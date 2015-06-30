@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2007-2013, International Business Machines Corporation and
+* Copyright (C) 2007-2014, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -26,7 +26,6 @@
 #include "unicode/ustring.h"
 #include "unicode/rep.h"
 #include "cpputils.h"
-#include "ucln_in.h"
 #include "mutex.h"
 #include "cmemory.h"
 #include "cstring.h"
@@ -35,8 +34,8 @@
 #include "hash.h"
 #include "uresimp.h"
 #include "dtptngen_impl.h"
-
-#define LENGTHOF(array) (int32_t)(sizeof(array)/sizeof((array)[0]))
+#include "shareddatetimepatterngenerator.h"
+#include "unifiedcache.h"
 
 #if U_CHARSET_FAMILY==U_EBCDIC_FAMILY
 /**
@@ -127,6 +126,27 @@ static const UChar *ures_a_getNextString(UResourceBundleAIterator *aiter, int32_
 
 U_NAMESPACE_BEGIN
 
+SharedDateTimePatternGenerator::~SharedDateTimePatternGenerator() {
+    delete ptr;
+}
+
+template<> U_I18N_API
+const SharedDateTimePatternGenerator *LocaleCacheKey<SharedDateTimePatternGenerator>::createObject(
+        const void * /*creationContext*/, UErrorCode &status) const {
+    DateTimePatternGenerator *fmt = DateTimePatternGenerator::internalMakeInstance(fLoc, status);
+    if (U_FAILURE(status)) {
+        return NULL;
+    }
+    SharedDateTimePatternGenerator *result = new SharedDateTimePatternGenerator(fmt);
+    if (result == NULL) {
+        delete fmt;
+        status = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
+    }
+    result->addRef();
+    return result;
+}
+
 
 // *****************************************************************************
 // class DateTimePatternGenerator
@@ -144,6 +164,7 @@ static const dtTypeElem dtTypes[] = {
     {LOW_Y, UDATPG_YEAR_FIELD, DT_NUMERIC, 1, 20},
     {CAP_Y, UDATPG_YEAR_FIELD, DT_NUMERIC + DT_DELTA, 1, 20},
     {LOW_U, UDATPG_YEAR_FIELD, DT_NUMERIC + 2*DT_DELTA, 1, 20},
+    {LOW_R, UDATPG_YEAR_FIELD, DT_NUMERIC + 3*DT_DELTA, 1, 20},
     {CAP_U, UDATPG_YEAR_FIELD, DT_SHORT, 1, 3},
     {CAP_U, UDATPG_YEAR_FIELD, DT_LONG, 4, 0},
     {CAP_U, UDATPG_YEAR_FIELD, DT_NARROW, 5, 0},
@@ -247,13 +268,30 @@ DateTimePatternGenerator::createInstance(UErrorCode& status) {
 
 DateTimePatternGenerator* U_EXPORT2
 DateTimePatternGenerator::createInstance(const Locale& locale, UErrorCode& status) {
-    DateTimePatternGenerator *result = new DateTimePatternGenerator(locale, status);
+    const SharedDateTimePatternGenerator *shared = NULL;
+    UnifiedCache::getByLocale(locale, shared, status);
+    if (U_FAILURE(status)) {
+        return NULL;
+    }
+    DateTimePatternGenerator *result = new DateTimePatternGenerator(**shared);
+    shared->removeRef();
     if (result == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
     }
+    return result;
+}
+
+
+DateTimePatternGenerator* U_EXPORT2
+DateTimePatternGenerator::internalMakeInstance(const Locale& locale, UErrorCode& status) {
+    DateTimePatternGenerator *result = new DateTimePatternGenerator(locale, status);
+    if (result == NULL) {
+        status = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
+    }
     if (U_FAILURE(status)) {
         delete result;
-        result = NULL;
+        return NULL;
     }
     return result;
 }
@@ -314,6 +352,10 @@ DateTimePatternGenerator::DateTimePatternGenerator(const DateTimePatternGenerato
 
 DateTimePatternGenerator&
 DateTimePatternGenerator::operator=(const DateTimePatternGenerator& other) {
+    // reflexive case
+    if (&other == this) {
+        return *this;
+    }
     pLocale = other.pLocale;
     fDefaultHourFormatChar = other.fDefaultHourFormatChar;
     *fp = *(other.fp);
@@ -510,7 +552,7 @@ DateTimePatternGenerator::addCLDRData(const Locale& locale, UErrorCode& err) {
     const char *key=NULL;
     int32_t i;
 
-    UnicodeString defaultItemFormat(TRUE, UDATPG_ItemFormat, LENGTHOF(UDATPG_ItemFormat)-1);  // Read-only alias.
+    UnicodeString defaultItemFormat(TRUE, UDATPG_ItemFormat, UPRV_LENGTHOF(UDATPG_ItemFormat)-1);  // Read-only alias.
 
     err = U_ZERO_ERROR;
     
@@ -1219,7 +1261,7 @@ DateTimePatternGenerator::copyHashtable(Hashtable *other, UErrorCode &status) {
     if(U_FAILURE(status)){
         return;
     }
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement* elem = NULL;
     // walk through the hash table and create a deep clone
     while((elem = other->nextElement(pos))!= NULL){
@@ -1335,7 +1377,7 @@ PatternMap::copyFrom(const PatternMap& other, UErrorCode& status) {
                 status = U_MEMORY_ALLOCATION_ERROR;
                 return;
             }
-
+            curElem->skeletonWasSpecified = otherElem->skeletonWasSpecified;
             if (prevElem!=NULL) {
                 prevElem->next=curElem;
             }

@@ -96,7 +96,7 @@ struct LayerManagerData {
   {}
 };
 
-static TemporaryRef<Compositor> CreateTestCompositor(LayersBackend backend, MockWidget* widget)
+static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, MockWidget* widget)
 {
   gfxPrefs::GetSingleton();
 
@@ -170,7 +170,7 @@ static std::vector<LayersBackend> GetPlatformBackends()
   return backends;
 }
 
-static TemporaryRef<DrawTarget> CreateDT()
+static already_AddRefed<DrawTarget> CreateDT()
 {
   return gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
     IntSize(gCompWidth, gCompHeight), SurfaceFormat::B8G8R8A8);

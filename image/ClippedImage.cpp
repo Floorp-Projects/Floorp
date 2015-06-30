@@ -33,7 +33,7 @@ namespace image {
 class ClippedImageCachedSurface
 {
 public:
-  ClippedImageCachedSurface(TemporaryRef<SourceSurface> aSurface,
+  ClippedImageCachedSurface(already_AddRefed<SourceSurface> aSurface,
                             const nsIntSize& aSize,
                             const Maybe<SVGImageContext>& aSVGContext,
                             float aFrame,
@@ -60,7 +60,7 @@ public:
            mFlags == aFlags;
   }
 
-  TemporaryRef<SourceSurface> Surface() {
+  already_AddRefed<SourceSurface> Surface() {
     RefPtr<SourceSurface> surf(mSurface);
     return surf.forget();
   }
@@ -213,14 +213,14 @@ ClippedImage::GetIntrinsicRatio(nsSize* aRatio)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 ClippedImage::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {
   return GetFrameInternal(mClip.Size(), Nothing(), aWhichFrame, aFlags);
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 ClippedImage::GetFrameInternal(const nsIntSize& aSize,
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aWhichFrame,

@@ -1693,7 +1693,7 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
     using mozilla::dom::quota::QuotaManager;
 
     if (QuotaManager* quotaManager = QuotaManager::Get()) {
-        quotaManager->AbortCloseStoragesForProcess(this);
+        quotaManager->AbortOperationsForProcess(mChildID);
     }
 
     // If Close() fails with an error, we'll end up back in this function, but
@@ -4834,6 +4834,26 @@ ContentParent::RecvGetFileReferences(const PersistenceType& aPersistenceType,
                                        aResult);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
+    }
+
+    return true;
+}
+
+bool
+ContentParent::RecvFlushPendingFileDeletions()
+{
+    nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
+    if (NS_WARN_IF(!mgr)) {
+        return false;
+    }
+
+    if (NS_WARN_IF(!mgr->IsMainProcess())) {
+        return false;
+    }
+
+    nsresult rv = mgr->FlushPendingFileDeletions();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
     }
 
     return true;

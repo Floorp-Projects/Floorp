@@ -34,7 +34,7 @@ SourceSurfaceD2D1::IsValid() const
   return mDevice == Factory::GetD2D1Device();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 SourceSurfaceD2D1::GetDataSurface()
 {
   HRESULT hr;

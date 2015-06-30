@@ -50,12 +50,12 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   bool doDecodeImmediately = gfxPrefs::ImageDecodeImmediatelyEnabled();
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
-  // We use the compositor APZ pref here since we don't have a widget to test.
+  // We use the platform APZ value here since we don't have a widget to test.
   // It's safe since this is an optimization, and the only platform
   // ImageDecodeOnlyOnDraw is disabled on is B2G (where APZ is enabled in all
   // widgets anyway).
   bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
-                            gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly();
+                            gfxPlatform::AsyncPanZoomEnabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
   // discarding and decode-only-on-draw for chrome URLS.
@@ -159,7 +159,7 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
   newTracker->SetImage(newImage);
   newImage->SetProgressTracker(newTracker);
 
-  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_NONE);
+  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_SYNC_LOAD);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
 
   return newImage.forget();

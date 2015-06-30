@@ -17,7 +17,7 @@ public:
   SVGTurbulenceRenderer(const Size &aBaseFrequency, int32_t aSeed,
                         int aNumOctaves, const Rect &aTileRect);
 
-  TemporaryRef<DataSourceSurface> Render(const IntSize &aSize, const Point &aOffset) const;
+  already_AddRefed<DataSourceSurface> Render(const IntSize &aSize, const Point &aOffset) const;
 
 private:
   /* The turbulence calculation code is an adapted version of what
@@ -327,7 +327,7 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::EquivalentNonNegativ
 }
 
 template<TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t, typename u8x16_t>
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Render(const IntSize &aSize, const Point &aOffset) const
 {
   RefPtr<DataSourceSurface> target =

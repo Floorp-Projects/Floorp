@@ -110,7 +110,7 @@ public:
   // If aPremultAlpha is provided, then it assumed the callee can handle
   // un-premultiplied surfaces, and *aPremultAlpha will be set to false
   // if one is returned.
-  virtual mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) = 0;
+  virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) = 0;
 
   // If this context is opaque, the backing store of the canvas should
   // be created as opaque; all compositing operators should assume the

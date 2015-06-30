@@ -165,7 +165,7 @@ private:
   // This code needs to make sure that the individual pieces
   // don't ever (mathematically) overlap; the pixel overlap
   // is taken care of by the ADD compositing.
-  mozilla::TemporaryRef<Path> GetSideClipSubPath(mozilla::css::Side aSide);
+  already_AddRefed<Path> GetSideClipSubPath(mozilla::css::Side aSide);
 
   // Given a set of sides to fill and a color, do so in the fastest way.
   //
@@ -212,7 +212,7 @@ private:
   bool AllBordersSolid(bool *aHasCompositeColors);
 
   // Azure variant of CreateCornerGradient.
-  mozilla::TemporaryRef<mozilla::gfx::GradientStops>
+  already_AddRefed<mozilla::gfx::GradientStops>
   CreateCornerGradient(mozilla::css::Corner aCorner, nscolor aFirstColor,
                        nscolor aSecondColor, mozilla::gfx::DrawTarget *aDT,
                        mozilla::gfx::Point &aPoint1, mozilla::gfx::Point &aPoint2);

@@ -1,20 +1,91 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fo.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/fo.xml
- */
 fo{
     Currencies{
         DKK{
             "kr",
-            "DKK",
+            "donsk króna",
+        }
+        EUR{
+            "€",
+            "euro",
+        }
+        ISK{
+            "ISK",
+            "íslendsk króna",
+        }
+        NOK{
+            "NOK",
+            "norsk króna",
+        }
+        SEK{
+            "SEK",
+            "svensk króna",
+        }
+        XAG{
+            "XAG",
+            "unse sølv",
+        }
+        XAU{
+            "XAU",
+            "unse guld",
+        }
+        XPD{
+            "XPD",
+            "unse palladium",
+        }
+        XPT{
+            "XPT",
+            "unse platin",
         }
     }
-    Version{"2.0.92.87"}
+    CurrencyPlurals{
+        DKK{
+            one{"donsk króna"}
+            other{"donska krónur"}
+        }
+        EUR{
+            one{"euro"}
+            other{"euro"}
+        }
+        ISK{
+            one{"íslendsk króna"}
+            other{"íslendska krónur"}
+        }
+        NOK{
+            one{"norsk króna"}
+            other{"norska krónur"}
+        }
+        SEK{
+            one{"svensk króna"}
+            other{"svenska krónur"}
+        }
+        XAG{
+            one{"unse sølv"}
+            other{"unse sølv"}
+        }
+        XAU{
+            one{"unse guld"}
+            other{"unse guld"}
+        }
+        XPD{
+            one{"unse palladium"}
+            other{"unse palladium"}
+        }
+        XPT{
+            one{"unse platin"}
+            other{"unse platin"}
+        }
+    }
+    CurrencyUnitPatterns{
+        one{"{0} {1}"}
+        other{"{0} {1}"}
+    }
+    Version{"2.1.12.27"}
 }

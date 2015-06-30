@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<title>Testcase, bug 1176969</title>
+<style>
+
+body { padding: 50px }
+
+#grandparent { perspective: 400px }
+
+#parent {
+  background: blue;
+  height: 200px; width: 200px;
+  border: 1px solid black;
+  transform-style: preserve-3d;
+  transform: rotateX(-45deg) rotateY(-45deg) rotateZ(-45deg);
+  will-change: transform;
+}
+
+#child {
+  transform: translateZ(15px);
+  height: 100px; width: 100px; margin: 50px;
+  background: yellow;
+  box-shadow: 3px 3px olive;
+}
+
+</style>
+
+<div id="grandparent">
+  <div id="parent">
+    <div id="child">
+    </div>
+  </div>
+</div>

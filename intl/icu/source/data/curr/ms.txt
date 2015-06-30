@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ms.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ms.xml
- */
 ms{
     Currencies{
         AED{
@@ -112,7 +109,7 @@ ms{
             "Dolar Belize",
         }
         CAD{
-            "CA$",
+            "CAD",
             "Dolar Kanada",
         }
         CDF{
@@ -175,6 +172,10 @@ ms{
             "EGP",
             "Paun Mesir",
         }
+        ERN{
+            "ERN",
+            "ERN",
+        }
         ETB{
             "ETB",
             "Birr Ethiopia",
@@ -193,7 +194,7 @@ ms{
         }
         GBP{
             "£",
-            "Paun Sterling British",
+            "Paun British",
         }
         GEL{
             "GEL",
@@ -392,7 +393,7 @@ ms{
             "Kwacha Malawi",
         }
         MXN{
-            "MX$",
+            "MXN",
             "Peso Mexico",
         }
         MYR{
@@ -580,8 +581,12 @@ ms{
             "Syiling Uganda",
         }
         USD{
-            "US$",
+            "USD",
             "Dolar AS",
+        }
+        UYU{
+            "UYU",
+            "UYU",
         }
         UZS{
             "UZS",
@@ -640,9 +645,71 @@ ms{
             "Kwacha Zambia",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
+        AED{
+            other{"Dirham Emiriah Arab Bersatu"}
+        }
         AFN{
             other{"Afghani Afghanistan"}
+        }
+        ALL{
+            other{"Lek Albania"}
+        }
+        AMD{
+            other{"Dram Armenia"}
         }
         ANG{
             other{"Guilder Antillean Netherland"}
@@ -659,11 +726,23 @@ ms{
         AWG{
             other{"Florin Aruba"}
         }
+        AZN{
+            other{"Manat Azerbaijan"}
+        }
+        BAM{
+            other{"Mark Boleh Tukar Bosnia-Herzegovina"}
+        }
         BBD{
             other{"Dolar Barbados"}
         }
         BDT{
             other{"Taka Bangladesh"}
+        }
+        BGN{
+            other{"Lev Bulgaria"}
+        }
+        BHD{
+            other{"Dinar Bahrain"}
         }
         BIF{
             other{"Franc Burundia"}
@@ -686,6 +765,12 @@ ms{
         BTN{
             other{"Ngultrum Bhutan"}
         }
+        BWP{
+            other{"Pula Botswana"}
+        }
+        BYR{
+            other{"Ruble Belarus"}
+        }
         BZD{
             other{"Dolar Belize"}
         }
@@ -694,6 +779,9 @@ ms{
         }
         CDF{
             other{"Franc Congo"}
+        }
+        CHF{
+            other{"Franc Switzerland"}
         }
         CLP{
             other{"Peso Chile"}
@@ -716,8 +804,14 @@ ms{
         CVE{
             other{"Escudo Tanjung Verde"}
         }
+        CZK{
+            other{"Koruna Republik Czech"}
+        }
         DJF{
             other{"Franc Djibouti"}
+        }
+        DKK{
+            other{"Krone Denmark"}
         }
         DOP{
             other{"Peso Dominican"}
@@ -734,14 +828,26 @@ ms{
         ETB{
             other{"Birr Ethiopia"}
         }
+        EUR{
+            other{"Euro"}
+        }
         FJD{
             other{"Dolar Fiji"}
         }
         FKP{
             other{"Paun Kepulauan Falkland"}
         }
+        GBP{
+            other{"Paun British"}
+        }
+        GEL{
+            other{"Lari Georgia"}
+        }
         GHS{
             other{"Cedi Ghana"}
+        }
+        GIP{
+            other{"Paun Gibraltar"}
         }
         GMD{
             other{"Dalasi Gambia"}
@@ -761,11 +867,20 @@ ms{
         HNL{
             other{"Lempira Honduras"}
         }
+        HRK{
+            other{"Kuna Croatia"}
+        }
         HTG{
             other{"Gourde Haiti"}
         }
+        HUF{
+            other{"Forint Hungary"}
+        }
         IDR{
             other{"Rupiah Indonesia"}
+        }
+        ILS{
+            other{"Sheqel Baru Israel"}
         }
         INR{
             other{"Rupee India"}
@@ -827,11 +942,26 @@ ms{
         LRD{
             other{"Dolar Liberia"}
         }
+        LTL{
+            other{"Litas Lithuania"}
+        }
+        LVL{
+            other{"Lats Latvia"}
+        }
         LYD{
             other{"Dinar Libya"}
         }
         MAD{
             other{"Dirham Maghribi"}
+        }
+        MDL{
+            other{"Leu Moldova"}
+        }
+        MGA{
+            other{"Ariary Malagasy"}
+        }
+        MKD{
+            other{"Denar Macedonia"}
         }
         MMK{
             other{"Kyat Myanma"}
@@ -845,8 +975,14 @@ ms{
         MRO{
             other{"Ouguiya Mauritania"}
         }
+        MUR{
+            other{"Rupee Mauritia"}
+        }
         MVR{
             other{"Rufiyaa Maldives"}
+        }
+        MWK{
+            other{"Kwacha Malawi"}
         }
         MXN{
             other{"Peso Mexico"}
@@ -854,11 +990,20 @@ ms{
         MYR{
             other{"Ringgit Malaysia"}
         }
+        MZN{
+            other{"Metikal Mozambique"}
+        }
+        NAD{
+            other{"Dolar Namibia"}
+        }
         NGN{
             other{"Naira Nigeria"}
         }
         NIO{
             other{"Cordoba Nicaragua"}
+        }
+        NOK{
+            other{"Krone Norway"}
         }
         NPR{
             other{"Rupee Nepal"}
@@ -884,11 +1029,26 @@ ms{
         PKR{
             other{"Rupee Pakistan"}
         }
+        PLN{
+            other{"Zloty Poland"}
+        }
         PYG{
             other{"Guarani Paraguay"}
         }
         QAR{
             other{"Rial Qatar"}
+        }
+        RON{
+            other{"Leu Romania"}
+        }
+        RSD{
+            other{"Dinar Serbia"}
+        }
+        RUB{
+            other{"Ruble Rusia"}
+        }
+        RWF{
+            other{"Franc Rwanda"}
         }
         SAR{
             other{"Riyal Saudi"}
@@ -896,8 +1056,14 @@ ms{
         SBD{
             other{"Dolar Kepulauan Solomon"}
         }
+        SCR{
+            other{"Rupee Seychelles"}
+        }
         SDG{
             other{"Paun Sudan"}
+        }
+        SEK{
+            other{"Krona Sweden"}
         }
         SGD{
             other{"Dolar Singapura"}
@@ -907,6 +1073,9 @@ ms{
         }
         SLL{
             other{"Leone Sierra Leone"}
+        }
+        SOS{
+            other{"Syiling Somali"}
         }
         SRD{
             other{"Dolar Surinam"}
@@ -919,6 +1088,9 @@ ms{
         }
         SYP{
             other{"Paun Syria"}
+        }
+        SZL{
+            other{"Lilangeni Swazi"}
         }
         THB{
             other{"Baht Thai"}
@@ -944,6 +1116,15 @@ ms{
         TWD{
             other{"Dolar Taiwan Baru"}
         }
+        TZS{
+            other{"Syiling Tanzania"}
+        }
+        UAH{
+            other{"Hryvnia Ukraine"}
+        }
+        UGX{
+            other{"Syiling Uganda"}
+        }
         USD{
             other{"Dolar AS"}
         }
@@ -965,6 +1146,9 @@ ms{
         WST{
             other{"Tala Samoa"}
         }
+        XAF{
+            other{"Franc CFA BEAC"}
+        }
         XCD{
             other{"Dolar Caribbean Timur"}
         }
@@ -974,12 +1158,21 @@ ms{
         XPF{
             other{"Franc CFP"}
         }
+        XXX{
+            other{"(mata wang tidak diketahui)"}
+        }
         YER{
             other{"Rial Yaman"}
+        }
+        ZAR{
+            other{"Rand Afrika Selatan"}
+        }
+        ZMW{
+            other{"Kwacha Zambia"}
         }
     }
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

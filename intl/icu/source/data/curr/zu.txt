@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zu.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/zu.xml
- */
 zu{
     Currencies{
         AED{
@@ -197,7 +194,7 @@ zu{
         }
         GBP{
             "£",
-            "i-British Pound Sterling",
+            "i-British Pound",
         }
         GEL{
             "GEL",
@@ -565,7 +562,7 @@ zu{
         }
         TTD{
             "TTD",
-            "Idola lase-Trinidad nase-Tobago",
+            "i-Trinidad and Tobago Dollar",
         }
         TWD{
             "NT$",
@@ -648,9 +645,213 @@ zu{
             "i-Zambian Kwacha",
         }
     }
+    Currencies%narrow{
+        AUD{"$"}
+        BBD{"$"}
+        BMD{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BZD{"$"}
+        CAD{"$"}
+        CNY{"¥"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        GBP{"£"}
+        HKD{"$"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KRW{"₩"}
+        KYD{"$"}
+        MXN{"$"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        USD{"$"}
+    }
+    CurrencyPlurals{
+        ANG{
+            one{"i-Netherlands Antillean Guilder"}
+            other{"i-Netherlands Antillean Guilder"}
+        }
+        AUD{
+            one{"i-Austrilian Dollar"}
+            other{"i-Austrilian Dollar"}
+        }
+        AWG{
+            one{"i-Aruban Florin"}
+            other{"i-Aruban Florin"}
+        }
+        BBD{
+            one{"i-Barbadian Dollar"}
+            other{"i-Barbadian Dollar"}
+        }
+        BMD{
+            one{"i-Bermudan Dollar"}
+            other{"i-Bermudan Dollar"}
+        }
+        BRL{
+            one{"i-Brazilian Real"}
+            other{"i-Brazilian Real"}
+        }
+        BSD{
+            one{"i-Bahamian Dollar"}
+            other{"i-Bahamian Dollar"}
+        }
+        BZD{
+            one{"i-Belize Dollar"}
+            other{"i-Belize Dollar"}
+        }
+        CAD{
+            one{"i-Candian Dollar"}
+            other{"i-Candian Dollar"}
+        }
+        CHF{
+            one{"i-Swiss Franc"}
+            other{"i-Swiss Franc"}
+        }
+        CNY{
+            one{"i-Chinese Yuan"}
+            other{"i-Chinese Yuan"}
+        }
+        CRC{
+            one{"i-Costa Rican Colón"}
+            other{"i-Costa Rican Colón"}
+        }
+        CUC{
+            one{"i-Cuban Convertable Peso"}
+            other{"i-Cuban Convertable Peso"}
+        }
+        CUP{
+            one{"I-Cuban Peso"}
+            other{"I-Cuban Peso"}
+        }
+        DKK{
+            one{"i-Danish Krone"}
+            other{"i-Danish Krone"}
+        }
+        DOP{
+            one{"i-Dominican Peso"}
+            other{"i-Dominican Peso"}
+        }
+        EUR{
+            one{"i-Euro"}
+            other{"i-Euro"}
+        }
+        GBP{
+            one{"i-British Pound"}
+            other{"i-British Pound"}
+        }
+        GTQ{
+            one{"i-Guatemalan Quetzal"}
+            other{"i-Guatemalan Quetzal"}
+        }
+        HKD{
+            one{"i-Hong Kong Dollar"}
+            other{"i-Hong Kong Dollar"}
+        }
+        HNL{
+            one{"i-Honduran Lempira"}
+            other{"i-Honduran lempiras"}
+        }
+        HTG{
+            one{"i-Haitian Gourde"}
+            other{"i-Haitian Gourde"}
+        }
+        IDR{
+            one{"i-Indonesian Rupiah"}
+            other{"i-Indonesian Rupiah"}
+        }
+        INR{
+            one{"i-Indian Rupee"}
+            other{"i-Indian Rupee"}
+        }
+        JMD{
+            one{"i-Jamaican Dollar"}
+            other{"i-Jamaican Dollar"}
+        }
+        JPY{
+            one{"i-Japanese Yen"}
+            other{"i-Japanese Yen"}
+        }
+        KRW{
+            one{"i-South Korean Won"}
+            other{"i-South Korean Won"}
+        }
+        KYD{
+            one{"i-Cayman Islands Dollar"}
+            other{"i-Cayman Islands Dollar"}
+        }
+        MXN{
+            one{"i-Mexican Peso"}
+            other{"i-Mexican Peso"}
+        }
+        NIO{
+            one{"i-Nicaraguan Córdoba"}
+            other{"i-Nicaraguan Córdoba"}
+        }
+        NOK{
+            one{"i-Norwegian Krone"}
+            other{"i-Norwegian Krone"}
+        }
+        PAB{
+            one{"i-Panamanian Balboa"}
+            other{"i-Panamanian Balboa"}
+        }
+        PLN{
+            one{"i-Polish Zloty"}
+            other{"i-Polish Zloty"}
+        }
+        RUB{
+            one{"i-Russian Ruble"}
+            other{"i-Russian Ruble"}
+        }
+        SAR{
+            one{"i-Saudi Riyal"}
+            other{"i-Saudi Riyal"}
+        }
+        SEK{
+            one{"i-Swedish Krona"}
+            other{"i-Swedish Krona"}
+        }
+        THB{
+            one{"i-Thai Baht"}
+            other{"i-Thai Baht"}
+        }
+        TRY{
+            one{"i-Turkish Lira"}
+            other{"i-Turkish Lira"}
+        }
+        TTD{
+            one{"i-Trinidad and Tobago dollar"}
+            other{"i-Trinidad and Tobago dollars"}
+        }
+        TWD{
+            one{"i-New Taiwan Dollar"}
+            other{"i-New Taiwan Dollar"}
+        }
+        USD{
+            one{"i-US Dollar"}
+            other{"i-US Dollar"}
+        }
+        XCD{
+            one{"i-East Caribbean Dollar"}
+            other{"i-East Caribbean Dollar"}
+        }
+        XXX{
+            one{"Imali engaziwa"}
+            other{"Imali engaziwa"}
+        }
+        ZAR{
+            one{"i-South African Rand"}
+            other{"i-South African Rand"}
+        }
+    }
     CurrencyUnitPatterns{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.93"}
 }

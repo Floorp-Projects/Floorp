@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *                                                                            *
-* Copyright (C) 2003-2013, International Business Machines                   *
+* Copyright (C) 2003-2015, International Business Machines                   *
 *                Corporation and others. All Rights Reserved.                *
 *                                                                            *
 ******************************************************************************
@@ -45,10 +45,8 @@ typedef enum ULocaleDataExemplarSetType  {
     ULOCDATA_ES_AUXILIARY=1,
     /** Index Character set @stable ICU 4.8 */
     ULOCDATA_ES_INDEX=2,
-#ifndef U_HIDE_DRAFT_API
-    /** Punctuation set @draft ICU 51 */
+    /** Punctuation set @stable ICU 51 */
     ULOCDATA_ES_PUNCTUATION=3,
-#endif /* U_HIDE_DRAFT_API */
     /** One higher than the last valid type @stable ICU 3.4 */
     ULOCDATA_ES_COUNT=4
 } ULocaleDataExemplarSetType;
@@ -188,8 +186,9 @@ ulocdata_getDelimiter(ULocaleData *uld, ULocaleDataDelimiterType type, UChar *re
  * @stable ICU 2.8
  */
 typedef enum UMeasurementSystem {
-    UMS_SI,     /** Measurement system specified by SI otherwise known as Metric system. */
-    UMS_US,     /** Measurement system followed in the United States of America. */
+    UMS_SI,     /**< Measurement system specified by SI otherwise known as Metric system. @stable ICU 2.8 */
+    UMS_US,     /**< Measurement system followed in the United States of America. @stable ICU 2.8 */
+    UMS_UK,     /**< Mix of metric and imperial units used in Great Britain. @stable ICU 55 */
     UMS_LIMIT
 } UMeasurementSystem;
 

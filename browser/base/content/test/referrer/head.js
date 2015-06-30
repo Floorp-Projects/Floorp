@@ -94,52 +94,8 @@ function getReferrerTestDescription(aTestNumber) {
  * @param aOptions The options for synthesizeMouseAtCenter.
  */
 function clickTheLink(aWindow, aLinkId, aOptions) {
-  ContentTask.spawn(aWindow.gBrowser.selectedBrowser,
-                    {id: aLinkId, options: aOptions},
-                    function(data) {
-    let element = content.document.getElementById(data.id);
-    let options = data.options;
-
-    // EventUtils.synthesizeMouseAtCenter(element, options, content);
-    // Alas, EventUtils doesn't work in the content task environment.
-    function doClick() {
-      var domWindowUtils =
-          content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-          .getInterface(Components.interfaces.nsIDOMWindowUtils);
-      var rect = element.getBoundingClientRect();
-      var left = rect.left + rect.width / 2;
-      var top = rect.top + rect.height / 2;
-      var button = options.button || 0;
-      function sendMouseEvent(type) {
-        domWindowUtils.sendMouseEvent(type, left, top, button,
-                                      1, 0, false, 0, 0, true);
-      }
-      if ("type" in options) {
-        sendMouseEvent(options.type);  // e.g., "contextmenu"
-      } else {
-        sendMouseEvent("mousedown");
-        sendMouseEvent("mouseup");
-      }
-    }
-
-    // waitForFocus(doClick, content);
-    let focusManager = Components.classes["@mozilla.org/focus-manager;1"].
-                       getService(Components.interfaces.nsIFocusManager);
-    let desiredWindow = {};
-    focusManager.getFocusedElementForWindow(content, true, desiredWindow);
-    desiredWindow = desiredWindow.value;
-    if (desiredWindow == focusManager.focusedWindow) {
-      // The window is already focused - click away.
-      doClick();
-    } else {
-      // Focus the window first, then click.
-      desiredWindow.addEventListener("focus", function onFocus() {
-        desiredWindow.removeEventListener("focus", onFocus, true);
-        setTimeout(doClick, 0);
-      }, true);
-      desiredWindow.focus();
-    }
-  });
+  return BrowserTestUtils.synthesizeMouseAtCenter(
+    "#" + aLinkId, aOptions, aWindow.gBrowser.selectedBrowser);
 }
 
 /**
@@ -196,20 +152,8 @@ function someTabLoaded(aWindow) {
  * @resolves With the new window once it's open and loaded.
  */
 function newWindowOpened() {
-  return new Promise(function(resolve) {
-    Services.wm.addListener({
-      onOpenWindow: function(aXULWindow) {
-        Services.wm.removeListener(this);
-        var newWindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIDOMWindow);
-        delayedStartupFinished(newWindow).then(function() {
-          resolve(newWindow);
-        });
-      },
-      onCloseWindow: function(aXULWindow) { },
-      onWindowTitleChange: function(aXULWindow, aNewTitle) { }
-    });
-  });
+  return TestUtils.topicObserved("browser-delayed-startup-finished")
+                  .then(([win]) => win);
 }
 
 /**
@@ -220,16 +164,11 @@ function newWindowOpened() {
  * @resolves With the menu popup when the context menu is open.
  */
 function contextMenuOpened(aWindow, aLinkId) {
-  return new Promise(function(resolve) {
-    aWindow.document.addEventListener("popupshown",
-                                      function handleMenu(aEvent) {
-      aWindow.document.removeEventListener("popupshown", handleMenu, false);
-      resolve(aEvent.target);
-    }, false);
-
-    // Simulate right-click that opens the context menu.
-    clickTheLink(aWindow, aLinkId, {type: "contextmenu", button: 2});
-  });
+  let popupShownPromise = BrowserTestUtils.waitForEvent(aWindow.document,
+                                                        "popupshown");
+  // Simulate right-click.
+  clickTheLink(aWindow, aLinkId, { type: "contextmenu", button: 2 });
+  return popupShownPromise.then(e => e.target);
 }
 
 /**

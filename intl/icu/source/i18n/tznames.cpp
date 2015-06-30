@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2011-2013, International Business Machines Corporation and    *
+* Copyright (C) 2011-2015, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 */
@@ -81,7 +81,7 @@ U_CDECL_END
  * block.
  */
 static void sweepCache() {
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement* elem;
     double now = (double)uprv_getUTCtime();
 
@@ -291,7 +291,26 @@ TimeZoneNames::~TimeZoneNames() {
 
 TimeZoneNames*
 TimeZoneNames::createInstance(const Locale& locale, UErrorCode& status) {
-    return new TimeZoneNamesDelegate(locale, status);
+    TimeZoneNames *instance = NULL;
+    if (U_SUCCESS(status)) {
+        instance = new TimeZoneNamesDelegate(locale, status);
+        if (instance == NULL && U_SUCCESS(status)) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+        }
+    }
+    return instance;
+}
+
+TimeZoneNames*
+TimeZoneNames::createTZDBInstance(const Locale& locale, UErrorCode& status) {
+    TimeZoneNames *instance = NULL;
+    if (U_SUCCESS(status)) {
+        instance = new TZDBTimeZoneNames(locale);
+        if (instance == NULL && U_SUCCESS(status)) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+        }
+    }
+    return instance;
 }
 
 UnicodeString&
@@ -303,7 +322,8 @@ UnicodeString&
 TimeZoneNames::getDisplayName(const UnicodeString& tzID, UTimeZoneNameType type, UDate date, UnicodeString& name) const {
     getTimeZoneDisplayName(tzID, type, name);
     if (name.isEmpty()) {
-        UnicodeString mzID;
+        UChar mzIDBuf[32];
+        UnicodeString mzID(mzIDBuf, 0, UPRV_LENGTHOF(mzIDBuf));
         getMetaZoneID(tzID, date, mzID);
         getMetaZoneDisplayName(mzID, type, name);
     }

@@ -2914,57 +2914,31 @@ nsCacheService::ClearDoomList()
     }
 }
 
-PLDHashOperator
-nsCacheService::GetActiveEntries(PLDHashTable *    table,
-                                 PLDHashEntryHdr * hdr,
-                                 uint32_t          number,
-                                 void *            arg)
-{
-    static_cast<nsTArray<nsCacheEntry*>*>(arg)->AppendElement(
-        ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry);
-    return PL_DHASH_NEXT;
-}
-
-struct ActiveEntryArgs
-{
-    nsTArray<nsCacheEntry*>* mActiveArray;
-    nsCacheService::DoomCheckFn mCheckFn;
-};
-
 void
 nsCacheService::DoomActiveEntries(DoomCheckFn check)
 {
     nsAutoTArray<nsCacheEntry*, 8> array;
-    ActiveEntryArgs args = { &array, check };
 
-    mActiveEntries.VisitEntries(RemoveActiveEntry, &args);
+    for (auto iter = mActiveEntries.RemovingIter(); !iter.Done(); iter.Next()) {
+        nsCacheEntry* entry =
+            static_cast<nsCacheEntryHashTableEntry*>(iter.Get())->cacheEntry;
+
+        if (check && !check(entry)) {
+            continue;
+        }
+
+        array.AppendElement(entry);
+
+        // entry is being removed from the active entry list
+        entry->MarkInactive();
+        iter.Remove();
+    }
 
     uint32_t count = array.Length();
-    for (uint32_t i=0; i < count; ++i)
+    for (uint32_t i = 0; i < count; ++i) {
         DoomEntry_Internal(array[i], true);
+    }
 }
-
-PLDHashOperator
-nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
-                                  PLDHashEntryHdr * hdr,
-                                  uint32_t          number,
-                                  void *            arg)
-{
-    nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
-    NS_ASSERTION(entry, "### active entry = nullptr!");
-
-    ActiveEntryArgs* args = static_cast<ActiveEntryArgs*>(arg);
-    if (args->mCheckFn && !args->mCheckFn(entry))
-        return PL_DHASH_NEXT;
-
-    NS_ASSERTION(args->mActiveArray, "### array = nullptr!");
-    args->mActiveArray->AppendElement(entry);
-
-    // entry is being removed from the active entry list
-    entry->MarkInactive();
-    return PL_DHASH_REMOVE; // and continue enumerating
-}
-
 
 void
 nsCacheService::CloseAllStreams()
@@ -2979,7 +2953,10 @@ nsCacheService::CloseAllStreams()
 
 #if DEBUG
         // make sure there is no active entry
-        mActiveEntries.VisitEntries(GetActiveEntries, &entries);
+        for (auto iter = mActiveEntries.Iter(); !iter.Done(); iter.Next()) {
+            auto entry = static_cast<nsCacheEntryHashTableEntry*>(iter.Get());
+            entries.AppendElement(entry->cacheEntry);
+        }
         NS_ASSERTION(entries.IsEmpty(), "Bad state");
 #endif
 

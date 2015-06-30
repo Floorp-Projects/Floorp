@@ -536,7 +536,7 @@ public:
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
 
-  mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
+  already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
   void CleanupRemoteDrawing() override;
 

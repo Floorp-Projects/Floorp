@@ -91,7 +91,7 @@ public:
                                           uint32_t aBegin,
                                           uint32_t aEnd) const;
   // 'Draw' (create as a path, does not stroke or fill) aRoundRect to aContext
-  mozilla::TemporaryRef<Path> MakeRoundedRectPath(DrawTarget& aDrawTarget,
+  already_AddRefed<Path> MakeRoundedRectPath(DrawTarget& aDrawTarget,
                                                   int32_t A2D,
                                                   const RoundedRect &aRoundRect) const;
 

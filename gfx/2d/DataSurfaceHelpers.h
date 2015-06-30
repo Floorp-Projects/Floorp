@@ -83,7 +83,7 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
  *
  * @return a dss allocated by Factory that contains a copy a aSource.
  */
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource);
 
 /**

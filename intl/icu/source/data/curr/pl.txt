@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/pl.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/pl.xml
- */
 pl{
     Currencies{
         ADP{
@@ -737,7 +734,7 @@ pl{
         }
         RON{
             "RON",
-            "leja rumuńska",
+            "lej rumuński",
         }
         RSD{
             "RSD",
@@ -865,7 +862,7 @@ pl{
         }
         TOP{
             "TOP",
-            "pa'anga tongijska",
+            "pa’anga tongijska",
         }
         TPE{
             "TPE",
@@ -1060,6 +1057,59 @@ pl{
             "dolar Zimbabwe (2008)",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
         ADP{
             few{"pesety andorskie"}
@@ -1182,16 +1232,16 @@ pl{
             other{"frank belgijski (zamienny)"}
         }
         BGL{
-            few{"lewa bułgarskie wymienne"}
-            many{"lewa bułgarskich wymiennych"}
+            few{"lewy bułgarskie wymienne"}
+            many{"lewów bułgarskich wymiennych"}
             one{"lew bułgarski wymienny"}
-            other{"lewa bułgarskich wymiennych"}
+            other{"lewa bułgarskiego wymiennego"}
         }
         BGM{
-            few{"lew bułgarski socjalistyczny"}
-            many{"lew bułgarski socjalistyczny"}
+            few{"lewy bułgarskie socjalistyczne"}
+            many{"lewów bułgarskich socjalistycznych"}
             one{"lew bułgarski socjalistyczny"}
-            other{"lew bułgarski socjalistyczny"}
+            other{"lewa bułgarskiego socjalistycznego"}
         }
         BGN{
             few{"lewy bułgarskie"}
@@ -1200,10 +1250,10 @@ pl{
             other{"lewa bułgarskiego"}
         }
         BGO{
-            few{"lew bułgarski (1879–1952)"}
-            many{"lew bułgarski (1879–1952)"}
+            few{"lewy bułgarskie (1879–1952)"}
+            many{"lewów bułgarskich (1879–1952)"}
             one{"lew bułgarski (1879–1952)"}
-            other{"lew bułgarski (1879–1952)"}
+            other{"lewa bułgarskiego (1879–1952)"}
         }
         BHD{
             few{"dinary bahrańskie"}
@@ -2022,10 +2072,10 @@ pl{
             other{"dinara tunezyjskiego"}
         }
         TOP{
-            few{"pa'anga tongijskie"}
-            many{"pa'anga tongijskich"}
-            one{"pa'anga tongijska"}
-            other{"pa'anga tongijskiej"}
+            few{"pa’anga tongijskie"}
+            many{"pa’anga tongijskich"}
+            one{"pa’anga tongijska"}
+            other{"pa’anga tongijskiej"}
         }
         TRL{
             few{"liry tureckie (1922–2005)"}
@@ -2184,5 +2234,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

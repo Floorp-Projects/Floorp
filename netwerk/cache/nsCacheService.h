@@ -311,17 +311,6 @@ private:
     void             FireClearNetworkCacheStoredAnywhereNotification();
 
     static
-    PLDHashOperator  GetActiveEntries(PLDHashTable *    table,
-                                      PLDHashEntryHdr * hdr,
-                                      uint32_t          number,
-                                      void *            arg);
-    static
-    PLDHashOperator  RemoveActiveEntry(PLDHashTable *    table,
-                                       PLDHashEntryHdr * hdr,
-                                       uint32_t          number,
-                                       void *            arg);
-
-    static
     PLDHashOperator  ShutdownCustomCacheDeviceEnum(const nsAString& aProfileDir,
                                                    nsRefPtr<nsOfflineCacheDevice>& aDevice,
                                                    void* aUserArg);
