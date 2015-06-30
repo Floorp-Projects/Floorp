@@ -702,6 +702,7 @@ DrawTargetCairo::LockBits(uint8_t** aData, IntSize* aSize,
 {
   if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
     WillChange();
+    Flush();
 
     mLockedBits = cairo_image_surface_get_data(mSurface);
     *aData = mLockedBits;
@@ -719,6 +720,7 @@ DrawTargetCairo::ReleaseBits(uint8_t* aData)
 {
   MOZ_ASSERT(mLockedBits == aData);
   mLockedBits = nullptr;
+  cairo_surface_mark_dirty(mSurface);
 }
 
 void
