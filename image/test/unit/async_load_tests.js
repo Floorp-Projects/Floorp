@@ -109,20 +109,6 @@ function firstLoadDone(oldlistener, aRequest)
 }
 
 // Return a closure that allows us to check the stream listener's status when the
-// image starts loading.
-function getChannelLoadImageStartCallback(streamlistener)
-{
-  return function channelLoadStart(imglistener, aRequest) {
-    // We must not have received all status before we get this start callback.
-    // If we have, we've broken people's expectations by delaying events from a
-    // channel we were given.
-    do_check_eq(streamlistener.requestStatus & STOP_REQUEST, 0);
-
-    checkClone(imglistener, aRequest);
-  }
-}
-
-// Return a closure that allows us to check the stream listener's status when the
 // image finishes loading.
 function getChannelLoadImageStopCallback(streamlistener, next)
 {
@@ -150,7 +136,7 @@ function checkSecondChannelLoad()
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener, null);
 
-  var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
+  var listener = new ImageListener(null,
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    all_done_callback));
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
@@ -179,7 +165,7 @@ function run_loadImageWithChannel_tests()
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener, null);
 
-  var listener = new ImageListener(getChannelLoadImageStartCallback(channellistener),
+  var listener = new ImageListener(null,
                                    getChannelLoadImageStopCallback(channellistener,
                                                                    checkSecondChannelLoad));
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
