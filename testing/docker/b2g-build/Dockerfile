@@ -15,10 +15,11 @@ RUN yum install -y epel-release && \
   autoconf213 \
   bc \
   bison \
-  bzip2 \
-  ccache \
   curl \
   curl-devel \
+  libcurl-devel \
+  bzip2 \
+  ccache \
   dbus-devel \
   dbus-glib-devel \
   dbus-glib-devel \
@@ -41,7 +42,6 @@ RUN yum install -y epel-release && \
   libX11-devel.i686 \
   libXrandr.i686 \
   libXt-devel \
-  libcurl-devel \
   libnotify-devel \
   libstdc++-static \
   libstdc++-static \
@@ -85,9 +85,6 @@ RUN yum install -y epel-release && \
   # distributing them to workers is wasteful.
   yum clean all
 
-RUN mkdir -p /home/worker/bin
-COPY bin/repository-url.py /home/worker/bin/repository-url.py
-
 # Default to mozilla specific python, etc...
 ENV PATH /tools/python27-mercurial/bin:/tools/python27/bin:$PATH
 ENV PATH /tools/tools/buildfarm/utils:$PATH:/home/worker/bin/
@@ -96,10 +93,28 @@ ENV PATH /tools/gcc-4.7.3-0moz1/bin:$PATH
 # Use the libstd++ we installed over all others...
 env LD_LIBRARY_PATH=/tools/gcc-4.7.3-0moz1/lib64:/tools/gcc-4.7.3-0moz1/lib
 
-RUN useradd -d /home/worker -s /bin/bash -m worker
-
 # Terrible symlink hacks so cc points to the gcc version we intend to use...
 RUN ls -lah /tools/gcc-4.7.3-0moz1/bin && ln -s /tools/gcc-4.7.3-0moz1/bin/gcc /tools/gcc-4.7.3-0moz1/bin/cc
+
+RUN useradd -d /home/worker -s /bin/bash -m worker
+
+RUN mkdir -p /home/worker/bin
+COPY bin/repository-url.py /home/worker/bin/repository-url.py
+
+# Install curl
+RUN mkdir -p /tmp/curl && \
+    cd /tmp/curl && \
+    wget --no-check-certificate https://github.com/bagder/curl/releases/download/curl-7_43_0/curl-7.43.0.tar.gz && \
+    tar -xzf curl-*.tar.gz && \
+    rm -f curl-*.tar.gz && \
+    cd curl-* && \
+    ./configure --prefix=/usr --libdir=/usr/lib64 && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf curl-* && \
+    cd /home/worker
+
 
 # Terrible Hack to correctly install git-2.4.1
 RUN mkdir -p /tmp/git && cd /tmp/git && \
