@@ -168,14 +168,18 @@ IDBMutableFile::Create(IDBDatabase* aDatabase,
   const DatabaseSpec* spec = aDatabase->Spec();
   MOZ_ASSERT(spec);
 
-  PersistenceType persistenceType = spec->metadata().persistenceType();
+  const DatabaseMetadata& metadata = spec->metadata();
+
+  PersistenceType persistenceType = metadata.persistenceType();
 
   nsCString storageId;
   QuotaManager::GetStorageId(persistenceType,
                              origin,
                              Client::IDB,
-                             aDatabase->Name(),
                              storageId);
+
+  storageId.Append('*');
+  storageId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
 
   nsCOMPtr<nsIFile> file = GetFileFor(fileInfo);
   if (NS_WARN_IF(!file)) {
