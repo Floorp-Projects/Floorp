@@ -8,6 +8,7 @@
 #define LulMainInt_h
 
 #include "LulPlatformMacros.h"
+#include "LulMain.h" // for TaggedUWord
 
 #include <vector>
 
@@ -19,6 +20,8 @@
 
 
 namespace lul {
+
+using std::vector;
 
 ////////////////////////////////////////////////////////////////
 // DW_REG_ constants                                          //
@@ -57,15 +60,82 @@ enum DW_REG_NUMBER {
 
 
 ////////////////////////////////////////////////////////////////
+// PfxExpr                                                    //
+////////////////////////////////////////////////////////////////
+
+enum PfxExprOp {
+  //             meaning of mOperand     effect on stack
+  PX_Start,   // bool start-with-CFA?    start, with CFA on stack, or not
+  PX_End,     // none                    stop; result is at top of stack
+  PX_SImm32,  // int32                   push signed int32
+  PX_DwReg,   // DW_REG_NUMBER           push value of the specified reg
+  PX_Deref,   // none                    pop X ; push *X
+  PX_Add,     // none                    pop X ; pop Y ; push Y + X
+  PX_Sub,     // none                    pop X ; pop Y ; push Y - X
+  PX_And,     // none                    pop X ; pop Y ; push Y & X
+  PX_Or,      // none                    pop X ; pop Y ; push Y | X
+  PX_CmpGES,  // none                    pop X ; pop Y ; push (Y >=s X) ? 1 : 0
+  PX_Shl      // none                    pop X ; pop Y ; push Y << X
+};
+
+struct PfxInstr {
+  PfxInstr(PfxExprOp opcode, int32_t operand)
+    : mOpcode(opcode)
+    , mOperand(operand)
+  {}
+  explicit PfxInstr(PfxExprOp opcode)
+    : mOpcode(opcode)
+    , mOperand(0)
+  {}
+  bool operator==(const PfxInstr& other) {
+    return mOpcode == other.mOpcode && mOperand == other.mOperand;
+  }
+  PfxExprOp mOpcode;
+  int32_t   mOperand;
+};
+
+static_assert(sizeof(PfxInstr) <= 8, "PfxInstr size changed unexpectedly");
+
+// Evaluate the prefix expression whose PfxInstrs start at aPfxInstrs[start].
+// In the case of any mishap (stack over/underflow, running off the end of
+// the instruction vector, obviously malformed sequences),
+// return an invalid TaggedUWord.
+// RUNS IN NO-MALLOC CONTEXT
+TaggedUWord EvaluatePfxExpr(int32_t start,
+                            const UnwindRegs* aOldRegs,
+                            TaggedUWord aCFA, const StackImage* aStackImg,
+                            const vector<PfxInstr>& aPfxInstrs);
+
+
+////////////////////////////////////////////////////////////////
 // LExpr                                                      //
 ////////////////////////////////////////////////////////////////
 
 // An expression -- very primitive.  Denotes either "register +
-// offset" or a dereferenced version of the same.  So as to allow
-// convenient handling of Dwarf-derived unwind info, the register may
-// also denote the CFA.  A large number of these need to be stored, so
-// we ensure it fits into 8 bytes.  See comment below on RuleSet to
-// see how expressions fit into the bigger picture.
+// offset", a dereferenced version of the same, or a reference to a
+// prefix expression stored elsewhere.  So as to allow convenient
+// handling of Dwarf-derived unwind info, the register may also denote
+// the CFA.  A large number of these need to be stored, so we ensure
+// it fits into 8 bytes.  See comment below on RuleSet to see how
+// expressions fit into the bigger picture.
+
+enum LExprHow {
+  UNKNOWN=0, // This LExpr denotes no value.
+  NODEREF,   // Value is  (mReg + mOffset).
+  DEREF,     // Value is *(mReg + mOffset).
+  PFXEXPR    // Value is EvaluatePfxExpr(secMap->mPfxInstrs[mOffset])
+};
+
+inline static const char* NameOf_LExprHow(LExprHow how) {
+  switch (how) {
+    case UNKNOWN: return "UNKNOWN";
+    case NODEREF: return "NODEREF";
+    case DEREF:   return "DEREF";
+    case PFXEXPR: return "PFXEXPR";
+    default:      return "LExpr-??";
+  }
+}
+
 
 struct LExpr {
   // Denotes an expression with no value.
@@ -76,11 +146,19 @@ struct LExpr {
   {}
 
   // Denotes any expressible expression.
-  LExpr(uint8_t how, int16_t reg, int32_t offset)
+  LExpr(LExprHow how, int16_t reg, int32_t offset)
     : mHow(how)
     , mReg(reg)
     , mOffset(offset)
-  {}
+  {
+    switch (how) {
+      case UNKNOWN: MOZ_ASSERT(reg == 0 && offset == 0); break;
+      case NODEREF: break;
+      case DEREF:   break;
+      case PFXEXPR: MOZ_ASSERT(reg == 0 && offset >= 0); break;
+      default:      MOZ_ASSERT(0, "LExpr::LExpr: invalid how");
+    }
+  }
 
   // Change the offset for an expression that references memory.
   LExpr add_delta(long delta)
@@ -102,17 +180,27 @@ struct LExpr {
                              : LExpr(); // Gone bad
   }
 
+  // Print a rule for recovery of |aNewReg| whose recovered value
+  // is this LExpr.
+  string ShowRule(const char* aNewReg) const;
+
+  // Evaluate this expression, producing a TaggedUWord.  |aOldRegs|
+  // holds register values that may be referred to by the expression.
+  // |aCFA| holds the CFA value, if any, that applies.  |aStackImg|
+  // contains a chuck of stack that will be consulted if the expression
+  // references memory.  |aPfxInstrs| holds the vector of PfxInstrs
+  // that will be consulted if this is a PFXEXPR.
+  // RUNS IN NO-MALLOC CONTEXT
+  TaggedUWord EvaluateExpr(const UnwindRegs* aOldRegs,
+                           TaggedUWord aCFA, const StackImage* aStackImg,
+                           const vector<PfxInstr>* aPfxInstrs) const;
+
   // Representation of expressions.  If |mReg| is DW_REG_CFA (-1) then
   // it denotes the CFA.  All other allowed values for |mReg| are
   // nonnegative and are DW_REG_ values.
-
-  enum { UNKNOWN=0, // This LExpr denotes no value.
-         NODEREF,   // Value is  (mReg + mOffset).
-         DEREF };   // Value is *(mReg + mOffset).
-
-  uint8_t mHow;    // UNKNOWN, NODEREF or DEREF
-  int16_t mReg;    // A DW_REG_ value
-  int32_t mOffset; // 32-bit signed offset should be more than enough.
+  LExprHow mHow:8;
+  int16_t  mReg;    // A DW_REG_ value
+  int32_t  mOffset; // 32-bit signed offset should be more than enough.
 };
 
 static_assert(sizeof(LExpr) <= 8, "LExpr size changed unexpectedly");
@@ -165,7 +253,7 @@ static_assert(sizeof(LExpr) <= 8, "LExpr size changed unexpectedly");
 class RuleSet {
 public:
   RuleSet();
-  void   Print(void(*aLog)(const char*));
+  void   Print(void(*aLog)(const char*)) const;
 
   // Find the LExpr* for a given DW_REG_ value in this class.
   LExpr* ExprForRegno(DW_REG_NUMBER aRegno);
@@ -191,6 +279,25 @@ public:
 #   error "Unknown arch"
 #endif
 };
+
+// Returns |true| for Dwarf register numbers which are members
+// of the set of registers that LUL unwinds on this target.
+static inline bool registerIsTracked(DW_REG_NUMBER reg) {
+  switch (reg) {
+#   if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
+    case DW_REG_INTEL_XBP: case DW_REG_INTEL_XSP: case DW_REG_INTEL_XIP:
+      return true;
+#   elif defined(LUL_ARCH_arm)
+    case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
+    case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15:
+      return true;
+#   else
+#     error "Unknown arch"
+#   endif
+    default:
+      return false;
+  }
+}
 
 
 ////////////////////////////////////////////////////////////////
@@ -233,7 +340,14 @@ public:
 
   // Add a RuleSet to the collection.  The rule is copied in.  Calling
   // this makes the map non-searchable.
-  void AddRuleSet(RuleSet* rs);
+  void AddRuleSet(const RuleSet* rs);
+
+  // Add a PfxInstr to the vector of such instrs, and return the index
+  // in the vector.  Calling this makes the map non-searchable.
+  uint32_t AddPfxInstr(PfxInstr pfxi);
+
+  // Returns the entire vector of PfxInstrs.
+  const vector<PfxInstr>* GetPfxInstrs() { return &mPfxInstrs; }
 
   // Prepare the map for searching.  Also, remove any rules for code
   // address ranges which don't fall inside [start, +len).  |len| may
@@ -255,7 +369,20 @@ private:
   bool mUsable;
 
   // A vector of RuleSets, sorted, nonoverlapping (post Prepare()).
-  std::vector<RuleSet> mRuleSets;
+  vector<RuleSet> mRuleSets;
+
+  // A vector of PfxInstrs, which are referred to by the RuleSets.
+  // These are provided as a representation of Dwarf expressions
+  // (DW_CFA_val_expression, DW_CFA_expression, DW_CFA_def_cfa_expression),
+  // are relatively expensive to evaluate, and and are therefore
+  // expected to be used only occasionally.
+  //
+  // The vector holds a bunch of separate PfxInstr programs, each one
+  // starting with a PX_Start and terminated by a PX_End, all
+  // concatenated together.  When a RuleSet can't recover a value
+  // using a self-contained LExpr, it uses a PFXEXPR whose mOffset is
+  // the index in this vector of start of the necessary PfxInstr program.
+  vector<PfxInstr> mPfxInstrs;
 
   // A logging sink, for debugging.
   void (*mLog)(const char*);
