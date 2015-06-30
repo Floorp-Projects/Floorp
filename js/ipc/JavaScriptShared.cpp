@@ -362,7 +362,7 @@ JavaScriptShared::fromVariant(JSContext* cx, const JSVariant& from, MutableHandl
           return true;
 
         case JSVariant::Tbool:
-          to.setBoolean(from.get_bool());
+          to.set(BOOLEAN_TO_JSVAL(from.get_bool()));
           return true;
 
         case JSVariant::TnsString:

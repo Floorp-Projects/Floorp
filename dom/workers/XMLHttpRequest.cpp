@@ -2457,7 +2457,7 @@ XMLHttpRequest::GetResponse(JSContext* /* unused */,
         return;
       }
 
-      mStateData.mResponse.setString(str);
+      mStateData.mResponse = STRING_TO_JSVAL(str);
     }
   }
 

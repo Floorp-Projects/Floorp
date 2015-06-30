@@ -824,7 +824,7 @@ bool SetStringProperty(JSContext *cx, JS::Handle<JSObject*> aObject, const char 
   }
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   NS_ENSURE_TRUE(strValue, false);
-  JS::Rooted<JS::Value> valValue(cx, JS::StringValue(strValue));
+  JS::Rooted<JS::Value> valValue(cx, STRING_TO_JSVAL(strValue));
   return JS_SetProperty(cx, aObject, aProperty, valValue);
 }
 
@@ -891,7 +891,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     if (!strVersion){
       return false;
     }
-    JS::Rooted<JS::Value> valVersion(cx, JS::StringValue(strVersion));
+    JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
     if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
       return false;
   }
@@ -907,7 +907,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
       return false;
     }
 
-    JS::Rooted<JS::Value> valVersion(cx, JS::StringValue(strVersion));
+    JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
     if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
       return false;
     }
