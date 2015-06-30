@@ -9,7 +9,6 @@
 
 #include "Workers.h"
 
-#include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsILoadGroup.h"
 #include "nsIWorkerDebugger.h"
@@ -735,27 +734,6 @@ public:
     return mWorkerType == WorkerTypeService;
   }
 
-  nsContentPolicyType
-  ContentPolicyType() const
-  {
-    return ContentPolicyType(mWorkerType);
-  }
-
-  static nsContentPolicyType
-  ContentPolicyType(WorkerType aWorkerType)
-  {
-    switch (aWorkerType) {
-    case WorkerTypeDedicated:
-      return nsIContentPolicy::TYPE_INTERNAL_WORKER;
-    case WorkerTypeShared:
-      return nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
-    case WorkerTypeService:
-      return nsIContentPolicy::TYPE_SCRIPT;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid worker type");
-    }
-  }
-
   const nsCString&
   SharedWorkerName() const
   {
@@ -1004,8 +982,7 @@ public:
   static nsresult
   GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
               const nsAString& aScriptURL, bool aIsChromeWorker,
-              LoadGroupBehavior aLoadGroupBehavior, WorkerType aWorkerType,
-              WorkerLoadInfo* aLoadInfo);
+              LoadGroupBehavior aLoadGroupBehavior, WorkerLoadInfo* aLoadInfo);
 
   static void
   OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo);
