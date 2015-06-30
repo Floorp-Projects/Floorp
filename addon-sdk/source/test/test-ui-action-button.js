@@ -18,6 +18,7 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { partial } = require('sdk/lang/functional');
 const { wait } = require('./event/helpers');
 const { gc } = require('sdk/test/memory');
+const { emit, once } = require("sdk/event/core");
 
 const openBrowserWindow = partial(open, null, {features: {toolbar: true}});
 const openPrivateBrowserWindow = partial(open, null,
@@ -716,7 +717,11 @@ exports['test button tab state'] = function*(assert) {
     'tab badgeColor inherited from global');
 
   // check the node properties
-  yield wait();
+  yield new Promise(resolve => {
+    let target = {};
+    once(target, "ready", resolve);
+    emit(target, "ready");
+  });
 
   assert.equal(node.getAttribute('label'), state.label,
     'node label is correct');
@@ -737,7 +742,11 @@ exports['test button tab state'] = function*(assert) {
 
   // This is made in order to avoid to check the node before it
   // is updated, need a better check
-  yield wait();
+  yield new Promise(resolve => {
+    let target = {};
+    once(target, "ready", resolve);
+    emit(target, "ready");
+  });
 
   state = button.state(mainTab);
 
