@@ -61,7 +61,7 @@ ToStringGuts(XPCCallContext& ccx)
     if (!str)
         return false;
 
-    ccx.SetRetVal(STRING_TO_JSVAL(str));
+    ccx.SetRetVal(JS::StringValue(str));
     return true;
 }
 
