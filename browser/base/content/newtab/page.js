@@ -54,6 +54,7 @@ let gPage = {
       // Update thumbnails to the new enhanced setting
       if (aData == "browser.newtabpage.enhanced") {
         this.update();
+        gIntro.showIfNecessary();
       }
 
       // Initialize the whole page if we haven't done that, yet.

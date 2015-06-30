@@ -64,14 +64,11 @@ static bool test_pldhash_lazy_storage()
   // No result to check here, but call it to make sure it doesn't crash.
   PL_DHashTableRemove(&t, (const void*)2);
 
-  // Using a null |enumerator| should be fine because it shouldn't be called
-  // for an empty table.
-  PLDHashEnumerator enumerator = nullptr;
-  if (PL_DHashTableEnumerate(&t, enumerator, nullptr) != 0) {
-    return false;   // enumeration count is non-zero?
+  for (auto iter = t.Iter(); !iter.Done(); iter.Next()) {
+    return false; // shouldn't hit this on an empty table
   }
 
-  for (auto iter = t.Iter(); !iter.Done(); iter.Get()) {
+  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
     return false; // shouldn't hit this on an empty table
   }
 

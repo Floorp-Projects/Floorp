@@ -39,13 +39,13 @@ BEGIN_TEST(testParseJSON_success)
 {
     // Primitives
     JS::RootedValue expected(cx);
-    expected = JSVAL_TRUE;
+    expected = JS::TrueValue();
     CHECK(TryParse(cx, "true", expected));
 
-    expected = JSVAL_FALSE;
+    expected = JS::FalseValue();
     CHECK(TryParse(cx, "false", expected));
 
-    expected = JSVAL_NULL;
+    expected = JS::NullValue();
     CHECK(TryParse(cx, "null", expected));
 
     expected = INT_TO_JSVAL(0);
@@ -107,16 +107,16 @@ BEGIN_TEST(testParseJSON_success)
     obj = &v.toObject();
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "length", &v2));
-    CHECK_SAME(v2, JSVAL_ZERO);
+    CHECK(v2.isInt32(0));
 
     CHECK(Parse(cx, "[1]", &v));
     CHECK(v.isObject());
     obj = &v.toObject();
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "0", &v2));
-    CHECK_SAME(v2, JSVAL_ONE);
+    CHECK(v2.isInt32(1));
     CHECK(JS_GetProperty(cx, obj, "length", &v2));
-    CHECK_SAME(v2, JSVAL_ONE);
+    CHECK(v2.isInt32(1));
 
 
     // Objects
@@ -361,7 +361,7 @@ TryParse(JSContext* cx, const char (&input)[N], JS::HandleValue filter)
     JS::RootedValue v(cx);
     str = input;
     CHECK(JS_ParseJSONWithReviver(cx, str.chars(), str.length(), filter, &v));
-    CHECK_SAME(v, JSVAL_NULL);
+    CHECK(v.isNull());
     return true;
 }
 END_TEST(testParseJSON_reviver)

@@ -1,0 +1,65 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+test_certificates = (
+    'ca.pem',
+    'ee_int-v1-BC-cA.pem',
+    'ee_int-v1-BC-not-cA.pem',
+    'ee_int-v1-noBC.pem',
+    'ee_int-v2-BC-cA.pem',
+    'ee_int-v2-BC-not-cA.pem',
+    'ee_int-v2-noBC.pem',
+    'ee_int-v3-BC-cA.pem',
+    'ee_int-v3-BC-not-cA.pem',
+    'ee_int-v3-noBC.pem',
+    'ee_int-v4-BC-cA.pem',
+    'ee_int-v4-BC-not-cA.pem',
+    'ee_int-v4-noBC.pem',
+    'ee-v1-BC-cA_ca.pem',
+    'ee-v1-BC-not-cA_ca.pem',
+    'ee-v1-noBC_ca.pem',
+    'ee-v2-BC-cA_ca.pem',
+    'ee-v2-BC-not-cA_ca.pem',
+    'ee-v2-noBC_ca.pem',
+    'ee-v3-BC-cA_ca.pem',
+    'ee-v3-BC-not-cA_ca.pem',
+    'ee-v3-noBC_ca.pem',
+    'ee-v4-BC-cA_ca.pem',
+    'ee-v4-BC-not-cA_ca.pem',
+    'ee-v4-noBC_ca.pem',
+    'int-v1-BC-cA_ca.pem',
+    'int-v1-BC-not-cA_ca.pem',
+    'int-v1-noBC_ca.pem',
+    'int-v2-BC-cA_ca.pem',
+    'int-v2-BC-not-cA_ca.pem',
+    'int-v2-noBC_ca.pem',
+    'int-v3-BC-cA_ca.pem',
+    'int-v3-BC-not-cA_ca.pem',
+    'int-v3-noBC_ca.pem',
+    'int-v4-BC-cA_ca.pem',
+    'int-v4-BC-not-cA_ca.pem',
+    'int-v4-noBC_ca.pem',
+    'ss-v1-BC-cA.pem',
+    'ss-v1-BC-not-cA.pem',
+    'ss-v1-noBC.pem',
+    'ss-v2-BC-cA.pem',
+    'ss-v2-BC-not-cA.pem',
+    'ss-v2-noBC.pem',
+    'ss-v3-BC-cA.pem',
+    'ss-v3-BC-not-cA.pem',
+    'ss-v3-noBC.pem',
+    'ss-v4-BC-cA.pem',
+    'ss-v4-BC-not-cA.pem',
+    'ss-v4-noBC.pem',
+)
+
+for test_certificate in test_certificates:
+    input_file = test_certificate + '.certspec'
+    GENERATED_FILES += [test_certificate]
+    props = GENERATED_FILES[test_certificate]
+    props.script = '../pycert.py'
+    props.inputs = [input_file, '!/config/buildid']
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_cert_version += ['!%s' % test_certificate]
