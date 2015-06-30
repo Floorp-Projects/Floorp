@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2002-2013, International Business Machines
+*   Copyright (C) 2002-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  regex.h
@@ -55,6 +55,8 @@
 
 // Forward Declarations
 
+struct UHashtable;
+
 U_NAMESPACE_BEGIN
 
 struct Regex8BitSet;
@@ -68,21 +70,6 @@ class  UVector;
 class  UVector32;
 class  UVector64;
 
-#ifndef U_HIDE_INTERNAL_API
-/**
- *   RBBIPatternDump   Debug function, displays the compiled form of a pattern.
- *   @internal
- */
-#ifdef REGEX_DEBUG
-U_INTERNAL void U_EXPORT2
-    RegexPatternDump(const RegexPattern *pat);
-#else
-    #undef RegexPatternDump
-    #define RegexPatternDump(pat)
-#endif
-#endif  /* U_HIDE_INTERNAL_API */
-
-
 
 /**
   * Class <code>RegexPattern</code> represents a compiled regular expression.  It includes
@@ -95,7 +82,7 @@ U_INTERNAL void U_EXPORT2
   *
   * @stable ICU 2.4
   */
-class U_I18N_API RegexPattern: public UObject {
+class U_I18N_API RegexPattern U_FINAL : public UObject {
 public:
 
     /**
@@ -151,7 +138,7 @@ public:
 
     /**
      * Create an exact copy of this RegexPattern object.  Since RegexPattern is not
-     * intended to be subclasses, <code>clone()</code> and the copy construction are
+     * intended to be subclassed, <code>clone()</code> and the copy construction are
      * equivalent operations.
      * @return the copy of this RegexPattern
      * @stable ICU 2.4
@@ -453,6 +440,41 @@ public:
 
 
     /**
+     * Get the group number corresponding to a named capture group.
+     * The returned number can be used with any function that access
+     * capture groups by number.
+     *
+     * The function returns an error status if the specified name does not
+     * appear in the pattern.
+     *
+     * @param  groupName   The capture group name.
+     * @param  status      A UErrorCode to receive any errors.
+     *
+     * @draft ICU 55
+     */
+    virtual int32_t groupNumberFromName(const UnicodeString &groupName, UErrorCode &status) const;
+
+
+    /**
+     * Get the group number corresponding to a named capture group.
+     * The returned number can be used with any function that access
+     * capture groups by number.
+     *
+     * The function returns an error status if the specified name does not
+     * appear in the pattern.
+     *
+     * @param  groupName   The capture group name,
+     *                     platform invariant characters only.
+     * @param  nameLength  The length of the name, or -1 if the name is
+     *                     nul-terminated.
+     * @param  status      A UErrorCode to receive any errors.
+     *
+     * @draft ICU 55
+     */
+    virtual int32_t groupNumberFromName(const char *groupName, int32_t nameLength, UErrorCode &status) const;
+
+
+    /**
      * Split a string into fields.  Somewhat like split() from Perl or Java.
      * Pattern matches identify delimiters that separate the input
      * into fields.  The input data between the delimiters becomes the
@@ -588,8 +610,6 @@ private:
     UVector32       *fGroupMap;    // Map from capture group number to position of
                                    //   the group's variables in the matcher stack frame.
 
-    int32_t         fMaxCaptureDigits;
-
     UnicodeSet     **fStaticSets;  // Ptr to static (shared) sets for predefined
                                    //   regex character classes, e.g. Word.
 
@@ -604,6 +624,8 @@ private:
     Regex8BitSet   *fInitialChars8;
     UBool           fNeedsAltInput;
 
+    UHashtable     *fNamedCaptureMap;  // Map from capture group names to numbers.
+
     friend class RegexCompile;
     friend class RegexMatcher;
     friend class RegexCImpl;
@@ -613,11 +635,17 @@ private:
     //
     void        init();            // Common initialization, for use by constructors.
     void        zap();             // Common cleanup
-#ifdef REGEX_DEBUG
-    void        dumpOp(int32_t index) const;
-    friend     void U_EXPORT2 RegexPatternDump(const RegexPattern *);
-#endif
 
+    void        dumpOp(int32_t index) const;
+
+  public:
+#ifndef U_HIDE_INTERNAL_API
+    /**
+      * Dump a compiled pattern. Internal debug function.
+      * @internal
+      */
+    void        dumpPattern() const;
+#endif  /* U_HIDE_INTERNAL_API */
 };
 
 
@@ -631,7 +659,7 @@ private:
  *
  * @stable ICU 2.4
  */
-class U_I18N_API RegexMatcher: public UObject {
+class U_I18N_API RegexMatcher U_FINAL : public UObject {
 public:
 
     /**
@@ -811,6 +839,21 @@ public:
 
 
    /**
+    *  Find the next pattern match in the input string.
+    *  The find begins searching the input at the location following the end of
+    *  the previous match, or at the start of the string if there is no previous match.
+    *  If a match is found, <code>start(), end()</code> and <code>group()</code>
+    *  will provide more information regarding the match.
+    *  <p>Note that if the input string is changed by the application,
+    *     use find(startPos, status) instead of find(), because the saved starting
+    *     position may not be valid with the altered input string.</p>
+    *  @param   status  A reference to a UErrorCode to receive any errors.
+    *  @return  TRUE if a match is found.
+    *  @draft ICU 55
+    */
+    virtual UBool find(UErrorCode &status);
+
+   /**
     *   Resets this RegexMatcher and then attempts to find the next substring of the
     *   input string that matches the pattern, starting at the specified index.
     *
@@ -847,7 +890,6 @@ public:
     *    @stable ICU 2.4
     */
     virtual UnicodeString group(int32_t groupNum, UErrorCode &status) const;
-
 
    /**
     *   Returns the number of capturing groups in this matcher's pattern.
@@ -889,24 +931,6 @@ public:
     *   @stable ICU 4.6
     */
     virtual UText *group(int32_t groupNum, UText *dest, int64_t &group_len, UErrorCode &status) const;
-
-   /**
-    *   Returns a string containing the text captured by the given group
-    *   during the previous match operation.  Group(0) is the entire match.
-    *
-    *   @param   groupNum    the capture group number
-    *   @param   dest        A mutable UText in which the matching text is placed.
-    *                        If NULL, a new UText will be created (which may not be mutable).
-    *   @param   status      A reference to a UErrorCode to receive any errors.
-    *                        Possible errors are  U_REGEX_INVALID_STATE if no match
-    *                        has been attempted or the last match failed.
-    *   @return  A string containing the matched input text. If a pre-allocated UText
-    *            was provided, it will always be used and returned.
-    *
-    *   @internal ICU 4.4 technology preview
-    */
-    virtual UText *group(int32_t groupNum, UText *dest, UErrorCode &status) const;
-
 
    /**
     *   Returns the index in the input string of the start of the text matched
@@ -956,7 +980,6 @@ public:
     *    @stable ICU 4.6
     */
     virtual int64_t start64(int32_t group, UErrorCode &status) const;
-
 
    /**
     *    Returns the index in the input string of the first character following the
@@ -1026,7 +1049,6 @@ public:
     *   @stable ICU 4.6
     */
     virtual int64_t end64(int32_t group, UErrorCode &status) const;
-
 
    /**
     *   Resets this matcher.  The effect is to remove any memory of previous matches,
@@ -1753,11 +1775,13 @@ private:
     REStackFrame        *resetStack();
     inline REStackFrame *StateSave(REStackFrame *fp, int64_t savePatIdx, UErrorCode &status);
     void                 IncrementTime(UErrorCode &status);
-    UBool                ReportFindProgress(int64_t matchIndex, UErrorCode &status);
+
+    // Call user find callback function, if set. Return TRUE if operation should be interrupted.
+    inline UBool         findProgressInterrupt(int64_t matchIndex, UErrorCode &status);
     
     int64_t              appendGroup(int32_t groupNum, UText *dest, UErrorCode &status) const;
     
-    UBool                findUsingChunk();
+    UBool                findUsingChunk(UErrorCode &status);
     void                 MatchChunkAt(int32_t startIdx, UBool toEnd, UErrorCode &status);
     UBool                isChunkWordBoundary(int32_t pos);
 

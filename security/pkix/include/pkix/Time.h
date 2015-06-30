@@ -41,7 +41,7 @@ namespace mozilla { namespace pkix {
 class Time final
 {
 public:
-  // Construct an uninitilized instance.
+  // Construct an uninitialized instance.
   //
   // This will fail to compile because there is no default constructor:
   //    Time x;
@@ -137,6 +137,10 @@ public:
   {
   }
 
+  bool operator>(const Duration& other) const
+  {
+    return durationInSeconds > other.durationInSeconds;
+  }
   bool operator<(const Duration& other) const
   {
     return durationInSeconds < other.durationInSeconds;

@@ -27,7 +27,7 @@ public:
   virtual BackendType GetBackendType() const { return mRefDT->GetBackendType(); }
   virtual DrawTargetType GetType() const { return mRefDT->GetType(); }
 
-  virtual TemporaryRef<SourceSurface> Snapshot();
+  virtual already_AddRefed<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
 
   virtual void Flush() {}
@@ -90,43 +90,43 @@ public:
 
   virtual void SetTransform(const Matrix &aTransform);
 
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
                                                                   SurfaceFormat aFormat) const
   {
     return mRefDT->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
   }
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const
   {
     return mRefDT->OptimizeSourceSurface(aSurface);
   }
 
-  virtual TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
   {
     return mRefDT->CreateSourceSurfaceFromNativeSurface(aSurface);
   }
 
-  virtual TemporaryRef<DrawTarget>
+  virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
   {
     return mRefDT->CreateSimilarDrawTarget(aSize, aFormat);
   }
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const
   {
     return mRefDT->CreatePathBuilder(aFillRule);
   }
 
-  virtual TemporaryRef<GradientStops>
+  virtual already_AddRefed<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = ExtendMode::CLAMP) const
   {
     return mRefDT->CreateGradientStops(aStops, aNumStops, aExtendMode);
   }
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType)
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType)
   {
     return mRefDT->CreateFilter(aType);
   }

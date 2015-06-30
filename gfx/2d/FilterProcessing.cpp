@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace gfx {
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
 {
   IntSize size = aSource->GetSize();
@@ -40,7 +40,7 @@ FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
   return alpha.forget();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ConvertToB8G8R8A8(SourceSurface* aSurface)
 {
   if (Factory::HasSSE2()) {
@@ -51,7 +51,7 @@ FilterProcessing::ConvertToB8G8R8A8(SourceSurface* aSurface)
   return ConvertToB8G8R8A8_Scalar(aSurface);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyBlending(DataSourceSurface* aInput1, DataSourceSurface* aInput2,
                                 BlendMode aBlendMode)
 {
@@ -97,7 +97,7 @@ FilterProcessing::ApplyMorphologyVertical(uint8_t* aSourceData, int32_t aSourceS
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyColorMatrix(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
 {
   if (Factory::HasSSE2()) {
@@ -164,7 +164,7 @@ FilterProcessing::SeparateColorChannels(DataSourceSurface* aSource,
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::CombineColorChannels(DataSourceSurface* aChannel0, DataSourceSurface* aChannel1,
                                        DataSourceSurface* aChannel2, DataSourceSurface* aChannel3)
 {
@@ -235,7 +235,7 @@ FilterProcessing::DoUnpremultiplicationCalculation(const IntSize& aSize,
   }
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::RenderTurbulence(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,
                                    int32_t aSeed, int aNumOctaves, TurbulenceType aType, bool aStitch, const Rect &aTileRect)
 {
@@ -247,7 +247,7 @@ FilterProcessing::RenderTurbulence(const IntSize &aSize, const Point &aOffset, c
   return RenderTurbulence_Scalar(aSize, aOffset, aBaseFrequency, aSeed, aNumOctaves, aType, aStitch, aTileRect);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyArithmeticCombine(DataSourceSurface* aInput1, DataSourceSurface* aInput2, Float aK1, Float aK2, Float aK3, Float aK4)
 {
   if (Factory::HasSSE2()) {

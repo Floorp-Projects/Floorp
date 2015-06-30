@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sk.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/sk.xml
- */
 sk{
     Currencies{
         ADP{
@@ -21,23 +18,23 @@ sk{
         }
         AFN{
             "AFN",
-            "Afganský afgání",
+            "afganský afgání",
         }
         ALL{
             "ALL",
-            "Albánsky lek",
+            "albánsky lek",
         }
         AMD{
             "AMD",
-            "Armenský dram",
+            "arménsky dram",
         }
         ANG{
             "ANG",
-            "Antilský gulden",
+            "antilský gulden",
         }
         AOA{
             "AOA",
-            "Angolská kwanza",
+            "angolská kwanza",
         }
         AOK{
             "AOK",
@@ -61,7 +58,7 @@ sk{
         }
         ARS{
             "ARS",
-            "Argentinské peso",
+            "argentínske peso",
         }
         ATS{
             "ATS",
@@ -69,11 +66,11 @@ sk{
         }
         AUD{
             "AUD",
-            "Austrálsky dolár",
+            "austrálsky dolár",
         }
         AWG{
             "AWG",
-            "Arubský guilder",
+            "arubský gulden",
         }
         AZM{
             "AZM",
@@ -81,7 +78,7 @@ sk{
         }
         AZN{
             "AZN",
-            "Azerbajdžanský manat",
+            "azerbajdžanský manat",
         }
         BAD{
             "BAD",
@@ -89,15 +86,15 @@ sk{
         }
         BAM{
             "BAM",
-            "Bosnianska konvertibilná marka",
+            "konvertibilná marka",
         }
         BBD{
             "BBD",
-            "Barbadoský dolár",
+            "barbadoský dolár",
         }
         BDT{
             "BDT",
-            "Bangladéšska taka",
+            "bangladéšska taka",
         }
         BEC{
             "BEC",
@@ -117,27 +114,27 @@ sk{
         }
         BGN{
             "BGN",
-            "Bulharský lev",
+            "bulharský lev",
         }
         BHD{
             "BHD",
-            "Bahrajnský dinár",
+            "bahrajnský dinár",
         }
         BIF{
             "BIF",
-            "Burundský frank",
+            "burundský frank",
         }
         BMD{
             "BMD",
-            "Bermudský dolár",
+            "bermudský dolár",
         }
         BND{
             "BND",
-            "Brunejský dolár",
+            "brunejský dolár",
         }
         BOB{
             "BOB",
-            "Bolívijské boliviano",
+            "bolívijské boliviano",
         }
         BOP{
             "BOP",
@@ -161,7 +158,7 @@ sk{
         }
         BRL{
             "BRL",
-            "Brazílsky real",
+            "brazílsky real",
         }
         BRN{
             "BRN",
@@ -173,11 +170,11 @@ sk{
         }
         BSD{
             "BSD",
-            "Bahamský dolár",
+            "bahamský dolár",
         }
         BTN{
             "BTN",
-            "Bhutánsky ngultrum",
+            "bhutánsky ngultrum",
         }
         BUK{
             "BUK",
@@ -185,7 +182,7 @@ sk{
         }
         BWP{
             "BWP",
-            "Botswanská pula",
+            "botswanská pula",
         }
         BYB{
             "BYB",
@@ -193,23 +190,23 @@ sk{
         }
         BYR{
             "BYR",
-            "Bieloruský rubeľ",
+            "bieloruský rubeľ",
         }
         BZD{
             "BZD",
-            "Belizský dolár",
+            "belizský dolár",
         }
         CAD{
             "CAD",
-            "Kanadský dolár",
+            "kanadský dolár",
         }
         CDF{
             "CDF",
-            "Konžský frank",
+            "konžský frank",
         }
         CHF{
             "CHF",
-            "Švajčiarsky frank",
+            "švajčiarsky frank",
         }
         CLF{
             "CLF",
@@ -217,19 +214,19 @@ sk{
         }
         CLP{
             "CLP",
-            "Čílske peso",
+            "čilské peso",
         }
         CNY{
             "CNY",
-            "Čínsky jüan",
+            "čínsky jüan",
         }
         COP{
             "COP",
-            "Kolumbijské peso",
+            "kolumbijské peso",
         }
         CRC{
             "CRC",
-            "Kostarický colón",
+            "kostarický colón",
         }
         CSK{
             "CSK",
@@ -237,15 +234,15 @@ sk{
         }
         CUC{
             "CUC",
-            "Kubánske konvertibilné peso",
+            "kubánske konvertibilné peso",
         }
         CUP{
             "CUP",
-            "Kubánske peso",
+            "kubánske peso",
         }
         CVE{
             "CVE",
-            "Kapverdské escudo",
+            "kapverdské escudo",
         }
         CYP{
             "CYP",
@@ -253,7 +250,7 @@ sk{
         }
         CZK{
             "CZK",
-            "Česká koruna",
+            "česká koruna",
         }
         DDM{
             "DDM",
@@ -265,19 +262,19 @@ sk{
         }
         DJF{
             "DJF",
-            "Džibutský frank",
+            "džibutský frank",
         }
         DKK{
             "DKK",
-            "Dánska koruna",
+            "dánska koruna",
         }
         DOP{
             "DOP",
-            "Dominikánske peso",
+            "dominikánske peso",
         }
         DZD{
             "DZD",
-            "Alžírsky dinár",
+            "alžírsky dinár",
         }
         ECS{
             "ECS",
@@ -293,11 +290,11 @@ sk{
         }
         EGP{
             "EGP",
-            "Egyptská libra",
+            "egyptská libra",
         }
         ERN{
             "ERN",
-            "Eritrejská nakfa",
+            "eritrejská nakfa",
         }
         ESP{
             "ESP",
@@ -305,11 +302,11 @@ sk{
         }
         ETB{
             "ETB",
-            "Ethiopský birr",
+            "etiópsky birr",
         }
         EUR{
             "€",
-            "Euro",
+            "euro",
         }
         FIM{
             "FIM",
@@ -317,11 +314,11 @@ sk{
         }
         FJD{
             "FJD",
-            "Fidžijský dolár",
+            "fidžijský dolár",
         }
         FKP{
             "FKP",
-            "Falklandská libra",
+            "falklandská libra",
         }
         FRF{
             "FRF",
@@ -329,7 +326,7 @@ sk{
         }
         GBP{
             "GBP",
-            "Britská libra",
+            "britská libra",
         }
         GEK{
             "GEK",
@@ -337,7 +334,7 @@ sk{
         }
         GEL{
             "GEL",
-            "Gruzínsky lari",
+            "gruzínske lari",
         }
         GHC{
             "GHC",
@@ -345,19 +342,19 @@ sk{
         }
         GHS{
             "GHS",
-            "Ghanský cedi",
+            "ghanské cedi",
         }
         GIP{
             "GIP",
-            "Gibraltarská libra",
+            "gibraltárska libra",
         }
         GMD{
             "GMD",
-            "Gambijský dalasi",
+            "gambijské dalasi",
         }
         GNF{
             "GNF",
-            "Guinejský frank",
+            "guinejský frank",
         }
         GNS{
             "GNS",
@@ -373,7 +370,7 @@ sk{
         }
         GTQ{
             "GTQ",
-            "Guatemalský quetzal",
+            "guatemalský quetzal",
         }
         GWE{
             "GWE",
@@ -381,19 +378,19 @@ sk{
         }
         GWP{
             "GWP",
-            "Guinea-Bissau peso",
+            "Guinejsko-bissauské peso",
         }
         GYD{
             "GYD",
-            "Guyanský dolár",
+            "guyanský dolár",
         }
         HKD{
             "HKD",
-            "Hongkonský dolár",
+            "hongkonský dolár",
         }
         HNL{
             "HNL",
-            "Hoduraská lempira",
+            "honduraská lempira",
         }
         HRD{
             "HRD",
@@ -401,19 +398,19 @@ sk{
         }
         HRK{
             "HRK",
-            "Chorvátska kuna",
+            "chorvátska kuna",
         }
         HTG{
             "HTG",
-            "Haitské gourde",
+            "haitské gourde",
         }
         HUF{
             "HUF",
-            "Maďarský forint",
+            "maďarský forint",
         }
         IDR{
             "IDR",
-            "Indonézska rupia",
+            "indonézska rupia",
         }
         IEP{
             "IEP",
@@ -424,24 +421,24 @@ sk{
             "Izraelská libra",
         }
         ILS{
-            "₪",
-            "Izraelský šekel",
+            "NIS",
+            "izraelský šekel",
         }
         INR{
             "INR",
-            "Indická rupia",
+            "indická rupia",
         }
         IQD{
             "IQD",
-            "Iracký dinár",
+            "iracký dinár",
         }
         IRR{
             "IRR",
-            "Iránsky rial",
+            "iránsky rial",
         }
         ISK{
             "ISK",
-            "Islandská krona",
+            "islandská koruna",
         }
         ITL{
             "ITL",
@@ -449,67 +446,67 @@ sk{
         }
         JMD{
             "JMD",
-            "Jamajský dolár",
+            "jamajský dolár",
         }
         JOD{
             "JOD",
-            "Jordánsky dinár",
+            "jordánsky dinár",
         }
         JPY{
             "JPY",
-            "Japonský jen",
+            "japonský jen",
         }
         KES{
             "KES",
-            "Keňský šiling",
+            "kenský šiling",
         }
         KGS{
             "KGS",
-            "Kirgizský som",
+            "kirgizský som",
         }
         KHR{
             "KHR",
-            "Kambodžský riel",
+            "kambodžský riel",
         }
         KMF{
             "KMF",
-            "Komorský frank",
+            "komorský frank",
         }
         KPW{
             "KPW",
-            "Severokórejský won",
+            "severokórejský won",
         }
         KRW{
             "KRW",
-            "Juhokórejský won",
+            "juhokórejský won",
         }
         KWD{
             "KWD",
-            "Kuvajtský dinár",
+            "kuvajtský dinár",
         }
         KYD{
             "KYD",
-            "Kajmanský dolár",
+            "kajmanský dolár",
         }
         KZT{
             "KZT",
-            "Kazašské tenge",
+            "kazašské tenge",
         }
         LAK{
             "LAK",
-            "Laoský kip",
+            "laoský kip",
         }
         LBP{
             "LBP",
-            "Libanonská libra",
+            "libanonská libra",
         }
         LKR{
             "LKR",
-            "Srílanská rupia",
+            "srílanská rupia",
         }
         LRD{
             "LRD",
-            "Libérský dolár",
+            "libérijský dolár",
         }
         LSL{
             "LSL",
@@ -517,7 +514,7 @@ sk{
         }
         LTL{
             "LTL",
-            "Litovský litas",
+            "litovský litas",
         }
         LTT{
             "LTT",
@@ -537,11 +534,11 @@ sk{
         }
         LYD{
             "LYD",
-            "Libyjský dinár",
+            "líbyjský dinár",
         }
         MAD{
             "MAD",
-            "Marocký dirham",
+            "marocký dirham",
         }
         MAF{
             "MAF",
@@ -549,11 +546,11 @@ sk{
         }
         MDL{
             "MDL",
-            "Moldavský leu",
+            "moldavský lei",
         }
         MGA{
             "MGA",
-            "Madagaskarský ariary",
+            "malgašský ariary",
         }
         MGF{
             "MGF",
@@ -561,7 +558,7 @@ sk{
         }
         MKD{
             "MKD",
-            "Macedónsky denár",
+            "macedónsky denár",
         }
         MLF{
             "MLF",
@@ -569,19 +566,19 @@ sk{
         }
         MMK{
             "MMK",
-            "Myanmarský kyat",
+            "mjanmarský kyat",
         }
         MNT{
             "MNT",
-            "Mongolský tugrik",
+            "mongolský tugrik",
         }
         MOP{
             "MOP",
-            "Macajská pataca",
+            "macajská pataca",
         }
         MRO{
             "MRO",
-            "Mauritania Ouguiya",
+            "mauritánska ukija",
         }
         MTL{
             "MTL",
@@ -593,19 +590,19 @@ sk{
         }
         MUR{
             "MUR",
-            "Maurícijská rupia",
+            "maurícijská rupia",
         }
         MVR{
             "MVR",
-            "Maldivská rufiyaa",
+            "maldivská rupia",
         }
         MWK{
             "MWK",
-            "Malawijská kwacha",
+            "malawijská kwacha",
         }
         MXN{
-            "Mex$",
-            "Mexické peso",
+            "MX$",
+            "mexické peso",
         }
         MXP{
             "MXP",
@@ -617,11 +614,11 @@ sk{
         }
         MYR{
             "MYR",
-            "Malajský ringgit",
+            "malajzijský ringgit",
         }
         MZE{
             "MZE",
-            "Mozabické escudo",
+            "Mozambické escudo",
         }
         MZM{
             "MZM",
@@ -629,15 +626,15 @@ sk{
         }
         MZN{
             "MZN",
-            "Mozambický metical",
+            "mozambický metical",
         }
         NAD{
             "NAD",
-            "Namibský dolár",
+            "namíbijský dolár",
         }
         NGN{
             "NGN",
-            "Nigerská naira",
+            "nigérijská naira",
         }
         NIC{
             "NIC",
@@ -645,7 +642,7 @@ sk{
         }
         NIO{
             "NIO",
-            "Nikaragujská Cordoba",
+            "nikaragujská córdoba",
         }
         NLG{
             "NLG",
@@ -653,23 +650,23 @@ sk{
         }
         NOK{
             "NOK",
-            "Nórska koruna",
+            "nórska koruna",
         }
         NPR{
             "NPR",
-            "Nepálska rupia",
+            "nepálska rupia",
         }
         NZD{
-            "NZ$",
-            "Novozélandský dolár",
+            "NZD",
+            "novozélandský dolár",
         }
         OMR{
             "OMR",
-            "Ománský rial",
+            "ománsky rial",
         }
         PAB{
             "PAB",
-            "Panamská balboa",
+            "panamská balboa",
         }
         PEI{
             "PEI",
@@ -677,7 +674,7 @@ sk{
         }
         PEN{
             "PEN",
-            "Peruvský sol Nuevo",
+            "peruánsky nový sol",
         }
         PES{
             "PES",
@@ -685,19 +682,19 @@ sk{
         }
         PGK{
             "PGK",
-            "Papuánska kina",
+            "papuánska kina",
         }
         PHP{
             "PHP",
-            "Filipínske peso",
+            "filipínske peso",
         }
         PKR{
             "PKR",
-            "Pakistanská rupia",
+            "pakistanská rupia",
         }
         PLN{
-            "zl",
-            "Poľský zlotý",
+            "PLN",
+            "poľský zlotý",
         }
         PLZ{
             "PLZ",
@@ -709,11 +706,11 @@ sk{
         }
         PYG{
             "PYG",
-            "Paraguayské guarani",
+            "paraguajské guaraní",
         }
         QAR{
             "QAR",
-            "Katarský rial",
+            "katarský rial",
         }
         ROL{
             "ROL",
@@ -721,15 +718,15 @@ sk{
         }
         RON{
             "RON",
-            "Rumunský leu",
+            "rumunský lei",
         }
         RSD{
             "RSD",
-            "Srbský dinár",
+            "srbský dinár",
         }
         RUB{
             "RUB",
-            "Ruský rubeľ",
+            "ruský rubeľ",
         }
         RUR{
             "RUR",
@@ -737,19 +734,19 @@ sk{
         }
         RWF{
             "RWF",
-            "Rwandský frank",
+            "rwandský frank",
         }
         SAR{
             "SAR",
-            "Saudskoarabský rial",
+            "saudskoarabský rial",
         }
         SBD{
             "SBD",
-            "Šalamúnsky dolár",
+            "šalamúnsky dolár",
         }
         SCR{
             "SCR",
-            "Seychelská rupia",
+            "seychelská rupia",
         }
         SDD{
             "SDD",
@@ -757,7 +754,7 @@ sk{
         }
         SDG{
             "SDG",
-            "Sudánska libra",
+            "sudánska libra",
         }
         SDP{
             "SDP",
@@ -765,15 +762,15 @@ sk{
         }
         SEK{
             "SEK",
-            "Švédska koruna",
+            "švédska koruna",
         }
         SGD{
             "SGD",
-            "Singapúrsky dolár",
+            "singapurský dolár",
         }
         SHP{
             "SHP",
-            "Svätohelenská libra",
+            "svätohelenská libra",
         }
         SIT{
             "SIT",
@@ -785,15 +782,15 @@ sk{
         }
         SLL{
             "SLL",
-            "Sierraleonský leone",
+            "sierraleonský leone",
         }
         SOS{
             "SOS",
-            "Somálsky šiling",
+            "somálsky šiling",
         }
         SRD{
             "SRD",
-            "Surinamský dolár",
+            "surinamský dolár",
         }
         SRG{
             "SRG",
@@ -801,11 +798,11 @@ sk{
         }
         SSP{
             "SSP",
-            "Juhosudánska libra",
+            "juhosudánska libra",
         }
         STD{
             "STD",
-            "Sao Tome a Principe dobra",
+            "svätotomášska dobra",
         }
         SUR{
             "SUR",
@@ -817,15 +814,15 @@ sk{
         }
         SYP{
             "SYP",
-            "Syrská libra",
+            "sýrska libra",
         }
         SZL{
             "SZL",
-            "Svazijské lilangeni",
+            "svazijské lilangeni",
         }
         THB{
             "THB",
-            "Thajský baht",
+            "thajský baht",
         }
         TJR{
             "TJR",
@@ -833,7 +830,7 @@ sk{
         }
         TJS{
             "TJS",
-            "Tadžické somoni",
+            "tadžické somoni",
         }
         TMM{
             "TMM",
@@ -841,15 +838,15 @@ sk{
         }
         TMT{
             "TMT",
-            "Turkménsky manat",
+            "turkménsky manat",
         }
         TND{
             "TND",
-            "Tuniský dinár",
+            "tuniský dinár",
         }
         TOP{
             "TOP",
-            "Tonga Paʻanga",
+            "tongská paʻanga",
         }
         TPE{
             "TPE",
@@ -861,23 +858,23 @@ sk{
         }
         TRY{
             "TRY",
-            "Turecká líra",
+            "turecká líra",
         }
         TTD{
             "TTD",
-            "Trinidadsko-tobažský dolár",
+            "trinidadsko-tobažský dolár",
         }
         TWD{
             "TWD",
-            "Nový taiwanský dolár",
+            "nový taiwanský dolár",
         }
         TZS{
             "TZS",
-            "Tanzanský šiling",
+            "tanzánsky šiling",
         }
         UAH{
             "UAH",
-            "Ukrainská hrivna",
+            "ukrajinská hrivna",
         }
         UAK{
             "UAK",
@@ -889,11 +886,11 @@ sk{
         }
         UGX{
             "UGX",
-            "Ugandský šiling",
+            "ugandský šiling",
         }
         USD{
             "USD",
-            "Americký dolár",
+            "americký dolár",
         }
         USN{
             "USN",
@@ -909,11 +906,11 @@ sk{
         }
         UYU{
             "UYU",
-            "Uruguajské peso Uruguayo",
+            "uruguajské peso",
         }
         UZS{
             "UZS",
-            "Uzbecký sum",
+            "uzbecký sum",
         }
         VEB{
             "VEB",
@@ -921,23 +918,23 @@ sk{
         }
         VEF{
             "VEF",
-            "Venezuelský bolívar",
+            "venezuelský bolívar",
         }
         VND{
-            "₫",
-            "Vietnamský dong",
+            "VND",
+            "vietnamský dong",
         }
         VUV{
             "VUV",
-            "Vanuatské vatu",
+            "vanuatské vatu",
         }
         WST{
             "WST",
-            "Samojská tala",
+            "samojská tala",
         }
         XAF{
             "FCFA",
-            "CFA frank BEAC",
+            "stredoafrický frank",
         }
         XAU{
             "XAU",
@@ -945,7 +942,7 @@ sk{
         }
         XCD{
             "EC$",
-            "Východokaribský dolár",
+            "východokaribský dolár",
         }
         XDR{
             "XDR",
@@ -961,7 +958,7 @@ sk{
         }
         XOF{
             "CFA",
-            "CFA frank BCEAO",
+            "západoafrický frank",
         }
         XPF{
             "CFPF",
@@ -969,7 +966,7 @@ sk{
         }
         XXX{
             "XXX",
-            "Neznáma mena",
+            "neznáma mena",
         }
         YDD{
             "YDD",
@@ -977,7 +974,7 @@ sk{
         }
         YER{
             "YER",
-            "Jemenský rial",
+            "jemenský rial",
         }
         YUD{
             "YUD",
@@ -997,7 +994,7 @@ sk{
         }
         ZAR{
             "ZAR",
-            "Juhoafrický rand",
+            "juhoafrický rand",
         }
         ZMK{
             "ZMK",
@@ -1005,7 +1002,7 @@ sk{
         }
         ZMW{
             "ZMW",
-            "Zambijská kwacha",
+            "zambijská kwacha",
         }
         ZRN{
             "ZRN",
@@ -1028,10 +1025,66 @@ sk{
             "Zimbabwiansky dolár (2008)",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
+    Currencies%variant{
+        RUB{"₽"}
+        TRY{"TL"}
+    }
     CurrencyPlurals{
         AED{
             few{"SAE dirhamy"}
-            many{"SAE dirhamov"}
+            many{"SAE dirhamu"}
             one{"SAE dirham"}
             other{"SAE dirhamov"}
         }
@@ -1041,17 +1094,47 @@ sk{
             one{"afganský afgání"}
             other{"afganských afgání"}
         }
+        ALL{
+            few{"albánske leky"}
+            many{"albánskeho leku"}
+            one{"albánsky lek"}
+            other{"albánskych lekov"}
+        }
+        AMD{
+            few{"arménske dramy"}
+            many{"arménskeho dramu"}
+            one{"arménsky dram"}
+            other{"arménskych dramov"}
+        }
         ANG{
             few{"antilské guldeny"}
             many{"antilského guldena"}
             one{"antilský gulden"}
             other{"antilských guldenov"}
         }
+        AOA{
+            few{"angolské kwanzy"}
+            many{"angolskej kwanzy"}
+            one{"angolská kwanza"}
+            other{"angolských kwánz"}
+        }
+        ARS{
+            few{"argentínske pesos"}
+            many{"argentínskeho pesa"}
+            one{"argentínske peso"}
+            other{"argentínskych pesos"}
+        }
         AUD{
             few{"austrálske doláre"}
             many{"austrálskeho dolára"}
             one{"austrálsky dolár"}
             other{"austrálskych dolárov"}
+        }
+        AWG{
+            few{"arubské guldeny"}
+            many{"arubského guldena"}
+            one{"arubský gulden"}
+            other{"arubských guldenov"}
         }
         AZM{
             few{"azerbajdžanské manaty (1993–2006)"}
@@ -1066,16 +1149,22 @@ sk{
             other{"azerbajdžanských manatov"}
         }
         BAM{
-            few{"bosnianske konvertibilné marky"}
-            many{"bosnianskej konvertibilnej marky"}
-            one{"bosnianska konvertibilná marka"}
-            other{"bosnianskych konvertibilných mariek"}
+            few{"konvertibilné marky"}
+            many{"konvertibilnej marky"}
+            one{"konvertibilná marka"}
+            other{"konvertibilných mariek"}
         }
         BBD{
             few{"barbadoské doláre"}
             many{"barbadoského dolára"}
             one{"barbadoský dolár"}
             other{"barbadoských dolárov"}
+        }
+        BDT{
+            few{"bangladéšske taky"}
+            many{"bangladéšskej taky"}
+            one{"bangladéšska taka"}
+            other{"bangladéšskych ták"}
         }
         BGN{
             few{"bulharské leva"}
@@ -1089,6 +1178,18 @@ sk{
             one{"bahrajnský dinár"}
             other{"bahrajnských dinárov"}
         }
+        BIF{
+            few{"burundské franky"}
+            many{"burundského franku"}
+            one{"burundský frank"}
+            other{"burundských frankov"}
+        }
+        BMD{
+            few{"bermudské doláre"}
+            many{"bermudského dolára"}
+            one{"bermudský dolár"}
+            other{"bermudských dolárov"}
+        }
         BND{
             few{"brunejské doláre"}
             many{"brunejského dolára"}
@@ -1096,16 +1197,22 @@ sk{
             other{"brunejských dolárov"}
         }
         BOB{
-            few{"bolívijské boliviany"}
+            few{"bolívijské boliviana"}
             many{"bolívijského boliviana"}
             one{"bolívijské boliviano"}
-            other{"bolívijských bolivianov"}
+            other{"bolívijských bolivian"}
         }
         BRL{
             few{"brazílske realy"}
             many{"brazílskeho realu"}
             one{"brazílsky real"}
             other{"brazílskych realov"}
+        }
+        BSD{
+            few{"bahamské doláre"}
+            many{"bahamského dolára"}
+            one{"bahamský dolár"}
+            other{"bahamských dolárov"}
         }
         BTN{
             few{"bhutánske ngultrumy"}
@@ -1133,7 +1240,7 @@ sk{
         }
         BZD{
             few{"belizské doláre"}
-            many{"belizských dolárov"}
+            many{"belizského dolára"}
             one{"belizský dolár"}
             other{"belizských dolárov"}
         }
@@ -1155,6 +1262,12 @@ sk{
             one{"švajčiarsky frank"}
             other{"švajčiarskych frankov"}
         }
+        CLP{
+            few{"čilské pesos"}
+            many{"čilského pesa"}
+            one{"čilské peso"}
+            other{"čilských pesos"}
+        }
         CNY{
             few{"čínske jüany"}
             many{"čínskeho jüana"}
@@ -1169,7 +1282,7 @@ sk{
         }
         CRC{
             few{"kostarické colóny"}
-            many{"kostarického colónu"}
+            many{"kostarického colóna"}
             one{"kostarický colón"}
             other{"kostarických colónov"}
         }
@@ -1197,17 +1310,53 @@ sk{
             one{"česká koruna"}
             other{"českých korún"}
         }
+        DJF{
+            few{"džibutské franky"}
+            many{"džibutského franku"}
+            one{"džibutský frank"}
+            other{"džibutských frankov"}
+        }
         DKK{
             few{"dánske koruny"}
             many{"dánskej koruny"}
             one{"dánska koruna"}
             other{"dánskych korún"}
         }
+        DOP{
+            few{"dominikánske pesos"}
+            many{"dominikánskeho pesa"}
+            one{"dominikánske peso"}
+            other{"dominikánske pesos"}
+        }
+        DZD{
+            few{"alžírske dináre"}
+            many{"alžírskeho dinára"}
+            one{"alžírsky dinár"}
+            other{"alžírskych dinárov"}
+        }
         EEK{
             few{"estónske kroony"}
             many{"estónskej kroony"}
             one{"estónska kroon"}
             other{"estónskych kroon"}
+        }
+        EGP{
+            few{"egyptské libry"}
+            many{"egyptskej libry"}
+            one{"egyptská libra"}
+            other{"egyptských libier"}
+        }
+        ERN{
+            few{"eritrejské nakfy"}
+            many{"eritrejskej nakfy"}
+            one{"eritrejská nakfa"}
+            other{"eritrejských nakief"}
+        }
+        ETB{
+            few{"etiópske birry"}
+            many{"etiópskeho birru"}
+            one{"etiópsky birr"}
+            other{"etiópskych birrov"}
         }
         EUR{
             few{"eurá"}
@@ -1221,11 +1370,23 @@ sk{
             one{"fidžijský dolár"}
             other{"fidžijských dolárov"}
         }
+        FKP{
+            few{"falklandské libry"}
+            many{"falklandskej libry"}
+            one{"falklandská libra"}
+            other{"falklandských libier"}
+        }
         GBP{
-            few{"britskej libry"}
+            few{"britské libry"}
             many{"britskej libry"}
             one{"britská libra"}
             other{"britských libier"}
+        }
+        GEL{
+            few{"gruzínske lari"}
+            many{"gruzínskeho lari"}
+            one{"gruzínske lari"}
+            other{"gruzínskych lari"}
         }
         GHC{
             few{"ghanské cedi (1979–2007)"}
@@ -1236,20 +1397,44 @@ sk{
         GHS{
             few{"ghanské cedi"}
             many{"ghanského cedi"}
-            one{"ghanský cedi"}
+            one{"ghanské cedi"}
             other{"ghanských cedi"}
+        }
+        GIP{
+            few{"gibraltárske libry"}
+            many{"gibraltárskej libry"}
+            one{"gibraltárska libra"}
+            other{"gibraltárskych libier"}
         }
         GMD{
             few{"gambijské dalasi"}
             many{"gambijského dalasi"}
-            one{"gambijský dalasi"}
+            one{"gambijské dalasi"}
             other{"gambijských dalasi"}
+        }
+        GNF{
+            few{"guinejské franky"}
+            many{"guinejského franku"}
+            one{"guinejský frank"}
+            other{"guinejských frankov"}
+        }
+        GTQ{
+            few{"guatemalské quetzaly"}
+            many{"guatemalského quetzala"}
+            one{"guatemalský quetzal"}
+            other{"guatemalských quetzalov"}
         }
         GWP{
             few{"Guinea-Bissau pesos"}
             many{"Guinea-Bissau pesa"}
             one{"Guinea-Bissau peso"}
             other{"Guinea-Bissau pesos"}
+        }
+        GYD{
+            few{"guyanské doláre"}
+            many{"guyanského dolára"}
+            one{"guyanský dolár"}
+            other{"guyanských dolárov"}
         }
         HKD{
             few{"hongkonské doláre"}
@@ -1263,6 +1448,18 @@ sk{
             one{"honduraská lempira"}
             other{"honduraských lempír"}
         }
+        HRK{
+            few{"chorvátske kuny"}
+            many{"chorvátskej kuny"}
+            one{"chorvátska kuna"}
+            other{"chorvátskych kún"}
+        }
+        HTG{
+            few{"haitské gourde"}
+            many{"haitského gourde"}
+            one{"haitské gourde"}
+            other{"haitských gourde"}
+        }
         HUF{
             few{"maďarské forinty"}
             many{"maďarského forinta"}
@@ -1275,11 +1472,47 @@ sk{
             one{"indonézska rupia"}
             other{"indonézskych rupií"}
         }
+        ILS{
+            few{"izraelské šekely"}
+            many{"izraelského šekela"}
+            one{"izraelský šekel"}
+            other{"izraelských šekelov"}
+        }
         INR{
             few{"indické rupie"}
             many{"indickej rupie"}
             one{"indická rupia"}
             other{"indických rupií"}
+        }
+        IQD{
+            few{"iracké dináre"}
+            many{"irackého dinára"}
+            one{"iracký dinár"}
+            other{"irackých dinárov"}
+        }
+        IRR{
+            few{"iránske rialy"}
+            many{"iránskeho rialu"}
+            one{"iránsky rial"}
+            other{"iránskych rialov"}
+        }
+        ISK{
+            few{"islandské koruny"}
+            many{"islandskej koruny"}
+            one{"islandská koruna"}
+            other{"islandských korún"}
+        }
+        JMD{
+            few{"jamajské doláre"}
+            many{"jamajského dolára"}
+            one{"jamajský dolár"}
+            other{"jamajských dolárov"}
+        }
+        JOD{
+            few{"jordánske dináre"}
+            many{"jordánskeho dinára"}
+            one{"jordánsky dinár"}
+            other{"jordánskych dinárov"}
         }
         JPY{
             few{"japonské jeny"}
@@ -1287,17 +1520,35 @@ sk{
             one{"japonský jen"}
             other{"japonských jenov"}
         }
+        KES{
+            few{"kenské šilingy"}
+            many{"kenského šilingu"}
+            one{"kenský šiling"}
+            other{"kenských šilingov"}
+        }
         KGS{
             few{"kirgizské somy"}
             many{"kirgizského somu"}
             one{"kirgizský som"}
             other{"kirgizských somov"}
         }
+        KHR{
+            few{"kambodžské riely"}
+            many{"kambodžského rielu"}
+            one{"kambodžský riel"}
+            other{"kambodžských rielov"}
+        }
         KMF{
             few{"komorské franky"}
             many{"komorského franku"}
-            one{"Comoro frank"}
+            one{"komorský frank"}
             other{"komorských frankov"}
+        }
+        KPW{
+            few{"severokórejské wony"}
+            many{"severokórejskeho wonu"}
+            one{"severokórejský won"}
+            other{"severokórejských wonov"}
         }
         KRW{
             few{"juhokórejské wony"}
@@ -1311,11 +1562,29 @@ sk{
             one{"kuvajtský dinár"}
             other{"kuvajtských dinárov"}
         }
+        KYD{
+            few{"kajmanské doláre"}
+            many{"kajmanského dolára"}
+            one{"kajmanský dolár"}
+            other{"kajmanských dolárov"}
+        }
         KZT{
             few{"kazašské tenge"}
             many{"kazašského tenge"}
             one{"kazašské tenge"}
             other{"kazašských tenge"}
+        }
+        LAK{
+            few{"laoské kipy"}
+            many{"laoského kipu"}
+            one{"laoský kip"}
+            other{"laoských kipov"}
+        }
+        LBP{
+            few{"libanonské libry"}
+            many{"libanonskej libry"}
+            one{"libanonská libra"}
+            other{"libanonských libier"}
         }
         LKR{
             few{"srílanské rupie"}
@@ -1323,17 +1592,65 @@ sk{
             one{"srílanská rupia"}
             other{"srílanských rupií"}
         }
+        LRD{
+            few{"libérijské doláre"}
+            many{"libérijského dolára"}
+            one{"libérijský dolár"}
+            other{"libérijských dolárov"}
+        }
         LTL{
-            few{"litovské litasy"}
-            many{"litovského litasa"}
+            few{"litovské lity"}
+            many{"litovského litu"}
             one{"litovský litas"}
-            other{"litovských litasov"}
+            other{"litovských litov"}
         }
         LVL{
             few{"lotyšské laty"}
             many{"lotyšského latu"}
             one{"lotyšský lat"}
             other{"lotyšských latov"}
+        }
+        LYD{
+            few{"líbyjské dináre"}
+            many{"líbyjského dinára"}
+            one{"líbyjský dinár"}
+            other{"líbyjských dinárov"}
+        }
+        MAD{
+            few{"marocké dirhamy"}
+            many{"marockého dirhamu"}
+            one{"marocký dirham"}
+            other{"marockých dirhamov"}
+        }
+        MDL{
+            few{"moldavské lei"}
+            many{"moldavského lei"}
+            one{"moldavský lei"}
+            other{"moldavských lei"}
+        }
+        MGA{
+            few{"malgašské ariary"}
+            many{"malgašského ariary"}
+            one{"malgašský ariary"}
+            other{"malgašských ariary"}
+        }
+        MKD{
+            few{"macedónske denáre"}
+            many{"macedónskeho denára"}
+            one{"macedónsky denár"}
+            other{"macedónskych denárov"}
+        }
+        MMK{
+            few{"mjanmarské kyaty"}
+            many{"mjanmarského kyatu"}
+            one{"mjanmarský kyat"}
+            other{"mjanmarských kyatov"}
+        }
+        MNT{
+            few{"mongolské tugriky"}
+            many{"mongolského tugrika"}
+            one{"mongolský tugrik"}
+            other{"mongolských tugrikov"}
         }
         MOP{
             few{"macajské patacy"}
@@ -1353,6 +1670,12 @@ sk{
             one{"maurícijská rupia"}
             other{"maurícijských rupií"}
         }
+        MVR{
+            few{"maldivské rupie"}
+            many{"maldivskej rupie"}
+            one{"maldivská rupia"}
+            other{"maldivských rupií"}
+        }
         MWK{
             few{"malawijské kwachy"}
             many{"malawijskej kwachy"}
@@ -1366,10 +1689,10 @@ sk{
             other{"mexických pesos"}
         }
         MYR{
-            few{"malajské ringgity"}
-            many{"malajského ringgitu"}
-            one{"malajský ringgit"}
-            other{"malajských ringgitov"}
+            few{"malajzijské ringgity"}
+            many{"malajzijského ringgitu"}
+            one{"malajzijský ringgit"}
+            other{"malajzijských ringgitov"}
         }
         MZE{
             few{"mozabické escudá"}
@@ -1395,6 +1718,12 @@ sk{
             one{"namíbijský dolár"}
             other{"namíbijských dolárov"}
         }
+        NGN{
+            few{"nigérijské nairy"}
+            many{"nigérijskej nairy"}
+            one{"nigérijská naira"}
+            other{"nigérijských nair"}
+        }
         NIC{
             few{"nikaragujské córdoby (1988–1991)"}
             many{"nikaragujskej córdoby (1988–1991)"}
@@ -1413,6 +1742,30 @@ sk{
             one{"nórska koruna"}
             other{"nórskych korún"}
         }
+        NPR{
+            few{"nepálske rupie"}
+            many{"nepálskej rupie"}
+            one{"nepálska rupia"}
+            other{"nepálskych rupií"}
+        }
+        NZD{
+            few{"novozélandské doláre"}
+            many{"novozélandského dolára"}
+            one{"novozélandský dolár"}
+            other{"novozélandských dolárov"}
+        }
+        OMR{
+            few{"ománske rialy"}
+            many{"ománskeho rialu"}
+            one{"ománsky rial"}
+            other{"ománskych rialov"}
+        }
+        PAB{
+            few{"panamské balboy"}
+            many{"panamskej balboy"}
+            one{"panamská balboa"}
+            other{"panamských balboí"}
+        }
         PEN{
             few{"peruánske nové soly"}
             many{"peruánskeho nového sola"}
@@ -1424,6 +1777,18 @@ sk{
             many{"papuánskej kiny"}
             one{"papuánska kina"}
             other{"papuánskych kín"}
+        }
+        PHP{
+            few{"filipínske pesos"}
+            many{"filipínskeho pesa"}
+            one{"filipínske peso"}
+            other{"filipínskych pesos"}
+        }
+        PKR{
+            few{"pakistanské rupie"}
+            many{"pakistanskej rupie"}
+            one{"pakistanská rupia"}
+            other{"pakistanských rupií"}
         }
         PLN{
             few{"poľské zloté"}
@@ -1438,10 +1803,10 @@ sk{
             other{"poľských zlotých (1950–1995)"}
         }
         PYG{
-            few{"paraguayské guarani"}
-            many{"paraguayského guarani"}
+            few{"paraguajské guaraní"}
+            many{"paraguajského guaraní"}
             one{"paraguajské guaraní"}
-            other{"paraguayských guarani"}
+            other{"paraguajských guaraní"}
         }
         QAR{
             few{"katarské rialy"}
@@ -1456,10 +1821,10 @@ sk{
             other{"rumunských leu (1952–2006)"}
         }
         RON{
-            few{"rumunské leu"}
-            many{"rumunského leu"}
-            one{"rumunský leu"}
-            other{"rumunských leu"}
+            few{"rumunské lei"}
+            many{"rumunského lei"}
+            one{"rumunský lei"}
+            other{"rumunských lei"}
         }
         RSD{
             few{"srbské dináre"}
@@ -1472,6 +1837,12 @@ sk{
             many{"ruského rubľa"}
             one{"ruský rubeľ"}
             other{"ruských rubľov"}
+        }
+        RWF{
+            few{"rwandské franky"}
+            many{"rwandského franku"}
+            one{"rwandský frank"}
+            other{"rwandských frankov"}
         }
         SAR{
             few{"saudskoarabské rialy"}
@@ -1509,6 +1880,12 @@ sk{
             one{"švédska koruna"}
             other{"švédskych korún"}
         }
+        SGD{
+            few{"singapurské doláre"}
+            many{"singapurského dolára"}
+            one{"singapurský dolár"}
+            other{"singapurských dolárov"}
+        }
         SHP{
             few{"svätohelenské libry"}
             many{"svätohelenskej libry"}
@@ -1520,6 +1897,12 @@ sk{
             many{"sierraleonského leone"}
             one{"sierraleonský leone"}
             other{"sierraleonských leone"}
+        }
+        SOS{
+            few{"somálske šilingy"}
+            many{"somálskeho šilingu"}
+            one{"somálsky šiling"}
+            other{"somálskych šilingov"}
         }
         SRD{
             few{"surinamské doláre"}
@@ -1537,13 +1920,19 @@ sk{
             few{"svätotomášske dobry"}
             many{"svätotomášskej dobry"}
             one{"svätotomášska dobra"}
-            other{"svätotomášskych dobrí"}
+            other{"svätotomášskych dobier"}
         }
         SVC{
             few{"salvádorské colóny"}
             many{"salvádorského colóna"}
             one{"salvádorský colón"}
             other{"salvádorských colónov"}
+        }
+        SYP{
+            few{"sýrske libry"}
+            many{"sýrskej libry"}
+            one{"sýrska libra"}
+            other{"sýrskych libier"}
         }
         SZL{
             few{"svazijské lilangeni"}
@@ -1575,11 +1964,17 @@ sk{
             one{"turkménsky manat"}
             other{"turkménskych manatov"}
         }
+        TND{
+            few{"tuniské dináre"}
+            many{"tuniského dinára"}
+            one{"tuniský dinár"}
+            other{"tuniských dinárov"}
+        }
         TOP{
-            few{"tongské pa'anga"}
-            many{"tongského pa'anga"}
-            one{"tongská pa'anga"}
-            other{"tongských pa'anga"}
+            few{"tongské pa’anga"}
+            many{"tongského pa’anga"}
+            one{"tongská pa’anga"}
+            other{"tongských pa’anga"}
         }
         TRL{
             few{"turecké líry (1922–2005)"}
@@ -1605,11 +2000,23 @@ sk{
             one{"nový taiwanský dolár"}
             other{"nových taiwanských dolárov"}
         }
+        TZS{
+            few{"tanzánske šilingy"}
+            many{"tanzánskeho šilingu"}
+            one{"tanzánsky šiling"}
+            other{"tanzánskych šilingov"}
+        }
         UAH{
             few{"ukrajinské hrivny"}
             many{"ukrajinskej hrivny"}
             one{"ukrajinská hrivna"}
             other{"ukrajinských hrivien"}
+        }
+        UGX{
+            few{"ugandské šilingy"}
+            many{"ugandského šilingu"}
+            one{"ugandský šiling"}
+            other{"ugandských šilingov"}
         }
         USD{
             few{"americké doláre"}
@@ -1619,7 +2026,7 @@ sk{
         }
         UYU{
             few{"uruguajské pesos"}
-            many{"uruguajských pesos"}
+            many{"uruguajského pesa"}
             one{"uruguajské peso"}
             other{"uruguajských pesos"}
         }
@@ -1628,6 +2035,18 @@ sk{
             many{"uzbeckého sumu"}
             one{"uzbecký sum"}
             other{"uzbeckých sumov"}
+        }
+        VEF{
+            few{"venezuelské bolívary"}
+            many{"venezuelského bolívaru"}
+            one{"venezuelský bolívar"}
+            other{"venezuelských bolívarov"}
+        }
+        VND{
+            few{"vietnamské dongy"}
+            many{"vietnamského dongu"}
+            one{"vietnamský dong"}
+            other{"vietnamských dongov"}
         }
         VUV{
             few{"vanuatské vatu"}
@@ -1641,17 +2060,41 @@ sk{
             one{"samojská tala"}
             other{"samojských tál"}
         }
+        XAF{
+            few{"stredoafrické franky"}
+            many{"stredoafrického franku"}
+            one{"stredoafrický frank"}
+            other{"stredoafrických frankov"}
+        }
         XCD{
             few{"východokaribské doláre"}
             many{"východokaribského dolára"}
             one{"východokaribský dolár"}
             other{"východokaribských dolárov"}
         }
+        XOF{
+            few{"západoafrické franky"}
+            many{"západoafrického franku"}
+            one{"západoafrický frank"}
+            other{"západoafrických frankov"}
+        }
+        XPF{
+            few{"CFP franky"}
+            many{"CFP franku"}
+            one{"CFP frank"}
+            other{"CFP frankov"}
+        }
         XXX{
-            few{"Neznáma mena"}
-            many{"Neznáma mena"}
-            one{"Neznáma mena"}
-            other{"Neznáma mena"}
+            few{"(neznáma mena)"}
+            many{"(neznáma mena)"}
+            one{"(neznáma mena)"}
+            other{"(neznáma mena)"}
+        }
+        YER{
+            few{"jemenské rialy"}
+            many{"jemenského rialu"}
+            one{"jemenský rial"}
+            other{"jemenských rialov"}
         }
         ZAR{
             few{"juhoafrické randy"}
@@ -1696,5 +2139,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

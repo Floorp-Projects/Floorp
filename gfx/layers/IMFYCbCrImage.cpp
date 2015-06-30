@@ -56,7 +56,7 @@ struct AutoLockTexture
   RefPtr<IDXGIKeyedMutex> mMutex;
 };
 
-static TemporaryRef<IDirect3DTexture9>
+static already_AddRefed<IDirect3DTexture9>
 InitTextures(IDirect3DDevice9* aDevice,
              const IntSize &aSize,
             _D3DFORMAT aFormat,

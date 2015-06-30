@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -23,7 +23,6 @@
 #include "unicode/utypes.h"
 #include "uassert.h"
 #include "cmemory.h"
-#include "ucln_cmn.h"
 
 
 // The ICU global mutex. Used when ICU implementation code passes NULL for the mutex pointer.
@@ -97,11 +96,6 @@ U_COMMON_API UBool U_EXPORT2 umtx_initImplPreInit(UInitOnce &uio) {
 
 // This function is called by the thread that ran an initialization function,
 // just after completing the function.
-//
-//   success: True:  the inialization succeeded. No further calls to the init
-//                   function will be made.
-//            False: the initializtion failed. The next call to umtx_initOnce()
-//                   will retry the initialization.
 
 U_COMMON_API void U_EXPORT2 umtx_initImplPostInit(UInitOnce &uio) {
     umtx_storeRelease(uio.fState, 2);
@@ -132,6 +126,63 @@ umtx_unlock(UMutex* mutex)
     }
     LeaveCriticalSection(&mutex->fCS);
 }
+
+
+U_CAPI void U_EXPORT2
+umtx_condBroadcast(UConditionVar *condition) {
+    // We require that the associated mutex be held by the caller,
+    //  so access to fWaitCount is protected and safe. No other thread can
+    //  call condWait() while we are here.
+    if (condition->fWaitCount == 0) {
+        return;
+    }
+    ResetEvent(condition->fExitGate);
+    SetEvent(condition->fEntryGate);
+}
+
+U_CAPI void U_EXPORT2
+umtx_condSignal(UConditionVar *condition) {
+    // Function not implemented. There is no immediate requirement from ICU to have it.
+    // Once ICU drops support for Windows XP and Server 2003, ICU Condition Variables will be
+    // changed to be thin wrappers on native Windows CONDITION_VARIABLEs, and this function
+    // becomes trivial to provide.
+    U_ASSERT(FALSE);
+}
+
+U_CAPI void U_EXPORT2
+umtx_condWait(UConditionVar *condition, UMutex *mutex) {
+    if (condition->fEntryGate == NULL) {
+        // Note: because the associated mutex must be locked when calling
+        //       wait, we know that there can not be multiple threads
+        //       running here with the same condition variable.
+        //       Meaning that lazy initialization is safe.
+        U_ASSERT(condition->fExitGate == NULL);
+        condition->fEntryGate = CreateEvent(NULL,   // Security Attributes
+                                            TRUE,   // Manual Reset
+                                            FALSE,  // Initially reset
+                                            NULL);  // Name.
+        U_ASSERT(condition->fEntryGate != NULL);
+        condition->fExitGate = CreateEvent(NULL, TRUE, TRUE, NULL);
+        U_ASSERT(condition->fExitGate != NULL);
+    }
+
+    condition->fWaitCount++;
+    umtx_unlock(mutex);
+    WaitForSingleObject(condition->fEntryGate, INFINITE); 
+    umtx_lock(mutex);
+    condition->fWaitCount--;
+    if (condition->fWaitCount == 0) {
+        // All threads that were waiting at the entry gate have woken up
+        // and moved through. Shut the entry gate and open the exit gate.
+        ResetEvent(condition->fEntryGate);
+        SetEvent(condition->fExitGate);
+    } else {
+        umtx_unlock(mutex);
+        WaitForSingleObject(condition->fExitGate, INFINITE);
+        umtx_lock(mutex);
+    }
+}
+
 
 #elif U_PLATFORM_IMPLEMENTS_POSIX
 
@@ -168,6 +219,33 @@ umtx_unlock(UMutex* mutex)
     (void)sysErr;   // Suppress unused variable warnings.
     U_ASSERT(sysErr == 0);
 }
+
+
+U_CAPI void U_EXPORT2
+umtx_condWait(UConditionVar *cond, UMutex *mutex) {
+    if (mutex == NULL) {
+        mutex = &globalMutex;
+    }
+    int sysErr = pthread_cond_wait(&cond->fCondition, &mutex->fMutex);
+    (void)sysErr;
+    U_ASSERT(sysErr == 0);
+}
+
+U_CAPI void U_EXPORT2
+umtx_condBroadcast(UConditionVar *cond) {
+    int sysErr = pthread_cond_broadcast(&cond->fCondition);
+    (void)sysErr;
+    U_ASSERT(sysErr == 0);
+}
+
+U_CAPI void U_EXPORT2
+umtx_condSignal(UConditionVar *cond) {
+    int sysErr = pthread_cond_signal(&cond->fCondition);
+    (void)sysErr;
+    U_ASSERT(sysErr == 0);
+}
+
+
 
 U_NAMESPACE_BEGIN
 

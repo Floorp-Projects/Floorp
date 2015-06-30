@@ -49,7 +49,7 @@ public:
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
-  virtual TemporaryRef<TextureClient>
+  virtual already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags, TextureAllocationFlags) const override {
     return nullptr;
   }

@@ -1,9 +1,10 @@
-Path: release-52-1
-URL: http://source.icu-project.org/repos/icu/icu/tags/release-52-1
+Path: release-55-1
+URL: http://source.icu-project.org/repos/icu/icu/tags/release-55-1
+Relative URL: ^/icu/tags/release-55-1
 Repository Root: http://source.icu-project.org/repos/icu
 Repository UUID: 251d0590-4201-4cf1-90de-194747b24ca1
 Node Kind: directory
-Last Changed Author: srl
-Last Changed Rev: 34523
-Last Changed Date: 2013-10-07 20:40:18 +0000 (Mon, 07 Oct 2013)
+Last Changed Author: mow
+Last Changed Rev: 37298
+Last Changed Date: 2015-03-27 21:06:39 +0000 (Fri, 27 Mar 2015)
 

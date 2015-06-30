@@ -1,21 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/rm.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/rm.xml
- */
 rm{
-    AuxExemplarCharacters{"[á à ă â å ä ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]"}
+    AuxExemplarCharacters{"[á ă â å ä ā æ ç ĕ ê ë ē í ĭ î ï ī ñ ó ŏ ô ö ø ō œ ú ŭ û ü ū ÿ]"}
     ExemplarCharacters{"[a à b c d e é è f g h i ì j k l m n o ò p q r s t u ù v w x y z]"}
     ExemplarCharactersIndex{"[A À B C D E É È F G H I Ì J K L M N O Ò P Q R S T U Ù V W X Y Z]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -38,7 +32,7 @@ rm{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -68,7 +62,6 @@ rm{
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
-                MMMMdd{"dd. MMMM"}
                 MMMd{"d. MMM"}
                 MMd{"d.MM."}
                 MMdd{"dd.MM."}
@@ -89,83 +82,83 @@ rm{
             }
             intervalFormats{
                 M{
-                    M{"M.-M."}
+                    M{"M.–M."}
                 }
                 MEd{
-                    M{"E, dd.MM. - E, dd.MM."}
-                    d{"E, dd.MM. - E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d. MMM - E, d. MMM"}
-                    d{"E, d. - E, d. MMM"}
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. MMM - d. MMM"}
-                    d{"d.-d. MMM"}
+                    M{"d. MMM – d. MMM"}
+                    d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. - dd.MM."}
-                    d{"dd.MM. - dd.MM."}
+                    M{"dd.MM. – dd.MM."}
+                    d{"dd.MM. – dd.MM."}
                 }
                 d{
-                    d{"d.-d."}
+                    d{"d.–d."}
                 }
                 fallback{"{0} - {1}"}
                 h{
-                    a{"HH-HH"}
-                    h{"HH-HH"}
+                    a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"HH:mm-HH:mm"}
-                    h{"HH:mm-HH:mm"}
-                    m{"HH:mm-HH:mm"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"HH:mm-HH:mm v"}
-                    h{"HH:mm-HH:mm v"}
-                    m{"HH:mm-HH:mm v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"HH-HH v"}
-                    h{"HH-HH v"}
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
-                    M{"MM.y - MM.y"}
-                    y{"MM.y - MM.y"}
+                    M{"MM.y – MM.y"}
+                    y{"MM.y – MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y - E, dd.MM.y"}
-                    d{"E, dd.MM.y - E, dd.MM.y"}
-                    y{"E, dd.MM.y - E, dd.MM.y"}
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
-                    M{"MMM-MMM y"}
-                    y{"MMM y - MMM y"}
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM - E, d. MMM y"}
-                    d{"E, d. - E, d. MMM y"}
-                    y{"E, d. MMM y - E, d. MMM y"}
+                    M{"E, d. MMM – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
+                    y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
                     M{"MM – MM.y"}
                     y{"MM.y – MM.y"}
                 }
                 yMMMd{
-                    M{"d. MMM - d. MMM y"}
-                    d{"d.-d. MMM y"}
-                    y{"d. MMM y - d. MMM y"}
+                    M{"d. MMM – d. MMM y"}
+                    d{"d.–d. MMM y"}
+                    y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
-                    M{"dd.MM.y - dd.MM.y"}
-                    d{"dd.MM.y - dd.MM.y"}
-                    y{"dd.MM.y - dd.MM.y"}
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
                 }
             }
         }
@@ -201,7 +194,6 @@ rm{
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
-                MMMMdd{"dd. MMMM"}
                 MMMd{"d. MMM"}
                 MMd{"d.MM."}
                 MMdd{"dd.MM."}
@@ -265,83 +257,83 @@ rm{
             }
             intervalFormats{
                 M{
-                    M{"M.-M."}
+                    M{"M.–M."}
                 }
                 MEd{
-                    M{"E, dd.MM. - E, dd.MM."}
-                    d{"E, dd.MM. - E, dd.MM."}
+                    M{"E, dd.MM. – E, dd.MM."}
+                    d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d. MMM - E, d. MMM"}
-                    d{"E, d. - E, d. MMM"}
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. MMM - d. MMM"}
-                    d{"d.-d. MMM"}
+                    M{"d. MMM – d. MMM"}
+                    d{"d.–d. MMM"}
                 }
                 Md{
-                    M{"dd.MM. - dd.MM."}
-                    d{"dd.MM. - dd.MM."}
+                    M{"dd.MM. – dd.MM."}
+                    d{"dd.MM. – dd.MM."}
                 }
                 d{
-                    d{"d.-d."}
+                    d{"d.–d."}
                 }
                 fallback{"{0} - {1}"}
                 h{
-                    a{"HH-HH"}
-                    h{"HH-HH"}
+                    a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
-                    a{"HH:mm-HH:mm"}
-                    h{"HH:mm-HH:mm"}
-                    m{"HH:mm-HH:mm"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"HH:mm-HH:mm v"}
-                    h{"HH:mm-HH:mm v"}
-                    m{"HH:mm-HH:mm v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"HH-HH v"}
-                    h{"HH-HH v"}
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
-                    M{"MM.y - MM.y"}
-                    y{"MM.y - MM.y"}
+                    M{"MM.y – MM.y"}
+                    y{"MM.y – MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y - E, dd.MM.y"}
-                    d{"E, dd.MM.y - E, dd.MM.y"}
-                    y{"E, dd.MM.y - E, dd.MM.y"}
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
-                    M{"MMM-MMM y"}
-                    y{"MMM y - MMM y"}
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM - E, d. MMM y"}
-                    d{"E, d. - E, d. MMM y"}
-                    y{"E, d. MMM y - E, d. MMM y"}
+                    M{"E, d. MMM – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
+                    y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
                     M{"MM – MM.y"}
                     y{"MM.y – MM.y"}
                 }
                 yMMMd{
-                    M{"d. MMM - d. MMM y"}
-                    d{"d.-d. MMM y"}
-                    y{"d. MMM y - d. MMM y"}
+                    M{"d. MMM – d. MMM y"}
+                    d{"d.–d. MMM y"}
+                    y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
-                    M{"dd.MM.y - dd.MM.y"}
-                    d{"dd.MM.y - dd.MM.y"}
-                    y{"dd.MM.y - dd.MM.y"}
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
                 }
             }
             monthNames{
@@ -443,81 +435,18 @@ rm{
             dn{"emna"}
         }
         weekday{
-            dn{"di da l'emna"}
+            dn{"di da l’emna"}
         }
         year{
             dn{"onn"}
         }
         zone{
-            dn{"zona d'urari"}
+            dn{"zona d’urari"}
         }
     }
     measurementSystemNames{
-        US{"unitads americans"}
-        metric{"unitads metrics"}
-    }
-    units{
-        duration{
-            day{
-                one{"{0} di"}
-                other{"{0} dis"}
-            }
-            hour{
-                one{"{0} ura"}
-                other{"{0} uras"}
-            }
-            minute{
-                one{"{0} minuta"}
-                other{"{0} minutas"}
-            }
-            month{
-                one{"{0} mais"}
-                other{"{0} mais"}
-            }
-            second{
-                one{"{0} secunda"}
-                other{"{0} secundas"}
-            }
-            week{
-                one{"{0} emna"}
-                other{"{0} emnas"}
-            }
-            year{
-                one{"{0} onn"}
-                other{"{0} onns"}
-            }
-        }
-    }
-    unitsShort{
-        duration{
-            day{
-                one{"{0} di"}
-                other{"{0} dis"}
-            }
-            hour{
-                one{"{0} ura"}
-                other{"{0} uras"}
-            }
-            minute{
-                one{"{0} min."}
-                other{"{0} mins."}
-            }
-            month{
-                one{"{0} mais"}
-                other{"{0} mais"}
-            }
-            second{
-                one{"{0} sec."}
-                other{"{0} secs."}
-            }
-            week{
-                one{"{0} emna"}
-                other{"{0} emnas"}
-            }
-            year{
-                one{"{0} onn"}
-                other{"{0} onns"}
-            }
-        }
+        UK{"englais"}
+        US{"american"}
+        metric{"metric"}
     }
 }

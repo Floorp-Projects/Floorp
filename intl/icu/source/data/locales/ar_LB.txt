@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar_LB.xml
@@ -15,27 +15,9 @@ ar_LB{
             }
         }
     }
-    Version{"2.0.92.80"}
+    Version{"2.1.12.18"}
     calendar{
         gregorian{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE، d MMMM، y",
-                "d MMMM، y",
-                "MMM d, y",
-                "d‏/M‏/y",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            availableFormats{
-                GyMMMEd{"E, MMM d, y G"}
-            }
             monthNames{
                 format{
                     abbreviated{

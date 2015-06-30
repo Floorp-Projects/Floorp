@@ -40,7 +40,7 @@ public:
 
   virtual DrawTargetType GetType() const override { return mTiles[0].mDrawTarget->GetType(); }
   virtual BackendType GetBackendType() const override { return mTiles[0].mDrawTarget->GetBackendType(); }
-  virtual TemporaryRef<SourceSurface> Snapshot() override;
+  virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual IntSize GetSize() override {
     MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
     return IntSize(mRect.XMost(), mRect.YMost());
@@ -106,43 +106,43 @@ public:
 
   virtual void SetTransform(const Matrix &aTransform) override;
 
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
                                                                   SurfaceFormat aFormat) const override
   {
     return mTiles[0].mDrawTarget->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
   }
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override
   {
     return mTiles[0].mDrawTarget->OptimizeSourceSurface(aSurface);
   }
 
-  virtual TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override
   {
     return mTiles[0].mDrawTarget->CreateSourceSurfaceFromNativeSurface(aSurface);
   }
 
-  virtual TemporaryRef<DrawTarget>
+  virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override
   {
     return mTiles[0].mDrawTarget->CreateSimilarDrawTarget(aSize, aFormat);
   }
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override
   {
     return mTiles[0].mDrawTarget->CreatePathBuilder(aFillRule);
   }
 
-  virtual TemporaryRef<GradientStops>
+  virtual already_AddRefed<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = ExtendMode::CLAMP) const override
   {
     return mTiles[0].mDrawTarget->CreateGradientStops(aStops, aNumStops, aExtendMode);
   }
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) override
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override
   {
     return mTiles[0].mDrawTarget->CreateFilter(aType);
   }
@@ -172,7 +172,7 @@ public:
   }
   virtual SurfaceFormat GetFormat() const { return mSnapshots[0]->GetFormat(); }
 
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface()
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface()
   {
     RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(GetSize(), GetFormat());
 

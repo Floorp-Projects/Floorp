@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2008-2013, International Business Machines Corporation and
+* Copyright (C) 2008-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -43,6 +43,7 @@ class RuleChain;
 class PluralRuleParser;
 class PluralKeywordEnumeration;
 class AndConstraint;
+class SharedPluralRules;
 
 /**
  * Defines rules for mapping non-negative numeric values onto a small set of
@@ -162,7 +163,7 @@ class AndConstraint;
  * <p>
  * The difference between 'in' and 'within' is that 'in' only includes
  * integers in the specified range, while 'within' includes all values.
- * Using 'within' with a range_list consisting entirely of values is the 
+ * Using 'within' with a range_list consisting entirely of values is the
  * same as using 'in' (it's not an error).
  *</p>
  * <p>
@@ -297,6 +298,25 @@ public:
      * @internal
      */
     static UBool hasOverride(const Locale &locale);
+
+    /**
+     * For ICU use only.
+     * creates a  SharedPluralRules object
+     * @internal
+     */
+    static PluralRules* U_EXPORT2 internalForLocale(const Locale& locale, UPluralType type, UErrorCode& status);
+
+    /**
+     * For ICU use only.
+     * Returns handle to the shared, cached PluralRules instance.
+     * Caller must call removeRef() on returned value once it is done with
+     * the shared instance.
+     * @internal
+     */
+    static const SharedPluralRules* U_EXPORT2 createSharedInstance(
+            const Locale& locale, UPluralType type, UErrorCode& status);
+
+
 #endif  /* U_HIDE_INTERNAL_API */
 
     /**
@@ -340,21 +360,24 @@ public:
      */
     StringEnumeration* getKeywords(UErrorCode& status) const;
 
+#ifndef U_HIDE_DEPRECATED_API
     /**
-     * Returns a unique value for this keyword if it exists, else the constant
-     * UPLRULES_NO_UNIQUE_VALUE.
+     * Deprecated Function, does not return useful results.
+     *
+     * Originally intended to return a unique value for this keyword if it exists,
+     * else the constant UPLRULES_NO_UNIQUE_VALUE.
      *
      * @param keyword The keyword.
-     * @return        The unique value that generates the keyword, or
-     *                UPLRULES_NO_UNIQUE_VALUE if the keyword is undefined or there is no
-     *                unique value that generates this keyword.
-     * @stable ICU 4.8
+     * @return        Stub deprecated function returns UPLRULES_NO_UNIQUE_VALUE always.
+     * @deprecated ICU 55
      */
     double getUniqueKeywordValue(const UnicodeString& keyword);
 
     /**
-     * Returns all the values for which select() would return the keyword.  If
-     * the keyword is unknown, returns no values, but this is not an error.  If
+     * Deprecated Function, does not produce useful results.
+     *
+     * Orginally intended to return all the values for which select() would return the keyword.
+     * If the keyword is unknown, returns no values, but this is not an error.  If
      * the number of values is unlimited, returns no values and -1 as the
      * count.
      *
@@ -364,15 +387,16 @@ public:
      * @param dest         Array into which to put the returned values.  May
      *                     be NULL if destCapacity is 0.
      * @param destCapacity The capacity of the array, must be at least 0.
-     * @param status       The error code.
+     * @param status       The error code. Deprecated function, always sets U_UNSUPPORTED_ERROR.
      * @return             The count of values available, or -1.  This count
      *                     can be larger than destCapacity, but no more than
      *                     destCapacity values will be written.
-     * @stable ICU 4.8
+     * @deprecated ICU 55
      */
     int32_t getAllKeywordValues(const UnicodeString &keyword,
                                 double *dest, int32_t destCapacity,
                                 UErrorCode& status);
+#endif  /* U_HIDE_DEPRECATED_API */
 
     /**
      * Returns sample values for which select() would return the keyword.  If

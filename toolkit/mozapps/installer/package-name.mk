@@ -129,7 +129,12 @@ SYMBOL_ARCHIVE_BASENAME = $(PKG_BASENAME).crashreporter-symbols
 CODE_COVERAGE_ARCHIVE_BASENAME = $(PKG_BASENAME).code-coverage-gcno
 
 # Test package naming
-TEST_PACKAGE = $(PKG_BASENAME).tests.zip
+TEST_PACKAGE = $(PKG_BASENAME).common.tests.zip
+CPP_TEST_PACKAGE = $(PKG_BASENAME).cppunittest.tests.zip
+XPC_TEST_PACKAGE = $(PKG_BASENAME).xpcshell.tests.zip
+MOCHITEST_PACKAGE = $(PKG_BASENAME).mochitest.tests.zip
+REFTEST_PACKAGE = $(PKG_BASENAME).reftest.tests.zip
+WP_TEST_PACKAGE = $(PKG_BASENAME).web-platform.tests.zip
 
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
@@ -156,6 +161,7 @@ MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).txt
 MOZ_BUILDINFO_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).json
 MOZ_MOZINFO_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).mozinfo.json
 MOZ_TEST_PACKAGES_FILE = $(DIST)/$(PKG_PATH)/test_packages.json
+MOZ_TEST_PACKAGES_FILE_TC = $(DIST)/$(PKG_PATH)/test_packages_tc.json
 
 # JavaScript Shell
 JSSHELL_NAME = jsshell-$(MOZ_PKG_PLATFORM).zip

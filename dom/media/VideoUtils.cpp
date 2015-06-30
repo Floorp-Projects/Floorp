@@ -201,7 +201,7 @@ IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
     aDisplay.width * aDisplay.height != 0;
 }
 
-TemporaryRef<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
+already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
 {
   const char *name;
   switch (aType) {

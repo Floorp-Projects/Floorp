@@ -23,7 +23,7 @@ class GLImage : public Image {
 public:
   explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 };
 
 class EGLImageImage : public GLImage {

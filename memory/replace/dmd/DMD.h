@@ -192,7 +192,16 @@ ClearReports()
 //       // is mandatory if it is greater than one, but omitted otherwise.
 //       // (Blocks with identical properties don't have to be aggregated via
 //       // this property, but it can greatly reduce output file size.)
-//       "num": 5
+//       "num": 5,
+//
+//       // The address of the block. This is mandatory in "scan" mode for
+//       // non-sampled blocks, but omitted otherwise.
+//       "addr": "4e4e4e4e",
+//
+//       // The contents of the block, read one word at a time. This is
+//       // mandatory in "scan" mode for non-sampled blocks at least one word
+//       // long, but omitted otherwise.
+//       "contents": ["0", "6", "7f7f7f7f", "0"]
 //     },
 //
 //     // An example of a sampled heap block.

@@ -62,7 +62,7 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
                                   nsSVGMark::eEnd));
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPolygonElement::BuildPath(PathBuilder* aBuilder)
 {
   const SVGPointList &points = mPoints.GetAnimValue();
