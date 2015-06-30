@@ -146,7 +146,7 @@ class DeleteFilesRunnable final
   : public nsIRunnable
   , public OpenDirectoryListener
 {
-  typedef mozilla::dom::quota::QuotaManager::DirectoryLock DirectoryLock;
+  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
 
   enum State
   {
