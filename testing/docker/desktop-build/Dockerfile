@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/ubuntu-build:0.0.2
+FROM          quay.io/mozilla/ubuntu-build:0.0.3
 MAINTAINER    Morgan Reece Phillips <winter2718@gmail.com>
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
