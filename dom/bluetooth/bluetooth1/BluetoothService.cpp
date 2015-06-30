@@ -98,6 +98,12 @@ StaticRefPtr<BluetoothService> sBluetoothService;
 bool sInShutdown = false;
 bool sToggleInProgress = false;
 
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
 void
 ShutdownTimeExceeded(nsITimer* aTimer, void* aClosure)
 {
@@ -214,7 +220,7 @@ BluetoothService*
 BluetoothService::Create()
 {
 #if defined(MOZ_B2G_BT)
-  if (!XRE_IsParentProcess()) {
+  if (!IsMainProcess()) {
     return BluetoothServiceChildProcess::Create();
   }
 
@@ -248,7 +254,7 @@ BluetoothService::Init()
   }
 
   // Only the main process should observe bluetooth settings changes.
-  if (XRE_IsParentProcess() &&
+  if (IsMainProcess() &&
       NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
     BT_WARNING("Failed to add settings change observer!");
     return false;

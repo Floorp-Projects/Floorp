@@ -785,7 +785,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             gAndroidScreenBounds.width = newScreenWidth;
             gAndroidScreenBounds.height = newScreenHeight;
 
-            if (!XRE_IsParentProcess() &&
+            if (XRE_GetProcessType() != GeckoProcessType_Default &&
                 !Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
                 break;
             }
@@ -931,7 +931,7 @@ nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 gfxIntSize
 nsWindow::GetAndroidScreenBounds()
 {
-    if (XRE_IsContentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
         return ContentChild::GetSingleton()->GetScreenSize();
     }
     return gAndroidScreenBounds;

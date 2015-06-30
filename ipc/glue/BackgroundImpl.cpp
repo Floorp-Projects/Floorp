@@ -51,7 +51,7 @@
 
 #define CRASH_IN_CHILD_PROCESS(_msg)                                           \
   do {                                                                         \
-    if (XRE_IsParentProcess()) {                                                     \
+    if (IsMainProcess()) {                                                     \
       MOZ_ASSERT(false, _msg);                                                 \
     } else {                                                                   \
       MOZ_CRASH(_msg);                                                         \
@@ -69,17 +69,32 @@ namespace {
 // Utility Functions
 // -----------------------------------------------------------------------------
 
+bool
+IsMainProcess()
+{
+  static const bool isMainProcess =
+    XRE_GetProcessType() == GeckoProcessType_Default;
+  return isMainProcess;
+}
+
+#ifdef DEBUG
+bool
+IsChildProcess()
+{
+  return !IsMainProcess();
+}
+#endif
 
 void
 AssertIsInMainProcess()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(IsMainProcess());
 }
 
 void
 AssertIsInChildProcess()
 {
-  MOZ_ASSERT(!XRE_IsParentProcess());
+  MOZ_ASSERT(IsChildProcess());
 }
 
 void
@@ -2042,7 +2057,7 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
               "shutdown has started!");
   }
 
-  if (XRE_IsParentProcess()) {
+  if (IsMainProcess()) {
     nsRefPtr<ParentImpl::CreateCallback> parentCallback =
       new ParentCreateCallback(aEventTarget);
 

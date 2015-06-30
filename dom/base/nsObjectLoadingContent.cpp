@@ -3199,7 +3199,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     sPrefsInitialized = true;
   }
 
-  if (XRE_IsParentProcess() &&
+  if (XRE_GetProcessType() == GeckoProcessType_Default &&
       BrowserTabsRemoteAutostart()) {
     // Plugins running OOP from the chrome process along with plugins running
     // OOP from the content process will hang. Let's prevent that situation.

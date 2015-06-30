@@ -32,7 +32,7 @@ static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 nsJARProtocolHandler *gJarHandler = nullptr;
 
 nsJARProtocolHandler::nsJARProtocolHandler()
-: mIsMainProcess(XRE_IsParentProcess())
+: mIsMainProcess(XRE_GetProcessType() == GeckoProcessType_Default)
 {
     MOZ_ASSERT(NS_IsMainThread());
 }

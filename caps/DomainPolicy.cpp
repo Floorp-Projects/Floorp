@@ -22,7 +22,7 @@ static nsresult
 BroadcastDomainSetChange(DomainSetType aSetType, DomainSetChangeType aChangeType,
                          nsIURI* aDomain = nullptr)
 {
-    MOZ_ASSERT(XRE_IsParentProcess(),
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
                "DomainPolicy should only be exposed to the chrome process.");
 
     nsTArray<ContentParent*> parents;
@@ -45,7 +45,7 @@ DomainPolicy::DomainPolicy() : mBlacklist(new DomainSet(BLACKLIST))
                              , mWhitelist(new DomainSet(WHITELIST))
                              , mSuperWhitelist(new DomainSet(SUPER_WHITELIST))
 {
-    if (XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
         BroadcastDomainSetChange(NO_TYPE, ACTIVATE_POLICY);
     }
 }
@@ -112,7 +112,7 @@ DomainPolicy::Deactivate()
     if (ssm) {
         ssm->DeactivateDomainPolicy();
     }
-    if (XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
         BroadcastDomainSetChange(NO_TYPE, DEACTIVATE_POLICY);
     }
     return NS_OK;
@@ -170,7 +170,7 @@ DomainSet::Add(nsIURI* aDomain)
     nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
     NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
     mHashTable.PutEntry(clone);
-    if (XRE_IsParentProcess())
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
         return BroadcastDomainSetChange(mType, ADD_DOMAIN, aDomain);
 
     return NS_OK;
@@ -182,7 +182,7 @@ DomainSet::Remove(nsIURI* aDomain)
     nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
     NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
     mHashTable.RemoveEntry(clone);
-    if (XRE_IsParentProcess())
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
         return BroadcastDomainSetChange(mType, REMOVE_DOMAIN, aDomain);
 
     return NS_OK;
@@ -192,7 +192,7 @@ NS_IMETHODIMP
 DomainSet::Clear()
 {
     mHashTable.Clear();
-    if (XRE_IsParentProcess())
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
         return BroadcastDomainSetChange(mType, CLEAR_DOMAINS);
 
     return NS_OK;

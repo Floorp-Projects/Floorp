@@ -48,7 +48,7 @@ namespace {
 void
 AssertIsInMainProcess()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 }
 
 void

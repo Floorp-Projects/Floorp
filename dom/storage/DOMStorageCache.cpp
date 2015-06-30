@@ -761,7 +761,7 @@ DOMStorageCache::StartDatabase()
     return sDatabase;
   }
 
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsAutoPtr<DOMStorageDBThread> db(new DOMStorageDBThread());
 
     nsresult rv = db->Init();
@@ -806,7 +806,7 @@ DOMStorageCache::StopDatabase()
   sDatabaseDown = true;
 
   nsresult rv = sDatabase->Shutdown();
-  if (XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
     delete sDatabase;
   } else {
     DOMStorageDBChild* child = static_cast<DOMStorageDBChild*>(sDatabase);

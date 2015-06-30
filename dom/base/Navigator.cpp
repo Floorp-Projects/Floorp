@@ -1481,7 +1481,7 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
 #if defined(XP_LINUX)
   if (aName.EqualsLiteral("hardware.memory")) {
     // with seccomp enabled, fopen() should be in a non-sandboxed process
-    if (XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
       uint32_t memLevel = mozilla::hal::GetTotalSystemMemoryLevel();
       if (memLevel == 0) {
         p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
@@ -2572,7 +2572,7 @@ Navigator::HasTVSupport(JSContext* aCx, JSObject* aGlobal)
 bool
 Navigator::IsE10sEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  return XRE_IsContentProcess();
+  return XRE_GetProcessType() == GeckoProcessType_Content;
 }
 
 bool
