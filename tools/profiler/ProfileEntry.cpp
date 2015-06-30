@@ -365,8 +365,12 @@ uint32_t UniqueStacks::Stack::GetOrAddIndex() const
 uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
-  if (!mLocation.empty()) {
+  if (!mLocation.IsEmpty()) {
+#ifdef SPS_STANDALONE
     hash = mozilla::HashString(mLocation.c_str());
+#else
+    hash = mozilla::HashString(mLocation.get());
+#endif
   }
   if (mLine.isSome()) {
     hash = mozilla::AddToHash(hash, *mLine);
@@ -539,7 +543,11 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 #else
   {
 #endif
+#ifdef SPS_STANDALONE
     mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.c_str());
+#else
+    mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.get());
+#endif
     if (aFrame.mLine.isSome()) {
       mFrameTableWriter.NullElement(); // implementation
       mFrameTableWriter.NullElement(); // optimizations
