@@ -658,7 +658,7 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults()
+  SendResults() override
   { }
 };
 
@@ -696,7 +696,7 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults();
+  SendResults() override;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIQUOTAREQUEST
@@ -728,7 +728,7 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults()
+  SendResults() override
   { }
 };
 
@@ -757,7 +757,7 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults()
+  SendResults() override
   { }
 };
 
