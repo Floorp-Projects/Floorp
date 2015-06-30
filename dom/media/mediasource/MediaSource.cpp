@@ -93,12 +93,12 @@ IsTypeSupported(const nsAString& aType)
       if ((mimeType.EqualsASCII("video/mp4") ||
            mimeType.EqualsASCII("audio/mp4")) &&
           !Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
-        break;
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
       }
       if ((mimeType.EqualsASCII("video/webm") ||
            mimeType.EqualsASCII("audio/webm")) &&
           !Preferences::GetBool("media.mediasource.webm.enabled", false)) {
-        break;
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
       }
       found = true;
       break;
