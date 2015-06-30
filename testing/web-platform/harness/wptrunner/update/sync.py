@@ -124,14 +124,12 @@ class GetSyncTargetCommit(Step):
 class LoadManifest(Step):
     """Load the test manifest"""
 
-    provides = ["test_manifest", "manifest_path"]
+    provides = ["test_manifest"]
 
     def create(self, state):
-        from manifest import manifest
-        state.manifest_path = os.path.join(state.metadata_path, "MANIFEST.json")
-        # Conservatively always rebuild the manifest when doing a sync
-        old_manifest = manifest.load(state.tests_path, state.manifest_path)
-        state.test_manifest = manifest.Manifest(old_manifest.rev, "/")
+        state.test_manifest = testloader.ManifestLoader(state.tests_path).load_manifest(
+            state.tests_path, state.metadata_path,
+        )
 
 
 class UpdateManifest(Step):
@@ -140,9 +138,10 @@ class UpdateManifest(Step):
     provides = ["initial_rev"]
     def create(self, state):
         from manifest import manifest, update
-        state.initial_rev = state.test_manifest.rev
-        update.update(state.sync["path"], "/", state.test_manifest)
-        manifest.write(state.test_manifest, state.manifest_path)
+        test_manifest = state.test_manifest
+        state.initial_rev = test_manifest.rev
+        update.update(state.sync["path"], "/", test_manifest)
+        manifest.write(test_manifest, os.path.join(state.metadata_path, "MANIFEST.json"))
 
 
 class CopyWorkTree(Step):
