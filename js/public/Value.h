@@ -1972,11 +1972,31 @@ UINT_TO_JSVAL(uint32_t i)
 }
 
 static inline jsval
+STRING_TO_JSVAL(JSString* str)
+{
+    return IMPL_TO_JSVAL(STRING_TO_JSVAL_IMPL(str));
+}
+
+static inline jsval
 OBJECT_TO_JSVAL(JSObject* obj)
 {
     if (obj)
         return IMPL_TO_JSVAL(OBJECT_TO_JSVAL_IMPL(obj));
     return IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL, 0));
+}
+
+static inline jsval
+BOOLEAN_TO_JSVAL(bool b)
+{
+    return IMPL_TO_JSVAL(BOOLEAN_TO_JSVAL_IMPL(b));
+}
+
+/* To be GC-safe, privates are tagged as doubles. */
+
+static inline jsval
+PRIVATE_TO_JSVAL(void* ptr)
+{
+    return IMPL_TO_JSVAL(PRIVATE_PTR_TO_JSVAL_IMPL(ptr));
 }
 
 namespace JS {
