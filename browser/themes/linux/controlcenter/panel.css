@@ -3,3 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include ../../shared/controlcenter/panel.inc.css
+
+.identity-popup-expander:-moz-focusring,
+#identity-popup-more-info-button {
+  padding: 1px;
+}
+
+.identity-popup-expander:-moz-focusring > .button-box,
+#identity-popup-more-info-button:-moz-focusring > .button-box {
+  outline: 1px -moz-dialogtext dotted;
+}
