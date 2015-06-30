@@ -30,6 +30,16 @@ public:
     return mCanceled;
   }
 
+  nsresult
+  Cancel()
+  {
+    if (mCanceled.exchange(true)) {
+      NS_WARNING("Canceled more than once?!");
+      return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+  }
+
   void
   AppendToDatabaseUsage(uint64_t aUsage)
   {

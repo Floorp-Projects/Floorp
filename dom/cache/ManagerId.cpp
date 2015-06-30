@@ -32,20 +32,15 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
   //
   // TODO: consider using QuotaManager's modified origin here (bug 1112071)
 
-  nsAutoCString origin;
+  nsCString origin;
   nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  uint32_t appId;
-  rv = aPrincipal->GetAppId(&appId);
+  nsCString jarPrefix;
+  rv = aPrincipal->GetJarPrefix(jarPrefix);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  bool inBrowserElement;
-  rv = aPrincipal->GetIsInBrowserElement(&inBrowserElement);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  nsRefPtr<ManagerId> ref = new ManagerId(aPrincipal, origin, appId,
-                                          inBrowserElement);
+  nsRefPtr<ManagerId> ref = new ManagerId(aPrincipal, origin, jarPrefix);
   ref.forget(aManagerIdOut);
 
   return NS_OK;
@@ -60,11 +55,9 @@ ManagerId::Principal() const
 }
 
 ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aOrigin,
-                     uint32_t aAppId, bool aInBrowserElement)
+                     const nsACString& aJarPrefix)
     : mPrincipal(aPrincipal)
-    , mOrigin(aOrigin)
-    , mAppId(aAppId)
-    , mInBrowserElement(aInBrowserElement)
+    , mExtendedOrigin(aJarPrefix + aOrigin)
 {
   MOZ_ASSERT(mPrincipal);
 }

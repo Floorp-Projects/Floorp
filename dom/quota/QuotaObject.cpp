@@ -180,9 +180,10 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   if (newTemporaryStorageUsage > quotaManager->mTemporaryStorageLimit) {
     // This will block the thread without holding the lock while waitting.
 
-    nsAutoTArray<OriginInfo*, 10> originInfos;
+    nsAutoTArray<nsRefPtr<DirectoryLock>, 10> locks;
+
     uint64_t sizeToBeFreed =
-      quotaManager->LockedCollectOriginsForEviction(delta, originInfos);
+      quotaManager->LockedCollectOriginsForEviction(delta, locks);
 
     if (!sizeToBeFreed) {
       return false;
@@ -193,12 +194,13 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     {
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      for (uint32_t i = 0; i < originInfos.Length(); i++) {
-        OriginInfo* originInfo = originInfos[i];
+      for (nsRefPtr<DirectoryLock>& lock : locks) {
+        MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
+        MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
+        MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
 
-        quotaManager->DeleteFilesForOrigin(
-                                       originInfo->mGroupInfo->mPersistenceType,
-                                       originInfo->mOrigin);
+        quotaManager->DeleteFilesForOrigin(lock->GetPersistenceType().Value(),
+                                           lock->GetOriginScope());
       }
     }
 
@@ -206,24 +208,18 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
 
     NS_ASSERTION(mOriginInfo, "How come?!");
 
-    nsTArray<OriginParams> origins;
-    for (uint32_t i = 0; i < originInfos.Length(); i++) {
-      OriginInfo* originInfo = originInfos[i];
+    for (DirectoryLock* lock : locks) {
+      MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
+      MOZ_ASSERT(!lock->GetGroup().IsEmpty());
+      MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
+      MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
+      MOZ_ASSERT(lock->GetOriginScope() != mOriginInfo->mOrigin,
+                 "Deleted itself!");
 
-      NS_ASSERTION(originInfo != mOriginInfo, "Deleted itself!");
-
-      PersistenceType persistenceType =
-        originInfo->mGroupInfo->mPersistenceType;
-      nsCString group = originInfo->mGroupInfo->mGroup;
-      nsCString origin = originInfo->mOrigin;
-      bool isApp = originInfo->mIsApp;
-      quotaManager->LockedRemoveQuotaForOrigin(persistenceType, group, origin);
-
-#ifdef DEBUG
-      originInfos[i] = nullptr;
-#endif
-
-      origins.AppendElement(OriginParams(persistenceType, origin, isApp));
+      quotaManager->LockedRemoveQuotaForOrigin(
+                                             lock->GetPersistenceType().Value(),
+                                             lock->GetGroup(),
+                                             lock->GetOriginScope());
     }
 
     // We unlocked and relocked several times so we need to recompute all the
@@ -252,7 +248,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
       // However, the origin eviction must be finalized in this case too.
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      quotaManager->FinalizeOriginEviction(origins);
+      quotaManager->FinalizeOriginEviction(locks);
 
       return false;
     }
@@ -278,7 +274,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     // ops for the evicted origins.
     MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-    quotaManager->FinalizeOriginEviction(origins);
+    quotaManager->FinalizeOriginEviction(locks);
 
     return true;
   }
@@ -315,9 +311,7 @@ GroupInfo::LockedGetOriginInfo(const nsACString& aOrigin)
 {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  for (uint32_t index = 0; index < mOriginInfos.Length(); index++) {
-    nsRefPtr<OriginInfo>& originInfo = mOriginInfos[index];
-
+  for (nsRefPtr<OriginInfo>& originInfo : mOriginInfos) {
     if (originInfo->mOrigin == aOrigin) {
       nsRefPtr<OriginInfo> result = originInfo;
       return result.forget();

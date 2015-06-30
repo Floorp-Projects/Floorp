@@ -90,6 +90,9 @@
     request.onsuccess = grabEventAndContinueHandler;
     yield undefined;
 
+    // and also flush pending file deletions before checking usage.
+    flushPendingFileDeletions();
+
     getUsage(grabFileUsageAndContinueHandler);
     let endUsage = yield undefined;
 

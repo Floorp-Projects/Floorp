@@ -11,61 +11,67 @@
 
 BEGIN_QUOTA_NAMESPACE
 
-class OriginOrPatternString : public nsCString
+class OriginScope : public nsCString
 {
 public:
-  static OriginOrPatternString
+  enum Type
+  {
+    eOrigin,
+    ePattern,
+    eNull
+  };
+
+  static OriginScope
   FromOrigin(const nsACString& aOrigin)
   {
-    return OriginOrPatternString(aOrigin, true);
+    return OriginScope(aOrigin, eOrigin);
   }
 
-  static OriginOrPatternString
+  static OriginScope
   FromPattern(const nsACString& aPattern)
   {
-    return OriginOrPatternString(aPattern, false);
+    return OriginScope(aPattern, ePattern);
   }
 
-  static OriginOrPatternString
+  static OriginScope
   FromNull()
   {
-    return OriginOrPatternString();
+    return OriginScope(NullCString(), eNull);
   }
 
   bool
   IsOrigin() const
   {
-    return mIsOrigin;
+    return mType == eOrigin;
   }
 
   bool
   IsPattern() const
   {
-    return mIsPattern;
+    return mType == ePattern;
   }
 
   bool
   IsNull() const
   {
-    return mIsNull;
+    return mType == eNull;
+  }
+
+  Type
+  GetType() const
+  {
+    return mType;
   }
 
 private:
-  OriginOrPatternString(const nsACString& aOriginOrPattern, bool aIsOrigin)
-  : nsCString(aOriginOrPattern),
-    mIsOrigin(aIsOrigin), mIsPattern(!aIsOrigin), mIsNull(false)
-  { }
-
-  OriginOrPatternString()
-  : mIsOrigin(false), mIsPattern(false), mIsNull(true)
+  OriginScope(const nsACString& aString, Type aType)
+  : nsCString(aString), mType(aType)
   { }
 
   bool
-  operator==(const OriginOrPatternString& aOther) = delete;
+  operator==(const OriginScope& aOther) = delete;
 
-  bool mIsOrigin;
-  bool mIsPattern;
-  bool mIsNull;
+  const Type mType;
 };
 
 END_QUOTA_NAMESPACE

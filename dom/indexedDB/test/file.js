@@ -220,3 +220,8 @@ function getFileDBRefCount(name, id)
   utils.getFileReferences(name, id, null, {}, count);
   return count.value;
 }
+
+function flushPendingFileDeletions()
+{
+  utils.flushPendingFileDeletions();
+}
