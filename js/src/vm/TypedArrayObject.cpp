@@ -68,15 +68,6 @@ TypedArrayLayout TypedArrayObject::layout_(false, // shared
                                            &TypedArrayObject::classes[0],
                                            &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]);
 
-TypedArrayLayout::TypedArrayLayout(bool isShared, bool isNeuterable, const Class* firstClass,
-                                   const Class* maxClass)
-    : isShared_(isShared)
-    , isNeuterable_(isNeuterable)
-    , firstClass_(firstClass)
-    , maxClass_(maxClass)
-{
-}
-
 /* static */ int
 TypedArrayLayout::lengthOffset()
 {

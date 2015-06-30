@@ -7,6 +7,7 @@
 #include "vm/SharedTypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 
 #include <string.h>
