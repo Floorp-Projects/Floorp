@@ -147,24 +147,33 @@ nsresult MediaDecoderReader::ResetDecode()
   return NS_OK;
 }
 
-VideoData* MediaDecoderReader::DecodeToFirstVideoData()
+nsRefPtr<MediaDecoderReader::VideoDataPromise>
+MediaDecoderReader::DecodeToFirstVideoData()
 {
-  bool eof = false;
-  while (!eof && VideoQueue().GetSize() == 0) {
-    {
-      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        return nullptr;
-      }
+  MOZ_ASSERT(OnTaskQueue());
+  typedef MediaDecoderReader::VideoDataPromise PromiseType;
+  nsRefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
+  nsRefPtr<MediaDecoderReader> self = this;
+  InvokeUntil([self] () -> bool {
+    MOZ_ASSERT(self->OnTaskQueue());
+    NS_ENSURE_TRUE(!self->mShutdown, false);
+    bool skip = false;
+    if (!self->DecodeVideoFrame(skip, 0)) {
+      self->VideoQueue().Finish();
+      return !!self->VideoQueue().PeekFront();
     }
-    bool keyframeSkip = false;
-    eof = !DecodeVideoFrame(keyframeSkip, 0);
-  }
-  if (eof) {
-    VideoQueue().Finish();
-  }
-  VideoData* d = nullptr;
-  return (d = VideoQueue().PeekFront()) ? d : nullptr;
+    return true;
+  }, [self] () -> bool {
+    MOZ_ASSERT(self->OnTaskQueue());
+    return self->VideoQueue().GetSize();
+  })->Then(TaskQueue(), __func__, [self, p] () {
+    p->Resolve(self->VideoQueue().PeekFront(), __func__);
+  }, [p] () {
+    // We don't have a way to differentiate EOS, error, and shutdown here. :-(
+    p->Reject(END_OF_STREAM, __func__);
+  });
+
+  return p.forget();
 }
 
 void

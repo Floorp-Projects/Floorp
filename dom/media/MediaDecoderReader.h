@@ -288,8 +288,7 @@ public:
     return mDecoder;
   }
 
-  // TODO: DEPRECATED.  This uses synchronous decoding.
-  VideoData* DecodeToFirstVideoData();
+  nsRefPtr<VideoDataPromise> DecodeToFirstVideoData();
 
   MediaInfo GetMediaInfo() { return mInfo; }
 
