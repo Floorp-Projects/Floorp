@@ -6,6 +6,7 @@
 
 const PREF_INTRO_SHOWN = "browser.newtabpage.introShown";
 const PREF_UPDATE_INTRO_SHOWN = "browser.newtabpage.updateIntroShown";
+const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
 // These consts indicate the type of intro/onboarding we show.
 const WELCOME = "welcome";
@@ -205,6 +206,9 @@ let gIntro = {
   },
 
   showIfNecessary: function() {
+    if (!Services.prefs.getBoolPref(PREF_NEWTAB_ENHANCED)) {
+      return;
+    }
     if (!Services.prefs.getBoolPref(PREF_INTRO_SHOWN)) {
       this._onboardingType = WELCOME;
       this.showPanel();

@@ -199,8 +199,19 @@ public:
    */
   uint32_t EnumerateEntries(Enumerator aEnumFunc, void* aUserArg)
   {
-    s_EnumArgs args = { aEnumFunc, aUserArg };
-    return PL_DHashTableEnumerate(&mTable, s_EnumStub, &args);
+    uint32_t n = 0;
+    for (auto iter = mTable.RemovingIter(); !iter.Done(); iter.Next()) {
+      auto entry = static_cast<EntryType*>(iter.Get());
+      PLDHashOperator op = aEnumFunc(entry, aUserArg);
+      n++;
+      if (op & PL_DHASH_REMOVE) {
+        iter.Remove();
+      }
+      if (op & PL_DHASH_STOP) {
+        break;
+      }
+    }
+    return n;
   }
 
   /**
@@ -317,23 +328,6 @@ protected:
   static void s_ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
   static void s_InitEntry(PLDHashEntryHdr* aEntry, const void* aKey);
-
-  /**
-   * passed internally during enumeration.  Allocated on the stack.
-   *
-   * @param userFunc the Enumerator function passed to
-   *   EnumerateEntries by the client
-   * @param userArg the userArg passed unaltered
-   */
-  struct s_EnumArgs
-  {
-    Enumerator userFunc;
-    void* userArg;
-  };
-
-  static PLDHashOperator s_EnumStub(PLDHashTable* aTable,
-                                    PLDHashEntryHdr* aEntry,
-                                    uint32_t aNumber, void* aArg);
 
   /**
    * passed internally during sizeOf counting.  Allocated on the stack.
@@ -465,19 +459,6 @@ nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
                                      const void* aKey)
 {
   new (aEntry) EntryType(reinterpret_cast<KeyTypePointer>(aKey));
-}
-
-template<class EntryType>
-PLDHashOperator
-nsTHashtable<EntryType>::s_EnumStub(PLDHashTable* aTable,
-                                    PLDHashEntryHdr* aEntry,
-                                    uint32_t aNumber,
-                                    void* aArg)
-{
-  // dereferences the function-pointer to the user's enumeration function
-  return (*reinterpret_cast<s_EnumArgs*>(aArg)->userFunc)(
-    static_cast<EntryType*>(aEntry),
-    reinterpret_cast<s_EnumArgs*>(aArg)->userArg);
 }
 
 template<class EntryType>

@@ -845,23 +845,6 @@ PL_DHashTableEnumerate(PLDHashTable* aTable, PLDHashEnumerator aEtor,
   return aTable->Enumerate(aEtor, aArg);
 }
 
-struct SizeOfEntryExcludingThisArg
-{
-  size_t total;
-  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis;
-  MallocSizeOf mallocSizeOf;
-  void* arg;  // the arg passed by the user
-};
-
-static PLDHashOperator
-SizeOfEntryExcludingThisEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                                   uint32_t aNumber, void* aArg)
-{
-  SizeOfEntryExcludingThisArg* e = (SizeOfEntryExcludingThisArg*)aArg;
-  e->total += e->sizeOfEntryExcludingThis(aHdr, e->mallocSizeOf, e->arg);
-  return PL_DHASH_NEXT;
-}
-
 MOZ_ALWAYS_INLINE size_t
 PLDHashTable::SizeOfExcludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
@@ -871,15 +854,11 @@ PLDHashTable::SizeOfExcludingThis(
     return 0;
   }
 
-  size_t n = 0;
-  n += aMallocSizeOf(mEntryStore);
+  size_t n = aMallocSizeOf(mEntryStore);
   if (aSizeOfEntryExcludingThis) {
-    SizeOfEntryExcludingThisArg arg2 = {
-      0, aSizeOfEntryExcludingThis, aMallocSizeOf, aArg
-    };
-    PL_DHashTableEnumerate(const_cast<PLDHashTable*>(this),
-                           SizeOfEntryExcludingThisEnumerator, &arg2);
-    n += arg2.total;
+    for (auto iter = Iter(); !iter.Done(); iter.Next()) {
+      n += aSizeOfEntryExcludingThis(iter.Get(), aMallocSizeOf, aArg);
+    }
   }
   return n;
 }

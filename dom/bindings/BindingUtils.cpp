@@ -2816,5 +2816,89 @@ SystemGlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj)
          ResolveSystemBinding(cx, obj, JSID_VOIDHANDLE, &ignored);
 }
 
+template<decltype(JS::NewMapObject) Method>
+bool
+GetMaplikeSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                               size_t aSlotIndex,
+                               JS::MutableHandle<JSObject*> aBackingObj,
+                               bool* aBackingObjCreated)
+{
+  JS::Rooted<JSObject*> reflector(aCx);
+  reflector = IsDOMObject(aObj) ? aObj : js::UncheckedUnwrap(aObj,
+                                                             /* stopAtOuter = */ false);
+
+  // Retrieve the backing object from the reserved slot on the maplike/setlike
+  // object. If it doesn't exist yet, create it.
+  JS::Rooted<JS::Value> slotValue(aCx);
+  slotValue = js::GetReservedSlot(reflector, aSlotIndex);
+  if (slotValue.isUndefined()) {
+    // Since backing object access can happen in non-originating compartments,
+    // make sure to create the backing object in reflector compartment.
+    {
+      JSAutoCompartment ac(aCx, reflector);
+      JS::Rooted<JSObject*> newBackingObj(aCx);
+      newBackingObj.set(Method(aCx));
+      if (NS_WARN_IF(!newBackingObj)) {
+        return false;
+      }
+      js::SetReservedSlot(reflector, aSlotIndex, JS::ObjectValue(*newBackingObj));
+    }
+    slotValue = js::GetReservedSlot(reflector, aSlotIndex);
+    *aBackingObjCreated = true;
+  } else {
+    *aBackingObjCreated = false;
+  }
+  if (!MaybeWrapNonDOMObjectValue(aCx, &slotValue)) {
+    return false;
+  }
+  aBackingObj.set(&slotValue.toObject());
+  return true;
+}
+
+bool
+GetMaplikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                        size_t aSlotIndex,
+                        JS::MutableHandle<JSObject*> aBackingObj,
+                        bool* aBackingObjCreated)
+{
+  return GetMaplikeSetlikeBackingObject<JS::NewMapObject>(aCx, aObj, aSlotIndex,
+                                                          aBackingObj,
+                                                          aBackingObjCreated);
+}
+
+bool
+GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                        size_t aSlotIndex,
+                        JS::MutableHandle<JSObject*> aBackingObj,
+                        bool* aBackingObjCreated)
+{
+  return GetMaplikeSetlikeBackingObject<JS::NewSetObject>(aCx, aObj, aSlotIndex,
+                                                          aBackingObj,
+                                                          aBackingObjCreated);
+}
+
+bool
+ForEachHandler(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+{
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+  // Unpack callback and object from slots
+  JS::Rooted<JS::Value>
+    callbackFn(aCx, js::GetFunctionNativeReserved(&args.callee(),
+                                                  FOREACH_CALLBACK_SLOT));
+  JS::Rooted<JS::Value>
+    maplikeOrSetlikeObj(aCx,
+                        js::GetFunctionNativeReserved(&args.callee(),
+                                                      FOREACH_MAPLIKEORSETLIKEOBJ_SLOT));
+  MOZ_ASSERT(aArgc == 3);
+  JS::AutoValueVector newArgs(aCx);
+  // Arguments are passed in as value, key, object. Keep value and key, replace
+  // object with the maplike/setlike object.
+  newArgs.append(args.get(0));
+  newArgs.append(args.get(1));
+  newArgs.append(maplikeOrSetlikeObj);
+  JS::Rooted<JS::Value> rval(aCx, JS::UndefinedValue());
+  // Now actually call the user specified callback
+  return JS::Call(aCx, args.thisv(), callbackFn, newArgs, &rval);
+}
 } // namespace dom
 } // namespace mozilla

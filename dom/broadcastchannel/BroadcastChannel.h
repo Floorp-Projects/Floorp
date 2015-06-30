@@ -105,6 +105,11 @@ private:
 
   void UpdateMustKeepAlive();
 
+  bool IsCertainlyAliveForCC() const override
+  {
+    return mIsKeptAlive;
+  }
+
   nsRefPtr<BroadcastChannelChild> mActor;
   nsTArray<nsRefPtr<BroadcastChannelMessage>> mPendingMessages;
 

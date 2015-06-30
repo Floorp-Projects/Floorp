@@ -1387,7 +1387,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 bool
 CallMethodHelper::Call()
 {
-    mCallContext.SetRetVal(JSVAL_VOID);
+    mCallContext.SetRetVal(JS::UndefinedValue());
 
     XPCJSRuntime::Get()->SetPendingException(nullptr);
 
@@ -1536,14 +1536,14 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
     if (paramInfo.IsOut() && !paramInfo.IsRetval()) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
-        jsval arg = paramIndex < mArgc ? mArgv[paramIndex] : JSVAL_NULL;
+        jsval arg = paramIndex < mArgc ? mArgv[paramIndex] : JS::NullValue();
         if (paramIndex < mArgc) {
             RootedObject obj(mCallContext);
             if (!arg.isPrimitive())
                 obj = &arg.toObject();
             if (!obj || !JS_GetPropertyById(mCallContext, obj, mIdxValueId, srcp)) {
                 // Explicitly passed in unusable value for out param.  Note
-                // that if i >= mArgc we already know that |arg| is JSVAL_NULL,
+                // that if i >= mArgc we already know that |arg| is JS::NullValue(),
                 // and that's ok.
                 ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, paramIndex,
                               mCallContext);
@@ -1807,7 +1807,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     // indirectly, regardless of in/out-ness.
     if (type_tag == nsXPTType::T_JSVAL) {
         // Root the value.
-        dp->val.j = JSVAL_VOID;
+        dp->val.j.setUndefined();
         if (!js::AddRawValueRoot(mCallContext, &dp->val.j, "XPCWrappedNative::CallMethod param"))
             return false;
     }
@@ -1841,9 +1841,9 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
         if (i < mArgc)
             src = mArgv[i];
         else if (type_tag == nsXPTType::T_JSVAL)
-            src = JSVAL_VOID;
+            src.setUndefined();
         else
-            src = JSVAL_NULL;
+            src.setNull();
     }
 
     nsID param_iid;
@@ -1957,7 +1957,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
         // Handle the 'in' case.
         MOZ_ASSERT(i < mArgc || paramInfo.IsOptional(),
                      "Expected either enough arguments or an optional argument");
-        src = i < mArgc ? mArgv[i] : JSVAL_NULL;
+        src = i < mArgc ? mArgv[i] : JS::NullValue();
     }
 
     nsID param_iid;

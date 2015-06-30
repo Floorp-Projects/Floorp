@@ -29,10 +29,10 @@ BEGIN_TEST(testObjectEmulatingUndefined_truthy)
     JS::RootedValue result(cx);
 
     EVAL("if (new ObjectEmulatingUndefined()) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_FALSE);
+    CHECK(result.isFalse());
 
     EVAL("if (!new ObjectEmulatingUndefined()) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("var obj = new ObjectEmulatingUndefined(); \n"
          "var res = []; \n"
@@ -40,7 +40,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_truthy)
          "  res.push(Boolean(obj)); \n"
          "res.every(function(v) { return v === false; });",
          &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     return true;
 }
@@ -55,16 +55,16 @@ BEGIN_TEST(testObjectEmulatingUndefined_equal)
     JS::RootedValue result(cx);
 
     EVAL("if (new ObjectEmulatingUndefined() == undefined) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("if (new ObjectEmulatingUndefined() == null) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("if (new ObjectEmulatingUndefined() != undefined) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_FALSE);
+    CHECK(result.isFalse());
 
     EVAL("if (new ObjectEmulatingUndefined() != null) true; else false;", &result);
-    CHECK_SAME(result, JSVAL_FALSE);
+    CHECK(result.isFalse());
 
     EVAL("var obj = new ObjectEmulatingUndefined(); \n"
          "var res = []; \n"
@@ -72,7 +72,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_equal)
          "  res.push(obj == undefined); \n"
          "res.every(function(v) { return v === true; });",
          &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("var obj = new ObjectEmulatingUndefined(); \n"
          "var res = []; \n"
@@ -80,7 +80,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_equal)
          "  res.push(obj == null); \n"
          "res.every(function(v) { return v === true; });",
          &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("var obj = new ObjectEmulatingUndefined(); \n"
          "var res = []; \n"
@@ -88,7 +88,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_equal)
          "  res.push(obj != undefined); \n"
          "res.every(function(v) { return v === false; });",
          &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     EVAL("var obj = new ObjectEmulatingUndefined(); \n"
          "var res = []; \n"
@@ -96,7 +96,7 @@ BEGIN_TEST(testObjectEmulatingUndefined_equal)
          "  res.push(obj != null); \n"
          "res.every(function(v) { return v === false; });",
          &result);
-    CHECK_SAME(result, JSVAL_TRUE);
+    CHECK(result.isTrue());
 
     return true;
 }

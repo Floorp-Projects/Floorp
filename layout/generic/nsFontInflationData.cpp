@@ -289,16 +289,14 @@ static uint32_t
 DoCharCountOfLargestOption(nsIFrame *aContainer)
 {
   uint32_t result = 0;
-  for (nsIFrame* option = aContainer->GetFirstPrincipalChild();
-       option; option = option->GetNextSibling()) {
+  for (nsIFrame* option : aContainer->PrincipalChildList()) {
     uint32_t optionResult;
     if (option->GetContent()->IsHTMLElement(nsGkAtoms::optgroup)) {
       optionResult = DoCharCountOfLargestOption(option);
     } else {
       // REVIEW: Check the frame structure for this!
       optionResult = 0;
-      for (nsIFrame *optionChild = option->GetFirstPrincipalChild();
-           optionChild; optionChild = optionChild->GetNextSibling()) {
+      for (nsIFrame* optionChild : option->PrincipalChildList()) {
         if (optionChild->GetType() == nsGkAtoms::textFrame) {
           optionResult += nsTextFrameUtils::
             ComputeApproximateLengthWithWhitespaceCompression(

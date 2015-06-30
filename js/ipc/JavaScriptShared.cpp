@@ -270,7 +270,7 @@ JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to)
       {
         RootedObject obj(cx, from.toObjectOrNull());
         if (!obj) {
-            MOZ_ASSERT(from == JSVAL_NULL);
+            MOZ_ASSERT(from.isNull());
             *to = NullVariant();
             return true;
         }

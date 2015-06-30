@@ -1,5 +1,7 @@
 // Test that new.target is acceptably usable in RematerializedFrames.
 
+gczeal(0);
+
 load(libdir + "jitopts.js");
 
 if (!jitTogglesMatch(Opts_Ion2NoOffthreadCompilation))

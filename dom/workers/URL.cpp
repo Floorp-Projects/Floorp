@@ -259,11 +259,12 @@ public:
 
     nsRefPtr<mozilla::dom::URL> url;
     if (mBaseProxy) {
-      url = mozilla::dom::URL::Constructor(mURL, mBaseProxy->URI(), mRv);
+      url = mozilla::dom::URL::Constructor(nullptr, mURL, mBaseProxy->URI(),
+                                           mRv);
     } else if (!mBase.IsVoid()) {
-      url = mozilla::dom::URL::Constructor(mURL, mBase, mRv);
+      url = mozilla::dom::URL::Constructor(nullptr, mURL, mBase, mRv);
     } else {
-      url = mozilla::dom::URL::Constructor(mURL, nullptr, mRv);
+      url = mozilla::dom::URL::Constructor(nullptr, mURL, nullptr, mRv);
     }
 
     if (mRv.Failed()) {
@@ -580,10 +581,10 @@ URL::~URL()
   }
 }
 
-bool
-URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector)
+JSObject*
+URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return URLBinding_workers::Wrap(aCx, this, aGivenProto, aReflector);
+  return URLBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -952,7 +953,7 @@ void
 URL::CreateSearchParamsIfNeeded()
 {
   if (!mSearchParams) {
-    mSearchParams = new URLSearchParams(this);
+    mSearchParams = new URLSearchParams(nullptr, this);
     UpdateURLSearchParams();
   }
 }

@@ -375,18 +375,20 @@ class jit::UniqueTrackedTypes
     { }
 
     bool init() { return map_.init(); }
-    bool getIndexOf(TypeSet::Type ty, uint8_t* indexp);
+    bool getIndexOf(JSContext* cx, TypeSet::Type ty, uint8_t* indexp);
 
     uint32_t count() const { MOZ_ASSERT(map_.count() == list_.length()); return list_.length(); }
     bool enumerate(TypeSet::TypeList* types) const;
 };
 
 bool
-UniqueTrackedTypes::getIndexOf(TypeSet::Type ty, uint8_t* indexp)
+UniqueTrackedTypes::getIndexOf(JSContext* cx, TypeSet::Type ty, uint8_t* indexp)
 {
-    // For now, tracking of nursery singleton objects is not supported.
-    if (ty.isSingletonUnchecked() && IsInsideNursery(ty.singleton()))
-        ty = TypeSet::UnknownType();
+    // FIXME bug 1176511. It is unduly onerous to make nursery things work
+    // correctly as keys of hash tables. Until then, since TypeSet::Types may
+    // be in the nursery, we evict the nursery before tracking types.
+    cx->runtime()->gc.evictNursery();
+    MOZ_ASSERT_IF(ty.isSingletonUnchecked(), !IsInsideNursery(ty.singleton()));
 
     TypesMap::AddPtr p = map_.lookupForAdd(ty);
     if (p) {
@@ -600,15 +602,15 @@ OptimizationAttempt::writeCompact(CompactBufferWriter& writer) const
 }
 
 bool
-OptimizationTypeInfo::writeCompact(CompactBufferWriter& writer,
-                              UniqueTrackedTypes& uniqueTypes) const
+OptimizationTypeInfo::writeCompact(JSContext* cx, CompactBufferWriter& writer,
+                                   UniqueTrackedTypes& uniqueTypes) const
 {
     writer.writeUnsigned((uint32_t) site_);
     writer.writeUnsigned((uint32_t) mirType_);
     writer.writeUnsigned(types_.length());
     for (uint32_t i = 0; i < types_.length(); i++) {
         uint8_t index;
-        if (!uniqueTypes.getIndexOf(types_[i], &index))
+        if (!uniqueTypes.getIndexOf(cx, types_[i], &index))
             return false;
         writer.writeByte(index);
     }
@@ -954,7 +956,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
             return false;
 
         for (const OptimizationTypeInfo* t = v->begin(); t != v->end(); t++) {
-            if (!t->writeCompact(writer, uniqueTypes))
+            if (!t->writeCompact(cx, writer, uniqueTypes))
                 return false;
         }
     }
