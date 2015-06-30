@@ -3356,4 +3356,51 @@ void AddLibraryMapping(const char* library_name,
 }
 #endif
 
+#ifdef XP_WIN
+void RecordCrashingModule(void* returnAddress)
+{
+  HMODULE module = nullptr;
+  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                         (LPCTSTR)returnAddress,
+                         &module)) {
+    return;
+  }
+
+  wchar_t moduleName[MAX_PATH];
+  if (!GetModuleFileNameW(module, moduleName, ArrayLength(moduleName))) {
+    return;
+  }
+
+  wchar_t tempPath[MAX_PATH];
+  if (!GetTempPathW(ArrayLength(tempPath), tempPath)) {
+    return;
+  }
+
+  if (wcscat_s(tempPath, ArrayLength(tempPath), L"FirefoxBlockedDLL.txt")) {
+    return;
+  }
+
+  HANDLE outputFile = CreateFileW(tempPath,
+                                  GENERIC_WRITE,
+                                  0,
+                                  nullptr,
+                                  CREATE_ALWAYS,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  nullptr);
+
+  if (outputFile == INVALID_HANDLE_VALUE) {
+    return;
+  }
+
+  DWORD nBytes;
+  WriteFile(outputFile,
+            moduleName,
+            wcslen(moduleName)*sizeof(wchar_t),
+            &nBytes,
+            nullptr);
+  CloseHandle(outputFile);
+}
+#endif
+
 } // namespace CrashReporter
