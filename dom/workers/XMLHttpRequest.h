@@ -251,7 +251,7 @@ public:
   NullResponseText()
   {
     mStateData.mResponseText.SetIsVoid(true);
-    mStateData.mResponse = JSVAL_NULL;
+    mStateData.mResponse.setNull();
   }
 
   bool MozAnon() const

@@ -26,10 +26,12 @@ const TEST_FAILED_VIDEO=2;
 const TEST_CRASHED=3;
 
 // GRAPHICS_SANITY_TEST_OS_SNAPSHOT histogram enumeration values
-const SNAPSHOT_OK=0;
-const SNAPSHOT_INCORRECT=1;
+const SNAPSHOT_VIDEO_OK=0;
+const SNAPSHOT_VIDEO_FAIL=1;
 const SNAPSHOT_ERROR=2;
 const SNAPSHOT_TIMEOUT=3;
+const SNAPSHOT_LAYERS_OK=4;
+const SNAPSHOT_LAYERS_FAIL=5;
 
 function testPixel(ctx, x, y, r, g, b, a, fuzz) {
   var data = ctx.getImageData(x, y, 1, 1);
@@ -75,9 +77,15 @@ function testWidgetSnapshot(win, canvas, ctx) {
   try {
     takeWidgetSnapshot(win, canvas, ctx);
     if (verifyVideoRendering(ctx)) {
-      reportSnapshotResult(SNAPSHOT_OK);
+      reportSnapshotResult(SNAPSHOT_VIDEO_OK);
     } else {
-      reportSnapshotResult(SNAPSHOT_INCORRECT);
+      reportSnapshotResult(SNAPSHOT_VIDEO_FAIL);
+    }
+
+    if (verifyLayersRendering(ctx)) {
+      reportSnapshotResult(SNAPSHOT_LAYERS_OK);
+    } else {
+      reportSnapshotResult(SNAPSHOT_LAYERS_FAIL);
     }
   } catch (e) {
     reportSnapshotResult(SNAPSHOT_ERROR);
@@ -109,12 +117,24 @@ function verifyVideoRendering(ctx) {
     testPixel(ctx, 50, 114, 255, 0, 0, 255, 64);
 }
 
+// Verify that the middle of the layers test is the color we expect.
+// It's a red 64x64 square, test a pixel deep into the 64x64 square
+// to prevent fuzzing.
+function verifyLayersRendering(ctx) {
+  return testPixel(ctx, 18, 18, 255, 0, 0, 255, 64);
+}
+
 function testCompositor(win, ctx) {
   takeWindowSnapshot(win, ctx);
 
   if (!verifyVideoRendering(ctx)) {
     reportResult(TEST_FAILED_VIDEO);
     Preferences.set(DISABLE_VIDEO_PREF, true);
+    return false;
+  }
+
+  if (!verifyLayersRendering(ctx)) {
+    reportResult(TEST_FAILED_RENDER);
     return false;
   }
 

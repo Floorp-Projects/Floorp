@@ -120,6 +120,12 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     // registers we need.
     masm.bind(&entry_label_);
 
+#ifdef JS_CODEGEN_ARM64
+    // ARM64 communicates stack address via sp, but uses a pseudo-sp for addressing.
+    MOZ_ASSERT(!masm.GetStackPointer64().Is(sp));
+    masm.moveStackPtrTo(masm.getStackPointer());
+#endif
+
     // Push non-volatile registers which might be modified by jitcode.
     size_t pushedNonVolatileRegisters = 0;
     for (GeneralRegisterForwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter) {
@@ -387,7 +393,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
 
         // Save registers before calling C function
         LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
-#if defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
         volatileRegs.add(Register::FromCode(Registers::lr));
 #elif defined(JS_CODEGEN_MIPS)
         volatileRegs.add(Register::FromCode(Registers::ra));

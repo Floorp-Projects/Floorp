@@ -22,7 +22,7 @@ class TestShutdownSubsubParent :
     public PTestShutdownSubsubParent
 {
 public:
-    TestShutdownSubsubParent(bool expectParentDeleted) :
+    explicit TestShutdownSubsubParent(bool expectParentDeleted) :
         mExpectParentDeleted(expectParentDeleted)
     {
     }
@@ -44,7 +44,7 @@ class TestShutdownSubParent :
     public PTestShutdownSubParent
 {
 public:
-    TestShutdownSubParent(bool expectCrash) :
+    explicit TestShutdownSubParent(bool expectCrash) :
         mExpectCrash(expectCrash),
         mDeletedCount(0)
     {
@@ -131,7 +131,7 @@ class TestShutdownSubsubChild :
     public PTestShutdownSubsubChild
 {
 public:
-    TestShutdownSubsubChild(bool expectParentDeleted) :
+    explicit TestShutdownSubsubChild(bool expectParentDeleted) :
         mExpectParentDeleted(expectParentDeleted)
     {
     }
@@ -152,7 +152,7 @@ class TestShutdownSubChild :
     public PTestShutdownSubChild
 {
 public:
-    TestShutdownSubChild(bool expectCrash) : mExpectCrash(expectCrash)
+    explicit TestShutdownSubChild(bool expectCrash) : mExpectCrash(expectCrash)
     {
     }
 

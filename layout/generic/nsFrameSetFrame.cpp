@@ -674,8 +674,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   // Reflow only creates children frames for <frameset> and <frame> content.
   // this assumption is used here
   int i = 0;
-  for (nsIFrame* child = mFrames.FirstChild(); child;
-       child = child->GetNextSibling()) {
+  for (nsIFrame* child : mFrames) {
     if (aChild == child) {
       nsIntPoint ignore;
       GetSizeOfChildAt(i, aWM, aSize, ignore);

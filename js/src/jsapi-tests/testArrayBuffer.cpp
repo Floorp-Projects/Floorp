@@ -68,9 +68,9 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK(JS_GetProperty(cx, view, "length", &v));
         CHECK_SAME(v, INT_TO_JSVAL(0));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
-        v = JSVAL_VOID;
+        v.setUndefined();
         JS_GetElement(cx, obj, 0, &v);
-        CHECK_SAME(v, JSVAL_VOID);
+        CHECK(v.isUndefined());
 
         // Transfer to a new ArrayBuffer
         JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, size, contents));

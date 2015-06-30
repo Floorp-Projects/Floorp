@@ -367,7 +367,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
             JSErrorReporter older;
 
             ok = JS_ExecuteScript(cx, script, &result);
-            if (ok && result != JSVAL_VOID) {
+            if (ok && !result.isUndefined()) {
                 /* Suppress error reports from JS::ToString(). */
                 older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
                 str = JS::ToString(cx, result);
@@ -584,7 +584,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
 
   JS::Rooted<JS::Value> result(cx);
   bool ok = JS_ExecuteScript(cx, script, &result);
-  if (ok && result != JSVAL_VOID) {
+  if (ok && !result.isUndefined()) {
       JSErrorReporter old = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
       JSString* str = JS::ToString(cx, result);
       nsAutoJSString autoStr;
