@@ -851,6 +851,9 @@ private:
                           int32_t* aSliceRefCnt,
                           bool* aResult) override;
 
+    virtual bool
+    RecvFlushPendingFileDeletions() override;
+
     virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;
     virtual bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor) override;
 

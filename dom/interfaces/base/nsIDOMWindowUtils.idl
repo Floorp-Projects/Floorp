@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(42c529d8-54cf-4158-8b09-13ca89d7a88c)]
+[scriptable, uuid(e7b44320-8255-4ad1-bbe9-d78a8a1867c9)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1544,6 +1544,8 @@ interface nsIDOMWindowUtils : nsISupports {
                             [optional] out long aRefCnt,
                             [optional] out long aDBRefCnt,
                             [optional] out long aSliceRefCnt);
+
+  void flushPendingFileDeletions();
 
   /**
    * Return whether incremental GC has been disabled due to a binary add-on.
