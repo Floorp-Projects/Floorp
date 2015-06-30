@@ -28,9 +28,19 @@ FAQ
 * I want to write some new tests for the web-platform-tests
   testsuite. How do I do that?
 
-  See the section on tests below. At the moment you will have to
-  submit the tests directly to the W3C and wait for them to be
-  imported into the Mozilla tree.
+  See the section on tests below. You can commit the tests directly to
+  the Mozilla repository and they will be upstreamed next time the
+  test is imported. For this reason please ensure that any tests you
+  write are testing correct-pre-spec behaviour even if we don't yet
+  pass, get proper review, and have a commit message that makes sense
+  outside of the Mozilla context.
+
+* How do I write a test that requires the use of a Mozilla-specific
+  feature?
+
+  Tests in the `mozilla/tests/` directory use the same harness but are
+  not synced with any upstream. Be aware that these tests run on the
+  server with a `/_mozilla/` prefix to their URLs.
 
 * A test is unstable; how do I disable it?
 
@@ -40,9 +50,8 @@ Directories
 -----------
 
 `tests/` contains the tests themselves. This is a copy of a certain
-revision of web-platform-tests. The contents of this directory must
-not be modified locally as any modifications will be overwritten
-whenever a new upstream sync is performed.
+revision of web-platform-tests. Any patches modifying this directory
+will be upstreamed next time the tests are imported.
 
 `harness/` contains the [wptrunner](http://github.com/w3c/wptrunner)
 test runner. Again the contents of this directory will be overwritten
@@ -50,6 +59,11 @@ on update.
 
 `meta/` contains Gecko-specific expectation data. This is explained in
 the following section.
+
+`mozilla/tests` contains tests that will not be upstreamed and may
+make use of Mozilla-specific features.
+
+`mozilla/meta` contains metadata for the Mozilla-specific tests.
 
 Expectation Data
 ----------------
@@ -128,6 +142,42 @@ can be disabled using an ini file with the contents:
         type: testharness
         disabled:
             if os == "win": https://bugzilla.mozilla.org/show_bug.cgi?id=1234567
+
+Enabling Prefs
+--------------
+
+Some tests require specific prefs to be enabled before running. These
+prefs can be set in the expectation data using a `prefs` key with a
+comma-seperate list of `pref.name:value` items to set e.g.
+
+    [filename.html]
+        prefs: [dom.serviceWorkers.enabled:true,
+                dom.serviceWorkers.interception.enabled:true,
+                dom.serviceWorkers.exemptFromPerDomainMax:true,
+                dom.caches.enabled:true]
+
+Setting per-Directory Metadata
+------------------------------
+
+Occasionally it is useful to set metadata for an entire directory of
+tests e.g. to disable then all, or to enable prefs for every test. In
+that case it is possible to create a `__dir__.ini` file in the
+metadata directory corresponding to the tests for which you want to
+set this metadata e.g. to disable all the tests in
+`tests/feature/unsupported/`, one might create
+`meta/feature/unsupported/__dir__.ini` with the contents:
+
+    disabled: Feature is unsupported
+
+Settings set in this way are inherited into subdirectories. It is
+possible to unset a value that has been set in a parent using the
+special token `@Reset` (usually used with prefs), or to force a value
+to true or false using `@True` and `@False`.  For example to enable
+the tests in `meta/feature/unsupported/subfeature-supported` one might
+create an ini file
+`meta/feature/unsupported/subfeature-supported/__dir__.ini` like:
+
+    disabled: @False
 
 Test Format
 -----------
