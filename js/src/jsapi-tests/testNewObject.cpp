@@ -106,7 +106,7 @@ BEGIN_TEST(testNewObject_1)
     obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
     CHECK(obj);
     CHECK(JS_GetElement(cx, ctor, 0, &v));
-    CHECK_SAME(v, JSVAL_ZERO);
+    CHECK(v.isInt32(0));
 
     return true;
 }
