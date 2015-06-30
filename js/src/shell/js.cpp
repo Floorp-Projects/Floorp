@@ -2400,7 +2400,7 @@ Intern(JSContext* cx, unsigned argc, jsval* vp)
 
     mozilla::Range<const char16_t> chars = strChars.twoByteRange();
 
-    if (!JS_InternUCStringN(cx, chars.start().get(), chars.length()))
+    if (!JS_AtomizeAndPinUCStringN(cx, chars.start().get(), chars.length()))
         return false;
 
     args.rval().setUndefined();

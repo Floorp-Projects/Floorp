@@ -3,7 +3,7 @@
 
 FRAGMENT(jsid, simple) {
   JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, "moon"));
-  JS::Rooted<JSString*> interned(cx, JS_InternJSString(cx, string));
+  JS::Rooted<JSString*> interned(cx, JS_AtomizeAndPinJSString(cx, string));
   JS::Rooted<jsid> string_id(cx, INTERNED_STRING_TO_JSID(cx, interned));
   jsid int_id = INT_TO_JSID(1729);
   JS::Rooted<jsid> unique_symbol_id(
@@ -38,7 +38,7 @@ jsid_handles(JS::Handle<jsid> jsid_handle,
 
 FRAGMENT(jsid, handles) {
   JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, "shovel"));
-  JS::Rooted<JSString*> interned(cx, JS_InternJSString(cx, string));
+  JS::Rooted<JSString*> interned(cx, JS_AtomizeAndPinJSString(cx, string));
   JS::Rooted<jsid> string_id(cx, INTERNED_STRING_TO_JSID(cx, interned));
   jsid_handles(string_id, &string_id);
 }

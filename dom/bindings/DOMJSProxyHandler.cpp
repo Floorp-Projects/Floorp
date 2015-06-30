@@ -25,7 +25,7 @@ jsid s_length_id = JSID_VOID;
 bool
 DefineStaticJSVals(JSContext* cx)
 {
-  return InternJSString(cx, s_length_id, "length");
+  return AtomizeAndPinJSString(cx, s_length_id, "length");
 }
 
 const char DOMProxyHandler::family = 0;
