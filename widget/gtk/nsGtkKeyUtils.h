@@ -129,6 +129,11 @@ public:
      */
     static bool IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent);
 
+    /**
+     * Destroys the singleton KeymapWrapper instance, if it exists.
+     */
+    static void Shutdown();
+
 protected:
 
     /**
@@ -245,8 +250,6 @@ protected:
      * Signal handlers.
      */
     static void OnKeysChanged(GdkKeymap* aKeymap, KeymapWrapper* aKeymapWrapper);
-    static void OnDestroyKeymap(KeymapWrapper* aKeymapWrapper,
-                                GdkKeymap *aGdkKeymap);
 
     /**
      * GetCharCodeFor() Computes what character is inputted by the key event
