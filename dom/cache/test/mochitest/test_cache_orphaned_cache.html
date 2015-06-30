@@ -109,6 +109,13 @@ SpecialPowers.pushPrefEnv({
     return caches.delete(name);
   }).then(function(deleted) {
     ok(deleted, 'cache should be deleted');
+
+    // This is a bit superfluous, but its necessary to make sure the Cache is
+    // fully deleted before we proceed.  The deletion actually takes place in
+    // two async steps.  We don't want to resetStorage() until the second step
+    // has taken place.  This extra Cache operation ensure that all the
+    // runnables have been flushed through the threads, etc.
+    return caches.has(name);
   })
 
   // Now measure initial disk usage
