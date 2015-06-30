@@ -258,28 +258,22 @@
         });
 
         getterNames.forEach(function (getterName) {
-            var propertyDesc = propertyDescs[getterName];
-
             // Chainable methods are things like `an`, which can work both for `.should.be.an.instanceOf` and as
             // `should.be.an("object")`. We need to handle those specially.
-            var isChainableMethod = false;
-            try {
-                isChainableMethod = typeof propertyDesc.get.call({}) === "function";
-            } catch (e) { }
+            var isChainableMethod = Assertion.prototype.__methods.hasOwnProperty(getterName);
 
             if (isChainableMethod) {
-                Assertion.addChainableMethod(
+                Assertion.overwriteChainableMethod(
                     getterName,
-                    function () {
-                        var assertion = this;
-                        function originalMethod() {
-                            return propertyDesc.get.call(assertion).apply(assertion, arguments);
-                        }
-                        doAsserterAsyncAndAddThen(originalMethod, this, arguments);
+                    function (originalMethod) {
+                        return function() {
+                            doAsserterAsyncAndAddThen(originalMethod, this, arguments);
+                        };
                     },
-                    function () {
-                        var originalGetter = propertyDesc.get;
-                        doAsserterAsyncAndAddThen(originalGetter, this);
+                    function (originalGetter) {
+                        return function() {
+                            doAsserterAsyncAndAddThen(originalGetter, this);
+                        };
                     }
                 );
             } else {
