@@ -565,6 +565,10 @@ bool
 SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
                                   Handle* aNewHandle)
 {
+  if (pid == getpid()) {
+    *aNewHandle = mPort;
+    return mach_port_mod_refs(mach_task_self(), *aNewHandle, MACH_PORT_RIGHT_SEND, 1) == KERN_SUCCESS;
+  }
   StaticMutexAutoLock smal(gMutex);
 
   MemoryPorts* ports = GetMemoryPortsForPid(pid);

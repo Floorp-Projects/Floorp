@@ -445,6 +445,10 @@ class CIBuild(object):
         if mozharness_rev is None:
             mozharness_rev = mozharness['revision']
 
+        from taskcluster_graph.from_now import (
+            json_time_from_now,
+            current_json_time,
+        )
         build_parameters = dict(gaia_info().items() + {
             'docker_image': docker_image,
             'owner': params['owner'],
