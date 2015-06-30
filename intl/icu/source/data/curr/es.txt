@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/es.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/es.xml
- */
 es{
     Currencies{
         ADP{
@@ -25,11 +22,11 @@ es{
         }
         AFN{
             "AFN",
-            "afgani afgano",
+            "afgani",
         }
         ALL{
             "ALL",
-            "lek albanés",
+            "lek",
         }
         AMD{
             "AMD",
@@ -41,7 +38,7 @@ es{
         }
         AOA{
             "AOA",
-            "kwanza angoleño",
+            "kuanza",
         }
         AOK{
             "AOK",
@@ -64,7 +61,7 @@ es{
             "peso argentino (1983–1985)",
         }
         ARS{
-            "AR$",
+            "ARS",
             "peso argentino",
         }
         ATS{
@@ -72,12 +69,12 @@ es{
             "chelín austriaco",
         }
         AUD{
-            "AU$",
+            "AUD",
             "dólar australiano",
         }
         AWG{
             "AWG",
-            "florín de Aruba",
+            "florín arubeño",
         }
         AZM{
             "AZM",
@@ -97,11 +94,11 @@ es{
         }
         BBD{
             "BBD",
-            "dólar de Barbados",
+            "dólar barbadense",
         }
         BDT{
             "BDT",
-            "taka de Bangladesh",
+            "taka",
         }
         BEC{
             "BEC",
@@ -129,7 +126,7 @@ es{
         }
         BIF{
             "BIF",
-            "franco de Burundi",
+            "franco burundés",
         }
         BMD{
             "BMD",
@@ -137,7 +134,7 @@ es{
         }
         BND{
             "BND",
-            "dólar de Brunéi",
+            "dólar bruneano",
         }
         BOB{
             "BOB",
@@ -164,7 +161,7 @@ es{
             "cruceiro brasileño (1990–1993)",
         }
         BRL{
-            "R$",
+            "BRL",
             "real brasileño",
         }
         BRN{
@@ -177,11 +174,11 @@ es{
         }
         BSD{
             "BSD",
-            "dólar de las Bahamas",
+            "dólar bahameño",
         }
         BTN{
             "BTN",
-            "ngultrum butanés",
+            "gultrum",
         }
         BUK{
             "BUK",
@@ -189,7 +186,7 @@ es{
         }
         BWP{
             "BWP",
-            "pula botsuano",
+            "pula",
         }
         BYB{
             "BYB",
@@ -201,7 +198,7 @@ es{
         }
         BZD{
             "BZD",
-            "dólar de Belice",
+            "dólar beliceño",
         }
         CAD{
             "CA$",
@@ -233,7 +230,7 @@ es{
         }
         CNY{
             "CNY",
-            "yuan chino",
+            "yuan",
         }
         COP{
             "COP",
@@ -285,7 +282,7 @@ es{
         }
         DJF{
             "DJF",
-            "franco de Yibuti",
+            "franco yibutiano",
         }
         DKK{
             "DKK",
@@ -333,7 +330,7 @@ es{
         }
         ETB{
             "ETB",
-            "birr etíope",
+            "bir",
         }
         EUR{
             "€",
@@ -345,11 +342,11 @@ es{
         }
         FJD{
             "FJD",
-            "dólar de las Islas Fiyi",
+            "dólar fiyiano",
         }
         FKP{
             "FKP",
-            "libra de las Islas Malvinas",
+            "libra malvinense",
         }
         FRF{
             "FRF",
@@ -357,7 +354,7 @@ es{
         }
         GBP{
             "GBP",
-            "libra esterlina británica",
+            "libra británica",
         }
         GEK{
             "GEK",
@@ -365,7 +362,7 @@ es{
         }
         GEL{
             "GEL",
-            "lari georgiano",
+            "lari",
         }
         GHC{
             "GHC",
@@ -373,15 +370,15 @@ es{
         }
         GHS{
             "GHS",
-            "cedi ghanés",
+            "cedi",
         }
         GIP{
             "GIP",
-            "libra de Gibraltar",
+            "libra gibraltareña",
         }
         GMD{
             "GMD",
-            "dalasi gambiano",
+            "dalasi",
         }
         GNF{
             "GNF",
@@ -417,7 +414,7 @@ es{
         }
         HKD{
             "HKD",
-            "dólar de Hong Kong",
+            "dólar hongkonés",
         }
         HNL{
             "HNL",
@@ -429,7 +426,7 @@ es{
         }
         HRK{
             "HRK",
-            "kuna croata",
+            "kuna",
         }
         HTG{
             "HTG",
@@ -437,7 +434,7 @@ es{
         }
         HUF{
             "HUF",
-            "florín húngaro",
+            "forinto húngaro",
         }
         IDR{
             "IDR",
@@ -453,7 +450,7 @@ es{
         }
         ILS{
             "ILS",
-            "nuevo sheqel israelí",
+            "nuevo séquel israelí",
         }
         INR{
             "INR",
@@ -477,7 +474,7 @@ es{
         }
         JMD{
             "JMD",
-            "dólar de Jamaica",
+            "dólar jamaicano",
         }
         JOD{
             "JOD",
@@ -485,19 +482,19 @@ es{
         }
         JPY{
             "JPY",
-            "yen japonés",
+            "yen",
         }
         KES{
             "KES",
-            "chelín keniata",
+            "chelín keniano",
         }
         KGS{
             "KGS",
-            "som kirguís",
+            "som",
         }
         KHR{
             "KHR",
-            "riel camboyano",
+            "riel",
         }
         KMF{
             "KMF",
@@ -525,7 +522,7 @@ es{
         }
         LAK{
             "LAK",
-            "kip laosiano",
+            "kip",
         }
         LBP{
             "LBP",
@@ -533,7 +530,7 @@ es{
         }
         LKR{
             "LKR",
-            "rupia de Sri Lanka",
+            "rupia esrilanquesa",
         }
         LRD{
             "LRD",
@@ -589,7 +586,7 @@ es{
         }
         MGA{
             "MGA",
-            "ariary malgache",
+            "ariari",
         }
         MGF{
             "MGF",
@@ -605,11 +602,11 @@ es{
         }
         MMK{
             "MMK",
-            "kyat de Myanmar",
+            "kiat",
         }
         MNT{
             "MNT",
-            "tugrik mongol",
+            "tugrik",
         }
         MOP{
             "MOP",
@@ -617,7 +614,7 @@ es{
         }
         MRO{
             "MRO",
-            "ouguiya mauritano",
+            "uguiya",
         }
         MTL{
             "MTL",
@@ -633,14 +630,14 @@ es{
         }
         MVR{
             "MVR",
-            "rufiyaa de Maldivas",
+            "rufiya",
         }
         MWK{
             "MWK",
-            "kwacha de Malawi",
+            "kwacha malauí",
         }
         MXN{
-            "MX$",
+            "MXN",
             "peso mexicano",
         }
         MXP{
@@ -653,7 +650,7 @@ es{
         }
         MYR{
             "MYR",
-            "ringgit malasio",
+            "ringit",
         }
         MZE{
             "MZE",
@@ -665,15 +662,15 @@ es{
         }
         MZN{
             "MZN",
-            "metical mozambiqueño",
+            "metical",
         }
         NAD{
             "NAD",
-            "dólar de Namibia",
+            "dólar namibio",
         }
         NGN{
             "NGN",
-            "naira nigeriano",
+            "naira",
         }
         NIC{
             "NIC",
@@ -693,10 +690,10 @@ es{
         }
         NPR{
             "NPR",
-            "rupia nepalesa",
+            "rupia nepalí",
         }
         NZD{
-            "NZ$",
+            "NZD",
             "dólar neozelandés",
         }
         OMR{
@@ -721,7 +718,7 @@ es{
         }
         PGK{
             "PGK",
-            "kina de Papúa Nueva Guinea",
+            "kina",
         }
         PHP{
             "PHP",
@@ -733,7 +730,7 @@ es{
         }
         PLN{
             "PLN",
-            "zloty polaco",
+            "esloti",
         }
         PLZ{
             "PLZ",
@@ -749,7 +746,7 @@ es{
         }
         QAR{
             "QAR",
-            "riyal de Qatar",
+            "rial catarí",
         }
         RHD{
             "RHD",
@@ -781,15 +778,15 @@ es{
         }
         SAR{
             "SAR",
-            "riyal saudí",
+            "rial saudí",
         }
         SBD{
             "SBD",
-            "dólar de las Islas Salomón",
+            "dólar salomonense",
         }
         SCR{
             "SCR",
-            "rupia de Seychelles",
+            "rupia seychellense",
         }
         SDD{
             "SDD",
@@ -825,7 +822,7 @@ es{
         }
         SLL{
             "SLL",
-            "leone de Sierra Leona",
+            "leona",
         }
         SOS{
             "SOS",
@@ -845,7 +842,7 @@ es{
         }
         STD{
             "STD",
-            "dobra de Santo Tomé y Príncipe",
+            "dobra",
         }
         SUR{
             "SUR",
@@ -861,11 +858,11 @@ es{
         }
         SZL{
             "SZL",
-            "lilangeni suazi",
+            "lilangeni",
         }
         THB{
             "฿",
-            "baht tailandés",
+            "bat",
         }
         TJR{
             "TJR",
@@ -889,7 +886,7 @@ es{
         }
         TOP{
             "TOP",
-            "paʻanga tongano",
+            "paanga",
         }
         TPE{
             "TPE",
@@ -917,7 +914,7 @@ es{
         }
         UAH{
             "UAH",
-            "grivna ucraniana",
+            "grivna",
         }
         UAK{
             "UAK",
@@ -957,7 +954,7 @@ es{
         }
         UZS{
             "UZS",
-            "som uzbeko",
+            "sum",
         }
         VEB{
             "VEB",
@@ -969,18 +966,18 @@ es{
         }
         VND{
             "₫",
-            "dong vietnamita",
+            "dong",
         }
         VUV{
             "VUV",
-            "vatu vanuatuense",
+            "vatu",
         }
         WST{
             "WST",
-            "tala samoano",
+            "tala",
         }
         XAF{
-            "FCFA",
+            "XAF",
             "franco CFA BEAC",
         }
         XAG{
@@ -1008,7 +1005,7 @@ es{
             "unidad de cuenta europea (XBD)",
         }
         XCD{
-            "EC$",
+            "XCD",
             "dólar del Caribe Oriental",
         }
         XDR{
@@ -1036,7 +1033,7 @@ es{
             "paladio",
         }
         XPF{
-            "XPF",
+            "CFPF",
             "franco CFP",
         }
         XPT{
@@ -1053,7 +1050,7 @@ es{
         }
         XXX{
             "XXX",
-            "divisa desconocida",
+            "moneda desconocida",
         }
         YDD{
             "YDD",
@@ -1081,7 +1078,7 @@ es{
         }
         ZAR{
             "ZAR",
-            "rand sudafricano",
+            "rand",
         }
         ZMK{
             "ZMK",
@@ -1089,7 +1086,7 @@ es{
         }
         ZMW{
             "ZMW",
-            "kwacha zambiano",
+            "kuacha zambiano",
         }
         ZRN{
             "ZRN",
@@ -1108,6 +1105,58 @@ es{
             "dólar zimbabuense",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
         ADP{
             one{"peseta andorrana"}
@@ -1118,24 +1167,24 @@ es{
             other{"dírhams de los Emiratos Árabes Unidos"}
         }
         AFN{
-            one{"afgani afgano"}
-            other{"afganis afganos"}
+            one{"afgani"}
+            other{"afganis"}
         }
         ALL{
-            one{"lek albanés"}
-            other{"lekë albaneses"}
+            one{"lek"}
+            other{"lekes"}
         }
         AMD{
-            one{"dram armenio"}
-            other{"dram armenios"}
+            one{"dram"}
+            other{"drams"}
         }
         ANG{
             one{"florín de las Antillas Neerlandesas"}
             other{"florines de las Antillas Neerlandesas"}
         }
         AOA{
-            one{"kwanza angoleño"}
-            other{"kwanzas angoleños"}
+            one{"kuanza"}
+            other{"kuanzas"}
         }
         ARA{
             one{"austral argentino"}
@@ -1158,8 +1207,8 @@ es{
             other{"dólares australianos"}
         }
         AWG{
-            one{"florín de Aruba"}
-            other{"florines de Aruba"}
+            one{"florín arubeño"}
+            other{"florines arubeños"}
         }
         AZN{
             one{"manat azerí"}
@@ -1174,12 +1223,12 @@ es{
             other{"marcos convertibles de Bosnia-Herzegovina"}
         }
         BBD{
-            one{"dólar de Barbados"}
-            other{"dólares de Barbados"}
+            one{"dólar barbadense"}
+            other{"dólares barbadenses"}
         }
         BDT{
-            one{"taka de Bangladesh"}
-            other{"taka de Bangladesh"}
+            one{"taka"}
+            other{"takas"}
         }
         BEC{
             one{"franco belga (convertible)"}
@@ -1198,7 +1247,7 @@ es{
             other{"leva fuertes búlgaros"}
         }
         BGN{
-            one{"nuevo lev búlgaro"}
+            one{"lev búlgaro"}
             other{"levas búlgaras"}
         }
         BHD{
@@ -1206,16 +1255,16 @@ es{
             other{"dinares bahreiníes"}
         }
         BIF{
-            one{"franco de Burundi"}
-            other{"francos de Burundi"}
+            one{"franco burundés"}
+            other{"francos burundeses"}
         }
         BMD{
             one{"dólar de Bermudas"}
             other{"dólares de Bermudas"}
         }
         BND{
-            one{"dólar de Brunéi"}
-            other{"dólares de Brunéi"}
+            one{"dólar bruneano"}
+            other{"dólares bruneanos"}
         }
         BOB{
             one{"boliviano"}
@@ -1254,20 +1303,20 @@ es{
             other{"cruceiros brasileños"}
         }
         BSD{
-            one{"dólar de las Bahamas"}
-            other{"dólares de las Bahamas"}
+            one{"dólar bahameño"}
+            other{"dólares bahameños"}
         }
         BTN{
-            one{"ngultrum butanés"}
-            other{"ngultrum butaneses"}
+            one{"gultrum"}
+            other{"gultrums"}
         }
         BUK{
             one{"kyat birmano"}
             other{"kyat birmanos"}
         }
         BWP{
-            one{"pula botsuana"}
-            other{"pula botsuanas"}
+            one{"pula"}
+            other{"pulas"}
         }
         BYB{
             one{"nuevo rublo bielorruso"}
@@ -1278,8 +1327,8 @@ es{
             other{"rublos bielorrusos"}
         }
         BZD{
-            one{"dólar de Belice"}
-            other{"dólares de Belice"}
+            one{"dólar beliceño"}
+            other{"dólares beliceños"}
         }
         CAD{
             one{"dólar canadiense"}
@@ -1310,8 +1359,8 @@ es{
             other{"pesos chilenos"}
         }
         CNY{
-            one{"yuan chino"}
-            other{"yuanes chinos"}
+            one{"yuan"}
+            other{"yuanes"}
         }
         COP{
             one{"peso colombiano"}
@@ -1362,8 +1411,8 @@ es{
             other{"marcos alemanes"}
         }
         DJF{
-            one{"franco de Yibuti"}
-            other{"francos de Yibuti"}
+            one{"franco yibutiano"}
+            other{"francos yibutianos"}
         }
         DKK{
             one{"corona danesa"}
@@ -1394,8 +1443,8 @@ es{
             other{"libras egipcias"}
         }
         ERN{
-            one{"nakfa eritreo"}
-            other{"nakfas eritreos"}
+            one{"nakfa"}
+            other{"nakfas"}
         }
         ESA{
             one{"peseta española (cuenta A)"}
@@ -1410,8 +1459,8 @@ es{
             other{"pesetas españolas"}
         }
         ETB{
-            one{"birr etíope"}
-            other{"birrs etíopes"}
+            one{"bir"}
+            other{"bires"}
         }
         EUR{
             one{"euro"}
@@ -1422,36 +1471,36 @@ es{
             other{"marcos finlandeses"}
         }
         FJD{
-            one{"dólar de las Islas Fiyi"}
-            other{"dólares de las Islas Fiyi"}
+            one{"dólar fiyiano"}
+            other{"dólares fiyianos"}
         }
         FKP{
-            one{"libra de las Islas Malvinas"}
-            other{"libras de las Islas Malvinas"}
+            one{"libra malvinense"}
+            other{"libras malvinenses"}
         }
         FRF{
             one{"franco francés"}
             other{"francos franceses"}
         }
         GBP{
-            one{"libra esterlina británica"}
-            other{"libras esterlinas británicas"}
+            one{"libra británica"}
+            other{"libras británicas"}
         }
         GEL{
-            one{"lari georgiano"}
-            other{"laris georgianos"}
+            one{"lari"}
+            other{"laris"}
         }
         GHS{
-            one{"cedi ghanés"}
-            other{"cedis ghaneses"}
+            one{"cedi"}
+            other{"cedis"}
         }
         GIP{
             one{"libra gibraltareña"}
             other{"libras gibraltareñas"}
         }
         GMD{
-            one{"dalasi gambiano"}
-            other{"dalasis gambianos"}
+            one{"dalasi"}
+            other{"dalasis"}
         }
         GNF{
             one{"franco guineano"}
@@ -1474,8 +1523,8 @@ es{
             other{"dólares guyaneses"}
         }
         HKD{
-            one{"dólar de Hong Kong"}
-            other{"dólares de Hong Kong"}
+            one{"dólar hongkonés"}
+            other{"dólares hongkoneses"}
         }
         HNL{
             one{"lempira hondureño"}
@@ -1486,16 +1535,16 @@ es{
             other{"dinares croatas"}
         }
         HRK{
-            one{"kuna croata"}
-            other{"kunas croatas"}
+            one{"kuna"}
+            other{"kunas"}
         }
         HTG{
             one{"gourde haitiano"}
             other{"gourdes haitianos"}
         }
         HUF{
-            one{"florín húngaro"}
-            other{"florines húngaros"}
+            one{"forinto húngaro"}
+            other{"forintos húngaros"}
         }
         IDR{
             one{"rupia indonesia"}
@@ -1510,8 +1559,8 @@ es{
             other{"libras israelíes"}
         }
         ILS{
-            one{"nuevo sheqel israelí"}
-            other{"nuevos sheqels israelíes"}
+            one{"nuevo séquel israelí"}
+            other{"nuevos séqueles israelíes"}
         }
         INR{
             one{"rupia india"}
@@ -1534,28 +1583,28 @@ es{
             other{"liras italianas"}
         }
         JMD{
-            one{"dólar de Jamaica"}
-            other{"dólares de Jamaica"}
+            one{"dólar jamaicano"}
+            other{"dólares jamaicanos"}
         }
         JOD{
             one{"dinar jordano"}
             other{"dinares jordanos"}
         }
         JPY{
-            one{"yen japonés"}
-            other{"yenes japoneses"}
+            one{"yen"}
+            other{"yenes"}
         }
         KES{
-            one{"chelín keniata"}
-            other{"chelines keniatas"}
+            one{"chelín keniano"}
+            other{"chelines kenianos"}
         }
         KGS{
-            one{"som kirguís"}
-            other{"soms kirguises"}
+            one{"som"}
+            other{"soms"}
         }
         KHR{
-            one{"riel camboyano"}
-            other{"rieles camboyanos"}
+            one{"riel"}
+            other{"rieles"}
         }
         KMF{
             one{"franco comorense"}
@@ -1582,16 +1631,16 @@ es{
             other{"tenges kazakos"}
         }
         LAK{
-            one{"kip laosiano"}
-            other{"kips laosianos"}
+            one{"kip"}
+            other{"kips"}
         }
         LBP{
             one{"libra libanesa"}
             other{"libras libanesas"}
         }
         LKR{
-            one{"rupia de Sri Lanka"}
-            other{"rupias de Sri Lanka"}
+            one{"rupia esrilanquesa"}
+            other{"rupias esrilanquesas"}
         }
         LRD{
             one{"dólar liberiano"}
@@ -1619,7 +1668,7 @@ es{
         }
         LVL{
             one{"lats letón"}
-            other{"lats letones"}
+            other{"lats letónes"}
         }
         LVR{
             one{"rublo letón"}
@@ -1642,28 +1691,28 @@ es{
             other{"leus moldavos"}
         }
         MGA{
-            one{"ariary malgache"}
-            other{"ariarys malgaches"}
+            one{"ariari"}
+            other{"ariaris"}
         }
         MKD{
             one{"dinar macedonio"}
             other{"dinares macedonios"}
         }
         MMK{
-            one{"kyat de Myanmar"}
-            other{"kyats de Myanmar"}
+            one{"kiat"}
+            other{"kiats"}
         }
         MNT{
-            one{"tugrik mongol"}
-            other{"tugriks mongoles"}
+            one{"tugrik"}
+            other{"tugriks"}
         }
         MOP{
             one{"pataca de Macao"}
             other{"patacas de Macao"}
         }
         MRO{
-            one{"ouguiya mauritano"}
-            other{"ouguiyas mauritanos"}
+            one{"uguiya"}
+            other{"uguiyas"}
         }
         MTL{
             one{"lira maltesa"}
@@ -1678,12 +1727,12 @@ es{
             other{"rupias mauricianas"}
         }
         MVR{
-            one{"rufiyaa de Maldivas"}
-            other{"rufiyaas de Maldivas"}
+            one{"rufiya"}
+            other{"rufiyas"}
         }
         MWK{
-            one{"kwacha de Malawi"}
-            other{"kwachas de Malawi"}
+            one{"kwacha malauí"}
+            other{"kwachas malauís"}
         }
         MXN{
             one{"peso mexicano"}
@@ -1698,24 +1747,24 @@ es{
             other{"unidades de inversión (UDI) mexicanas"}
         }
         MYR{
-            one{"ringgit malasio"}
-            other{"ringgits malasios"}
+            one{"ringit"}
+            other{"ringits"}
         }
         MZE{
             one{"escudo mozambiqueño"}
             other{"escudos mozambiqueños"}
         }
         MZN{
-            one{"metical mozambiqueño"}
-            other{"meticales mozambiqueños"}
+            one{"metical"}
+            other{"meticales"}
         }
         NAD{
-            one{"dólar de Namibia"}
-            other{"dólares de Namibia"}
+            one{"dólar namibio"}
+            other{"dólares namibios"}
         }
         NGN{
-            one{"naira nigeriano"}
-            other{"nairas nigerianos"}
+            one{"naira"}
+            other{"nairas"}
         }
         NIC{
             one{"córdoba nicaragüense (1988–1991)"}
@@ -1734,8 +1783,8 @@ es{
             other{"coronas noruegas"}
         }
         NPR{
-            one{"rupia nepalesa"}
-            other{"rupias nepalesas"}
+            one{"rupia nepalí"}
+            other{"rupias nepalíes"}
         }
         NZD{
             one{"dólar neozelandés"}
@@ -1762,8 +1811,8 @@ es{
             other{"soles peruanos"}
         }
         PGK{
-            one{"kina de Papúa Nueva Guinea"}
-            other{"kinas de Papúa Nueva Guinea"}
+            one{"kina"}
+            other{"kinas"}
         }
         PHP{
             one{"peso filipino"}
@@ -1774,8 +1823,8 @@ es{
             other{"rupias pakistaníes"}
         }
         PLN{
-            one{"zloty polaco"}
-            other{"zlotys polacos"}
+            one{"esloti"}
+            other{"eslotis"}
         }
         PLZ{
             one{"zloty polaco (PLZ)"}
@@ -1790,8 +1839,8 @@ es{
             other{"guaraníes paraguayos"}
         }
         QAR{
-            one{"riyal de Qatar"}
-            other{"riales de Qatar"}
+            one{"rial catarí"}
+            other{"riales cataríes"}
         }
         ROL{
             one{"antiguo leu rumano"}
@@ -1799,7 +1848,7 @@ es{
         }
         RON{
             one{"leu rumano"}
-            other{"lei rumanos"}
+            other{"leus rumanos"}
         }
         RSD{
             one{"dinar serbio"}
@@ -1822,12 +1871,12 @@ es{
             other{"riales saudíes"}
         }
         SBD{
-            one{"dólar de las Islas Salomón"}
-            other{"dólares de las Islas Salomón"}
+            one{"dólar salomonense"}
+            other{"dólares salomonenses"}
         }
         SCR{
-            one{"rupia de Seychelles"}
-            other{"rupias de Seychelles"}
+            one{"rupia seychellense"}
+            other{"rupias seychellenses"}
         }
         SDD{
             one{"dinar sudanés"}
@@ -1862,8 +1911,8 @@ es{
             other{"coronas eslovacas"}
         }
         SLL{
-            one{"leone de Sierra Leona"}
-            other{"leones de Sierra Leona"}
+            one{"leona"}
+            other{"leonas"}
         }
         SOS{
             one{"chelín somalí"}
@@ -1878,8 +1927,8 @@ es{
             other{"libras sursudanesas"}
         }
         STD{
-            one{"dobra de Santo Tomé y Príncipe"}
-            other{"dobras de Santo Tomé y Príncipe"}
+            one{"dobra"}
+            other{"dobras"}
         }
         SUR{
             one{"rublo soviético"}
@@ -1894,12 +1943,12 @@ es{
             other{"libras sirias"}
         }
         SZL{
-            one{"lilangeni suazi"}
-            other{"lilangenis suazis"}
+            one{"lilangeni"}
+            other{"lilangenis"}
         }
         THB{
-            one{"baht tailandés"}
-            other{"bahts tailandeses"}
+            one{"bat"}
+            other{"bats"}
         }
         TJS{
             one{"somoni tayiko"}
@@ -1918,8 +1967,8 @@ es{
             other{"dinares tunecinos"}
         }
         TOP{
-            one{"paʻanga tongano"}
-            other{"paʻangas tonganos"}
+            one{"paanga"}
+            other{"paangas"}
         }
         TRL{
             one{"lira turca (1922–2005)"}
@@ -1942,8 +1991,8 @@ es{
             other{"chelines tanzanos"}
         }
         UAH{
-            one{"grivnia ucraniana"}
-            other{"grivnias ucranianas"}
+            one{"grivna"}
+            other{"grivnas"}
         }
         UAK{
             one{"karbovanet ucraniano"}
@@ -1978,8 +2027,8 @@ es{
             other{"pesos uruguayos"}
         }
         UZS{
-            one{"som uzbeko"}
-            other{"soms uzbekos"}
+            one{"sum"}
+            other{"sums"}
         }
         VEB{
             one{"bolívar venezolano (1871–2008)"}
@@ -1990,16 +2039,16 @@ es{
             other{"bolívares venezolanos"}
         }
         VND{
-            one{"dong vietnamita"}
-            other{"dongs vietnamitas"}
+            one{"dong"}
+            other{"dongs"}
         }
         VUV{
-            one{"vatu vanuatuense"}
-            other{"vatus vanuatuenses"}
+            one{"vatu"}
+            other{"vatus"}
         }
         WST{
-            one{"tala samoano"}
-            other{"talas samoanos"}
+            one{"tala"}
+            other{"talas"}
         }
         XAF{
             one{"franco CFA BEAC"}
@@ -2062,8 +2111,8 @@ es{
             other{"platino"}
         }
         XXX{
-            one{"moneda desconocida/no válida"}
-            other{"monedas desconocidas/no válidas"}
+            one{"(unidad de moneda desconocida)"}
+            other{"(moneda desconocida)"}
         }
         YER{
             one{"rial yemení"}
@@ -2074,21 +2123,21 @@ es{
             other{"dinares convertibles yugoslavos"}
         }
         ZAR{
-            one{"rand sudafricano"}
-            other{"rands sudafricanos"}
+            one{"rand"}
+            other{"rands"}
         }
         ZMK{
             one{"kwacha zambiano (1968–2012)"}
             other{"kwachas zambianos (1968–2012)"}
         }
         ZMW{
-            one{"kwacha zambiano"}
-            other{"kwachas zambianos"}
+            one{"kuacha zambiano"}
+            other{"kuachas zambianos"}
         }
     }
     CurrencyUnitPatterns{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.13.21"}
 }

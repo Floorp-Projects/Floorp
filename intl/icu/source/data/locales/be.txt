@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/be.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/be.xml
- */
 be{
     AuxExemplarCharacters{
         "[{а\u0301} {е\u0301} {ё\u0301} {і\u0301} {о\u0301} {у\u0301} {ы\u0301} {э"
@@ -16,9 +13,6 @@ be{
     }
     ExemplarCharacters{"[а б в г д {дж} {дз} е ё ж з і й к л м н о п р с т у ў ф х ц ч ш ы ь э ю я]"}
     ExemplarCharactersIndex{"[А Б В Г Д Е Ж З І Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Ы Э Ю Я]"}
-    LocaleScript{
-        "Cyrl",
-    }
     NumberElements{
         latn{
             patterns{
@@ -33,7 +27,7 @@ be{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.10.93"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -122,15 +116,15 @@ be{
             }
             intervalFormats{
                 MMM{
-                    M{"LLL-LLL"}
+                    M{"LLL–LLL"}
                 }
                 yMMM{
-                    M{"LLL-LLL y G"}
-                    y{"LLL y - LLL y G"}
+                    M{"LLL–LLL y G"}
+                    y{"LLL y – LLL y G"}
                 }
                 yMMMM{
-                    M{"LLLL-LLLL y G"}
-                    y{"LLLL y - LLLL y G"}
+                    M{"LLLL–LLLL y G"}
+                    y{"LLLL y – LLLL y G"}
                 }
             }
         }
@@ -225,15 +219,15 @@ be{
             }
             intervalFormats{
                 MMM{
-                    M{"LLL-LLL"}
+                    M{"LLL–LLL"}
                 }
                 yMMM{
-                    M{"LLL-LLL y"}
-                    y{"LLL y - LLL y"}
+                    M{"LLL–LLL y"}
+                    y{"LLL y – LLL y"}
                 }
                 yMMMM{
-                    M{"LLLL-LLLL y"}
-                    y{"LLLL y - LLLL y"}
+                    M{"LLLL–LLLL y"}
+                    y{"LLLL y – LLLL y"}
                 }
             }
             monthNames{
@@ -393,53 +387,8 @@ be{
         }
     }
     measurementSystemNames{
+        UK{"брытанская"}
         US{"ЗША"}
         metric{"метрычная"}
-    }
-    units{
-        duration{
-            day{
-                few{"{0} дні"}
-                many{"{0} дзён"}
-                one{"{0} дзень"}
-                other{"{0} дня"}
-            }
-            hour{
-                few{"{0} гадзіны"}
-                many{"{0} гадзін"}
-                one{"{0} гадзіна"}
-                other{"{0} гадзіны"}
-            }
-            minute{
-                few{"{0} хвіліны"}
-                many{"{0} хвілін"}
-                one{"{0} хвіліна"}
-                other{"{0} хвіліны"}
-            }
-            month{
-                few{"{0} месяца"}
-                many{"{0} месяцаў"}
-                one{"{0} месяц"}
-                other{"{0} месяца"}
-            }
-            second{
-                few{"{0} сэкунды"}
-                many{"{0} сэкунд"}
-                one{"{0} сэкунда"}
-                other{"{0} сэкунды"}
-            }
-            week{
-                few{"{0} тыдні"}
-                many{"{0} тыдняў"}
-                one{"{0} тыдзень"}
-                other{"{0} тыдня"}
-            }
-            year{
-                few{"{0} гады"}
-                many{"{0} гадоў"}
-                one{"{0} год"}
-                other{"{0} году"}
-            }
-        }
     }
 }

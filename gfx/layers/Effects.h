@@ -7,7 +7,7 @@
 #define MOZILLA_LAYERS_EFFECTS_H
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef, etc
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"           // for Rect
@@ -245,7 +245,7 @@ struct EffectChain
  * where aFormat would be FOMRAT_YCBCR and each texture source would be
  * a one-channel A8 texture)
  */
-inline TemporaryRef<TexturedEffect>
+inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(gfx::SurfaceFormat aFormat,
                      TextureSource* aSource,
                      const gfx::Filter& aFilter,
@@ -281,7 +281,7 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
  *
  * aSourceOnWhite can be null.
  */
-inline TemporaryRef<TexturedEffect>
+inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(TextureSource* aSource,
                      TextureSource* aSourceOnWhite,
                      const gfx::Filter& aFilter,
@@ -308,7 +308,7 @@ CreateTexturedEffect(TextureSource* aSource,
  *
  * This version excudes the possibility of component alpha.
  */
-inline TemporaryRef<TexturedEffect>
+inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(TextureSource *aTexture,
                      const gfx::Filter& aFilter,
                      const LayerRenderState &state = LayerRenderState())

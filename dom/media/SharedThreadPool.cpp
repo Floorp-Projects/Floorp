@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedThreadPool.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
@@ -27,85 +28,40 @@ static StaticAutoPtr<nsDataHashtable<nsCStringHashKey, SharedThreadPool*>> sPool
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName);
 
-static void
-DestroySharedThreadPoolHashTable();
-
 void
-SharedThreadPool::EnsureInitialized()
+SharedThreadPool::InitStatics()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (sMonitor || sPools) {
-    // Already initalized.
-    return;
-  }
+  MOZ_ASSERT(!sMonitor && !sPools);
   sMonitor = new ReentrantMonitor("SharedThreadPool");
   sPools = new nsDataHashtable<nsCStringHashKey, SharedThreadPool*>();
+  ClearOnShutdown(&sMonitor);
+  ClearOnShutdown(&sPools);
 }
 
-class ShutdownPoolsEvent : public nsRunnable {
-public:
-  NS_IMETHODIMP Run() {
-    MOZ_ASSERT(NS_IsMainThread());
-    DestroySharedThreadPoolHashTable();
-    return NS_OK;
-  }
-};
-
-static void
-DestroySharedThreadPoolHashTable()
+/* static */
+bool
+SharedThreadPool::IsEmpty()
 {
-  // We have to guard against a lot of funny business here - see the comments
-  // below. It would make more sense to just manually initialize/destroy the
-  // hashtable on startup/shutdown.
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Check that the pool still exists to guard against this scenario:
-  // (1) sPools becomes empty, and we dispatch ShutdownPoolsEvent.
-  // (2) A new call to ::Get occurs and sPools becomes non-empty.
-  // (3) The new pool is immediately released, causing us to dispatch a second
-  //     ShutdownPoolsEvent.
-  // (4) The first ShutdownPoolsEvent runs, and deletes sPools.
-  // (5) The second ShutdownPoolsEvent runs.
-  if (!sPools) {
-    MOZ_ASSERT(!sMonitor);
-    return;
-  }
-
-  // Check that the pool is still empty to guard against this scenario:
-  // (1) sPools becomes empty, and we dispatch ShutdownPoolsEvent
-  // (2) A new call to ::Get occurs and sPools becomes non-empty.
-  // (3) The ShutdownPoolsEvent runs, with sPools now non-empty.
-  if (!sPools->Count()) {
-    // No more SharedThreadPool singletons. Delete the hash table.
-    // Note we don't need to lock sMonitor, since we only modify the
-    // hash table on the main thread, and if the hash table is empty
-    // there are no external references into its contents.
-    sPools = nullptr;
-    sMonitor = nullptr;
-  }
+  ReentrantMonitorAutoEnter mon(*sMonitor);
+  return !sPools->Count();
 }
 
 /* static */
 void
-SharedThreadPool::SpinUntilShutdown()
+SharedThreadPool::SpinUntilEmpty()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // Wait until the ShutdownPoolsEvent has been run and shutdown the pool.
-  while (sPools) {
-    if (!NS_ProcessNextEvent(NS_GetCurrentThread(), true)) {
-      break;
-    }
+  while (!IsEmpty()) {
+    sMonitor->AssertNotCurrentThreadIn();
+    NS_ProcessNextEvent(NS_GetCurrentThread(), true);
   }
-  MOZ_ASSERT(!sPools);
-  MOZ_ASSERT(!sMonitor);
 }
 
-TemporaryRef<SharedThreadPool>
+already_AddRefed<SharedThreadPool>
 SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  EnsureInitialized();
-  MOZ_ASSERT(sMonitor);
+  MOZ_ASSERT(sMonitor && sPools);
   ReentrantMonitorAutoEnter mon(*sMonitor);
   SharedThreadPool* pool = nullptr;
   nsresult rv;
@@ -148,42 +104,26 @@ NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::AddRef(void)
 NS_IMETHODIMP_(MozExternalRefCountType) SharedThreadPool::Release(void)
 {
   MOZ_ASSERT(sMonitor);
-  bool dispatchShutdownEvent;
-  {
-    ReentrantMonitorAutoEnter mon(*sMonitor);
-    nsrefcnt count = --mRefCnt;
-    NS_LOG_RELEASE(this, count, "SharedThreadPool");
-    if (count) {
-      return count;
-    }
-
-    // Zero refcount. Must shutdown and then delete the thread pool.
-
-    // First, dispatch an event to the main thread to call Shutdown() on
-    // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
-    // and when the Runnable releases the nsIThreadPool it will be deleted.
-    RefPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
-    NS_DispatchToMainThread(r);
-
-    // Remove SharedThreadPool from table of pools.
-    sPools->Remove(mName);
-    MOZ_ASSERT(!sPools->Get(mName));
-
-    // Stabilize refcount, so that if something in the dtor QIs,
-    // it won't explode.
-    mRefCnt = 1;
-
-    delete this;
-
-    dispatchShutdownEvent = sPools->Count() == 0;
+  ReentrantMonitorAutoEnter mon(*sMonitor);
+  nsrefcnt count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "SharedThreadPool");
+  if (count) {
+    return count;
   }
-  if (dispatchShutdownEvent) {
-    // No more SharedThreadPools alive. Destroy the hash table.
-    // Ensure that we only run on the main thread.
-    // Do this in an event so that if something holds the monitor we won't
-    // be deleting the monitor while it's held.
-    NS_DispatchToMainThread(new ShutdownPoolsEvent());
-  }
+
+  // Remove SharedThreadPool from table of pools.
+  sPools->Remove(mName);
+  MOZ_ASSERT(!sPools->Get(mName));
+
+  // Dispatch an event to the main thread to call Shutdown() on
+  // the nsIThreadPool. The Runnable here  will add a refcount to the pool,
+  // and when the Runnable releases the nsIThreadPool it will be deleted.
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mPool, &nsIThreadPool::Shutdown);
+  AbstractThread::MainThread()->Dispatch(r.forget());
+
+  // Stabilize refcount, so that if something in the dtor QIs, it won't explode.
+  mRefCnt = 1;
+  delete this;
   return 0;
 }
 
@@ -237,8 +177,6 @@ SharedThreadPool::EnsureThreadLimitIsAtLeast(uint32_t aLimit)
 static already_AddRefed<nsIThreadPool>
 CreateThreadPool(const nsCString& aName)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv;
   nsCOMPtr<nsIThreadPool> pool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nullptr);

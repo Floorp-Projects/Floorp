@@ -81,7 +81,7 @@ static bool TestClientPool(const char* what,
 }
 #endif
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 TextureClientPool::GetTextureClient()
 {
   // Try to fetch a client from the pool

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This checks if the right policies are applied from a given string (including whitespace, invalid policy strings, etc).  It doesn't do a complete check for all load types; that's done in another test.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 704320</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="referrerHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
+
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' \f\r\n\t  ');
+  yield checkIndividualResults("whitespace only policy", ["full"]);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+

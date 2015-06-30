@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/nb.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/nb.xml
- */
 nb{
     Currencies{
         ADP{
@@ -397,7 +394,7 @@ nb{
         }
         GBP{
             "£",
-            "britiske pund sterling",
+            "britiske pund",
         }
         GEK{
             "GEK",
@@ -638,6 +635,10 @@ nb{
         MAF{
             "MAF",
             "marokkanske franc",
+        }
+        MCF{
+            "MCF",
+            "MCF",
         }
         MDC{
             "MDC",
@@ -1196,6 +1197,59 @@ nb{
             "zimbabwisk dollar (2008)",
         }
     }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUP{"$"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+    }
     CurrencyPlurals{
         ADP{
             one{"andorransk pesetas"}
@@ -1574,8 +1628,8 @@ nb{
             other{"franske franc"}
         }
         GBP{
-            one{"britisk pund sterling"}
-            other{"britiske pund sterling"}
+            one{"britisk pund"}
+            other{"britiske pund"}
         }
         GEK{
             one{"georgisk kupon larit"}
@@ -1816,6 +1870,10 @@ nb{
         MAF{
             one{"marokkansk franc"}
             other{"marokkanske franc"}
+        }
+        MCF{
+            one{"MCF"}
+            other{"MCF"}
         }
         MDC{
             one{"moldovsk cupon"}
@@ -2189,6 +2247,10 @@ nb{
             one{"amerikansk dollar (samme dag)"}
             other{"amerikanske dollar (samme dag)"}
         }
+        UYI{
+            one{"uruguyanske pesos (indekserte enheter)"}
+            other{"uruguyanske pesos (indekserte enheter)"}
+        }
         UYP{
             one{"uruguayansk pesos (1975–1993)"}
             other{"uruguayanske pesos (1975–1993)"}
@@ -2370,5 +2432,5 @@ nb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

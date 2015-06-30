@@ -32,12 +32,8 @@ public:
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
   // *Must* be called on the main thread.
-  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName,
+  static already_AddRefed<SharedThreadPool> Get(const nsCString& aName,
                                             uint32_t aThreadLimit = 4);
-
-  // Spins the event loop until all thread pools are shutdown.
-  // *Must* be called on the main thread.
-  static void SpinUntilShutdown();
 
   // We implement custom threadsafe AddRef/Release pair, that destroys the
   // the shared pool singleton when the refcount drops to 0. The addref/release
@@ -51,11 +47,17 @@ public:
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);
   NS_FORWARD_SAFE_NSIEVENTTARGET(mEventTarget);
 
+  // Creates necessary statics. Called once at startup.
+  static void InitStatics();
+
+  // Spins the event loop until all thread pools are shutdown.
+  // *Must* be called on the main thread.
+  static void SpinUntilEmpty();
+
 private:
 
-  // Creates necessary statics.
-  // Main thread only.
-  static void EnsureInitialized();
+  // Returns whether there are no pools in existence at the moment.
+  static bool IsEmpty();
 
   // Creates a singleton SharedThreadPool wrapper around aPool.
   // aName is the name of the aPool, and is used to lookup the

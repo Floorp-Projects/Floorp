@@ -38,7 +38,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolylineElement)
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGPolylineElement::BuildPath(PathBuilder* aBuilder)
 {
   const SVGPointList &points = mPoints.GetAnimValue();

@@ -71,7 +71,7 @@ VolumeManager::NumVolumes()
 }
 
 //static
-TemporaryRef<Volume>
+already_AddRefed<Volume>
 VolumeManager::GetVolume(size_t aIndex)
 {
   MOZ_ASSERT(aIndex < NumVolumes());
@@ -125,7 +125,7 @@ void VolumeManager::UnregisterStateObserver(StateObserver* aObserver)
 }
 
 //static
-TemporaryRef<Volume>
+already_AddRefed<Volume>
 VolumeManager::FindVolumeByName(const nsCSubstring& aName)
 {
   if (!sVolumeManager) {
@@ -143,7 +143,7 @@ VolumeManager::FindVolumeByName(const nsCSubstring& aName)
 }
 
 //static
-TemporaryRef<Volume>
+already_AddRefed<Volume>
 VolumeManager::FindAddVolumeByName(const nsCSubstring& aName)
 {
   RefPtr<Volume> vol = FindVolumeByName(aName);

@@ -23,6 +23,12 @@ enum PersistenceType
   PERSISTENCE_TYPE_INVALID
 };
 
+static const PersistenceType kAllPersistenceTypes[] = {
+  PERSISTENCE_TYPE_PERSISTENT,
+  PERSISTENCE_TYPE_TEMPORARY,
+  PERSISTENCE_TYPE_DEFAULT
+};
+
 inline void
 PersistenceTypeToText(PersistenceType aPersistenceType, nsACString& aText)
 {

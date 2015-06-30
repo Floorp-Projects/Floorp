@@ -1,7 +1,7 @@
 
 #*****************************************************************************
 #
-#   Copyright (C) 2002-2007, International Business Machines Corporation and others.
+#   Copyright (C) 2002-2015, International Business Machines Corporation and others.
 #   All Rights Reserved.
 #
 #*****************************************************************************
@@ -147,6 +147,7 @@ open-paren-extended:
 open-paren-lookbehind:
     '='                  n  term            ^expr-cont              doOpenLookBehind       #  (?<=
     '!'                  n  term            ^expr-cont              doOpenLookBehindNeg    #  (?<!
+    ascii_letter            named-capture                           doBeginNamedCapture    #  (?<name
     default                 errorDeath                              doBadOpenParenType
 
 
@@ -174,6 +175,14 @@ paren-flag:
     ':'                  n  term              ^expr-quant           doMatchModeParen
     default                 errorDeath                              doBadModeFlag
 
+#
+#  named-capture    (?<name> ... ), position currently on the name.
+#
+named-capture:
+    ascii_letter         n  named-capture                           doContinueNamedCapture
+    digit_char           n  named-capture                           doContinueNamedCapture
+    '>'                  n  term               ^expr-quant          doOpenCaptureParen      # common w non-named capture.
+    default                 errorDeath                              doBadNamedCapture
 
 #
 #  quant-star     Scanning a '*' quantifier.  Need to look ahead to decide
@@ -241,12 +250,18 @@ backslash:
    'd'                   n  expr-quant                              doBackslashd
    'D'                   n  expr-quant                              doBackslashD
    'G'                   n  term                                    doBackslashG
+   'h'                   n  expr-quant                              doBackslashh
+   'H'                   n  expr-quant                              doBackslashH
+   'k'                   n  named-backref
    'N'                      expr-quant                              doNamedChar      #   \N{NAME}  named char
    'p'                      expr-quant                              doProperty       #   \p{Lu}  style property
    'P'                      expr-quant                              doProperty
+   'R'                   n  expr-quant                              doBackslashR
    'Q'                   n  term                                    doEnterQuoteMode
    'S'                   n  expr-quant                              doBackslashS
    's'                   n  expr-quant                              doBackslashs
+   'v'                   n  expr-quant                              doBackslashv
+   'V'                   n  expr-quant                              doBackslashV
    'W'                   n  expr-quant                              doBackslashW
    'w'                   n  expr-quant                              doBackslashw
    'X'                   n  expr-quant                              doBackslashX
@@ -256,6 +271,24 @@ backslash:
    eof                      errorDeath                              doEscapeError
    default               n  expr-quant                              doEscapedLiteralChar
 
+
+# named-backref   Scanned \k
+#                 Leading to \k<captureName>
+#                 Failure to get the full sequence is an error.
+#
+named-backref:
+    '<'                  n  named-backref-2                         doBeginNamedBackRef
+    default                 errorDeath                              doBadNamedCapture
+
+named-backref-2:
+    ascii_letter         n  named-backref-3                         doContinueNamedBackRef
+    default                 errorDeath                              doBadNamedCapture
+
+named-backref-3:
+    ascii_letter         n  named-backref-3                         doContinueNamedBackRef
+    digit_char           n  named-backref-3                         doContinueNamedBackRef
+    '>'                  n  expr-quant                              doCompleteNamedBackRef
+    default                 errorDeath                              doBadNamedCapture
 
 
 #
@@ -444,6 +477,10 @@ set-escape:
    'W'                   n  set-after-range                         doSetBackslash_W
    'd'                   n  set-after-range                         doSetBackslash_d
    'D'                   n  set-after-range                         doSetBackslash_D
+   'h'                   n  set-after-range                         doSetBackslash_h
+   'H'                   n  set-after-range                         doSetBackslash_H
+   'v'                   n  set-after-range                         doSetBackslash_v
+   'V'                   n  set-after-range                         doSetBackslash_V
    default               n  set-after-lit                           doSetLiteralEscaped 
 
 #

@@ -132,9 +132,9 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) f
 fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,2,7878) == aja-linear-5a.html aja-linear-5-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,2,10163) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708 
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
-skip-if(B2G||Mulet) fuzzy-if(Android,4,160) == height-dependence-1.html height-dependence-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,1,40000) fuzzy-if(Android,4,160) == height-dependence-2.html height-dependence-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(Android,4,160) == height-dependence-3.html height-dependence-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,6,10576) == height-dependence-1.html height-dependence-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,1,40000) fuzzy-if(Android,6,10576) == height-dependence-2.html height-dependence-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,6,10576) == height-dependence-3.html height-dependence-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 == linear-onestopposition-1.html linear-onestopposition-1-ref.html
 fuzzy-if(d2d,47,400) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # d2d interpolates the hard stop

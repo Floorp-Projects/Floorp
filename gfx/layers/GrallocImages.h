@@ -84,7 +84,7 @@ public:
     GRALLOC_SW_UAGE = android::GraphicBuffer::USAGE_SOFTWARE_MASK,
   };
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   android::sp<android::GraphicBuffer> GetGraphicBuffer() const;
 

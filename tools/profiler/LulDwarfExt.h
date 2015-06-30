@@ -1185,11 +1185,10 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
                                        const UniqueString* reg);
 
     // The DWARF CFI entry at OFFSET says that REG uses a DWARF
-    // expression to find its value, but DwarfCFIToModule is not
-    // capable of translating DWARF expressions to Breakpad postfix
-    // expressions.
-    virtual void ExpressionsNotSupported(size_t offset,
-                                         const UniqueString* reg);
+    // expression to find its value, but parseDwarfExpr could not
+    // convert it to a sequence of PfxInstrs.
+    virtual void ExpressionCouldNotBeSummarised(size_t offset,
+                                                const UniqueString* reg);
 
   private:
     // A logging sink function, as supplied by LUL's user.
@@ -1224,10 +1223,11 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   // process.
   DwarfCFIToModule(const unsigned int num_dw_regs,
                    Reporter *reporter,
+                   ByteReader* reader,
                    /*MOD*/UniqueStringUniverse* usu,
                    /*OUT*/Summariser* summ)
       : summ_(summ), usu_(usu), num_dw_regs_(num_dw_regs),
-        reporter_(reporter), return_address_(-1) {
+        reporter_(reporter), reader_(reader), return_address_(-1) {
   }
   virtual ~DwarfCFIToModule() {}
 
@@ -1263,6 +1263,9 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   // The reporter to use to report problems.
   Reporter *reporter_;
 
+  // The ByteReader to use for parsing Dwarf expressions.
+  ByteReader* reader_;
+
   // The section offset of the current frame description entry, for
   // use in error messages.
   size_t entry_offset_;
@@ -1270,6 +1273,14 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   // The return address column for that entry.
   unsigned return_address_;
 };
+
+
+// Convert the Dwarf expression in |expr| into PfxInstrs stored in the
+// SecMap referred to by |summ|, and return the index of the starting
+// PfxInstr added, which must be >= 0.  In case of failure return -1.
+int32_t parseDwarfExpr(Summariser* summ, const ByteReader* reader,
+                       string expr, bool debug,
+                       bool pushCfaAtStart, bool derefAtEnd);
 
 } // namespace lul
 

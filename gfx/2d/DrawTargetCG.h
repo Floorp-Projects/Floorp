@@ -120,7 +120,7 @@ public:
 
   virtual DrawTargetType GetType() const override;
   virtual BackendType GetBackendType() const override;
-  virtual TemporaryRef<SourceSurface> Snapshot() override;
+  virtual already_AddRefed<SourceSurface> Snapshot() override;
 
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,
@@ -163,12 +163,12 @@ public:
   virtual void PushClip(const Path *) override;
   virtual void PushClipRect(const Rect &aRect) override;
   virtual void PopClip() override;
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const override { return nullptr;}
-  virtual TemporaryRef<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const override;
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule) const override;
-  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *, uint32_t,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromNativeSurface(const NativeSurface&) const override { return nullptr;}
+  virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(const IntSize &, SurfaceFormat) const override;
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule) const override;
+  virtual already_AddRefed<GradientStops> CreateGradientStops(GradientStop *, uint32_t,
                                                           ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) override;
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
   virtual void *GetNativeSurface(NativeSurfaceType) override;
 
@@ -177,11 +177,11 @@ public:
   virtual void SetTransform(const Matrix &aTransform) override;
 
   /* This is for creating good compatible surfaces */
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
                                                             int32_t aStride,
                                                             SurfaceFormat aFormat) const override;
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const override;
   CGContextRef GetCGContext() {
       return mCg;
   }

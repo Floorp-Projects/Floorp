@@ -41,13 +41,13 @@ public:
 
   // The SurfaceTexture is created in an attached state. This method requires
   // Android Ice Cream Sandwich.
-  static TemporaryRef<AndroidSurfaceTexture> Create(GLContext* aGLContext, GLuint aTexture);
+  static already_AddRefed<AndroidSurfaceTexture> Create(GLContext* aGLContext, GLuint aTexture);
 
   // Here the SurfaceTexture will be created in a detached state. You must call
   // Attach() with the GLContext you wish to composite with. It must be done
   // on the thread where that GLContext is current. This method requires
   // Android Jelly Bean.
-  static TemporaryRef<AndroidSurfaceTexture> Create();
+  static already_AddRefed<AndroidSurfaceTexture> Create();
 
   static AndroidSurfaceTexture* Find(int id);
 
