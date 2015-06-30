@@ -16,10 +16,10 @@ BEGIN_TEST(testFunctionProperties)
 
     JS::RootedValue y(cx);
     CHECK(JS_GetProperty(cx, obj, "arguments", &y));
-    CHECK_SAME(y, JSVAL_NULL);
+    CHECK(y.isNull());
 
     CHECK(JS_GetProperty(cx, obj, "caller", &y));
-    CHECK_SAME(y, JSVAL_NULL);
+    CHECK(y.isNull());
 
     return true;
 }
