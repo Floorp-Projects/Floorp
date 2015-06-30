@@ -1078,7 +1078,7 @@
            if (cell.childElt == "twisty")
              return;
 
-           if (cell.col) {
+           if (cell.col && event.button == 0) {
              if (cell.col.cycler) {
                view.cycleCell(cell.row, cell.col);
                return;
