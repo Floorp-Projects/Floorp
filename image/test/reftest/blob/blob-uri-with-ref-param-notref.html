@@ -23,10 +23,14 @@
     canvas.toBlob(function(blob) {
       var uri = window.URL.createObjectURL(blob);
       uri += '#-moz-samplesize=8';
-      document.getElementById('test').src = uri;
+      var testImage = document.getElementById('test');
 
-      // Take the snapshot.
-      document.documentElement.removeAttribute('class');
+      testImage.onload = testImage.onerror = function() {
+        // Take the snapshot.
+        document.documentElement.removeAttribute('class');
+      };
+
+      testImage.src = uri;
     }, 'image/jpeg', 0.99);
   }
 

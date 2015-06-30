@@ -22,10 +22,14 @@
     // Convert the image into a blob URI and use it as #test's src.
     canvas.toBlob(function(blob) {
       var uri = window.URL.createObjectURL(blob);
-      document.getElementById('test').src = uri;
+      var testImage = document.getElementById('test');
+      
+      testImage.onload = testImage.onerror = function() {
+        // Take the snapshot.
+        document.documentElement.removeAttribute('class');
+      };
 
-      // Take the snapshot.
-      document.documentElement.removeAttribute('class');
+      testImage.src = uri;
     }, 'image/jpeg', 0.99);
   }
 
