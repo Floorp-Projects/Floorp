@@ -1,0 +1,5 @@
+{
+  "name": "App",
+  "launch_path": "/index.html",
+  "description": "Test app for bug 1172562"
+}
