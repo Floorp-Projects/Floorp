@@ -61,7 +61,7 @@ stepFunc(JSContext *aCtx,
   bool hasMore = false;
   rv = stmt->ExecuteStep(&hasMore);
   if (NS_SUCCEEDED(rv) && !hasMore) {
-    *_vp = JSVAL_FALSE;
+    _vp->setBoolean(false);
     (void)stmt->Reset();
     return true;
   }

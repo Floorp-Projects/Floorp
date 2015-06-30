@@ -43,29 +43,32 @@ public:
 
   friend class TimerThread;
   friend struct TimerAdditionComparator;
-
-  void Fire();
-  // If a failure is encountered, the reference is returned to the caller
-  static already_AddRefed<nsTimerImpl> PostTimerEvent(
-    already_AddRefed<nsTimerImpl> aTimerRef);
-  void SetDelayInternal(uint32_t aDelay);
+  friend class nsTimerEvent;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMER
 
-  int32_t GetGeneration()
-  {
-    return mGeneration;
-  }
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+private:
+  void SetDelayInternal(uint32_t aDelay);
+
+  void Fire();
 
 #ifdef MOZ_TASK_TRACER
   void GetTLSTraceInfo();
   mozilla::tasktracer::TracedTaskCommon GetTracedTask();
 #endif
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  // If a failure is encountered, the reference is returned to the caller
+  static already_AddRefed<nsTimerImpl> PostTimerEvent(
+    already_AddRefed<nsTimerImpl> aTimerRef);
 
-private:
+  int32_t GetGeneration()
+  {
+    return mGeneration;
+  }
+
   enum class CallbackType : uint8_t {
     Unknown = 0,
     Interface = 1,

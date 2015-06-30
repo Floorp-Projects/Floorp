@@ -1474,13 +1474,6 @@ js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue r
     return true;
 }
 
-#if !HAVE_TRUNC
-double trunc(double x)
-{
-    return x > 0 ? floor(x) : ceil(x);
-}
-#endif
-
 double
 js::math_trunc_impl(MathCache* cache, double x)
 {

@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "nsWrapperCache.h"
 
 class nsISupports;
 class nsIURI;
@@ -32,6 +33,7 @@ class URLProxy;
 }
 
 class URL final : public URLSearchParamsObserver
+                , public nsWrapperCache
 {
   ~URL() {}
 
@@ -39,11 +41,16 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(URL)
 
-  explicit URL(already_AddRefed<nsIURI> aURI);
+  URL(nsISupports* aParent, already_AddRefed<nsIURI> aURI);
 
   // WebIDL methods
-  bool
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  nsISupports* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URL>
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
@@ -56,9 +63,11 @@ public:
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
               const nsAString& aBase, ErrorResult& aRv);
   static already_AddRefed<URL>
-  Constructor(const nsAString& aUrl, const nsAString& aBase, ErrorResult& aRv);
+  Constructor(nsISupports* aParent, const nsAString& aUrl,
+              const nsAString& aBase, ErrorResult& aRv);
   static already_AddRefed<URL>
-  Constructor(const nsAString& aUrl, nsIURI* aBase, ErrorResult& aRv);
+  Constructor(nsISupports* aParent, const nsAString& aUrl,
+              nsIURI* aBase, ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               Blob& aBlob,
@@ -150,6 +159,7 @@ private:
                                       nsAString& aResult,
                                       ErrorResult& aError);
 
+  nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIURI> mURI;
   nsRefPtr<URLSearchParams> mSearchParams;
 

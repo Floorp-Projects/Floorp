@@ -87,7 +87,8 @@ class OptimizationTypeInfo
 
     HashNumber hash() const;
 
-    bool writeCompact(CompactBufferWriter& writer, UniqueTrackedTypes& uniqueTypes) const;
+    bool writeCompact(JSContext* cx, CompactBufferWriter& writer,
+                      UniqueTrackedTypes& uniqueTypes) const;
 };
 
 typedef Vector<OptimizationTypeInfo, 1, JitAllocPolicy> TempOptimizationTypeInfoVector;

@@ -264,9 +264,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
 
   // Reflow the child frames. We may have up to two, an image frame
   // which is the poster, and a box frame, which is the video controls.
-  for (nsIFrame *child = mFrames.FirstChild();
-       child;
-       child = child->GetNextSibling()) {
+  for (nsIFrame* child : mFrames) {
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
@@ -438,9 +436,7 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Add child frames to display list. We expect various children,
   // but only want to draw mPosterImage conditionally. Others we
   // always add to the display list.
-  for (nsIFrame *child = mFrames.FirstChild();
-       child;
-       child = child->GetNextSibling()) {
+  for (nsIFrame* child : mFrames) {
     if (child->GetContent() != mPosterImage || shouldDisplayPoster) {
       child->BuildDisplayListForStackingContext(aBuilder,
                                                 aDirtyRect - child->GetOffsetTo(this),

@@ -114,14 +114,16 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URLSearchParams)
 
-  explicit URLSearchParams(URLSearchParamsObserver* aObserver);
+  URLSearchParams(nsISupports* aParent,
+                  URLSearchParamsObserver* aObserver);
 
-  explicit URLSearchParams(const URLSearchParams& aOther);
+  URLSearchParams(nsISupports* aParent,
+                  const URLSearchParams& aOther);
 
   // WebIDL methods
   nsISupports* GetParentObject() const
   {
-    return nullptr;
+    return mParent;
   }
 
   virtual JSObject*
@@ -174,6 +176,7 @@ private:
   void NotifyObserver();
 
   UniquePtr<URLParams> mParams;
+  nsCOMPtr<nsISupports> mParent;
   nsRefPtr<URLSearchParamsObserver> mObserver;
 };
 

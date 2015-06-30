@@ -737,7 +737,11 @@ void
 Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
 {
   aPrefs->SetCapacity(gHashTable->Capacity());
-  PL_DHashTableEnumerate(gHashTable, pref_GetPrefs, aPrefs);
+  for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<PrefHashEntry*>(iter.Get());
+    dom::PrefSetting *pref = aPrefs->AppendElement();
+    pref_GetPrefFromEntry(entry, pref);
+  }
 }
 
 NS_IMETHODIMP
@@ -958,12 +962,9 @@ Preferences::WritePrefFile(nsIFile* aFile)
 
   nsAutoArrayPtr<char*> valueArray(new char*[gHashTable->EntryCount()]);
   memset(valueArray, 0, gHashTable->EntryCount() * sizeof(char*));
-  pref_saveArgs saveArgs;
-  saveArgs.prefArray = valueArray;
-  saveArgs.saveTypes = SAVE_ALL;
 
   // get the lines that we're supposed to be writing to the file
-  PL_DHashTableEnumerate(gHashTable, pref_savePref, &saveArgs);
+  pref_savePrefs(gHashTable, valueArray);
 
   /* Sort the preferences to make a readable file on disk */
   NS_QuickSort(valueArray, gHashTable->EntryCount(), sizeof(char *),
