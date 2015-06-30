@@ -115,7 +115,7 @@ private:
       return false;
     }
 
-    rval.set(STRING_TO_JSVAL(ucstr));
+    rval.setString(ucstr);
     return true;
   }
 

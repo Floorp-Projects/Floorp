@@ -290,7 +290,7 @@ MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress)
     return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
   }
 
-  JS::Rooted<JS::Value> val(cx, STRING_TO_JSVAL(smsc));
+  JS::Rooted<JS::Value> val(cx, JS::StringValue(smsc));
   return NotifySuccess(val);
 }
 
