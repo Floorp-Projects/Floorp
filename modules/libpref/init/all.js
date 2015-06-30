@@ -4227,11 +4227,7 @@ pref("layers.offmainthreadcomposition.testing.enabled", false);
 pref("layers.offmainthreadcomposition.force-basic", false);
 
 // Whether to animate simple opacity and transforms on the compositor
-#ifdef RELEASE_BUILD
-pref("layers.offmainthreadcomposition.async-animations", false);
-#else
 pref("layers.offmainthreadcomposition.async-animations", true);
-#endif
 
 // Whether to log information about off main thread animations to stderr
 pref("layers.offmainthreadcomposition.log-animations", false);
