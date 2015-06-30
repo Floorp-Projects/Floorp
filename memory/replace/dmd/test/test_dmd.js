@@ -167,7 +167,12 @@ function run_test() {
   let is64Bit = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULRuntime).is64Bit;
   let basicScanFileName = "basic-scan-" + (is64Bit ? "64" : "32");
-  test(basicScanFileName, [jsonFile.path]);
+  test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
+  ok(scanTest(jsonFile.path, ["--clamp-contents"]), "Scan with address clamping");
+  // Run the generic test a second time to ensure that the first time produced
+  // valid JSON output. "--clamp-contents" is passed in so we don't have to have
+  // more variants of the files.
+  test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
   jsonFile.remove(true);
 
 
