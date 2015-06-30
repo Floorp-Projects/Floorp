@@ -10,6 +10,18 @@ fi
 MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
+# In TaskCluster, the Java JRE/JDK are installed from tooltool, but that
+# install doesn't work on the old Buildbot mock builders (CentOS 6.2), so
+# the relevant env vars are not set up in that case, leaving the build to
+# run from the JRE/JDK in /usr/lib/jvm.
+if [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS release 6.2 (Final)" ]; then
+    # set JAVA_HOME to find the JRE/JDK from tooltool.  Several scripts in the JDK
+    # assume `java` is in PATH, so set that too.  To see how this tarball is built,
+    # see testing/taskcluster/scripts/misc/repackage-jdk.sh
+    export JAVA_HOME="$topsrcdir/java_home"
+    export PATH="$PATH:$topsrcdir/java_home/bin"
+fi
+
 # Set the most aggressive settings for szip. Not the default because it's
 # much slower and we didn't want to slow down developers builds.
 # Has no effect when MOZ_ENABLE_SZIP is not set in mobile/android/confvars.sh.
