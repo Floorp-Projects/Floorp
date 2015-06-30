@@ -39,12 +39,52 @@ class OptionalContentId;
 
 BEGIN_QUOTA_NAMESPACE
 
+class DirectoryLockImpl;
 class GroupInfo;
 class GroupInfoPair;
-class OpenDirectoryListener;
 class OriginInfo;
 class OriginScope;
 class QuotaObject;
+
+class NS_NO_VTABLE RefCountedObject
+{
+public:
+  NS_IMETHOD_(MozExternalRefCountType)
+  AddRef() = 0;
+
+  NS_IMETHOD_(MozExternalRefCountType)
+  Release() = 0;
+};
+
+// nsISupports is needed for nsMainThreadPtrHandle<DirectoryLock>
+// XXX RemoveMe once bug 1164581 gets fixed.
+class DirectoryLock
+  : public nsISupports
+{
+  friend class DirectoryLockImpl;
+
+private:
+  DirectoryLock()
+  { }
+
+  ~DirectoryLock()
+  { }
+};
+
+class NS_NO_VTABLE OpenDirectoryListener
+  : public RefCountedObject
+{
+public:
+  virtual void
+  DirectoryLockAcquired(DirectoryLock* aLock) = 0;
+
+  virtual void
+  DirectoryLockFailed() = 0;
+
+protected:
+  virtual ~OpenDirectoryListener()
+  { }
+};
 
 struct OriginParams
 {
@@ -64,10 +104,7 @@ struct OriginParams
 class QuotaManager final : public nsIQuotaManager,
                            public nsIObserver
 {
-public:
-  class DirectoryLock;
-
-private:
+  friend class DirectoryLockImpl;
   friend class GroupInfo;
   friend class OriginInfo;
   friend class QuotaObject;
@@ -78,10 +115,6 @@ private:
     NotMozBrowser,
     IgnoreMozBrowser
   };
-
-  class CollectOriginsHelper;
-  class DirectoryLockImpl;
-  class FinalizeOriginEvictionOp;
 
   typedef nsClassHashtable<nsCStringHashKey,
                            nsTArray<DirectoryLockImpl*>> DirectoryLockTable;
@@ -486,46 +519,6 @@ private:
   bool mTemporaryStorageInitialized;
 
   bool mStorageAreaInitialized;
-};
-
-class NS_NO_VTABLE RefCountedObject
-{
-public:
-  NS_IMETHOD_(MozExternalRefCountType)
-  AddRef() = 0;
-
-  NS_IMETHOD_(MozExternalRefCountType)
-  Release() = 0;
-};
-
-// nsISupports is needed for nsMainThreadPtrHandle<DirectoryLock>
-// XXX RemoveMe once bug 1164581 gets fixed.
-class QuotaManager::DirectoryLock
-  : public nsISupports
-{
-  friend class DirectoryLockImpl;
-
-private:
-  DirectoryLock()
-  { }
-
-  ~DirectoryLock()
-  { }
-};
-
-class NS_NO_VTABLE OpenDirectoryListener
-  : public RefCountedObject
-{
-public:
-  virtual void
-  DirectoryLockAcquired(QuotaManager::DirectoryLock* aLock) = 0;
-
-  virtual void
-  DirectoryLockFailed() = 0;
-
-protected:
-  virtual ~OpenDirectoryListener()
-  { }
 };
 
 END_QUOTA_NAMESPACE

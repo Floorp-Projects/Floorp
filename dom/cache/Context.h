@@ -8,7 +8,6 @@
 #define mozilla_dom_cache_Context_h
 
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
@@ -22,6 +21,13 @@ class nsIThread;
 
 namespace mozilla {
 namespace dom {
+
+namespace quota {
+
+class DirectoryLock;
+
+} // namespace quota
+
 namespace cache {
 
 class Action;
@@ -59,7 +65,7 @@ class Manager;
 // via the code in ShutdownObserver.cpp.
 class Context final
 {
-  typedef mozilla::dom::quota::QuotaManager::DirectoryLock DirectoryLock;
+  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
 
 public:
   // Define a class allowing other threads to hold the Context alive.  This also
