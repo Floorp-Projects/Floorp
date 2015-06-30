@@ -207,30 +207,29 @@ bool LoadDwarfCFI(const string& dwarf_filename,
 
   // Here's a summariser, which will receive the output of the
   // parser, create summaries, and add them to |smap|.
-  Summariser* summ = new Summariser(smap, text_bias, log);
+  Summariser summ(smap, text_bias, log);
+
+  lul::ByteReader reader(endianness);
+  reader.SetAddressSize(ElfClass::kAddrSize);
 
   DwarfCFIToModule::Reporter module_reporter(log, dwarf_filename, section_name);
-  DwarfCFIToModule handler(num_dw_regs, &module_reporter, usu, summ);
-  lul::ByteReader byte_reader(endianness);
-
-  byte_reader.SetAddressSize(ElfClass::kAddrSize);
+  DwarfCFIToModule handler(num_dw_regs, &module_reporter, &reader, usu, &summ);
 
   // Provide the base addresses for .eh_frame encoded pointers, if
   // possible.
-  byte_reader.SetCFIDataBase(section->sh_addr, cfi);
+  reader.SetCFIDataBase(section->sh_addr, cfi);
   if (got_section)
-    byte_reader.SetDataBase(got_section->sh_addr);
+    reader.SetDataBase(got_section->sh_addr);
   if (text_section)
-    byte_reader.SetTextBase(text_section->sh_addr);
+    reader.SetTextBase(text_section->sh_addr);
 
   lul::CallFrameInfo::Reporter dwarf_reporter(log, dwarf_filename,
                                               section_name);
   lul::CallFrameInfo parser(cfi, cfi_size,
-                            &byte_reader, &handler, &dwarf_reporter,
+                            &reader, &handler, &dwarf_reporter,
                             eh_frame);
   parser.Start();
 
-  delete summ;
   return true;
 }
 
