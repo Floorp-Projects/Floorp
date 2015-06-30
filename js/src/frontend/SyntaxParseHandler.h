@@ -47,6 +47,7 @@ class SyntaxParseHandler
         NodeHoistableDeclaration,
         NodeBreak,
         NodeThrow,
+        NodeEmptyStatement,
 
         // In rare cases a parenthesized |node| doesn't have the same semantics
         // as |node|.  Each such node has a special Node value, and we use a
@@ -206,7 +207,7 @@ class SyntaxParseHandler
     Node newStatementList(unsigned blockid, const TokenPos& pos) { return NodeGeneric; }
     void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler>* pc) {}
     bool prependInitialYield(Node stmtList, Node gen) { return true; }
-    Node newEmptyStatement(const TokenPos& pos) { return NodeGeneric; }
+    Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
 
     Node newExprStatement(Node expr, uint32_t end) {
         return expr == NodeUnparenthesizedString ? NodeStringExprStatement : NodeGeneric;
@@ -337,7 +338,8 @@ class SyntaxParseHandler
     }
 
     bool isStatementPermittedAfterReturnStatement(Node pn) {
-        return pn == NodeHoistableDeclaration || pn == NodeBreak || pn == NodeThrow;
+        return pn == NodeHoistableDeclaration || pn == NodeBreak || pn == NodeThrow ||
+               pn == NodeEmptyStatement;
     }
 
     void setOp(Node pn, JSOp op) {}
