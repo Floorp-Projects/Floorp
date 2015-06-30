@@ -12,6 +12,7 @@
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
 #include "nsBaseWidget.h"
+#include "nsGtkKeyUtils.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "nsTransferable.h"
@@ -308,6 +309,7 @@ nsWidgetGtk2ModuleDtor()
   nsFilePicker::Shutdown();
   nsSound::Shutdown();
   nsWindow::ReleaseGlobals();
+  KeymapWrapper::Shutdown();
   nsGTKToolkit::Shutdown();
   nsAppShellShutdown();
 #ifdef MOZ_ENABLE_DBUS

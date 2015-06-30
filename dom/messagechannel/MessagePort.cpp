@@ -386,8 +386,13 @@ MessagePort::Initialize(const nsID& aUUID,
   mNextStep = eNextStepNone;
 
   if (mNeutered) {
+    // If this port is neutered we don't want to keep it alive artificially nor
+    // we want to add listeners or workerFeatures.
     mState = eStateDisentangled;
-  } else if (mState == eStateEntangling) {
+    return;
+  }
+
+  if (mState == eStateEntangling) {
     ConnectToPBackground();
   } else {
     MOZ_ASSERT(mState == eStateUnshippedEntangled);
