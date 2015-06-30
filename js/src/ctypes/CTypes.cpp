@@ -3931,7 +3931,7 @@ CType::Create(JSContext* cx,
   if (ffiType)
     JS_SetReservedSlot(typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType));
   if (name)
-    JS_SetReservedSlot(typeObj, SLOT_NAME, STRING_TO_JSVAL(name));
+    JS_SetReservedSlot(typeObj, SLOT_NAME, StringValue(name));
   JS_SetReservedSlot(typeObj, SLOT_SIZE, size);
   JS_SetReservedSlot(typeObj, SLOT_ALIGN, align);
 
@@ -4291,7 +4291,7 @@ CType::GetName(JSContext* cx, HandleObject obj)
   JSString* name = BuildTypeName(cx, obj);
   if (!name)
     return nullptr;
-  JS_SetReservedSlot(obj, SLOT_NAME, STRING_TO_JSVAL(name));
+  JS_SetReservedSlot(obj, SLOT_NAME, StringValue(name));
   return name;
 }
 
@@ -7086,7 +7086,7 @@ CData::Create(JSContext* cx,
     JS_SetReservedSlot(dataObj, SLOT_REFERENT, OBJECT_TO_JSVAL(refObj));
 
   // Set our ownership flag.
-  JS_SetReservedSlot(dataObj, SLOT_OWNS, BOOLEAN_TO_JSVAL(ownResult));
+  JS_SetReservedSlot(dataObj, SLOT_OWNS, BooleanValue(ownResult));
 
   // attach the buffer. since it might not be 2-byte aligned, we need to
   // allocate an aligned space for it and store it there. :(

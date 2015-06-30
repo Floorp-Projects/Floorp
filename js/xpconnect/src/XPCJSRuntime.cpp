@@ -3532,7 +3532,7 @@ XPCJSRuntime::OnJSContextNew(JSContext* cx)
                 return false;
             }
             mStrIDs[i] = INTERNED_STRING_TO_JSID(cx, str);
-            mStrJSVals[i] = STRING_TO_JSVAL(str);
+            mStrJSVals[i].setString(str);
         }
 
         if (!mozilla::dom::DefineStaticJSVals(cx)) {

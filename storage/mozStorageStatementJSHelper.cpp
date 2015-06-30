@@ -71,7 +71,7 @@ stepFunc(JSContext *aCtx,
     return false;
   }
 
-  *_vp = BOOLEAN_TO_JSVAL(hasMore);
+  _vp->setBoolean(hasMore);
   return true;
 }
 

@@ -399,7 +399,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
     JSString* jsString = JS_NewUCStringCopyN(cx, utf16data.get(), utf16data.Length());
     NS_ENSURE_TRUE(jsString, NS_ERROR_FAILURE);
 
-    jsData = STRING_TO_JSVAL(jsString);
+    jsData.setString(jsString);
   }
 
   nsCOMPtr<nsIDOMEvent> event;

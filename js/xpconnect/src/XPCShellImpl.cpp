@@ -712,7 +712,7 @@ env_setProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
         JS_ReportError(cx, "can't set envariable %s to %s", name.ptr(), value.ptr());
         return false;
     }
-    vp.set(STRING_TO_JSVAL(valstr));
+    vp.setString(valstr);
 #endif /* !defined SOLARIS */
     return result.succeed();
 }

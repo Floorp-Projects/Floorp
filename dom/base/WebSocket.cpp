@@ -1776,7 +1776,7 @@ WebSocket::CreateAndDispatchMessageEvent(JSContext* aCx,
     jsString = JS_NewUCStringCopyN(aCx, utf16Data.get(), utf16Data.Length());
     NS_ENSURE_TRUE(jsString, NS_ERROR_FAILURE);
 
-    jsData = STRING_TO_JSVAL(jsString);
+    jsData.setString(jsString);
   }
 
   // create an event that uses the MessageEvent interface,
