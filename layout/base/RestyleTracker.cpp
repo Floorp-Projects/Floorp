@@ -11,6 +11,7 @@
 #include "RestyleTracker.h"
 
 #include "GeckoProfiler.h"
+#include "nsDocShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsStyleChangeList.h"
