@@ -82,27 +82,36 @@ function do_test()
         "Data stored for sites");
 
       // Clear data for "foo.com" and its subdomains.
-      ForgetAboutSite.removeDataFromDomain("foo.com");
+      ForgetAboutSite.removeDataFromDomain("foo.com").then(test1);
+    });
+    function test1() {
+      dump("test1\n");
       ok(stored(["bar.com","192.168.1.1","localhost"]), "Data stored for sites");
       ok(!stored(["foo.com"]), "Data cleared for foo.com");
       ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
 
       // Clear data for "bar.com" using a subdomain.
-      ForgetAboutSite.removeDataFromDomain("foo.bar.com");
+      ForgetAboutSite.removeDataFromDomain("foo.bar.com").then(test2);
+    }
+    function test2() {
       ok(!stored(["bar.com"]), "Data cleared for bar.com");
 
       // Clear data for "192.168.1.1".
-      ForgetAboutSite.removeDataFromDomain("192.168.1.1");
+      ForgetAboutSite.removeDataFromDomain("192.168.1.1").then(test3);
+    }
+    function test3() {
       ok(!stored(["192.168.1.1"]), "Data cleared for 192.168.1.1");
 
       // Clear data for "localhost".
-      ForgetAboutSite.removeDataFromDomain("localhost");
+      ForgetAboutSite.removeDataFromDomain("localhost").then(test4);
+    }
+    function test4() {
       ok(!stored(null), "All data cleared");
 
       gBrowser.removeCurrentTab();
 
       executeSoon(finish);
-    });
+    }
   }, true);
   content.location = testURL;
 }

@@ -28,9 +28,7 @@
     SimpleTest.executeSoon(function() {
       // Make sure clearing by timerange is supported.
       p.setSitesWithDataCapabilities(true);
-
       ok(PluginUtils.withTestPlugin(runTest), "Test plugin found");
-      SimpleTest.finish();
     });
 
     function stored(needles) {
@@ -59,7 +57,6 @@
 
     function runTest(pluginTag) {
       this.pluginTag = pluginTag;
-
       p.setSitesWithData(
         "foo.com:0:5," +
         "foo.com:0:7," +
@@ -69,75 +66,99 @@
         "qux.com:1:5," +
         "quz.com:1:8"
       );
-
-      ok(stored(["foo.com","bar.com","baz.com","qux.com","quz.com"]),
-        "Data stored for sites");
-
-      // Clear nothing.
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 4);
       ok(stored(["foo.com","bar.com","baz.com","qux.com","quz.com"]),
          "Data stored for sites");
 
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 4);
+      // Clear nothing.
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 4, {callback: function() { test1(); }});
+    }
+    function test1() {
+      ok(stored(["foo.com","bar.com","baz.com","qux.com","quz.com"]),
+         "Data stored for sites");
+
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 4, {callback: function() { test2(); }});
+    }
+    function test2() {
       ok(stored(["foo.com","bar.com","baz.com","qux.com","quz.com"]),
          "Data stored for sites");
 
       // Clear cache data 5 seconds or older.
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 5);
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 5, {callback: function() { test3(); }});
+    }
+    function test3() {
       ok(stored(["foo.com","bar.com","baz.com","quz.com"]),
          "Data stored for sites");
       ok(!stored(["qux.com"]), "Data cleared for qux.com");
-
       // Clear cache data for foo.com, but leave non-cache data.
-      pluginHost.clearSiteData(pluginTag, "foo.com", FLAG_CLEAR_CACHE, 20);
+      pluginHost.clearSiteData(pluginTag, "foo.com", FLAG_CLEAR_CACHE, 20, {callback: function() { test4(); }});
+    }
+    function test4() {
       ok(stored(["foo.com","bar.com","baz.com","quz.com"]),
          "Data stored for sites");
 
       // Clear all data 7 seconds or older.
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 7);
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 7, {callback: function() { test5(); }});
+    }
+    function test5() {
       ok(stored(["bar.com","baz.com","quz.com"]), "Data stored for sites");
       ok(!stored(["foo.com"]), "Data cleared for foo.com");
       ok(!stored(["qux.com"]), "Data cleared for qux.com");
 
       // Clear all cache data.
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 20);
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 20, {callback: function() { test6(); }});
+    }
+    function test6() {
       ok(stored(["bar.com","baz.com"]), "Data stored for sites");
       ok(!stored(["quz.com"]), "Data cleared for quz.com");
 
       // Clear all data for bar.com.
-      pluginHost.clearSiteData(pluginTag, "bar.com", FLAG_CLEAR_ALL, 20);
+      pluginHost.clearSiteData(pluginTag, "bar.com", FLAG_CLEAR_ALL, 20, {callback: function(rv) { test7(rv); }});
+    }
+    function test7(rv) {
       ok(stored(["baz.com"]), "Data stored for baz.com");
       ok(!stored(["bar.com"]), "Data cleared for bar.com");
 
       // Disable clearing by age.
       p.setSitesWithDataCapabilities(false);
 
-      // Attempt to clear data by age.
-      checkThrows(function() {
-        pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 20);
-      }, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
-
-      checkThrows(function() {
-        pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 20);
-      }, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
-
-      checkThrows(function() {
-        pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_ALL, 20);
-      }, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
-
-      checkThrows(function() {
-        pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_CACHE, 20);
-      }, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
-
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_ALL, 20, {callback: function(rv) {
+        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        test8(rv);
+      }});
+    }
+    function test8(rv) {
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, 20, {callback: function(rv) {
+        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        test9(rv);
+      }});
+    }
+    function test9(rv) {
+      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_ALL, 20, {callback: function(rv) {
+        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+        test10(rv);
+      }});
+    }
+    function test10(rv) {
+      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_CACHE, 20, {callback: function(rv) {
+        is(rv, Components.results.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
+          test11();
+          }});
+    }
+    function test11() {
       // Clear cache for baz.com and globally for all ages.
-      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_CACHE, -1);
-      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, -1);
-
+      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_CACHE, -1, {callback: function(rv) { test12()}});
+    }
+    function test12() {
+      pluginHost.clearSiteData(pluginTag, null, FLAG_CLEAR_CACHE, -1, {callback: function(rv) { test13()}});
+    }
+    function test13() {
       // Check that all of the above were no-ops.
       ok(stored(["baz.com"]), "Data stored for baz.com");
 
       // Clear everything for baz.com.
-      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "baz.com", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test14()}});
+    }
+    function test14() {
       ok(!stored(["baz.com"]), "Data cleared for baz.com");
       ok(!stored(null), "All data cleared");
 
@@ -150,26 +171,33 @@
         "[192.168.1.1]:0:0," +
         "localhost:0:0"
       );
-
       ok(stored(["foo.com","nonexistent.foo.com","bar.com","192.168.1.1","localhost"]),
-        "Data stored for sites");
+         "Data stored for sites");
 
       // Clear data for "foo.com" and its subdomains.
-      pluginHost.clearSiteData(pluginTag, "foo.com", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "foo.com", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test15()}});
+    }
+    function test15() {
       ok(stored(["bar.com","192.168.1.1","localhost"]), "Data stored for sites");
       ok(!stored(["foo.com"]), "Data cleared for foo.com");
       ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
 
       // Clear data for "bar.com" using a subdomain.
-      pluginHost.clearSiteData(pluginTag, "foo.bar.com", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "foo.bar.com", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test16()}});
+    }
+    function test16() {
       ok(!stored(["bar.com"]), "Data cleared for bar.com");
 
       // Clear data for "192.168.1.1".
-      pluginHost.clearSiteData(pluginTag, "192.168.1.1", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "192.168.1.1", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test17()}});
+    }
+    function test17() {
       ok(!stored(["192.168.1.1"]), "Data cleared for 192.168.1.1");
 
       // Clear data for "localhost".
-      pluginHost.clearSiteData(pluginTag, "localhost", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "localhost", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test18()}});
+    }
+    function test18() {
       ok(!stored(null), "All data cleared");
 
       // Set data to test international domains.
@@ -178,18 +206,21 @@
         "b\u00FCcher.uk:0:0," +
         "xn--bcher-kva.NZ:0:0"
       );
-
-      // Check that both the ACE and UTF-8 representations register.
+        // Check that both the ACE and UTF-8 representations register.
       ok(stored(["b\u00FCcher.es","xn--bcher-kva.es","b\u00FCcher.uk","xn--bcher-kva.uk"]),
-        "Data stored for sites");
+         "Data stored for sites");
 
       // Clear data for the UTF-8 version.
-      pluginHost.clearSiteData(pluginTag, "b\u00FCcher.es", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "b\u00FCcher.es", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test19()}});
+    }
+    function test19() {
       ok(!stored(["b\u00FCcher.es"]), "Data cleared for UTF-8 representation");
       ok(!stored(["xn--bcher-kva.es"]), "Data cleared for ACE representation");
 
       // Clear data for the ACE version.
-      pluginHost.clearSiteData(pluginTag, "xn--bcher-kva.uk", FLAG_CLEAR_ALL, -1);
+      pluginHost.clearSiteData(pluginTag, "xn--bcher-kva.uk", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test20()}});
+    }
+    function test20() {
       ok(!stored(["b\u00FCcher.uk"]), "Data cleared for UTF-8 representation");
       ok(!stored(["xn--bcher-kva.uk"]), "Data cleared for ACE representation");
 
@@ -197,11 +228,14 @@
       // UTF-8. We do happen to normalize the result anyway, so while that's not
       // strictly required, we test it here.
       ok(stored(["b\u00FCcher.nz","xn--bcher-kva.nz"]),
-        "Data stored for sites");
-      pluginHost.clearSiteData(pluginTag, "b\u00FCcher.nz", FLAG_CLEAR_ALL, -1);
+         "Data stored for sites");
+      pluginHost.clearSiteData(pluginTag, "b\u00FCcher.nz", FLAG_CLEAR_ALL, -1, {callback: function(rv) { test21()}});
+    }
+    function test21() {
       ok(!stored(["b\u00FCcher.nz"]), "Data cleared for UTF-8 representation");
       ok(!stored(["xn--bcher-kva.nz"]), "Data cleared for ACE representation");
       ok(!stored(null), "All data cleared");
+      SimpleTest.finish();
     }
   </script>
 </body>
