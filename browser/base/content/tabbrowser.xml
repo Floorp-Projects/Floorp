@@ -1786,11 +1786,10 @@
 
             let b;
             let usingPreloadedContent = false;
-            let isPrivateWindow = PrivateBrowsingUtils.isWindowPrivate(window);
 
             // If we open a new tab with the newtab URL,
             // check if there is a preloaded browser ready.
-            if (aURI == BROWSER_NEW_TAB_URL && !isPrivateWindow) {
+            if (aURI == BROWSER_NEW_TAB_URL) {
               b = this._getPreloadedBrowser();
               usingPreloadedContent = !!b;
             }
