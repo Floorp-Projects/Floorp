@@ -466,6 +466,11 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   {
     needsOwnLayer = true;
   }
+  if (!needsOwnLayer && aBuilder->IsBuildingLayerEventRegions() &&
+      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell))
+  {
+    needsOwnLayer = true;
+  }
 
   nsDisplayList childItems;
 
