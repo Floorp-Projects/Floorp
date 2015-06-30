@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace gfx {
 
-TemporaryRef<DrawTargetCapture>
+already_AddRefed<DrawTargetCapture>
 DrawTarget::CreateCaptureDT(const IntSize& aSize)
 {
   RefPtr<DrawTargetCaptureImpl> dt = new DrawTargetCaptureImpl();

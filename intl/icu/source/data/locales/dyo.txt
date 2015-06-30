@@ -1,21 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/dyo.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/dyo.xml
- */
 dyo{
     AuxExemplarCharacters{"[z]"}
     ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ ŋ o ó p q r s t u ú v w x y]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ Ŋ O P Q R S T U V W X Y]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -29,7 +23,7 @@ dyo{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.6.69"}
     calendar{
         generic{
             DateTimePatterns{

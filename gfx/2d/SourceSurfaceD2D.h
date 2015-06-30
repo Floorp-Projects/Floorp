@@ -27,7 +27,7 @@ public:
   virtual SurfaceFormat GetFormat() const;
   virtual bool IsValid() const;
 
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
 
   ID2D1Bitmap *GetBitmap() { return mBitmap; }
 

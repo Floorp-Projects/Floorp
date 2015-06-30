@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/hu.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/hu.xml
- */
 hu{
     AuxExemplarCharacters{"[à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ô ø ō œ q ù ŭ û ū w x y ÿ]"}
     Ellipsis{
@@ -32,11 +29,9 @@ hu{
         "[\\- – , ; \\: ! ? . … ' ’ \u0022 ” „ « » ( ) \\[ \\] \\{ \\} ⟨ ⟩ § @ * / "
         "\\& # ~ ⁒]"
     }
-    LocaleScript{
-        "Latn",
-    }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -165,10 +160,13 @@ hu{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.0.93.17"}
+    Version{"2.1.12.94"}
     calendar{
         buddhist{
             eras{
@@ -428,18 +426,18 @@ hu{
             }
             intervalFormats{
                 H{
-                    H{"H-H"}
+                    H{"H–H"}
                 }
                 Hm{
-                    H{"H:mm-H:mm"}
-                    m{"H:mm-H:mm"}
+                    H{"H:mm–H:mm"}
+                    m{"H:mm–H:mm"}
                 }
                 Hmv{
-                    H{"H:mm-H:mm v"}
-                    m{"H:mm-H:mm v"}
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
                 }
                 Hv{
-                    H{"H-H v"}
+                    H{"H–H v"}
                 }
                 M{
                     M{"M–M."}
@@ -538,7 +536,7 @@ hu{
                 "H:mm",
                 "y. MMMM d., EEEE",
                 "y. MMMM d.",
-                "y MMM d",
+                "y. MMM d.",
                 "y. MM. dd.",
                 "{1} {0}",
                 "{1} {0}",
@@ -546,10 +544,13 @@ hu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"dél"}
+            NoonMarkerNarrow{"dél"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d., E"}
@@ -677,10 +678,14 @@ hu{
                     "időszámításunk előtt",
                     "időszámításunk szerint",
                 }
+                wide%variant{
+                    "i. e.",
+                    "i. sz.",
+                }
             }
             intervalFormats{
                 H{
-                    H{"H-H"}
+                    H{"H–H"}
                 }
                 Hm{
                     H{"H:mm–H:mm"}
@@ -1212,11 +1217,6 @@ hu{
         quotationEnd{"”"}
         quotationStart{"„"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"nap"}
@@ -1238,6 +1238,32 @@ hu{
                 }
             }
         }
+        day-narrow{
+            dn{"nap"}
+            relativeTime{
+                future{
+                    one{"{0} nap múlva"}
+                    other{"{0} nap múlva"}
+                }
+                past{
+                    one{"{0} napja"}
+                    other{"{0} napja"}
+                }
+            }
+        }
+        day-short{
+            dn{"nap"}
+            relativeTime{
+                future{
+                    one{"{0} nap múlva"}
+                    other{"{0} nap múlva"}
+                }
+                past{
+                    one{"{0} napja"}
+                    other{"{0} napja"}
+                }
+            }
+        }
         dayperiod{
             dn{"napszak"}
         }
@@ -1251,7 +1277,47 @@ hu{
                 "1"{"következő péntek"}
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"előző péntek"}
+                "0"{"ez a péntek"}
+                "1"{"következő péntek"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"előző péntek"}
+                "0"{"ez a péntek"}
+                "1"{"következő péntek"}
+            }
+        }
         hour{
+            dn{"óra"}
+            relativeTime{
+                future{
+                    one{"{0} óra múlva"}
+                    other{"{0} óra múlva"}
+                }
+                past{
+                    one{"{0} órával ezelőtt"}
+                    other{"{0} órával ezelőtt"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"óra"}
+            relativeTime{
+                future{
+                    one{"{0} óra múlva"}
+                    other{"{0} óra múlva"}
+                }
+                past{
+                    one{"{0} órával ezelőtt"}
+                    other{"{0} órával ezelőtt"}
+                }
+            }
+        }
+        hour-short{
             dn{"óra"}
             relativeTime{
                 future{
@@ -1277,7 +1343,47 @@ hu{
                 }
             }
         }
+        minute-narrow{
+            dn{"perc"}
+            relativeTime{
+                future{
+                    one{"{0} perc múlva"}
+                    other{"{0} perc múlva"}
+                }
+                past{
+                    one{"{0} perccel ezelőtt"}
+                    other{"{0} perccel ezelőtt"}
+                }
+            }
+        }
+        minute-short{
+            dn{"perc"}
+            relativeTime{
+                future{
+                    one{"{0} perc múlva"}
+                    other{"{0} perc múlva"}
+                }
+                past{
+                    one{"{0} perccel ezelőtt"}
+                    other{"{0} perccel ezelőtt"}
+                }
+            }
+        }
         mon{
+            relative{
+                "-1"{"előző hétfő"}
+                "0"{"ez a hétfő"}
+                "1"{"következő hétfő"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"előző hétfő"}
+                "0"{"ez a hétfő"}
+                "1"{"következő hétfő"}
+            }
+        }
+        mon-short{
             relative{
                 "-1"{"előző hétfő"}
                 "0"{"ez a hétfő"}
@@ -1302,7 +1408,86 @@ hu{
                 }
             }
         }
+        month-narrow{
+            dn{"hónap"}
+            relativeTime{
+                future{
+                    one{"{0} hónap múlva"}
+                    other{"{0} hónap múlva"}
+                }
+                past{
+                    one{"{0} hónappal ezelőtt"}
+                    other{"{0} hónappal ezelőtt"}
+                }
+            }
+        }
+        month-short{
+            dn{"hónap"}
+            relativeTime{
+                future{
+                    one{"{0} hónap múlva"}
+                    other{"{0} hónap múlva"}
+                }
+                past{
+                    one{"{0} hónappal ezelőtt"}
+                    other{"{0} hónappal ezelőtt"}
+                }
+            }
+        }
+        quarter{
+            dn{"negyedév"}
+            relativeTime{
+                future{
+                    one{"{0} negyedév múlva"}
+                    other{"{0} negyedév múlva"}
+                }
+                past{
+                    one{"{0} negyedévvel ezelőtt"}
+                    other{"{0} negyedévvel ezelőtt"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"negyedév"}
+            relativeTime{
+                future{
+                    one{"{0} negyedév múlva"}
+                    other{"{0} negyedév múlva"}
+                }
+                past{
+                    one{"{0} negyedévvel ezelőtt"}
+                    other{"{0} negyedévvel ezelőtt"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"negyedév"}
+            relativeTime{
+                future{
+                    one{"{0} negyedév múlva"}
+                    other{"{0} negyedév múlva"}
+                }
+                past{
+                    one{"{0} negyedévvel ezelőtt"}
+                    other{"{0} negyedévvel ezelőtt"}
+                }
+            }
+        }
         sat{
+            relative{
+                "-1"{"előző szombat"}
+                "0"{"ez a szombat"}
+                "1"{"következő szombat"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"előző szombat"}
+                "0"{"ez a szombat"}
+                "1"{"következő szombat"}
+            }
+        }
+        sat-short{
             relative{
                 "-1"{"előző szombat"}
                 "0"{"ez a szombat"}
@@ -1325,7 +1510,47 @@ hu{
                 }
             }
         }
+        second-narrow{
+            dn{"másodperc"}
+            relativeTime{
+                future{
+                    one{"{0} másodperc múlva"}
+                    other{"{0} másodperc múlva"}
+                }
+                past{
+                    one{"{0} másodperccel ezelőtt"}
+                    other{"{0} másodperccel ezelőtt"}
+                }
+            }
+        }
+        second-short{
+            dn{"másodperc"}
+            relativeTime{
+                future{
+                    one{"{0} másodperc múlva"}
+                    other{"{0} másodperc múlva"}
+                }
+                past{
+                    one{"{0} másodperccel ezelőtt"}
+                    other{"{0} másodperccel ezelőtt"}
+                }
+            }
+        }
         sun{
+            relative{
+                "-1"{"előző vasárnap"}
+                "0"{"ez a vasárnap"}
+                "1"{"következő vasárnap"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"előző vasárnap"}
+                "0"{"ez a vasárnap"}
+                "1"{"következő vasárnap"}
+            }
+        }
+        sun-short{
             relative{
                 "-1"{"előző vasárnap"}
                 "0"{"ez a vasárnap"}
@@ -1339,7 +1564,35 @@ hu{
                 "1"{"következő csütörtök"}
             }
         }
+        thu-narrow{
+            relative{
+                "-1"{"előző csütörtök"}
+                "0"{"ez a csütörtök"}
+                "1"{"következő csütörtök"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"előző csütörtök"}
+                "0"{"ez a csütörtök"}
+                "1"{"következő csütörtök"}
+            }
+        }
         tue{
+            relative{
+                "-1"{"előző kedd"}
+                "0"{"ez a kedd"}
+                "1"{"következő kedd"}
+            }
+        }
+        tue-narrow{
+            relative{
+                "-1"{"előző kedd"}
+                "0"{"ez a kedd"}
+                "1"{"következő kedd"}
+            }
+        }
+        tue-short{
             relative{
                 "-1"{"előző kedd"}
                 "0"{"ez a kedd"}
@@ -1353,6 +1606,20 @@ hu{
                 "1"{"következő szerda"}
             }
         }
+        wed-narrow{
+            relative{
+                "-1"{"előző szerda"}
+                "0"{"ez a szerda"}
+                "1"{"következő szerda"}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"előző szerda"}
+                "0"{"ez a szerda"}
+                "1"{"következő szerda"}
+            }
+        }
         week{
             dn{"hét"}
             relative{
@@ -1360,6 +1627,32 @@ hu{
                 "0"{"ez a hét"}
                 "1"{"következő hét"}
             }
+            relativeTime{
+                future{
+                    one{"{0} hét múlva"}
+                    other{"{0} hét múlva"}
+                }
+                past{
+                    one{"{0} héttel ezelőtt"}
+                    other{"{0} héttel ezelőtt"}
+                }
+            }
+        }
+        week-narrow{
+            dn{"hét"}
+            relativeTime{
+                future{
+                    one{"{0} hét múlva"}
+                    other{"{0} hét múlva"}
+                }
+                past{
+                    one{"{0} héttel ezelőtt"}
+                    other{"{0} héttel ezelőtt"}
+                }
+            }
+        }
+        week-short{
+            dn{"hét"}
             relativeTime{
                 future{
                     one{"{0} hét múlva"}
@@ -1392,6 +1685,32 @@ hu{
                 }
             }
         }
+        year-narrow{
+            dn{"év"}
+            relativeTime{
+                future{
+                    one{"{0} év múlva"}
+                    other{"{0} év múlva"}
+                }
+                past{
+                    one{"{0} évvel ezelőtt"}
+                    other{"{0} évvel ezelőtt"}
+                }
+            }
+        }
+        year-short{
+            dn{"év"}
+            relativeTime{
+                future{
+                    one{"{0} év múlva"}
+                    other{"{0} év múlva"}
+                }
+                past{
+                    one{"{0} évvel ezelőtt"}
+                    other{"{0} évvel ezelőtt"}
+                }
+            }
+        }
         zone{
             dn{"időzóna"}
         }
@@ -1404,6 +1723,12 @@ hu{
             start{"{0}, {1}"}
         }
         unit{
+            2{"{0} és {1}"}
+            end{"{0} és {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
             2{"{0} és {1}"}
             end{"{0} és {1}"}
             middle{"{0}, {1}"}
@@ -1432,638 +1757,5 @@ hu{
         x-Jamo{"Jamo"}
         x-Pinyin{"Pinjin"}
         x-Publishing{"Kiadásra"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} g gyorsulás"}
-                other{"{0} g gyorsulás"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} perc"}
-                other{"{0} perc"}
-            }
-            arc-second{
-                one{"{0} másodperc"}
-                other{"{0} másodperc"}
-            }
-            degree{
-                one{"{0} fok"}
-                other{"{0} fok"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} acre"}
-                other{"{0} acre"}
-            }
-            hectare{
-                one{"{0} hektár"}
-                other{"{0} hektár"}
-            }
-            square-foot{
-                one{"{0} négyzetláb"}
-                other{"{0} négyzetláb"}
-            }
-            square-kilometer{
-                one{"{0} négyzetkilométer"}
-                other{"{0} négyzetkilométer"}
-            }
-            square-meter{
-                one{"{0} négyzetméter"}
-                other{"{0} négyzetméter"}
-            }
-            square-mile{
-                one{"{0} négyzetmérföld"}
-                other{"{0} négyzetmérföld"}
-            }
-        }
-        compound{
-            per{"{0} per {1}"}
-        }
-        duration{
-            day{
-                one{"{0} nap"}
-                other{"{0} nap"}
-            }
-            hour{
-                one{"{0} óra"}
-                other{"{0} óra"}
-            }
-            millisecond{
-                one{"{0} ezredmásodperc"}
-                other{"{0} ezredmásodperc"}
-            }
-            minute{
-                one{"{0} perc"}
-                other{"{0} perc"}
-            }
-            month{
-                one{"{0} hónap"}
-                other{"{0} hónap"}
-            }
-            second{
-                one{"{0} másodperc"}
-                other{"{0} másodperc"}
-            }
-            week{
-                one{"{0} hét"}
-                other{"{0} hét"}
-            }
-            year{
-                one{"{0} év"}
-                other{"{0} év"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} centiméter"}
-                other{"{0} centiméter"}
-            }
-            foot{
-                one{"{0} láb"}
-                other{"{0} láb"}
-            }
-            inch{
-                one{"{0} hüvelyk"}
-                other{"{0} hüvelyk"}
-            }
-            kilometer{
-                one{"{0} kilométer"}
-                other{"{0} kilométer"}
-            }
-            light-year{
-                one{"{0} fényév"}
-                other{"{0} fényév"}
-            }
-            meter{
-                one{"{0} méter"}
-                other{"{0} méter"}
-            }
-            mile{
-                one{"{0} mérföld"}
-                other{"{0} mérföld"}
-            }
-            millimeter{
-                one{"{0} milliméter"}
-                other{"{0} milliméter"}
-            }
-            picometer{
-                one{"{0} pikométer"}
-                other{"{0} pikométer"}
-            }
-            yard{
-                one{"{0} yard"}
-                other{"{0} yard"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} gramm"}
-                other{"{0} gramm"}
-            }
-            kilogram{
-                one{"{0} kilogramm"}
-                other{"{0} kilogramm"}
-            }
-            ounce{
-                one{"{0} uncia"}
-                other{"{0} uncia"}
-            }
-            pound{
-                one{"{0} font"}
-                other{"{0} font"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} lóerő"}
-                other{"{0} lóerő"}
-            }
-            kilowatt{
-                one{"{0} kilowatt"}
-                other{"{0} kilowatt"}
-            }
-            watt{
-                one{"{0} watt"}
-                other{"{0} watt"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hektopascal"}
-                other{"{0} hektopascal"}
-            }
-            inch-hg{
-                one{"{0} higanyhüvelyk"}
-                other{"{0} higanyhüvelyk"}
-            }
-            millibar{
-                one{"{0} millibar"}
-                other{"{0} millibar"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} kilométer per óra"}
-                other{"{0} kilométer per óra"}
-            }
-            meter-per-second{
-                one{"{0} méter per másodperc"}
-                other{"{0} méter per másodperc"}
-            }
-            mile-per-hour{
-                one{"{0} mérföld per óra"}
-                other{"{0} mérföld per óra"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} Celsius-fok"}
-                other{"{0} Celsius-fok"}
-            }
-            fahrenheit{
-                one{"{0} Fahrenheit-fok"}
-                other{"{0} Fahrenheit-fok"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} köbkilométer"}
-                other{"{0} köbkilométer"}
-            }
-            cubic-mile{
-                one{"{0} köbmérföld"}
-                other{"{0} köbmérföld"}
-            }
-            liter{
-                one{"{0} liter"}
-                other{"{0} liter"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} nap"}
-                other{"{0} nap"}
-            }
-            hour{
-                one{"{0} h"}
-                other{"{0} h"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} min"}
-                other{"{0} min"}
-            }
-            month{
-                one{"{0} h."}
-                other{"{0} h."}
-            }
-            second{
-                one{"{0} s"}
-                other{"{0} s"}
-            }
-            week{
-                one{"{0} hét"}
-                other{"{0} hét"}
-            }
-            year{
-                one{"{0} év"}
-                other{"{0} év"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            foot{
-                one{"{0} láb"}
-                other{"{0} láb"}
-            }
-            inch{
-                one{"{0} hüvelyk"}
-                other{"{0} hüvelyk"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            light-year{
-                one{"{0} fényév"}
-                other{"{0} fényév"}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            mile{
-                one{"{0} mf"}
-                other{"{0} mf"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} uncia"}
-                other{"{0} uncia"}
-            }
-            pound{
-                one{"{0} font"}
-                other{"{0} font"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} LE"}
-                other{"{0} LE"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mb"}
-                other{"{0} mb"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mph"}
-                other{"{0} mph"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} °"}
-                other{"{0} °"}
-            }
-            fahrenheit{
-                one{"{0} °F"}
-                other{"{0} °F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0} fok"}
-                other{"{0} fok"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} ac"}
-                other{"{0} ac"}
-            }
-            hectare{
-                one{"{0} ha"}
-                other{"{0} ha"}
-            }
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
-            }
-            square-kilometer{
-                one{"{0} km²"}
-                other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
-            }
-            square-mile{
-                one{"{0} mf²"}
-                other{"{0} mf²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} nap"}
-                other{"{0} nap"}
-            }
-            hour{
-                one{"{0} h"}
-                other{"{0} h"}
-            }
-            millisecond{
-                one{"{0} ms"}
-                other{"{0} ms"}
-            }
-            minute{
-                one{"{0} min"}
-                other{"{0} min"}
-            }
-            month{
-                one{"{0} hónap"}
-                other{"{0} hónap"}
-            }
-            second{
-                one{"{0} s"}
-                other{"{0} s"}
-            }
-            week{
-                one{"{0} hét"}
-                other{"{0} hét"}
-            }
-            year{
-                one{"{0} év"}
-                other{"{0} év"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            foot{
-                one{"{0} láb"}
-                other{"{0} láb"}
-            }
-            inch{
-                one{"{0} hüvelyk"}
-                other{"{0} hüvelyk"}
-            }
-            kilometer{
-                one{"{0} km"}
-                other{"{0} km"}
-            }
-            light-year{
-                one{"{0} fényév"}
-                other{"{0} fényév"}
-            }
-            meter{
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            mile{
-                one{"{0} mf"}
-                other{"{0} mf"}
-            }
-            millimeter{
-                one{"{0} mm"}
-                other{"{0} mm"}
-            }
-            picometer{
-                one{"{0} pm"}
-                other{"{0} pm"}
-            }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                one{"{0} kg"}
-                other{"{0} kg"}
-            }
-            ounce{
-                one{"{0} uncia"}
-                other{"{0} uncia"}
-            }
-            pound{
-                one{"{0} font"}
-                other{"{0} font"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} LE"}
-                other{"{0} LE"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} mb"}
-                other{"{0} mb"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} km/h"}
-                other{"{0} km/h"}
-            }
-            meter-per-second{
-                one{"{0} m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                one{"{0} mph"}
-                other{"{0} mph"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} °C"}
-                other{"{0} °C"}
-            }
-            fahrenheit{
-                one{"{0} °F"}
-                other{"{0} °F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} km³"}
-                other{"{0} km³"}
-            }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
-            }
-            liter{
-                one{"{0} l"}
-                other{"{0} l"}
-            }
-        }
     }
 }

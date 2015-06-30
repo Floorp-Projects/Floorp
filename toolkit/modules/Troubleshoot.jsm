@@ -177,6 +177,7 @@ let dataProviders = {
       userAgent: Cc["@mozilla.org/network/protocol;1?name=http"].
                  getService(Ci.nsIHttpProtocolHandler).
                  userAgent,
+      safeMode: Services.appinfo.inSafeMode,
     };
 
     if (AppConstants.MOZ_UPDATER)

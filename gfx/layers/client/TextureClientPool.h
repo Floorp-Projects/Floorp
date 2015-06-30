@@ -39,7 +39,7 @@ public:
    * All clients retrieved by this method should be returned using the return
    * functions, or reported lost so that the pool can manage its size correctly.
    */
-  TemporaryRef<TextureClient> GetTextureClient();
+  already_AddRefed<TextureClient> GetTextureClient();
 
   /**
    * Return a TextureClient that is no longer being used and is ready for

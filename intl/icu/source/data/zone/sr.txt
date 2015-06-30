@@ -1,16 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sr.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/sr.xml
- */
 sr{
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиџан"}
@@ -22,7 +19,7 @@ sr{
             ec{"Адис Абеба"}
         }
         "Africa:Algiers"{
-            ec{"алжирско"}
+            ec{"Алжир"}
         }
         "Africa:Asmera"{
             ec{"Асмера"}
@@ -115,7 +112,7 @@ sr{
             ec{"Луанда"}
         }
         "Africa:Lubumbashi"{
-            ec{"Лумумбаши"}
+            ec{"Лубумбаши"}
         }
         "Africa:Lusaka"{
             ec{"Лусака"}
@@ -148,7 +145,7 @@ sr{
             ec{"Нијамеј"}
         }
         "Africa:Nouakchott"{
-            ec{"Навакшут"}
+            ec{"Нуакшот"}
         }
         "Africa:Ouagadougou"{
             ec{"Уагадугу"}
@@ -163,7 +160,7 @@ sr{
             ec{"Триполи"}
         }
         "Africa:Tunis"{
-            ec{"тунижанско"}
+            ec{"Тунис"}
         }
         "Africa:Windhoek"{
             ec{"Виндхук"}
@@ -184,7 +181,7 @@ sr{
             ec{"Арагвајана"}
         }
         "America:Argentina:La_Rioja"{
-            ec{"Ла Риоја"}
+            ec{"Ла Риоха"}
         }
         "America:Argentina:Rio_Gallegos"{
             ec{"Рио Гелегос"}
@@ -211,7 +208,7 @@ sr{
             ec{"Асунсион"}
         }
         "America:Bahia"{
-            ec{"Бахиа"}
+            ec{"Баија"}
         }
         "America:Bahia_Banderas"{
             ec{"Баија Бандерас"}
@@ -238,7 +235,7 @@ sr{
             ec{"Бојзи"}
         }
         "America:Buenos_Aires"{
-            ec{"Буенос Аирес"}
+            ec{"Буенос Ајрес"}
         }
         "America:Cambridge_Bay"{
             ec{"Кембриџ Беј"}
@@ -259,7 +256,7 @@ sr{
             ec{"Кајен"}
         }
         "America:Cayman"{
-            ec{"Кајманска острва"}
+            ec{"Кајманска Острва"}
         }
         "America:Chicago"{
             ec{"Чикаго"}
@@ -340,7 +337,7 @@ sr{
             ec{"Гвајакил"}
         }
         "America:Guyana"{
-            ec{"Гуана"}
+            ec{"Гвајана"}
         }
         "America:Halifax"{
             ec{"Халифакс"}
@@ -352,13 +349,13 @@ sr{
             ec{"Хермосиљо"}
         }
         "America:Indiana:Knox"{
-            ec{"Кнокс, Индијана"}
+            ec{"Нокс, Индијана"}
         }
         "America:Indiana:Marengo"{
             ec{"Маренго, Индијана"}
         }
         "America:Indiana:Petersburg"{
-            ec{"Петерсбург, Индијана"}
+            ec{"Питерсбург, Индијана"}
         }
         "America:Indiana:Tell_City"{
             ec{"Тел Сити"}
@@ -433,7 +430,7 @@ sr{
             ec{"Мазатлан"}
         }
         "America:Mendoza"{
-            ec{"Мендоза"}
+            ec{"Мендоса"}
         }
         "America:Menominee"{
             ec{"Меномини"}
@@ -458,9 +455,6 @@ sr{
         }
         "America:Montevideo"{
             ec{"Монтевидео"}
-        }
-        "America:Montreal"{
-            ec{"Монтреал"}
         }
         "America:Montserrat"{
             ec{"Монтсерат"}
@@ -487,7 +481,7 @@ sr{
             ec{"Центар, Северна Дакота"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"Нови Салем, Северна Даткоа"}
+            ec{"Нови Салем, Северна Дакота"}
         }
         "America:Ojinaga"{
             ec{"Охинага"}
@@ -499,10 +493,10 @@ sr{
             ec{"Пангниртунг"}
         }
         "America:Paramaribo"{
-            ec{"Парамирбо"}
+            ec{"Парамарибо"}
         }
         "America:Phoenix"{
-            ec{"Феникс"}
+            ec{"Финикс"}
         }
         "America:Port-au-Prince"{
             ec{"Порт-о-Пренс"}
@@ -541,7 +535,7 @@ sr{
             ec{"Сантарем"}
         }
         "America:Santiago"{
-            ec{"Сантијаго"}
+            ec{"Сантјаго"}
         }
         "America:Santo_Domingo"{
             ec{"Санто Доминго"}
@@ -551,9 +545,6 @@ sr{
         }
         "America:Scoresbysund"{
             ec{"Скорезбисунд"}
-        }
-        "America:Shiprock"{
-            ec{"Шипрок"}
         }
         "America:Sitka"{
             ec{"Ситка"}
@@ -583,7 +574,7 @@ sr{
             ec{"Тегусигалпа"}
         }
         "America:Thule"{
-            ec{"Туле"}
+            ec{"Тул"}
         }
         "America:Thunder_Bay"{
             ec{"Тандер Беј"}
@@ -613,7 +604,7 @@ sr{
             ec{"Јелоунајф"}
         }
         "Antarctica:Casey"{
-            ec{"Касеј"}
+            ec{"Кејси"}
         }
         "Antarctica:Davis"{
             ec{"Дејвис"}
@@ -636,11 +627,11 @@ sr{
         "Antarctica:Rothera"{
             ec{"Ротера"}
         }
-        "Antarctica:South_Pole"{
-            ec{"Јужни пол"}
-        }
         "Antarctica:Syowa"{
             ec{"Шова"}
+        }
+        "Antarctica:Troll"{
+            ec{"Трол"}
         }
         "Antarctica:Vostok"{
             ec{"Восток"}
@@ -696,9 +687,6 @@ sr{
         "Asia:Choibalsan"{
             ec{"Чојбалсан"}
         }
-        "Asia:Chongqing"{
-            ec{"Чонгкинг"}
-        }
         "Asia:Colombo"{
             ec{"Коломбо"}
         }
@@ -719,9 +707,6 @@ sr{
         }
         "Asia:Gaza"{
             ec{"Газа"}
-        }
-        "Asia:Harbin"{
-            ec{"Харбин"}
         }
         "Asia:Hebron"{
             ec{"Хеброн"}
@@ -753,9 +738,6 @@ sr{
         "Asia:Karachi"{
             ec{"Карачи"}
         }
-        "Asia:Kashgar"{
-            ec{"Кашгар"}
-        }
         "Asia:Katmandu"{
             ec{"Катманду"}
         }
@@ -775,7 +757,7 @@ sr{
             ec{"Кувајт"}
         }
         "Asia:Macau"{
-            ec{"Макау"}
+            ec{"Макао"}
         }
         "Asia:Magadan"{
             ec{"Магадан"}
@@ -808,7 +790,7 @@ sr{
             ec{"Пном Пен"}
         }
         "Asia:Pontianak"{
-            ec{"Понтианак"}
+            ec{"Понтијанак"}
         }
         "Asia:Pyongyang"{
             ec{"Пјонгјанг"}
@@ -898,10 +880,10 @@ sr{
             ec{"Зеленортска Острва"}
         }
         "Atlantic:Faeroe"{
-            ec{"Фарска острва"}
+            ec{"Фарска Острва"}
         }
         "Atlantic:Madeira"{
-            ec{"Мадера"}
+            ec{"Мадеира"}
         }
         "Atlantic:Reykjavik"{
             ec{"Рејкјавик"}
@@ -910,13 +892,13 @@ sr{
             ec{"Јужна Џорџија"}
         }
         "Atlantic:St_Helena"{
-            ec{"Св. Јелена"}
+            ec{"Света Јелена"}
         }
         "Atlantic:Stanley"{
             ec{"Стенли"}
         }
         "Australia:Adelaide"{
-            ec{"Аделаида"}
+            ec{"Аделејд"}
         }
         "Australia:Brisbane"{
             ec{"Бризбејн"}
@@ -940,7 +922,7 @@ sr{
             ec{"Линдеман"}
         }
         "Australia:Lord_Howe"{
-            ec{"Лорд Хов"}
+            ec{"Лорд Хау"}
         }
         "Australia:Melbourne"{
             ec{"Мелбурн"}
@@ -952,7 +934,7 @@ sr{
             ec{"Сиднеј"}
         }
         "Etc:Unknown"{
-            ec{"Непознат или неважећи град"}
+            ec{"Непознат град"}
         }
         "Europe:Amsterdam"{
             ec{"Амстердам"}
@@ -1013,7 +995,7 @@ sr{
             ec{"Џерси"}
         }
         "Europe:Kaliningrad"{
-            ec{"Калининград"}
+            ec{"Калињинград"}
         }
         "Europe:Kiev"{
             ec{"Кијев"}
@@ -1077,7 +1059,7 @@ sr{
             ec{"Сарајево"}
         }
         "Europe:Simferopol"{
-            ec{"Симферопол"}
+            ec{"Симферопољ"}
         }
         "Europe:Skopje"{
             ec{"Скопље"}
@@ -1107,7 +1089,7 @@ sr{
             ec{"Беч"}
         }
         "Europe:Vilnius"{
-            ec{"Виљнус"}
+            ec{"Вилњус"}
         }
         "Europe:Volgograd"{
             ec{"Волгоград"}
@@ -1164,7 +1146,7 @@ sr{
             ec{"Окланд"}
         }
         "Pacific:Chatham"{
-            ec{"Катхам"}
+            ec{"Чатам"}
         }
         "Pacific:Easter"{
             ec{"Ускршње острво"}
@@ -1239,7 +1221,7 @@ sr{
             ec{"Палау"}
         }
         "Pacific:Pitcairn"{
-            ec{"Питкаирн"}
+            ec{"Питкерн"}
         }
         "Pacific:Ponape"{
             ec{"Понапе"}
@@ -1332,6 +1314,11 @@ sr{
             ld{"Анадир летње рачунање времена"}
             lg{"Анадир време"}
             ls{"Анадир стандардно време"}
+        }
+        "meta:Apia"{
+            ld{"Апија летње рачунање времена"}
+            lg{"Апија време"}
+            ls{"Апија стандардно време"}
         }
         "meta:Aqtau"{
             ld{"Акватау летње рачунање времена"}
@@ -1487,16 +1474,28 @@ sr{
             ld{"Средњеевропско летње рачунање времена"}
             lg{"Средњеевропско време"}
             ls{"Средњеевропско стандардно време"}
+            sd{"CEST"}
+            sg{"CET"}
+            ss{"CET"}
         }
         "meta:Europe_Eastern"{
             ld{"Источноевропско летње рачунање времена"}
             lg{"Источноевропско време"}
             ls{"Источноевропско стандардно време"}
+            sd{"EEST"}
+            sg{"EET"}
+            ss{"EET"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"даљи исток Европе"}
         }
         "meta:Europe_Western"{
             ld{"Западноевропско летње рачунање времена"}
             lg{"Западноевропско време"}
             ls{"Западноевропско стандардно време"}
+            sd{"WEST"}
+            sg{"WET"}
+            ss{"WET"}
         }
         "meta:Falkland"{
             ld{"Фолкландска Острва летње рачунање времена"}
@@ -1515,7 +1514,8 @@ sr{
             ls{"Француско јужно и антарктичко време"}
         }
         "meta:GMT"{
-            ls{"Гринвич средње време"}
+            ls{"Средње време по Гриничу"}
+            ss{"GMT"}
         }
         "meta:Galapagos"{
             ls{"Галапагос време"}
@@ -1545,7 +1545,7 @@ sr{
             ls{"Гуам стандардно време"}
         }
         "meta:Gulf"{
-            ls{"Залив време"}
+            ls{"Заливско време"}
         }
         "meta:Guyana"{
             ls{"Гвајана време"}
@@ -1673,6 +1673,16 @@ sr{
         }
         "meta:Mawson"{
             ls{"Мосон време"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"Северозападни Мексико летње рачунање времена"}
+            lg{"Северни Мексико"}
+            ls{"Северозападни Мексико стандардно време"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Мексички Пацифик летње рачунање времена"}
+            lg{"Мексички Пацифик"}
+            ls{"Мексички Пацифик стандардно време"}
         }
         "meta:Mongolia"{
             ld{"Улан Батор летње рачунање времена"}

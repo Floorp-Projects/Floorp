@@ -178,7 +178,7 @@ CompositableHost::RemoveMaskEffect()
   }
 }
 
-/* static */ TemporaryRef<CompositableHost>
+/* static */ already_AddRefed<CompositableHost>
 CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;

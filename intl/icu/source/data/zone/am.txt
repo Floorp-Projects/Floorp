@@ -1,16 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/am.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/am.xml
- */
 am{
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"አቢጃን"}
@@ -130,7 +127,7 @@ am{
             ec{"ማሴሩ"}
         }
         "Africa:Mbabane"{
-            ec{"ምባቤን"}
+            ec{"ምባባኔ"}
         }
         "Africa:Mogadishu"{
             ec{"ሞቃዲሹ"}
@@ -166,7 +163,7 @@ am{
             ec{"ቱኒዝ"}
         }
         "Africa:Windhoek"{
-            ec{"ዊንድሆይክ"}
+            ec{"ዊንድሆክ"}
         }
         "America:Adak"{
             ec{"አዳክ"}
@@ -459,9 +456,6 @@ am{
         "America:Montevideo"{
             ec{"ሞንቴቪድዮ"}
         }
-        "America:Montreal"{
-            ec{"ሞንትሪያል"}
-        }
         "America:Montserrat"{
             ec{"ሞንትሴራት"}
         }
@@ -529,7 +523,7 @@ am{
             ec{"ረጂና"}
         }
         "America:Resolute"{
-            ec{"ቆራጥ"}
+            ec{"ሪዞሊዩት"}
         }
         "America:Rio_Branco"{
             ec{"ሪዮ ብራንኮ"}
@@ -547,13 +541,10 @@ am{
             ec{"ሳንቶ ዶሚንጎ"}
         }
         "America:Sao_Paulo"{
-            ec{"ሴኦ ፖሎ"}
+            ec{"ሳኦ ፖሎ"}
         }
         "America:Scoresbysund"{
             ec{"ስኮርስባይሰንድ"}
-        }
-        "America:Shiprock"{
-            ec{"ሺፕሮክ"}
         }
         "America:Sitka"{
             ec{"ሲትካ"}
@@ -636,11 +627,11 @@ am{
         "Antarctica:Rothera"{
             ec{"ሮቴራ"}
         }
-        "Antarctica:South_Pole"{
-            ec{"የደቡብ ዋልታ"}
-        }
         "Antarctica:Syowa"{
             ec{"ስዮዋ"}
+        }
+        "Antarctica:Troll"{
+            ec{"ትሮል"}
         }
         "Antarctica:Vostok"{
             ec{"ቭስቶክ"}
@@ -696,9 +687,6 @@ am{
         "Asia:Choibalsan"{
             ec{"ቾይባልሳን"}
         }
-        "Asia:Chongqing"{
-            ec{"ቾንግኪንግ"}
-        }
         "Asia:Colombo"{
             ec{"ኮሎምቦ"}
         }
@@ -719,9 +707,6 @@ am{
         }
         "Asia:Gaza"{
             ec{"ጋዛ"}
-        }
-        "Asia:Harbin"{
-            ec{"ሃሪቢን"}
         }
         "Asia:Hebron"{
             ec{"ኬብሮን"}
@@ -752,9 +737,6 @@ am{
         }
         "Asia:Karachi"{
             ec{"ካራቺ"}
-        }
-        "Asia:Kashgar"{
-            ec{"ካሽጋር"}
         }
         "Asia:Katmandu"{
             ec{"ካትማንዱ"}
@@ -973,7 +955,7 @@ am{
             ec{"ብራቲስላቫ"}
         }
         "Europe:Brussels"{
-            ec{"ብራስል"}
+            ec{"ብራሰልስ"}
         }
         "Europe:Bucharest"{
             ec{"ቡካሬስት"}
@@ -992,6 +974,7 @@ am{
         }
         "Europe:Dublin"{
             ec{"ደብሊን"}
+            ld{"የአይሪሽ መደበኛ ሰዓት አቆጣጠር"}
         }
         "Europe:Gibraltar"{
             ec{"ጂብራልታር"}
@@ -1025,6 +1008,7 @@ am{
         }
         "Europe:London"{
             ec{"ለንደን"}
+            ld{"የብሪትሽ የበጋ ሰዓት አቆጣጠር"}
         }
         "Europe:Luxembourg"{
             ec{"ሉክሰምበርግ"}
@@ -1111,10 +1095,10 @@ am{
             ec{"ቮልጎራድ"}
         }
         "Europe:Warsaw"{
-            ec{"ዋርሳው"}
+            ec{"ዋርሶው"}
         }
         "Europe:Zagreb"{
-            ec{"ዛግረብ"}
+            ec{"ዛግሬብ"}
         }
         "Europe:Zaporozhye"{
             ec{"ዛፖሮዚይ"}
@@ -1321,6 +1305,11 @@ am{
             lg{"የአናድይር ሰዓት አቆጣጠር"}
             ls{"የአናዲይር ሰዓት አቆጣጠር"}
         }
+        "meta:Apia"{
+            ld{"የአፒያ የቀን ጊዜ ሰዓት"}
+            lg{"የአፒያ ሰዓት"}
+            ls{"የአፒያ መደበኛ ሰዓት"}
+        }
         "meta:Arabian"{
             ld{"የአረቢያ የቀን ብርሃን ሰዓት"}
             lg{"የአረቢያ ሰዓት"}
@@ -1470,6 +1459,9 @@ am{
             ld{"የምስራቃዊ አውሮፓ ክረምት ሰዓት"}
             lg{"የምስራቃዊ አውሮፓ ሰዓት"}
             ls{"የምስራቃዊ አውሮፓ መደበኛ ሰዓት"}
+        }
+        "meta:Europe_Further_Eastern"{
+            ls{"የሩቅ ምስራቅ የአውሮፓ ሰዓት"}
         }
         "meta:Europe_Western"{
             ld{"የምዕራባዊ አውሮፓ ክረምት ሰዓት"}
@@ -1640,6 +1632,16 @@ am{
         }
         "meta:Mawson"{
             ls{"የማውሰን ሰዓት"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"ሰሜናዊ ምእራብ የሜክሲኮ የቀን ሰዓት አቆጣጠር"}
+            lg{"ሰሜናዊ ምእራብ የሜክሲኮ ሰዓት አቆጣጠር"}
+            ls{"ሰሜናዊ ምእራብ የሜክሲኮ መደበኛ ሰዓት አቆጣጠር"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"የሜክሲኮ ፓሲፊክ የቀን ሰዓት አቆጣጠር"}
+            lg{"የሜክሲኮ ፓሲፊክ ሰዓት አቆጣጠር"}
+            ls{"የሜክሲኮ ፓሲፊክ መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:Mongolia"{
             ld{"የኡላን ባቶር የበጋ ሰዓት አቆጣጠር"}

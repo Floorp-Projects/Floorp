@@ -81,7 +81,7 @@ internalIntlRegExps.currencyDigitsRE = null;
 function getUnicodeLocaleExtensionSequenceRE() {
     return internalIntlRegExps.unicodeLocaleExtensionSequenceRE ||
            (internalIntlRegExps.unicodeLocaleExtensionSequenceRE =
-            regexp_construct_no_statics("-u(-[a-z0-9]{2,8})+"));
+            regexp_construct_no_statics("-u(?:-[a-z0-9]{2,8})+"));
 }
 
 
@@ -89,15 +89,38 @@ function getUnicodeLocaleExtensionSequenceRE() {
  * Removes Unicode locale extension sequences from the given language tag.
  */
 function removeUnicodeExtensions(locale) {
-    // Don't use std_String_replace directly with a regular expression,
-    // as that would set RegExp statics.
+    // A wholly-privateuse locale has no extension sequences.
+    if (callFunction(std_String_startsWith, locale, "x-"))
+        return locale;
+
+    // Otherwise, split on "-x-" marking the start of any privateuse component.
+    // Replace Unicode locale extension sequences in the left half, and return
+    // the concatenation.
+    var pos = callFunction(std_String_indexOf, locale, "-x-");
+    if (pos < 0)
+        pos = locale.length;
+
+    var left = callFunction(std_String_substring, locale, 0, pos);
+    var right = callFunction(std_String_substring, locale, pos);
+
     var extensions;
     var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-    while ((extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, locale)) !== null) {
-        locale = callFunction(std_String_replace, locale, extensions[0], "");
+    while ((extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left)) !== null) {
+        left = callFunction(std_String_replace, left, extensions[0], "");
         unicodeLocaleExtensionSequenceRE.lastIndex = 0;
     }
-    return locale;
+
+    var combined = left + right;
+    assert(IsStructurallyValidLanguageTag(combined), "recombination produced an invalid language tag");
+    assert(function() {
+        var uindex = callFunction(std_String_indexOf, combined, "-u-");
+        if (uindex < 0)
+            return true;
+        var xindex = callFunction(std_String_indexOf, combined, "-x-");
+        return xindex > 0 && xindex < uindex;
+    }(), "recombination failed to remove all Unicode locale extension sequences");
+
+    return combined;
 }
 
 

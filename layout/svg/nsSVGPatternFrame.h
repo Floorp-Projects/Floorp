@@ -109,7 +109,7 @@ protected:
     return GetLengthValue(aIndex, mContent);
   }
 
-  mozilla::TemporaryRef<SourceSurface>
+  already_AddRefed<SourceSurface>
   PaintPattern(const DrawTarget* aDrawTarget,
                Matrix *patternMatrix,
                const Matrix &aContextMatrix,

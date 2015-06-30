@@ -3,7 +3,7 @@
 //
 /*
 ***************************************************************************
-*   Copyright (C) 2002-2011 International Business Machines Corporation
+*   Copyright (C) 2002-2014 International Business Machines Corporation
 *   and others. All rights reserved.
 ***************************************************************************
 */
@@ -230,7 +230,7 @@ void RBBISymbolTable::rbbiSymtablePrint() const {
            "Name               Node Val     String Val\n"
            "----------------------------------------------------------------------\n");
 
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement  *e   = NULL;
     for (;;) {
         e = uhash_nextElement(fHashTable,  &pos);

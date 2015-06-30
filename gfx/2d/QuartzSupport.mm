@@ -26,7 +26,6 @@
 @end
 
 using mozilla::RefPtr;
-using mozilla::TemporaryRef;
 
 CGColorSpaceRef CreateSystemColorSpace() {
   CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());

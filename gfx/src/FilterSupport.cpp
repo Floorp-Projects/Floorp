@@ -98,7 +98,7 @@ namespace gfx {
 
 namespace FilterWrappers {
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   Unpremultiply(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::UNPREMULTIPLY);
@@ -109,7 +109,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   Premultiply(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::PREMULTIPLY);
@@ -120,7 +120,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   LinearRGBToSRGB(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
@@ -138,7 +138,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   SRGBToLinearRGB(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
@@ -156,7 +156,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   Crop(DrawTarget* aDT, FilterNode* aInputFilter, const IntRect& aRect)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CROP);
@@ -168,7 +168,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   Offset(DrawTarget* aDT, FilterNode* aInputFilter, const IntPoint& aOffset)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
@@ -180,7 +180,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   GaussianBlur(DrawTarget* aDT, FilterNode* aInputFilter, const Size& aStdDeviation)
   {
     float stdX = float(std::min(aStdDeviation.width, kMaxStdDeviation));
@@ -208,7 +208,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   Clear(DrawTarget* aDT)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
@@ -219,7 +219,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   ForSurface(DrawTarget* aDT, SourceSurface* aSurface,
              const IntPoint& aSurfacePosition)
   {
@@ -233,7 +233,7 @@ namespace FilterWrappers {
     return nullptr;
   }
 
-  static TemporaryRef<FilterNode>
+  static already_AddRefed<FilterNode>
   ToAlpha(DrawTarget* aDT, FilterNode* aInput)
   {
     float zero = 0.0f;
@@ -273,13 +273,13 @@ public:
                           ColorModel aOriginalColorModel);
 
   // Get a FilterNode for the specified color model, guaranteed to be non-null.
-  TemporaryRef<FilterNode> ForColorModel(ColorModel aColorModel);
+  already_AddRefed<FilterNode> ForColorModel(ColorModel aColorModel);
 
   AlphaModel OriginalAlphaModel() const { return mOriginalColorModel.mAlphaModel; }
 
 private:
   // Create the required FilterNode that will be cached by ForColorModel.
-  TemporaryRef<FilterNode> WrapForColorModel(ColorModel aColorModel);
+  already_AddRefed<FilterNode> WrapForColorModel(ColorModel aColorModel);
 
   RefPtr<DrawTarget> mDT;
   ColorModel mOriginalColorModel;
@@ -307,7 +307,7 @@ FilterCachedColorModels::FilterCachedColorModels(DrawTarget* aDT,
   }
 }
 
-TemporaryRef<FilterNode>
+already_AddRefed<FilterNode>
 FilterCachedColorModels::ForColorModel(ColorModel aColorModel)
 {
   if (!mFilterForColorModel[aColorModel.ToIndex()]) {
@@ -317,7 +317,7 @@ FilterCachedColorModels::ForColorModel(ColorModel aColorModel)
   return filter.forget();
 }
 
-TemporaryRef<FilterNode>
+already_AddRefed<FilterNode>
 FilterCachedColorModels::WrapForColorModel(ColorModel aColorModel)
 {
   // Convert one aspect at a time and recurse.
@@ -695,7 +695,7 @@ const int32_t kMorphologyMaxRadius = 100000;
 // aSourceRegions contains the filter primitive subregions of the source
 // primitives; only needed for eTile primitives.
 // aInputImages carries additional surfaces that are used by eImage primitives.
-static TemporaryRef<FilterNode>
+static already_AddRefed<FilterNode>
 FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescription,
                                    DrawTarget* aDT,
                                    nsTArray<RefPtr<FilterNode> >& aSources,
@@ -1217,7 +1217,7 @@ OutputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
 }
 
 // Returns the output FilterNode, in premultiplied sRGB space.
-static TemporaryRef<FilterNode>
+static already_AddRefed<FilterNode>
 FilterNodeGraphFromDescription(DrawTarget* aDT,
                                const FilterDescription& aFilter,
                                const Rect& aResultNeededRect,

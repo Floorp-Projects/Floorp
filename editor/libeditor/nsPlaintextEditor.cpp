@@ -1201,7 +1201,10 @@ NS_IMETHODIMP nsPlaintextEditor::Cut()
 NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 {
   NS_ENSURE_ARG_POINTER(aCanCut);
-  *aCanCut = IsModifiable() && CanCutOrCopy(ePasswordFieldNotAllowed);
+  // Cut is always enabled in HTML documents
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  *aCanCut = (doc && doc->IsHTMLOrXHTML()) ||
+    (IsModifiable() && CanCutOrCopy(ePasswordFieldNotAllowed));
   return NS_OK;
 }
 
@@ -1216,7 +1219,10 @@ NS_IMETHODIMP nsPlaintextEditor::Copy()
 NS_IMETHODIMP nsPlaintextEditor::CanCopy(bool *aCanCopy)
 {
   NS_ENSURE_ARG_POINTER(aCanCopy);
-  *aCanCopy = CanCutOrCopy(ePasswordFieldNotAllowed);
+  // Copy is always enabled in HTML documents
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  *aCanCopy = (doc && doc->IsHTMLOrXHTML()) ||
+    CanCutOrCopy(ePasswordFieldNotAllowed);
   return NS_OK;
 }
 

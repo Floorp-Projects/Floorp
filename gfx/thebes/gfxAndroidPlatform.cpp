@@ -340,7 +340,7 @@ gfxAndroidPlatform::MakePlatformFont(const nsAString& aFontName,
                                                                      aLength);
 }
 
-TemporaryRef<ScaledFont>
+already_AddRefed<ScaledFont>
 gfxAndroidPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     return GetScaledFontForFontWithCairoSkia(aTarget, aFont);

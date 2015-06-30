@@ -44,7 +44,7 @@
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests, window);
+SimpleTest.waitForFocus(runTest, window);
 
 var gScrollable128 = document.getElementById("Scrollable128");
 var gScrollable96 = document.getElementById("Scrollable96");
@@ -52,87 +52,88 @@ var gScrollable64 = document.getElementById("Scrollable64");
 var gScrollable32 = document.getElementById("Scrollable32");
 var gRoot = document.documentElement;
 
-function prepareScrollUnits()
+function* prepareScrollUnits()
 {
   var result = -1;
   function handler(aEvent)
   {
     result = aEvent.detail;
     aEvent.preventDefault();
+    setTimeout(runTest, 0);
   }
   window.addEventListener("MozMousePixelScroll", handler, true);
 
-  synthesizeWheel(gScrollable128, 10, 10,
+  yield synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable128.wheelLineHeight = result;
   ok(result > 96 && result < 200, "prepareScrollUnits: gScrollable128.wheelLineHeight may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable96, 10, 10,
+  yield synthesizeWheel(gScrollable96, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable96.wheelLineHeight = result;
   ok(result > 64 && result < gScrollable128.wheelLineHeight, "prepareScrollUnits: gScrollable96.wheelLineHeight may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable64, 10, 10,
+  yield synthesizeWheel(gScrollable64, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable64.wheelLineHeight = result;
   ok(result > 32 && result < gScrollable96.wheelLineHeight, "prepareScrollUnits: gScrollable64.wheelLineHeight may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable32, 10, 10,
+  yield synthesizeWheel(gScrollable32, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable32.wheelLineHeight = result;
   ok(result > 16 && result < gScrollable64.wheelLineHeight, "prepareScrollUnits: gScrollable32.wheelLineHeight may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gRoot, 10, 10,
+  yield synthesizeWheel(gRoot, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gRoot.wheelLineHeight = result;
   ok(result > 10 && result < gScrollable32.wheelLineHeight, "prepareScrollUnits: gRoot.wheelLineHeight may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable128, 10, 10,
+  yield synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable128.wheelHorizontalLine = result;
   ok(result > 50 && result < 200, "prepareScrollUnits: gScrollable128.wheelHorizontalLine may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable96, 10, 10,
+  yield synthesizeWheel(gScrollable96, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable96.wheelHorizontalLine = result;
   ok(result > 30 && result < gScrollable128.wheelHorizontalLine, "prepareScrollUnits: gScrollable96.wheelHorizontalLine may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable64, 10, 10,
+  yield synthesizeWheel(gScrollable64, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable64.wheelHorizontalLine = result;
   ok(result > 20 && result < gScrollable96.wheelHorizontalLine, "prepareScrollUnits: gScrollable64.wheelHorizontalLine may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable32, 10, 10,
+  yield synthesizeWheel(gScrollable32, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable32.wheelHorizontalLine = result;
   ok(result > 12 && result < gScrollable64.wheelHorizontalLine, "prepareScrollUnits: gScrollable32.wheelHorizontalLine may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gRoot, 10, 10,
+  yield synthesizeWheel(gRoot, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_LINE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gRoot.wheelHorizontalLine = result;
   ok(result > 5 && result < gScrollable32.wheelHorizontalLine, "prepareScrollUnits: gRoot.wheelHorizontalLine may be illegal value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable128, 10, 10,
+  yield synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable128.wheelPageHeight = result;
@@ -140,7 +141,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable128.wheelLineHeight is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable96, 10, 10,
+  yield synthesizeWheel(gScrollable96, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable96.wheelPageHeight = result;
@@ -148,7 +149,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable96.wheelLineHeight is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable64, 10, 10,
+  yield synthesizeWheel(gScrollable64, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable64.wheelPageHeight = result;
@@ -156,7 +157,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable64.wheelLineHeight is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable32, 10, 10,
+  yield synthesizeWheel(gScrollable32, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gScrollable32.wheelPageHeight = result;
@@ -164,7 +165,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable32.wheelLineHeight is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gRoot, 10, 10,
+  yield synthesizeWheel(gRoot, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaY: 1.0, lineOrPageDeltaY: 1 });
   gRoot.wheelPageHeight = result;
@@ -173,7 +174,7 @@ function prepareScrollUnits()
 
 
   result = -1;
-  synthesizeWheel(gScrollable128, 10, 10,
+  yield synthesizeWheel(gScrollable128, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable128.wheelPageWidth = result;
@@ -181,7 +182,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable128.wheelPageWidth is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable96, 10, 10,
+  yield synthesizeWheel(gScrollable96, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable96.wheelPageWidth = result;
@@ -189,7 +190,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable96.wheelPageWidth is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable64, 10, 10,
+  yield synthesizeWheel(gScrollable64, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable64.wheelPageWidth = result;
@@ -197,7 +198,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable64.wheelPageWidth is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gScrollable32, 10, 10,
+  yield synthesizeWheel(gScrollable32, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gScrollable32.wheelPageWidth = result;
@@ -205,7 +206,7 @@ function prepareScrollUnits()
      "prepareScrollUnits: gScrollable32.wheelPageWidth is strange value, got " + result);
 
   result = -1;
-  synthesizeWheel(gRoot, 10, 10,
+  yield synthesizeWheel(gRoot, 10, 10,
                   { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                     deltaX: 1.0, lineOrPageDeltaX: 1 });
   gRoot.wheelPageWidth = result;
@@ -215,7 +216,7 @@ function prepareScrollUnits()
   window.removeEventListener("MozMousePixelScroll", handler, true);
 }
 
-function doTests()
+function* doTests()
 {
   const kTests = [
     // DOM_DELTA_LINE
@@ -1235,6 +1236,7 @@ function doTests()
   ];
 
   var currentTest, description, firedX, firedY;
+  var expectedHandlerCalls;
 
   function handler(aEvent)
   {
@@ -1244,6 +1246,9 @@ function doTests()
         aEvent.axis != MouseScrollEvent.VERTICAL_AXIS) {
       ok(false,
          description + "The event had invalid axis (" + aEvent.axis + ")");
+      if (--expectedHandlerCalls == 0) {
+        setTimeout(runTest, 0);
+      }
       return;
     }
 
@@ -1253,6 +1258,9 @@ function doTests()
       ok(false,
          description + "The event fired unexpectedly (" +
          (isHorizontal ? "Horizontal" : "Vertical") + ")");
+      if (--expectedHandlerCalls == 0) {
+        setTimeout(runTest, 0);
+      }
       return;
     }
 
@@ -1270,6 +1278,10 @@ function doTests()
                         currentTest.expected.y.wheelPageHeight);
     is(Math.abs(aEvent.detail), expectedDetail,
        description + ((isHorizontal) ? "horizontal" : "vertical") + " event detail is wrong");
+
+    if (--expectedHandlerCalls == 0) {
+      setTimeout(runTest, 0);
+    }
   }
 
   window.addEventListener("MozMousePixelScroll", handler, true);
@@ -1283,9 +1295,11 @@ function doTests()
         ", deltaY: " + currentTest.event.deltaY + "): ";
     currentTest.prepare();
     firedX = firedY = false;
-    synthesizeWheel(currentTest.target, 10, 10, currentTest.event);
+    expectedHandlerCalls = (currentTest.expected.x ? 1 : 0)
+                         + (currentTest.expected.y ? 1 : 0);
+    yield synthesizeWheel(currentTest.target, 10, 10, currentTest.event);
     if (currentTest.expected.x) {
-      ok(firedX, description + "Horizontla MozMousePixelScroll event wasn't fired");
+      ok(firedX, description + "Horizontal MozMousePixelScroll event wasn't fired");
     }
     if (currentTest.expected.y) {
       ok(firedY, description + "Vertical MozMousePixelScroll event wasn't fired");
@@ -1296,7 +1310,7 @@ function doTests()
   window.removeEventListener("MozMousePixelScroll", handler, true);
 }
 
-function runTests()
+function* testBody()
 {
   SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_x", 100);
   SpecialPowers.setIntPref("mousewheel.default.delta_multiplier_y", 100);
@@ -1316,9 +1330,12 @@ function runTests()
   SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_x", 100);
   SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_y", 100);
   SpecialPowers.setIntPref("mousewheel.with_win.delta_multiplier_z", 100);
+  // If APZ is enabled we should ensure the preventDefault calls work even
+  // if the test is running slowly.
+  SpecialPowers.setIntPref("apz.content_response_timeout", 2000);
 
-  prepareScrollUnits();
-  doTests();
+  yield* prepareScrollUnits();
+  yield* doTests();
 
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.default.delta_multiplier_y");
@@ -1338,8 +1355,20 @@ function runTests()
   SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_x");
   SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_y");
   SpecialPowers.clearUserPref("mousewheel.with_win.delta_multiplier_z");
+  SpecialPowers.clearUserPref("apz.content_response_timeout");
+}
 
-  SimpleTest.finish();
+var gTestContinuation = null;
+
+function runTest()
+{
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
 }
 
 </script>

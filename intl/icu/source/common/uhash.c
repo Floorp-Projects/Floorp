@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2011, International Business Machines
+*   Copyright (C) 1997-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -575,7 +575,7 @@ uhash_close(UHashtable *hash) {
     }
     if (hash->elements != NULL) {
         if (hash->keyDeleter != NULL || hash->valueDeleter != NULL) {
-            int32_t pos=-1;
+            int32_t pos=UHASH_FIRST;
             UHashElement *e;
             while ((e = (UHashElement*) uhash_nextElement(hash, &pos)) != NULL) {
                 HASH_DELETE_KEY_VALUE(hash, e->key.pointer, e->value.pointer);
@@ -756,7 +756,7 @@ uhash_iremovei(UHashtable *hash,
 
 U_CAPI void U_EXPORT2
 uhash_removeAll(UHashtable *hash) {
-    int32_t pos = -1;
+    int32_t pos = UHASH_FIRST;
     const UHashElement *e;
     U_ASSERT(hash != NULL);
     if (hash->count != 0) {
@@ -885,7 +885,7 @@ uhash_equals(const UHashtable* hash1, const UHashtable* hash2){
         return FALSE;
     }
     
-    pos=-1;
+    pos=UHASH_FIRST;
     for(i=0; i<count1; i++){
         const UHashElement* elem1 = uhash_nextElement(hash1, &pos);
         const UHashTok key1 = elem1->key;

@@ -1,0 +1,145 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/qu.xml
+// *
+// ***************************************************************************
+qu{
+    AuxExemplarCharacters{
+        "[á à ă â å ä ã ā æ b c ç d e é è ĕ ê ë ē f g í ì ĭ î ï ī j o ó ò ŏ ô ö ø ō œ"
+        " r ú ù ŭ û ü ū v x ÿ z]"
+    }
+    ExemplarCharacters{"[a {ch} {chʼ} h i k {kʼ} l {ll} m n ñ p {pʼ} q {qʼ} s t {tʼ} u w y]"}
+    ExemplarCharactersIndex{"[A {Ch} H I K L {Ll} M N Ñ P Q S T U W Y]"}
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤ #,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+    }
+    Version{"2.1.6.71"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "hh:mm:ss a",
+                "hh:mm a",
+                "EEEE, d MMMM, y",
+                "y MMMM d",
+                "y MMM d",
+                "dd/MM/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                yMMMEd{"E, d MMM, y"}
+                yMd{"dd-MM-y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Dom",
+                        "Lun",
+                        "Mar",
+                        "Mié",
+                        "Jue",
+                        "Vie",
+                        "Sab",
+                    }
+                    wide{
+                        "Domingo",
+                        "Lunes",
+                        "Martes",
+                        "Miércoles",
+                        "Jueves",
+                        "Viernes",
+                        "Sábado",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "X",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "BCE",
+                    "d.C.",
+                }
+                narrow{
+                    "BCE",
+                    "dC",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Qul",
+                        "Hat",
+                        "Pau",
+                        "Ayr",
+                        "Aym",
+                        "Int",
+                        "Ant",
+                        "Qha",
+                        "Uma",
+                        "Kan",
+                        "Aya",
+                        "Kap",
+                    }
+                    wide{
+                        "Qulla puquy",
+                        "Hatun puquy",
+                        "Pauqar waray",
+                        "Ayriwa",
+                        "Aymuray",
+                        "Inti raymi",
+                        "Anta Sitwa",
+                        "Qhapaq Sitwa",
+                        "Uma raymi",
+                        "Kantaray",
+                        "Ayamarqʼa",
+                        "Kapaq Raymi",
+                    }
+                }
+            }
+        }
+    }
+    layout{
+        characters{"left-to-right"}
+        lines{"top-to-bottom"}
+    }
+}

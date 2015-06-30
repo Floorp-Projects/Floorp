@@ -20,13 +20,13 @@ FilterProcessing::ExtractAlpha_SSE2(const IntSize& size, uint8_t* sourceData, in
   ExtractAlpha_SIMD<__m128i>(size, sourceData, sourceStride, alphaData, alphaStride);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ConvertToB8G8R8A8_SSE2(SourceSurface* aSurface)
 {
   return ConvertToB8G8R8A8_SIMD<__m128i>(aSurface);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyBlending_SSE2(DataSourceSurface* aInput1, DataSourceSurface* aInput2,
                                      BlendMode aBlendMode)
 {
@@ -53,7 +53,7 @@ FilterProcessing::ApplyMorphologyVertical_SSE2(uint8_t* aSourceData, int32_t aSo
     aSourceData, aSourceStride, aDestData, aDestStride, aDestRect, aRadius, aOp);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyColorMatrix_SSE2(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
 {
   return ApplyColorMatrix_SIMD<__m128i,__m128i,__m128i>(aInput, aMatrix);
@@ -95,14 +95,14 @@ FilterProcessing::DoUnpremultiplicationCalculation_SSE2(
   DoUnpremultiplicationCalculation_SIMD<__m128i,__m128i>(aSize, aTargetData, aTargetStride, aSourceData, aSourceStride);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::RenderTurbulence_SSE2(const IntSize &aSize, const Point &aOffset, const Size &aBaseFrequency,
                                         int32_t aSeed, int aNumOctaves, TurbulenceType aType, bool aStitch, const Rect &aTileRect)
 {
   return RenderTurbulence_SIMD<__m128,__m128i,__m128i>(aSize, aOffset, aBaseFrequency, aSeed, aNumOctaves, aType, aStitch, aTileRect);
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 FilterProcessing::ApplyArithmeticCombine_SSE2(DataSourceSurface* aInput1, DataSourceSurface* aInput2, Float aK1, Float aK2, Float aK3, Float aK4)
 {
   return ApplyArithmeticCombine_SIMD<__m128i,__m128i,__m128i>(aInput1, aInput2, aK1, aK2, aK3, aK4);

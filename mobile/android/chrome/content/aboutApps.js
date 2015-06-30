@@ -21,13 +21,14 @@ const DEFAULT_ICON = "chrome://browser/skin/images/default-app-icon.png";
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutApps.properties");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem)
-    .rootTreeItem
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindow)
-    .QueryInterface(Ci.nsIDOMChromeWindow)});
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIWebNavigation)
+           .QueryInterface(Ci.nsIDocShellTreeItem)
+           .rootTreeItem
+           .QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIDOMWindow)
+           .QueryInterface(Ci.nsIDOMChromeWindow);
+});
 
 document.addEventListener("DOMContentLoaded", onLoad, false);
 
