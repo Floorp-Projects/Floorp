@@ -100,12 +100,12 @@ IsTypeSupported(const nsAString& aType)
           || AndroidBridge::Bridge()->GetAPIVersion() < 16
 #endif
           )) {
-        break;
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
       }
       if ((mimeType.EqualsASCII("video/webm") ||
            mimeType.EqualsASCII("audio/webm")) &&
           !Preferences::GetBool("media.mediasource.webm.enabled", false)) {
-        break;
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
       }
       found = true;
       break;
