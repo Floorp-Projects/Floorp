@@ -42,7 +42,7 @@ BEGIN_TEST(testResolveRecursion)
     /* Start the essence of the test via invoking the first resolve hook. */
     JS::RootedValue v(cx);
     EVAL("obj1.x", &v);
-    CHECK_SAME(v, JSVAL_FALSE);
+    CHECK(v.isFalse());
     CHECK_EQUAL(resolveEntryCount, 4);
     CHECK_EQUAL(resolveExitCount, 4);
 
@@ -86,7 +86,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp)
             /* First resolve hook invocation. */
             CHECK_EQUAL(resolveEntryCount, 1);
             EVAL("obj2.y = true", &v);
-            CHECK_SAME(v, JSVAL_TRUE);
+            CHECK(v.isTrue());
             CHECK(JS_DefinePropertyById(cx, obj, id, JS::FalseHandleValue, JSPROP_RESOLVING));
             *resolvedp = true;
             return true;
@@ -103,7 +103,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp)
             EVAL("obj1.x", &v);
             CHECK(v.isUndefined());
             EVAL("obj1.y", &v);
-            CHECK_SAME(v, JSVAL_ZERO);
+            CHECK(v.isInt32(0));
             *resolvedp = true;
             return true;
         }
@@ -118,7 +118,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, bool* resolvedp)
             EVAL("obj2.x", &v);
             CHECK(v.isUndefined());
             EVAL("obj1.y = 0", &v);
-            CHECK_SAME(v, JSVAL_ZERO);
+            CHECK(v.isInt32(0));
             *resolvedp = true;
             return true;
         }

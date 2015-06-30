@@ -9,6 +9,8 @@
 
 #if defined(JS_CODEGEN_ARM)
 # include "jit/arm/AtomicOperations-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/AtomicOperations-arm64.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/AtomicOperations-mips.h"
 #elif defined(JS_CODEGEN_NONE)
@@ -19,4 +21,4 @@
 # error "Atomic operations must be defined for this platform"
 #endif
 
-#endif //  jit_AtomicOperations_inl_h
+#endif // jit_AtomicOperations_inl_h

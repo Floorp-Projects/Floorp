@@ -479,7 +479,7 @@ XPC_WN_Shared_Convert(JSContext* cx, HandleObject obj, JSType type, MutableHandl
             vp.set(JS_GetNaNValue(cx));
             return true;
         case JSTYPE_BOOLEAN:
-            vp.set(JSVAL_TRUE);
+            vp.setBoolean(true);
             return true;
         case JSTYPE_VOID:
         case JSTYPE_STRING:

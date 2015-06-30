@@ -1677,6 +1677,9 @@ pref("browser.newtabpage.updateIntroShown", false);
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
+// Toggles the enhanced content of 'about:newtab'. Shows sponsored tiles.
+sticky_pref("browser.newtabpage.enhanced", true);
+
 // number of rows of newtab grid
 pref("browser.newtabpage.rows", 3);
 

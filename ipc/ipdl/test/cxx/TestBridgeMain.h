@@ -42,7 +42,7 @@ class TestBridgeMainSubParent :
     public PTestBridgeMainSubParent
 {
 public:
-    TestBridgeMainSubParent(Transport* aTransport)
+    explicit TestBridgeMainSubParent(Transport* aTransport)
         : mTransport(aTransport)
     {}
     virtual ~TestBridgeMainSubParent() {}
@@ -126,7 +126,7 @@ class TestBridgeMainSubChild :
     public PTestBridgeMainSubChild
 {
 public:
-    TestBridgeMainSubChild(Transport* aTransport)
+    explicit TestBridgeMainSubChild(Transport* aTransport)
         : mGotHi(false)
         , mTransport(aTransport)
     {}

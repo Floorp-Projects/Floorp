@@ -9,6 +9,7 @@ TEST_DIRS += [
     'test_cert_eku',
     'test_cert_keyUsage',
     'test_cert_trust',
+    'test_cert_version',
     'test_intermediate_basic_usage_constraints',
     'test_pinning_dynamic',
 ]
