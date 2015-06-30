@@ -84,6 +84,25 @@ SOURCES += [
     'StructuredClone.cpp',
 ]
 
+# Tests for maplike and setlike require bindings to be built, which means they
+# must be included in libxul. This breaks the "no test classes are exported"
+# rule stated in the test/ directory, but it's the only way this will work.
+# Test classes are only built in debug mode, and all tests requiring use of
+# them are only run in debug mode.
+if CONFIG['MOZ_DEBUG']:
+    EXPORTS.mozilla.dom += [
+        "test/TestInterfaceMaplike.h",
+        "test/TestInterfaceMaplikeObject.h",
+        "test/TestInterfaceSetlike.h",
+        "test/TestInterfaceSetlikeNode.h"
+        ]
+    UNIFIED_SOURCES += [
+        "test/TestInterfaceMaplike.cpp",
+        "test/TestInterfaceMaplikeObject.cpp",
+        "test/TestInterfaceSetlike.cpp",
+        "test/TestInterfaceSetlikeNode.cpp",
+        ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:

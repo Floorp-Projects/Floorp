@@ -1913,12 +1913,12 @@ nsIFileToJsval(nsPIDOMWindow* aWindow, DeviceStorageFile* aFile)
   MOZ_ASSERT(aWindow);
 
   if (!aFile) {
-    return JSVAL_NULL;
+    return JS::NullValue();
   }
 
   if (aFile->mEditable) {
     // TODO - needs janv's file handle support.
-    return JSVAL_NULL;
+    return JS::NullValue();
   }
 
   nsString fullPath;
@@ -2531,7 +2531,7 @@ public:
     }
 
     AutoJSContext cx;
-    JS::Rooted<JS::Value> result(cx, JSVAL_NULL);
+    JS::Rooted<JS::Value> result(cx, JS::NullValue());
 
     if (mFile) {
       result = nsIFileToJsval(window, mFile);

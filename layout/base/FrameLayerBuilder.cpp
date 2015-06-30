@@ -4643,6 +4643,7 @@ static bool
 ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
                            nsDisplayListBuilder* aDisplayListBuilder,
                            nsIFrame* aContainerFrame,
+                           nsDisplayItem* aContainerItem,
                            const nsRect& aVisibleRect,
                            const Matrix4x4* aTransform,
                            const ContainerLayerParameters& aIncomingScale,
@@ -4698,11 +4699,32 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // If the container's transform is animated off main thread, fix a suitable scale size
     // for animation
     if (aContainerFrame->GetContent() &&
+        aContainerItem &&
+        aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
         nsLayoutUtils::HasAnimationsForCompositor(
           aContainerFrame->GetContent(), eCSSProperty_transform)) {
+      // Use the size of the nearest widget as the maximum size.  This
+      // is important since it might be a popup that is bigger than the
+      // pres context's size.
+      nsPresContext* presContext = aContainerFrame->PresContext();
+      nsIWidget* widget = aContainerFrame->GetNearestWidget();
+      nsSize displaySize;
+      if (widget) {
+        IntSize widgetSize = widget->GetClientSize();
+        int32_t p2a = presContext->AppUnitsPerDevPixel();
+        displaySize.width = NSIntPixelsToAppUnits(widgetSize.width, p2a);
+        displaySize.height = NSIntPixelsToAppUnits(widgetSize.height, p2a);
+      } else {
+        displaySize = presContext->GetVisibleArea().Size();
+      }
+      // compute scale using the animation on the container (ignoring
+      // its ancestors)
       scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
                 aContainerFrame->GetContent(), aVisibleRect.Size(),
-                aContainerFrame->PresContext()->GetVisibleArea().Size());
+                displaySize);
+      // multiply by the scale inherited from ancestors
+      scale.width *= aIncomingScale.mXScale;
+      scale.height *= aIncomingScale.mYScale;
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of resolution changes
       scale = RoundToFloatPrecision(ThebesMatrix(transform2d).ScaleFactors(true));
@@ -4886,6 +4908,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       aContainerItem ? aContainerItem->GetVisibleRectForChildren() :
           aContainerFrame->GetVisualOverflowRectRelativeToSelf();
   if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame,
+                                  aContainerItem,
                                   bounds.Intersect(childrenVisible),
                                   aTransform, aParameters,
                                   containerLayer, state, scaleParameters)) {

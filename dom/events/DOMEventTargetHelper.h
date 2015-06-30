@@ -167,6 +167,14 @@ protected:
 
   nsresult WantsUntrusted(bool* aRetVal);
 
+  // If this method returns true your object is kept alive until it returns
+  // false. You can use this method instead using
+  // NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN macro.
+  virtual bool IsCertainlyAliveForCC() const
+  {
+    return false;
+  }
+
   nsRefPtr<EventListenerManager> mListenerManager;
   // Make |event| trusted and dispatch |aEvent| to |this|.
   nsresult DispatchTrustedEvent(nsIDOMEvent* aEvent);

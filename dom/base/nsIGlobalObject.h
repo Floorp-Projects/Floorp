@@ -22,6 +22,7 @@ class nsIPrincipal;
 
 class nsIGlobalObject : public nsISupports
 {
+  nsTArray<nsCString> mHostObjectURIs;
   bool mIsDying;
 
 protected:
@@ -69,10 +70,6 @@ public:
 protected:
   virtual ~nsIGlobalObject();
 
-private:
-  nsTArray<nsCString> mHostObjectURIs;
-
-protected:
   void
   StartDying()
   {
