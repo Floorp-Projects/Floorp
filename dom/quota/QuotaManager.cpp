@@ -91,8 +91,6 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
-using DirectoryLock = QuotaManager::DirectoryLock;
-
 namespace {
 
 /*******************************************************************************
@@ -136,7 +134,7 @@ enum AppId {
 
 } // anonymous namespace
 
-class QuotaManager::DirectoryLockImpl final
+class DirectoryLockImpl final
   : public DirectoryLock
 {
   nsRefPtr<QuotaManager> mQuotaManager;
@@ -468,7 +466,9 @@ private:
   nsRefPtr<GroupInfo> mDefaultStorageGroupInfo;
 };
 
-class QuotaManager::CollectOriginsHelper final
+namespace {
+
+class CollectOriginsHelper final
   : public nsRunnable
 {
   uint64_t mMinSizeToBeFreed;
@@ -477,7 +477,7 @@ class QuotaManager::CollectOriginsHelper final
   CondVar mCondVar;
 
   // The members below are protected by mMutex.
-  nsTArray<nsRefPtr<QuotaManager::DirectoryLockImpl>> mLocks;
+  nsTArray<nsRefPtr<DirectoryLockImpl>> mLocks;
   uint64_t mSizeToBeFreed;
   bool mWaiting;
 
@@ -498,8 +498,6 @@ private:
   NS_IMETHOD
   Run();
 };
-
-namespace {
 
 class OriginOperationBase
   : public nsRunnable
@@ -763,9 +761,7 @@ private:
   { }
 };
 
-} // anonymous namespace
-
-class QuotaManager::FinalizeOriginEvictionOp
+class FinalizeOriginEvictionOp
   : public OriginOperationBase
 {
   nsTArray<nsRefPtr<DirectoryLockImpl>> mLocks;
@@ -798,8 +794,6 @@ private:
   virtual void
   UnblockOpen() override;
 };
-
-namespace {
 
 /*******************************************************************************
  * Helper Functions
@@ -1620,7 +1614,6 @@ GetTemporaryStorageLimit(nsIFile* aDirectory, uint64_t aCurrentUsage,
  * Directory lock
  ******************************************************************************/
 
-QuotaManager::
 DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
                                      Nullable<PersistenceType> aPersistenceType,
                                      const nsACString& aGroup,
@@ -1656,7 +1649,6 @@ DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
   MOZ_ASSERT_IF(!aInternal, aOpenListener);
 }
 
-QuotaManager::
 DirectoryLockImpl::~DirectoryLockImpl()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1673,7 +1665,6 @@ DirectoryLockImpl::~DirectoryLockImpl()
 
 // static
 bool
-QuotaManager::
 DirectoryLockImpl::MatchOriginScopes(const OriginScope& aOriginScope1,
                                      const OriginScope& aOriginScope2)
 {
@@ -1700,7 +1691,6 @@ DirectoryLockImpl::MatchOriginScopes(const OriginScope& aOriginScope1,
 }
 
 bool
-QuotaManager::
 DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aExistingLock)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1734,7 +1724,6 @@ DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aExistingLock)
 }
 
 void
-QuotaManager::
 DirectoryLockImpl::NotifyOpenListener()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1752,7 +1741,7 @@ DirectoryLockImpl::NotifyOpenListener()
   mQuotaManager->RemovePendingDirectoryLock(this);
 }
 
-NS_IMPL_ISUPPORTS0(QuotaManager::DirectoryLockImpl);
+NS_IMPL_ISUPPORTS0(DirectoryLockImpl);
 
 /*******************************************************************************
  * Quota object
@@ -1883,7 +1872,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   if (newTemporaryStorageUsage > quotaManager->mTemporaryStorageLimit) {
     // This will block the thread without holding the lock while waitting.
 
-    nsAutoTArray<nsRefPtr<QuotaManager::DirectoryLockImpl>, 10> locks;
+    nsAutoTArray<nsRefPtr<DirectoryLockImpl>, 10> locks;
 
     uint64_t sizeToBeFreed =
       quotaManager->LockedCollectOriginsForEviction(delta, locks);
@@ -1897,7 +1886,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     {
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      for (nsRefPtr<QuotaManager::DirectoryLockImpl>& lock : locks) {
+      for (nsRefPtr<DirectoryLockImpl>& lock : locks) {
         MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
         MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
         MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
@@ -1911,7 +1900,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
 
     NS_ASSERTION(mOriginInfo, "How come?!");
 
-    for (QuotaManager::DirectoryLockImpl* lock : locks) {
+    for (DirectoryLockImpl* lock : locks) {
       MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
       MOZ_ASSERT(!lock->GetGroup().IsEmpty());
       MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
@@ -4395,7 +4384,6 @@ GroupInfoPair::GetGroupInfoForPersistenceType(PersistenceType aPersistenceType)
   }
 }
 
-QuotaManager::
 CollectOriginsHelper::CollectOriginsHelper(mozilla::Mutex& aMutex,
                                            uint64_t aMinSizeToBeFreed)
 : mMinSizeToBeFreed(aMinSizeToBeFreed),
@@ -4409,7 +4397,6 @@ CollectOriginsHelper::CollectOriginsHelper(mozilla::Mutex& aMutex,
 }
 
 int64_t
-QuotaManager::
 CollectOriginsHelper::BlockAndReturnOriginsForEviction(
                                   nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
 {
@@ -4425,7 +4412,6 @@ CollectOriginsHelper::BlockAndReturnOriginsForEviction(
 }
 
 NS_IMETHODIMP
-QuotaManager::
 CollectOriginsHelper::Run()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
@@ -4996,7 +4982,6 @@ OriginClearOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 }
 
 void
-QuotaManager::
 FinalizeOriginEvictionOp::Dispatch()
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -5008,7 +4993,6 @@ FinalizeOriginEvictionOp::Dispatch()
 }
 
 void
-QuotaManager::
 FinalizeOriginEvictionOp::RunOnIOThreadImmediately()
 {
   AssertIsOnIOThread();
@@ -5020,14 +5004,12 @@ FinalizeOriginEvictionOp::RunOnIOThreadImmediately()
 }
 
 nsresult
-QuotaManager::
 FinalizeOriginEvictionOp::Open()
 {
   MOZ_CRASH("Shouldn't get here!");
 }
 
 nsresult
-QuotaManager::
 FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 {
   AssertIsOnIOThread();
@@ -5045,7 +5027,6 @@ FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 }
 
 void
-QuotaManager::
 FinalizeOriginEvictionOp::UnblockOpen()
 {
   MOZ_ASSERT(NS_IsMainThread());
