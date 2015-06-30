@@ -86,7 +86,7 @@ nsScreenGtk :: GetDPIScale()
 {
   double dpiScale = nsIWidget::DefaultScaleOverride();
   if (dpiScale <= 0.0) {
-    dpiScale = gfxPlatformGtk::GetDPIScale();
+    dpiScale = GetGtkMonitorScaleFactor() * gfxPlatformGtk::GetDPIScale();
   }
   return dpiScale;
 }
