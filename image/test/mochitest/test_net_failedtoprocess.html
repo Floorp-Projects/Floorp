@@ -13,6 +13,7 @@ observer event with the nsIURI of the failed image as the subject
 <body>
 <p id="display"></p>
 <pre id="test">
+</pre>
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
@@ -43,9 +44,9 @@ var observer = {
 
 obs.addObserver(observer, "net:failed-to-process-uri-content", false);
 
+document.write('<img src="damon.jpg">');
+document.write('<img src="invalid.jpg">');
+
 </script>
-</pre>
-<img src="damon.jpg">
-<img src="invalid.jpg">
 </body>
 </html>

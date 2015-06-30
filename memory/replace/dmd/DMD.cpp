@@ -347,7 +347,13 @@ class Options
     // Like "Live", but also outputs the same data for dead blocks. This mode
     // does cumulative heap profiling, which is good for identifying where large
     // amounts of short-lived allocations occur.
-    Cumulative
+    Cumulative,
+
+    // Like "Live", but this mode also outputs for each live block the address
+    // of the block and the values contained in the blocks. This mode is useful
+    // for investigating leaks, by helping to figure out which blocks refer to
+    // other blocks. This mode disables sampling.
+    Scan
   };
 
   char* mDMDEnvVar;   // a saved copy, for later printing
@@ -369,6 +375,7 @@ public:
   bool IsLiveMode()       const { return mMode == Live; }
   bool IsDarkMatterMode() const { return mMode == DarkMatter; }
   bool IsCumulativeMode() const { return mMode == Cumulative; }
+  bool IsScanMode()       const { return mMode == Scan; }
 
   const char* ModeString() const;
 
@@ -1434,6 +1441,8 @@ Options::Options(const char* aDMDEnvVar)
         mMode = Options::DarkMatter;
       } else if (strcmp(arg, "--mode=cumulative") == 0) {
         mMode = Options::Cumulative;
+      } else if (strcmp(arg, "--mode=scan") == 0) {
+        mMode = Options::Scan;
 
       } else if (GetLong(arg, "--sample-below", 1, mSampleBelowSize.mMax,
                  &myLong)) {
@@ -1456,6 +1465,10 @@ Options::Options(const char* aDMDEnvVar)
       // Undo the temporary isolation.
       *e = replacedChar;
     }
+  }
+
+  if (mMode == Options::Scan) {
+    mSampleBelowSize.mActual = 1;
   }
 }
 
@@ -1493,6 +1506,8 @@ Options::ModeString() const
     return "dark-matter";
   case Cumulative:
     return "cumulative";
+  case Scan:
+    return "scan";
   default:
     MOZ_ASSERT(false);
     return "(unknown DMD mode)";
@@ -1747,6 +1762,41 @@ private:
   char mIdBuf[kIdBufLen];
 };
 
+// Helper class for converting a pointer value to a string.
+class ToStringConverter
+{
+public:
+  const char* ToPtrString(const void* aPtr)
+  {
+    snprintf(kPtrBuf, sizeof(kPtrBuf) - 1, "%" PRIxPTR, (uintptr_t)aPtr);
+    return kPtrBuf;
+  }
+
+private:
+  char kPtrBuf[32];
+};
+
+static void
+WriteBlockContents(JSONWriter& aWriter, const LiveBlock& aBlock)
+{
+  MOZ_ASSERT(!aBlock.IsSampled(), "Sampled blocks do not have accurate sizes");
+
+  size_t numWords = aBlock.ReqSize() / sizeof(uintptr_t*);
+  if (numWords == 0) {
+    return;
+  }
+
+  aWriter.StartArrayProperty("contents", aWriter.SingleLineStyle);
+  {
+    const uintptr_t** block = (const uintptr_t**)aBlock.Address();
+    ToStringConverter sc;
+    for (size_t i = 0; i < numWords; ++i) {
+      aWriter.StringElement(sc.ToPtrString(block[i]));
+    }
+  }
+  aWriter.EndArray();
+}
+
 static void
 AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
 {
@@ -1789,6 +1839,7 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
     StatusMsg("  Constructing the heap block list...\n");
 
     ToIdStringConverter isc;
+    ToStringConverter sc;
 
     writer.StartArrayProperty("blockList");
     {
@@ -1800,6 +1851,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
         writer.StartObjectElement(writer.SingleLineStyle);
         {
           if (!b.IsSampled()) {
+            if (gOptions->IsScanMode()) {
+              writer.StringProperty("addr", sc.ToPtrString(b.Address()));
+              WriteBlockContents(writer, b);
+            }
             writer.IntProperty("req", b.ReqSize());
             if (b.SlopSize() > 0) {
               writer.IntProperty("slop", b.SlopSize());

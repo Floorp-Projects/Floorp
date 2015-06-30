@@ -45,7 +45,7 @@ public:
 
   virtual DrawTargetType GetType() const override { return DrawTargetType::HARDWARE_RASTER; }
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
-  virtual TemporaryRef<SourceSurface> Snapshot();
+  virtual already_AddRefed<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
 
   virtual void Flush();
@@ -106,26 +106,26 @@ public:
   virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
 
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
                                                             int32_t aStride,
                                                             SurfaceFormat aFormat) const;
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
 
-  virtual TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const;
   
-  virtual TemporaryRef<DrawTarget>
+  virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
 
-  virtual TemporaryRef<GradientStops>
+  virtual already_AddRefed<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = ExtendMode::CLAMP) const;
 
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType);
 
   virtual bool SupportsRegionClipping() const { return false; }
 
@@ -135,10 +135,10 @@ public:
   bool Init(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   bool InitD3D10Data();
   uint32_t GetByteSize() const;
-  TemporaryRef<ID2D1Layer> GetCachedLayer();
+  already_AddRefed<ID2D1Layer> GetCachedLayer();
   void PopCachedLayer(ID2D1RenderTarget *aRT);
 
-  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface);
+  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface);
 
   static ID2D1Factory *factory();
   static void CleanupD2D();
@@ -159,7 +159,7 @@ public:
   static uint64_t mVRAMUsageSS;
 
 private:
-  TemporaryRef<ID2D1Bitmap>
+  already_AddRefed<ID2D1Bitmap>
   GetBitmapForSurface(SourceSurface *aSurface,
                       Rect &aSource);
   friend class AutoSaveRestoreClippedOut;
@@ -199,20 +199,20 @@ private:
                         IDWriteRenderingParams *aParams,
                         const DrawOptions &aOptions = DrawOptions());
 
-  TemporaryRef<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
+  already_AddRefed<ID2D1RenderTarget> CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
 
   // This returns the clipped geometry, in addition it returns aClipBounds which
   // represents the intersection of all pixel-aligned rectangular clips that
   // are currently set. The returned clipped geometry must be clipped by these
   // bounds to correctly reflect the total clip. This is in device space.
-  TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
+  already_AddRefed<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
 
   bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
 
-  TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
+  already_AddRefed<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
-  TemporaryRef<ID3D10Texture2D> CreateGradientTexture(const GradientStopsD2D *aStops);
-  TemporaryRef<ID3D10Texture2D> CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds);
+  already_AddRefed<ID3D10Texture2D> CreateGradientTexture(const GradientStopsD2D *aStops);
+  already_AddRefed<ID3D10Texture2D> CreateTextureForAnalysis(IDWriteGlyphRunAnalysis *aAnalysis, const IntRect &aBounds);
 
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
   void SetupStateForRendering();

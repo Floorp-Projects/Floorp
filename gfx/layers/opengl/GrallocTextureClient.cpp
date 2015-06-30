@@ -48,7 +48,7 @@ GrallocTextureClientOGL::~GrallocTextureClientOGL()
   }
 }
 
-TemporaryRef<TextureClient>
+already_AddRefed<TextureClient>
 GrallocTextureClientOGL::CreateSimilar(TextureFlags aFlags,
                                        TextureAllocationFlags aAllocFlags) const
 {
@@ -351,7 +351,7 @@ GrallocTextureClientOGL::GetBufferSize() const
   return 0;
 }
 
-/*static*/ TemporaryRef<TextureClient>
+/*static*/ already_AddRefed<TextureClient>
 GrallocTextureClientOGL::FromSharedSurface(gl::SharedSurface* abstractSurf,
                                            TextureFlags flags)
 {

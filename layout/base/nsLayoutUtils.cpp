@@ -8127,7 +8127,8 @@ nsLayoutUtils::HasApzAwareListeners(EventListenerManager* aElm)
          aElm->HasListenersFor(nsGkAtoms::ontouchmove) ||
          aElm->HasListenersFor(nsGkAtoms::onwheel) ||
          aElm->HasListenersFor(nsGkAtoms::onDOMMouseScroll) ||
-         aElm->HasListenersFor(nsHtml5Atoms::onmousewheel);
+         aElm->HasListenersFor(nsHtml5Atoms::onmousewheel) ||
+         aElm->HasListenersFor(nsGkAtoms::onMozMousePixelScroll);
 }
 
 /* static */ bool

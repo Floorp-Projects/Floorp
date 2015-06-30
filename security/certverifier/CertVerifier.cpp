@@ -201,7 +201,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled,
-                                       MIN_RSA_BITS_WEAK, nullptr, builtChain);
+                                       MIN_RSA_BITS_WEAK,
+                                       ValidityCheckingMode::CheckingOff,
+                                       nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -230,7 +232,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
           trustDomain(trustSSL, evOCSPFetching,
                       mOCSPCache, pinArg, ocspGETConfig,
                       mCertShortLifetimeInDays, mPinningMode, MIN_RSA_BITS,
-                      hostname, builtChain);
+                      ValidityCheckingMode::CheckForEV, hostname, builtChain);
         rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
                                           KeyUsage::keyEncipherment, // RSA
@@ -256,7 +258,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain trustDomain(trustSSL, defaultOCSPFetching,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays, mPinningMode,
-                                       MIN_RSA_BITS, hostname, builtChain);
+                                       MIN_RSA_BITS,
+                                       ValidityCheckingMode::CheckingOff,
+                                       hostname, builtChain);
       rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                         KeyUsage::digitalSignature, // (EC)DHE
                                         KeyUsage::keyEncipherment, // RSA
@@ -277,6 +281,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                            mOCSPCache, pinArg, ocspGETConfig,
                                            mCertShortLifetimeInDays,
                                            mPinningMode, MIN_RSA_BITS_WEAK,
+                                           ValidityCheckingMode::CheckingOff,
                                            hostname, builtChain);
       rv = BuildCertChainForOneKeyUsage(trustDomainWeak, certDER, time,
                                         KeyUsage::digitalSignature, // (EC)DHE
@@ -302,6 +307,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
+                                       ValidityCheckingMode::CheckingOff,
                                        nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
@@ -315,6 +321,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
+                                       ValidityCheckingMode::CheckingOff,
                                        nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -339,6 +346,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
+                                       ValidityCheckingMode::CheckingOff,
                                        nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -360,6 +368,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mOCSPCache, pinArg, ocspGETConfig,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
+                                       ValidityCheckingMode::CheckingOff,
                                        nullptr, builtChain);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
@@ -390,6 +399,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
       NSSCertDBTrustDomain sslTrust(trustSSL, defaultOCSPFetching, mOCSPCache,
                                     pinArg, ocspGETConfig, mCertShortLifetimeInDays,
                                     pinningDisabled, MIN_RSA_BITS_WEAK,
+                                    ValidityCheckingMode::CheckingOff,
                                     nullptr, builtChain);
       rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
@@ -399,6 +409,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                         mOCSPCache, pinArg, ocspGETConfig,
                                         mCertShortLifetimeInDays,
                                         pinningDisabled, MIN_RSA_BITS_WEAK,
+                                        ValidityCheckingMode::CheckingOff,
                                         nullptr, builtChain);
         rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
@@ -410,6 +421,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                                   mCertShortLifetimeInDays,
                                                   pinningDisabled,
                                                   MIN_RSA_BITS_WEAK,
+                                                  ValidityCheckingMode::CheckingOff,
                                                   nullptr, builtChain);
           rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,

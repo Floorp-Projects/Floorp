@@ -532,7 +532,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 #endif
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 YInvertImageSurface(DataSourceSurface* aSurf)
 {
     RefPtr<DataSourceSurface> temp =
@@ -568,7 +568,7 @@ YInvertImageSurface(DataSourceSurface* aSurf)
     return temp.forget();
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
 {
     gl->MakeCurrent();
@@ -617,7 +617,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
         break;                                                              \
     }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
                                    GLenum aTextureTarget,
                                    const gfx::IntSize& aSize,

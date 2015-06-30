@@ -62,7 +62,7 @@ public:
     // Accessor to let clients check if we've received any commands yet.
     inline bool HaveReceivedCommands() { return mHaveReceivedCommands; }
     // Accessor to get the finalized path
-    mozilla::TemporaryRef<Path> GetResultingPath();
+    already_AddRefed<Path> GetResultingPath();
 
   protected:
     // Helper methods

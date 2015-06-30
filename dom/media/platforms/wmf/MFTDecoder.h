@@ -43,7 +43,7 @@ public:
                         void* aData = nullptr);
 
   // Returns the MFT's IMFAttributes object.
-  TemporaryRef<IMFAttributes> GetAttributes();
+  already_AddRefed<IMFAttributes> GetAttributes();
 
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.

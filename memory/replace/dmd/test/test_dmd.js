@@ -36,6 +36,8 @@ let gDmdTestFile = getExecutable("SmokeDMD" + (gIsWindows ? ".exe" : ""));
 
 let gDmdScriptFile = getExecutable("dmd.py");
 
+let gScanTestFile = FileUtils.getFile("CurWorkD", ["scan-test.py"]);
+
 function readFile(aFile) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);
@@ -113,6 +115,16 @@ function test(aPrefix, aArgs) {
   actualFile.remove(true);
 }
 
+// Run scan-test.py on the JSON file and see if it succeeds.
+function scanTest(aJsonFilePath, aExtraArgs) {
+  let args = [
+    gScanTestFile.path,
+    aJsonFilePath,
+  ].concat(aExtraArgs);
+
+  return runProcess(new FileUtils.File(gPythonName), args) == 0;
+}
+
 function run_test() {
   let jsonFile, jsonFile2;
 
@@ -147,6 +159,22 @@ function run_test() {
   test2("unsampled2", "cumulative");
 
   test2("sampled", "live");
+
+  // Heap scan testing.
+  jsonFile = FileUtils.getFile("CurWorkD", ["basic-scan.json"]);
+  ok(scanTest(jsonFile.path), "Basic scan test");
+
+  let is64Bit = Components.classes["@mozilla.org/xre/app-info;1"]
+                          .getService(Components.interfaces.nsIXULRuntime).is64Bit;
+  let basicScanFileName = "basic-scan-" + (is64Bit ? "64" : "32");
+  test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
+  ok(scanTest(jsonFile.path, ["--clamp-contents"]), "Scan with address clamping");
+  // Run the generic test a second time to ensure that the first time produced
+  // valid JSON output. "--clamp-contents" is passed in so we don't have to have
+  // more variants of the files.
+  test(basicScanFileName, ["--clamp-contents", jsonFile.path]);
+  jsonFile.remove(true);
+
 
   // These tests only test the post-processing script. They use hand-written
   // JSON files as input. Ideally the JSON files would contain comments

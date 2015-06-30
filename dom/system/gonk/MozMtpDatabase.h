@@ -243,7 +243,7 @@ private:
   void AddEntryAndNotify(DbEntry* aEntr, RefCountedMtpServer* aMtpServer);
   void DumpEntries(const char* aLabel);
   MtpObjectHandle FindEntryByPath(const nsACString& aPath);
-  mozilla::TemporaryRef<DbEntry> GetEntry(MtpObjectHandle aHandle);
+  already_AddRefed<DbEntry> GetEntry(MtpObjectHandle aHandle);
   void RemoveEntry(MtpObjectHandle aHandle);
   void RemoveEntryAndNotify(MtpObjectHandle aHandle, RefCountedMtpServer* aMtpServer);
   void UpdateEntry(MtpObjectHandle aHandle, DeviceStorageFile* aFile);
