@@ -734,31 +734,34 @@ PluginModuleChild::AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
 }
 
 bool
-PluginModuleChild::AnswerNPP_ClearSiteData(const nsCString& aSite,
+PluginModuleChild::RecvNPP_ClearSiteData(const nsCString& aSite,
                                            const uint64_t& aFlags,
                                            const uint64_t& aMaxAge,
-                                           NPError* aResult)
+                                           const uint64_t& aCallbackId)
 {
-    *aResult =
+    NPError result =
         mFunctions.clearsitedata(NullableStringGet(aSite), aFlags, aMaxAge);
+    SendReturnClearSiteData(result, aCallbackId);
     return true;
 }
 
 bool
-PluginModuleChild::AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult)
+PluginModuleChild::RecvNPP_GetSitesWithData(const uint64_t& aCallbackId)
 {
     char** result = mFunctions.getsiteswithdata();
-    if (!result)
+    InfallibleTArray<nsCString> array;
+    if (!result) {
+        SendReturnSitesWithData(array, aCallbackId);
         return true;
-
+    }
     char** iterator = result;
     while (*iterator) {
-        aResult->AppendElement(*iterator);
+        array.AppendElement(*iterator);
         free(*iterator);
         ++iterator;
     }
+    SendReturnSitesWithData(array, aCallbackId);
     free(result);
-
     return true;
 }
 
