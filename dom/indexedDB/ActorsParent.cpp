@@ -8338,7 +8338,7 @@ public:
     MOZ_ASSERT(QuotaClient::GetInstance() == aQuotaClient);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(QuotaClient::GetDirectoryLockListener)
+  NS_INLINE_DECL_REFCOUNTING(QuotaClient::GetDirectoryLockListener, override)
 
 private:
   ~GetDirectoryLockListener()
