@@ -1029,7 +1029,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     nsXBLDocumentInfo* docInfo = aProtoBinding->XBLDocumentInfo();
     ::JS_SetPrivate(proto, docInfo);
     NS_ADDREF(docInfo);
-    JS_SetReservedSlot(proto, 0, PRIVATE_TO_JSVAL(aProtoBinding));
+    JS_SetReservedSlot(proto, 0, JS::PrivateValue(aProtoBinding));
 
     // Next, enter the compartment of the property holder, wrap the proto, and
     // stick it on.
