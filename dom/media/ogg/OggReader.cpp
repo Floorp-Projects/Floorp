@@ -1981,14 +1981,14 @@ VideoData* OggReader::FindStartTime(int64_t& aOutStartTime)
   VideoData* videoData = nullptr;
 
   if (HasVideo()) {
-    videoData = DecodeToFirstVideoData();
+    videoData = SyncDecodeToFirstVideoData();
     if (videoData) {
       videoStartTime = videoData->mTime;
       LOG(LogLevel::Debug, ("OggReader::FindStartTime() video=%lld", videoStartTime));
     }
   }
   if (HasAudio()) {
-    AudioData* audioData = DecodeToFirstAudioData();
+    AudioData* audioData = SyncDecodeToFirstAudioData();
     if (audioData) {
       audioStartTime = audioData->mTime;
       LOG(LogLevel::Debug, ("OggReader::FindStartTime() audio=%lld", audioStartTime));
@@ -2003,7 +2003,7 @@ VideoData* OggReader::FindStartTime(int64_t& aOutStartTime)
   return videoData;
 }
 
-AudioData* OggReader::DecodeToFirstAudioData()
+AudioData* OggReader::SyncDecodeToFirstAudioData()
 {
   bool eof = false;
   while (!eof && AudioQueue().GetSize() == 0) {
@@ -2020,6 +2020,26 @@ AudioData* OggReader::DecodeToFirstAudioData()
   }
   AudioData* d = nullptr;
   return (d = AudioQueue().PeekFront()) ? d : nullptr;
+}
+
+VideoData* OggReader::SyncDecodeToFirstVideoData()
+{
+  bool eof = false;
+  while (!eof && VideoQueue().GetSize() == 0) {
+    {
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+      if (mDecoder->IsShutdown()) {
+        return nullptr;
+      }
+    }
+    bool keyframeSkip = false;
+    eof = !DecodeVideoFrame(keyframeSkip, 0);
+  }
+  if (eof) {
+    VideoQueue().Finish();
+  }
+  VideoData* d = nullptr;
+  return (d = VideoQueue().PeekFront()) ? d : nullptr;
 }
 
 OggCodecStore::OggCodecStore()
