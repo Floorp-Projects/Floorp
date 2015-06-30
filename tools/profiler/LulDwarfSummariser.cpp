@@ -13,6 +13,38 @@
 
 namespace lul {
 
+// Do |s64|'s lowest 32 bits sign extend back to |s64| itself?
+static inline bool fitsIn32Bits(int64 s64) {
+  return s64 == ((s64 & 0xffffffff) ^ 0x80000000) - 0x80000000;
+}
+
+// Check a LExpr prefix expression, starting at pfxInstrs[start] up to
+// the next PX_End instruction, to ensure that:
+// * It only mentions registers that are tracked on this target
+// * The start point is sane
+// If the expression is ok, return NULL.  Else return a pointer
+// a const char* holding a bit of text describing the problem.
+static const char*
+checkPfxExpr(const vector<PfxInstr>* pfxInstrs, int64_t start)
+{
+  size_t nInstrs = pfxInstrs->size();
+  if (start < 0 || start >= (ssize_t)nInstrs) {
+    return "bogus start point";
+  }
+  size_t i;
+  for (i = start; i < nInstrs; i++) {
+    PfxInstr pxi = (*pfxInstrs)[i];
+    if (pxi.mOpcode == PX_End)
+      break;
+    if (pxi.mOpcode == PX_DwReg &&
+        !registerIsTracked((DW_REG_NUMBER)pxi.mOperand)) {
+      return "uses untracked reg";
+    }
+  }
+  return nullptr; // success
+}
+
+
 Summariser::Summariser(SecMap* aSecMap, uintptr_t aTextBias,
                        void(*aLog)(const char*))
   : mSecMap(aSecMap)
@@ -32,10 +64,9 @@ Summariser::Entry(uintptr_t aAddress, uintptr_t aLength)
   aAddress += mTextBias;
   if (DEBUG_SUMMARISER) {
     char buf[100];
-    snprintf(buf, sizeof(buf), "LUL Entry(%llx, %llu)\n",
-             (unsigned long long int)aAddress,
-             (unsigned long long int)aLength);
-    buf[sizeof(buf)-1] = 0;
+    snprintf_literal(buf, "LUL Entry(%llx, %llu)\n",
+                     (unsigned long long int)aAddress,
+                     (unsigned long long int)aLength);
     mLog(buf);
   }
   // This throws away any previous summary, that is, assumes
@@ -47,19 +78,32 @@ Summariser::Entry(uintptr_t aAddress, uintptr_t aLength)
 }
 
 void
-Summariser::Rule(uintptr_t aAddress,
-                 int aNewReg, int aOldReg, intptr_t aOffset, bool aDeref)
+Summariser::Rule(uintptr_t aAddress, int aNewReg,
+                 LExprHow how, int16_t oldReg, int64_t offset)
 {
   aAddress += mTextBias;
   if (DEBUG_SUMMARISER) {
     char buf[100];
-    snprintf(buf, sizeof(buf),
-             "LUL  0x%llx  old-r%d = %sr%d + %ld%s\n",
-             (unsigned long long int)aAddress, aNewReg,
-             aDeref ? "*(" : "", aOldReg, (long)aOffset, aDeref ? ")" : "");
-    buf[sizeof(buf)-1] = 0;
+    if (how == NODEREF || how == DEREF) {
+      bool deref = how == DEREF;
+      snprintf_literal(buf,
+                       "LUL  0x%llx  old-r%d = %sr%d + %lld%s\n",
+                       (unsigned long long int)aAddress, aNewReg,
+                       deref ? "*(" : "", (int)oldReg, (long long int)offset,
+                       deref ? ")" : "");
+    } else if (how == PFXEXPR) {
+      snprintf_literal(buf,
+                       "LUL  0x%llx  old-r%d = pfx-expr-at %lld\n",
+                       (unsigned long long int)aAddress, aNewReg,
+                       (long long int)offset);
+    } else {
+      snprintf_literal(buf,
+                       "LUL  0x%llx  old-r%d = (invalid LExpr!)\n",
+                       (unsigned long long int)aAddress, aNewReg);
+    }
     mLog(buf);
   }
+
   if (mCurrAddr < aAddress) {
     // Flush the existing summary first.
     mCurrRules.mAddr = mCurrAddr;
@@ -70,6 +114,21 @@ Summariser::Rule(uintptr_t aAddress,
       mLog("\n");
     }
     mCurrAddr = aAddress;
+  }
+
+  // If for some reason summarisation fails, either or both of these
+  // become non-null and point at constant text describing the
+  // problem.  Using two rather than just one avoids complications of
+  // having to concatenate two strings to produce a complete error message.
+  const char* reason1 = nullptr;
+  const char* reason2 = nullptr;
+  
+  // |offset| needs to be a 32 bit value that sign extends to 64 bits
+  // on a 64 bit target.  We will need to incorporate |offset| into
+  // any LExpr made here.  So we may as well check it right now.
+  if (!fitsIn32Bits(offset)) {
+    reason1 = "offset not in signed 32-bit range";
+    goto cant_summarise;
   }
 
   // FIXME: factor out common parts of the arch-dependent summarisers.
@@ -88,35 +147,48 @@ Summariser::Rule(uintptr_t aAddress,
       // choose to represent are: r7/11/12/13 + offset.  The offset
       // must fit into 32 bits since 'uintptr_t' is 32 bit on ARM,
       // hence there is no need to check it for overflow.
-      if (aDeref) {
+      if (how != NODEREF) {
+        reason1 = "rule for DW_REG_CFA: invalid |how|";
         goto cant_summarise;
       }
-      switch (aOldReg) {
+      switch (oldReg) {
         case DW_REG_ARM_R7:  case DW_REG_ARM_R11:
         case DW_REG_ARM_R12: case DW_REG_ARM_R13:
           break;
         default:
+          reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
           goto cant_summarise;
       }
-      mCurrRules.mCfaExpr = LExpr(LExpr::NODEREF, aOldReg, aOffset);
+      mCurrRules.mCfaExpr = LExpr(how, oldReg, offset);
       break;
 
     case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
     case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15: {
-      // Check the aOldReg is valid.
-      switch (aOldReg) {
-        case DW_REG_CFA:
-        case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
-        case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15:
+      // This is a new rule for R7, R11, R12, R13 (SP), R14 (LR) or
+      // R15 (the return address).
+      switch (how) {
+        case NODEREF: case DEREF:
+          // Check the old register is one we're tracking.
+          if (!registerIsTracked((DW_REG_NUMBER)oldReg) &&
+              oldReg != DW_REG_CFA) {
+            reason1 = "rule for R7/11/12/13/14/15: uses untracked reg";
+            goto cant_summarise;
+          }
           break;
+        case PFXEXPR: {
+          // Check that the prefix expression only mentions tracked registers.
+          const vector<PfxInstr>* pfxInstrs = mSecMap->GetPfxInstrs();
+          reason2 = checkPfxExpr(pfxInstrs, offset);
+          if (reason2) {
+            reason1 = "rule for R7/11/12/13/14/15: ";
+            goto cant_summarise;
+          }
+          break;
+        }
         default:
           goto cant_summarise;
       }
-      // This is a new rule for one of r{7,11,12,13,14,15} and has a
-      // representable offset.  In particular the new value of r15 is
-      // going to be the return address.
-      LExpr expr = LExpr(aDeref ? LExpr::DEREF : LExpr::NODEREF,
-                         aOldReg, aOffset);
+      LExpr expr = LExpr(how, oldReg, offset);
       switch (aNewReg) {
         case DW_REG_ARM_R7:  mCurrRules.mR7expr  = expr; break;
         case DW_REG_ARM_R11: mCurrRules.mR11expr = expr; break;
@@ -130,30 +202,38 @@ Summariser::Rule(uintptr_t aAddress,
     }
 
     default:
+      // Leave |reason1| and |reason2| unset here.  This program point
+      // is reached so often that it causes a flood of "Can't
+      // summarise" messages.  In any case, we don't really care about
+      // the fact that this summary would produce a new value for a
+      // register that we're not tracking.  We do on the other hand
+      // care if the summary's expression *uses* a register that we're
+      // not tracking.  But in that case one of the above failures
+      // should tell us which.
       goto cant_summarise;
   }
 
   // Mark callee-saved registers (r4 .. r11) as unchanged, if there is
   // no other information about them.  FIXME: do this just once, at
   // the point where the ruleset is committed.
-  if (mCurrRules.mR7expr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mR7expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R7, 0);
+  if (mCurrRules.mR7expr.mHow == UNKNOWN) {
+    mCurrRules.mR7expr = LExpr(NODEREF, DW_REG_ARM_R7, 0);
   }
-  if (mCurrRules.mR11expr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mR11expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R11, 0);
+  if (mCurrRules.mR11expr.mHow == UNKNOWN) {
+    mCurrRules.mR11expr = LExpr(NODEREF, DW_REG_ARM_R11, 0);
   }
-  if (mCurrRules.mR12expr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mR12expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R12, 0);
+  if (mCurrRules.mR12expr.mHow == UNKNOWN) {
+    mCurrRules.mR12expr = LExpr(NODEREF, DW_REG_ARM_R12, 0);
   }
 
   // The old r13 (SP) value before the call is always the same as the
   // CFA.
-  mCurrRules.mR13expr = LExpr(LExpr::NODEREF, DW_REG_CFA, 0);
+  mCurrRules.mR13expr = LExpr(NODEREF, DW_REG_CFA, 0);
 
   // If there's no information about R15 (the return address), say
   // it's a copy of R14 (the link register).
-  if (mCurrRules.mR15expr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mR15expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R14, 0);
+  if (mCurrRules.mR15expr.mHow == UNKNOWN) {
+    mCurrRules.mR15expr = LExpr(NODEREF, DW_REG_ARM_R14, 0);
   }
 
 #elif defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
@@ -162,52 +242,74 @@ Summariser::Rule(uintptr_t aAddress,
 
   // Now, can we add the rule to our summary?  This depends on whether
   // the registers and the overall expression are representable.  This
-  // is the heart of the summarisation process.  In the 64 bit case
-  // we need to check that aOffset will fit into an int32_t.  In the
-  // 32 bit case it is expected that the compiler will fold out the
-  // test since it always succeeds.
-  if (aNewReg == DW_REG_CFA) {
-    // This is a rule that defines the CFA.  The only forms we can
-    // represent are: = SP+offset or = FP+offset.
-    if (!aDeref && aOffset == (intptr_t)(int32_t)aOffset &&
-        (aOldReg == DW_REG_INTEL_XSP || aOldReg == DW_REG_INTEL_XBP)) {
-      mCurrRules.mCfaExpr = LExpr(LExpr::NODEREF, aOldReg, aOffset);
-    } else {
+  // is the heart of the summarisation process.
+  switch (aNewReg) {
+
+    case DW_REG_CFA:
+      // This is a rule that defines the CFA.  The only forms we can
+      // represent are: = SP+offset or = FP+offset.
+      if (how != NODEREF) {
+        reason1 = "rule for DW_REG_CFA: invalid |how|";
+        goto cant_summarise;
+      }
+      if (oldReg != DW_REG_INTEL_XSP && oldReg != DW_REG_INTEL_XBP) {
+        reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
+        goto cant_summarise;
+      }
+      mCurrRules.mCfaExpr = LExpr(how, oldReg, offset);
+      break;
+
+    case DW_REG_INTEL_XSP: case DW_REG_INTEL_XBP: case DW_REG_INTEL_XIP: {
+      // This is a new rule for XSP, XBP or XIP (the return address).
+      switch (how) {
+        case NODEREF: case DEREF:
+          // Check the old register is one we're tracking.
+          if (!registerIsTracked((DW_REG_NUMBER)oldReg) &&
+              oldReg != DW_REG_CFA) {
+            reason1 = "rule for XSP/XBP/XIP: uses untracked reg";
+            goto cant_summarise;
+          }
+          break;
+        case PFXEXPR: {
+          // Check that the prefix expression only mentions tracked registers.
+          const vector<PfxInstr>* pfxInstrs = mSecMap->GetPfxInstrs();
+          reason2 = checkPfxExpr(pfxInstrs, offset);
+          if (reason2) {
+            reason1 = "rule for XSP/XBP/XIP: ";
+            goto cant_summarise;
+          }
+          break;
+        }
+        default:
+          goto cant_summarise;
+      }
+      LExpr expr = LExpr(how, oldReg, offset);
+      switch (aNewReg) {
+        case DW_REG_INTEL_XBP: mCurrRules.mXbpExpr = expr; break;
+        case DW_REG_INTEL_XSP: mCurrRules.mXspExpr = expr; break;
+        case DW_REG_INTEL_XIP: mCurrRules.mXipExpr = expr; break;
+        default: MOZ_CRASH("impossible value for aNewReg");
+      }
+      break;
+    }
+
+    default:
+      // Leave |reason1| and |reason2| unset here, for the reasons
+      // explained in the analogous point in the ARM case just above.
       goto cant_summarise;
-    }
-  }
-  else
-  if ((aNewReg == DW_REG_INTEL_XSP ||
-       aNewReg == DW_REG_INTEL_XBP || aNewReg == DW_REG_INTEL_XIP) &&
-      (aOldReg == DW_REG_CFA ||
-       aOldReg == DW_REG_INTEL_XSP ||
-       aOldReg == DW_REG_INTEL_XBP || aOldReg == DW_REG_INTEL_XIP) &&
-      aOffset == (intptr_t)(int32_t)aOffset) {
-    // This is a new rule for SP, BP or the return address
-    // respectively, and has a representable offset.
-    LExpr expr = LExpr(aDeref ? LExpr::DEREF : LExpr::NODEREF,
-                       aOldReg, aOffset);
-    switch (aNewReg) {
-      case DW_REG_INTEL_XBP: mCurrRules.mXbpExpr = expr; break;
-      case DW_REG_INTEL_XSP: mCurrRules.mXspExpr = expr; break;
-      case DW_REG_INTEL_XIP: mCurrRules.mXipExpr = expr; break;
-      default: MOZ_CRASH("impossible value for aNewReg");
-    }
-  }
-  else {
-    goto cant_summarise;
+
   }
 
   // On Intel, it seems the old SP value before the call is always the
   // same as the CFA.  Therefore, in the absence of any other way to
   // recover the SP, specify that the CFA should be copied.
-  if (mCurrRules.mXspExpr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mXspExpr = LExpr(LExpr::NODEREF, DW_REG_CFA, 0);
+  if (mCurrRules.mXspExpr.mHow == UNKNOWN) {
+    mCurrRules.mXspExpr = LExpr(NODEREF, DW_REG_CFA, 0);
   }
 
   // Also, gcc says "Undef" for BP when it is unchanged.
-  if (mCurrRules.mXbpExpr.mHow == LExpr::UNKNOWN) {
-    mCurrRules.mXbpExpr = LExpr(LExpr::NODEREF, DW_REG_INTEL_XBP, 0);
+  if (mCurrRules.mXbpExpr.mHow == UNKNOWN) {
+    mCurrRules.mXbpExpr = LExpr(NODEREF, DW_REG_INTEL_XBP, 0);
   }
 
 #else
@@ -216,10 +318,24 @@ Summariser::Rule(uintptr_t aAddress,
 #endif
 
   return;
+
  cant_summarise:
-  if (0) {
-    mLog("LUL  can't summarise\n");
+  if (reason1 || reason2) {
+    char buf[200];
+    snprintf_literal(buf, "LUL  can't summarise: "
+                     "SVMA=0x%llx: %s%s, expr=LExpr(%s,%u,%lld)\n",
+                     (unsigned long long int)(aAddress - mTextBias),
+                     reason1 ? reason1 : "", reason2 ? reason2 : "",
+                     NameOf_LExprHow(how),
+                     (unsigned int)oldReg, (long long int)offset);
+    mLog(buf);
   }
+}
+
+uint32_t
+Summariser::AddPfxInstr(PfxInstr pfxi)
+{
+  return mSecMap->AddPfxInstr(pfxi);
 }
 
 void

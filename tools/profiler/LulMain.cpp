@@ -34,6 +34,7 @@ namespace lul {
 
 using std::string;
 using std::vector;
+using std::pair;
 using mozilla::DebugOnly;
 
 
@@ -75,21 +76,27 @@ NameOf_DW_REG(int16_t aReg)
   }
 }
 
-static string
-ShowRule(const char* aNewReg, LExpr aExpr)
+string
+LExpr::ShowRule(const char* aNewReg) const
 {
   char buf[64];
   string res = string(aNewReg) + "=";
-  switch (aExpr.mHow) {
-    case LExpr::UNKNOWN:
+  switch (mHow) {
+    case UNKNOWN:
       res += "Unknown";
       break;
-    case LExpr::NODEREF:
-      snprintf_literal(buf, "%s+%d", NameOf_DW_REG(aExpr.mReg), (int)aExpr.mOffset);
+    case NODEREF:
+      snprintf_literal(buf, "%s+%d",
+                       NameOf_DW_REG(mReg), (int)mOffset);
       res += buf;
       break;
-    case LExpr::DEREF:
-      snprintf_literal(buf, "*(%s+%d)", NameOf_DW_REG(aExpr.mReg), (int)aExpr.mOffset);
+    case DEREF:
+      snprintf_literal(buf, "*(%s+%d)",
+                       NameOf_DW_REG(mReg), (int)mOffset);
+      res += buf;
+      break;
+    case PFXEXPR:
+      snprintf_literal(buf, "PfxExpr-at-%d", (int)mOffset);
       res += buf;
       break;
     default:
@@ -100,27 +107,27 @@ ShowRule(const char* aNewReg, LExpr aExpr)
 }
 
 void
-RuleSet::Print(void(*aLog)(const char*))
+RuleSet::Print(void(*aLog)(const char*)) const
 {
   char buf[96];
   snprintf_literal(buf, "[%llx .. %llx]: let ",
                    (unsigned long long int)mAddr,
                    (unsigned long long int)(mAddr + mLen - 1));
   string res = string(buf);
-  res += ShowRule("cfa", mCfaExpr);
+  res += mCfaExpr.ShowRule("cfa");
   res += " in";
   // For each reg we care about, print the recovery expression.
 #if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
-  res += ShowRule(" RA", mXipExpr);
-  res += ShowRule(" SP", mXspExpr);
-  res += ShowRule(" BP", mXbpExpr);
+  res += mXipExpr.ShowRule(" RA");
+  res += mXspExpr.ShowRule(" SP");
+  res += mXbpExpr.ShowRule(" BP");
 #elif defined(LUL_ARCH_arm)
-  res += ShowRule(" R15", mR15expr);
-  res += ShowRule(" R7",  mR7expr);
-  res += ShowRule(" R11", mR11expr);
-  res += ShowRule(" R12", mR12expr);
-  res += ShowRule(" R13", mR13expr);
-  res += ShowRule(" R14", mR14expr);
+  res += mR15expr.ShowRule(" R15");
+  res += mR7expr .ShowRule(" R7" );
+  res += mR11expr.ShowRule(" R11");
+  res += mR12expr.ShowRule(" R12");
+  res += mR13expr.ShowRule(" R13");
+  res += mR14expr.ShowRule(" R14");
 #else
 # error "Unsupported arch"
 #endif
@@ -209,9 +216,18 @@ SecMap::FindRuleSet(uintptr_t ia) {
 // Add a RuleSet to the collection.  The rule is copied in.  Calling
 // this makes the map non-searchable.
 void
-SecMap::AddRuleSet(RuleSet* rs) {
+SecMap::AddRuleSet(const RuleSet* rs) {
   mUsable = false;
   mRuleSets.push_back(*rs);
+}
+
+// Add a PfxInstr to the vector of such instrs, and return the index
+// in the vector.  Calling this makes the map non-searchable.
+uint32_t
+SecMap::AddPfxInstr(PfxInstr pfxi) {
+  mUsable = false;
+  mPfxInstrs.push_back(pfxi);
+  return mPfxInstrs.size() - 1;
 }
 
 
@@ -494,9 +510,13 @@ class PriMap {
   }
 
   // RUNS IN NO-MALLOC CONTEXT
-  RuleSet* Lookup(uintptr_t ia) {
+  pair<const RuleSet*, const vector<PfxInstr>*>
+  Lookup(uintptr_t ia)
+  {
     SecMap* sm = FindSecMap(ia);
-    return sm ? sm->FindRuleSet(ia) : nullptr;
+    return pair<const RuleSet*, const vector<PfxInstr>*>
+             (sm ? sm->FindRuleSet(ia) : nullptr,
+              sm ? sm->GetPfxInstrs() : nullptr);
   }
 
   // Add a secondary map.  No overlaps allowed w.r.t. existing
@@ -990,7 +1010,7 @@ LUL::CountMappings()
 
 // RUNS IN NO-MALLOC CONTEXT
 static
-TaggedUWord DerefTUW(TaggedUWord aAddr, StackImage* aStackImg)
+TaggedUWord DerefTUW(TaggedUWord aAddr, const StackImage* aStackImg)
 {
   if (!aAddr.Valid()) {
     return TaggedUWord();
@@ -1006,9 +1026,10 @@ TaggedUWord DerefTUW(TaggedUWord aAddr, StackImage* aStackImg)
                                    - aStackImg->mStartAvma));
 }
 
-  // RUNS IN NO-MALLOC CONTEXT
+// RUNS IN NO-MALLOC CONTEXT
 static
-TaggedUWord EvaluateReg(int16_t aReg, UnwindRegs* aOldRegs, TaggedUWord aCFA)
+TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
+                        TaggedUWord aCFA)
 {
   switch (aReg) {
     case DW_REG_CFA:       return aCFA;
@@ -1031,22 +1052,157 @@ TaggedUWord EvaluateReg(int16_t aReg, UnwindRegs* aOldRegs, TaggedUWord aCFA)
 }
 
 // RUNS IN NO-MALLOC CONTEXT
-static
-TaggedUWord EvaluateExpr(LExpr aExpr, UnwindRegs* aOldRegs,
-                         TaggedUWord aCFA, StackImage* aStackImg)
+// See prototype for comment.
+TaggedUWord EvaluatePfxExpr(int32_t start,
+                            const UnwindRegs* aOldRegs,
+                            TaggedUWord aCFA, const StackImage* aStackImg,
+                            const vector<PfxInstr>& aPfxInstrs)
 {
-  switch (aExpr.mHow) {
-    case LExpr::UNKNOWN:
+  // A small evaluation stack, and a stack pointer, which points to
+  // the highest numbered in-use element.
+  const int N_STACK = 10;
+  TaggedUWord stack[N_STACK];
+  int stackPointer = -1;
+  for (int i = 0; i < N_STACK; i++)
+    stack[i] = TaggedUWord();
+
+# define PUSH(_tuw) \
+    do { \
+      if (stackPointer >= N_STACK-1) goto fail; /* overflow */ \
+      stack[++stackPointer] = (_tuw); \
+    } while (0)
+
+# define POP(_lval) \
+    do { \
+      if (stackPointer < 0) goto fail; /* underflow */ \
+     _lval = stack[stackPointer--]; \
+   } while (0)
+
+  // Cursor in the instruction sequence.
+  size_t curr = start + 1;
+
+  // Check the start point is sane.
+  size_t nInstrs = aPfxInstrs.size();
+  if (start < 0 || (size_t)start >= nInstrs)
+    goto fail;
+
+  {
+    // The instruction sequence must start with PX_Start.  If not,
+    // something is seriously wrong.
+    PfxInstr first = aPfxInstrs[start];
+    if (first.mOpcode != PX_Start)
+      goto fail;
+
+    // Push the CFA on the stack to start with (or not), as required by
+    // the original DW_OP_*expression* CFI.
+    if (first.mOperand != 0)
+      PUSH(aCFA);
+  }
+
+  while (true) {
+    if (curr >= nInstrs)
+      goto fail; // ran off the end of the sequence
+
+    PfxInstr pfxi = aPfxInstrs[curr++];
+    if (pfxi.mOpcode == PX_End)
+      break; // we're done
+
+    switch (pfxi.mOpcode) {
+      case PX_Start:
+        // This should appear only at the start of the sequence.
+        goto fail;
+      case PX_End:
+        // We just took care of that, so we shouldn't see it again.
+        MOZ_ASSERT(0);
+        goto fail;
+      case PX_SImm32:
+        PUSH(TaggedUWord((intptr_t)pfxi.mOperand));
+        break;
+      case PX_DwReg: {
+        DW_REG_NUMBER reg = (DW_REG_NUMBER)pfxi.mOperand;
+        MOZ_ASSERT(reg != DW_REG_CFA);
+        PUSH(EvaluateReg(reg, aOldRegs, aCFA));
+        break;
+      }
+      case PX_Deref: {
+        TaggedUWord addr;
+        POP(addr);
+        PUSH(DerefTUW(addr, aStackImg));
+        break;
+      }
+      case PX_Add: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y + x);
+        break;
+      }
+      case PX_Sub: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y - x);
+        break;
+      }
+      case PX_And: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y & x);
+        break;
+      }
+      case PX_Or: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y | x);
+        break;
+      }
+      case PX_CmpGES: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y.CmpGEs(x));
+        break;
+      }
+      case PX_Shl: {
+        TaggedUWord x, y;
+        POP(x); POP(y); PUSH(y << x);
+        break;
+      }
+      default:
+        MOZ_ASSERT(0);
+        goto fail;
+    }
+  } // while (true)
+
+  // Evaluation finished.  The top value on the stack is the result.
+  if (stackPointer >= 0) {
+    return stack[stackPointer];
+  }
+  // Else fall through
+
+ fail:
+  return TaggedUWord();
+
+# undef PUSH
+# undef POP
+}
+
+// RUNS IN NO-MALLOC CONTEXT
+TaggedUWord LExpr::EvaluateExpr(const UnwindRegs* aOldRegs,
+                                TaggedUWord aCFA, const StackImage* aStackImg,
+                                const vector<PfxInstr>* aPfxInstrs) const
+{
+  switch (mHow) {
+    case UNKNOWN:
       return TaggedUWord();
-    case LExpr::NODEREF: {
-      TaggedUWord tuw = EvaluateReg(aExpr.mReg, aOldRegs, aCFA);
-      tuw.Add(TaggedUWord((intptr_t)aExpr.mOffset));
+    case NODEREF: {
+      TaggedUWord tuw = EvaluateReg(mReg, aOldRegs, aCFA);
+      tuw = tuw + TaggedUWord((intptr_t)mOffset);
       return tuw;
     }
-    case LExpr::DEREF: {
-      TaggedUWord tuw = EvaluateReg(aExpr.mReg, aOldRegs, aCFA);
-      tuw.Add(TaggedUWord((intptr_t)aExpr.mOffset));
+    case DEREF: {
+      TaggedUWord tuw = EvaluateReg(mReg, aOldRegs, aCFA);
+      tuw = tuw + TaggedUWord((intptr_t)mOffset);
       return DerefTUW(tuw, aStackImg);
+    }
+    case PFXEXPR: {
+      MOZ_ASSERT(aPfxInstrs);
+      if (!aPfxInstrs) {
+        return TaggedUWord();
+      }
+      return EvaluatePfxExpr(mOffset, aOldRegs, aCFA, aStackImg, *aPfxInstrs);
     }
     default:
       MOZ_ASSERT(0);
@@ -1057,7 +1213,8 @@ TaggedUWord EvaluateExpr(LExpr aExpr, UnwindRegs* aOldRegs,
 // RUNS IN NO-MALLOC CONTEXT
 static
 void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
-                StackImage* aStackImg, RuleSet* aRS)
+                const StackImage* aStackImg, const RuleSet* aRS,
+                const vector<PfxInstr>* aPfxInstrs)
 {
   // Take a copy of regs, since we'll need to refer to the old values
   // whilst computing the new ones.
@@ -1087,8 +1244,9 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   const TaggedUWord inval = TaggedUWord();
 
   // First, compute the CFA.
-  TaggedUWord cfa = EvaluateExpr(aRS->mCfaExpr, &old_regs,
-                                 inval/*old cfa*/, aStackImg);
+  TaggedUWord cfa
+    = aRS->mCfaExpr.EvaluateExpr(&old_regs,
+                                 inval/*old cfa*/, aStackImg, aPfxInstrs);
 
   // If we didn't manage to compute the CFA, well .. that's ungood,
   // but keep going anyway.  It'll be OK provided none of the register
@@ -1096,16 +1254,25 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   // for each register that we're tracking.
 
 #if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
-  aRegs->xbp = EvaluateExpr(aRS->mXbpExpr, &old_regs, cfa, aStackImg);
-  aRegs->xsp = EvaluateExpr(aRS->mXspExpr, &old_regs, cfa, aStackImg);
-  aRegs->xip = EvaluateExpr(aRS->mXipExpr, &old_regs, cfa, aStackImg);
+  aRegs->xbp
+    = aRS->mXbpExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->xsp
+    = aRS->mXspExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->xip
+    = aRS->mXipExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
 #elif defined(LUL_ARCH_arm)
-  aRegs->r7  = EvaluateExpr(aRS->mR7expr,  &old_regs, cfa, aStackImg);
-  aRegs->r11 = EvaluateExpr(aRS->mR11expr, &old_regs, cfa, aStackImg);
-  aRegs->r12 = EvaluateExpr(aRS->mR12expr, &old_regs, cfa, aStackImg);
-  aRegs->r13 = EvaluateExpr(aRS->mR13expr, &old_regs, cfa, aStackImg);
-  aRegs->r14 = EvaluateExpr(aRS->mR14expr, &old_regs, cfa, aStackImg);
-  aRegs->r15 = EvaluateExpr(aRS->mR15expr, &old_regs, cfa, aStackImg);
+  aRegs->r7
+    = aRS->mR7expr .EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->r11
+    = aRS->mR11expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->r12
+    = aRS->mR12expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->r13
+    = aRS->mR13expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->r14
+    = aRS->mR14expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
+  aRegs->r15
+    = aRS->mR15expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
 #else
 # error "Unsupported arch"
 #endif
@@ -1219,10 +1386,14 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 
     // If this isn't the innermost frame, back up into the calling insn.
     if (*aFramesUsed > 1) {
-      ia.Add(TaggedUWord((uintptr_t)(-1)));
+      ia = ia + TaggedUWord((uintptr_t)(-1));
     }
 
-    RuleSet* ruleset = mPriMap->Lookup(ia.Value());
+    pair<const RuleSet*, const vector<PfxInstr>*> ruleset_and_pfxinstrs
+      = mPriMap->Lookup(ia.Value());
+    const RuleSet* ruleset = ruleset_and_pfxinstrs.first;
+    const vector<PfxInstr>* pfxinstrs = ruleset_and_pfxinstrs.second;
+
     if (DEBUG_MAIN) {
       char buf[100];
       snprintf_literal(buf, "ruleset for 0x%llx = %p\n",
@@ -1284,8 +1455,8 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           TaggedUWord sp_plus_0  = sp;
           TaggedUWord sp_plus_12 = sp;
           TaggedUWord sp_plus_16 = sp;
-          sp_plus_12.Add(TaggedUWord(12));
-          sp_plus_16.Add(TaggedUWord(16));
+          sp_plus_12 = sp_plus_12 + TaggedUWord(12);
+          sp_plus_16 = sp_plus_16 + TaggedUWord(16);
           TaggedUWord new_ebp = DerefTUW(sp_plus_0, aStackImg);
           TaggedUWord new_eip = DerefTUW(sp_plus_12, aStackImg);
           TaggedUWord new_esp = sp_plus_16;
@@ -1310,7 +1481,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
       }
       // Use the RuleSet to compute the registers for the previous
       // frame.  |regs| is modified in-place.
-      UseRuleSet(&regs, aStackImg, ruleset);
+      UseRuleSet(&regs, aStackImg, ruleset, pfxinstrs);
 
     } else {
 
@@ -1357,13 +1528,11 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           // the CALL instruction.  So the caller's XSP value
           // immediately before and after that CALL instruction is the
           // word above XSP.
-          regs.xsp = sp;
-          regs.xsp.Add(TaggedUWord(wordSize));
+          regs.xsp = sp + TaggedUWord(wordSize);
 
           // aWord points at the return point, so back up one byte
           // to put it in the calling instruction.
-          regs.xip = aWord;
-          regs.xip.Add(TaggedUWord((uintptr_t)(-1)));
+          regs.xip = aWord + TaggedUWord((uintptr_t)(-1));
 
           // Computing a new value from the frame pointer is more tricky.
           if (regs.xbp.Valid() &&
@@ -1388,7 +1557,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           }
 
           // Move on to the next word up the stack
-          sp.Add(TaggedUWord(wordSize));
+          sp = sp + TaggedUWord(wordSize);
 
 #elif defined(LUL_ARCH_arm)
           // Set all registers to be undefined, except for SP(R13) and
@@ -1398,19 +1567,17 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           // ARM code, or one insn past the return point if returning
           // to Thumb code.  In both cases, aWord-2 is guaranteed to
           // fall within the calling instruction.
-          regs.r15 = aWord;
-          regs.r15.Add(TaggedUWord((uintptr_t)(-2)));
+          regs.r15 = aWord + TaggedUWord((uintptr_t)(-2));
 
           // Make SP be the word above the location where the return
           // address was found.
-          regs.r13 = sp;
-          regs.r13.Add(TaggedUWord(4));
+          regs.r13 = sp + TaggedUWord(4);
 
           // All other regs are undefined.
           regs.r7 = regs.r11 = regs.r12 = regs.r14 = TaggedUWord();
 
           // Move on to the next word up the stack
-          sp.Add(TaggedUWord(4));
+          sp = sp + TaggedUWord(4);
 
 #else
 # error "Unknown plat"
