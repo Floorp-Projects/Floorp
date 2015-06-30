@@ -93,6 +93,8 @@ static const char16_t sHTMLTagUnicodeName_em[] =
   {'e', 'm', '\0'};
 static const char16_t sHTMLTagUnicodeName_embed[] =
   {'e', 'm', 'b', 'e', 'd', '\0'};
+static const char16_t sHTMLTagUnicodeName_extapp[] =
+  {'e', 'x', 't', 'a', 'p', 'p', '\0'};
 static const char16_t sHTMLTagUnicodeName_fieldset[] =
   {'f', 'i', 'e', 'l', 'd', 's', 'e', 't', '\0'};
 static const char16_t sHTMLTagUnicodeName_figcaption[] =
