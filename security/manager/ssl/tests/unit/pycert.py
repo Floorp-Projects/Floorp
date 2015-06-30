@@ -12,6 +12,7 @@ The input format is as follows:
 
 issuer:<string to use as the issuer common name>
 subject:<string to use as the subject common name>
+[version:<{1,2,3,4}>]
 [issuerKey:alternate]
 [subjectKey:alternate]
 [extension:<extension name:<extension-specific data>>]
@@ -25,6 +26,16 @@ extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              nsSGC, # Netscape Server Gated Crypto
              OCSPSigning,timeStamping]
 subjectAlternativeName:[<dNSName>,...]
+
+Where:
+  [] indicates an optional field or component of a field
+  <> indicates a required component of a field
+  {} indicates choice among a set of values
+  [a,b,c] indicates a list of potential values, of which more than one
+          may be used
+
+For instance, the version field is optional. However, if it is
+specified, it must have exactly one value from the set {1,2,3,4}.
 
 In the future it will be possible to specify other properties of the
 generated certificate (for example, its validity period, signature
@@ -102,6 +113,14 @@ class UnknownKeyTargetError(UnknownBaseError):
     def __init__(self, value):
         UnknownBaseError.__init__(self, value)
         self.category = 'key target'
+
+
+class UnknownVersionError(UnknownBaseError):
+    """Helper exception type to handle unknown specified versions."""
+
+    def __init__(self, value):
+        UnknownBaseError.__init__(self, value)
+        self.category = 'version'
 
 
 def getASN1Tag(asn1Type):
@@ -239,7 +258,7 @@ class Certificate:
         'd039ba01adf328ebc5', 16)
 
     def __init__(self, paramStream, now=datetime.datetime.utcnow()):
-        self.version = 'v3'
+        self.versionValue = 2 # a value of 2 is X509v3
         self.signature = 'sha256WithRSAEncryption'
         self.issuer = 'Default Issuer'
         oneYear = datetime.timedelta(days=365)
@@ -264,7 +283,7 @@ class Certificate:
         the build system on OS X (see the comment above main, later in
         this file)."""
         hasher = hashlib.sha256()
-        hasher.update(self.version)
+        hasher.update(str(self.versionValue))
         hasher.update(self.signature)
         hasher.update(self.issuer)
         hasher.update(str(self.notBefore))
@@ -295,7 +314,9 @@ class Certificate:
     def decodeParam(self, line):
         param = line.split(':')[0]
         value = ':'.join(line.split(':')[1:])
-        if param == 'subject':
+        if param == 'version':
+            self.setVersion(value)
+        elif param == 'subject':
             self.subject = value
         elif param == 'issuer':
             self.issuer = value
@@ -307,6 +328,13 @@ class Certificate:
             self.setupKey('subject', value)
         else:
             raise UnknownParameterTypeError(param)
+
+    def setVersion(self, version):
+        intVersion = int(version)
+        if intVersion >= 1 and intVersion <= 4:
+            self.versionValue = intVersion - 1
+        else:
+            raise UnknownVersionError(version)
 
     def decodeExtension(self, extension):
         extensionType = extension.split(':')[0]
@@ -402,7 +430,7 @@ class Certificate:
         self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName)
 
     def getVersion(self):
-        return rfc2459.Version(self.version).subtype(
+        return rfc2459.Version(self.versionValue).subtype(
             explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 0))
 
     def getSerialNumber(self):

@@ -112,6 +112,14 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, jsval* vp)
     if (!JS_SetProperty(cx, info, "arm-simulator", value))
         return false;
 
+#ifdef JS_SIMULATOR_ARM64
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "arm64-simulator", value))
+        return false;
+
 #ifdef MOZ_ASAN
     value = BooleanValue(true);
 #else

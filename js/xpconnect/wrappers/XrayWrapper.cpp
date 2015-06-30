@@ -1255,9 +1255,9 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext* cx, HandleObject wr
     desc.setAttributes(JSPROP_ENUMERATE);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr);
-    desc.value().set(JSVAL_VOID);
+    desc.value().setUndefined();
 
-    RootedValue fval(cx, JSVAL_VOID);
+    RootedValue fval(cx, JS::UndefinedValue());
     if (member->IsConstant()) {
         if (!member->GetConstantValue(ccx, iface, desc.value().address())) {
             JS_ReportError(cx, "Failed to convert constant native property to JS value");

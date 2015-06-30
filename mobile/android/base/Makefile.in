@@ -351,16 +351,18 @@ all_resources = \
 # $(1): zip file to add to (or create).
 # $(2): directory to zip contents of.
 define zip_directory_with_relative_paths
-cd $(2) && zip -q $(1) -r * -x $(subst *,\\*,$(not_android_res_files))
+cd $(2) && zip -q $(1) -r * -x $(subst *,\*,$(not_android_res_files))
 
 endef
 
+ifndef MOZ_DISABLE_GECKOVIEW
 # We delete the archive before updating so that resources removed from
 # the filesystem are removed from the archive.
 geckoview_resources.zip: $(all_resources) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(RM) -rf $@
 	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
+endif
 
 # All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
 # produced by aapt; this saves aapt invocations.  The trailing
@@ -493,8 +495,12 @@ gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
 
 .PHONY: gradle-targets gradle-omnijar
 
-libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
+ifndef MOZ_DISABLE_GECKOVIEW
+libs:: geckoview_resources.zip
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
+endif
+
+libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
 	 (echo '*****************************************************' && \

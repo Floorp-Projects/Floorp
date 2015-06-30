@@ -145,7 +145,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URLSearchParams)
 NS_INTERFACE_MAP_END
 
 
-URLSearchParams::URLSearchParams(URLSearchParamsObserver* aObserver)
+URLSearchParams::URLSearchParams(nsISupports* aParent,
+                                 URLSearchParamsObserver* aObserver)
 {
 }
 

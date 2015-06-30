@@ -20,7 +20,7 @@ class TestDataStructuresSub :
         public PTestDataStructuresSubChild
 {
 public:
-    TestDataStructuresSub(uint32_t i) : mI(i)
+    explicit TestDataStructuresSub(uint32_t i) : mI(i)
     { }
     virtual ~TestDataStructuresSub()
     { }

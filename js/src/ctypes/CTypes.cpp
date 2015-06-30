@@ -1889,7 +1889,8 @@ InitTypeClasses(JSContext* cx, HandleObject ctypesObj)
   // Create objects representing the special types void_t and voidptr_t.
   RootedObject typeObj(cx,
     CType::DefineBuiltin(cx, ctypesObj, "void_t", CTypeProto, CDataProto, "void",
-                         TYPE_void_t, JSVAL_VOID, JSVAL_VOID, &ffi_type_void));
+                         TYPE_void_t, JS::UndefinedValue(), JS::UndefinedValue(),
+                         &ffi_type_void));
   if (!typeObj)
     return false;
 
@@ -4191,7 +4192,7 @@ CType::GetSafeSize(JSObject* obj, size_t* result)
 
   jsval size = JS_GetReservedSlot(obj, SLOT_SIZE);
 
-  // The "size" property can be an int, a double, or JSVAL_VOID
+  // The "size" property can be an int, a double, or JS::UndefinedValue()
   // (for arrays of undefined length), and must always fit in a size_t.
   if (size.isInt32()) {
     *result = size.toInt32();
@@ -4215,9 +4216,10 @@ CType::GetSize(JSObject* obj)
 
   MOZ_ASSERT(!size.isUndefined());
 
-  // The "size" property can be an int, a double, or JSVAL_VOID
+  // The "size" property can be an int, a double, or JS::UndefinedValue()
   // (for arrays of undefined length), and must always fit in a size_t.
-  // For callers who know it can never be JSVAL_VOID, return a size_t directly.
+  // For callers who know it can never be JS::UndefinedValue(), return a size_t
+  // directly.
   if (size.isInt32())
     return size.toInt32();
   return Convert<size_t>(size.toDouble());
@@ -4230,7 +4232,7 @@ CType::IsSizeDefined(JSObject* obj)
 
   jsval size = JS_GetReservedSlot(obj, SLOT_SIZE);
 
-  // The "size" property can be an int, a double, or JSVAL_VOID
+  // The "size" property can be an int, a double, or JS::UndefinedValue()
   // (for arrays of undefined length), and must always fit in a size_t.
   MOZ_ASSERT(size.isInt32() || size.isDouble() || size.isUndefined());
   return !size.isUndefined();
@@ -4709,7 +4711,7 @@ PointerType::ConstructData(JSContext* cx,
   // The third argument is an optional error sentinel that js-ctypes will return
   // if an exception is raised while executing the closure. The type must match
   // the return type of the callback.
-  jsval errVal = JSVAL_VOID;
+  Value errVal = JS::UndefinedValue();
   if (args.length() == 3)
     errVal = args[2];
 
@@ -4930,8 +4932,8 @@ ArrayType::CreateInternal(JSContext* cx,
     return nullptr;
   }
 
-  RootedValue sizeVal(cx, JSVAL_VOID);
-  RootedValue lengthVal(cx, JSVAL_VOID);
+  RootedValue sizeVal(cx, JS::UndefinedValue());
+  RootedValue lengthVal(cx, JS::UndefinedValue());
   if (lengthDefined) {
     // Check for overflow, and convert to an int or double as required.
     size_t size = length * baseSize;
@@ -5084,7 +5086,7 @@ ArrayType::GetSafeLength(JSObject* obj, size_t* result)
 
   jsval length = JS_GetReservedSlot(obj, SLOT_LENGTH);
 
-  // The "length" property can be an int, a double, or JSVAL_VOID
+  // The "length" property can be an int, a double, or JS::UndefinedValue()
   // (for arrays of undefined length), and must always fit in a size_t.
   if (length.isInt32()) {
     *result = length.toInt32();
@@ -5109,9 +5111,10 @@ ArrayType::GetLength(JSObject* obj)
 
   MOZ_ASSERT(!length.isUndefined());
 
-  // The "length" property can be an int, a double, or JSVAL_VOID
+  // The "length" property can be an int, a double, or JS::UndefinedValue()
   // (for arrays of undefined length), and must always fit in a size_t.
-  // For callers who know it can never be JSVAL_VOID, return a size_t directly.
+  // For callers who know it can never be JS::UndefinedValue(), return a size_t
+  // directly.
   if (length.isInt32())
     return length.toInt32();
   return Convert<size_t>(length.toDouble());
@@ -5441,7 +5444,8 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
   // non-instantiable as CData, will have no 'prototype' property, and will
   // have undefined size and alignment and no ffi_type.
   RootedObject result(cx, CType::Create(cx, typeProto, nullptr, TYPE_struct,
-                                        name.toString(), JSVAL_VOID, JSVAL_VOID, nullptr));
+                                        name.toString(), JS::UndefinedValue(),
+                                        JS::UndefinedValue(), nullptr));
   if (!result)
     return false;
 
@@ -6426,7 +6430,8 @@ FunctionType::CreateInternal(JSContext* cx,
 
   // Create a new CType object with the common properties and slots.
   RootedObject typeObj(cx, CType::Create(cx, typeProto, dataProto, TYPE_function,
-                                         nullptr, JSVAL_VOID, JSVAL_VOID, nullptr));
+                                         nullptr, JS::UndefinedValue(),
+                                         JS::UndefinedValue(), nullptr));
   if (!typeObj)
     return nullptr;
 
@@ -7951,7 +7956,7 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval* vp)
   MOZ_ASSERT(CType::GetTypeCode(objCodeType) == TYPE_function);
 
   RootedObject resultType(cx, FunctionType::GetFunctionInfo(objCodeType)->mReturnType);
-  RootedValue result(cx, JSVAL_VOID);
+  RootedValue result(cx, JS::UndefinedValue());
 
   int errnoStatus;
 #if defined(XP_WIN)
@@ -8029,7 +8034,7 @@ CDataFinalizer::Cleanup(CDataFinalizer::Private* p, JSObject* obj)
 
   JS_SetPrivate(obj, nullptr);
   for (int i = 0; i < CDATAFINALIZER_SLOTS; ++i) {
-    JS_SetReservedSlot(obj, i, JSVAL_NULL);
+    JS_SetReservedSlot(obj, i, JS::NullValue());
   }
 }
 
