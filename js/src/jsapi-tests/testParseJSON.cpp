@@ -74,26 +74,26 @@ BEGIN_TEST(testParseJSON_success)
     const char16_t emptystr[] = { '\0' };
     str = js::NewStringCopyN<CanGC>(cx, emptystr, 0);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\"", expected));
 
     const char16_t nullstr[] = { '\0' };
     str = NewString(cx, nullstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\u0000\"", expected));
 
     const char16_t backstr[] = { '\b' };
     str = NewString(cx, backstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\b\"", expected));
     CHECK(TryParse(cx, "\"\\u0008\"", expected));
 
     const char16_t newlinestr[] = { '\n', };
     str = NewString(cx, newlinestr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\n\"", expected));
     CHECK(TryParse(cx, "\"\\u000A\"", expected));
 
