@@ -17,13 +17,14 @@ const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
 let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem)
-    .rootTreeItem
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindow)
-    .QueryInterface(Ci.nsIDOMChromeWindow)});
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIWebNavigation)
+           .QueryInterface(Ci.nsIDocShellTreeItem)
+           .rootTreeItem
+           .QueryInterface(Ci.nsIInterfaceRequestor)
+           .getInterface(Ci.nsIDOMWindow)
+           .QueryInterface(Ci.nsIDOMChromeWindow);
+});
 
 var ContextMenus = {
   target: null,

@@ -167,7 +167,7 @@ ImageWrapper::GetAnimated(bool* aAnimated)
   return mInnerImage->GetAnimated(aAnimated);
 }
 
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 ImageWrapper::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {

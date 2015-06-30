@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 2005-2013, International Business Machines
+*   Copyright (C) 2005-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -124,7 +124,7 @@ Win32DateFormat &Win32DateFormat::operator=(const Win32DateFormat &other)
 
 //    delete fCalendar;
 
-    this->fDateTimeMsg = other.fDateTimeMsg;
+    this->fDateTimeMsg = other.fDateTimeMsg == NULL ? NULL : new UnicodeString(*other.fDateTimeMsg);
     this->fTimeStyle   = other.fTimeStyle;
     this->fDateStyle   = other.fDateStyle;
     this->fLocale      = other.fLocale;

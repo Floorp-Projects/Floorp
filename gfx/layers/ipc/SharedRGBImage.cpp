@@ -117,7 +117,7 @@ SharedRGBImage::GetTextureClient(CompositableClient* aClient)
   return mTextureClient.get();
 }
 
-TemporaryRef<gfx::SourceSurface>
+already_AddRefed<gfx::SourceSurface>
 SharedRGBImage::GetAsSourceSurface()
 {
   return nullptr;

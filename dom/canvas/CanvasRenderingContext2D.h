@@ -445,7 +445,7 @@ public:
                             const char16_t* aEncoderOptions,
                             nsIInputStream **aStream) override;
 
-  mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override
+  already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override
   {
     EnsureTarget();
     if (aPremultAlpha) {

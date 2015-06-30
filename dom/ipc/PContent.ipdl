@@ -735,7 +735,7 @@ parent:
 
     sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
 
-    PHal();
+    prio(urgent) async PHal();
 
     PIcc(uint32_t serviceId);
 
@@ -969,6 +969,9 @@ parent:
                            int64_t fileId)
       returns (int32_t refCnt, int32_t dBRefCnt, int32_t sliceRefCnt,
                bool result);
+
+    // Use only for testing!
+    FlushPendingFileDeletions();
 
     /**
      * Tell the chrome process there is an creation of PBrowser.

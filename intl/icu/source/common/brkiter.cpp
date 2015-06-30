@@ -1,10 +1,10 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2013, International Business Machines Corporation and
+* Copyright (C) 1997-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
-* File TXTBDRY.CPP
+* File brkiter.cpp
 *
 * Modification History:
 *
@@ -35,6 +35,7 @@
 #include "uresimp.h"
 #include "uassert.h"
 #include "ubrkimpl.h"
+#include "charstr.h"
 
 // *****************************************************************************
 // class BreakIterator
@@ -52,7 +53,7 @@ BreakIterator::buildInstance(const Locale& loc, const char *type, int32_t kind, 
 {
     char fnbuff[256];
     char ext[4]={'\0'};
-    char actualLocale[ULOC_FULLNAME_CAPACITY];
+    CharString actualLocale;
     int32_t size;
     const UChar* brkfname = NULL;
     UResourceBundle brkRulesStack;
@@ -68,13 +69,7 @@ BreakIterator::buildInstance(const Locale& loc, const char *type, int32_t kind, 
     ures_initStackObject(brkName);
 
     // Get the locale
-    UResourceBundle *b = ures_open(U_ICUDATA_BRKITR, loc.getName(), &status);
-    /* this is a hack for now. Should be fixed when the data is fetched from
-        brk_index.txt */
-    if(status==U_USING_DEFAULT_WARNING){
-        status=U_ZERO_ERROR;
-        ures_openFillIn(b, U_ICUDATA_BRKITR, "", &status);
-    }
+    UResourceBundle *b = ures_openNoDefault(U_ICUDATA_BRKITR, loc.getName(), &status);
 
     // Get the "boundaries" array.
     if (U_SUCCESS(status)) {
@@ -93,9 +88,7 @@ BreakIterator::buildInstance(const Locale& loc, const char *type, int32_t kind, 
 
         // Use the string if we found it
         if (U_SUCCESS(status) && brkfname) {
-            uprv_strncpy(actualLocale,
-                ures_getLocaleInternal(brkName, &status),
-                sizeof(actualLocale)/sizeof(actualLocale[0]));
+            actualLocale.append(ures_getLocaleInternal(brkName, &status), -1, status);
 
             UChar* extStart=u_strchr(brkfname, 0x002e);
             int len = 0;
@@ -123,7 +116,8 @@ BreakIterator::buildInstance(const Locale& loc, const char *type, int32_t kind, 
     // If there is a result, set the valid locale and actual locale, and the kind
     if (U_SUCCESS(status) && result != NULL) {
         U_LOCALE_BASED(locBased, *(BreakIterator*)result);
-        locBased.setLocaleIDs(ures_getLocaleByType(b, ULOC_VALID_LOCALE, &status), actualLocale);
+        locBased.setLocaleIDs(ures_getLocaleByType(b, ULOC_VALID_LOCALE, &status), 
+                              actualLocale.data());
         result->setBreakType(kind);
     }
 
@@ -389,6 +383,7 @@ BreakIterator::createInstance(const Locale& loc, int32_t kind, UErrorCode& statu
 }
 
 // -------------------------------------
+enum { kLBTypeLenMax = 32 };
 
 BreakIterator*
 BreakIterator::makeInstance(const Locale& loc, int32_t kind, UErrorCode& status)
@@ -397,6 +392,7 @@ BreakIterator::makeInstance(const Locale& loc, int32_t kind, UErrorCode& status)
     if (U_FAILURE(status)) {
         return NULL;
     }
+    char lbType[kLBTypeLenMax];
 
     BreakIterator *result = NULL;
     switch (kind) {
@@ -407,7 +403,17 @@ BreakIterator::makeInstance(const Locale& loc, int32_t kind, UErrorCode& status)
         result = BreakIterator::buildInstance(loc, "word", kind, status);
         break;
     case UBRK_LINE:
-        result = BreakIterator::buildInstance(loc, "line", kind, status);
+        uprv_strcpy(lbType, "line");
+        {
+            char lbKeyValue[kLBTypeLenMax] = {0};
+            UErrorCode kvStatus = U_ZERO_ERROR;
+            int32_t kLen = loc.getKeywordValue("lb", lbKeyValue, kLBTypeLenMax, kvStatus);
+            if (U_SUCCESS(kvStatus) && kLen > 0 && (uprv_strcmp(lbKeyValue,"strict")==0 || uprv_strcmp(lbKeyValue,"normal")==0 || uprv_strcmp(lbKeyValue,"loose")==0)) {
+                uprv_strcat(lbType, "_");
+                uprv_strcat(lbType, lbKeyValue);
+            }
+        }
+        result = BreakIterator::buildInstance(loc, lbType, kind, status);
         break;
     case UBRK_SENTENCE:
         result = BreakIterator::buildInstance(loc, "sentence", kind, status);
@@ -459,6 +465,11 @@ int32_t BreakIterator::getRuleStatusVec(int32_t *fillInVec, int32_t capacity, UE
     }
     *fillInVec = 0;
     return 1;
+}
+
+BreakIterator::BreakIterator (const Locale& valid, const Locale& actual) {
+  U_LOCALE_BASED(locBased, (*this));
+  locBased.setLocaleIDs(valid, actual);
 }
 
 U_NAMESPACE_END

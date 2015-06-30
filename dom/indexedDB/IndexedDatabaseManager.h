@@ -14,7 +14,9 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
+#include "nsCOMPtr.h"
 #include "nsHashKeys.h"
+#include "nsITimer.h"
 
 struct PRLogModuleInfo;
 
@@ -24,15 +26,15 @@ class EventChainPostVisitor;
 
 namespace dom {
 
-class TabContext;
-
 namespace indexedDB {
 
 class FileManager;
 class FileManagerInfo;
 class IDBFactory;
 
-class IndexedDatabaseManager final : public nsIObserver
+class IndexedDatabaseManager final
+  : public nsIObserver
+  , public nsITimerCallback
 {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
@@ -48,6 +50,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   // Returns a non-owning reference.
   static IndexedDatabaseManager*
@@ -152,6 +155,9 @@ public:
                             int32_t* aSliceRefCnt,
                             bool* aResult);
 
+  nsresult
+  FlushPendingFileDeletions();
+
   static mozilla::Mutex&
   FileMutex()
   {
@@ -163,10 +169,6 @@ public:
 
   static nsresult
   CommonPostHandleEvent(EventChainPostVisitor& aVisitor, IDBFactory* aFactory);
-
-  static bool
-  TabContextMayAccessOrigin(const mozilla::dom::TabContext& aContext,
-                            const nsACString& aOrigin);
 
   static bool
   DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
@@ -184,9 +186,14 @@ private:
   static void
   LoggingModePrefChangedCallback(const char* aPrefName, void* aClosure);
 
+  nsCOMPtr<nsITimer> mDeleteTimer;
+
   // Maintains a list of all file managers per origin. This list isn't
   // protected by any mutex but it is only ever touched on the IO thread.
   nsClassHashtable<nsCStringHashKey, FileManagerInfo> mFileManagerInfos;
+
+  nsClassHashtable<nsRefPtrHashKey<FileManager>,
+                   nsTArray<int64_t>> mPendingDeleteInfos;
 
   // Lock protecting FileManager.mFileInfos and BlobImplBase.mFileInfos
   // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt

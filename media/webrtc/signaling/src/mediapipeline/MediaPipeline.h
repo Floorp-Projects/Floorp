@@ -361,7 +361,7 @@ class GenericReceiveCallback : public TrackAddedCallback
 class ConduitDeleteEvent: public nsRunnable
 {
 public:
-  explicit ConduitDeleteEvent(TemporaryRef<MediaSessionConduit> aConduit) :
+  explicit ConduitDeleteEvent(already_AddRefed<MediaSessionConduit> aConduit) :
     mConduit(aConduit) {}
 
   /* we exist solely to proxy release of the conduit */

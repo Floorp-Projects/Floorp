@@ -36,7 +36,7 @@ SourceSurfaceCG::GetFormat() const
   return mFormat;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 SourceSurfaceCG::GetDataSurface()
 {
   //XXX: we should be more disciplined about who takes a reference and where

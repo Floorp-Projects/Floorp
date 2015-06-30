@@ -128,7 +128,7 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
+  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
@@ -167,7 +167,7 @@ public:
 
   LayerRenderState GetRenderState() override;
 
-  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) override;
+  virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::Filter& aFilter) override;
 
 protected:
   CompositableTextureHostRef mTextureHost;

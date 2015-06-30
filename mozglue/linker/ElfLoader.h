@@ -279,7 +279,7 @@ public:
    * Returns a new SystemElf for the given path. The given flags are passed
    * to dlopen().
    */
-  static mozilla::TemporaryRef<LibHandle> Load(const char *path, int flags);
+  static already_AddRefed<LibHandle> Load(const char *path, int flags);
 
   /**
    * Inherited from LibHandle
@@ -412,7 +412,7 @@ public:
    * requesting the given library to be loaded. The loader may look in the
    * directory containing that parent library for the library to load.
    */
-  mozilla::TemporaryRef<LibHandle> Load(const char *path, int flags,
+  already_AddRefed<LibHandle> Load(const char *path, int flags,
                                         LibHandle *parent = nullptr);
 
   /**
@@ -421,7 +421,7 @@ public:
    * LibHandle::Contains returns true. Its purpose is to allow to
    * implement dladdr().
    */
-  mozilla::TemporaryRef<LibHandle> GetHandleByPtr(void *addr);
+  already_AddRefed<LibHandle> GetHandleByPtr(void *addr);
 
   /**
    * Returns a Mappable object for the path. Paths in the form

@@ -64,7 +64,7 @@ private:
     decoder = nullptr;
     resource = nullptr;
     reader = nullptr;
-    SharedThreadPool::SpinUntilShutdown();
+    SharedThreadPool::SpinUntilEmpty();
   }
 
   void ReadMetadata()
