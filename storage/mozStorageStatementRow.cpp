@@ -80,7 +80,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
         *_retval = false;
         return NS_OK;
       }
-      *_vp = STRING_TO_JSVAL(str);
+      _vp->setString(str);
     }
     else if (type == mozIStorageValueArray::VALUE_TYPE_BLOB) {
       uint32_t length;
