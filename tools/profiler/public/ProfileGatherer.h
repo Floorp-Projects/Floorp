@@ -7,7 +7,7 @@
 
 #include "mozilla/dom/Promise.h"
 
-class TableTicker;
+class GeckoSampler;
 
 namespace mozilla {
 
@@ -16,7 +16,7 @@ class ProfileGatherer final : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
-  ProfileGatherer(TableTicker* aTicker,
+  ProfileGatherer(GeckoSampler* aTicker,
                   double aSinceTime,
                   mozilla::dom::Promise* aPromise);
   void WillGatherOOPProfile();
@@ -28,7 +28,7 @@ private:
   void Finish();
 
   nsRefPtr<mozilla::dom::Promise> mPromise;
-  TableTicker* mTicker;
+  GeckoSampler* mTicker;
   double mSinceTime;
   uint32_t mPendingProfiles;
 };

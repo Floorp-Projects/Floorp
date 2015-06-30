@@ -38,7 +38,7 @@
 #endif
 
 #include "platform.h"
-#include "TableTicker.h"
+#include "GeckoSampler.h"
 #include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
@@ -137,7 +137,7 @@ void Thread::Join() {
   pthread_join(thread_, NULL);
 }
 
-class PlatformData : public Malloced {
+class PlatformData {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
   {
