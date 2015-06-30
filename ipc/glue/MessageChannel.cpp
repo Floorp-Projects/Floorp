@@ -974,12 +974,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
         // If the message is not Interrupt, we can dispatch it as normal.
         if (!recvd.is_interrupt()) {
-            {
-                AutoEnterTransaction transaction(this, recvd);
-                MonitorAutoUnlock unlock(*mMonitor);
-                CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
-                DispatchMessage(recvd);
-            }
+            DispatchMessage(recvd);
             if (!Connected()) {
                 ReportConnectionError("MessageChannel::DispatchMessage");
                 return false;
@@ -1107,14 +1102,7 @@ MessageChannel::ProcessPendingRequest(const Message &aUrgent)
     // to save the reply.
     nsAutoPtr<Message> savedReply(mRecvd.forget());
 
-    {
-        // In order to send the parent RPC messages and guarantee it will
-        // wake up, we must re-use its transaction.
-        AutoEnterTransaction transaction(this, aUrgent);
-
-        MonitorAutoUnlock unlock(*mMonitor);
-        DispatchMessage(aUrgent);
-    }
+    DispatchMessage(aUrgent);
     if (!Connected()) {
         ReportConnectionError("MessageChannel::ProcessPendingRequest");
         return false;
@@ -1171,16 +1159,10 @@ MessageChannel::OnMaybeDequeueOne()
         return false;
     }
 
-    {
-        // We should not be in a transaction yet if we're not blocked.
-        MOZ_ASSERT(mCurrentTransaction == 0);
-        AutoEnterTransaction transaction(this, recvd);
+    // We should not be in a transaction yet if we're not blocked.
+    MOZ_ASSERT(mCurrentTransaction == 0);
+    DispatchMessage(recvd);
 
-        MonitorAutoUnlock unlock(*mMonitor);
-
-        CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
-        DispatchMessage(recvd);
-    }
     return true;
 }
 
@@ -1190,20 +1172,31 @@ MessageChannel::DispatchMessage(const Message &aMsg)
     Maybe<AutoNoJSAPI> nojsapi;
     if (ScriptSettingsInitialized() && NS_IsMainThread())
         nojsapi.emplace();
-    if (aMsg.is_sync())
-        DispatchSyncMessage(aMsg);
-    else if (aMsg.is_interrupt())
-        DispatchInterruptMessage(aMsg, 0);
-    else
-        DispatchAsyncMessage(aMsg);
+
+    nsAutoPtr<Message> reply;
+
+    {
+        AutoEnterTransaction transaction(this, aMsg);
+        MonitorAutoUnlock unlock(*mMonitor);
+        CxxStackFrame frame(*this, IN_MESSAGE, &aMsg);
+
+        if (aMsg.is_sync())
+            DispatchSyncMessage(aMsg, *getter_Transfers(reply));
+        else if (aMsg.is_interrupt())
+            DispatchInterruptMessage(aMsg, 0);
+        else
+            DispatchAsyncMessage(aMsg);
+    }
+
+    if (reply && ChannelConnected == mChannelState) {
+        mLink->SendMessage(reply.forget());
+    }
 }
 
 void
-MessageChannel::DispatchSyncMessage(const Message& aMsg)
+MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
 {
     AssertWorkerThread();
-
-    nsAutoPtr<Message> reply;
 
     int prio = aMsg.priority();
 
@@ -1242,23 +1235,18 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg)
         AutoSetValue<bool> blocked(blockingVar, true);
         AutoSetValue<bool> sync(mDispatchingSyncMessage, true);
         AutoSetValue<int> prioSet(mDispatchingSyncMessagePriority, prio);
-        rv = mListener->OnMessageReceived(aMsg, *getter_Transfers(reply));
+        rv = mListener->OnMessageReceived(aMsg, aReply);
     }
 
     if (!MaybeHandleError(rv, aMsg, "DispatchSyncMessage")) {
-        reply = new Message();
-        reply->set_sync();
-        reply->set_priority(aMsg.priority());
-        reply->set_reply();
-        reply->set_reply_error();
+        aReply = new Message();
+        aReply->set_sync();
+        aReply->set_priority(aMsg.priority());
+        aReply->set_reply();
+        aReply->set_reply_error();
     }
-    reply->set_seqno(aMsg.seqno());
-    reply->set_transaction_id(aMsg.transaction_id());
-
-    MonitorAutoLock lock(*mMonitor);
-    if (ChannelConnected == mChannelState) {
-        mLink->SendMessage(reply.forget());
-    }
+    aReply->set_seqno(aMsg.seqno());
+    aReply->set_transaction_id(aMsg.transaction_id());
 }
 
 void
