@@ -39,9 +39,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
         password.focus();
         password.select();
 
-        ok(!editor2.canCopy(), "can copy, password");
-        ok(!editor2.canCut(), "can cut, password");
-        ok(editor1.canDelete(), "can delete, password");
+        // Copy and cut commands don't do anything on passoword fields by default,
+        // but webpages can hook up event handlers to the event, and thus, we have to
+        // always keep the cut and copy event enabled in HTML/XHTML documents.
+        ok(editor2.canCopy(), "can copy, password");
+        ok(editor2.canCut(), "can cut, password");
+        ok(editor2.canDelete(), "can delete, password");
 
         SimpleTest.finish();
       }
