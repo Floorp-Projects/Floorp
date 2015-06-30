@@ -293,7 +293,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
         if (!XPCConvert::IsMethodReflectable(*info))
             continue;
 
-        str = JS_InternString(cx, info->GetName());
+        str = JS_AtomizeAndPinString(cx, info->GetName());
         if (!str) {
             NS_ERROR("bad method name");
             failed = true;
@@ -338,7 +338,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
                 break;
             }
 
-            str = JS_InternString(cx, namestr);
+            str = JS_AtomizeAndPinString(cx, namestr);
             if (!str) {
                 NS_ERROR("bad constant name");
                 failed = true;
@@ -364,7 +364,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     if (!failed) {
         const char* bytes;
         if (NS_FAILED(aInfo->GetNameShared(&bytes)) || !bytes ||
-            nullptr == (str = JS_InternString(cx, bytes))) {
+            nullptr == (str = JS_AtomizeAndPinString(cx, bytes))) {
             failed = true;
         }
         interfaceName = INTERNED_STRING_TO_JSID(cx, str);

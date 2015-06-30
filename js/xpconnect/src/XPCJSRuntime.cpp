@@ -3526,7 +3526,7 @@ XPCJSRuntime::OnJSContextNew(JSContext* cx)
     if (JSID_IS_VOID(mStrIDs[0])) {
         RootedString str(cx);
         for (unsigned i = 0; i < IDX_TOTAL_COUNT; i++) {
-            str = JS_InternString(cx, mStrings[i]);
+            str = JS_AtomizeAndPinString(cx, mStrings[i]);
             if (!str) {
                 mStrIDs[0] = JSID_VOID;
                 return false;
@@ -3560,7 +3560,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
     XPCWrappedNativeProto* p =
         static_cast<XPCWrappedNativeProto*>(xpc_GetJSPrivate(obj));
     si = p->GetScriptableInfo();
-    
+
     if (!si) {
         return false;
     }
