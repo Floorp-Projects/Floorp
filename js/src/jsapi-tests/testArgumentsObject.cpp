@@ -94,7 +94,7 @@ ExhaustiveTest(const char funcode[])
             for (size_t k = 0; k < j; k++)
                 CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)
-                CHECK_SAME(elems[k], JSVAL_NULL);
+                CHECK(elems[k].isNull());
             CHECK_SAME(elems[MAX_ELEMS - 1], INT_TO_JSVAL(42));
         }
     }
