@@ -8,6 +8,8 @@
 async_test(function(t) {
   var div = addDiv(t);
 
+  // FIXME: This test does too many things. It should be split up.
+
   // Add a couple of transitions
   div.style.left = '0px';
   div.style.top = '0px';
@@ -41,6 +43,16 @@ async_test(function(t) {
     t.done();
   }));
 }, 'getAnimations for CSS Transitions');
+
+test(function(t) {
+  var div = addDiv(t, { style: 'left: 0px; transition: all 100s' });
+
+  flushComputedStyle(div);
+  div.style.left = '100px';
+
+  assert_class_string(div.getAnimations()[0], 'CSSTransition',
+                      'Interface of returned animation is CSSTransition');
+}, 'getAnimations returns CSSTransition objects for CSS Transitions');
 
 async_test(function(t) {
   var div = addDiv(t);
