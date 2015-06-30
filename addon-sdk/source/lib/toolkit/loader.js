@@ -874,7 +874,8 @@ function Loader(options) {
       metadata: {
         addonID: options.id,
         URI: "Addon-SDK"
-      }
+      },
+      prototype: options.sandboxPrototype || {}
     });
   }
 
