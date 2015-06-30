@@ -110,7 +110,7 @@ nsDataHandler::NewChannel2(nsIURI* uri,
 {
     NS_ENSURE_ARG_POINTER(uri);
     nsDataChannel* channel;
-    if (XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
         channel = new nsDataChannel(uri);
     } else {
         channel = new mozilla::net::DataChannelChild(uri);

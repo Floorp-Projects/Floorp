@@ -702,7 +702,7 @@ public:
 
   static bool EventLatencyIsImportant()
   {
-    return NS_IsMainThread() && XRE_IsParentProcess();
+    return NS_IsMainThread() && XRE_GetProcessType() == GeckoProcessType_Default;
   }
 };
 

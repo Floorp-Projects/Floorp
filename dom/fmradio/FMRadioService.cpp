@@ -42,7 +42,7 @@ BEGIN_FMRADIO_NAMESPACE
 IFMRadioService*
 IFMRadioService::Singleton()
 {
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return FMRadioChild::Singleton();
   } else {
     return FMRadioService::Singleton();
@@ -1243,7 +1243,7 @@ FMRadioService::UpdateFrequency()
 FMRadioService*
 FMRadioService::Singleton()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sFMRadioService) {

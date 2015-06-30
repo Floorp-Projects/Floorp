@@ -133,7 +133,7 @@ nsAppShell::nsAppShell()
 {
     gAppShell = this;
 
-    if (!XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
         return;
     }
 

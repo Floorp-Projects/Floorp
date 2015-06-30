@@ -33,7 +33,7 @@ namespace gmp {
 already_AddRefed<GeckoMediaPluginServiceChild>
 GeckoMediaPluginServiceChild::GetSingleton()
 {
-  MOZ_ASSERT(!XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
   nsRefPtr<GeckoMediaPluginService> service(
     GeckoMediaPluginService::GetGeckoMediaPluginService());
 #ifdef DEBUG

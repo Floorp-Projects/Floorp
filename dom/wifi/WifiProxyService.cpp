@@ -150,7 +150,7 @@ WifiProxyService::~WifiProxyService()
 already_AddRefed<WifiProxyService>
 WifiProxyService::FactoryCreate()
 {
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return nullptr;
   }
 

@@ -134,7 +134,7 @@ NetworkWorker::~NetworkWorker()
 already_AddRefed<NetworkWorker>
 NetworkWorker::FactoryCreate()
 {
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return nullptr;
   }
 

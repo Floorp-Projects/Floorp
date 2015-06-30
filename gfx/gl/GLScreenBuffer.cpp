@@ -40,6 +40,7 @@ GLScreenBuffer::Create(GLContext* gl,
         return Move(ret);
     }
 
+
     layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
     if (!caps.premultAlpha) {
         flags |= layers::TextureFlags::NON_PREMULTIPLIED;
