@@ -8,9 +8,13 @@ package org.mozilla.gecko.util;
 import android.content.Context;
 import android.content.Intent;
 import android.speech.RecognizerIntent;
+import org.mozilla.gecko.AppConstants.Versions;
 
 public class InputOptionsUtils {
     public static boolean supportsVoiceRecognizer(Context context, String prompt) {
+        if (Versions.preICS) {
+            return false;
+        }
         final Intent intent = createVoiceRecognizerIntent(prompt);
         return intent.resolveActivity(context.getPackageManager()) != null;
     }
