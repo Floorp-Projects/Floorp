@@ -93,7 +93,7 @@ function goDoCommand(aCommand)
   try {
     var controller = top.document.commandDispatcher
                         .getControllerForCommand(aCommand);
-    if (controller)
+    if (controller && controller.isCommandEnabled(aCommand))
       controller.doCommand(aCommand);
   }
   catch (e) {
