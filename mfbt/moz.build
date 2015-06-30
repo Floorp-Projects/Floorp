@@ -86,6 +86,7 @@ EXPORTS.mozilla = [
     'Types.h',
     'TypeTraits.h',
     'UniquePtr.h',
+    'Variant.h',
     'Vector.h',
     'WeakPtr.h',
     'unused.h',
