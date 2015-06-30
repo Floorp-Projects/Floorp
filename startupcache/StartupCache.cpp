@@ -87,7 +87,7 @@ StartupCache*
 StartupCache::GetSingleton()
 {
   if (!gStartupCache) {
-    if (!XRE_IsParentProcess()) {
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
       return nullptr;
     }
 #ifdef MOZ_DISABLE_STARTUPCACHE

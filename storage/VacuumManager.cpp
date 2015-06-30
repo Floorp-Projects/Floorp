@@ -315,7 +315,7 @@ VacuumManager *
 VacuumManager::getSingleton()
 {
   //Don't allocate it in the child Process.
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return nullptr;
   }
 

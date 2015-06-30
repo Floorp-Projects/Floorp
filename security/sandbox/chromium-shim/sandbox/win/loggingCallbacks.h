@@ -123,7 +123,7 @@ InitLoggingIfRequired()
 #if defined(MOZ_CONTENT_SANDBOX) && defined(MOZ_STACKWALKING)
     // We can only log the stack trace on process types where we know that the
     // sandbox won't prevent it.
-    if (XRE_IsContentProcess()) {
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
       Preferences::AddUintVarCache(&sStackTraceDepth,
         "security.sandbox.windows.log.stackTraceDepth");
     }

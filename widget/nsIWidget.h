@@ -2315,7 +2315,7 @@ public:
     static bool
     UsePuppetWidgets()
     {
-      return XRE_IsContentProcess();
+      return XRE_GetProcessType() == GeckoProcessType_Content;
     }
 
     /**

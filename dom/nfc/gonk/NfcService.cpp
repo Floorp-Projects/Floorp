@@ -312,7 +312,7 @@ NfcService::~NfcService()
 already_AddRefed<NfcService>
 NfcService::FactoryCreate()
 {
-  if (!XRE_IsParentProcess()) {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
     return nullptr;
   }
 

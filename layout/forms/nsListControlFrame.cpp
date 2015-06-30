@@ -1791,7 +1791,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 static bool
 FireShowDropDownEvent(nsIContent* aContent)
 {
-  if (XRE_IsContentProcess() &&
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
       Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
                                         NS_LITERAL_STRING("mozshowdropdown"), true,
