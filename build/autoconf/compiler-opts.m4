@@ -356,37 +356,6 @@ if test "$GNU_CC" -a -n "$MOZ_PIE"; then
     LDFLAGS=$_SAVE_LDFLAGS
 fi
 
-MOZ_COLOR_DIAGNOSTICS=1
-MOZ_ARG_DISABLE_BOOL(color-diagnostics,
-[ --disable-color-diagnostics    Disable colorized warnings and errors],
-    MOZ_COLOR_DIAGNOSTICS=)
-if test -n "$MOZ_COLOR_DIAGNOSTICS"; then
-    dnl
-    dnl See if -fdiagnostics-color is supported.
-    dnl
-    AC_MSG_CHECKING(whether ${CXX-c++} accepts -fdiagnostics-color)
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    _SAVE_CPPFLAGS=$CPPFLAGS
-    CPPFLAGS="$CPPFLAGS -fdiagnostics-color"
-    AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
-                     [LDFLAGS="$LDFLAGS -fdiagnostics-color"],
-                     AC_MSG_RESULT([no])
-                     [CPPFLAGS=$_SAVE_CPPFLAGS])
-
-    AC_MSG_CHECKING(whether ${HOST_CXX-c++} accepts -fdiagnostics-color)
-    _SAVE_HOST_CPPFLAGS=$HOST_CPPFLAGS
-    HOST_CPPFLAGS="$HOST_CPPFLAGS -fdiagnostics-color"
-    _SAVE_CXX=$CXX
-    CXX=$HOST_CXX
-    AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
-                     [HOST_LDFLAGS="$HOST_LDFLAGS -fdiagnostics-color"],
-                     AC_MSG_RESULT([no])
-                     [HOST_CPPFLAGS=$_SAVE_HOST_CPPFLAGS])
-    CXX=$_SAVE_CXX
-    AC_LANG_RESTORE
-fi
-
 AC_SUBST(MOZ_PROGRAM_LDFLAGS)
 
 ])
