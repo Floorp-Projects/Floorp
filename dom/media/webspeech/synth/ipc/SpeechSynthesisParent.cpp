@@ -123,7 +123,9 @@ nsresult
 SpeechTaskParent::DispatchStartImpl(const nsAString& aUri)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnStart(nsString(aUri)), NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(mActor->SendOnStart(nsString(aUri))))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -134,8 +136,9 @@ SpeechTaskParent::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
   MOZ_ASSERT(mActor);
   SpeechSynthesisRequestParent* actor = mActor;
   mActor = nullptr;
-  NS_ENSURE_TRUE(actor->Send__delete__(actor, false, aElapsedTime, aCharIndex),
-                 NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(actor->Send__delete__(actor, false, aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -144,7 +147,9 @@ nsresult
 SpeechTaskParent::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnPause(aElapsedTime, aCharIndex), NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(mActor->SendOnPause(aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -153,7 +158,9 @@ nsresult
 SpeechTaskParent::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnResume(aElapsedTime, aCharIndex), NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(mActor->SendOnResume(aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -164,8 +171,9 @@ SpeechTaskParent::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
   MOZ_ASSERT(mActor);
   SpeechSynthesisRequestParent* actor = mActor;
   mActor = nullptr;
-  NS_ENSURE_TRUE(actor->Send__delete__(actor, true, aElapsedTime, aCharIndex),
-                 NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(actor->Send__delete__(actor, true, aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -175,8 +183,9 @@ SpeechTaskParent::DispatchBoundaryImpl(const nsAString& aName,
                                        float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnBoundary(nsString(aName), aElapsedTime, aCharIndex),
-                 NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(mActor->SendOnBoundary(nsString(aName), aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -186,8 +195,9 @@ SpeechTaskParent::DispatchMarkImpl(const nsAString& aName,
                                    float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnMark(nsString(aName), aElapsedTime, aCharIndex),
-                 NS_ERROR_FAILURE);
+  if(NS_WARN_IF(!(mActor->SendOnMark(nsString(aName), aElapsedTime, aCharIndex)))) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }

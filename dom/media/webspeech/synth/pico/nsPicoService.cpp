@@ -451,7 +451,9 @@ nsPicoService::Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_TRUE(!strcmp(aTopic, "profile-after-change"), NS_ERROR_UNEXPECTED);
+  if(NS_WARN_IF(!(!strcmp(aTopic, "profile-after-change")))) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (!Preferences::GetBool("media.webspeech.synth.enabled") ||
       Preferences::GetBool("media.webspeech.synth.test")) {
@@ -470,12 +472,16 @@ nsPicoService::Speak(const nsAString& aText, const nsAString& aUri,
                      float aVolume, float aRate, float aPitch,
                      nsISpeechTask* aTask)
 {
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_AVAILABLE);
+  if(NS_WARN_IF(!(mInitialized))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   MonitorAutoLock autoLock(mVoicesMonitor);
   bool found = false;
   PicoVoice* voice = mVoices.GetWeak(aUri, &found);
-  NS_ENSURE_TRUE(found, NS_ERROR_NOT_AVAILABLE);
+  if(NS_WARN_IF(!(found))) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   mCurrentTask = aTask;
   nsRefPtr<PicoCallbackRunnable> cb = new PicoCallbackRunnable(aText, voice, aRate, aPitch, aTask, this);
