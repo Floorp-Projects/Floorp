@@ -40,7 +40,7 @@ var currencyDigits = {
     CHE: 2,
     CHF: 2,
     CHW: 2,
-    CLF: 0,
+    CLF: 4,
     CLP: 0,
     CNY: 2,
     COP: 2,
