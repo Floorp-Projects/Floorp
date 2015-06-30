@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Video track src attribute must match src list - negative test</title>
+    <meta name=timeout content=long>
     <script src='/resources/testharness.js'></script>
     <script src='/resources/testharnessreport.js'></script>
 </head>
@@ -10,8 +11,7 @@
     <div id='log'></div>
 
   <script>
-    var source_test =
-        async_test("Disallowed track element onerror handler fires.");
+    var source_test = async_test("Disallowed track element");
 
       var trackURL = location.protocol +
         "//www." +
@@ -33,25 +33,18 @@
   </script>
 
     <video id="videoObject" width="320" height="240" controls
-           onerror="media_error_handler(source_test)"
-           crossorigin>
+           onloadeddata="media_loaded(source_test)" crossorigin>
         <source id="audioSourceObject"
                 type="audio/mpeg"
                 src="/media/white.mp4">
-        <track default
-               id="trackObject"
+        <track id="trackObject"
                kind="subtitles"
                srclang="en"
                label="English"
-               onerror="media_error_handler(source_test)"
-               onload="media_loaded(source_test)"
-               onloadeddata="media_loaded(source_test)">
+               onerror="media_error_handler(source_test)">
     </video>
     <script>
         document.getElementById("trackObject").src = trackURL;
-        source_test.step(function() {
-            source_test.set_status(source_test.FAIL);
-        });
     </script>
 
   <script async defer src="../support/checkReport.sub.js?reportField=violated-directive&reportValue=media-src%20%27self%27">
