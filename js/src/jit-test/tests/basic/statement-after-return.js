@@ -256,8 +256,8 @@ var f = new Function("return\\n");
 // empty statement
 testPass(`
 function f() {
-  return
-  ;
+  return;
+  ; // empty statement
 }
 `);
 
