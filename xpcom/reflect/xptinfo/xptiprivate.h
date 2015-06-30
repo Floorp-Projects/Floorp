@@ -340,7 +340,7 @@ public:
         return NS_OK;
     }
     NS_IMETHOD GetMethodCount(uint16_t *aMethodCount) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodCount(aMethodCount); }
-    NS_IMETHOD GetConstantCount(uint16_t *aConstantCount) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetConstantCount(aConstantCount); }
+    NS_IMETHOD GetConstantCount(uint16_t *aConstantCount) override;
     NS_IMETHOD GetMethodInfo(uint16_t index, const nsXPTMethodInfo * *info) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodInfo(index, info); }
     NS_IMETHOD GetMethodInfoForName(const char *methodName, uint16_t *index, const nsXPTMethodInfo * *info) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetMethodInfoForName(methodName, index, info); }
     NS_IMETHOD GetConstant(uint16_t index, JS::MutableHandleValue constant, char** name) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetConstant(index, constant, name); }

@@ -595,6 +595,23 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
   return rv;
 }
 
+#ifdef XP_WIN
+static void
+DeleteBlockedDLLFile()
+{
+  wchar_t tempPath[MAX_PATH];
+  if (!GetTempPathW(ArrayLength(tempPath), tempPath)) {
+    return;
+  }
+
+  if (wcscat_s(tempPath, ArrayLength(tempPath), L"FirefoxBlockedDLL.txt")) {
+    return;
+  }
+
+  DeleteFileW(tempPath);
+}
+#endif
+
 int main(int argc, char* argv[])
 {
 #ifdef DEBUG_delay_start_metro
@@ -633,6 +650,10 @@ int main(int argc, char* argv[])
 
   nsresult rv = InitXPCOMGlue(argv[0], &xreDirectory);
   if (NS_FAILED(rv)) {
+#ifdef XP_WIN
+    // In case we accidentally locked ourselves out
+    DeleteBlockedDLLFile();
+#endif
     return 255;
   }
 
