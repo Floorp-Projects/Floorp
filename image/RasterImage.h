@@ -244,6 +244,7 @@ public:
                                        nsresult aStatus,
                                        bool aLastPart) override;
 
+  void NotifyForLoadEvent(Progress aProgress);
   void NotifyForDecodeOnlyOnDraw();
 
   /**
@@ -360,6 +361,9 @@ private: // data
   nsIntSize                  mSize;
   Orientation                mOrientation;
 
+  /// If this has a value, we're waiting for SetSize() to send the load event.
+  Maybe<Progress>            mLoadProgress;
+
   nsCOMPtr<nsIProperties>   mProperties;
 
   /// If this image is animated, a FrameAnimator which manages its animation.
@@ -407,6 +411,7 @@ private: // data
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mDecodeOnlyOnDraw:1; // Decoding only on draw?
   bool                       mTransient:1;     // Is the image short-lived?
+  bool                       mSyncLoad:1;      // Are we loading synchronously?
   bool                       mDiscardable:1;   // Is container discardable?
   bool                       mHasSourceData:1; // Do we have source data?
   bool                       mHasBeenDecoded:1; // Decoded at least once?
