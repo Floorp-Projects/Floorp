@@ -1543,12 +1543,12 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         }
 
         if (isValidUrlEncodedMimeType) {
-          nsRefPtr<URLSearchParams> params = new URLSearchParams(nullptr);
-          params->ParseInput(data);
+          URLParams params;
+          params.ParseInput(data);
 
           nsRefPtr<nsFormData> fd = new nsFormData(DerivedClass()->GetParentObject());
           FillFormIterator iterator(fd);
-          DebugOnly<bool> status = params->ForEach(iterator);
+          DebugOnly<bool> status = params.ForEach(iterator);
           MOZ_ASSERT(status);
 
           localPromise->MaybeResolve(fd);

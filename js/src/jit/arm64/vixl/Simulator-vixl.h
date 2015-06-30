@@ -27,6 +27,10 @@
 #ifndef VIXL_A64_SIMULATOR_A64_H_
 #define VIXL_A64_SIMULATOR_A64_H_
 
+#include "js-config.h"
+
+#ifdef JS_SIMULATOR_ARM64
+
 #include "mozilla/Vector.h"
 
 #include "jsalloc.h"
@@ -39,6 +43,7 @@
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "jit/IonTypes.h"
 #include "vm/PosixNSPR.h"
+
 
 #define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)             \
     JS_BEGIN_MACRO                                                              \
@@ -338,17 +343,26 @@ class Simulator : public DecoderVisitor {
 
   void ResetState();
 
+  static inline uintptr_t StackLimit() {
+    return Simulator::Current()->stackLimit();
+  }
+
   // Run the simulator.
   virtual void Run();
   void RunFrom(const Instruction* first);
 
   // Simulation helpers.
   const Instruction* pc() const { return pc_; }
+  const Instruction* get_pc() const { return pc_; }
+
+  template <typename T>
+  T get_pc_as() const { return reinterpret_cast<T>(const_cast<Instruction*>(pc())); }
+
   void set_pc(const Instruction* new_pc) {
     pc_ = AddressUntag(new_pc);
     pc_modified_ = true;
   }
-  void set_resume_pc(const Instruction* new_resume_pc);
+  void set_resume_pc(void* new_resume_pc);
 
   void increment_pc() {
     if (!pc_modified_) {
@@ -930,9 +944,8 @@ class Simulator : public DecoderVisitor {
 
   // Stack
   byte* stack_;
-  static const int stack_protection_size_ = 256;
-  // 2 KB stack.
-  static const int stack_size_ = 2 * 1024 + 2 * stack_protection_size_;
+  static const int stack_protection_size_ = 128 * KBytes;
+  static const int stack_size_ = (2 * MBytes) + (2 * stack_protection_size_);
   byte* stack_limit_;
 
   Decoder* decoder_;
@@ -974,4 +987,5 @@ class Simulator : public DecoderVisitor {
 };
 }  // namespace vixl
 
+#endif  // JS_SIMULATOR_ARM64
 #endif  // VIXL_A64_SIMULATOR_A64_H_

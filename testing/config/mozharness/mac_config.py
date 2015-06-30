@@ -31,7 +31,8 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--certificate-path=tests/certs",
                 "--quiet",
-                "--log-raw=%(raw_log_file)s"
+                "--log-raw=%(raw_log_file)s",
+                "--screenshot-on-fail",
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"

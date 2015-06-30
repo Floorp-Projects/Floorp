@@ -75,8 +75,8 @@ public:
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(MessagePort,
-                                                                   DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,
+                                           MessagePortBase)
 
   static already_AddRefed<MessagePort>
   Create(nsPIDOMWindow* aWindow, const nsID& aUUID,
@@ -176,6 +176,11 @@ private:
   // creating the actor and until the actor is entangled.
   // We release the object when the port is closed or disentangled.
   void UpdateMustKeepAlive();
+
+  bool IsCertainlyAliveForCC() const override
+  {
+    return mIsKeptAlive;
+  }
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 

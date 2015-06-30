@@ -487,7 +487,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
   case NPVariantType_Void :
     return JS::UndefinedValue();
   case NPVariantType_Null :
-    return JSVAL_NULL;
+    return JS::NullValue();
   case NPVariantType_Bool :
     return BOOLEAN_TO_JSVAL(NPVARIANT_TO_BOOLEAN(*variant));
   case NPVariantType_Int32 :

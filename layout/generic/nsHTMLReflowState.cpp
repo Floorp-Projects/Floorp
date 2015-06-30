@@ -1167,7 +1167,7 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
     *aFound = false;
     return false;
   }
-  for (nsIFrame* f = aFrame->GetFirstPrincipalChild(); f; f = f->GetNextSibling()) {
+  for (nsIFrame* f : aFrame->PrincipalChildList()) {
     bool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
     if (*aFound || !allEmpty) {
       return allEmpty;

@@ -8,7 +8,7 @@ task:
       name: '[TC] Linux64 Dbg'
       description: 'Linux64 Dbg'
 
-  workerType: b2g-desktop-opt
+  workerType: dbg-linux64
 
   payload:
     env:
