@@ -32,13 +32,21 @@
               "gInR5cCI6ICJtb2NrL3BheW1lbnRzL2luYXBwL3YxIn0.QZxc62USCy4U" +
               "IyKIC1TKelVhNklvk-Ou1l_daKntaFI";
 
-    var request = navigator.mozPay(jwt);
-    request.onsuccess = function onsuccess() {
-      document.getElementById("msg").textContent = "Success.";
-    };
-    request.onerror = function onerror() {
-      document.getElementById("msg").textContent = request.error.name;
-    };
+    // mozPay is currently disabled in the desktop runtime, so we check
+    // that the property is set to null on the navigator object.
+    window.addEventListener("load", function() {
+        document.getElementById("msg").textContent =
+          (navigator.mozPay === null) ? "Success." : "navigator.mozPay defined";
+    }, false);
+
+    // This is the old code for checking the behavior of the API when enabled:
+    // var request = navigator.mozPay(jwt);
+    // request.onsuccess = function onsuccess() {
+    //   document.getElementById("msg").textContent = "Success.";
+    // };
+    // request.onerror = function onerror() {
+    //   document.getElementById("msg").textContent = request.error.name;
+    // };
     </script>
     <p id="msg">Webapp waiting to be paid...</p>
   </body>

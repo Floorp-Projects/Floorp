@@ -12,10 +12,10 @@ function test() {
     providerUri: "https://example.com:443/webapprtChrome/webapprt/test/chrome/mozpay-success.html?req=",
     message: "Success."
   });
-  tests.push({
-    providerUri: "https://example.com:443/webapprtChrome/webapprt/test/chrome/mozpay-failure.html?req=",
-    message: "Chocolate rejected."
-  });
+  // tests.push({
+  //   providerUri: "https://example.com:443/webapprtChrome/webapprt/test/chrome/mozpay-failure.html?req=",
+  //   message: "Chocolate rejected."
+  // });
 
   let jwt = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJhdWQiOiAibW9j" +
             "a3BheXByb3ZpZGVyLnBocGZvZ2FwcC5jb20iLCAiaXNzIjogIkVudGVyI" +
@@ -36,23 +36,25 @@ function test() {
     requestMethod: "GET"
   };
 
-  let providerWindow;
-
-  let winObserver = function(win, topic) {
-    if (topic == "domwindowopened") {
-      win.addEventListener("load", function onLoadWindow() {
-        win.removeEventListener("load", onLoadWindow, false);
-
-        if (win.document.getElementById("content").getAttribute("src") ==
-            (tests[curTest].providerUri + jwt)) {
-          ok(true, "Payment provider window shown.");
-          providerWindow = win;
-        }
-      }, false);
-    }
-  }
-
-  Services.ww.registerNotification(winObserver);
+  // Disabled because the mozPay API is disabled, so the provider window
+  // won't be shown.
+  //
+  // let providerWindow;
+  // let winObserver = function(win, topic) {
+  //   if (topic == "domwindowopened") {
+  //     win.addEventListener("load", function onLoadWindow() {
+  //       win.removeEventListener("load", onLoadWindow, false);
+  //
+  //       if (win.document.getElementById("content") &&
+  //           win.document.getElementById("content").getAttribute("src") ==
+  //             (tests[curTest].providerUri + jwt)) {
+  //         ok(true, "Payment provider window shown.");
+  //         providerWindow = win;
+  //       }
+  //     }, false);
+  //   }
+  // }
+  // Services.ww.registerNotification(winObserver);
 
   let mutObserver = null;
 
@@ -61,12 +63,12 @@ function test() {
     mutObserver = new MutationObserver(function(mutations) {
       is(msg.textContent, tests[curTest].message, "Got: " + tests[curTest].message);
 
-      if (!providerWindow) {
-        ok(false, "Payment provider window shown.");
-      } else {
-        providerWindow.close();
-        providerWindow = null;
-      }
+      // if (!providerWindow) {
+      //   ok(false, "Payment provider window shown.");
+      // } else {
+      //   providerWindow.close();
+      //   providerWindow = null;
+      // }
 
       runNextTest();
     });
@@ -76,7 +78,7 @@ function test() {
   loadWebapp("mozpay.webapp", undefined, onLoad);
 
   function runNextTest() {
-    providerWindow = null;
+    // providerWindow = null;
     if (mutObserver) {
       mutObserver.disconnect();
     }
@@ -97,7 +99,7 @@ function test() {
   }
 
   registerCleanupFunction(function() {
-    Services.ww.unregisterNotification(winObserver);
+    // Services.ww.unregisterNotification(winObserver);
     mutObserver.disconnect();
   });
 }

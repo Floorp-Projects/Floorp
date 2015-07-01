@@ -1036,7 +1036,7 @@ add_task(function* test_dailyOverdue() {
 
   // Simulate an overdue ping: we're not close to midnight, but the last daily ping
   // time is too long ago.
-  let dailyOverdue = new Date(2030, 1, 2, 13, 00, 0);
+  let dailyOverdue = new Date(2030, 1, 2, 13, 0, 0);
   fakeNow(dailyOverdue);
 
   // Run a scheduler tick: it should trigger the daily ping.
@@ -1446,7 +1446,7 @@ add_task(function* test_abortedDailyCoalescing() {
   let schedulerTickCallback = null;
   gRequestIterator = Iterator(new Request());
 
-  let nowDate = new Date(2009, 10, 18, 00, 00, 0);
+  let nowDate = new Date(2009, 10, 18, 0, 0, 0);
   fakeNow(nowDate);
 
   // Fake scheduler functions to control aborted-session flow in tests.
@@ -1498,7 +1498,7 @@ add_task(function* test_schedulerComputerSleep() {
   yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
 
   // Set a fake current date and start Telemetry.
-  let nowDate = new Date(2009, 10, 18, 0, 00, 0);
+  let nowDate = new Date(2009, 10, 18, 0, 0, 0);
   fakeNow(nowDate);
   let schedulerTickCallback = null;
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
@@ -1538,7 +1538,7 @@ add_task(function* test_schedulerEnvironmentReschedules() {
   gRequestIterator = Iterator(new Request());
 
   // Set a fake current date and start Telemetry.
-  let nowDate = new Date(2060, 10, 18, 0, 00, 0);
+  let nowDate = new Date(2060, 10, 18, 0, 0, 0);
   fakeNow(nowDate);
   let schedulerTickCallback = null;
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});

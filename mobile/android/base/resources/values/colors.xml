@@ -58,9 +58,6 @@
   <!-- highlight on private nav button: 20% white over private_toolbar_grey -->
   <color name="highlight_nav_pb">#FF545654</color>
 
-  <!-- highlight-focused on private nav button: 10% white over private_toolbar_grey -->
-  <color name="highlight_nav_focused_pb">#FF3F423F</color>
-
   <color name="dark_transparent_overlay">#99000000</color>
 
   <!-- Firstrun tour-->
@@ -70,7 +67,6 @@
   <!-- Tab Queue -->
   <color name="tab_queue_dismiss_button_foreground">#16A3DF</color>
   <color name="tab_queue_dismiss_button_foreground_pressed">#1193CB</color>
-  <color name="tab_queue_background">#16A3DF</color>
 
   <!--
       Application theme colors
@@ -80,7 +76,6 @@
 
   <!-- Default inverse colors -->
   <color name="text_color_secondary_inverse">#DDDDDD</color>
-  <color name="text_color_tertiary_inverse">#A4A7A9</color>
 
   <!-- Disabled colors -->
   <color name="text_color_primary_disable_only">#999999</color>
@@ -98,20 +93,11 @@
 
   <!-- Divider colors -->
   <color name="divider_light">#FFD7D9DB</color>
-  <color name="divider_dark">#FFB3C2CE</color>
-
-  <color name="splash_background">#000000</color>
-  <color name="splash_msgfont">#ffffff</color>
-  <color name="splash_urlfont">#000000</color>
-  <color name="splash_content">#ffffff</color>
 
   <color name="doorhanger_link">#FF2AA1FE</color>
-  <color name="doorhanger_background_dark">#FFDDE4EA</color>
 
   <color name="validation_message_text">#ffffff</color>
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
-  <color name="suggestion_primary">#dddddd</color>
-  <color name="suggestion_pressed">#bbbbbb</color>
   <color name="tab_row_pressed">#4D000000</color>
 
   <color name="textbox_background">#FFF</color>
@@ -133,12 +119,6 @@
   <!-- Swipe to refresh colors for dynamic panel -->
   <color name="swipe_refresh_orange">#FFFFC26C</color>
   <color name="swipe_refresh_white">#FFFFFFFF</color>
-
-  <!-- Swipe to refresh colors for remote tabs -->
-  <color name="swipe_refresh_orange1">#EE6700</color>
-  <color name="swipe_refresh_orange2">#FF9400</color>
-  <color name="swipe_refresh_orange3">#F57900</color>
-  <color name="swipe_refresh_orange4">#FFB44C</color>
 
   <!-- Remote tabs setup -->
   <color name="remote_tabs_setup_button_background_hit">#D95300</color>
