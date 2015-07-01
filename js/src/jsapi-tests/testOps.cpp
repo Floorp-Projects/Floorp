@@ -57,7 +57,7 @@ BEGIN_TEST(testOps_bug559006)
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunctionName(cx, global, "main", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK_SAME(rval, INT_TO_JSVAL(123));
+        CHECK(rval.isInt32(123));
     }
     return true;
 }

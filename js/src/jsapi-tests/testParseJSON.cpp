@@ -48,13 +48,13 @@ BEGIN_TEST(testParseJSON_success)
     expected = JS::NullValue();
     CHECK(TryParse(cx, "null", expected));
 
-    expected = INT_TO_JSVAL(0);
+    expected.setInt32(0);
     CHECK(TryParse(cx, "0", expected));
 
-    expected = INT_TO_JSVAL(1);
+    expected.setInt32(1);
     CHECK(TryParse(cx, "1", expected));
 
-    expected = INT_TO_JSVAL(-1);
+    expected.setInt32(-1);
     CHECK(TryParse(cx, "-1", expected));
 
     expected = DOUBLE_TO_JSVAL(1);
@@ -130,7 +130,7 @@ BEGIN_TEST(testParseJSON_success)
     obj = &v.toObject();
     CHECK(!JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "f", &v2));
-    CHECK_SAME(v2, INT_TO_JSVAL(17));
+    CHECK(v2.isInt32(17));
 
     return true;
 }
