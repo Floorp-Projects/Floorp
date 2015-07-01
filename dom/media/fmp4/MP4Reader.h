@@ -118,7 +118,7 @@ private:
   bool IsSupportedVideoMimeType(const nsACString& aMimeType);
   virtual bool IsWaitingOnCDMResource() override;
 
-  Microseconds GetNextKeyframeTime();
+  mp4_demuxer::Microseconds GetNextKeyframeTime();
   bool ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   size_t SizeOfQueue(TrackType aTrack);
