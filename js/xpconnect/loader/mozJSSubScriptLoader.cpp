@@ -129,7 +129,8 @@ PrepareScript(nsIURI* uri,
               MutableHandleFunction function)
 {
     JS::CompileOptions options(cx);
-    options.setFileAndLine(uriStr, 1);
+    options.setFileAndLine(uriStr, 1)
+           .setVersion(JSVERSION_LATEST);
     if (!charset.IsVoid()) {
         char16_t* scriptBuf = nullptr;
         size_t scriptLength = 0;
