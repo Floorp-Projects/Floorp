@@ -1668,7 +1668,7 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       }
     }
 
-    if (!domainInfo->ActiveWorkerCount()) {
+    if (domainInfo->HasNoWorkers()) {
       MOZ_ASSERT(domainInfo->mQueuedWorkers.IsEmpty());
       mDomainMap.Remove(domain);
     }
