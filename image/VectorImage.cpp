@@ -27,6 +27,7 @@
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "nsWindowMemoryReporter.h"
 #include "ImageRegion.h"
+#include "LookupResult.h"
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
 #include "nsIDOMEventListener.h"
@@ -829,18 +830,18 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::SUCCESS;
   }
 
-  DrawableFrameRef frameRef =
+  LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
                          VectorSurfaceKey(params.size,
                                           params.svgContext,
                                           params.animationTime));
 
   // Draw.
-  if (frameRef) {
-    RefPtr<SourceSurface> surface = frameRef->GetSurface();
+  if (result) {
+    RefPtr<SourceSurface> surface = result.DrawableRef()->GetSurface();
     if (surface) {
       nsRefPtr<gfxDrawable> svgDrawable =
-        new gfxSurfaceDrawable(surface, frameRef->GetSize());
+        new gfxSurfaceDrawable(surface, result.DrawableRef()->GetSize());
       Show(svgDrawable, params);
       return DrawResult::SUCCESS;
     }
