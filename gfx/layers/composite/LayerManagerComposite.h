@@ -56,7 +56,6 @@ class ImageLayerComposite;
 class LayerComposite;
 class RefLayerComposite;
 class PaintedLayerComposite;
-class TiledLayerComposer;
 class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
@@ -378,8 +377,6 @@ public:
   virtual CompositableHost* GetCompositableHost() = 0;
 
   virtual void CleanupResources() = 0;
-
-  virtual TiledLayerComposer* GetTiledLayerComposer() { return nullptr; }
 
   virtual void DestroyFrontBuffer() { }
 

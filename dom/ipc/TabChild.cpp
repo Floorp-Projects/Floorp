@@ -20,6 +20,7 @@
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/plugins/PluginWidgetChild.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
@@ -2196,6 +2197,20 @@ bool TabChild::RecvParentActivated(const bool& aActivated)
 
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(WebNavigation());
   fm->ParentActivated(window, aActivated);
+  return true;
+}
+
+bool
+TabChild::RecvStopIMEStateManagement()
+{
+  IMEStateManager::StopIMEStateManagement();
+  return true;
+}
+
+bool
+TabChild::RecvMenuKeyboardListenerInstalled(const bool& aInstalled)
+{
+  IMEStateManager::OnInstalledMenuKeyboardListener(aInstalled);
   return true;
 }
 

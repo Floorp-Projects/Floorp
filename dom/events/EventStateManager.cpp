@@ -3385,7 +3385,7 @@ EventStateManager::RemoteQueryContentEvent(WidgetEvent* aEvent)
 TabParent*
 EventStateManager::GetCrossProcessTarget()
 {
-  return TabParent::GetIMETabParent();
+  return IMEStateManager::GetActiveTabParent();
 }
 
 bool
@@ -3396,7 +3396,7 @@ EventStateManager::IsTargetCrossProcess(WidgetGUIEvent* aEvent)
   nsIContent *focusedContent = GetFocusedContent();
   if (focusedContent && focusedContent->IsEditable())
     return false;
-  return TabParent::GetIMETabParent() != nullptr;
+  return IMEStateManager::GetActiveTabParent() != nullptr;
 }
 
 void
