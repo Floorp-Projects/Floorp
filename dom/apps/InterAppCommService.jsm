@@ -241,6 +241,7 @@ this.InterAppCommService = {
             " aDescription: " + aDescription +
             " aRules.minimumAccessLevel: " + aRules.minimumAccessLevel +
             " aRules.manifestURLs: " + aRules.manifestURLs +
+            " aRules.pageURLs: " + aRules.pageURLs +
             " aRules.installOrigins: " + aRules.installOrigins);
     }
 
@@ -316,6 +317,35 @@ this.InterAppCommService = {
     return false;
   },
 
+  _matchPageURLs: function(aRules, aPageURL) {
+
+    if (!aRules || !aRules.pageURLs) {
+      if (DEBUG) {
+        debug("rules.pageURLs is not available. No need to match.");
+      }
+      return true;
+    }
+
+    if (!Array.isArray(aRules.pageURLs)) {
+      aRules.pageURLs = [aRules.pageURLs];
+    }
+
+    let pageURLs = aRules.pageURLs;
+    let isAllowed = false;
+    for (let i = 0, li = pageURLs.length; i < li && !isAllowed ; i++) {
+      let regExpAllowedURL = new RegExp(pageURLs[i]);
+      isAllowed = regExpAllowedURL.test(aPageURL);
+    }
+
+    if (DEBUG) {
+      debug("rules.pageURLs is " + (isAllowed ? "" : "not") + " matched!" +
+            " pageURLs: " + pageURLs +
+            " aPageURL: " + aPageURL);
+    }
+
+    return isAllowed;
+  },
+
   _matchInstallOrigins: function(aRules, aInstallOrigin) {
     if (!aRules || !Array.isArray(aRules.installOrigins)) {
       if (DEBUG) {
@@ -337,8 +367,28 @@ this.InterAppCommService = {
     return false;
   },
 
+  // A connection is allowed if all the rules are matched.
+  // The publisher is matched against the rules defined by the subscriber on the
+  // manifest, and the subscriber is matched against the rules defined by the
+  // publisher on the call to connect.
+  // The possible rules for both subscribers and publishers are:
+  //  * minimumAccessLevel: "privileged"|"certified"|"web"|undefined
+  //     The default (non existant or undefined value) is "certified".
+  //     That means that if an explicit minimumAccessLevel rule does not
+  //     exist then the peer of the connection *must* be a certified app.
+  //  * pageURLs: Array of regExp of URLs. If the value exists, only the pages
+  //     whose URLs are explicitly declared on the array (matched) can connect.
+  //     Otherwise all pages can connect
+  //  * installOrigins: Array of origin URLs. If the value exist, only the apps
+  //    whose origins are on the array can connect. Otherwise, all origins are
+  //    allowed. This is only checked for non certified apps!
+  // The default value (empty or non existant rules) is:
+  //   * Only certified apps can connect
+  //   * Any originator/receiving page URLs are valid
+  //   * Any origin is valid.
   _matchRules: function(aPubAppManifestURL, aPubRules,
-                        aSubAppManifestURL, aSubRules) {
+                        aSubAppManifestURL, aSubRules,
+                        aPubPageURL, aSubPageURL) {
     let pubApp = appsService.getAppByManifestURL(aPubAppManifestURL);
     let subApp = appsService.getAppByManifestURL(aSubAppManifestURL);
 
@@ -348,16 +398,30 @@ this.InterAppCommService = {
     let isSubAppCertified =
       (subApp.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED);
 
-    // TODO Bug 907068 In the initiative step, we only expose this API to
-    // certified apps to meet the time line. Eventually, we need to make
-    // it available for the non-certified apps as well. For now, only the
-    // certified apps can match the rules.
+#ifndef NIGHTLY_BUILD
+
     if (!isPubAppCertified || !isSubAppCertified) {
       if (DEBUG) {
         debug("Only certified apps are allowed to do connections.");
       }
       return false;
     }
+
+#else
+
+    let numSubRules =  (aSubRules && Object.keys(aSubRules).length) || 0;
+    let numPubRules =  (aPubRules && Object.keys(aPubRules).length) || 0;
+
+    if ((!isSubAppCertified && !numPubRules) ||
+        (!isPubAppCertified && !numSubRules)) {
+      if (DEBUG) {
+        debug("If there aren't rules defined only certified apps are allowed " +
+              "to do connections.");
+      }
+      return false;
+    }
+
+#endif
 
     if (!aPubRules && !aSubRules) {
       if (DEBUG) {
@@ -375,6 +439,12 @@ this.InterAppCommService = {
     // Check manifestURLs.
     if (!this._matchManifestURLs(aPubRules, aSubAppManifestURL) ||
         !this._matchManifestURLs(aSubRules, aPubAppManifestURL)) {
+      return false;
+    }
+
+    // Check pageURLs.
+    if (!this._matchPageURLs(aPubRules, aSubPageURL) ||
+        !this._matchPageURLs(aSubRules, aPubPageURL)) {
       return false;
     }
 
@@ -570,7 +640,8 @@ this.InterAppCommService = {
 
       let matched =
         this._matchRules(pubAppManifestURL, pubRules,
-                         subAppManifestURL, subRules);
+                         subAppManifestURL, subRules,
+                         pubPageURL, subscribedInfo.pageURL);
       if (!matched) {
         if (DEBUG) {
           debug("Rules are not matched. Skipping: " + subAppManifestURL);
