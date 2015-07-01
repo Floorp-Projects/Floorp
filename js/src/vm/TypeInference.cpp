@@ -3289,8 +3289,10 @@ JSScript::makeTypes(JSContext* cx)
 
     TypeScript* typeScript = (TypeScript*)
         zone()->pod_calloc<uint8_t>(TypeScript::SizeIncludingTypeArray(count));
-    if (!typeScript)
+    if (!typeScript) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     types_ = typeScript;
     setTypesGeneration(cx->zone()->types.generation);
@@ -3543,8 +3545,10 @@ TypeNewScript::makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
     size_t initializerLength = cursor - newScript->initializerList + 1;
 
     nativeNewScript->initializerList = cx->zone()->pod_calloc<Initializer>(initializerLength);
-    if (!nativeNewScript->initializerList)
+    if (!nativeNewScript->initializerList) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
     PodCopy(nativeNewScript->initializerList, newScript->initializerList, initializerLength);
 
     return nativeNewScript.forget();
@@ -3751,8 +3755,10 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
             return false;
 
         initializerList = group->zone()->pod_calloc<Initializer>(initializerVector.length());
-        if (!initializerList)
+        if (!initializerList) {
+            ReportOutOfMemory(cx);
             return false;
+        }
         PodCopy(initializerList, initializerVector.begin(), initializerVector.length());
     }
 

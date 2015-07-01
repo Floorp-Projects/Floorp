@@ -1916,8 +1916,10 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
              */
             if (!pc->funcStmts) {
                 pc->funcStmts = alloc.new_<FuncStmtSet>(alloc);
-                if (!pc->funcStmts || !pc->funcStmts->init())
+                if (!pc->funcStmts || !pc->funcStmts->init()) {
+                    ReportOutOfMemory(context);
                     return false;
+                }
             }
             if (!pc->funcStmts->put(funName))
                 return false;
