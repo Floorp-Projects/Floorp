@@ -326,12 +326,12 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.Ldr(w0, MemOperand(masm.GetStackPointer64(), RectifierFrameLayout::offsetOfNumActualArgs()));
     masm.Ldr(x1, MemOperand(masm.GetStackPointer64(), RectifierFrameLayout::offsetOfCalleeToken()));
 
-    // Extract a JSFunction pointer from the callee token.
-    masm.And(x6, x1, Operand(CalleeTokenMask));
-    // XXX Maybe we can use x5 here, to avoid the calculations below
+    // Extract a JSFunction pointer from the callee token and keep the
+    // intermediary to avoid later recalculation.
+    masm.And(x5, x1, Operand(CalleeTokenMask));
 
     // Get the arguments from the function object.
-    masm.Ldrh(x6, MemOperand(x6, JSFunction::offsetOfNargs()));
+    masm.Ldrh(x6, MemOperand(x5, JSFunction::offsetOfNargs()));
 
     static_assert(CalleeToken_FunctionConstructing == 0x1, "Constructing must be low-order bit");
     masm.And(x4, x1, Operand(CalleeToken_FunctionConstructing));
@@ -400,10 +400,8 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
               r1,  // Callee token.
               r6); // Frame descriptor.
 
-    // Didn't we just compute this? Can't we just stick that value in one of our 30 GPR's?
     // Load the address of the code that is getting called.
-    masm.And(x1, x1, Operand(CalleeTokenMask));
-    masm.Ldr(x3, MemOperand(x1, JSFunction::offsetOfNativeOrScript()));
+    masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
     masm.loadBaselineOrIonRaw(r3, r3, nullptr);
     masm.call(r3);
     uint32_t returnOffset = masm.currentOffset();
