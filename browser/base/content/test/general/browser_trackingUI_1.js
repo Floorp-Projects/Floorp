@@ -27,9 +27,18 @@ function hidden(sel) {
   return display === "none";
 }
 
+function clickButton(sel) {
+  let win = gBrowser.ownerGlobal;
+  let el = win.document.querySelector(sel);
+  el.doCommand();
+}
+
 function testBenignPage() {
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
+
+  ok (hidden("#tracking-action-block"), "blockButton is hidden");
+  ok (hidden("#tracking-action-unblock"), "unblockButton is hidden");
 
   // Make sure that the no tracking elements message appears
   ok (!hidden("#tracking-not-detected"), "labelNoTracking is visible");
@@ -41,6 +50,9 @@ function testTrackingPage() {
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (TrackingProtection.content.hasAttribute("block-active"), "blocking is active");
 
+  ok (hidden("#tracking-action-block"), "blockButton is hidden");
+  ok (!hidden("#tracking-action-unblock"), "unblockButton is visible");
+
   // Make sure that the blocked tracking elements message appears
   ok (hidden("#tracking-not-detected"), "labelNoTracking is hidden");
   ok (hidden("#tracking-loaded"), "labelTrackingLoaded is hidden");
@@ -50,6 +62,9 @@ function testTrackingPage() {
 function testTrackingPageWhitelisted() {
   ok (TrackingProtection.content.hasAttribute("block-disabled"), "blocking is disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
+
+  ok (!hidden("#tracking-action-block"), "blockButton is visible");
+  ok (hidden("#tracking-action-unblock"), "unblockButton is hidden");
 
   // Make sure that the blocked tracking elements message appears
   ok (hidden("#tracking-not-detected"), "labelNoTracking is hidden");
@@ -82,7 +97,7 @@ add_task(function* () {
   testTrackingPage();
 
   info("Disable Tracking Content Protection for the page (which reloads the page)");
-  TrackingProtection.disableForCurrentPage();
+  clickButton("#tracking-action-unblock");
 
   info("Wait for tab to reload following tracking-protection page white-listing");
   yield promiseTabLoadEvent(tab);
@@ -91,7 +106,7 @@ add_task(function* () {
   testTrackingPageWhitelisted();
 
   info("Re-enable Tracking Content Protection for the page (which reloads the page)");
-  TrackingProtection.enableForCurrentPage();
+  clickButton("#tracking-action-block");
 
   info("Wait for tab to reload following tracking-protection page white-listing");
   yield promiseTabLoadEvent(tab);
