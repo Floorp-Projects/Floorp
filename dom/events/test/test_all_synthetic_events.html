@@ -436,6 +436,7 @@ const kEventConstructors = {
                                                        },
                                              },
   SpeechSynthesisEvent:                      { create: function (aName, aProps) {
+                                                         aProps.utterance = new SpeechSynthesisUtterance("Hello World");
                                                          return new SpeechSynthesisEvent(aName, aProps);
                                                        },
                                              },
