@@ -444,6 +444,8 @@ public:
   }
 
 private:
+  DrawableFrameRef(const DrawableFrameRef& aOther) = delete;
+
   nsRefPtr<imgFrame> mFrame;
   VolatileBufferPtr<uint8_t> mRef;
 };
@@ -526,6 +528,8 @@ public:
   }
 
 private:
+  RawAccessFrameRef(const RawAccessFrameRef& aOther) = delete;
+
   nsRefPtr<imgFrame> mFrame;
 };
 
