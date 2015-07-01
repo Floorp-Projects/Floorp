@@ -21,4 +21,21 @@
 # error "Atomic operations must be defined for this platform"
 #endif
 
+inline bool
+js::jit::AtomicOperations::isLockfree(int32_t size)
+{
+    // Keep this in sync with visitAtomicIsLockFree() in jit/CodeGenerator.cpp.
+
+    switch (size) {
+      case 1:
+      case 2:
+      case 4:
+        return true;
+      case 8:
+        return AtomicOperations::isLockfree8();
+      default:
+        return false;
+    }
+}
+
 #endif // jit_AtomicOperations_inl_h

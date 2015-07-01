@@ -13,10 +13,13 @@
 #include <stdio.h>
 
 #include "./vpx_config.h"
+#include "./vpx_dsp_rtcd.h"
 
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/mem.h"
 
 #include "vp9/common/vp9_common.h"
+#include "vp9/common/vp9_reconinter.h"
 
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_mcomp.h"
@@ -159,9 +162,9 @@ void vp9_init3smotion_compensation(search_site_config *cfg, int stride) {
       error_per_bit + 4096) >> 13 : 0)
 
 
-// convert motion vector component to offset for svf calc
+// convert motion vector component to offset for sv[a]f calc
 static INLINE int sp(int x) {
-  return (x & 7) << 1;
+  return x & 7;
 }
 
 static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
@@ -301,14 +304,14 @@ static INLINE unsigned int setup_center_error(const MACROBLOCKD *xd,
 #if CONFIG_VP9_HIGHBITDEPTH
   if (second_pred != NULL) {
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-      DECLARE_ALIGNED_ARRAY(16, uint16_t, comp_pred16, 64 * 64);
-      vp9_highbd_comp_avg_pred(comp_pred16, second_pred, w, h, y + offset,
+      DECLARE_ALIGNED(16, uint16_t, comp_pred16[64 * 64]);
+      vpx_highbd_comp_avg_pred(comp_pred16, second_pred, w, h, y + offset,
                                y_stride);
       besterr = vfp->vf(CONVERT_TO_BYTEPTR(comp_pred16), w, src, src_stride,
                         sse1);
     } else {
-      DECLARE_ALIGNED_ARRAY(16, uint8_t, comp_pred, 64 * 64);
-      vp9_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
+      DECLARE_ALIGNED(16, uint8_t, comp_pred[64 * 64]);
+      vpx_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
       besterr = vfp->vf(comp_pred, w, src, src_stride, sse1);
     }
   } else {
@@ -319,8 +322,8 @@ static INLINE unsigned int setup_center_error(const MACROBLOCKD *xd,
 #else
   (void) xd;
   if (second_pred != NULL) {
-    DECLARE_ALIGNED_ARRAY(16, uint8_t, comp_pred, 64 * 64);
-    vp9_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
+    DECLARE_ALIGNED(16, uint8_t, comp_pred[64 * 64]);
+    vpx_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
     besterr = vfp->vf(comp_pred, w, src, src_stride, sse1);
   } else {
     besterr = vfp->vf(y + offset, y_stride, src, src_stride, sse1);
@@ -676,16 +679,14 @@ int vp9_find_best_sub_pixel_tree(const MACROBLOCK *x,
       tc = bc + search_step[idx].col;
       if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
         const uint8_t *const pre_address = y + (tr >> 3) * y_stride + (tc >> 3);
-        int row_offset = (tr & 0x07) << 1;
-        int col_offset = (tc & 0x07) << 1;
         MV this_mv;
         this_mv.row = tr;
         this_mv.col = tc;
         if (second_pred == NULL)
-          thismse = vfp->svf(pre_address, y_stride, col_offset, row_offset,
+          thismse = vfp->svf(pre_address, y_stride, sp(tc), sp(tr),
                              src_address, src_stride, &sse);
         else
-          thismse = vfp->svaf(pre_address, y_stride, col_offset, row_offset,
+          thismse = vfp->svaf(pre_address, y_stride, sp(tc), sp(tr),
                               src_address, src_stride, &sse, second_pred);
         cost_array[idx] = thismse +
             mv_err_cost(&this_mv, ref_mv, mvjcost, mvcost, error_per_bit);
@@ -706,14 +707,12 @@ int vp9_find_best_sub_pixel_tree(const MACROBLOCK *x,
     tr = br + (cost_array[2] < cost_array[3] ? -hstep : hstep);
     if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
       const uint8_t *const pre_address = y + (tr >> 3) * y_stride + (tc >> 3);
-      int row_offset = (tr & 0x07) << 1;
-      int col_offset = (tc & 0x07) << 1;
       MV this_mv = {tr, tc};
       if (second_pred == NULL)
-        thismse = vfp->svf(pre_address, y_stride, col_offset, row_offset,
+        thismse = vfp->svf(pre_address, y_stride, sp(tc), sp(tr),
                            src_address, src_stride, &sse);
       else
-        thismse = vfp->svaf(pre_address, y_stride, col_offset, row_offset,
+        thismse = vfp->svaf(pre_address, y_stride, sp(tc), sp(tr),
                             src_address, src_stride, &sse, second_pred);
       cost_array[4] = thismse +
           mv_err_cost(&this_mv, ref_mv, mvjcost, mvcost, error_per_bit);
@@ -1788,8 +1787,11 @@ static const MV search_pos[4] = {
 };
 
 unsigned int vp9_int_pro_motion_estimation(const VP9_COMP *cpi, MACROBLOCK *x,
-                                           BLOCK_SIZE bsize) {
+                                           BLOCK_SIZE bsize,
+                                           int mi_row, int mi_col) {
   MACROBLOCKD *xd = &x->e_mbd;
+  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
+  struct buf_2d backup_yv12[MAX_MB_PLANE] = {{0, 0}};
   DECLARE_ALIGNED(16, int16_t, hbuf[128]);
   DECLARE_ALIGNED(16, int16_t, vbuf[128]);
   DECLARE_ALIGNED(16, int16_t, src_hbuf[64]);
@@ -1802,16 +1804,38 @@ unsigned int vp9_int_pro_motion_estimation(const VP9_COMP *cpi, MACROBLOCK *x,
   const int src_stride = x->plane[0].src.stride;
   const int ref_stride = xd->plane[0].pre[0].stride;
   uint8_t const *ref_buf, *src_buf;
-  MV *tmp_mv = &xd->mi[0].src_mi->mbmi.mv[0].as_mv;
+  MV *tmp_mv = &xd->mi[0]->mbmi.mv[0].as_mv;
   unsigned int best_sad, tmp_sad, this_sad[4];
   MV this_mv;
   const int norm_factor = 3 + (bw >> 5);
+  const YV12_BUFFER_CONFIG *scaled_ref_frame =
+      vp9_get_scaled_ref_frame(cpi, mbmi->ref_frame[0]);
+
+  if (scaled_ref_frame) {
+    int i;
+    // Swap out the reference frame for a version that's been scaled to
+    // match the resolution of the current frame, allowing the existing
+    // motion search code to be used without additional modifications.
+    for (i = 0; i < MAX_MB_PLANE; i++)
+      backup_yv12[i] = xd->plane[i].pre[0];
+    vp9_setup_pre_planes(xd, 0, scaled_ref_frame, mi_row, mi_col, NULL);
+  }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-  tmp_mv->row = 0;
-  tmp_mv->col = 0;
-  return cpi->fn_ptr[bsize].sdf(x->plane[0].src.buf, src_stride,
-                                xd->plane[0].pre[0].buf, ref_stride);
+  {
+    unsigned int this_sad;
+    tmp_mv->row = 0;
+    tmp_mv->col = 0;
+    this_sad = cpi->fn_ptr[bsize].sdf(x->plane[0].src.buf, src_stride,
+                                      xd->plane[0].pre[0].buf, ref_stride);
+
+    if (scaled_ref_frame) {
+      int i;
+      for (i = 0; i < MAX_MB_PLANE; i++)
+        xd->plane[i].pre[0] = backup_yv12[i];
+    }
+    return this_sad;
+  }
 #endif
 
   // Set up prediction 1-D reference set
@@ -1888,6 +1912,12 @@ unsigned int vp9_int_pro_motion_estimation(const VP9_COMP *cpi, MACROBLOCK *x,
 
   tmp_mv->row *= 8;
   tmp_mv->col *= 8;
+
+  if (scaled_ref_frame) {
+    int i;
+    for (i = 0; i < MAX_MB_PLANE; i++)
+      xd->plane[i].pre[0] = backup_yv12[i];
+  }
 
   return best_sad;
 }
@@ -2017,7 +2047,7 @@ int vp9_full_search_sadx3(const MACROBLOCK *x, const MV *ref_mv,
     if (fn_ptr->sdx3f != NULL) {
       while ((c + 2) < col_max) {
         int i;
-        unsigned int sads[3];
+        DECLARE_ALIGNED(16, uint32_t, sads[3]);
 
         fn_ptr->sdx3f(what->buf, what->stride, check_here, in_what->stride,
                       sads);
@@ -2082,7 +2112,7 @@ int vp9_full_search_sadx8(const MACROBLOCK *x, const MV *ref_mv,
     if (fn_ptr->sdx8f != NULL) {
       while ((c + 7) < col_max) {
         int i;
-        unsigned int sads[8];
+        DECLARE_ALIGNED(16, uint32_t, sads[8]);
 
         fn_ptr->sdx8f(what->buf, what->stride, check_here, in_what->stride,
                       sads);
@@ -2106,7 +2136,7 @@ int vp9_full_search_sadx8(const MACROBLOCK *x, const MV *ref_mv,
     if (fn_ptr->sdx3f != NULL) {
       while ((c + 2) < col_max) {
         int i;
-        unsigned int sads[3];
+        DECLARE_ALIGNED(16, uint32_t, sads[3]);
 
         fn_ptr->sdx3f(what->buf, what->stride, check_here, in_what->stride,
                       sads);

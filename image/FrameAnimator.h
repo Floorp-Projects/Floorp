@@ -128,10 +128,10 @@ public:
 
   /**
    * If we have a composited frame for @aFrameNum, returns it. Otherwise,
-   * returns an empty DrawableFrameRef. It is an error to call this method with
+   * returns an empty LookupResult. It is an error to call this method with
    * aFrameNum == 0, because the first frame is never composited.
    */
-  DrawableFrameRef GetCompositedFrame(uint32_t aFrameNum);
+  LookupResult GetCompositedFrame(uint32_t aFrameNum);
 
   /*
    * Returns the frame's adjusted timeout. If the animation loops and the
