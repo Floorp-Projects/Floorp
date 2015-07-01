@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "./vp9_rtcd.h"
+#include "vpx_ports/mem.h"
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_idct.h"
 #include "vp9/common/vp9_systemdependent.h"
@@ -1276,7 +1277,7 @@ void vp9_idct32x32_1024_add_c(const tran_low_t *input, uint8_t *dest,
     if (zero_coeff[0] | zero_coeff[1])
       idct32(input, outptr);
     else
-      vpx_memset(outptr, 0, sizeof(tran_low_t) * 32);
+      memset(outptr, 0, sizeof(tran_low_t) * 32);
     input += 32;
     outptr += 32;
   }
@@ -1676,7 +1677,7 @@ static void highbd_iadst4(const tran_low_t *input, tran_low_t *output, int bd) {
   (void) bd;
 
   if (!(x0 | x1 | x2 | x3)) {
-    vpx_memset(output, 0, 4 * sizeof(*output));
+    memset(output, 0, 4 * sizeof(*output));
     return;
   }
 
@@ -1752,7 +1753,7 @@ static void highbd_iadst8(const tran_low_t *input, tran_low_t *output, int bd) {
   (void) bd;
 
   if (!(x0 | x1 | x2 | x3 | x4 | x5 | x6 | x7)) {
-    vpx_memset(output, 0, 8 * sizeof(*output));
+    memset(output, 0, 8 * sizeof(*output));
     return;
   }
 
@@ -2095,7 +2096,7 @@ static void highbd_iadst16(const tran_low_t *input, tran_low_t *output,
 
   if (!(x0 | x1 | x2 | x3 | x4 | x5 | x6 | x7 | x8
            | x9 | x10 | x11 | x12 | x13 | x14 | x15)) {
-    vpx_memset(output, 0, 16 * sizeof(*output));
+    memset(output, 0, 16 * sizeof(*output));
     return;
   }
 
@@ -2712,7 +2713,7 @@ void vp9_highbd_idct32x32_1024_add_c(const tran_low_t *input, uint8_t *dest8,
     if (zero_coeff[0] | zero_coeff[1])
       highbd_idct32(input, outptr, bd);
     else
-      vpx_memset(outptr, 0, sizeof(tran_low_t) * 32);
+      memset(outptr, 0, sizeof(tran_low_t) * 32);
     input += 32;
     outptr += 32;
   }

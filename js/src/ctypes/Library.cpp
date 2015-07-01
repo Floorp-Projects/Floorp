@@ -89,7 +89,7 @@ Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
     return nullptr;
 
   // initialize the library
-  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(nullptr));
+  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PrivateValue(nullptr));
 
   // attach API functions
   if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
@@ -166,7 +166,7 @@ Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
 #endif
 
   // stash the library
-  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(library));
+  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PrivateValue(library));
 
   return libraryObj;
 }
@@ -244,7 +244,7 @@ Library::Close(JSContext* cx, unsigned argc, jsval* vp)
 
   // delete our internal objects
   UnloadLibrary(obj);
-  JS_SetReservedSlot(obj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(nullptr));
+  JS_SetReservedSlot(obj, SLOT_LIBRARY, PrivateValue(nullptr));
 
   args.rval().setUndefined();
   return true;

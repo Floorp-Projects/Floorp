@@ -341,6 +341,58 @@
     });
   }
 
+  function testWorker() {
+    return new Promise(function(resolve, reject) {
+      var worker = new Worker("myworker");
+      worker.onmessage = function(e) {
+        if (e.data == "ack") {
+          worker.terminate();
+          resolve();
+        }
+      };
+      worker.onerror = reject;
+    });
+  }
+
+  function testNestedWorker() {
+    return new Promise(function(resolve, reject) {
+      var worker = new Worker("myparentworker");
+      worker.onmessage = function(e) {
+        if (e.data == "ack") {
+          worker.terminate();
+          resolve();
+        }
+      };
+      worker.onerror = reject;
+    });
+  }
+
+  function testSharedWorker() {
+    return new Promise(function(resolve, reject) {
+      var worker = new SharedWorker("mysharedworker");
+      worker.port.start();
+      worker.port.onmessage = function(e) {
+        if (e.data == "ack") {
+          resolve();
+        }
+      };
+      worker.onerror = reject;
+    });
+  }
+
+  function testNestedWorkerInSharedWorker() {
+    return new Promise(function(resolve, reject) {
+      var worker = new SharedWorker("myparentsharedworker");
+      worker.port.start();
+      worker.port.onmessage = function(e) {
+        if (e.data == "ack") {
+          resolve();
+        }
+      };
+      worker.onerror = reject;
+    });
+  }
+
   function testCache() {
     return new Promise(function(resolve, reject) {
       // Issue an XHR that will be intercepted by the SW in order to start off
@@ -383,6 +435,10 @@
     testTrack(),
     testXHR(),
     testXSLT(),
+    testWorker(),
+    testNestedWorker(),
+    testSharedWorker(),
+    testNestedWorkerInSharedWorker(),
 
     // Also, test to see if the type of the request can be persisted in the database.
     testCache(),

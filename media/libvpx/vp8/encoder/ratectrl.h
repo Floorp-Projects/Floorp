@@ -30,6 +30,8 @@ extern void vp8_compute_frame_size_bounds(VP8_COMP *cpi, int *frame_under_shoot_
 /* return of 0 means drop frame */
 extern int vp8_pick_frame_size(VP8_COMP *cpi);
 
+extern int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

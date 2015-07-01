@@ -402,7 +402,8 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
         if (coversWholeImage) {
             tex->SetImageDataStatus(texImageTarget, level, WebGLImageDataStatus::InitializedImageData);
         } else {
-            tex->EnsureNoUninitializedImageData(texImageTarget, level);
+            if (!tex->EnsureInitializedImageData(texImageTarget, level))
+                return;
         }
     }
 

@@ -58,15 +58,20 @@ PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
 
-static const char* const gPlayStateStr[] = {
-  "START",
-  "LOADING",
-  "PAUSED",
-  "PLAYING",
-  "SEEKING",
-  "ENDED",
-  "SHUTDOWN"
-};
+static const char*
+ToPlayStateStr(MediaDecoder::PlayState aState)
+{
+  switch (aState) {
+    case MediaDecoder::PLAY_STATE_START:    return "START";
+    case MediaDecoder::PLAY_STATE_LOADING:  return "LOADING";
+    case MediaDecoder::PLAY_STATE_PAUSED:   return "PAUSED";
+    case MediaDecoder::PLAY_STATE_PLAYING:  return "PLAYING";
+    case MediaDecoder::PLAY_STATE_ENDED:    return "ENDED";
+    case MediaDecoder::PLAY_STATE_SHUTDOWN: return "SHUTDOWN";
+    default: MOZ_ASSERT_UNREACHABLE("Invalid playState.");
+  }
+  return "UNKNOWN";
+}
 
 class MediaMemoryTracker : public nsIMemoryReporter
 {
@@ -136,7 +141,7 @@ MediaDecoder::InitStatics()
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
 
-NS_IMPL_ISUPPORTS(MediaDecoder, nsIObserver)
+NS_IMPL_ISUPPORTS0(MediaDecoder)
 
 void MediaDecoder::NotifyOwnerActivityChanged()
 {
@@ -807,18 +812,6 @@ void MediaDecoder::PlaybackEnded()
   }
 }
 
-NS_IMETHODIMP MediaDecoder::Observe(nsISupports *aSubjet,
-                                        const char *aTopic,
-                                        const char16_t *someData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    Shutdown();
-  }
-
-  return NS_OK;
-}
-
 MediaDecoder::Statistics
 MediaDecoder::GetStatistics()
 {
@@ -1019,7 +1012,7 @@ void MediaDecoder::ChangeState(PlayState aState)
   }
 
   DECODER_LOG("ChangeState %s => %s",
-              gPlayStateStr[mPlayState], gPlayStateStr[aState]);
+              ToPlayStateStr(mPlayState), ToPlayStateStr(aState));
   mPlayState = aState;
 
   if (mPlayState == PLAY_STATE_PLAYING) {

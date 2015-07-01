@@ -1189,7 +1189,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                     goto pre_call_clean_up;
                 }
             }
-            *sp++ = OBJECT_TO_JSVAL(out_obj);
+            *sp++ = JS::ObjectValue(*out_obj);
         } else
             *sp++ = val;
     }

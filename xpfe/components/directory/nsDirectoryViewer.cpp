@@ -254,7 +254,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
                  "unable to get jsobj from xpconnect wrapper");
     if (!jsobj) return NS_ERROR_UNEXPECTED;
 
-    JS::Rooted<JS::Value> jslistener(cx, OBJECT_TO_JSVAL(jsobj));
+    JS::Rooted<JS::Value> jslistener(cx, JS::ObjectValue(*jsobj));
 
     // ...and stuff it into the global context
     bool ok = JS_SetProperty(cx, global, "HTTPIndex", jslistener);

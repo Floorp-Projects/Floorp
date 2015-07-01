@@ -50,6 +50,8 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 /**
  * A fragment that displays the status of an AndroidFxAccount.
@@ -140,13 +142,11 @@ public class FxAccountStatusFragment
   // Runnable to update last synced time.
   protected Runnable lastSyncedTimeUpdateRunnable;
 
-  // Runnable to retry fetching profile information.
-  protected Runnable profileFetchRunnable;
-
   // Broadcast Receiver to update profile Information.
   protected FxAccountProfileInformationReceiver accountProfileInformationReceiver;
 
   protected final InnerSyncStatusDelegate syncStatusDelegate = new InnerSyncStatusDelegate();
+  private Target profileAvatarTarget;
 
   protected Preference ensureFindPreference(String key) {
     Preference preference = findPreference(key);
@@ -485,6 +485,18 @@ public class FxAccountStatusFragment
     // register/unregister calls.
     FxAccountSyncStatusHelper.getInstance().startObserving(syncStatusDelegate);
 
+    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      // Register a local broadcast receiver to get profile cached notification.
+      final IntentFilter intentFilter = new IntentFilter();
+      intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);
+      accountProfileInformationReceiver = new FxAccountProfileInformationReceiver();
+      LocalBroadcastManager.getInstance(getActivity()).registerReceiver(accountProfileInformationReceiver, intentFilter);
+
+      // profilePreference is set during onCreate, so it's definitely not null here.
+      final float cornerRadius = getResources().getDimension(R.dimen.fxaccount_profile_image_width) / 2;
+      profileAvatarTarget = new PicassoPreferenceIconTarget(getResources(), profilePreference, cornerRadius);
+    }
+
     refresh();
   }
 
@@ -498,13 +510,14 @@ public class FxAccountStatusFragment
       handler.removeCallbacks(lastSyncedTimeUpdateRunnable);
     }
 
-    if (profileFetchRunnable != null) {
-      handler.removeCallbacks(profileFetchRunnable);
-    }
-
     // Focus lost, unregister broadcast receiver.
     if (accountProfileInformationReceiver != null) {
       LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(accountProfileInformationReceiver);
+    }
+
+    if (profileAvatarTarget != null) {
+      Picasso.with(getActivity()).cancelRequest(profileAvatarTarget);
+      profileAvatarTarget = null;
     }
   }
 
@@ -606,53 +619,60 @@ public class FxAccountStatusFragment
       return;
     }
 
-    final ExtendedJSONObject cachedProfileJSON = fxAccount.getCachedProfileJSON();
-    if (cachedProfileJSON != null) {
-      // Update profile information from the cached Json.
-      updateProfileInformation(cachedProfileJSON);
+    final ExtendedJSONObject profileJSON = fxAccount.getProfileJSON();
+    if (profileJSON == null) {
+      // Update the profile title with email as the fallback.
+      // Profile icon by default use the default avatar as the fallback.
+      profilePreference.setTitle(fxAccount.getEmail());
       return;
     }
 
-    // Update the profile title with email as the fallback.
-    // Profile icon by default use the default avatar as the fallback.
-    profilePreference.setTitle(fxAccount.getEmail());
-
-    // Register a local broadcast receiver to get profile cached notification.
-    final IntentFilter intentFilter = new IntentFilter();
-    intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION);
-    accountProfileInformationReceiver = new FxAccountProfileInformationReceiver();
-    LocalBroadcastManager.getInstance(getActivity()).registerReceiver(accountProfileInformationReceiver, intentFilter);
-
-    // Fetch the profile from the server.
-    fxAccount.maybeUpdateProfileJSON(false);
-
-    // Schedule an runnable to retry fetching profile.
-    profileFetchRunnable = new ProfileFetchUpdateRunnable();
-    handler.postDelayed(profileFetchRunnable, PROFILE_FETCH_RETRY_INTERVAL_IN_MILLISECONDS);
+    updateProfileInformation(profileJSON);
   }
 
   /**
    * Update profile information from json on UI thread.
    *
-   * @param profileJson json fetched from server.
+   * @param profileJSON json fetched from server.
    */
-  protected void updateProfileInformation(final ExtendedJSONObject profileJson) {
-    // Remove the scheduled runnable for fetching the profile information.
-    if (profileFetchRunnable != null) {
-      handler.removeCallbacks(profileFetchRunnable);
+  protected void updateProfileInformation(final ExtendedJSONObject profileJSON) {
+    // View changes must always be done on UI thread.
+    ThreadUtils.assertOnUiThread();
+
+    FxAccountUtils.pii(LOG_TAG, "Profile JSON is: " + profileJSON.toJSONString());
+
+    final String userName = profileJSON.getString(FxAccountConstants.KEY_PROFILE_JSON_USERNAME);
+    // Update the profile username and email if available.
+    if (!TextUtils.isEmpty(userName)) {
+      profilePreference.setTitle(userName);
+      profilePreference.setSummary(fxAccount.getEmail());
+    } else {
+      profilePreference.setTitle(fxAccount.getEmail());
     }
 
-    // Read the profile information from json and Update the UI elements.
-    ThreadUtils.postToUiThread(new Runnable() {
-      @Override
-      public void run() {
-        // Icon update from java is not supported prior to API 11, skip the avatar update for older device.
-        if (AppConstants.Versions.feature11Plus) {
-          profilePreference.setIcon(getResources().getDrawable(R.drawable.sync_avatar_default));
-        }
-        profilePreference.setTitle(fxAccount.getAndroidAccount().name);
-      }
-    });
+    // Icon update from java is not supported prior to API 11, skip the avatar image fetch and update for older device.
+    if (!AppConstants.Versions.feature11Plus) {
+      Logger.info(LOG_TAG, "Skipping profile image fetch for older pre-API 11 devices.");
+      return;
+    }
+
+    // Avatar URI empty, skip profile image fetch.
+    final String avatarURI = profileJSON.getString(FxAccountConstants.KEY_PROFILE_JSON_AVATAR);
+    if (TextUtils.isEmpty(avatarURI)) {
+      Logger.info(LOG_TAG, "AvatarURI is empty, skipping profile image fetch.");
+      return;
+    }
+
+    // Using noPlaceholder would avoid a pop of the default image, but it's not available in the version of Picasso
+    // we ship in the tree.
+    Picasso
+        .with(getActivity())
+        .load(avatarURI)
+        .centerInside()
+        .resizeDimen(R.dimen.fxaccount_profile_image_width, R.dimen.fxaccount_profile_image_height)
+        .placeholder(R.drawable.sync_avatar_default)
+        .error(R.drawable.sync_avatar_default)
+        .into(profileAvatarTarget);
   }
 
   private void scheduleAndUpdateLastSyncedTime() {
@@ -831,25 +851,23 @@ public class FxAccountStatusFragment
   }
 
   /**
-   * The Runnable that schedules a future to fetch profile information.
-   */
-  protected class ProfileFetchUpdateRunnable implements Runnable  {
-    @Override
-    public void run() {
-      updateProfileInformation();
-    }
-  }
-
-  /**
    * Broadcast receiver to receive updates for the cached profile action.
    */
   public class FxAccountProfileInformationReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-      if (intent.getAction().equals(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION)) {
-        // We should have a cached profile json here.
-        updateProfileInformation(fxAccount.getCachedProfileJSON());
+      if (!intent.getAction().equals(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION)) {
+        return;
       }
+
+      Logger.info(LOG_TAG, "Profile avatar cache update action broadcast received.");
+      // Update the UI from cached profile json on the main thread.
+      getActivity().runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          updateProfileInformation();
+        }
+      });
     }
   }
 

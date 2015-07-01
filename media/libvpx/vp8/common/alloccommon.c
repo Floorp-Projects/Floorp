@@ -10,6 +10,7 @@
 
 
 #include "vpx_config.h"
+#include "alloccommon.h"
 #include "blockd.h"
 #include "vpx_mem/vpx_mem.h"
 #include "onyxc_int.h"
@@ -103,9 +104,9 @@ int vp8_alloc_frame_buffers(VP8_COMMON *oci, int width, int height)
         goto allocation_fail;
 
     oci->post_proc_buffer_int_used = 0;
-    vpx_memset(&oci->postproc_state, 0, sizeof(oci->postproc_state));
-    vpx_memset(oci->post_proc_buffer.buffer_alloc, 128,
-               oci->post_proc_buffer.frame_size);
+    memset(&oci->postproc_state, 0, sizeof(oci->postproc_state));
+    memset(oci->post_proc_buffer.buffer_alloc, 128,
+           oci->post_proc_buffer.frame_size);
 
     /* Allocate buffer to store post-processing filter coefficients.
      *
@@ -176,7 +177,7 @@ void vp8_create_common(VP8_COMMON *oci)
     oci->clamp_type = RECON_CLAMP_REQUIRED;
 
     /* Initialize reference frame sign bias structure to defaults */
-    vpx_memset(oci->ref_frame_sign_bias, 0, sizeof(oci->ref_frame_sign_bias));
+    memset(oci->ref_frame_sign_bias, 0, sizeof(oci->ref_frame_sign_bias));
 
     /* Default disable buffer to buffer copying */
     oci->copy_buffer_to_gf = 0;

@@ -357,7 +357,7 @@ void CleanupOSFileConstants()
  * Produces a |ConstantSpec|.
  */
 #define INT_CONSTANT(name)      \
-  { #name, INT_TO_JSVAL(name) }
+  { #name, JS::Int32Value(name) }
 
 /**
  * Define a simple read-only property holding an unsigned integer.
@@ -576,94 +576,94 @@ static const dom::ConstantSpec gLibcProperties[] =
 
 #if defined(XP_UNIX)
   // The size of |mode_t|.
-  { "OSFILE_SIZEOF_MODE_T", INT_TO_JSVAL(sizeof (mode_t)) },
+  { "OSFILE_SIZEOF_MODE_T", JS::Int32Value(sizeof (mode_t)) },
 
   // The size of |gid_t|.
-  { "OSFILE_SIZEOF_GID_T", INT_TO_JSVAL(sizeof (gid_t)) },
+  { "OSFILE_SIZEOF_GID_T", JS::Int32Value(sizeof (gid_t)) },
 
   // The size of |uid_t|.
-  { "OSFILE_SIZEOF_UID_T", INT_TO_JSVAL(sizeof (uid_t)) },
+  { "OSFILE_SIZEOF_UID_T", JS::Int32Value(sizeof (uid_t)) },
 
   // The size of |time_t|.
-  { "OSFILE_SIZEOF_TIME_T", INT_TO_JSVAL(sizeof (time_t)) },
+  { "OSFILE_SIZEOF_TIME_T", JS::Int32Value(sizeof (time_t)) },
 
   // The size of |fsblkcnt_t|.
-  { "OSFILE_SIZEOF_FSBLKCNT_T", INT_TO_JSVAL(sizeof (fsblkcnt_t)) },
+  { "OSFILE_SIZEOF_FSBLKCNT_T", JS::Int32Value(sizeof (fsblkcnt_t)) },
 
 #if !defined(ANDROID)
   // The size of |posix_spawn_file_actions_t|.
-  { "OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T", INT_TO_JSVAL(sizeof (posix_spawn_file_actions_t)) },
+  { "OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T", JS::Int32Value(sizeof (posix_spawn_file_actions_t)) },
 #endif // !defined(ANDROID)
 
   // Defining |dirent|.
   // Size
-  { "OSFILE_SIZEOF_DIRENT", INT_TO_JSVAL(sizeof (dirent)) },
+  { "OSFILE_SIZEOF_DIRENT", JS::Int32Value(sizeof (dirent)) },
 
   // Defining |flock|.
 #if defined(XP_UNIX)
-  { "OSFILE_SIZEOF_FLOCK", INT_TO_JSVAL(sizeof (struct flock)) },
-  { "OSFILE_OFFSETOF_FLOCK_L_START", INT_TO_JSVAL(offsetof (struct flock, l_start)) },
-  { "OSFILE_OFFSETOF_FLOCK_L_LEN", INT_TO_JSVAL(offsetof (struct flock, l_len)) },
-  { "OSFILE_OFFSETOF_FLOCK_L_PID", INT_TO_JSVAL(offsetof (struct flock, l_pid)) },
-  { "OSFILE_OFFSETOF_FLOCK_L_TYPE", INT_TO_JSVAL(offsetof (struct flock, l_type)) },
-  { "OSFILE_OFFSETOF_FLOCK_L_WHENCE", INT_TO_JSVAL(offsetof (struct flock, l_whence)) },
+  { "OSFILE_SIZEOF_FLOCK", JS::Int32Value(sizeof (struct flock)) },
+  { "OSFILE_OFFSETOF_FLOCK_L_START", JS::Int32Value(offsetof (struct flock, l_start)) },
+  { "OSFILE_OFFSETOF_FLOCK_L_LEN", JS::Int32Value(offsetof (struct flock, l_len)) },
+  { "OSFILE_OFFSETOF_FLOCK_L_PID", JS::Int32Value(offsetof (struct flock, l_pid)) },
+  { "OSFILE_OFFSETOF_FLOCK_L_TYPE", JS::Int32Value(offsetof (struct flock, l_type)) },
+  { "OSFILE_OFFSETOF_FLOCK_L_WHENCE", JS::Int32Value(offsetof (struct flock, l_whence)) },
 #endif // defined(XP_UNIX)
   // Offset of field |d_name|.
-  { "OSFILE_OFFSETOF_DIRENT_D_NAME", INT_TO_JSVAL(offsetof (struct dirent, d_name)) },
+  { "OSFILE_OFFSETOF_DIRENT_D_NAME", JS::Int32Value(offsetof (struct dirent, d_name)) },
   // An upper bound to the length of field |d_name| of struct |dirent|.
   // (may not be exact, depending on padding).
-  { "OSFILE_SIZEOF_DIRENT_D_NAME", INT_TO_JSVAL(sizeof (struct dirent) - offsetof (struct dirent, d_name)) },
+  { "OSFILE_SIZEOF_DIRENT_D_NAME", JS::Int32Value(sizeof (struct dirent) - offsetof (struct dirent, d_name)) },
 
   // Defining |timeval|.
-  { "OSFILE_SIZEOF_TIMEVAL", INT_TO_JSVAL(sizeof (struct timeval)) },
-  { "OSFILE_OFFSETOF_TIMEVAL_TV_SEC", INT_TO_JSVAL(offsetof (struct timeval, tv_sec)) },
-  { "OSFILE_OFFSETOF_TIMEVAL_TV_USEC", INT_TO_JSVAL(offsetof (struct timeval, tv_usec)) },
+  { "OSFILE_SIZEOF_TIMEVAL", JS::Int32Value(sizeof (struct timeval)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_SEC", JS::Int32Value(offsetof (struct timeval, tv_sec)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_USEC", JS::Int32Value(offsetof (struct timeval, tv_usec)) },
 
 #if defined(DT_UNKNOWN)
   // Position of field |d_type| in |dirent|
   // Not strictly posix, but seems defined on all platforms
   // except mingw32.
-  { "OSFILE_OFFSETOF_DIRENT_D_TYPE", INT_TO_JSVAL(offsetof (struct dirent, d_type)) },
+  { "OSFILE_OFFSETOF_DIRENT_D_TYPE", JS::Int32Value(offsetof (struct dirent, d_type)) },
 #endif // defined(DT_UNKNOWN)
 
   // Under MacOS X and BSDs, |dirfd| is a macro rather than a
   // function, so we need a little help to get it to work
 #if defined(dirfd)
-  { "OSFILE_SIZEOF_DIR", INT_TO_JSVAL(sizeof (DIR)) },
+  { "OSFILE_SIZEOF_DIR", JS::Int32Value(sizeof (DIR)) },
 
-  { "OSFILE_OFFSETOF_DIR_DD_FD", INT_TO_JSVAL(offsetof (DIR, __dd_fd)) },
+  { "OSFILE_OFFSETOF_DIR_DD_FD", JS::Int32Value(offsetof (DIR, __dd_fd)) },
 #endif
 
   // Defining |stat|
 
-  { "OSFILE_SIZEOF_STAT", INT_TO_JSVAL(sizeof (struct stat)) },
+  { "OSFILE_SIZEOF_STAT", JS::Int32Value(sizeof (struct stat)) },
 
-  { "OSFILE_OFFSETOF_STAT_ST_MODE", INT_TO_JSVAL(offsetof (struct stat, st_mode)) },
-  { "OSFILE_OFFSETOF_STAT_ST_UID", INT_TO_JSVAL(offsetof (struct stat, st_uid)) },
-  { "OSFILE_OFFSETOF_STAT_ST_GID", INT_TO_JSVAL(offsetof (struct stat, st_gid)) },
-  { "OSFILE_OFFSETOF_STAT_ST_SIZE", INT_TO_JSVAL(offsetof (struct stat, st_size)) },
+  { "OSFILE_OFFSETOF_STAT_ST_MODE", JS::Int32Value(offsetof (struct stat, st_mode)) },
+  { "OSFILE_OFFSETOF_STAT_ST_UID", JS::Int32Value(offsetof (struct stat, st_uid)) },
+  { "OSFILE_OFFSETOF_STAT_ST_GID", JS::Int32Value(offsetof (struct stat, st_gid)) },
+  { "OSFILE_OFFSETOF_STAT_ST_SIZE", JS::Int32Value(offsetof (struct stat, st_size)) },
 
 #if defined(HAVE_ST_ATIMESPEC)
-  { "OSFILE_OFFSETOF_STAT_ST_ATIME", INT_TO_JSVAL(offsetof (struct stat, st_atimespec)) },
-  { "OSFILE_OFFSETOF_STAT_ST_MTIME", INT_TO_JSVAL(offsetof (struct stat, st_mtimespec)) },
-  { "OSFILE_OFFSETOF_STAT_ST_CTIME", INT_TO_JSVAL(offsetof (struct stat, st_ctimespec)) },
+  { "OSFILE_OFFSETOF_STAT_ST_ATIME", JS::Int32Value(offsetof (struct stat, st_atimespec)) },
+  { "OSFILE_OFFSETOF_STAT_ST_MTIME", JS::Int32Value(offsetof (struct stat, st_mtimespec)) },
+  { "OSFILE_OFFSETOF_STAT_ST_CTIME", JS::Int32Value(offsetof (struct stat, st_ctimespec)) },
 #else
-  { "OSFILE_OFFSETOF_STAT_ST_ATIME", INT_TO_JSVAL(offsetof (struct stat, st_atime)) },
-  { "OSFILE_OFFSETOF_STAT_ST_MTIME", INT_TO_JSVAL(offsetof (struct stat, st_mtime)) },
-  { "OSFILE_OFFSETOF_STAT_ST_CTIME", INT_TO_JSVAL(offsetof (struct stat, st_ctime)) },
+  { "OSFILE_OFFSETOF_STAT_ST_ATIME", JS::Int32Value(offsetof (struct stat, st_atime)) },
+  { "OSFILE_OFFSETOF_STAT_ST_MTIME", JS::Int32Value(offsetof (struct stat, st_mtime)) },
+  { "OSFILE_OFFSETOF_STAT_ST_CTIME", JS::Int32Value(offsetof (struct stat, st_ctime)) },
 #endif // defined(HAVE_ST_ATIME)
 
   // Several OSes have a birthtime field. For the moment, supporting only Darwin.
 #if defined(_DARWIN_FEATURE_64_BIT_INODE)
-  { "OSFILE_OFFSETOF_STAT_ST_BIRTHTIME", INT_TO_JSVAL(offsetof (struct stat, st_birthtime)) },
+  { "OSFILE_OFFSETOF_STAT_ST_BIRTHTIME", JS::Int32Value(offsetof (struct stat, st_birthtime)) },
 #endif // defined(_DARWIN_FEATURE_64_BIT_INODE)
 
   // Defining |statvfs|
 
-  { "OSFILE_SIZEOF_STATVFS", INT_TO_JSVAL(sizeof (struct statvfs)) },
+  { "OSFILE_SIZEOF_STATVFS", JS::Int32Value(sizeof (struct statvfs)) },
 
-  { "OSFILE_OFFSETOF_STATVFS_F_BSIZE", INT_TO_JSVAL(offsetof (struct statvfs, f_bsize)) },
-  { "OSFILE_OFFSETOF_STATVFS_F_BAVAIL", INT_TO_JSVAL(offsetof (struct statvfs, f_bavail)) },
+  { "OSFILE_OFFSETOF_STATVFS_F_BSIZE", JS::Int32Value(offsetof (struct statvfs, f_bsize)) },
+  { "OSFILE_OFFSETOF_STATVFS_F_BAVAIL", JS::Int32Value(offsetof (struct statvfs, f_bavail)) },
 
 #endif // defined(XP_UNIX)
 
@@ -678,7 +678,7 @@ static const dom::ConstantSpec gLibcProperties[] =
   // whenever macro _DARWIN_FEATURE_64_BIT_INODE is set. We export
   // this value to be able to do so from JavaScript.
 #if defined(_DARWIN_FEATURE_64_BIT_INODE)
-   { "_DARWIN_FEATURE_64_BIT_INODE", INT_TO_JSVAL(1) },
+   { "_DARWIN_FEATURE_64_BIT_INODE", JS::Int32Value(1) },
 #endif // defined(_DARWIN_FEATURE_64_BIT_INODE)
 
   // Similar feature for Linux
@@ -738,7 +738,7 @@ static const dom::ConstantSpec gWinProperties[] =
   INT_CONSTANT(FILE_FLAG_BACKUP_SEMANTICS),
 
   // CreateFile error constant
-  { "INVALID_HANDLE_VALUE", INT_TO_JSVAL(INT_PTR(INVALID_HANDLE_VALUE)) },
+  { "INVALID_HANDLE_VALUE", JS::Int32Value(INT_PTR(INVALID_HANDLE_VALUE)) },
 
 
   // CreateFile flags
@@ -824,7 +824,7 @@ bool SetStringProperty(JSContext *cx, JS::Handle<JSObject*> aObject, const char 
   }
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   NS_ENSURE_TRUE(strValue, false);
-  JS::Rooted<JS::Value> valValue(cx, STRING_TO_JSVAL(strValue));
+  JS::Rooted<JS::Value> valValue(cx, JS::StringValue(strValue));
   return JS_SetProperty(cx, aObject, aProperty, valValue);
 }
 
@@ -891,7 +891,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     if (!strVersion){
       return false;
     }
-    JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
+    JS::Rooted<JS::Value> valVersion(cx, JS::StringValue(strVersion));
     if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
       return false;
   }
@@ -907,7 +907,7 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
       return false;
     }
 
-    JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
+    JS::Rooted<JS::Value> valVersion(cx, JS::StringValue(strVersion));
     if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
       return false;
     }
@@ -922,9 +922,9 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
 #endif
 
 #if defined(HAVE_64BIT_BUILD)
-  JS::Rooted<JS::Value> valBits(cx, INT_TO_JSVAL(64));
+  JS::Rooted<JS::Value> valBits(cx, JS::Int32Value(64));
 #else
-  JS::Rooted<JS::Value> valBits(cx, INT_TO_JSVAL(32));
+  JS::Rooted<JS::Value> valBits(cx, JS::Int32Value(32));
 #endif //defined (HAVE_64BIT_BUILD)
   if (!JS_SetProperty(cx, objSys, "bits", valBits)) {
     return false;

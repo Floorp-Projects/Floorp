@@ -33,7 +33,7 @@ void vp8_dequant_idct_add_y_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dst, stride, dst, stride);
-                vpx_memset(q, 0, 2 * sizeof(q[0]));
+                memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q   += 16;
@@ -59,7 +59,7 @@ void vp8_dequant_idct_add_uv_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dstu, stride, dstu, stride);
-                vpx_memset(q, 0, 2 * sizeof(q[0]));
+                memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q    += 16;
@@ -78,7 +78,7 @@ void vp8_dequant_idct_add_uv_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dstv, stride, dstv, stride);
-                vpx_memset(q, 0, 2 * sizeof(q[0]));
+                memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q    += 16;

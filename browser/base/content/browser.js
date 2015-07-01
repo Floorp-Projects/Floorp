@@ -280,6 +280,7 @@ let gInitialPages = [
 #include browser-social.js
 #include browser-tabview.js
 #include browser-thumbnails.js
+#include browser-trackingprotection.js
 
 #ifdef MOZ_DATA_REPORTING
 #include browser-data-submission-info-bar.js
@@ -964,6 +965,7 @@ var gBrowserInit = {
     BrowserOnClick.init();
     DevEdition.init();
     AboutPrivateBrowsingListener.init();
+    TrackingProtection.init();
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
@@ -1446,12 +1448,6 @@ var gBrowserInit = {
         }
       }, 5000);
 
-      // Telemetry for tracking protection.
-      let tpEnabled = gPrefService
-                      .getBoolPref("privacy.trackingprotection.enabled");
-      Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED")
-        .add(tpEnabled);
-
       PanicButtonNotifier.init();
     });
     this.delayedStartupFinished = true;
@@ -1533,6 +1529,8 @@ var gBrowserInit = {
     BrowserOnClick.uninit();
 
     DevEdition.uninit();
+
+    TrackingProtection.uninit();
 
     gMenuButtonUpdateBadge.uninit();
 
@@ -4383,6 +4381,7 @@ var XULBrowserWindow = {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
     gIdentityHandler.checkIdentity(this._state, uri);
+    TrackingProtection.onSecurityChange(this._state);
   },
 
   // simulate all change notifications after switching tabs
@@ -6781,7 +6780,7 @@ var gIdentityHandler = {
          nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
          nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
       this.showBadContentDoorhanger(state);
-    } else if (gPrefService.getBoolPref("privacy.trackingprotection.enabled")) {
+    } else if (TrackingProtection.enabled) {
       // We didn't show the shield
       Services.telemetry.getHistogramById("TRACKING_PROTECTION_SHIELD")
         .add(0);
