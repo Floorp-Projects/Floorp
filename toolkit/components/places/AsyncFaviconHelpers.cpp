@@ -144,18 +144,11 @@ SetIconInfo(nsRefPtr<Database>& aDB,
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  // The 'multi-coalesce' here ensures that replacing a favicon without
-  // specifying a :guid parameter doesn't cause it to be allocated a new
-  // GUID.
   nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
     "INSERT OR REPLACE INTO moz_favicons "
-      "(id, url, data, mime_type, expiration, guid) "
+      "(id, url, data, mime_type, expiration) "
     "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
-            ":icon_url, :data, :mime_type, :expiration, "
-            "COALESCE(:guid, "
-                     "(SELECT guid FROM moz_favicons "
-                      "WHERE url = :icon_url), "
-                     "GENERATE_GUID()))"
+            ":icon_url, :data, :mime_type, :expiration) "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -167,15 +160,6 @@ SetIconInfo(nsRefPtr<Database>& aDB,
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"), aIcon.mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), aIcon.expiration);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Binding a GUID allows us to override the current (or generated) GUID.
-  if (aIcon.guid.IsEmpty()) {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("guid"));
-  }
-  else {
-    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), aIcon.guid);
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
