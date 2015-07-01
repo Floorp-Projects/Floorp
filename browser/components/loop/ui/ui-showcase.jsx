@@ -421,8 +421,8 @@
     shapes: {
       "10x10": ["close", "close-active", "close-disabled", "dropdown",
         "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
-        "edit-active", "edit-disabled", "expand", "expand-active", "expand-disabled",
-        "minimize", "minimize-active", "minimize-disabled"
+        "edit-active", "edit-disabled", "edit-white", "expand", "expand-active",
+        "expand-disabled", "minimize", "minimize-active", "minimize-disabled"
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",
@@ -1282,6 +1282,15 @@
   });
 
   window.addEventListener("DOMContentLoaded", function() {
+    var uncaughtError;
+    var consoleWarn = console.warn;
+    var caughtWarnings = [];
+    console.warn = function() {
+      var args = Array.slice(arguments);
+      caughtWarnings.push(args);
+      consoleWarn.apply(console, args);
+    };
+
     try {
       React.renderComponent(<App />, document.getElementById("main"));
 
@@ -1304,12 +1313,23 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      if (uncaughtError) {
-        $("#results").append("<div class='failures'><em>1</em></div>");
-        $("#results").append("<li class='test fail'>" +
-          "<h2>Errors rendering UI-Showcase</h2>" +
-          "<pre class='error'>" + uncaughtError + "\n" + uncaughtError.stack + "</pre>" +
-          "</li>");
+      var expectedWarningsCount = 53;
+      var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
+      if (uncaughtError || warningsMismatch) {
+        $("#results").append("<div class='failures'><em>" +
+          (!!(uncaughtError && warningsMismatch) ? 2 : 1) + "</em></div>");
+        if (warningsMismatch) {
+          $("#results").append("<li class='test fail'>" +
+            "<h2>Unexpected number of warnings detected in UI-Showcase</h2>" +
+            "<pre class='error'>Got: " + caughtWarnings.length + "\n" +
+            "Expected: " + expectedWarningsCount + "</pre></li>");
+        }
+        if (uncaughtError) {
+          $("#results").append("<li class='test fail'>" +
+            "<h2>Errors rendering UI-Showcase</h2>" +
+            "<pre class='error'>" + uncaughtError + "\n" + uncaughtError.stack + "</pre>" +
+            "</li>");
+        }
       } else {
         $("#results").append("<div class='failures'><em>0</em></div>");
       }
