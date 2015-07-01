@@ -23,7 +23,9 @@ enum MyTestEnum {
              object obj1,
              object? obj2, sequence<Dict> seq, optional any any2,
              optional object obj3,
-             optional object? obj4),
+             optional object? obj4,
+             Uint8Array typedArr,
+             ArrayBuffer arrayBuf),
  JSImplementation="@mozilla.org/test-js-impl-interface;1"]
 interface TestJSImplInterface {
   // Integer types

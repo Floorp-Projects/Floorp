@@ -14667,7 +14667,10 @@ class CGJSImplInitOperation(CallbackOperationBase):
     def __init__(self, sig, descriptor):
         assert sig in descriptor.interface.ctor().signatures()
         CallbackOperationBase.__init__(self, (BuiltinTypes[IDLBuiltinType.Types.void], sig[1]),
-                                       "__init", "__Init", descriptor, False, True)
+                                       "__init", "__Init", descriptor,
+                                       singleOperation=False,
+                                       rethrowContentException=True,
+                                       typedArraysAreStructs=True)
 
     def getPrettyName(self):
         return "__init"
