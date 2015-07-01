@@ -95,17 +95,15 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect)
 
   mCompositor->MakeCurrent();
 
-  EffectChain effectChain(this);
-  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
-  AddBlendModeEffect(effectChain);
-
-  gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-  mImageHost->SetCompositor(mCompositor);
-  mImageHost->Composite(effectChain,
-                        GetEffectiveOpacity(),
-                        GetEffectiveTransformForBuffer(),
-                        GetEffectFilter(),
-                        clipRect);
+  RenderWithAllMasks(this, mCompositor, aClipRect,
+                     [&](EffectChain& effectChain, const Rect& clipRect) {
+    mImageHost->SetCompositor(mCompositor);
+    mImageHost->Composite(effectChain,
+                          GetEffectiveOpacity(),
+                          GetEffectiveTransformForBuffer(),
+                          GetEffectFilter(),
+                          clipRect);
+  });
   mImageHost->BumpFlashCounter();
 }
 
