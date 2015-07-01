@@ -821,9 +821,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     uint32_t width = signedWidth;
     uint32_t height = signedHeight;
 
-    // We always want to get a recomposite after resize. (though not necessaryily a
-    // Present!)
-    Invalidate();
+    // Early success return cases
+    GetCanvas()->InvalidateCanvas();
 
     // Zero-sized surfaces can cause problems.
     if (width == 0)
@@ -846,8 +845,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         MakeContextCurrent();
 
         // If we've already drawn, we should commit the current buffer.
-        // If we do not do this, we're likely to get a bunch of rendered frames that never
-        // make it to the screen if we're being continuously resized.
         PresentScreenBuffer();
 
         if (IsContextLost()) {
@@ -974,9 +971,11 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     AssertCachedBindings();
     AssertCachedState();
 
-    // Mark for lazy clearing and presentation, so if nothing is drawn immediately, we get
-    // the proper blank frame being Presented.
+    // Clear immediately, because we need to present the cleared initial
+    // buffer.
     mBackbufferNeedsClear = true;
+    ClearBackbufferIfNeeded();
+
     mShouldPresent = true;
 
     MOZ_ASSERT(gl->Caps().color);
@@ -1473,7 +1472,7 @@ WebGLContext::PresentScreenBuffer()
     if (!mShouldPresent) {
         return false;
     }
-    ClearBackbufferIfNeeded();
+    MOZ_ASSERT(!mBackbufferNeedsClear);
 
     gl->MakeCurrent();
 
