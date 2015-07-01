@@ -23,6 +23,7 @@
 #include "nsIProperties.h"
 #include "nsTArray.h"
 #include "imgFrame.h"
+#include "LookupResult.h"
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
 #include "Orientation.h"
@@ -301,9 +302,9 @@ private:
   Pair<DrawResult, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(uint32_t aWhichFrame, uint32_t aFlags);
 
-  DrawableFrameRef LookupFrameInternal(uint32_t aFrameNum,
-                                       const gfx::IntSize& aSize,
-                                       uint32_t aFlags);
+  LookupResult LookupFrameInternal(uint32_t aFrameNum,
+                                   const gfx::IntSize& aSize,
+                                   uint32_t aFlags);
   DrawableFrameRef LookupFrame(uint32_t aFrameNum,
                                const nsIntSize& aSize,
                                uint32_t aFlags);

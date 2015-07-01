@@ -54,10 +54,10 @@ struct LooseEqualityData
         qNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::quiet_NaN());
         sNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::signaling_NaN());
         d42 = DOUBLE_TO_JSVAL(42.0);
-        i42 = INT_TO_JSVAL(42);
+        i42 = JS::Int32Value(42);
         undef = JS::UndefinedValue();
         null = JS::NullValue();
-        obj = OBJECT_TO_JSVAL(JS::CurrentGlobalOrNull(cx));
+        obj = JS::ObjectOrNullValue(JS::CurrentGlobalOrNull(cx));
         poszero = DOUBLE_TO_JSVAL(0.0);
         negzero = DOUBLE_TO_JSVAL(-0.0);
 #ifdef XP_WIN

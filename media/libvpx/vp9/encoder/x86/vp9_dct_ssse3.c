@@ -15,6 +15,8 @@
 #include <math.h>
 #endif
 #include <tmmintrin.h>  // SSSE3
+
+#include "./vp9_rtcd.h"
 #include "vp9/common/x86/vp9_idct_intrin_sse2.h"
 
 void vp9_fdct8x8_quant_ssse3(const int16_t *input, int stride,
@@ -293,7 +295,8 @@ void vp9_fdct8x8_quant_ssse3(const int16_t *input, int stride,
 
   if (!skip_block) {
     __m128i eob;
-    __m128i round, quant, dequant;
+    __m128i round, quant, dequant, thr;
+    int16_t nzflag;
     {
       __m128i coeff0, coeff1;
 
@@ -368,6 +371,7 @@ void vp9_fdct8x8_quant_ssse3(const int16_t *input, int stride,
 
     // AC only loop
     index = 2;
+    thr = _mm_srai_epi16(dequant, 1);
     while (n_coeffs < 0) {
       __m128i coeff0, coeff1;
       {
@@ -387,28 +391,39 @@ void vp9_fdct8x8_quant_ssse3(const int16_t *input, int stride,
         qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
         qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
 
-        qcoeff0 = _mm_adds_epi16(qcoeff0, round);
-        qcoeff1 = _mm_adds_epi16(qcoeff1, round);
-        qtmp0 = _mm_mulhi_epi16(qcoeff0, quant);
-        qtmp1 = _mm_mulhi_epi16(qcoeff1, quant);
+        nzflag = _mm_movemask_epi8(_mm_cmpgt_epi16(qcoeff0, thr)) |
+            _mm_movemask_epi8(_mm_cmpgt_epi16(qcoeff1, thr));
 
-        // Reinsert signs
-        qcoeff0 = _mm_xor_si128(qtmp0, coeff0_sign);
-        qcoeff1 = _mm_xor_si128(qtmp1, coeff1_sign);
-        qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
-        qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
+        if (nzflag) {
+          qcoeff0 = _mm_adds_epi16(qcoeff0, round);
+          qcoeff1 = _mm_adds_epi16(qcoeff1, round);
+          qtmp0 = _mm_mulhi_epi16(qcoeff0, quant);
+          qtmp1 = _mm_mulhi_epi16(qcoeff1, quant);
 
-        _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs), qcoeff0);
-        _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs) + 1, qcoeff1);
+          // Reinsert signs
+          qcoeff0 = _mm_xor_si128(qtmp0, coeff0_sign);
+          qcoeff1 = _mm_xor_si128(qtmp1, coeff1_sign);
+          qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
+          qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
 
-        coeff0 = _mm_mullo_epi16(qcoeff0, dequant);
-        coeff1 = _mm_mullo_epi16(qcoeff1, dequant);
+          _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs), qcoeff0);
+          _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs) + 1, qcoeff1);
 
-        _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs), coeff0);
-        _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs) + 1, coeff1);
+          coeff0 = _mm_mullo_epi16(qcoeff0, dequant);
+          coeff1 = _mm_mullo_epi16(qcoeff1, dequant);
+
+          _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs), coeff0);
+          _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs) + 1, coeff1);
+        } else {
+          _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs), zero);
+          _mm_store_si128((__m128i*)(qcoeff_ptr + n_coeffs) + 1, zero);
+
+          _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs), zero);
+          _mm_store_si128((__m128i*)(dqcoeff_ptr + n_coeffs) + 1, zero);
+        }
       }
 
-      {
+      if (nzflag) {
         // Scan for eob
         __m128i zero_coeff0, zero_coeff1;
         __m128i nzero_coeff0, nzero_coeff1;

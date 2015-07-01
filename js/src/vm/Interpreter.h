@@ -394,6 +394,9 @@ ModValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Mutable
 bool
 UrshValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res);
 
+bool
+AtomicIsLockFree(JSContext* cx, HandleValue in, int* out);
+
 template <bool strict>
 bool
 DeletePropertyJit(JSContext* ctx, HandleValue val, HandlePropertyName name, bool* bv);
