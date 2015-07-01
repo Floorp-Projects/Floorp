@@ -174,20 +174,16 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (location) {
-            nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
-
             bool symlink;
             // don't normalize symlinks, because that's kind of confusing
             if (NS_SUCCEEDED(location->IsSymlink(&symlink)) &&
                 !symlink)
                 location->Normalize();
+            RootedObject locationObj(cx);
             rv = xpc->WrapNative(cx, &args.thisv().toObject(), location,
-                                 NS_GET_IID(nsIFile),
-                                 getter_AddRefs(locationHolder));
-
-            if (NS_SUCCEEDED(rv) &&
-                locationHolder->GetJSObject()) {
-                args.rval().setObject(*locationHolder->GetJSObject());
+                                 NS_GET_IID(nsIFile), locationObj.address());
+            if (NS_SUCCEEDED(rv) && locationObj) {
+                args.rval().setObject(*locationObj);
             }
         }
     }
