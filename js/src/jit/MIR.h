@@ -12879,6 +12879,42 @@ class MMemoryBarrier
     }
 };
 
+class MAtomicIsLockFree
+  : public MUnaryInstruction,
+    public ConvertToInt32Policy<0>::Data
+{
+    explicit MAtomicIsLockFree(MDefinition* value)
+      : MUnaryInstruction(value)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(AtomicIsLockFree)
+
+    static MAtomicIsLockFree* New(TempAllocator& alloc, MDefinition* value) {
+        return new(alloc) MAtomicIsLockFree(value);
+    }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+
+    ALLOW_CLONE(MAtomicIsLockFree)
+};
+
 class MCompareExchangeTypedArrayElement
   : public MAryInstruction<4>,
     public Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>::Data

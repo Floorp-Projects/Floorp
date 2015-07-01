@@ -155,6 +155,10 @@ void vp9_frameworker_copy_context(VP9Worker *const dst_worker,
   dst_worker_data->pbi->need_resync = src_worker_data->pbi->need_resync;
   vp9_frameworker_unlock_stats(src_worker);
 
+  dst_cm->bit_depth = src_cm->bit_depth;
+#if CONFIG_VP9_HIGHBITDEPTH
+  dst_cm->use_highbitdepth = src_cm->use_highbitdepth;
+#endif
   dst_cm->prev_frame = src_cm->show_existing_frame ?
                        src_cm->prev_frame : src_cm->cur_frame;
   dst_cm->last_width = !src_cm->show_existing_frame ?

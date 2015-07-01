@@ -17,6 +17,7 @@
 
 #include "vp9/common/vp9_entropy.h"
 #include "vp9/common/vp9_pred_common.h"
+#include "vp9/common/vp9_scan.h"
 #include "vp9/common/vp9_seg_common.h"
 
 #include "vp9/encoder/vp9_cost.h"
@@ -63,18 +64,6 @@ const vp9_tree_index vp9_coef_tree[TREE_SIZE(ENTROPY_TOKENS)] = {
   18, 20,                              // 8  = CAT_THREEFOUR
   -CATEGORY3_TOKEN, -CATEGORY4_TOKEN,  // 9  = CAT_THREE
   -CATEGORY5_TOKEN, -CATEGORY6_TOKEN   // 10 = CAT_FIVE
-};
-
-// Unconstrained Node Tree
-const vp9_tree_index vp9_coef_con_tree[TREE_SIZE(ENTROPY_TOKENS)] = {
-  2, 6,                                // 0 = LOW_VAL
-  -TWO_TOKEN, 4,                       // 1 = TWO
-  -THREE_TOKEN, -FOUR_TOKEN,           // 2 = THREE
-  8, 10,                               // 3 = HIGH_LOW
-  -CATEGORY1_TOKEN, -CATEGORY2_TOKEN,  // 4 = CAT_ONE
-  12, 14,                              // 5 = CAT_THREEFOUR
-  -CATEGORY3_TOKEN, -CATEGORY4_TOKEN,  // 6 = CAT_THREE
-  -CATEGORY5_TOKEN, -CATEGORY6_TOKEN   // 7 = CAT_FIVE
 };
 
 static const vp9_tree_index cat1[2] = {0, 0};
@@ -509,7 +498,7 @@ static void tokenize_b(int plane, int block, BLOCK_SIZE plane_bsize,
   uint8_t token_cache[32 * 32];
   struct macroblock_plane *p = &x->plane[plane];
   struct macroblockd_plane *pd = &xd->plane[plane];
-  MB_MODE_INFO *mbmi = &xd->mi[0].src_mi->mbmi;
+  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   int pt; /* near block/prev token context index */
   int c;
   TOKENEXTRA *t = *tp;        /* store tokens starting here */
@@ -624,8 +613,7 @@ void vp9_tokenize_sb(VP9_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
   VP9_COMMON *const cm = &cpi->common;
   MACROBLOCK *const x = &td->mb;
   MACROBLOCKD *const xd = &x->e_mbd;
-  MB_MODE_INFO *const mbmi = &xd->mi[0].src_mi->mbmi;
-  TOKENEXTRA *t_backup = *t;
+  MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
   const int ctx = vp9_get_skip_context(xd);
   const int skip_inc = !vp9_segfeature_active(&cm->seg, mbmi->segment_id,
                                               SEG_LVL_SKIP);
@@ -634,8 +622,6 @@ void vp9_tokenize_sb(VP9_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
     if (!dry_run)
       td->counts->skip[ctx][1] += skip_inc;
     reset_skip_context(xd, bsize);
-    if (dry_run)
-      *t = t_backup;
     return;
   }
 
@@ -644,6 +630,5 @@ void vp9_tokenize_sb(VP9_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
     vp9_foreach_transformed_block(xd, bsize, tokenize_b, &arg);
   } else {
     vp9_foreach_transformed_block(xd, bsize, set_entropy_context_b, &arg);
-    *t = t_backup;
   }
 }

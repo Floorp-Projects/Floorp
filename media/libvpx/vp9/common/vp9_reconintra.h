@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-void vp9_init_intra_predictors();
+void vp9_init_intra_predictors(void);
 
 void vp9_predict_intra_block(const MACROBLOCKD *xd, int block_idx, int bwl_in,
                              TX_SIZE tx_size, PREDICTION_MODE mode,

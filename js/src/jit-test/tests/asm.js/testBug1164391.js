@@ -14,7 +14,10 @@ function m(stdlib, ffi, heap) {
     }
     return {add_sharedEv:add_sharedEv};
 }
+
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(m), true);
+
 var sab = new SharedArrayBuffer(65536);
 var {add_sharedEv} = m(this, {}, sab);
 add_sharedEv(sab.byteLength);
-

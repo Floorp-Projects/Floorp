@@ -14,8 +14,8 @@
 #include "vpx/vpx_integer.h"
 
 #include "vp9/common/vp9_common.h"
+#include "vp9/common/vp9_enums.h"
 #include "vp9/common/vp9_prob.h"
-#include "vp9/common/vp9_scan.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,18 +137,6 @@ struct VP9Common;
 void vp9_default_coef_probs(struct VP9Common *cm);
 void vp9_adapt_coef_probs(struct VP9Common *cm);
 
-static INLINE void reset_skip_context(MACROBLOCKD *xd, BLOCK_SIZE bsize) {
-  int i;
-  for (i = 0; i < MAX_MB_PLANE; i++) {
-    struct macroblockd_plane *const pd = &xd->plane[i];
-    const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
-    vpx_memset(pd->above_context, 0, sizeof(ENTROPY_CONTEXT) *
-                   num_4x4_blocks_wide_lookup[plane_bsize]);
-    vpx_memset(pd->left_context, 0, sizeof(ENTROPY_CONTEXT) *
-                   num_4x4_blocks_high_lookup[plane_bsize]);
-  }
-}
-
 // This is the index in the scan order beyond which all coefficients for
 // 8x8 transform and above are in the top band.
 // This macro is currently unused but may be used by certain implementations
@@ -173,6 +161,7 @@ static INLINE const uint8_t *get_band_translate(TX_SIZE tx_size) {
 #define PIVOT_NODE                  2   // which node is pivot
 
 #define MODEL_NODES (ENTROPY_NODES - UNCONSTRAINED_NODES)
+extern const vp9_tree_index vp9_coef_con_tree[TREE_SIZE(ENTROPY_TOKENS)];
 extern const vp9_prob vp9_pareto8_full[COEFF_PROB_MODELS][MODEL_NODES];
 
 typedef vp9_prob vp9_coeff_probs_model[REF_TYPES][COEF_BANDS]
@@ -183,6 +172,13 @@ typedef unsigned int vp9_coeff_count_model[REF_TYPES][COEF_BANDS]
                                           [UNCONSTRAINED_NODES + 1];
 
 void vp9_model_to_full_probs(const vp9_prob *model, vp9_prob *full);
+
+typedef char ENTROPY_CONTEXT;
+
+static INLINE int combine_entropy_contexts(ENTROPY_CONTEXT a,
+                                           ENTROPY_CONTEXT b) {
+  return (a != 0) + (b != 0);
+}
 
 static INLINE int get_entropy_context(TX_SIZE tx_size, const ENTROPY_CONTEXT *a,
                                       const ENTROPY_CONTEXT *l) {
@@ -211,18 +207,6 @@ static INLINE int get_entropy_context(TX_SIZE tx_size, const ENTROPY_CONTEXT *a,
   }
 
   return combine_entropy_contexts(above_ec, left_ec);
-}
-
-static INLINE const scan_order *get_scan(const MACROBLOCKD *xd, TX_SIZE tx_size,
-                                         PLANE_TYPE type, int block_idx) {
-  const MODE_INFO *const mi = xd->mi[0].src_mi;
-
-  if (is_inter_block(&mi->mbmi) || type != PLANE_TYPE_Y || xd->lossless) {
-    return &vp9_default_scan_orders[tx_size];
-  } else {
-    const PREDICTION_MODE mode = get_y_mode(mi, block_idx);
-    return &vp9_scan_orders[tx_size][intra_mode_to_tx_type_lookup[mode]];
-  }
 }
 
 #ifdef __cplusplus

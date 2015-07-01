@@ -36,6 +36,42 @@
                 oncommand="gIdentityHandler.showSubView('security', this)"/>
       </hbox>
 
+      <!-- Tracking Protection Section -->
+      <hbox id="tracking-protection-container" class="identity-popup-section">
+        <vbox id="tracking-protection-content" flex="1">
+          <description class="identity-popup-text identity-popup-headline"
+                       crop="end"
+                       value="&trackingProtection.title;" />
+
+          <label id="tracking-blocked"
+                 class="identity-popup-text"
+                 crop="end">&trackingProtection.detectedBlocked;</label>
+          <label id="tracking-loaded"
+                 class="identity-popup-text"
+                 crop="end">&trackingProtection.detectedNotBlocked;</label>
+          <label id="tracking-not-detected"
+                 class="identity-popup-text"
+                 crop="end">&trackingProtection.notDetected;</label>
+
+          <button id="tracking-actions"
+            type="menu" label="&trackingContentBlocked.options;"
+            sizetopopup="none">
+            <menupopup>
+              <menuitem
+                id="tracking-action-unblock"
+                label="&trackingProtection.unblock.label;"
+                accesskey="&trackingProtection.unblock.accesskey;"
+                oncommand="TrackingProtection.disableForCurrentPage();"/>
+              <menuitem
+                id="tracking-action-block"
+                label="&trackingProtection.block.label;"
+                accesskey="&trackingProtection.block.accesskey;"
+                oncommand="TrackingProtection.enableForCurrentPage();"/>
+            </menupopup>
+          </button>
+        </vbox>
+      </hbox>
+
       <!-- Permissions Section -->
       <hbox id="identity-popup-permissions" class="identity-popup-section">
         <vbox id="identity-popup-permissions-content" flex="1">

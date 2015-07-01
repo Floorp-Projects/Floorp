@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1075758 (updating ICU to 55) requires a clobber.
+Bug 1178215 requires clobber for libvpx file moves.

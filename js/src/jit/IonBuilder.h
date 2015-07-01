@@ -781,6 +781,7 @@ class IonBuilder
     InliningStatus inlineAtomicsStore(CallInfo& callInfo);
     InliningStatus inlineAtomicsFence(CallInfo& callInfo);
     InliningStatus inlineAtomicsBinop(CallInfo& callInfo, JSFunction* target);
+    InliningStatus inlineAtomicsIsLockFree(CallInfo& callInfo);
 
     // Slot intrinsics.
     InliningStatus inlineUnsafeSetReservedSlot(CallInfo& callInfo);

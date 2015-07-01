@@ -133,25 +133,16 @@ nsresult nsNSSShutDownList::doPK11Logout()
   // This is guaranteed by holding the list lock.
 
   MutexAutoLock lock(singleton->mListLock);
-  PL_DHashTableEnumerate(&mPK11LogoutCancelObjects, doPK11LogoutHelper, 0);
-
-  return NS_OK;
-}
-
-PLDHashOperator
-nsNSSShutDownList::doPK11LogoutHelper(PLDHashTable *table, 
-  PLDHashEntryHdr *hdr, uint32_t number, void *arg)
-{
-  ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
-
-  nsOnPK11LogoutCancelObject *pklco = 
-    reinterpret_cast<nsOnPK11LogoutCancelObject*>(entry->obj);
-
-  if (pklco) {
-    pklco->logout();
+  for (auto iter = mPK11LogoutCancelObjects.Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<ObjectHashEntry*>(iter.Get());
+    nsOnPK11LogoutCancelObject *pklco =
+      reinterpret_cast<nsOnPK11LogoutCancelObject*>(entry->obj);
+    if (pklco) {
+      pklco->logout();
+    }
   }
 
-  return PL_DHASH_NEXT;
+  return NS_OK;
 }
 
 bool nsNSSShutDownList::isUIActive()
@@ -180,29 +171,26 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   }
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("now evaporating NSS resources\n"));
-  int removedCount;
-  do {
-    MutexAutoLock lock(mListLock);
-    removedCount = PL_DHashTableEnumerate(&mObjects, evaporateAllNSSResourcesHelper, 0);
-  } while (removedCount > 0);
 
-  mActivityState.releaseCurrentThreadActivityRestriction();
-  return NS_OK;
-}
-
-PLDHashOperator
-nsNSSShutDownList::evaporateAllNSSResourcesHelper(PLDHashTable *table, 
-  PLDHashEntryHdr *hdr, uint32_t number, void *arg)
-{
-  ObjectHashEntry *entry = static_cast<ObjectHashEntry*>(hdr);
-  {
-    MutexAutoUnlock unlock(singleton->mListLock);
-    entry->obj->shutdown(nsNSSShutDownObject::calledFromList);
-  }
   // Never free more than one entry, because other threads might be calling
   // us and remove themselves while we are iterating over the list,
   // and the behaviour of changing the list while iterating is undefined.
-  return (PLDHashOperator)(PL_DHASH_STOP | PL_DHASH_REMOVE);
+  while (true) {
+    MutexAutoLock lock(mListLock);
+    auto iter = mObjects.RemovingIter();
+    if (iter.Done()) {
+      break;
+    }
+    auto entry = static_cast<ObjectHashEntry*>(iter.Get());
+    {
+      MutexAutoUnlock unlock(singleton->mListLock);
+      entry->obj->shutdown(nsNSSShutDownObject::calledFromList);
+    }
+    iter.Remove();
+  }
+
+  mActivityState.releaseCurrentThreadActivityRestriction();
+  return NS_OK;
 }
 
 nsNSSShutDownList *nsNSSShutDownList::construct()

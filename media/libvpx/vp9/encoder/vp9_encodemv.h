@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-void vp9_entropy_mv_init();
+void vp9_entropy_mv_init(void);
 
 void vp9_write_nmv_probs(VP9_COMMON *cm, int usehp, vp9_writer *w,
                          nmv_context_counts *const counts);

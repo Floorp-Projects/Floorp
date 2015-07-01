@@ -34,6 +34,7 @@ class ObjectWeakMap
 {
   private:
     ObjectValueMap map;
+    typedef gc::HashKeyRef<ObjectValueMap, JSObject*> StoreBufferRef;
 
   public:
     explicit ObjectWeakMap(JSContext* cx);

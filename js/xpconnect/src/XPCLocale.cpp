@@ -115,7 +115,7 @@ private:
       return false;
     }
 
-    rval.set(STRING_TO_JSVAL(ucstr));
+    rval.setString(ucstr);
     return true;
   }
 
@@ -162,7 +162,7 @@ private:
       return false;
     }
 
-    rval.set(INT_TO_JSVAL(result));
+    rval.setInt32(result);
     return true;
   }
 

@@ -39,9 +39,9 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK(JS_IsArrayBufferObject(obj));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), size);
         JS_GetProperty(cx, obj, "byteLength", &v);
-        CHECK_SAME(v, INT_TO_JSVAL(size));
+        CHECK(v.isInt32(size));
         JS_GetProperty(cx, view, "byteLength", &v);
-        CHECK_SAME(v, INT_TO_JSVAL(size));
+        CHECK(v.isInt32(size));
 
         // Modifying the underlying data should update the value returned through the view
         {
@@ -51,7 +51,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
             *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
         }
         CHECK(JS_GetElement(cx, view, 0, &v));
-        CHECK_SAME(v, INT_TO_JSVAL(MAGIC_VALUE_2));
+        CHECK(v.isInt32(MAGIC_VALUE_2));
 
         // Steal the contents
         void* contents = JS_StealArrayBufferContents(cx, obj);
@@ -60,13 +60,13 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Check that the original ArrayBuffer is neutered
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
         CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
-        CHECK_SAME(v, INT_TO_JSVAL(0));
+        CHECK(v.isInt32(0));
         CHECK(JS_GetProperty(cx, view, "byteLength", &v));
-        CHECK_SAME(v, INT_TO_JSVAL(0));
+        CHECK(v.isInt32(0));
         CHECK(JS_GetProperty(cx, view, "byteOffset", &v));
-        CHECK_SAME(v, INT_TO_JSVAL(0));
+        CHECK(v.isInt32(0));
         CHECK(JS_GetProperty(cx, view, "length", &v));
-        CHECK_SAME(v, INT_TO_JSVAL(0));
+        CHECK(v.isInt32(0));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0u);
         v.setUndefined();
         JS_GetElement(cx, obj, 0, &v);
@@ -91,7 +91,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
             CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
         }
         CHECK(JS_GetElement(cx, dstview, 0, &v));
-        CHECK_SAME(v, INT_TO_JSVAL(MAGIC_VALUE_2));
+        CHECK(v.isInt32(MAGIC_VALUE_2));
     }
 
     return true;

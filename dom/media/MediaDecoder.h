@@ -277,7 +277,6 @@ public:
   typedef MediaPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 
   // Enumeration for the valid play states (see mPlayState)
   enum PlayState {

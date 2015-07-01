@@ -75,7 +75,7 @@ BEGIN_TEST(testNewObject_1)
     argv[0].setInt32(4);
     obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
     CHECK(obj);
-    rt = OBJECT_TO_JSVAL(obj);
+    rt = JS::ObjectValue(*obj);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, 4u);
@@ -85,12 +85,12 @@ BEGIN_TEST(testNewObject_1)
         argv[i].setInt32(i);
     obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
     CHECK(obj);
-    rt = OBJECT_TO_JSVAL(obj);
+    rt = JS::ObjectValue(*obj);
     CHECK(JS_IsArrayObject(cx, obj));
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, N);
     CHECK(JS_GetElement(cx, obj, N - 1, &v));
-    CHECK_SAME(v, INT_TO_JSVAL(N - 1));
+    CHECK(v.isInt32(N - 1));
 
     // With JSClass.construct.
     static const JSClass cls = {
@@ -102,7 +102,7 @@ BEGIN_TEST(testNewObject_1)
     };
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
     CHECK(ctor);
-    JS::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
+    JS::RootedValue rt2(cx, JS::ObjectValue(*ctor));
     obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
     CHECK(obj);
     CHECK(JS_GetElement(cx, ctor, 0, &v));

@@ -5108,6 +5108,19 @@ class LStoreTypedArrayElementStatic : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LAtomicIsLockFree : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AtomicIsLockFree)
+
+    explicit LAtomicIsLockFree(const LAllocation& value) {
+        setOperand(0, value);
+    }
+    const LAllocation* value() {
+        return getOperand(0);
+    }
+};
+
 class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 1>
 {
   public:

@@ -415,8 +415,8 @@ int vp8_denoiser_allocate(VP8_DENOISER *denoiser, int width, int height,
             vp8_denoiser_free(denoiser);
             return 1;
         }
-        vpx_memset(denoiser->yv12_running_avg[i].buffer_alloc, 0,
-                   denoiser->yv12_running_avg[i].frame_size);
+        memset(denoiser->yv12_running_avg[i].buffer_alloc, 0,
+               denoiser->yv12_running_avg[i].frame_size);
 
     }
     denoiser->yv12_mc_running_avg.flags = 0;
@@ -428,19 +428,19 @@ int vp8_denoiser_allocate(VP8_DENOISER *denoiser, int width, int height,
         return 1;
     }
 
-    vpx_memset(denoiser->yv12_mc_running_avg.buffer_alloc, 0,
-               denoiser->yv12_mc_running_avg.frame_size);
+    memset(denoiser->yv12_mc_running_avg.buffer_alloc, 0,
+           denoiser->yv12_mc_running_avg.frame_size);
 
     if (vp8_yv12_alloc_frame_buffer(&denoiser->yv12_last_source, width,
                                     height, VP8BORDERINPIXELS) < 0) {
       vp8_denoiser_free(denoiser);
       return 1;
     }
-    vpx_memset(denoiser->yv12_last_source.buffer_alloc, 0,
-               denoiser->yv12_last_source.frame_size);
+    memset(denoiser->yv12_last_source.buffer_alloc, 0,
+           denoiser->yv12_last_source.frame_size);
 
     denoiser->denoise_state = vpx_calloc((num_mb_rows * num_mb_cols), 1);
-    vpx_memset(denoiser->denoise_state, 0, (num_mb_rows * num_mb_cols));
+    memset(denoiser->denoise_state, 0, (num_mb_rows * num_mb_cols));
     vp8_denoiser_set_parameters(denoiser, mode);
     denoiser->nmse_source_diff = 0;
     denoiser->nmse_source_diff_count = 0;

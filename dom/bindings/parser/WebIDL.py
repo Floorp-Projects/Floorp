@@ -1273,7 +1273,11 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
 
                 args = attr.args() if attr.hasArgs() else []
 
-                retType = IDLWrapperType(self.location, self)
+                if self.identifier.name == "Promise":
+                    promiseType = BuiltinTypes[IDLBuiltinType.Types.any]
+                else:
+                    promiseType = None
+                retType = IDLWrapperType(self.location, self, promiseType)
 
                 if identifier == "Constructor" or identifier == "ChromeConstructor":
                     name = "constructor"
@@ -2633,6 +2637,10 @@ class IDLWrapperType(IDLType):
         return isinstance(self.inner, IDLInterface) and \
                self.inner.identifier.name == "Promise"
 
+    def promiseInnerType(self):
+        assert self.isPromise()
+        return self._promiseInnerType
+
     def isSerializable(self):
         if self.isInterface():
             if self.inner.isExternal():
@@ -2709,9 +2717,9 @@ class IDLWrapperType(IDLType):
             # Let's say true, though ideally we'd only do this when
             # exposureSet contains the primary global's name.
             return True
-        if (iface.identifier.name == "Promise" and
+        if (self.isPromise() and
             # Check the internal type
-            not self._promiseInnerType.unroll().isExposedInAllOf(exposureSet)):
+            not self.promiseInnerType().unroll().isExposedInAllOf(exposureSet)):
             return False
         return iface.exposureSet.issuperset(exposureSet)
 

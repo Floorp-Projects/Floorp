@@ -125,7 +125,7 @@ bool TestCloneObject()
     JS::RootedObject obj1(cx, CreateNewObject(8, 12));
     CHECK(obj1);
     JSAutoStructuredCloneBuffer cloned_buffer;
-    JS::RootedValue v1(cx, OBJECT_TO_JSVAL(obj1));
+    JS::RootedValue v1(cx, JS::ObjectValue(*obj1));
     const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);
     CHECK(cloned_buffer.write(cx, v1, callbacks, nullptr));
     JS::RootedValue v2(cx);
@@ -152,14 +152,14 @@ bool TestTransferObject()
 {
     JS::RootedObject obj1(cx, CreateNewObject(8, 12));
     CHECK(obj1);
-    JS::RootedValue v1(cx, OBJECT_TO_JSVAL(obj1));
+    JS::RootedValue v1(cx, JS::ObjectValue(*obj1));
 
     // Create an Array of transferable values.
     JS::AutoValueVector argv(cx);
     argv.append(v1);
     JS::RootedObject obj(cx, JS_NewArrayObject(cx, JS::HandleValueArray::subarray(argv, 0, 1)));
     CHECK(obj);
-    JS::RootedValue transferable(cx, OBJECT_TO_JSVAL(obj));
+    JS::RootedValue transferable(cx, JS::ObjectValue(*obj));
 
     JSAutoStructuredCloneBuffer cloned_buffer;
     const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);

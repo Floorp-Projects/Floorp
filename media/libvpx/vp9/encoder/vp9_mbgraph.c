@@ -10,6 +10,9 @@
 
 #include <limits.h>
 
+#include "./vp9_rtcd.h"
+#include "./vpx_dsp_rtcd.h"
+
 #include "vpx_mem/vpx_mem.h"
 #include "vp9/encoder/vp9_segmentation.h"
 #include "vp9/encoder/vp9_mcomp.h"
@@ -63,8 +66,8 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
         &distortion, &sse, NULL, 0, 0);
   }
 
-  xd->mi[0].src_mi->mbmi.mode = NEWMV;
-  xd->mi[0].src_mi->mbmi.mv[0].as_mv = *dst_mv;
+  xd->mi[0]->mbmi.mode = NEWMV;
+  xd->mi[0]->mbmi.mv[0].as_mv = *dst_mv;
 
   vp9_build_inter_predictors_sby(xd, mb_row, mb_col, BLOCK_16X16);
 
@@ -74,8 +77,8 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
   x->mv_row_min = tmp_row_min;
   x->mv_row_max = tmp_row_max;
 
-  return vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
-          xd->plane[0].dst.buf, xd->plane[0].dst.stride);
+  return vpx_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
+                      xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 }
 
 static int do_16x16_motion_search(VP9_COMP *cpi, const MV *ref_mv,
@@ -87,7 +90,7 @@ static int do_16x16_motion_search(VP9_COMP *cpi, const MV *ref_mv,
 
   // Try zero MV first
   // FIXME should really use something like near/nearest MV and/or MV prediction
-  err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
+  err = vpx_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                      xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride);
   dst_mv->as_int = 0;
 
@@ -123,7 +126,7 @@ static int do_16x16_zerozero_search(VP9_COMP *cpi, int_mv *dst_mv) {
 
   // Try zero MV first
   // FIXME should really use something like near/nearest MV and/or MV prediction
-  err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
+  err = vpx_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                      xd->plane[0].pre[0].buf, xd->plane[0].pre[0].stride);
 
   dst_mv->as_int = 0;
@@ -141,12 +144,12 @@ static int find_best_16x16_intra(VP9_COMP *cpi, PREDICTION_MODE *pbest_mode) {
   for (mode = DC_PRED; mode <= TM_PRED; mode++) {
     unsigned int err;
 
-    xd->mi[0].src_mi->mbmi.mode = mode;
+    xd->mi[0]->mbmi.mode = mode;
     vp9_predict_intra_block(xd, 0, 2, TX_16X16, mode,
                             x->plane[0].src.buf, x->plane[0].src.stride,
                             xd->plane[0].dst.buf, xd->plane[0].dst.stride,
                             0, 0, 0);
-    err = vp9_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
+    err = vpx_sad16x16(x->plane[0].src.buf, x->plane[0].src.stride,
                        xd->plane[0].dst.buf, xd->plane[0].dst.stride);
 
     // find best
@@ -247,7 +250,7 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
   xd->plane[0].dst.stride  = buf->y_stride;
   xd->plane[0].pre[0].stride  = buf->y_stride;
   xd->plane[1].dst.stride = buf->uv_stride;
-  xd->mi[0].src_mi = &mi_local;
+  xd->mi[0] = &mi_local;
   mi_local.mbmi.sb_type = BLOCK_16X16;
   mi_local.mbmi.ref_frame[0] = LAST_FRAME;
   mi_local.mbmi.ref_frame[1] = NONE;
@@ -389,9 +392,8 @@ void vp9_update_mbgraph_stats(VP9_COMP *cpi) {
   cpi->mbgraph_n_frames = n_frames;
   for (i = 0; i < n_frames; i++) {
     MBGRAPH_FRAME_STATS *frame_stats = &cpi->mbgraph_stats[i];
-    vpx_memset(frame_stats->mb_stats, 0,
-               cm->mb_rows * cm->mb_cols *
-               sizeof(*cpi->mbgraph_stats[i].mb_stats));
+    memset(frame_stats->mb_stats, 0,
+           cm->mb_rows * cm->mb_cols * sizeof(*cpi->mbgraph_stats[i].mb_stats));
   }
 
   // do motion search to find contribution of each reference to data

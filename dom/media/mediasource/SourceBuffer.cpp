@@ -73,7 +73,7 @@ SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
-  if (mIsUsingFormatReader && mGenerateTimestamp &&
+  if (mIsUsingFormatReader && mGenerateTimestamps &&
       aMode == SourceBufferAppendMode::Segments) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -331,14 +331,14 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
             mContentManager.get());
   if (aType.LowerCaseEqualsLiteral("audio/mpeg") ||
       aType.LowerCaseEqualsLiteral("audio/aac")) {
-    mGenerateTimestamp = true;
+    mGenerateTimestamps = true;
   } else {
-    mGenerateTimestamp = false;
+    mGenerateTimestamps = false;
   }
   mIsUsingFormatReader =
     Preferences::GetBool("media.mediasource.format-reader", false);
   ErrorResult dummy;
-  if (mGenerateTimestamp) {
+  if (mGenerateTimestamps) {
     SetMode(SourceBufferAppendMode::Sequence, dummy);
   } else {
     SetMode(SourceBufferAppendMode::Segments, dummy);
@@ -427,7 +427,7 @@ SourceBuffer::CheckEndTime()
 {
   MOZ_ASSERT(NS_IsMainThread());
   // Check if we need to update mMediaSource duration
-  double endTime = GetBufferedEnd();
+  double endTime = mContentManager->GroupEndTimestamp().ToSeconds();
   double duration = mMediaSource->Duration();
   if (endTime > duration) {
     mMediaSource->SetDuration(endTime, MSRangeRemovalAction::SKIP);

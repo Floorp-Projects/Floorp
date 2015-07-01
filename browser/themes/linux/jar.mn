@@ -150,6 +150,8 @@ browser.jar:
   skin/classic/browser/controlcenter/conn-secure-dv.svg  (../shared/controlcenter/conn-secure-dv.svg)
   skin/classic/browser/controlcenter/conn-secure-ev.svg  (../shared/controlcenter/conn-secure-ev.svg)
   skin/classic/browser/controlcenter/permissions.svg  (../shared/controlcenter/permissions.svg)
+  skin/classic/browser/controlcenter/tracking-protection.svg                 (../shared/controlcenter/tracking-protection.svg)
+  skin/classic/browser/controlcenter/tracking-protection-disabled.svg        (../shared/controlcenter/tracking-protection-disabled.svg)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
   skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)

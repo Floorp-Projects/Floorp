@@ -69,12 +69,12 @@ public class AndroidFxAccount {
 
   public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
-  public static final String ACCOUNT_KEY_PROFILE_AVATAR = "avatar";
 
   public static final int CURRENT_BUNDLE_VERSION = 2;
   public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
   public static final String BUNDLE_KEY_STATE = "state";
+  public static final String BUNDLE_KEY_PROFILE_JSON = "profile";
 
   // Account authentication token type for fetching account profile.
   public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
@@ -105,13 +105,6 @@ public class AndroidFxAccount {
   }
 
   private static final String PREF_KEY_LAST_SYNCED_TIMESTAMP = "lastSyncedTimestamp";
-  public static final String PREF_KEY_LAST_PROFILE_FETCH_TIME = "lastProfilefetchTime";
-  public static final String PREF_KEY_NUMBER_OF_PROFILE_FETCH = "numProfileFetch";
-
-  // Max wait time between successful profile avatar network fetch.
-  public static final long PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
-  // Max attempts allowed for retrying profile avatar network fetch.
-  public static final int MAX_PROFILE_FETCH_RETRIES = 5;
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -127,7 +120,6 @@ public class AndroidFxAccount {
    */
   protected static final ConcurrentHashMap<String, ExtendedJSONObject> perAccountBundleCache =
       new ConcurrentHashMap<>();
-  private ExtendedJSONObject profileJson;
 
   public static void invalidateCaches() {
     perAccountBundleCache.clear();
@@ -667,39 +659,17 @@ public class AndroidFxAccount {
     return intent;
   }
 
-  private void setLastProfileFetchTimestampAndAttempts(long now, int attempts) {
-    try {
-      getSyncPrefs().edit().putLong(PREF_KEY_LAST_PROFILE_FETCH_TIME, now).commit();
-      getSyncPrefs().edit().putInt(PREF_KEY_NUMBER_OF_PROFILE_FETCH, attempts);
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception setting last profile fetch time & attempts; ignoring.", e);
-    }
-  }
-
-  private long getLastProfileFetchTimestamp() {
-    final long neverFetched = -1L;
-    try {
-      return getSyncPrefs().getLong(PREF_KEY_LAST_PROFILE_FETCH_TIME, neverFetched);
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception getting last profile fetch time; ignoring.", e);
-      return neverFetched;
-    }
-  }
-
-  private int getNumberOfProfileFetch() {
-    final int neverFetched = 0;
-    try {
-      return getSyncPrefs().getInt(PREF_KEY_NUMBER_OF_PROFILE_FETCH, neverFetched);
-    } catch (Exception e) {
-      Logger.warn(LOG_TAG, "Got exception getting number of profile fetch; ignoring.", e);
-      return neverFetched;
-    }
-  }
-
-  private boolean canScheduleProfileFetch() {
-    final int attempts = getNumberOfProfileFetch();
-    final long delta = System.currentTimeMillis() - getLastProfileFetchTimestamp();
-    return delta > PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS || attempts < MAX_PROFILE_FETCH_RETRIES;
+  /**
+   * Create an intent announcing that the profile JSON attached to this Firefox Account has been updated.
+   * <p>
+   * It is not guaranteed that the profile JSON has changed.
+   *
+   * @return <code>Intent</code> to broadcast.
+   */
+  private Intent makeProfileJSONUpdatedIntent() {
+    final Intent intent = new Intent();
+    intent.setAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);
+    return intent;
   }
 
   public void setLastSyncedTimestamp(long now) {
@@ -755,60 +725,31 @@ public class AndroidFxAccount {
     ContentResolver.setIsSyncable(account, BrowserContract.READING_LIST_AUTHORITY, 1);
   }
 
-  // Helper function to create intent for profile avatar updated event.
-  private Intent getProfileAvatarUpdatedIntent() {
-    final Intent profileCachedIntent = new Intent();
-    profileCachedIntent.setAction(FxAccountConstants.ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION);
-    return profileCachedIntent;
-  }
-
   /**
-   * Returns the cached profile JSON object if available or null.
+   * Returns the current profile JSON if available, or null.
    *
-   * @return profile JSON Object.
+   * @return profile JSON object.
    */
-  public ExtendedJSONObject getCachedProfileJSON() {
-    if (profileJson == null) {
-      // Try to retrieve and parse the json string from account manager.
-      final String profileJsonString = accountManager.getUserData(account, ACCOUNT_KEY_PROFILE_AVATAR);
-      if (profileJsonString != null) {
-        Logger.info(LOG_TAG, "Cached Profile information retrieved from AccountManager.");
-        try {
-          profileJson = ExtendedJSONObject.parseJSONObject(profileJsonString);
-        } catch (Exception e) {
-          Logger.error(LOG_TAG, "Failed to parse profile json; ignoring.", e);
-        }
-      }
+  public ExtendedJSONObject getProfileJSON() {
+    final String profileString = getBundleData(BUNDLE_KEY_PROFILE_JSON);
+    if (profileString == null) {
+      return null;
     }
-    return profileJson;
+
+    try {
+      return new ExtendedJSONObject(profileString);
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Failed to parse profile JSON; ignoring and returning null.", e);
+    }
+    return null;
   }
 
   /**
-   * Fetches the profile json from the server and updates the local cache.
-   *
+   * Fetch the profile JSON associated to the underlying Firefox Account from the server and update the local store.
    * <p>
-   * On successful fetch and cache, LocalBroadcastManager is used to notify the receivers asynchronously.
-   * </p>
-   *
-   * @param isForceFetch boolean to isForceFetch fetch from the server.
+   * The LocalBroadcastManager is used to notify the receivers asynchronously after a successful fetch.
    */
-  public void maybeUpdateProfileJSON(final boolean isForceFetch) {
-    final ExtendedJSONObject profileJson = getCachedProfileJSON();
-    final Intent profileAvatarUpdatedIntent = getProfileAvatarUpdatedIntent();
-
-    if (!isForceFetch && profileJson != null && !profileJson.keySet().isEmpty()) {
-      // Second line of defense, cache may have been updated in between.
-      Logger.info(LOG_TAG, "Profile already cached.");
-      LocalBroadcastManager.getInstance(context).sendBroadcast(profileAvatarUpdatedIntent);
-      return;
-    }
-
-    if (!isForceFetch && !canScheduleProfileFetch()) {
-      // Rate limiting repeated attempts to fetch the profile information.
-      Logger.info(LOG_TAG, "Too many attempts to fetch the profile information.");
-      return;
-    }
-
+  public void fetchProfileJSON() {
     ThreadUtils.postToBackgroundThread(new Runnable() {
       @Override
       public void run() {
@@ -828,24 +769,15 @@ public class AndroidFxAccount {
         final Intent intent = new Intent(context, FxAccountProfileService.class);
         intent.putExtra(FxAccountProfileService.KEY_AUTH_TOKEN, authToken);
         intent.putExtra(FxAccountProfileService.KEY_PROFILE_SERVER_URI, getProfileServerURI());
-        intent.putExtra(FxAccountProfileService.KEY_RESULT_RECEIVER, new ProfileResultReceiver(profileAvatarUpdatedIntent));
+        intent.putExtra(FxAccountProfileService.KEY_RESULT_RECEIVER, new ProfileResultReceiver(new Handler()));
         context.startService(intent);
-
-        // Update the profile fetch time and attempts, resetting the attempts if last fetch was over a day old.
-        final int attempts = getNumberOfProfileFetch();
-        final long now = System.currentTimeMillis();
-        final long delta = now - getLastProfileFetchTimestamp();
-        setLastProfileFetchTimestampAndAttempts(now, delta < PROFILE_FETCH_RETRY_BACKOFF_DELTA_IN_MILLISECONDS ? attempts + 1 : 1);
       }
     });
   }
 
   private class ProfileResultReceiver extends ResultReceiver {
-    private final Intent profileAvatarUpdatedIntent;
-
-    public ProfileResultReceiver(Intent broadcastIntent) {
-      super(new Handler());
-      this.profileAvatarUpdatedIntent = broadcastIntent;
+    public ProfileResultReceiver(Handler handler) {
+      super(handler);
     }
 
     @Override
@@ -853,21 +785,17 @@ public class AndroidFxAccount {
       super.onReceiveResult(resultCode, bundle);
       switch (resultCode) {
         case Activity.RESULT_OK:
-          try {
-            final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
-            profileJson = ExtendedJSONObject.parseJSONObject(resultData);
-            accountManager.setUserData(account, ACCOUNT_KEY_PROFILE_AVATAR, resultData);
-            Logger.pii(LOG_TAG, "Profile fetch successful." + resultData);
-            LocalBroadcastManager.getInstance(context).sendBroadcast(profileAvatarUpdatedIntent);
-          } catch (Exception e) {
-            Logger.error(LOG_TAG, "Failed to parse profile json; ignoring.", e);
-          }
+          final String resultData = bundle.getString(FxAccountProfileService.KEY_RESULT_STRING);
+          updateBundleValues(BUNDLE_KEY_PROFILE_JSON, resultData);
+          Logger.info(LOG_TAG, "Profile JSON fetch succeeeded!");
+          FxAccountUtils.pii(LOG_TAG, "Profile JSON fetch returned: " + resultData);
+          LocalBroadcastManager.getInstance(context).sendBroadcast(makeDeletedAccountIntent());
           break;
         case Activity.RESULT_CANCELED:
-          Logger.warn(LOG_TAG, "Failed to fetch profile; ignoring.");
+          Logger.warn(LOG_TAG, "Failed to fetch profile JSON; ignoring.");
           break;
         default:
-          Logger.warn(LOG_TAG, "Invalid Result code received; ignoring.");
+          Logger.warn(LOG_TAG, "Invalid result code received; ignoring.");
           break;
       }
     }

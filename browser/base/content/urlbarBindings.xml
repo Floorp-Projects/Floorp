@@ -2377,10 +2377,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "tracking-protection";
         }
-        if (Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
-          let histogram = Services.telemetry.getHistogramById("TRACKING_PROTECTION_EVENTS");
-          histogram.add(0);
-        }
       ]]></constructor>
       <method name="disableMixedContentProtection">
         <body><![CDATA[
@@ -2415,10 +2411,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // places this host on the tracking protection allowlist.
           Services.perms.add(normalizedUrl,
             "trackingprotection", Services.perms.ALLOW_ACTION);
-          // Telemetry for disable protection
-          let histogram = Services.telemetry.getHistogramById(
-              "TRACKING_PROTECTION_EVENTS");
-          histogram.add(1);
           BrowserReload();
         ]]></body>
       </method>
@@ -2429,10 +2421,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // from the tracking protection allowlist.
           Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
             "trackingprotection");
-          // Telemetry for enable protection
-          let histogram = Services.telemetry.getHistogramById(
-              "TRACKING_PROTECTION_EVENTS");
-          histogram.add(2);
           BrowserReload();
         ]]></body>
       </method>

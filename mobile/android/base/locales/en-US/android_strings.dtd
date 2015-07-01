@@ -426,9 +426,9 @@ size. -->
 <!ENTITY site_settings_clear        "Clear">
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">
 
-<!-- Localization note (reading_list_added2) : Used in a toast, please keep as short
+<!-- Localization note (reading_list_added3) : Used in a toast, please keep as short
      as possible. -->
-<!ENTITY reading_list_added2 "Added to list">
+<!ENTITY reading_list_added3 "Added to Reading List">
 <!ENTITY reading_list_removed "Page removed from your Reading List">
 <!-- Localization note (reading_list_remove) : Used to remove the currently open page from
      the user's reading list. The opposite of overlay_share_reading_list_btn_label. -->

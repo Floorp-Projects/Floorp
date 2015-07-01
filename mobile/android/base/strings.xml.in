@@ -326,7 +326,7 @@
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
-  <string name="reading_list_added">&reading_list_added2;</string>
+  <string name="reading_list_added">&reading_list_added3;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_remove">&reading_list_remove;</string>
   <string name="reading_list_duplicate">&reading_list_duplicate;</string>

@@ -71,6 +71,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     {
         return inlineAtomicsBinop(callInfo, target);
     }
+    if (native == atomics_isLockFree)
+        return inlineAtomicsIsLockFree(callInfo);
 
     // Array natives.
     if (native == ArrayConstructor)
@@ -2951,6 +2953,24 @@ IonBuilder::inlineAtomicsBinop(CallInfo& callInfo, JSFunction* target)
 
     if (!resumeAfter(binop))
         return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineAtomicsIsLockFree(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MAtomicIsLockFree* ilf =
+        MAtomicIsLockFree::New(alloc(), callInfo.getArg(0));
+    current->add(ilf);
+    current->push(ilf);
 
     return InliningStatus_Inlined;
 }

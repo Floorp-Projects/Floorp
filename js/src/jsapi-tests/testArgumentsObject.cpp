@@ -92,10 +92,10 @@ ExhaustiveTest(const char funcode[])
             ClearElements(elems);
             CHECK(argsobj->maybeGetElements(i, j, elems.begin()));
             for (size_t k = 0; k < j; k++)
-                CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
+                CHECK(elems[k].isInt32(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)
                 CHECK(elems[k].isNull());
-            CHECK_SAME(elems[MAX_ELEMS - 1], INT_TO_JSVAL(42));
+            CHECK(elems[MAX_ELEMS - 1].isInt32(42));
         }
     }
 

@@ -36,7 +36,9 @@
 
 %include "vpx_config.asm"
 
+%ifndef program_name
 %define program_name vp9
+%endif
 
 
 %define UNIX64 0
