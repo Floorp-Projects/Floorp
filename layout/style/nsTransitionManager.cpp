@@ -41,16 +41,6 @@ using mozilla::dom::KeyframeEffectReadOnly;
 using namespace mozilla;
 using namespace mozilla::css;
 
-const nsString&
-ElementPropertyTransition::Name() const
-{
-   if (!mName.Length()) {
-     const_cast<ElementPropertyTransition*>(this)->mName =
-       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(TransitionProperty()));
-   }
-   return dom::KeyframeEffectReadOnly::Name();
-}
-
 double
 ElementPropertyTransition::CurrentValuePortion() const
 {
@@ -91,6 +81,18 @@ JSObject*
 CSSTransition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return dom::CSSTransitionBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+CSSTransition::GetTransitionProperty(nsString& aRetVal) const
+{
+  // Once we make the effect property settable (bug 1049975) we will need
+  // to store the transition property on the CSSTransition itself but for
+  // now we can just query the effect.
+  MOZ_ASSERT(mEffect && mEffect->AsTransition(),
+             "Transitions should have a transition effect");
+  nsCSSProperty prop = mEffect->AsTransition()->TransitionProperty();
+  aRetVal = NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(prop));
 }
 
 AnimationPlayState
