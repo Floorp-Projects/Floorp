@@ -255,8 +255,8 @@ nsAccUtils::TableFor(Accessible* aRow)
           tableRole = table->Role();
       }
 
-      return tableRole == roles::TABLE || tableRole == roles::TREE_TABLE ?
-        table : nullptr;
+      return (tableRole == roles::TABLE || tableRole == roles::TREE_TABLE ||
+              tableRole == roles::MATHML_TABLE) ? table : nullptr;
     }
   }
 
