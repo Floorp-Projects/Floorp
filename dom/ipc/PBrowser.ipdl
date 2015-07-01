@@ -583,6 +583,12 @@ child:
     StopIMEStateManagement();
 
     /**
+     * MenuKeyboardListenerInstalled() is called when menu keyboard listener
+     * is installed in the parent process.
+     */
+    MenuKeyboardListenerInstalled(bool aInstalled);
+
+    /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
     MouseEvent(nsString aType,
