@@ -498,4 +498,76 @@ assertEq(i8m.and_i(80001), 0);
 assertEq(i8m.add_i(80001), 0);
 assertEq(i8m.sub_i(80001), 0);
 
+function loadModule_misc(stdlib, foreign, heap) {
+    "use asm";
+
+    var atomic_isLockFree = stdlib.Atomics.isLockFree;
+
+    function ilf1() {
+	return atomic_isLockFree(1)|0;
+    }
+
+    function ilf2() {
+	return atomic_isLockFree(2)|0;
+    }
+
+    function ilf3() {
+	return atomic_isLockFree(3)|0;
+    }
+
+    function ilf4() {
+	return atomic_isLockFree(4)|0;
+    }
+
+    function ilf5() {
+	return atomic_isLockFree(5)|0;
+    }
+
+    function ilf6() {
+	return atomic_isLockFree(6)|0;
+    }
+
+    function ilf7() {
+	return atomic_isLockFree(7)|0;
+    }
+
+    function ilf8() {
+	return atomic_isLockFree(8)|0;
+    }
+
+    function ilf9() {
+	return atomic_isLockFree(9)|0;
+    }
+
+    return { ilf1: ilf1,
+	     ilf2: ilf2,
+	     ilf3: ilf3,
+	     ilf4: ilf4,
+	     ilf5: ilf5,
+	     ilf6: ilf6,
+	     ilf7: ilf7,
+	     ilf8: ilf8,
+	     ilf9: ilf9 };
+}
+
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(loadModule_misc), true);
+
+function test_misc(heap) {
+    var misc = loadModule_misc(this, {}, heap);
+
+    assertEq(misc.ilf1(), 1);
+    assertEq(misc.ilf2(), 1);
+    assertEq(misc.ilf3(), 0);
+    assertEq(misc.ilf4(), 1);
+    assertEq(misc.ilf5(), 0);
+    assertEq(misc.ilf6(), 0);
+    assertEq(misc.ilf7(), 0);
+    var v = misc.ilf8();
+    assertEq(v === 0 || v === 1, true);
+    assertEq(misc.ilf9(), 0);
+}
+
+test_misc(heap);
+
 print("Done");

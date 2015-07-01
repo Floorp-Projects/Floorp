@@ -15,6 +15,7 @@
 #include "jslibmath.h"
 #include "jsstr.h"
 
+#include "jit/AtomicOperations.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
 #include "jit/JitSpewer.h"
@@ -24,6 +25,8 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+
+#include "jit/AtomicOperations-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1209,6 +1212,20 @@ MMathFunction::foldsTo(TempAllocator& alloc)
     if (input->type() == MIRType_Float32)
         return MConstant::NewTypedValue(alloc, DoubleValue(out), MIRType_Float32);
     return MConstant::New(alloc, DoubleValue(out));
+}
+
+MDefinition*
+MAtomicIsLockFree::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = getOperand(0);
+    if (!input->isConstantValue())
+        return this;
+
+    Value val = input->constantValue();
+    if (!val.isInt32())
+        return this;
+
+    return MConstant::New(alloc, BooleanValue(AtomicOperations::isLockfree(val.toInt32())));
 }
 
 MParameter*
