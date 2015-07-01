@@ -1583,7 +1583,7 @@ Connection::ExecuteSimpleSQLAsync(const nsACString &aSQLStatement,
     return rv;
   }
 
-  NS_ADDREF(*_handle = pendingStatement);
+  pendingStatement.forget(_handle);
   return rv;
 }
 
