@@ -40,7 +40,6 @@ class Matrix4x4;
 namespace layers {
 class Compositor;
 class ThebesBufferData;
-class TiledLayerComposer;
 struct EffectChain;
 
 struct TexturedEffect;
@@ -54,10 +53,6 @@ struct TexturedEffect;
 class ContentHost : public CompositableHost
 {
 public:
-  // Subclasses should implement this method if they support being used as a
-  // tiling.
-  virtual TiledLayerComposer* AsTiledLayerComposer() { return nullptr; }
-
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
                             const nsIntRegion& aOldValidRegionBack,

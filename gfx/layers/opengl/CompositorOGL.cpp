@@ -41,7 +41,6 @@
 #include "ScopedGLHelpers.h"
 #include "GLReadTexImageHelper.h"
 #include "GLBlitTextureImageHelper.h"
-#include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "HeapCopyOfStackArray.h"
 
 #if MOZ_WIDGET_ANDROID

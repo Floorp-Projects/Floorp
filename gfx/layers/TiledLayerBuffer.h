@@ -60,11 +60,6 @@ static inline int floor_div(int a, int b)
   }
 }
 
-// An abstract implementation of a tile buffer. This code covers the logic of
-// moving and reusing tiles and leaves the validation up to the implementor. To
-// avoid the overhead of virtual dispatch, we employ the curiously recurring
-// template pattern.
-//
 // Tiles are aligned to a grid with one of the grid points at (0,0) and other
 // grid points spaced evenly in the x- and y-directions by GetTileSize()
 // multiplied by mResolution. GetScaledTileSize() provides convenience for
@@ -81,30 +76,6 @@ static inline int floor_div(int a, int b)
 // validate and return tiles of that type. Tiles will be frequently copied, so
 // the tile type should be a reference or some other type with an efficient
 // copy constructor.
-//
-// It is required that the derived class specify the base class as a friend. It
-// must also implement the following public method:
-//
-//   Tile GetPlaceholderTile() const;
-//
-//   Returns a temporary placeholder tile used as a marker. This placeholder tile
-//   must never be returned by validateTile and must be == to every instance
-//   of a placeholder tile.
-//
-// Additionally, it must implement the following protected methods:
-//
-//   Tile ValidateTile(Tile aTile, const nsIntPoint& aTileOrigin,
-//                     const nsIntRegion& aDirtyRect);
-//
-//   Validates the dirtyRect. The returned Tile will replace the tile.
-//
-//   void ReleaseTile(Tile aTile);
-//
-//   Destroys the given tile.
-//
-//   void SwapTiles(Tile& aTileA, Tile& aTileB);
-//
-//   Swaps two tiles.
 //
 // The contents of the tile buffer will be rendered at the resolution specified
 // in mResolution, which can be altered with SetResolution. The resolution
@@ -196,19 +167,6 @@ public:
   const nsIntRegion& GetPaintedRegion() const { return mPaintedRegion; }
   void ClearPaintedRegion() { mPaintedRegion.SetEmpty(); }
 
-  void ResetPaintedAndValidState() {
-    mPaintedRegion.SetEmpty();
-    mValidRegion.SetEmpty();
-    mTiles.mSize.width = 0;
-    mTiles.mSize.height = 0;
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (!mRetainedTiles[i].IsPlaceholderTile()) {
-        AsDerived().ReleaseTile(mRetainedTiles[i]);
-      }
-    }
-    mRetainedTiles.Clear();
-  }
-
   // Get and set draw scaling. mResolution affects the resolution at which the
   // contents of the buffer are drawn. mResolution has no effect on the
   // coordinate space of the valid region, but does affect the size of an
@@ -217,17 +175,9 @@ public:
   float GetResolution() const { return mResolution; }
   bool IsLowPrecision() const { return mResolution < 1; }
 
-  typedef Tile* Iterator;
-  Iterator TilesBegin() { return mRetainedTiles.Elements(); }
-  Iterator TilesEnd() { return mRetainedTiles.Elements() + mRetainedTiles.Length(); }
-
   void Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml);
 
 protected:
-
-  // Return a reference to this tile in GetTile when the requested tile offset
-  // does not exist.
-  Tile mPlaceHolderTile;
 
   nsIntRegion     mValidRegion;
   nsIntRegion     mPaintedRegion;
@@ -244,41 +194,6 @@ protected:
   TilesPlacement  mTiles;
   float           mResolution;
   gfx::IntSize    mTileSize;
-
-private:
-  const Derived& AsDerived() const { return *static_cast<const Derived*>(this); }
-  Derived& AsDerived() { return *static_cast<Derived*>(this); }
-};
-
-class ClientTiledLayerBuffer;
-class SurfaceDescriptorTiles;
-class ISurfaceAllocator;
-
-// Shadow layers may implement this interface in order to be notified when a
-// tiled layer buffer is updated.
-class TiledLayerComposer
-{
-public:
-  /**
-   * Update the current retained layer with the updated layer data.
-   * It is expected that the tiles described by aTiledDescriptor are all in the
-   * ReadLock state, so that the locks can be adopted when recreating a
-   * ClientTiledLayerBuffer locally. This lock will be retained until the buffer
-   * has completed uploading.
-   *
-   * Returns false if a deserialization error happened, in which case we will
-   * have to kill the child process.
-   */
-  virtual bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
-                                   const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
-
-  /**
-   * If some part of the buffer is being rendered at a lower precision, this
-   * returns that region. If it is not, an empty region will be returned.
-   */
-  virtual const nsIntRegion& GetValidLowPrecisionRegion() const = 0;
-
-  virtual const nsIntRegion& GetValidRegion() const = 0;
 };
 
 template<typename Derived, typename Tile> void
