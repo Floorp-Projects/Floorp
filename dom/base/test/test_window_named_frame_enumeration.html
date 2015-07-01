@@ -29,26 +29,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1019417
        "Frame with no name or empty name should not be in GSP own prop list");
     is(names1.indexOf("x"), -1,
        "Frame with about:blank loaded should not be in our own prop list");
-    isnot(names2.indexOf("x"), -1,
-          "Frame with about:blank loaded should be in our enumeration list");
+    is(names2.indexOf("x"), -1,
+       "Frame with about:blank loaded should not be in our enumeration list");
     isnot(names3.indexOf("x"), -1,
           "Frame with about:blank loaded should be in GSP own prop list");
     is(names1.indexOf("y"), -1,
        "Frame with same-origin loaded should not be in our own prop list");
-    isnot(names2.indexOf("y"), -1,
-          "Frame with same-origin loaded should be in our enumeration list");
+    is(names2.indexOf("y"), -1,
+       "Frame with same-origin loaded should not be in our enumeration list");
     isnot(names3.indexOf("y"), -1,
           "Frame with same-origin loaded should be in GSP own prop list");
     is(names1.indexOf("z"), -1,
        "Frame with cross-origin loaded should not be in our own prop list");
-    isnot(names2.indexOf("z"), -1,
-          "Frame with cross-origin loaded should be in our enumeration list");
+    is(names2.indexOf("z"), -1,
+       "Frame with cross-origin loaded should not be in our enumeration list");
     isnot(names3.indexOf("z"), -1,
-          "Frame with cross-origin loaded should be in GSPown prop list");
+          "Frame with cross-origin loaded should be in GSP own prop list");
     is(names1.indexOf("sameorigin"), -1,
           "Frame with same-origin changed name should not be in our own prop list");
-    isnot(names2.indexOf("sameorigin"), -1,
-          "Frame with same-origin changed name should be in our enumeration list");
+    is(names2.indexOf("sameorigin"), -1,
+       "Frame with same-origin changed name should not be in our enumeration list");
     isnot(names3.indexOf("sameorigin"), -1,
           "Frame with same-origin changed name should be in GSP own prop list");
     is(names1.indexOf("crossorigin"), -1,
