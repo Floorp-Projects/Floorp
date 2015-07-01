@@ -95,17 +95,15 @@ CanvasLayerComposite::RenderLayer(const IntRect& aClipRect)
   }
 #endif
 
-  EffectChain effectChain(this);
-  AddBlendModeEffect(effectChain);
+  RenderWithAllMasks(this, mCompositor, aClipRect,
+                     [&](EffectChain& effectChain, const Rect& clipRect) {
+    mCompositableHost->Composite(effectChain,
+                          GetEffectiveOpacity(),
+                          GetEffectiveTransform(),
+                          GetEffectFilter(),
+                          clipRect);
+  });
 
-  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
-  gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-
-  mCompositableHost->Composite(effectChain,
-                        GetEffectiveOpacity(),
-                        GetEffectiveTransform(),
-                        GetEffectFilter(),
-                        clipRect);
   mCompositableHost->BumpFlashCounter();
 }
 
