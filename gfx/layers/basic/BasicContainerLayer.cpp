@@ -44,7 +44,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
   if (!idealTransform.CanDraw2D()) {
     mEffectiveTransform = idealTransform;
     ComputeEffectiveTransformsForChildren(Matrix4x4());
-    ComputeEffectiveTransformForMaskLayer(Matrix4x4());
+    ComputeEffectiveTransformForMaskLayers(Matrix4x4());
     mUseIntermediateSurface = true;
     return;
   }
@@ -54,7 +54,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
   // need to apply any compensation using the residual from SnapTransformTranslation.
   ComputeEffectiveTransformsForChildren(idealTransform);
 
-  ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 
   Layer* child = GetFirstChild();
   bool hasSingleBlendingChild = false;
