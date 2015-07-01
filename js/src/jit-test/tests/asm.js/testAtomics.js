@@ -24,7 +24,7 @@ function loadModule_int32(stdlib, foreign, heap) {
     // Load element 0
     function do_load() {
 	var v = 0;
-	v = atomic_load(i32a, 0);
+	v = atomic_load(i32a, 0)|0;
 	return v|0;
     }
 
@@ -32,14 +32,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_load_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_load(i32a, i>>2);
+	v = atomic_load(i32a, i>>2)|0;
 	return v|0;
     }
 
     // Store 37 in element 0
     function do_store() {
 	var v = 0;
-	v = atomic_store(i32a, 0, 37);
+	v = atomic_store(i32a, 0, 37)|0;
 	return v|0;
     }
 
@@ -47,14 +47,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_store_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_store(i32a, i>>2, 37);
+	v = atomic_store(i32a, i>>2, 37)|0;
 	return v|0;
     }
 
     // Add 37 to element 10
     function do_add() {
 	var v = 0;
-	v = atomic_add(i32a, 10, 37);
+	v = atomic_add(i32a, 10, 37)|0;
 	return v|0;
     }
 
@@ -62,14 +62,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_add_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_add(i32a, i>>2, 37);
+	v = atomic_add(i32a, i>>2, 37)|0;
 	return v|0;
     }
 
     // Subtract 148 from element 20
     function do_sub() {
 	var v = 0;
-	v = atomic_sub(i32a, 20, 148);
+	v = atomic_sub(i32a, 20, 148)|0;
 	return v|0;
     }
 
@@ -77,14 +77,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_sub_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_sub(i32a, i>>2, 148);
+	v = atomic_sub(i32a, i>>2, 148)|0;
 	return v|0;
     }
 
     // AND 0x33333333 into element 30
     function do_and() {
 	var v = 0;
-	v = atomic_and(i32a, 30, 0x33333333);
+	v = atomic_and(i32a, 30, 0x33333333)|0;
 	return v|0;
     }
 
@@ -92,14 +92,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_and_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_and(i32a, i>>2, 0x33333333);
+	v = atomic_and(i32a, i>>2, 0x33333333)|0;
 	return v|0;
     }
 
     // OR 0x33333333 into element 40
     function do_or() {
 	var v = 0;
-	v = atomic_or(i32a, 40, 0x33333333);
+	v = atomic_or(i32a, 40, 0x33333333)|0;
 	return v|0;
     }
 
@@ -107,14 +107,14 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_or_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_or(i32a, i>>2, 0x33333333);
+	v = atomic_or(i32a, i>>2, 0x33333333)|0;
 	return v|0;
     }
 
     // XOR 0x33333333 into element 50
     function do_xor() {
 	var v = 0;
-	v = atomic_xor(i32a, 50, 0x33333333);
+	v = atomic_xor(i32a, 50, 0x33333333)|0;
 	return v|0;
     }
 
@@ -122,21 +122,21 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_xor_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_xor(i32a, i>>2, 0x33333333);
+	v = atomic_xor(i32a, i>>2, 0x33333333)|0;
 	return v|0;
     }
 
     // CAS element 100: 0 -> -1
     function do_cas1() {
 	var v = 0;
-	v = atomic_cmpxchg(i32a, 100, 0, -1);
+	v = atomic_cmpxchg(i32a, 100, 0, -1)|0;
 	return v|0;
     }
 
     // CAS element 100: -1 -> 0x5A5A5A5A
     function do_cas2() {
 	var v = 0;
-	v = atomic_cmpxchg(i32a, 100, -1, 0x5A5A5A5A);
+	v = atomic_cmpxchg(i32a, 100, -1, 0x5A5A5A5A)|0;
 	return v|0;
     }
 
@@ -144,7 +144,7 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_cas1_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_cmpxchg(i32a, i>>2, 0, -1);
+	v = atomic_cmpxchg(i32a, i>>2, 0, -1)|0;
 	return v|0;
     }
 
@@ -152,7 +152,7 @@ function loadModule_int32(stdlib, foreign, heap) {
     function do_cas2_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_cmpxchg(i32a, i>>2, -1, 0x5A5A5A5A);
+	v = atomic_cmpxchg(i32a, i>>2, -1, 0x5A5A5A5A)|0;
 	return v|0;
     }
 
@@ -177,6 +177,9 @@ function loadModule_int32(stdlib, foreign, heap) {
 	     cas2_i: do_cas2_i };
 }
 
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(loadModule_int32), true);
+
 function loadModule_int8(stdlib, foreign, heap) {
     "use asm";
 
@@ -194,7 +197,7 @@ function loadModule_int8(stdlib, foreign, heap) {
     // Load element 0
     function do_load() {
 	var v = 0;
-	v = atomic_load(i8a, 0);
+	v = atomic_load(i8a, 0)|0;
 	return v|0;
     }
 
@@ -202,14 +205,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_load_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_load(i8a, i);
+	v = atomic_load(i8a, i)|0;
 	return v|0;
     }
 
     // Store 37 in element 0
     function do_store() {
 	var v = 0;
-	v = atomic_store(i8a, 0, 37);
+	v = atomic_store(i8a, 0, 37)|0;
 	return v|0;
     }
 
@@ -217,14 +220,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_store_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_store(i8a, i, 37);
+	v = atomic_store(i8a, i, 37)|0;
 	return v|0;
     }
 
     // Add 37 to element 10
     function do_add() {
 	var v = 0;
-	v = atomic_add(i8a, 10, 37);
+	v = atomic_add(i8a, 10, 37)|0;
 	return v|0;
     }
 
@@ -232,14 +235,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_add_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_add(i8a, i, 37);
+	v = atomic_add(i8a, i, 37)|0;
 	return v|0;
     }
 
     // Subtract 108 from element 20
     function do_sub() {
 	var v = 0;
-	v = atomic_sub(i8a, 20, 108);
+	v = atomic_sub(i8a, 20, 108)|0;
 	return v|0;
     }
 
@@ -247,14 +250,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_sub_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_sub(i8a, i, 108);
+	v = atomic_sub(i8a, i, 108)|0;
 	return v|0;
     }
 
     // AND 0x33 into element 30
     function do_and() {
 	var v = 0;
-	v = atomic_and(i8a, 30, 0x33);
+	v = atomic_and(i8a, 30, 0x33)|0;
 	return v|0;
     }
 
@@ -262,14 +265,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_and_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_and(i8a, i, 0x33);
+	v = atomic_and(i8a, i, 0x33)|0;
 	return v|0;
     }
 
     // OR 0x33 into element 40
     function do_or() {
 	var v = 0;
-	v = atomic_or(i8a, 40, 0x33);
+	v = atomic_or(i8a, 40, 0x33)|0;
 	return v|0;
     }
 
@@ -277,14 +280,14 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_or_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_or(i8a, i, 0x33);
+	v = atomic_or(i8a, i, 0x33)|0;
 	return v|0;
     }
 
     // XOR 0x33 into element 50
     function do_xor() {
 	var v = 0;
-	v = atomic_xor(i8a, 50, 0x33);
+	v = atomic_xor(i8a, 50, 0x33)|0;
 	return v|0;
     }
 
@@ -292,21 +295,21 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_xor_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_xor(i8a, i, 0x33);
+	v = atomic_xor(i8a, i, 0x33)|0;
 	return v|0;
     }
 
     // CAS element 100: 0 -> -1
     function do_cas1() {
 	var v = 0;
-	v = atomic_cmpxchg(i8a, 100, 0, -1);
+	v = atomic_cmpxchg(i8a, 100, 0, -1)|0;
 	return v|0;
     }
 
     // CAS element 100: -1 -> 0x5A
     function do_cas2() {
 	var v = 0;
-	v = atomic_cmpxchg(i8a, 100, -1, 0x5A);
+	v = atomic_cmpxchg(i8a, 100, -1, 0x5A)|0;
 	return v|0;
     }
 
@@ -314,7 +317,7 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_cas1_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_cmpxchg(i8a, i, 0, -1);
+	v = atomic_cmpxchg(i8a, i, 0, -1)|0;
 	return v|0;
     }
 
@@ -322,7 +325,7 @@ function loadModule_int8(stdlib, foreign, heap) {
     function do_cas2_i(i) {
 	i = i|0;
 	var v = 0;
-	v = atomic_cmpxchg(i8a, i, -1, 0x5A);
+	v = atomic_cmpxchg(i8a, i, -1, 0x5A)|0;
 	return v|0;
     }
 
@@ -345,6 +348,9 @@ function loadModule_int8(stdlib, foreign, heap) {
 	     cas1_i: do_cas1_i,
 	     cas2_i: do_cas2_i };
 }
+
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(loadModule_int8), true);
 
 // TODO: halfword arrays
 // TODO: signed vs unsigned; negative results

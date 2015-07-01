@@ -30,6 +30,9 @@ function m(stdlib, ffi, heap)
     return {add_sharedEv:add_sharedEv};
 }
 
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(m), true);
+
 var x;
 
 var sab = new SharedArrayBuffer(65536);

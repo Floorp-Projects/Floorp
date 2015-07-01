@@ -4970,7 +4970,7 @@ CheckAtomicsLoad(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type* 
     PrepareArrayIndex(f, &pointerDef, needsBoundsCheck, mask);
 
     *def = f.atomicLoadHeap(viewType, pointerDef, needsBoundsCheck);
-    *type = Type::Signed;
+    *type = Type::Intish;
     return true;
 }
 
@@ -5004,7 +5004,7 @@ CheckAtomicsStore(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type*
     f.atomicStoreHeap(viewType, pointerDef, rhsDef, needsBoundsCheck);
 
     *def = rhsDef;
-    *type = Type::Signed;
+    *type = rhsType;
     return true;
 }
 
@@ -5036,7 +5036,7 @@ CheckAtomicsBinop(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type*
     PrepareArrayIndex(f, &pointerDef, needsBoundsCheck, mask);
 
     *def = f.atomicBinopHeap(op, viewType, pointerDef, valueArgDef, needsBoundsCheck);
-    *type = Type::Signed;
+    *type = Type::Intish;
     return true;
 }
 
@@ -5095,7 +5095,7 @@ CheckAtomicsCompareExchange(FunctionCompiler& f, ParseNode* call, MDefinition** 
 
     *def = f.atomicCompareExchangeHeap(viewType, pointerDef, oldValueArgDef, newValueArgDef,
                                        needsBoundsCheck);
-    *type = Type::Signed;
+    *type = Type::Intish;
     return true;
 }
 
