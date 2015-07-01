@@ -204,7 +204,7 @@ PluginPRLibrary::NPP_New(NPMIMEType pluginType, NPP instance,
 
 nsresult
 PluginPRLibrary::NPP_ClearSiteData(const char* site, uint64_t flags,
-                                   uint64_t maxAge, nsCOMPtr<nsIClearSiteDataCallback> callback)
+                                   uint64_t maxAge)
 {
   if (!mNPP_ClearSiteData) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -213,44 +213,39 @@ PluginPRLibrary::NPP_ClearSiteData(const char* site, uint64_t flags,
   MAIN_THREAD_JNI_REF_GUARD;
   NPError result = mNPP_ClearSiteData(site, flags, maxAge);
 
-  nsresult rv;
   switch (result) {
   case NPERR_NO_ERROR:
-    rv = NS_OK;
-    break;
+    return NS_OK;
   case NPERR_TIME_RANGE_NOT_SUPPORTED:
-    rv = NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED;
-    break;
+    return NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED;
   case NPERR_MALFORMED_SITE:
-    rv = NS_ERROR_INVALID_ARG;
-    break;
+    return NS_ERROR_INVALID_ARG;
   default:
-    rv = NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
-  callback->Callback(rv);
-  return NS_OK;
 }
 
 nsresult
-PluginPRLibrary::NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> callback)
+PluginPRLibrary::NPP_GetSitesWithData(InfallibleTArray<nsCString>& result)
 {
   if (!mNPP_GetSitesWithData) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  result.Clear();
 
   MAIN_THREAD_JNI_REF_GUARD;
   char** sites = mNPP_GetSitesWithData();
   if (!sites) {
     return NS_OK;
   }
-  InfallibleTArray<nsCString> result;
+
   char** iterator = sites;
   while (*iterator) {
     result.AppendElement(*iterator);
     free(*iterator);
     ++iterator;
   }
-  callback->SitesWithData(result);
   free(sites);
 
   return NS_OK;
