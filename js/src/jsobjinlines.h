@@ -593,12 +593,12 @@ ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
  * or embedding code.
  */
 inline bool
-IsInternalFunctionObject(JSObject* funobj)
+IsInternalFunctionObject(JSObject& funobj)
 {
-    JSFunction* fun = &funobj->as<JSFunction>();
-    MOZ_ASSERT_IF(fun->isLambda(),
-                  fun->isInterpreted() || fun->isAsmJSNative());
-    return fun->isLambda() && fun->isInterpreted() && !fun->environment();
+    JSFunction& fun = funobj.as<JSFunction>();
+    MOZ_ASSERT_IF(fun.isLambda(),
+                  fun.isInterpreted() || fun.isAsmJSNative());
+    return fun.isLambda() && fun.isInterpreted() && !fun.environment();
 }
 
 typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;

@@ -492,7 +492,7 @@ WebGLTexture::ResolvedFakeBlackStatus()
                     const ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
                     if (imageInfo.mImageDataStatus == WebGLImageDataStatus::UninitializedImageData)
                     {
-                        EnsureNoUninitializedImageData(imageTarget, level);
+                        EnsureInitializedImageData(imageTarget, level);
                     }
                 }
             }
@@ -613,13 +613,13 @@ ClearWithTempFB(WebGLContext* webgl, GLuint tex,
 }
 
 
-void
-WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget,
-                                             GLint level)
+bool
+WebGLTexture::EnsureInitializedImageData(TexImageTarget imageTarget,
+                                         GLint level)
 {
     const ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
     if (!imageInfo.HasUninitializedImageData())
-        return;
+        return true;
 
     mContext->MakeContextCurrent();
 
@@ -631,13 +631,11 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget,
         if (cleared) {
             SetImageDataStatus(imageTarget, level,
                                WebGLImageDataStatus::InitializedImageData);
-            return;
+            return true;
         }
     }
 
     // That didn't work. Try uploading zeros then.
-    gl::ScopedBindTexture autoBindTex(mContext->gl, mGLName, mTarget);
-
     size_t bitspertexel = GetBitsPerTexel(imageInfo.mEffectiveInternalFormat);
     MOZ_ASSERT((bitspertexel % 8) == 0); // That would only happen for
                                          // compressed images, which cannot use
@@ -653,11 +651,22 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget,
     MOZ_ASSERT(checked_byteLength.isValid()); // Should have been checked
                                               // earlier.
 
-     // Infallible for now.
-    UniquePtr<uint8_t> zeros((uint8_t*)moz_xcalloc(1,
-                                                   checked_byteLength.value()));
+    size_t byteCount = checked_byteLength.value();
+
+    UniquePtr<uint8_t> zeros((uint8_t*)calloc(1, byteCount));
+    if (zeros == nullptr) {
+        // Failed to allocate memory. Lose the context. Return OOM error.
+        mContext->ForceLoseContext(true);
+        mContext->ErrorOutOfMemory("EnsureInitializedImageData: Failed to alloc %u "
+                                   "bytes to clear image target `%s` level `%d`.",
+                                   byteCount, mContext->EnumName(imageTarget.get()),
+                                   level);
+         return false;
+    }
 
     gl::GLContext* gl = mContext->gl;
+    gl::ScopedBindTexture autoBindTex(gl, mGLName, mTarget);
+
     GLenum driverInternalFormat = LOCAL_GL_NONE;
     GLenum driverFormat = LOCAL_GL_NONE;
     GLenum driverType = LOCAL_GL_NONE;
@@ -691,11 +700,27 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget,
         // from this here.
         gfxCriticalError() << "GL context GetAndFlushUnderlyingGLErrors " << gfx::hexa(error);
         printf_stderr("Error: 0x%4x\n", error);
-        MOZ_CRASH(); // Errors on texture upload have been related to video
-                     // memory exposure in the past.
+        if (error != LOCAL_GL_OUT_OF_MEMORY) {
+            // Errors on texture upload have been related to video
+            // memory exposure in the past, which is a security issue.
+            // Force loss of context.
+            mContext->ForceLoseContext(true);
+            return false;
+        }
+
+        // Out-of-memory uploading pixels to GL. Lose context and report OOM.
+        mContext->ForceLoseContext(true);
+        mContext->ErrorOutOfMemory("EnsureNoUninitializedImageData: Failed to "
+                                   "upload texture of width: %u, height: %u, "
+                                   "depth: %u to target %s level %d.",
+                                   imageInfo.mWidth, imageInfo.mHeight, imageInfo.mDepth,
+                                   mContext->EnumName(imageTarget.get()), level);
+        return false;
     }
 
     SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
+
+    return true;
 }
 
 void

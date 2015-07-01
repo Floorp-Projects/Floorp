@@ -48,13 +48,13 @@ BEGIN_TEST(testParseJSON_success)
     expected = JS::NullValue();
     CHECK(TryParse(cx, "null", expected));
 
-    expected = INT_TO_JSVAL(0);
+    expected.setInt32(0);
     CHECK(TryParse(cx, "0", expected));
 
-    expected = INT_TO_JSVAL(1);
+    expected.setInt32(1);
     CHECK(TryParse(cx, "1", expected));
 
-    expected = INT_TO_JSVAL(-1);
+    expected.setInt32(-1);
     CHECK(TryParse(cx, "-1", expected));
 
     expected = DOUBLE_TO_JSVAL(1);
@@ -74,26 +74,26 @@ BEGIN_TEST(testParseJSON_success)
     const char16_t emptystr[] = { '\0' };
     str = js::NewStringCopyN<CanGC>(cx, emptystr, 0);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\"", expected));
 
     const char16_t nullstr[] = { '\0' };
     str = NewString(cx, nullstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\u0000\"", expected));
 
     const char16_t backstr[] = { '\b' };
     str = NewString(cx, backstr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\b\"", expected));
     CHECK(TryParse(cx, "\"\\u0008\"", expected));
 
     const char16_t newlinestr[] = { '\n', };
     str = NewString(cx, newlinestr);
     CHECK(str);
-    expected = STRING_TO_JSVAL(str);
+    expected = JS::StringValue(str);
     CHECK(TryParse(cx, "\"\\n\"", expected));
     CHECK(TryParse(cx, "\"\\u000A\"", expected));
 
@@ -130,7 +130,7 @@ BEGIN_TEST(testParseJSON_success)
     obj = &v.toObject();
     CHECK(!JS_IsArrayObject(cx, obj));
     CHECK(JS_GetProperty(cx, obj, "f", &v2));
-    CHECK_SAME(v2, INT_TO_JSVAL(17));
+    CHECK(v2.isInt32(17));
 
     return true;
 }
@@ -341,7 +341,7 @@ BEGIN_TEST(testParseJSON_reviver)
     JSFunction* fun = JS_NewFunction(cx, Censor, 0, 0, "censor");
     CHECK(fun);
 
-    JS::RootedValue filter(cx, OBJECT_TO_JSVAL(JS_GetFunctionObject(fun)));
+    JS::RootedValue filter(cx, JS::ObjectValue(*JS_GetFunctionObject(fun)));
 
     CHECK(TryParse(cx, "true", filter));
     CHECK(TryParse(cx, "false", filter));

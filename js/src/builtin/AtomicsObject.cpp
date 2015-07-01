@@ -507,6 +507,19 @@ js::atomics_xor(JSContext* cx, unsigned argc, Value* vp)
     return atomics_binop_impl<do_xor>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
+bool
+js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    HandleValue v = args.get(0);
+    if (!v.isInt32()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+    args.rval().setBoolean(jit::AtomicOperations::isLockfree(v.toInt32()));
+    return true;
+}
+
 // asm.js callouts for platforms that do not have non-word-sized
 // atomics where we don't want to inline the logic for the atomics.
 //
@@ -1195,6 +1208,7 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_FN("and",                atomics_and,                3,0),
     JS_FN("or",                 atomics_or,                 3,0),
     JS_FN("xor",                atomics_xor,                3,0),
+    JS_FN("isLockFree",         atomics_isLockFree,         1,0),
     JS_FN("futexWait",          atomics_futexWait,          4,0),
     JS_FN("futexWake",          atomics_futexWake,          3,0),
     JS_FN("futexWakeOrRequeue", atomics_futexWakeOrRequeue, 5,0),

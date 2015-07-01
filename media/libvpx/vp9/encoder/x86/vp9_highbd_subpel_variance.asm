@@ -14,35 +14,19 @@ SECTION_RODATA
 pw_8: times  8 dw  8
 bilin_filter_m_sse2: times  8 dw 16
                      times  8 dw  0
-                     times  8 dw 15
-                     times  8 dw  1
                      times  8 dw 14
                      times  8 dw  2
-                     times  8 dw 13
-                     times  8 dw  3
                      times  8 dw 12
                      times  8 dw  4
-                     times  8 dw 11
-                     times  8 dw  5
                      times  8 dw 10
                      times  8 dw  6
-                     times  8 dw  9
-                     times  8 dw  7
                      times 16 dw  8
-                     times  8 dw  7
-                     times  8 dw  9
                      times  8 dw  6
                      times  8 dw 10
-                     times  8 dw  5
-                     times  8 dw 11
                      times  8 dw  4
                      times  8 dw 12
-                     times  8 dw  3
-                     times  8 dw 13
                      times  8 dw  2
                      times  8 dw 14
-                     times  8 dw  1
-                     times  8 dw 15
 
 SECTION .text
 

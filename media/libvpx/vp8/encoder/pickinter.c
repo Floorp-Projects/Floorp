@@ -11,6 +11,7 @@
 
 #include <limits.h>
 #include "vpx_config.h"
+#include "./vpx_dsp_rtcd.h"
 #include "onyx_int.h"
 #include "modecosts.h"
 #include "encodeintra.h"
@@ -29,16 +30,12 @@
 #include "denoising.h"
 #endif
 
-extern int VP8_UVSSE(MACROBLOCK *x);
-
 #ifdef SPEEDSTATS
 extern unsigned int cnt_pm;
 #endif
 
 extern const int vp8_ref_frame_order[MAX_MODES];
 extern const MB_PREDICTION_MODE vp8_mode_order[MAX_MODES];
-
-extern int vp8_cost_mv_ref(MB_PREDICTION_MODE m, const int near_mv_ref_ct[4]);
 
 // Fixed point implementation of a skin color classifier. Skin color
 // is model by a Gaussian distribution in the CbCr color space.
@@ -219,33 +216,6 @@ int vp8_get_inter_mbpred_error(MACROBLOCK *mb,
 
 }
 
-
-unsigned int vp8_get4x4sse_cs_c
-(
-    const unsigned char *src_ptr,
-    int  source_stride,
-    const unsigned char *ref_ptr,
-    int  recon_stride
-)
-{
-    int distortion = 0;
-    int r, c;
-
-    for (r = 0; r < 4; r++)
-    {
-        for (c = 0; c < 4; c++)
-        {
-            int diff = src_ptr[c] - ref_ptr[c];
-            distortion += diff * diff;
-        }
-
-        src_ptr += source_stride;
-        ref_ptr += recon_stride;
-    }
-
-    return distortion;
-}
-
 static int get_prediction_error(BLOCK *be, BLOCKD *b)
 {
     unsigned char *sptr;
@@ -253,7 +223,7 @@ static int get_prediction_error(BLOCK *be, BLOCKD *b)
     sptr = (*(be->base_src) + be->src);
     dptr = b->predictor;
 
-    return vp8_get4x4sse_cs(sptr, be->src_stride, dptr, 16);
+    return vpx_get4x4sse_cs(sptr, be->src_stride, dptr, 16);
 
 }
 
@@ -862,8 +832,8 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 
     mode_mv = mode_mv_sb[sign_bias];
     best_ref_mv.as_int = 0;
-    vpx_memset(mode_mv_sb, 0, sizeof(mode_mv_sb));
-    vpx_memset(&best_mbmode, 0, sizeof(best_mbmode));
+    memset(mode_mv_sb, 0, sizeof(mode_mv_sb));
+    memset(&best_mbmode, 0, sizeof(best_mbmode));
 
     /* Setup search priorities */
 #if CONFIG_MULTI_RES_ENCODING
@@ -1041,7 +1011,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             else
             {
                 rate2 += rate;
-                distortion2 = vp8_variance16x16(
+                distortion2 = vpx_variance16x16(
                                     *(b->base_src), b->src_stride,
                                     x->e_mbd.predictor, 16, &sse);
                 this_rd = RDCOST(x->rdmult, x->rddiv, rate2, distortion2);
@@ -1070,7 +1040,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                                              xd->dst.y_stride,
                                              xd->predictor,
                                              16);
-            distortion2 = vp8_variance16x16
+            distortion2 = vpx_variance16x16
                                           (*(b->base_src), b->src_stride,
                                           x->e_mbd.predictor, 16, &sse);
             rate2 += x->mbmode_cost[x->e_mbd.frame_type][x->e_mbd.mode_info_context->mbmi.mode];
@@ -1348,8 +1318,8 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             *returndistortion = distortion2;
             best_rd_sse = sse;
             best_rd = this_rd;
-            vpx_memcpy(&best_mbmode, &x->e_mbd.mode_info_context->mbmi,
-                       sizeof(MB_MODE_INFO));
+            memcpy(&best_mbmode, &x->e_mbd.mode_info_context->mbmi,
+                   sizeof(MB_MODE_INFO));
 
             /* Testing this mode gave rise to an improvement in best error
              * score. Lower threshold a bit for next time
@@ -1487,8 +1457,8 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
 
             if (this_rd < best_rd)
             {
-                vpx_memcpy(&best_mbmode, &x->e_mbd.mode_info_context->mbmi,
-                           sizeof(MB_MODE_INFO));
+                memcpy(&best_mbmode, &x->e_mbd.mode_info_context->mbmi,
+                       sizeof(MB_MODE_INFO));
             }
         }
 
@@ -1512,8 +1482,8 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     /* set to the best mb mode, this copy can be skip if x->skip since it
      * already has the right content */
     if (!x->skip)
-        vpx_memcpy(&x->e_mbd.mode_info_context->mbmi, &best_mbmode,
-                   sizeof(MB_MODE_INFO));
+        memcpy(&x->e_mbd.mode_info_context->mbmi, &best_mbmode,
+               sizeof(MB_MODE_INFO));
 
     if (best_mbmode.mode <= B_PRED)
     {
@@ -1551,7 +1521,7 @@ void vp8_pick_intra_mode(MACROBLOCK *x, int *rate_)
                                          xd->dst.y_stride,
                                          xd->predictor,
                                          16);
-        distortion = vp8_variance16x16
+        distortion = vpx_variance16x16
             (*(b->base_src), b->src_stride, xd->predictor, 16, &sse);
         rate = x->mbmode_cost[xd->frame_type][mode];
         this_rd = RDCOST(x->rdmult, x->rddiv, rate, distortion);

@@ -25,7 +25,7 @@ static void log_frame_info(VP9_COMMON *cm, const char *str, FILE *f) {
 static void print_mi_data(VP9_COMMON *cm, FILE *file, const char *descriptor,
                           size_t member_offset) {
   int mi_row, mi_col;
-  MODE_INFO *mi = cm->mi;
+  MODE_INFO **mi = cm->mi_grid_visible;
   int rows = cm->mi_rows;
   int cols = cm->mi_cols;
   char prefix = descriptor[0];
@@ -35,7 +35,7 @@ static void print_mi_data(VP9_COMMON *cm, FILE *file, const char *descriptor,
     fprintf(file, "%c ", prefix);
     for (mi_col = 0; mi_col < cols; mi_col++) {
       fprintf(file, "%2d ",
-              *((int*) ((char *) (&mi->src_mi->mbmi) +
+              *((int*) ((char *) (&mi[0]->mbmi) +
                                   member_offset)));
       mi++;
     }
@@ -49,7 +49,7 @@ void vp9_print_modes_and_motion_vectors(VP9_COMMON *cm, const char *file) {
   int mi_row;
   int mi_col;
   FILE *mvs = fopen(file, "a");
-  MODE_INFO *mi = cm->mi;
+  MODE_INFO **mi = cm->mi_grid_visible;
   int rows = cm->mi_rows;
   int cols = cm->mi_cols;
 
@@ -64,7 +64,7 @@ void vp9_print_modes_and_motion_vectors(VP9_COMMON *cm, const char *file) {
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(mvs, "S ");
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(mvs, "%2d ", mi->src_mi->mbmi.skip);
+      fprintf(mvs, "%2d ", mi[0]->mbmi.skip);
       mi++;
     }
     fprintf(mvs, "\n");
@@ -74,12 +74,12 @@ void vp9_print_modes_and_motion_vectors(VP9_COMMON *cm, const char *file) {
 
   // output motion vectors.
   log_frame_info(cm, "Vectors ", mvs);
-  mi = cm->mi;
+  mi = cm->mi_grid_visible;
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(mvs, "V ");
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(mvs, "%4d:%4d ", mi->src_mi->mbmi.mv[0].as_mv.row,
-                               mi->src_mi->mbmi.mv[0].as_mv.col);
+      fprintf(mvs, "%4d:%4d ", mi[0]->mbmi.mv[0].as_mv.row,
+                               mi[0]->mbmi.mv[0].as_mv.col);
       mi++;
     }
     fprintf(mvs, "\n");

@@ -287,7 +287,7 @@ JS_GetPositiveInfinityValue(JSContext* cx)
 JS_PUBLIC_API(jsval)
 JS_GetEmptyStringValue(JSContext* cx)
 {
-    return STRING_TO_JSVAL(cx->runtime()->emptyString);
+    return StringValue(cx->runtime()->emptyString);
 }
 
 JS_PUBLIC_API(JSString*)

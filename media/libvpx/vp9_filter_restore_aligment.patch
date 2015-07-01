@@ -1,0 +1,27 @@
+commit 33b3953c548a20c0aee705657df0440a740c28b7
+Author: James Zern <jzern@google.com>
+Date:   Thu Jun 11 15:12:22 2015 -0700
+
+    vp9_filter: restore vp9_bilinear_filters alignment
+    
+    the declaration containing the alignment in vp9_filter.h was removed in:
+    eb88b17 Make vp9 subpixel match vp8
+    
+    fixes a crash in 32-bit builds
+    
+    Change-Id: I9a97e6b4e8e94698e43ff79d0d8bb85043b73c61
+
+diff --git a/vp9/common/vp9_filter.c b/vp9/common/vp9_filter.c
+index afcdf22..b256d4a 100644
+--- a/vp9/common/vp9_filter.c
++++ b/vp9/common/vp9_filter.c
+@@ -12,7 +12,8 @@
+ 
+ #include "vp9/common/vp9_filter.h"
+ 
+-const InterpKernel vp9_bilinear_filters[SUBPEL_SHIFTS] = {
++DECLARE_ALIGNED(256, const InterpKernel,
++                vp9_bilinear_filters[SUBPEL_SHIFTS]) = {
+   { 0, 0, 0, 128,   0, 0, 0, 0 },
+   { 0, 0, 0, 120,   8, 0, 0, 0 },
+   { 0, 0, 0, 112,  16, 0, 0, 0 },

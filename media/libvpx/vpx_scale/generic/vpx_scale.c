@@ -22,6 +22,7 @@
 ****************************************************************************/
 #include "./vpx_scale_rtcd.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_scale/vpx_scale.h"
 #include "vpx_scale/yv12config.h"
 
 typedef struct {
@@ -379,7 +380,7 @@ void Scale2D
       vert_band_scale(temp_area + dest_pitch, dest_pitch, dest, dest_pitch, dest_width);
 
       if (interpolation)
-        vpx_memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_width);
+        memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_width);
 
       /* Next band... */
       source += (unsigned long) source_band_height  * source_pitch;
@@ -432,7 +433,7 @@ void Scale2D
                  temp_area + i * dest_pitch, 1, hratio, dest_width);
       } else { /*  Duplicate the last row */
         /* copy temp_area row 0 over from last row in the past */
-        vpx_memcpy(temp_area + i * dest_pitch, temp_area + (i - 1)*dest_pitch, dest_pitch);
+        memcpy(temp_area + i * dest_pitch, temp_area + (i - 1)*dest_pitch, dest_pitch);
       }
     }
 
@@ -443,7 +444,7 @@ void Scale2D
     }
 
     /* copy temp_area row 0 over from last row in the past */
-    vpx_memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_pitch);
+    memcpy(temp_area, temp_area + source_band_height * dest_pitch, dest_pitch);
 
     /* move to the next band */
     source += source_band_height * source_pitch;
@@ -498,11 +499,11 @@ void vpx_scale_frame
 
   if (dw < (int)dst->y_width)
     for (i = 0; i < dh; i++)
-      vpx_memset(dst->y_buffer + i * dst->y_stride + dw - 1, dst->y_buffer[i * dst->y_stride + dw - 2], dst->y_width - dw + 1);
+      memset(dst->y_buffer + i * dst->y_stride + dw - 1, dst->y_buffer[i * dst->y_stride + dw - 2], dst->y_width - dw + 1);
 
   if (dh < (int)dst->y_height)
     for (i = dh - 1; i < (int)dst->y_height; i++)
-      vpx_memcpy(dst->y_buffer + i * dst->y_stride, dst->y_buffer + (dh - 2) * dst->y_stride, dst->y_width + 1);
+      memcpy(dst->y_buffer + i * dst->y_stride, dst->y_buffer + (dh - 2) * dst->y_stride, dst->y_width + 1);
 
   Scale2D((unsigned char *) src->u_buffer, src->uv_stride, src->uv_width, src->uv_height,
           (unsigned char *) dst->u_buffer, dst->uv_stride, dw / 2, dh / 2,
@@ -510,11 +511,11 @@ void vpx_scale_frame
 
   if (dw / 2 < (int)dst->uv_width)
     for (i = 0; i < dst->uv_height; i++)
-      vpx_memset(dst->u_buffer + i * dst->uv_stride + dw / 2 - 1, dst->u_buffer[i * dst->uv_stride + dw / 2 - 2], dst->uv_width - dw / 2 + 1);
+      memset(dst->u_buffer + i * dst->uv_stride + dw / 2 - 1, dst->u_buffer[i * dst->uv_stride + dw / 2 - 2], dst->uv_width - dw / 2 + 1);
 
   if (dh / 2 < (int)dst->uv_height)
     for (i = dh / 2 - 1; i < (int)dst->y_height / 2; i++)
-      vpx_memcpy(dst->u_buffer + i * dst->uv_stride, dst->u_buffer + (dh / 2 - 2)*dst->uv_stride, dst->uv_width);
+      memcpy(dst->u_buffer + i * dst->uv_stride, dst->u_buffer + (dh / 2 - 2)*dst->uv_stride, dst->uv_width);
 
   Scale2D((unsigned char *) src->v_buffer, src->uv_stride, src->uv_width, src->uv_height,
           (unsigned char *) dst->v_buffer, dst->uv_stride, dw / 2, dh / 2,
@@ -522,9 +523,9 @@ void vpx_scale_frame
 
   if (dw / 2 < (int)dst->uv_width)
     for (i = 0; i < dst->uv_height; i++)
-      vpx_memset(dst->v_buffer + i * dst->uv_stride + dw / 2 - 1, dst->v_buffer[i * dst->uv_stride + dw / 2 - 2], dst->uv_width - dw / 2 + 1);
+      memset(dst->v_buffer + i * dst->uv_stride + dw / 2 - 1, dst->v_buffer[i * dst->uv_stride + dw / 2 - 2], dst->uv_width - dw / 2 + 1);
 
   if (dh / 2 < (int) dst->uv_height)
     for (i = dh / 2 - 1; i < (int)dst->y_height / 2; i++)
-      vpx_memcpy(dst->v_buffer + i * dst->uv_stride, dst->v_buffer + (dh / 2 - 2)*dst->uv_stride, dst->uv_width);
+      memcpy(dst->v_buffer + i * dst->uv_stride, dst->v_buffer + (dh / 2 - 2)*dst->uv_stride, dst->uv_width);
 }

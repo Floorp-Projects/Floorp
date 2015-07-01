@@ -136,6 +136,9 @@ extern void vp8_mv_pred
     int near_sadidx[]
 );
 void vp8_cal_sad(VP8_COMP *cpi, MACROBLOCKD *xd, MACROBLOCK *x, int recon_yoffset, int near_sadidx[]);
+int VP8_UVSSE(MACROBLOCK *x);
+int vp8_cost_mv_ref(MB_PREDICTION_MODE m, const int near_mv_ref_ct[4]);
+void vp8_set_mbmode_and_mvs(MACROBLOCK *x, MB_PREDICTION_MODE mb, int_mv *mv);
 
 #ifdef __cplusplus
 }  // extern "C"

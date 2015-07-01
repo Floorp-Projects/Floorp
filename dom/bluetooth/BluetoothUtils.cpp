@@ -155,14 +155,14 @@ SetJsObject(JSContext* aContext,
                                      v.get_nsString().BeginReading(),
                                      v.get_nsString().Length());
         NS_ENSURE_TRUE(jsData, false);
-        val = STRING_TO_JSVAL(jsData);
+        val.setString(jsData);
         break;
       }
       case BluetoothValue::Tuint32_t:
-        val = INT_TO_JSVAL(v.get_uint32_t());
+        val.setInt32(v.get_uint32_t());
         break;
       case BluetoothValue::Tbool:
-        val = BOOLEAN_TO_JSVAL(v.get_bool());
+        val.setBoolean(v.get_bool());
         break;
       default:
         BT_WARNING("SetJsObject: Parameter is not handled");
@@ -197,7 +197,7 @@ BroadcastSystemMessage(const nsAString& aType,
     JSString* jsData = JS_NewUCStringCopyN(cx,
                                            aData.get_nsString().BeginReading(),
                                            aData.get_nsString().Length());
-    value = STRING_TO_JSVAL(jsData);
+    value.setString(jsData);
   } else if (aData.type() == BluetoothValue::TArrayOfBluetoothNamedValue) {
     JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
     if (!obj) {

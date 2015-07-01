@@ -40,6 +40,7 @@ bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
+bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_futexWait(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_futexWake(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp);

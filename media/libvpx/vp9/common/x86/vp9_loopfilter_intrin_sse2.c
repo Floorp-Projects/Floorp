@@ -9,6 +9,8 @@
  */
 
 #include <emmintrin.h>  // SSE2
+
+#include "./vp9_rtcd.h"
 #include "vp9/common/vp9_loopfilter.h"
 #include "vpx_ports/emmintrin_compat.h"
 
@@ -729,12 +731,12 @@ void vp9_lpf_horizontal_8_sse2(unsigned char *s, int p,
                                const unsigned char *_blimit,
                                const unsigned char *_limit,
                                const unsigned char *_thresh, int count) {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op2, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op1, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op0, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq2, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq1, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq0, 16);
+  DECLARE_ALIGNED(16, unsigned char, flat_op2[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_op1[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_op0[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq2[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq1[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq0[16]);
   const __m128i zero = _mm_set1_epi16(0);
   const __m128i blimit = _mm_load_si128((const __m128i *)_blimit);
   const __m128i limit = _mm_load_si128((const __m128i *)_limit);
@@ -948,12 +950,12 @@ void vp9_lpf_horizontal_8_dual_sse2(uint8_t *s, int p,
                                     const uint8_t *_blimit1,
                                     const uint8_t *_limit1,
                                     const uint8_t *_thresh1) {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op2, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op1, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_op0, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq2, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq1, 16);
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, flat_oq0, 16);
+  DECLARE_ALIGNED(16, unsigned char, flat_op2[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_op1[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_op0[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq2[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq1[16]);
+  DECLARE_ALIGNED(16, unsigned char, flat_oq0[16]);
   const __m128i zero = _mm_set1_epi16(0);
   const __m128i blimit =
       _mm_unpacklo_epi64(_mm_load_si128((const __m128i *)_blimit0),
@@ -1461,7 +1463,7 @@ void vp9_lpf_vertical_4_dual_sse2(uint8_t *s, int p, const uint8_t *blimit0,
                                   const uint8_t *blimit1,
                                   const uint8_t *limit1,
                                   const uint8_t *thresh1) {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, t_dst, 16 * 8);
+  DECLARE_ALIGNED(16, unsigned char, t_dst[16 * 8]);
   unsigned char *src[2];
   unsigned char *dst[2];
 
@@ -1484,7 +1486,7 @@ void vp9_lpf_vertical_8_sse2(unsigned char *s, int p,
                              const unsigned char *blimit,
                              const unsigned char *limit,
                              const unsigned char *thresh, int count) {
-  DECLARE_ALIGNED_ARRAY(8, unsigned char, t_dst, 8 * 8);
+  DECLARE_ALIGNED(8, unsigned char, t_dst[8 * 8]);
   unsigned char *src[1];
   unsigned char *dst[1];
   (void)count;
@@ -1511,7 +1513,7 @@ void vp9_lpf_vertical_8_dual_sse2(uint8_t *s, int p, const uint8_t *blimit0,
                                   const uint8_t *blimit1,
                                   const uint8_t *limit1,
                                   const uint8_t *thresh1) {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, t_dst, 16 * 8);
+  DECLARE_ALIGNED(16, unsigned char, t_dst[16 * 8]);
   unsigned char *src[2];
   unsigned char *dst[2];
 
@@ -1535,7 +1537,7 @@ void vp9_lpf_vertical_16_sse2(unsigned char *s, int p,
                               const unsigned char *blimit,
                               const unsigned char *limit,
                               const unsigned char *thresh) {
-  DECLARE_ALIGNED_ARRAY(8, unsigned char, t_dst, 8 * 16);
+  DECLARE_ALIGNED(8, unsigned char, t_dst[8 * 16]);
   unsigned char *src[2];
   unsigned char *dst[2];
 
@@ -1562,7 +1564,7 @@ void vp9_lpf_vertical_16_sse2(unsigned char *s, int p,
 void vp9_lpf_vertical_16_dual_sse2(unsigned char *s, int p,
                                    const uint8_t *blimit, const uint8_t *limit,
                                    const uint8_t *thresh) {
-  DECLARE_ALIGNED_ARRAY(16, unsigned char, t_dst, 256);
+  DECLARE_ALIGNED(16, unsigned char, t_dst[256]);
 
   // Transpose 16x16
   transpose8x16(s - 8, s - 8 + 8 * p, p, t_dst, 16);

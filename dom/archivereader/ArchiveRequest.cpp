@@ -201,7 +201,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
     return NS_ERROR_FAILURE;
   }
 
-  *aValue = OBJECT_TO_JSVAL(array);
+  aValue->setObject(*array);
   return NS_OK;
 }
 

@@ -427,6 +427,14 @@ public:
     return Intersection(intervals);
   }
 
+  SelfType& operator-= (const SelfType& aIntervals)
+  {
+    for (const auto& interval : aIntervals.mIntervals) {
+      *this -= interval;
+    }
+    return *this;
+  }
+
   SelfType operator- (const ElemType& aInterval)
   {
     SelfType intervals(*this);

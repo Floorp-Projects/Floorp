@@ -99,7 +99,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
     js::SetFunctionNativeReserved(funobj, XPC_FUNCTION_PARENT_OBJECT_SLOT,
                                   ObjectValue(*parent));
 
-    *vp = OBJECT_TO_JSVAL(funobj);
+    vp->setObject(*funobj);
 
     return true;
 }

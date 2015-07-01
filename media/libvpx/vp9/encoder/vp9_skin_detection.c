@@ -60,14 +60,14 @@ void vp9_compute_skin_map(VP9_COMP *const cpi, FILE *yuv_skinmap_file) {
   const int src_ystride = cpi->Source->y_stride;
   const int src_uvstride = cpi->Source->uv_stride;
   YV12_BUFFER_CONFIG skinmap;
-  vpx_memset(&skinmap, 0, sizeof(YV12_BUFFER_CONFIG));
+  memset(&skinmap, 0, sizeof(YV12_BUFFER_CONFIG));
   if (vp9_alloc_frame_buffer(&skinmap, cm->width, cm->height,
                                cm->subsampling_x, cm->subsampling_y,
                                VP9_ENC_BORDER_IN_PIXELS, cm->byte_alignment)) {
       vp9_free_frame_buffer(&skinmap);
       return;
   }
-  vpx_memset(skinmap.buffer_alloc, 128, skinmap.frame_size);
+  memset(skinmap.buffer_alloc, 128, skinmap.frame_size);
   y = skinmap.y_buffer;
   // Loop through 8x8 blocks and set skin map based on center pixel of block.
   // Set y to white for skin block, otherwise set to source with gray scale.

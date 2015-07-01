@@ -20,17 +20,17 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
     JS::RootedValue vobj(cx);
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
-    vobj = OBJECT_TO_JSVAL(obj);
+    vobj.setObject(*obj);
 
     JSFunction* funGet = JS_NewFunction(cx, NativeGetterSetter, 0, 0, "get");
     CHECK(funGet);
     JS::RootedObject funGetObj(cx, JS_GetFunctionObject(funGet));
-    JS::RootedValue vget(cx, OBJECT_TO_JSVAL(funGetObj));
+    JS::RootedValue vget(cx, JS::ObjectValue(*funGetObj));
 
     JSFunction* funSet = JS_NewFunction(cx, NativeGetterSetter, 1, 0, "set");
     CHECK(funSet);
     JS::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
-    JS::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));
+    JS::RootedValue vset(cx, JS::ObjectValue(*funSetObj));
 
     JS::RootedObject vObject(cx, vobj.toObjectOrNull());
     CHECK(JS_DefineProperty(cx, vObject, PROPERTY_NAME,

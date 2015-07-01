@@ -45,7 +45,7 @@ function testSteps()
 
   const objectStoreDataLengthSort = [
     { key: "5", value: arr},
-    //{ key: "4", value: str},
+    { key: "4", value: str},
   ];
 
   let request = indexedDB.open(name, 1);
