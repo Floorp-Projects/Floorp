@@ -267,16 +267,8 @@ description > html|a {
   -moz-margin-start: 33px;
 }
 
-#trackingProtectionImage {
-  width: 16px;
-  height: 16px;
-  list-style-image: url(chrome://browser/skin/bad-content-blocked-16.png);
-}
-
-@media (min-resolution: 2dppx) {
-  #trackingProtectionImage {
-    list-style-image: url(chrome://browser/skin/bad-content-blocked-16@2x.png);
-  }
+.text-link {
+  margin-bottom: 0;
 }
 
 #showUpdateHistory {
