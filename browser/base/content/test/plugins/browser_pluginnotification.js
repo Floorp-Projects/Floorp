@@ -50,6 +50,57 @@ add_task(function* () {
      "Test 1a, plugin fallback type should be PLUGIN_UNSUPPORTED");
 });
 
+// Test that the doorhanger is shown when the user clicks on the overlay
+// after having previously blocked the plugin.
+add_task(function* () {
+  updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+
+  // Work around for delayed PluginBindingAttached
+  yield promiseUpdatePluginBindings(gTestBrowser);
+
+  yield promisePopupNotification("click-to-play-plugins");
+
+  let pluginInfo = yield promiseForPluginInfo("test");
+  ok(!pluginInfo.activated, "Plugin should not be activated");
+
+  // Simulate clicking the "Allow Now" button.
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+
+  yield promiseForNotificationShown(notification);
+
+  PopupNotifications.panel.firstChild._secondaryButton.click();
+
+  pluginInfo = yield promiseForPluginInfo("test");
+  ok(pluginInfo.activated, "Plugin should be activated");
+
+  // Simulate clicking the "Block" button.
+  yield promiseForNotificationShown(notification);
+
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
+  pluginInfo = yield promiseForPluginInfo("test");
+  ok(!pluginInfo.activated, "Plugin should not be activated");
+
+  // Simulate clicking the overlay
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let doc = content.document;
+    let plugin = doc.getElementById("test");
+    let bounds = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
+    let left = (bounds.left + bounds.right) / 2;
+    let top = (bounds.top + bounds.bottom) / 2;
+    let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
+    utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+  });
+
+  ok(!notification.dismissed, "A plugin notification should be shown.");
+
+  clearAllPluginPermissions();
+});
+
 // Tests that going back will reshow the notification for click-to-play plugins
 add_task(function* () {
   updateAllTestPlugins(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
