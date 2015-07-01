@@ -1392,12 +1392,10 @@ UndefinedValue()
 #endif
 }
 
-static inline Value
+static inline JS_VALUE_CONSTEXPR Value
 Int32Value(int32_t i32)
 {
-    Value v;
-    v.setInt32(i32);
-    return v;
+    return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i32));
 }
 
 static inline Value
@@ -1935,12 +1933,6 @@ static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
 /************************************************************************/
 
 static inline JS_VALUE_CONSTEXPR jsval
-INT_TO_JSVAL(int32_t i)
-{
-    return IMPL_TO_JSVAL(INT32_TO_JSVAL_IMPL(i));
-}
-
-static inline JS_VALUE_CONSTEXPR jsval
 DOUBLE_TO_JSVAL(double d)
 {
     /*
@@ -1967,7 +1959,7 @@ static inline JS_VALUE_CONSTEXPR jsval
 UINT_TO_JSVAL(uint32_t i)
 {
     return i <= JSVAL_INT_MAX
-           ? INT_TO_JSVAL((int32_t)i)
+           ? JS::Int32Value(int32_t(i))
            : DOUBLE_TO_JSVAL((double)i);
 }
 

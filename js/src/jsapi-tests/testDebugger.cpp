@@ -57,7 +57,7 @@ bool testIndirectEval(JS::HandleObject scope, const char* code)
 
     JS::RootedValue hitsv(cx);
     EVAL("hits", &hitsv);
-    CHECK_SAME(hitsv, INT_TO_JSVAL(1));
+    CHECK(hitsv.isInt32(1));
     return true;
 }
 END_TEST(testDebugger_newScriptHook)

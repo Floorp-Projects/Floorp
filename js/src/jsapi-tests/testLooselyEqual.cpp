@@ -54,7 +54,7 @@ struct LooseEqualityData
         qNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::quiet_NaN());
         sNaN = DOUBLE_TO_JSVAL(numeric_limits<double>::signaling_NaN());
         d42 = DOUBLE_TO_JSVAL(42.0);
-        i42 = INT_TO_JSVAL(42);
+        i42 = JS::Int32Value(42);
         undef = JS::UndefinedValue();
         null = JS::NullValue();
         obj = JS::ObjectOrNullValue(JS::CurrentGlobalOrNull(cx));

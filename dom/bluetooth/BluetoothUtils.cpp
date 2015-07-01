@@ -159,7 +159,7 @@ SetJsObject(JSContext* aContext,
         break;
       }
       case BluetoothValue::Tuint32_t:
-        val = INT_TO_JSVAL(v.get_uint32_t());
+        val.setInt32(v.get_uint32_t());
         break;
       case BluetoothValue::Tbool:
         val.setBoolean(v.get_bool());
