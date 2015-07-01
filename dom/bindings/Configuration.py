@@ -133,9 +133,15 @@ class Configuration:
         self.unionsPerFilename = defaultdict(list)
 
         for (t, descriptor, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
-            if t.isMozMap():
-                t = t.inner
-            t = t.unroll()
+            while True:
+                if t.isMozMap():
+                    t = t.inner
+                elif t.isPromise():
+                    t = t.promiseInnerType()
+                elif t.unroll() != t:
+                    t = t.unroll()
+                else:
+                    break
             if t.isUnion():
                 filenamesForUnion = self.filenamesPerUnion[t.name]
                 if t.filename() not in filenamesForUnion:
