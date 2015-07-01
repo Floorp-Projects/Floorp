@@ -1088,14 +1088,8 @@ protected:
    * Grab a recyclable ImageLayer for use as a mask layer for aLayer (that is a
    * mask layer which has been used for aLayer before), or create one if such
    * a layer doesn't exist.
-   *
-   * Since mask layers can exist either on the layer directly, or as a side-
-   * attachment to FrameMetrics (for ancestor scrollframe clips), we key the
-   * recycle operation on both the originating layer and the mask layer's
-   * index in the layer, if any.
    */
-  struct MaskLayerKey;
-  already_AddRefed<ImageLayer> CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey);
+  already_AddRefed<ImageLayer> CreateOrRecycleMaskImageLayerFor(Layer* aLayer);
   /**
    * Grabs all PaintedLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
@@ -1197,12 +1191,6 @@ protected:
                       const nsIntRegion& aLayerVisibleRegion,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
 
-  already_AddRefed<Layer> CreateMaskLayer(
-    Layer *aLayer, const DisplayItemClip& aClip,
-    const nsIntRegion& aLayerVisibleRegion,
-    const Maybe<size_t>& aForAncestorMaskLayer,
-    uint32_t aRoundedRectClipCount = UINT32_MAX);
-
   bool ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
                                   const nsIFrame **aAnimatedGeometryRoot);
 
@@ -1235,33 +1223,11 @@ protected:
   typedef nsAutoTArray<NewLayerEntry,1> AutoLayersArray;
   AutoLayersArray                  mNewChildLayers;
   nsTHashtable<nsRefPtrHashKey<PaintedLayer>> mPaintedLayersAvailableForRecycling;
+  nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
+    mRecycledMaskImageLayers;
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mSnappingEnabled;
   bool                             mFlattenToSingleLayer;
-
-  struct MaskLayerKey {
-    MaskLayerKey() : mLayer(nullptr) {}
-    MaskLayerKey(Layer* aLayer, const Maybe<size_t>& aAncestorIndex)
-      : mLayer(aLayer),
-        mAncestorIndex(aAncestorIndex)
-    {}
-
-    PLDHashNumber Hash() const {
-      // Hash the layer and add the layer index to the hash.
-      return (NS_PTR_TO_UINT32(mLayer) >> 2)
-             + (mAncestorIndex ? (*mAncestorIndex + 1) : 0);
-    }
-    bool operator ==(const MaskLayerKey& aOther) const {
-      return mLayer == aOther.mLayer &&
-             mAncestorIndex == aOther.mAncestorIndex;
-    }
-
-    Layer* mLayer;
-    Maybe<size_t> mAncestorIndex;
-  };
-
-  nsDataHashtable<nsGenericHashKey<MaskLayerKey>, nsRefPtr<ImageLayer>>
-    mRecycledMaskImageLayers;
 };
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
@@ -1961,12 +1927,12 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 }
 
 already_AddRefed<ImageLayer>
-ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey)
+ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
 {
-  nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aKey);
+  nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
   if (result) {
-    mRecycledMaskImageLayers.Remove(aKey);
-    aKey.mLayer->ClearExtraDumpInfo();
+    mRecycledMaskImageLayers.Remove(aLayer);
+    aLayer->ClearExtraDumpInfo();
     // XXX if we use clip on mask layers, null it out here
   } else {
     // Create a new layer
@@ -4354,14 +4320,7 @@ ContainerState::CollectOldLayers()
     if (Layer* maskLayer = layer->GetMaskLayer()) {
       NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
                    "Could not recycle mask layer, unsupported layer type.");
-      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Nothing()), static_cast<ImageLayer*>(maskLayer));
-    }
-    for (size_t i = 0; i < layer->GetAncestorMaskLayerCount(); i++) {
-      Layer* maskLayer = layer->GetAncestorMaskLayerAt(i);
-
-      NS_ASSERTION(maskLayer->GetType() == Layer::TYPE_IMAGE,
-                   "Could not recycle mask layer, unsupported layer type.");
-      mRecycledMaskImageLayers.Put(MaskLayerKey(layer, Some(i)), static_cast<ImageLayer*>(maskLayer));
+      mRecycledMaskImageLayers.Put(layer, static_cast<ImageLayer*>(maskLayer));
     }
   }
 }
@@ -4399,15 +4358,8 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   nsAutoTArray<FrameMetrics,2> metricsArray;
   if (aEntry->mBaseFrameMetrics) {
     metricsArray.AppendElement(*aEntry->mBaseFrameMetrics);
-
-    // The base FrameMetrics was not computed by the nsIScrollableframe, so it
-    // should not have a mask layer.
-    MOZ_ASSERT(!aEntry->mBaseFrameMetrics->GetMaskLayerIndex());
   }
   uint32_t baseLength = metricsArray.Length();
-
-  // Any extra mask layers we need to attach to FrameMetrics.
-  nsTArray<nsRefPtr<Layer>> maskLayers;
 
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRoot;
@@ -4433,38 +4385,11 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       continue;
     }
 
-    Maybe<FrameMetricsAndClip> info =
-      scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame, mParameters);
-    if (!info) {
-      continue;
-    }
-
-    FrameMetrics& metrics = info->metrics;
-    const DisplayItemClip* clip = info->clip;
-
-    if (clip &&
-        clip->HasClip() &&
-        clip->GetRoundedRectCount() > 0)
-    {
-      // The clip in between this scrollframe and its ancestor scrollframe
-      // requires a mask layer. Since this mask layer should not move with
-      // the APZC associated with this FrameMetrics, we attach the mask
-      // layer as an additional, separate clip.
-      Maybe<size_t> nextIndex = Some(maskLayers.Length());
-      nsRefPtr<Layer> maskLayer =
-        CreateMaskLayer(aEntry->mLayer, *clip, aEntry->mVisibleRegion, nextIndex, clip->GetRoundedRectCount());
-      if (maskLayer) {
-        metrics.SetMaskLayerIndex(nextIndex);
-        maskLayers.AppendElement(maskLayer);
-      }
-    }
-
-    metricsArray.AppendElement(metrics);
+    scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame,
+                                     mParameters, &metricsArray);
   }
-
   // Watch out for FrameMetrics copies in profiles
   aEntry->mLayer->SetFrameMetrics(metricsArray);
-  aEntry->mLayer->SetAncestorMaskLayers(maskLayers);
 }
 
 static void
@@ -5712,28 +5637,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
     return;
   }
 
-  nsRefPtr<Layer> maskLayer =
-    CreateMaskLayer(aLayer, aClip, aLayerVisibleRegion, Nothing(), aRoundedRectClipCount);
-
-  if (!maskLayer) {
-    SetClipCount(paintedData, 0);
-    return;
-  }
-
-  aLayer->SetMaskLayer(maskLayer);
-  SetClipCount(paintedData, aRoundedRectClipCount);
-}
-
-already_AddRefed<Layer>
-ContainerState::CreateMaskLayer(Layer *aLayer,
-                               const DisplayItemClip& aClip,
-                               const nsIntRegion& aLayerVisibleRegion,
-                               const Maybe<size_t>& aForAncestorMaskLayer,
-                               uint32_t aRoundedRectClipCount)
-{
   // check if we can re-use the mask layer
-  MaskLayerKey recycleKey(aLayer, aForAncestorMaskLayer);
-  nsRefPtr<ImageLayer> maskLayer = CreateOrRecycleMaskImageLayerFor(recycleKey);
+  nsRefPtr<ImageLayer> maskLayer =  CreateOrRecycleMaskImageLayerFor(aLayer);
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
 
   MaskLayerUserData newData;
@@ -5744,7 +5649,9 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   newData.mAppUnitsPerDevPixel = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
 
   if (*userData == newData) {
-    return maskLayer.forget();
+    aLayer->SetMaskLayer(maskLayer);
+    SetClipCount(paintedData, aRoundedRectClipCount);
+    return;
   }
 
   // calculate a more precise bounding rect
@@ -5797,7 +5704,8 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     // fail if we can't get the right surface
     if (!dt) {
       NS_WARNING("Could not create DrawTarget for mask layer.");
-      return nullptr;
+      SetClipCount(paintedData, 0);
+      return;
     }
 
     nsRefPtr<gfxContext> context = new gfxContext(dt);
@@ -5842,7 +5750,9 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
   userData->mImageKey = lookupKey;
 
-  return maskLayer.forget();
+  aLayer->SetMaskLayer(maskLayer);
+  SetClipCount(paintedData, aRoundedRectClipCount);
+  return;
 }
 
 } // namespace mozilla
