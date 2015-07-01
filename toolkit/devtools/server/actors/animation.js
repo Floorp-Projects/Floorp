@@ -113,6 +113,14 @@ let AnimationPlayerActor = ActorClass({
     return data;
   },
 
+  isAnimation: function(player=this.player) {
+    return player instanceof this.tabActor.window.CSSAnimation;
+  },
+
+  isTransition: function(player=this.player) {
+    return player instanceof this.tabActor.window.CSSTransition;
+  },
+
   /**
    * Some of the player's properties are retrieved from the node's
    * computed-styles because the Web Animations API does not provide them yet.
@@ -140,11 +148,28 @@ let AnimationPlayerActor = ActorClass({
 
     // If there are several names, retrieve the index of the animation name in
     // the list.
+    let playerName = this.getName();
     names = names.split(",").map(n => n.trim());
     for (let i = 0; i < names.length; i++) {
-      if (names[i] === this.player.effect.name) {
+      if (names[i] === playerName) {
         return i;
       }
+    }
+  },
+
+  /**
+   * Get the name associated with the player. This is used to match
+   * up the player with values in the computed animation-name or
+   * transition-property property.
+   * @return {String}
+   */
+  getName: function() {
+    if (this.isAnimation()) {
+      return this.player.animationName;
+    } else if (this.isTransition()) {
+      return this.player.transitionProperty;
+    } else {
+      return  "";
     }
   },
 
@@ -234,7 +259,7 @@ let AnimationPlayerActor = ActorClass({
       currentTime: this.player.currentTime,
       playState: this.player.playState,
       playbackRate: this.player.playbackRate,
-      name: this.player.effect.name,
+      name: this.getName(),
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
@@ -627,8 +652,11 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
         // already have, it means it's a transition that's re-starting. So send
         // a "removed" event for the one we already have.
         let index = this.actors.findIndex(a => {
-          return a.player.effect.name === player.effect.name &&
-                 a.player.effect.target === player.effect.target;
+          return a.player.constructor === player.constructor &&
+                 ((a.isAnimation() &&
+                   a.player.animationName === player.animationName) ||
+                  (a.isTransition() &&
+                   a.player.transitionProperty === player.transitionProperty));
         });
         if (index !== -1) {
           eventData.push({
