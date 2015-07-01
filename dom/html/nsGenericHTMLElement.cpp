@@ -106,8 +106,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 
-#include "mozilla/net/ReferrerPolicy.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -997,10 +995,6 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
       return aResult.ParseIntValue(aValue);
     }
 
-    if (aAttribute == nsGkAtoms::referrer) {
-      return ParseReferrerAttribute(aValue, aResult);
-    }
-
     if (aAttribute == nsGkAtoms::name) {
       // Store name as an atom.  name="" means that the element has no name,
       // not that it has an emptystring as the name.
@@ -1266,19 +1260,6 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
     return aResult.ParseIntWithBounds(aString, 0);
   }
   return false;
-}
-
-bool
-nsGenericHTMLElement::ParseReferrerAttribute(const nsAString& aString,
-                                             nsAttrValue& aResult)
-{
-  static const nsAttrValue::EnumTable kReferrerTable[] = {
-    { "no-referrer", net::RP_No_Referrer },
-    { "origin", net::RP_Origin },
-    { "unsafe-url", net::RP_Unsafe_URL },
-    { 0 }
-  };
-  return aResult.ParseEnumValue(aString, kReferrerTable, false);
 }
 
 bool

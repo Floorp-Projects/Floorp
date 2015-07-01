@@ -24,7 +24,6 @@
 #include "nsAutoPtr.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIURI;
 class nsIDocument;
@@ -198,8 +197,6 @@ protected:
    * default implementation returns CORS_NONE unconditionally.
    */
   virtual mozilla::CORSMode GetCORSMode();
-
-  virtual mozilla::net::ReferrerPolicy GetImageReferrerPolicy();
 
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
   void BindToTree(nsIDocument* aDocument, nsIContent* aParent,

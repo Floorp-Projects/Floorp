@@ -670,9 +670,6 @@ ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
                      nsISupports* aCX, ReferrerPolicy referrerPolicy)
 {
   // If the entry's Referrer Policy doesn't match, we can't use this request.
-  // XXX: this will return false if an image has different referrer attributes,
-  // i.e. we currently don't use the cached image but reload the image with
-  // the new referrer policy
   if (referrerPolicy != request->GetReferrerPolicy()) {
     return false;
   }

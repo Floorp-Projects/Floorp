@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[uuid(a640d8af-3c0e-4926-8102-5ab52053c280)]
+[uuid(ec18e71c-4f5c-4cc3-aa36-5273168644dc)]
 interface nsIDOMHTMLImageElement : nsISupports
 {
            attribute DOMString        alt;
@@ -24,7 +24,6 @@ interface nsIDOMHTMLImageElement : nsISupports
            attribute DOMString        srcset;
            attribute DOMString        sizes;
            attribute DOMString        useMap;
-           attribute DOMString        referrer;
            attribute boolean          isMap;
            attribute unsigned long    width;
            attribute unsigned long    height;

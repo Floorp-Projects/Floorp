@@ -30,8 +30,6 @@ interface HTMLImageElement : HTMLElement {
            [SetterThrows]
            attribute DOMString useMap;
            [SetterThrows]
-           attribute DOMString referrer;
-           [SetterThrows]
            attribute boolean isMap;
            [SetterThrows]
            attribute unsigned long width;
