@@ -22,8 +22,10 @@
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(Async, Async, "Async") \
+    macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
+    macro(by, by, "by") \
     macro(byteLength, byteLength, "byteLength") \
     macro(byteAlignment, byteAlignment, "byteAlignment") \
     macro(byteOffset, byteOffset, "byteOffset") \
@@ -121,6 +123,7 @@
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
     macro(keys, keys, "keys") \
+    macro(label, label, "label") \
     macro(lastIndex, lastIndex, "lastIndex") \
     macro(LegacyGeneratorCloseInternal, LegacyGeneratorCloseInternal, "LegacyGeneratorCloseInternal") \
     macro(length, length, "length") \
@@ -199,6 +202,7 @@
     macro(super, super, "super") \
     macro(target, target, "target") \
     macro(test, test, "test") \
+    macro(then, then, "then") \
     macro(throw, throw_, "throw") \
     macro(timestamp, timestamp, "timestamp") \
     macro(timeZone, timeZone, "timeZone") \
