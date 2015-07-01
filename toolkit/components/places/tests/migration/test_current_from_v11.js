@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(function* setup() {
-  yield setupPlacesDatabase("places_v16.sqlite");
+  yield setupPlacesDatabase("places_v11.sqlite");
 });
 
 add_task(function* database_is_valid() {
