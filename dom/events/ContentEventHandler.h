@@ -8,8 +8,8 @@
 #define mozilla_ContentEventHandler_h_
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
-#include "nsISelection.h"
 #include "nsRange.h"
 
 class nsPresContext;
@@ -35,6 +35,8 @@ enum LineBreakType
 class MOZ_STACK_CLASS ContentEventHandler
 {
 public:
+  typedef dom::Selection Selection;
+
   explicit ContentEventHandler(nsPresContext* aPresContext);
 
   // NS_QUERY_SELECTED_TEXT event handler
@@ -62,7 +64,7 @@ public:
 protected:
   nsPresContext* mPresContext;
   nsCOMPtr<nsIPresShell> mPresShell;
-  nsCOMPtr<nsISelection> mSelection;
+  nsRefPtr<Selection> mSelection;
   nsRefPtr<nsRange> mFirstSelectedRange;
   nsCOMPtr<nsIContent> mRootContent;
 

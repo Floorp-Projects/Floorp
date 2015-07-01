@@ -28,7 +28,6 @@ namespace layers {
 
 class CompositableHost;
 class ContentHost;
-class TiledLayerComposer;
 
 class PaintedLayerComposite : public PaintedLayer,
                               public LayerComposite
@@ -51,8 +50,6 @@ public:
   virtual Layer* GetLayer() override;
 
   virtual void SetLayerManager(LayerManagerComposite* aManager) override;
-
-  virtual TiledLayerComposer* GetTiledLayerComposer() override;
 
   virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
 
