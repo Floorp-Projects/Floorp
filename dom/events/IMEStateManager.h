@@ -9,6 +9,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIWidget.h"
 
 class nsIContent;
@@ -33,6 +34,7 @@ class TextComposition;
 
 class IMEStateManager
 {
+  typedef dom::TabParent TabParent;
   typedef widget::IMEMessage IMEMessage;
   typedef widget::IMENotification IMENotification;
   typedef widget::IMEState IMEState;
@@ -42,6 +44,26 @@ class IMEStateManager
 public:
   static void Init();
   static void Shutdown();
+
+  /**
+   * GetActiveTabParent() returns a pointer to a TabParent instance which is
+   * managed by the focused content (sContent).  If the focused content isn't
+   * managing another process, this returns nullptr.
+   */
+  static TabParent* GetActiveTabParent() { return sActiveTabParent.get(); }
+
+  /**
+   * OnTabParentDestroying() is called when aTabParent is being destroyed.
+   */
+  static void OnTabParentDestroying(TabParent* aTabParent);
+
+  /**
+   * SetIMEContextForChildProcess() is called when aTabParent receives
+   * SetInputContext() from the remote process.
+   */
+  static void SetInputContextForChildProcess(TabParent* aTabParent,
+                                             const InputContext& aInputContext,
+                                             const InputContextAction& aAction);
 
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
   static nsresult OnRemoveContent(nsPresContext* aPresContext,
@@ -163,6 +185,9 @@ protected:
                           nsIContent* aContent,
                           nsIWidget* aWidget,
                           InputContextAction aAction);
+  static void SetInputContext(nsIWidget* aWidget,
+                              const InputContext& aInputContext,
+                              const InputContextAction& aAction);
   static IMEState GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 
@@ -177,6 +202,7 @@ protected:
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
   static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
+  static StaticRefPtr<TabParent> sActiveTabParent;
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
