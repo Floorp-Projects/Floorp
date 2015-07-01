@@ -4207,6 +4207,12 @@ LIRGenerator::visitDebugger(MDebugger* ins)
     add(lir, ins);
 }
 
+void
+LIRGenerator::visitAtomicIsLockFree(MAtomicIsLockFree* ins)
+{
+    define(new(alloc()) LAtomicIsLockFree(useRegister(ins->input())), ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint)
 {

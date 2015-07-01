@@ -72,6 +72,29 @@ static void set_good_speed_feature_framesize_dependent(VP9_COMMON *cm,
   }
 }
 
+// Sets a partition size down to which the auto partition code will always
+// search (can go lower), based on the image dimensions. The logic here
+// is that the extent to which ringing artefacts are offensive, depends
+// partly on the screen area that over which they propogate. Propogation is
+// limited by transform block size but the screen area take up by a given block
+// size will be larger for a small image format stretched to full screen.
+static BLOCK_SIZE set_partition_min_limit(VP9_COMP *cpi) {
+  VP9_COMMON *const cm = &cpi->common;
+  unsigned int screen_area = (cm->width * cm->height);
+
+  // Select block size based on image format size.
+  if (screen_area < 1280 * 720) {
+    // Formats smaller in area than 720P
+    return BLOCK_4X4;
+  } else if (screen_area < 1920 * 1080) {
+    // Format >= 720P and < 1080P
+    return BLOCK_8X8;
+  } else {
+    // Formats 1080P and up
+    return BLOCK_16X16;
+  }
+}
+
 static void set_good_speed_feature(VP9_COMP *cpi, VP9_COMMON *cm,
                                    SPEED_FEATURES *sf, int speed) {
   const int boosted = frame_is_boosted(cpi);
@@ -115,8 +138,8 @@ static void set_good_speed_feature(VP9_COMP *cpi, VP9_COMMON *cm,
                                  FLAG_SKIP_INTRA_LOWVAR;
     sf->disable_filter_search_var_thresh = 100;
     sf->comp_inter_joint_search_thresh = BLOCK_SIZES;
-    sf->auto_min_max_partition_size = CONSTRAIN_NEIGHBORING_MIN_MAX;
-
+    sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
+    sf->rd_auto_partition_min_limit = set_partition_min_limit(cpi);
     sf->allow_partition_search_skip = 1;
   }
 
@@ -237,8 +260,12 @@ static void set_rt_speed_feature(VP9_COMP *cpi, SPEED_FEATURES *sf,
                                  FLAG_SKIP_INTRA_LOWVAR;
     sf->adaptive_pred_interp_filter = 2;
 
-    // Reference masking is not supported in dynamic scaling mode.
-    sf->reference_masking = cpi->oxcf.resize_mode != RESIZE_DYNAMIC ? 1 : 0;
+    // Disable reference masking if using spatial scaling since
+    // pred_mv_sad will not be set (since vp9_mv_pred will not
+    // be called).
+    // TODO(marpan/agrange): Fix this condition.
+    sf->reference_masking = (cpi->oxcf.resize_mode != RESIZE_DYNAMIC &&
+                             cpi->svc.number_spatial_layers == 1) ? 1 : 0;
 
     sf->disable_filter_search_var_thresh = 50;
     sf->comp_inter_joint_search_thresh = BLOCK_SIZES;
@@ -301,7 +328,7 @@ static void set_rt_speed_feature(VP9_COMP *cpi, SPEED_FEATURES *sf,
         (frames_since_key % (sf->last_partitioning_redo_frequency << 1) == 1);
     sf->max_delta_qindex = is_keyframe ? 20 : 15;
     sf->partition_search_type = REFERENCE_PARTITION;
-    sf->use_nonrd_pick_mode = !is_keyframe;
+    sf->use_nonrd_pick_mode = 1;
     sf->allow_skip_recode = 0;
     sf->inter_mode_mask[BLOCK_32X32] = INTER_NEAREST_NEW_ZERO;
     sf->inter_mode_mask[BLOCK_32X64] = INTER_NEAREST_NEW_ZERO;
@@ -314,15 +341,20 @@ static void set_rt_speed_feature(VP9_COMP *cpi, SPEED_FEATURES *sf,
     sf->coeff_prob_appx_step = 4;
     sf->use_fast_coef_updates = is_keyframe ? TWO_LOOP : ONE_LOOP_REDUCED;
     sf->mode_search_skip_flags = FLAG_SKIP_INTRA_DIRMISMATCH;
+    sf->tx_size_search_method = is_keyframe ? USE_LARGESTALL : USE_TX_8X8;
 
     if (!is_keyframe) {
       int i;
       if (content == VP9E_CONTENT_SCREEN) {
-        for (i = 0; i < TX_SIZES; ++i)
-          sf->intra_y_mode_mask[i] = INTRA_DC_TM_H_V;
+        for (i = 0; i < BLOCK_SIZES; ++i)
+          sf->intra_y_mode_bsize_mask[i] = INTRA_DC_TM_H_V;
       } else {
-        for (i = 0; i < TX_SIZES; i++)
-          sf->intra_y_mode_mask[i] = INTRA_DC;
+        for (i = 0; i < BLOCK_SIZES; ++i)
+          if (i >= BLOCK_16X16)
+            sf->intra_y_mode_bsize_mask[i] = INTRA_DC;
+          else
+            // Use H and V intra mode for block sizes <= 16X16.
+            sf->intra_y_mode_bsize_mask[i] = INTRA_DC_H_V;
       }
     }
   }
@@ -333,7 +365,6 @@ static void set_rt_speed_feature(VP9_COMP *cpi, SPEED_FEATURES *sf,
     // Turn on this to use non-RD key frame coding mode.
     sf->use_nonrd_pick_mode = 1;
     sf->mv.search_method = NSTEP;
-    sf->tx_size_search_method = is_keyframe ? USE_LARGESTALL : USE_TX_8X8;
     sf->mv.reduce_first_step_size = 1;
     sf->skip_encode_sb = 0;
   }
@@ -416,6 +447,7 @@ void vp9_set_speed_features_framesize_independent(VP9_COMP *cpi) {
   sf->less_rectangular_check = 0;
   sf->use_square_partition_only = 0;
   sf->auto_min_max_partition_size = NOT_IN_USE;
+  sf->rd_auto_partition_min_limit = BLOCK_4X4;
   sf->default_max_partition_size = BLOCK_64X64;
   sf->default_min_partition_size = BLOCK_4X4;
   sf->adjust_partitioning_from_last_frame = 0;

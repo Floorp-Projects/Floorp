@@ -111,8 +111,8 @@ void vp9_quantize_fp_neon(const int16_t *coeff_ptr, intptr_t count,
       *eob_ptr = (uint16_t)vget_lane_s16(v_eobmax_final, 0);
     }
   } else {
-    vpx_memset(qcoeff_ptr, 0, count * sizeof(int16_t));
-    vpx_memset(dqcoeff_ptr, 0, count * sizeof(int16_t));
+    memset(qcoeff_ptr, 0, count * sizeof(int16_t));
+    memset(dqcoeff_ptr, 0, count * sizeof(int16_t));
     *eob_ptr = 0;
   }
 }

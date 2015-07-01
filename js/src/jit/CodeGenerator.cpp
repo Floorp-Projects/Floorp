@@ -22,6 +22,7 @@
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
 #include "irregexp/NativeRegExpMacroAssembler.h"
+#include "jit/AtomicOperations.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonCaches.h"
@@ -39,6 +40,7 @@
 
 #include "jsboolinlines.h"
 
+#include "jit/AtomicOperations-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -9229,6 +9231,29 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir)
     }
     if (guardLength)
         masm.bind(&skip);
+}
+
+void
+CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir)
+{
+    Register value = ToRegister(lir->value());
+    Register output = ToRegister(lir->output());
+
+    // Keep this in sync with isLockfree() in jit/AtomicOperations-inl.h.
+
+    Label Ldone, Lfailed;
+    masm.move32(Imm32(1), output);
+    if (AtomicOperations::isLockfree8())
+        masm.branch32(Assembler::Equal, value, Imm32(8), &Ldone);
+    else
+        masm.branch32(Assembler::Equal, value, Imm32(8), &Lfailed);
+    masm.branch32(Assembler::Equal, value, Imm32(4), &Ldone);
+    masm.branch32(Assembler::Equal, value, Imm32(2), &Ldone);
+    masm.branch32(Assembler::Equal, value, Imm32(1), &Ldone);
+    if (!AtomicOperations::isLockfree8())
+        masm.bind(&Lfailed);
+    masm.move32(Imm32(0), output);
+    masm.bind(&Ldone);
 }
 
 void

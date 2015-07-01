@@ -110,7 +110,7 @@ static void once(void (*func)(void))
 
 
 #else
-/* No-op version that performs no synchronization. vp8_rtcd() is idempotent,
+/* No-op version that performs no synchronization. *_rtcd() is idempotent,
  * so as long as your platform provides atomic loads/stores of pointers
  * no synchronization is strictly necessary.
  */

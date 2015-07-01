@@ -333,6 +333,40 @@ function testUint32(a) {
     assertEq(sum, k);
 }
 
+var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
+                   9,    10,    11,    12];
+var answers = [ true,  true, false,  true, false, false, false, {},
+	       false, false, false, false];
+
+function testIsLockFree() {
+    var saved8 = "Invalid";
+
+    // This ought to defeat most compile-time resolution.
+    for ( var i=0 ; i < sizes.length ; i++ ) {
+	var v = Atomics.isLockFree(sizes[i]);
+	var a = answers[i];
+	assertEq(typeof v, 'boolean');
+	if (typeof a == 'boolean')
+	    assertEq(v, a);
+	else
+	    saved8 = v;
+    }
+
+    // This ought to be optimizable.
+    assertEq(Atomics.isLockFree(1), true);
+    assertEq(Atomics.isLockFree(2), true);
+    assertEq(Atomics.isLockFree(3), false);
+    assertEq(Atomics.isLockFree(4), true);
+    assertEq(Atomics.isLockFree(5), false);
+    assertEq(Atomics.isLockFree(6), false);
+    assertEq(Atomics.isLockFree(7), false);
+    assertEq(Atomics.isLockFree(8), saved8);
+    assertEq(Atomics.isLockFree(9), false);
+    assertEq(Atomics.isLockFree(10), false);
+    assertEq(Atomics.isLockFree(11), false);
+    assertEq(Atomics.isLockFree(12), false);
+}
+
 function isLittleEndian() {
     var xxx = new ArrayBuffer(2);
     var xxa = new Int16Array(xxx);
@@ -417,6 +451,9 @@ function runTests() {
     testUint8Extremes(new SharedUint8Array(sab));
     testInt16Extremes(new SharedInt16Array(sab));
     testUint32(new SharedUint32Array(sab));
+
+    // Misc
+    testIsLockFree();
 }
 
 if (this.Atomics && this.SharedArrayBuffer && this.SharedInt32Array)

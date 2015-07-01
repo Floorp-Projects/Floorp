@@ -430,10 +430,10 @@ void vp9_setup_past_independence(VP9_COMMON *cm) {
   cm->seg.abs_delta = SEGMENT_DELTADATA;
 
   if (cm->last_frame_seg_map && !cm->frame_parallel_decode)
-    vpx_memset(cm->last_frame_seg_map, 0, (cm->mi_rows * cm->mi_cols));
+    memset(cm->last_frame_seg_map, 0, (cm->mi_rows * cm->mi_cols));
 
   if (cm->current_frame_seg_map)
-    vpx_memset(cm->current_frame_seg_map, 0, (cm->mi_rows * cm->mi_cols));
+    memset(cm->current_frame_seg_map, 0, (cm->mi_rows * cm->mi_cols));
 
   // Reset the mode ref deltas for loop filter
   vp9_zero(lf->last_ref_deltas);
@@ -460,8 +460,8 @@ void vp9_setup_past_independence(VP9_COMMON *cm) {
 
   // prev_mip will only be allocated in encoder.
   if (frame_is_intra_only(cm) && cm->prev_mip && !cm->frame_parallel_decode)
-    vpx_memset(cm->prev_mip, 0, cm->mi_stride * (cm->mi_rows + 1) *
-                                    sizeof(*cm->prev_mip));
+    memset(cm->prev_mip, 0,
+           cm->mi_stride * (cm->mi_rows + 1) * sizeof(*cm->prev_mip));
 
   vp9_zero(cm->ref_frame_sign_bias);
 

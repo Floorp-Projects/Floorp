@@ -115,7 +115,6 @@ static INLINE void load_buffer_8x16(const int16_t *input, __m128i *in) {
       d0 = _mm_add_epi16(in_x, d0); \
       d0 = _mm_packus_epi16(d0, d0); \
       _mm_storel_epi64((__m128i *)(dest), d0); \
-      dest += stride; \
   }
 
 static INLINE void write_buffer_8x16(uint8_t *dest, __m128i *in, int stride) {
@@ -156,20 +155,20 @@ static INLINE void write_buffer_8x16(uint8_t *dest, __m128i *in, int stride) {
   in[14] = _mm_srai_epi16(in[14], 6);
   in[15] = _mm_srai_epi16(in[15], 6);
 
-  RECON_AND_STORE(dest, in[0]);
-  RECON_AND_STORE(dest, in[1]);
-  RECON_AND_STORE(dest, in[2]);
-  RECON_AND_STORE(dest, in[3]);
-  RECON_AND_STORE(dest, in[4]);
-  RECON_AND_STORE(dest, in[5]);
-  RECON_AND_STORE(dest, in[6]);
-  RECON_AND_STORE(dest, in[7]);
-  RECON_AND_STORE(dest, in[8]);
-  RECON_AND_STORE(dest, in[9]);
-  RECON_AND_STORE(dest, in[10]);
-  RECON_AND_STORE(dest, in[11]);
-  RECON_AND_STORE(dest, in[12]);
-  RECON_AND_STORE(dest, in[13]);
-  RECON_AND_STORE(dest, in[14]);
-  RECON_AND_STORE(dest, in[15]);
+  RECON_AND_STORE(dest +  0 * stride, in[0]);
+  RECON_AND_STORE(dest +  1 * stride, in[1]);
+  RECON_AND_STORE(dest +  2 * stride, in[2]);
+  RECON_AND_STORE(dest +  3 * stride, in[3]);
+  RECON_AND_STORE(dest +  4 * stride, in[4]);
+  RECON_AND_STORE(dest +  5 * stride, in[5]);
+  RECON_AND_STORE(dest +  6 * stride, in[6]);
+  RECON_AND_STORE(dest +  7 * stride, in[7]);
+  RECON_AND_STORE(dest +  8 * stride, in[8]);
+  RECON_AND_STORE(dest +  9 * stride, in[9]);
+  RECON_AND_STORE(dest + 10 * stride, in[10]);
+  RECON_AND_STORE(dest + 11 * stride, in[11]);
+  RECON_AND_STORE(dest + 12 * stride, in[12]);
+  RECON_AND_STORE(dest + 13 * stride, in[13]);
+  RECON_AND_STORE(dest + 14 * stride, in[14]);
+  RECON_AND_STORE(dest + 15 * stride, in[15]);
 }

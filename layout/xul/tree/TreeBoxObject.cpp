@@ -592,22 +592,22 @@ TreeBoxObject::GetCoordsForCellItem(JSContext* cx,
 {
   int32_t x, y, w, h;
   GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
-  JS::Rooted<JS::Value> v(cx, INT_TO_JSVAL(x));
+  JS::Rooted<JS::Value> v(cx, JS::Int32Value(x));
   if (!JS_SetProperty(cx, xOut, "value", v)) {
     aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
     return;
   }
-  v = INT_TO_JSVAL(y);
+  v.setInt32(y);
   if (!JS_SetProperty(cx, yOut, "value", v)) {
     aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
     return;
   }
-  v = INT_TO_JSVAL(w);
+  v.setInt32(w);
   if (!JS_SetProperty(cx, widthOut, "value", v)) {
     aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
     return;
   }
-  v = INT_TO_JSVAL(h);
+  v.setInt32(h);
   if (!JS_SetProperty(cx, heightOut, "value", v)) {
     aRv.Throw(NS_ERROR_XPC_CANT_SET_OUT_VAL);
     return;
