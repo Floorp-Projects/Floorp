@@ -39,7 +39,6 @@ using namespace JS;
 
 NS_IMPL_ISUPPORTS(nsXPConnect,
                   nsIXPConnect,
-                  nsISupportsWeakReference,
                   nsIThreadObserver)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
