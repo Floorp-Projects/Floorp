@@ -16,7 +16,10 @@
 #ifdef FXOS_SIMULATOR
   <link rel="stylesheet" href="desktop.css" type="text/css">
 #endif
-
+  <script type="text/javascript">
+  <!-- Add raptor performance marker -->
+  window.performance.mark('gecko-shell-html-load');
+  </script>
   <script type="application/javascript;version=1.8"
           src="chrome://b2g/content/settings.js"> </script>
   <script type="application/javascript;version=1.8"

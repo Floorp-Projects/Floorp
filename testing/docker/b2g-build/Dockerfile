@@ -6,7 +6,18 @@ COPY releng.repo /etc/yum.repos.d/releng.repo
 RUN yum install -y epel-release && \
   yum update -y && \
   yum makecache && \
-  yum install -y \
+  yum install -y  wget
+
+# Install updated curl libraries
+RUN cd /tmp && \
+  wget https://s3-us-west-2.amazonaws.com/test-caching/libcurl-7.29.0-19.el6.x86_64.rpm && \
+  wget https://s3-us-west-2.amazonaws.com/test-caching/libcurl-devel-7.29.0-19.el6.x86_64.rpm && \
+  wget https://s3-us-west-2.amazonaws.com/test-caching/curl-7.29.0-19.el6.x86_64.rpm && \
+  yum install -y libcurl-7.29.0-19.el6.x86_64.rpm libcurl-devel-7.29.0-19.el6.x86_64.rpm curl-7.29.0-19.el6.x86_64.rpm && \
+  rm -f libcurl-7.29.0-19.el6.x86_64.rpm libcurl-devel-7.29.0-19.el6.x86_64.rpm curl-7.29.0-19.el6.x86_64.rpm && \
+  cd -
+
+RUN yum install -y \
   # From Building B2G docs
   # cmake \
   # cmake: is disabled intentionally to work around: bug 1141417
@@ -17,8 +28,6 @@ RUN yum install -y epel-release && \
   bison \
   bzip2 \
   ccache \
-  curl \
-  curl-devel \
   dbus-devel \
   dbus-glib-devel \
   dbus-glib-devel \
@@ -41,7 +50,6 @@ RUN yum install -y epel-release && \
   libX11-devel.i686 \
   libXrandr.i686 \
   libXt-devel \
-  libcurl-devel \
   libnotify-devel \
   libstdc++-static \
   libstdc++-static \
@@ -72,7 +80,6 @@ RUN yum install -y epel-release && \
   unzip \
   uuid \
   vim \
-  wget \
   wireless-tools-devel \
   xorg-x11-server-Xvfb \
   xorg-x11-server-utils \
