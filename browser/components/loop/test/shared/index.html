@@ -19,6 +19,13 @@
     window.addEventListener("error", function(error) {
       uncaughtError = error;
     });
+    var consoleWarn = console.warn;
+    var caughtWarnings = [];
+    console.warn = function() {
+      var args = Array.slice(arguments);
+      caughtWarnings.push(args);
+      consoleWarn.apply(console, args);
+    };
   </script>
 
   <!-- libs -->
@@ -84,6 +91,12 @@
     describe("Uncaught Error Check", function() {
       it("should load the tests without errors", function() {
         chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
+      });
+    });
+
+    describe("Unexpected Warnings Check", function() {
+      it("should long only the warnings we expect", function() {
+        chai.expect(caughtWarnings.length).to.eql(183);
       });
     });
 
