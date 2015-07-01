@@ -795,10 +795,14 @@ pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
 
 // See ua-update.json.in for the packaged UA override list
-pref("general.useragent.updates.enabled", true);
+// Disabling until we understand the cause of Bug 1178760
+pref("general.useragent.updates.enabled", false);
 pref("general.useragent.updates.url", "https://dynamicua.cdn.mozilla.net/0/%APP_ID%");
 pref("general.useragent.updates.interval", 604800); // 1 week
 pref("general.useragent.updates.retry", 86400); // 1 day
+
+// Youtube is broken with Android version in UA string. Bug 1174784.
+pref("general.useragent.override.youtube.com", "Android\\s\\d.+?;#Android;");
 
 // When true, phone number linkification is enabled.
 pref("browser.ui.linkify.phone", false);
