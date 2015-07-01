@@ -90,7 +90,6 @@
     ", data BLOB" \
     ", mime_type VARCHAR(32)" \
     ", expiration LONG" \
-    ", guid TEXT" \
   ")" \
 )
 
