@@ -4,7 +4,10 @@
 
 // Test that very long strings do not hang the browser.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-859170-longstring-hang.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-859170-longstring-hang.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

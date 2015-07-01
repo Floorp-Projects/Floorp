@@ -1185,6 +1185,17 @@ TelephonyService.prototype = {
       return;
     }
 
+    // It's a foreground call.
+    if (!call.isConference) {
+      let heldCalls = this._getCallsWithState(aClientId, nsITelephonyService.CALL_STATE_HELD);
+
+      // Automatic resume another held call.
+      if (heldCalls.length) {
+        this._hangUpForeground(aClientId, aCallback);
+        return;
+      }
+    }
+
     call.hangUpLocal = true;
     this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex },
                           this._defaultCallbackHandler.bind(this, aCallback));

@@ -18,8 +18,8 @@ function test() {
     HUDService.toggleBrowserConsole().then(browserConsoleOpened);
   });
 
-  function browserConsoleOpened(aHud) {
-    hud = aHud;
+  function browserConsoleOpened(hudConsole) {
+    hud = hudConsole;
     ok(hud, "browser console opened");
 
     let button = content.document.querySelector("button");

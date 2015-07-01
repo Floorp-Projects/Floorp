@@ -8,7 +8,8 @@
 "use strict";
 
 let test = asyncTest(function*() {
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/test-console.html";
 
   yield loadTab(TEST_URI);
 
@@ -33,11 +34,13 @@ let test = asyncTest(function*() {
   let bottom = currentPosition;
 
   EventUtils.synthesizeKey("VK_PAGE_UP", {});
-  isnot(hud.outputNode.parentNode.scrollTop, currentPosition, "scroll position changed after page up");
+  isnot(hud.outputNode.parentNode.scrollTop, currentPosition,
+        "scroll position changed after page up");
 
   currentPosition = hud.outputNode.parentNode.scrollTop;
   EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
-  ok(hud.outputNode.parentNode.scrollTop > currentPosition, "scroll position now at bottom");
+  ok(hud.outputNode.parentNode.scrollTop > currentPosition,
+     "scroll position now at bottom");
 
   EventUtils.synthesizeKey("VK_HOME", {});
   is(hud.outputNode.parentNode.scrollTop, 0, "scroll position now at top");
@@ -49,7 +52,9 @@ let test = asyncTest(function*() {
      "scroll position now at bottom");
 
   info("try ctrl-l to clear output");
-  executeSoon(() => { EventUtils.synthesizeKey("l", { ctrlKey: true }); });
+  executeSoon(() => {
+    EventUtils.synthesizeKey("l", { ctrlKey: true });
+  });
   yield hud.jsterm.once("messages-cleared");
 
   is(hud.outputNode.textContent.indexOf("foobarz1"), -1, "output cleared");
@@ -69,8 +74,7 @@ let test = asyncTest(function*() {
     ok(!hud.ui.getFilterState("network"), "accesskey for Network works");
     EventUtils.synthesizeKey("t", { ctrlKey: true });
     ok(hud.ui.getFilterState("network"), "accesskey for Network works (again)");
-  }
-  else {
+  } else {
     EventUtils.synthesizeKey("N", { altKey: true });
     let net = hud.ui.document.querySelector("toolbarbutton[category=net]");
     is(hud.ui.document.activeElement, net,

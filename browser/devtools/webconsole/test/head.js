@@ -15,7 +15,7 @@ let {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
 let {Messages} = require("devtools/webconsole/console-output");
 const asyncStorage = require("devtools/toolkit/shared/async-storage");
 
-//Services.prefs.setBoolPref("devtools.debugger.log", true);
+// Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 let gPendingOutputTest = 0;
 
@@ -37,8 +37,9 @@ const SEVERITY_LOG = 3;
 // The indent of a console group in pixels.
 const GROUP_INDENT = 12;
 
-const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
-let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
+const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/" +
+                               "webconsole.properties";
+let WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
 gDevTools.testing = true;
 
@@ -47,7 +48,6 @@ function asyncTest(generator) {
     Task.spawn(generator).then(finishTest);
   };
 }
-
 
 function loadTab(url) {
   let deferred = promise.defer();
@@ -97,8 +97,9 @@ function afterAllTabsLoaded(callback, win) {
   function onLoad() {
     this.removeEventListener("load", onLoad, true);
     stillToLoad--;
-    if (!stillToLoad)
+    if (!stillToLoad) {
       callback();
+    }
   }
 
   for (let a = 0; a < win.gBrowser.tabs.length; a++) {
@@ -109,77 +110,76 @@ function afterAllTabsLoaded(callback, win) {
     }
   }
 
-  if (!stillToLoad)
+  if (!stillToLoad) {
     callback();
+  }
 }
 
 /**
  * Check if a log entry exists in the HUD output node.
  *
- * @param {Element} aOutputNode
+ * @param {Element} outputNode
  *        the HUD output node.
- * @param {string} aMatchString
+ * @param {string} matchString
  *        the string you want to check if it exists in the output node.
- * @param {string} aMsg
+ * @param {string} msg
  *        the message describing the test
- * @param {boolean} [aOnlyVisible=false]
+ * @param {boolean} [onlyVisible=false]
  *        find only messages that are visible, not hidden by the filter.
- * @param {boolean} [aFailIfFound=false]
+ * @param {boolean} [failIfFound=false]
  *        fail the test if the string is found in the output node.
- * @param {string} aClass [optional]
+ * @param {string} cssClass [optional]
  *        find only messages with the given CSS class.
  */
-function testLogEntry(aOutputNode, aMatchString, aMsg, aOnlyVisible,
-                      aFailIfFound, aClass)
-{
+function testLogEntry(outputNode, matchString, msg, onlyVisible,
+                      failIfFound, cssClass) {
   let selector = ".message";
   // Skip entries that are hidden by the filter.
-  if (aOnlyVisible) {
+  if (onlyVisible) {
     selector += ":not(.filtered-by-type):not(.filtered-by-string)";
   }
-  if (aClass) {
+  if (cssClass) {
     selector += "." + aClass;
   }
 
-  let msgs = aOutputNode.querySelectorAll(selector);
+  let msgs = outputNode.querySelectorAll(selector);
   let found = false;
   for (let i = 0, n = msgs.length; i < n; i++) {
-    let message = msgs[i].textContent.indexOf(aMatchString);
+    let message = msgs[i].textContent.indexOf(matchString);
     if (message > -1) {
       found = true;
       break;
     }
   }
 
-  is(found, !aFailIfFound, aMsg);
+  is(found, !failIfFound, msg);
 }
 
 /**
  * A convenience method to call testLogEntry().
  *
- * @param string aString
+ * @param str string
  *        The string to find.
  */
-function findLogEntry(aString)
-{
-  testLogEntry(outputNode, aString, "found " + aString);
+function findLogEntry(str) {
+  testLogEntry(outputNode, str, "found " + str);
 }
 
 /**
  * Open the Web Console for the given tab.
  *
- * @param nsIDOMElement [aTab]
+ * @param nsIDOMElement [tab]
  *        Optional tab element for which you want open the Web Console. The
  *        default tab is taken from the global variable |tab|.
- * @param function [aCallback]
+ * @param function [callback]
  *        Optional function to invoke after the Web Console completes
  *        initialization (web-console-created).
  * @return object
  *         A promise that is resolved once the web console is open.
  */
-let openConsole = function(aTab) {
+let openConsole = function(tab) {
   let webconsoleOpened = promise.defer();
-  let target = TargetFactory.forTab(aTab || gBrowser.selectedTab);
+  let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
   gDevTools.showToolbox(target, "webconsole").then(toolbox => {
     let hud = toolbox.getCurrentPanel().hud;
     hud.jsterm._lazyVariablesView = false;
@@ -191,17 +191,17 @@ let openConsole = function(aTab) {
 /**
  * Close the Web Console for the given tab.
  *
- * @param nsIDOMElement [aTab]
+ * @param nsIDOMElement [tab]
  *        Optional tab element for which you want close the Web Console. The
  *        default tab is taken from the global variable |tab|.
- * @param function [aCallback]
+ * @param function [callback]
  *        Optional function to invoke after the Web Console completes
  *        closing (web-console-destroyed).
  * @return object
  *         A promise that is resolved once the web console is closed.
  */
-let closeConsole = Task.async(function* (aTab) {
-  let target = TargetFactory.forTab(aTab || gBrowser.selectedTab);
+let closeConsole = Task.async(function* (tab) {
+  let target = TargetFactory.forTab(tab || gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
   if (toolbox) {
     yield toolbox.destroy();
@@ -211,48 +211,47 @@ let closeConsole = Task.async(function* (aTab) {
 /**
  * Wait for a context menu popup to open.
  *
- * @param nsIDOMElement aPopup
+ * @param nsIDOMElement popup
  *        The XUL popup you expect to open.
- * @param nsIDOMElement aButton
+ * @param nsIDOMElement button
  *        The button/element that receives the contextmenu event. This is
  *        expected to open the popup.
- * @param function aOnShown
+ * @param function onShown
  *        Function to invoke on popupshown event.
- * @param function aOnHidden
+ * @param function onHidden
  *        Function to invoke on popuphidden event.
  * @return object
  *         A Promise object that is resolved after the popuphidden event
  *         callback is invoked.
  */
-function waitForContextMenu(aPopup, aButton, aOnShown, aOnHidden)
-{
+function waitForContextMenu(popup, button, onShown, onHidden) {
   let deferred = promise.defer();
 
   function onPopupShown() {
     info("onPopupShown");
-    aPopup.removeEventListener("popupshown", onPopupShown);
+    popup.removeEventListener("popupshown", onPopupShown);
 
-    aOnShown && aOnShown();
+    onShown && onShown();
 
     // Use executeSoon() to get out of the popupshown event.
-    aPopup.addEventListener("popuphidden", onPopupHidden);
-    executeSoon(() => aPopup.hidePopup());
+    popup.addEventListener("popuphidden", onPopupHidden);
+    executeSoon(() => popup.hidePopup());
   }
   function onPopupHidden() {
     info("onPopupHidden");
-    aPopup.removeEventListener("popuphidden", onPopupHidden);
+    popup.removeEventListener("popuphidden", onPopupHidden);
 
-    aOnHidden && aOnHidden();
+    onHidden && onHidden();
 
-    deferred.resolve(aPopup);
+    deferred.resolve(popup);
   }
 
-  aPopup.addEventListener("popupshown", onPopupShown);
+  popup.addEventListener("popupshown", onPopupShown);
 
   info("wait for the context menu to open");
   let eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(aButton, 2, 2, eventDetails,
-                             aButton.ownerDocument.defaultView);
+  EventUtils.synthesizeMouse(button, 2, 2, eventDetails,
+                             button.ownerDocument.defaultView);
   return deferred.promise;
 }
 
@@ -274,8 +273,7 @@ let waitForTab = Task.async(function*() {
 /**
  * Dump the output of all open Web Consoles - used only for debugging purposes.
  */
-function dumpConsoles()
-{
+function dumpConsoles() {
   if (gPendingOutputTest) {
     console.log("dumpConsoles start");
     for (let [, hud] of HUDService.consoles) {
@@ -298,23 +296,22 @@ function dumpConsoles()
 /**
  * Dump to output debug information for the given webconsole message.
  *
- * @param nsIDOMNode aMessage
+ * @param nsIDOMNode message
  *        The message element you want to display.
  */
-function dumpMessageElement(aMessage)
-{
-  let text = aMessage.textContent;
-  let repeats = aMessage.querySelector(".message-repeats");
+function dumpMessageElement(message) {
+  let text = message.textContent;
+  let repeats = message.querySelector(".message-repeats");
   if (repeats) {
     repeats = repeats.getAttribute("value");
   }
-  console.debug("id", aMessage.getAttribute("id"),
-                "date", aMessage.timestamp,
-                "class", aMessage.className,
-                "category", aMessage.category,
-                "severity", aMessage.severity,
+  console.debug("id", message.getAttribute("id"),
+                "date", message.timestamp,
+                "class", message.className,
+                "category", message.category,
+                "severity", message.severity,
                 "repeats", repeats,
-                "clipboardText", aMessage.clipboardText,
+                "clipboardText", message.clipboardText,
                 "text", text);
 }
 
@@ -360,7 +357,7 @@ waitForExplicitFinish();
 /**
  * Polls a given function waiting for it to become true.
  *
- * @param object aOptions
+ * @param object options
  *        Options object with the following properties:
  *        - validator
  *        A validator function that returns a boolean. This is called every few
@@ -376,28 +373,24 @@ waitForExplicitFinish();
  * @return object
  *         A Promise object that is resolved based on the validator function.
  */
-function waitForSuccess(aOptions)
-{
+function waitForSuccess(options) {
   let deferred = promise.defer();
   let start = Date.now();
-  let timeout = aOptions.timeout || 5000;
-  let {validator} = aOptions;
+  let timeout = options.timeout || 5000;
+  let {validator} = options;
 
-
-  function wait()
-  {
+  function wait() {
     if ((Date.now() - start) > timeout) {
       // Log the failure.
-      ok(false, "Timed out while waiting for: " + aOptions.name);
+      ok(false, "Timed out while waiting for: " + options.name);
       deferred.reject(null);
       return;
     }
 
-    if (validator(aOptions)) {
-      ok(true, aOptions.name);
+    if (validator(options)) {
+      ok(true, options.name);
       deferred.resolve(null);
-    }
-    else {
+    } else {
       setTimeout(wait, 100);
     }
   }
@@ -407,8 +400,8 @@ function waitForSuccess(aOptions)
   return deferred.promise;
 }
 
-let openInspector = Task.async(function* (aTab = gBrowser.selectedTab) {
-  let target = TargetFactory.forTab(aTab);
+let openInspector = Task.async(function* (tab = gBrowser.selectedTab) {
+  let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "inspector");
   return toolbox.getCurrentPanel();
 });
@@ -416,9 +409,9 @@ let openInspector = Task.async(function* (aTab = gBrowser.selectedTab) {
 /**
  * Find variables or properties in a VariablesView instance.
  *
- * @param object aView
+ * @param object view
  *        The VariablesView instance.
- * @param array aRules
+ * @param array rules
  *        The array of rules you want to match. Each rule is an object with:
  *        - name (string|regexp): property name to match.
  *        - value (string|regexp): property value to match.
@@ -426,7 +419,7 @@ let openInspector = Task.async(function* (aTab = gBrowser.selectedTab) {
  *        - isGetter (boolean): check if the property is a getter.
  *        - isGenerator (boolean): check if the property is a generator.
  *        - dontMatch (boolean): make sure the rule doesn't match any property.
- * @param object aOptions
+ * @param object options
  *        Options for matching:
  *        - webconsole: the WebConsole instance we work with.
  * @return object
@@ -437,17 +430,15 @@ let openInspector = Task.async(function* (aTab = gBrowser.selectedTab) {
  *         VariablesView. If the rule did not match, then |matchedProp| is
  *         undefined.
  */
-function findVariableViewProperties(aView, aRules, aOptions)
-{
+function findVariableViewProperties(view, rules, options) {
   // Initialize the search.
-  function init()
-  {
+  function init() {
     // Separate out the rules that require expanding properties throughout the
     // view.
     let expandRules = [];
-    let rules = aRules.filter((aRule) => {
-      if (typeof aRule.name == "string" && aRule.name.indexOf(".") > -1) {
-        expandRules.push(aRule);
+    let filterRules = rules.filter((rule) => {
+      if (typeof rule.name == "string" && rule.name.indexOf(".") > -1) {
+        expandRules.push(rule);
         return false;
       }
       return true;
@@ -457,82 +448,76 @@ function findVariableViewProperties(aView, aRules, aOptions)
     // be expanded. Build the array of matchers, outstanding promises to be
     // resolved.
     let outstanding = [];
-    finder(rules, aView, outstanding);
+    finder(filterRules, view, outstanding);
 
     // Process the rules that need to expand properties.
     let lastStep = processExpandRules.bind(null, expandRules);
 
-    // Return the results - a promise resolved to hold the updated aRules array.
-    let returnResults = onAllRulesMatched.bind(null, aRules);
+    // Return the results - a promise resolved to hold the updated rules array.
+    let returnResults = onAllRulesMatched.bind(null, rules);
 
     return promise.all(outstanding).then(lastStep).then(returnResults);
   }
 
-  function onMatch(aProp, aRule, aMatched)
-  {
-    if (aMatched && !aRule.matchedProp) {
-      aRule.matchedProp = aProp;
+  function onMatch(prop, rule, matched) {
+    if (matched && !rule.matchedProp) {
+      rule.matchedProp = prop;
     }
   }
 
-  function finder(aRules, aVar, aPromises)
-  {
-    for (let [id, prop] of aVar) {
-      for (let rule of aRules) {
-        let matcher = matchVariablesViewProperty(prop, rule, aOptions);
-        aPromises.push(matcher.then(onMatch.bind(null, prop, rule)));
+  function finder(rules, vars, promises) {
+    for (let [, prop] of vars) {
+      for (let rule of rules) {
+        let matcher = matchVariablesViewProperty(prop, rule, options);
+        promises.push(matcher.then(onMatch.bind(null, prop, rule)));
       }
     }
   }
 
-  function processExpandRules(aRules)
-  {
-    let rule = aRules.shift();
+  function processExpandRules(rules) {
+    let rule = rules.shift();
     if (!rule) {
       return promise.resolve(null);
     }
 
     let deferred = promise.defer();
     let expandOptions = {
-      rootVariable: aView,
+      rootVariable: view,
       expandTo: rule.name,
-      webconsole: aOptions.webconsole,
+      webconsole: options.webconsole,
     };
 
-    variablesViewExpandTo(expandOptions).then(function onSuccess(aProp) {
+    variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
       let name = rule.name;
       let lastName = name.split(".").pop();
       rule.name = lastName;
 
-      let matched = matchVariablesViewProperty(aProp, rule, aOptions);
-      return matched.then(onMatch.bind(null, aProp, rule)).then(function() {
+      let matched = matchVariablesViewProperty(prop, rule, options);
+      return matched.then(onMatch.bind(null, prop, rule)).then(function() {
         rule.name = name;
       });
     }, function onFailure() {
       return promise.resolve(null);
-    }).then(processExpandRules.bind(null, aRules)).then(function() {
+    }).then(processExpandRules.bind(null, rules)).then(function() {
       deferred.resolve(null);
     });
 
     return deferred.promise;
   }
 
-  function onAllRulesMatched(aRules)
-  {
-    for (let rule of aRules) {
+  function onAllRulesMatched(rules) {
+    for (let rule of rules) {
       let matched = rule.matchedProp;
       if (matched && !rule.dontMatch) {
         ok(true, "rule " + rule.name + " matched for property " + matched.name);
-      }
-      else if (matched && rule.dontMatch) {
+      } else if (matched && rule.dontMatch) {
         ok(false, "rule " + rule.name + " should not match property " +
            matched.name);
-      }
-      else {
+      } else {
         ok(rule.dontMatch, "rule " + rule.name + " did not match any property");
       }
     }
-    return aRules;
+    return rules;
   }
 
   return init();
@@ -542,81 +527,80 @@ function findVariableViewProperties(aView, aRules, aOptions)
  * Check if a given Property object from the variables view matches the given
  * rule.
  *
- * @param object aProp
+ * @param object prop
  *        The variable's view Property instance.
- * @param object aRule
+ * @param object rule
  *        Rules for matching the property. See findVariableViewProperties() for
  *        details.
- * @param object aOptions
+ * @param object options
  *        Options for matching. See findVariableViewProperties().
  * @return object
  *         A promise that is resolved when all the checks complete. Resolution
  *         result is a boolean that tells your promise callback the match
  *         result: true or false.
  */
-function matchVariablesViewProperty(aProp, aRule, aOptions)
-{
-  function resolve(aResult) {
-    return promise.resolve(aResult);
+function matchVariablesViewProperty(prop, rule, options) {
+  function resolve(result) {
+    return promise.resolve(result);
   }
 
-  if (aRule.name) {
-    let match = aRule.name instanceof RegExp ?
-                aRule.name.test(aProp.name) :
-                aProp.name == aRule.name;
+  if (rule.name) {
+    let match = rule.name instanceof RegExp ?
+                rule.name.test(prop.name) :
+                prop.name == rule.name;
     if (!match) {
       return resolve(false);
     }
   }
 
-  if (aRule.value) {
-    let displayValue = aProp.displayValue;
-    if (aProp.displayValueClassName == "token-string") {
+  if (rule.value) {
+    let displayValue = prop.displayValue;
+    if (prop.displayValueClassName == "token-string") {
       displayValue = displayValue.substring(1, displayValue.length - 1);
     }
 
-    let match = aRule.value instanceof RegExp ?
-                aRule.value.test(displayValue) :
-                displayValue == aRule.value;
+    let match = rule.value instanceof RegExp ?
+                rule.value.test(displayValue) :
+                displayValue == rule.value;
     if (!match) {
-      info("rule " + aRule.name + " did not match value, expected '" +
-           aRule.value + "', found '" + displayValue  + "'");
+      info("rule " + rule.name + " did not match value, expected '" +
+           rule.value + "', found '" + displayValue + "'");
       return resolve(false);
     }
   }
 
-  if ("isGetter" in aRule) {
-    let isGetter = !!(aProp.getter && aProp.get("get"));
-    if (aRule.isGetter != isGetter) {
-      info("rule " + aRule.name + " getter test failed");
+  if ("isGetter" in rule) {
+    let isGetter = !!(prop.getter && prop.get("get"));
+    if (rule.isGetter != isGetter) {
+      info("rule " + rule.name + " getter test failed");
       return resolve(false);
     }
   }
 
-  if ("isGenerator" in aRule) {
-    let isGenerator = aProp.displayValue == "Generator";
-    if (aRule.isGenerator != isGenerator) {
-      info("rule " + aRule.name + " generator test failed");
+  if ("isGenerator" in rule) {
+    let isGenerator = prop.displayValue == "Generator";
+    if (rule.isGenerator != isGenerator) {
+      info("rule " + rule.name + " generator test failed");
       return resolve(false);
     }
   }
 
   let outstanding = [];
 
-  if ("isIterator" in aRule) {
-    let isIterator = isVariableViewPropertyIterator(aProp, aOptions.webconsole);
-    outstanding.push(isIterator.then((aResult) => {
-      if (aResult != aRule.isIterator) {
-        info("rule " + aRule.name + " iterator test failed");
+  if ("isIterator" in rule) {
+    let isIterator = isVariableViewPropertyIterator(prop, options.webconsole);
+    outstanding.push(isIterator.then((result) => {
+      if (result != rule.isIterator) {
+        info("rule " + rule.name + " iterator test failed");
       }
-      return aResult == aRule.isIterator;
+      return result == rule.isIterator;
     }));
   }
 
   outstanding.push(promise.resolve(true));
 
-  return promise.all(outstanding).then(function _onMatchDone(aResults) {
-    let ruleMatched = aResults.indexOf(false) == -1;
+  return promise.all(outstanding).then(function _onMatchDone(results) {
+    let ruleMatched = results.indexOf(false) == -1;
     return resolve(ruleMatched);
   });
 }
@@ -624,28 +608,27 @@ function matchVariablesViewProperty(aProp, aRule, aOptions)
 /**
  * Check if the given variables view property is an iterator.
  *
- * @param object aProp
+ * @param object prop
  *        The Property instance you want to check.
- * @param object aWebConsole
+ * @param object webConsole
  *        The WebConsole instance to work with.
  * @return object
  *         A promise that is resolved when the check completes. The resolved
  *         callback is given a boolean: true if the property is an iterator, or
  *         false otherwise.
  */
-function isVariableViewPropertyIterator(aProp, aWebConsole)
-{
-  if (aProp.displayValue == "Iterator") {
+function isVariableViewPropertyIterator(prop, webConsole) {
+  if (prop.displayValue == "Iterator") {
     return promise.resolve(true);
   }
 
   let deferred = promise.defer();
 
   variablesViewExpandTo({
-    rootVariable: aProp,
+    rootVariable: prop,
     expandTo: "__proto__.__iterator__",
-    webconsole: aWebConsole,
-  }).then(function onSuccess(aProp) {
+    webconsole: webConsole,
+  }).then(function onSuccess() {
     deferred.resolve(true);
   }, function onFailure() {
     deferred.resolve(false);
@@ -654,11 +637,10 @@ function isVariableViewPropertyIterator(aProp, aWebConsole)
   return deferred.promise;
 }
 
-
 /**
  * Recursively expand the variables view up to a given property.
  *
- * @param aOptions
+ * @param options
  *        Options for view expansion:
  *        - rootVariable: start from the given scope/variable/property.
  *        - expandTo: string made up of property names you want to expand.
@@ -672,82 +654,70 @@ function isVariableViewPropertyIterator(aProp, aWebConsole)
  *         last property - |nextSibling| in the example above. Rejection is
  *         always the last property that was found.
  */
-function variablesViewExpandTo(aOptions)
-{
-  let root = aOptions.rootVariable;
-  let expandTo = aOptions.expandTo.split(".");
-  let jsterm = (aOptions.webconsole || {}).jsterm;
+function variablesViewExpandTo(options) {
+  let root = options.rootVariable;
+  let expandTo = options.expandTo.split(".");
+  let jsterm = (options.webconsole || {}).jsterm;
   let lastDeferred = promise.defer();
 
-  function fetch(aProp)
-  {
-    if (!aProp.onexpand) {
-      ok(false, "property " + aProp.name + " cannot be expanded: !onexpand");
-      return promise.reject(aProp);
+  function fetch(prop) {
+    if (!prop.onexpand) {
+      ok(false, "property " + prop.name + " cannot be expanded: !onexpand");
+      return promise.reject(prop);
     }
 
     let deferred = promise.defer();
 
-    if (aProp._fetched || !jsterm) {
+    if (prop._fetched || !jsterm) {
       executeSoon(function() {
-        deferred.resolve(aProp);
+        deferred.resolve(prop);
       });
-    }
-    else {
+    } else {
       jsterm.once("variablesview-fetched", function _onFetchProp() {
-        executeSoon(() => deferred.resolve(aProp));
+        executeSoon(() => deferred.resolve(prop));
       });
     }
 
-    aProp.expand();
+    prop.expand();
 
     return deferred.promise;
   }
 
-  function getNext(aProp)
-  {
+  function getNext(prop) {
     let name = expandTo.shift();
-    let newProp = aProp.get(name);
+    let newProp = prop.get(name);
 
     if (expandTo.length > 0) {
       ok(newProp, "found property " + name);
       if (newProp) {
         fetch(newProp).then(getNext, fetchError);
+      } else {
+        lastDeferred.reject(prop);
       }
-      else {
-        lastDeferred.reject(aProp);
-      }
-    }
-    else {
-      if (newProp) {
-        lastDeferred.resolve(newProp);
-      }
-      else {
-        lastDeferred.reject(aProp);
-      }
+    } else if (newProp) {
+      lastDeferred.resolve(newProp);
+    } else {
+      lastDeferred.reject(prop);
     }
   }
 
-  function fetchError(aProp)
-  {
-    lastDeferred.reject(aProp);
+  function fetchError(prop) {
+    lastDeferred.reject(prop);
   }
 
   if (!root._fetched) {
     fetch(root).then(getNext, fetchError);
-  }
-  else {
+  } else {
     getNext(root);
   }
 
   return lastDeferred.promise;
 }
 
-
 /**
  * Update the content of a property in the variables view.
  *
- * @param object aOptions
+ * @param object options
  *        Options for the property update:
  *        - property: the property you want to change.
  *        - field: string that tells what you want to change:
@@ -758,12 +728,12 @@ function variablesViewExpandTo(aOptions)
  * @return object
  *         A Promise object that is resolved once the property is updated.
  */
-let updateVariablesViewProperty = Task.async(function* (aOptions) {
-  let view = aOptions.property._variablesView;
+let updateVariablesViewProperty = Task.async(function* (options) {
+  let view = options.property._variablesView;
   view.window.focus();
-  aOptions.property.focus();
+  options.property.focus();
 
-  switch (aOptions.field) {
+  switch (options.field) {
     case "name":
       EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, view.window);
       break;
@@ -779,19 +749,18 @@ let updateVariablesViewProperty = Task.async(function* (aOptions) {
   executeSoon(() => {
     EventUtils.synthesizeKey("A", { accelKey: true }, view.window);
 
-    for (let c of aOptions.string) {
+    for (let c of options.string) {
       EventUtils.synthesizeKey(c, {}, view.window);
     }
 
-    if (aOptions.webconsole) {
-      aOptions.webconsole.jsterm.once("variablesview-fetched").then((varView) => {
-        deferred.resolve(varView);
-      });
+    if (options.webconsole) {
+      options.webconsole.jsterm.once("variablesview-fetched")
+        .then((varView) => deferred.resolve(varView));
     }
 
     EventUtils.synthesizeKey("VK_RETURN", {}, view.window);
 
-    if (!aOptions.webconsole) {
+    if (!options.webconsole) {
       executeSoon(() => {
         deferred.resolve(null);
       });
@@ -804,7 +773,7 @@ let updateVariablesViewProperty = Task.async(function* (aOptions) {
 /**
  * Open the JavaScript debugger.
  *
- * @param object aOptions
+ * @param object options
  *        Options for opening the debugger:
  *        - tab: the tab you want to open the debugger for.
  * @return object
@@ -816,42 +785,40 @@ let updateVariablesViewProperty = Task.async(function* (aOptions) {
  *         - panel: the jsdebugger panel instance.
  *         - panelWin: the window object of the panel iframe.
  */
-function openDebugger(aOptions = {})
-{
-  if (!aOptions.tab) {
-    aOptions.tab = gBrowser.selectedTab;
+function openDebugger(options = {}) {
+  if (!options.tab) {
+    options.tab = gBrowser.selectedTab;
   }
 
   let deferred = promise.defer();
 
-  let target = TargetFactory.forTab(aOptions.tab);
+  let target = TargetFactory.forTab(options.tab);
   let toolbox = gDevTools.getToolbox(target);
   let dbgPanelAlreadyOpen = toolbox && toolbox.getPanel("jsdebugger");
 
-  gDevTools.showToolbox(target, "jsdebugger").then(function onSuccess(aToolbox) {
-    let panel = aToolbox.getCurrentPanel();
+  gDevTools.showToolbox(target, "jsdebugger").then(function onSuccess(tool) {
+    let panel = tool.getCurrentPanel();
     let panelWin = panel.panelWin;
 
     panel._view.Variables.lazyEmpty = false;
 
     let resolveObject = {
       target: target,
-      toolbox: aToolbox,
+      toolbox: tool,
       panel: panel,
       panelWin: panelWin,
     };
 
     if (dbgPanelAlreadyOpen) {
       deferred.resolve(resolveObject);
-    }
-    else {
+    } else {
       panelWin.once(panelWin.EVENTS.SOURCES_ADDED, () => {
         deferred.resolve(resolveObject);
       });
     }
-  }, function onFailure(aReason) {
-    console.debug("failed to open the toolbox for 'jsdebugger'", aReason);
-    deferred.reject(aReason);
+  }, function onFailure(reason) {
+    console.debug("failed to open the toolbox for 'jsdebugger'", reason);
+    deferred.reject(reason);
   });
 
   return deferred.promise;
@@ -860,25 +827,25 @@ function openDebugger(aOptions = {})
 /**
  * Returns true if the caret in the debugger editor is placed at the specified
  * position.
- * @param  aPanel The debugger panel.
- * @param {number} aLine The line number.
- * @param {number} [aCol] The column number.
+ * @param  panel The debugger panel.
+ * @param {number} line The line number.
+ * @param {number} [col] The column number.
  * @returns {boolean}
  */
-function isDebuggerCaretPos(aPanel, aLine, aCol = 1) {
-  let editor = aPanel.panelWin.DebuggerView.editor;
+function isDebuggerCaretPos(panel, line, col = 1) {
+  let editor = panel.panelWin.DebuggerView.editor;
   let cursor = editor.getCursor();
 
   // Source editor starts counting line and column numbers from 0.
   info("Current editor caret position: " + (cursor.line + 1) + ", " +
     (cursor.ch + 1));
-  return cursor.line == (aLine - 1) && cursor.ch == (aCol - 1);
+  return cursor.line == (line - 1) && cursor.ch == (col - 1);
 }
 
 /**
  * Wait for messages in the Web Console output.
  *
- * @param object aOptions
+ * @param object options
  *        Options for what you want to wait for:
  *        - webconsole: the webconsole instance you work with.
  *        - matchCondition: "any" or "all". Default: "all". The promise
@@ -945,119 +912,108 @@ function isDebuggerCaretPos(aPanel, aLine, aCol = 1) {
  *         in the message element, to expand a long string. This is available
  *         only if |longString| is present in the matching rule.
  */
-function waitForMessages(aOptions)
-{
+function waitForMessages(options) {
   info("Waiting for messages...");
 
   gPendingOutputTest++;
-  let webconsole = aOptions.webconsole;
-  let rules = WebConsoleUtils.cloneObject(aOptions.messages, true);
+  let webconsole = options.webconsole;
+  let rules = WebConsoleUtils.cloneObject(options.messages, true);
   let rulesMatched = 0;
   let listenerAdded = false;
   let deferred = promise.defer();
-  aOptions.matchCondition = aOptions.matchCondition || "all";
+  options.matchCondition = options.matchCondition || "all";
 
-  function checkText(aRule, aText)
-  {
+  function checkText(rule, text) {
     let result = false;
-    if (Array.isArray(aRule)) {
-      result = aRule.every((s) => checkText(s, aText));
-    }
-    else if (typeof aRule == "string") {
-      result = aText.indexOf(aRule) > -1;
-    }
-    else if (aRule instanceof RegExp) {
-      result = aRule.test(aText);
-    }
-    else {
-      result = aRule == aText;
+    if (Array.isArray(rule)) {
+      result = rule.every((s) => checkText(s, text));
+    } else if (typeof rule == "string") {
+      result = text.indexOf(rule) > -1;
+    } else if (rule instanceof RegExp) {
+      result = rule.test(text);
+    } else {
+      result = rule == text;
     }
     return result;
   }
 
-  function checkConsoleTable(aRule, aElement)
-  {
-    let elemText = aElement.textContent;
-    let table = aRule.consoleTable;
+  function checkConsoleTable(rule, element) {
+    let elemText = element.textContent;
 
     if (!checkText("console.table():", elemText)) {
       return false;
     }
 
-    aRule.category = CATEGORY_WEBDEV;
-    aRule.severity = SEVERITY_LOG;
-    aRule.type = Messages.ConsoleTable;
+    rule.category = CATEGORY_WEBDEV;
+    rule.severity = SEVERITY_LOG;
+    rule.type = Messages.ConsoleTable;
 
     return true;
   }
 
-  function checkConsoleTrace(aRule, aElement)
-  {
-    let elemText = aElement.textContent;
-    let trace = aRule.consoleTrace;
+  function checkConsoleTrace(rule, element) {
+    let elemText = element.textContent;
+    let trace = rule.consoleTrace;
 
     if (!checkText("console.trace():", elemText)) {
       return false;
     }
 
-    aRule.category = CATEGORY_WEBDEV;
-    aRule.severity = SEVERITY_LOG;
-    aRule.type = Messages.ConsoleTrace;
+    rule.category = CATEGORY_WEBDEV;
+    rule.severity = SEVERITY_LOG;
+    rule.type = Messages.ConsoleTrace;
 
-    if (!aRule.stacktrace && typeof trace == "object" && trace !== true) {
+    if (!rule.stacktrace && typeof trace == "object" && trace !== true) {
       if (Array.isArray(trace)) {
-        aRule.stacktrace = trace;
+        rule.stacktrace = trace;
       } else {
-        aRule.stacktrace = [trace];
+        rule.stacktrace = [trace];
       }
     }
 
     return true;
   }
 
-  function checkConsoleTime(aRule, aElement)
-  {
-    let elemText = aElement.textContent;
-    let time = aRule.consoleTime;
+  function checkConsoleTime(rule, element) {
+    let elemText = element.textContent;
+    let time = rule.consoleTime;
 
     if (!checkText(time + ": timer started", elemText)) {
       return false;
     }
 
-    aRule.category = CATEGORY_WEBDEV;
-    aRule.severity = SEVERITY_LOG;
+    rule.category = CATEGORY_WEBDEV;
+    rule.severity = SEVERITY_LOG;
 
     return true;
   }
 
-  function checkConsoleTimeEnd(aRule, aElement)
-  {
-    let elemText = aElement.textContent;
-    let time = aRule.consoleTimeEnd;
+  function checkConsoleTimeEnd(rule, element) {
+    let elemText = element.textContent;
+    let time = rule.consoleTimeEnd;
     let regex = new RegExp(time + ": -?\\d+([,.]\\d+)?ms");
 
     if (!checkText(regex, elemText)) {
       return false;
     }
 
-    aRule.category = CATEGORY_WEBDEV;
-    aRule.severity = SEVERITY_LOG;
+    rule.category = CATEGORY_WEBDEV;
+    rule.severity = SEVERITY_LOG;
 
     return true;
   }
 
-  function checkConsoleDir(aRule, aElement)
-  {
-    if (!aElement.classList.contains("inlined-variables-view")) {
+  function checkConsoleDir(rule, element) {
+    if (!element.classList.contains("inlined-variables-view")) {
       return false;
     }
 
-    let elemText = aElement.textContent;
-    if (!checkText(aRule.consoleDir, elemText)) {
+    let elemText = element.textContent;
+    if (!checkText(rule.consoleDir, elemText)) {
       return false;
     }
 
-    let iframe = aElement.querySelector("iframe");
+    let iframe = element.querySelector("iframe");
     if (!iframe) {
       ok(false, "console.dir message has no iframe");
       return false;
@@ -1066,49 +1022,45 @@ function waitForMessages(aOptions)
     return true;
   }
 
-  function checkConsoleGroup(aRule, aElement)
-  {
-    if (!isNaN(parseInt(aRule.consoleGroup))) {
-      aRule.groupDepth = aRule.consoleGroup;
+  function checkConsoleGroup(rule) {
+    if (!isNaN(parseInt(rule.consoleGroup, 10))) {
+      rule.groupDepth = rule.consoleGroup;
     }
-    aRule.category = CATEGORY_WEBDEV;
-    aRule.severity = SEVERITY_LOG;
+    rule.category = CATEGORY_WEBDEV;
+    rule.severity = SEVERITY_LOG;
 
     return true;
   }
 
-  function checkSource(aRule, aElement)
-  {
-    let location = aElement.querySelector(".message-location");
+  function checkSource(rule, element) {
+    let location = element.querySelector(".message-location");
     if (!location) {
       return false;
     }
 
-    if (!checkText(aRule.source.url, location.getAttribute("title"))) {
+    if (!checkText(rule.source.url, location.getAttribute("title"))) {
       return false;
     }
 
-    if ("line" in aRule.source && location.sourceLine != aRule.source.line) {
-      return false;
-    }
-
-    return true;
-  }
-
-  function checkCollapsible(aRule, aElement)
-  {
-    let msg = aElement._messageObject;
-    if (!msg || !!msg.collapsible != aRule.collapsible) {
+    if ("line" in rule.source && location.sourceLine != rule.source.line) {
       return false;
     }
 
     return true;
   }
 
-  function checkStacktrace(aRule, aElement)
-  {
-    let stack = aRule.stacktrace;
-    let frames = aElement.querySelectorAll(".stacktrace > li");
+  function checkCollapsible(rule, element) {
+    let msg = element._messageObject;
+    if (!msg || !!msg.collapsible != rule.collapsible) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function checkStacktrace(rule, element) {
+    let stack = rule.stacktrace;
+    let frames = element.querySelectorAll(".stacktrace > li");
     if (!frames.length) {
       return false;
     }
@@ -1126,7 +1078,7 @@ function waitForMessages(aOptions)
         if (!checkText(expected.file, file)) {
           ok(false, "frame #" + i + " does not match file name: " +
                     expected.file);
-          displayErrorContext(aRule, aElement);
+          displayErrorContext(rule, element);
           return false;
         }
       }
@@ -1136,7 +1088,7 @@ function waitForMessages(aOptions)
         if (!checkText(expected.fn, fn)) {
           ok(false, "frame #" + i + " does not match the function name: " +
                     expected.fn);
-          displayErrorContext(aRule, aElement);
+          displayErrorContext(rule, element);
           return false;
         }
       }
@@ -1146,7 +1098,7 @@ function waitForMessages(aOptions)
         if (!checkText(expected.line, line)) {
           ok(false, "frame #" + i + " does not match the line number: " +
                     expected.line);
-          displayErrorContext(aRule, aElement);
+          displayErrorContext(rule, element);
           return false;
         }
       }
@@ -1155,180 +1107,178 @@ function waitForMessages(aOptions)
     return true;
   }
 
-  function hasXhrLabel(aElement) {
-    let xhr = aElement.querySelector('.xhr');
+  function hasXhrLabel(element) {
+    let xhr = element.querySelector(".xhr");
     if (!xhr) {
       return false;
     }
     return true;
   }
 
-  function checkMessage(aRule, aElement)
-  {
-    let elemText = aElement.textContent;
+  function checkMessage(rule, element) {
+    let elemText = element.textContent;
 
-    if (aRule.text && !checkText(aRule.text, elemText)) {
+    if (rule.text && !checkText(rule.text, elemText)) {
       return false;
     }
 
-    if (aRule.noText && checkText(aRule.noText, elemText)) {
+    if (rule.noText && checkText(rule.noText, elemText)) {
       return false;
     }
 
-    if (aRule.consoleTable && !checkConsoleTable(aRule, aElement)) {
+    if (rule.consoleTable && !checkConsoleTable(rule, element)) {
       return false;
     }
 
-    if (aRule.consoleTrace && !checkConsoleTrace(aRule, aElement)) {
+    if (rule.consoleTrace && !checkConsoleTrace(rule, element)) {
       return false;
     }
 
-    if (aRule.consoleTime && !checkConsoleTime(aRule, aElement)) {
+    if (rule.consoleTime && !checkConsoleTime(rule, element)) {
       return false;
     }
 
-    if (aRule.consoleTimeEnd && !checkConsoleTimeEnd(aRule, aElement)) {
+    if (rule.consoleTimeEnd && !checkConsoleTimeEnd(rule, element)) {
       return false;
     }
 
-    if (aRule.consoleDir && !checkConsoleDir(aRule, aElement)) {
+    if (rule.consoleDir && !checkConsoleDir(rule, element)) {
       return false;
     }
 
-    if (aRule.consoleGroup && !checkConsoleGroup(aRule, aElement)) {
+    if (rule.consoleGroup && !checkConsoleGroup(rule, element)) {
       return false;
     }
 
-    if (aRule.source && !checkSource(aRule, aElement)) {
+    if (rule.source && !checkSource(rule, element)) {
       return false;
     }
 
-    if ("collapsible" in aRule && !checkCollapsible(aRule, aElement)) {
+    if ("collapsible" in rule && !checkCollapsible(rule, element)) {
       return false;
     }
 
-    if (aRule.isXhr && !hasXhrLabel(aElement)) {
+    if (rule.isXhr && !hasXhrLabel(element)) {
       return false;
     }
 
-    if (!aRule.isXhr && hasXhrLabel(aElement)) {
+    if (!rule.isXhr && hasXhrLabel(element)) {
       return false;
     }
 
-    let partialMatch = !!(aRule.consoleTrace || aRule.consoleTime ||
-                          aRule.consoleTimeEnd);
+    let partialMatch = !!(rule.consoleTrace || rule.consoleTime ||
+                          rule.consoleTimeEnd);
 
     // The rule tries to match the newer types of messages, based on their
     // object constructor.
-    if (aRule.type) {
-      if (!aElement._messageObject ||
-          !(aElement._messageObject instanceof aRule.type)) {
+    if (rule.type) {
+      if (!element._messageObject ||
+          !(element._messageObject instanceof rule.type)) {
         if (partialMatch) {
-          ok(false, "message type for rule: " + displayRule(aRule));
-          displayErrorContext(aRule, aElement);
+          ok(false, "message type for rule: " + displayRule(rule));
+          displayErrorContext(rule, element);
         }
         return false;
       }
       partialMatch = true;
     }
 
-    if ("category" in aRule && aElement.category != aRule.category) {
+    if ("category" in rule && element.category != rule.category) {
       if (partialMatch) {
-        is(aElement.category, aRule.category,
-           "message category for rule: " + displayRule(aRule));
-        displayErrorContext(aRule, aElement);
+        is(element.category, rule.category,
+           "message category for rule: " + displayRule(rule));
+        displayErrorContext(rule, element);
       }
       return false;
     }
 
-    if ("severity" in aRule && aElement.severity != aRule.severity) {
+    if ("severity" in rule && element.severity != rule.severity) {
       if (partialMatch) {
-        is(aElement.severity, aRule.severity,
-           "message severity for rule: " + displayRule(aRule));
-        displayErrorContext(aRule, aElement);
+        is(element.severity, rule.severity,
+           "message severity for rule: " + displayRule(rule));
+        displayErrorContext(rule, element);
       }
       return false;
     }
 
-    if (aRule.text) {
+    if (rule.text) {
       partialMatch = true;
     }
 
-    if (aRule.stacktrace && !checkStacktrace(aRule, aElement)) {
+    if (rule.stacktrace && !checkStacktrace(rule, element)) {
       if (partialMatch) {
-        ok(false, "failed to match stacktrace for rule: " + displayRule(aRule));
-        displayErrorContext(aRule, aElement);
+        ok(false, "failed to match stacktrace for rule: " + displayRule(rule));
+        displayErrorContext(rule, element);
       }
       return false;
     }
 
-    if (aRule.category == CATEGORY_NETWORK && "url" in aRule &&
-        !checkText(aRule.url, aElement.url)) {
+    if (rule.category == CATEGORY_NETWORK && "url" in rule &&
+        !checkText(rule.url, element.url)) {
       return false;
     }
 
-    if ("repeats" in aRule) {
-      let repeats = aElement.querySelector(".message-repeats");
-      if (!repeats || repeats.getAttribute("value") != aRule.repeats) {
+    if ("repeats" in rule) {
+      let repeats = element.querySelector(".message-repeats");
+      if (!repeats || repeats.getAttribute("value") != rule.repeats) {
         return false;
       }
     }
 
-    if ("groupDepth" in aRule) {
-      let indentNode = aElement.querySelector(".indent");
-      let indent = (GROUP_INDENT * aRule.groupDepth)  + "px";
+    if ("groupDepth" in rule) {
+      let indentNode = element.querySelector(".indent");
+      let indent = (GROUP_INDENT * rule.groupDepth) + "px";
       if (!indentNode || indentNode.style.width != indent) {
         is(indentNode.style.width, indent,
-           "group depth check failed for message rule: " + displayRule(aRule));
+           "group depth check failed for message rule: " + displayRule(rule));
         return false;
       }
     }
 
-    if ("longString" in aRule) {
-      let longStrings = aElement.querySelectorAll(".longStringEllipsis");
-      if (aRule.longString != !!longStrings[0]) {
+    if ("longString" in rule) {
+      let longStrings = element.querySelectorAll(".longStringEllipsis");
+      if (rule.longString != !!longStrings[0]) {
         if (partialMatch) {
-          is(!!longStrings[0], aRule.longString,
+          is(!!longStrings[0], rule.longString,
              "long string existence check failed for message rule: " +
-             displayRule(aRule));
-          displayErrorContext(aRule, aElement);
+             displayRule(rule));
+          displayErrorContext(rule, element);
         }
         return false;
       }
-      aRule.longStrings = longStrings;
+      rule.longStrings = longStrings;
     }
 
-    if ("objects" in aRule) {
-      let clickables = aElement.querySelectorAll(".message-body a");
-      if (aRule.objects != !!clickables[0]) {
+    if ("objects" in rule) {
+      let clickables = element.querySelectorAll(".message-body a");
+      if (rule.objects != !!clickables[0]) {
         if (partialMatch) {
-          is(!!clickables[0], aRule.objects,
+          is(!!clickables[0], rule.objects,
              "objects existence check failed for message rule: " +
-             displayRule(aRule));
-          displayErrorContext(aRule, aElement);
+             displayRule(rule));
+          displayErrorContext(rule, element);
         }
         return false;
       }
-      aRule.clickableElements = clickables;
+      rule.clickableElements = clickables;
     }
 
-    if ("prefix" in aRule) {
-      let prefixNode = aElement.querySelector(".prefix");
-      is(prefixNode && prefixNode.textContent, aRule.prefix, "Check prefix");
+    if ("prefix" in rule) {
+      let prefixNode = element.querySelector(".prefix");
+      is(prefixNode && prefixNode.textContent, rule.prefix, "Check prefix");
     }
 
-    let count = aRule.count || 1;
-    if (!aRule.matched) {
-      aRule.matched = new Set();
+    let count = rule.count || 1;
+    if (!rule.matched) {
+      rule.matched = new Set();
     }
-    aRule.matched.add(aElement);
+    rule.matched.add(element);
 
-    return aRule.matched.size == count;
+    return rule.matched.size == count;
   }
 
-  function onMessagesAdded(aEvent, aNewMessages)
-  {
-    for (let msg of aNewMessages) {
+  function onMessagesAdded(event, newMessages) {
+    for (let msg of newMessages) {
       let elem = msg.node;
       let location = elem.querySelector(".message-location");
       if (location) {
@@ -1358,14 +1308,12 @@ function waitForMessages(aOptions)
     }
   }
 
-  function allRulesMatched()
-  {
-    return aOptions.matchCondition == "all" && rulesMatched == rules.length ||
-           aOptions.matchCondition == "any" && rulesMatched > 0;
+  function allRulesMatched() {
+    return options.matchCondition == "all" && rulesMatched == rules.length ||
+           options.matchCondition == "any" && rulesMatched > 0;
   }
 
-  function maybeDone()
-  {
+  function maybeDone() {
     if (allRulesMatched()) {
       if (listenerAdded) {
         webconsole.ui.off("new-messages", onMessagesAdded);
@@ -1393,20 +1341,17 @@ function waitForMessages(aOptions)
     }
   }
 
-  function displayRule(aRule)
-  {
-    return aRule.name || aRule.text;
+  function displayRule(rule) {
+    return rule.name || rule.text;
   }
 
-  function displayErrorContext(aRule, aElement)
-  {
-    console.log("error occured during rule " + displayRule(aRule));
+  function displayErrorContext(rule, element) {
+    console.log("error occured during rule " + displayRule(rule));
     console.log("while checking the following message");
-    dumpMessageElement(aElement);
+    dumpMessageElement(element);
   }
 
   executeSoon(() => {
-
     let messages = [];
     for (let elem of webconsole.outputNode.childNodes) {
       messages.push({
@@ -1427,12 +1372,11 @@ function waitForMessages(aOptions)
   return deferred.promise;
 }
 
-function whenDelayedStartupFinished(aWindow, aCallback)
-{
-  Services.obs.addObserver(function observer(aSubject, aTopic) {
-    if (aWindow == aSubject) {
-      Services.obs.removeObserver(observer, aTopic);
-      executeSoon(aCallback);
+function whenDelayedStartupFinished(win, callback) {
+  Services.obs.addObserver(function observer(subject, topic) {
+    if (win == subject) {
+      Services.obs.removeObserver(observer, topic);
+      executeSoon(callback);
     }
   }, "browser-delayed-startup-finished", false);
 }
@@ -1474,16 +1418,14 @@ function whenDelayedStartupFinished(aWindow, aCallback)
  *        result widget to contain an inspectorIcon element (className
  *        open-inspector).
  *
- *        - expectedTab: string, optional, the full URL of the new tab which must
- *        open. If this is not provided, any new tabs that open will cause a test
- *        failure.
+ *        - expectedTab: string, optional, the full URL of the new tab which
+ *        must open. If this is not provided, any new tabs that open will cause
+ *        a test failure.
  */
-function checkOutputForInputs(hud, inputTests)
-{
+function checkOutputForInputs(hud, inputTests) {
   let container = gBrowser.tabContainer;
 
-  function* runner()
-  {
+  function* runner() {
     for (let [i, entry] of inputTests.entries()) {
       info("checkInput(" + i + "): " + entry.input);
       yield checkInput(entry);
@@ -1491,15 +1433,13 @@ function checkOutputForInputs(hud, inputTests)
     container = null;
   }
 
-  function* checkInput(entry)
-  {
+  function* checkInput(entry) {
     yield checkConsoleLog(entry);
     yield checkPrintOutput(entry);
     yield checkJSEval(entry);
   }
 
-  function* checkConsoleLog(entry)
-  {
+  function* checkConsoleLog(entry) {
     info("Logging: " + entry.input);
     hud.jsterm.clearOutput();
     hud.jsterm.execute("console.log(" + entry.input + ")");
@@ -1524,8 +1464,7 @@ function checkOutputForInputs(hud, inputTests)
     }
   }
 
-  function checkPrintOutput(entry)
-  {
+  function checkPrintOutput(entry) {
     info("Printing: " + entry.input);
     hud.jsterm.clearOutput();
     hud.jsterm.execute("print(" + entry.input + ")");
@@ -1542,8 +1481,7 @@ function checkOutputForInputs(hud, inputTests)
     });
   }
 
-  function* checkJSEval(entry)
-  {
+  function* checkJSEval(entry) {
     info("Evaluating: " + entry.input);
     hud.jsterm.clearOutput();
     hud.jsterm.execute(entry.input);
@@ -1567,15 +1505,15 @@ function checkOutputForInputs(hud, inputTests)
     }
   }
 
-  function* checkObjectClick(entry, msg)
-  {
+  function* checkObjectClick(entry, msg) {
     info("Clicking: " + entry.input);
     let body = msg.querySelector(".message-body a") ||
                msg.querySelector(".message-body");
     ok(body, "the message body");
 
     let deferredVariablesView = promise.defer();
-    entry._onVariablesViewOpen = onVariablesViewOpen.bind(null, entry, deferredVariablesView);
+    entry._onVariablesViewOpen = onVariablesViewOpen.bind(null, entry,
+                                                          deferredVariablesView);
     hud.jsterm.on("variablesview-open", entry._onVariablesViewOpen);
 
     let deferredTab = promise.defer();
@@ -1586,7 +1524,8 @@ function checkOutputForInputs(hud, inputTests)
     EventUtils.synthesizeMouse(body, 2, 2, {}, hud.iframeWindow);
 
     if (entry.inspectable) {
-      info("message body tagName '" + body.tagName +  "' className '" + body.className + "'");
+      info("message body tagName '" + body.tagName + "' className '" +
+           body.className + "'");
       yield deferredVariablesView.promise;
     } else {
       hud.jsterm.off("variablesview-open", entry._onVariablesView);
@@ -1603,8 +1542,7 @@ function checkOutputForInputs(hud, inputTests)
     yield promise.resolve(null);
   }
 
-  function onVariablesViewOpen(entry, {resolve, reject}, event, view, options)
-  {
+  function onVariablesViewOpen(entry, {resolve, reject}, event, view, options) {
     info("Variables view opened: " + entry.input);
     let label = entry.variablesViewLabel || entry.output;
     if (typeof label == "string" && options.label != label) {
@@ -1621,8 +1559,7 @@ function checkOutputForInputs(hud, inputTests)
     resolve(null);
   }
 
-  function onTabOpen(entry, {resolve, reject}, event)
-  {
+  function onTabOpen(entry, {resolve, reject}, event) {
     container.removeEventListener("TabOpen", entry._onTabOpen, true);
     entry._onTabOpen = null;
 
@@ -1631,7 +1568,7 @@ function checkOutputForInputs(hud, inputTests)
     loadBrowser(browser).then(() => {
       let uri = content.location.href;
       ok(entry.expectedTab && entry.expectedTab == uri,
-        "opened tab '" + uri +  "', expected tab '" + entry.expectedTab + "'");
+         "opened tab '" + uri + "', expected tab '" + entry.expectedTab + "'");
       return closeTab(tab);
     }).then(resolve, reject);
   }
@@ -1644,7 +1581,7 @@ function checkOutputForInputs(hud, inputTests)
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
  * @param {String} eventName
- * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @param {Boolean} useCapture Optional for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
 function once(target, eventName, useCapture=false) {
@@ -1676,12 +1613,11 @@ function once(target, eventName, useCapture=false) {
  *  link to the inspector panel.
  * @param {element} msg The message to test.
  */
-function checkLinkToInspector(hasLinkToInspector, msg)
-{
+function checkLinkToInspector(hasLinkToInspector, msg) {
   let elementNodeWidget = [...msg._messageObject.widgets][0];
   if (!elementNodeWidget) {
     ok(!hasLinkToInspector, "The message has no ElementNode widget");
-    return;
+    return true;
   }
 
   return elementNodeWidget.linkToInspector().then(() => {
@@ -1695,12 +1631,13 @@ function checkLinkToInspector(hasLinkToInspector, msg)
     }
   }, () => {
     // linkToInspector promise rejected, node not linked to inspector
-    ok(!hasLinkToInspector, "The ElementNode widget isn't linked to the inspector");
+    ok(!hasLinkToInspector,
+       "The ElementNode widget isn't linked to the inspector");
   });
 }
 
-function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+function getSourceActor(sources, URL) {
+  let item = sources.getItemForAttachment(a => a.source.url === URL);
   return item && item.value;
 }
 

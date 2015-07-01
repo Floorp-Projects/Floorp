@@ -3,13 +3,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Test to make sure that web console commands can fire while paused at a breakpoint
-// that was triggered from a JS call.  Relies on asynchronous js evaluation over the
-// protocol - see Bug 1088861.
+// Test to make sure that web console commands can fire while paused at a
+// breakpoint that was triggered from a JS call.  Relies on asynchronous js
+// evaluation over the protocol - see Bug 1088861.
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-eval-in-stackframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-eval-in-stackframe.html";
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
 
@@ -18,46 +19,46 @@ let test = asyncTest(function*() {
   let {jsterm} = hud;
 
   info("open the debugger");
-  let {panel,panelWin} = yield openDebugger();
+  let {panelWin} = yield openDebugger();
   let {DebuggerController} = panelWin;
-  let {activeThread,StackFrames} = DebuggerController;
+  let {activeThread} = DebuggerController;
 
   let firstCall = promise.defer();
   let frameAdded = promise.defer();
   executeSoon(() => {
-    info ("Executing firstCall");
+    info("Executing firstCall");
     activeThread.addOneTimeListener("framesadded", () => {
       executeSoon(frameAdded.resolve);
     });
     jsterm.execute("firstCall()").then(firstCall.resolve);
   });
 
-  info ("Waiting for a frame to be added");
+  info("Waiting for a frame to be added");
   yield frameAdded.promise;
 
-  info ("Executing basic command while paused");
+  info("Executing basic command while paused");
   yield executeAndConfirm(jsterm, "1 + 2", "3");
 
-  info ("Executing command using scoped variables while paused");
-  yield executeAndConfirm(jsterm, "foo + foo2", '"globalFooBug783499foo2SecondCall"');
+  info("Executing command using scoped variables while paused");
+  yield executeAndConfirm(jsterm, "foo + foo2",
+                          '"globalFooBug783499foo2SecondCall"');
 
-  info ("Resuming the thread");
+  info("Resuming the thread");
   activeThread.resume();
 
-  info ("Checking the first command (which is the last to resolve since it paused");
+  info("Checking the first command, which is the last to resolve since it " +
+       "paused");
   let node = yield firstCall.promise;
-  is (node.querySelector(".message-body").textContent,
-      "undefined",
-      "firstCall() returned correct value");
+  is(node.querySelector(".message-body").textContent,
+     "undefined",
+     "firstCall() returned correct value");
 });
 
 function* executeAndConfirm(jsterm, input, output) {
-  info ("Executing command `"+input+"`");
+  info("Executing command `" + input + "`");
 
   let node = yield jsterm.execute(input);
 
-  is (node.querySelector(".message-body").textContent,
-      output,
-      "Expected result from call to " + input);
+  is(node.querySelector(".message-body").textContent, output,
+     "Expected result from call to " + input);
 }
-

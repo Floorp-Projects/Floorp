@@ -6,29 +6,27 @@
 // Check that variables view is linked to the inspector for highlighting and
 // selecting DOM nodes
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-952277-highlight-nodes-in-vview.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-952277-highlight-nodes-in-vview.html";
 
 let gWebConsole, gJSTerm, gVariablesView, gToolbox;
 
-function test()
-{
+function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then(hud => {
       consoleOpened(hud);
-    })
+    });
   });
 }
 
-function consoleOpened(hud)
-{
+function consoleOpened(hud) {
   gWebConsole = hud;
   gJSTerm = hud.jsterm;
   gToolbox = gDevTools.getToolbox(hud.target);
   gJSTerm.execute("document.querySelectorAll('p')").then(onQSAexecuted);
 }
 
-function onQSAexecuted(msg)
-{
+function onQSAexecuted(msg) {
   ok(msg, "output message found");
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");
@@ -40,8 +38,7 @@ function onQSAexecuted(msg)
   );
 }
 
-function onNodeListVviewFetched(aEvent, aVar)
-{
+function onNodeListVviewFetched(aEvent, aVar) {
   gVariablesView = aVar._variablesView;
   ok(gVariablesView, "variables view object");
 
@@ -54,7 +51,6 @@ function onNodeListVviewFetched(aEvent, aVar)
   function hoverOverDomNodeVariableAndAssertHighlighter(index) {
     if (props[index]) {
       let prop = props[index][1];
-      let valueEl = prop._valueLabel;
 
       gToolbox.once("node-highlight", () => {
         ok(true, "The highlighter was shown on hover of the DOMNode");
@@ -80,7 +76,8 @@ function onNodeListVviewFetched(aEvent, aVar)
       // variable's openNodeInInspector function and see if it has the
       // desired effect
       prop.openNodeInInspector().then(() => {
-        is(gToolbox.currentToolId, "inspector", "The toolbox switched over the inspector on DOMNode click");
+        is(gToolbox.currentToolId, "inspector",
+           "The toolbox switched over the inspector on DOMNode click");
         gToolbox.selectTool("webconsole").then(() => {
           hoverOverDomNodeVariableAndAssertHighlighter(index + 1);
         });
