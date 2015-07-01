@@ -14,6 +14,7 @@
  Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesisEvent : Event
 {
+  readonly attribute SpeechSynthesisUtterance utterance;
   readonly attribute unsigned long charIndex;
   readonly attribute float elapsedTime;
   readonly attribute DOMString? name;
@@ -21,6 +22,7 @@ interface SpeechSynthesisEvent : Event
 
 dictionary SpeechSynthesisEventInit : EventInit
 {
+  required SpeechSynthesisUtterance utterance;
   unsigned long charIndex = 0;
   float elapsedTime = 0;
   DOMString name = "";
