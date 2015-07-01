@@ -110,7 +110,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
 
-        mTitle = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_title);
+        mTitle = (TextView) mIdentity.findViewById(R.id.site_identity_title);
         mEncrypted = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_encrypted);
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
         mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
