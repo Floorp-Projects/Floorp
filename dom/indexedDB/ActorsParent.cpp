@@ -23070,8 +23070,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       MOZ_ASSERT(autoIncrementNum > 0);
 
       if (autoIncrementNum > (1LL << 53)) {
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
       }
 
       key.SetFromInteger(autoIncrementNum);
