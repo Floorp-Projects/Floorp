@@ -10,81 +10,56 @@
 namespace mozilla {
 namespace layers {
 
-struct TestTiledLayerTile {
-  int value;
-  explicit TestTiledLayerTile(int v = 0) {
-    value = v;
-  }
-  bool operator== (const TestTiledLayerTile& o) const {
-    return value == o.value;
-  }
-  bool operator!= (const TestTiledLayerTile& o) const {
-    return value != o.value;
-  }
-
-  bool IsPlaceholderTile() const {
-    return value == -1;
-  }
-};
-
-class TestTiledLayerBuffer : public TiledLayerBuffer<TestTiledLayerBuffer, TestTiledLayerTile>
-{
-  friend class TiledLayerBuffer<TestTiledLayerBuffer, TestTiledLayerTile>;
-
-public:
-  TestTiledLayerTile GetPlaceholderTile() const {
-    return TestTiledLayerTile(-1);
-  }
-
-  TestTiledLayerTile ValidateTile(TestTiledLayerTile aTile, const nsIntPoint& aTileOrigin, const nsIntRegion& aDirtyRect) {
-    return TestTiledLayerTile();
-  }
-
-  void ReleaseTile(TestTiledLayerTile aTile)
-  {
-
-  }
-
-  void SwapTiles(TestTiledLayerTile& aTileA, TestTiledLayerTile& aTileB)
-  {
-    TestTiledLayerTile oldTileA = aTileA;
-    aTileA = aTileB;
-    aTileB = oldTileA;
-  }
-
-  void TestUpdate(const nsIntRegion& aNewValidRegion, const nsIntRegion& aPaintRegion)
-  {
-    Update(aNewValidRegion, aPaintRegion);
-  }
-
-  void UnlockTile(TestTiledLayerTile aTile) {}
-  void PostValidate(const nsIntRegion& aPaintRegion) {}
-};
-
-TEST(TiledLayerBuffer, TileConstructor) {
-  gfxPlatform::GetPlatform()->ComputeTileSize();
-
-  TestTiledLayerBuffer buffer;
-}
-
 TEST(TiledLayerBuffer, TileStart) {
   gfxPlatform::GetPlatform()->ComputeTileSize();
 
-  TestTiledLayerBuffer buffer;
-
-  ASSERT_EQ(buffer.RoundDownToTileEdge(10, 256), 0);
-  ASSERT_EQ(buffer.RoundDownToTileEdge(-10, 256), -256);
+  ASSERT_EQ(RoundDownToTileEdge(10, 256), 0);
+  ASSERT_EQ(RoundDownToTileEdge(-10, 256), -256);
 }
 
-TEST(TiledLayerBuffer, EmptyUpdate) {
-  gfxPlatform::GetPlatform()->ComputeTileSize();
+TEST(TiledLayerBuffer, TilesPlacement) {
+  for (int firstY = -10; firstY < 10; ++firstY) {
+    for (int firstX = -10; firstX < 10; ++firstX) {
+      for (int height = 1; height < 10; ++height) {
+        for (int width = 1; width < 10; ++width) {
 
-  TestTiledLayerBuffer buffer;
+          const TilesPlacement p1 = TilesPlacement(firstX, firstY, width, height);
+          // Check that HasTile returns false with some positions that we know
+          // not to be in the rectangle of the TilesPlacement.
+          ASSERT_FALSE(p1.HasTile(TileIntPoint(firstX - 1, 0)));
+          ASSERT_FALSE(p1.HasTile(TileIntPoint(0, firstY - 1)));
+          ASSERT_FALSE(p1.HasTile(TileIntPoint(firstX + width + 1,  0)));
+          ASSERT_FALSE(p1.HasTile(TileIntPoint(0, firstY + height + 1)));
 
-  nsIntRegion validRegion(gfx::IntRect(0, 0, 10, 10));
-  buffer.TestUpdate(validRegion, validRegion);
+          // Verify that all positions within the rect that defines the
+          // TilesPlacement map to indices between 0 and width*height.
+          for (int y = firstY; y < (firstY+height); ++y) {
+            for (int x = firstX; x < (firstX+width); ++x) {
+              ASSERT_TRUE(p1.HasTile(TileIntPoint(x,y)));
+              ASSERT_TRUE(p1.TileIndex(TileIntPoint(x, y)) >= 0);
+              ASSERT_TRUE(p1.TileIndex(TileIntPoint(x, y)) < width * height);
+            }
+          }
 
-  ASSERT_EQ(buffer.GetValidRegion(), validRegion);
+          // XXX - This causes some versions of gcc to warn that it optimizes
+          // away the test, which gets caught in -WError in PGO builds.
+          // The lazy thing to do is to just comment this out since this specific
+          // test isn't critically important, but we should remove the warning instead.
+          // cf. bug 1179287
+          //
+          // Verify that indices map to positions that are within the rect that
+          // defines the TilesPlacement.
+          // for (int i = 0; i < width * height; ++i) {
+          //   ASSERT_TRUE(p1.TilePosition(i).x >= firstX);
+          //   ASSERT_TRUE(p1.TilePosition(i).x < firstX + width);
+          //   ASSERT_TRUE(p1.TilePosition(i).y >= firstY);
+          //   ASSERT_TRUE(p1.TilePosition(i).y < firstY + height);
+          // }
+
+        }
+      }
+    }
+  }
 }
 
 }
