@@ -185,15 +185,12 @@ StaticRefPtr<nsIContent> IMEStateManager::sContent;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
 StaticRefPtr<nsIWidget> IMEStateManager::sFocusedIMEWidget;
 StaticRefPtr<TabParent> IMEStateManager::sActiveTabParent;
+StaticRefPtr<IMEContentObserver> IMEStateManager::sActiveIMEContentObserver;
+TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 bool IMEStateManager::sCheckForIMEUnawareWebApps = false;
 bool IMEStateManager::sRemoteHasFocus = false;
-
-// sActiveIMEContentObserver points to the currently active IMEContentObserver.
-// sActiveIMEContentObserver is null if there is no focused editor.
-IMEContentObserver* IMEStateManager::sActiveIMEContentObserver = nullptr;
-TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
 
 // static
 void
@@ -402,7 +399,8 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
      GetActionCauseName(aAction.mCause),
      GetActionFocusChangeName(aAction.mFocusChange),
      sPresContext, sContent.get(), sActiveTabParent.get(),
-     sActiveIMEContentObserver, GetBoolName(sInstalledMenuKeyboardListener)));
+     sActiveIMEContentObserver.get(),
+     GetBoolName(sInstalledMenuKeyboardListener)));
 
   bool focusActuallyChanging =
     (sContent != aContent || sPresContext != aPresContext ||
@@ -681,7 +679,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
      "aEditor=0x%p), sPresContext=0x%p, sContent=0x%p, "
      "sActiveIMEContentObserver=0x%p",
      aPresContext, aContent, aEditor, sPresContext, sContent.get(),
-     sActiveIMEContentObserver));
+     sActiveIMEContentObserver.get()));
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -752,7 +750,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
      "sIsGettingNewIMEState=%s",
      GetIMEStateEnabledName(aNewIMEState.mEnabled),
      GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent, aEditor,
-     sPresContext, sContent.get(), sActiveIMEContentObserver,
+     sPresContext, sContent.get(), sActiveIMEContentObserver.get(),
      GetBoolName(sIsGettingNewIMEState)));
 
   if (sIsGettingNewIMEState) {
@@ -1482,7 +1480,7 @@ IMEStateManager::DestroyIMEContentObserver()
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::DestroyIMEContentObserver(), "
      "sActiveIMEContentObserver=0x%p",
-     sActiveIMEContentObserver));
+     sActiveIMEContentObserver.get()));
 
   if (!sActiveIMEContentObserver) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -1493,8 +1491,8 @@ IMEStateManager::DestroyIMEContentObserver()
   MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::DestroyIMEContentObserver(), destroying "
      "the active IMEContentObserver..."));
-  nsRefPtr<IMEContentObserver> tsm;
-  tsm.swap(sActiveIMEContentObserver);
+  nsRefPtr<IMEContentObserver> tsm = sActiveIMEContentObserver.get();
+  sActiveIMEContentObserver = nullptr;
   tsm->Destroy();
 }
 
@@ -1506,7 +1504,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
     ("ISM: IMEStateManager::CreateIMEContentObserver(aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
-     aEditor, sPresContext, sContent.get(), sActiveIMEContentObserver,
+     aEditor, sPresContext, sContent.get(), sActiveIMEContentObserver.get(),
      GetBoolName(sActiveIMEContentObserver ?
        sActiveIMEContentObserver->IsManaging(sPresContext, sContent) : false)));
 
@@ -1538,7 +1536,6 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
     ("ISM:   IMEStateManager::CreateIMEContentObserver() is creating an "
      "IMEContentObserver instance..."));
   sActiveIMEContentObserver = new IMEContentObserver();
-  NS_ADDREF(sActiveIMEContentObserver);
 
   // IMEContentObserver::Init() might create another IMEContentObserver
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
