@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
@@ -532,6 +533,12 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             final KeyBundle syncKeyBundle = married.getSyncKeyBundle();
             final String clientState = married.getClientState();
             syncWithAssertion(audience, assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs, syncKeyBundle, clientState, sessionCallback, extras, fxAccount);
+
+            if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+              // Force fetch the profile avatar information.
+              Logger.info(LOG_TAG, "Fetching profile avatar information.");
+              fxAccount.fetchProfileJSON();
+            }
           } catch (Exception e) {
             syncDelegate.handleError(e);
             return;
