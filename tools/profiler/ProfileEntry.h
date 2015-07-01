@@ -148,7 +148,13 @@ class UniqueStacks
 {
 public:
   struct FrameKey {
+#ifdef SPS_STANDALONE
     std::string mLocation;
+#else
+    // This cannot be a std::string, as it is not memmove compatible, which
+    // is used by nsHashTable
+    nsCString mLocation;
+#endif
     mozilla::Maybe<unsigned> mLine;
     mozilla::Maybe<unsigned> mCategory;
     mozilla::Maybe<void*> mJITAddress;

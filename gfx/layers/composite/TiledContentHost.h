@@ -167,8 +167,6 @@ public:
   static void RecycleCallback(TextureHost* textureHost, void* aClosure);
 
 protected:
-  void SwapTiles(TileHost& aTileA, TileHost& aTileB) { std::swap(aTileA, aTileB); }
-
   CSSToParentLayerScale2D mFrameResolution;
 };
 
@@ -192,8 +190,7 @@ protected:
  * buffer after compositing a new one. Rendering takes us to RenderTile which
  * is similar to Composite for non-tiled ContentHosts.
  */
-class TiledContentHost : public ContentHost,
-                         public TiledLayerComposer
+class TiledContentHost : public ContentHost
 {
 public:
   explicit TiledContentHost(const TextureInfo& aTextureInfo);
@@ -217,12 +214,12 @@ public:
     return false;
   }
 
-  const nsIntRegion& GetValidLowPrecisionRegion() const override
+  const nsIntRegion& GetValidLowPrecisionRegion() const
   {
     return mLowPrecisionTiledBuffer.GetValidRegion();
   }
 
-  const nsIntRegion& GetValidRegion() const override
+  const nsIntRegion& GetValidRegion() const
   {
     return mTiledBuffer.GetValidRegion();
   }
@@ -235,8 +232,8 @@ public:
     mLowPrecisionTiledBuffer.SetCompositor(aCompositor);
   }
 
-  virtual bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
-                                   const SurfaceDescriptorTiles& aTiledDescriptor) override;
+  bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
+                           const SurfaceDescriptorTiles& aTiledDescriptor);
 
   void Composite(EffectChain& aEffectChain,
                  float aOpacity,
@@ -247,7 +244,7 @@ public:
 
   virtual CompositableType GetType() override { return CompositableType::CONTENT_TILED; }
 
-  virtual TiledLayerComposer* AsTiledLayerComposer() override { return this; }
+  virtual TiledContentHost* AsTiledContentHost() override { return this; }
 
   virtual void Attach(Layer* aLayer,
                       Compositor* aCompositor,

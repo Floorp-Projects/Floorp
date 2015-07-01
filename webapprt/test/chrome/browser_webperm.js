@@ -20,10 +20,6 @@ function test() {
 
     let perms = [
     {
-      manifestName: "storage",
-      permName: "indexedDB",
-    },
-    {
       manifestName: "geolocation",
       permName: "geolocation",
     },

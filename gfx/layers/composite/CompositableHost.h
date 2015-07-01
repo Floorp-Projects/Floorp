@@ -39,7 +39,7 @@ namespace layers {
 class Layer;
 class Compositor;
 class ThebesBufferData;
-class TiledLayerComposer;
+class TiledContentHost;
 class CompositableParentManager;
 class PCompositableParent;
 struct EffectChain;
@@ -132,7 +132,7 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
-  virtual TiledLayerComposer* AsTiledLayerComposer() { return nullptr; }
+  virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
 
   typedef uint32_t AttachFlags;
   static const AttachFlags NO_FLAGS = 0;

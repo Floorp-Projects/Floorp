@@ -1648,7 +1648,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // changed the order while it was possible, so doesn't look like
               // there's a strong need for that.
               let {engineName, searchSuggestion, searchQuery} = action.params;
-              let engineStr = "- " +
+              let engineStr = " - " +
                 this._stringBundle.formatStringFromName("searchWithEngine",
                                                         [engineName], 1);
 

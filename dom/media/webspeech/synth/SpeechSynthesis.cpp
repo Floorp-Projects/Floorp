@@ -225,7 +225,9 @@ SpeechSynthesis::GetVoices(nsTArray< nsRefPtr<SpeechSynthesisVoice> >& aResult)
   uint32_t voiceCount = 0;
 
   nsresult rv = nsSynthVoiceRegistry::GetInstance()->GetVoiceCount(&voiceCount);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   for (uint32_t i = 0; i < voiceCount; i++) {
     nsAutoString uri;

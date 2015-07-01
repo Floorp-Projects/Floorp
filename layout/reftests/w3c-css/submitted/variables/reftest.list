@@ -104,6 +104,7 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-reference-37.html variable-reference-37-ref.html
 == variable-reference-38.html variable-reference-38-ref.html
 == variable-reference-39.html support/color-green-ref.html
+== variable-reference-40.html variable-reference-40-ref.html
 == variable-supports-01.html support/color-green-ref.html
 == variable-supports-02.html support/color-green-ref.html
 == variable-supports-03.html support/color-green-ref.html

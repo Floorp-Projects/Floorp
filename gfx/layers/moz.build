@@ -131,6 +131,7 @@ EXPORTS.mozilla.layers += [
     'composite/LayerManagerComposite.h',
     'composite/PaintedLayerComposite.h',
     'composite/TextureHost.h',
+    'composite/TiledContentHost.h',
     'Compositor.h',
     'CompositorTypes.h',
     'D3D11ShareHandleImage.h',

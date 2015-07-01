@@ -499,7 +499,14 @@ function runTest() {
   var chromeDoc = SpecialPowers.wrap(document);
   ok(chromeDoc.documentURI.indexOf("pushStateTest") > -1);
 
+  SimpleTest.executeSoon(function() { gen.next(); });
+
+  yield undefined;
+
   history.back();
+  SimpleTest.executeSoon(function() { gen.next(); });
+
+  yield undefined;
 
   SimpleTest.finish();
   SpecialPowers.removePermission("systemXHR", document);

@@ -10,20 +10,27 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(DOMString type, optional SpeechSynthesisEventInit eventInitDict),
- Pref="media.webspeech.synth.enabled"]
-interface SpeechSynthesisEvent : Event
-{
-  readonly attribute SpeechSynthesisUtterance utterance;
-  readonly attribute unsigned long charIndex;
-  readonly attribute float elapsedTime;
-  readonly attribute DOMString? name;
+enum SpeechSynthesisErrorCode {
+  "canceled",
+  "interrupted",
+  "audio-busy",
+  "audio-hardware",
+  "network",
+  "synthesis-unavailable",
+  "synthesis-failed",
+  "language-unavailable",
+  "voice-unavailable",
+  "text-too-long",
+  "invalid-argument",
 };
 
-dictionary SpeechSynthesisEventInit : EventInit
+[Constructor(DOMString type, optional SpeechSynthesisErrorEventInit eventInitDict),
+ Pref="media.webspeech.synth.enabled"]
+interface SpeechSynthesisErrorEvent : SpeechSynthesisEvent {
+  readonly attribute SpeechSynthesisErrorCode error;
+};
+
+dictionary SpeechSynthesisErrorEventInit : SpeechSynthesisEventInit
 {
-  required SpeechSynthesisUtterance utterance;
-  unsigned long charIndex = 0;
-  float elapsedTime = 0;
-  DOMString name = "";
+  required SpeechSynthesisErrorCode error;
 };
