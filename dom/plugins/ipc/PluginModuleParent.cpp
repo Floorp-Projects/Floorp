@@ -2644,34 +2644,35 @@ PluginModuleChromeParent::UpdatePluginTimeout()
 }
 
 nsresult
-PluginModuleParent::NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge,
-                                      nsCOMPtr<nsIClearSiteDataCallback> callback)
+PluginModuleParent::NPP_ClearSiteData(const char* site, uint64_t flags,
+                                      uint64_t maxAge)
 {
     if (!mClearSiteDataSupported)
         return NS_ERROR_NOT_AVAILABLE;
 
-    static uint64_t callbackId = 0;
-    callbackId++;
-    mClearSiteDataCallbacks[callbackId] = callback;
+    NPError result;
+    if (!CallNPP_ClearSiteData(NullableString(site), flags, maxAge, &result))
+        return NS_ERROR_FAILURE;
 
-    if (!SendNPP_ClearSiteData(NullableString(site), flags, maxAge, callbackId)) {
+    switch (result) {
+    case NPERR_NO_ERROR:
+        return NS_OK;
+    case NPERR_TIME_RANGE_NOT_SUPPORTED:
+        return NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED;
+    case NPERR_MALFORMED_SITE:
+        return NS_ERROR_INVALID_ARG;
+    default:
         return NS_ERROR_FAILURE;
     }
-    return NS_OK;
 }
 
-
 nsresult
-PluginModuleParent::NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> callback)
+PluginModuleParent::NPP_GetSitesWithData(InfallibleTArray<nsCString>& result)
 {
     if (!mGetSitesWithDataSupported)
         return NS_ERROR_NOT_AVAILABLE;
 
-    static uint64_t callbackId = 0;
-    callbackId++;
-    mSitesWithDataCallbacks[callbackId] = callback;
-
-    if (!SendNPP_GetSitesWithData(callbackId))
+    if (!CallNPP_GetSitesWithData(&result))
         return NS_ERROR_FAILURE;
 
     return NS_OK;
@@ -2922,49 +2923,6 @@ PluginModuleChromeParent::RecvNotifyContentModuleDestroyed()
     if (host) {
         host->NotifyContentModuleDestroyed(mPluginId);
     }
-    return true;
-}
-
-bool
-PluginModuleParent::RecvReturnClearSiteData(const NPError& aRv,
-                                            const uint64_t& aCallbackId)
-{
-    if (mClearSiteDataCallbacks.find(aCallbackId) == mClearSiteDataCallbacks.end()) {
-        return true;
-    }
-    if (!!mClearSiteDataCallbacks[aCallbackId]) {
-        nsresult rv;
-        switch (aRv) {
-        case NPERR_NO_ERROR:
-            rv = NS_OK;
-            break;
-        case NPERR_TIME_RANGE_NOT_SUPPORTED:
-            rv = NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED;
-            break;
-        case NPERR_MALFORMED_SITE:
-            rv = NS_ERROR_INVALID_ARG;
-            break;
-        default:
-            rv = NS_ERROR_FAILURE;
-        }
-        mClearSiteDataCallbacks[aCallbackId]->Callback(rv);
-    }
-    mClearSiteDataCallbacks.erase(aCallbackId);
-    return true;
-}
-
-bool
-PluginModuleParent::RecvReturnSitesWithData(nsTArray<nsCString>&& aSites,
-                                            const uint64_t& aCallbackId)
-{
-    if (mSitesWithDataCallbacks.find(aCallbackId) == mSitesWithDataCallbacks.end()) {
-        return true;
-    }
-
-    if (!!mSitesWithDataCallbacks[aCallbackId]) {
-        mSitesWithDataCallbacks[aCallbackId]->SitesWithData(aSites);
-    }
-    mSitesWithDataCallbacks.erase(aCallbackId);
     return true;
 }
 

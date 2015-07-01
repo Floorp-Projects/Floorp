@@ -112,13 +112,13 @@ protected:
                                      bool *aGetSitesWithData) override;
 
     virtual bool
-    RecvNPP_ClearSiteData(const nsCString& aSite,
+    AnswerNPP_ClearSiteData(const nsCString& aSite,
                             const uint64_t& aFlags,
                             const uint64_t& aMaxAge,
-                            const uint64_t& aCallbackId) override;
+                            NPError* aResult) override;
 
     virtual bool
-    RecvNPP_GetSitesWithData(const uint64_t& aCallbackId) override;
+    AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult) override;
 
     virtual bool
     RecvSetAudioSessionData(const nsID& aId,

@@ -105,8 +105,8 @@ public:
                              NPError* aError) override;
 
     virtual nsresult NPP_ClearSiteData(const char* aSite, uint64_t aFlags,
-                                       uint64_t aMaxAge, nsCOMPtr<nsIClearSiteDataCallback> callback) override;
-    virtual nsresult NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> callback) override;
+                                       uint64_t aMaxAge) override;
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) override;
 
     virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) override;
     virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;

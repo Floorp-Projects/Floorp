@@ -27,16 +27,7 @@ interface nsIPluginPlayPreviewInfo : nsISupports
   boolean checkWhitelist(in AUTF8String pageURI, in AUTF8String objectURI);
 };
 
-[scriptable, function, uuid(9c311778-7c2c-4ad8-b439-b8a2786a20dd)]
-interface nsIClearSiteDataCallback : nsISupports
-{
-    /**
-     * callback with the result from a call to clearSiteData
-     */
-    void callback(in nsresult rv);
-};
-
-[scriptable, uuid(c536e038-84e8-443a-a822-6bd762140de8)]
+[scriptable, uuid(d7d5b2e0-105b-4c9d-8558-b6b31f28b7df)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -86,8 +77,7 @@ interface nsIPluginHost : nsISupports
    *         general or for that particular site and/or flag combination.
    */
   void clearSiteData(in nsIPluginTag plugin, in AUTF8String domain,
-                     in uint64_t flags, in int64_t maxAge,
-                     in nsIClearSiteDataCallback callback);
+                     in uint64_t flags, in int64_t maxAge);
 
   /*
    * Determine if a plugin has stored data for a given site.
