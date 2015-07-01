@@ -266,7 +266,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(8bc1230e-036b-4749-8763-768ed65df143)]
+[noscript, uuid(b91f1eeb-2fe4-44cc-9983-abcc06d69a94)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -458,7 +458,7 @@ interface nsIXPConnect : nsISupports
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
 
-    nsIXPConnectJSObjectHolder
+    JSObjectPtr
     getWrappedNativePrototype(in JSContextPtr aJSContext,
                               in JSObjectPtr  aScope,
                               in nsIClassInfo aClassInfo);
