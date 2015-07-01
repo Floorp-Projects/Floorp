@@ -56,8 +56,20 @@ class RuntimeService final : public nsIObserver
     ActiveWorkerCount() const
     {
       return mActiveWorkers.Length() +
-             mActiveServiceWorkers.Length() +
              mChildWorkerCount;
+    }
+
+    uint32_t
+    ActiveServiceWorkerCount() const
+    {
+      return mActiveServiceWorkers.Length();
+    }
+
+    bool
+    HasNoWorkers() const
+    {
+      return ActiveWorkerCount() == 0 &&
+             ActiveServiceWorkerCount() == 0;
     }
   };
 
