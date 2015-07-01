@@ -212,7 +212,7 @@ protected:
 
   static bool IsIMEObserverNeeded(const IMEState& aState);
 
-  static nsIContent*    sContent;
+  static StaticRefPtr<nsIContent> sContent;
   static nsPresContext* sPresContext;
   static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
   static StaticRefPtr<TabParent> sActiveTabParent;

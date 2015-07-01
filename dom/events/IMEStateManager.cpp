@@ -181,7 +181,7 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
   }
 }
 
-nsIContent* IMEStateManager::sContent = nullptr;
+StaticRefPtr<nsIContent> IMEStateManager::sContent;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
 StaticRefPtr<nsIWidget> IMEStateManager::sFocusedIMEWidget;
 StaticRefPtr<TabParent> IMEStateManager::sActiveTabParent;
@@ -255,7 +255,6 @@ IMEStateManager::StopIMEStateManagement()
     NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, sPresContext);
   }
   sPresContext = nullptr;
-  NS_IF_RELEASE(sContent);
   sContent = nullptr;
   sActiveTabParent = nullptr;
   DestroyIMEContentObserver();
@@ -295,7 +294,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnDestroyPresContext(aPresContext=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
-     aPresContext, sPresContext, sContent, sTextCompositions));
+     aPresContext, sPresContext, sContent.get(), sTextCompositions));
 
   DestroyIMEContentObserver();
 
@@ -306,7 +305,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
                               InputContextAction::LOST_FOCUS);
     SetIMEState(newState, nullptr, widget, action);
   }
-  NS_IF_RELEASE(sContent);
+  sContent = nullptr;
   sPresContext = nullptr;
   sActiveTabParent = nullptr;
   return NS_OK;
@@ -351,7 +350,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnRemoveContent(aPresContext=0x%p, "
      "aContent=0x%p), sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
-     aPresContext, aContent, sPresContext, sContent, sTextCompositions));
+     aPresContext, aContent, sPresContext, sContent.get(), sTextCompositions));
 
   DestroyIMEContentObserver();
 
@@ -364,7 +363,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     SetIMEState(newState, nullptr, widget, action);
   }
 
-  NS_IF_RELEASE(sContent);
+  sContent = nullptr;
   sPresContext = nullptr;
   sActiveTabParent = nullptr;
 
@@ -402,8 +401,8 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
      aPresContext, aContent, newTabParent.get(),
      GetActionCauseName(aAction.mCause),
      GetActionFocusChangeName(aAction.mFocusChange),
-     sPresContext, sContent, sActiveTabParent.get(), sActiveIMEContentObserver,
-     GetBoolName(sInstalledMenuKeyboardListener)));
+     sPresContext, sContent.get(), sActiveTabParent.get(),
+     sActiveIMEContentObserver, GetBoolName(sInstalledMenuKeyboardListener)));
 
   bool focusActuallyChanging =
     (sContent != aContent || sPresContext != aPresContext ||
@@ -532,10 +531,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 
   sActiveTabParent = newTabParent;
   sPresContext = aPresContext;
-  if (sContent != aContent) {
-    NS_IF_RELEASE(sContent);
-    NS_IF_ADDREF(sContent = aContent);
-  }
+  sContent = aContent;
 
   // Don't call CreateIMEContentObserver() here, it should be called from
   // focus event handler of editor.
@@ -569,7 +565,7 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnMouseButtonEventInEditor(aPresContext=0x%p, "
      "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
-     aPresContext, aContent, aMouseEvent, sPresContext, sContent));
+     aPresContext, aContent, aMouseEvent, sPresContext, sContent.get()));
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -626,7 +622,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnClickInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
-     aPresContext, aContent, aMouseEvent, sPresContext, sContent));
+     aPresContext, aContent, aMouseEvent, sPresContext, sContent.get()));
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -684,7 +680,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     ("ISM: IMEStateManager::OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aEditor=0x%p), sPresContext=0x%p, sContent=0x%p, "
      "sActiveIMEContentObserver=0x%p",
-     aPresContext, aContent, aEditor, sPresContext, sContent,
+     aPresContext, aContent, aEditor, sPresContext, sContent.get(),
      sActiveIMEContentObserver));
 
   if (sPresContext != aPresContext || sContent != aContent) {
@@ -756,7 +752,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
      "sIsGettingNewIMEState=%s",
      GetIMEStateEnabledName(aNewIMEState.mEnabled),
      GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent, aEditor,
-     sPresContext, sContent, sActiveIMEContentObserver,
+     sPresContext, sContent.get(), sActiveIMEContentObserver,
      GetBoolName(sIsGettingNewIMEState)));
 
   if (sIsGettingNewIMEState) {
@@ -1510,7 +1506,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
     ("ISM: IMEStateManager::CreateIMEContentObserver(aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
-     aEditor, sPresContext, sContent, sActiveIMEContentObserver,
+     aEditor, sPresContext, sContent.get(), sActiveIMEContentObserver,
      GetBoolName(sActiveIMEContentObserver ?
        sActiveIMEContentObserver->IsManaging(sPresContext, sContent) : false)));
 
