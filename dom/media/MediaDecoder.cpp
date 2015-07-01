@@ -851,7 +851,7 @@ double MediaDecoder::ComputePlaybackRate(bool* aReliable)
   int64_t length = mResource ? mResource->GetLength() : -1;
   if (!IsNaN(mDuration) && !mozilla::IsInfinite<double>(mDuration) && length >= 0) {
     *aReliable = true;
-    return length * mDuration;
+    return length / mDuration;
   }
   return mPlaybackStatistics->GetRateAtLastStop(aReliable);
 }
