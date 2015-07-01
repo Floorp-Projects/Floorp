@@ -11,7 +11,6 @@
 #include "GLContext.h"                  // for GLContext
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
-#include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
@@ -23,6 +22,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
+#include "mozilla/layers/TiledContentHost.h"
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "mozilla/unused.h"
@@ -112,13 +112,12 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpUseTiledLayerBuffer: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint TiledLayerBuffer"));
       const OpUseTiledLayerBuffer& op = aEdit.get_OpUseTiledLayerBuffer();
-      CompositableHost* compositable = AsCompositable(op);
+      TiledContentHost* compositable = AsCompositable(op)->AsTiledContentHost();
 
-      TiledLayerComposer* tileComposer = compositable->AsTiledLayerComposer();
-      NS_ASSERTION(tileComposer, "compositable is not a tile composer");
+      NS_ASSERTION(compositable, "The compositable is not tiled");
 
       const SurfaceDescriptorTiles& tileDesc = op.tileLayerDescriptor();
-      bool success = tileComposer->UseTiledLayerBuffer(this, tileDesc);
+      bool success = compositable->UseTiledLayerBuffer(this, tileDesc);
       if (!success) {
         return false;
       }

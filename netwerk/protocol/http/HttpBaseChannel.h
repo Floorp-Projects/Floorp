@@ -197,7 +197,6 @@ public:
   NS_IMETHOD GetCorsMode(uint32_t* aCorsMode) override;
   NS_IMETHOD SetCorsMode(uint32_t aCorsMode) override;
   NS_IMETHOD GetTopWindowURI(nsIURI **aTopWindowURI) override;
-  NS_IMETHOD ContinueBeginConnect() override;
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
 
   inline void CleanRedirectCacheChainIfNecessary()

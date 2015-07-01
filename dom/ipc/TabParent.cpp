@@ -248,7 +248,6 @@ private:
 namespace mozilla {
 namespace dom {
 
-TabParent *TabParent::mIMETabParent = nullptr;
 TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 
 NS_IMPL_ISUPPORTS(TabParent,
@@ -481,9 +480,8 @@ TabParent::Recv__delete__()
 void
 TabParent::ActorDestroy(ActorDestroyReason why)
 {
-  if (mIMETabParent == this) {
-    mIMETabParent = nullptr;
-  }
+  IMEStateManager::OnTabParentDestroying(this);
+
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
@@ -1934,7 +1932,6 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
     return true;
   }
 
-  mIMETabParent = aFocus ? this : nullptr;
   IMENotification notification(aFocus ? NOTIFY_IME_OF_FOCUS :
                                         NOTIFY_IME_OF_BLUR);
   mContentCache.AssignContent(aContentCache, &notification);
@@ -2388,26 +2385,6 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
                                const int32_t& aCause,
                                const int32_t& aFocusChange)
 {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget || !AllowContentIME()) {
-    return true;
-  }
-
-  InputContext oldContext = widget->GetInputContext();
-
-  // Ignore if current widget IME setting is not DISABLED and didn't come
-  // from remote content.  Chrome content may have taken over.
-  if (oldContext.mIMEState.mEnabled != IMEState::DISABLED &&
-      oldContext.IsOriginMainProcess()) {
-    return true;
-  }
-
-  // mIMETabParent (which is actually static) tracks which if any TabParent has IMEFocus
-  // When the input mode is set to anything but IMEState::DISABLED,
-  // mIMETabParent should be set to this
-  mIMETabParent =
-    aIMEEnabled != static_cast<int32_t>(IMEState::DISABLED) ? this : nullptr;
-
   InputContext context;
   context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(aIMEEnabled);
   context.mIMEState.mOpen = static_cast<IMEState::Open>(aIMEOpen);
@@ -2419,15 +2396,8 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
   InputContextAction action(
     static_cast<InputContextAction::Cause>(aCause),
     static_cast<InputContextAction::FocusChange>(aFocusChange));
-  widget->SetInputContext(context, action);
 
-  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-  if (!observerService)
-    return true;
-
-  nsAutoString state;
-  state.AppendInt(aIMEEnabled);
-  observerService->NotifyObservers(nullptr, "ime-enabled-state-changed", state.get());
+  IMEStateManager::SetInputContextForChildProcess(this, context, action);
 
   return true;
 }
@@ -2613,19 +2583,6 @@ TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
     RequestNotifyLayerTreeReady();
     mNeedLayerTreeReadyNotification = false;
   }
-
-  return true;
-}
-
-bool
-TabParent::AllowContentIME()
-{
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, false);
-
-  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
-  if (focusedContent && focusedContent->IsEditable())
-    return false;
 
   return true;
 }
