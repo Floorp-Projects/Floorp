@@ -2942,18 +2942,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
             ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
             : aBuilder->GetCurrentScrollParentId());
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-    if (!mIsRoot || !usingDisplayport) {
-      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-      nscoord radii[8];
-      bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
-      // Our override of GetBorderRadii ensures we never have a radius at
-      // the corners where we have a scrollbar.
-      if (mClipAllDescendants) {
-        clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
-      } else {
-        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
-      }
-    }
 
     if (usingDisplayport) {
       // Capture the clip state of the parent scroll frame. This will be saved
@@ -2974,6 +2962,17 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //     the entire displayport, but it lets the compositor know to
       //     clip to the scroll port after compositing.
       clipState.Clear();
+    } else {
+      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+      nscoord radii[8];
+      bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+      // Our override of GetBorderRadii ensures we never have a radius at
+      // the corners where we have a scrollbar.
+      if (mClipAllDescendants) {
+        clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
+      } else {
+        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
+      }
     }
 
     aBuilder->StoreDirtyRectForScrolledContents(mOuter, dirtyRect);
@@ -3053,13 +3052,14 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   scrolledContent.MoveTo(aLists);
 }
 
-Maybe<FrameMetricsAndClip>
+void
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
-                                       const ContainerLayerParameters& aParameters) const
+                                       const ContainerLayerParameters& aParameters,
+                                       nsTArray<FrameMetrics>* aOutput) const
 {
   if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
-    return Nothing();
+    return;
   }
 
   bool needsParentLayerClip = true;
@@ -3117,21 +3117,17 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     }
 
     // Return early, since if we don't use APZ we don't need FrameMetrics.
-    return Nothing();
+    return;
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
-  FrameMetricsAndClip result;
-
   nsRect scrollport = mScrollPort + toReferenceFrame;
-  result.metrics = nsLayoutUtils::ComputeFrameMetrics(
-    mScrolledFrame, mOuter, mOuter->GetContent(),
-    aContainerReferenceFrame, aLayer, mScrollParentID,
-    scrollport, parentLayerClip, isRootContent, aParameters);
-  result.clip = mAncestorClip;
-
-  return Some(result);
+  *aOutput->AppendElement() =
+      nsLayoutUtils::ComputeFrameMetrics(
+        mScrolledFrame, mOuter, mOuter->GetContent(),
+        aContainerReferenceFrame, aLayer, mScrollParentID,
+        scrollport, parentLayerClip, isRootContent, aParameters);
 }
 
 bool

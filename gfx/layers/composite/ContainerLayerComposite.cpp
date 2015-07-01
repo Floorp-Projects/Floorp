@@ -513,24 +513,34 @@ ContainerRender(ContainerT* aContainer,
       return;
     }
 
-    gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
-    Compositor* compositor = aManager->GetCompositor();
+    float opacity = aContainer->GetEffectiveOpacity();
+
+    gfx::IntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
-      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
+      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);
       }
     }
 #endif
 
-    RenderWithAllMasks(aContainer, compositor, aClipRect,
-                       [&](EffectChain& effectChain, const Rect& clipRect) {
-      effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
-      compositor->DrawQuad(visibleRect, clipRect, effectChain,
-                           aContainer->GetEffectiveOpacity(),
-                           aContainer->GetEffectiveTransform());
-    });
+    EffectChain effectChain(aContainer);
+    LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(aContainer->GetMaskLayer(),
+                                                            effectChain,
+                                                            !aContainer->GetTransform().CanDraw2D());
+    if (autoMaskEffect.Failed()) {
+      NS_WARNING("Failed to apply a mask effect.");
+      return;
+    }
+
+    aContainer->AddBlendModeEffect(effectChain);
+    effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
+
+    gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
+    gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+    aManager->GetCompositor()->DrawQuad(rect, clipRect, effectChain, opacity,
+                                        aContainer->GetEffectiveTransform());
   } else {
     RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
   }
