@@ -27,12 +27,13 @@ PLATFORMS= [
 
 mk_files = [
     'vp8/vp8_common.mk',
-    'vp8/vp8cx_arm.mk',
     'vp8/vp8cx.mk',
     'vp8/vp8dx.mk',
+    'vp8/vp8cx_arm.mk',
     'vp9/vp9_common.mk',
     'vp9/vp9cx.mk',
     'vp9/vp9dx.mk',
+    'vpx_dsp/vpx_dsp.mk',
     'vpx_mem/vpx_mem.mk',
     'vpx_ports/vpx_ports.mk',
     'vpx_scale/vpx_scale.mk',
@@ -48,6 +49,8 @@ MODULES = {
         'API_EXPORTS',
         'API_SRCS-$(CONFIG_VP8_DECODER)',
         'API_SRCS-yes',
+        'DSP_SRCS-yes',
+        'DSP_SRCS-yes+$(CONFIG_ENCODERS)',
         'MEM_SRCS-yes',
         'PORTS_SRCS-yes',
         'SCALE_SRCS-$(CONFIG_SPATIAL_RESAMPLING)',
@@ -86,8 +89,16 @@ MODULES = {
         'VP9_CX_SRCS-yes',
     ],
     'X86_ASM': [
+        'DSP_SRCS-$(HAVE_MMX)',
+        'DSP_SRCS-$(HAVE_MMX)+$(CONFIG_ENCODERS)',
+        'DSP_SRCS-$(HAVE_SSE2)',
+        'DSP_SRCS-$(HAVE_SSE2)+$(CONFIG_ENCODERS)',
+        'DSP_SRCS-$(HAVE_SSE3)+$(CONFIG_ENCODERS)',
+        'DSP_SRCS-$(HAVE_SSE4_1)+$(CONFIG_ENCODERS)',
+        'DSP_SRCS-$(HAVE_SSSE3)+$(CONFIG_ENCODERS)',
         'PORTS_SRCS-$(BUILD_LIBVPX)',
         'PORTS_SRCS-$(BUILD_LIBVPX)+$(ARCH_X86)$(ARCH_X86_64)',
+        'PORTS_SRCS-yes+$(ARCH_X86)$(ARCH_X86_64)',
         'VP8_COMMON_SRCS-$(ARCH_X86)$(ARCH_X86_64)',
         'VP8_COMMON_SRCS-$(HAVE_MMX)',
         'VP8_COMMON_SRCS-$(HAVE_MMX)+$(CONFIG_POSTPROC)',
@@ -127,6 +138,10 @@ MODULES = {
         'VP9_CX_SRCS-$(HAVE_SSSE3)+$(ARCH_X86_64)',
     ],
     'ARM_ASM': [
+        'DSP_SRCS-$(HAVE_MEDIA)',
+        'DSP_SRCS-$(HAVE_MEDIA)+$(CONFIG_ENCODERS)',
+        'DSP_SRCS-$(HAVE_NEON)',
+        'DSP_SRCS-$(HAVE_NEON)+$(CONFIG_ENCODERS)',
         'PORTS_SRCS-$(ARCH_ARM)',
         'SCALE_SRCS-$(HAVE_NEON)',
         'VP8_COMMON_SRCS-$(ARCH_ARM)',
@@ -146,6 +161,8 @@ MODULES = {
         'VP8_DX_SRCS-$(CONFIG_ERROR_CONCEALMENT)',
     ],
     'AVX2': [
+        'DSP_SRCS-$(HAVE_AVX2)',
+        'DSP_SRCS-$(HAVE_AVX2)+$(CONFIG_ENCODERS)',
         'VP9_COMMON_SRCS-$(HAVE_AVX2)',
         'VP9_CX_SRCS-$(HAVE_AVX2)',
     ],
@@ -170,6 +187,9 @@ DISABLED_MODULES = [
     'VP9_CX_SRCS-$(CONFIG_INTERNAL_STATS)+$(CONFIG_VP9_POSTPROC)',
     'VP9_CX_SRCS-$(CONFIG_VP9_TEMPORAL_DENOISING)',
     'VP9_CX_SRCS-$(HAVE_SSE2)+$(CONFIG_VP9_TEMPORAL_DENOISING)',
+
+    # VP9_HIGHBITDEPTH
+    'DSP_SRCS-$(HAVE_SSE2)+$(CONFIG_VP9_HIGHBITDEPTH)',
     'VP9_COMMON_SRCS-$(HAVE_SSE2)+$(CONFIG_VP9_HIGHBITDEPTH)',
     'VP9_CX_SRCS-$(HAVE_SSE2)+$(CONFIG_VP9_HIGHBITDEPTH)',
 
@@ -183,6 +203,8 @@ DISABLED_MODULES = [
     'VP8_COMMON_SRCS-$(HAVE_DSPR2)',
     'VP9_COMMON_SRCS-$(HAVE_DSPR2)',
     'VP8_CX_SRCS_REMOVE-$(HAVE_EDSP)',
+    'VP9_COMMON_SRCS-$(HAVE_MSA)',
+    'VP9_CX_SRCS-$(HAVE_MSA)',
 ]
 
 libvpx_files = [
@@ -221,8 +243,12 @@ ignore_folders = [
 ]
 
 rename_files = {
+    #avoid clash between vpx_dsp/x86 and vp8/common/x86
+    'vp8/common/x86/variance_mmx.c': 'vp8/common/x86/vp8_variance_mmx.c',
+    'vp8/common/x86/variance_sse2.c': 'vp8/common/x86/vp8_variance_sse2.c',
+    'vp8/common/x86/variance_impl_mmx.asm': 'vp8/common/x86/vp8_variance_impl_mmx.asm',
     #avoid clash with common/arm/neon/vp9_avg_neon.c
-    'vp9/encoder/arm/neon/vp9_avg_neon.c': 'vp9/encoder/arm/neon/vp9enc_avg_neon.c'
+    'vp9/encoder/arm/neon/vp9_avg_neon.c': 'vp9/encoder/arm/neon/vp9enc_avg_neon.c',
 }
 
 files = {
@@ -250,7 +276,6 @@ files = {
     ],
     'SOURCES': [
         'vp8/common/rtcd.c',
-        'vp8/common/sad_c.c',
         'vp8/encoder/bitstream.c',
         'vp8/encoder/onyx_if.c',
         'vp8/vp8_dx_iface.c',
@@ -300,7 +325,6 @@ files = {
         'vp9/encoder/vp9_ratectrl.c',
         'vp9/encoder/vp9_rdopt.c',
         'vp9/encoder/vp9_resize.c',
-        'vp9/encoder/vp9_sad.c',
         'vp9/encoder/vp9_segmentation.c',
         'vp9/encoder/vp9_subexp.c',
         'vp9/encoder/vp9_temporal_filter.c',
@@ -348,14 +372,14 @@ platform_files = [
     'vpx_config.asm',
     'vpx_config.h',
     'vpx_scale_rtcd.h',
+    'vpx_dsp_rtcd.h',
 ]
 
 def prepare_upstream(prefix, commit=None):
     upstream_url = 'https://chromium.googlesource.com/webm/libvpx'
     if os.path.exists(prefix):
-        print "Using existing repo in '%s'" % prefix
         os.chdir(prefix)
-        subprocess.call(['git', 'fetch', upstream_url, prefix])
+        subprocess.call(['git', 'fetch', 'origin'])
     else:
         subprocess.call(['git', 'clone', upstream_url, prefix])
         os.chdir(prefix)
@@ -368,7 +392,8 @@ def prepare_upstream(prefix, commit=None):
 
     for target in PLATFORMS:
         target_objdir = os.path.join(prefix, 'objdir', target)
-        os.makedirs(target_objdir)
+        if not os.path.exists(target_objdir):
+            os.makedirs(target_objdir)
         os.chdir(target_objdir)
         configure = ['../../configure', '--target=%s' % target,
             '--disable-examples', '--disable-install-docs',
@@ -386,10 +411,14 @@ def prepare_upstream(prefix, commit=None):
 
         if target == 'armv7-android-gcc':
             configure += ['--sdk-path=%s' % ndk_path]
-
+        print "\n" + target_objdir
+        print " ".join(configure)
+        sys.stdout.flush()
         subprocess.call(configure)
         make_targets = [f for f in platform_files if not os.path.exists(f)]
         if make_targets:
+            print " ".join(['make'] + make_targets)
+            sys.stdout.flush()
             subprocess.call(['make'] + make_targets)
         for f in make_targets:
             if not os.path.exists(f):
@@ -543,6 +572,10 @@ def update_and_remove_files(prefix, libvpx_files, files):
 
     # Remove unknown files from tree
     removed_files = [f for f in current_files if f not in libvpx_files and f not in rename_files.values()]
+    for f in rename_files:
+        if os.path.exists(f) and os.path.exists(rename_files[f]) and not f in removed_files:
+            removed_files.append(f)
+
     if removed_files:
         print "Remove files:"
         for f in removed_files:
@@ -552,12 +585,13 @@ def update_and_remove_files(prefix, libvpx_files, files):
 def apply_patches():
     # Patch to permit vpx users to specify their own <stdint.h> types.
     os.system("patch -p0 < stdint.patch")
-    # Patch to allow MSVC 2015 to compile libvpx
-    os.system("patch -p1 < msvc2015.patch")
     # Patch to fix a crash caused by MSVC 2013
     os.system("patch -p3 < bug1137614.patch")
     # Bug 1176730 - Don't use pthread for libvpx in mingw builds.
     os.system("patch -p3 < disable_pthread_on_mingw.patch")
+    # Cherry pick https://chromium-review.googlesource.com/#/c/276889/
+    # to fix crash on 32bit
+    os.system("patch -p1 < vp9_filter_restore_aligment.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

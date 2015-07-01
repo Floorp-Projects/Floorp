@@ -24,17 +24,6 @@
 #define DECLARE_ALIGNED(n,typ,val)  typ val
 #endif
 
-
-/* Declare an aligned array on the stack, for situations where the stack
- * pointer may not have the alignment we expect. Creates an array with a
- * modified name, then defines val to be a pointer, and aligns that pointer
- * within the array.
- */
-#define DECLARE_ALIGNED_ARRAY(a,typ,val,n)\
-  typ val##_[(n)+(a)/sizeof(typ)+1];\
-  typ *val = (typ*)((((intptr_t)val##_)+(a)-1)&((intptr_t)-(a)))
-
-
 /* Indicates that the usage of the specified variable has been audited to assure
  * that it's safe to use uninitialized. Silences 'may be used uninitialized'
  * warnings on gcc.
@@ -48,5 +37,17 @@
 #if HAVE_NEON && defined(_MSC_VER)
 #define __builtin_prefetch(x)
 #endif
+
+/* Shift down with rounding */
+#define ROUND_POWER_OF_TWO(value, n) \
+    (((value) + (1 << ((n) - 1))) >> (n))
+
+#define ALIGN_POWER_OF_TWO(value, n) \
+    (((value) + ((1 << (n)) - 1)) & ~((1 << (n)) - 1))
+
+#if CONFIG_VP9_HIGHBITDEPTH
+#define CONVERT_TO_SHORTPTR(x) ((uint16_t*)(((uintptr_t)x) << 1))
+#define CONVERT_TO_BYTEPTR(x) ((uint8_t*)(((uintptr_t)x) >> 1))
+#endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #endif  // VPX_PORTS_MEM_H_

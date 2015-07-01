@@ -24,9 +24,9 @@
 namespace mozilla {
 namespace image {
 
-class DrawableFrameRef;
 class Image;
 class imgFrame;
+class LookupResult;
 struct SurfaceMemoryCounter;
 
 /*
@@ -174,7 +174,7 @@ struct SurfaceCache
    *
    * If the imgFrame was found in the cache, but had stored its surface in a
    * volatile buffer which was discarded by the OS, then it is automatically
-   * removed from the cache and an empty DrawableFrameRef is returned. Note that
+   * removed from the cache and an empty LookupResult is returned. Note that
    * this will never happen to persistent surfaces associated with a locked
    * image; the cache keeps a strong reference to such surfaces internally.
    *
@@ -190,14 +190,13 @@ struct SurfaceCache
    *                        than calling Lookup() twice, which requires taking a
    *                        lock each time.
    *
-   * @return                a DrawableFrameRef to the imgFrame wrapping the
-   *                        requested surface, or an empty DrawableFrameRef if
-   *                        not found.
+   * @return                a LookupResult, which will either contain a
+   *                        DrawableFrameRef to the requested surface, or an
+   *                        empty DrawableFrameRef if the surface was not found.
    */
-  static DrawableFrameRef Lookup(const ImageKey    aImageKey,
-                                 const SurfaceKey& aSurfaceKey,
-                                 const Maybe<uint32_t>& aAlternateFlags
-                                   = Nothing());
+  static LookupResult Lookup(const ImageKey    aImageKey,
+                             const SurfaceKey& aSurfaceKey,
+                             const Maybe<uint32_t>& aAlternateFlags = Nothing());
 
   /**
    * Looks up the best matching surface in the cache and returns a drawable
@@ -216,13 +215,17 @@ struct SurfaceCache
    *                        acceptable to the caller. This is much more
    *                        efficient than calling LookupBestMatch() twice.
    *
-   * @return a DrawableFrameRef to the imgFrame wrapping a surface similar to
-   *         the requested surface, or an empty DrawableFrameRef if not found.
+   * @return                a LookupResult, which will either contain a
+   *                        DrawableFrameRef to a surface similar to the
+   *                        requested surface, or an empty DrawableFrameRef if
+   *                        the surface was not found. Callers can use
+   *                        LookupResult::IsExactMatch() to check whether the
+   *                        returned surface exactly matches @aSurfaceKey.
    */
-  static DrawableFrameRef LookupBestMatch(const ImageKey    aImageKey,
-                                          const SurfaceKey& aSurfaceKey,
-                                          const Maybe<uint32_t>& aAlternateFlags
-                                            = Nothing());
+  static LookupResult LookupBestMatch(const ImageKey    aImageKey,
+                                      const SurfaceKey& aSurfaceKey,
+                                      const Maybe<uint32_t>& aAlternateFlags
+                                        = Nothing());
 
   /**
    * Insert a surface into the cache. If a surface with the same ImageKey and

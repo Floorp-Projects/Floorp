@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-void vp9_temporal_filter_init();
+void vp9_temporal_filter_init(void);
 void vp9_temporal_filter(VP9_COMP *cpi, int distance);
 
 #ifdef __cplusplus

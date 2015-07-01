@@ -35,8 +35,14 @@ class AtomicOperations
 {
   public:
 
-    // Execute a full memory barrier (LoadLoad+LoadStore+StoreLoad+StoreStore).
-    static inline void fenceSeqCst();
+    // Test lock-freedom for any integer value.
+    //
+    // This implements a platform-independent pattern, as follows:
+    //
+    // 1, 2, and 4 bytes are always lock free, lock-freedom for 8
+    // bytes is determined by the platform's isLockfree8(), and there
+    // is no lock-freedom for any other values on any platform.
+    static inline bool isLockfree(int32_t n);
 
     // If the return value is true then a call to the 64-bit (8-byte)
     // routines below will work, otherwise those functions will assert in
@@ -44,6 +50,9 @@ class AtomicOperations
     // ../arm for an example.)  The value of this call does not change
     // during a run.
     static inline bool isLockfree8();
+
+    // Execute a full memory barrier (LoadLoad+LoadStore+StoreLoad+StoreStore).
+    static inline void fenceSeqCst();
 
     // The following functions are defined for T = int8_t, uint8_t,
     // int16_t, uint16_t, int32_t, uint32_t, int64_t, and uint64_t

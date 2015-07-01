@@ -17,10 +17,11 @@
  * higher quality.
  */
 
-#include "postproc.h"
-#include "variance.h"
+#include "./vp8_rtcd.h"
+#include "./vpx_dsp_rtcd.h"
+#include "vp8/common/postproc.h"
+#include "vp8/common/variance.h"
 #include "vpx_mem/vpx_mem.h"
-#include "vp8_rtcd.h"
 #include "vpx_scale/yv12config.h"
 
 #include <limits.h>
@@ -150,36 +151,36 @@ static void multiframe_quality_enhance_block
 
     if (blksize == 16)
     {
-        actd = (vp8_variance16x16(yd, yd_stride, VP8_ZEROS, 0, &sse)+128)>>8;
-        act = (vp8_variance16x16(y, y_stride, VP8_ZEROS, 0, &sse)+128)>>8;
+        actd = (vpx_variance16x16(yd, yd_stride, VP8_ZEROS, 0, &sse)+128)>>8;
+        act = (vpx_variance16x16(y, y_stride, VP8_ZEROS, 0, &sse)+128)>>8;
 #ifdef USE_SSD
-        sad = (vp8_variance16x16(y, y_stride, yd, yd_stride, &sse));
+        vpx_variance16x16(y, y_stride, yd, yd_stride, &sse);
         sad = (sse + 128)>>8;
-        usad = (vp8_variance8x8(u, uv_stride, ud, uvd_stride, &sse));
+        vpx_variance8x8(u, uv_stride, ud, uvd_stride, &sse);
         usad = (sse + 32)>>6;
-        vsad = (vp8_variance8x8(v, uv_stride, vd, uvd_stride, &sse));
+        vpx_variance8x8(v, uv_stride, vd, uvd_stride, &sse);
         vsad = (sse + 32)>>6;
 #else
-        sad = (vp8_sad16x16(y, y_stride, yd, yd_stride, UINT_MAX) + 128) >> 8;
-        usad = (vp8_sad8x8(u, uv_stride, ud, uvd_stride, UINT_MAX) + 32) >> 6;
-        vsad = (vp8_sad8x8(v, uv_stride, vd, uvd_stride, UINT_MAX)+ 32) >> 6;
+        sad = (vpx_sad16x16(y, y_stride, yd, yd_stride) + 128) >> 8;
+        usad = (vpx_sad8x8(u, uv_stride, ud, uvd_stride) + 32) >> 6;
+        vsad = (vpx_sad8x8(v, uv_stride, vd, uvd_stride)+ 32) >> 6;
 #endif
     }
     else /* if (blksize == 8) */
     {
-        actd = (vp8_variance8x8(yd, yd_stride, VP8_ZEROS, 0, &sse)+32)>>6;
-        act = (vp8_variance8x8(y, y_stride, VP8_ZEROS, 0, &sse)+32)>>6;
+        actd = (vpx_variance8x8(yd, yd_stride, VP8_ZEROS, 0, &sse)+32)>>6;
+        act = (vpx_variance8x8(y, y_stride, VP8_ZEROS, 0, &sse)+32)>>6;
 #ifdef USE_SSD
-        sad = (vp8_variance8x8(y, y_stride, yd, yd_stride, &sse));
+        vpx_variance8x8(y, y_stride, yd, yd_stride, &sse);
         sad = (sse + 32)>>6;
-        usad = (vp8_variance4x4(u, uv_stride, ud, uvd_stride, &sse));
+        vpx_variance4x4(u, uv_stride, ud, uvd_stride, &sse);
         usad = (sse + 8)>>4;
-        vsad = (vp8_variance4x4(v, uv_stride, vd, uvd_stride, &sse));
+        vpx_variance4x4(v, uv_stride, vd, uvd_stride, &sse);
         vsad = (sse + 8)>>4;
 #else
-        sad = (vp8_sad8x8(y, y_stride, yd, yd_stride, UINT_MAX) + 32) >> 6;
-        usad = (vp8_sad4x4(u, uv_stride, ud, uvd_stride, UINT_MAX) + 8) >> 4;
-        vsad = (vp8_sad4x4(v, uv_stride, vd, uvd_stride, UINT_MAX) + 8) >> 4;
+        sad = (vpx_sad8x8(y, y_stride, yd, yd_stride) + 32) >> 6;
+        usad = (vpx_sad4x4(u, uv_stride, ud, uvd_stride) + 8) >> 4;
+        vsad = (vpx_sad4x4(v, uv_stride, vd, uvd_stride) + 8) >> 4;
 #endif
     }
 
@@ -231,9 +232,9 @@ static void multiframe_quality_enhance_block
         {
             vp8_copy_mem8x8(y, y_stride, yd, yd_stride);
             for (up = u, udp = ud, i = 0; i < uvblksize; ++i, up += uv_stride, udp += uvd_stride)
-                vpx_memcpy(udp, up, uvblksize);
+                memcpy(udp, up, uvblksize);
             for (vp = v, vdp = vd, i = 0; i < uvblksize; ++i, vp += uv_stride, vdp += uvd_stride)
-                vpx_memcpy(vdp, vp, uvblksize);
+                memcpy(vdp, vp, uvblksize);
         }
     }
 }
@@ -341,8 +342,8 @@ void vp8_multiframe_quality_enhance
                                 for (k = 0; k < 4; ++k, up += show->uv_stride, udp += dest->uv_stride,
                                                         vp += show->uv_stride, vdp += dest->uv_stride)
                                 {
-                                    vpx_memcpy(udp, up, 4);
-                                    vpx_memcpy(vdp, vp, 4);
+                                    memcpy(udp, up, 4);
+                                    memcpy(vdp, vp, 4);
                                 }
                             }
                         }

@@ -12,6 +12,8 @@
 #ifndef VP9_ENCODER_VP9_ENCODEFRAME_H_
 #define VP9_ENCODER_VP9_ENCODEFRAME_H_
 
+#include "vpx/vpx_integer.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +40,7 @@ void vp9_init_tile_data(struct VP9_COMP *cpi);
 void vp9_encode_tile(struct VP9_COMP *cpi, struct ThreadData *td,
                      int tile_row, int tile_col);
 
-void vp9_set_vbp_thresholds(struct VP9_COMP *cpi, int q);
+void vp9_set_variance_partition_thresholds(struct VP9_COMP *cpi, int q);
 
 #ifdef __cplusplus
 }  // extern "C"
