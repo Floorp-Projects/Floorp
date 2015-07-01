@@ -1531,77 +1531,10 @@ nsPluginHost::GetPlayPreviewInfo(const nsACString& mimeType,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-#define ClearDataFromSitesClosure_CID {0x9fb21761, 0x2403, 0x41ad, {0x9e, 0xfd, 0x36, 0x7e, 0xc4, 0x4f, 0xa4, 0x5e}}
-
-
-// Class to hold all the data we need need for IterateMatchesAndClear and ClearDataFromSites
-class ClearDataFromSitesClosure : public nsIClearSiteDataCallback, public nsIGetSitesWithDataCallback {
-public:
-  ClearDataFromSitesClosure(nsIPluginTag* plugin, const nsACString& domain, uint64_t flags,
-                            int64_t maxAge, nsCOMPtr<nsIClearSiteDataCallback> callback,
-                            nsPluginHost* host) :
-    domain(domain), callback(callback), tag(plugin), flags(flags), maxAge(maxAge), host(host) {}
-  NS_DECL_ISUPPORTS
-
-  // Callback from NPP_ClearSiteData, continue to iterate the matches and clear
-  NS_IMETHOD Callback(nsresult rv) {
-    if (NS_FAILED(rv)) {
-      callback->Callback(rv);
-      return NS_OK;
-    }
-    if (!matches.Length()) {
-      callback->Callback(NS_OK);
-      return NS_OK;
-    }
-
-    const nsCString match(matches[0]);
-    matches.RemoveElement(match);
-    PluginLibrary* library = static_cast<nsPluginTag*>(tag)->mPlugin->GetLibrary();
-    rv = library->NPP_ClearSiteData(match.get(), flags, maxAge, this);
-    if (NS_FAILED(rv)) {
-      callback->Callback(rv);
-      return NS_OK;
-    }
-    return NS_OK;
-  }
-
-  // Callback from NPP_GetSitesWithData, kick the iteration off to clear the data
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites)
-  {
-    // Enumerate the sites and build a list of matches.
-    nsresult rv = host->EnumerateSiteData(domain, sites, matches, false);
-    Callback(rv);
-    return NS_OK;
-  }
-
-  nsCString domain;
-  nsCOMPtr<nsIClearSiteDataCallback> callback;
-  InfallibleTArray<nsCString> matches;
-  nsIPluginTag* tag;
-  uint64_t flags;
-  int64_t maxAge;
-  nsPluginHost* host;
-  NS_DECLARE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure_CID)
-  private:
-  virtual ~ClearDataFromSitesClosure() {}
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure, ClearDataFromSitesClosure_CID)
-
-NS_IMPL_ADDREF(ClearDataFromSitesClosure)
-NS_IMPL_RELEASE(ClearDataFromSitesClosure)
-
-NS_INTERFACE_MAP_BEGIN(ClearDataFromSitesClosure)
-  NS_INTERFACE_MAP_ENTRY(nsIClearSiteDataCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIGetSitesWithDataCallback)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClearSiteDataCallback)
-NS_INTERFACE_MAP_END
-
 NS_IMETHODIMP
 nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
-                            uint64_t flags, int64_t maxAge, nsIClearSiteDataCallback* callbackFunc)
+                            uint64_t flags, int64_t maxAge)
 {
-  nsCOMPtr<nsIClearSiteDataCallback> callback(callbackFunc);
   // maxAge must be either a nonnegative integer or -1.
   NS_ENSURE_ARG(maxAge >= 0 || maxAge == -1);
 
@@ -1633,69 +1566,29 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
 
   // If 'domain' is the null string, clear everything.
   if (domain.IsVoid()) {
-    return library->NPP_ClearSiteData(nullptr, flags, maxAge, callback);
+    return library->NPP_ClearSiteData(nullptr, flags, maxAge);
   }
-  nsCOMPtr<nsIGetSitesWithDataCallback> closure(new ClearDataFromSitesClosure(plugin, domain, flags,
-                                                                              maxAge, callback, this));
-  rv = library->NPP_GetSitesWithData(closure);
+
+  // Get the list of sites from the plugin.
+  InfallibleTArray<nsCString> sites;
+  rv = library->NPP_GetSitesWithData(sites);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Enumerate the sites and build a list of matches.
+  InfallibleTArray<nsCString> matches;
+  rv = EnumerateSiteData(domain, sites, matches, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear the matches.
+  for (uint32_t i = 0; i < matches.Length(); ++i) {
+    const nsCString& match = matches[i];
+    rv = library->NPP_ClearSiteData(match.get(), flags, maxAge);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
-#define GetSitesClosure_CID {0x4c9268ac, 0x2fd1, 0x4f2a, {0x9a, 0x10, 0x7a, 0x09, 0xf1, 0xb7, 0x60, 0x3a}}
-
-// Closure to contain the data needed to handle the callback from NPP_GetSitesWithData
-class GetSitesClosure : public nsIGetSitesWithDataCallback {
-public:
-  NS_DECL_ISUPPORTS
-  GetSitesClosure(const nsACString& domain, nsPluginHost* host) : domain(domain), host(host) {
-  }
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) {
-    retVal = HandleGetSites(sites);
-    keepWaiting = false;
-    return NS_OK;
-  }
-
-  nsresult HandleGetSites(InfallibleTArray<nsCString>& sites) {
-    // If there's no data, we're done.
-    if (sites.IsEmpty()) {
-      result = false;
-      return NS_OK;
-    }
-
-    // If 'domain' is the null string, and there's data for at least one site,
-    // we're done.
-    if (domain.IsVoid()) {
-      result = true;
-      return NS_OK;
-    }
-
-    // Enumerate the sites and determine if there's a match.
-    InfallibleTArray<nsCString> matches;
-    nsresult rv = host->EnumerateSiteData(domain, sites, matches, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    result = !matches.IsEmpty();
-    return NS_OK;
-  }
-
-  nsCString domain;
-  bool result;
-  bool keepWaiting;
-  nsresult retVal;
-  nsRefPtr<nsPluginHost> host;
-  NS_DECLARE_STATIC_IID_ACCESSOR(GetSitesClosure_CID)
-  private:
-  virtual ~GetSitesClosure() {
-  }
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(GetSitesClosure, GetSitesClosure_CID)
-
-NS_IMPL_ISUPPORTS(GetSitesClosure, nsIGetSitesWithDataCallback)
-
-// This will spin the event loop while waiting on an async
-// call to GetSitesWithData
 NS_IMETHODIMP
 nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
                           bool* result)
@@ -1723,17 +1616,31 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
 
   PluginLibrary* library = tag->mPlugin->GetLibrary();
 
-  // Get the list of sites from the plugin
-  nsCOMPtr<GetSitesClosure> closure(new GetSitesClosure(domain, this));
-  closure->keepWaiting = true;
-  rv = library->NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback>(do_QueryInterface(closure)));
+  // Get the list of sites from the plugin.
+  InfallibleTArray<nsCString> sites;
+  rv = library->NPP_GetSitesWithData(sites);
   NS_ENSURE_SUCCESS(rv, rv);
-  // Spin the event loop while we wait for the async call to GetSitesWithData
-  while (closure->keepWaiting) {
-    NS_ProcessNextEvent(nullptr, true);
+
+  // If there's no data, we're done.
+  if (sites.IsEmpty()) {
+    *result = false;
+    return NS_OK;
   }
-  *result = closure->result;
-  return closure->retVal;
+
+  // If 'domain' is the null string, and there's data for at least one site,
+  // we're done.
+  if (domain.IsVoid()) {
+    *result = true;
+    return NS_OK;
+  }
+
+  // Enumerate the sites and determine if there's a match.
+  InfallibleTArray<nsCString> matches;
+  rv = EnumerateSiteData(domain, sites, matches, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *result = !matches.IsEmpty();
+  return NS_OK;
 }
 
 nsPluginHost::SpecialType
