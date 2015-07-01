@@ -365,7 +365,7 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
     }
   }
 
-  *aOutVal = OBJECT_TO_JSVAL(arrayObj);
+  aOutVal->setObject(*arrayObj);
   return NS_OK;
 }
 

@@ -91,7 +91,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
         *_retval = false;
         return NS_OK;
       }
-      *_vp = OBJECT_TO_JSVAL(obj);
+      _vp->setObject(*obj);
 
       // Copy the blob over to the JS array.
       for (uint32_t i = 0; i < length; i++) {
