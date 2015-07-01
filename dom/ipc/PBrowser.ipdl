@@ -577,6 +577,12 @@ child:
     ParentActivated(bool aActivated);
 
     /**
+     * StopIMEStateManagement() is called when the process loses focus and
+     * should stop managing IME state.
+     */
+    StopIMEStateManagement();
+
+    /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
     MouseEvent(nsString aType,
