@@ -16,13 +16,26 @@ class Summariser
 public:
   Summariser(SecMap* aSecMap, uintptr_t aTextBias, void(*aLog)(const char*));
 
-  void Entry(uintptr_t aAddress, uintptr_t aLength);
-  void End();
-  void Rule(uintptr_t aAddress,
-            int aNewReg, int aOldReg, intptr_t aOffset, bool aDeref);
+  virtual void Entry(uintptr_t aAddress, uintptr_t aLength);
+  virtual void End();
 
+  // Tell the summariser that the value for |aNewReg| at |aAddress| is
+  // recovered using the LExpr that can be constructed using the
+  // components |how|, |oldReg| and |offset|.  The summariser will
+  // inspect the components and may reject them for various reasons,
+  // but the hope is that it will find them acceptable and record this
+  // rule permanently.
+  virtual void Rule(uintptr_t aAddress, int aNewReg,
+                    LExprHow how, int16_t oldReg, int64_t offset);
+
+  virtual uint32_t AddPfxInstr(PfxInstr pfxi);
+
+  // Send output to the logging sink, for debugging.
+  virtual void Log(const char* str) { mLog(str); }
+  
 private:
-  // The SecMap in which we park the finished summaries (RuleSets).
+  // The SecMap in which we park the finished summaries (RuleSets) and
+  // also any PfxInstrs derived from Dwarf expressions.
   SecMap* mSecMap;
 
   // Running state for the current summary (RuleSet) under construction.

@@ -19,7 +19,7 @@ class FilterNodeD2D1 : public FilterNode
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeD2D1)
-  static TemporaryRef<FilterNode> Create(ID2D1DeviceContext *aDC, FilterType aType);
+  static already_AddRefed<FilterNode> Create(ID2D1DeviceContext *aDC, FilterType aType);
 
   FilterNodeD2D1(ID2D1Effect *aEffect, FilterType aType)
     : mEffect(aEffect)

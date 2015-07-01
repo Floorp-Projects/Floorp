@@ -129,7 +129,7 @@ public:
     DrawFrameTrivialQuad(aCompositor, aScreenRect, aStep, effects);
   }
 
-  TemporaryRef<Effect> CreateEffect(size_t i) {
+  already_AddRefed<Effect> CreateEffect(size_t i) {
       float red;
       float tmp;
       red = modf(i * 0.03f, &tmp);
@@ -155,7 +155,7 @@ public:
     DrawFrameStressQuad(aCompositor, aScreenRect, aStep, effects);
   }
 
-  TemporaryRef<Effect> CreateEffect(size_t i) {
+  already_AddRefed<Effect> CreateEffect(size_t i) {
       float red;
       float tmp;
       red = modf(i * 0.03f, &tmp);
@@ -240,7 +240,7 @@ public:
     free(mBuf);
   }
 
-  TemporaryRef<Effect> CreateEffect(size_t i) {
+  already_AddRefed<Effect> CreateEffect(size_t i) {
     return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
@@ -283,7 +283,7 @@ public:
     free(mBuf);
   }
 
-  virtual TemporaryRef<Effect> CreateEffect(size_t i) {
+  virtual already_AddRefed<Effect> CreateEffect(size_t i) {
     return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
@@ -325,7 +325,7 @@ public:
     free(mBuf);
   }
 
-  virtual TemporaryRef<Effect> CreateEffect(size_t i) {
+  virtual already_AddRefed<Effect> CreateEffect(size_t i) {
     return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };
@@ -366,7 +366,7 @@ public:
     free(mBuf);
   }
 
-  virtual TemporaryRef<Effect> CreateEffect(size_t i) {
+  virtual already_AddRefed<Effect> CreateEffect(size_t i) {
     return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };

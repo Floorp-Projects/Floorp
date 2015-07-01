@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2002-2012, International Business Machines
+* Copyright (c) 2002-2014, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -129,6 +129,22 @@ StringEnumeration::operator!=(const StringEnumeration& that)const {
 }
 
 // UStringEnumeration implementation --------------------------------------- ***
+
+UStringEnumeration * U_EXPORT2
+UStringEnumeration::fromUEnumeration(
+        UEnumeration *uenumToAdopt, UErrorCode &status) {
+    if (U_FAILURE(status)) {
+        uenum_close(uenumToAdopt);
+        return NULL;
+    }
+    UStringEnumeration *result = new UStringEnumeration(uenumToAdopt);
+    if (result == NULL) {
+        status = U_MEMORY_ALLOCATION_ERROR;
+        uenum_close(uenumToAdopt);
+        return NULL;
+    }
+    return result;
+}
 
 UStringEnumeration::UStringEnumeration(UEnumeration* _uenum) :
     uenum(_uenum) {

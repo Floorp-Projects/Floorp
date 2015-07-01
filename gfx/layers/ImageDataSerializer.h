@@ -10,7 +10,7 @@
 
 #include <stdint.h>                     // for uint8_t, uint32_t
 #include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
-#include "mozilla/RefPtr.h"             // for TemporaryRef
+#include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 
@@ -33,8 +33,8 @@ public:
   uint32_t GetStride() const;
   gfx::IntSize GetSize() const;
   gfx::SurfaceFormat GetFormat() const;
-  TemporaryRef<gfx::DataSourceSurface> GetAsSurface();
-  TemporaryRef<gfx::DrawTarget> GetAsDrawTarget(gfx::BackendType aBackend);
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
+  already_AddRefed<gfx::DrawTarget> GetAsDrawTarget(gfx::BackendType aBackend);
 
   static uint32_t ComputeMinBufferSize(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat);

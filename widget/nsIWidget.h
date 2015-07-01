@@ -1703,7 +1703,7 @@ class nsIWidget : public nsISupports {
      * Called by BasicCompositor on the compositor thread for OMTC drawing
      * before each composition.
      */
-    virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() = 0;
+    virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() = 0;
 
     /**
      * Ensure that what was painted into the DrawTarget returned from
@@ -2123,7 +2123,7 @@ class nsIWidget : public nsISupports {
      *
      * This is only supported for widgets using OMTC.
      */
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> SnapshotWidgetOnScreen();
+    already_AddRefed<mozilla::gfx::SourceSurface> SnapshotWidgetOnScreen();
 
     /*
      * Implementation of SnapshotWidgetOnScreen. This is invoked by the

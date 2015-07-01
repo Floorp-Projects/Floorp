@@ -5,18 +5,22 @@
 
 // Tests that the network panel works with LongStringActors.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
+const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-image.png";
 
 const TEST_IMG_BASE64 =
-  "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAVRJREFU" +
-  "OI2lk7FLw0AUxr+YpC1CBqcMWfsvCCLdXFzqEJCgDl1EQRGxg9AhSBEJONhFhG52UCuFDjq5dxD8" +
-  "FwoO0qGDOBQkl7vLOeWa2EQDffDBvTu+373Hu1OEEJgntGgxGD6J+7fLXKbt5VNUyhsKAChRBQcP" +
-  "FVFeWskFGH694mZroCQqCLlAwPxcgJBP254CmAD5B7C7dgHLMLF3uzoL4DQEod+Z5sP1FizDxGgy" +
-  "BqfhLID9AahX29J89bwPFgMsSEAQglAf9WobhPpScbPXr4FQHyzIADTsDizDRMPuIOC+zEeTMZo9" +
-  "BwH3EfAMACccbtfGaDKGZZg423yUZrdrg3EqxQlPr0BTdTR7joREN2uqnlBmCwW1hIJagtev4f3z" +
-  "A16/JvfiigMSYyzqJXlw/XKUyOORMUaBor6YavgdjKa8xGOnidadmwtwsnMu18q83/kHSou+bFND" +
-  "Dr4AAAAASUVORK5CYII=";
+  "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAVRJ" +
+  "REFUOI2lk7FLw0AUxr+YpC1CBqcMWfsvCCLdXFzqEJCgDl1EQRGxg9AhSBEJONhFhG52UCuF" +
+  "Djq5dxD8FwoO0qGDOBQkl7vLOeWa2EQDffDBvTu+373Hu1OEEJgntGgxGD6J+7fLXKbt5VNU" +
+  "yhsKAChRBQcPFVFeWskFGH694mZroCQqCLlAwPxcgJBP254CmAD5B7C7dgHLMLF3uzoL4DQE" +
+  "od+Z5sP1FizDxGgyBqfhLID9AahX29J89bwPFgMsSEAQglAf9WobhPpScbPXr4FQHyzIADTs" +
+  "DizDRMPuIOC+zEeTMZo9BwH3EfAMACccbtfGaDKGZZg423yUZrdrg3EqxQlPr0BTdTR7joRE" +
+  "N2uqnlBmCwW1hIJagtev4f3zA16/JvfiigMSYyzqJXlw/XKUyOORMUaBor6YavgdjKa8xGOn" +
+  "idadmwtwsnMu18q83/kHSou+bFNDDr4AAAAASUVORK5CYII=";
 
 let testDriver;
 
@@ -35,7 +39,8 @@ function checkIsVisible(aPanel, aList) {
   for (let id in aList) {
     let node = aPanel.document.getElementById(id);
     let isVisible = aList[id];
-    is(node.style.display, (isVisible ? "block" : "none"), id + " isVisible=" + isVisible);
+    is(node.style.display, (isVisible ? "block" : "none"),
+       id + " isVisible=" + isVisible);
   }
 }
 
@@ -43,12 +48,11 @@ function checkNodeContent(aPanel, aId, aContent) {
   let node = aPanel.document.getElementById(aId);
   if (node == null) {
     ok(false, "Tried to access node " + aId + " that doesn't exist!");
-  }
-  else if (node.textContent.indexOf(aContent) != -1) {
+  } else if (node.textContent.indexOf(aContent) != -1) {
     ok(true, "checking content of " + aId);
-  }
-  else {
-    ok(false, "Got false value for " + aId + ": " + node.textContent + " doesn't have " + aContent);
+  } else {
+    ok(false, "Got false value for " + aId + ": " + node.textContent +
+       " doesn't have " + aContent);
   }
 }
 
@@ -163,8 +167,7 @@ function* testGen() {
 
   let expectedGrip = headerValueGrip;
 
-  function longStringClientProvider(aLongString)
-  {
+  function longStringClientProvider(aLongString) {
     is(aLongString, expectedGrip,
        "longString grip is correct");
 
@@ -241,7 +244,8 @@ function* testGen() {
     requestBodyFetchLink: false,
   });
 
-  checkNodeContent(networkPanel, "requestBodyContent", expectedGrip._fullString);
+  checkNodeContent(networkPanel, "requestBodyContent",
+                   expectedGrip._fullString);
 
   webConsoleClient.longString = longStringFn;
 
@@ -295,7 +299,8 @@ function* testGen() {
 
   webConsoleClient.longString = longStringFn;
   is(clickable.style.display, "none", "#responseBodyFetchLink is not visible");
-  checkNodeContent(networkPanel, "responseBodyContent", expectedGrip._fullString);
+  checkNodeContent(networkPanel, "responseBodyContent",
+                   expectedGrip._fullString);
 
   networkPanel.panel.hidePopup();
 

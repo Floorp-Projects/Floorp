@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/ar.xml
- */
 ar{
     Currencies{
         ADP{
@@ -392,7 +389,7 @@ ar{
             "فورينت مجري",
         }
         IDR{
-            "IDR",
+            "ر.إن.",
             "روبية إندونيسية",
         }
         IEP{
@@ -416,7 +413,7 @@ ar{
             "دينار عراقي",
         }
         IRR{
-            "IRR",
+            "ر.إ.",
             "ريال إيراني",
         }
         ISK{
@@ -664,7 +661,7 @@ ar{
             "بيزو فلبيني",
         }
         PKR{
-            "PKR",
+            "ر.ب.",
             "روبية باكستاني",
         }
         PLN{
@@ -836,7 +833,7 @@ ar{
             "ليرة تركي",
         }
         TRY{
-            "TRY",
+            "ل.ت.",
             "ليرة تركية",
         }
         TTD{
@@ -1027,6 +1024,59 @@ ar{
             "ZWL",
             "دولار زمبابوي 2009",
         }
+    }
+    Currencies%narrow{
+        ARS{"AR$"}
+        AUD{"AU$"}
+        BBD{"BB$"}
+        BDT{"৳"}
+        BMD{"BM$"}
+        BND{"BN$"}
+        BRL{"R$"}
+        BSD{"BS$"}
+        BYR{"р."}
+        BZD{"BZ$"}
+        CAD{"CA$"}
+        CLP{"CL$"}
+        CNY{"CN¥"}
+        COP{"CO$"}
+        CRC{"₡"}
+        CUP{"CU$"}
+        DOP{"DO$"}
+        EUR{"€"}
+        FJD{"FJ$"}
+        GBP{"UK£"}
+        GIP{"£"}
+        GYD{"GY$"}
+        HKD{"HK$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"JM$"}
+        JPY{"JP¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"KY$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"MX$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"NZ$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"SB$"}
+        SGD{"$"}
+        SRD{"SR$"}
+        SSP{"ج.ج.س."}
+        TRY{"₺"}
+        TTD{"TT$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"US$"}
+        UYU{"UY$"}
+        VND{"₫"}
     }
     CurrencyPlurals{
         AED{
@@ -2198,5 +2248,5 @@ ar{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
 }

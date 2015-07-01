@@ -201,7 +201,7 @@ gfxContext::ClosePath()
   mPathBuilder->Close();
 }
 
-TemporaryRef<Path> gfxContext::GetPath()
+already_AddRefed<Path> gfxContext::GetPath()
 {
   EnsurePath();
   RefPtr<Path> path(mPath);
@@ -969,7 +969,7 @@ gfxContext::PopGroup()
   return pat.forget();
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 gfxContext::PopGroupToSurface(Matrix* aTransform)
 {
   RefPtr<SourceSurface> src = mDT->Snapshot();

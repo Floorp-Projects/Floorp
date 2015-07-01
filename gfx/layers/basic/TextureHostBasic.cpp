@@ -14,7 +14,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-TemporaryRef<TextureHost>
+already_AddRefed<TextureHost>
 CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
                        TextureFlags aFlags)

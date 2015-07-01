@@ -154,7 +154,7 @@ MozMtpDatabase::FindEntryByPath(const nsACString& aPath)
   return 0;
 }
 
-TemporaryRef<MozMtpDatabase::DbEntry>
+already_AddRefed<MozMtpDatabase::DbEntry>
 MozMtpDatabase::GetEntry(MtpObjectHandle aHandle)
 {
   MutexAutoLock lock(mMutex);

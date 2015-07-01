@@ -462,15 +462,17 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     PL_DHashTableRemove(&table, &(cacheEntry->mKey));
 }
 
-
-void
-nsCacheEntryHashTable::VisitEntries( PLDHashEnumerator etor, void *arg)
+PLDHashTable::Iterator
+nsCacheEntryHashTable::Iter() const
 {
-    NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
-    if (!initialized)  return; // NS_ERROR_NOT_INITIALIZED
-    PL_DHashTableEnumerate(&table, etor, arg);
+    return PLDHashTable::Iterator(&table);
 }
 
+PLDHashTable::RemovingIterator
+nsCacheEntryHashTable::RemovingIter()
+{
+    return PLDHashTable::RemovingIterator(&table);
+}
 
 /**
  *  hash table operation callback functions

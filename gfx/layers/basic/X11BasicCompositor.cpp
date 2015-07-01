@@ -117,7 +117,7 @@ X11DataTextureSourceBasic::DeallocateDeviceData()
   mBufferDrawTarget = nullptr;
 }
 
-TemporaryRef<DataTextureSource>
+already_AddRefed<DataTextureSource>
 X11BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
   RefPtr<DataTextureSource> result =

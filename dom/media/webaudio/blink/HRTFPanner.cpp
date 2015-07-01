@@ -41,7 +41,7 @@ const double MaxDelayTimeSeconds = 0.002;
 const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = WEBAUDIO_BLOCK_SIZE;
 
-HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoader> databaseLoader)
+HRTFPanner::HRTFPanner(float sampleRate, already_AddRefed<HRTFDatabaseLoader> databaseLoader)
     : m_databaseLoader(databaseLoader)
     , m_sampleRate(sampleRate)
     , m_crossfadeSelection(CrossfadeSelection1)

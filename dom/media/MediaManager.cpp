@@ -2135,7 +2135,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     class ShutdownTask : public Task
     {
     public:
-      ShutdownTask(TemporaryRef<MediaEngine> aBackend,
+      ShutdownTask(already_AddRefed<MediaEngine> aBackend,
                    nsRunnable* aReply)
         : mReply(aReply)
         , mBackend(aBackend) {}

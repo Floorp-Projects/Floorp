@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_BZ.xml
@@ -8,7 +8,7 @@
 // ***************************************************************************
 en_BZ{
     %%Parent{"en_001"}
-    Version{"2.0.92.80"}
+    Version{"2.1.11.50"}
     calendar{
         generic{
             DateTimePatterns{
@@ -16,7 +16,7 @@ en_BZ{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE dd MMMM y G",
+                "EEEE, dd MMMM y G",
                 "dd MMMM y G",
                 "dd-MMM-y G",
                 "dd/MM/y GGGGG",
@@ -27,13 +27,11 @@ en_BZ{
                 "{1}, {0}",
             }
             availableFormats{
-                MEd{"E dd/MM"}
-                MMMEd{"E dd MMM"}
+                MMMEd{"E, dd MMM"}
                 MMMd{"dd MMM"}
-                Md{"dd/MM"}
                 yyyyM{"MM/y G"}
-                yyyyMEd{"E dd/MM/y G"}
-                yyyyMMMEd{"E dd MMM y G"}
+                yyyyMEd{"E, dd/MM/y G"}
+                yyyyMMMEd{"E, dd MMM y G"}
                 yyyyMMMd{"dd MMM y G"}
                 yyyyMd{"dd/MM/y G"}
             }
@@ -44,7 +42,7 @@ en_BZ{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE dd MMMM y",
+                "EEEE, dd MMMM y",
                 "dd MMMM y",
                 "dd-MMM-y",
                 "dd/MM/yy",
@@ -55,15 +53,10 @@ en_BZ{
                 "{1}, {0}",
             }
             availableFormats{
-                MEd{"E dd/MM"}
-                MMMEd{"E dd MMM"}
+                MMMEd{"E, dd MMM"}
                 MMMd{"dd MMM"}
-                Md{"dd/MM"}
-                yM{"MM/y"}
-                yMEd{"E dd/MM/y"}
-                yMMMEd{"E dd MMM y"}
+                yMMMEd{"E, dd MMM y"}
                 yMMMd{"dd MMM y"}
-                yMd{"dd/MM/y"}
             }
         }
     }

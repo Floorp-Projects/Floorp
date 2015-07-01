@@ -520,7 +520,7 @@ void GonkBufferQueueConsumer::dumpToString(String8& result, const char* prefix) 
     mCore->dump(result, prefix);
 }
 
-TemporaryRef<GonkBufferSlot::TextureClient>
+already_AddRefed<GonkBufferSlot::TextureClient>
 GonkBufferQueueConsumer::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 {
     Mutex::Autolock _l(mCore->mMutex);

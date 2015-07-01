@@ -69,11 +69,11 @@ public:
   // of the MacIOSurface instance.
   // MacIOSurface holds a reference to the corresponding IOSurface.
 
-  static mozilla::TemporaryRef<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
+  static already_AddRefed<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
                                                              double aContentsScaleFactor = 1.0,
                                                              bool aHasAlpha = true);
   static void ReleaseIOSurface(MacIOSurface *aIOSurface);
-  static mozilla::TemporaryRef<MacIOSurface> LookupSurface(IOSurfaceID aSurfaceID,
+  static already_AddRefed<MacIOSurface> LookupSurface(IOSurfaceID aSurfaceID,
                                                            double aContentsScaleFactor = 1.0,
                                                            bool aHasAlpha = true);
 
@@ -103,12 +103,12 @@ public:
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.
   CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt);
-  mozilla::TemporaryRef<SourceSurface> GetAsSurface();
+  already_AddRefed<SourceSurface> GetAsSurface();
   CGContextRef CreateIOSurfaceContext();
 
   // FIXME This doesn't really belong here
   static CGImageRef CreateImageFromIOSurfaceContext(CGContextRef aContext);
-  static mozilla::TemporaryRef<MacIOSurface> IOSurfaceContextGetSurface(CGContextRef aContext,
+  static already_AddRefed<MacIOSurface> IOSurfaceContextGetSurface(CGContextRef aContext,
                                                                         double aContentsScaleFactor = 1.0,
                                                                         bool aHasAlpha = true);
   static size_t GetMaxWidth();

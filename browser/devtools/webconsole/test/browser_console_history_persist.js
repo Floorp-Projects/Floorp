@@ -48,7 +48,8 @@ let test = asyncTest(function* () {
      '["0","1","2","3","4","5","6","7","8","9"]',
      "Third tab has populated history");
 
-  // Set input value separately from execute so UP arrow accurately navigates history.
+  // Set input value separately from execute so UP arrow accurately navigates
+  // history.
   hud3.jsterm.setInputValue('"hello from third tab"');
   hud3.jsterm.execute();
 
@@ -72,12 +73,12 @@ let test = asyncTest(function* () {
      "Fourth tab has most recent history");
 
   yield hud4.jsterm.clearHistory();
-  is(JSON.stringify(hud4.jsterm.history), '[]',
+  is(JSON.stringify(hud4.jsterm.history), "[]",
      "Clearing history for a tab works");
 
   yield loadTab(TEST_URI);
   let hud5 = yield openConsole();
-  is(JSON.stringify(hud5.jsterm.history), '[]',
+  is(JSON.stringify(hud5.jsterm.history), "[]",
      "Clearing history carries over to a new tab");
 
   info("Clearing custom input history pref");

@@ -5,7 +5,8 @@
 
 // Check that variables view works as expected in the web console.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-eval-in-stackframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-eval-in-stackframe.html";
 
 let gWebConsole, gJSTerm, gVariablesView;
 
@@ -21,7 +22,8 @@ let test = asyncTest(function* () {
   let msg = yield gJSTerm.execute("fooObj");
 
   ok(msg, "output message found");
-  ok(msg.textContent.includes('{ testProp: "testValue" }'), "message text check");
+  ok(msg.textContent.includes('{ testProp: "testValue" }'),
+                              "message text check");
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");
@@ -52,8 +54,7 @@ let test = asyncTest(function* () {
   gWebConsole = gJSTerm = gVariablesView = null;
 });
 
-function onFooObjFetch(aVar)
-{
+function onFooObjFetch(aVar) {
   gVariablesView = aVar._variablesView;
   ok(gVariablesView, "variables view object");
 
@@ -62,8 +63,7 @@ function onFooObjFetch(aVar)
   ], { webconsole: gWebConsole });
 }
 
-function onTestPropFound(aResults)
-{
+function onTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the |testProp| property in the variables view");
 
@@ -80,19 +80,17 @@ function onTestPropFound(aResults)
   });
 }
 
-function onFooObjFetchAfterUpdate(aVar)
-{
+function onFooObjFetchAfterUpdate(aVar) {
   info("onFooObjFetchAfterUpdate");
-  let expectedValue = content.document.title + content.location
-                      + '[object HTMLParagraphElement]';
+  let expectedValue = content.document.title + content.location +
+                      "[object HTMLParagraphElement]";
 
   return findVariableViewProperties(aVar, [
     { name: "testProp", value: expectedValue },
   ], { webconsole: gWebConsole });
 }
 
-function onUpdatedTestPropFound(aResults)
-{
+function onUpdatedTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the updated |testProp| property value");
 
@@ -108,8 +106,7 @@ function onUpdatedTestPropFound(aResults)
   });
 }
 
-function onFooObjFetchAfterPropRename(aVar)
-{
+function onFooObjFetchAfterPropRename(aVar) {
   info("onFooObjFetchAfterPropRename");
 
   let para = content.wrappedJSObject.document.querySelector("p");
@@ -121,8 +118,7 @@ function onFooObjFetchAfterPropRename(aVar)
   ], { webconsole: gWebConsole });
 }
 
-function onRenamedTestPropFound(aResults)
-{
+function onRenamedTestPropFound(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the renamed |testProp| property");
 
@@ -141,8 +137,7 @@ function onRenamedTestPropFound(aResults)
   });
 }
 
-function onPropUpdateError(aVar)
-{
+function onPropUpdateError(aVar) {
   info("onPropUpdateError");
 
   let para = content.wrappedJSObject.document.querySelector("p");
@@ -154,12 +149,9 @@ function onPropUpdateError(aVar)
   ], { webconsole: gWebConsole });
 }
 
-function onRenamedTestPropFoundAgain(aResults)
-{
+function onRenamedTestPropFoundAgain(aResults) {
   let prop = aResults[0].matchedProp;
   ok(prop, "matched the renamed |testProp| property again");
-
-  let outputNode = gWebConsole.outputNode;
 
   return waitForMessages({
     webconsole: gWebConsole,
@@ -172,8 +164,7 @@ function onRenamedTestPropFoundAgain(aResults)
   });
 }
 
-function testPropDelete(aProp)
-{
+function testPropDelete(aProp) {
   gVariablesView.window.focus();
   aProp.focus();
 

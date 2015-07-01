@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2000-2011, International Business Machines
+*   Copyright (C) 2000-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -31,17 +31,6 @@
 #define URES_MAX_BUFFER_SIZE 256
 
 #define EMPTY_SET 0x2205
-
-/*
-enum UResEntryType {
-    ENTRY_OK = 0,
-    ENTRY_GOTO_ROOT = 1,
-    ENTRY_GOTO_DEFAULT = 2,
-    ENTRY_INVALID = 3
-};
-
-typedef enum UResEntryType UResEntryType;
-*/
 
 struct UResourceDataEntry;
 typedef struct UResourceDataEntry UResourceDataEntry;
@@ -90,6 +79,17 @@ struct UResourceBundle {
 };
 
 U_CAPI void U_EXPORT2 ures_initStackObject(UResourceBundle* resB);
+
+/**
+ * Opens a resource bundle for the locale;
+ * if there is not even a base language bundle, then loads the root bundle;
+ * never falls back to the default locale.
+ *
+ * This is used for algorithms that have good pan-Unicode default behavior,
+ * such as case mappings, collation, and segmentation (BreakIterator).
+ */
+U_CAPI UResourceBundle* U_EXPORT2
+ures_openNoDefault(const char* path, const char* localeID, UErrorCode* status);
 
 /* Some getters used by the copy constructor */
 U_CFUNC const char* ures_getName(const UResourceBundle* resB);

@@ -116,7 +116,7 @@ DrawBlur(gfxContext* aDestinationCtx,
     }
 }
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 gfxAlphaBoxBlur::DoBlur(DrawTarget* aDT, IntPoint* aTopLeft)
 {
     mBlur->Blur(mData);
@@ -382,7 +382,7 @@ CacheBlur(DrawTarget& aDT,
 }
 
 // Blurs a small surface and creates the mask.
-static TemporaryRef<SourceSurface>
+static already_AddRefed<SourceSurface>
 CreateBlurMask(const IntSize& aRectSize,
                RectCornerRadii* aCornerRadii,
                gfxIntSize aBlurRadius,
@@ -427,7 +427,7 @@ CreateBlurMask(const IntSize& aRectSize,
   return result.forget();
 }
 
-static TemporaryRef<SourceSurface>
+static already_AddRefed<SourceSurface>
 CreateBoxShadow(DrawTarget& aDT, SourceSurface* aBlurMask, const gfxRGBA& aShadowColor)
 {
   IntSize blurredSize = aBlurMask->GetSize();

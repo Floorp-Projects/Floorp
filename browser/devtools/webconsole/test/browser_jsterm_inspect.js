@@ -5,6 +5,8 @@
 
 // Check that the inspect() jsterm helper function works.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<p>hello bug 869981";
 
 let test = asyncTest(function* () {
