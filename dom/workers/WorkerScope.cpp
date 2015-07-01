@@ -742,7 +742,7 @@ workerdebuggersandbox_convert(JSContext *cx, JS::Handle<JSObject *> obj,
                               JSType type, JS::MutableHandle<JS::Value> vp)
 {
   if (type == JSTYPE_OBJECT) {
-    vp.set(OBJECT_TO_JSVAL(obj));
+    vp.setObject(*obj);
     return true;
   }
 

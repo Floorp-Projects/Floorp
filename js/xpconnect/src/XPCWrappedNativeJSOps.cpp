@@ -454,7 +454,7 @@ static bool
 XPC_WN_Shared_Convert(JSContext* cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     if (type == JSTYPE_OBJECT) {
-        vp.set(OBJECT_TO_JSVAL(obj));
+        vp.setObject(*obj);
         return true;
     }
 
@@ -469,7 +469,7 @@ XPC_WN_Shared_Convert(JSContext* cx, HandleObject obj, JSType type, MutableHandl
                     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
                     if (si && (si->GetFlags().WantCall() ||
                                si->GetFlags().WantConstruct())) {
-                        vp.set(OBJECT_TO_JSVAL(obj));
+                        vp.setObject(*obj);
                         return true;
                     }
                 }

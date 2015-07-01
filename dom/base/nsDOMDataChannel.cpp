@@ -389,7 +389,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
       JS::Rooted<JSObject*> arrayBuf(cx);
       rv = nsContentUtils::CreateArrayBuffer(cx, aData, arrayBuf.address());
       NS_ENSURE_SUCCESS(rv, rv);
-      jsData = OBJECT_TO_JSVAL(arrayBuf);
+      jsData.setObject(*arrayBuf);
     } else {
       NS_RUNTIMEABORT("Unknown binary type!");
       return NS_ERROR_UNEXPECTED;
