@@ -8476,6 +8476,43 @@ IonBuilder::getElemTryCache(bool* emitted, MDefinition* obj, MDefinition* index)
     return true;
 }
 
+TemporaryTypeSet*
+IonBuilder::computeHeapType(const TemporaryTypeSet* objTypes, const jsid id)
+{
+    if (objTypes->unknownObject() || objTypes->getObjectCount() == 0)
+        return nullptr;
+
+    TemporaryTypeSet empty;
+    TemporaryTypeSet* acc = &empty;
+    LifoAlloc* lifoAlloc = alloc().lifoAlloc();
+
+    Vector<HeapTypeSetKey, 4, SystemAllocPolicy> properties;
+    if (!properties.reserve(objTypes->getObjectCount()))
+        return nullptr;
+
+    for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
+        TypeSet::ObjectKey* key = objTypes->getObject(i);
+
+        if (key->unknownProperties())
+            return nullptr;
+
+        HeapTypeSetKey property = key->property(id);
+        HeapTypeSet* currentSet = property.maybeTypes();
+
+        if (!currentSet || currentSet->unknown())
+            return nullptr;
+
+        properties.infallibleAppend(property);
+        acc = TypeSet::unionSets(acc, currentSet, lifoAlloc);
+    }
+
+    // Freeze all the properties associated with the refined type set.
+    for (HeapTypeSetKey* i = properties.begin(); i != properties.end(); i++)
+        i->freeze(constraints());
+
+    return acc;
+}
+
 bool
 IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType unboxedType)
 {
@@ -8521,12 +8558,21 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
     // If we can load the element as a definite double, make sure to check that
     // the array has been converted to homogenous doubles first.
     TemporaryTypeSet* objTypes = obj->resultTypeSet();
+    bool inBounds = !readOutOfBounds && !needsHoleCheck;
+
+    if (inBounds) {
+        TemporaryTypeSet* heapTypes = computeHeapType(objTypes, JSID_VOID);
+        if (heapTypes && heapTypes->isSubset(types)) {
+            knownType = heapTypes->getKnownMIRType();
+            types = heapTypes;
+        }
+    }
+
     bool loadDouble =
         unboxedType == JSVAL_TYPE_MAGIC &&
         barrier == BarrierKind::NoBarrier &&
         loopDepth_ &&
-        !readOutOfBounds &&
-        !needsHoleCheck &&
+        inBounds &&
         knownType == MIRType_Double &&
         objTypes &&
         objTypes->convertDoubleElements(constraints()) == TemporaryTypeSet::AlwaysConvertToDoubles;
@@ -8562,8 +8608,10 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
         MOZ_ASSERT(knownType == MIRType_Value);
     }
 
-    if (knownType != MIRType_Value)
+    if (knownType != MIRType_Value) {
         load->setResultType(knownType);
+        load->setResultTypeSet(types);
+    }
 
     current->push(load);
     return pushTypeBarrier(load, types, barrier);
