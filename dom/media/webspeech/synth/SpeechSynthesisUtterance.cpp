@@ -162,6 +162,7 @@ SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventTy
   SpeechSynthesisEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
+  init.mUtterance = this;
   init.mCharIndex = aCharIndex;
   init.mElapsedTime = aElapsedTime;
   init.mName = aName;
