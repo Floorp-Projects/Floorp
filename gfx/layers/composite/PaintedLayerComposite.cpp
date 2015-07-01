@@ -29,8 +29,6 @@
 namespace mozilla {
 namespace layers {
 
-class TiledLayerComposer;
-
 PaintedLayerComposite::PaintedLayerComposite(LayerManagerComposite *aManager)
   : PaintedLayer(aManager, nullptr)
   , LayerComposite(aManager)
@@ -89,16 +87,6 @@ PaintedLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
   if (mBuffer && mCompositor) {
     mBuffer->SetCompositor(mCompositor);
   }
-}
-
-TiledLayerComposer*
-PaintedLayerComposite::GetTiledLayerComposer()
-{
-  if (!mBuffer) {
-    return nullptr;
-  }
-  MOZ_ASSERT(mBuffer->IsAttached());
-  return mBuffer->AsTiledLayerComposer();
 }
 
 LayerRenderState

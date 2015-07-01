@@ -498,9 +498,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   float resolution = aLayerBuffer.GetResolution();
   gfx::Size layerScale(1, 1);
 
-  // Make sure we don't render at low resolution where we have valid high
-  // resolution content, to avoid overdraw and artifacts with semi-transparent
-  // layers.
+  // We assume that the current frame resolution is the one used in our high
+  // precision layer buffer. Compensate for a changing frame resolution when
+  // rendering the low precision buffer.
   if (aLayerBuffer.GetFrameResolution() != mTiledBuffer.GetFrameResolution()) {
     const CSSToParentLayerScale2D& layerResolution = aLayerBuffer.GetFrameResolution();
     const CSSToParentLayerScale2D& localResolution = mTiledBuffer.GetFrameResolution();
@@ -509,9 +509,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     aVisibleRegion.ScaleRoundOut(layerScale.width, layerScale.height);
   }
 
-  // If we're drawing the low precision buffer, make sure the high precision
-  // buffer is masked out to avoid overdraw and rendering artifacts with
-  // non-opaque layers.
+  // Make sure we don't render at low resolution where we have valid high
+  // resolution content, to avoid overdraw and artifacts with semi-transparent
+  // layers.
   nsIntRegion maskRegion;
   if (resolution != mTiledBuffer.GetResolution()) {
     maskRegion = mTiledBuffer.GetValidRegion();
