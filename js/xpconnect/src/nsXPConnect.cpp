@@ -776,12 +776,12 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
                          JSVERSION_LATEST, rval);
 }
 
-/* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
+/* JSObjectPtr getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope); */
 NS_IMETHODIMP
-nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
-                                       JSObject * aScopeArg,
+nsXPConnect::GetWrappedNativePrototype(JSContext* aJSContext,
+                                       JSObject* aScopeArg,
                                        nsIClassInfo* aClassInfo,
-                                       nsIXPConnectJSObjectHolder** _retval)
+                                       JSObject** aRetVal)
 {
     RootedObject aScope(aJSContext, aScopeArg);
     JSAutoCompartment ac(aJSContext, aScope);
@@ -802,8 +802,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     if (!protoObj)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    nsRefPtr<XPCJSObjectHolder> holder = new XPCJSObjectHolder(protoObj);
-    holder.forget(_retval);
+    *aRetVal = protoObj;
 
     return NS_OK;
 }
