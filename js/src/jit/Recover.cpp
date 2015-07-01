@@ -1496,3 +1496,29 @@ bool RStringReplace::recover(JSContext* cx, SnapshotIterator& iter) const
     iter.storeInstructionResult(result);
     return true;
 }
+
+bool
+MAtomicIsLockFree::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_AtomicIsLockFree));
+    return true;
+}
+
+RAtomicIsLockFree::RAtomicIsLockFree(CompactBufferReader& reader)
+{ }
+
+bool
+RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue operand(cx, iter.read());
+    MOZ_ASSERT(operand.isInt32());
+
+    int32_t result;
+    if (!js::AtomicIsLockFree(cx, operand, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
+    return true;
+}
