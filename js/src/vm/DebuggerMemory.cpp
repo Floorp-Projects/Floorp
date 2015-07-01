@@ -454,6 +454,9 @@ struct CountType {
     // to this type. Return a nullptr on OOM.
     virtual CountBasePtr makeCount() = 0;
 
+    // Trace |count| and all its children, for garbage collection.
+    virtual void traceCount(CountBase& count, JSTracer* trc) = 0;
+
     // Destruct a count tree node that this type instance constructed.
     virtual void destructCount(CountBase& count) = 0;
 
@@ -497,7 +500,25 @@ class CountBase {
     // its destructor.
     void destruct() { return type.destructCount(*this); }
 
+    // Trace this count for garbage collection.
+    void trace(JSTracer* trc) { type.traceCount(*this, trc); }
+
     size_t total_;
+};
+
+class RootedCount : JS::CustomAutoRooter {
+    CountBasePtr count;
+
+    void trace(JSTracer* trc) override { count->trace(trc); }
+
+  public:
+    RootedCount(JSContext* cx, CountBasePtr&& count)
+        : CustomAutoRooter(cx),
+          count(Move(count))
+          { }
+    CountBase* operator->() const { return count.get(); }
+    explicit operator bool() const { return count.get(); }
+    operator CountBasePtr&() { return count; }
 };
 
 void
@@ -535,6 +556,8 @@ class SimpleCount : public CountType {
     CountBasePtr makeCount() override {
         return CountBasePtr(census.new_<Count>(*this));
     }
+
+    void traceCount(CountBase& countBase, JSTracer* trc) override { }
 
     void destructCount(CountBase& countBase) override {
         Count& count = static_cast<Count&>(countBase);
@@ -628,6 +651,14 @@ class ByCoarseType : public CountType {
                                                scriptsCount,
                                                stringsCount,
                                                otherCount));
+    }
+
+    void traceCount(CountBase& countBase, JSTracer* trc) override {
+        Count& count = static_cast<Count&>(countBase);
+        count.objects->trace(trc);
+        count.scripts->trace(trc);
+        count.strings->trace(trc);
+        count.other->trace(trc);
     }
 
     void destructCount(CountBase& countBase) override {
@@ -755,6 +786,13 @@ class ByObjectClass : public CountType {
         return CountBasePtr(count.release());
     }
 
+    void traceCount(CountBase& countBase, JSTracer* trc) override {
+        Count& count = static_cast<Count&>(countBase);
+        for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
+            r.front().value()->trace(trc);
+        count.other->trace(trc);
+    }
+
     void destructCount(CountBase& countBase) override {
         Count& count = static_cast<Count&>(countBase);
         count.~Count();
@@ -869,6 +907,12 @@ class ByUbinodeType : public CountType {
             return nullptr;
 
         return CountBasePtr(count.release());
+    }
+
+    void traceCount(CountBase& countBase, JSTracer* trc) override {
+        Count& count = static_cast<Count&>(countBase);
+        for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
+            r.front().value()->trace(trc);
     }
 
     void destructCount(CountBase& countBase) override {
@@ -1168,7 +1212,7 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
     if (!rootType)
         return false;
 
-    CountBasePtr rootCount(rootType->makeCount());
+    dbg::RootedCount rootCount(cx, rootType->makeCount());
     if (!rootCount)
         return false;
     dbg::CensusHandler handler(census, rootCount);
