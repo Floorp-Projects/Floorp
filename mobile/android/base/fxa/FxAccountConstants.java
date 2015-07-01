@@ -24,7 +24,7 @@ public class FxAccountConstants {
   public static final String STAGE_PROFILE_SERVER_ENDPOINT = "https://latest.dev.lcip.org/profile/v1";
 
   // Action to update on cached profile information.
-  public static final String ACCOUNT_PROFILE_AVATAR_UPDATED_ACTION = "org.mozilla.gecko.fxa.profile.cached";
+  public static final String ACCOUNT_PROFILE_JSON_UPDATED_ACTION = "org.mozilla.gecko.fxa.profile.JSON.updated";
 
   // You must be at least 13 years old, on the day of creation, to create a Firefox Account.
   public static final int MINIMUM_AGE_TO_CREATE_AN_ACCOUNT = 13;
