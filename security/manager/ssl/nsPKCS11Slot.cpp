@@ -169,8 +169,7 @@ nsPKCS11Slot::GetToken(nsIPK11Token **_retval)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsIPK11Token> token = new nsPK11Token(mSlot);
-  *_retval = token;
-  NS_ADDREF(*_retval);
+  token.forget(_retval);
   return NS_OK;
 }
 
@@ -319,8 +318,7 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
   free(asciiname);
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
   PK11_FreeSlot(slotinfo);
-  *_retval = slot;
-  NS_ADDREF(*_retval);
+  slot.forget(_retval);
   return NS_OK;
 }
 
@@ -372,8 +370,7 @@ nsPKCS11ModuleDB::GetInternal(nsIPKCS11Module **_retval)
     SECMOD_CreateModule(nullptr, SECMOD_INT_NAME, nullptr, SECMOD_INT_FLAGS);
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
   SECMOD_DestroyModule(nssMod);
-  *_retval = module;
-  NS_ADDREF(*_retval);
+  module.forget(_retval);
   return NS_OK;
 }
 
@@ -385,8 +382,7 @@ nsPKCS11ModuleDB::GetInternalFIPS(nsIPKCS11Module **_retval)
     SECMOD_CreateModule(nullptr, SECMOD_FIPS_NAME, nullptr, SECMOD_FIPS_FLAGS);
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(nssMod);
   SECMOD_DestroyModule(nssMod);
-  *_retval = module;
-  NS_ADDREF(*_retval);
+  module.forget(_retval);
   return NS_OK;
 }
 
@@ -402,8 +398,7 @@ nsPKCS11ModuleDB::FindModuleByName(const char16_t *aName,
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Module> module = new nsPKCS11Module(mod);
   SECMOD_DestroyModule(mod);
-  *_retval = module;
-  NS_ADDREF(*_retval);
+  module.forget(_retval);
   return NS_OK;
 }
 
@@ -422,8 +417,7 @@ nsPKCS11ModuleDB::FindSlotByName(const char16_t *aName,
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
   PK11_FreeSlot(slotinfo);
-  *_retval = slot;
-  NS_ADDREF(*_retval);
+  slot.forget(_retval);
   return NS_OK;
 }
 
