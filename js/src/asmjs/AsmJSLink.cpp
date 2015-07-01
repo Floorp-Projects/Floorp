@@ -425,6 +425,7 @@ ValidateAtomicsBuiltinFunction(JSContext* cx, AsmJSModule::Global& global, Handl
       case AsmJSAtomicsBuiltin_and: native = atomics_and; break;
       case AsmJSAtomicsBuiltin_or: native = atomics_or; break;
       case AsmJSAtomicsBuiltin_xor: native = atomics_xor; break;
+      case AsmJSAtomicsBuiltin_isLockFree: native = atomics_isLockFree; break;
     }
 
     if (!IsNativeFunction(v, native))

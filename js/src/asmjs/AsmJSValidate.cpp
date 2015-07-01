@@ -35,6 +35,7 @@
 #include "asmjs/AsmJSSignalHandlers.h"
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
+#include "jit/AtomicOperations.h"
 #include "jit/CodeGenerator.h"
 #include "jit/CompileWrappers.h"
 #include "jit/MIR.h"
@@ -49,6 +50,7 @@
 
 #include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
+#include "jit/AtomicOperations-inl.h"
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
@@ -1540,7 +1542,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibraryAtomicsName("sub", AsmJSAtomicsBuiltin_sub) ||
             !addStandardLibraryAtomicsName("and", AsmJSAtomicsBuiltin_and) ||
             !addStandardLibraryAtomicsName("or", AsmJSAtomicsBuiltin_or) ||
-            !addStandardLibraryAtomicsName("xor", AsmJSAtomicsBuiltin_xor))
+            !addStandardLibraryAtomicsName("xor", AsmJSAtomicsBuiltin_xor) ||
+            !addStandardLibraryAtomicsName("isLockFree", AsmJSAtomicsBuiltin_isLockFree))
         {
             return false;
         }
@@ -5038,6 +5041,23 @@ CheckAtomicsBinop(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type*
 }
 
 static bool
+CheckAtomicsIsLockFree(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type* type)
+{
+    if (CallArgListLength(call) != 1)
+        return f.fail(call, "Atomics.isLockFree must be passed 1 argument");
+
+    ParseNode* sizeArg = CallArgList(call);
+
+    uint32_t size;
+    if (!IsLiteralInt(f.m(), sizeArg, &size))
+        return f.fail(sizeArg, "Atomics.isLockFree requires an integer literal argument");
+
+    *def = f.constant(Int32Value(AtomicOperations::isLockfree(size)), Type::Int);
+    *type = Type::Int;
+    return true;
+}
+
+static bool
 CheckAtomicsCompareExchange(FunctionCompiler& f, ParseNode* call, MDefinition** def, Type* type)
 {
     if (CallArgListLength(call) != 4)
@@ -5102,6 +5122,8 @@ CheckAtomicsBuiltinCall(FunctionCompiler& f, ParseNode* callNode, AsmJSAtomicsBu
         return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchOrOp);
       case AsmJSAtomicsBuiltin_xor:
         return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchXorOp);
+      case AsmJSAtomicsBuiltin_isLockFree:
+        return CheckAtomicsIsLockFree(f, callNode, resultDef, resultType);
       default:
         MOZ_CRASH("unexpected atomicsBuiltin function");
     }
