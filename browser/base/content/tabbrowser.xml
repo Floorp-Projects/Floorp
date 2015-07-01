@@ -1190,25 +1190,29 @@
               this._tabAttrModified(this.mCurrentTab, ["selected"]);
 
               if (oldBrowser != newBrowser &&
-                  oldBrowser.docShell &&
-                  oldBrowser.docShell.contentViewer.inPermitUnload) {
-                // Since the user is switching away from a tab that has
-                // a beforeunload prompt active, we remove the prompt.
-                // This prevents confusing user flows like the following:
-                //   1. User attempts to close Firefox
-                //   2. User switches tabs (ingoring a beforeunload prompt)
-                //   3. User returns to tab, presses "Leave page"
-                let promptBox = this.getTabModalPromptBox(oldBrowser);
-                let prompts = promptBox.listPrompts();
-                // There might not be any prompts here if the tab was closed
-                // while in an onbeforeunload prompt, which will have
-                // destroyed aforementioned prompt already, so check there's
-                // something to remove, first:
-                if (prompts.length) {
-                  // NB: This code assumes that the beforeunload prompt
-                  //     is the top-most prompt on the tab.
-                  prompts[prompts.length - 1].abortPrompt();
-                }
+                  oldBrowser.getInPermitUnload) {
+                oldBrowser.getInPermitUnload(inPermitUnload => {
+                  if (!inPermitUnload) {
+                    return;
+                  }
+                  // Since the user is switching away from a tab that has
+                  // a beforeunload prompt active, we remove the prompt.
+                  // This prevents confusing user flows like the following:
+                  //   1. User attempts to close Firefox
+                  //   2. User switches tabs (ingoring a beforeunload prompt)
+                  //   3. User returns to tab, presses "Leave page"
+                  let promptBox = this.getTabModalPromptBox(oldBrowser);
+                  let prompts = promptBox.listPrompts();
+                  // There might not be any prompts here if the tab was closed
+                  // while in an onbeforeunload prompt, which will have
+                  // destroyed aforementioned prompt already, so check there's
+                  // something to remove, first:
+                  if (prompts.length) {
+                    // NB: This code assumes that the beforeunload prompt
+                    //     is the top-most prompt on the tab.
+                    prompts[prompts.length - 1].abortPrompt();
+                  }
+                });
               }
 
               oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
@@ -2124,6 +2128,7 @@
             if (aParams) {
               var animate = aParams.animate;
               var byMouse = aParams.byMouse;
+              var skipPermitUnload = aParams.skipPermitUnload;
             }
 
             // Handle requests for synchronously removing an already
@@ -2136,7 +2141,7 @@
 
             var isLastTab = (this.tabs.length - this._removingTabs.length == 1);
 
-            if (!this._beginRemoveTab(aTab, false, null, true))
+            if (!this._beginRemoveTab(aTab, false, null, true, skipPermitUnload))
               return;
 
             if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse)
@@ -2184,6 +2189,7 @@
         <parameter name="aTabWillBeMoved"/>
         <parameter name="aCloseWindowWithLastTab"/>
         <parameter name="aCloseWindowFastpath"/>
+        <parameter name="aSkipPermitUnload"/>
         <body>
           <![CDATA[
             if (aTab.closing ||
@@ -2214,23 +2220,20 @@
               newTab = true;
             }
 
-            if (!aTab._pendingPermitUnload && !aTabWillBeMoved) {
-              let ds = browser.docShell;
-              if (ds && ds.contentViewer) {
-                // We need to block while calling permitUnload() because it
-                // processes the event queue and may lead to another removeTab()
-                // call before permitUnload() returns.
-                aTab._pendingPermitUnload = true;
-                let permitUnload = ds.contentViewer.permitUnload();
-                delete aTab._pendingPermitUnload;
-                // If we were closed during onbeforeunload, we return false now
-                // so we don't (try to) close the same tab again. Of course, we
-                // also stop if the unload was cancelled by the user:
-                if (aTab.closing || !permitUnload) {
-                  // NB: deliberately keep the _closedDuringPermitUnload set to
-                  // true so we keep exiting early in case of multiple calls.
-                  return false;
-                }
+            if (!aTab._pendingPermitUnload && !aTabWillBeMoved && !aSkipPermitUnload) {
+              // We need to block while calling permitUnload() because it
+              // processes the event queue and may lead to another removeTab()
+              // call before permitUnload() returns.
+              aTab._pendingPermitUnload = true;
+              let {permitUnload} = browser.permitUnload();
+              delete aTab._pendingPermitUnload;
+              // If we were closed during onbeforeunload, we return false now
+              // so we don't (try to) close the same tab again. Of course, we
+              // also stop if the unload was cancelled by the user:
+              if (aTab.closing || !permitUnload) {
+                // NB: deliberately keep the _closedDuringPermitUnload set to
+                // true so we keep exiting early in case of multiple calls.
+                return false;
               }
             }
 
@@ -4044,13 +4047,19 @@
             }
             case "DOMWindowClose": {
               if (this.tabs.length == 1) {
+                // We already did PermitUnload in the content process
+                // for this tab (the only one in the window). So we don't
+                // need to do it again for any tabs.
+                window.skipNextCanClose = true;
                 window.close();
                 return;
               }
 
               let tab = this.getTabForBrowser(browser);
               if (tab) {
-                this.removeTab(tab);
+                // Skip running PermitUnload since it already happened in
+                // the content process.
+                this.removeTab(tab, {skipPermitUnload: true});
               }
               break;
             }
@@ -4334,12 +4343,18 @@
           if (!event.isTrusted)
             return;
 
-          if (this.tabs.length == 1)
+          if (this.tabs.length == 1) {
+            // We already did PermitUnload in nsGlobalWindow::Close
+            // for this tab. There are no other tabs we need to do
+            // PermitUnload for.
+            window.skipNextCanClose = true;
             return;
+          }
 
           var tab = this._getTabForContentWindow(event.target);
           if (tab) {
-            this.removeTab(tab);
+            // Skip running PermitUnload since it already happened.
+            this.removeTab(tab, {skipPermitUnload: true});
             event.preventDefault();
           }
         ]]>
