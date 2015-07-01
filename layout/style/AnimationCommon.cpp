@@ -134,28 +134,45 @@ CommonAnimationManager::NeedsRefresh() const
 }
 
 AnimationCollection*
+CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return nullptr;
+  }
+  nsIAtom* animProp;
+  if (aFrame->IsGeneratedContentFrame()) {
+    nsIFrame* parent = aFrame->GetParent();
+    if (parent->IsGeneratedContentFrame()) {
+      return nullptr;
+    }
+    nsIAtom* name = content->NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+      animProp = GetAnimationsBeforeAtom();
+    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+      animProp = GetAnimationsAfterAtom();
+    } else {
+      return nullptr;
+    }
+    content = content->GetParent();
+    if (!content) {
+      return nullptr;
+    }
+  } else {
+    if (!content->MayHaveAnimations()) {
+      return nullptr;
+    }
+    animProp = GetAnimationsAtom();
+  }
+
+  return static_cast<AnimationCollection*>(content->GetProperty(animProp));
+}
+
+AnimationCollection*
 CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
                                                    nsCSSProperty aProperty)
 {
-  nsIContent *content;
-  nsCSSPseudoElements::Type pseudoType;
-  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
-    return nullptr;
-  }
-
-  nsIAtom *animProp;
-  if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    animProp = GetAnimationsAtom();
-  } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
-    animProp = GetAnimationsBeforeAtom();
-  } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
-    animProp = GetAnimationsAfterAtom();
-  } else {
-    return nullptr;
-  }
-
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(content->GetProperty(animProp));
+  AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
       !collection->HasAnimationOfProperty(aProperty) ||
       !collection->CanPerformOnCompositorThread(
