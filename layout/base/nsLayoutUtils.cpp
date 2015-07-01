@@ -372,64 +372,6 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 }
 
 bool
-nsLayoutUtils::GetAnimationContent(const nsIFrame* aFrame,
-                    nsIContent* &aContentResult,
-                    nsCSSPseudoElements::Type &aPseudoTypeResult)
-{
-  aPseudoTypeResult = nsCSSPseudoElements::ePseudo_NotPseudoElement;
-  aContentResult = aFrame->GetContent();
-  if (!aContentResult) {
-    return false;
-  }
-  if (aFrame->IsGeneratedContentFrame()) {
-    nsIFrame* parent = aFrame->GetParent();
-    if (parent->IsGeneratedContentFrame()) {
-      return false;
-    }
-    nsIAtom* name = aContentResult->NodeInfo()->NameAtom();
-    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
-      aPseudoTypeResult = nsCSSPseudoElements::ePseudo_before;
-    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
-      aPseudoTypeResult = nsCSSPseudoElements::ePseudo_after;
-    } else {
-      return false;
-    }
-    aContentResult = aContentResult->GetParent();
-    if (!aContentResult) {
-      return false;
-    }
-  } else if (!aContentResult->MayHaveAnimations()) {
-    return false;
-  }
-  return true;
-}
-
-static AnimationCollection*
-GetAnimationCollection(nsIContent* aContent,
-                       nsCSSPseudoElements::Type aPseudoType,
-                       nsIAtom* aAnimationProperty)
-{
-  if (aPseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    if (aAnimationProperty == nsGkAtoms::animationsProperty) {
-      aAnimationProperty =
-        aPseudoType == nsCSSPseudoElements::ePseudo_before ?
-          nsGkAtoms::animationsOfBeforeProperty :
-          nsGkAtoms::animationsOfAfterProperty;
-    } else if (aAnimationProperty == nsGkAtoms::transitionsProperty) {
-      aAnimationProperty =
-        aPseudoType == nsCSSPseudoElements::ePseudo_before ?
-          nsGkAtoms::transitionsOfBeforeProperty :
-          nsGkAtoms::transitionsOfAfterProperty;
-    } else {
-      MOZ_ASSERT(false, "unsupported animation property for pseudo-element");
-      return nullptr;
-    }
-  }
-  return static_cast<AnimationCollection*>(
-           aContent->GetProperty(aAnimationProperty));
-}
-
-bool
 nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
                                           nsCSSProperty aProperty)
 {
@@ -442,40 +384,40 @@ bool
 nsLayoutUtils::HasAnimations(const nsIFrame* aFrame,
                              nsCSSProperty aProperty)
 {
-  nsIContent* content;
-  nsCSSPseudoElements::Type pseudoType;
-  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
-    return false;
+  nsPresContext* presContext = aFrame->PresContext();
+  AnimationCollection* collection =
+    presContext->AnimationManager()->GetAnimationCollection(aFrame);
+  if (collection &&
+      collection->HasAnimationOfProperty(aProperty)) {
+    return true;
   }
-
-  static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
-                                         nsGkAtoms::animationsProperty,
-                                         nullptr };
-  for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
-    AnimationCollection* collection =
-      GetAnimationCollection(content, pseudoType, *animProp);
-    if (collection &&
-        collection->HasAnimationOfProperty(aProperty)) {
-      return true;
-    }
+  collection =
+    presContext->TransitionManager()->GetAnimationCollection(aFrame);
+  if (collection &&
+      collection->HasAnimationOfProperty(aProperty)) {
+    return true;
   }
-
   return false;
 }
 
 bool
-nsLayoutUtils::HasCurrentAnimations(const nsIFrame* aFrame,
-                                    nsIAtom* aAnimationProperty)
+nsLayoutUtils::HasCurrentAnimations(const nsIFrame* aFrame)
 {
-  nsIContent* content;
-  nsCSSPseudoElements::Type pseudoType;
-  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
-    return false;
-  }
-
+  nsPresContext* presContext = aFrame->PresContext();
   AnimationCollection* collection =
-    GetAnimationCollection(content, pseudoType, aAnimationProperty);
-  return (collection && collection->HasCurrentAnimations());
+    presContext->AnimationManager()->GetAnimationCollection(aFrame);
+  return collection &&
+         collection->HasCurrentAnimations();
+}
+
+bool
+nsLayoutUtils::HasCurrentTransitions(const nsIFrame* aFrame)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  AnimationCollection* collection =
+    presContext->TransitionManager()->GetAnimationCollection(aFrame);
+  return collection &&
+         collection->HasCurrentAnimations();
 }
 
 bool
@@ -483,25 +425,21 @@ nsLayoutUtils::HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
                                                  const nsCSSProperty* aProperties,
                                                  size_t aPropertyCount)
 {
-  nsIContent* content;
-  nsCSSPseudoElements::Type pseudoType;
-  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
-    return false;
+  nsPresContext* presContext = aFrame->PresContext();
+  AnimationCollection* collection =
+    presContext->AnimationManager()->GetAnimationCollection(aFrame);
+  if (collection &&
+      collection->HasCurrentAnimationsForProperties(aProperties,
+                                                    aPropertyCount)) {
+    return true;
   }
-
-  static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
-                                         nsGkAtoms::animationsProperty,
-                                         nullptr };
-  for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
-    AnimationCollection* collection =
-      GetAnimationCollection(content, pseudoType, *animProp);
-    if (collection &&
-        collection->HasCurrentAnimationsForProperties(aProperties,
-                                                      aPropertyCount)) {
-      return true;
-    }
+  collection =
+    presContext->TransitionManager()->GetAnimationCollection(aFrame);
+  if (collection &&
+      collection->HasCurrentAnimationsForProperties(aProperties,
+                                                    aPropertyCount)) {
+    return true;
   }
-
   return false;
 }
 

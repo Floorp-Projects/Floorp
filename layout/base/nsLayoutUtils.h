@@ -2159,13 +2159,18 @@ public:
   static bool HasAnimations(const nsIFrame* aFrame, nsCSSProperty aProperty);
 
   /**
-   * Returns true if the frame has any current animations or transitions
-   * (depending on the value of |aAnimationProperty|).
+   * Returns true if the frame has any current animations.
    * A current animation is any animation that has not yet finished playing
    * including paused animations.
    */
-  static bool HasCurrentAnimations(const nsIFrame* aFrame,
-                                   nsIAtom* aAnimationProperty);
+  static bool HasCurrentAnimations(const nsIFrame* aFrame);
+
+  /**
+   * Returns true if the frame has any current transitions.
+   * A current transition is any transition that has not yet finished playing
+   * including paused transitions.
+   */
+  static bool HasCurrentTransitions(const nsIFrame* aFrame);
 
   /**
    * Returns true if the frame has any current animations or transitions

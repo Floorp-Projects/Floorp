@@ -174,6 +174,12 @@ public:
   GetAnimationsForCompositor(const nsIFrame* aFrame,
                              nsCSSProperty aProperty);
 
+  // Given the frame aFrame with possibly animated content, finds its
+  // associated collection of animations. If it is a generated content
+  // frame, it may examine the parent frame to search for such animations.
+  AnimationCollection*
+  GetAnimationCollection(const nsIFrame* aFrame);
+
 protected:
   PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
