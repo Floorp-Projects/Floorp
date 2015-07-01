@@ -34,6 +34,7 @@ function clickButton(sel) {
 }
 
 function testBenignPage() {
+  info("Non-tracking content must not be blocked");
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
 
@@ -47,6 +48,7 @@ function testBenignPage() {
 }
 
 function testTrackingPage() {
+  info("Tracking content must be blocked");
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (TrackingProtection.content.hasAttribute("block-active"), "blocking is active");
 
@@ -60,6 +62,7 @@ function testTrackingPage() {
 }
 
 function testTrackingPageWhitelisted() {
+  info("Tracking content must be white-listed and not blocked");
   ok (TrackingProtection.content.hasAttribute("block-disabled"), "blocking is disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
 
@@ -80,37 +83,30 @@ add_task(function* () {
   TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok (TrackingProtection, "Functionality is attached to the browser window");
   is (TrackingProtection.enabled, Services.prefs.getBoolPref(PREF),
-    "The initial enabled value is based on the default pref value");
+    "TP.enabled is based on the original pref value");
 
-  info("Enable Tracking Protection");
   Services.prefs.setBoolPref(PREF, true);
-  ok (TrackingProtection.enabled, "Functionality is enabled after setting the pref");
+  ok (TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  info("Point tab to a test page NOT containing tracking elements");
+  info("Load a test page not containing tracking elements");
   yield promiseTabLoadEvent(tab, BENIGN_PAGE);
   testBenignPage();
 
-  info("Point tab to a test page containing tracking elements");
+  info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
-
-  info("Tracking content must be blocked");
   testTrackingPage();
 
-  info("Disable Tracking Content Protection for the page (which reloads the page)");
+  info("Disable TP for the page (which reloads the page)");
   clickButton("#tracking-action-unblock");
 
-  info("Wait for tab to reload following tracking-protection page white-listing");
+  info("Wait for tab to reload following TP white-listing");
   yield promiseTabLoadEvent(tab);
-
-  info("Tracking content must be white-listed (NOT blocked)");
   testTrackingPageWhitelisted();
 
-  info("Re-enable Tracking Content Protection for the page (which reloads the page)");
+  info("Re-enable TP for the page (which reloads the page)");
   clickButton("#tracking-action-block");
 
-  info("Wait for tab to reload following tracking-protection page white-listing");
+  info("Wait for tab to reload following TP black-listing");
   yield promiseTabLoadEvent(tab);
-
-  info("Tracking content must be blocked");
   testTrackingPage();
 });
