@@ -5,7 +5,6 @@
 
 <resources>
     <item type="layout" name="tabs_layout_item_view">@layout/tabs_item_row</item>
-    <item type="layout" name="new_tablet_browser_toolbar">@null</item>
     <item type="layout" name="new_tablet_tab_strip">@null</item>
     <item type="layout" name="new_tablet_tabs_item_cell">@null</item>
     <item type="layout" name="new_tablet_tabs_panel_back_button">@null</item>
