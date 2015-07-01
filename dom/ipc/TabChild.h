@@ -529,6 +529,8 @@ protected:
 
     virtual bool RecvParentActivated(const bool& aActivated) override;
 
+    virtual bool RecvStopIMEStateManagement() override;
+
 #ifdef MOZ_WIDGET_GONK
     void MaybeRequestPreinitCamera();
 #endif
