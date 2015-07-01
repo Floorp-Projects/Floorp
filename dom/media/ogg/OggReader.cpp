@@ -1439,6 +1439,7 @@ OggReader::Seek(int64_t aTarget, int64_t aEndTime)
 nsresult OggReader::SeekInternal(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
+  NS_ENSURE_TRUE(HaveStartTime(), NS_ERROR_FAILURE);
   if (mIsChained)
     return NS_ERROR_FAILURE;
   LOG(LogLevel::Debug, ("%p About to seek to %lld", mDecoder, aTarget));
@@ -1447,10 +1448,10 @@ nsresult OggReader::SeekInternal(int64_t aTarget, int64_t aEndTime)
   NS_ENSURE_TRUE(resource != nullptr, NS_ERROR_FAILURE);
   int64_t adjustedTarget = aTarget;
   if (HasAudio() && mOpusState){
-    adjustedTarget = std::max(mStartTime, aTarget - SEEK_OPUS_PREROLL);
+    adjustedTarget = std::max(StartTime(), aTarget - SEEK_OPUS_PREROLL);
   }
 
-  if (adjustedTarget == mStartTime) {
+  if (adjustedTarget == StartTime()) {
     // We've seeked to the media start. Just seek to the offset of the first
     // content page.
     res = resource->Seek(nsISeekableStream::NS_SEEK_SET, 0);
@@ -1473,18 +1474,18 @@ nsresult OggReader::SeekInternal(int64_t aTarget, int64_t aEndTime)
       NS_ENSURE_SUCCESS(res,res);
 
       // Figure out if the seek target lies in a buffered range.
-      SeekRange r = SelectSeekRange(ranges, aTarget, mStartTime, aEndTime, true);
+      SeekRange r = SelectSeekRange(ranges, aTarget, StartTime(), aEndTime, true);
 
       if (!r.IsNull()) {
         // We know the buffered range in which the seek target lies, do a
         // bisection search in that buffered range.
-        res = SeekInBufferedRange(aTarget, adjustedTarget, mStartTime, aEndTime, ranges, r);
+        res = SeekInBufferedRange(aTarget, adjustedTarget, StartTime(), aEndTime, ranges, r);
         NS_ENSURE_SUCCESS(res,res);
       } else {
         // The target doesn't lie in a buffered range. Perform a bisection
         // search over the whole media, using the known buffered ranges to
         // reduce the search space.
-        res = SeekInUnbuffered(aTarget, mStartTime, aEndTime, ranges);
+        res = SeekInUnbuffered(aTarget, StartTime(), aEndTime, ranges);
         NS_ENSURE_SUCCESS(res,res);
       }
     }
@@ -1853,7 +1854,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 media::TimeIntervals OggReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
+  NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
     if (mIsChained) {
@@ -1892,7 +1893,7 @@ media::TimeIntervals OggReader::GetBuffered()
     // we special-case (startOffset == 0) so that the first
     // buffered range always appears to be buffered from the media start
     // time, rather than from the end-time of the first page.
-    int64_t startTime = (startOffset == 0) ? mStartTime : -1;
+    int64_t startTime = (startOffset == 0) ? StartTime() : -1;
 
     // Find the start time of the range. Read pages until we find one with a
     // granulepos which we can convert into a timestamp to use as the time of
@@ -1959,8 +1960,8 @@ media::TimeIntervals OggReader::GetBuffered()
       int64_t endTime = RangeEndTime(startOffset, endOffset, true);
       if (endTime > startTime) {
         buffered += media::TimeInterval(
-           media::TimeUnit::FromMicroseconds(startTime - mStartTime),
-           media::TimeUnit::FromMicroseconds(endTime - mStartTime));
+           media::TimeUnit::FromMicroseconds(startTime - StartTime()),
+           media::TimeUnit::FromMicroseconds(endTime - StartTime()));
       }
     }
   }
