@@ -839,6 +839,8 @@ MessageChannel::WasTransactionCanceled(int transaction, int prio)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
+    nsAutoPtr<Message> msg(aMsg);
+
     // See comment in DispatchSyncMessage.
     MaybeScriptBlocker scriptBlocker(this, true);
 
@@ -853,7 +855,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     SyncStackFrame frame(this, false);
 #endif
 
-    CxxStackFrame f(*this, OUT_MESSAGE, aMsg);
+    CxxStackFrame f(*this, OUT_MESSAGE, msg);
 
     MonitorAutoLock lock(*mMonitor);
 
@@ -866,7 +868,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     }
 
     if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_NORMAL &&
-        aMsg->priority() > IPC::Message::PRIORITY_NORMAL)
+        msg->priority() > IPC::Message::PRIORITY_NORMAL)
     {
         // Don't allow sending CPOWs while we're dispatching a sync message.
         // If you want to do that, use sendRpcMessage instead.
@@ -874,8 +876,8 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     }
 
     if (mCurrentTransaction &&
-        (aMsg->priority() < DispatchingSyncMessagePriority() ||
-         mAwaitingSyncReplyPriority > aMsg->priority() ||
+        (msg->priority() < DispatchingSyncMessagePriority() ||
+         mAwaitingSyncReplyPriority > msg->priority() ||
          DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
          DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT))
     {
@@ -883,18 +885,16 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         mLink->SendMessage(new CancelMessage());
     }
 
-    IPC_ASSERT(aMsg->is_sync(), "can only Send() sync messages here");
-    IPC_ASSERT(aMsg->priority() >= DispatchingSyncMessagePriority(),
+    IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
+    IPC_ASSERT(msg->priority() >= DispatchingSyncMessagePriority(),
                "can't send sync message of a lesser priority than what's being dispatched");
-    IPC_ASSERT(AwaitingSyncReplyPriority() <= aMsg->priority(),
+    IPC_ASSERT(AwaitingSyncReplyPriority() <= msg->priority(),
                "nested sync message sends must be of increasing priority");
 
     IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
                "not allowed to send messages while dispatching urgent messages");
     IPC_ASSERT(DispatchingAsyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
                "not allowed to send messages while dispatching urgent messages");
-
-    nsAutoPtr<Message> msg(aMsg);
 
     if (!Connected()) {
         ReportConnectionError("MessageChannel::SendAndWait", msg);
