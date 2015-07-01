@@ -55,7 +55,8 @@
 
 #identity-popup-securityView,
 #identity-popup-security-content,
-#identity-popup-permissions-content {
+#identity-popup-permissions-content,
+#tracking-protection-content {
   padding: 0.75em 0 1em;
   -moz-padding-start: calc(2em + 24px);
   -moz-padding-end: 1em;
@@ -66,7 +67,8 @@
 
 #identity-popup-securityView:-moz-locale-dir(rtl),
 #identity-popup-security-content:-moz-locale-dir(rtl),
-#identity-popup-permissions-content:-moz-locale-dir(rtl) {
+#identity-popup-permissions-content:-moz-locale-dir(rtl),
+#tracking-protection-content:-moz-locale-dir(rtl) {
   background-position: calc(100% - 1em) 1em;
 }
 
@@ -197,6 +199,30 @@
 #identity-popup-content-owner,
 #identity-popup-securityView > #identity-popup-securityView-connection.identity-popup-text {
   margin-top: 1em;
+}
+
+/* TRACKING PROTECTION */
+
+#tracking-protection-content {
+  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
+}
+
+#tracking-protection-content[block-disabled]  {
+  background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
+}
+
+#tracking-actions {
+  margin: 1em 0 0;
+}
+
+#tracking-protection-content[block-active] > #tracking-not-detected,
+#tracking-protection-content[block-disabled] > #tracking-not-detected,
+#tracking-protection-content:not([block-active]) > #tracking-blocked,
+#tracking-protection-content:not([block-active]) #tracking-action-unblock,
+#tracking-protection-content:not([block-disabled]) > #tracking-loaded,
+#tracking-protection-content:not([block-disabled]) #tracking-action-block,
+#tracking-protection-content:not([block-active]):not([block-disabled]) > #tracking-actions {
+  display: none;
 }
 
 /* PERMISSIONS */
