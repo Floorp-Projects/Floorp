@@ -13567,7 +13567,22 @@ class CGExampleRoot(CGThing):
 
         self.root = CGNamespace.build(["mozilla", "dom"], self.root)
 
-        self.root = CGList([CGClassForwardDeclare("JSContext", isStruct=True),
+        builder = ForwardDeclarationBuilder()
+        for member in descriptor.interface.members:
+            if not member.isAttr() and not member.isMethod():
+                continue
+            if member.isStatic():
+                builder.addInMozillaDom("GlobalObject")
+            if member.isAttr():
+                builder.forwardDeclareForType(member.type, config)
+            else:
+                assert member.isMethod()
+                for sig in member.signatures():
+                    builder.forwardDeclareForType(sig[0], config)
+                    for arg in sig[1]:
+                        builder.forwardDeclareForType(arg.type, config)
+
+        self.root = CGList([builder.build(),
                             self.root], "\n")
 
         # Throw in our #includes
@@ -13575,7 +13590,9 @@ class CGExampleRoot(CGThing):
                               ["nsWrapperCache.h",
                                "nsCycleCollectionParticipant.h",
                                "mozilla/Attributes.h",
-                               "mozilla/ErrorResult.h"],
+                               "mozilla/ErrorResult.h",
+                               "mozilla/dom/BindingDeclarations.h",
+                               "js/TypeDecls.h"],
                               ["mozilla/dom/%s.h" % interfaceName,
                                ("mozilla/dom/%s" %
                                 CGHeaders.getDeclarationFilename(descriptor.interface))], "", self.root)
