@@ -121,8 +121,12 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
 
   nsRect r;
   nsIFrame* frame = nsCaret::GetGeometry(mSelection, &r);
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
+  if (!frame) {
+    frame = mRootContent->GetPrimaryFrame();
+    if (NS_WARN_IF(!frame)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
   aEvent->mReply.mFocusedWidget = frame->GetNearestWidget();
 
   return NS_OK;
