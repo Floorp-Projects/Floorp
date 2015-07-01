@@ -419,6 +419,8 @@ public:
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData);
 
+  void Update(const nsIntRegion& aNewValidRegion, const nsIntRegion& aPaintRegion);
+
   void ReadLock();
 
   void Release();
