@@ -12,6 +12,8 @@
 // Tests that the Web Console limits the number of lines displayed according to
 // the user's preferences.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,test for bug 585237";
 
 let outputNode;
