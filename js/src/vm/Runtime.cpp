@@ -744,27 +744,29 @@ JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPt
     if (isHeapBusy())
         return nullptr;
 
-    /*
-     * Retry when we are done with the background sweeping and have stopped
-     * all the allocations and released the empty GC chunks.
-     */
-    gc.onOutOfMallocMemory();
-    void* p;
-    switch (allocFunc) {
-      case AllocFunction::Malloc:
-        p = js_malloc(nbytes);
-        break;
-      case AllocFunction::Calloc:
-        p = js_calloc(nbytes);
-        break;
-      case AllocFunction::Realloc:
-        p = js_realloc(reallocPtr, nbytes);
-        break;
-      default:
-        MOZ_CRASH();
+    if (!oom::IsSimulatedOOMAllocation()) {
+        /*
+         * Retry when we are done with the background sweeping and have stopped
+         * all the allocations and released the empty GC chunks.
+         */
+        gc.onOutOfMallocMemory();
+        void* p;
+        switch (allocFunc) {
+          case AllocFunction::Malloc:
+            p = js_malloc(nbytes);
+            break;
+          case AllocFunction::Calloc:
+            p = js_calloc(nbytes);
+            break;
+          case AllocFunction::Realloc:
+            p = js_realloc(reallocPtr, nbytes);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+        if (p)
+            return p;
     }
-    if (p)
-        return p;
 
     if (maybecx)
         ReportOutOfMemory(maybecx);
