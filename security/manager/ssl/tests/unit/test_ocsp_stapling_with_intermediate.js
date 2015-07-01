@@ -38,7 +38,7 @@ function run_test() {
 
   add_test(function () { ocspResponder.stop(run_next_test); });
   add_test(function() {
-    do_check_eq(gOCSPRequestCount, 0);
+    equal(gOCSPRequestCount, 0, "No OCSP requests should have been made");
     run_next_test();
   });
   run_next_test();
