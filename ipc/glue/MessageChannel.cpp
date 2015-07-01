@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/Telemetry.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
@@ -2037,6 +2038,7 @@ void
 CancelCPOWs()
 {
     if (gParentProcessBlocker) {
+        mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_TRANSACTION_CANCEL, true);
         gParentProcessBlocker->CancelCurrentTransaction();
     }
 }
