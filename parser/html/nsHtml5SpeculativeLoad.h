@@ -45,13 +45,12 @@ class nsHtml5SpeculativeLoad {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadMetaReferrer;
-      mReferrerPolicy.Assign(
+      mMetaReferrerPolicy.Assign(
         nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aReferrerPolicy));
     }
 
     inline void InitImage(const nsAString& aUrl,
                           const nsAString& aCrossOrigin,
-                          const nsAString& aReferrerPolicy,
                           const nsAString& aSrcset,
                           const nsAString& aSizes)
     {
@@ -60,8 +59,6 @@ class nsHtml5SpeculativeLoad {
       mOpCode = eSpeculativeLoadImage;
       mUrl.Assign(aUrl);
       mCrossOrigin.Assign(aCrossOrigin);
-      mReferrerPolicy.Assign(
-        nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aReferrerPolicy));
       mSrcset.Assign(aSrcset);
       mSizes.Assign(aSizes);
     }
@@ -182,7 +179,7 @@ class nsHtml5SpeculativeLoad {
   private:
     eHtml5SpeculativeLoad mOpCode;
     nsString mUrl;
-    nsString mReferrerPolicy;
+    nsString mMetaReferrerPolicy;
     /**
      * If mOpCode is eSpeculativeLoadStyle or eSpeculativeLoadScript[FromHead]
      * then this is the value of the "charset" attribute. For
