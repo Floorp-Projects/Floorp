@@ -949,22 +949,10 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      if (currentSchemaVersion < 14) {
-        rv = MigrateV14Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
       if (currentSchemaVersion < 15) {
         rv = MigrateV15Up();
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      if (currentSchemaVersion < 16) {
-        rv = MigrateV16Up();
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // Firefox 11 uses schema version 16.
 
       if (currentSchemaVersion < 17) {
         rv = MigrateV17Up();
@@ -1044,12 +1032,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 39 uses schema version 28.
 
-      if (currentSchemaVersion < 29) {
-        rv = MigrateV29Up();
+      if (currentSchemaVersion < 30) {
+        rv = MigrateV30Up();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 41 uses schema version 29.
+      // Firefox 41 uses schema version 30.
 
       // Schema Upgrades must add migration code here.
 
@@ -1122,8 +1110,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
     // moz_favicons.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_FAVICONS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_FAVICONS_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_anno_attributes.
@@ -1373,41 +1359,6 @@ Database::MigrateV13Up()
 }
 
 nsresult
-Database::MigrateV14Up()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // For existing profiles, we may not have a moz_favicons.guid column.
-  // Add it here. We want it to be unique, but ALTER TABLE doesn't allow
-  // a uniqueness constraint, so the index must be created separately.
-  nsCOMPtr<mozIStorageStatement> hasGuidStatement;
-  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT guid FROM moz_favicons"),
-    getter_AddRefs(hasGuidStatement));
-
-  if (NS_FAILED(rv)) {
-    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_favicons "
-      "ADD COLUMN guid TEXT"
-    ));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_FAVICONS_GUID);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Generate GUID for any favicon missing it.
-  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_favicons "
-    "SET guid = GENERATE_GUID() "
-    "WHERE guid ISNULL "
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
 Database::MigrateV15Up()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1427,23 +1378,6 @@ Database::MigrateV15Up()
       "FROM moz_bookmarks "
       "WHERE keyword_id = moz_keywords.id "
     ")"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-Database::MigrateV16Up()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Due to Bug 715268 downgraded and then upgraded profiles may lack favicons
-  // guids, so fillup any missing ones.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_favicons "
-    "SET guid = GENERATE_GUID() "
-    "WHERE guid ISNULL "
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1907,10 +1841,12 @@ Database::MigrateV28Up() {
 }
 
 nsresult
-Database::MigrateV29Up() {
+Database::MigrateV30Up() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_FAVICONS_GUID);
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX IF EXISTS moz_favicons_guid_uniqueindex"
+  ));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1959,16 +1895,6 @@ Database::Shutdown()
     rv = stmt->ExecuteStep(&haveNullGuids);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     MOZ_ASSERT(!haveNullGuids && "Found a bookmark without a GUID!");
-
-    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT 1 "
-      "FROM moz_favicons "
-      "WHERE guid IS NULL "
-    ), getter_AddRefs(stmt));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&haveNullGuids);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!haveNullGuids && "Found a favicon without a GUID!");
   }
 
   { // Sanity check for unrounded dateAdded and lastModified values (bug
