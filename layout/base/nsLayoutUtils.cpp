@@ -372,69 +372,129 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 }
 
 bool
-nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
-                                          nsCSSProperty aProperty)
+nsLayoutUtils::GetAnimationContent(const nsIFrame* aFrame,
+                    nsIContent* &aContentResult,
+                    nsCSSPseudoElements::Type &aPseudoTypeResult)
 {
-  return nsAnimationManager::GetAnimationsForCompositor(aContent, aProperty) ||
-         nsTransitionManager::GetAnimationsForCompositor(aContent, aProperty);
+  aPseudoTypeResult = nsCSSPseudoElements::ePseudo_NotPseudoElement;
+  aContentResult = aFrame->GetContent();
+  if (!aContentResult) {
+    return false;
+  }
+  if (aFrame->IsGeneratedContentFrame()) {
+    nsIFrame* parent = aFrame->GetParent();
+    if (parent->IsGeneratedContentFrame()) {
+      return false;
+    }
+    nsIAtom* name = aContentResult->NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+      aPseudoTypeResult = nsCSSPseudoElements::ePseudo_before;
+    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+      aPseudoTypeResult = nsCSSPseudoElements::ePseudo_after;
+    } else {
+      return false;
+    }
+    aContentResult = aContentResult->GetParent();
+    if (!aContentResult) {
+      return false;
+    }
+  } else if (!aContentResult->MayHaveAnimations()) {
+    return false;
+  }
+  return true;
 }
 
 static AnimationCollection*
-GetAnimationsOrTransitions(nsIContent* aContent,
-                           nsIAtom* aAnimationProperty,
-                           nsCSSProperty aProperty)
+GetAnimationCollection(nsIContent* aContent,
+                       nsCSSPseudoElements::Type aPseudoType,
+                       nsIAtom* aAnimationProperty)
 {
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(aContent->GetProperty(
-        aAnimationProperty));
-  if (collection) {
-    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
-    if (propertyMatches) {
-      return collection;
+  if (aPseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    if (aAnimationProperty == nsGkAtoms::animationsProperty) {
+      aAnimationProperty =
+        aPseudoType == nsCSSPseudoElements::ePseudo_before ?
+          nsGkAtoms::animationsOfBeforeProperty :
+          nsGkAtoms::animationsOfAfterProperty;
+    } else if (aAnimationProperty == nsGkAtoms::transitionsProperty) {
+      aAnimationProperty =
+        aPseudoType == nsCSSPseudoElements::ePseudo_before ?
+          nsGkAtoms::transitionsOfBeforeProperty :
+          nsGkAtoms::transitionsOfAfterProperty;
+    } else {
+      MOZ_ASSERT(false, "unsupported animation property for pseudo-element");
+      return nullptr;
     }
   }
-  return nullptr;
+  return static_cast<AnimationCollection*>(
+           aContent->GetProperty(aAnimationProperty));
 }
 
 bool
-nsLayoutUtils::HasAnimations(nsIContent* aContent,
+nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
+                                          nsCSSProperty aProperty)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  return presContext->AnimationManager()->GetAnimationsForCompositor(aFrame, aProperty) ||
+         presContext->TransitionManager()->GetAnimationsForCompositor(aFrame, aProperty);
+}
+
+bool
+nsLayoutUtils::HasAnimations(const nsIFrame* aFrame,
                              nsCSSProperty aProperty)
 {
-  if (!aContent->MayHaveAnimations())
+  nsIContent* content;
+  nsCSSPseudoElements::Type pseudoType;
+  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
     return false;
-  return GetAnimationsOrTransitions(aContent, nsGkAtoms::animationsProperty,
-                                    aProperty) ||
-         GetAnimationsOrTransitions(aContent, nsGkAtoms::transitionsProperty,
-                                    aProperty);
-}
-
-bool
-nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
-                                    nsIAtom* aAnimationProperty)
-{
-  if (!aContent->MayHaveAnimations())
-    return false;
-
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(
-      aContent->GetProperty(aAnimationProperty));
-  return (collection && collection->HasCurrentAnimations());
-}
-
-bool
-nsLayoutUtils::HasCurrentAnimationsForProperties(nsIContent* aContent,
-                                                 const nsCSSProperty* aProperties,
-                                                 size_t aPropertyCount)
-{
-  if (!aContent->MayHaveAnimations())
-    return false;
+  }
 
   static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
                                          nsGkAtoms::animationsProperty,
                                          nullptr };
   for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
     AnimationCollection* collection =
-      static_cast<AnimationCollection*>(aContent->GetProperty(*animProp));
+      GetAnimationCollection(content, pseudoType, *animProp);
+    if (collection &&
+        collection->HasAnimationOfProperty(aProperty)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+nsLayoutUtils::HasCurrentAnimations(const nsIFrame* aFrame,
+                                    nsIAtom* aAnimationProperty)
+{
+  nsIContent* content;
+  nsCSSPseudoElements::Type pseudoType;
+  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
+    return false;
+  }
+
+  AnimationCollection* collection =
+    GetAnimationCollection(content, pseudoType, aAnimationProperty);
+  return (collection && collection->HasCurrentAnimations());
+}
+
+bool
+nsLayoutUtils::HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
+                                                 const nsCSSProperty* aProperties,
+                                                 size_t aPropertyCount)
+{
+  nsIContent* content;
+  nsCSSPseudoElements::Type pseudoType;
+  if (!nsLayoutUtils::GetAnimationContent(aFrame, content, pseudoType)) {
+    return false;
+  }
+
+  static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
+                                         nsGkAtoms::animationsProperty,
+                                         nullptr };
+  for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
+    AnimationCollection* collection =
+      GetAnimationCollection(content, pseudoType, *animProp);
     if (collection &&
         collection->HasCurrentAnimationsForProperties(aProperties,
                                                       aPropertyCount)) {
@@ -446,7 +506,7 @@ nsLayoutUtils::HasCurrentAnimationsForProperties(nsIContent* aContent,
 }
 
 static gfxSize
-GetScaleForValue(const StyleAnimationValue& aValue, nsIFrame* aFrame)
+GetScaleForValue(const StyleAnimationValue& aValue, const nsIFrame* aFrame)
 {
   if (!aFrame) {
     NS_WARNING("No frame.");
@@ -491,7 +551,7 @@ GetSuitableScale(float aMaxScale, float aMinScale,
 }
 
 static void
-GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
+GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
                                       AnimationCollection* aAnimations,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
@@ -507,14 +567,12 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
       if (prop.mProperty == eCSSProperty_transform) {
         for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
           AnimationPropertySegment& segment = prop.mSegments[segIdx];
-          gfxSize from = GetScaleForValue(segment.mFromValue,
-                                          aContent->GetPrimaryFrame());
+          gfxSize from = GetScaleForValue(segment.mFromValue, aFrame);
           aMaxScale.width = std::max<float>(aMaxScale.width, from.width);
           aMaxScale.height = std::max<float>(aMaxScale.height, from.height);
           aMinScale.width = std::min<float>(aMinScale.width, from.width);
           aMinScale.height = std::min<float>(aMinScale.height, from.height);
-          gfxSize to = GetScaleForValue(segment.mToValue,
-                                        aContent->GetPrimaryFrame());
+          gfxSize to = GetScaleForValue(segment.mToValue, aFrame);
           aMaxScale.width = std::max<float>(aMaxScale.width, to.width);
           aMaxScale.height = std::max<float>(aMaxScale.height, to.height);
           aMinScale.width = std::min<float>(aMinScale.width, to.width);
@@ -526,7 +584,7 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
 }
 
 gfxSize
-nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent,
+nsLayoutUtils::ComputeSuitableScaleForAnimation(const nsIFrame* aFrame,
                                                 const nsSize& aVisibleSize,
                                                 const nsSize& aDisplaySize)
 {
@@ -534,20 +592,21 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent,
                    std::numeric_limits<gfxFloat>::min());
   gfxSize minScale(std::numeric_limits<gfxFloat>::max(),
                    std::numeric_limits<gfxFloat>::max());
+  nsPresContext* presContext = aFrame->PresContext();
 
   AnimationCollection* animations =
-    nsAnimationManager::GetAnimationsForCompositor(aContent,
-                                                   eCSSProperty_transform);
+    presContext->AnimationManager()->GetAnimationsForCompositor(
+      aFrame, eCSSProperty_transform);
   if (animations) {
-    GetMinAndMaxScaleForAnimationProperty(aContent, animations,
+    GetMinAndMaxScaleForAnimationProperty(aFrame, animations,
                                           maxScale, minScale);
   }
 
   animations =
-    nsTransitionManager::GetAnimationsForCompositor(aContent,
-                                                    eCSSProperty_transform);
+    presContext->TransitionManager()->GetAnimationsForCompositor(
+      aFrame, eCSSProperty_transform);
   if (animations) {
-    GetMinAndMaxScaleForAnimationProperty(aContent, animations,
+    GetMinAndMaxScaleForAnimationProperty(aFrame, animations,
                                           maxScale, minScale);
   }
 
