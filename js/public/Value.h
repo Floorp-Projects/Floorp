@@ -1971,14 +1971,6 @@ UINT_TO_JSVAL(uint32_t i)
            : DOUBLE_TO_JSVAL((double)i);
 }
 
-static inline jsval
-OBJECT_TO_JSVAL(JSObject* obj)
-{
-    if (obj)
-        return IMPL_TO_JSVAL(OBJECT_TO_JSVAL_IMPL(obj));
-    return IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL, 0));
-}
-
 namespace JS {
 
 extern JS_PUBLIC_DATA(const HandleValue) NullHandleValue;

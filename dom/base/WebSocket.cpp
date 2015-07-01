@@ -1764,7 +1764,7 @@ WebSocket::CreateAndDispatchMessageEvent(JSContext* aCx,
       nsresult rv = nsContentUtils::CreateArrayBuffer(aCx, aData,
                                                       arrayBuf.address());
       NS_ENSURE_SUCCESS(rv, rv);
-      jsData = OBJECT_TO_JSVAL(arrayBuf);
+      jsData.setObject(*arrayBuf);
     } else {
       NS_RUNTIMEABORT("Unknown binary type!");
       return NS_ERROR_UNEXPECTED;

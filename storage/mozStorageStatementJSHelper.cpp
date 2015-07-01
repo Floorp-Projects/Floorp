@@ -118,7 +118,7 @@ StatementJSHelper::getRow(Statement *aStatement,
   obj = aStatement->mStatementRowHolder->GetJSObject();
   NS_ENSURE_STATE(obj);
 
-  *_row = OBJECT_TO_JSVAL(obj);
+  _row->setObject(*obj);
   return NS_OK;
 }
 
@@ -164,7 +164,7 @@ StatementJSHelper::getParams(Statement *aStatement,
   obj = aStatement->mStatementParamsHolder->GetJSObject();
   NS_ENSURE_STATE(obj);
 
-  *_params = OBJECT_TO_JSVAL(obj);
+  _params->setObject(*obj);
   return NS_OK;
 }
 

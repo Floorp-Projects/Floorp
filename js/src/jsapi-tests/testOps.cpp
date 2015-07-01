@@ -34,7 +34,7 @@ createMyObject(JSContext* context, unsigned argc, jsval* vp)
     //JS_GC(context); //<- if we make GC here, all is ok
 
     JSObject* myObject = JS_NewObject(context, &myClass);
-    *vp = OBJECT_TO_JSVAL(myObject);
+    *vp = JS::ObjectOrNullValue(myObject);
 
     JS_EndRequest(context);
 

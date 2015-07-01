@@ -57,7 +57,7 @@ struct LooseEqualityData
         i42 = INT_TO_JSVAL(42);
         undef = JS::UndefinedValue();
         null = JS::NullValue();
-        obj = OBJECT_TO_JSVAL(JS::CurrentGlobalOrNull(cx));
+        obj = JS::ObjectOrNullValue(JS::CurrentGlobalOrNull(cx));
         poszero = DOUBLE_TO_JSVAL(0.0);
         negzero = DOUBLE_TO_JSVAL(-0.0);
 #ifdef XP_WIN
