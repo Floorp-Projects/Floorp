@@ -514,21 +514,22 @@ ContainerRender(ContainerT* aContainer,
     }
 
     gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
+    Compositor* compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
-      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
+      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);
       }
     }
 #endif
 
-    RenderWithAllMasks(aContainer, aManager->GetCompositor(), aClipRect,
+    RenderWithAllMasks(aContainer, compositor, aClipRect,
                        [&](EffectChain& effectChain, const Rect& clipRect) {
       effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
-      aManager->GetCompositor()->DrawQuad(visibleRect, clipRect, effectChain,
-                                          aContainer->GetEffectiveOpacity(),
-                                          aContainer->GetEffectiveTransform());
+      compositor->DrawQuad(visibleRect, clipRect, effectChain,
+                           aContainer->GetEffectiveOpacity(),
+                           aContainer->GetEffectiveTransform());
     });
   } else {
     RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
