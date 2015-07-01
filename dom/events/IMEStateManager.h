@@ -50,7 +50,14 @@ public:
    * managed by the focused content (sContent).  If the focused content isn't
    * managing another process, this returns nullptr.
    */
-  static TabParent* GetActiveTabParent() { return sActiveTabParent.get(); }
+  static TabParent* GetActiveTabParent()
+  {
+    // If menu has pseudo focus, we should ignore active child process.
+    if (sInstalledMenuKeyboardListener) {
+      return nullptr;
+    }
+    return sActiveTabParent.get();
+  }
 
   /**
    * OnTabParentDestroying() is called when aTabParent is being destroyed.

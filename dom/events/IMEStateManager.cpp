@@ -463,7 +463,16 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   bool setIMEState = true;
 
   if (newTabParent) {
-    if (focusActuallyChanging) {
+    if (aAction.mFocusChange == InputContextAction::MENU_GOT_PSEUDO_FOCUS ||
+        aAction.mFocusChange == InputContextAction::MENU_LOST_PSEUDO_FOCUS) {
+      // XXX When menu keyboard listener is being uninstalled, IME state needs
+      //     to be restored by the child process asynchronously.  Therefore,
+      //     some key events which are fired immediately after closing menu
+      //     may not be handled by IME.
+      unused << newTabParent->
+        SendMenuKeyboardListenerInstalled(sInstalledMenuKeyboardListener);
+      setIMEState = sInstalledMenuKeyboardListener;
+    } else if (focusActuallyChanging) {
       InputContext context = widget->GetInputContext();
       if (context.mIMEState.mEnabled == IMEState::DISABLED) {
         setIMEState = false;
