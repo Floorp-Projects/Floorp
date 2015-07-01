@@ -216,6 +216,16 @@ protected:
   static nsPresContext* sPresContext;
   static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
   static StaticRefPtr<TabParent> sActiveTabParent;
+  // sActiveIMEContentObserver points to the currently active
+  // IMEContentObserver.  This is null if there is no focused editor.
+  static StaticRefPtr<IMEContentObserver> sActiveIMEContentObserver;
+
+  // All active compositions in the process are stored by this array.
+  // When you get an item of this array and use it, please be careful.
+  // The instances in this array can be destroyed automatically if you do
+  // something to cause committing or canceling the composition.
+  static TextCompositionArray* sTextCompositions;
+
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
@@ -236,14 +246,6 @@ protected:
   private:
     bool mOldValue;
   };
-
-  static IMEContentObserver* sActiveIMEContentObserver;
-
-  // All active compositions in the process are stored by this array.
-  // When you get an item of this array and use it, please be careful.
-  // The instances in this array can be destroyed automatically if you do
-  // something to cause committing or canceling the composition.
-  static TextCompositionArray* sTextCompositions;
 };
 
 } // namespace mozilla
