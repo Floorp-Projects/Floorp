@@ -292,7 +292,13 @@ private:
     mLiveActorArray->AppendElement(this);
   }
 
+  already_AddRefed<ContentParent>
+  GetContentParent() const;
+
   // These methods are only called by IPDL.
+  virtual void
+  ProcessingError(Result aCode, const char* aReason) override;
+
   virtual IToplevelProtocol*
   CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
                 ProcessHandle aPeerProcess,
@@ -1014,27 +1020,7 @@ ParentImpl::GetContentParent(PBackgroundParent* aBackgroundActor)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
 
-  auto actor = static_cast<ParentImpl*>(aBackgroundActor);
-  if (actor->mActorDestroyed) {
-    MOZ_ASSERT(false, "GetContentParent called after ActorDestroy was called!");
-    return nullptr;
-  }
-
-  if (actor->mContent) {
-    // We need to hand out a reference to our ContentParent but we also need to
-    // keep the one we have. We can't call AddRef here because ContentParent is
-    // not threadsafe so instead we dispatch a runnable to the main thread to do
-    // it for us. This is safe since we are guaranteed that our AddRef runnable
-    // will run before the reference we hand out can be released, and the
-    // ContentParent can't die as long as the existing reference is maintained.
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewNonOwningRunnableMethod(actor->mContent, &ContentParent::AddRef);
-    MOZ_ASSERT(runnable);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
-  }
-
-  return already_AddRefed<ContentParent>(actor->mContent.get());
+  return static_cast<ParentImpl*>(aBackgroundActor)->GetContentParent();
 }
 
 // static
@@ -1326,6 +1312,78 @@ ParentImpl::MainThreadActorDestroy()
 
   // This may be the last reference!
   Release();
+}
+
+already_AddRefed<ContentParent>
+ParentImpl::GetContentParent() const
+{
+  if (mActorDestroyed) {
+    MOZ_ASSERT(false, "GetContentParent called after ActorDestroy was called!");
+    return nullptr;
+  }
+
+  if (mContent) {
+    // We need to hand out a reference to our ContentParent but we also need to
+    // keep the one we have. We can't call AddRef here because ContentParent is
+    // not threadsafe so instead we dispatch a runnable to the main thread to do
+    // it for us. This is safe since we are guaranteed that our AddRef runnable
+    // will run before the reference we hand out can be released, and the
+    // ContentParent can't die as long as the existing reference is maintained.
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewNonOwningRunnableMethod(mContent, &ContentParent::AddRef);
+    MOZ_ASSERT(runnable);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  }
+
+  return already_AddRefed<ContentParent>(mContent.get());
+}
+
+void
+ParentImpl::ProcessingError(Result aCode, const char* aReason)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  BackgroundParentImpl::ProcessingError(aCode, aReason);
+
+  if (!mIsOtherProcessActor) {
+    // Warning is about all we can really do here, short of intentionally
+    // crashing the parent process.
+    return;
+  }
+
+  if (aCode == MsgDropped) {
+    // Ignore this; it just means that the child process can't receive any
+    // more messages.
+    return;
+  }
+
+  nsRefPtr<ContentParent> content = GetContentParent();
+  if (NS_WARN_IF(!content)) {
+    return;
+  }
+
+  // Transfer ownership to the lambda.
+  ContentParent* owningContent = content.forget().take();
+  nsCString owningReason(aReason);
+
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+    [owningContent, owningReason]()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      // Transfer ownership back to the stack.
+      nsRefPtr<ContentParent> content = dont_AddRef(owningContent);
+      MOZ_ASSERT(content);
+
+      content->KillHard(owningReason.get());
+    }
+  );
+  MOZ_ASSERT(runnable);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
 }
 
 IToplevelProtocol*
