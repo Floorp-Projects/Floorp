@@ -7,22 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include "./vp9_rtcd.h"
 #include "./vpx_config.h"
 
 #include "vp9/encoder/vp9_variance.h"
 #include "vpx_ports/mem.h"
-
-typedef void (*get_var_avx2)(const uint8_t *src, int src_stride,
-                             const uint8_t *ref, int ref_stride,
-                             unsigned int *sse, int *sum);
-
-void vp9_get16x16var_avx2(const uint8_t *src, int src_stride,
-                          const uint8_t *ref, int ref_stride,
-                          unsigned int *sse, int *sum);
-
-void vp9_get32x32var_avx2(const uint8_t *src, int src_stride,
-                          const uint8_t *ref, int ref_stride,
-                          unsigned int *sse, int *sum);
 
 unsigned int vp9_sub_pixel_variance32xh_avx2(const uint8_t *src, int src_stride,
                                              int x_offset, int y_offset,
@@ -40,81 +29,6 @@ unsigned int vp9_sub_pixel_avg_variance32xh_avx2(const uint8_t *src,
                                                  int sec_stride,
                                                  int height,
                                                  unsigned int *sseptr);
-
-static void variance_avx2(const uint8_t *src, int src_stride,
-                          const uint8_t *ref, int  ref_stride,
-                          int w, int h, unsigned int *sse, int *sum,
-                          get_var_avx2 var_fn, int block_size) {
-  int i, j;
-
-  *sse = 0;
-  *sum = 0;
-
-  for (i = 0; i < h; i += 16) {
-    for (j = 0; j < w; j += block_size) {
-      unsigned int sse0;
-      int sum0;
-      var_fn(&src[src_stride * i + j], src_stride,
-             &ref[ref_stride * i + j], ref_stride, &sse0, &sum0);
-      *sse += sse0;
-      *sum += sum0;
-    }
-  }
-}
-
-
-unsigned int vp9_variance16x16_avx2(const uint8_t *src, int src_stride,
-                                    const uint8_t *ref, int ref_stride,
-                                    unsigned int *sse) {
-  int sum;
-  variance_avx2(src, src_stride, ref, ref_stride, 16, 16,
-                sse, &sum, vp9_get16x16var_avx2, 16);
-  return *sse - (((unsigned int)sum * sum) >> 8);
-}
-
-unsigned int vp9_mse16x16_avx2(const uint8_t *src, int src_stride,
-                               const uint8_t *ref, int ref_stride,
-                               unsigned int *sse) {
-  int sum;
-  vp9_get16x16var_avx2(src, src_stride, ref, ref_stride, sse, &sum);
-  return *sse;
-}
-
-unsigned int vp9_variance32x16_avx2(const uint8_t *src, int src_stride,
-                                    const uint8_t *ref, int ref_stride,
-                                    unsigned int *sse) {
-  int sum;
-  variance_avx2(src, src_stride, ref, ref_stride, 32, 16,
-                sse, &sum, vp9_get32x32var_avx2, 32);
-  return *sse - (((int64_t)sum * sum) >> 9);
-}
-
-unsigned int vp9_variance32x32_avx2(const uint8_t *src, int src_stride,
-                                    const uint8_t *ref, int ref_stride,
-                                    unsigned int *sse) {
-  int sum;
-  variance_avx2(src, src_stride, ref, ref_stride, 32, 32,
-                sse, &sum, vp9_get32x32var_avx2, 32);
-  return *sse - (((int64_t)sum * sum) >> 10);
-}
-
-unsigned int vp9_variance64x64_avx2(const uint8_t *src, int src_stride,
-                                    const uint8_t *ref, int ref_stride,
-                                    unsigned int *sse) {
-  int sum;
-  variance_avx2(src, src_stride, ref, ref_stride, 64, 64,
-                sse, &sum, vp9_get32x32var_avx2, 32);
-  return *sse - (((int64_t)sum * sum) >> 12);
-}
-
-unsigned int vp9_variance64x32_avx2(const uint8_t *src, int src_stride,
-                                    const uint8_t *ref, int ref_stride,
-                                    unsigned int *sse) {
-  int sum;
-  variance_avx2(src, src_stride, ref, ref_stride, 64, 32,
-                sse, &sum, vp9_get32x32var_avx2, 32);
-  return *sse - (((int64_t)sum * sum) >> 11);
-}
 
 unsigned int vp9_sub_pixel_variance64x64_avx2(const uint8_t *src,
                                               int src_stride,

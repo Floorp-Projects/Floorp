@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
+#include "./vpx_scale_rtcd.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vpx_mem/vpx_mem.h"
 /****************************************************************************
@@ -215,7 +215,7 @@ void vp8_vertical_band_2_1_scale_c(unsigned char *source,
                                    unsigned int dest_width) {
   (void) dest_pitch;
   (void) src_pitch;
-  vpx_memcpy(dest, source, dest_width);
+  memcpy(dest, source, dest_width);
 }
 
 void vp8_vertical_band_2_1_scale_i_c(unsigned char *source,

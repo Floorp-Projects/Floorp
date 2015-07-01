@@ -64,7 +64,7 @@ int vp9_get_frame_buffer(void *cb_priv, size_t min_size,
     // This memset is needed for fixing valgrind error from C loop filter
     // due to access uninitialized memory in frame border. It could be
     // removed if border is totally removed.
-    vpx_memset(int_fb_list->int_fb[i].data, 0, min_size);
+    memset(int_fb_list->int_fb[i].data, 0, min_size);
     int_fb_list->int_fb[i].size = min_size;
   }
 

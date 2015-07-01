@@ -150,38 +150,37 @@ static int vp9_denoiser_NxM_sse2_small(
   const uint8_t shift = (width == 4) ? 2 : 1;
 
   for (r = 0; r < ((4 << b_height_log2_lookup[bs]) >> shift); ++r) {
-    vpx_memcpy(sig_buffer[r], sig, width);
-    vpx_memcpy(sig_buffer[r] + width, sig + sig_stride, width);
-    vpx_memcpy(mc_running_buffer[r], mc_running_avg_y, width);
-    vpx_memcpy(mc_running_buffer[r] + width,
-               mc_running_avg_y + mc_avg_y_stride, width);
-    vpx_memcpy(running_buffer[r], running_avg_y, width);
-    vpx_memcpy(running_buffer[r] + width,
-               running_avg_y + avg_y_stride, width);
+    memcpy(sig_buffer[r], sig, width);
+    memcpy(sig_buffer[r] + width, sig + sig_stride, width);
+    memcpy(mc_running_buffer[r], mc_running_avg_y, width);
+    memcpy(mc_running_buffer[r] + width,
+           mc_running_avg_y + mc_avg_y_stride, width);
+    memcpy(running_buffer[r], running_avg_y, width);
+    memcpy(running_buffer[r] + width, running_avg_y + avg_y_stride, width);
     if (width == 4) {
-      vpx_memcpy(sig_buffer[r] + width * 2, sig + sig_stride * 2, width);
-      vpx_memcpy(sig_buffer[r] + width * 3, sig + sig_stride * 3, width);
-      vpx_memcpy(mc_running_buffer[r] + width * 2,
-                 mc_running_avg_y + mc_avg_y_stride * 2, width);
-      vpx_memcpy(mc_running_buffer[r] + width * 3,
-                 mc_running_avg_y + mc_avg_y_stride * 3, width);
-      vpx_memcpy(running_buffer[r] + width * 2,
-                 running_avg_y + avg_y_stride * 2, width);
-      vpx_memcpy(running_buffer[r] + width * 3,
-                 running_avg_y + avg_y_stride * 3, width);
+      memcpy(sig_buffer[r] + width * 2, sig + sig_stride * 2, width);
+      memcpy(sig_buffer[r] + width * 3, sig + sig_stride * 3, width);
+      memcpy(mc_running_buffer[r] + width * 2,
+             mc_running_avg_y + mc_avg_y_stride * 2, width);
+      memcpy(mc_running_buffer[r] + width * 3,
+             mc_running_avg_y + mc_avg_y_stride * 3, width);
+      memcpy(running_buffer[r] + width * 2,
+             running_avg_y + avg_y_stride * 2, width);
+      memcpy(running_buffer[r] + width * 3,
+             running_avg_y + avg_y_stride * 3, width);
     }
     acc_diff = vp9_denoiser_16x1_sse2(sig_buffer[r],
                                       mc_running_buffer[r],
                                       running_buffer[r],
                                       &k_0, &k_4, &k_8, &k_16,
                                       &l3, &l32, &l21, acc_diff);
-    vpx_memcpy(running_avg_y, running_buffer[r], width);
-    vpx_memcpy(running_avg_y + avg_y_stride, running_buffer[r] + width, width);
+    memcpy(running_avg_y, running_buffer[r], width);
+    memcpy(running_avg_y + avg_y_stride, running_buffer[r] + width, width);
     if (width == 4) {
-      vpx_memcpy(running_avg_y + avg_y_stride * 2,
-                 running_buffer[r] + width * 2, width);
-      vpx_memcpy(running_avg_y + avg_y_stride * 3,
-                 running_buffer[r] + width * 3, width);
+      memcpy(running_avg_y + avg_y_stride * 2,
+             running_buffer[r] + width * 2, width);
+      memcpy(running_avg_y + avg_y_stride * 3,
+             running_buffer[r] + width * 3, width);
     }
     // Update pointers for next iteration.
     sig += (sig_stride << shift);
@@ -213,14 +212,14 @@ static int vp9_denoiser_NxM_sse2_small(
           acc_diff = vp9_denoiser_adj_16x1_sse2(
               sig_buffer[r], mc_running_buffer[r], running_buffer[r],
               k_0, k_delta, acc_diff);
-          vpx_memcpy(running_avg_y, running_buffer[r], width);
-          vpx_memcpy(running_avg_y + avg_y_stride,
-                     running_buffer[r] + width, width);
+          memcpy(running_avg_y, running_buffer[r], width);
+          memcpy(running_avg_y + avg_y_stride,
+                 running_buffer[r] + width, width);
           if (width == 4) {
-            vpx_memcpy(running_avg_y + avg_y_stride * 2,
-                       running_buffer[r] + width * 2, width);
-            vpx_memcpy(running_avg_y + avg_y_stride * 3,
-                       running_buffer[r] + width * 3, width);
+            memcpy(running_avg_y + avg_y_stride * 2,
+                   running_buffer[r] + width * 2, width);
+            memcpy(running_avg_y + avg_y_stride * 3,
+                   running_buffer[r] + width * 3, width);
           }
           // Update pointers for next iteration.
           running_avg_y += (avg_y_stride << shift);
