@@ -32,18 +32,10 @@ class nsDisplayListBuilder;
 
 namespace mozilla {
 struct ContainerLayerParameters;
-class DisplayItemClip;
 namespace layers {
 class Layer;
 }
-
-struct FrameMetricsAndClip
-{
-  layers::FrameMetrics metrics;
-  const DisplayItemClip* clip;
-};
-
-} // namespace mozilla
+}
 
 /**
  * Interface for frames that are scrollable. This interface exposes
@@ -423,10 +415,10 @@ public:
    * aLayer's animated geometry root is this frame. If there needs to be a
    * FrameMetrics contributed by this frame, append it to aOutput.
    */
-  virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
-    mozilla::layers::Layer* aLayer,
-    nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const = 0;
+  virtual void ComputeFrameMetrics(mozilla::layers::Layer* aLayer,
+                                   nsIFrame* aContainerReferenceFrame,
+                                   const ContainerLayerParameters& aParameters,
+                                   nsTArray<FrameMetrics>* aOutput) const = 0;
 
   /**
    * If this scroll frame is ignoring viewporting clipping

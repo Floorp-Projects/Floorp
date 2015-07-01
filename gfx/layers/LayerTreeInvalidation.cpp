@@ -83,10 +83,6 @@ NotifySubdocumentInvalidationRecursive(Layer* aLayer, NotifySubDocInvalidationFu
   if (aLayer->GetMaskLayer()) {
     NotifySubdocumentInvalidationRecursive(aLayer->GetMaskLayer(), aCallback);
   }
-  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
-    Layer* maskLayer = aLayer->GetAncestorMaskLayerAt(i);
-    NotifySubdocumentInvalidationRecursive(maskLayer, aCallback);
-  }
 
   if (!container) {
     return;
@@ -114,10 +110,6 @@ struct LayerPropertiesBase : public LayerProperties
     MOZ_COUNT_CTOR(LayerPropertiesBase);
     if (aLayer->GetMaskLayer()) {
       mMaskLayer = CloneLayerTreePropertiesInternal(aLayer->GetMaskLayer(), true);
-    }
-    for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
-      Layer* maskLayer = aLayer->GetAncestorMaskLayerAt(i);
-      mAncestorMaskLayers.AppendElement(CloneLayerTreePropertiesInternal(maskLayer, true));
     }
     if (mUseClipRect) {
       mClipRect = *aLayer->GetClipRect();
@@ -147,22 +139,10 @@ struct LayerPropertiesBase : public LayerProperties
     bool transformChanged = !mTransform.FuzzyEqualsMultiplicative(mLayer->GetLocalTransform()) ||
                             mLayer->GetPostXScale() != mPostXScale ||
                             mLayer->GetPostYScale() != mPostYScale;
+    Layer* otherMask = mLayer->GetMaskLayer();
     const Maybe<ParentLayerIntRect>& otherClip = mLayer->GetClipRect();
     nsIntRegion result;
-
-    bool ancestorMaskChanged = mAncestorMaskLayers.Length() != mLayer->GetAncestorMaskLayerCount();
-    if (!ancestorMaskChanged) {
-      for (size_t i = 0; i < mAncestorMaskLayers.Length(); i++) {
-        if (mLayer->GetAncestorMaskLayerAt(i) != mAncestorMaskLayers[i]->mLayer) {
-          ancestorMaskChanged = true;
-          break;
-        }
-      }
-    }
-
-    Layer* otherMask = mLayer->GetMaskLayer();
     if ((mMaskLayer ? mMaskLayer->mLayer : nullptr) != otherMask ||
-        ancestorMaskChanged ||
         (mUseClipRect != !!otherClip) ||
         mLayer->GetLocalOpacity() != mOpacity ||
         transformChanged) 
@@ -179,15 +159,6 @@ struct LayerPropertiesBase : public LayerProperties
 
     if (mMaskLayer && otherMask) {
       AddTransformedRegion(result, mMaskLayer->ComputeChange(aCallback, aGeometryChanged),
-                           mTransform);
-    }
-
-    for (size_t i = 0;
-         i < std::min(mAncestorMaskLayers.Length(), mLayer->GetAncestorMaskLayerCount());
-         i++)
-    {
-      AddTransformedRegion(result,
-                           mAncestorMaskLayers[i]->ComputeChange(aCallback, aGeometryChanged),
                            mTransform);
     }
 
@@ -222,7 +193,6 @@ struct LayerPropertiesBase : public LayerProperties
 
   nsRefPtr<Layer> mLayer;
   UniquePtr<LayerPropertiesBase> mMaskLayer;
-  nsTArray<UniquePtr<LayerPropertiesBase>> mAncestorMaskLayers;
   nsIntRegion mVisibleRegion;
   nsIntRegion mInvalidRegion;
   Matrix4x4 mTransform;
@@ -472,9 +442,6 @@ LayerProperties::ClearInvalidations(Layer *aLayer)
   aLayer->ClearInvalidRect();
   if (aLayer->GetMaskLayer()) {
     ClearInvalidations(aLayer->GetMaskLayer());
-  }
-  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
-    ClearInvalidations(aLayer->GetAncestorMaskLayerAt(i));
   }
 
   ContainerLayer* container = aLayer->AsContainerLayer();

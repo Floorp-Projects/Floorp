@@ -1071,9 +1071,6 @@ CompositorParent::SetShadowProperties(Layer* aLayer)
   if (Layer* maskLayer = aLayer->GetMaskLayer()) {
     SetShadowProperties(maskLayer);
   }
-  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
-    SetShadowProperties(aLayer->GetAncestorMaskLayerAt(i));
-  }
 
   // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
   LayerComposite* layerComposite = aLayer->AsLayerComposite();

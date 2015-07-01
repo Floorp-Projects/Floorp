@@ -126,7 +126,9 @@ protected:
 void
 ClientImageLayer::RenderLayer()
 {
-  RenderMaskLayers(this);
+  if (GetMaskLayer()) {
+    ToClientLayer(GetMaskLayer())->RenderLayer();
+  }
 
   if (!mContainer) {
      return;
