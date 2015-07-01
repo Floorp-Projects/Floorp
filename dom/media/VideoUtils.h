@@ -127,10 +127,11 @@ media::TimeIntervals GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStr
                                                     int64_t aDurationUsecs);
 
 // Converts from number of audio frames (aFrames) to microseconds, given
-// the specified audio rate (aRate). Stores result in aOutUsecs. Returns true
-// if the operation succeeded, or false if there was an integer overflow
-// while calulating the conversion.
+// the specified audio rate (aRate).
 CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate);
+// Converts from number of audio frames (aFrames) TimeUnit, given
+// the specified audio rate (aRate).
+media::TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate);
 
 // Converts from microseconds (aUsecs) to number of audio frames, given the
 // specified audio rate (aRate). Stores the result in aOutFrames. Returns
