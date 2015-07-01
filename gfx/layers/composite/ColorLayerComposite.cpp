@@ -21,28 +21,17 @@ namespace layers {
 void
 ColorLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
 {
-  EffectChain effects(this);
-
-  GenEffectChain(effects);
-
-  gfx::IntRect boundRect = GetBounds();
-
-  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(GetMaskLayer(),
-                                                          effects);
-
-  gfx::Rect rect(boundRect.x, boundRect.y,
-                 boundRect.width, boundRect.height);
-  gfx::Rect clipRect(aClipRect.x, aClipRect.y,
-                     aClipRect.width, aClipRect.height);
-
-  float opacity = GetEffectiveOpacity();
-
-  AddBlendModeEffect(effects);
-
+  gfx::Rect rect(GetBounds());
   const gfx::Matrix4x4& transform = GetEffectiveTransform();
-  mCompositor->DrawQuad(rect, clipRect, effects, opacity, transform);
+
+  RenderWithAllMasks(this, mCompositor, aClipRect,
+                     [&](EffectChain& effectChain, const Rect& clipRect) {
+    GenEffectChain(effectChain);
+    mCompositor->DrawQuad(rect, clipRect, effectChain, GetEffectiveOpacity(), transform);
+  });
+
   mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR,
-                               rect, clipRect,
+                               rect, Rect(aClipRect),
                                transform);
 }
 
