@@ -89,6 +89,10 @@ public:
 
   virtual CSSTransition* AsCSSTransition() override { return this; }
 
+  // CSSTransition interface
+  void GetTransitionProperty(nsString& aRetVal) const { aRetVal = Name(); }
+
+  // Animation interface overrides
   virtual AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;
 
