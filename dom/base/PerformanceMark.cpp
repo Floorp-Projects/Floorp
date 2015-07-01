@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PerformanceMark.h"
+#include "MainThreadUtils.h"
 #include "mozilla/dom/PerformanceMarkBinding.h"
 
 using namespace mozilla::dom;

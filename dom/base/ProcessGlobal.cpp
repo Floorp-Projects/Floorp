@@ -8,6 +8,7 @@
 
 #include "nsContentCID.h"
 #include "nsDOMClassInfoID.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
