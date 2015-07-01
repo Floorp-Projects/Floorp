@@ -19,7 +19,7 @@
 #endif
 #include "SourceBufferResource.h"
 
-extern PRLogModuleInfo* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceSamplesLog();
 
 /* Polyfill __func__ on MSVC to pass to the log. */
 #ifdef _MSC_VER
@@ -28,8 +28,8 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-#define MSE_DEBUG(name, arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
-#define MSE_DEBUGV(name, arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(name, arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUGV(name, arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Verbose, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 

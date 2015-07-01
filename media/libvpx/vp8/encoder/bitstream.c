@@ -1543,7 +1543,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char * dest
     if (pc->refresh_entropy_probs == 0)
     {
         /* save a copy for later refresh */
-        vpx_memcpy(&cpi->common.lfc, &cpi->common.fc, sizeof(cpi->common.fc));
+        memcpy(&cpi->common.lfc, &cpi->common.fc, sizeof(cpi->common.fc));
     }
 
     vp8_update_coef_probs(cpi);
@@ -1620,7 +1620,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char * dest
             /* concatenate partition buffers */
             for(i = 0; i < num_part; i++)
             {
-                vpx_memmove(dp, cpi->partition_d[i+1], cpi->partition_sz[i+1]);
+                memmove(dp, cpi->partition_d[i+1], cpi->partition_sz[i+1]);
                 cpi->partition_d[i+1] = dp;
                 dp += cpi->partition_sz[i+1];
             }

@@ -20,7 +20,7 @@ void vp9_convolve8_neon(const uint8_t *src, ptrdiff_t src_stride,
   /* Given our constraints: w <= 64, h <= 64, taps == 8 we can reduce the
    * maximum buffer size to 64 * 64 + 7 (+ 1 to make it divisible by 4).
    */
-  DECLARE_ALIGNED_ARRAY(8, uint8_t, temp, 64 * 72);
+  DECLARE_ALIGNED(8, uint8_t, temp[64 * 72]);
 
   // Account for the vertical phase needing 3 lines prior and 4 lines post
   int intermediate_height = h + 7;
@@ -56,7 +56,7 @@ void vp9_convolve8_avg_neon(const uint8_t *src, ptrdiff_t src_stride,
                             const int16_t *filter_x, int x_step_q4,
                             const int16_t *filter_y, int y_step_q4,
                             int w, int h) {
-  DECLARE_ALIGNED_ARRAY(8, uint8_t, temp, 64 * 72);
+  DECLARE_ALIGNED(8, uint8_t, temp[64 * 72]);
   int intermediate_height = h + 7;
 
   if (x_step_q4 != 16 || y_step_q4 != 16) {

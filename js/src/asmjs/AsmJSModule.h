@@ -77,7 +77,8 @@ enum AsmJSAtomicsBuiltinFunction
     AsmJSAtomicsBuiltin_sub,
     AsmJSAtomicsBuiltin_and,
     AsmJSAtomicsBuiltin_or,
-    AsmJSAtomicsBuiltin_xor
+    AsmJSAtomicsBuiltin_xor,
+    AsmJSAtomicsBuiltin_isLockFree
 };
 
 // Set of known global object SIMD's attributes, i.e. types

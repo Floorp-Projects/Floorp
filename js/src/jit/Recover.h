@@ -35,7 +35,7 @@ namespace jit {
 // For each MIR instruction where |canRecoverOnBailout| might return true, we
 // have a RInstruction of the same name.
 //
-// Recover instructions are encoded by code generator into a compact buffer
+// Recover instructions are encoded by the code generator into a compact buffer
 // (RecoverWriter). The MIR instruction method |writeRecoverData| should write a
 // tag in the |CompactBufferWriter| which is used by
 // |RInstruction::readRecoverData| to dispatch to the right Recover
@@ -104,6 +104,7 @@ namespace jit {
     _(SimdBox)                                  \
     _(ObjectState)                              \
     _(ArrayState)                               \
+    _(AtomicIsLockFree)                         \
     _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -768,6 +769,18 @@ class RArrayState final : public RInstruction
         // +1 for the array.
         // +1 for the initalized length.
         return numElements() + 2;
+    }
+
+    bool recover(JSContext* cx, SnapshotIterator& iter) const;
+};
+
+class RAtomicIsLockFree final : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(AtomicIsLockFree)
+
+    virtual uint32_t numOperands() const {
+        return 1;
     }
 
     bool recover(JSContext* cx, SnapshotIterator& iter) const;

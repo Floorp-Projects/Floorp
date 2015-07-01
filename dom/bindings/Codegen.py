@@ -5570,7 +5570,7 @@ def convertConstIDLValueToJSVal(value):
     tag = value.type.tag()
     if tag in [IDLType.Tags.int8, IDLType.Tags.uint8, IDLType.Tags.int16,
                IDLType.Tags.uint16, IDLType.Tags.int32]:
-        return "INT_TO_JSVAL(%s)" % (value.value)
+        return "JS::Int32Value(%s)" % (value.value)
     if tag == IDLType.Tags.uint32:
         return "UINT_TO_JSVAL(%sU)" % (value.value)
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:

@@ -40,7 +40,7 @@ void vp9_foreach_transformed_block_in_plane(
     const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
     foreach_transformed_block_visitor visit, void *arg) {
   const struct macroblockd_plane *const pd = &xd->plane[plane];
-  const MB_MODE_INFO* mbmi = &xd->mi[0].src_mi->mbmi;
+  const MB_MODE_INFO* mbmi = &xd->mi[0]->mbmi;
   // block and transform sizes, in number of 4x4 blocks log 2 ("*_b")
   // 4x4=0, 8x8=2, 16x16=4, 32x32=6, 64x64=8
   // transform size varies per plane, look it up in a common way.
@@ -103,7 +103,7 @@ void vp9_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
     for (i = above_contexts; i < tx_size_in_blocks; ++i)
       a[i] = 0;
   } else {
-    vpx_memset(a, has_eob, sizeof(ENTROPY_CONTEXT) * tx_size_in_blocks);
+    memset(a, has_eob, sizeof(ENTROPY_CONTEXT) * tx_size_in_blocks);
   }
 
   // left
@@ -120,7 +120,7 @@ void vp9_set_contexts(const MACROBLOCKD *xd, struct macroblockd_plane *pd,
     for (i = left_contexts; i < tx_size_in_blocks; ++i)
       l[i] = 0;
   } else {
-    vpx_memset(l, has_eob, sizeof(ENTROPY_CONTEXT) * tx_size_in_blocks);
+    memset(l, has_eob, sizeof(ENTROPY_CONTEXT) * tx_size_in_blocks);
   }
 }
 
