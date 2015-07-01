@@ -1181,6 +1181,41 @@ GCMarker::drainMarkStack(SliceBudget& budget)
     return true;
 }
 
+inline static bool
+ObjectDenseElementsMayBeMarkable(NativeObject* nobj)
+{
+    /*
+     * For arrays that are large enough it's worth checking the type information
+     * to see if the object's elements contain any GC pointers.  If not, we
+     * don't need to trace them.
+     */
+    const unsigned MinElementsLength = 32;
+    if (nobj->getDenseInitializedLength() < MinElementsLength || nobj->isSingleton())
+        return true;
+
+    ObjectGroup* group = nobj->group();
+    if (group->needsSweep() || group->unknownProperties())
+        return true;
+
+    HeapTypeSet* typeSet = group->maybeGetProperty(JSID_VOID);
+    if (!typeSet)
+        return true;
+
+    static const uint32_t flagMask =
+        TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL | TYPE_FLAG_LAZYARGS | TYPE_FLAG_ANYOBJECT;
+    bool mayBeMarkable = typeSet->hasAnyFlag(flagMask) || typeSet->getObjectCount() != 0;
+
+#ifdef DEBUG
+    if (!mayBeMarkable) {
+        const Value* elements = nobj->getDenseElementsAllowCopyOnWrite();
+        for (unsigned i = 0; i < nobj->getDenseInitializedLength(); i++)
+            MOZ_ASSERT(!elements[i].isMarkable());
+    }
+#endif
+
+    return mayBeMarkable;
+}
+
 inline void
 GCMarker::processMarkStackTop(SliceBudget& budget)
 {
@@ -1305,8 +1340,12 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                 }
             }
 
+            if (!ObjectDenseElementsMayBeMarkable(nobj))
+                break;
+
             vp = nobj->getDenseElementsAllowCopyOnWrite();
             end = vp + nobj->getDenseInitializedLength();
+
             if (!nslots)
                 goto scan_value_array;
             pushValueArray(nobj, vp, end);
@@ -1911,7 +1950,10 @@ js::TenuringTracer::traceObject(JSObject* obj)
 
     // Note: the contents of copy on write elements pointers are filled in
     // during parsing and cannot contain nursery pointers.
-    if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite()) {
+    if (!nobj->hasEmptyElements() &&
+        !nobj->denseElementsAreCopyOnWrite() &&
+        ObjectDenseElementsMayBeMarkable(nobj))
+    {
         Value* elems = static_cast<HeapSlot*>(nobj->getDenseElements())->unsafeGet();
         traceSlots(elems, elems + nobj->getDenseInitializedLength());
     }
