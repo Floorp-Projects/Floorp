@@ -4548,7 +4548,6 @@ EntryPoints(JSContext* cx, unsigned argc, Value* vp)
     return false;
 }
 
-
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
