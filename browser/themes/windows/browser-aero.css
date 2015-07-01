@@ -47,18 +47,6 @@
     -moz-margin-end: -3px;
   }
 
-  #urlbar:not(:-moz-lwtheme),
-  .searchbar-textbox:not(:-moz-lwtheme) {
-    border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
-    box-shadow: 0 1px 0 hsla(0,0%,0%,.01) inset,
-                0 1px 0 hsla(0,0%,100%,.1);
-  }
-
-  #urlbar:not(:-moz-lwtheme)[focused],
-  .searchbar-textbox:not(:-moz-lwtheme)[focused] {
-    border-color: Highlight;
-  }
-
   .menu-accel,
   .menu-iconic-accel {
     color: graytext;
