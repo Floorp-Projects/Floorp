@@ -277,7 +277,7 @@ YCbCrImageDataSerializer::CopyData(const uint8_t* aYData,
   return true;
 }
 
-TemporaryRef<DataSourceSurface>
+already_AddRefed<DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
   RefPtr<DataSourceSurface> result =

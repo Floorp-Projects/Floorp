@@ -115,7 +115,7 @@ SVGLineElement::GetAsSimplePath(SimplePath* aSimplePath)
   aSimplePath->SetLine(x1, y1, x2, y2);
 }
 
-TemporaryRef<Path>
+already_AddRefed<Path>
 SVGLineElement::BuildPath(PathBuilder* aBuilder)
 {
   float x1, y1, x2, y2;

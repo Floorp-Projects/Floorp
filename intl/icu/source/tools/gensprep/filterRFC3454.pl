@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Copyright (c) 2001-2009 International Business Machines
+# Copyright (c) 2001-2015 International Business Machines
 # Corporation and others. All Rights Reserved.
 
 ####################################################################################
@@ -140,7 +140,7 @@ sub main(){
   if( defined $writeISCSIProhibitedExtra){
       create_iSCSIExtraProhibitedTable($inFH, $outfile);
   }
-  if( defined $writeXMPPNodeProhitedExtra){
+  if( defined $writeXMPPNodeProhibitedExtra){
       create_XMPPNodeExtraProhibitedTable($inFH, $outfile);
   }
   if( defined $writeSASLMap){

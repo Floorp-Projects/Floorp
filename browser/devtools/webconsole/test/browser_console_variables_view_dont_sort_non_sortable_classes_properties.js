@@ -2,6 +2,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /* Test case that ensures Array and other list types are not sorted in variables
@@ -115,8 +116,10 @@ function test() {
     let variableScope = yield deferred.promise;
     ok(variableScope, "Variables view opened");
 
-    // If the properties are sorted: keys = ["1", "4", "10",..., "abc", "hello"] <- correct
-    // If the properties are not sorted: keys = ["1", "10", "4",...] <- incorrect
+    // If the properties are sorted:
+    // keys = ["1", "4", "10",..., "abc", "hello"] <- correct
+    // If the properties are not sorted:
+    // keys = ["1", "10", "4",...] <- incorrect
     let keyIterator = variableScope._store.keys();
     is(keyIterator.next().value, "1", "First key should be 1");
     is(keyIterator.next().value, "4", "Second key should be 4");

@@ -186,13 +186,13 @@ public:
                                               nscolor aBackgroundColor,
                                               gfxContext* aThebesContext) override;
 
-  virtual mozilla::TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
   RenderNode(nsIDOMNode* aNode,
              nsIntRegion* aRegion,
              nsIntPoint& aPoint,
              nsIntRect* aScreenRect) override;
 
-  virtual mozilla::TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
   RenderSelection(nsISelection* aSelection,
                   nsIntPoint& aPoint,
                   nsIntRect* aScreenRect) override;
@@ -543,7 +543,7 @@ protected:
    * aScreenRect - [out] set to the area of the screen the painted area should
    *               be displayed at
    */
-  mozilla::TemporaryRef<SourceSurface>
+  already_AddRefed<SourceSurface>
   PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                       nsISelection* aSelection,
                       nsIntRegion* aRegion,

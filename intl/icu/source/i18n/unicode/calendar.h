@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2014, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -127,9 +127,9 @@ class BasicTimeZone;
  *
  * <p>
  * <strong>Ambiguous Wall Clock Time.</strong> When time offset from UTC has
- * changed, it produces ambiguous time slot around the transition. For example,
+ * changed, it produces an ambiguous time slot around the transition. For example,
  * many US locations observe daylight saving time. On the date switching to daylight
- * saving time in US, wall clock time jumps from 1:00 AM (standard) to 2:00 AM
+ * saving time in US, wall clock time jumps from 12:59 AM (standard) to 2:00 AM
  * (daylight). Therefore, wall clock time from 1:00 AM to 1:59 AM do not exist on
  * the date. When the input wall time fall into this missing time slot, the ICU
  * Calendar resolves the time using the UTC offset before the transition by default.
@@ -1713,6 +1713,16 @@ protected:
      */
     virtual int32_t handleGetExtendedYearFromWeekFields(int32_t yearWoy, int32_t woy);
 
+    /**
+     * Validate a single field of this calendar.  Subclasses should
+     * override this method to validate any calendar-specific fields.
+     * Generic fields can be handled by
+     * <code>Calendar::validateField()</code>.
+     * @see #validateField(int, int, int, int&)
+     * @internal
+     */
+    virtual void validateField(UCalendarDateFields field, UErrorCode &status);
+
 #ifndef U_HIDE_INTERNAL_API
     /**
      * Compute the Julian day from fields.  Will determine whether to use
@@ -2154,7 +2164,7 @@ private:
 
     /**
      * Time zone affects the time calculation done by Calendar. Calendar subclasses use
-     * the time zone data to produce the local time.
+     * the time zone data to produce the local time. Always set; never NULL.
      */
     TimeZone*   fZone;
 
@@ -2293,16 +2303,6 @@ private:
     void validateFields(UErrorCode &status);
 
     /**
-     * Validate a single field of this calendar.  Subclasses should
-     * override this method to validate any calendar-specific fields.
-     * Generic fields can be handled by
-     * <code>Calendar::validateField()</code>.
-     * @see #validateField(int, int, int, int&)
-     * @internal
-     */
-    virtual void validateField(UCalendarDateFields field, UErrorCode &status);
-
-    /**
      * Validate a single field of this calendar given its minimum and
      * maximum allowed value.  If the field is out of range,
      * <code>U_ILLEGAL_ARGUMENT_ERROR</code> will be set.  Subclasses may
@@ -2348,6 +2348,11 @@ private:
     /**
      * Register a new Calendar factory.  The factory will be adopted.
      * INTERNAL in 2.6
+     *
+     * Because ICU may choose to cache Calendars internally, this must
+     * be called at application startup, prior to any calls to
+     * Calendar::createInstance to avoid undefined behavior.
+     *
      * @param toAdopt the factory instance to be adopted
      * @param status the in/out status code, no special meanings are assigned
      * @return a registry key that can be used to unregister this factory
@@ -2360,6 +2365,11 @@ private:
      * register call.  Key becomes invalid after a successful call and should not be used again.
      * The CalendarFactory corresponding to the key will be deleted.
      * INTERNAL in 2.6
+     *
+     * Because ICU may choose to cache Calendars internally, this should
+     * be called during application shutdown, after all calls to
+     * Calendar::createInstance to avoid undefined behavior.
+     *
      * @param key the registry key returned by a previous call to registerFactory
      * @param status the in/out status code, no special meanings are assigned
      * @return TRUE if the factory for the key was successfully unregistered
@@ -2412,6 +2422,20 @@ private:
      */
     Locale getLocale(ULocDataLocaleType type, UErrorCode &status) const;
 
+    /**
+     * @return      The related Gregorian year; will be obtained by modifying the value
+     *              obtained by get from UCAL_EXTENDED_YEAR field
+     * @internal
+     */
+    virtual int32_t getRelatedYear(UErrorCode &status) const;
+
+    /**
+     * @param year  The related Gregorian year to set; will be modified as necessary then
+     *              set in UCAL_EXTENDED_YEAR field
+     * @internal
+     */
+    virtual void setRelatedYear(int32_t year);
+
 #ifndef U_HIDE_INTERNAL_API
     /** Get the locale for this calendar object. You can choose between valid and actual locale.
      *  @param type type of the locale we're looking for (valid or actual)
@@ -2428,6 +2452,45 @@ private:
      * is not an instance of BasicTimeZone.
      */
     BasicTimeZone* getBasicTimeZone() const;
+
+    /**
+     * Find the previous zone transtion near the given time.
+     * @param base The base time, inclusive
+     * @param transitionTime Receives the result time
+     * @param status The error status
+     * @return TRUE if a transition is found.
+     */
+    UBool getImmediatePreviousZoneTransition(UDate base, UDate *transitionTime, UErrorCode& status) const;
+
+public:
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     * Creates a new Calendar from a Locale for the cache.
+     * This method does not set the time or timezone in returned calendar.
+     * @param locale the locale.
+     * @param status any error returned here.
+     * @return the new Calendar object with no time or timezone set.
+     * @internal For ICU use only.
+     */
+    static Calendar * U_EXPORT2 makeInstance(
+            const Locale &locale, UErrorCode &status);
+
+    /**
+     * Get the calendar type for given locale.
+     * @param locale the locale
+     * @param typeBuffer calendar type returned here
+     * @param typeBufferSize The size of typeBuffer in bytes. If the type
+     *   can't fit in the buffer, this method sets status to
+     *   U_BUFFER_OVERFLOW_ERROR
+     * @param status error, if any, returned here.
+     * @internal For ICU use only.
+     */
+    static void U_EXPORT2 getCalendarTypeFromLocale(
+            const Locale &locale,
+            char *typeBuffer,
+            int32_t typeBufferSize,
+            UErrorCode &status);
+#endif  /* U_HIDE_INTERNAL_API */
 };
 
 // -------------------------------------
@@ -2453,7 +2516,7 @@ Calendar::roll(EDateFields field, UBool up, UErrorCode& status)
 {
     roll((UCalendarDateFields) field, up, status);
 }
-#endif
+#endif  /* U_HIDE_DEPRECATED_API */
 
 
 // -------------------------------------
@@ -2477,7 +2540,7 @@ inline int32_t  Calendar::weekNumber(int32_t dayOfPeriod, int32_t dayOfWeek)
 {
   return weekNumber(dayOfPeriod, dayOfPeriod, dayOfWeek);
 }
-#endif
+#endif  /* U_HIDE_INTERNAL_API */
 
 U_NAMESPACE_END
 

@@ -35,7 +35,7 @@ public:
 
   virtual DrawTargetType GetType() const override { return DrawTargetType::HARDWARE_RASTER; }
   virtual BackendType GetBackendType() const { return BackendType::DIRECT2D1_1; }
-  virtual TemporaryRef<SourceSurface> Snapshot();
+  virtual already_AddRefed<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
 
   virtual void Flush();
@@ -95,26 +95,26 @@ public:
   virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
 
-  virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
+  virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
                                                                   int32_t aStride,
                                                                   SurfaceFormat aFormat) const;
-  virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
+  virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const;
 
-  virtual TemporaryRef<SourceSurface>
+  virtual already_AddRefed<SourceSurface>
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const { return nullptr; }
   
-  virtual TemporaryRef<DrawTarget>
+  virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
 
-  virtual TemporaryRef<GradientStops>
+  virtual already_AddRefed<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = ExtendMode::CLAMP) const;
 
-  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+  virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType);
 
   virtual bool SupportsRegionClipping() const { return false; }
 
@@ -124,10 +124,10 @@ public:
   bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
-  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
+  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
                                               ExtendMode aExtendMode, const IntRect* aSourceRect = nullptr);
 
-  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, ExtendMode aExtendMode) {
+  already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, ExtendMode aExtendMode) {
     Matrix mat;
     return GetImageForSurface(aSurface, mat, aExtendMode, nullptr);
   }
@@ -171,9 +171,9 @@ private:
   // represents the intersection of all pixel-aligned rectangular clips that
   // are currently set. The returned clipped geometry must be clipped by these
   // bounds to correctly reflect the total clip. This is in device space.
-  TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
+  already_AddRefed<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
 
-  TemporaryRef<ID2D1Geometry> GetInverseClippedGeometry();
+  already_AddRefed<ID2D1Geometry> GetInverseClippedGeometry();
 
   bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
 
@@ -182,9 +182,9 @@ private:
   void PushClipsToDC(ID2D1DeviceContext *aDC, bool aForceIgnoreAlpha = false, const D2D1_RECT_F& aMaxRect = D2D1::InfiniteRect());
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
 
-  TemporaryRef<ID2D1Brush> CreateTransparentBlackBrush();
-  TemporaryRef<ID2D1SolidColorBrush> GetSolidColorBrush(const D2D_COLOR_F& aColor);
-  TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
+  already_AddRefed<ID2D1Brush> CreateTransparentBlackBrush();
+  already_AddRefed<ID2D1SolidColorBrush> GetSolidColorBrush(const D2D_COLOR_F& aColor);
+  already_AddRefed<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform,
                     bool aForceIgnoreAlpha = false, const D2D1_RECT_F& aLayerRect = D2D1::InfiniteRect());

@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fi.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/fi.xml
- */
 fi{
     Currencies{
         ADP{
@@ -380,7 +377,7 @@ fi{
             "euro",
         }
         FIM{
-            "FIM",
+            "mk",
             "Suomen markka",
         }
         FJD{
@@ -698,6 +695,10 @@ fi{
         MUR{
             "MUR",
             "Mauritiuksen rupia",
+        }
+        MVP{
+            "MVP",
+            "Malediivien rupia (1947–1981)",
         }
         MVR{
             "MVR",
@@ -1119,9 +1120,17 @@ fi{
             "XRE",
             "RINET-rahastot",
         }
+        XSU{
+            "XSU",
+            "etelä-amerikkalaisen ALBA:n laskentayksikkö sucre",
+        }
         XTS{
             "XTS",
             "testaustarkoitukseen varattu valuuttakoodi",
+        }
+        XUA{
+            "XUA",
+            "afrikkalainen ADB-laskentayksikkö",
         }
         XXX{
             "XXX",
@@ -1187,6 +1196,57 @@ fi{
             "ZWR",
             "Zimbabwen dollari (2008)",
         }
+    }
+    Currencies%narrow{
+        ARS{"$"}
+        AUD{"$"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BRL{"R$"}
+        BSD{"$"}
+        BYR{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        DOP{"$"}
+        EUR{"€"}
+        FJD{"$"}
+        GBP{"£"}
+        GIP{"£"}
+        GYD{"$"}
+        HKD{"$"}
+        ILS{"₪"}
+        INR{"₹"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KRW{"₩"}
+        KYD{"$"}
+        LAK{"₭"}
+        LRD{"$"}
+        MNT{"₮"}
+        MXN{"$"}
+        NAD{"$"}
+        NGN{"₦"}
+        NZD{"$"}
+        PHP{"₱"}
+        PYG{"₲"}
+        SBD{"$"}
+        SGD{"$"}
+        SRD{"$"}
+        SSP{"£"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$U"}
+        VND{"₫"}
     }
     CurrencyPlurals{
         ADP{
@@ -1355,7 +1415,7 @@ fi{
         }
         BOV{
             one{"Bolivian mvdol"}
-            other{"Bolivian mvdol'ia"}
+            other{"Bolivian mvdol’ia"}
         }
         BRB{
             one{"Brasilian uusi cruzeiro (1967–1986)"}
@@ -1523,7 +1583,7 @@ fi{
         }
         ECV{
             one{"Ecuadorin UVC"}
-            other{"Ecuadorin UVC'ta"}
+            other{"Ecuadorin UVC’ta"}
         }
         EEK{
             one{"Viron kruunu"}
@@ -1877,6 +1937,10 @@ fi{
             one{"Mauritiuksen rupia"}
             other{"Mauritiuksen rupiaa"}
         }
+        MVP{
+            one{"Malediivien rupia (1947–1981)"}
+            other{"Malediivien rupiaa (1947–1981)"}
+        }
         MVR{
             one{"Malediivien rufiyaa"}
             other{"Malediivien rufiyaata"}
@@ -1895,7 +1959,7 @@ fi{
         }
         MXV{
             one{"Meksikon UDI"}
-            other{"Meksikon UDI'ta"}
+            other{"Meksikon UDI’ta"}
         }
         MYR{
             one{"Malesian ringgit"}
@@ -2243,7 +2307,7 @@ fi{
         }
         XBA{
             one{"EURCO"}
-            other{"EURCO'a"}
+            other{"EURCO’a"}
         }
         XBB{
             one{"Euroopan rahayksikkö (EMU)"}
@@ -2251,11 +2315,11 @@ fi{
         }
         XBC{
             one{"EUA (XBC)"}
-            other{"EUA'ta (XBC)"}
+            other{"EUA’ta (XBC)"}
         }
         XBD{
             one{"EUA (XBD)"}
-            other{"EUA'ta (XBD)"}
+            other{"EUA’ta (XBD)"}
         }
         XCD{
             one{"Itä-Karibian dollari"}
@@ -2297,9 +2361,17 @@ fi{
             one{"RINET-rahastoyksikkö"}
             other{"RINET-rahastoyksikköä"}
         }
+        XSU{
+            one{"sucre"}
+            other{"sucrea"}
+        }
         XTS{
             one{"testaustarkoitukseen varattu valuuttakoodi"}
             other{"testaustarkoitukseen varattua valuuttakoodia"}
+        }
+        XUA{
+            one{"ADB-laskentayksikkö"}
+            other{"ADB-laskentayksikköä"}
         }
         XXX{
             one{"tuntematon rahayksikkö"}
@@ -2370,5 +2442,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.13.33"}
 }

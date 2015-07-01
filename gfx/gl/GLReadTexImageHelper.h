@@ -31,7 +31,7 @@ bool GetActualReadFormats(GLContext* gl,
 void ReadPixelsIntoDataSurface(GLContext* aGL,
                                gfx::DataSourceSurface* aSurface);
 
-TemporaryRef<gfx::DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
 
 class GLReadTexImageHelper final
@@ -64,7 +64,7 @@ public:
       * NOTE: aShaderProgram is really mozilla::layers::ShaderProgramType. It is
       * passed as int to eliminate including LayerManagerOGLProgram.h here.
       */
-    TemporaryRef<gfx::DataSourceSurface> ReadTexImage(GLuint aTextureId,
+    already_AddRefed<gfx::DataSourceSurface> ReadTexImage(GLuint aTextureId,
                                                       GLenum aTextureTarget,
                                                       const gfx::IntSize& aSize,
                               /* ShaderProgramType */ int aShaderProgram,

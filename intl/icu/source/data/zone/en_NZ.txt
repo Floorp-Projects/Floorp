@@ -1,18 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_NZ.xml
 // *
 // ***************************************************************************
 en_NZ{
-    %%Parent{"en_GB"}
-    Version{"2.0.90.61"}
+    %%Parent{"en_001"}
+    Version{"2.1.11.51"}
     zoneStrings{
-        "Europe:London"{
-            sd{"∅∅∅"}
-        }
         "meta:Australia_Central"{
             sd{"ACDT"}
             sg{"ACT"}
@@ -37,21 +34,6 @@ en_NZ{
             sd{"CHADT"}
             sg{"CHAT"}
             ss{"CHAST"}
-        }
-        "meta:Europe_Central"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:Europe_Eastern"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:Europe_Western"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
         }
         "meta:Lord_Howe"{
             sd{"LHDT"}

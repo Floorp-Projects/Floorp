@@ -1,20 +1,14 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/haw.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/haw.xml
- */
 haw{
     AuxExemplarCharacters{"[b c d f g j q r s t v x y z]"}
     ExemplarCharacters{"[a ā e ē i ī o ō u ū h k l m n p w ʻ]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -23,9 +17,64 @@ haw{
             }
         }
     }
-    Version{"2.0.93.15"}
+    Version{"2.1.6.69"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                {
+                    "d/M/yy GGGGG",
+                    "M=romanlow",
+                }
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
         gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                {
+                    "d/M/yy",
+                    "M=romanlow",
+                }
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                MEd{"E, d/M"}
+                MMMEd{"E, d MMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                yM{"M/y"}
+                yMEd{"E, d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+            }
             dayNames{
                 format{
                     abbreviated{
@@ -85,37 +134,5 @@ haw{
     measurementSystemNames{
         US{"ʻAmelika Hui Pū ʻIa"}
         metric{"Mekalika"}
-    }
-    units{
-        duration{
-            day{
-                one{"{0} lā"}
-                other{"{0} lā"}
-            }
-            hour{
-                one{"{0} hola"}
-                other{"{0} hola"}
-            }
-            minute{
-                one{"{0} minuke"}
-                other{"{0} minuke"}
-            }
-            month{
-                one{"{0} mahina"}
-                other{"{0} mahina"}
-            }
-            second{
-                one{"{0} kekona"}
-                other{"{0} kekona"}
-            }
-            week{
-                one{"{0} pule"}
-                other{"{0} pule"}
-            }
-            year{
-                one{"{0} makahiki"}
-                other{"{0} makahiki"}
-            }
-        }
     }
 }

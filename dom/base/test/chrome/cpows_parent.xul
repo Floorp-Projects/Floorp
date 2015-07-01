@@ -68,6 +68,9 @@
       is(typeof document.cookie, "string", "can get document.cookie");
       is(typeof document.defaultView.navigator.userAgent, "string", "can get navigator.userAgent");
 
+      // Don't crash.
+      document.defaultView.screen;
+
       data.i = 6;
       data.b = false;
       data.s = "bye";

@@ -702,7 +702,8 @@ class FullParseHandler
 
     bool isStatementPermittedAfterReturnStatement(ParseNode *node) {
         ParseNodeKind kind = node->getKind();
-        return kind == PNK_FUNCTION || kind == PNK_VAR || kind == PNK_BREAK || kind == PNK_THROW;
+        return kind == PNK_FUNCTION || kind == PNK_VAR || kind == PNK_BREAK || kind == PNK_THROW ||
+               (kind == PNK_SEMI && !node->pn_kid);
     }
 
     inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);

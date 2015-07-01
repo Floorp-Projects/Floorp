@@ -124,7 +124,7 @@ gfxPlatformMac::CreateOffscreenSurface(const IntSize& size,
     return newSurface.forget();
 }
 
-TemporaryRef<ScaledFont>
+already_AddRefed<ScaledFont>
 gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     gfxMacFont *font = static_cast<gfxMacFont*>(aFont);

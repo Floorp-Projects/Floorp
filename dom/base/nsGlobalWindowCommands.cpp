@@ -486,14 +486,23 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
   *outCmdEnabled = false;
 
   if (strcmp(aCommandName, "cmd_copy") &&
-      strcmp(aCommandName, "cmd_copyAndCollapseToEnd"))
+      strcmp(aCommandName, "cmd_copyAndCollapseToEnd") &&
+      strcmp(aCommandName, "cmd_cut"))
     return NS_OK;
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  *outCmdEnabled = nsCopySupport::CanCopy(doc);
+  if (doc->IsHTMLOrXHTML()) {
+    // In HTML and XHTML documents, we always want cut and copy commands to be enabled.
+    *outCmdEnabled = true;
+  } else {
+    // Cut isn't enabled in xul documents which use nsClipboardCommand
+    if (strcmp(aCommandName, "cmd_cut")) {
+      *outCmdEnabled = nsCopySupport::CanCopy(doc);
+    }
+  }
   return NS_OK;
 }
 

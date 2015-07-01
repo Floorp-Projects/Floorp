@@ -1,23 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/collation/bn.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/xml/collation/bn.xml
- */
 bn{
-    Version{"2.0.89.0"}
+    Version{"2.0.96.14"}
     collations{
         standard{
             Sequence{
                 "[normalization on][reorder Beng Deva Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
                 "&ঔ<ং<ঃ<ঁ"
             }
-            Version{"24"}
+            Version{"27.0.1"}
         }
         traditional{
             Sequence{
@@ -636,7 +633,7 @@ bn{
                 "&যৌ<<<য়ৌ"
                 "&য্<<<য়্"
             }
-            Version{"24"}
+            Version{"27.0.1"}
         }
     }
 }

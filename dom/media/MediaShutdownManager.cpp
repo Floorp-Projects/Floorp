@@ -127,7 +127,7 @@ MediaShutdownManager::Shutdown()
   // Ensure all media shared thread pools are shutdown. This joins with all
   // threads in the state machine thread pool, the decoder thread pool, and
   // any others.
-  SharedThreadPool::SpinUntilShutdown();
+  SharedThreadPool::SpinUntilEmpty();
 
   // Remove the MediaShutdownManager instance from the shutdown observer
   // list.

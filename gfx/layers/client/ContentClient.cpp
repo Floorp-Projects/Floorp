@@ -59,7 +59,7 @@ static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFla
   return result;
 }
 
-/* static */ TemporaryRef<ContentClient>
+/* static */ already_AddRefed<ContentClient>
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
   LayersBackend backend = aForwarder->GetCompositorBackendType();

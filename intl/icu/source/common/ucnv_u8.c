@@ -1,6 +1,6 @@
 /*  
 **********************************************************************
-*   Copyright (C) 2002-2012, International Business Machines
+*   Copyright (C) 2002-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  ucnv_u8.c
@@ -87,6 +87,15 @@ static const int8_t bytesFromUTF8[256] = {
 static const uint32_t
 utf8_minChar32[7]={ 0, 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
 
+static UBool hasCESU8Data(const UConverter *cnv)
+{
+#if UCONFIG_ONLY_HTML_CONVERSION
+    return FALSE;
+#else
+    return (UBool)(cnv->sharedData == &_CESU8Data);
+#endif
+}
+
 static void ucnv_toUnicode_UTF8 (UConverterToUnicodeArgs * args,
                                   UErrorCode * err)
 {
@@ -96,10 +105,10 @@ static void ucnv_toUnicode_UTF8 (UConverterToUnicodeArgs * args,
     const unsigned char *sourceLimit = (unsigned char *) args->sourceLimit;
     const UChar *targetLimit = args->targetLimit;
     unsigned char *toUBytes = cnv->toUBytes;
-    UBool isCESU8 = (UBool)(cnv->sharedData == &_CESU8Data);
+    UBool isCESU8 = hasCESU8Data(cnv);
     uint32_t ch, ch2 = 0;
     int32_t i, inBytes;
-  
+
     /* Restore size of current sequence */
     if (cnv->toUnicodeStatus && myTarget < targetLimit)
     {
@@ -226,7 +235,7 @@ static void ucnv_toUnicode_UTF8_OFFSETS_LOGIC (UConverterToUnicodeArgs * args,
     const unsigned char *sourceLimit = (unsigned char *) args->sourceLimit;
     const UChar *targetLimit = args->targetLimit;
     unsigned char *toUBytes = cnv->toUBytes;
-    UBool isCESU8 = (UBool)(cnv->sharedData == &_CESU8Data);
+    UBool isCESU8 = hasCESU8Data(cnv);
     uint32_t ch, ch2 = 0;
     int32_t i, inBytes;
 
@@ -357,7 +366,7 @@ U_CFUNC void ucnv_fromUnicode_UTF8 (UConverterFromUnicodeArgs * args,
     UChar32 ch;
     uint8_t tempBuf[4];
     int32_t indexToWrite;
-    UBool isNotCESU8 = (UBool)(cnv->sharedData != &_CESU8Data);
+    UBool isNotCESU8 = !hasCESU8Data(cnv);
 
     if (cnv->fromUChar32 && myTarget < targetLimit)
     {
@@ -473,7 +482,7 @@ U_CFUNC void ucnv_fromUnicode_UTF8_OFFSETS_LOGIC (UConverterFromUnicodeArgs * ar
     int32_t offsetNum, nextSourceIndex;
     int32_t indexToWrite;
     uint8_t tempBuf[4];
-    UBool isNotCESU8 = (UBool)(cnv->sharedData != &_CESU8Data);
+    UBool isNotCESU8 = !hasCESU8Data(cnv);
 
     if (cnv->fromUChar32 && myTarget < targetLimit)
     {

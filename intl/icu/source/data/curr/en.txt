@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/en.xml
- */
 en{
     Currencies{
         ADP{
@@ -397,7 +394,7 @@ en{
         }
         GBP{
             "£",
-            "British Pound Sterling",
+            "British Pound",
         }
         GEK{
             "GEK",
@@ -701,7 +698,7 @@ en{
         }
         MVP{
             "MVP",
-            "Maldivian Rupee",
+            "Maldivian Rupee (1947–1981)",
         }
         MVR{
             "MVR",
@@ -885,7 +882,7 @@ en{
         }
         SHP{
             "SHP",
-            "Saint Helena Pound",
+            "St. Helena Pound",
         }
         SIT{
             "SIT",
@@ -917,7 +914,7 @@ en{
         }
         STD{
             "STD",
-            "São Tomé and Príncipe Dobra",
+            "São Tomé & Príncipe Dobra",
         }
         SUR{
             "SUR",
@@ -936,7 +933,7 @@ en{
             "Swazi Lilangeni",
         }
         THB{
-            "฿",
+            "THB",
             "Thai Baht",
         }
         TJR{
@@ -977,7 +974,7 @@ en{
         }
         TTD{
             "TTD",
-            "Trinidad and Tobago Dollar",
+            "Trinidad & Tobago Dollar",
         }
         TWD{
             "NT$",
@@ -1029,7 +1026,7 @@ en{
         }
         UZS{
             "UZS",
-            "Uzbekistan Som",
+            "Uzbekistani Som",
         }
         VEB{
             "VEB",
@@ -1057,7 +1054,7 @@ en{
         }
         XAF{
             "FCFA",
-            "CFA Franc BEAC",
+            "Central African CFA Franc",
         }
         XAG{
             "XAG",
@@ -1105,7 +1102,7 @@ en{
         }
         XOF{
             "CFA",
-            "CFA Franc BCEAO",
+            "West African CFA Franc",
         }
         XPD{
             "XPD",
@@ -1586,8 +1583,8 @@ en{
             other{"French francs"}
         }
         GBP{
-            one{"British pound sterling"}
-            other{"British pounds sterling"}
+            one{"British pound"}
+            other{"British pounds"}
         }
         GEK{
             one{"Georgian kupon larit"}
@@ -1842,8 +1839,8 @@ en{
             other{"Moldovan lei"}
         }
         MGA{
-            one{"Malagasy Ariary"}
-            other{"Malagasy Ariaries"}
+            one{"Malagasy ariary"}
+            other{"Malagasy ariaries"}
         }
         MGF{
             one{"Malagasy franc"}
@@ -1890,16 +1887,16 @@ en{
             other{"Mauritian rupees"}
         }
         MVP{
-            one{"Maldivian rupee"}
-            other{"Maldivian rupees"}
+            one{"Maldivian rupee (1947–1981)"}
+            other{"Maldivian rupees (1947–1981)"}
         }
         MVR{
             one{"Maldivian rufiyaa"}
             other{"Maldivian rufiyaas"}
         }
         MWK{
-            one{"Malawian Kwacha"}
-            other{"Malawian Kwachas"}
+            one{"Malawian kwacha"}
+            other{"Malawian kwachas"}
         }
         MXN{
             one{"Mexican peso"}
@@ -2074,8 +2071,8 @@ en{
             other{"Singapore dollars"}
         }
         SHP{
-            one{"Saint Helena pound"}
-            other{"Saint Helena pounds"}
+            one{"St. Helena pound"}
+            other{"St. Helena pounds"}
         }
         SIT{
             one{"Slovenian tolar"}
@@ -2106,8 +2103,8 @@ en{
             other{"South Sudanese pounds"}
         }
         STD{
-            one{"São Tomé and Príncipe dobra"}
-            other{"São Tomé and Príncipe dobras"}
+            one{"São Tomé & Príncipe dobra"}
+            other{"São Tomé & Príncipe dobras"}
         }
         SUR{
             one{"Soviet rouble"}
@@ -2166,8 +2163,8 @@ en{
             other{"Turkish Lira"}
         }
         TTD{
-            one{"Trinidad and Tobago dollar"}
-            other{"Trinidad and Tobago dollars"}
+            one{"Trinidad & Tobago dollar"}
+            other{"Trinidad & Tobago dollars"}
         }
         TWD{
             one{"New Taiwan dollar"}
@@ -2218,8 +2215,8 @@ en{
             other{"Uruguayan pesos"}
         }
         UZS{
-            one{"Uzbekistan som"}
-            other{"Uzbekistan som"}
+            one{"Uzbekistani som"}
+            other{"Uzbekistani som"}
         }
         VEB{
             one{"Venezuelan bolívar (1871–2008)"}
@@ -2246,8 +2243,8 @@ en{
             other{"Samoan tala"}
         }
         XAF{
-            one{"CFA franc BEAC"}
-            other{"CFA francs BEAC"}
+            one{"Central African CFA franc"}
+            other{"Central African CFA francs"}
         }
         XAG{
             one{"troy ounce of silver"}
@@ -2294,8 +2291,8 @@ en{
             other{"French UIC-francs"}
         }
         XOF{
-            one{"CFA franc BCEAO"}
-            other{"CFA francs BCEAO"}
+            one{"West African CFA franc"}
+            other{"West African CFA francs"}
         }
         XPD{
             one{"troy ounce of palladium"}
@@ -2394,5 +2391,5 @@ en{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.13.48"}
 }

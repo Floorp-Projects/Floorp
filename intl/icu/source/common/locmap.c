@@ -1,6 +1,6 @@
 /*
  **********************************************************************
- *   Copyright (C) 1996-2013, International Business Machines
+ *   Copyright (C) 1996-2014, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  **********************************************************************
  *
@@ -294,7 +294,7 @@ ILCID_POSIX_SUBTABLE(es) {
     {0x540a, "es_US"},
     {0x380a, "es_UY"},
     {0x200a, "es_VE"},
-    {0xe40a, "es_419"},
+    {0x580a, "es_419"},
     {0x040a, "es_ES@collation=traditional"},
     {0x040a, "es@collation=traditional"}
 };
@@ -400,6 +400,13 @@ ILCID_POSIX_SUBTABLE(hr) {
     {0x7c1a, "sr"}          /* In CLDR sr is sr_Cyrl. */
 };
 
+ILCID_POSIX_SUBTABLE(hsb) {
+    {0x2E,   "hsb"},
+    {0x042E, "hsb_DE"},
+    {0x082E, "dsb_DE"},
+    {0x7C2E, "dsb"},
+};
+
 ILCID_POSIX_ELEMENT_ARRAY(0x040e, hu, hu_HU)
 ILCID_POSIX_ELEMENT_ARRAY(0x042b, hy, hy_AM)
 ILCID_POSIX_ELEMENT_ARRAY(0x0469, ibb, ibb_NG)
@@ -462,7 +469,8 @@ ILCID_POSIX_SUBTABLE(mn) {
     {0x7c50, "mn_Mong"},
     {0x0850, "mn_Mong_CN"},
     {0x0850, "mn_CN"},
-    {0x7850, "mn_Cyrl"}
+    {0x7850, "mn_Cyrl"},
+    {0x0c50, "mn_Mong_MN"}
 };
 
 ILCID_POSIX_ELEMENT_ARRAY(0x0458, mni,mni_IN)
@@ -685,16 +693,6 @@ ILCID_POSIX_SUBTABLE(ve) { /* TODO: Verify the country */
 };
 
 ILCID_POSIX_ELEMENT_ARRAY(0x042a, vi, vi_VN)
-
-ILCID_POSIX_SUBTABLE(wen) {
-    {0x2E,   "wen"},
-    {0x042E, "wen_DE"},
-    {0x042E, "hsb_DE"},
-    {0x082E, "dsb_DE"},
-    {0x7C2E, "dsb"},
-    {0x2E,   "hsb"}
-};
-
 ILCID_POSIX_ELEMENT_ARRAY(0x0488, wo, wo_SN)
 ILCID_POSIX_ELEMENT_ARRAY(0x0434, xh, xh_ZA)
 ILCID_POSIX_ELEMENT_ARRAY(0x043d, yi, yi)
@@ -778,6 +776,7 @@ static const ILcidPosixMap gPosixIDmap[] = {
     ILCID_POSIX_MAP(he),    /*  he  Hebrew (formerly iw)      0x0d */
     ILCID_POSIX_MAP(hi),    /*  hi  Hindi                     0x39 */
     ILCID_POSIX_MAP(hr),    /*  *   Croatian and others       0x1a */
+    ILCID_POSIX_MAP(hsb),   /*  hsb Upper Sorbian             0x2e */
     ILCID_POSIX_MAP(hu),    /*  hu  Hungarian                 0x0e */
     ILCID_POSIX_MAP(hy),    /*  hy  Armenian                  0x2b */
     ILCID_POSIX_MAP(ibb),   /*  ibb Ibibio - Nigeria          0x69 */
@@ -867,7 +866,6 @@ static const ILcidPosixMap gPosixIDmap[] = {
     ILCID_POSIX_MAP(uz),    /*  uz  Uzbek                     0x43 */
     ILCID_POSIX_MAP(ve),    /*  ve  Venda                     0x33 */
     ILCID_POSIX_MAP(vi),    /*  vi  Vietnamese                0x2a */
-    ILCID_POSIX_MAP(wen),   /*  wen Sorbian                   0x2e */
     ILCID_POSIX_MAP(wo),    /*  wo  Wolof                     0x88 */
     ILCID_POSIX_MAP(xh),    /*  xh  Xhosa                     0x34 */
     ILCID_POSIX_MAP(yi),    /*  yi  Yiddish                   0x3d */

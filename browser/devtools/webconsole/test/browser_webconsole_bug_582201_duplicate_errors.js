@@ -9,7 +9,8 @@
 "use strict";
 
 const INIT_URI = "data:text/html;charset=utf8,hello world";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-duplicate-error.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-duplicate-error.html";
 
 let test = asyncTest(function* () {
   yield loadTab(INIT_URI);

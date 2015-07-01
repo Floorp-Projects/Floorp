@@ -214,10 +214,10 @@ public:
      * support the DrawTarget we get back.
      * See SupportsAzureContentForDrawTarget.
      */
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual already_AddRefed<DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual already_AddRefed<DrawTarget>
       CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
@@ -232,24 +232,24 @@ public:
      * PluginInstanceChild (where we can't call gfxPlatform::GetPlatform()
      * because the prefs service can only be accessed from the main process).
      */
-    static mozilla::TemporaryRef<SourceSurface>
+    static already_AddRefed<SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
 
     static void ClearSourceSurfaceForSurface(gfxASurface *aSurface);
 
-    static mozilla::TemporaryRef<DataSourceSurface>
+    static already_AddRefed<DataSourceSurface>
         GetWrappedDataSourceSurface(gfxASurface *aSurface);
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
+    virtual already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
-    mozilla::TemporaryRef<DrawTarget>
+    already_AddRefed<DrawTarget>
       CreateOffscreenContentDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
-    mozilla::TemporaryRef<DrawTarget>
+    already_AddRefed<DrawTarget>
       CreateOffscreenCanvasDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual already_AddRefed<DrawTarget>
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
@@ -645,7 +645,7 @@ public:
      * Helper method, creates a draw target for a specific Azure backend.
      * Used by CreateOffscreenDrawTarget.
      */
-    mozilla::TemporaryRef<DrawTarget>
+    already_AddRefed<DrawTarget>
       CreateDrawTargetForBackend(mozilla::gfx::BackendType aBackend,
                                  const mozilla::gfx::IntSize& aSize,
                                  mozilla::gfx::SurfaceFormat aFormat);
@@ -696,7 +696,7 @@ protected:
      */
     static mozilla::gfx::BackendType BackendTypeForName(const nsCString& aName);
 
-    static mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
+    static already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
 
     int8_t  mAllowDownloadableFonts;

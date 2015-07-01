@@ -12,8 +12,6 @@
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/cache/ManagerId.h"
-#include "mozilla/dom/cache/OfflineStorage.h"
-#include "mozilla/dom/quota/OriginOrPatternString.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozIStorageConnection.h"
 #include "nsIFile.h"
@@ -23,39 +21,8 @@
 
 namespace {
 
-using mozilla::dom::Nullable;
 using mozilla::dom::cache::Action;
 using mozilla::dom::cache::QuotaInfo;
-using mozilla::dom::quota::Client;
-using mozilla::dom::quota::OriginOrPatternString;
-using mozilla::dom::quota::QuotaManager;
-using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
-using mozilla::dom::quota::PersistenceType;
-
-// Release our lock on the QuotaManager directory asynchronously.
-class QuotaReleaseRunnable final : public nsRunnable
-{
-public:
-  explicit QuotaReleaseRunnable(const QuotaInfo& aQuotaInfo)
-    : mQuotaInfo(aQuotaInfo)
-  { }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    QuotaManager* qm = QuotaManager::Get();
-    MOZ_ASSERT(qm);
-    qm->AllowNextSynchronizedOp(OriginOrPatternString::FromOrigin(mQuotaInfo.mOrigin),
-                                Nullable<PersistenceType>(PERSISTENCE_TYPE_DEFAULT),
-                                mQuotaInfo.mStorageId);
-    return NS_OK;
-  }
-
-private:
-  ~QuotaReleaseRunnable() { }
-
-  const QuotaInfo mQuotaInfo;
-};
 
 class NullAction final : public Action
 {
@@ -80,7 +47,8 @@ namespace dom {
 namespace cache {
 
 using mozilla::DebugOnly;
-using mozilla::dom::quota::OriginOrPatternString;
+using mozilla::dom::quota::AssertIsOnIOThread;
+using mozilla::dom::quota::OpenDirectoryListener;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
@@ -132,6 +100,7 @@ private:
 // the QuotaManager.  This must be performed for each origin before any disk
 // IO occurrs.
 class Context::QuotaInitRunnable final : public nsIRunnable
+                                       , public OpenDirectoryListener
 {
 public:
   QuotaInitRunnable(Context* aContext,
@@ -149,7 +118,6 @@ public:
     , mResult(NS_OK)
     , mState(STATE_INIT)
     , mCanceled(false)
-    , mNeedsQuotaRelease(false)
   {
     MOZ_ASSERT(mContext);
     MOZ_ASSERT(mManager);
@@ -164,7 +132,7 @@ public:
     NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
     MOZ_ASSERT(mState == STATE_INIT);
 
-    mState = STATE_CALL_WAIT_FOR_OPEN_ALLOWED;
+    mState = STATE_OPEN_DIRECTORY;
     nsresult rv = NS_DispatchToMainThread(this, nsIThread::DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mState = STATE_COMPLETE;
@@ -180,6 +148,13 @@ public:
     mCanceled = true;
     mInitAction->CancelOnInitiatingThread();
   }
+
+  // OpenDirectoryListener methods
+  virtual void
+  DirectoryLockAcquired(DirectoryLock* aLock) override;
+
+  virtual void
+  DirectoryLockFailed() override;
 
 private:
   class SyncResolver final : public Action::Resolver
@@ -220,14 +195,26 @@ private:
   enum State
   {
     STATE_INIT,
-    STATE_CALL_WAIT_FOR_OPEN_ALLOWED,
-    STATE_WAIT_FOR_OPEN_ALLOWED,
+    STATE_OPEN_DIRECTORY,
+    STATE_WAIT_FOR_DIRECTORY_LOCK,
     STATE_ENSURE_ORIGIN_INITIALIZED,
     STATE_RUN_ON_TARGET,
     STATE_RUNNING,
     STATE_COMPLETING,
     STATE_COMPLETE
   };
+
+  void Complete(nsresult aResult)
+  {
+    MOZ_ASSERT(mState == STATE_RUNNING || NS_FAILED(aResult));
+
+    MOZ_ASSERT(NS_SUCCEEDED(mResult));
+    mResult = aResult;
+
+    mState = STATE_COMPLETING;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      mInitiatingThread->Dispatch(this, nsIThread::DISPATCH_NORMAL)));
+  }
 
   void Clear()
   {
@@ -247,15 +234,51 @@ private:
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsresult mResult;
   QuotaInfo mQuotaInfo;
-  nsMainThreadPtrHandle<OfflineStorage> mOfflineStorage;
+  nsMainThreadPtrHandle<DirectoryLock> mDirectoryLock;
   State mState;
   Atomic<bool> mCanceled;
-  bool mNeedsQuotaRelease;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 };
+
+void
+Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == STATE_WAIT_FOR_DIRECTORY_LOCK);
+  MOZ_ASSERT(!mDirectoryLock);
+
+  mDirectoryLock = new nsMainThreadPtrHolder<DirectoryLock>(aLock);
+
+  if (mCanceled) {
+    Complete(NS_ERROR_ABORT);
+    return;
+  }
+
+  QuotaManager* qm = QuotaManager::Get();
+  MOZ_ASSERT(qm);
+
+  mState = STATE_ENSURE_ORIGIN_INITIALIZED;
+  nsresult rv = qm->IOThread()->Dispatch(this, nsIThread::DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Complete(rv);
+    return;
+  }
+}
+
+void
+Context::QuotaInitRunnable::DirectoryLockFailed()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == STATE_WAIT_FOR_DIRECTORY_LOCK);
+  MOZ_ASSERT(!mDirectoryLock);
+
+  NS_WARNING("Failed to acquire a directory lock!");
+
+  Complete(NS_ERROR_FAILURE);
+}
 
 NS_IMPL_ISUPPORTS(mozilla::dom::cache::Context::QuotaInitRunnable, nsIRunnable);
 
@@ -267,14 +290,14 @@ NS_IMPL_ISUPPORTS(mozilla::dom::cache::Context::QuotaInitRunnable, nsIRunnable);
 //    +-------+-------+                     |
 //            |                             |
 // +----------v-----------+                 |
-// |CallWaitForOpenAllowed|  Resolve(error) |
+// |    OpenDirectory     |  Resolve(error) |
 // |    (Main Thread)     +-----------------+
 // +----------+-----------+                 |
 //            |                             |
-//   +--------v---------+                   |
-//   |WaitForOpenAllowed|    Resolve(error) |
-//   |  (Main Thread)   +-------------------+
-//   +--------+---------+                   |
+// +----------v-----------+                 |
+// | WaitForDirectoryLock |  Resolve(error) |
+// |    (Main Thread)     +-----------------+
+// +----------+-----------+                 |
 //            |                             |
 // +----------v------------+                |
 // |EnsureOriginInitialized| Resolve(error) |
@@ -307,7 +330,7 @@ Context::QuotaInitRunnable::Run()
 
   switch(mState) {
     // -----------------------------------
-    case STATE_CALL_WAIT_FOR_OPEN_ALLOWED:
+    case STATE_OPEN_DIRECTORY:
     {
       MOZ_ASSERT(NS_IsMainThread());
 
@@ -333,59 +356,23 @@ Context::QuotaInitRunnable::Run()
         break;
       }
 
-      QuotaManager::GetStorageId(PERSISTENCE_TYPE_DEFAULT,
-                                 mQuotaInfo.mOrigin,
-                                 Client::DOMCACHE,
-                                 NS_LITERAL_STRING("cache"),
-                                 mQuotaInfo.mStorageId);
-
-      // QuotaManager::WaitForOpenAllowed() will hold a reference to us as
-      // a callback.  We will then get executed again on the main thread when
-      // it is safe to open the quota directory.
-      mState = STATE_WAIT_FOR_OPEN_ALLOWED;
-      rv = qm->WaitForOpenAllowed(OriginOrPatternString::FromOrigin(mQuotaInfo.mOrigin),
-                                  Nullable<PersistenceType>(PERSISTENCE_TYPE_DEFAULT),
-                                  mQuotaInfo.mStorageId, this);
-      if (NS_FAILED(rv)) {
-        resolver->Resolve(rv);
-        break;
-      }
-      break;
-    }
-    // ------------------------------
-    case STATE_WAIT_FOR_OPEN_ALLOWED:
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      mNeedsQuotaRelease = true;
-
-      if (mCanceled) {
-        resolver->Resolve(NS_ERROR_ABORT);
-        break;
-      }
-
-      QuotaManager* qm = QuotaManager::Get();
-      MOZ_ASSERT(qm);
-
-      nsRefPtr<OfflineStorage> offlineStorage =
-        OfflineStorage::Register(mThreadsafeHandle, mQuotaInfo);
-      mOfflineStorage = new nsMainThreadPtrHolder<OfflineStorage>(offlineStorage);
-
-      mState = STATE_ENSURE_ORIGIN_INITIALIZED;
-      nsresult rv = qm->IOThread()->Dispatch(this, nsIThread::DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        resolver->Resolve(rv);
-        break;
-      }
+      // QuotaManager::OpenDirectory() will hold a reference to us as
+      // a listener.  We will then get DirectoryLockAcquired() on the main
+      // thread when it is safe to access our storage directory.
+      mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
+      qm->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
+                        mQuotaInfo.mGroup,
+                        mQuotaInfo.mOrigin,
+                        mQuotaInfo.mIsApp,
+                        quota::Client::DOMCACHE,
+                        /* aExclusive */ false,
+                        this);
       break;
     }
     // ----------------------------------
     case STATE_ENSURE_ORIGIN_INITIALIZED:
     {
-      // Can't assert quota IO thread because its an idle thread that can get
-      // recreated.  At least assert we're not on main thread or owning thread.
-      MOZ_ASSERT(!NS_IsMainThread());
-      MOZ_ASSERT(_mOwningThread.GetThread() != PR_GetCurrentThread());
+      AssertIsOnIOThread();
 
       if (mCanceled) {
         resolver->Resolve(NS_ERROR_ABORT);
@@ -438,14 +425,8 @@ Context::QuotaInitRunnable::Run()
     {
       NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
       mInitAction->CompleteOnInitiatingThread(mResult);
-      mContext->OnQuotaInit(mResult, mQuotaInfo, mOfflineStorage);
+      mContext->OnQuotaInit(mResult, mQuotaInfo, mDirectoryLock);
       mState = STATE_COMPLETE;
-
-      if (mNeedsQuotaRelease) {
-        // Unlock the quota dir if we locked it previously
-        nsCOMPtr<nsIRunnable> runnable = new QuotaReleaseRunnable(mQuotaInfo);
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
-      }
 
       // Explicitly cleanup here as the destructor could fire on any of
       // the threads we have bounced through.
@@ -453,6 +434,7 @@ Context::QuotaInitRunnable::Run()
       break;
     }
     // -----
+    case STATE_WAIT_FOR_DIRECTORY_LOCK:
     default:
     {
       MOZ_CRASH("unexpected state in QuotaInitRunnable");
@@ -460,14 +442,7 @@ Context::QuotaInitRunnable::Run()
   }
 
   if (resolver->Resolved()) {
-    MOZ_ASSERT(mState == STATE_RUNNING || NS_FAILED(resolver->Result()));
-
-    MOZ_ASSERT(NS_SUCCEEDED(mResult));
-    mResult = resolver->Result();
-
-    mState = STATE_COMPLETING;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      mInitiatingThread->Dispatch(this, nsIThread::DISPATCH_NORMAL)));
+    Complete(resolver->Result());
   }
 
   return NS_OK;
@@ -1007,7 +982,7 @@ Context::DispatchAction(Action* aAction, bool aDoomData)
 
 void
 Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
-                     nsMainThreadPtrHandle<OfflineStorage>& aOfflineStorage)
+                     nsMainThreadPtrHandle<DirectoryLock>& aDirectoryLock)
 {
   NS_ASSERT_OWNINGTHREAD(Context);
 
@@ -1016,10 +991,10 @@ Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
 
   mQuotaInfo = aQuotaInfo;
 
-  // Always save the offline storage to ensure QuotaManager does not shutdown
+  // Always save the directory lock to ensure QuotaManager does not shutdown
   // before the Context has gone away.
-  MOZ_ASSERT(!mOfflineStorage);
-  mOfflineStorage = aOfflineStorage;
+  MOZ_ASSERT(!mDirectoryLock);
+  mDirectoryLock = aDirectoryLock;
 
   if (mState == STATE_CONTEXT_CANCELED || NS_FAILED(aRv)) {
     for (uint32_t i = 0; i < mPendingActions.Length(); ++i) {

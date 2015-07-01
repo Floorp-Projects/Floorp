@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/it_CH.xml
@@ -18,11 +18,11 @@ it_CH{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.11.71"}
     calendar{
         generic{
             DateTimePatterns{
-                "HH.mm:ss 'h' zzzz",
+                "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
@@ -39,7 +39,7 @@ it_CH{
         }
         gregorian{
             DateTimePatterns{
-                "HH.mm:ss 'h' zzzz",
+                "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
@@ -47,11 +47,11 @@ it_CH{
                 "d MMMM y",
                 "d-MMM-y",
                 "dd.MM.yy",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
         }
     }
