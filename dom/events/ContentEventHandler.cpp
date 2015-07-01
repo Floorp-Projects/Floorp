@@ -1043,25 +1043,26 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRect caretRect;
-  nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
 
   if (selectionIsCollapsed) {
-    uint32_t offset;
-    rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset,
-                                  lineBreakType);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (offset == aEvent->mInput.mOffset) {
-      if (!caretFrame) {
-        return NS_ERROR_FAILURE;
-      }
-      rv = ConvertToRootViewRelativeOffset(caretFrame, caretRect);
+    nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
+    if (caretFrame) {
+      uint32_t offset;
+      rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset,
+                                    lineBreakType);
       NS_ENSURE_SUCCESS(rv, rv);
-      aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
-        caretRect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel()));
-      aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
-      aEvent->mReply.mOffset = aEvent->mInput.mOffset;
-      aEvent->mSucceeded = true;
-      return NS_OK;
+      if (offset == aEvent->mInput.mOffset) {
+        rv = ConvertToRootViewRelativeOffset(caretFrame, caretRect);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nscoord appUnitsPerDevPixel =
+          caretFrame->PresContext()->AppUnitsPerDevPixel();
+        aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+          caretRect.ToOutsidePixels(appUnitsPerDevPixel));
+        aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
+        aEvent->mReply.mOffset = aEvent->mInput.mOffset;
+        aEvent->mSucceeded = true;
+        return NS_OK;
+      }
     }
   }
 
