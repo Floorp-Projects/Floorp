@@ -36,14 +36,12 @@ public class LoginDoorHanger extends DoorHanger {
     private enum ActionType { EDIT, SELECT }
 
     private final TextView mMessage;
-    private final TextView mLink;
     private final DoorhangerConfig.ButtonConfig mButtonConfig;
 
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
         super(context, config, Type.LOGIN);
 
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
-        mLink = (TextView) findViewById(R.id.doorhanger_link);
         mIcon.setImageResource(R.drawable.icon_key);
         mIcon.setVisibility(View.VISIBLE);
 
