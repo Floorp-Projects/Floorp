@@ -1724,13 +1724,10 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   }
   NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
   nsresult rv =
-    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci,
-                                          getter_AddRefs(proto_holder));
+    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci, aProto.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aProto.set(proto_holder->GetJSObject());
   return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
 }
 
