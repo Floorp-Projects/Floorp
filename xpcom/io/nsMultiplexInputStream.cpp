@@ -696,13 +696,9 @@ nsMultiplexInputStreamConstructor(nsISupports* aOuter,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsMultiplexInputStream* inst = new nsMultiplexInputStream();
+  nsRefPtr<nsMultiplexInputStream> inst = new nsMultiplexInputStream();
 
-  NS_ADDREF(inst);
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
+  return inst->QueryInterface(aIID, aResult);
 }
 
 void
