@@ -12,15 +12,6 @@
               android:focusable="true"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:layout_marginBottom="@dimen/doorhanger_section_padding_large"
               android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
-
-    <TextView android:id="@+id/doorhanger_link"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
-              android:textColor="@color/link_blue"
-              android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
-              android:visibility="gone"/>
 
 </LinearLayout>
