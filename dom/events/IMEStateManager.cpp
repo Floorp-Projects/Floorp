@@ -16,6 +16,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/TabParent.h"
 
@@ -241,6 +242,26 @@ IMEStateManager::OnTabParentDestroying(TabParent* aTabParent)
 }
 
 // static
+void
+IMEStateManager::StopIMEStateManagement()
+{
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM: IMEStateManager::StopIMEStateManagement()"));
+
+  // NOTE: Don't set input context from here since this has already lost
+  //       the rights to change input context.
+
+  if (sTextCompositions && sPresContext) {
+    NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, sPresContext);
+  }
+  sPresContext = nullptr;
+  NS_IF_RELEASE(sContent);
+  sContent = nullptr;
+  sActiveTabParent = nullptr;
+  DestroyIMEContentObserver();
+}
+
+// static
 nsresult
 IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 {
@@ -409,6 +430,18 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       ("ISM:   IMEStateManager::OnChangeFocusInternal(), "
        "no nsPresContext is being activated"));
     return NS_OK;
+  }
+
+  nsIContentParent* currentContentParent =
+    sActiveTabParent ? sActiveTabParent->Manager() : nullptr;
+  nsIContentParent* newContentParent =
+    newTabParent ? newTabParent->Manager() : nullptr;
+  if (sActiveTabParent && currentContentParent != newContentParent) {
+    MOZ_LOG(sISMLog, LogLevel::Debug,
+      ("ISM:   IMEStateManager::OnChangeFocusInternal(), notifying previous "
+       "focused child process of parent process or another child process "
+       "getting focus"));
+    unused << sActiveTabParent->SendStopIMEStateManagement();
   }
 
   nsCOMPtr<nsIWidget> widget =
