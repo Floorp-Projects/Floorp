@@ -426,48 +426,9 @@ XPCOMGlueEnablePreload()
   do_preload = true;
 }
 
-#ifdef MOZ_WIDGET_GTK
-#include <glib.h>
-
-class GSliceInit {
-#if defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__)
-public:
-  GSliceInit() {
-    mHadGSlice = bool(getenv("G_SLICE"));
-    if (!mHadGSlice) {
-      // Disable the slice allocator, since jemalloc already uses similar layout
-      // algorithms, and using a sub-allocator tends to increase fragmentation.
-      // This must be done before g_thread_init() is called.
-      setenv("G_SLICE", "always-malloc", 1);
-    }
-  }
-
-  ~GSliceInit() {
-    if (mHadGSlice) {
-      return;
-    }
-    if (sTop) {
-      auto g_thread_init = (void (*)(void*)) GetSymbol(sTop->libHandle,
-        "g_thread_init");
-      auto g_type_init = (void (*)()) GetSymbol(sTop->libHandle, "g_type_init");
-      g_thread_init(nullptr); // For GLib version < 2.32
-      g_type_init(); // For 2.32 <= GLib version < 2.36
-    }
-    unsetenv("G_SLICE");
-  }
-
-private:
-  bool mHadGSlice;
-#endif
-};
-#endif
-
 nsresult
 XPCOMGlueStartup(const char* aXPCOMFile)
 {
-#ifdef MOZ_WIDGET_GTK
-  GSliceInit gSliceInit;
-#endif
   xpcomFunctions.version = XPCOM_GLUE_VERSION;
   xpcomFunctions.size    = sizeof(XPCOMFunctions);
 
