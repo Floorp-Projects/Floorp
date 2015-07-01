@@ -1761,8 +1761,10 @@ ScriptSource::ensureOwnsSource(ExclusiveContext* cx)
         return true;
 
     char16_t* uncompressed = cx->zone()->pod_malloc<char16_t>(Max<size_t>(length_, 1));
-    if (!uncompressed)
+    if (!uncompressed) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     PodCopy(uncompressed, uncompressedChars(), length_);
 
     data.uncompressed.chars = uncompressed;
@@ -2083,8 +2085,10 @@ FormatIntroducedFilename(ExclusiveContext* cx, const char* filename, unsigned li
                  introducerLen                  +
                  1 /* \0 */;
     char* formatted = cx->zone()->pod_malloc<char>(len);
-    if (!formatted)
+    if (!formatted) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
     mozilla::DebugOnly<size_t> checkLen = JS_snprintf(formatted, len, "%s line %s > %s",
                                                       filename, linenoBuf, introducer);
     MOZ_ASSERT(checkLen == len - 1);
@@ -2199,8 +2203,10 @@ js::SharedScriptData::new_(ExclusiveContext* cx, uint32_t codeLength,
 
     SharedScriptData* entry = reinterpret_cast<SharedScriptData*>(
             cx->zone()->pod_malloc<uint8_t>(length + dataOffset));
-    if (!entry)
+    if (!entry) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     entry->length = length;
     entry->natoms = natoms;
@@ -2521,8 +2527,10 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     size_t size = ScriptDataSize(script->bindings.count(), nconsts, nobjects, nregexps, ntrynotes,
                                  nblockscopes, nyieldoffsets);
     script->data = AllocScriptData(script->zone(), size);
-    if (size && !script->data)
+    if (size && !script->data) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     script->dataSize_ = size;
 
     MOZ_ASSERT(nTypeSets <= UINT16_MAX);
@@ -3899,8 +3907,10 @@ LazyScript::CreateRaw(ExclusiveContext* cx, HandleFunction fun,
                  + (p.numInnerFunctions * sizeof(HeapPtrFunction));
 
     ScopedJSFreePtr<uint8_t> table(bytes ? fun->zone()->pod_malloc<uint8_t>(bytes) : nullptr);
-    if (bytes && !table)
+    if (bytes && !table) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     LazyScript* res = Allocate<LazyScript>(cx);
     if (!res)

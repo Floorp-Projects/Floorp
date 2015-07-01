@@ -1023,13 +1023,17 @@ ObjectGroup::newPlainObject(ExclusiveContext* cx, IdValuePair* properties, size_
         preliminaryObjects->registerNewObject(obj);
 
         ScopedJSFreePtr<jsid> ids(group->zone()->pod_calloc<jsid>(nproperties));
-        if (!ids)
+        if (!ids) {
+            ReportOutOfMemory(cx);
             return nullptr;
+        }
 
         ScopedJSFreePtr<TypeSet::Type> types(
             group->zone()->pod_calloc<TypeSet::Type>(nproperties));
-        if (!types)
+        if (!types) {
+            ReportOutOfMemory(cx);
             return nullptr;
+        }
 
         for (size_t i = 0; i < nproperties; i++) {
             ids[i] = properties[i].id;
