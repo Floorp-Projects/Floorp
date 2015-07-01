@@ -791,15 +791,33 @@ this.PlacesUIUtils = {
     browserWindow.gBrowser.loadTabs(urls, loadInBackground, false);
   },
 
+  openLiveMarkNodesInTabs:
+  function PUIU_openLiveMarkNodesInTabs(aNode, aEvent, aView) {
+    let window = aView.ownerWindow;
+
+    PlacesUtils.livemarks.getLivemark({id: aNode.itemId})
+      .then(aLivemark => {
+        urlsToOpen = [];
+
+        let nodes = aLivemark.getNodesForContainer(aNode);
+        for (let node of nodes) {
+          urlsToOpen.push({uri: node.uri, isBookmark: false});
+        }
+
+        if (this._confirmOpenInTabs(urlsToOpen.length, window)) {
+          this._openTabset(urlsToOpen, aEvent, window);
+        }
+      }, Cu.reportError);
+  },
+
   openContainerNodeInTabs:
   function PUIU_openContainerInTabs(aNode, aEvent, aView) {
     let window = aView.ownerWindow;
 
     let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
-    if (!this._confirmOpenInTabs(urlsToOpen.length, window))
-      return;
-
-    this._openTabset(urlsToOpen, aEvent, window);
+    if (this._confirmOpenInTabs(urlsToOpen.length, window)) {
+      this._openTabset(urlsToOpen, aEvent, window);
+    }
   },
 
   openURINodesInTabs: function PUIU_openURINodesInTabs(aNodes, aEvent, aView) {
