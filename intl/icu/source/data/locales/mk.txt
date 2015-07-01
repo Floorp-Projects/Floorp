@@ -1,14 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mk.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/mk.xml
- */
 mk{
     AuxExemplarCharacters{"[ѐ ѝ]"}
     Ellipsis{
@@ -22,17 +19,16 @@ mk{
     ExemplarCharacters{"[а б в г д ѓ е ж з ѕ и ј к л љ м н њ о п р с т ќ у ф х ц ч џ ш]"}
     ExemplarCharactersIndex{"[А Б В Г Д Ѓ Е Ж З Ѕ И Ј К Л Љ М Н Њ О П Р С Т Ќ У Ф Х Ц Ч Џ Ш]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ‘ ‚ “ „ ( ) \\[ \\] \\{ \\}]"}
-    LocaleScript{
-        "Cyrl",
-    }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
                 range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"¤ #,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -77,7 +73,7 @@ mk{
                         other{"000 милијарди"}
                     }
                     1000000000000{
-                        one{"0 трилиони"}
+                        one{"0 трилион"}
                         other{"0 трилиони"}
                     }
                     10000000000000{
@@ -113,8 +109,8 @@ mk{
                         other{"00 мил'.'"}
                     }
                     100000000{
-                        one{"000 мил'.'"}
-                        other{"000 мил'.'"}
+                        one{"000 М"}
+                        other{"000 М"}
                     }
                     1000000000{
                         one{"0 милј'.'"}
@@ -125,7 +121,7 @@ mk{
                         other{"00 милј'.'"}
                     }
                     100000000000{
-                        one{"000 милј'.'"}
+                        one{"000 мј'.'"}
                         other{"000 милј'.'"}
                     }
                     1000000000000{
@@ -154,10 +150,13 @@ mk{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.12.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -211,100 +210,100 @@ mk{
             }
             intervalFormats{
                 H{
-                    H{"HH-HH"}
+                    H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH:mm-HH:mm"}
-                    m{"HH:mm-HH:mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm-HH:mm v"}
-                    m{"HH:mm-HH:mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
-                    H{"HH-HH v"}
+                    H{"HH–HH v"}
                 }
                 M{
-                    M{"M-M"}
+                    M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd.M - E, dd.M"}
-                    d{"E, dd.M - E, dd.M"}
+                    M{"E, dd.M – E, dd.M"}
+                    d{"E, dd.M – E, dd.M"}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, dd MMM - E, dd MMM"}
-                    d{"E, dd - E, dd MMM"}
+                    M{"E, dd MMM – E, dd MMM"}
+                    d{"E, dd – E, dd MMM"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
                 }
                 MMMd{
-                    M{"dd MMM - dd MMM"}
-                    d{"dd-dd MMM"}
+                    M{"dd MMM – dd MMM"}
+                    d{"dd–dd MMM"}
                 }
                 Md{
-                    M{"dd.M - dd.M"}
-                    d{"dd.M - dd.M"}
+                    M{"dd.M – dd.M"}
+                    d{"dd.M – dd.M"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
                     a{"h a – h a"}
-                    h{"h-h a"}
+                    h{"h–h a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
-                    h{"h:mm-h:mm a"}
-                    m{"h:mm-h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
                     a{"h:mm a – h:mm a v"}
-                    h{"h:mm-h:mm a v"}
-                    m{"h:mm-h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}
-                    h{"h-h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y G"}
+                    y{"y–y G"}
                 }
                 yM{
-                    M{"M.y - M.y G"}
-                    y{"M.y - M.y G"}
+                    M{"M.y – M.y G"}
+                    y{"M.y – M.y G"}
                 }
                 yMEd{
-                    M{"E, dd.M.y - E, dd.M.y G"}
-                    d{"E, dd.M.y - E, dd.M.y G"}
-                    y{"E, dd.M.y - E, dd.M.y G"}
+                    M{"E, dd.M.y – E, dd.M.y G"}
+                    d{"E, dd.M.y – E, dd.M.y G"}
+                    y{"E, dd.M.y – E, dd.M.y G"}
                 }
                 yMMM{
-                    M{"MMM-MMM y G"}
-                    y{"MMM y - MMM y G"}
+                    M{"MMM–MMM y G"}
+                    y{"MMM y – MMM y G"}
                 }
                 yMMMEd{
-                    M{"E, dd MMM - E, dd MMM y G"}
-                    d{"E, dd - E, dd MMM y G"}
-                    y{"E, dd MMM y - E, dd MMM y G"}
+                    M{"E, dd MMM – E, dd MMM y G"}
+                    d{"E, dd – E, dd MMM y G"}
+                    y{"E, dd MMM y – E, dd MMM y G"}
                 }
                 yMMMM{
-                    M{"MMMM-MMMM y G"}
-                    y{"MMMM y - MMMM y G"}
+                    M{"MMMM–MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
                 }
                 yMMMd{
-                    M{"dd MMM - dd MMM y G"}
-                    d{"dd-dd MMM y G"}
-                    y{"dd MMM y - dd MMM y G"}
+                    M{"dd MMM – dd MMM y G"}
+                    d{"dd–dd MMM y G"}
+                    y{"dd MMM y – dd MMM y G"}
                 }
                 yMd{
-                    M{"dd.M.y - dd.M.y G"}
-                    d{"dd.M.y - dd.M.y G"}
-                    y{"dd.M.y - dd.M.y G"}
+                    M{"dd.M.y – dd.M.y G"}
+                    d{"dd.M.y – dd.M.y G"}
+                    y{"dd.M.y – dd.M.y G"}
                 }
             }
         }
@@ -313,13 +312,17 @@ mk{
                 "претпладне",
                 "попладне",
             }
+            AmPmMarkersNarrow{
+                "прет.",
+                "попл.",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, dd MMMM y 'г'.",
-                "dd MMMM y 'г'.",
+                "EEEE, dd MMMM y",
+                "dd MMMM y",
                 "dd.M.y",
                 "dd.M.yy",
                 "{1} {0}",
@@ -328,19 +331,22 @@ mk{
                 "{1} {0}",
                 "{1} {0}",
             }
+            NoonMarker{"на пладне"}
+            NoonMarkerNarrow{"напл."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                E{"ccc"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"y 'г'. G"}
-                GyMMM{"MMM y 'г'. G"}
-                GyMMMEd{"E, dd MMM y 'г'. G"}
-                GyMMMd{"dd MMM y 'г'. G"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, dd MMM y G"}
+                GyMMMd{"dd MMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -350,7 +356,6 @@ mk{
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d MMMM"}
-                MMMMdd{"dd MMMM"}
                 MMMd{"d MMM"}
                 Md{"d.M"}
                 Mdd{"dd.M"}
@@ -359,7 +364,7 @@ mk{
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
-                y{"y 'г'."}
+                y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
                 yMMM{"MMM y 'г'."}
@@ -393,11 +398,11 @@ mk{
                     short{
                         "нед.",
                         "пон.",
-                        "3",
+                        "вт.",
                         "сре.",
                         "чет.",
                         "пет.",
-                        "7",
+                        "саб.",
                     }
                     wide{
                         "недела",
@@ -453,103 +458,115 @@ mk{
                     "пр.н.е.",
                     "н.е.",
                 }
+                abbreviated%variant{
+                    "пр. н.е.",
+                    "CE",
+                }
+                narrow{
+                    "пр. н.е.",
+                    "н.е.",
+                }
+                wide{
+                    "пред нашата ера",
+                    "од нашата ера",
+                }
             }
             intervalFormats{
                 H{
                     H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH:mm-HH:mm"}
-                    m{"HH:mm-HH:mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH:mm-HH:mm v"}
-                    m{"HH:mm-HH:mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
-                    H{"HH-HH v"}
+                    H{"HH–HH v"}
                 }
                 M{
-                    M{"M-M"}
+                    M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd.M - E, dd.M"}
-                    d{"E, dd.M - E, dd.M"}
+                    M{"E, dd.M – E, dd.M"}
+                    d{"E, dd.M – E, dd.M"}
                 }
                 MMM{
-                    M{"MMM-MMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, dd MMM - E, dd MMM"}
-                    d{"E, dd - E, dd MMM"}
+                    M{"E, dd MMM – E, dd MMM"}
+                    d{"E, dd – E, dd MMM"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
                 }
                 MMMd{
-                    M{"dd MMM - dd MMM"}
-                    d{"dd-dd MMM"}
+                    M{"dd MMM – dd MMM"}
+                    d{"dd–dd MMM"}
                 }
                 Md{
-                    M{"dd.M - dd.M"}
-                    d{"dd.M - dd.M"}
+                    M{"dd.M – dd.M"}
+                    d{"dd.M – dd.M"}
                 }
                 d{
-                    d{"d-d"}
+                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
                     a{"h a – h a"}
-                    h{"h-h a"}
+                    h{"h–h a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
-                    h{"h:mm-h:mm a"}
-                    m{"h:mm-h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
                     a{"h:mm a – h:mm a v"}
-                    h{"h:mm-h:mm a v"}
-                    m{"h:mm-h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}
-                    h{"h-h a v"}
+                    h{"h–h a v"}
                 }
                 y{
-                    y{"y-y"}
+                    y{"y–y"}
                 }
                 yM{
-                    M{"M.y - M.y"}
-                    y{"M.y - M.y"}
+                    M{"M.y – M.y"}
+                    y{"M.y – M.y"}
                 }
                 yMEd{
-                    M{"E, dd.M.y - E, dd.M.y"}
-                    d{"E, dd.M.y - E, dd.M.y"}
-                    y{"E, dd.M.y - E, dd.M.y"}
+                    M{"E, dd.M.y – E, dd.M.y"}
+                    d{"E, dd.M.y – E, dd.M.y"}
+                    y{"E, dd.M.y – E, dd.M.y"}
                 }
                 yMMM{
-                    M{"MMM-MMM y"}
-                    y{"MMM y - MMM y"}
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, dd MMM - E, dd MMM y"}
-                    d{"E, dd - E, dd MMM y"}
-                    y{"E, dd MMM y - E, dd MMM y"}
+                    M{"E, dd MMM – E, dd MMM y"}
+                    d{"E, dd – E, dd MMM y"}
+                    y{"E, dd MMM y – E, dd MMM y"}
                 }
                 yMMMM{
                     M{"MMMM–MMMM y"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"dd MMM - dd MMM y"}
-                    d{"dd-dd MMM y"}
-                    y{"dd MMM y - dd MMM y"}
+                    M{"dd MMM – dd MMM y"}
+                    d{"dd–dd MMM y"}
+                    y{"dd MMM y – dd MMM y"}
                 }
                 yMd{
-                    M{"dd.M.y - dd.M.y"}
-                    d{"dd.M.y - dd.M.y"}
-                    y{"dd.M.y - dd.M.y"}
+                    M{"dd.M.y – dd.M.y"}
+                    d{"dd.M.y – dd.M.y"}
+                    y{"dd.M.y – dd.M.y"}
                 }
             }
             monthNames{
@@ -645,10 +662,10 @@ mk{
             quarters{
                 format{
                     abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
+                        "јан-мар",
+                        "апр-јун",
+                        "јул-сеп",
+                        "окт-дек",
                     }
                     narrow{
                         "1",
@@ -692,29 +709,50 @@ mk{
         quotationEnd{"“"}
         quotationStart{"„"}
     }
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     fields{
         day{
             dn{"ден"}
             relative{
                 "-1"{"вчера"}
                 "-2"{"завчера"}
-                "0"{"Денес"}
+                "0"{"денес"}
                 "1"{"утре"}
                 "2"{"задутре"}
             }
             relativeTime{
                 future{
-                    one{"За {0} ден"}
-                    other{"За {0} дена"}
+                    one{"за {0} ден"}
+                    other{"за {0} дена"}
                 }
                 past{
-                    one{"Пред {0} ден"}
-                    other{"Пред {0} дена"}
+                    one{"пред {0} ден"}
+                    other{"пред {0} дена"}
+                }
+            }
+        }
+        day-narrow{
+            dn{"ден"}
+            relativeTime{
+                future{
+                    one{"за {0} ден"}
+                    other{"за {0} дена"}
+                }
+                past{
+                    one{"пред {0} ден"}
+                    other{"пред {0} дена"}
+                }
+            }
+        }
+        day-short{
+            dn{"ден"}
+            relativeTime{
+                future{
+                    one{"за {0} ден"}
+                    other{"за {0} дена"}
+                }
+                past{
+                    one{"пред {0} ден"}
+                    other{"пред {0} дена"}
                 }
             }
         }
@@ -731,16 +769,56 @@ mk{
                 "1"{"следниот петок"}
             }
         }
+        fri-narrow{
+            relative{
+                "-1"{"минатиот петок"}
+                "0"{"овој петок"}
+                "1"{"следниот петок"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"минатиот петок"}
+                "0"{"овој петок"}
+                "1"{"следниот петок"}
+            }
+        }
         hour{
             dn{"Час"}
             relativeTime{
                 future{
-                    one{"За {0} час"}
-                    other{"За {0} часа"}
+                    one{"за {0} час"}
+                    other{"за {0} часа"}
                 }
                 past{
-                    one{"Пред {0} час"}
-                    other{"Пред {0} часа"}
+                    one{"пред {0} час"}
+                    other{"пред {0} часа"}
+                }
+            }
+        }
+        hour-narrow{
+            dn{"час"}
+            relativeTime{
+                future{
+                    one{"за {0} час"}
+                    other{"за {0} часа"}
+                }
+                past{
+                    one{"пред {0} час"}
+                    other{"пред {0} часа"}
+                }
+            }
+        }
+        hour-short{
+            dn{"час"}
+            relativeTime{
+                future{
+                    one{"за {0} час"}
+                    other{"за {0} часа"}
+                }
+                past{
+                    one{"пред {0} час"}
+                    other{"пред {0} часа"}
                 }
             }
         }
@@ -748,16 +826,56 @@ mk{
             dn{"Минута"}
             relativeTime{
                 future{
-                    one{"За {0} минута"}
-                    other{"За {0} минути"}
+                    one{"за {0} минута"}
+                    other{"за {0} минути"}
                 }
                 past{
-                    one{"Пред {0} минута"}
-                    other{"Пред {0} минути"}
+                    one{"пред {0} минута"}
+                    other{"пред {0} минути"}
+                }
+            }
+        }
+        minute-narrow{
+            dn{"мин."}
+            relativeTime{
+                future{
+                    one{"за {0} минута"}
+                    other{"за {0} минути"}
+                }
+                past{
+                    one{"пред {0} минута"}
+                    other{"пред {0} минути"}
+                }
+            }
+        }
+        minute-short{
+            dn{"мин."}
+            relativeTime{
+                future{
+                    one{"за {0} минута"}
+                    other{"за {0} минути"}
+                }
+                past{
+                    one{"пред {0} минута"}
+                    other{"пред {0} минути"}
                 }
             }
         }
         mon{
+            relative{
+                "-1"{"минатиот понеделник"}
+                "0"{"овој понеделник"}
+                "1"{"следниот понеделник"}
+            }
+        }
+        mon-narrow{
+            relative{
+                "-1"{"минатиот понеделник"}
+                "0"{"овој понеделник"}
+                "1"{"следниот понеделник"}
+            }
+        }
+        mon-short{
             relative{
                 "-1"{"минатиот понеделник"}
                 "0"{"овој понеделник"}
@@ -773,16 +891,95 @@ mk{
             }
             relativeTime{
                 future{
-                    one{"За {0} месец"}
-                    other{"За {0} месеци"}
+                    one{"за {0} месец"}
+                    other{"за {0} месеци"}
                 }
                 past{
-                    one{"Пред {0} месец"}
-                    other{"Пред {0} месеци"}
+                    one{"пред {0} месец"}
+                    other{"пред {0} месеци"}
+                }
+            }
+        }
+        month-narrow{
+            dn{"мес."}
+            relativeTime{
+                future{
+                    one{"за {0} месец"}
+                    other{"за {0} месеци"}
+                }
+                past{
+                    one{"пред {0} месец"}
+                    other{"пред {0} месеци"}
+                }
+            }
+        }
+        month-short{
+            dn{"мес."}
+            relativeTime{
+                future{
+                    one{"за {0} месец"}
+                    other{"за {0} месеци"}
+                }
+                past{
+                    one{"пред {0} месец"}
+                    other{"пред {0} месеци"}
+                }
+            }
+        }
+        quarter{
+            dn{"тромесечје"}
+            relativeTime{
+                future{
+                    one{"за {0} тромесечје"}
+                    other{"за {0} тромесечја"}
+                }
+                past{
+                    one{"пред {0} тромесечје"}
+                    other{"пред {0} тромесечја"}
+                }
+            }
+        }
+        quarter-narrow{
+            dn{"тромес."}
+            relativeTime{
+                future{
+                    one{"за {0} тромесечја"}
+                    other{"за {0} тромесечја"}
+                }
+                past{
+                    one{"пред {0} тромесечја"}
+                    other{"пред {0} тромесечја"}
+                }
+            }
+        }
+        quarter-short{
+            dn{"тромес."}
+            relativeTime{
+                future{
+                    one{"за {0} тромесечје"}
+                    other{"за {0} тромесечја"}
+                }
+                past{
+                    one{"пред {0} тромесечје"}
+                    other{"пред {0} тромесечја"}
                 }
             }
         }
         sat{
+            relative{
+                "-1"{"минатата сабота"}
+                "0"{"оваа сабота"}
+                "1"{"следната сабота"}
+            }
+        }
+        sat-narrow{
+            relative{
+                "-1"{"минатата сабота"}
+                "0"{"оваа сабота"}
+                "1"{"следната сабота"}
+            }
+        }
+        sat-short{
             relative{
                 "-1"{"минатата сабота"}
                 "0"{"оваа сабота"}
@@ -796,16 +993,56 @@ mk{
             }
             relativeTime{
                 future{
-                    one{"За {0} секунда"}
-                    other{"За {0} секунди"}
+                    one{"за {0} секунда"}
+                    other{"за {0} секунди"}
                 }
                 past{
-                    one{"Пред {0} секунда"}
-                    other{"Пред {0} секунди"}
+                    one{"пред {0} секунда"}
+                    other{"пред {0} секунди"}
+                }
+            }
+        }
+        second-narrow{
+            dn{"сек."}
+            relativeTime{
+                future{
+                    one{"за {0} секунда"}
+                    other{"за {0} секунди"}
+                }
+                past{
+                    one{"пред {0} секунда"}
+                    other{"пред {0} секунди"}
+                }
+            }
+        }
+        second-short{
+            dn{"сек."}
+            relativeTime{
+                future{
+                    one{"за {0} секунда"}
+                    other{"за {0} секунди"}
+                }
+                past{
+                    one{"пред {0} секунда"}
+                    other{"пред {0} секунди"}
                 }
             }
         }
         sun{
+            relative{
+                "-1"{"минатата недела"}
+                "0"{"оваа недела"}
+                "1"{"следната недела"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"минатата недела"}
+                "0"{"оваа недела"}
+                "1"{"следната недела"}
+            }
+        }
+        sun-short{
             relative{
                 "-1"{"минатата недела"}
                 "0"{"оваа недела"}
@@ -819,6 +1056,20 @@ mk{
                 "1"{"следниот четврток"}
             }
         }
+        thu-narrow{
+            relative{
+                "-1"{"минатиот четврток"}
+                "0"{"овој четврток"}
+                "1"{"следниот четврток"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"минатиот четврток"}
+                "0"{"овој четврток"}
+                "1"{"следниот четврток"}
+            }
+        }
         tue{
             relative{
                 "-1"{"минатиот вторник"}
@@ -826,7 +1077,35 @@ mk{
                 "1"{"следниот вторник"}
             }
         }
+        tue-narrow{
+            relative{
+                "-1"{"минатиот вторник"}
+                "0"{"овој вторник"}
+                "1"{"следниот вторник"}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"минатиот вторник"}
+                "0"{"овој вторник"}
+                "1"{"следниот вторник"}
+            }
+        }
         wed{
+            relative{
+                "-1"{"минатата среда"}
+                "0"{"оваа среда"}
+                "1"{"следната среда"}
+            }
+        }
+        wed-narrow{
+            relative{
+                "-1"{"минатата среда"}
+                "0"{"оваа среда"}
+                "1"{"следната среда"}
+            }
+        }
+        wed-short{
             relative{
                 "-1"{"минатата среда"}
                 "0"{"оваа среда"}
@@ -842,12 +1121,38 @@ mk{
             }
             relativeTime{
                 future{
-                    one{"За {0} седмица"}
-                    other{"За {0} седмици"}
+                    one{"за {0} седмица"}
+                    other{"за {0} седмици"}
                 }
                 past{
-                    one{"Пред {0} седмица"}
-                    other{"Пред {0} седмици"}
+                    one{"пред {0} седмица"}
+                    other{"пред {0} седмици"}
+                }
+            }
+        }
+        week-narrow{
+            dn{"сед."}
+            relativeTime{
+                future{
+                    one{"за {0} седмица"}
+                    other{"за {0} седмици"}
+                }
+                past{
+                    one{"пред {0} седмица"}
+                    other{"пред {0} седмици"}
+                }
+            }
+        }
+        week-short{
+            dn{"сед."}
+            relativeTime{
+                future{
+                    one{"за {0} седмица"}
+                    other{"за {0} седмици"}
+                }
+                past{
+                    one{"пред {0} седмица"}
+                    other{"пред {0} седмици"}
                 }
             }
         }
@@ -863,12 +1168,38 @@ mk{
             }
             relativeTime{
                 future{
-                    one{"За {0} година"}
+                    one{"за {0} година"}
+                    other{"за {0} години"}
+                }
+                past{
+                    one{"пред {0} година"}
+                    other{"пред {0} години"}
+                }
+            }
+        }
+        year-narrow{
+            dn{"год."}
+            relativeTime{
+                future{
+                    one{"За {0} години"}
                     other{"За {0} години"}
                 }
                 past{
-                    one{"Пред {0} година"}
+                    one{"Пред {0} години"}
                     other{"Пред {0} години"}
+                }
+            }
+        }
+        year-short{
+            dn{"год."}
+            relativeTime{
+                future{
+                    one{"за {0} година"}
+                    other{"за {0} години"}
+                }
+                past{
+                    one{"пред {0} година"}
+                    other{"пред {0} години"}
                 }
             }
         }
@@ -879,654 +1210,32 @@ mk{
     listPattern{
         standard{
             2{"{0}, {1}"}
-            end{"{0}, {1}"}
+            end{"{0} и {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         unit{
+            2{"{0} и {1}"}
             end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
         UK{"британски"}
         US{"американски"}
         metric{"метрички"}
-    }
-    units{
-        acceleration{
-            g-force{
-                one{"{0} гравитациска сила"}
-                other{"{0} гравитациска сила"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} минута"}
-                other{"{0} минути"}
-            }
-            arc-second{
-                one{"{0} секунда"}
-                other{"{0} секунди"}
-            }
-            degree{
-                one{"{0} степен"}
-                other{"{0} степени"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акри"}
-            }
-            hectare{
-                one{"{0} хектар"}
-                other{"{0} хектари"}
-            }
-            square-foot{
-                one{"{0} квадратна стапка"}
-                other{"{0} квадратни стапки"}
-            }
-            square-kilometer{
-                one{"{0} квадратен километар"}
-                other{"{0} квадратни километри"}
-            }
-            square-meter{
-                one{"{0} квадратен метар"}
-                other{"{0} квадратни метри"}
-            }
-            square-mile{
-                one{"{0} квадратна милја"}
-                other{"{0} квадратни милји"}
-            }
-        }
-        compound{
-            per{"{0} на {1}"}
-        }
-        duration{
-            day{
-                one{"{0} ден"}
-                other{"{0} дена"}
-            }
-            hour{
-                one{"{0} час"}
-                other{"{0} часа"}
-            }
-            millisecond{
-                one{"{0} милисекунда"}
-                other{"{0} милисекунди"}
-            }
-            minute{
-                one{"{0} минута"}
-                other{"{0} минути"}
-            }
-            month{
-                one{"{0} месец"}
-                other{"{0} месеци"}
-            }
-            second{
-                one{"{0} секунда"}
-                other{"{0} секунди"}
-            }
-            week{
-                one{"{0} седмица"}
-                other{"{0} седмици"}
-            }
-            year{
-                one{"{0} година"}
-                other{"{0} години"}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} сантиметар"}
-                other{"{0} сантиметри"}
-            }
-            foot{
-                one{"{0} стапка"}
-                other{"{0} стапки"}
-            }
-            inch{
-                one{"{0} инч"}
-                other{"{0} инчи"}
-            }
-            kilometer{
-                one{"{0} километар"}
-                other{"{0} километри"}
-            }
-            light-year{
-                one{"{0} светлосна година"}
-                other{"{0} светлосни години"}
-            }
-            meter{
-                one{"{0} метар"}
-                other{"{0} метри"}
-            }
-            mile{
-                one{"{0} милја"}
-                other{"{0} милји"}
-            }
-            millimeter{
-                one{"{0} милиметар"}
-                other{"{0} милиметри"}
-            }
-            picometer{
-                one{"{0} пикометар"}
-                other{"{0} пикометри"}
-            }
-            yard{
-                one{"{0} јард"}
-                other{"{0} јарди"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} грам"}
-                other{"{0} грама"}
-            }
-            kilogram{
-                one{"{0} килограм"}
-                other{"{0} килограми"}
-            }
-            ounce{
-                one{"{0} унца"}
-                other{"{0} унци"}
-            }
-            pound{
-                one{"{0} фунта"}
-                other{"{0} фунти"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} коњска сила"}
-                other{"{0} коњски сили"}
-            }
-            kilowatt{
-                one{"{0} киловат"}
-                other{"{0} киловати"}
-            }
-            watt{
-                one{"{0} ват"}
-                other{"{0} вати"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} хектопаскал"}
-                other{"{0} хектопаскали"}
-            }
-            inch-hg{
-                one{"{0} инч жива"}
-                other{"{0} инчи жива"}
-            }
-            millibar{
-                one{"{0} милибар"}
-                other{"{0} милибари"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} километар на час"}
-                other{"{0} километри на час"}
-            }
-            meter-per-second{
-                one{"{0} метар во секунда"}
-                other{"{0} метри во секунда"}
-            }
-            mile-per-hour{
-                one{"{0} милја на час"}
-                other{"{0} милји на час"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0} целзиусов степен"}
-                other{"{0} целзиусови степени"}
-            }
-            fahrenheit{
-                one{"{0} фаренхајтов степен"}
-                other{"{0} фаренхајтови степени"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} кубен километар"}
-                other{"{0} кубни километри"}
-            }
-            cubic-mile{
-                one{"{0} кубна милја"}
-                other{"{0} кубни милји"}
-            }
-            liter{
-                one{"{0} литар"}
-                other{"{0} литри"}
-            }
-        }
-    }
-    unitsNarrow{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0}′"}
-                other{"{0}′"}
-            }
-            arc-second{
-                one{"{0}″"}
-                other{"{0}″"}
-            }
-            degree{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акри"}
-            }
-            hectare{
-                one{"{0} ха"}
-                other{"{0} ха"}
-            }
-            square-foot{
-                one{"{0} ст²"}
-                other{"{0} ст²"}
-            }
-            square-kilometer{
-                one{"{0} км²"}
-                other{"{0} км²"}
-            }
-            square-meter{
-                one{"{0} м²"}
-                other{"{0} м²"}
-            }
-            square-mile{
-                one{"{0} ми²"}
-                other{"{0} ми²"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} ден"}
-                other{"{0} дена"}
-            }
-            hour{
-                one{"{0} час"}
-                other{"{0} часа"}
-            }
-            millisecond{
-                one{"{0} мс"}
-                other{"{0} мс"}
-            }
-            minute{
-                one{"{0} мин."}
-                other{"{0} мин."}
-            }
-            month{
-                one{"{0} мес."}
-                other{"{0} мес."}
-            }
-            second{
-                one{"{0} сек."}
-                other{"{0} сек."}
-            }
-            week{
-                one{"{0} сед."}
-                other{"{0} сед."}
-            }
-            year{
-                one{"{0} год."}
-                other{"{0} год."}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} см"}
-                other{"{0} см"}
-            }
-            foot{
-                one{"{0} ст"}
-                other{"{0} ст"}
-            }
-            inch{
-                one{"{0} инч"}
-                other{"{0} инчи"}
-            }
-            kilometer{
-                one{"{0} км"}
-                other{"{0} км"}
-            }
-            light-year{
-                one{"{0} сг"}
-                other{"{0} сг"}
-            }
-            meter{
-                one{"{0} м"}
-                other{"{0} м"}
-            }
-            mile{
-                one{"{0} ми"}
-                other{"{0} ми"}
-            }
-            millimeter{
-                one{"{0} мм"}
-                other{"{0} мм"}
-            }
-            picometer{
-                one{"{0} пм"}
-                other{"{0} пм"}
-            }
-            yard{
-                one{"{0} јард"}
-                other{"{0} јарди"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} г"}
-                other{"{0} г"}
-            }
-            kilogram{
-                one{"{0} кг"}
-                other{"{0} кг"}
-            }
-            ounce{
-                one{"{0} унца"}
-                other{"{0} унци"}
-            }
-            pound{
-                one{"{0} фунта"}
-                other{"{0} фунти"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} кс"}
-                other{"{0} кс"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} ват"}
-                other{"{0} вати"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} мб"}
-                other{"{0} мб"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} к/ч"}
-                other{"{0} к/ч"}
-            }
-            meter-per-second{
-                one{"{0} м/с"}
-                other{"{0} м/с"}
-            }
-            mile-per-hour{
-                one{"{0} ми/ч"}
-                other{"{0} ми/ч"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} км³"}
-                other{"{0} км³"}
-            }
-            cubic-mile{
-                one{"{0} ми³"}
-                other{"{0} ми³"}
-            }
-            liter{
-                one{"{0} л"}
-                other{"{0} л"}
-            }
-        }
-    }
-    unitsShort{
-        acceleration{
-            g-force{
-                one{"{0} G"}
-                other{"{0} G"}
-            }
-        }
-        angle{
-            arc-minute{
-                one{"{0} мин."}
-                other{"{0} мин."}
-            }
-            degree{
-                one{"{0} степ."}
-                other{"{0} степ."}
-            }
-        }
-        area{
-            acre{
-                one{"{0} акр"}
-                other{"{0} акри"}
-            }
-            hectare{
-                one{"{0} ха"}
-                other{"{0} ха"}
-            }
-            square-foot{
-                one{"{0} кв. стапка"}
-                other{"{0} кв. стапки"}
-            }
-            square-kilometer{
-                one{"{0} км²"}
-                other{"{0} км²"}
-            }
-            square-meter{
-                one{"{0} м²"}
-                other{"{0} м²"}
-            }
-            square-mile{
-                one{"{0} кв. милја"}
-                other{"{0} кв. милји"}
-            }
-        }
-        compound{
-            per{"{0}/{1}"}
-        }
-        duration{
-            day{
-                one{"{0} ден"}
-                other{"{0} дена"}
-            }
-            hour{
-                one{"{0} час"}
-                other{"{0} часа"}
-            }
-            millisecond{
-                one{"{0} мс"}
-                other{"{0} мс"}
-            }
-            minute{
-                one{"{0} мин."}
-                other{"{0} мин."}
-            }
-            month{
-                one{"{0} мес."}
-                other{"{0} мес."}
-            }
-            second{
-                one{"{0} сек."}
-                other{"{0} сек."}
-            }
-            week{
-                one{"{0} сед."}
-                other{"{0} сед."}
-            }
-            year{
-                one{"{0} год."}
-                other{"{0} год."}
-            }
-        }
-        length{
-            centimeter{
-                one{"{0} см"}
-                other{"{0} см"}
-            }
-            foot{
-                one{"{0} ст"}
-                other{"{0} ст"}
-            }
-            inch{
-                one{"{0} инч"}
-                other{"{0} инчи"}
-            }
-            kilometer{
-                one{"{0} км"}
-                other{"{0} км"}
-            }
-            light-year{
-                one{"{0} сг"}
-                other{"{0} сг"}
-            }
-            meter{
-                one{"{0} м"}
-                other{"{0} м"}
-            }
-            mile{
-                one{"{0} ми"}
-                other{"{0} ми"}
-            }
-            millimeter{
-                one{"{0} мм"}
-                other{"{0} мм"}
-            }
-            picometer{
-                one{"{0} пм"}
-                other{"{0} пм"}
-            }
-            yard{
-                one{"{0} јард"}
-                other{"{0} јарди"}
-            }
-        }
-        mass{
-            gram{
-                one{"{0} г"}
-                other{"{0} г"}
-            }
-            kilogram{
-                one{"{0} кг"}
-                other{"{0} кг"}
-            }
-            ounce{
-                one{"{0} унца"}
-                other{"{0} унци"}
-            }
-            pound{
-                one{"{0} фунта"}
-                other{"{0} фунти"}
-            }
-        }
-        power{
-            horsepower{
-                one{"{0} кс"}
-                other{"{0} кс"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} ват"}
-                other{"{0} вати"}
-            }
-        }
-        pressure{
-            hectopascal{
-                one{"{0} hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                one{"{0} inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                one{"{0} мб"}
-                other{"{0} мб"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                one{"{0} к/ч"}
-                other{"{0} к/ч"}
-            }
-            meter-per-second{
-                one{"{0} м/с"}
-                other{"{0} м/с"}
-            }
-            mile-per-hour{
-                one{"{0} ми/ч"}
-                other{"{0} ми/ч"}
-            }
-        }
-        temperature{
-            celsius{
-                one{"{0}°C"}
-                other{"{0}°C"}
-            }
-            fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
-            }
-        }
-        volume{
-            cubic-kilometer{
-                one{"{0} км³"}
-                other{"{0} км³"}
-            }
-            cubic-mile{
-                one{"{0} ми³"}
-                other{"{0} ми³"}
-            }
-            liter{
-                one{"{0} л"}
-                other{"{0} л"}
-            }
-        }
     }
 }

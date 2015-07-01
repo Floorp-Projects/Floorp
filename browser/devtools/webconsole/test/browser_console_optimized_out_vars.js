@@ -4,9 +4,12 @@
 // Check that inspecting an optimized out variable works when execution is
 // paused.
 
+"use strict";
+
 function test() {
   Task.spawn(function* () {
-    const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-closure-optimized-out.html";
+    const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                     "test/test-closure-optimized-out.html";
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
     let { toolbox, panel, panelWin } = yield openDebugger();
@@ -25,7 +28,7 @@ function test() {
     // this function to return first.
     executeSoon(() => button.click());
 
-    let packet = yield fetchedScopes;
+    yield fetchedScopes;
     ok(true, "Scopes were fetched");
 
     yield toolbox.selectTool("webconsole");
@@ -56,25 +59,25 @@ function ensureThreadClientState(aPanel, aState) {
 
   if (state == aState) {
     return promise.resolve(null);
-  } else {
-    return waitForThreadEvents(aPanel, aState);
   }
+  return waitForThreadEvents(aPanel, aState);
 }
 
 function waitForThreadEvents(aPanel, aEventName, aEventRepeat = 1) {
-  info("Waiting for thread event: '" + aEventName + "' to fire: " + aEventRepeat + " time(s).");
+  info("Waiting for thread event: '" + aEventName + "' to fire: " +
+       aEventRepeat + " time(s).");
 
   let deferred = promise.defer();
   let thread = aPanel.panelWin.gThreadClient;
   let count = 0;
 
-  thread.addListener(aEventName, function onEvent(aEventName, ...aArgs) {
-    info("Thread event '" + aEventName + "' fired: " + (++count) + " time(s).");
+  thread.addListener(aEventName, function onEvent(eventName, ...args) {
+    info("Thread event '" + eventName + "' fired: " + (++count) + " time(s).");
 
     if (count == aEventRepeat) {
-      ok(true, "Enough '" + aEventName + "' thread events have been fired.");
-      thread.removeListener(aEventName, onEvent);
-      deferred.resolve.apply(deferred, aArgs);
+      ok(true, "Enough '" + eventName + "' thread events have been fired.");
+      thread.removeListener(eventName, onEvent);
+      deferred.resolve.apply(deferred, args);
     }
   });
 

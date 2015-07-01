@@ -415,7 +415,7 @@ public:
     }
 
     // Added by mozilla
-    virtual mozilla::TemporaryRef<mozilla::layers::TextureClient>
+    virtual already_AddRefed<mozilla::layers::TextureClient>
     getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
     {
         return nullptr;

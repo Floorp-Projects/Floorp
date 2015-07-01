@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- Copyright (c) 2010-2012 International Business Machines Corporation and others. All rights reserved.
+ Copyright (c) 2010-2015 International Business Machines Corporation and others. All rights reserved.
 -->
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
 [
@@ -14,27 +14,5 @@
         <generation date="$Date: 2008/05/25 01:05:56 $"/>
         <language type="root"/> 
     </identity>
-    <characters>
-        <special xmlns:icu="http://www.icu-project.org/">
-            <icu:scripts>
-                <icu:script type="1">Zyyy</icu:script>
-            </icu:scripts>
-        </special>
-    </characters>
-  <dates>
-    <timeZoneNames>
-      <zone type="">
-        <long>
-          <standard/>
-          <daylight/>
-        </long>
-        <short>
-          <standard/>
-          <daylight/>
-        </short>
-        <exemplarCity/>
-      </zone>
-    </timeZoneNames>
-  </dates>
 </ldml>
 

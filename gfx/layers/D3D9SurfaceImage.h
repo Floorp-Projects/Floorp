@@ -40,7 +40,7 @@ public:
 
   gfx::IntSize GetSize() override;
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 

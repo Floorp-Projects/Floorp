@@ -70,7 +70,7 @@ OrientedImage::GetIntrinsicRatio(nsSize* aRatio)
   return rv;
 }
 
-NS_IMETHODIMP_(TemporaryRef<SourceSurface>)
+NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 OrientedImage::GetFrame(uint32_t aWhichFrame,
                         uint32_t aFlags)
 {

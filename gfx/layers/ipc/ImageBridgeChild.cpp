@@ -650,7 +650,7 @@ ImageBridgeChild::IdentifyCompositorTextureHost(const TextureFactoryIdentifier& 
   }
 }
 
-TemporaryRef<ImageClient>
+already_AddRefed<ImageClient>
 ImageBridgeChild::CreateImageClient(CompositableType aType)
 {
   if (InImageBridgeChildThread()) {
@@ -671,7 +671,7 @@ ImageBridgeChild::CreateImageClient(CompositableType aType)
   return result.forget();
 }
 
-TemporaryRef<ImageClient>
+already_AddRefed<ImageClient>
 ImageBridgeChild::CreateImageClientNow(CompositableType aType)
 {
   MOZ_ASSERT(!sImageBridgeChildSingleton->mShuttingDown);

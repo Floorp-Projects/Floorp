@@ -161,7 +161,7 @@ public:
   virtual void            PostRender(LayerManagerComposite* aManager) override {}
   virtual void            DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect) override {}
   virtual void            DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect) override {}
-  virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
+  virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override { };
   virtual void            CleanupRemoteDrawing() override { };
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}

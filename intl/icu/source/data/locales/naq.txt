@@ -1,21 +1,15 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2013 International Business Machines
+// * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/naq.xml
 // *
 // ***************************************************************************
-/**
- * ICU <specials> source: <path>/common/main/naq.xml
- */
 naq{
     AuxExemplarCharacters{"[j l v]"}
     ExemplarCharacters{"[a â b c d e f g h i î k m n o ô p q r s t u û w x y z ǀ ǁ ǂ ǃ]"}
     ExemplarCharactersIndex{"[A B C D E F G H I K M N O P Q R S T U W X Y Z]"}
-    LocaleScript{
-        "Latn",
-    }
     NumberElements{
         latn{
             patterns{
@@ -23,7 +17,7 @@ naq{
             }
         }
     }
-    Version{"2.0.92.87"}
+    Version{"2.1.6.69"}
     calendar{
         generic{
             DateTimePatterns{

@@ -6,7 +6,7 @@
 set -e
 
 # Usage: update-icu.sh <URL of ICU SVN with release>
-# E.g., for ICU 52.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-52-1/
+# E.g., for ICU 55.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-55-1/
 
 if [ $# -lt 1 ]; then
   echo "Usage: update-icu.sh <URL of ICU SVN with release>"
@@ -50,12 +50,12 @@ rm ${icu_dir}/source/data/translit/*
 # the tree.)
 svn info $1 | grep -v '^Revision: [[:digit:]]\+$' > ${icu_dir}/SVN-INFO
 
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-4
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-915735
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/genrb-omitCollationRules.diff
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/qualify-uinitonce-windows.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/suppress-warnings.diff
-patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/clang-cl.diff
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/pkgdata-large-buffer.diff
+
+# NOTE: If you're updating this script for a new ICU version, you have to rerun
+# js/src/tests/ecma_6/String/make-normalize-generateddata-input.py for any
+# normalization changes the new ICU implements.
 
 hg addremove ${icu_dir}

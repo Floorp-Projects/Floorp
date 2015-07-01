@@ -220,16 +220,21 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     break;
   }
 
-  switch (styleSVG->mStrokeLinecap) {
-  case NS_STYLE_STROKE_LINECAP_BUTT:
+  if (ShapeTypeHasNoCorners(aElement)) {
     aStrokeOptions->mLineCap = CapStyle::BUTT;
-    break;
-  case NS_STYLE_STROKE_LINECAP_ROUND:
-    aStrokeOptions->mLineCap = CapStyle::ROUND;
-    break;
-  case NS_STYLE_STROKE_LINECAP_SQUARE:
-    aStrokeOptions->mLineCap = CapStyle::SQUARE;
-    break;
+  }
+  else {
+    switch (styleSVG->mStrokeLinecap) {
+      case NS_STYLE_STROKE_LINECAP_BUTT:
+        aStrokeOptions->mLineCap = CapStyle::BUTT;
+        break;
+      case NS_STYLE_STROKE_LINECAP_ROUND:
+        aStrokeOptions->mLineCap = CapStyle::ROUND;
+        break;
+      case NS_STYLE_STROKE_LINECAP_SQUARE:
+        aStrokeOptions->mLineCap = CapStyle::SQUARE;
+        break;
+    }
   }
 }
 
@@ -792,7 +797,7 @@ SVGContentUtils::CoordToFloat(nsSVGElement *aContent,
   }
 }
 
-TemporaryRef<gfx::Path>
+already_AddRefed<gfx::Path>
 SVGContentUtils::GetPath(const nsAString& aPathString)
 {
   SVGPathData pathData;
@@ -807,4 +812,10 @@ SVGContentUtils::GetPath(const nsAString& aPathString)
     drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
 
   return pathData.BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 1);
+}
+
+bool
+SVGContentUtils::ShapeTypeHasNoCorners(const nsIContent* aContent) {
+  return aContent && aContent->IsAnyOfSVGElements(nsGkAtoms::circle,
+                                                  nsGkAtoms::ellipse);
 }

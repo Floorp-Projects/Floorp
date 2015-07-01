@@ -1478,7 +1478,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
   return NS_OK;
 }
 
-static TemporaryRef<DataSourceSurface>
+static already_AddRefed<DataSourceSurface>
 CanvasToDataSourceSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);
@@ -2978,6 +2978,24 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   else {
     *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
     *aResult = false;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::FlushPendingFileDeletions()
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  using mozilla::dom::indexedDB::IndexedDatabaseManager;
+
+  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
+  if (mgr) {
+    nsresult rv = mgr->FlushPendingFileDeletions();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;

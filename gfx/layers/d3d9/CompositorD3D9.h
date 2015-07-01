@@ -35,11 +35,11 @@ public:
 
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) override {}
 
-  virtual TemporaryRef<CompositingRenderTarget>
+  virtual already_AddRefed<CompositingRenderTarget>
     CreateRenderTarget(const gfx::IntRect &aRect,
                        SurfaceInitMode aInit) override;
 
-  virtual TemporaryRef<CompositingRenderTarget>
+  virtual already_AddRefed<CompositingRenderTarget>
     CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                  const CompositingRenderTarget *aSource,
                                  const gfx::IntPoint &aSourcePoint) override;
@@ -118,7 +118,7 @@ public:
     // If the offset is 0, 0 that's okay.
   }
 
-  virtual TemporaryRef<DataTextureSource>
+  virtual already_AddRefed<DataTextureSource>
     CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 private:
   // ensure mSize is up to date with respect to mWidget

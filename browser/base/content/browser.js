@@ -6993,6 +6993,9 @@ var gIdentityHandler = {
         supplemental += iData.country;
       break;
     }
+    case this.IDENTITY_MODE_UNKNOWN:
+      supplemental = gNavigatorBundle.getString("identity.not_secure");
+      break;
     case this.IDENTITY_MODE_MIXED_DISPLAY_LOADED:
     case this.IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED:
       supplemental = gNavigatorBundle.getString("identity.broken_loaded");

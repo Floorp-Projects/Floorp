@@ -112,9 +112,9 @@ int ARMExToModule::TranslateCmd(const struct extab_data* edata,
   switch (edata->cmd) {
     case ARM_EXIDX_CMD_FINISH:
       /* Copy LR to PC if there isn't currently a rule for PC in force. */
-      if (curr_rules_.mR15expr.mHow == LExpr::UNKNOWN) {
-        if (curr_rules_.mR14expr.mHow == LExpr::UNKNOWN) {
-          curr_rules_.mR15expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R14, 0);
+      if (curr_rules_.mR15expr.mHow == UNKNOWN) {
+        if (curr_rules_.mR14expr.mHow == UNKNOWN) {
+          curr_rules_.mR15expr = LExpr(NODEREF, DW_REG_ARM_R14, 0);
         } else {
           curr_rules_.mR15expr = curr_rules_.mR14expr;
         }
@@ -152,8 +152,8 @@ int ARMExToModule::TranslateCmd(const struct extab_data* edata,
       // Same comment as above, re the casting of |reg_no|, applies.
       LExpr* reg_exprP = curr_rules_.ExprForRegno((DW_REG_NUMBER)reg_no);
       if (reg_exprP) {
-        if (reg_exprP->mHow == LExpr::UNKNOWN) {
-          curr_rules_.mR13expr = LExpr(LExpr::NODEREF, reg_no, 0);
+        if (reg_exprP->mHow == UNKNOWN) {
+          curr_rules_.mR13expr = LExpr(NODEREF, reg_no, 0);
         } else {
           curr_rules_.mR13expr = *reg_exprP;
         }
@@ -198,7 +198,7 @@ void ARMExToModule::AddStackFrame(uintptr_t addr, size_t size) {
   // Here we are effectively reinitialising the EXIDX summariser for a
   // new code address range.  smap_ stays unchanged.  All other fields
   // are reinitialised.
-  vsp_ = LExpr(LExpr::NODEREF, DW_REG_ARM_R13, 0);
+  vsp_ = LExpr(NODEREF, DW_REG_ARM_R13, 0);
   (void) new (&curr_rules_) RuleSet();
   curr_rules_.mAddr = (uintptr_t)addr;
   curr_rules_.mLen  = (uintptr_t)size;
@@ -235,17 +235,17 @@ void ARMExToModule::SubmitStackFrame() {
     /* Mark callee-saved registers (r4 .. r11) as unchanged, if there is
        no other information about them.  FIXME: do this just once, at
        the point where the ruleset is committed. */
-    if (curr_rules_.mR7expr.mHow == LExpr::UNKNOWN) {
-      curr_rules_.mR7expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R7, 0);
+    if (curr_rules_.mR7expr.mHow == UNKNOWN) {
+      curr_rules_.mR7expr = LExpr(NODEREF, DW_REG_ARM_R7, 0);
     }
-    if (curr_rules_.mR11expr.mHow == LExpr::UNKNOWN) {
-      curr_rules_.mR11expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R11, 0);
+    if (curr_rules_.mR11expr.mHow == UNKNOWN) {
+      curr_rules_.mR11expr = LExpr(NODEREF, DW_REG_ARM_R11, 0);
     }
-    if (curr_rules_.mR12expr.mHow == LExpr::UNKNOWN) {
-      curr_rules_.mR12expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R12, 0);
+    if (curr_rules_.mR12expr.mHow == UNKNOWN) {
+      curr_rules_.mR12expr = LExpr(NODEREF, DW_REG_ARM_R12, 0);
     }
-    if (curr_rules_.mR14expr.mHow == LExpr::UNKNOWN) {
-      curr_rules_.mR14expr = LExpr(LExpr::NODEREF, DW_REG_ARM_R14, 0);
+    if (curr_rules_.mR14expr.mHow == UNKNOWN) {
+      curr_rules_.mR14expr = LExpr(NODEREF, DW_REG_ARM_R14, 0);
     }
 
     // And add them

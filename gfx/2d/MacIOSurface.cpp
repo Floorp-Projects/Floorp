@@ -285,7 +285,7 @@ MacIOSurface::~MacIOSurface() {
   CFRelease(mIOSurfacePtr);
 }
 
-TemporaryRef<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHeight,
+already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHeight,
                                                          double aContentsScaleFactor,
                                                          bool aHasAlpha) {
   if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0)
@@ -338,7 +338,7 @@ TemporaryRef<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHeight
   return ioSurface.forget();
 }
 
-TemporaryRef<MacIOSurface> MacIOSurface::LookupSurface(IOSurfaceID aIOSurfaceID,
+already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(IOSurfaceID aIOSurfaceID,
                                                        double aContentsScaleFactor,
                                                        bool aHasAlpha) { 
   if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0)
@@ -435,7 +435,7 @@ using mozilla::gfx::SourceSurfaceRawData;
 using mozilla::gfx::IntSize;
 using mozilla::gfx::SurfaceFormat;
 
-TemporaryRef<SourceSurface>
+already_AddRefed<SourceSurface>
 MacIOSurface::GetAsSurface() {
   Lock();
   size_t bytesPerRow = GetBytesPerRow();
@@ -499,7 +499,7 @@ CGImageRef MacIOSurface::CreateImageFromIOSurfaceContext(CGContextRef aContext) 
   return MacIOSurfaceLib::IOSurfaceContextCreateImage(aContext);
 }
 
-TemporaryRef<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(CGContextRef aContext,
+already_AddRefed<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(CGContextRef aContext,
                                                                     double aContentsScaleFactor,
                                                                     bool aHasAlpha) {
   if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0)

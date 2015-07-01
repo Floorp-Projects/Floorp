@@ -51,17 +51,17 @@ class TabsGridLayout extends GridView
                                 Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "Gecko" + TabsGridLayout.class.getSimpleName();
 
-    private static final int ANIM_TIME_MS = 200;
     public static final int ANIM_DELAY_MULTIPLE_MS = 20;
+    private static final int ANIM_TIME_MS = 200;
     private static final DecelerateInterpolator ANIM_INTERPOLATOR = new DecelerateInterpolator();
 
     private final Context mContext;
-    private TabsPanel mTabsPanel;
     private final SparseArray<PointF> mTabLocations = new SparseArray<PointF>();
     private final boolean mIsPrivate;
     private final TabsLayoutAdapter mTabsAdapter;
-
     private final int mColumnWidth;
+    private TabsPanel mTabsPanel;
+    private int lastSelectedTabId;
 
     public TabsGridLayout(Context context, AttributeSet attrs) {
         super(context, attrs, R.attr.tabGridLayoutViewStyle);
@@ -110,40 +110,6 @@ class TabsGridLayout extends GridView
         TabSwipeGestureListener mSwipeListener = new TabSwipeGestureListener();
         setOnTouchListener(mSwipeListener);
         setOnScrollListener(mSwipeListener.makeScrollListener());
-    }
-
-    private class TabsGridLayoutAdapter extends TabsLayoutAdapter {
-
-        final private Button.OnClickListener mCloseClickListener;
-
-        public TabsGridLayoutAdapter(Context context) {
-            super(context, R.layout.new_tablet_tabs_item_cell);
-
-            mCloseClickListener = new Button.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    closeTab(v);
-                }
-            };
-        }
-
-        @Override
-        TabsLayoutItemView newView(int position, ViewGroup parent) {
-            final TabsLayoutItemView item = super.newView(position, parent);
-
-            item.setCloseOnClickListener(mCloseClickListener);
-
-            return item;
-        }
-
-        @Override
-        public void bindView(TabsLayoutItemView view, Tab tab) {
-            super.bindView(view, tab);
-
-            // If we're recycling this view, there's a chance it was transformed during
-            // the close animation. Remove any of those properties.
-            resetTransforms(view);
-        }
     }
 
     private void populateTabLocations(final Tab removedTab) {
@@ -199,10 +165,16 @@ class TabsGridLayout extends GridView
         Tabs.getInstance().refreshThumbnails();
         Tabs.registerOnTabsChangedListener(this);
         refreshTabsData();
+
+        Tab currentlySelectedTab = Tabs.getInstance().getSelectedTab();
+        if (lastSelectedTabId != currentlySelectedTab.getId()) {
+            smoothScrollToPosition(mTabsAdapter.getPositionForTab(currentlySelectedTab));
+        }
     }
 
     @Override
     public void hide() {
+        lastSelectedTabId = Tabs.getInstance().getSelectedTab().getId();
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel", ""));
@@ -439,6 +411,39 @@ class TabsGridLayout extends GridView
         animator.start();
     }
 
+    private class TabsGridLayoutAdapter extends TabsLayoutAdapter {
+
+        final private Button.OnClickListener mCloseClickListener;
+
+        public TabsGridLayoutAdapter(Context context) {
+            super(context, R.layout.new_tablet_tabs_item_cell);
+
+            mCloseClickListener = new Button.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    closeTab(v);
+                }
+            };
+        }
+
+        @Override
+        TabsLayoutItemView newView(int position, ViewGroup parent) {
+            final TabsLayoutItemView item = super.newView(position, parent);
+
+            item.setCloseOnClickListener(mCloseClickListener);
+
+            return item;
+        }
+
+        @Override
+        public void bindView(TabsLayoutItemView view, Tab tab) {
+            super.bindView(view, tab);
+
+            // If we're recycling this view, there's a chance it was transformed during
+            // the close animation. Remove any of those properties.
+            resetTransforms(view);
+        }
+    }
 
     private class TabSwipeGestureListener implements View.OnTouchListener {
         // same value the stock browser uses for after drag animation velocity in pixels/sec
@@ -553,7 +558,7 @@ class TabsGridLayout extends GridView
                         dismiss = mSwiping && (deltaX * mVelocityTracker.getYVelocity() > 0);
                     }
                     if (dismiss) {
-                       closeTab(mSwipeView.findViewById(R.id.close));
+                        closeTab(mSwipeView.findViewById(R.id.close));
                     } else {
                         animateCancel(mSwipeView);
                     }

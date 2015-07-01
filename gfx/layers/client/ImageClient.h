@@ -9,7 +9,7 @@
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include <sys/types.h>                  // for int32_t
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
@@ -42,7 +42,7 @@ public:
    * message will be sent to the compositor to create a corresponding image
    * host.
    */
-  static TemporaryRef<ImageClient> CreateImageClient(CompositableType aImageHostType,
+  static already_AddRefed<ImageClient> CreateImageClient(CompositableType aImageHostType,
                                                      CompositableForwarder* aFwd,
                                                      TextureFlags aFlags);
 
@@ -66,7 +66,7 @@ public:
   /**
    * Create AsyncTransactionTracker that is used for FlushAllImagesAsync().
    */
-  virtual TemporaryRef<AsyncTransactionTracker> PrepareFlushAllImages() { return nullptr; }
+  virtual already_AddRefed<AsyncTransactionTracker> PrepareFlushAllImages() { return nullptr; }
 
   /**
    * asynchronously remove all the textures used by the image client.
@@ -109,7 +109,7 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) override;
 
-  virtual TemporaryRef<AsyncTransactionTracker> PrepareFlushAllImages() override;
+  virtual already_AddRefed<AsyncTransactionTracker> PrepareFlushAllImages() override;
 
   virtual void FlushAllImages(bool aExceptFront,
                               AsyncTransactionTracker* aAsyncTransactionTracker) override;

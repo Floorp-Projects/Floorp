@@ -48,6 +48,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            uint32_t certShortLifetimeInDays,
                                            CertVerifier::PinningMode pinningMode,
                                            unsigned int minRSABits,
+                                           ValidityCheckingMode validityCheckingMode,
                               /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
@@ -58,6 +59,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
   , mPinningMode(pinningMode)
   , mMinRSABits(minRSABits)
+  , mValidityCheckingMode(validityCheckingMode)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
@@ -838,6 +840,44 @@ NSSCertDBTrustDomain::VerifyECDSASignedDigest(const SignedDigest& signedDigest,
 {
   return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
                                     mPinArg);
+}
+
+Result
+NSSCertDBTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,
+                                                EndEntityOrCA endEntityOrCA,
+                                                KeyPurposeId keyPurpose)
+{
+  if (endEntityOrCA != EndEntityOrCA::MustBeEndEntity) {
+    return Success;
+  }
+  if (keyPurpose == KeyPurposeId::id_kp_OCSPSigning) {
+    return Success;
+  }
+
+  Duration DURATION_39_MONTHS((3 * 365 + 3 * 31) * Time::ONE_DAY_IN_SECONDS);
+  Duration maxValidityDuration(UINT64_MAX);
+  Duration validityDuration(notBefore, notAfter);
+
+  switch (mValidityCheckingMode) {
+    case ValidityCheckingMode::CheckingOff:
+      return Success;
+    case ValidityCheckingMode::CheckForEV:
+      // The EV Guidelines say the maximum is 27 months, but we use a higher
+      // limit here:
+      //  a) To (hopefully) minimize compatibility breakage.
+      //  b) Because there was some talk about raising the limit to 39 months to
+      //     match the BR limit.
+      maxValidityDuration = DURATION_39_MONTHS;
+      break;
+    default:
+      PR_NOT_REACHED("We're not handling every ValidityCheckingMode type");
+  }
+
+  if (validityDuration > maxValidityDuration) {
+    return Result::ERROR_VALIDITY_TOO_LONG;
+  }
+
+  return Success;
 }
 
 namespace {
