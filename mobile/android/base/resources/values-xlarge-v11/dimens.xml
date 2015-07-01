@@ -6,11 +6,7 @@
 <resources>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
-    <dimen name="remote_tab_child_row_height">56dp</dimen>
-    <dimen name="remote_tab_group_row_height">34dp</dimen>
-    <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
-    <dimen name="tabs_panel_list_padding">8dip</dimen>
     <dimen name="panel_grid_view_column_width">250dp</dimen>
     <dimen name="new_tablet_tab_panel_grid_padding">48dp</dimen>
 

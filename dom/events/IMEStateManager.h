@@ -9,6 +9,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIWidget.h"
 
 class nsIContent;
@@ -33,6 +34,7 @@ class TextComposition;
 
 class IMEStateManager
 {
+  typedef dom::TabParent TabParent;
   typedef widget::IMEMessage IMEMessage;
   typedef widget::IMENotification IMENotification;
   typedef widget::IMEState IMEState;
@@ -42,6 +44,39 @@ class IMEStateManager
 public:
   static void Init();
   static void Shutdown();
+
+  /**
+   * GetActiveTabParent() returns a pointer to a TabParent instance which is
+   * managed by the focused content (sContent).  If the focused content isn't
+   * managing another process, this returns nullptr.
+   */
+  static TabParent* GetActiveTabParent()
+  {
+    // If menu has pseudo focus, we should ignore active child process.
+    if (sInstalledMenuKeyboardListener) {
+      return nullptr;
+    }
+    return sActiveTabParent.get();
+  }
+
+  /**
+   * OnTabParentDestroying() is called when aTabParent is being destroyed.
+   */
+  static void OnTabParentDestroying(TabParent* aTabParent);
+
+  /**
+   * SetIMEContextForChildProcess() is called when aTabParent receives
+   * SetInputContext() from the remote process.
+   */
+  static void SetInputContextForChildProcess(TabParent* aTabParent,
+                                             const InputContext& aInputContext,
+                                             const InputContextAction& aAction);
+
+  /**
+   * StopIMEStateManagement() is called when the process should stop managing
+   * IME state.
+   */
+  static void StopIMEStateManagement();
 
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
   static nsresult OnRemoveContent(nsPresContext* aPresContext,
@@ -163,6 +198,9 @@ protected:
                           nsIContent* aContent,
                           nsIWidget* aWidget,
                           InputContextAction aAction);
+  static void SetInputContext(nsIWidget* aWidget,
+                              const InputContext& aInputContext,
+                              const InputContextAction& aAction);
   static IMEState GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 
@@ -174,9 +212,20 @@ protected:
 
   static bool IsIMEObserverNeeded(const IMEState& aState);
 
-  static nsIContent*    sContent;
+  static StaticRefPtr<nsIContent> sContent;
   static nsPresContext* sPresContext;
   static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
+  static StaticRefPtr<TabParent> sActiveTabParent;
+  // sActiveIMEContentObserver points to the currently active
+  // IMEContentObserver.  This is null if there is no focused editor.
+  static StaticRefPtr<IMEContentObserver> sActiveIMEContentObserver;
+
+  // All active compositions in the process are stored by this array.
+  // When you get an item of this array and use it, please be careful.
+  // The instances in this array can be destroyed automatically if you do
+  // something to cause committing or canceling the composition.
+  static TextCompositionArray* sTextCompositions;
+
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsGettingNewIMEState;
   static bool           sCheckForIMEUnawareWebApps;
@@ -197,14 +246,6 @@ protected:
   private:
     bool mOldValue;
   };
-
-  static IMEContentObserver* sActiveIMEContentObserver;
-
-  // All active compositions in the process are stored by this array.
-  // When you get an item of this array and use it, please be careful.
-  // The instances in this array can be destroyed automatically if you do
-  // something to cause committing or canceling the composition.
-  static TextCompositionArray* sTextCompositions;
 };
 
 } // namespace mozilla

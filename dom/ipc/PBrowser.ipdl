@@ -577,6 +577,18 @@ child:
     ParentActivated(bool aActivated);
 
     /**
+     * StopIMEStateManagement() is called when the process loses focus and
+     * should stop managing IME state.
+     */
+    StopIMEStateManagement();
+
+    /**
+     * MenuKeyboardListenerInstalled() is called when menu keyboard listener
+     * is installed in the parent process.
+     */
+    MenuKeyboardListenerInstalled(bool aInstalled);
+
+    /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
     MouseEvent(nsString aType,

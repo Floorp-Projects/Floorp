@@ -823,6 +823,8 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
       return @"AXMathSubscriptSuperscript";
 
     case roles::MATHML_ROW:
+    case roles::MATHML_STYLE:
+    case roles::MATHML_ERROR:
       return @"AXMathRow";
 
     case roles::MATHML_UNDER:
