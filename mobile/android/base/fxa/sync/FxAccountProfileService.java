@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException;
 import org.mozilla.gecko.background.fxa.profile.FxAccountProfileClient10;
@@ -36,6 +37,11 @@ public class FxAccountProfileService extends IntentService {
     final String authToken = intent.getStringExtra(KEY_AUTH_TOKEN);
     final String profileServerURI = intent.getStringExtra(KEY_PROFILE_SERVER_URI);
     final ResultReceiver resultReceiver = intent.getParcelableExtra(KEY_RESULT_RECEIVER);
+
+    if (resultReceiver == null) {
+      Logger.warn(LOG_TAG, "Result receiver must not be null; ignoring intent.");
+      return;
+    }
 
     if (authToken == null || authToken.length() == 0) {
       Logger.warn(LOG_TAG, "Invalid Auth Token");
@@ -66,7 +72,7 @@ public class FxAccountProfileService extends IntentService {
       @Override
       public void handleSuccess(ExtendedJSONObject result) {
         if (result != null){
-          Logger.pii(LOG_TAG, "Profile Server response : " + result.toJSONString());
+          FxAccountUtils.pii(LOG_TAG, "Profile server return profile: " + result.toJSONString());
           sendResult(result.toJSONString(), resultReceiver, Activity.RESULT_OK);
         }
       }
