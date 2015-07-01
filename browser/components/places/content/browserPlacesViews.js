@@ -808,6 +808,12 @@ PlacesViewBase.prototype = {
       hasMultipleURIs = numURINodes > 1;
     }
 
+    let isLiveMark = false;
+    if (this.controller.hasCachedLivemarkInfo(aPopup._placesNode)) {
+      hasMultipleURIs = true;
+      isLiveMark = true;
+    }
+
     if (!hasMultipleURIs) {
       aPopup.setAttribute("singleitempopup", "true");
     } else {
@@ -839,9 +845,15 @@ PlacesViewBase.prototype = {
       if (typeof this.options.extraClasses.footer == "string")
         aPopup._endOptOpenAllInTabs.classList.add(this.options.extraClasses.footer);
 
-      aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
-        "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._placesNode, event, " +
-                                               "PlacesUIUtils.getViewForNode(this));");
+      if (isLiveMark) {
+        aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
+          "PlacesUIUtils.openLiveMarkNodesInTabs(this.parentNode._placesNode, event, " +
+                                                 "PlacesUIUtils.getViewForNode(this));");
+      } else {
+        aPopup._endOptOpenAllInTabs.setAttribute("oncommand",
+          "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._placesNode, event, " +
+                                                 "PlacesUIUtils.getViewForNode(this));");
+      }
       aPopup._endOptOpenAllInTabs.setAttribute("onclick",
         "checkForMiddleClick(this, event); event.stopPropagation();");
       aPopup._endOptOpenAllInTabs.setAttribute("label",
