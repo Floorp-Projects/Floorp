@@ -25,4 +25,9 @@
   <dimen name="preference_fragment_padding_side">16dp</dimen>
 
   <integer name="preference_fragment_scrollbarStyle">0x02000000</integer> <!-- outsideOverlay -->
+
+  <!-- Profile avatar image height. -->
+  <dimen name="fxaccount_profile_image_height">48dp</dimen>
+  <!-- Profile avatar image width. -->
+  <dimen name="fxaccount_profile_image_width">48dp</dimen>
 </resources>

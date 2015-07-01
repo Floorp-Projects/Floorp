@@ -863,6 +863,7 @@ sync_java_files = [
     'fxa/activities/FxAccountStatusFragment.java',
     'fxa/activities/FxAccountUpdateCredentialsActivity.java',
     'fxa/activities/FxAccountVerifiedAccountActivity.java',
+    'fxa/activities/PicassoPreferenceIconTarget.java',
     'fxa/authenticator/AccountPickler.java',
     'fxa/authenticator/AndroidFxAccount.java',
     'fxa/authenticator/FxAccountAuthenticator.java',

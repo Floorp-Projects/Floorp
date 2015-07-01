@@ -325,7 +325,6 @@ class Artifacts(object):
                 n = os.path.join(distdir, 'bin', os.path.basename(info.filename))
                 fh = FileAvoidWrite(n, mode='r')
                 shutil.copyfileobj(zf.open(info), fh)
-                fh.write(zf.open(info).read())
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
                     {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
