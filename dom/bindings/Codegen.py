@@ -12476,6 +12476,42 @@ class ForwardDeclarationBuilder:
     def build(self):
         return self._build(atTopLevel=True)
 
+    def forwardDeclareForType(self, t, config, workerness='both'):
+        t = t.unroll()
+        if t.isGeckoInterface():
+            name = t.inner.identifier.name
+            # Find and add the non-worker implementation, if any.
+            if workerness != 'workeronly':
+                try:
+                    desc = config.getDescriptor(name, False)
+                    self.add(desc.nativeType)
+                except NoSuchDescriptorError:
+                    pass
+            # Find and add the worker implementation, if any.
+            if workerness != 'mainthreadonly':
+                try:
+                    desc = config.getDescriptor(name, True)
+                    self.add(desc.nativeType)
+                except NoSuchDescriptorError:
+                    pass
+        # Note: Spidermonkey interfaces are typedefs, so can't be
+        # forward-declared
+        elif t.isCallback():
+            self.addInMozillaDom(t.callback.identifier.name)
+        elif t.isDictionary():
+            self.addInMozillaDom(t.inner.identifier.name, isStruct=True)
+        elif t.isCallbackInterface():
+            self.addInMozillaDom(t.inner.identifier.name)
+        elif t.isUnion():
+            # Forward declare both the owning and non-owning version,
+            # since we don't know which one we might want
+            self.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
+            self.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
+        elif t.isMozMap():
+            self.forwardDeclareForType(t.inner, config, workerness)
+        # Don't need to do anything for void, primitive, string, any or object.
+        # There may be some other cases we are missing.
+
 
 class CGForwardDeclarations(CGWrapper):
     """
@@ -12488,42 +12524,6 @@ class CGForwardDeclarations(CGWrapper):
                  dictionaries, callbackInterfaces, additionalDeclarations=[]):
         builder = ForwardDeclarationBuilder()
 
-        def forwardDeclareForType(t, workerness='both'):
-            t = t.unroll()
-            if t.isGeckoInterface():
-                name = t.inner.identifier.name
-                # Find and add the non-worker implementation, if any.
-                if workerness != 'workeronly':
-                    try:
-                        desc = config.getDescriptor(name, False)
-                        builder.add(desc.nativeType)
-                    except NoSuchDescriptorError:
-                        pass
-                # Find and add the worker implementation, if any.
-                if workerness != 'mainthreadonly':
-                    try:
-                        desc = config.getDescriptor(name, True)
-                        builder.add(desc.nativeType)
-                    except NoSuchDescriptorError:
-                        pass
-            # Note: Spidermonkey interfaces are typedefs, so can't be
-            # forward-declared
-            elif t.isCallback():
-                builder.addInMozillaDom(t.callback.identifier.name)
-            elif t.isDictionary():
-                builder.addInMozillaDom(t.inner.identifier.name, isStruct=True)
-            elif t.isCallbackInterface():
-                builder.addInMozillaDom(t.inner.identifier.name)
-            elif t.isUnion():
-                # Forward declare both the owning and non-owning version,
-                # since we don't know which one we might want
-                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
-                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
-            elif t.isMozMap():
-                forwardDeclareForType(t.inner, workerness)
-            # Don't need to do anything for void, primitive, string, any or object.
-            # There may be some other cases we are missing.
-
         # Needed for at least Wrap.
         for d in descriptors:
             builder.add(d.nativeType)
@@ -12534,8 +12534,10 @@ class CGForwardDeclarations(CGWrapper):
             # arguments to helper functions, and they'll need to be forward
             # declared in the header.
             if d.interface.maplikeOrSetlike:
-                forwardDeclareForType(d.interface.maplikeOrSetlike.keyType)
-                forwardDeclareForType(d.interface.maplikeOrSetlike.valueType)
+                builder.forwardDeclareForType(d.interface.maplikeOrSetlike.keyType,
+                                              config)
+                builder.forwardDeclareForType(d.interface.maplikeOrSetlike.valueType,
+                                              config)
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks", isStruct=True)
@@ -12547,24 +12549,25 @@ class CGForwardDeclarations(CGWrapper):
         for callback in mainCallbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                forwardDeclareForType(t, workerness='mainthreadonly')
+                builder.forwardDeclareForType(t, config,
+                                              workerness='mainthreadonly')
 
         for callback in workerCallbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                forwardDeclareForType(t, workerness='workeronly')
+                builder.forwardDeclareForType(t, config, workerness='workeronly')
 
         for d in callbackInterfaces:
             builder.add(d.nativeType)
             builder.add(d.nativeType + "Atoms", isStruct=True)
             for t in getTypesFromDescriptor(d):
-                forwardDeclareForType(t)
+                builder.forwardDeclareForType(t, config)
 
         for d in dictionaries:
             if len(d.members) > 0:
                 builder.addInMozillaDom(d.identifier.name + "Atoms", isStruct=True)
             for t in getTypesFromDictionary(d):
-                forwardDeclareForType(t)
+                builder.forwardDeclareForType(t, config)
 
         for className, isStruct in additionalDeclarations:
             builder.add(className, isStruct=isStruct)
