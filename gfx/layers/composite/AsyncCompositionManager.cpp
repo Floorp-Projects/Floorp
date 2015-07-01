@@ -614,6 +614,18 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
   // The final clip for the layer is the intersection of these clips.
   Maybe<ParentLayerIntRect> asyncClip = aLayer->GetClipRect();
 
+  // The transform of a mask layer is relative to the masked layer's parent
+  // layer. So whenever we apply an async transform to a layer, we need to
+  // apply that same transform to the layer's own mask layer.
+  // A layer can also have "ancestor" mask layers for any rounded clips from
+  // its ancestor scroll frames. A scroll frame mask layer only needs to be
+  // async transformed for async scrolls of this scroll frame's ancestor
+  // scroll frames, not for async scrolls of this scroll frame itself.
+  // In the loop below, we iterate over scroll frames from inside to outside.
+  // At each iteration, this array contains the layer's ancestor mask layers 
+  // of all scroll frames inside the current one.
+  nsTArray<Layer*> ancestorMaskLayers;
+
   for (uint32_t i = 0; i < aLayer->GetFrameMetricsCount(); i++) {
     AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(i);
     if (!controller) {
@@ -676,6 +688,21 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       }
     }
 
+    // Do the same for the ancestor mask layers: ancestorMaskLayers contains
+    // the ancestor mask layers for scroll frames *inside* the current scroll
+    // frame, so these are the ones we need to shift by our async transform.
+    for (Layer* ancestorMaskLayer : ancestorMaskLayers) {
+      SetShadowTransform(ancestorMaskLayer,
+          ancestorMaskLayer->GetLocalTransform() * asyncTransform);
+    }
+
+    // Append the ancestor mask layer for this scroll frame to ancestorMaskLayers.
+    if (metrics.GetMaskLayerIndex()) {
+      size_t maskLayerIndex = metrics.GetMaskLayerIndex().value();
+      Layer* ancestorMaskLayer = aLayer->GetAncestorMaskLayerAt(maskLayerIndex);
+      ancestorMaskLayers.AppendElement(ancestorMaskLayer);
+    }
+
     combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
     combinedAsyncTransform *= asyncTransform;
   }
@@ -691,6 +718,12 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // rather than clobber it.
     SetShadowTransform(aLayer,
         aLayer->GetLocalTransform() * AdjustForClip(combinedAsyncTransform, aLayer));
+
+    // Do the same for the layer's own mask layer, if it has one.
+    if (Layer* maskLayer = aLayer->GetMaskLayer()) {
+      SetShadowTransform(maskLayer,
+          maskLayer->GetLocalTransform() * combinedAsyncTransform);
+    }
 
     const FrameMetrics& bottom = LayerMetricsWrapper::BottommostScrollableMetrics(aLayer);
     MOZ_ASSERT(bottom.IsScrollable());  // must be true because hasAsyncTransform is true

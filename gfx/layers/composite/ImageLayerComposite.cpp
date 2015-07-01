@@ -143,7 +143,7 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransform
     mEffectiveTransformForBuffer = mEffectiveTransform;
   }
 
-  ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
 CompositableHost*
