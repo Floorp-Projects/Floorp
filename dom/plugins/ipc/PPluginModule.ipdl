@@ -76,9 +76,11 @@ child:
     returns (bool aURLRedirectNotify, bool aClearSiteData,
              bool aGetSitesWithData);
 
-  async NPP_ClearSiteData(nsCString site, uint64_t flags, uint64_t maxAge, uint64_t aCallbackId);
+  intr NPP_ClearSiteData(nsCString site, uint64_t flags, uint64_t maxAge)
+    returns (NPError rv);
 
-  async NPP_GetSitesWithData(uint64_t aCallbackId);
+  intr NPP_GetSitesWithData()
+    returns (nsCString[] sites);
 
   // Windows specific message to set up an audio session in the plugin process
   async SetAudioSessionData(nsID aID,
@@ -146,12 +148,6 @@ parent:
   async NotifyContentModuleDestroyed();
 
   async Profile(nsCString aProfile);
-
-  // Answers to request about site data
-  async ReturnClearSiteData(NPError aRv, uint64_t aCallbackId);
-
-  async ReturnSitesWithData(nsCString[] aSites, uint64_t aCallbackId);
-
 };
 
 } // namespace plugins
