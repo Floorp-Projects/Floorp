@@ -972,7 +972,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       p->GetData(&data);
 
-      *aArgv = INT_TO_JSVAL(data);
+      aArgv->setInt32(data);
 
       break;
     }
@@ -984,7 +984,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       p->GetData(&data);
 
-      *aArgv = INT_TO_JSVAL(data);
+      aArgv->setInt32(data);
 
       break;
     }
@@ -996,7 +996,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       p->GetData(&data);
 
-      *aArgv = INT_TO_JSVAL(data);
+      aArgv->setInt32(data);
 
       break;
     }
@@ -1023,7 +1023,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       p->GetData(&data);
 
-      *aArgv = INT_TO_JSVAL(data);
+      aArgv->setInt32(data);
 
       break;
     }
@@ -1035,7 +1035,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       p->GetData(&data);
 
-      *aArgv = INT_TO_JSVAL(data);
+      aArgv->setInt32(data);
 
       break;
     }

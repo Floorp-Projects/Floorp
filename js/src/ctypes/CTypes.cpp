@@ -1590,7 +1590,7 @@ DefineABIConstant(JSContext* cx,
   RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, &sCABIClass, prototype));
   if (!obj)
     return false;
-  JS_SetReservedSlot(obj, SLOT_ABICODE, INT_TO_JSVAL(code));
+  JS_SetReservedSlot(obj, SLOT_ABICODE, Int32Value(code));
 
   if (!JS_FreezeObject(cx, obj))
     return false;
@@ -1866,8 +1866,8 @@ InitTypeClasses(JSContext* cx, HandleObject ctypesObj)
 #define DEFINE_TYPE(name, type, ffiType)                                       \
   RootedObject typeObj_##name(cx,                                              \
     CType::DefineBuiltin(cx, ctypesObj, #name, CTypeProto, CDataProto, #name,  \
-      TYPE_##name, INT_TO_JSVAL(sizeof(type)),                                 \
-      INT_TO_JSVAL(ffiType.alignment), &ffiType));                             \
+      TYPE_##name, Int32Value(sizeof(type)),                                   \
+      Int32Value(ffiType.alignment), &ffiType));                               \
   if (!typeObj_##name)                                                         \
     return false;
   CTYPES_FOR_EACH_TYPE(DEFINE_TYPE)
@@ -3926,7 +3926,7 @@ CType::Create(JSContext* cx,
     return nullptr;
 
   // Set up the reserved slots.
-  JS_SetReservedSlot(typeObj, SLOT_TYPECODE, INT_TO_JSVAL(type));
+  JS_SetReservedSlot(typeObj, SLOT_TYPECODE, Int32Value(type));
   if (ffiType)
     JS_SetReservedSlot(typeObj, SLOT_FFITYPE, PrivateValue(ffiType));
   if (name)
@@ -4622,8 +4622,8 @@ PointerType::CreateInternal(JSContext* cx, HandleObject baseType)
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
-                        nullptr, INT_TO_JSVAL(sizeof(void*)),
-                        INT_TO_JSVAL(ffi_type_pointer.alignment),
+                        nullptr, Int32Value(sizeof(void*)),
+                        Int32Value(ffi_type_pointer.alignment),
                         &ffi_type_pointer);
   if (!typeObj)
     return nullptr;
@@ -4949,7 +4949,7 @@ ArrayType::CreateInternal(JSContext* cx,
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_array, nullptr,
-                        sizeVal, INT_TO_JSVAL(align), nullptr);
+                        sizeVal, Int32Value(align), nullptr);
   if (!typeObj)
     return nullptr;
 
@@ -5638,7 +5638,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PrivateValue(fields.release()));
 
   JS_SetReservedSlot(typeObj, SLOT_SIZE, sizeVal);
-  JS_SetReservedSlot(typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign));
+  JS_SetReservedSlot(typeObj, SLOT_ALIGN, Int32Value(structAlign));
   //if (!JS_FreezeObject(cx, prototype)0 // XXX fixme - see bug 541212!
   //  return false;
   JS_SetReservedSlot(typeObj, SLOT_PROTO, ObjectValue(*prototype));
@@ -6654,9 +6654,9 @@ FunctionType::Call(JSContext* cx,
   if (!objCTypes)
     return false;
 
-  JS_SetReservedSlot(objCTypes, SLOT_ERRNO, INT_TO_JSVAL(errnoStatus));
+  JS_SetReservedSlot(objCTypes, SLOT_ERRNO, Int32Value(errnoStatus));
 #if defined(XP_WIN)
-  JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, INT_TO_JSVAL(lastErrorStatus));
+  JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, Int32Value(lastErrorStatus));
 #endif // defined(XP_WIN)
 
   // Small integer types get returned as a word-sized ffi_arg. Coerce it back
@@ -7965,9 +7965,9 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval* vp)
   CDataFinalizer::CallFinalizer(p, &errnoStatus, nullptr);
 #endif // defined(XP_WIN)
 
-  JS_SetReservedSlot(objCTypes, SLOT_ERRNO, INT_TO_JSVAL(errnoStatus));
+  JS_SetReservedSlot(objCTypes, SLOT_ERRNO, Int32Value(errnoStatus));
 #if defined(XP_WIN)
-  JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, INT_TO_JSVAL(lastErrorStatus));
+  JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, Int32Value(lastErrorStatus));
 #endif // defined(XP_WIN)
 
   if (ConvertToJS(cx, resultType, nullptr, p->rvalue, false, true, &result)) {
