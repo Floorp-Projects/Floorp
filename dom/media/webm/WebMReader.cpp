@@ -735,6 +735,7 @@ WebMReader::Seek(int64_t aTarget, int64_t aEndTime)
 nsresult WebMReader::SeekInternal(int64_t aTarget)
 {
   MOZ_ASSERT(OnTaskQueue());
+  NS_ENSURE_TRUE(HaveStartTime(), NS_ERROR_FAILURE);
   if (mVideoDecoder) {
     nsresult rv = mVideoDecoder->Flush();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -749,7 +750,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
   uint64_t target = aTarget * NS_PER_USEC;
 
   if (mSeekPreroll) {
-    target = std::max(uint64_t(mStartTime * NS_PER_USEC),
+    target = std::max(uint64_t(StartTime() * NS_PER_USEC),
                       target - mSeekPreroll);
   }
   int r = nestegg_track_seek(mContext, trackToSeek, target);
@@ -777,7 +778,7 @@ nsresult WebMReader::SeekInternal(int64_t aTarget)
 media::TimeIntervals WebMReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
+  NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
 
   media::TimeIntervals buffered;
@@ -804,7 +805,7 @@ media::TimeIntervals WebMReader::GetBuffered()
                                                         ranges[index].mEnd,
                                                         &start, &end);
     if (rv) {
-      int64_t startOffset = mStartTime * NS_PER_USEC;
+      int64_t startOffset = StartTime() * NS_PER_USEC;
       NS_ASSERTION(startOffset >= 0 && uint64_t(startOffset) <= start,
                    "startOffset negative or larger than start time");
       if (!(startOffset >= 0 && uint64_t(startOffset) <= start)) {
