@@ -31,7 +31,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     Cmp(dest, Operand(0));
-    Csel(dest, wzr, dest, LessThan);
+    Csel(dest, dest, wzr, GreaterThan);
 }
 
 void
