@@ -24,7 +24,8 @@ UNIFIED_SOURCES += [
     'TestTextures.cpp',
     # Test works but it doesn't assert anything
     #'gfxTextRunPerfTest.cpp',
-    'TestTiledLayerBuffer.cpp',
+    # Bug 1179287 - PGO bustage on Linux
+    #'TestTiledLayerBuffer.cpp',
     'TestVsync.cpp',
 ]
 
