@@ -16,6 +16,7 @@
 #include "jsalloc.h"
 #include "jscompartment.h"
 
+#include "builtin/MapObject.h"
 #include "gc/Marking.h"
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
@@ -976,6 +977,175 @@ class ByUbinodeType : public CountType {
 };
 
 
+// A count type that categorizes nodes by the JS stack under which they were
+// allocated.
+class ByAllocationStack : public CountType {
+    typedef HashMap<SavedFrame*, CountBasePtr, DefaultHasher<SavedFrame*>,
+                    SystemAllocPolicy> Table;
+    typedef Table::Entry Entry;
+
+    struct Count : public CountBase {
+        // NOTE: You may look up entries in this table by SavedFrame key only
+        // during traversal, NOT ONCE TRAVERSAL IS COMPLETE. Once traversal is
+        // complete, you may only iterate over it.
+        //
+        // In this hash table, keys are JSObjects, and we use JSObject identity
+        // (that is, address identity) as key identity. The normal way to
+        // support such a table is to make the trace function notice keys that
+        // have moved and re-key them in the table. However, our trace function
+        // does *not* rehash; the first GC may render the hash table
+        // unsearchable.
+        //
+        // This is as it should be:
+        //
+        // First, the heap traversal phase needs lookups by key to work. But no
+        // GC may ever occur during a traversal; this is enforced by the
+        // JS::ubi::BreadthFirst template. So the traceCount function doesn't
+        // need to do anything to help traversal; it never even runs then.
+        //
+        // Second, the report phase needs iteration over the table to work, but
+        // never looks up entries by key. GC may well occur during this phase:
+        // we allocate a Map object, and probably cross-compartment wrappers for
+        // SavedFrame instances as well. If a GC were to occur, it would call
+        // our traceCount function; if traceCount were to re-key, that would
+        // ruin the traversal in progress.
+        //
+        // So depending on the phase, we either don't need re-keying, or
+        // can't abide it.
+        Table table;
+        CountBasePtr noStack;
+
+        Count(CountType& type, CountBasePtr& noStack)
+          : CountBase(type),
+            noStack(Move(noStack))
+        { }
+        bool init() { return table.init(); }
+    };
+
+    CountTypePtr entryType;
+    CountTypePtr noStackType;
+
+  public:
+    ByAllocationStack(Census& census, CountTypePtr& entryType, CountTypePtr& noStackType)
+      : CountType(census),
+        entryType(Move(entryType)),
+        noStackType(Move(noStackType))
+    { }
+
+    CountBasePtr makeCount() override {
+        CountBasePtr noStackCount(noStackType->makeCount());
+        if (!noStackCount)
+            return nullptr;
+
+        UniquePtr<Count> count(census.new_<Count>(*this, noStackCount));
+        if (!count || !count->init())
+            return nullptr;
+        return CountBasePtr(count.release());
+    }
+
+    void traceCount(CountBase& countBase, JSTracer* trc) override {
+        Count& count= static_cast<Count&>(countBase);
+        for (Table::Range r = count.table.all(); !r.empty(); r.popFront()) {
+            // Trace our child Counts.
+            r.front().value()->trace(trc);
+
+            // Trace the SavedFrame that is this entry's key. Do not re-key if
+            // it has moved; see comments for ByAllocationStack::Count::table.
+            SavedFrame** keyPtr = const_cast<SavedFrame**>(&r.front().key());
+            TraceRoot(trc, keyPtr, "Debugger.Memory.prototype.census byAllocationStack count key");
+        }
+        count.noStack->trace(trc);
+    }
+
+    void destructCount(CountBase& countBase) override {
+        Count& count = static_cast<Count&>(countBase);
+        count.~Count();
+    }
+
+    bool count(CountBase& countBase, const Node& node) {
+        Count& count = static_cast<Count&>(countBase);
+        count.total_++;
+
+        SavedFrame* allocationStack = nullptr;
+        if (node.is<JSObject>()) {
+            JSObject* metadata = GetObjectMetadata(node.as<JSObject>());
+            if (metadata && metadata->is<SavedFrame>())
+                allocationStack = &metadata->as<SavedFrame>();
+        }
+        // If any other types had allocation site data, we could retrieve it
+        // here.
+
+        // If we do have an allocation stack for this node, include it in the
+        // count for that stack.
+        if (allocationStack) {
+            Table::AddPtr p = count.table.lookupForAdd(allocationStack);
+            if (!p) {
+                CountBasePtr stackCount(entryType->makeCount());
+                if (!stackCount || !count.table.add(p, allocationStack, Move(stackCount)))
+                    return false;
+            }
+            return p->value()->count(node);
+        }
+
+        // Otherwise, count it in the "no stack" category.
+        return count.noStack->count(node);
+    }
+
+    bool report(CountBase& countBase, MutableHandleValue report) override {
+        Count& count = static_cast<Count&>(countBase);
+        JSContext* cx = census.cx;
+
+#ifdef DEBUG
+        // Check that nothing rehashes our table while we hold pointers into it.
+        uint32_t generation = count.table.generation();
+#endif
+
+        // Build a vector of pointers to entries; sort by total; and then use
+        // that to build the result object. This makes the ordering of entries
+        // more interesting, and a little less non-deterministic.
+        mozilla::Vector<Entry*> entries;
+        if (!entries.reserve(count.table.count()))
+            return false;
+        for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
+            entries.infallibleAppend(&r.front());
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
+
+        // Now build the result by iterating over the sorted vector.
+        Rooted<MapObject*> map(cx, MapObject::create(cx));
+        if (!map)
+            return false;
+        for (Entry** entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
+            Entry& entry = **entryPtr;
+
+            MOZ_ASSERT(entry.key());
+            RootedValue stack(cx, ObjectValue(*entry.key()));
+            if (!cx->compartment()->wrap(cx, &stack))
+                return false;
+
+            CountBasePtr& stackCount = entry.value();
+            RootedValue stackReport(cx);
+            if (!stackCount->report(&stackReport))
+                return false;
+
+            if (!MapObject::set(cx, map, stack, stackReport))
+                return false;
+        }
+
+        RootedValue noStackReport(cx);
+        if (!count.noStack->report(&noStackReport))
+            return false;
+        RootedValue noStack(cx, StringValue(cx->names().noStack));
+        if (!MapObject::set(cx, map, noStack, noStackReport))
+            return false;
+
+        MOZ_ASSERT(generation == count.table.generation());
+
+        report.setObject(*map);
+        return true;
+    }
+};
+
+
 // A BreadthFirst handler type that conducts a census, using a CountBase to
 // categorize and count each node.
 class CensusHandler {
@@ -1140,6 +1310,17 @@ ParseBreakdown(Census& census, HandleValue breakdownValue)
             return nullptr;
 
         return CountTypePtr(census.new_<ByUbinodeType>(census, thenType));
+    }
+
+    if (StringEqualsAscii(by, "allocationStack")) {
+        CountTypePtr thenType(ParseChildBreakdown(census, breakdown, cx->names().then));
+        if (!thenType)
+            return nullptr;
+        CountTypePtr noStackType(ParseChildBreakdown(census, breakdown, cx->names().noStack));
+        if (!noStackType)
+            return nullptr;
+
+        return CountTypePtr(census.new_<ByAllocationStack>(census, thenType, noStackType));
     }
 
     // We didn't recognize the breakdown type; complain.

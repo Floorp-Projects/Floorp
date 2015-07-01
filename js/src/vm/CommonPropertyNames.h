@@ -151,6 +151,7 @@
     macro(NFKC, NFKC, "NFKC") \
     macro(NFKD, NFKD, "NFKD") \
     macro(nonincrementalReason, nonincrementalReason, "nonincrementalReason") \
+    macro(noStack, noStack, "noStack") \
     macro(noSuchMethod, noSuchMethod, "__noSuchMethod__") \
     macro(NumberFormat, NumberFormat, "NumberFormat") \
     macro(NumberFormatFormatGet, NumberFormatFormatGet, "Intl_NumberFormat_format_get") \
