@@ -35,14 +35,11 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
                             dom::Element* aTarget,
                             nsCSSPseudoElements::Type aPseudoType,
                             const AnimationTiming &aTiming)
-    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
-                                  aTiming, EmptyString())
+    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
   { }
 
   virtual ElementPropertyTransition* AsTransition() override { return this; }
   virtual const ElementPropertyTransition* AsTransition() const override { return this; }
-
-  virtual const nsString& Name() const override;
 
   nsCSSProperty TransitionProperty() const {
     MOZ_ASSERT(Properties().Length() == 1,
@@ -90,7 +87,7 @@ public:
   virtual CSSTransition* AsCSSTransition() override { return this; }
 
   // CSSTransition interface
-  void GetTransitionProperty(nsString& aRetVal) const { aRetVal = Name(); }
+  void GetTransitionProperty(nsString& aRetVal) const;
 
   // Animation interface overrides
   virtual AnimationPlayState PlayStateFromJS() const override;
