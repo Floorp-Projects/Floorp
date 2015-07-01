@@ -32,31 +32,31 @@
  * Terminology: To dispatch a message Foo is to run the RecvFoo code for
  * it. This is also called "handling" the message.
  *
- * Sync messages have priorities while async and intr messages always have
+ * Sync and async messages have priorities while intr messages always have
  * normal priority. The three possible priorities are normal, high, and urgent.
  * The intended uses of these priorities are:
  *   NORMAL - most messages.
  *   HIGH   - CPOW-related messages, which can go in either direction.
  *   URGENT - messages where we don't want to dispatch
  *            incoming CPOWs while waiting for the response.
+ * Async messages cannot have HIGH priority.
  *
  * To avoid jank, the parent process is not allowed to send sync messages of
- * normal priority. The parent also is not allowed to send urgent messages at
- * all.  When a process is waiting for a response to a sync message M0, it will
- * dispatch an incoming message M if:
+ * normal priority. When a process is waiting for a response to a sync message
+ * M0, it will dispatch an incoming message M if:
  *   1. M has a higher priority than M0, or
  *   2. if M has the same priority as M0 and we're in the child, or
  *   3. if M has the same priority as M0 and it was sent by the other side
-        while dispatching M0 (nesting).
+ *      while dispatching M0 (nesting).
  * The idea is that higher priority messages should take precendence, and we
  * also want to allow nesting. The purpose of rule 2 is to handle a race where
  * both processes send to each other simultaneously. In this case, we resolve
  * the race in favor of the parent (so the child dispatches first).
  *
- * Sync messages satisfy the following properties:
+ * Messages satisfy the following properties:
  *   A. When waiting for a response to a sync message, we won't dispatch any
  *      messages of lower priority.
- *   B. Sync messages of the same priority will be dispatched roughly in the
+ *   B. Messages of the same priority will be dispatched roughly in the
  *      order they were sent. The exception is when the parent and child send
  *      sync messages to each other simulataneously. In this case, the parent's
  *      message is dispatched first. While it is dispatched, the child may send
@@ -64,6 +64,11 @@
  *      child's original message. We can consider ordering to be preserved here
  *      because we pretend that the child's original message wasn't sent until
  *      after the parent's message is finished being dispatched.
+ *
+ * When waiting for a sync message reply, we dispatch an async message only if
+ * it has URGENT priority. Normally URGENT async messages are sent only from the
+ * child. However, the parent can send URGENT async messages when it is creating
+ * a bridged protocol.
  *
  * Intr messages are blocking but not prioritized. While waiting for an intr
  * response, all incoming messages are dispatched until a response is
