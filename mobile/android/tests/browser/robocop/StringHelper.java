@@ -16,6 +16,8 @@ public class StringHelper {
     public static String STATIC_ABOUT_HOME_URL = "about:home";
 
     public final String OK;
+    public final String CANCEL;
+    public final String CLEAR;
 
     // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
     public final String[] DEFAULT_BOOKMARKS_TITLES;
@@ -295,6 +297,8 @@ public class StringHelper {
     private StringHelper(final Resources res) {
 
         OK = res.getString(R.string.button_ok);
+        CANCEL = res.getString(R.string.button_cancel);
+        CLEAR = res.getString(R.string.button_clear);
 
         // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
         DEFAULT_BOOKMARKS_TITLES = new String[] {
