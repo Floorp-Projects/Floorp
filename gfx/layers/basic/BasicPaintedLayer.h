@@ -86,7 +86,7 @@ public:
         mResidualTranslation = gfxPoint(0,0);
         mValidRegion.SetEmpty();
       }
-      ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+      ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
       return;
     }
     PaintedLayer::ComputeEffectiveTransforms(aTransformToSurface);
