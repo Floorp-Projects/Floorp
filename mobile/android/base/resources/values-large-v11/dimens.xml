@@ -5,7 +5,6 @@
 
 <resources>
 
-    <dimen name="arrow_popup_container_width">400dp</dimen>
     <dimen name="doorhanger_offsetY">100dp</dimen>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
@@ -20,7 +19,6 @@
     <dimen name="browser_toolbar_site_security_padding_vertical">21dp</dimen>
     <dimen name="browser_toolbar_site_security_padding_horizontal">8dp</dimen>
 
-    <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="panel_grid_view_column_width">200dp</dimen>
 
     <dimen name="reading_list_row_height">96dp</dimen>
