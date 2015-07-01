@@ -1000,14 +1000,7 @@ WebGLContext::ClearBackbufferIfNeeded()
     if (!mBackbufferNeedsClear)
         return;
 
-#ifdef DEBUG
-    gl->MakeCurrent();
-
-    GLuint fb = 0;
-    gl->GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &fb);
-    MOZ_ASSERT(fb == 0);
-#endif
-
+    ScopedBindFramebuffer(gl, 0);
     ClearScreen();
 
     mBackbufferNeedsClear = false;
