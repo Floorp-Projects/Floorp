@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-function WorkersView() {}
+function WorkersView() {
+  this._onWorkerSelect = this._onWorkerSelect.bind(this);
+}
 
 WorkersView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function () {
@@ -17,6 +19,7 @@ WorkersView.prototype = Heritage.extend(WidgetMethods, {
       showArrows: true,
     });
     this.emptyText = L10N.getStr("noWorkersText");
+    this.widget.addEventListener("select", this._onWorkerSelect, false);
   },
 
   addWorker: function (actor, name) {
@@ -30,6 +33,13 @@ WorkersView.prototype = Heritage.extend(WidgetMethods, {
 
   removeWorker: function (actor) {
     this.remove(this.getItemByValue(actor));
+  },
+
+  _onWorkerSelect: function () {
+    if (this.selectedItem !== null) {
+      DebuggerController.Workers._onWorkerSelect(this.selectedItem.value);
+      this.selectedItem = null;
+    }
   }
 });
 

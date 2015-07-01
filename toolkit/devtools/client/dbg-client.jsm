@@ -511,7 +511,8 @@ DebuggerClient.prototype = {
       executeSoon(() => aOnResponse({
         from: workerClient.actor,
         type: "attached",
-        isFrozen: workerClient.isFrozen
+        isFrozen: workerClient.isFrozen,
+        url: workerClient.url
       }, workerClient));
       return;
     }
@@ -1379,6 +1380,8 @@ function WorkerClient(aClient, aForm) {
   this.addListener("close", this._onClose);
   this.addListener("freeze", this._onFreeze);
   this.addListener("thaw", this._onThaw);
+
+  this.traits = {};
 }
 
 WorkerClient.prototype = {
@@ -1452,6 +1455,10 @@ WorkerClient.prototype = {
 
   _onThaw: function () {
     this._isFrozen = false;
+  },
+
+  reconfigure: function () {
+    return Promise.resolve();
   },
 
   events: ["close", "freeze", "thaw"]
