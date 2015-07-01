@@ -46,7 +46,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/Preferences.h"
 
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -931,27 +930,15 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
   }
 
-  // get document wide referrer policy
-  mozilla::net::ReferrerPolicy referrerPolicy = aDocument->GetReferrerPolicy();
-  bool referrerAttributeEnabled = Preferences::GetBool("network.http.enablePerElementReferrer", false);
-  // if referrer attributes are enabled in preferences, load img referrer attribute
-  nsresult rv;
-  if (referrerAttributeEnabled) {
-    mozilla::net::ReferrerPolicy imgReferrerPolicy = GetImageReferrerPolicy();
-    // if the image does not provide a referrer attribute, ignore this
-    if (imgReferrerPolicy != mozilla::net::RP_Unset) {
-      referrerPolicy = imgReferrerPolicy;
-    }
-  }
-
   // Not blocked. Do the load.
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
                                  aDocument->GetDocumentURI(),
-                                 referrerPolicy,
+                                 aDocument->GetReferrerPolicy(),
                                  this, loadFlags,
                                  content->LocalName(),
                                  getter_AddRefs(req),
@@ -1579,11 +1566,3 @@ nsImageLoadingContent::ImageObserver::~ImageObserver()
   MOZ_COUNT_DTOR(ImageObserver);
   NS_CONTENT_DELETE_LIST_MEMBER(ImageObserver, this, mNext);
 }
-
-// Only HTMLInputElement.h overrides this for <img> tags
-// all other subclasses use this one, i.e. ignore referrer attributes
-mozilla::net::ReferrerPolicy
-nsImageLoadingContent::GetImageReferrerPolicy()
-{
-  return mozilla::net::RP_Unset;
-};

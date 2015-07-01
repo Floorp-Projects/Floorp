@@ -25,10 +25,7 @@ enum ReferrerPolicy {
   RP_Origin_When_Crossorigin     = nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN,
 
   /* spec tokens: always unsafe-url */
-  RP_Unsafe_URL                  = nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL,
-
-  /* referrer policy is not set */
-  RP_Unset                       = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE
+  RP_Unsafe_URL                  = nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL
 };
 
 inline ReferrerPolicy
