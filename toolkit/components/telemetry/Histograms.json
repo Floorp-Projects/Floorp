@@ -2486,6 +2486,12 @@
     "n_buckets": 1000,
     "description": "Time spend blocked on poll (ms)."
   },
+  "IPV4_AND_IPV6_ADDRESS_CONNECTIVITY": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Count the number of 0) successful connections to an ipv4 address, 1) failed connection an ipv4 address, 2) successful connection to an ipv6 address and 3) failed connections to an ipv6 address."
+  },
   "URL_PATH_ENDS_IN_EXCLAMATION": {
     "expires_in_version": "never",
     "kind": "boolean",
