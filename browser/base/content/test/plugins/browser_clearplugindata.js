@@ -84,7 +84,7 @@ add_task(function* () {
   // Clear 20 seconds ago
   let now_uSec = Date.now() * 1000;
   sanitizer.range = [now_uSec - 20*1000000, now_uSec];
-  yield sanitizer.sanitize();
+  sanitizer.sanitize();
 
   ok(stored(["bar.com","qux.com"]), "Data stored for sites");
   ok(!stored(["foo.com"]), "Data cleared for foo.com");
@@ -92,7 +92,7 @@ add_task(function* () {
 
   // Clear everything
   sanitizer.range = null;
-  yield sanitizer.sanitize();
+  sanitizer.sanitize();
 
   ok(!stored(null), "All data cleared");
 
@@ -117,7 +117,7 @@ add_task(function* () {
   // clearing all data regardless of age.
   let now_uSec = Date.now() * 1000;
   sanitizer.range = [now_uSec - 20*1000000, now_uSec];
-  yield sanitizer.sanitize();
+  sanitizer.sanitize();
 
   ok(!stored(null), "All data cleared");
 

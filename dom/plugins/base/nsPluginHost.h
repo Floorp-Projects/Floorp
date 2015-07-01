@@ -243,11 +243,6 @@ public:
 
   void CreateWidget(nsPluginInstanceOwner* aOwner);
 
-  nsresult EnumerateSiteData(const nsACString& domain,
-                             const InfallibleTArray<nsCString>& sites,
-                             InfallibleTArray<nsCString>& result,
-                             bool firstMatchOnly);
-
 private:
   friend class nsPluginUnloadRunnable;
 
@@ -371,6 +366,10 @@ private:
 
   // Helpers for ClearSiteData and SiteHasData.
   nsresult NormalizeHostname(nsCString& host);
+  nsresult EnumerateSiteData(const nsACString& domain,
+                             const InfallibleTArray<nsCString>& sites,
+                             InfallibleTArray<nsCString>& result,
+                             bool firstMatchOnly);
 
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
 
