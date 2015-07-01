@@ -3,8 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-replaced-api.html";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/testscript.js";
+"use strict";
+
+const TEST_REPLACED_API_URI = "http://example.com/browser/browser/devtools/" +
+                              "webconsole/test/test-console-replaced-api.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/testscript.js";
 const PREF = "devtools.webconsole.persistlog";
 
 let test = asyncTest(function* () {
@@ -26,8 +30,7 @@ let test = asyncTest(function* () {
   Services.prefs.clearUserPref(PREF);
 });
 
-function testWarningNotPresent(hud)
-{
+function testWarningNotPresent(hud) {
   let deferred = promise.defer();
 
   is(hud.outputNode.textContent.indexOf("logging API"), -1,
@@ -52,8 +55,7 @@ function testWarningNotPresent(hud)
   return deferred.promise;
 }
 
-function testWarningPresent(hud)
-{
+function testWarningPresent(hud) {
   info("wait for the warning to show");
   let deferred = promise.defer();
 
@@ -78,4 +80,3 @@ function testWarningPresent(hud)
 
   return deferred.promise;
 }
-

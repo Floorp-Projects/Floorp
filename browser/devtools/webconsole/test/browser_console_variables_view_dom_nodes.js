@@ -28,29 +28,28 @@ function test() {
 
   Task.spawn(runner).then(finishTest);
 
-    function* runner() {
-      const {tab} = yield loadTab(TEST_URI);
-      const hud = yield openConsole(tab);
-      const jsterm = hud.jsterm;
+  function* runner() {
+    const {tab} = yield loadTab(TEST_URI);
+    const hud = yield openConsole(tab);
+    const jsterm = hud.jsterm;
 
-      let deferred = promise.defer();
-      jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));
-      jsterm.execute("inspect(document.querySelectorAll('div'))");
+    let deferred = promise.defer();
+    jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));
+    jsterm.execute("inspect(document.querySelectorAll('div'))");
 
-      let variableScope = yield deferred.promise;
-      ok(variableScope, "Variables view opened");
+    let variableScope = yield deferred.promise;
+    ok(variableScope, "Variables view opened");
 
-      yield findVariableViewProperties(variableScope, [
-        { name: "0", value: "<div>"},
-        { name: "1", value: "<div#testID>"},
-        { name: "2", value: "<div.single-class>"},
-        { name: "3", value: "<div.multiple-classes.another-class>"},
-        { name: "4", value: "<div#class-and-id.class-and-id>"},
-        { name: "5", value: "<div#multiple-classes-and-id.multiple-classes-and-id.another-class>"},
-        { name: "6", value: "<div.whitespace-start>"},
-        { name: "7", value: "<div.whitespace-end>"},
-        { name: "8", value: "<div.multiple.spaces>"},
-      ], { webconsole: hud});
-
-    }
+    yield findVariableViewProperties(variableScope, [
+      { name: "0", value: "<div>"},
+      { name: "1", value: "<div#testID>"},
+      { name: "2", value: "<div.single-class>"},
+      { name: "3", value: "<div.multiple-classes.another-class>"},
+      { name: "4", value: "<div#class-and-id.class-and-id>"},
+      { name: "5", value: "<div#multiple-classes-and-id.multiple-classes-and-id.another-class>"},
+      { name: "6", value: "<div.whitespace-start>"},
+      { name: "7", value: "<div.whitespace-end>"},
+      { name: "8", value: "<div.multiple.spaces>"},
+    ], { webconsole: hud});
+  }
 }

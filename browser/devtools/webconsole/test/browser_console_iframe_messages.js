@@ -6,7 +6,10 @@
 // Check that cached messages from nested iframes are displayed in the
 // Web/Browser Console.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-consoleiframes.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-consoleiframes.html";
 
 const expectedMessages = [
   {
@@ -52,16 +55,14 @@ const expectedMessagesAny = [
   },
 ];
 
-function test()
-{
+function test() {
   expectUncaughtException();
   loadTab(TEST_URI).then(() => {
     openConsole().then(consoleOpened);
   });
 }
 
-function consoleOpened(hud)
-{
+function consoleOpened(hud) {
   ok(hud, "web console opened");
 
   waitForMessages({
@@ -79,14 +80,12 @@ function consoleOpened(hud)
   });
 }
 
-function onWebConsoleClose()
-{
+function onWebConsoleClose() {
   info("web console closed");
   HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
 }
 
-function onBrowserConsoleOpen(hud)
-{
+function onBrowserConsoleOpen(hud) {
   ok(hud, "browser console opened");
   waitForMessages({
     webconsole: hud,

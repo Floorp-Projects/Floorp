@@ -12,9 +12,12 @@
 // Bug 875456 - Log mixed content messages from the Mixed Content
 // Blocker to the Security Pane in the Web Console
 
-const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-mixedcontent-securityerrors.html";
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/MixedContent";
+"use strict";
 
+const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-mixedcontent-securityerrors.html";
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
+                       "MixedContent";
 
 let test = asyncTest(function* () {
   yield pushPrefEnv();
@@ -50,31 +53,30 @@ let test = asyncTest(function* () {
   yield testClickOpenNewTab(hud, results2[0]);
 });
 
-function pushPrefEnv()
-{
+function pushPrefEnv() {
   let deferred = promise.defer();
-  let options = {"set": [["security.mixed_content.block_active_content", true],
-                            ["security.mixed_content.block_display_content", true]]};
+  let options = {"set": [
+                  ["security.mixed_content.block_active_content", true],
+                  ["security.mixed_content.block_display_content", true]
+                ]};
   SpecialPowers.pushPrefEnv(options, deferred.resolve);
   return deferred.promise;
 }
 
-function waitForNotificationShown(notification, callback)
-{
+function waitForNotificationShown(notification, callback) {
   if (PopupNotifications.panel.state == "open") {
     executeSoon(callback);
     return;
   }
-  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
+  PopupNotifications.panel.addEventListener("popupshown", function onShown() {
     PopupNotifications.panel.removeEventListener("popupshown", onShown);
     callback();
   }, false);
   notification.reshow();
 }
 
-function mixedContentOverrideTest2(hud, browser)
-{
-  var notification = PopupNotifications.getNotification("bad-content", browser);
+function mixedContentOverrideTest2(hud, browser) {
+  let notification = PopupNotifications.getNotification("bad-content", browser);
   ok(notification, "Mixed Content Doorhanger did appear");
   let deferred = promise.defer();
   waitForNotificationShown(notification, () => {
@@ -83,9 +85,9 @@ function mixedContentOverrideTest2(hud, browser)
   return deferred.promise;
 }
 
-function afterNotificationShown(hud, notification, deferred)
-{
-  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
+function afterNotificationShown(hud, notification, deferred) {
+  ok(PopupNotifications.panel.firstChild.isMixedContentBlocked,
+     "OK: Mixed Content is being blocked");
   // Click on the doorhanger.
   PopupNotifications.panel.firstChild.disableMixedContentProtection();
   notification.remove();
@@ -95,8 +97,8 @@ function afterNotificationShown(hud, notification, deferred)
     messages: [
       {
         name: "Logged blocking mixed active content",
-        text: "Loading mixed (insecure) active content \"http://example.com/\"" +
-          " on a secure page",
+        text: "Loading mixed (insecure) active content " +
+              "\"http://example.com/\" on a secure page",
         category: CATEGORY_SECURITY,
         severity: SEVERITY_WARNING,
         objects: true,

@@ -11,15 +11,25 @@ an image which is allowed by the CSPRO header but not by the CSP header.
 So we expect a warning (image has been blocked) and a report
  (script should not load and was reported)
 
-The expected console messages in the constants CSP_VIOLATION_MSG and CSP_REPORT_MSG are confirmed to be found in the console messages.
+The expected console messages in the constants CSP_VIOLATION_MSG and
+CSP_REPORT_MSG are confirmed to be found in the console messages.
 */
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Web Console CSP report only test (bug 1010953)";
-const TEST_VIOLATION = "http://example.com/browser/browser/devtools/webconsole/test/test_bug_1010953_cspro.html";
-const CSP_VIOLATION_MSG = 'Content Security Policy: The page\'s settings blocked the loading of a resource at http://some.example.com/test.png ("img-src http://example.com").';
-const CSP_REPORT_MSG = 'Content Security Policy: The page\'s settings observed the loading of a resource at http://some.example.com/test_bug_1010953_cspro.js ("script-src http://example.com"). A CSP report is being sent.';
+const TEST_URI = "data:text/html;charset=utf8,Web Console CSP report only " +
+                 "test (bug 1010953)";
+const TEST_VIOLATION = "http://example.com/browser/browser/devtools/" +
+                       "webconsole/test/test_bug_1010953_cspro.html";
+const CSP_VIOLATION_MSG = "Content Security Policy: The page's settings " +
+                          "blocked the loading of a resource at " +
+                          "http://some.example.com/test.png " +
+                          "(\"img-src http://example.com\").";
+const CSP_REPORT_MSG = "Content Security Policy: The page\'s settings " +
+                       "observed the loading of a resource at " +
+                       "http://some.example.com/test_bug_1010953_cspro.js " +
+                       "(\"script-src http://example.com\"). A CSP report is " +
+                       "being sent.";
 
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);
@@ -32,10 +42,9 @@ let test = asyncTest(function* () {
   content.location = TEST_VIOLATION;
   yield loaded;
 
-  let aOutputNode = hud.outputNode;
-
   yield waitForSuccess({
-    name: "Confirmed that CSP and CSP-Report-Only log different messages to the console.",
+    name: "Confirmed that CSP and CSP-Report-Only log different messages to " +
+          "the console.",
     validator: function() {
       console.log(hud.outputNode.textContent);
       let success = false;
