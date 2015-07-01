@@ -186,41 +186,46 @@ def remove(path):
                 # If no exception has been thrown it should be done
                 break
 
-    def _update_permissions(path):
+    def _update_permissions(path, st):
         """Sets specified pemissions depending on filetype"""
         if os.path.islink(path):
             # Path is a symlink which we don't have to modify
             # because it should already have all the needed permissions
             return
 
-        stats = os.stat(path)
-
-        if os.path.isfile(path):
-            mode = stats.st_mode | stat.S_IWUSR
-        elif os.path.isdir(path):
-            mode = stats.st_mode | stat.S_IWUSR | stat.S_IXUSR
+        if stat.S_ISREG(st.st_mode):
+            mode = st.st_mode | stat.S_IWUSR
+        elif stat.S_ISDIR(st.st_mode):
+            mode = st.st_mode | stat.S_IWUSR | stat.S_IXUSR
         else:
             # Not supported type
             return
 
         _call_with_windows_retry(os.chmod, (path, mode))
 
-    if not os.path.exists(path):
+    try:
+        st = os.stat(path)
+    except os.error:
         return
 
-    if os.path.isfile(path) or os.path.islink(path):
+    is_link = os.path.islink(path)
+
+    if stat.S_ISREG(st.st_mode) or is_link:
         # Verify the file or link is read/write for the current user
-        _update_permissions(path)
+        if not is_link:
+            _update_permissions(path, st)
+
         _call_with_windows_retry(os.remove, (path,))
 
-    elif os.path.isdir(path):
+    elif stat.S_ISDIR(st.st_mode):
         # Verify the directory is read/write/execute for the current user
-        _update_permissions(path)
+        _update_permissions(path, st)
 
         # We're ensuring that every nested item has writable permission.
         for root, dirs, files in os.walk(path):
             for entry in dirs + files:
-                _update_permissions(os.path.join(root, entry))
+                fpath = os.path.join(root, entry)
+                _update_permissions(fpath, os.stat(fpath))
         _call_with_windows_retry(shutil.rmtree, (path,))
 
 
