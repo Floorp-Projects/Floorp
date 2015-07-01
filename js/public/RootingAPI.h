@@ -174,7 +174,8 @@ template <typename T> class PersistentRooted;
 /* This is exposing internal state of the GC for inlining purposes. */
 JS_FRIEND_API(bool) isGCEnabled();
 
-JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next);
+JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp);
+JS_FRIEND_API(void) HeapObjectRelocate(JSObject** objp);
 
 #ifdef JS_DEBUG
 /*
@@ -231,7 +232,8 @@ class Heap : public js::HeapBase<T>
     explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
     ~Heap() {
-        post(ptr, js::GCMethods<T>::initial());
+        if (js::GCMethods<T>::needsPostBarrier(ptr))
+            relocate();
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -255,17 +257,29 @@ class Heap : public js::HeapBase<T>
   private:
     void init(T newPtr) {
         ptr = newPtr;
-        post(js::GCMethods<T>::initial(), ptr);
+        if (js::GCMethods<T>::needsPostBarrier(ptr))
+            post();
     }
 
     void set(T newPtr) {
-        T tmp = ptr;
-        ptr = newPtr;
-        post(tmp, ptr);
+        if (js::GCMethods<T>::needsPostBarrier(newPtr)) {
+            ptr = newPtr;
+            post();
+        } else if (js::GCMethods<T>::needsPostBarrier(ptr)) {
+            relocate();  /* Called before overwriting ptr. */
+            ptr = newPtr;
+        } else {
+            ptr = newPtr;
+        }
     }
 
-    void post(const T& prev, const T& next) {
-        js::GCMethods<T>::postBarrier(&ptr, prev, next);
+    void post() {
+        MOZ_ASSERT(js::GCMethods<T>::needsPostBarrier(ptr));
+        js::GCMethods<T>::postBarrier(&ptr);
+    }
+
+    void relocate() {
+        js::GCMethods<T>::relocate(&ptr);
     }
 
     enum {
@@ -590,9 +604,10 @@ template <typename T>
 struct GCMethods<T*>
 {
     static T* initial() { return nullptr; }
-    static void postBarrier(T** vp, T* prev, T* next) {
-        if (next)
-            JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(next));
+    static bool needsPostBarrier(T* v) { return false; }
+    static void postBarrier(T** vp) {
+        if (vp)
+            JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(vp));
     }
     static void relocate(T** vp) {}
 };
@@ -607,8 +622,14 @@ struct GCMethods<JSObject*>
         MOZ_ASSERT(uintptr_t(v) > 32);
         return reinterpret_cast<gc::Cell*>(v);
     }
-    static void postBarrier(JSObject** vp, JSObject* prev, JSObject* next) {
-        JS::HeapObjectPostBarrier(vp, prev, next);
+    static bool needsPostBarrier(JSObject* v) {
+        return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(v));
+    }
+    static void postBarrier(JSObject** vp) {
+        JS::HeapObjectPostBarrier(vp);
+    }
+    static void relocate(JSObject** vp) {
+        JS::HeapObjectRelocate(vp);
     }
 };
 
@@ -616,10 +637,14 @@ template <>
 struct GCMethods<JSFunction*>
 {
     static JSFunction* initial() { return nullptr; }
-    static void postBarrier(JSFunction** vp, JSFunction* prev, JSFunction* next) {
-        JS::HeapObjectPostBarrier(reinterpret_cast<JSObject**>(vp),
-                                  reinterpret_cast<JSObject*>(prev),
-                                  reinterpret_cast<JSObject*>(next));
+    static bool needsPostBarrier(JSFunction* v) {
+        return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(v));
+    }
+    static void postBarrier(JSFunction** vp) {
+        JS::HeapObjectPostBarrier(reinterpret_cast<JSObject**>(vp));
+    }
+    static void relocate(JSFunction** vp) {
+        JS::HeapObjectRelocate(reinterpret_cast<JSObject**>(vp));
     }
 };
 

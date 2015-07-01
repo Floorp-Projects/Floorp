@@ -90,15 +90,31 @@ template void js::PreBarrierFunctor<jsid>::operator()<JS::Symbol>(JS::Symbol*);
 template void js::PreBarrierFunctor<jsid>::operator()<JSString>(JSString*);
 
 JS_PUBLIC_API(void)
-JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
+JS::HeapObjectPostBarrier(JSObject** objp)
 {
     MOZ_ASSERT(objp);
-    js::InternalGCMethods<JSObject*>::postBarrier(objp, prev, next);
+    MOZ_ASSERT(*objp);
+    js::InternalGCMethods<JSObject*>::postBarrierRelocate(objp);
 }
 
 JS_PUBLIC_API(void)
-JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
+JS::HeapObjectRelocate(JSObject** objp)
+{
+    MOZ_ASSERT(objp);
+    MOZ_ASSERT(*objp);
+    js::InternalGCMethods<JSObject*>::postBarrierRemove(objp);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapValuePostBarrier(JS::Value* valuep)
 {
     MOZ_ASSERT(valuep);
-    js::InternalGCMethods<JS::Value>::postBarrier(valuep, prev, next);
+    js::InternalGCMethods<JS::Value>::postBarrierRelocate(valuep);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapValueRelocate(JS::Value* valuep)
+{
+    MOZ_ASSERT(valuep);
+    js::InternalGCMethods<JS::Value>::postBarrierRemove(valuep);
 }
