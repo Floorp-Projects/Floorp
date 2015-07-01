@@ -1155,13 +1155,12 @@ void ClientTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     mRetainedTiles[i] = tile;
   }
 
-  mTiles = newTiles;
-
   PostValidate(aPaintRegion);
   for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
     UnlockTile(mRetainedTiles[i]);
   }
 
+  mTiles = newTiles;
   mValidRegion = newValidRegion;
   mPaintedRegion.OrWith(aPaintRegion);
 }
