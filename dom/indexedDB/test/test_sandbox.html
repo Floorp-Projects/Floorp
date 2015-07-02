@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <title>indexedDB in JS Sandbox</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
+</head>
+<body>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This runs inside a same-origin sandbox.
+// The intent being to show that the data store is the same.
+function storeValue() {
+  function createDB_inner() {
+    var op = indexedDB.open('db');
+    op.onupgradeneeded = e => {
+      var db = e.target.result;
+      db.createObjectStore('store');
+    };
+    return new Promise(resolve => {
+      op.onsuccess = e => resolve(e.target.result);
+    });
+  }
+
+  function add(k, v) {
+    return createDB_inner().then(db => {
+      var tx = db.transaction('store', 'readwrite');
+      var store = tx.objectStore('store');
+      var op = store.add(v, k);
+      return new Promise((resolve, reject) => {
+        op.onsuccess = e => resolve(e.target.result);
+        op.onerror = _ => reject(op.error);
+        tx.onabort = _ => reject(tx.error);
+      });
+    });
+  }
+
+  return add('x', [ 10, {} ])
+    .then(_ => step_done(),
+          _ => ok(false, 'failed to store'));
+}
+
+function createDB_outer() {
+  var op = indexedDB.open('db');
+  op.onupgradeneeded = e => {
+    ok(false, 'upgrade should not be needed');
+    var db = e.target.result;
+    db.createObjectStore('store');
+  };
+  return new Promise(resolve => {
+    op.onsuccess = e => resolve(e.target.result);
+  });
+}
+
+function get(k) {
+  return createDB_outer().then(db => {
+      var tx = db.transaction('store', 'readonly');
+      var store = tx.objectStore('store');
+      var op = store.get(k);
+      return new Promise((resolve, reject) => {
+        op.onsuccess = e => resolve(e.target.result);
+        op.onerror = _ => reject(op.error);
+        tx.onabort = _ => reject(tx.error);
+      });
+  });
+}
+
+function runInSandbox(sandbox, testFunc) {
+  is(typeof testFunc, 'function');
+  var resolvePromise;
+  var testPromise = new Promise(r => resolvePromise = r);
+  SpecialPowers.Cu.exportFunction(_ => resolvePromise(), sandbox,
+                                  { defineAs: 'step_done' });
+  SpecialPowers.Cu.evalInSandbox('(' + testFunc.toSource() + ')()' +
+                                 '.then(step_done);', sandbox);
+  return testPromise;
+}
+
+// Use the window principal for the sandbox; location.origin is not sufficient.
+var sb = new SpecialPowers.Cu.Sandbox(window,
+                                      { wantGlobalProperties: ['indexedDB'] });
+
+sb.ok = SpecialPowers.Cu.exportFunction(ok, sb);
+
+Promise.resolve()
+  .then(_ => runInSandbox(sb, storeValue))
+  .then(_ => get('x'))
+  .then(x => {
+    ok(x, 'a value should be present');
+    is(x.length, 2);
+    is(x[0], 10);
+    is(typeof x[1], 'object');
+    is(Object.keys(x[1]).length, 0);
+  })
+  .then(_ => SimpleTest.finish());
+
+</script>
+</body>
+</html>
