@@ -17,10 +17,6 @@
 #include "mozilla/Types.h"
 #include "nscore.h"
 
-#ifdef PL_DHASHMETER
-#include <stdio.h>
-#endif
-
 #if defined(__GNUC__) && defined(__i386__)
 #define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
 #elif defined(XP_WIN)
@@ -169,28 +165,6 @@ private:
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
   uint32_t            mGeneration;    /* entry storage generation number */
   char*               mEntryStore;    /* entry storage; allocated lazily */
-#ifdef PL_DHASHMETER
-  struct PLDHashStats
-  {
-    uint32_t        mSearches;      /* total number of table searches */
-    uint32_t        mSteps;         /* hash chain links traversed */
-    uint32_t        mHits;          /* searches that found key */
-    uint32_t        mMisses;        /* searches that didn't find key */
-    uint32_t        mSearches;      /* number of Search() calls */
-    uint32_t        mAddMisses;     /* adds that miss, and do work */
-    uint32_t        mAddOverRemoved;/* adds that recycled a removed entry */
-    uint32_t        mAddHits;       /* adds that hit an existing entry */
-    uint32_t        mAddFailures;   /* out-of-memory during add growth */
-    uint32_t        mRemoveHits;    /* removes that hit, and do work */
-    uint32_t        mRemoveMisses;  /* useless removes that miss */
-    uint32_t        mRemoveFrees;   /* removes that freed entry directly */
-    uint32_t        mRemoveEnums;   /* removes done by Enumerate */
-    uint32_t        mGrows;         /* table expansions */
-    uint32_t        mShrinks;       /* table contractions */
-    uint32_t        mCompresses;    /* table compressions */
-    uint32_t        mEnumShrinks;   /* contractions after Enumerate */
-  } mStats;
-#endif
 
 #ifdef DEBUG
   // We use an atomic counter here so that the various ++/-- operations can't
@@ -287,10 +261,6 @@ public:
   void MoveEntryStub(const PLDHashEntryHdr* aFrom, PLDHashEntryHdr* aTo);
 
   void ClearEntryStub(PLDHashEntryHdr* aEntry);
-
-#ifdef PL_DHASHMETER
-  void DumpMeter(PLDHashEnumerator aDump, FILE* aFp);
-#endif
 
   // This is an iterator for PLDHashtable. It is not safe to modify the
   // table while it is being iterated over; on debug builds, attempting to do
@@ -560,8 +530,7 @@ PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
  * NB: this is a "raw" or low-level routine, intended to be used only where
  * the inefficiency of a full PL_DHashTableRemove (which rehashes in order
  * to find the entry given its key) is not tolerable.  This function does not
- * shrink the table if it is underloaded.  It does not update mStats #ifdef
- * PL_DHASHMETER, either.
+ * shrink the table if it is underloaded.
  */
 void PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
@@ -604,11 +573,6 @@ size_t PL_DHashTableSizeOfIncludingThis(
  * mutations will cause assertions.
  */
 void PL_DHashMarkTableImmutable(PLDHashTable* aTable);
-#endif
-
-#ifdef PL_DHASHMETER
-void PL_DHashTableDumpMeter(PLDHashTable* aTable,
-                            PLDHashEnumerator aDump, FILE* aFp);
 #endif
 
 #endif /* pldhash_h___ */
