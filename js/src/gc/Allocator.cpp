@@ -176,8 +176,11 @@ GCRuntime::tryNewTenuredObject(ExclusiveContext* cx, AllocKind kind, size_t thin
     HeapSlot* slots = nullptr;
     if (nDynamicSlots) {
         slots = cx->zone()->pod_malloc<HeapSlot>(nDynamicSlots);
-        if (MOZ_UNLIKELY(!slots))
+        if (MOZ_UNLIKELY(!slots)) {
+            if (allowGC)
+                ReportOutOfMemory(cx);
             return nullptr;
+        }
         Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
     }
 

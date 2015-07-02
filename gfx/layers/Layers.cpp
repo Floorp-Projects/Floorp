@@ -857,21 +857,31 @@ Layer::DeprecatedGetEffectiveMixBlendMode()
 }
 
 void
-Layer::ComputeEffectiveTransformForMaskLayer(const Matrix4x4& aTransformToSurface)
+Layer::ComputeEffectiveTransformForMaskLayers(const gfx::Matrix4x4& aTransformToSurface)
 {
-  if (mMaskLayer) {
-    mMaskLayer->mEffectiveTransform = aTransformToSurface;
+  if (GetMaskLayer()) {
+    ComputeEffectiveTransformForMaskLayer(GetMaskLayer(), aTransformToSurface);
+  }
+  for (size_t i = 0; i < GetAncestorMaskLayerCount(); i++) {
+    Layer* maskLayer = GetAncestorMaskLayerAt(i);
+    ComputeEffectiveTransformForMaskLayer(maskLayer, aTransformToSurface);
+  }
+}
+
+/* static */ void
+Layer::ComputeEffectiveTransformForMaskLayer(Layer* aMaskLayer, const gfx::Matrix4x4& aTransformToSurface)
+{
+  aMaskLayer->mEffectiveTransform = aTransformToSurface;
 
 #ifdef DEBUG
-    bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D();
-    NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+  bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D();
+  NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
 #endif
-    // The mask layer can have an async transform applied to it in some
-    // situations, so be sure to use its GetLocalTransform() rather than
-    // its GetTransform().
-    mMaskLayer->mEffectiveTransform = mMaskLayer->GetLocalTransform() *
-      mMaskLayer->mEffectiveTransform;
-  }
+  // The mask layer can have an async transform applied to it in some
+  // situations, so be sure to use its GetLocalTransform() rather than
+  // its GetTransform().
+  aMaskLayer->mEffectiveTransform = aMaskLayer->GetLocalTransform() *
+    aMaskLayer->mEffectiveTransform;
 }
 
 RenderTargetRect
@@ -1190,7 +1200,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
 
   bool useIntermediateSurface;
-  if (GetMaskLayer() ||
+  if (HasMaskLayers() ||
       GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
@@ -1219,7 +1229,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
            * Nor for a child with a mask layer.
            */
           if ((clipRect && !clipRect->IsEmpty() && !child->GetVisibleRegion().IsEmpty()) ||
-              child->GetMaskLayer()) {
+              child->HasMaskLayers()) {
             useIntermediateSurface = true;
             break;
           }
@@ -1236,9 +1246,9 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
   }
 
   if (idealTransform.CanDraw2D()) {
-    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   } else {
-    ComputeEffectiveTransformForMaskLayer(Matrix4x4());
+    ComputeEffectiveTransformForMaskLayers(Matrix4x4());
   }
 }
 
@@ -1519,6 +1529,13 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
     nsAutoCString pfx(aPrefix);
     pfx += "    ";
     mask->Dump(aStream, pfx.get(), aDumpHtml);
+  }
+
+  for (size_t i = 0; i < GetAncestorMaskLayerCount(); i++) {
+    aStream << nsPrintfCString("%s  Ancestor mask layer %d:\n", aPrefix, uint32_t(i)).get();
+    nsAutoCString pfx(aPrefix);
+    pfx += "    ";
+    GetAncestorMaskLayerAt(i)->Dump(aStream, pfx.get(), aDumpHtml);
   }
 
 #ifdef MOZ_DUMP_PAINTING

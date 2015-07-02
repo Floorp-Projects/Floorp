@@ -12,12 +12,16 @@ const { viewFor } = require('sdk/view/core');
 const { getOwnerWindow } = require('sdk/tabs/utils');
 const { windows, onFocus, getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { open, focus, close } = require('sdk/window/helpers');
+const { observer: windowObserver } = require("sdk/windows/observer");
 const tabs = require('sdk/tabs');
 const { browserWindows } = require('sdk/windows');
-const { set: setPref } = require("sdk/preferences/service");
+const { set: setPref, get: getPref, reset: resetPref } = require("sdk/preferences/service");
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
+const OPEN_IN_NEW_WINDOW_PREF = 'browser.link.open_newwindow';
+const DISABLE_POPUP_PREF = 'dom.disable_open_during_load';
 const fixtures = require("../fixtures");
 const { base64jpeg } = fixtures;
+const { cleanUI, before, after } = require("sdk/test/utils");
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
@@ -160,11 +164,8 @@ exports.testAutomaticDestroyEventClose = function(assert, done) {
 };
 
 exports.testTabPropertiesInNewWindow = function(assert, done) {
-  let warning = "DEPRECATED: tab.favicon is deprecated, please use require(\"sdk/places/favicon\").getFavicon instead.\n"
   const { LoaderWithFilteredConsole } = require("sdk/test/loader");
   let loader = LoaderWithFilteredConsole(module, function(type, message) {
-    if (type == "error" && message.substring(0, warning.length) == warning)
-      return false;
     return true;
   });
 
@@ -185,7 +186,7 @@ exports.testTabPropertiesInNewWindow = function(assert, done) {
     onReady: function(tab) {
       assert.equal(tab.title, "foo", "title of the new tab matches");
       assert.equal(tab.url, url, "URL of the new tab matches");
-      assert.ok(tab.favicon, "favicon of the new tab is not empty");
+      assert.equal(tab.favicon, undefined, "favicon of the new tab is undefined");
       assert.equal(tab.style, null, "style of the new tab matches");
       assert.equal(tab.index, 0, "index of the new tab matches");
       assert.notEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
@@ -196,7 +197,7 @@ exports.testTabPropertiesInNewWindow = function(assert, done) {
     onLoad: function(tab) {
       assert.equal(tab.title, "foo", "title of the new tab matches");
       assert.equal(tab.url, url, "URL of the new tab matches");
-      assert.ok(tab.favicon, "favicon of the new tab is not empty");
+      assert.equal(tab.favicon, undefined, "favicon of the new tab is undefined");
       assert.equal(tab.style, null, "style of the new tab matches");
       assert.equal(tab.index, 0, "index of the new tab matches");
       assert.notEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
@@ -208,11 +209,8 @@ exports.testTabPropertiesInNewWindow = function(assert, done) {
 };
 
 exports.testTabPropertiesInSameWindow = function(assert, done) {
-  let warning = "DEPRECATED: tab.favicon is deprecated, please use require(\"sdk/places/favicon\").getFavicon instead.\n"
   const { LoaderWithFilteredConsole } = require("sdk/test/loader");
   let loader = LoaderWithFilteredConsole(module, function(type, message) {
-    if (type == "error" && message.substring(0, warning.length) == warning)
-      return false;
     return true;
   });
 
@@ -234,7 +232,7 @@ exports.testTabPropertiesInSameWindow = function(assert, done) {
     onReady: function(tab) {
       assert.equal(tab.title, "foo", "title of the new tab matches");
       assert.equal(tab.url, url, "URL of the new tab matches");
-      assert.ok(tab.favicon, "favicon of the new tab is not empty");
+      assert.equal(tab.favicon, undefined, "favicon of the new tab is undefined");
       assert.equal(tab.style, null, "style of the new tab matches");
       assert.equal(tab.index, tabCount, "index of the new tab matches");
       assert.notEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
@@ -245,7 +243,7 @@ exports.testTabPropertiesInSameWindow = function(assert, done) {
     onLoad: function(tab) {
       assert.equal(tab.title, "foo", "title of the new tab matches");
       assert.equal(tab.url, url, "URL of the new tab matches");
-      assert.ok(tab.favicon, "favicon of the new tab is not empty");
+      assert.equal(tab.favicon, undefined, "favicon of the new tab is undefined");
       assert.equal(tab.style, null, "style of the new tab matches");
       assert.equal(tab.index, tabCount, "index of the new tab matches");
       assert.notEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
@@ -372,31 +370,28 @@ exports.testTabMove = function(assert, done) {
   }).then(null, assert.fail);
 };
 
-exports.testIgnoreClosing = function(assert, done) {
-  let originalWindow = viewFor(browserWindows.activeWindow);
-  openBrowserWindow(function(window, browser) {
-    onFocus(window).then(() => {
-      let url = "data:text/html;charset=utf-8,foobar";
+exports.testIgnoreClosing = function*(assert) {
+  let url = "data:text/html;charset=utf-8,foobar";
+  let originalWindow = getMostRecentBrowserWindow();
 
-      assert.equal(tabs.length, 2, "should be two windows open each with one tab");
+  let window = yield open().then(focus);
 
-      tabs.on('ready', function onReady(tab) {
-        tabs.removeListener('ready', onReady);
+  assert.equal(tabs.length, 2, "should be two windows open each with one tab");
 
-        let win = tab.window;
-        assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
-        assert.equal(tabs.length, 3, "should be three tabs in total");
+  yield new Promise(resolve => {
+    tabs.once("ready", (tab) => {
+      let win = tab.window;
+      assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
+      assert.equal(tabs.length, 3, "should be three tabs in total");
 
-        tab.close(function() {
-          assert.equal(win.tabs.length, 1, "should be one tab in the new window");
-          assert.equal(tabs.length, 2, "should be two tabs in total");
-
-          close(window).then(onFocus(originalWindow)).then(done).then(null, assert.fail);
-        });
+      tab.close(() => {
+        assert.equal(win.tabs.length, 1, "should be one tab in the new window");
+        assert.equal(tabs.length, 2, "should be two tabs in total");
+        resolve();
       });
-
-      tabs.open(url);
     });
+
+    tabs.open(url);
   });
 };
 
@@ -537,23 +532,23 @@ exports.testTabsEvent_onOpen = function(assert, done) {
 };
 
 // TEST: onClose event handler
-exports.testTabsEvent_onClose = function(assert, done) {
-  open().then(focus).then(window => {
-    let url = "data:text/html;charset=utf-8,onclose";
-    let eventCount = 0;
+exports.testTabsEvent_onClose = function*(assert) {
+  let window = yield open().then(focus);
+  let url = "data:text/html;charset=utf-8,onclose";
+  let eventCount = 0;
 
-    // add listener via property assignment
-    function listener1(tab) {
-      eventCount++;
-    }
-    tabs.on('close', listener1);
+  // add listener via property assignment
+  function listener1(tab) {
+    eventCount++;
+  }
+  tabs.on("close", listener1);
 
+  yield new Promise(resolve => {
     // add listener via collection add
-    tabs.on('close', function listener2(tab) {
+    tabs.on("close", function listener2(tab) {
       assert.equal(++eventCount, 2, "both listeners notified");
-      tabs.removeListener('close', listener1);
-      tabs.removeListener('close', listener2);
-      close(window).then(done).then(null, assert.fail);
+      tabs.removeListener("close", listener2);
+      resolve();
     });
 
     tabs.on('ready', function onReady(tab) {
@@ -562,7 +557,13 @@ exports.testTabsEvent_onClose = function(assert, done) {
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  });
+
+  tabs.removeListener("close", listener1);
+  assert.pass("done test!");
+
+  yield close(window);
+  assert.pass("window was closed!");
 };
 
 // TEST: onClose event handler when a window is closed
@@ -671,32 +672,38 @@ exports.testTabsEvent_onActivate = function(assert, done) {
 };
 
 // onDeactivate event handler
-exports.testTabsEvent_onDeactivate = function(assert, done) {
-  open().then(focus).then(window => {
-    let url = "data:text/html;charset=utf-8,ondeactivate";
-    let eventCount = 0;
+exports.testTabsEvent_onDeactivate = function*(assert) {
+  let window = yield open().then(focus);
 
-    // add listener via property assignment
-    function listener1(tab) {
-      eventCount++;
-    };
-    tabs.on('deactivate', listener1);
+  let url = "data:text/html;charset=utf-8,ondeactivate";
+  let eventCount = 0;
 
+  // add listener via property assignment
+  function listener1(tab) {
+    eventCount++;
+    assert.pass("listener1 was called " + eventCount);
+  };
+  tabs.on('deactivate', listener1);
+
+  yield new Promise(resolve => {
     // add listener via collection add
     tabs.on('deactivate', function listener2(tab) {
       assert.equal(++eventCount, 2, "both listeners notified");
-      tabs.removeListener('deactivate', listener1);
       tabs.removeListener('deactivate', listener2);
-      close(window).then(done).then(null, assert.fail);
+      resolve();
     });
 
     tabs.on('open', function onOpen(tab) {
+      assert.pass("tab opened");
       tabs.removeListener('open', onOpen);
       tabs.open("data:text/html;charset=utf-8,foo");
     });
 
     tabs.open(url);
-  }).then(null, assert.fail);
+  });
+
+  tabs.removeListener('deactivate', listener1);
+  assert.pass("listeners were removed");
 };
 
 // pinning
@@ -726,13 +733,16 @@ exports.testTabsEvent_pinning = function(assert, done) {
 };
 
 // TEST: per-tab event handlers
-exports.testPerTabEvents = function(assert, done) {
-  open().then(focus).then(window => {
-    let eventCount = 0;
+exports.testPerTabEvents = function*(assert) {
+  let window = yield open().then(focus);
+  let eventCount = 0;
 
+  let tab = yield new Promise(resolve => {
     tabs.open({
       url: "data:text/html;charset=utf-8,foo",
-      onOpen: function(tab) {
+      onOpen: (tab) => {
+        assert.pass("the tab was opened");
+
         // add listener via property assignment
         function listener1() {
           eventCount++;
@@ -741,14 +751,18 @@ exports.testPerTabEvents = function(assert, done) {
 
         // add listener via collection add
         tab.on('ready', function listener2() {
-          assert.equal(eventCount, 1, "both listeners notified");
+          assert.equal(eventCount, 1, "listener1 called before listener2");
           tab.removeListener('ready', listener1);
           tab.removeListener('ready', listener2);
-          close(window).then(done).then(null, assert.fail);
+          assert.pass("removed listeners");
+          eventCount++;
+          resolve();
         });
       }
     });
-  }).then(null, assert.fail);
+  });
+
+  assert.equal(eventCount, 2, "both listeners were notified.");
 };
 
 exports.testAttachOnOpen = function (assert, done) {
@@ -1038,29 +1052,6 @@ exports.testOnLoadEventWithImage = function(assert, done) {
   });
 };
 
-exports.testFaviconGetterDeprecation = function (assert, done) {
-  setPref(DEPRECATE_PREF, true);
-  const { LoaderWithHookedConsole } = require("sdk/test/loader");
-  let { loader, messages } = LoaderWithHookedConsole(module);
-  let tabs = loader.require('sdk/tabs');
-
-  tabs.open({
-    url: 'data:text/html;charset=utf-8,',
-    onOpen: function (tab) {
-      let favicon = tab.favicon;
-      assert.equal(messages.length, 1, 'only one error is dispatched');
-      assert.ok(messages[0].type, 'error', 'the console message is an error');
-
-      let msg = messages[0].msg;
-      assert.ok(msg.indexOf('tab.favicon is deprecated') !== -1,
-        'message contains the given message');
-      tab.close(done);
-      loader.unload();
-    }
-  });
-}
-
-
 exports.testNoDeadObjects = function(assert, done) {
   let loader = Loader(module);
   let myTabs = loader.require("sdk/tabs");
@@ -1201,6 +1192,56 @@ exports.testTabDestroy = function(assert, done) {
       myFirstTab.activate();
     })
   })
+};
+
+// related to bug 942511
+// https://bugzilla.mozilla.org/show_bug.cgi?id=942511
+exports['test active tab properties defined on popup closed'] = function (assert, done) {
+  setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
+  setPref(DISABLE_POPUP_PREF, false);
+
+  let tabID = "";
+  let popupClosed = false;
+
+  tabs.open({
+    url: 'about:blank',
+    onReady: function (tab) {
+      tabID = tab.id;
+      tab.attach({
+        contentScript: 'var popup = window.open("about:blank");' +
+                       'popup.close();'
+      });
+      
+      windowObserver.once('close', () => {
+        popupClosed = true;
+      });
+
+      windowObserver.on('activate', () => {
+        // Only when the 'activate' event is fired after the popup was closed.
+        if (popupClosed) {
+          popupClosed = false;
+          let activeTabID = tabs.activeTab.id;
+          if (activeTabID) {
+              assert.equal(tabID, activeTabID, 'ActiveTab properties are correct');
+          }
+          else {
+            assert.fail('ActiveTab properties undefined on popup closed');
+          }
+          tab.close(done);
+        }
+      });
+    }
+  });
+};
+
+after(exports, function*(name, assert) {
+  resetPopupPrefs();
+  yield cleanUI();
+});
+
+const resetPopupPrefs = () => {
+  resetPref(OPEN_IN_NEW_WINDOW_PREF);
+  resetPref(DISABLE_POPUP_PREF);
 };
 
 /******************* helpers *********************/

@@ -7,6 +7,8 @@
 const { setTimeout } = require('sdk/timers');
 const { waitUntil, cleanUI } = require('sdk/test/utils');
 const tabs = require('sdk/tabs');
+const fixtures = require("./fixtures");
+const testURI = fixtures.url("test.html");
 
 exports.testWaitUntil = function (assert, done) {
   let bool = false;
@@ -44,29 +46,36 @@ exports.testWaitUntilInterval = function (assert, done) {
   setTimeout(() => { bool = true; }, 10);
 };
 
-exports.testCleanUIWithExtraTabAndWindow = function(assert, done) {
-  tabs.open({
-    url: "about:blank",
-    inNewWindow: true,
-    onOpen: () => {
-      cleanUI().then(() => {
-        assert.pass("the ui was cleaned");
-        assert.equal(tabs.length, 1, 'there is only one tab open');
-      }).then(done).catch(assert.fail);
-    }
+exports.testCleanUIWithExtraTabAndWindow = function*(assert) {
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: testURI,
+      inNewWindow: true,
+      onReady: resolve
+    });
   });
+
+  assert.equal(tabs.length, 2, 'there are two tabs open');
+
+  yield cleanUI()
+  assert.pass("the ui was cleaned");
+  assert.equal(tabs.length, 1, 'there is only one tab open');
 }
 
-exports.testCleanUIWithOnlyExtraTab = function(assert, done) {
-  tabs.open({
-    url: "about:blank",
-    onOpen: () => {
-      cleanUI().then(() => {
-        assert.pass("the ui was cleaned");
-        assert.equal(tabs.length, 1, 'there is only one tab open');
-      }).then(done).catch(assert.fail);
-    }
+exports.testCleanUIWithOnlyExtraTab = function*(assert) {
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: testURI,
+      inBackground: true,
+      onReady: resolve
+    });
   });
+
+  assert.equal(tabs.length, 2, 'there are two tabs open');
+
+  yield cleanUI();
+  assert.pass("the ui was cleaned.");
+  assert.equal(tabs.length, 1, 'there is only one tab open');
 }
 
 require('sdk/test').run(exports);

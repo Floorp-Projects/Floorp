@@ -21,7 +21,7 @@ require('sdk/places/host/host-bookmarks');
 require('sdk/places/host/host-tags');
 require('sdk/places/host/host-query');
 const {
-  invalidResolve, invalidReject, createTree,
+  invalidResolve, createTree,
   compareWithHost, createBookmark, createBookmarkTree, resetPlaces
 } = require('./places-helper');
 
@@ -32,7 +32,7 @@ const hsrv = Cc['@mozilla.org/browser/nav-history-service;1'].
 const tagsrv = Cc['@mozilla.org/browser/tagging-service;1'].
               getService(Ci.nsITaggingService);
 
-exports.testBookmarksCreate = function (assert, done) {
+exports.testBookmarksCreate = function*(assert) {
   let items = [{
     title: 'my title',
     url: 'http://test-places-host.com/testBookmarksCreate/',
@@ -47,13 +47,11 @@ exports.testBookmarksCreate = function (assert, done) {
     group: bmsrv.unfiledBookmarksFolder
   }];
 
-  all(items.map(function (item) {
-    return send('sdk-places-bookmarks-create', item).then(function (data) {
+  yield all(items.map((item) => {
+    return send('sdk-places-bookmarks-create', item).then((data) => {
       compareWithHost(assert, data);
-    }, invalidReject(assert));
-  })).then(function () {
-    done();
-  }, invalidReject(assert));
+    });
+  }));
 };
 
 exports.testBookmarksCreateFail = function (assert, done) {
