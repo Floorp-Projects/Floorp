@@ -87,6 +87,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
@@ -125,7 +126,8 @@ public abstract class GeckoApp
     LocationListener,
     NativeEventListener,
     SensorEventListener,
-    Tabs.OnTabsChangedListener {
+    Tabs.OnTabsChangedListener,
+    ViewTreeObserver.OnGlobalLayoutListener {
 
     private static final String LOGTAG = "GeckoApp";
     private static final int ONE_DAY_MS = 1000*60*60*24;
@@ -189,6 +191,7 @@ public abstract class GeckoApp
 
     protected boolean mShouldRestore;
     protected boolean mInitialized;
+    protected boolean mWindowFocusInitialized;
     private Telemetry.Timer mJavaUiStartupTimer;
     private Telemetry.Timer mGeckoReadyStartupTimer;
 
@@ -1281,6 +1284,9 @@ public abstract class GeckoApp
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (LayerView) findViewById(R.id.layer_view);
 
+        // Use global layout state change to kick off additional initialization
+        mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
+
         // Determine whether we should restore tabs.
         mShouldRestore = getSessionRestoreState(savedInstanceState);
         if (mShouldRestore && savedInstanceState != null) {
@@ -1418,13 +1424,6 @@ public abstract class GeckoApp
                 ((SurfaceView)mCameraView).getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
             }
         }
-
-        // XXX our editor tests require the GeckoView to have focus to pass, so we have to
-        // manually shift focus to the GeckoView. requestFocus apparently doesn't work at
-        // this stage of starting up, so we have to unset and reset the focusability.
-        mLayerView.setFocusable(false);
-        mLayerView.setFocusable(true);
-        mLayerView.setFocusableInTouchMode(true);
     }
 
     /**
@@ -1614,6 +1613,18 @@ public abstract class GeckoApp
             processAlertCallback(intent);
         } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
+        }
+    }
+
+    @Override
+    public void onGlobalLayout() {
+        if (Versions.preJB) {
+            mMainLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+        } else {
+            mMainLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+        }
+        if (!mInitialized) {
+            initialize();
         }
     }
 
@@ -1953,8 +1964,14 @@ public abstract class GeckoApp
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        if (!mInitialized && hasFocus) {
-            initialize();
+        if (!mWindowFocusInitialized && hasFocus) {
+            mWindowFocusInitialized = true;
+            // XXX our editor tests require the GeckoView to have focus to pass, so we have to
+            // manually shift focus to the GeckoView. requestFocus apparently doesn't work at
+            // this stage of starting up, so we have to unset and reset the focusability.
+            mLayerView.setFocusable(false);
+            mLayerView.setFocusable(true);
+            mLayerView.setFocusableInTouchMode(true);
             getWindow().setBackgroundDrawable(null);
         }
     }
