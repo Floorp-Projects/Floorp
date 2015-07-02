@@ -59,7 +59,7 @@ function doTests() {
     testOnWindow(true, function(aWin) {
       wP = aWin;
       ok(!("serviceWorker" in wP.content.navigator), "ServiceWorkers are not available for private windows");
-      SimpleTest.finish();
+      runTest();
     });
   });
 }
