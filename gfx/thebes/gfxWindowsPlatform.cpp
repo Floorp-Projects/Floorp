@@ -55,8 +55,6 @@
 #include <string>
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-#include "gfxD2DSurface.h"
-
 #include <d3d10_1.h>
 
 #include "mozilla/gfx/2D.h"
@@ -115,38 +113,6 @@ static const char *kFeatureLevelPref =
   "gfx.direct3d.last_used_feature_level_idx";
 static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0 };
-
-class GfxD2DSurfaceReporter final : public nsIMemoryReporter
-{
-    ~GfxD2DSurfaceReporter() {}
-
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData, bool aAnonymize)
-    {
-        nsresult rv;
-
-        int64_t amount = cairo_d2d_get_image_surface_cache_usage();
-        rv = MOZ_COLLECT_REPORT(
-            "gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES, amount,
-            "Memory used by the Direct2D internal surface cache.");
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        cairo_device_t *device =
-            gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-        amount = device ? cairo_d2d_get_surface_vram_usage(device) : 0;
-        rv = MOZ_COLLECT_REPORT(
-            "gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES, amount,
-            "Video memory used by D2D surfaces.");
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS(GfxD2DSurfaceReporter, nsIMemoryReporter)
 
 #endif
 
@@ -422,7 +388,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     CoInitialize(nullptr); 
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    RegisterStrongMemoryReporter(new GfxD2DSurfaceReporter());
     mD2DDevice = nullptr;
 #endif
     RegisterStrongMemoryReporter(new GfxD2DVramReporter());
@@ -779,15 +744,9 @@ gfxWindowsPlatform::CreateOffscreenSurface(const IntSize& size,
     nsRefPtr<gfxASurface> surf = nullptr;
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-    if (mRenderMode == RENDER_GDI)
+    if (mRenderMode == RENDER_GDI || mRenderMode == RENDER_DIRECT2D)
         surf = new gfxWindowsSurface(size,
                                      OptimalFormatForContent(contentType));
-#endif
-
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mRenderMode == RENDER_DIRECT2D)
-        surf = new gfxD2DSurface(size,
-                                 OptimalFormatForContent(contentType));
 #endif
 
     if (!surf || surf->CairoStatus()) {
