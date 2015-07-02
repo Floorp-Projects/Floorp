@@ -326,7 +326,7 @@ WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve)
     mCurve = nullptr;
   }
 
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  AudioNodeStream* ns = mStream;
   MOZ_ASSERT(ns, "Why don't we have a stream here?");
   ns->SetRawArrayData(curve);
 }

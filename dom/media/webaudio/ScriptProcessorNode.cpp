@@ -249,7 +249,7 @@ public:
     : AudioNodeEngine(aNode)
     , mSharedBuffers(aNode->GetSharedBuffers())
     , mSource(nullptr)
-    , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
+    , mDestination(aDestination->Stream())
     , mBufferSize(aBufferSize)
     , mInputWriteIndex(0)
     , mSeenNonSilenceInput(false)
@@ -490,7 +490,7 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
                                   BufferSize(),
                                   aNumberOfInputChannels);
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  engine->SetSourceStream(mStream);
 }
 
 ScriptProcessorNode::~ScriptProcessorNode()

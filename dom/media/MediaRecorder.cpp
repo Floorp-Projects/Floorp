@@ -1140,7 +1140,7 @@ MediaRecorder::GetSourceMediaStream()
     return mDOMStream->GetStream();
   }
   MOZ_ASSERT(mAudioNode != nullptr);
-  return mPipeStream != nullptr ? mPipeStream : mAudioNode->Stream();
+  return mPipeStream != nullptr ? mPipeStream.get() : mAudioNode->Stream();
 }
 
 nsIPrincipal*

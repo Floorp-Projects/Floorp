@@ -79,7 +79,7 @@ public:
   BiquadFilterNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
     , mSource(nullptr)
-    , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
+    , mDestination(aDestination->Stream())
     // Keep the default values in sync with the default values in
     // BiquadFilterNode::BiquadFilterNode
     , mType(BiquadFilterType::Lowpass)
@@ -251,7 +251,7 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
 {
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  engine->SetSourceStream(mStream);
 }
 
 BiquadFilterNode::~BiquadFilterNode()
