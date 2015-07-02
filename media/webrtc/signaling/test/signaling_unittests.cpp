@@ -913,6 +913,7 @@ class SignalingAgent {
       PeerConnectionImpl::CreatePeerConnection();
     EXPECT_TRUE(pcImpl);
     pcImpl->SetAllowIceLoopback(true);
+    pcImpl->SetAllowIceLinkLocal(true);
     pc = new PCDispatchWrapper(pcImpl);
   }
 
@@ -4709,7 +4710,7 @@ int main(int argc, char **argv) {
   // Adds a listener to the end.  Google Test takes the ownership.
   listeners.Append(new test::RingbufferDumper(test_utils));
   test_utils->sts_target()->Dispatch(
-    WrapRunnableNM(&TestStunServer::GetInstance), NS_DISPATCH_SYNC);
+    WrapRunnableNM(&TestStunServer::GetInstance, AF_INET), NS_DISPATCH_SYNC);
 
   // Set the main thread global which is this thread.
   nsIThread *thread;

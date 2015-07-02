@@ -287,6 +287,11 @@ public:
 
   // Configure the ability to use localhost.
   void SetAllowIceLoopback(bool val) { mAllowIceLoopback = val; }
+  bool GetAllowIceLoopback() const { return mAllowIceLoopback; }
+
+  // Configure the ability to use IPV6 link-local addresses.
+  void SetAllowIceLinkLocal(bool val) { mAllowIceLinkLocal = val; }
+  bool GetAllowIceLinkLocal() const { return mAllowIceLinkLocal; }
 
   // Handle system to allow weak references to be passed through C code
   virtual const std::string& GetHandle();
@@ -739,6 +744,7 @@ private:
 #endif
 
   bool mAllowIceLoopback;
+  bool mAllowIceLinkLocal;
   nsRefPtr<PeerConnectionMedia> mMedia;
 
   // The JSEP negotiation session.

@@ -337,20 +337,11 @@ static int nr_transport_addr_to_praddr(nr_transport_addr *addr,
         naddr->inet.ip = addr->u.addr4.sin_addr.s_addr;
         break;
       case NR_IPV6:
-#if 0
         naddr->ipv6.family = PR_AF_INET6;
         naddr->ipv6.port = addr->u.addr6.sin6_port;
-#ifdef LINUX
-        memcpy(naddr->ipv6.ip._S6_un._S6_u8,
-               &addr->u.addr6.sin6_addr.__in6_u.__u6_addr8, 16);
-#else
-        memcpy(naddr->ipv6.ip._S6_un._S6_u8,
-               &addr->u.addr6.sin6_addr.__u6_addr.__u6_addr8, 16);
-#endif
-#else
-        // TODO: make IPv6 work
-        ABORT(R_INTERNAL);
-#endif
+        naddr->ipv6.flowinfo = addr->u.addr6.sin6_flowinfo;
+        memcpy(&naddr->ipv6.ip, &addr->u.addr6.sin6_addr, sizeof(in6_addr));
+        naddr->ipv6.scope_id = addr->u.addr6.sin6_scope_id;
         break;
       default:
         ABORT(R_BAD_ARGS);
@@ -440,6 +431,7 @@ int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
     int _status;
     int r;
     struct sockaddr_in ip4;
+    struct sockaddr_in6 ip6;
 
     switch(praddr->raw.family) {
       case PR_AF_INET:
@@ -447,18 +439,19 @@ int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
         ip4.sin_addr.s_addr = praddr->inet.ip;
         ip4.sin_port = praddr->inet.port;
         if ((r = nr_sockaddr_to_transport_addr((sockaddr *)&ip4,
-                                               sizeof(ip4),
                                                protocol, keep,
                                                addr)))
           ABORT(r);
         break;
       case PR_AF_INET6:
-#if 0
-        r = nr_sockaddr_to_transport_addr((sockaddr *)&praddr->raw,
-          sizeof(struct sockaddr_in6),IPPROTO_UDP,keep,addr);
+        ip6.sin6_family = PF_INET6;
+        ip6.sin6_port = praddr->ipv6.port;
+        ip6.sin6_flowinfo = praddr->ipv6.flowinfo;
+        memcpy(&ip6.sin6_addr, &praddr->ipv6.ip, sizeof(in6_addr));
+        ip6.sin6_scope_id = praddr->ipv6.scope_id;
+        if ((r = nr_sockaddr_to_transport_addr((sockaddr *)&ip6,protocol,keep,addr)))
+          ABORT(r);
         break;
-#endif
-        ABORT(R_BAD_ARGS);
       default:
         MOZ_ASSERT(false);
         ABORT(R_BAD_ARGS);
@@ -516,14 +509,16 @@ int NrSocket::create(nr_transport_addr *addr) {
 
   switch (addr->protocol) {
     case IPPROTO_UDP:
-      if (!(fd_ = PR_NewUDPSocket())) {
-        r_log(LOG_GENERIC,LOG_CRIT,"Couldn't create socket");
+      if (!(fd_ = PR_OpenUDPSocket(naddr.raw.family))) {
+        r_log(LOG_GENERIC,LOG_CRIT,"Couldn't create UDP socket, "
+              "family=%d, err=%d", naddr.raw.family, PR_GetError());
         ABORT(R_INTERNAL);
       }
       break;
     case IPPROTO_TCP:
-      if (!(fd_ = PR_NewTCPSocket())) {
-        r_log(LOG_GENERIC,LOG_CRIT,"Couldn't create socket");
+      if (!(fd_ = PR_OpenTCPSocket(naddr.raw.family))) {
+        r_log(LOG_GENERIC,LOG_CRIT,"Couldn't create TCP socket, "
+              "family=%d, err=%d", naddr.raw.family, PR_GetError());
         ABORT(R_INTERNAL);
       }
       // Set ReuseAddr for TCP sockets to enable having several
@@ -686,7 +681,8 @@ int NrSocket::sendto(const void *msg, size_t len,
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR)
       ABORT(R_WOULDBLOCK);
 
-    r_log(LOG_GENERIC, LOG_INFO, "Error in sendto: %s", to->as_string);
+    r_log(LOG_GENERIC, LOG_INFO, "Error in sendto %s: %d",
+          to->as_string, PR_GetError());
     ABORT(R_IO_ERROR);
   }
 
