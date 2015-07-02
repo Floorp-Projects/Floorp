@@ -26,10 +26,6 @@
 #define LOG(...) do { } while(0)
 #endif
 
-#ifndef M_PI
-# define M_PI 3.14159265358979323846
-#endif
-
 // 1/sqrt(2) (aka sqrt(2)/2)
 #ifndef M_SQRT1_2
 # define M_SQRT1_2	0.70710678118654752440
@@ -99,6 +95,18 @@ HMDInfoCardboard::HMDInfoCardboard()
   mMaximumEyeFOV[Eye_Right] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);
 
   SetFOV(mRecommendedEyeFOV[Eye_Left], mRecommendedEyeFOV[Eye_Right], 0.01, 10000.0);
+
+#if 1
+  int32_t xcoord = 0;
+  if (getenv("FAKE_CARDBOARD_SCREEN")) {
+      const char *env = getenv("FAKE_CARDBOARD_SCREEN");
+      nsresult err;
+      xcoord = nsCString(env).ToInteger(&err);
+      if (err != NS_OK) xcoord = 0;
+  }
+  mScreen = VRHMDManager::MakeFakeScreen(xcoord, 0, 1920, 1080);
+#endif
+
 }
 
 bool
@@ -129,9 +137,9 @@ HMDInfoCardboard::Notify(const mozilla::hal::ScreenConfiguration& config)
   mOrient = config.orientation();
 
   if (mOrient == eScreenOrientation_LandscapePrimary) {
-    mScreenTransform = Quaternion(0.f, 0.f, M_SQRT1_2, M_SQRT1_2);
+    mScreenTransform = Quaternion(0.f, 0.f, (float) M_SQRT1_2, (float) M_SQRT1_2);
   } else if (mOrient == eScreenOrientation_LandscapeSecondary) {
-    mScreenTransform = Quaternion(0.f, 0.f, -M_SQRT1_2, M_SQRT1_2);
+    mScreenTransform = Quaternion(0.f, 0.f, (float) -M_SQRT1_2, (float) M_SQRT1_2);
   } else if (mOrient == eScreenOrientation_PortraitPrimary) {
     mScreenTransform = Quaternion();
   } else if (mOrient == eScreenOrientation_PortraitSecondary) {
@@ -215,38 +223,6 @@ HMDInfoCardboard::ZeroSensor()
   mSensorZeroInverse.Invert();
 }
 
-static Matrix4x4
-ConstructProjectionMatrix(const VRFieldOfView& fov, bool rightHanded, double zNear, double zFar)
-{
-  float upTan = tan(fov.upDegrees * M_PI / 180.0);
-  float downTan = tan(fov.downDegrees * M_PI / 180.0);
-  float leftTan = tan(fov.leftDegrees * M_PI / 180.0);
-  float rightTan = tan(fov.rightDegrees * M_PI / 180.0);
-
-  float handednessScale = rightHanded ? -1.0 : 1.0;
-
-  float pxscale = 2.0f / (leftTan + rightTan);
-  float pxoffset = (leftTan - rightTan) * pxscale * 0.5;
-  float pyscale = 2.0f / (upTan + downTan);
-  float pyoffset = (upTan - downTan) * pyscale * 0.5;
-
-  Matrix4x4 mobj;
-  float *m = &mobj._11;
-
-  m[0*4+0] = pxscale;
-  m[0*4+2] = pxoffset * handednessScale;
-
-  m[1*4+1] = pyscale;
-  m[1*4+2] = -pyoffset * handednessScale;
-
-  m[2*4+2] = zFar / (zNear - zFar) * -handednessScale;
-  m[2*4+3] = (zFar * zNear) / (zNear - zFar);
-
-  m[3*4+2] = handednessScale;
-
-  return mobj;
-}
-
 bool
 HMDInfoCardboard::SetFOV(const VRFieldOfView& aFOVLeft,
                          const VRFieldOfView& aFOVRight,
@@ -257,7 +233,7 @@ HMDInfoCardboard::SetFOV(const VRFieldOfView& aFOVLeft,
   for (uint32_t eye = 0; eye < NumEyes; eye++) {
     mEyeFOV[eye] = eye == Eye_Left ? aFOVLeft : aFOVRight;
     mEyeTranslation[eye] = Point3D(standardIPD * (eye == Eye_Left ? -1.0 : 1.0), 0.0, 0.0);
-    mEyeProjectionMatrix[eye] = ConstructProjectionMatrix(mEyeFOV[eye], true, zNear, zFar);
+    mEyeProjectionMatrix[eye] = mEyeFOV[eye].ConstructProjectionMatrix(zNear, zFar, true);
 
     mDistortionMesh[eye].mVertices.SetLength(4);
     mDistortionMesh[eye].mIndices.SetLength(6);
