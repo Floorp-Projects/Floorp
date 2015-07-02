@@ -196,6 +196,9 @@ private:
 
   void
   DropJSObjects();
+
+  bool
+  IsSourceDeleted() const;
 };
 
 } // namespace indexedDB
