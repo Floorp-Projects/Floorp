@@ -1031,7 +1031,8 @@ CodeGeneratorShared::ensureOsiSpace()
         for (int32_t i = 0; i < paddingSize; ++i)
             masm.nop();
     }
-    MOZ_ASSERT(masm.currentOffset() - lastOsiPointOffset_ >= Assembler::PatchWrite_NearCallSize());
+    MOZ_ASSERT_IF(!masm.oom(),
+                  masm.currentOffset() - lastOsiPointOffset_ >= Assembler::PatchWrite_NearCallSize());
     lastOsiPointOffset_ = masm.currentOffset();
 }
 

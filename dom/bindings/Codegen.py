@@ -12300,7 +12300,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
         jsidInits = CGList(
             (CGIfWrapper(
                 CGGeneric("return false;\n"),
-                '!InternJSString(aCx, %s, "%s")' %
+                '!AtomizeAndPinJSString(aCx, %s, "%s")' %
                 (descNameToId(desc.name), desc.interface.identifier.name))
              for desc in descriptors),
             "\n")
@@ -12476,6 +12476,42 @@ class ForwardDeclarationBuilder:
     def build(self):
         return self._build(atTopLevel=True)
 
+    def forwardDeclareForType(self, t, config, workerness='both'):
+        t = t.unroll()
+        if t.isGeckoInterface():
+            name = t.inner.identifier.name
+            # Find and add the non-worker implementation, if any.
+            if workerness != 'workeronly':
+                try:
+                    desc = config.getDescriptor(name, False)
+                    self.add(desc.nativeType)
+                except NoSuchDescriptorError:
+                    pass
+            # Find and add the worker implementation, if any.
+            if workerness != 'mainthreadonly':
+                try:
+                    desc = config.getDescriptor(name, True)
+                    self.add(desc.nativeType)
+                except NoSuchDescriptorError:
+                    pass
+        # Note: Spidermonkey interfaces are typedefs, so can't be
+        # forward-declared
+        elif t.isCallback():
+            self.addInMozillaDom(t.callback.identifier.name)
+        elif t.isDictionary():
+            self.addInMozillaDom(t.inner.identifier.name, isStruct=True)
+        elif t.isCallbackInterface():
+            self.addInMozillaDom(t.inner.identifier.name)
+        elif t.isUnion():
+            # Forward declare both the owning and non-owning version,
+            # since we don't know which one we might want
+            self.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
+            self.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
+        elif t.isMozMap():
+            self.forwardDeclareForType(t.inner, config, workerness)
+        # Don't need to do anything for void, primitive, string, any or object.
+        # There may be some other cases we are missing.
+
 
 class CGForwardDeclarations(CGWrapper):
     """
@@ -12488,42 +12524,6 @@ class CGForwardDeclarations(CGWrapper):
                  dictionaries, callbackInterfaces, additionalDeclarations=[]):
         builder = ForwardDeclarationBuilder()
 
-        def forwardDeclareForType(t, workerness='both'):
-            t = t.unroll()
-            if t.isGeckoInterface():
-                name = t.inner.identifier.name
-                # Find and add the non-worker implementation, if any.
-                if workerness != 'workeronly':
-                    try:
-                        desc = config.getDescriptor(name, False)
-                        builder.add(desc.nativeType)
-                    except NoSuchDescriptorError:
-                        pass
-                # Find and add the worker implementation, if any.
-                if workerness != 'mainthreadonly':
-                    try:
-                        desc = config.getDescriptor(name, True)
-                        builder.add(desc.nativeType)
-                    except NoSuchDescriptorError:
-                        pass
-            # Note: Spidermonkey interfaces are typedefs, so can't be
-            # forward-declared
-            elif t.isCallback():
-                builder.addInMozillaDom(t.callback.identifier.name)
-            elif t.isDictionary():
-                builder.addInMozillaDom(t.inner.identifier.name, isStruct=True)
-            elif t.isCallbackInterface():
-                builder.addInMozillaDom(t.inner.identifier.name)
-            elif t.isUnion():
-                # Forward declare both the owning and non-owning version,
-                # since we don't know which one we might want
-                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
-                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
-            elif t.isMozMap():
-                forwardDeclareForType(t.inner, workerness)
-            # Don't need to do anything for void, primitive, string, any or object.
-            # There may be some other cases we are missing.
-
         # Needed for at least Wrap.
         for d in descriptors:
             builder.add(d.nativeType)
@@ -12534,8 +12534,10 @@ class CGForwardDeclarations(CGWrapper):
             # arguments to helper functions, and they'll need to be forward
             # declared in the header.
             if d.interface.maplikeOrSetlike:
-                forwardDeclareForType(d.interface.maplikeOrSetlike.keyType)
-                forwardDeclareForType(d.interface.maplikeOrSetlike.valueType)
+                builder.forwardDeclareForType(d.interface.maplikeOrSetlike.keyType,
+                                              config)
+                builder.forwardDeclareForType(d.interface.maplikeOrSetlike.valueType,
+                                              config)
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks", isStruct=True)
@@ -12547,24 +12549,25 @@ class CGForwardDeclarations(CGWrapper):
         for callback in mainCallbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                forwardDeclareForType(t, workerness='mainthreadonly')
+                builder.forwardDeclareForType(t, config,
+                                              workerness='mainthreadonly')
 
         for callback in workerCallbacks:
             builder.addInMozillaDom(callback.identifier.name)
             for t in getTypesFromCallback(callback):
-                forwardDeclareForType(t, workerness='workeronly')
+                builder.forwardDeclareForType(t, config, workerness='workeronly')
 
         for d in callbackInterfaces:
             builder.add(d.nativeType)
             builder.add(d.nativeType + "Atoms", isStruct=True)
             for t in getTypesFromDescriptor(d):
-                forwardDeclareForType(t)
+                builder.forwardDeclareForType(t, config)
 
         for d in dictionaries:
             if len(d.members) > 0:
                 builder.addInMozillaDom(d.identifier.name + "Atoms", isStruct=True)
             for t in getTypesFromDictionary(d):
-                forwardDeclareForType(t)
+                builder.forwardDeclareForType(t, config)
 
         for className, isStruct in additionalDeclarations:
             builder.add(className, isStruct=isStruct)
@@ -13404,10 +13407,13 @@ class CGBindingImplClass(CGClass):
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JS::Handle<JSObject*>', 'aGivenProto')]
         if not descriptor.wrapperCache:
+            wrapReturnType = "bool"
             wrapArgs.append(Argument('JS::MutableHandle<JSObject*>',
                                      'aReflector'))
+        else:
+            wrapReturnType = "JSObject*"
         self.methodDecls.insert(0,
-                                ClassMethod(wrapMethodName, "JSObject*",
+                                ClassMethod(wrapMethodName, wrapReturnType,
                                             wrapArgs, virtual=descriptor.wrapperCache,
                                             breakAfterReturnDecl=" ",
                                             override=descriptor.wrapperCache,
@@ -13526,11 +13532,13 @@ class CGExampleClass(CGBindingImplClass):
         if self.descriptor.wrapperCache:
             reflectorArg = ""
             reflectorPassArg = ""
+            returnType = "JSObject*"
         else:
             reflectorArg = ", JS::MutableHandle<JSObject*> aReflector"
             reflectorPassArg = ", aReflector"
+            returnType = "bool"
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
-            JSObject*
+            ${returnType}
             ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto${reflectorArg})
             {
               return ${ifaceName}Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
@@ -13541,6 +13549,7 @@ class CGExampleClass(CGBindingImplClass):
             ifaceName=self.descriptor.name,
             nativeType=self.nativeLeafName(self.descriptor),
             parentType=self.nativeLeafName(self.parentDesc) if self.parentIface else "",
+            returnType=returnType,
             reflectorArg=reflectorArg,
             reflectorPassArg=reflectorPassArg)
 
@@ -13564,7 +13573,22 @@ class CGExampleRoot(CGThing):
 
         self.root = CGNamespace.build(["mozilla", "dom"], self.root)
 
-        self.root = CGList([CGClassForwardDeclare("JSContext", isStruct=True),
+        builder = ForwardDeclarationBuilder()
+        for member in descriptor.interface.members:
+            if not member.isAttr() and not member.isMethod():
+                continue
+            if member.isStatic():
+                builder.addInMozillaDom("GlobalObject")
+            if member.isAttr():
+                builder.forwardDeclareForType(member.type, config)
+            else:
+                assert member.isMethod()
+                for sig in member.signatures():
+                    builder.forwardDeclareForType(sig[0], config)
+                    for arg in sig[1]:
+                        builder.forwardDeclareForType(arg.type, config)
+
+        self.root = CGList([builder.build(),
                             self.root], "\n")
 
         # Throw in our #includes
@@ -13572,7 +13596,9 @@ class CGExampleRoot(CGThing):
                               ["nsWrapperCache.h",
                                "nsCycleCollectionParticipant.h",
                                "mozilla/Attributes.h",
-                               "mozilla/ErrorResult.h"],
+                               "mozilla/ErrorResult.h",
+                               "mozilla/dom/BindingDeclarations.h",
+                               "js/TypeDecls.h"],
                               ["mozilla/dom/%s.h" % interfaceName,
                                ("mozilla/dom/%s" %
                                 CGHeaders.getDeclarationFilename(descriptor.interface))], "", self.root)
@@ -14641,7 +14667,10 @@ class CGJSImplInitOperation(CallbackOperationBase):
     def __init__(self, sig, descriptor):
         assert sig in descriptor.interface.ctor().signatures()
         CallbackOperationBase.__init__(self, (BuiltinTypes[IDLBuiltinType.Types.void], sig[1]),
-                                       "__init", "__Init", descriptor, False, True)
+                                       "__init", "__Init", descriptor,
+                                       singleOperation=False,
+                                       rethrowContentException=True,
+                                       typedArraysAreStructs=True)
 
     def getPrettyName(self):
         return "__init"
@@ -15156,7 +15185,7 @@ class GlobalGenRoots():
         def memberToAtomCacheMember(binaryNameFor, m):
             binaryMemberName = binaryNameFor(m.identifier.name)
             return ClassMember(CGDictionary.makeIdName(binaryMemberName),
-                               "InternedStringId", visibility="public")
+                               "PinnedStringId", visibility="public")
         def buildAtomCacheStructure(idlobj, binaryNameFor, members):
             classMembers = [memberToAtomCacheMember(binaryNameFor, m)
                             for m in members]
@@ -15202,7 +15231,7 @@ class GlobalGenRoots():
                                  CGWrapper(structs, pre='\n'))
         curr = CGWrapper(curr, post='\n')
 
-        # Add include statement for InternedStringId.
+        # Add include statement for PinnedStringId.
         declareIncludes = ['mozilla/dom/BindingUtils.h']
         curr = CGHeaders([], [], [], [], declareIncludes, [], 'GeneratedAtomList',
                          curr)
@@ -15379,7 +15408,7 @@ class GlobalGenRoots():
                                                             skipGen=False)]
         defineIncludes.append("nsThreadUtils.h") # For NS_IsMainThread
         defineIncludes.append("js/Id.h") # For jsid
-        defineIncludes.append("mozilla/dom/BindingUtils.h") # InternJSString
+        defineIncludes.append("mozilla/dom/BindingUtils.h") # AtomizeAndPinJSString
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'ResolveSystemBinding', curr)

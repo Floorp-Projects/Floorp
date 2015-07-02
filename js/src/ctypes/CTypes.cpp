@@ -1787,7 +1787,8 @@ InitTypeClasses(JSContext* cx, HandleObject ctypesObj)
   //     * __proto__ === 'p', the prototype object from above
   //     * 'constructor' property === 't'
   AutoObjectVector protos(cx);
-  protos.resize(CTYPEPROTO_SLOTS);
+  if (!protos.resize(CTYPEPROTO_SLOTS))
+      return false;
   if (!InitTypeConstructor(cx, ctypesObj, CTypeProto, CDataProto,
          sPointerFunction, nullptr, sPointerProps,
          sPointerInstanceFunctions, sPointerInstanceProps,

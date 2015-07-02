@@ -1,0 +1,595 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D2669E901AD6EC830027914D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D2669E8E1AD6EC830027914D /* Main.storyboard */; };
+		D2669E921AD6EC830027914D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2669E911AD6EC830027914D /* Images.xcassets */; };
+		D2669E951AD6EC830027914D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2669E931AD6EC830027914D /* LaunchScreen.xib */; };
+		D2C9CF2E1AA4960F0041BE29 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2C9CF2D1AA4960F0041BE29 /* main.mm */; };
+		D2C9CF311AA4960F0041BE29 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C9CF301AA4960F0041BE29 /* AppDelegate.m */; };
+		D2C9CF341AA4960F0041BE29 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D2C9CF331AA4960F0041BE29 /* ViewController.m */; };
+		D2C9CF371AA4960F0041BE29 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D2C9CF351AA4960F0041BE29 /* Main.storyboard */; };
+		D2C9CF391AA4960F0041BE29 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2C9CF381AA4960F0041BE29 /* Images.xcassets */; };
+		D2C9CF3C1AA4960F0041BE29 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = D2C9CF3A1AA4960F0041BE29 /* LaunchScreen.xib */; };
+		D2C9CF521AA4A23A0041BE29 /* browser in Resources */ = {isa = PBXBuildFile; fileRef = D2C9CF511AA4A23A0041BE29 /* browser */; };
+		D2CA73561ADDE3F10022A192 /* shell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2CA73551ADDE3F10022A192 /* shell.cpp */; };
+		D2CA73591ADDEBAB0022A192 /* dirs.m in Sources */ = {isa = PBXBuildFile; fileRef = D2CA73581ADDEBAB0022A192 /* dirs.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D2669EA81AD6ECFC0027914D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2C9CF201AA4960F0041BE29 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2C9CF271AA4960F0041BE29;
+			remoteInfo = GeckoEmbed;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D20C8D111ADDD6E600CE4BC8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D20C8D121ADDD87C00CE4BC8 /* libmozglue.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmozglue.dylib; path = "../../../../debug-mozilla-central/mozglue/build/libmozglue.dylib"; sourceTree = "<group>"; };
+		D2669E821AD6EC830027914D /* js.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = js.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2669E851AD6EC830027914D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D2669E8F1AD6EC830027914D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		D2669E911AD6EC830027914D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		D2669E941AD6EC830027914D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		D2C9CF281AA4960F0041BE29 /* GeckoEmbed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GeckoEmbed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2C9CF2C1AA4960F0041BE29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D2C9CF2D1AA4960F0041BE29 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		D2C9CF2F1AA4960F0041BE29 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		D2C9CF301AA4960F0041BE29 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		D2C9CF321AA4960F0041BE29 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		D2C9CF331AA4960F0041BE29 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		D2C9CF361AA4960F0041BE29 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		D2C9CF381AA4960F0041BE29 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		D2C9CF3B1AA4960F0041BE29 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		D2C9CF511AA4A23A0041BE29 /* browser */ = {isa = PBXFileReference; lastKnownFileType = folder; path = browser; sourceTree = "<group>"; };
+		D2C9CF541AA4A26E0041BE29 /* libxpcomglue.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpcomglue.a; path = "../../../../../iphone-simulator-debug/xpcom/glue/standalone/libxpcomglue.a"; sourceTree = "<group>"; };
+		D2CA73551ADDE3F10022A192 /* shell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shell.cpp; sourceTree = "<group>"; };
+		D2CA73581ADDEBAB0022A192 /* dirs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dirs.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D2669E7F1AD6EC830027914D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2C9CF251AA4960F0041BE29 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D2669E831AD6EC830027914D /* js */ = {
+			isa = PBXGroup;
+			children = (
+				D2669E8E1AD6EC830027914D /* Main.storyboard */,
+				D2669E911AD6EC830027914D /* Images.xcassets */,
+				D2669E931AD6EC830027914D /* LaunchScreen.xib */,
+				D2669E841AD6EC830027914D /* Supporting Files */,
+				D2CA73551ADDE3F10022A192 /* shell.cpp */,
+				D2CA73581ADDEBAB0022A192 /* dirs.m */,
+			);
+			path = js;
+			sourceTree = "<group>";
+		};
+		D2669E841AD6EC830027914D /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D2669E851AD6EC830027914D /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D2C9CF1F1AA4960F0041BE29 = {
+			isa = PBXGroup;
+			children = (
+				D20C8D121ADDD87C00CE4BC8 /* libmozglue.dylib */,
+				D2C9CF2A1AA4960F0041BE29 /* GeckoEmbed */,
+				D2669E831AD6EC830027914D /* js */,
+				D2C9CF291AA4960F0041BE29 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D2C9CF291AA4960F0041BE29 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2C9CF281AA4960F0041BE29 /* GeckoEmbed.app */,
+				D2669E821AD6EC830027914D /* js.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D2C9CF2A1AA4960F0041BE29 /* GeckoEmbed */ = {
+			isa = PBXGroup;
+			children = (
+				D2C9CF541AA4A26E0041BE29 /* libxpcomglue.a */,
+				D2C9CF511AA4A23A0041BE29 /* browser */,
+				D2C9CF2D1AA4960F0041BE29 /* main.mm */,
+				D2C9CF2F1AA4960F0041BE29 /* AppDelegate.h */,
+				D2C9CF301AA4960F0041BE29 /* AppDelegate.m */,
+				D2C9CF321AA4960F0041BE29 /* ViewController.h */,
+				D2C9CF331AA4960F0041BE29 /* ViewController.m */,
+				D2C9CF351AA4960F0041BE29 /* Main.storyboard */,
+				D2C9CF381AA4960F0041BE29 /* Images.xcassets */,
+				D2C9CF3A1AA4960F0041BE29 /* LaunchScreen.xib */,
+				D2C9CF2B1AA4960F0041BE29 /* Supporting Files */,
+			);
+			path = GeckoEmbed;
+			sourceTree = "<group>";
+		};
+		D2C9CF2B1AA4960F0041BE29 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D2C9CF2C1AA4960F0041BE29 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D2669E811AD6EC830027914D /* js */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2669EA61AD6EC830027914D /* Build configuration list for PBXNativeTarget "js" */;
+			buildPhases = (
+				D20C8D141ADDD97100CE4BC8 /* Sources */,
+				D2669E7F1AD6EC830027914D /* Frameworks */,
+				D2669E801AD6EC830027914D /* Resources */,
+				D20C8D111ADDD6E600CE4BC8 /* CopyFiles */,
+				D2CA73571ADDEA7A0022A192 /* Run Script */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D2669EA91AD6ECFC0027914D /* PBXTargetDependency */,
+			);
+			name = js;
+			productName = js;
+			productReference = D2669E821AD6EC830027914D /* js.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D2C9CF271AA4960F0041BE29 /* GeckoEmbed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2C9CF4B1AA4960F0041BE29 /* Build configuration list for PBXNativeTarget "GeckoEmbed" */;
+			buildPhases = (
+				D2C9CF5D1AA4A6D80041BE29 /* Run Script */,
+				D2C9CF241AA4960F0041BE29 /* Sources */,
+				D2C9CF251AA4960F0041BE29 /* Frameworks */,
+				D2C9CF261AA4960F0041BE29 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GeckoEmbed;
+			productName = GeckoEmbed;
+			productReference = D2C9CF281AA4960F0041BE29 /* GeckoEmbed.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D2C9CF201AA4960F0041BE29 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				ORGANIZATIONNAME = Mozilla;
+				TargetAttributes = {
+					D2669E811AD6EC830027914D = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+					D2C9CF271AA4960F0041BE29 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
+			};
+			buildConfigurationList = D2C9CF231AA4960F0041BE29 /* Build configuration list for PBXProject "GeckoEmbed" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D2C9CF1F1AA4960F0041BE29;
+			productRefGroup = D2C9CF291AA4960F0041BE29 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D2C9CF271AA4960F0041BE29 /* GeckoEmbed */,
+				D2669E811AD6EC830027914D /* js */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D2669E801AD6EC830027914D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2669E901AD6EC830027914D /* Main.storyboard in Resources */,
+				D2669E951AD6EC830027914D /* LaunchScreen.xib in Resources */,
+				D2669E921AD6EC830027914D /* Images.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2C9CF261AA4960F0041BE29 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2C9CF371AA4960F0041BE29 /* Main.storyboard in Resources */,
+				D2C9CF3C1AA4960F0041BE29 /* LaunchScreen.xib in Resources */,
+				D2C9CF391AA4960F0041BE29 /* Images.xcassets in Resources */,
+				D2C9CF521AA4A23A0041BE29 /* browser in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D2C9CF5D1AA4A6D80041BE29 /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "${SRCROOT}/build-gecko.sh";
+		};
+		D2CA73571ADDEA7A0022A192 /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "${SRCROOT}/copy-jsshell.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D20C8D141ADDD97100CE4BC8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2CA73561ADDE3F10022A192 /* shell.cpp in Sources */,
+				D2CA73591ADDEBAB0022A192 /* dirs.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2C9CF241AA4960F0041BE29 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2C9CF341AA4960F0041BE29 /* ViewController.m in Sources */,
+				D2C9CF311AA4960F0041BE29 /* AppDelegate.m in Sources */,
+				D2C9CF2E1AA4960F0041BE29 /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D2669EA91AD6ECFC0027914D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2C9CF271AA4960F0041BE29 /* GeckoEmbed */;
+			targetProxy = D2669EA81AD6ECFC0027914D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		D2669E8E1AD6EC830027914D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D2669E8F1AD6EC830027914D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		D2669E931AD6EC830027914D /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D2669E941AD6EC830027914D /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+		D2C9CF351AA4960F0041BE29 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D2C9CF361AA4960F0041BE29 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		D2C9CF3A1AA4960F0041BE29 /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D2C9CF3B1AA4960F0041BE29 /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D2669EA21AD6EC830027914D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"IMPL_MFBT=1",
+					"EXPORT_JS_API=1",
+					"DEBUG=1",
+					"MOZILLA_CLIENT=1",
+				);
+				INFOPLIST_FILE = js/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(GECKO_OBJDIR)/config/external/nss",
+					"$(GECKO_OBJDIR)/mozglue/build",
+					"$(GECKO_OBJDIR)/js/src",
+					"$(GECKO_OBJDIR)/js/src/editline",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-include",
+					"$(GECKO_OBJDIR)/js/src/js-confdefs.h",
+				);
+				OTHER_LDFLAGS = (
+					"-ljs_static",
+					"-lmozglue",
+					"-lnss3",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(GECKO_OBJDIR)/dist/include/nspr $(GECKO_OBJDIR)/dist/include $(SRCROOT)/../../../js/src $(SRCROOT)/../../../js/src/shell $(SRCROOT)/../../../js/src/editline";
+			};
+			name = Debug;
+		};
+		D2669EA31AD6EC830027914D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"IMPL_MFBT=1",
+					"EXPORT_JS_API=1",
+					"MOZILLA_CLIENT=1",
+				);
+				INFOPLIST_FILE = js/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(GECKO_OBJDIR)/config/external/nss",
+					"$(GECKO_OBJDIR)/mozglue/build",
+					"$(GECKO_OBJDIR)/js/src",
+					"$(GECKO_OBJDIR)/js/src/editline",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-include",
+					"$(GECKO_OBJDIR)/js/src/js-confdefs.h",
+				);
+				OTHER_LDFLAGS = (
+					"-ljs_static",
+					"-lmozglue",
+					"-lnss3",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(GECKO_OBJDIR)/dist/include/nspr $(GECKO_OBJDIR)/dist/include $(SRCROOT)/../../../js/src $(SRCROOT)/../../../js/src/shell $(SRCROOT)/../../../js/src/editline";
+			};
+			name = Release;
+		};
+		D2C9CF491AA4960F0041BE29 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				"ARCHS[sdk=iphoneos*]" = armv7;
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GECKO_OBJDIR = "";
+				"GECKO_OBJDIR[sdk=iphoneos*]" = "$(SRCROOT)/../../../../iphone-device-debug/";
+				"GECKO_OBJDIR[sdk=iphonesimulator*]" = "$(SRCROOT)/../../../../iphone-simulator-debug/";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D2C9CF4A1AA4960F0041BE29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				"ARCHS[sdk=iphoneos*]" = armv7;
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GECKO_OBJDIR = "";
+				"GECKO_OBJDIR[sdk=iphoneos*]" = "$(SRCROOT)/../../../../iphone-device-opt/";
+				"GECKO_OBJDIR[sdk=iphonesimulator*]" = "$(SRCROOT)/../../../../iphone-simulator-opt/";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		D2C9CF4C1AA4960F0041BE29 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				"ARCHS[sdk=iphoneos*]" = armv7;
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				GECKO_OBJDIR = "";
+				"GECKO_OBJDIR[sdk=iphoneos*]" = "$(SRCROOT)/../../../../iphone-device-debug/";
+				"GECKO_OBJDIR[sdk=iphonesimulator*]" = "$(SRCROOT)/../../../../iphone-simulator-debug/";
+				INFOPLIST_FILE = GeckoEmbed/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(GECKO_OBJDIR)/dist/lib",
+					"$(GECKO_OBJDIR)/mozglue/build",
+					"$(GECKO_OBJDIR)/xpcom/glue/standalone",
+				);
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_LDFLAGS = (
+					"$(GECKO_OBJDIR)/xpcom/glue/standalone/libxpcomglue.a",
+					"$(GECKO_OBJDIR)/mozglue/build/libmozglue.dylib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(GECKO_OBJDIR)/dist/include $(GECKO_OBJDIR)/dist/include/nspr";
+			};
+			name = Debug;
+		};
+		D2C9CF4D1AA4960F0041BE29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				"ARCHS[sdk=iphoneos*]" = armv7;
+				"ARCHS[sdk=iphonesimulator*]" = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				GECKO_OBJDIR = "";
+				"GECKO_OBJDIR[sdk=iphoneos*]" = "$(SRCROOT)/../../../../iphone-device-opt/";
+				"GECKO_OBJDIR[sdk=iphonesimulator*]" = "$(SRCROOT)/../../../../iphone-simulator-opt/";
+				INFOPLIST_FILE = GeckoEmbed/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(GECKO_OBJDIR)/dist/lib",
+					"$(GECKO_OBJDIR)/mozglue/build",
+					"$(GECKO_OBJDIR)/xpcom/glue/standalone",
+				);
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_LDFLAGS = (
+					"$(GECKO_OBJDIR)/xpcom/glue/standalone/libxpcomglue.a",
+					"$(GECKO_OBJDIR)/mozglue/build/libmozglue.dylib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(GECKO_OBJDIR)/dist/include $(GECKO_OBJDIR)/dist/include/nspr";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D2669EA61AD6EC830027914D /* Build configuration list for PBXNativeTarget "js" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2669EA21AD6EC830027914D /* Debug */,
+				D2669EA31AD6EC830027914D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D2C9CF231AA4960F0041BE29 /* Build configuration list for PBXProject "GeckoEmbed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2C9CF491AA4960F0041BE29 /* Debug */,
+				D2C9CF4A1AA4960F0041BE29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D2C9CF4B1AA4960F0041BE29 /* Build configuration list for PBXNativeTarget "GeckoEmbed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2C9CF4C1AA4960F0041BE29 /* Debug */,
+				D2C9CF4D1AA4960F0041BE29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D2C9CF201AA4960F0041BE29 /* Project object */;
+}
