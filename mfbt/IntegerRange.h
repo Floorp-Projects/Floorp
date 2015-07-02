@@ -21,7 +21,7 @@ template<typename IntTypeT>
 class IntegerIterator
 {
 public:
-  typedef const IntTypeT ValueType;
+  typedef IntTypeT ValueType;
   typedef typename MakeSigned<IntTypeT>::Type DifferenceType;
 
   template<typename IntType>
@@ -32,9 +32,7 @@ public:
   IntegerIterator(const IntegerIterator<IntType>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
-  // Since operator* is required to return a reference, we return
-  // a reference to our member here.
-  const IntTypeT& operator*() const { return mCurrent; }
+  IntTypeT operator*() const { return mCurrent; }
 
   /* Increment and decrement operators */
 
