@@ -6,7 +6,10 @@
 // Tests that the cached autocomplete results are used when the new
 // user input is a subset of the existing completion results.
 
-const TEST_URI = "data:text/html;charset=utf8,<p>test cached autocompletion results";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf8,<p>test cached autocompletion " +
+                 "results";
 
 let jsterm;
 
@@ -32,7 +35,7 @@ let test = asyncTest(function* () {
   input.setSelectionRange(7, 7);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  ok(popup.getItems().length > 0, "'window.' gave a list of suggestions")
+  ok(popup.getItems().length > 0, "'window.' gave a list of suggestions");
 
   yield jsterm.execute("window.docfoobar = true");
 
@@ -43,8 +46,9 @@ let test = asyncTest(function* () {
 
   let newItems = popup.getItems();
   ok(newItems.every(function(item) {
-       return item.label != "docfoobar";
-     }), "autocomplete cached results do not contain docfoobar. list has not been updated");
+    return item.label != "docfoobar";
+  }), "autocomplete cached results do not contain docfoobar. list has not " +
+      "been updated");
 
   // Test that backspace does not cause a request to the server
   input.value = "window.do";
@@ -53,13 +57,14 @@ let test = asyncTest(function* () {
 
   newItems = popup.getItems();
   ok(newItems.every(function(item) {
-       return item.label != "docfoobar";
-     }), "autocomplete cached results do not contain docfoobar. list has not been updated");
+    return item.label != "docfoobar";
+  }), "autocomplete cached results do not contain docfoobar. list has not " +
+      "been updated");
 
   yield jsterm.execute("delete window.docfoobar");
 
   // Test if 'window.getC' gives 'getComputedStyle'
-  input.value = "window."
+  input.value = "window.";
   input.setSelectionRange(7, 7);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
@@ -93,8 +98,9 @@ let test = asyncTest(function* () {
 
   newItems = popup.getItems();
   ok(newItems.every(function(item) {
-       return item.label != "docfoobar";
-     }), "autocomplete cached results do not contain docfoobar. list has not been updated");
+    return item.label != "docfoobar";
+  }), "autocomplete cached results do not contain docfoobar. list has not " +
+      "been updated");
 
   yield jsterm.execute("delete window.docfoobar");
 

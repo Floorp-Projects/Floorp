@@ -3,9 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup test";
-
 "use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
+                 "popup test";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
@@ -34,8 +35,8 @@ function consoleOpened(HUD) {
   ok(!popup.isOpen, "popup is not open");
   ok(!input.hasAttribute("aria-activedescendant"), "no aria-activedescendant");
 
-  popup._panel.addEventListener("popupshown", function() {
-    popup._panel.removeEventListener("popupshown", arguments.callee, false);
+  popup._panel.addEventListener("popupshown", function onPopupPanel() {
+    popup._panel.removeEventListener("popupshown", onPopupPanel, false);
 
     ok(popup.isOpen, "popup is open");
 
@@ -116,4 +117,3 @@ function consoleOpened(HUD) {
 
   return deferred.promise;
 }
-
