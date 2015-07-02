@@ -344,7 +344,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
   if (parentBackend == LayersBackend::LAYERS_D3D11 &&
       (aMoz2DBackend == gfx::BackendType::DIRECT2D ||
         aMoz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
-      gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
+      gfxWindowsPlatform::GetPlatform()->GetD3D10Device() &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize) {
     texture = new TextureClientD3D11(aAllocator, aFormat, aTextureFlags);
