@@ -83,6 +83,29 @@ struct FlattenedConstraints : public NormalizedConstraintSet
   explicit FlattenedConstraints(const dom::MediaTrackConstraints& aOther);
 };
 
+// A helper class for MediaEngines
+
+class MediaConstraintsHelper
+{
+protected:
+  template<class ValueType, class ConstrainRange>
+  static uint32_t FitnessDistance(ValueType aN, const ConstrainRange& aRange);
+  static uint32_t FitnessDistance(int32_t aN,
+      const dom::OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced);
+  static uint32_t FitnessDistance(double aN,
+      const dom::OwningDoubleOrConstrainDoubleRange& aConstraint, bool aAdvanced);
+  static uint32_t FitnessDistance(nsString aN,
+    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint,
+    bool aAdvanced);
+  static uint32_t FitnessDistance(nsString aN,
+      const dom::ConstrainDOMStringParameters& aParams);
+
+  static uint32_t
+  GetMinimumFitnessDistance(const dom::MediaTrackConstraintSet &aConstraints,
+                            bool aAdvanced,
+                            const nsString& aDeviceId);
+};
+
 }
 
 #endif /* MEDIATRACKCONSTRAINTS_H_ */
