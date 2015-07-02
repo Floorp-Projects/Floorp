@@ -403,6 +403,12 @@ Convert(uint8_t aIn, BluetoothHandsfreeWbsConfig& aOut)
 }
 
 nsresult
+Convert(uint8_t aIn, BluetoothTypeOfDevice& aOut)
+{
+  return Convert((int32_t)aIn, aOut);
+}
+
+nsresult
 Convert(uint8_t aIn, BluetoothPropertyType& aOut)
 {
   static const BluetoothPropertyType sPropertyType[] = {
