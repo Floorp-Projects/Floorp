@@ -425,7 +425,7 @@ TEST_PKGS := \
   web-platform \
   $(NULL)
 
-PKG_ARG = --$(1) $(PKG_BASENAME).$(1).tests.zip
+PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest-tc:
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
