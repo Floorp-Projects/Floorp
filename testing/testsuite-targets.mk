@@ -427,7 +427,7 @@ TEST_PKGS := \
   web-platform \
   $(NULL)
 
-PKG_ARG = --$(1) $(PKG_BASENAME).$(1).tests.zip
+PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
