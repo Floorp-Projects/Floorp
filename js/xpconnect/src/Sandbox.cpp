@@ -916,7 +916,7 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     if (CSS && !dom::CSSBinding::GetConstructorObject(cx, obj))
         return false;
 
-    if (indexedDB && AccessCheck::isChrome(obj) &&
+    if (indexedDB &&
         !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
         return false;
 
