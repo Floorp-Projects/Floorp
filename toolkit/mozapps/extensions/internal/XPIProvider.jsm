@@ -710,7 +710,8 @@ function createAddonDetails(id, aAddon) {
   return {
     id: id || aAddon.id,
     type: aAddon.type,
-    version: aAddon.version
+    version: aAddon.version,
+    multiprocessCompatible: aAddon.multiprocessCompatible
   };
 }
 
