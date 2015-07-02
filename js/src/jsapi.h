@@ -3280,14 +3280,6 @@ JS_IsNativeFunction(JSObject* funobj, JSNative call);
 extern JS_PUBLIC_API(bool)
 JS_IsConstructor(JSFunction* fun);
 
-/*
- * Bind the given callable to use the given object as "this".
- *
- * If |callable| is not callable, will throw and return nullptr.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_BindCallable(JSContext* cx, JS::Handle<JSObject*> callable, JS::Handle<JSObject*> newThis);
-
 // This enum is used to select if properties with JSPROP_DEFINE_LATE flag
 // should be defined on the object.
 // Normal JSAPI consumers probably always want DefineAllProperties here.
