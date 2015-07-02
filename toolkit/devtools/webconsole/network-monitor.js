@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals NetworkHelper, Services, DevToolsUtils, NetUtil,
+   gActivityDistributor */
 
 "use strict";
 
@@ -8,25 +10,15 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-loader.lazyGetter(this, "NetworkHelper", () => require("devtools/toolkit/webconsole/network-helper"));
+loader.lazyRequireGetter(this, "NetworkHelper",
+                         "devtools/toolkit/webconsole/network-helper");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyImporter(this, "DevToolsUtils", "resource://gre/modules/devtools/DevToolsUtils.jsm");
+loader.lazyRequireGetter(this, "DevToolsUtils",
+                         "devtools/toolkit/DevToolsUtils");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
-let _testing = false;
-Object.defineProperty(this, "gTesting", {
-  get: function() {
-    try {
-      const { gDevTools } = require("resource:///modules/devtools/gDevTools.jsm");
-      _testing = gDevTools.testing;
-    } catch (e) {
-      // gDevTools is not present on B2G.
-    }
-    return _testing;
-  }
-});
 
 ///////////////////////////////////////////////////////////////////////////////
 // Network logging
@@ -756,9 +748,9 @@ NetworkMonitor.prototype = {
     // Ignore requests from chrome or add-on code when we are monitoring
     // content.
     // TODO: one particular test (browser_styleeditor_fetch-from-cache.js) needs
-    // the gDevTools.testing check. We will move to a better way to serve its
-    // needs in bug 1167188, where this check should be removed.
-    if (!gTesting && aChannel.loadInfo &&
+    // the DevToolsUtils.testing check. We will move to a better way to serve
+    // its needs in bug 1167188, where this check should be removed.
+    if (!DevToolsUtils.testing && aChannel.loadInfo &&
         aChannel.loadInfo.loadingDocument === null &&
         aChannel.loadInfo.loadingPrincipal === Services.scriptSecurityManager.getSystemPrincipal()) {
       return false;

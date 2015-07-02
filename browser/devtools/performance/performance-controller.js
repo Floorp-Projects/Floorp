@@ -532,7 +532,7 @@ let PerformanceController = {
     // have realtime rendering tests in non-e10s. This function is
     // overridden wholesale in tests when we want to test multiprocess support
     // specifically.
-    if (gDevTools.testing) {
+    if (DevToolsUtils.testing) {
       return { supported: true, enabled: true };
     }
     let supported = system.constants.E10S_TESTING_ONLY;
