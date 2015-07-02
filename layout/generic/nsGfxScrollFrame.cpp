@@ -3089,6 +3089,17 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   scrolledContent.MoveTo(aLists);
 }
 
+const DisplayItemClip*
+ScrollFrameHelper::ComputeScrollClip(bool aIsForCaret) const
+{
+  const DisplayItemClip* ancestorClip = aIsForCaret ? mAncestorClipForCaret : mAncestorClip;
+  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+    return nullptr;
+  }
+
+  return ancestorClip;
+}
+
 Maybe<FrameMetricsAndClip>
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
