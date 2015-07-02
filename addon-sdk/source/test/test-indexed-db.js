@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let xulApp = require("sdk/system/xul-app");
-if (xulApp.versionInRange(xulApp.platformVersion, "16.0a1", "*")) {
-new function tests() {
-
 const { indexedDB, IDBKeyRange, DOMException
       } = require("sdk/indexed-db");
 
@@ -182,12 +178,5 @@ function testRead(assert, done) {
     assert.fail("failed to open db");
   };
 };
-
-}
-} else {
-  exports.testDB = function(assert) {
-    assert.pass("IndexedDB is not implemented")
-  }
-}
 
 require("sdk/test").run(exports);

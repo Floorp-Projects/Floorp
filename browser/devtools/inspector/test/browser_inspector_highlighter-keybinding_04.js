@@ -10,7 +10,7 @@
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {toolbox} = yield openInspectorForURL(TEST_URL);
 
   info("Start the element picker");
   yield toolbox.highlighterUtils.startPicker();
@@ -34,10 +34,12 @@ add_task(function*() {
 
   info("Press escape again and wait for the split console to open");
   let onSplitConsole = toolbox.once("split-console");
+  let onConsoleReady = toolbox.once("webconsole-ready");
   // The escape key is synthesized in the main process, which is where the focus
   // should be after the picker was stopped.
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield onSplitConsole;
+  yield onConsoleReady;
   ok(toolbox.splitConsole, "The split console is shown.");
 
   // Hide the split console.
