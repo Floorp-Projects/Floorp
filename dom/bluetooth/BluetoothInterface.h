@@ -680,7 +680,7 @@ public:
   virtual void DeregisterNotification() { }
 
   virtual void ReadRemoteRssi() { }
-  virtual void GetDeviceType() { }
+  virtual void GetDeviceType(BluetoothTypeOfDevice type) { }
   virtual void SetAdvData() { }
   virtual void TestCommand() { }
 
