@@ -17,6 +17,24 @@ SimpleTest.waitForExplicitFinish();
 var advance = function() { tests.next(); };
 
 /**
+ * Listen for notifications from the child.
+ * These are sent in case of error, or when the loads we await have completed.
+ */
+window.addEventListener("message", function(event) {
+    if (event.data == "childLoadComplete") {
+      // all loads happen, continue the test.
+      advance();
+    } else if (event.data == "childOverload") {
+      // too many loads happened in a test frame, abort.
+      ok(false, "Too many load handlers called in test.");
+      SimpleTest.finish();
+    } else if (event.data.indexOf("fail-") == 0) {
+      // something else failed in the test frame, abort.
+      ok(false, "Child failed the test with error " + event.data.substr(5));
+      SimpleTest.finish();
+    }});
+
+/**
  * This is the main test routine -- serialized by use of a generator.
  * It resets the counter, then performs two tests in sequence using
  * the same iframe.
