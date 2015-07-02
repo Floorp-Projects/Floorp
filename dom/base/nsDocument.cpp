@@ -11823,13 +11823,6 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
     }
   }
 
-  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
-  // order so that the events for the root document arrives before the leaf
-  // document, as required by the spec.
-  for (uint32_t i = 0; i < changed.Length(); ++i) {
-    DispatchFullScreenChange(changed[changed.Length() - i - 1]);
-  }
-
   // If this document hasn't already been approved in this session,
   // check to see if the user has granted the fullscreen access
   // to the document's principal's host, if it has one. Note that documents
@@ -11841,6 +11834,8 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
       NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
   }
+
+  FullscreenRoots::Add(this);
 
   // If it is the first entry of the fullscreen, trigger an event so
   // that the UI can response to this change, e.g. hide chrome, or
@@ -11871,7 +11866,12 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
     asyncDispatcher->PostDOMEvent();
   }
 
-  FullscreenRoots::Add(this);
+  // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
+  // order so that the events for the root document arrives before the leaf
+  // document, as required by the spec.
+  for (uint32_t i = 0; i < changed.Length(); ++i) {
+    DispatchFullScreenChange(changed[changed.Length() - i - 1]);
+  }
 }
 
 NS_IMETHODIMP
