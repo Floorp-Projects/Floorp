@@ -1762,11 +1762,12 @@ HyperTextAccessible::RelationByType(RelationType aType)
 
   switch (aType) {
     case RelationType::NODE_CHILD_OF:
-      if (mContent->IsMathMLElement()) {
+      if (HasOwnContent() && mContent->IsMathMLElement()) {
         Accessible* parent = Parent();
         if (parent) {
           nsIContent* parentContent = parent->GetContent();
-          if (parentContent->IsMathMLElement(nsGkAtoms::mroot_)) {
+          if (parentContent &&
+              parentContent->IsMathMLElement(nsGkAtoms::mroot_)) {
             // Add a relation pointing to the parent <mroot>.
             rel.AppendTarget(parent);
           }
@@ -1774,7 +1775,7 @@ HyperTextAccessible::RelationByType(RelationType aType)
       }
       break;
     case RelationType::NODE_PARENT_OF:
-      if (mContent->IsMathMLElement(nsGkAtoms::mroot_)) {
+      if (HasOwnContent() && mContent->IsMathMLElement(nsGkAtoms::mroot_)) {
         Accessible* base = GetChildAt(0);
         Accessible* index = GetChildAt(1);
         if (base && index) {
