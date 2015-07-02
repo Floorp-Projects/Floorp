@@ -231,6 +231,9 @@ protected:
     nsAutoTArray<IMEChange, 4> mIMETextChanges;
     bool mIMESelectionChanged;
 
+    bool mAwaitingFullScreen;
+    bool mIsFullScreen;
+
     InputContext mInputContext;
 
     virtual nsresult NotifyIMEInternal(
