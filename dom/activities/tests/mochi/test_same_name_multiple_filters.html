@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}
+https://bugzilla.mozilla.org/show_bug.cgi?id={1176712}
 -->
 <head>
-  <title>Test for Bug {1123846}</title>
+  <title>Test for Bug {1176712}</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
@@ -15,25 +15,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}
 </head>
 <body>
 
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}">Mozilla Bug {1123846}</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1176712}">Mozilla Bug {1176712}</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
-
-
-/**
-  * Tests the developer mode activities that can only be provided by the
-  * system app.
-  *
-  * We test the following:
-  * 1) No dev mode, no system app installed (failure).
-  * 2) No dev mode, system app installed (failure).
-  * 3) No dev mode, system app and other app installed (failure).
-  * 4) Dev mode, system app and other app installed (success, only system app returned).
-  */
 
 var gGenerator = runTest();
 
@@ -45,30 +33,17 @@ function go() {
     function() {
       SpecialPowers.pushPrefEnv(
         {'set': [["dom.mozBrowserFramesEnabled", true],
-                 ["dom.sysmsg.enabled", true],
-                 ["dom.apps.developer_mode", false],
-                 ["dom.activities.developer_mode_only", "import-app"]]},
+                 ["dom.sysmsg.enabled", true]]},
         continueTest) });
 }
 
 SimpleTest.waitForExplicitFinish();
-
-var systemAppUrl = gRootUrl + "system.webapp";
-var otherAppUrl = gRootUrl + "manifest.webapp";
 
 function installApp(aUrl) {
   var request = navigator.mozApps.install(aUrl, { });
   request.onerror = cbError;
   request.onsuccess = continueTest;
   return request;
-}
-
-function installSystemApp() {
-  return installApp(systemAppUrl);
-}
-
-function installOtherApp() {
-  return installApp(otherAppUrl);
 }
 
 function uninstall(aApp) {
@@ -121,8 +96,6 @@ var SystemMessageGlue = {
 
   // nsISystemMessageGlue implementation.
   openApp(pageURL, manifestURL, type, target, showApp, onlyShowApp, extra) {
-    // We should only try to open a page in the system app.
-    is(manifestURL, systemAppUrl, "Opening a page in the system app.");
   }
 };
 
@@ -139,9 +112,6 @@ registerComponent(SystemMessageGlue,
 function finish() {
   unregisterComponent(ActivityGlue);
   unregisterComponent(SystemMessageGlue);
-  obsService.removeObserver(continueTest, "new-activity-registered-success");
-  obsService.removeObserver(continueTest, "new-activity-registered-failure");
-
   SimpleTest.finish();
 }
 
@@ -153,15 +123,6 @@ function continueTest() {
   }
 }
 
-var obsService = Cc["@mozilla.org/observer-service;1"]
-                   .getService(Ci.nsIObserverService);
-
-obsService.addObserver(continueTest, "new-activity-registered-success", false);
-obsService.addObserver(continueTest, "new-activity-registered-failure", false);
-
-/**
-  * Test dev mode activity.
-  */
 function runTest() {
   SpecialPowers.setAllAppsLaunchable(true);
 
@@ -179,79 +140,69 @@ function runTest() {
   var initialAppsCount = request.result.length;
   info("Starting with " + initialAppsCount + " apps installed.");
 
-  // 1) No dev mode, no system app installed (failure).
-  var activity = new MozActivity({ name: "import-app" });
-  activity.onerror = function() {
-    ok(true, "1) No dev mode, no system app installed");
+  // Before app installed
+
+  var activity = new MozActivity({
+    name: "bug1176712",
+    data: {
+      type: "type1"
+    }
+  });
+  activity.onsuccess = unexpectedSuccess("Shouldn't launch unregistered activity");
+  activity.onerror = () => {
+    ok(activity.error.name == "NO_PROVIDER", "Expected NO_PROVIDER");
     continueTest();
-  }
-  activity.onsuccess = unexpectedSuccess("1) No dev mode, no system app installed");
+  };
   yield undefined;
 
-
-  // 2) No dev mode, system app installed (failure).
-  // Configure the system app manifest url.
-  SpecialPowers.pushPrefEnv(
-        {'set': [["b2g.system_manifest_url", systemAppUrl]]},
-        continueTest);
-  yield undefined;
-
-  // Install the system app.
-  request = installSystemApp();
-  yield undefined;
-  var systemApp = request.result;
-  ok(systemApp, "systemApp is non-null");
-
-  // yielding for the activity install observer.
-  yield undefined;
-
-  activity = new MozActivity({ name: "import-app" });
-  activity.onerror = function() {
-    ok(true, "2) No dev mode, system app installed");
+  var activity = new MozActivity({
+    name: "bug1176712",
+    data: {
+      type: "type2"
+    }
+  });
+  activity.onsuccess = unexpectedSuccess("Shouldn't launch unregistered activity");
+  activity.onerror = () => {
+    ok(activity.error.name == "NO_PROVIDER", "Expected NO_PROVIDER");
     continueTest();
-  }
-  activity.onsuccess = unexpectedSuccess("2) No dev mode, system app installed");
+  };
   yield undefined;
 
-  // 3) No dev mode, system app and other app installed (failure).
-  request = installOtherApp();
+  var request = installApp(gRootUrl + "manifest.webapp");
   yield undefined;
-  var otherApp = request.result;
-  ok(otherApp, "otherApp is non-null");
+  var app = request.result;
+  ok(app, "App installed");
 
-  // yielding for the activity install observer.
-  yield undefined;
+  // After app installed
 
-  activity = new MozActivity({ name: "import-app" });
-  activity.onerror = function() {
-    ok(true, "3) No dev mode, system app and other app installed");
-    continueTest();
-  }
-  activity.onsuccess = unexpectedSuccess("3) No dev mode, system app and other app installed");
-  yield undefined;
-
-  // 4) Dev mode, system app and other app installed.
-  SpecialPowers.pushPrefEnv(
-        {'set': [["dom.apps.developer_mode", true]]},
-        continueTest);
-  yield undefined;
-
-  activity = new MozActivity({ name: "import-app" });
+  var activity = new MozActivity({
+    name: "bug1176712",
+    data: {
+      type: "type1"
+    }
+  });
   activity.onsuccess = function() {
-    ok(true, "4) Dev mode, system app and other app installed");
+    ok(true, "Activity launch succeed");
     continueTest();
   }
-  activity.onerror = function(aEvent) {
-    ok(false, "4) Got error: " + aEvent.error.name);
-    finish();
+  activity.onerror = cbError;
+  yield undefined;
+
+  var activity = new MozActivity({
+    name: "bug1176712",
+    data: {
+      type: "type2"
+    }
+  });
+  activity.onsuccess = function() {
+    ok(true, "Activity launch succeed");
+    continueTest();
   }
+  activity.onerror = cbError;
   yield undefined;
 
   // Cleanup
-  uninstall(systemApp);
-  yield undefined;
-
-  uninstall(otherApp);
+  uninstall(app);
   yield undefined;
 
   // Check that we restored the app registry.
