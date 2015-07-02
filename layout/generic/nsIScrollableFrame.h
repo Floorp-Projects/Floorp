@@ -426,7 +426,8 @@ public:
   virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
     mozilla::layers::Layer* aLayer,
     nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const = 0;
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const = 0;
 
   /**
    * If this scroll frame is ignoring viewporting clipping

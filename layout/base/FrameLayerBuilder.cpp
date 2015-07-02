@@ -4434,7 +4434,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     }
 
     Maybe<FrameMetricsAndClip> info =
-      scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame, mParameters);
+      scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame, mParameters, aEntry->mIsCaret);
     if (!info) {
       continue;
     }
