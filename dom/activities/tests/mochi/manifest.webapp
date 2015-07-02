@@ -1,17 +1,6 @@
 {
   "name": "Random app",
   "activities": {
-    "import-app": { "blob": { "required": true } },
-    "bug1176712": [{
-      "filters": {
-        "type": "type1"
-      },
-      "href": "href1"
-    }, {
-      "filters": {
-        "type": "type2"
-      },
-      "href": "href2"
-    }]
+    "import-app": { "blob": { "required": true } }
   }
 }
