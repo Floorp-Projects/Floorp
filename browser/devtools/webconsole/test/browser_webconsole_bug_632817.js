@@ -4,25 +4,29 @@
 
 // Tests that network log messages bring up the network panel.
 
-const TEST_NETWORK_REQUEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-network-request.html";
+"use strict";
 
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
+const TEST_NETWORK_REQUEST_URI = "https://example.com/browser/browser/" +
+                                 "devtools/webconsole/test/test-network-request.html";
+
+const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-image.png";
 
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging tests";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging " +
+                 "tests";
 
 let lastRequest = null;
 let requestCallback = null;
 let hud, browser;
 
-function test()
-{
+function test() {
   const PREF = "devtools.webconsole.persistlog";
   const NET_PREF = "devtools.webconsole.filter.networkinfo";
-  const NETXHR_PREF = "devtools.webconsole.filter.netxhr"
-  const MIXED_AC_PREF = "security.mixed_content.block_active_content"
+  const NETXHR_PREF = "devtools.webconsole.filter.netxhr";
+  const MIXED_AC_PREF = "security.mixed_content.block_active_content";
   let original = Services.prefs.getBoolPref(NET_PREF);
   let originalXhr = Services.prefs.getBoolPref(NETXHR_PREF);
   let originalMixedActive = Services.prefs.getBoolPref(MIXED_AC_PREF);
@@ -39,23 +43,22 @@ function test()
 
   loadTab(TEST_URI).then((tab) => {
     browser = tab.browser;
-    openConsole().then((aHud) => {
-      hud = aHud;
+    openConsole().then((hudConsole) => {
+      hud = hudConsole;
 
-      HUDService.lastFinishedRequest.callback = function(aRequest) {
-        lastRequest = aRequest;
+      HUDService.lastFinishedRequest.callback = function(request) {
+        lastRequest = request;
         if (requestCallback) {
           requestCallback();
         }
       };
 
       executeSoon(testPageLoad);
-    })
+    });
   });
 }
 
-function testPageLoad()
-{
+function testPageLoad() {
   requestCallback = function() {
     // Check if page load was logged correctly.
     ok(lastRequest, "Page load was logged");
@@ -70,8 +73,7 @@ function testPageLoad()
   content.location = TEST_NETWORK_REQUEST_URI;
 }
 
-function testPageLoadBody()
-{
+function testPageLoadBody() {
   let loaded = false;
   let requestCallbackInvoked = false;
 
@@ -99,8 +101,7 @@ function testPageLoadBody()
   content.location.reload();
 }
 
-function testXhrGet()
-{
+function testXhrGet() {
   requestCallback = function() {
     ok(lastRequest, "testXhrGet() was logged");
     is(lastRequest.request.method, "GET", "Method is correct");
@@ -113,8 +114,7 @@ function testXhrGet()
   content.wrappedJSObject.testXhrGet();
 }
 
-function testXhrWarn()
-{
+function testXhrWarn() {
   requestCallback = function() {
     ok(lastRequest, "testXhrWarn() was logged");
     is(lastRequest.request.method, "GET", "Method is correct");
@@ -127,8 +127,7 @@ function testXhrWarn()
   content.wrappedJSObject.testXhrWarn();
 }
 
-function testXhrPost()
-{
+function testXhrPost() {
   requestCallback = function() {
     ok(lastRequest, "testXhrPost() was logged");
     is(lastRequest.request.method, "POST", "Method is correct");
@@ -141,8 +140,7 @@ function testXhrPost()
   content.wrappedJSObject.testXhrPost();
 }
 
-function testFormSubmission()
-{
+function testFormSubmission() {
   // Start the form submission test. As the form is submitted, the page is
   // loaded again. Bind to the load event to catch when this is done.
   requestCallback = function() {
@@ -227,15 +225,15 @@ function countMessageNodes() {
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
     let computedStyle = view.getComputedStyle(messageNodes[i], null);
-    if (computedStyle.display !== "none")
+    if (computedStyle.display !== "none") {
       displayedMessageNodes++;
+    }
   }
 
   return displayedMessageNodes;
 }
 
-function setStringFilter(aValue)
-{
-  hud.ui.filterBox.value = aValue;
+function setStringFilter(value) {
+  hud.ui.filterBox.value = value;
   hud.ui.adjustVisibilityOnSearchStringChange();
 }

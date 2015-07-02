@@ -8,29 +8,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const INIT_URI = "data:text/plain;charset=utf8,hello world";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-599725-response-headers.sjs";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-599725-response-headers.sjs";
 
 let loads = 0;
-function performTest(aRequest, aConsole)
-{
+function performTest(request, console) {
   let deferred = promise.defer();
 
   let headers = null;
 
-  function readHeader(aName)
-  {
+  function readHeader(name) {
     for (let header of headers) {
-      if (header.name == aName) {
+      if (header.name == name) {
         return header.value;
       }
     }
     return null;
   }
 
-  aConsole.webConsoleClient.getResponseHeaders(aRequest.actor,
-    function (aResponse) {
-      headers = aResponse.headers;
+  console.webConsoleClient.getResponseHeaders(request.actor,
+    function(response) {
+      headers = response.headers;
       ok(headers, "we have the response headers for reload");
 
       let contentType = readHeader("Content-Type");
@@ -71,7 +72,7 @@ function waitForRequest() {
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
-  let hud = yield openConsole();
+  yield openConsole();
 
   let gotLastRequest = waitForRequest();
 

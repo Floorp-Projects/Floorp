@@ -8,11 +8,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let HUD, outputNode;
-
-"use strict";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -34,8 +35,8 @@ function consoleOpened(aHud) {
 
   HUD.jsterm.clearOutput();
 
-  let controller = top.document.commandDispatcher.
-                   getControllerForCommand("cmd_copy");
+  let controller = top.document.commandDispatcher
+                               .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
 
   content.console.log("Hello world! bug587617");
@@ -54,18 +55,22 @@ function consoleOpened(aHud) {
     outputNode.focus();
 
     goUpdateCommand("cmd_copy");
-    controller = top.document.commandDispatcher.getControllerForCommand("cmd_copy");
+    controller = top.document.commandDispatcher
+                             .getControllerForCommand("cmd_copy");
     is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
-    // Remove new lines since getSelection() includes one between message and line
-    // number, but the clipboard doesn't (see bug 1119503)
-    let selection = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
+    // Remove new lines since getSelection() includes one between message and
+    // line number, but the clipboard doesn't (see bug 1119503)
+    let selection = (HUD.iframeWindow.getSelection() + "")
+      .replace(/\r?\n|\r/g, " ");
     isnot(selection.indexOf("bug587617"), -1,
           "selection text includes 'bug587617'");
 
-    waitForClipboard((str) => { return selection.trim() == str.trim(); },
-      () => { goDoCommand("cmd_copy") },
-      deferred.resolve, deferred.resolve);
+    waitForClipboard((str) => {
+      return selection.trim() == str.trim();
+    }, () => {
+      goDoCommand("cmd_copy");
+    }, deferred.resolve, deferred.resolve);
   });
   return deferred.promise;
 }
@@ -84,15 +89,17 @@ function testContextMenuCopy() {
 
   // Remove new lines since getSelection() includes one between message and line
   // number, but the clipboard doesn't (see bug 1119503)
-  let selection = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
+  let selection = (HUD.iframeWindow.getSelection() + "")
+    .replace(/\r?\n|\r/g, " ");
 
   copyItem.doCommand();
 
-  waitForClipboard((str) => { return selection.trim() == str.trim(); },
-    () => { goDoCommand("cmd_copy") },
-    deferred.resolve, deferred.resolve);
+  waitForClipboard((str) => {
+    return selection.trim() == str.trim();
+  }, () => {
+    goDoCommand("cmd_copy");
+  }, deferred.resolve, deferred.resolve);
   HUD = outputNode = null;
 
   return deferred.promise;
 }
-

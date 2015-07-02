@@ -8,25 +8,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const INIT_URI = "data:text/html;charset=utf-8,Web Console - bug 600183 test";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-600183-charset.html";
+"use strict";
 
-function performTest(lastFinishedRequest, aConsole)
-{
+const INIT_URI = "data:text/html;charset=utf-8,Web Console - bug 600183 test";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-600183-charset.html";
+
+function performTest(lastFinishedRequest, console) {
   let deferred = promise.defer();
 
   ok(lastFinishedRequest, "charset test page was loaded and logged");
   HUDService.lastFinishedRequest.callback = null;
 
   executeSoon(() => {
-    aConsole.webConsoleClient.getResponseContent(lastFinishedRequest.actor,
-      (aResponse) => {
-        ok(!aResponse.contentDiscarded, "response body was not discarded");
+    console.webConsoleClient.getResponseContent(lastFinishedRequest.actor,
+      (response) => {
+        ok(!response.contentDiscarded, "response body was not discarded");
 
-        let body = aResponse.content.text;
+        let body = response.content.text;
         ok(body, "we have the response body");
 
-        let chars = "\u7684\u95ee\u5019!"; // 的问候!
+        // 的问候!
+        let chars = "\u7684\u95ee\u5019!";
         isnot(body.indexOf("<p>" + chars + "</p>"), -1,
           "found the chinese simplified string");
 
