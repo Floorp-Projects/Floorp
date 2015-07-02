@@ -27,6 +27,9 @@ public:
       mStream->RemoveMainThreadListener(this);
     }
     AudioNode::DestroyMediaStream();
+    if (Context()) {
+      Context()->UnregisterAudioBufferSourceNode(this);
+    }
   }
   virtual uint16_t NumberOfInputs() const final override
   {
