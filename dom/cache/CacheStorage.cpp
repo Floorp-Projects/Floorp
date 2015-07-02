@@ -204,9 +204,23 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
 
   const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
 
+  // We have a number of cases where we want to skip the https scheme
+  // validation:
+  //
+  // 1) Any worker when dom.caches.testing.enabled pref is true.
+  // 2) Any worker when dom.serviceWorkers.testing.enabled pref is true.  This
+  //    is mainly because most sites using SWs will expect Cache to work if
+  //    SWs are enabled.
+  // 3) If the window that created this worker has the devtools SW testing
+  //    option enabled.  Same reasoning as (2).
+  // 4) If the worker itself is a ServiceWorker, then we always skip the
+  //    origin checks.  The ServiceWorker has its own trusted origin checks
+  //    that are better than ours.  In addition, we don't have information
+  //    about the window any more, so we can't do our own checks.
   bool testingEnabled = aWorkerPrivate->DOMCachesTestingEnabled() ||
                         aWorkerPrivate->ServiceWorkersTestingEnabled() ||
-                        aWorkerPrivate->ServiceWorkersTestingInWindow();
+                        aWorkerPrivate->ServiceWorkersTestingInWindow() ||
+                        aWorkerPrivate->IsServiceWorker();
 
   if (!IsTrusted(principalInfo, testingEnabled)) {
     NS_WARNING("CacheStorage not supported on untrusted origins.");
