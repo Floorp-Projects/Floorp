@@ -51,7 +51,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   params->Serialize(value);
   if (!value.IsEmpty()) {
-    aStr.AppendLiteral("!");
+    aStr.AppendLiteral("^");
     aStr.Append(NS_ConvertUTF16toUTF8(value));
   }
 }
@@ -117,7 +117,7 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return true;
   }
 
-  if (aStr[0] != '!') {
+  if (aStr[0] != '^') {
     return false;
   }
 
@@ -134,7 +134,7 @@ OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
 {
   // RFindChar is only available on nsCString.
   nsCString origin(aOrigin);
-  int32_t pos = origin.RFindChar('!');
+  int32_t pos = origin.RFindChar('^');
 
   if (pos == kNotFound) {
     aOriginNoSuffix = origin;
