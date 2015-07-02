@@ -204,7 +204,7 @@ upload: checksum
 source-package:
 	@echo 'Packaging source tarball...'
 	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
-	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - $(DIR_TO_BE_PACKAGED)) | xz -9e > $(SOURCE_TAR)
+	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - ./ ) | xz -9e > $(SOURCE_TAR)
 
 hg-bundle:
 	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
