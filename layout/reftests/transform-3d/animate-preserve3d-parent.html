@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Testcase, bug 1176969</title>
+<style>
+
+body { padding: 50px }
+
+#grandparent { perspective: 400px }
+
+@keyframes spin {
+  0%, 85% { transform: rotateX(-45deg) rotateY(-45deg) rotateZ(-45deg); }
+  90%, 100% { transform: rotateX(-30deg) rotateY(-30deg) rotateZ(-30deg); }
+}
+
+#parent {
+  background: blue;
+  height: 200px; width: 200px;
+  border: 1px solid black;
+  transform-style: preserve-3d;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: spin 100s -99.9s linear 2;
+}
+
+#child {
+  transform: translateZ(15px);
+  height: 100px; width: 100px; margin: 50px;
+  background: yellow;
+  box-shadow: 3px 3px olive;
+}
+
+</style>
+
+<div id="grandparent">
+  <div id="parent">
+    <div id="child">
+    </div>
+  </div>
+</div>
+
+<script>
+
+document.getElementById("parent").addEventListener("animationiteration", IterationListener, false);
+
+function IterationListener(event) {
+  setTimeout(RemoveReftestWait, 0);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>
