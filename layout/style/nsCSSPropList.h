@@ -3200,9 +3200,8 @@ CSS_PROP_TEXT(
     text_combine_upright,
     TextCombineUpright,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
-        CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS,
-    "layout.css.vertical-text.enabled",
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+    "layout.css.text-combine-upright.enabled",
     0,
     kTextCombineUprightKTable,
     offsetof(nsStyleText, mTextCombineUpright),
