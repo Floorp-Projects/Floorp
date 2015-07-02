@@ -451,7 +451,7 @@ struct StorensRefPtrPassByPtr
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  explicit StorensRefPtrPassByPtr(A a) : m(a) {}
+  explicit StorensRefPtrPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m.get(); }
 };
 template<typename S>
