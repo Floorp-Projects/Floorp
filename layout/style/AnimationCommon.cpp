@@ -527,7 +527,7 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
     return false;
   }
   if (aProperty == eCSSProperty_transform) {
-    if (frame->Preserves3D() &&
+    if (frame->Preserves3D() ||
         frame->Preserves3DChildren()) {
       if (shouldLog) {
         nsCString message;
