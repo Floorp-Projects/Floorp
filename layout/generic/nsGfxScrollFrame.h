@@ -381,6 +381,7 @@ public:
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     bool aIsForCaret) const;
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -843,6 +844,10 @@ public:
   {
     return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
   }
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  {
+    return mHelper.ComputeScrollClip(aIsForCaret);
+  }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
   }
@@ -1238,6 +1243,10 @@ public:
     bool aIsForCaret) const override
   {
     return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
+  }
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  {
+    return mHelper.ComputeScrollClip(aIsForCaret);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
