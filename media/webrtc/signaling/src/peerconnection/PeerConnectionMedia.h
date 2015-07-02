@@ -232,9 +232,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // WARNING: This destroys the object!
   void SelfDestruct();
 
-  // Configure the ability to use localhost.
-  void SetAllowIceLoopback(bool val) { mAllowIceLoopback = val; }
-
   RefPtr<NrIceCtx> ice_ctx() const { return mIceCtx; }
 
   RefPtr<NrIceMediaStream> ice_media_stream(size_t i) const {
@@ -490,9 +487,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsTArray<nsRefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
 
   std::map<size_t, std::pair<bool, RefPtr<MediaSessionConduit>>> mConduits;
-
-  // Allow loopback for ICE.
-  bool mAllowIceLoopback;
 
   // ICE objects
   RefPtr<NrIceCtx> mIceCtx;

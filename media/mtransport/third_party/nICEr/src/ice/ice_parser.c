@@ -120,7 +120,6 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     nr_ice_candidate *cand;
     char *connection_address=0;
     unsigned int port;
-    in_addr_t addr;
     int i;
     unsigned int component_id;
     char *rel_addr=0;
@@ -212,10 +211,6 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     if (*str == '\0')
         ABORT(R_BAD_DATA);
 
-    addr = inet_addr(connection_address);
-    if (addr == INADDR_NONE)
-        ABORT(R_BAD_DATA);
-
     skip_whitespace(&str);
     if (*str == '\0')
         ABORT(R_BAD_DATA);
@@ -226,8 +221,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
     if (port < 1 || port > 0x0FFFF)
         ABORT(R_BAD_DATA);
 
-    /* Assume v4 for now */
-    if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,transport,&cand->addr))
+    if ((r=nr_str_port_to_transport_addr(connection_address,port,transport,&cand->addr)))
       ABORT(r);
 
     skip_to_past_space(&str);
@@ -289,10 +283,6 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         if (*str == '\0')
             ABORT(R_BAD_DATA);
 
-        addr = inet_addr(rel_addr);
-        if (addr == INADDR_NONE)
-            ABORT(R_BAD_DATA);
-
         skip_whitespace(&str);
         if (*str == '\0')
             ABORT(R_BAD_DATA);
@@ -314,8 +304,7 @@ nr_ice_peer_candidate_from_attribute(nr_ice_ctx *ctx,char *orig,nr_ice_media_str
         if (port < 1 || port > 0x0FFFF)
             ABORT(R_BAD_DATA);
 
-        /* Assume v4 for now */
-        if(r=nr_ip4_port_to_transport_addr(ntohl(addr),port,transport,&cand->base))
+        if ((r=nr_str_port_to_transport_addr(rel_addr,port,transport,&cand->base)))
           ABORT(r);
 
         skip_to_past_space(&str);

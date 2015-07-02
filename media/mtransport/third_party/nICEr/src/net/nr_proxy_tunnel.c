@@ -256,7 +256,7 @@ int nr_socket_proxy_tunnel_connect(void *obj, nr_transport_addr *addr)
   assert(config->proxy_host);
 
   /* Check if the proxy_host is already an IP address */
-  has_addr = !nr_ip4_str_port_to_transport_addr(config->proxy_host,
+  has_addr = !nr_str_port_to_transport_addr(config->proxy_host,
       config->proxy_port, IPPROTO_TCP, &proxy_addr);
 
   r_log(LOG_GENERIC,LOG_DEBUG,"nr_socket_proxy_tunnel_connect: %s", config->proxy_host);

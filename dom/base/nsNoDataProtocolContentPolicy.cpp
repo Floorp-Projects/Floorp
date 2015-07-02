@@ -17,6 +17,7 @@
 #include "nsIIOService.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_ISUPPORTS(nsNoDataProtocolContentPolicy, nsIContentPolicy)
 

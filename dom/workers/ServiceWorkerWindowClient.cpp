@@ -87,7 +87,8 @@ public:
       ErrorResult result;
       //FIXME(catalinb): Bug 1144660 - check if we are allowed to focus here.
       window->Focus(result);
-      clientInfo.reset(new ServiceWorkerClientInfo(window->GetDocument()));
+      clientInfo.reset(new ServiceWorkerClientInfo(window->GetDocument(),
+                                                   window->GetOuterWindow()));
     }
 
     DispatchResult(Move(clientInfo));

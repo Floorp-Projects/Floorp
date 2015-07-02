@@ -7,8 +7,11 @@
 
 """A parser for cross-platform IDL (XPIDL) files."""
 
-import sys, os.path, re
-from ply import lex, yacc
+import sys
+import os.path
+import re
+from ply import lex
+from ply import yacc
 
 """A type conforms to the following pattern:
 
@@ -27,12 +30,13 @@ Interface members const/method/attribute conform to the following pattern:
         'returns the member signature as IDL'
 """
 
+
 def attlistToIDL(attlist):
     if len(attlist) == 0:
         return ''
 
     attlist = list(attlist)
-    attlist.sort(cmp=lambda a,b: cmp(a[0], b[0]))
+    attlist.sort(cmp=lambda a, b: cmp(a[0], b[0]))
 
     return '[%s] ' % ','.join(["%s%s" % (name, value is not None and '(%s)' % value or '')
                               for name, value, aloc in attlist])
@@ -41,6 +45,7 @@ _paramsHardcode = {
     2: ('array', 'shared', 'iid_is', 'size_is', 'retval'),
     3: ('array', 'size_is', 'const'),
 }
+
 
 def paramAttlistToIDL(attlist):
     if len(attlist) == 0:
@@ -66,11 +71,13 @@ def paramAttlistToIDL(attlist):
     return '[%s] ' % ', '.join(["%s%s" % (name, value is not None and ' (%s)' % value or '')
                                 for name, value, aloc in sorted])
 
+
 def unaliasType(t):
     while t.kind == 'typedef':
         t = t.realtype
     assert t is not None
     return t
+
 
 def getBuiltinOrNativeTypeName(t):
     t = unaliasType(t)
@@ -82,12 +89,14 @@ def getBuiltinOrNativeTypeName(t):
     else:
         return None
 
+
 class BuiltinLocation(object):
     def get(self):
         return "<builtin type>"
 
     def __str__(self):
         return self.get()
+
 
 class Builtin(object):
     kind = 'builtin'
@@ -139,6 +148,7 @@ builtinMap = {}
 for b in builtinNames:
     builtinMap[b.name] = b
 
+
 class Location(object):
     _line = None
 
@@ -149,8 +159,8 @@ class Location(object):
         self._file = getattr(lexer, 'filename', "<unknown>")
 
     def __eq__(self, other):
-        return self._lexpos == other._lexpos and \
-               self._file == other._file
+        return (self._lexpos == other._lexpos and
+                self._file == other._file)
 
     def resolve(self):
         if self._line:
@@ -178,6 +188,7 @@ class Location(object):
         return "%s line %s:%s\n%s\n%s" % (self._file, self._lineno, self._colno,
                                           self._line, self.pointerline())
 
+
 class NameMap(object):
     """Map of name -> object. Each object must have a .name and .location property.
     Setting the same name twice throws an error."""
@@ -202,7 +213,8 @@ class NameMap(object):
             object.name = object.name[1:]
         if object.name in self._d:
             old = self._d[object.name]
-            if old == object: return
+            if old == object:
+                return
             if isinstance(old, Forward) and isinstance(object, Interface):
                 self._d[object.name] = object
             elif isinstance(old, Interface) and isinstance(object, Forward):
@@ -218,6 +230,7 @@ class NameMap(object):
         except KeyError:
             raise IDLError("Name '%s' not found", location)
 
+
 class IDLError(Exception):
     def __init__(self, message, location, warning=False):
         self.message = message
@@ -227,6 +240,7 @@ class IDLError(Exception):
     def __str__(self):
         return "%s: %s, %s" % (self.warning and 'warning' or 'error',
                                self.message, self.location)
+
 
 class Include(object):
     kind = 'include'
@@ -245,7 +259,8 @@ class Include(object):
                 yield os.path.join(dir, self.filename)
 
         for file in incfiles():
-            if not os.path.exists(file): continue
+            if not os.path.exists(file):
+                continue
 
             self.IDL = parent.parser.parse(open(file).read(), filename=file)
             self.IDL.resolve(parent.incdirs, parent.parser)
@@ -255,6 +270,7 @@ class Include(object):
             return
 
         raise IDLError("File '%s' not found" % self.filename, self.location)
+
 
 class IDL(object):
     def __init__(self, productions):
@@ -297,6 +313,7 @@ class IDL(object):
                 return True
         return False
 
+
 class CDATA(object):
     kind = 'cdata'
     _re = re.compile(r'\n+')
@@ -313,6 +330,7 @@ class CDATA(object):
 
     def count(self):
         return 0
+
 
 class Typedef(object):
     kind = 'typedef'
@@ -340,6 +358,7 @@ class Typedef(object):
     def __str__(self):
         return "typedef %s %s\n" % (self.type, self.name)
 
+
 class Forward(object):
     kind = 'forward'
 
@@ -356,7 +375,8 @@ class Forward(object):
         # forward.
         if parent.hasName(self.name):
             for i in xrange(0, len(parent.productions)):
-                if parent.productions[i] is self: break
+                if parent.productions[i] is self:
+                    break
             for i in xrange(i + 1, len(parent.productions)):
                 if hasattr(parent.productions[i], 'doccomments'):
                     parent.productions[i].doccomments[0:0] = self.doccomments
@@ -373,6 +393,7 @@ class Forward(object):
 
     def __str__(self):
         return "forward-declared %s\n" % self.name
+
 
 class Native(object):
     kind = 'native'
@@ -411,10 +432,10 @@ class Native(object):
                 raise IDLError("Unexpected attribute", aloc)
 
     def __eq__(self, other):
-        return self.name == other.name and \
-               self.nativename == other.nativename and \
-               self.modifier == other.modifier and \
-               self.specialtype == other.specialtype
+        return (self.name == other.name and
+                self.nativename == other.nativename and
+                self.modifier == other.modifier and
+                self.specialtype == other.specialtype)
 
     def resolve(self, parent):
         parent.setName(self)
@@ -458,6 +479,7 @@ class Native(object):
 
     def __str__(self):
         return "native %s(%s)\n" % (self.name, self.nativename)
+
 
 class Interface(object):
     kind = 'interface'
@@ -520,8 +542,7 @@ class Interface(object):
         # Do not increase this value without increasing the number in that
         # location, or you WILL cause otherwise unknown problems!
         if self.countEntries() > 250 and not self.attributes.builtinclass:
-            raise IDLError("interface '%s' has too many entries" % self.name,
-                self.location)
+            raise IDLError("interface '%s' has too many entries" % self.name, self.location)
 
     def isScriptable(self):
         # NOTE: this is not whether *this* interface is scriptable... it's
@@ -552,7 +573,7 @@ class Interface(object):
         while name not in iface.namemap and iface is not None:
             iface = self.idl.getName(self.base, self.location)
         if iface is None:
-            raise IDLError("cannot find symbol '%s'" % name, c.location)
+            raise IDLError("cannot find symbol '%s'" % name)
         c = iface.namemap.get(name, location)
         if c.kind != 'const':
             raise IDLError("symbol '%s' is not a constant", c.location)
@@ -574,6 +595,7 @@ class Interface(object):
             realbase = self.idl.getName(self.base, self.location)
             total += realbase.countEntries()
         return total
+
 
 class InterfaceAttributes(object):
     uuid = None
@@ -652,8 +674,10 @@ class InterfaceAttributes(object):
             l.append("\tmain_process_scriptable_only\n")
         return "".join(l)
 
+
 class ConstMember(object):
     kind = 'const'
+
     def __init__(self, type, name, value, location, doccomments):
         self.type = type
         self.name = name
@@ -680,6 +704,7 @@ class ConstMember(object):
 
     def count(self):
         return 0
+
 
 class Attribute(object):
     kind = 'attribute'
@@ -715,20 +740,20 @@ class Attribute(object):
                     raise IDLError("'Null' attribute requires a value", aloc)
                 if readonly:
                     raise IDLError("'Null' attribute only makes sense for setters",
-                                   aloc);
+                                   aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
                     raise IDLError("'Null' attribute value must be 'Empty', 'Null' or 'Stringify'",
-                                   aloc);
+                                   aloc)
                 self.null = value
             elif name == 'Undefined':
                 if value is None:
                     raise IDLError("'Undefined' attribute requires a value", aloc)
                 if readonly:
                     raise IDLError("'Undefined' attribute only makes sense for setters",
-                                   aloc);
+                                   aloc)
                 if value not in ('Empty', 'Null'):
                     raise IDLError("'Undefined' attribute value must be 'Empty' or 'Null'",
-                                   aloc);
+                                   aloc)
                 self.undefined = value
             else:
                 if value is not None:
@@ -751,11 +776,11 @@ class Attribute(object):
         self.iface = iface
         self.realtype = iface.idl.getName(self.type, self.location)
         if (self.null is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Null' attribute can only be used on DOMString",
                            self.location)
         if (self.undefined is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
         if self.infallible and not self.realtype.kind == 'builtin':
@@ -767,14 +792,14 @@ class Attribute(object):
                            '[builtinclass] interfaces',
                            self.location)
 
-
     def toIDL(self):
         attribs = attlistToIDL(self.attlist)
         readonly = self.readonly and 'readonly ' or ''
         return "%s%sattribute %s %s;" % (attribs, readonly, self.type, self.name)
 
     def isScriptable(self):
-        if not self.iface.attributes.scriptable: return False
+        if not self.iface.attributes.scriptable:
+            return False
         return not self.noscript
 
     def __str__(self):
@@ -783,6 +808,7 @@ class Attribute(object):
 
     def count(self):
         return self.readonly and 1 or 2
+
 
 class Method(object):
     kind = 'method'
@@ -853,7 +879,8 @@ class Method(object):
                     raise IDLError("could not find is_size parameter '%s'" % p.size_is, self.location)
 
     def isScriptable(self):
-        if not self.iface.attributes.scriptable: return False
+        if not self.iface.attributes.scriptable:
+            return False
         return not (self.noscript or self.notxpcom)
 
     def __str__(self):
@@ -885,6 +912,7 @@ class Method(object):
 
     def count(self):
         return 1
+
 
 class Param(object):
     size_is = None
@@ -920,14 +948,14 @@ class Param(object):
                     raise IDLError("'Null' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
                     raise IDLError("'Null' parameter value must be 'Empty', 'Null', or 'Stringify'",
-                                   aloc);
+                                   aloc)
                 self.null = value
             elif name == 'Undefined':
                 if value is None:
                     raise IDLError("'Undefined' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null'):
                     raise IDLError("'Undefined' parameter value must be 'Empty' or 'Null'",
-                                   aloc);
+                                   aloc)
                 self.undefined = value
             else:
                 if value is not None:
@@ -952,18 +980,20 @@ class Param(object):
         if self.array:
             self.realtype = Array(self.realtype)
         if (self.null is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Null' attribute can only be used on DOMString",
                            self.location)
         if (self.undefined is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
 
     def nativeType(self):
         kwargs = {}
-        if self.shared: kwargs['shared'] = True
-        if self.const: kwargs['const'] = True
+        if self.shared:
+            kwargs['shared'] = True
+        if self.const:
+            kwargs['const'] = True
 
         try:
             return self.realtype.nativeType(self.paramtype, **kwargs)
@@ -978,6 +1008,7 @@ class Param(object):
                                self.type,
                                self.name)
 
+
 class Array(object):
     def __init__(self, basetype):
         self.type = basetype
@@ -988,6 +1019,7 @@ class Array(object):
     def nativeType(self, calltype, const=False):
         return "%s%s*" % (const and 'const ' or '',
                           self.type.nativeType(calltype))
+
 
 class IDLParser(object):
     keywords = {
@@ -1026,7 +1058,7 @@ class IDLParser(object):
     t_NUMBER = r'-?\d+'
     t_HEXNUM = r'0x%s+' % hexchar
     t_LSHIFT = r'<<'
-    t_RSHIFT=  r'>>'
+    t_RSHIFT = r'>>'
 
     literals = '"(){}[],;:=|+-*'
 

@@ -53,6 +53,9 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr_reg.c,v 1.2 2008/04/28 17
 #include "transport_addr.h"
 #include "transport_addr_reg.h"
 
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46 /* Value used by linux/BSD */
+#endif
 
 int
 nr_reg_get_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
@@ -107,7 +110,7 @@ nr_reg_get_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
 
     if (!keep) memset(addr, 0, sizeof(*addr));
 
-    if ((r=nr_ip4_str_port_to_transport_addr(address?address:"0.0.0.0", port, p, addr)))
+    if ((r=nr_str_port_to_transport_addr(address?address:"0.0.0.0", port, p, addr)))
         ABORT(r);
 
     if (ifname)
@@ -133,7 +136,7 @@ nr_reg_set_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
 
     switch (addr->ip_version) {
     case NR_IPV4:
-        if (addr->u.addr4.sin_addr.s_addr != INADDR_ANY) {
+        if (!nr_transport_addr_is_wildcard(addr)) {
             if ((r=NR_reg_set2_string(prefix, "address", inet_ntoa(addr->u.addr4.sin_addr))))
                 ABORT(r);
         }
@@ -142,33 +145,48 @@ nr_reg_set_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
             if ((r=NR_reg_set2_uint2(prefix, "port", ntohs(addr->u.addr4.sin_port))))
                 ABORT(r);
         }
-
-        switch (addr->protocol) {
-        case IPPROTO_TCP:
-            if ((r=NR_reg_set2_string(prefix, "protocol", "tcp")))
-                ABORT(r);
-            break;
-        case IPPROTO_UDP:
-            if ((r=NR_reg_set2_string(prefix, "protocol", "udp")))
-                ABORT(r);
-            break;
-        default:
-            UNIMPLEMENTED;
-            break;
-        }
-
-        if (strlen(addr->ifname) > 0) {
-            if ((r=NR_reg_set2_string(prefix, "ifname", addr->ifname)))
-                ABORT(r);
-        }
         break;
 
     case NR_IPV6:
-        UNIMPLEMENTED;
+        if (!nr_transport_addr_is_wildcard(addr)) {
+          char address[INET6_ADDRSTRLEN];
+          if(!inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr,address,sizeof(address))) {
+            ABORT(R_BAD_DATA);
+          }
+
+          if ((r=NR_reg_set2_string(prefix, "address", address))) {
+            ABORT(r);
+          }
+        }
+
+        if (addr->u.addr6.sin6_port != 0) {
+            if ((r=NR_reg_set2_uint2(prefix, "port", ntohs(addr->u.addr6.sin6_port))))
+                ABORT(r);
+        }
         break;
     default:
         ABORT(R_INTERNAL);
         break;
+    }
+
+    /* We abort if neither NR_IPV4 or NR_IPV6 above */
+    switch (addr->protocol) {
+      case IPPROTO_TCP:
+        if ((r=NR_reg_set2_string(prefix, "protocol", "tcp")))
+          ABORT(r);
+        break;
+      case IPPROTO_UDP:
+        if ((r=NR_reg_set2_string(prefix, "protocol", "udp")))
+          ABORT(r);
+        break;
+      default:
+        UNIMPLEMENTED;
+        break;
+    }
+
+    if (strlen(addr->ifname) > 0) {
+      if ((r=NR_reg_set2_string(prefix, "ifname", addr->ifname)))
+        ABORT(r);
     }
 
     _status=0;
