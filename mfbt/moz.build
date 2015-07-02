@@ -46,7 +46,6 @@ EXPORTS.mozilla = [
     'IntegerPrintfMacros.h',
     'IntegerRange.h',
     'IntegerTypeTraits.h',
-    'IteratorTraits.h',
     'JSONWriter.h',
     'Likely.h',
     'LinkedList.h',

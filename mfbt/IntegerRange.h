@@ -21,9 +21,6 @@ template<typename IntTypeT>
 class IntegerIterator
 {
 public:
-  typedef IntTypeT ValueType;
-  typedef typename MakeSigned<IntTypeT>::Type DifferenceType;
-
   template<typename IntType>
   explicit IntegerIterator(IntType aCurrent)
     : mCurrent(aCurrent) { }
@@ -40,25 +37,6 @@ public:
   IntegerIterator& operator--() { --mCurrent; return *this; }
   IntegerIterator operator++(int) { auto ret = *this; ++mCurrent; return ret; }
   IntegerIterator operator--(int) { auto ret = *this; --mCurrent; return ret; }
-
-  IntegerIterator operator+(DifferenceType aN) const
-  {
-    return IntegerIterator(mCurrent + aN);
-  }
-  IntegerIterator operator-(DifferenceType aN) const
-  {
-    return IntegerIterator(mCurrent - aN);
-  }
-  IntegerIterator& operator+=(DifferenceType aN)
-  {
-    mCurrent += aN;
-    return *this;
-  }
-  IntegerIterator& operator-=(DifferenceType aN)
-  {
-    mCurrent -= aN;
-    return *this;
-  }
 
   /* Comparison operators */
 
