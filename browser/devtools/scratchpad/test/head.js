@@ -14,9 +14,9 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 /**
