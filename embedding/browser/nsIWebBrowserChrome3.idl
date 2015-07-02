@@ -12,7 +12,7 @@ interface nsIInputStream;
 /**
  * nsIWebBrowserChrome3 is an extension to nsIWebBrowserChrome2.
  */
-[scriptable, uuid(da646a9c-5788-4860-88a4-bd5d0ad853da)]
+[scriptable, uuid(542b6625-35a9-426a-8257-c12a345383b0)]
 interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
 {
   /**
@@ -47,7 +47,4 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
                      in nsIURI         aReferrer);
-
-  bool shouldAddToSessionHistory(in nsIDocShell aDocShell,
-                                 in nsIURI      aURI);
 };
