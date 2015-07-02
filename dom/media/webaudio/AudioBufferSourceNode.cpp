@@ -568,6 +568,18 @@ AudioBufferSourceNode::~AudioBufferSourceNode()
 {
 }
 
+void
+AudioBufferSourceNode::DestroyMediaStream()
+{
+  if (mStream) {
+    mStream->RemoveMainThreadListener(this);
+  }
+  AudioNode::DestroyMediaStream();
+  if (Context()) {
+    Context()->UnregisterAudioBufferSourceNode(this);
+  }
+}
+
 size_t
 AudioBufferSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
