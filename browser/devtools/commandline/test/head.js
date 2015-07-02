@@ -5,17 +5,19 @@
 const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/commandline/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/commandline/test/";
 
-var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-var console = require("resource://gre/modules/devtools/Console.jsm").console;
+let { require } =
+  Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let console = require("resource://gre/modules/devtools/Console.jsm").console;
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this);
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 function whenDelayedStartupFinished(aWindow, aCallback) {

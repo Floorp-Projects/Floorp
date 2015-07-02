@@ -123,6 +123,7 @@ const EventEmitter = require("devtools/toolkit/event-emitter");
 const Editor = require("devtools/sourceeditor/editor");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const {ToolSidebar} = require("devtools/framework/sidebar");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource:///modules/devtools/Chart.jsm");
@@ -138,9 +139,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
-  "resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
@@ -800,7 +798,7 @@ const WDA_DEFAULT_VERIFY_INTERVAL = 50; // ms
 // and two seconds is quite short on slow debug builds. The timeout here should
 // be at least equal to the general mochitest timeout of 45 seconds so that this
 // never gets hit during testing.
-const WDA_DEFAULT_GIVE_UP_TIMEOUT = gDevTools.testing ? 45000 : 2000; // ms
+const WDA_DEFAULT_GIVE_UP_TIMEOUT = DevToolsUtils.testing ? 45000 : 2000; // ms
 
 /**
  * Helper method for debugging.

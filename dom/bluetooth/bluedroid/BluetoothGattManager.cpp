@@ -1355,7 +1355,6 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
                                                  int aClientIf,
                                                  const BluetoothUuid& aAppUuid)
 {
-  BT_API2_LOGR("Client Registered, clientIf = %d", aClientIf);
   MOZ_ASSERT(NS_IsMainThread());
 
   nsString uuid;
@@ -1370,9 +1369,8 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   NS_ENSURE_TRUE_VOID(bs);
 
   if (aStatus != GATT_STATUS_SUCCESS) {
-    BT_API2_LOGR(
-      "RegisterClient failed, clientIf = %d, status = %d, appUuid = %s",
-      aClientIf, aStatus, NS_ConvertUTF16toUTF8(uuid).get());
+    BT_LOGD("RegisterClient failed: clientIf = %d, status = %d, appUuid = %s",
+            aClientIf, aStatus, NS_ConvertUTF16toUTF8(uuid).get());
 
     // Notify BluetoothGatt for client disconnected
     bs->DistributeSignal(
@@ -1418,6 +1416,53 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   }
 }
 
+class BluetoothGattManager::ScanDeviceTypeResultHandler final
+  : public BluetoothGattClientResultHandler
+{
+public:
+  ScanDeviceTypeResultHandler(const nsAString& aBdAddr, int aRssi,
+                              const BluetoothGattAdvData& aAdvData)
+  : mBdAddr(aBdAddr)
+  , mRssi(static_cast<int32_t>(aRssi))
+  {
+    mAdvData.AppendElements(aAdvData.mAdvData, sizeof(aAdvData.mAdvData));
+  }
+
+  void GetDeviceType(BluetoothTypeOfDevice type)
+  {
+    DistributeSignalDeviceFound(type);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    DistributeSignalDeviceFound(TYPE_OF_DEVICE_BLE);
+  }
+
+private:
+  void DistributeSignalDeviceFound(BluetoothTypeOfDevice type)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    InfallibleTArray<BluetoothNamedValue> properties;
+
+    BT_APPEND_NAMED_VALUE(properties, "Address", mBdAddr);
+    BT_APPEND_NAMED_VALUE(properties, "Rssi", mRssi);
+    BT_APPEND_NAMED_VALUE(properties, "GattAdv", mAdvData);
+    BT_APPEND_NAMED_VALUE(properties, "Type", static_cast<uint32_t>(type));
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    bs->DistributeSignal(NS_LITERAL_STRING("LeDeviceFound"),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         BluetoothValue(properties));
+  }
+
+  nsString mBdAddr;
+  int32_t mRssi;
+  nsTArray<uint8_t> mAdvData;
+};
+
 void
 BluetoothGattManager::ScanResultNotification(
   const nsAString& aBdAddr, int aRssi,
@@ -1425,23 +1470,13 @@ BluetoothGattManager::ScanResultNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  InfallibleTArray<BluetoothNamedValue> properties;
+  NS_ENSURE_TRUE_VOID(sBluetoothGattClientInterface);
 
-  nsTArray<uint8_t> advData;
-  advData.AppendElements(aAdvData.mAdvData, sizeof(aAdvData.mAdvData));
-
-  BT_APPEND_NAMED_VALUE(properties, "Address", nsString(aBdAddr));
-  BT_APPEND_NAMED_VALUE(properties, "Rssi", static_cast<int32_t>(aRssi));
-  BT_APPEND_NAMED_VALUE(properties, "GattAdv", advData);
-  BT_APPEND_NAMED_VALUE(properties, "Type",
-    static_cast<uint32_t>(TYPE_OF_DEVICE_BLE));
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-
-  bs->DistributeSignal(NS_LITERAL_STRING("LeDeviceFound"),
-                       NS_LITERAL_STRING(KEY_ADAPTER),
-                       BluetoothValue(properties));
+  // Distribute "LeDeviceFound" signal after we know the corresponding
+  // BluetoothTypeOfDevice of the device
+  sBluetoothGattClientInterface->GetDeviceType(
+    aBdAddr,
+    new ScanDeviceTypeResultHandler(aBdAddr, aRssi, aAdvData));
 }
 
 void
@@ -1450,7 +1485,6 @@ BluetoothGattManager::ConnectNotification(int aConnId,
                                           int aClientIf,
                                           const nsAString& aDeviceAddr)
 {
-  BT_API2_LOGR();
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothService* bs = BluetoothService::Get();
@@ -1463,8 +1497,8 @@ BluetoothGattManager::ConnectNotification(int aConnId,
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
   if (aStatus != GATT_STATUS_SUCCESS) {
-    BT_API2_LOGR("Connect failed, clientIf = %d, connId = %d, status = %d",
-                 aClientIf, aConnId, aStatus);
+    BT_LOGD("Connect failed: clientIf = %d, connId = %d, status = %d",
+            aClientIf, aConnId, aStatus);
 
     // Notify BluetoothGatt that the client remains disconnected
     bs->DistributeSignal(
@@ -1503,7 +1537,6 @@ BluetoothGattManager::DisconnectNotification(int aConnId,
                                              int aClientIf,
                                              const nsAString& aDeviceAddr)
 {
-  BT_API2_LOGR();
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothService* bs = BluetoothService::Get();
@@ -2030,7 +2063,6 @@ BluetoothGattManager::ReadRemoteRssiNotification(int aClientIf,
                                                  int aRssi,
                                                  BluetoothGattStatus aStatus)
 {
-  BT_API2_LOGR();
   MOZ_ASSERT(NS_IsMainThread());
 
   BluetoothService* bs = BluetoothService::Get();
@@ -2043,9 +2075,9 @@ BluetoothGattManager::ReadRemoteRssiNotification(int aClientIf,
   nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
   if (aStatus != GATT_STATUS_SUCCESS) { // operation failed
-    BT_API2_LOGR("ReadRemoteRssi failed, clientIf = %d, bdAddr = %s, " \
-                 "rssi = %d, status = %d", aClientIf,
-                 NS_ConvertUTF16toUTF8(aBdAddr).get(), aRssi, (int)aStatus);
+    BT_LOGD("ReadRemoteRssi failed: clientIf = %d, bdAddr = %s, rssi = %d, " \
+            "status = %d", aClientIf, NS_ConvertUTF16toUTF8(aBdAddr).get(),
+            aRssi, (int)aStatus);
 
     // Reject the read remote rssi request
     if (client->mReadRemoteRssiRunnable) {
