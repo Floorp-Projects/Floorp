@@ -79,7 +79,7 @@ HighlightersOverlay.prototype = {
 
     let el = this.view.element;
     el.addEventListener("mousemove", this._onMouseMove, false);
-    el.addEventListener("mouseout", this._onMouseLeave, false);
+    el.addEventListener("mouseleave", this._onMouseLeave, false);
 
     this._isStarted = true;
   },
@@ -97,7 +97,7 @@ HighlightersOverlay.prototype = {
 
     let el = this.view.element;
     el.removeEventListener("mousemove", this._onMouseMove, false);
-    el.removeEventListener("mouseout", this._onMouseLeave, false);
+    el.removeEventListener("mouseleave", this._onMouseLeave, false);
 
     this._isStarted = false;
   },

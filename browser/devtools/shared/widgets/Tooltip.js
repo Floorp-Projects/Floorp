@@ -400,7 +400,7 @@ Tooltip.prototype = {
     this._onBaseNodeMouseLeave = this._onBaseNodeMouseLeave.bind(this);
 
     baseNode.addEventListener("mousemove", this._onBaseNodeMouseMove, false);
-    baseNode.addEventListener("mouseout", this._onBaseNodeMouseLeave, false);
+    baseNode.addEventListener("mouseleave", this._onBaseNodeMouseLeave, false);
   },
 
   /**
@@ -417,7 +417,7 @@ Tooltip.prototype = {
 
     this._basedNode.removeEventListener("mousemove",
       this._onBaseNodeMouseMove, false);
-    this._basedNode.removeEventListener("mouseout",
+    this._basedNode.removeEventListener("mouseleave",
       this._onBaseNodeMouseLeave, false);
 
     this._basedNode = null;
