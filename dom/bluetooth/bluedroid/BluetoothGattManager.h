@@ -110,6 +110,7 @@ private:
   class WriteCharacteristicValueResultHandler;
   class ReadDescriptorValueResultHandler;
   class WriteDescriptorValueResultHandler;
+  class ScanDeviceTypeResultHandler;
 
   BluetoothGattManager();
 

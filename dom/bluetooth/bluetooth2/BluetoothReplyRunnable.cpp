@@ -23,11 +23,7 @@ BluetoothReplyRunnable::BluetoothReplyRunnable(nsIDOMDOMRequest* aReq,
   , mPromise(aPromise)
   , mErrorStatus(STATUS_FAIL)
   , mName(aName)
-{
-  if (aPromise) {
-    BT_API2_LOGR("<%s>", NS_ConvertUTF16toUTF8(mName).get());
-  }
-}
+{}
 
 void
 BluetoothReplyRunnable::SetReply(BluetoothReply* aReply)
@@ -61,7 +57,6 @@ BluetoothReplyRunnable::FireReplySuccess(JS::Handle<JS::Value> aVal)
 
   // Promise
   if (mPromise) {
-    BT_API2_LOGR("<%s>", NS_ConvertUTF16toUTF8(mName).get());
     mPromise->MaybeResolve(aVal);
   }
 
@@ -82,8 +77,6 @@ BluetoothReplyRunnable::FireErrorString()
 
   // Promise
   if (mPromise) {
-    BT_API2_LOGR("<%s>", NS_ConvertUTF16toUTF8(mName).get());
-
     nsresult rv =
       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_BLUETOOTH, mErrorStatus);
     mPromise->MaybeReject(rv);

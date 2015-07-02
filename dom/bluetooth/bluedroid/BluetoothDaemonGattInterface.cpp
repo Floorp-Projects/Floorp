@@ -875,14 +875,37 @@ BluetoothDaemonGattModule::ClientReadRemoteRssiRsp(
     UnpackPDUInitOp(aPDU));
 }
 
+// Init operator class for ClientGetDeviceTypeRsp
+class BluetoothDaemonGattModule::ClientGetDeviceTypeInitOp final
+  : private PDUInitOp
+{
+public:
+  ClientGetDeviceTypeInitOp(DaemonSocketPDU& aPDU)
+    : PDUInitOp(aPDU)
+  { }
+
+  nsresult
+  operator () (BluetoothTypeOfDevice& aArg1) const
+  {
+    /* Read device type */
+    nsresult rv = UnpackPDU(
+      GetPDU(), UnpackConversion<uint8_t, BluetoothTypeOfDevice>(aArg1));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
+
 void
 BluetoothDaemonGattModule::ClientGetDeviceTypeRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
   BluetoothGattClientResultHandler* aRes)
 {
-  ClientResultRunnable::Dispatch(
+  ClientGetDeviceTypeResultRunnable::Dispatch(
     aRes, &BluetoothGattClientResultHandler::GetDeviceType,
-    UnpackPDUInitOp(aPDU));
+    ClientGetDeviceTypeInitOp(aPDU));
 }
 
 void

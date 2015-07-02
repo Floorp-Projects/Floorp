@@ -248,7 +248,7 @@ BluetoothGatt::DiscoverServices(ErrorResult& aRv)
 void
 BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
 {
-  BT_API2_LOGR("GATT connection state changes to: %d", int(aState));
+  BT_LOGR("GATT connection state changes to: %d", int(aState));
   mConnectionState = aState;
 
   // Dispatch connectionstatechanged event to application
