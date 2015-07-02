@@ -268,14 +268,6 @@ public:
   void
   NoteDeletion();
 
-  bool
-  IsDeleted() const
-  {
-    AssertIsOnOwningThread();
-
-    return !!mDeletedSpec;
-  }
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBObjectStore)
 
