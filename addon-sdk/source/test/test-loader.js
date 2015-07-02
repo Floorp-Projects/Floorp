@@ -367,6 +367,16 @@ exports['test shared globals'] = function(assert) {
   unload(loader);
 }
 
+exports['test prototype of global'] = function (assert) {
+  let uri = root + '/fixtures/loader/globals/';
+  let loader = Loader({ paths: { '': uri }, sharedGlobal: true,
+                        sandboxPrototype: { globalFoo: 5 }});
+
+  let program = main(loader, 'main');
+
+  assert.ok(program.globalFoo === 5, '`globalFoo` exists');
+};
+
 exports["test require#resolve"] = function(assert) {
   let foundRoot = require.resolve("sdk/tabs").replace(/sdk\/tabs.js$/, "");
   assert.ok(root, foundRoot, "correct resolution root");
@@ -522,6 +532,24 @@ exports['test lazy globals'] = function (assert) {
   assert.ok(!gotFoo, "foo hasn't been accessed during module loading");
   assert.equal(program.useFoo(), foo, "foo mock works");
   assert.ok(gotFoo, "foo has been accessed only when we first try to use it");
+};
+
+exports['test user global'] = function(assert) {
+  // Test case for bug 827792
+  let com = {};
+  let loader = require('toolkit/loader');
+  let loadOptions = require('@loader/options');
+  let options = loader.override(loadOptions,
+                                {globals: loader.override(loadOptions.globals,
+                                                          {com: com,
+                                                           console: console,
+                                                           dump: dump})});
+  let subloader = loader.Loader(options);
+  let userRequire = loader.Require(subloader, module);
+  let userModule = userRequire("./loader/user-global");
+
+  assert.equal(userModule.getCom(), com,
+               "user module returns expected `com` global");
 };
 
 require('sdk/test').run(exports);

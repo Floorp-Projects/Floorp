@@ -145,7 +145,12 @@
     <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
 
     <!-- for url bar autocomplete -->
-    <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
+    <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true">
+      <hbox id="urlbar-search-footer" flex="1" align="stretch" pack="end">
+        <button id="urlbar-search-settings" label="&changeSearchSettings.button;"
+                oncommand="BrowserUITelemetry.countSearchSettingsEvent('urlbar'); openPreferences('paneSearch')"/>
+      </hbox>
+    </panel>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes
