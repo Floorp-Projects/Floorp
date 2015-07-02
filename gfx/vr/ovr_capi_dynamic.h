@@ -11,7 +11,11 @@
  */
 
 #ifdef OVR_CAPI_h
-#warning OVR_CAPI.h included before ovr_capi_dynamic.h, skpping this
+#ifdef _MSC_VER
+#pragma message("ovr_capi_dyanmic.h: OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this")
+#else
+#warning OVR_CAPI.h included before ovr_capi_dynamic.h, skipping this
+#endif
 #define mozilla_ovr_capi_dynamic_h_
 
 #else
@@ -20,6 +24,14 @@
 #define mozilla_ovr_capi_dynamic_h_
 
 #define OVR_CAPI_LIMITED_MOZILLA 1
+
+#ifdef HAVE_64BIT_BUILD
+#define OVR_PTR_SIZE 8
+#define OVR_ON64(x)     x
+#else
+#define OVR_PTR_SIZE 4
+#define OVR_ON64(x)     /**/
+#endif
 
 #if defined(_WIN32)
 #define OVR_PFN __cdecl
@@ -51,6 +63,7 @@
 extern "C" {
 #endif
 
+typedef int32_t ovrResult;
 typedef char ovrBool;
 typedef struct { int x, y; } ovrVector2i;
 typedef struct { int w, h; } ovrSizei;
@@ -94,16 +107,11 @@ typedef enum {
 } ovrHmdType;
 
 typedef enum {
-  ovrHmdCap_Present           = 0x0001,
-  ovrHmdCap_Available         = 0x0002,
-  ovrHmdCap_Captured          = 0x0004,
-  ovrHmdCap_ExtendDesktop     = 0x0008,
   ovrHmdCap_DebugDevice       = 0x0010,
-  ovrHmdCap_DisplayOff        = 0x0040,
   ovrHmdCap_LowPersistence    = 0x0080,
   ovrHmdCap_DynamicPrediction = 0x0200,
   ovrHmdCap_NoVSync           = 0x1000,
-  ovrHmdCap_NoMirrorToWindow  = 0x2000
+  ovrHmdCap_EnumSize          = 0x7fffffff
 } ovrHmdCapBits;
 
 typedef enum
@@ -116,32 +124,17 @@ typedef enum
 } ovrTrackingCaps;
 
 typedef enum {
-  ovrDistortionCap_Chromatic = 0x01,
-  ovrDistortionCap_TimeWarp  = 0x02,
-  ovrDistortionCap_Vignette  = 0x08,
-  ovrDistortionCap_NoRestore = 0x10,
-  ovrDistortionCap_FlipInput = 0x20,
-  ovrDistortionCap_SRGB      = 0x40,
-  ovrDistortionCap_Overdrive = 0x80,
-  ovrDistortionCap_HqDistortion = 0x100,
-  ovrDistortionCap_LinuxDevFullscreen = 0x200,
-  ovrDistortionCap_ComputeShader = 0x400,
-  ovrDistortionCap_TimewarpJitDelay = 0x1000,
-  ovrDistortionCap_ProfileNoSpinWaits = 0x10000,
-  ovrDistortionCap_EnumSize = 0x7fffffff
-} ovrDistortionCaps;
-
-typedef enum {
   ovrEye_Left  = 0,
   ovrEye_Right = 1,
   ovrEye_Count = 2,
   ovrEye_EnumSize = 0x7fffffff
 } ovrEyeType;
 
-typedef struct ovrHmdDesc_ {
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
   void* Handle;
   ovrHmdType  Type;
-  const char* ProductName;    
+  OVR_ON64(uint32_t pad0;)
+  const char* ProductName;
   const char* Manufacturer;
   short VendorId;
   short ProductId;
@@ -155,17 +148,12 @@ typedef struct ovrHmdDesc_ {
 
   unsigned int HmdCaps;
   unsigned int TrackingCaps;
-  unsigned int DistortionCaps;
 
   ovrFovPort  DefaultEyeFov[ovrEye_Count];
   ovrFovPort  MaxEyeFov[ovrEye_Count];
   ovrEyeType  EyeRenderOrder[ovrEye_Count];
 
   ovrSizei    Resolution;
-  ovrVector2i WindowsPos;
-
-  const char* DisplayDeviceName;
-  int         DisplayId;
 } ovrHmdDesc;
 
 typedef const ovrHmdDesc* ovrHmd;
@@ -179,7 +167,7 @@ typedef enum {
   ovrStatus_EnumSize              = 0x7fffffff
 } ovrStatusBits;
 
-typedef struct ovrSensorData_ {
+typedef struct OVR_ALIGNAS(4) {
   ovrVector3f    Accelerometer;
   ovrVector3f    Gyro;
   ovrVector3f    Magnetometer;
@@ -188,28 +176,24 @@ typedef struct ovrSensorData_ {
 } ovrSensorData;
 
 
-typedef struct ovrTrackingState_ {
+typedef struct OVR_ALIGNAS(8) {
   ovrPoseStatef HeadPose;
   ovrPosef CameraPose;
   ovrPosef LeveledCameraPose;
   ovrSensorData RawSensorData;
   unsigned int StatusFlags;
-  double LastVisionProcessingTime;
   uint32_t LastCameraFrameCounter;
-  uint32_t Pad;
+  uint32_t pad0;
 } ovrTrackingState;
 
-typedef struct OVR_ALIGNAS(8) ovrFrameTiming_ {
-  float DeltaSeconds;
-  float Pad; 
-  double ThisFrameSeconds;
-  double TimewarpPointSeconds;
-  double NextFrameSeconds;
-  double ScanoutMidpointSeconds;
-  double EyeScanoutSeconds[2];    
+typedef struct OVR_ALIGNAS(8) {
+  double DisplayMidpointSeconds;
+  double FrameIntervalSeconds;
+  unsigned AppFrameIndex;
+  unsigned DisplayFrameIndex;
 } ovrFrameTiming;
 
-typedef struct ovrEyeRenderDesc_ {
+typedef struct OVR_ALIGNAS(4) {
   ovrEyeType  Eye;
   ovrFovPort  Fov;
   ovrRecti DistortedViewport;
@@ -217,72 +201,183 @@ typedef struct ovrEyeRenderDesc_ {
   ovrVector3f HmdToEyeViewOffset;
 } ovrEyeRenderDesc;
 
-typedef struct ovrDistortionVertex_ {
-  ovrVector2f ScreenPosNDC;
-  float       TimeWarpFactor;
-  float       VignetteFactor;
-  ovrVector2f TanEyeAnglesR;
-  ovrVector2f TanEyeAnglesG;
-  ovrVector2f TanEyeAnglesB;    
-} ovrDistortionVertex;
+typedef struct OVR_ALIGNAS(4) {
+  float Projection22;
+  float Projection23;
+  float Projection32;
+} ovrTimewarpProjectionDesc;
 
-typedef struct ovrDistortionMesh_ {
-  ovrDistortionVertex* pVertexData;
-  unsigned short*      pIndexData;
-  unsigned int         VertexCount;
-  unsigned int         IndexCount;
-} ovrDistortionMesh;
+typedef struct OVR_ALIGNAS(4) {
+  ovrVector3f HmdToEyeViewOffset[ovrEye_Count];
+  float HmdSpaceToWorldScaleInMeters;
+} ovrViewScaleDesc;
+
+typedef enum {
+    ovrRenderAPI_None,
+    ovrRenderAPI_OpenGL,
+    ovrRenderAPI_Android_GLES,
+    ovrRenderAPI_D3D9_Obsolete,
+    ovrRenderAPI_D3D10_Obsolete,
+    ovrRenderAPI_D3D11,
+    ovrRenderAPI_Count,
+    ovrRenderAPI_EnumSize = 0x7fffffff
+} ovrRenderAPIType;
+
+typedef struct OVR_ALIGNAS(4) {
+  ovrRenderAPIType API;
+  ovrSizei TextureSize;
+} ovrTextureHeader;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  ovrTextureHeader Header;
+  OVR_ON64(uint32_t pad0;)
+  uintptr_t PlatformData[8];
+} ovrTexture;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  ovrTexture* Textures;
+  int TextureCount;
+  int CurrentIndex;
+} ovrSwapTextureSet;
 
 typedef enum {
   ovrInit_Debug          = 0x00000001,
   ovrInit_ServerOptional = 0x00000002,
   ovrInit_RequestVersion = 0x00000004,
-  ovrInit_ForceNoDebug   = 0x00000008
+  ovrInit_ForceNoDebug   = 0x00000008,
+  ovrInit_EnumSize       = 0x7fffffff
 } ovrInitFlags;
 
 typedef enum {
   ovrLogLevel_Debug = 0,
   ovrLogLevel_Info  = 1,
-  ovrLogLevel_Error = 2
+  ovrLogLevel_Error = 2,
+  ovrLogLevel_EnumSize = 0x7fffffff
 } ovrLogLevel;
+
+typedef enum {
+  ovrLayerType_Disabled       = 0,
+  ovrLayerType_EyeFov         = 1,
+  ovrLayerType_EyeFovDepth    = 2,
+  ovrLayerType_QuadInWorld    = 3,
+  ovrLayerType_QuadHeadLocked = 4,
+  ovrLayerType_Direct         = 6,
+  ovrLayerType_EnumSize       = 0x7fffffff
+} ovrLayerType;
+
+typedef enum {
+  ovrLayerFlag_HighQuality               = 0x01,
+  ovrLayerFlag_TextureOriginAtBottomLeft = 0x02
+} ovrLayerFlags;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+    ovrLayerType    Type;
+    unsigned        Flags;
+} ovrLayerHeader;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+    ovrLayerHeader      Header;
+    ovrSwapTextureSet*  ColorTexture[ovrEye_Count];
+    ovrRecti            Viewport[ovrEye_Count];
+    ovrFovPort          Fov[ovrEye_Count];
+    ovrPosef            RenderPose[ovrEye_Count];
+} ovrLayerEyeFov;
 
 typedef void (OVR_PFN *ovrLogCallback)(int level, const char* message);
 
-typedef struct {
+typedef struct OVR_ALIGNAS(8) {
   uint32_t Flags;
   uint32_t RequestedMinorVersion;
   ovrLogCallback LogCallback;
   uint32_t ConnectionTimeoutMS;
+  OVR_ON64(uint32_t pad0;)
 } ovrInitParams;
 
-typedef ovrBool (OVR_PFN *pfn_ovr_Initialize)(ovrInitParams const* params);
+enum {
+  ovrSuccess = 0,
+
+  ovrError_MemoryAllocationFailure = -1000,
+  ovrError_SocketCreationFailure   = -1001,
+  ovrError_InvalidHmd              = -1002,
+  ovrError_Timeout                 = -1003,
+  ovrError_NotInitialized          = -1004,
+  ovrError_InvalidParameter        = -1005,
+  ovrError_ServiceError            = -1006,
+  ovrError_NoHmd                   = -1007,
+
+  ovrError_AudioReservedBegin      = -2000,
+  ovrError_AudioReservedEnd        = -2999,
+
+  ovrError_Initialize              = -3000,
+  ovrError_LibLoad                 = -3001,
+  ovrError_LibVersion              = -3002,
+  ovrError_ServiceConnection       = -3003,
+  ovrError_ServiceVersion          = -3004,
+  ovrError_IncompatibleOS          = -3005,
+  ovrError_DisplayInit             = -3006,
+  ovrError_ServerStart             = -3007,
+  ovrError_Reinitialization        = -3008,
+
+  ovrError_InvalidBundleAdjustment = -4000,
+  ovrError_USBBandwidth            = -4001
+};
+
+typedef ovrResult (OVR_PFN *pfn_ovr_Initialize)(ovrInitParams const* params);
 typedef void (OVR_PFN *pfn_ovr_Shutdown)();
-typedef int (OVR_PFN *pfn_ovrHmd_Detect)();
-typedef ovrHmd (OVR_PFN *pfn_ovrHmd_Create)(int index);
+typedef double (OVR_PFN *pfn_ovr_GetTimeInSeconds)();
+  
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_Detect)();
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_Create)(int index, ovrHmd*);
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_CreateDebug)(ovrHmdType type, ovrHmd*);
 typedef void (OVR_PFN *pfn_ovrHmd_Destroy)(ovrHmd hmd);
-typedef ovrHmd (OVR_PFN *pfn_ovrHmd_CreateDebug)(ovrHmdType type);
-typedef const char* (OVR_PFN *pfn_ovrHmd_GetLastError)(ovrHmd hmd);
-typedef ovrBool (OVR_PFN *pfn_ovrHmd_AttachToWindow)(ovrHmd hmd, void* window, const ovrRecti* destMirrorRect, const ovrRecti* sourceRenderTargetRect);
-typedef unsigned int (OVR_PFN *pfn_ovrHmd_GetEnabledCaps)(ovrHmd hmd);
-typedef void (OVR_PFN *pfn_ovrHmd_SetEnabledCaps)(ovrHmd hmd, unsigned int hmdCaps);
-typedef ovrBool (OVR_PFN *pfn_ovrHmd_ConfigureTracking)(ovrHmd hmd, unsigned int supportedTrackingCaps, unsigned int requiredTrackingCaps); 
+  
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_ConfigureTracking)(ovrHmd hmd, unsigned int supportedTrackingCaps, unsigned int requiredTrackingCaps); 
 typedef void (OVR_PFN *pfn_ovrHmd_RecenterPose)(ovrHmd hmd);
 typedef ovrTrackingState (OVR_PFN *pfn_ovrHmd_GetTrackingState)(ovrHmd hmd, double absTime);
 typedef ovrSizei (OVR_PFN *pfn_ovrHmd_GetFovTextureSize)(ovrHmd hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
 typedef ovrEyeRenderDesc (OVR_PFN *pfn_ovrHmd_GetRenderDesc)(ovrHmd hmd, ovrEyeType eyeType, ovrFovPort fov);
-typedef ovrBool (OVR_PFN *pfn_ovrHmd_CreateDistortionMesh)(ovrHmd hmd, ovrEyeType eyeType, ovrFovPort fov, unsigned int distortionCaps, ovrDistortionMesh *meshData);
-typedef void (OVR_PFN *pfn_ovrHmd_DestroyDistortionMesh)(ovrDistortionMesh* meshData);
-typedef void (OVR_PFN *pfn_ovrHmd_GetRenderScaleAndOffset)(ovrFovPort fov, ovrSizei textureSize, ovrRecti renderViewport, ovrVector2f uvScaleOffsetOut[2]);
-typedef ovrFrameTiming (OVR_PFN *pfn_ovrHmd_GetFrameTiming)(ovrHmd hmd, unsigned int frameIndex);
-typedef ovrFrameTiming (OVR_PFN *pfn_ovrHmd_BeginFrameTiming)(ovrHmd hmd, unsigned int frameIndex);
-typedef void (OVR_PFN *pfn_ovrHmd_EndFrameTiming)(ovrHmd hmd);
-typedef void (OVR_PFN *pfn_ovrHmd_ResetFrameTiming)(ovrHmd hmd, unsigned int frameIndex, bool vsync);
-typedef void (OVR_PFN *pfn_ovrHmd_GetEyePoses)(ovrHmd hmd, unsigned int frameIndex, ovrVector3f hmdToEyeViewOffset[2], ovrPosef outEyePoses[2], ovrTrackingState* outHmdTrackingState);
-typedef ovrPosef (OVR_PFN *pfn_ovrHmd_GetHmdPosePerEye)(ovrHmd hmd, ovrEyeType eye);
-typedef void (OVR_PFN *pfn_ovrHmd_GetEyeTimewarpMatrices)(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
-typedef ovrMatrix4f (OVR_PFN *pfn_ovrMatrix4f_Projection) (ovrFovPort fov, float znear, float zfar, ovrBool rightHanded );
-typedef ovrMatrix4f (OVR_PFN *pfn_ovrMatrix4f_OrthoSubProjection) (ovrFovPort fov, ovrVector2f orthoScale, float orthoDistance, float eyeViewAdjustX);
-typedef double (OVR_PFN *pfn_ovr_GetTimeInSeconds)();
+
+typedef void (OVR_PFN *pfn_ovrHmd_DestroySwapTextureSet)(ovrHmd hmd, ovrSwapTextureSet* textureSet);
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_SubmitFrame)(ovrHmd hmd, unsigned int frameIndex,
+                                                    const ovrViewScaleDesc* viewScaleDesc,
+                                                    ovrLayerHeader const * const * layerPtrList, unsigned int layerCount);
+
+#ifdef XP_WIN
+struct D3D11_TEXTURE2D_DESC;
+struct ID3D11Device;
+struct ID3D11Texture2D;
+struct ID3D11ShaderResourceView;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+    ovrTextureHeader          Header;
+    OVR_ON64(uint32_t pad0;)
+    ID3D11Texture2D*          pTexture;
+    ID3D11ShaderResourceView* pSRView;
+} ovrD3D11TextureData;
+
+typedef union {
+    ovrTexture          Texture;
+    ovrD3D11TextureData D3D11;
+} ovrD3D11Texture;
+
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_CreateSwapTextureSetD3D11)(ovrHmd hmd, ID3D11Device* device,
+                                                                  const D3D11_TEXTURE2D_DESC* desc,
+                                                                  ovrSwapTextureSet** outTextureSet);
+#endif
+
+typedef struct {
+    ovrTextureHeader Header;
+    uint32_t TexId;
+} ovrGLTextureData;
+
+typedef union {
+    ovrTexture       Texture;
+    ovrGLTextureData OGL;
+} ovrGLTexture;
+
+typedef ovrResult (OVR_PFN *pfn_ovrHmd_CreateSwapTextureSetGL)(ovrHmd hmd, uint32_t format,
+                                                               int width, int height,
+                                                               ovrSwapTextureSet** outTextureSet);
 
 #ifdef __cplusplus 
 }

@@ -12,6 +12,12 @@
 #include "nsString.h"
 #include "mozilla/Preferences.h"
 
+#include "mozilla/gfx/Quaternion.h"
+
+#ifdef XP_WIN
+#include "../layers/d3d11/CompositorD3D11.h"
+#endif
+
 #include "gfxVROculus.h"
 
 #include "nsServiceManagerUtils.h"
@@ -29,32 +35,26 @@ namespace {
 #ifdef OVR_CAPI_LIMITED_MOZILLA
 static pfn_ovr_Initialize ovr_Initialize = nullptr;
 static pfn_ovr_Shutdown ovr_Shutdown = nullptr;
+static pfn_ovr_GetTimeInSeconds ovr_GetTimeInSeconds = nullptr;
+
 static pfn_ovrHmd_Detect ovrHmd_Detect = nullptr;
 static pfn_ovrHmd_Create ovrHmd_Create = nullptr;
-static pfn_ovrHmd_Destroy ovrHmd_Destroy = nullptr;
 static pfn_ovrHmd_CreateDebug ovrHmd_CreateDebug = nullptr;
-static pfn_ovrHmd_GetLastError ovrHmd_GetLastError = nullptr;
-static pfn_ovrHmd_AttachToWindow ovrHmd_AttachToWindow = nullptr;
-static pfn_ovrHmd_GetEnabledCaps ovrHmd_GetEnabledCaps = nullptr;
-static pfn_ovrHmd_SetEnabledCaps ovrHmd_SetEnabledCaps = nullptr;
+static pfn_ovrHmd_Destroy ovrHmd_Destroy = nullptr;
+
 static pfn_ovrHmd_ConfigureTracking ovrHmd_ConfigureTracking = nullptr;
 static pfn_ovrHmd_RecenterPose ovrHmd_RecenterPose = nullptr;
 static pfn_ovrHmd_GetTrackingState ovrHmd_GetTrackingState = nullptr;
 static pfn_ovrHmd_GetFovTextureSize ovrHmd_GetFovTextureSize = nullptr;
 static pfn_ovrHmd_GetRenderDesc ovrHmd_GetRenderDesc = nullptr;
-static pfn_ovrHmd_CreateDistortionMesh ovrHmd_CreateDistortionMesh = nullptr;
-static pfn_ovrHmd_DestroyDistortionMesh ovrHmd_DestroyDistortionMesh = nullptr;
-static pfn_ovrHmd_GetRenderScaleAndOffset ovrHmd_GetRenderScaleAndOffset = nullptr;
-static pfn_ovrHmd_GetFrameTiming ovrHmd_GetFrameTiming = nullptr;
-static pfn_ovrHmd_BeginFrameTiming ovrHmd_BeginFrameTiming = nullptr;
-static pfn_ovrHmd_EndFrameTiming ovrHmd_EndFrameTiming = nullptr;
-static pfn_ovrHmd_ResetFrameTiming ovrHmd_ResetFrameTiming = nullptr;
-static pfn_ovrHmd_GetEyePoses ovrHmd_GetEyePoses = nullptr;
-static pfn_ovrHmd_GetHmdPosePerEye ovrHmd_GetHmdPosePerEye = nullptr;
-static pfn_ovrHmd_GetEyeTimewarpMatrices ovrHmd_GetEyeTimewarpMatrices = nullptr;
-static pfn_ovrMatrix4f_Projection ovrMatrix4f_Projection = nullptr;
-static pfn_ovrMatrix4f_OrthoSubProjection ovrMatrix4f_OrthoSubProjection = nullptr;
-static pfn_ovr_GetTimeInSeconds ovr_GetTimeInSeconds = nullptr;
+
+static pfn_ovrHmd_DestroySwapTextureSet ovrHmd_DestroySwapTextureSet = nullptr;
+static pfn_ovrHmd_SubmitFrame ovrHmd_SubmitFrame = nullptr;
+
+#ifdef XP_WIN
+static pfn_ovrHmd_CreateSwapTextureSetD3D11 ovrHmd_CreateSwapTextureSetD3D11 = nullptr;
+#endif
+static pfn_ovrHmd_CreateSwapTextureSetGL ovrHmd_CreateSwapTextureSetGL = nullptr;
 
 #ifdef HAVE_64BIT_BUILD
 #define BUILD_BITS 64
@@ -62,9 +62,9 @@ static pfn_ovr_GetTimeInSeconds ovr_GetTimeInSeconds = nullptr;
 #define BUILD_BITS 32
 #endif
 
-#define LIBOVR_PRODUCT_VERSION 0
-#define LIBOVR_MAJOR_VERSION   5
-#define LIBOVR_MINOR_VERSION   0
+#define OVR_PRODUCT_VERSION 0
+#define OVR_MAJOR_VERSION   6
+#define OVR_MINOR_VERSION   0
 
 static bool
 InitializeOculusCAPI()
@@ -90,26 +90,26 @@ InitializeOculusCAPI()
       searchPath.SetLength(realLen);
       libSearchPaths.AppendElement(searchPath);
     }
-    libName.AppendPrintf("LibOVRRT%d_%d_%d.dll", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libName.AppendPrintf("LibOVRRT%d_%d_%d.dll", BUILD_BITS, OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
 #elif defined(__APPLE__)
     searchPath.Truncate();
-    searchPath.AppendPrintf("/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    searchPath.AppendPrintf("/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
     libSearchPaths.AppendElement(searchPath);
 
     if (PR_GetEnv("HOME")) {
       searchPath.Truncate();
-      searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+      searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
       libSearchPaths.AppendElement(searchPath);
     }
     // The following will match the va_list overload of AppendPrintf if the product version is 0
     // That's bad times.
-    //libName.AppendPrintf("LibOVRRT_%d", LIBOVR_PRODUCT_VERSION);
+    //libName.AppendPrintf("LibOVRRT_%d", OVR_PRODUCT_VERSION);
     libName.Append("LibOVRRT_");
-    libName.AppendInt(LIBOVR_PRODUCT_VERSION);
+    libName.AppendInt(OVR_PRODUCT_VERSION);
 #else
     libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
     libSearchPaths.AppendElement(nsCString("/usr/lib"));
-    libName.AppendPrintf("libOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libName.AppendPrintf("libOVRRT%d_%d.so.%d", BUILD_BITS, OVR_PRODUCT_VERSION, OVR_MAJOR_VERSION);
 #endif
 
     // If the pref is present, we override libName
@@ -167,33 +167,25 @@ InitializeOculusCAPI()
 
   REQUIRE_FUNCTION(ovr_Initialize);
   REQUIRE_FUNCTION(ovr_Shutdown);
+  REQUIRE_FUNCTION(ovr_GetTimeInSeconds);
+  
   REQUIRE_FUNCTION(ovrHmd_Detect);
   REQUIRE_FUNCTION(ovrHmd_Create);
-  REQUIRE_FUNCTION(ovrHmd_Destroy);
   REQUIRE_FUNCTION(ovrHmd_CreateDebug);
-  REQUIRE_FUNCTION(ovrHmd_GetLastError);
-  REQUIRE_FUNCTION(ovrHmd_AttachToWindow);
-  REQUIRE_FUNCTION(ovrHmd_GetEnabledCaps);
-  REQUIRE_FUNCTION(ovrHmd_SetEnabledCaps);
+  REQUIRE_FUNCTION(ovrHmd_Destroy);
+  
   REQUIRE_FUNCTION(ovrHmd_ConfigureTracking);
   REQUIRE_FUNCTION(ovrHmd_RecenterPose);
   REQUIRE_FUNCTION(ovrHmd_GetTrackingState);
-
   REQUIRE_FUNCTION(ovrHmd_GetFovTextureSize);
   REQUIRE_FUNCTION(ovrHmd_GetRenderDesc);
-  REQUIRE_FUNCTION(ovrHmd_CreateDistortionMesh);
-  REQUIRE_FUNCTION(ovrHmd_DestroyDistortionMesh);
-  REQUIRE_FUNCTION(ovrHmd_GetRenderScaleAndOffset);
-  REQUIRE_FUNCTION(ovrHmd_GetFrameTiming);
-  REQUIRE_FUNCTION(ovrHmd_BeginFrameTiming);
-  REQUIRE_FUNCTION(ovrHmd_EndFrameTiming);
-  REQUIRE_FUNCTION(ovrHmd_ResetFrameTiming);
-  REQUIRE_FUNCTION(ovrHmd_GetEyePoses);
-  REQUIRE_FUNCTION(ovrHmd_GetHmdPosePerEye);
-  REQUIRE_FUNCTION(ovrHmd_GetEyeTimewarpMatrices);
-  REQUIRE_FUNCTION(ovrMatrix4f_Projection);
-  REQUIRE_FUNCTION(ovrMatrix4f_OrthoSubProjection);
-  REQUIRE_FUNCTION(ovr_GetTimeInSeconds);
+
+  REQUIRE_FUNCTION(ovrHmd_DestroySwapTextureSet);
+  REQUIRE_FUNCTION(ovrHmd_SubmitFrame);
+#ifdef XP_WIN
+  REQUIRE_FUNCTION(ovrHmd_CreateSwapTextureSetD3D11);
+#endif
+  REQUIRE_FUNCTION(ovrHmd_CreateSwapTextureSetGL);
 
 #undef REQUIRE_FUNCTION
 
@@ -205,12 +197,34 @@ InitializeOculusCAPI()
 }
 
 #else
+#include <OVR_Version.h>
 // we're statically linked; it's available
 static bool InitializeOculusCAPI()
 {
   return true;
 }
+
 #endif
+
+static void
+do_CalcEyePoses(ovrPosef headPose,
+                const ovrVector3f hmdToEyeViewOffset[2],
+                ovrPosef outEyePoses[2])
+{
+  if (!hmdToEyeViewOffset || !outEyePoses)
+    return;
+
+  for (uint32_t i = 0; i < 2; ++i) {
+    gfx::Quaternion o(headPose.Orientation.x, headPose.Orientation.y, headPose.Orientation.z, headPose.Orientation.w);
+    Point3D vo(hmdToEyeViewOffset[i].x, hmdToEyeViewOffset[i].y, hmdToEyeViewOffset[i].z);
+    Point3D p = o.RotatePoint(vo);
+
+    outEyePoses[i].Orientation = headPose.Orientation;
+    outEyePoses[i].Position.x = p.x + headPose.Position.x;
+    outEyePoses[i].Position.y = p.y + headPose.Position.y;
+    outEyePoses[i].Position.z = p.z + headPose.Position.z;
+  }
+}
 
 ovrFovPort
 ToFovPort(const VRFieldOfView& aFOV)
@@ -262,12 +276,22 @@ HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
 
   SetFOV(mRecommendedEyeFOV[Eye_Left], mRecommendedEyeFOV[Eye_Right], 0.01, 10000.0);
 
-  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (screenmgr) {
-    screenmgr->ScreenForRect(mHMD->WindowsPos.x, mHMD->WindowsPos.y,
-                             mHMD->Resolution.w, mHMD->Resolution.h,
-                             getter_AddRefs(mScreen));
+#if 1
+  int32_t xcoord = 0;
+  if (getenv("FAKE_OCULUS_SCREEN")) {
+      const char *env = getenv("FAKE_OCULUS_SCREEN");
+      nsresult err;
+      xcoord = nsCString(env).ToInteger(&err);
+      if (err != NS_OK) xcoord = 0;
   }
+  uint32_t w = mHMD->Resolution.w;
+  uint32_t h = mHMD->Resolution.h;
+  mScreen = VRHMDManager::MakeFakeScreen(xcoord, 0, std::max(w, h), std::min(w, h));
+
+#ifdef DEBUG
+  printf_stderr("OCULUS SCREEN: %d %d %d %d\n", xcoord, 0, std::max(w, h), std::min(w, h));
+#endif
+#endif
 }
 
 void
@@ -286,8 +310,6 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
   float pixelsPerDisplayPixel = 1.0;
   ovrSizei texSize[2];
 
-  uint32_t caps = ovrDistortionCap_Chromatic | ovrDistortionCap_Vignette; // XXX TODO add TimeWarp
-
   // get eye parameters and create the mesh
   for (uint32_t eye = 0; eye < NumEyes; eye++) {
     mEyeFOV[eye] = eye == 0 ? aFOVLeft : aFOVRight;
@@ -295,47 +317,13 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
 
     ovrEyeRenderDesc renderDesc = ovrHmd_GetRenderDesc(mHMD, (ovrEyeType) eye, mFOVPort[eye]);
 
-    // these values are negated so that content can add the adjustment to its camera position,
-    // instead of subtracting
-    mEyeTranslation[eye] = Point3D(-renderDesc.HmdToEyeViewOffset.x, -renderDesc.HmdToEyeViewOffset.y, -renderDesc.HmdToEyeViewOffset.z);
+    // As of Oculus 0.6.0, the HmdToEyeViewOffset values are correct and don't need to be negated.
+    mEyeTranslation[eye] = Point3D(renderDesc.HmdToEyeViewOffset.x, renderDesc.HmdToEyeViewOffset.y, renderDesc.HmdToEyeViewOffset.z);
 
     // note that we are using a right-handed coordinate system here, to match CSS
-    ovrMatrix4f projMatrix = ovrMatrix4f_Projection(mFOVPort[eye], zNear, zFar, true);
-
-    // XXX this is gross, we really need better methods on Matrix4x4
-    memcpy(&mEyeProjectionMatrix[eye], projMatrix.M, sizeof(ovrMatrix4f));
-    mEyeProjectionMatrix[eye].Transpose();
+    mEyeProjectionMatrix[eye] = mEyeFOV[eye].ConstructProjectionMatrix(zNear, zFar, true);
 
     texSize[eye] = ovrHmd_GetFovTextureSize(mHMD, (ovrEyeType) eye, mFOVPort[eye], pixelsPerDisplayPixel);
-
-    ovrDistortionMesh mesh;
-    bool ok = ovrHmd_CreateDistortionMesh(mHMD, (ovrEyeType) eye, mFOVPort[eye], caps, &mesh);
-    if (!ok)
-      return false;
-
-    mDistortionMesh[eye].mVertices.SetLength(mesh.VertexCount);
-    mDistortionMesh[eye].mIndices.SetLength(mesh.IndexCount);
-
-    ovrDistortionVertex *srcv = mesh.pVertexData;
-    HMDInfoOculus::DistortionVertex *destv = reinterpret_cast<HMDInfoOculus::DistortionVertex*>(mDistortionMesh[eye].mVertices.Elements());
-    memset(destv, 0, mesh.VertexCount * sizeof(VRDistortionVertex));
-    for (uint32_t i = 0; i < mesh.VertexCount; ++i) {
-      destv[i].pos[0] = srcv[i].ScreenPosNDC.x;
-      destv[i].pos[1] = srcv[i].ScreenPosNDC.y;
-
-      destv[i].texR[0] = srcv[i].TanEyeAnglesR.x;
-      destv[i].texR[1] = srcv[i].TanEyeAnglesR.y;
-      destv[i].texG[0] = srcv[i].TanEyeAnglesG.x;
-      destv[i].texG[1] = srcv[i].TanEyeAnglesG.y;
-      destv[i].texB[0] = srcv[i].TanEyeAnglesB.x;
-      destv[i].texB[1] = srcv[i].TanEyeAnglesB.y;
-
-      destv[i].genericAttribs[0] = srcv[i].VignetteFactor;
-      destv[i].genericAttribs[1] = srcv[i].TimeWarpFactor;
-    }
-
-    memcpy(mDistortionMesh[eye].mIndices.Elements(), mesh.pIndexData, mesh.IndexCount * sizeof(uint16_t));
-    ovrHmd_DestroyDistortionMesh(&mesh);
   }
 
   // take the max of both for eye resolution
@@ -348,8 +336,6 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
   mConfiguration.fov[1] = aFOVRight;
 
   return true;
-  //* need to call this during rendering each frame I think? */
-  //ovrHmd_GetRenderScaleAndOffset(fovPort, texSize, renderViewport, uvScaleOffsetOut);
 }
 
 void
@@ -360,33 +346,6 @@ HMDInfoOculus::FillDistortionConstants(uint32_t whichEye,
                                        const Rect& destRect,
                                        VRDistortionConstants& values)
 {
-  ovrSizei texSize = { textureSize.width, textureSize.height };
-  ovrRecti eyePort = { { eyeViewport.x, eyeViewport.y }, { eyeViewport.width, eyeViewport.height } };
-  ovrVector2f scaleOut[2];
-
-  ovrHmd_GetRenderScaleAndOffset(mFOVPort[whichEye], texSize, eyePort, scaleOut);
-
-  values.eyeToSourceScaleAndOffset[0] = scaleOut[1].x;
-  values.eyeToSourceScaleAndOffset[1] = scaleOut[1].y;
-  values.eyeToSourceScaleAndOffset[2] = scaleOut[0].x;
-  values.eyeToSourceScaleAndOffset[3] = scaleOut[0].y;
-
-  // These values are in clip space [-1..1] range, but we're providing
-  // scaling in the 0..2 space for sanity.
-
-  // this is the destRect in clip space
-  float x0 = destRect.x / destViewport.width * 2.0 - 1.0;
-  float x1 = (destRect.x + destRect.width) / destViewport.width * 2.0 - 1.0;
-
-  float y0 = destRect.y / destViewport.height * 2.0 - 1.0;
-  float y1 = (destRect.y + destRect.height) / destViewport.height * 2.0 - 1.0;
-
-  // offset
-  values.destinationScaleAndOffset[0] = (x0+x1) / 2.0;
-  values.destinationScaleAndOffset[1] = (y0+y1) / 2.0;
-  // scale
-  values.destinationScaleAndOffset[2] = destRect.width / destViewport.width;
-  values.destinationScaleAndOffset[3] = destRect.height / destViewport.height;
 }
 
 bool
@@ -462,7 +421,158 @@ HMDInfoOculus::GetSensorState(double timeOffset)
     result.linearAcceleration[2] = pose.LinearAcceleration.z;
   }
 
+  mLastTrackingState = state;
+  
   return result;
+}
+
+struct RenderTargetSetOculus : public VRHMDRenderingSupport::RenderTargetSet
+{
+  RenderTargetSetOculus(const IntSize& aSize,
+                        HMDInfoOculus *aHMD,
+                        ovrSwapTextureSet *aTS)
+    : hmd(aHMD)
+  {
+    textureSet = aTS;
+    size = aSize;
+  }
+  
+  already_AddRefed<layers::CompositingRenderTarget> GetNextRenderTarget() override {
+    currentRenderTarget = (currentRenderTarget + 1) % renderTargets.Length();
+    textureSet->CurrentIndex = currentRenderTarget;
+    renderTargets[currentRenderTarget]->ClearOnBind();
+    nsRefPtr<layers::CompositingRenderTarget> rt = renderTargets[currentRenderTarget];
+    return rt.forget();
+  }
+
+  void Destroy() {
+    if (!hmd)
+      return;
+    
+    if (hmd->GetOculusHMD()) {
+      // If the ovrHmd was already destroyed, so were all associated
+      // texture sets
+      ovrHmd_DestroySwapTextureSet(hmd->GetOculusHMD(), textureSet);
+    }
+    hmd = nullptr;
+    textureSet = nullptr;
+  }
+  
+  ~RenderTargetSetOculus() {
+    Destroy();
+  }
+
+  nsRefPtr<HMDInfoOculus> hmd;
+  ovrSwapTextureSet *textureSet;
+};
+
+#ifdef XP_WIN
+class BasicTextureSourceD3D11 : public layers::TextureSourceD3D11
+{
+public:
+  BasicTextureSourceD3D11(ID3D11Texture2D *aTexture, const IntSize& aSize) {
+    mTexture = aTexture;
+    mSize = aSize;
+  }
+};
+
+struct RenderTargetSetD3D11 : public RenderTargetSetOculus
+{
+  RenderTargetSetD3D11(layers::CompositorD3D11 *aCompositor,
+                       const IntSize& aSize,
+                       HMDInfoOculus *aHMD,
+                       ovrSwapTextureSet *aTS)
+    : RenderTargetSetOculus(aSize, aHMD, aTS)
+  {
+    compositor = aCompositor;
+    
+    renderTargets.SetLength(aTS->TextureCount);
+    
+    currentRenderTarget = aTS->CurrentIndex;
+
+    for (int i = 0; i < aTS->TextureCount; ++i) {
+      ovrD3D11Texture *tex11;
+      nsRefPtr<layers::CompositingRenderTargetD3D11> rt;
+      
+      tex11 = (ovrD3D11Texture*)&aTS->Textures[i];
+      rt = new layers::CompositingRenderTargetD3D11(tex11->D3D11.pTexture, IntPoint(0, 0));
+      rt->SetSize(size);
+      renderTargets[i] = rt;
+    }
+  }
+};
+#endif
+
+already_AddRefed<VRHMDRenderingSupport::RenderTargetSet>
+HMDInfoOculus::CreateRenderTargetSet(layers::Compositor *aCompositor, const IntSize& aSize)
+{
+#ifdef XP_WIN
+  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_D3D11)
+  {
+    layers::CompositorD3D11 *comp11 = static_cast<layers::CompositorD3D11*>(aCompositor);
+
+    CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aSize.width, aSize.height, 1, 1,
+                               D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+    ovrSwapTextureSet *ts = nullptr;
+    
+    ovrResult orv = ovrHmd_CreateSwapTextureSetD3D11(mHMD, comp11->GetDevice(), &desc, &ts);
+    if (orv != ovrSuccess) {
+      return nullptr;
+    }
+
+    nsRefPtr<RenderTargetSetD3D11> rts = new RenderTargetSetD3D11(comp11, aSize, this, ts);
+    return rts.forget();
+  }
+#endif
+
+  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_OPENGL) {
+  }
+
+  return nullptr;
+}
+
+void
+HMDInfoOculus::DestroyRenderTargetSet(RenderTargetSet *aRTSet)
+{
+  RenderTargetSetOculus *rts = static_cast<RenderTargetSetOculus*>(aRTSet);
+  rts->Destroy();
+}
+
+void
+HMDInfoOculus::SubmitFrame(RenderTargetSet *aRTSet)
+{
+  RenderTargetSetOculus *rts = static_cast<RenderTargetSetOculus*>(aRTSet);
+  MOZ_ASSERT(rts->hmd != nullptr);
+  MOZ_ASSERT(rts->textureSet != nullptr);
+
+  ovrLayerEyeFov layer;
+  layer.Header.Type = ovrLayerType_EyeFov;
+  layer.Header.Flags = 0;
+  layer.ColorTexture[0] = rts->textureSet;
+  layer.ColorTexture[1] = nullptr;
+  layer.Fov[0] = mFOVPort[0];
+  layer.Fov[1] = mFOVPort[1];
+  layer.Viewport[0].Pos.x = 0;
+  layer.Viewport[0].Pos.y = 0;
+  layer.Viewport[0].Size.w = rts->size.width / 2;
+  layer.Viewport[0].Size.h = rts->size.height;
+  layer.Viewport[1].Pos.x = rts->size.width / 2;
+  layer.Viewport[1].Pos.y = 0;
+  layer.Viewport[1].Size.w = rts->size.width / 2;
+  layer.Viewport[1].Size.h = rts->size.height;
+
+  const Point3D& l = rts->hmd->mEyeTranslation[0];
+  const Point3D& r = rts->hmd->mEyeTranslation[1];
+  const ovrVector3f hmdToEyeViewOffset[2] = { { l.x, l.y, l.z },
+                                              { r.x, r.y, r.z } };
+  do_CalcEyePoses(rts->hmd->mLastTrackingState.HeadPose.ThePose, hmdToEyeViewOffset, layer.RenderPose);
+
+  ovrLayerHeader *layers = &layer.Header;
+  ovrResult orv = ovrHmd_SubmitFrame(mHMD, 0, nullptr, &layers, 1);
+  //printf_stderr("Submitted frame %d, result: %d\n", rts->textureSet->CurrentIndex, orv);
+  if (orv != ovrSuccess) {
+    // not visible? failed?
+  }
 }
 
 bool
@@ -479,13 +589,13 @@ VRHMDManagerOculus::PlatformInit()
 
   ovrInitParams params;
   params.Flags = ovrInit_RequestVersion;
-  params.RequestedMinorVersion = LIBOVR_MINOR_VERSION;
+  params.RequestedMinorVersion = OVR_MINOR_VERSION;
   params.LogCallback = nullptr;
   params.ConnectionTimeoutMS = 0;
 
-  bool ok = ovr_Initialize(&params);
+  ovrResult orv = ovr_Initialize(&params);
 
-  if (!ok)
+  if (orv != ovrSuccess)
     return false;
 
   mOculusPlatformInitialized = true;
@@ -501,11 +611,13 @@ VRHMDManagerOculus::Init()
   if (!PlatformInit())
     return false;
 
+  ovrResult orv;
   int count = ovrHmd_Detect();
-
+  
   for (int i = 0; i < count; ++i) {
-    ovrHmd hmd = ovrHmd_Create(i);
-    if (hmd) {
+    ovrHmd hmd;
+    orv = ovrHmd_Create(i, &hmd);
+    if (orv == ovrSuccess) {
       nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
       mOculusHMDs.AppendElement(oc);
     }
@@ -516,8 +628,9 @@ VRHMDManagerOculus::Init()
   if ((count == 0 && gfxPrefs::VRAddTestDevices() == 1) ||
       (gfxPrefs::VRAddTestDevices() == 2))
   {
-    ovrHmd hmd = ovrHmd_CreateDebug(ovrHmd_DK2);
-    if (hmd) {
+    ovrHmd hmd;
+    orv = ovrHmd_CreateDebug(ovrHmd_DK2, &hmd);
+    if (orv == ovrSuccess) {
       nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
       mOculusHMDs.AppendElement(oc);
     }

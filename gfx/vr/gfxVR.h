@@ -17,6 +17,11 @@
 #include "mozilla/Atomics.h"
 
 namespace mozilla {
+namespace layers {
+class Compositor;
+class CompositingRenderTarget;
+}
+
 namespace gfx {
 
 enum class VRHMDType : uint16_t {
@@ -57,6 +62,8 @@ struct VRFieldOfView {
       downDegrees == 0.0 ||
       leftDegrees == 0.0;
   }
+
+  Matrix4x4 ConstructProjectionMatrix(float zNear, float zFar, bool rightHanded);
 
   double upDegrees;
   double rightDegrees;
@@ -125,6 +132,30 @@ struct VRHMDConfiguration {
   VRFieldOfView fov[2];
 };
 
+class VRHMDRenderingSupport {
+public:
+  struct RenderTargetSet {
+    RenderTargetSet();
+    
+    NS_INLINE_DECL_REFCOUNTING(RenderTargetSet)
+
+    nsRefPtr<layers::Compositor> compositor;
+    IntSize size;
+    nsTArray<nsRefPtr<layers::CompositingRenderTarget>> renderTargets;
+    int32_t currentRenderTarget;
+
+    virtual already_AddRefed<layers::CompositingRenderTarget> GetNextRenderTarget() = 0;
+  protected:
+    virtual ~RenderTargetSet();
+  };
+
+  virtual already_AddRefed<RenderTargetSet> CreateRenderTargetSet(layers::Compositor *aCompositor, const IntSize& aSize) = 0;
+  virtual void DestroyRenderTargetSet(RenderTargetSet *aRTSet) = 0;
+  virtual void SubmitFrame(RenderTargetSet *aRTSet) = 0;
+protected:
+  VRHMDRenderingSupport() { }
+};
+
 class VRHMDInfo {
 public:
   enum Eye {
@@ -170,6 +201,11 @@ public:
 
   virtual void ZeroSensor() = 0;
 
+
+  // if rendering is offloaded
+  virtual VRHMDRenderingSupport *GetRenderingSupport() { return nullptr; }
+
+  // distortion mesh stuff; we should implement renderingsupport for this
   virtual void FillDistortionConstants(uint32_t whichEye,
                                        const IntSize& textureSize, // the full size of the texture
                                        const IntRect& eyeViewport, // the viewport within the texture for the current eye
@@ -210,6 +246,7 @@ public:
   static void ManagerDestroy();
   static void GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult);
   static uint32_t AllocateDeviceIndex();
+  static already_AddRefed<nsIScreen> MakeFakeScreen(int32_t x, int32_t y, uint32_t width, uint32_t height);
 
 protected:
   typedef nsTArray<nsRefPtr<VRHMDManager>> VRHMDManagerArray;

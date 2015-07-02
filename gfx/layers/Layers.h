@@ -1677,7 +1677,7 @@ public:
   virtual gfx::Matrix4x4 ReplaceEffectiveTransform(const gfx::Matrix4x4& aNewEffectiveTransform) {
     gfx::Matrix4x4 old = mEffectiveTransform;
     mEffectiveTransform = aNewEffectiveTransform;
-    ComputeEffectiveTransformForMaskLayer(mEffectiveTransform);
+    ComputeEffectiveTransformForMaskLayers(mEffectiveTransform);
     return old;
   }
 
@@ -2078,7 +2078,7 @@ public:
     gfx::Matrix4x4 old = mEffectiveTransform;
     mEffectiveTransform = aNewEffectiveTransform;
     ComputeEffectiveTransformsForChildren(mEffectiveTransform);
-    ComputeEffectiveTransformForMaskLayer(mEffectiveTransform);
+    ComputeEffectiveTransformForMaskLayers(mEffectiveTransform);
     return old;
   }
 
@@ -2286,6 +2286,8 @@ public:
     mPreTransCallback = callback;
     mPreTransCallbackData = closureData;
   }
+
+  const nsIntRect& GetBounds() const { return mBounds; }
 
 protected:
   void FirePreTransactionCallback()
