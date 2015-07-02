@@ -422,6 +422,15 @@ OscillatorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
+OscillatorNode::DestroyMediaStream()
+{
+  if (mStream) {
+    mStream->RemoveMainThreadListener(this);
+  }
+  AudioNode::DestroyMediaStream();
+}
+
+void
 OscillatorNode::SendFrequencyToStream(AudioNode* aNode)
 {
   OscillatorNode* This = static_cast<OscillatorNode*>(aNode);
