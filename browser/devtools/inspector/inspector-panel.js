@@ -1047,7 +1047,7 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
-    this._copyLongStr(this.walker.innerHTML(this.selection.nodeFront));
+    this._copyLongString(this.walker.innerHTML(this.selection.nodeFront));
   },
 
   /**
@@ -1057,8 +1057,21 @@ InspectorPanel.prototype = {
     if (!this.selection.isNode()) {
       return;
     }
+    let node = this.selection.nodeFront;
 
-    this._copyLongStr(this.walker.outerHTML(this.selection.nodeFront));
+    switch (node.nodeType) {
+      case Ci.nsIDOMNode.ELEMENT_NODE :
+        this._copyLongString(this.walker.outerHTML(node));
+        break;
+      case Ci.nsIDOMNode.COMMENT_NODE :
+        this._getLongString(node.getNodeValue()).then(comment => {
+          clipboardHelper.copyString("<!--" + comment + "-->");
+        });
+        break;
+      case Ci.nsIDOMNode.DOCUMENT_TYPE_NODE :
+        clipboardHelper.copyString(node.doctypeString);
+        break;
+    }
   },
 
   /**
@@ -1071,13 +1084,29 @@ InspectorPanel.prototype = {
     }
   },
 
-  _copyLongStr: function(promise) {
-    return promise.then(longstr => {
-      return longstr.string().then(toCopy => {
-        longstr.release().then(null, console.error);
-        clipboardHelper.copyString(toCopy);
+  /**
+   * Copy the content of a longString (via a promise resolving a LongStringActor) to the clipboard
+   * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
+   * @return {Promise} promise resolving (with no argument) when the string is sent to the clipboard
+   */
+  _copyLongString: function(longStringActorPromise) {
+    return this._getLongString(longStringActorPromise).then(string => {
+      clipboardHelper.copyString(string);
+    }).catch(Cu.reportError);
+  },
+
+  /**
+   * Retrieve the content of a longString (via a promise resolving a LongStringActor)
+   * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
+   * @return {Promise} promise resolving with the retrieved string as argument
+   */
+  _getLongString: function(longStringActorPromise) {
+    return longStringActorPromise.then(longStringActor => {
+      return longStringActor.string().then(string => {
+        longStringActor.release().catch(Cu.reportError);
+        return string;
       });
-    }).then(null, console.error);
+    }).catch(Cu.reportError);
   },
 
   /**

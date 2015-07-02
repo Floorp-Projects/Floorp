@@ -724,6 +724,15 @@ function wait(ms) {
 }
 
 /**
+ * Dispatch the copy event on the given element
+ */
+function fireCopyEvent(element) {
+  let evt = element.ownerDocument.createEvent("Event");
+  evt.initEvent("copy", true, true);
+  element.dispatchEvent(evt);
+}
+
+/**
  * Send an async message to the frame script (chrome -> content) and wait for a
  * response message with the same name (content -> chrome).
  * @param {String} name The message name. Should be one of the messages defined
