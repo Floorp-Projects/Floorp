@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var context = new window.AudioContext();
+var source = context.createBufferSource();
+source.buffer = context.createBuffer(1, 1, context.sampleRate);
+source.onended =
+  function(e) {
+    setTimeout(
+      function() {
+        var panner = context.createPanner();
+        source.connect(panner);
+        panner.setVelocity(1.0, 0.0, 0.0);
+        setTimeout(
+          function() {
+            document.documentElement.removeAttribute("class");
+          },
+          0);
+      },
+      0);
+  };
+source.start(0);
+</script>

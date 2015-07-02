@@ -70,6 +70,7 @@ load 990794.html
 load 1015662.html
 skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load buffer-source-ended-1.html
+load doppler-1.html
 HTTP load media-element-source-seek-1.html
 load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html
