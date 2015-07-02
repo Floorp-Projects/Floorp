@@ -4715,16 +4715,6 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       other_values: [ "upright", "sideways-right" ],
       invalid_values: [ "none", "3em", "sideways", "sideways-left" ] /* sideways, sideways-left not yet supported */
     },
-    "text-combine-upright": {
-      domProp: "textCombineUpright",
-      inherited: true,
-      type: CSS_TYPE_LONGHAND,
-      initial_values: [ "none" ],
-      other_values: [ "all", "digits", "digits 2", "digits 3", "digits 4", "digits     3" ],
-      invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
-                        "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
-                        "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
-    },
     "border-block-end": {
       domProp: "borderBlockEnd",
       inherited: false,
@@ -5286,6 +5276,19 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
     }
     p.prerequisites["writing-mode"] = "initial";
   });
+}
+
+if (SpecialPowers.getBoolPref("layout.css.text-combine-upright.enabled")) {
+  gCSSProperties["text-combine-upright"] = {
+    domProp: "textCombineUpright",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "all", "digits", "digits 2", "digits 3", "digits 4", "digits     3" ],
+    invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
+                      "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
+                      "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
+  };
 }
 
 if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {
