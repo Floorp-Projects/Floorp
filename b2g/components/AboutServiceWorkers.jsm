@@ -149,7 +149,7 @@ this.AboutServiceWorkers = {
             !message.principal.origin ||
             !message.principal.originAttributes ||
             !message.principal.originAttributes.appId ||
-            !message.principal.originAttributes.isInBrowser) {
+            (message.principal.originAttributes.inBrowser == null)) {
           self.sendError(message.id, "MissingPrincipal");
           return;
         }
@@ -157,7 +157,7 @@ this.AboutServiceWorkers = {
         let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
           Services.io.newURI(message.principal.origin, null, null),
           message.principal.originAttributes.appId,
-          message.principal.originAttributes.isInBrowser
+          message.principal.originAttributes.inBrowser
         );
 
         if (!message.scope) {
