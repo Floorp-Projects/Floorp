@@ -199,7 +199,7 @@ public:
   }
 
   mozilla::net::ReferrerPolicy
-  GetImageReferrerPolicy()
+  GetImageReferrerPolicy() override
   {
     return GetReferrerPolicy();
   }
