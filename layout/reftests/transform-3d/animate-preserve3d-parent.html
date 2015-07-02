@@ -8,8 +8,8 @@ body { padding: 50px }
 #grandparent { perspective: 400px }
 
 @keyframes spin {
-  0% { transform: rotateX(-30deg) rotateY(-30deg) rotateZ(-30deg); }
-  0.01%, 100% { transform: rotateX(-45deg) rotateY(-45deg) rotateZ(-45deg); }
+  0%, 85% { transform: rotateX(-45deg) rotateY(-45deg) rotateZ(-45deg); }
+  90%, 100% { transform: rotateX(-30deg) rotateY(-30deg) rotateZ(-30deg); }
 }
 
 #parent {
@@ -17,7 +17,8 @@ body { padding: 50px }
   height: 200px; width: 200px;
   border: 1px solid black;
   transform-style: preserve-3d;
-  animation: spin 100s linear;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: spin 100s -99.9s linear 2;
 }
 
 #child {
@@ -38,11 +39,10 @@ body { padding: 50px }
 
 <script>
 
-document.getElementById("parent").addEventListener("animationstart", StartListener, false);
+document.getElementById("parent").addEventListener("animationiteration", IterationListener, false);
 
-function StartListener(event) {
-  // Animation should be at final state after 10ms; give it longer.
-  setTimeout(RemoveReftestWait, 100);
+function IterationListener(event) {
+  setTimeout(RemoveReftestWait, 0);
 }
 
 function RemoveReftestWait() {

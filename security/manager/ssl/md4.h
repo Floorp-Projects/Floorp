@@ -14,7 +14,7 @@ extern "C" {
 
 /**
  * md4sum - computes the MD4 sum over the input buffer per RFC 1320
- * 
+ *
  * @param input
  *        buffer containing input data
  * @param inputLen

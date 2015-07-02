@@ -43,9 +43,7 @@ public:
 
   virtual void RenderLayer()
   {
-    if (GetMaskLayer()) {
-      ToClientLayer(GetMaskLayer())->RenderLayer();
-    }
+    RenderMaskLayers(this);
   }
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)

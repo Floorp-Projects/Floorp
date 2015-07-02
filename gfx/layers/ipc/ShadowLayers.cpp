@@ -607,6 +607,10 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     common.animations() = mutant->GetAnimations();
     common.invalidRegion() = mutant->GetInvalidRegion();
     common.metrics() = mutant->GetAllFrameMetrics();
+    for (size_t i = 0; i < mutant->GetAncestorMaskLayerCount(); i++) {
+      auto layer = Shadow(mutant->GetAncestorMaskLayerAt(i)->AsShadowableLayer());
+      common.ancestorMaskLayersChild().AppendElement(layer);
+    }
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 
