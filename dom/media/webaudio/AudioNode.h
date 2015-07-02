@@ -167,7 +167,8 @@ public:
     uint32_t mOutputPort;
   };
 
-  AudioNodeStream* Stream() { return mStream; }
+  // Returns the stream, if any.
+  AudioNodeStream* GetStream() { return mStream; }
 
   const nsTArray<InputNode>& InputNodes() const
   {
