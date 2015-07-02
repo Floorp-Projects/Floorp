@@ -2330,19 +2330,13 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   }
   EnqueueFirstFrameLoadedEvent();
 
-  if (mState == DECODER_STATE_DECODING_FIRSTFRAME) {
-    StartDecoding();
-  }
-
-  // For very short media the first frame decode can decode the entire media.
-  // So we need to check if this has occurred, else our decode pipeline won't
-  // run (since it doesn't need to) and we won't detect end of stream.
-  CheckIfDecodeComplete();
-
   if (mQueuedSeek.Exists()) {
     mPendingSeek.Steal(mQueuedSeek);
     SetState(DECODER_STATE_SEEKING);
     ScheduleStateMachine();
+  } else if (mState == DECODER_STATE_DECODING_FIRSTFRAME) {
+    // StartDecoding() will also check if decode is completed.
+    StartDecoding();
   }
 
   return NS_OK;
