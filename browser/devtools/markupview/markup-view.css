@@ -6,6 +6,10 @@
   -moz-control-character-visibility: visible;
 }
 
+body {
+  -moz-user-select: none;
+}
+
 /* Force height and width (possibly overflowing) from inline elements.
  * This allows long overflows of text or input fields to still be styled with
  * the container, rather than the background disappearing when scrolling */
@@ -16,7 +20,6 @@
 
 body.dragging .tag-line {
   cursor: grabbing;
-  -moz-user-select: none;
 }
 
 #root-wrapper:after {
