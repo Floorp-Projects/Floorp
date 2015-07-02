@@ -227,6 +227,10 @@ protected:
   typedef BluetoothResultRunnable0<BluetoothGattClientResultHandler, void>
     ClientResultRunnable;
 
+  typedef BluetoothResultRunnable1<BluetoothGattClientResultHandler, void,
+                                   BluetoothTypeOfDevice, BluetoothTypeOfDevice>
+    ClientGetDeviceTypeResultRunnable;
+
   typedef BluetoothResultRunnable0<BluetoothGattResultHandler, void>
     ResultRunnable;
 
@@ -455,6 +459,7 @@ protected:
   class ClientScanResultInitOp;
   class ClientConnectDisconnectInitOp;
   class ClientReadRemoteRssiInitOp;
+  class ClientGetDeviceTypeInitOp;
 
   void ClientRegisterNtf(const DaemonSocketPDUHeader& aHeader,
                                DaemonSocketPDU& aPDU);

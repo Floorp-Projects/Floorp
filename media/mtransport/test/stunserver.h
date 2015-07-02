@@ -24,12 +24,13 @@ class TestStunServer {
  public:
   // Generally, you should only call API in this class from the same thread that
   // the initial |GetInstance| call was made from.
-  static TestStunServer *GetInstance();
+  static TestStunServer *GetInstance(int address_family = AF_INET);
   static void ShutdownInstance();
   // |ConfigurePort| will only have an effect if called before the first call
   // to |GetInstance| (possibly following a |ShutdownInstance| call)
   static void ConfigurePort(uint16_t port);
-  static TestStunServer *Create();
+  // AF_INET, AF_INET6
+  static TestStunServer *Create(int address_family);
 
   virtual ~TestStunServer();
 
@@ -59,7 +60,7 @@ class TestStunServer {
         timer_handle_(nullptr) {}
 
   int SetInternalPort(nr_local_addr* addr, uint16_t port);
-  int Initialize();
+  int Initialize(int address_family);
   static void readable_cb(NR_SOCKET sock, int how, void *cb_arg);
 
  private:
@@ -82,12 +83,13 @@ class TestStunServer {
   std::map<std::string, uint32_t> received_ct_;
 
   static TestStunServer* instance;
+  static TestStunServer* instance6;
   static uint16_t instance_port;
 };
 
 class TestStunTcpServer: public TestStunServer {
  public:
-  static TestStunTcpServer *GetInstance();
+  static TestStunTcpServer *GetInstance(int address_family);
   static void ShutdownInstance();
   static void ConfigurePort(uint16_t port);
   virtual ~TestStunTcpServer();
@@ -98,9 +100,10 @@ class TestStunTcpServer: public TestStunServer {
   nsRefPtr<NrIceCtx> ice_ctx_;
  private:
   virtual int TryOpenListenSocket(nr_local_addr* addr, uint16_t port);
-  static TestStunTcpServer *Create();
+  static TestStunTcpServer *Create(int address_family);
 
   static TestStunTcpServer* instance;
+  static TestStunTcpServer* instance6;
   static uint16_t instance_port;
 };
 } // End of namespace mozilla

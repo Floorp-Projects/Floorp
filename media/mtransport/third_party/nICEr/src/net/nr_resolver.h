@@ -46,6 +46,7 @@ typedef struct nr_resolver_resource_ {
   UINT2 port;
   int stun_turn;
   UCHAR transport_protocol;
+  UCHAR address_family;
 } nr_resolver_resource;
 
 typedef struct nr_resolver_vtbl_ {

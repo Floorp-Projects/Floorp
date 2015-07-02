@@ -100,44 +100,51 @@ int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char
         if (!inet_ntop(AF_INET, &addr->u.addr4.sin_addr,buffer,sizeof(buffer))) {
            strncpy(buffer, "[error]", len);
         }
-        snprintf(buf,len,"%s:%s",addr->ifname,buffer);
+        break;
+      case NR_IPV6:
+        if (!inet_ntop(AF_INET6, &addr->u.addr6.sin6_addr,buffer,sizeof(buffer))) {
+           strncpy(buffer, "[error]", len);
+        }
         break;
       default:
         ABORT(R_INTERNAL);
     }
+    snprintf(buf,len,"%s:%s",addr->ifname,buffer);
 
     _status=0;
   abort:
     return(_status);
   }
 
-int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int protocol, int keep, nr_transport_addr *addr)
+int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep, nr_transport_addr *addr)
   {
     int r,_status;
 
     if(!keep) memset(addr,0,sizeof(nr_transport_addr));
 
-    if(saddr->sa_family==PF_INET){
-      if(saddr_len != sizeof(struct sockaddr_in))
+    switch(protocol){
+      case IPPROTO_TCP:
+      case IPPROTO_UDP:
+        break;
+      default:
         ABORT(R_BAD_ARGS);
+    }
 
-      switch(protocol){
-        case IPPROTO_TCP:
-        case IPPROTO_UDP:
-          break;
-        default:
-          ABORT(R_BAD_ARGS);
-      }
+    addr->protocol=protocol;
+
+    if(saddr->sa_family==AF_INET){
       addr->ip_version=NR_IPV4;
-      addr->protocol=protocol;
 
       memcpy(&addr->u.addr4,saddr,sizeof(struct sockaddr_in));
       addr->addr=(struct sockaddr *)&addr->u.addr4;
-      addr->addr_len=saddr_len;
+      addr->addr_len=sizeof(struct sockaddr_in);
     }
-    else if(saddr->sa_family==PF_INET6){
-      /* Not implemented */
-      ABORT(R_INTERNAL);
+    else if(saddr->sa_family==AF_INET6){
+      addr->ip_version=NR_IPV6;
+
+      memcpy(&addr->u.addr6, saddr, sizeof(struct sockaddr_in6));
+      addr->addr=(struct sockaddr *)&addr->u.addr6;
+      addr->addr_len=sizeof(struct sockaddr_in6);
     }
     else
       ABORT(R_BAD_ARGS);
@@ -206,16 +213,42 @@ int nr_ip4_port_to_transport_addr(UINT4 ip4, UINT2 port, int protocol, nr_transp
     return(_status);
   }
 
-int nr_ip4_str_port_to_transport_addr(const char *ip4, UINT2 port, int protocol, nr_transport_addr *addr)
+int nr_str_port_to_transport_addr(const char *ip, UINT2 port, int protocol, nr_transport_addr *addr_out)
   {
     int r,_status;
-    in_addr_t ip_addr;
+    struct in_addr addr;
+    struct in6_addr addr6;
 
-    ip_addr=inet_addr(ip4);
-    if (ip_addr == INADDR_NONE)
+    if (inet_pton(AF_INET, ip, &addr) == 1) {
+      if(r=nr_ip4_port_to_transport_addr(ntohl(addr.s_addr),port,protocol,addr_out))
+        ABORT(r);
+    } else if (inet_pton(AF_INET6, ip, &addr6) == 1) {
+      if(r=nr_ip6_port_to_transport_addr(&addr6,port,protocol,addr_out))
+        ABORT(r);
+    } else {
       ABORT(R_BAD_DATA);
-    /* Assume v4 for now */
-    if(r=nr_ip4_port_to_transport_addr(ntohl(ip_addr),port,protocol,addr))
+    }
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
+int nr_ip6_port_to_transport_addr(struct in6_addr* addr6, UINT2 port, int protocol, nr_transport_addr *addr)
+  {
+    int r,_status;
+
+    memset(addr, 0, sizeof(nr_transport_addr));
+
+    addr->ip_version=NR_IPV6;
+    addr->protocol=protocol;
+    addr->u.addr6.sin6_family=PF_INET6;
+    addr->u.addr6.sin6_port=htons(port);
+    memcpy(addr->u.addr6.sin6_addr.s6_addr, addr6->s6_addr, sizeof(addr6->s6_addr));
+    addr->addr=(struct sockaddr *)&addr->u.addr6;
+    addr->addr_len=sizeof(struct sockaddr_in6);
+
+    if(r=nr_transport_addr_fmt_addr_string(addr))
       ABORT(r);
 
     _status=0;
@@ -291,26 +324,6 @@ int nr_transport_addr_set_port(nr_transport_addr *addr, int port)
     return(_status);
   }
 
-int nr_transport_addr_get_ip4(nr_transport_addr *addr, UINT4 *ip4p)
-  {
-    int _status;
-
-    switch(addr->ip_version){
-      case NR_IPV4:
-        *ip4p=ntohl(addr->u.addr4.sin_addr.s_addr);
-        break;
-      case NR_IPV6:
-        ABORT(R_NOT_FOUND);
-        break;
-      default:
-        ABORT(R_INTERNAL);
-    }
-
-    _status=0;
-  abort:
-    return(_status);
-  }
-
 /* memcmp() may not work if, for instance, the string or interface
    haven't been made. Hmmm.. */
 int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int mode)
@@ -340,7 +353,13 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
           return(1);
         break;
       case NR_IPV6:
-        UNIMPLEMENTED;
+        if(memcmp(addr1->u.addr6.sin6_addr.s6_addr,addr2->u.addr6.sin6_addr.s6_addr,sizeof(struct in6_addr)))
+          return(1);
+        if(mode < NR_TRANSPORT_ADDR_CMP_MODE_ALL)
+          return(0);
+        if(addr1->u.addr6.sin6_port != addr2->u.addr6.sin6_port)
+          return(1);
+        break;
       default:
         abort();
     }
@@ -363,8 +382,24 @@ int nr_transport_addr_is_loopback(nr_transport_addr *addr)
         }
         break;
 
+      case NR_IPV6:
+        if(!memcmp(addr->u.addr6.sin6_addr.s6_addr,in6addr_loopback.s6_addr,sizeof(struct in6_addr)))
+          return(1);
+        break;
       default:
         UNIMPLEMENTED;
+    }
+
+    return(0);
+  }
+
+int nr_transport_addr_is_link_local(nr_transport_addr *addr)
+  {
+    if(addr->ip_version == NR_IPV6){
+      UINT4* addrTop = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr);
+      return ((*addrTop & htonl(0xFFC00000)) == htonl(0xFE800000));
+    } else {
+      assert(0);
     }
 
     return(0);
@@ -377,6 +412,12 @@ int nr_transport_addr_is_wildcard(nr_transport_addr *addr)
         if(addr->u.addr4.sin_addr.s_addr==INADDR_ANY)
           return(1);
         if(addr->u.addr4.sin_port==0)
+          return(1);
+        break;
+      case NR_IPV6:
+        if(!memcmp(addr->u.addr6.sin6_addr.s6_addr,in6addr_any.s6_addr,sizeof(struct in6_addr)))
+          return(1);
+        if(addr->u.addr6.sin6_port==0)
           return(1);
         break;
       default:

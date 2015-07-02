@@ -15,6 +15,11 @@ typedef
 
 typedef
   BluetoothHALInterfaceRunnable1<BluetoothGattClientResultHandler, void,
+                                 BluetoothTypeOfDevice, BluetoothTypeOfDevice>
+  BluetoothGattClientGetDeviceTypeHALResultRunnable;
+
+typedef
+  BluetoothHALInterfaceRunnable1<BluetoothGattClientResultHandler, void,
                                  BluetoothStatus, BluetoothStatus>
   BluetoothGattClientHALErrorRunnable;
 
@@ -42,6 +47,35 @@ DispatchBluetoothGattClientHALResult(
   } else {
     runnable = new BluetoothGattClientHALErrorRunnable(aRes,
       &BluetoothGattClientResultHandler::OnError, aStatus);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
+template <typename ResultRunnable, typename Tin1, typename Arg1>
+static nsresult
+DispatchBluetoothGattClientHALResult(
+  BluetoothGattClientResultHandler* aRes,
+  void (BluetoothGattClientResultHandler::*aMethod)(Arg1),
+  Tin1 aArg1,
+  BluetoothStatus aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+  Arg1 arg1;
+
+  if (aStatus != STATUS_SUCCESS) {
+    runnable = new BluetoothGattClientHALErrorRunnable(aRes,
+      &BluetoothGattClientResultHandler::OnError, aStatus);
+  } else if (NS_FAILED(Convert(aArg1, arg1))) {
+    runnable = new BluetoothGattClientHALErrorRunnable(aRes,
+      &BluetoothGattClientResultHandler::OnError, STATUS_PARM_INVALID);
+  } else {
+    runnable = new ResultRunnable(aRes, aMethod, arg1);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
@@ -1007,22 +1041,23 @@ void
 BluetoothGattClientHALInterface::GetDeviceType(
   const nsAString& aBdAddr, BluetoothGattClientResultHandler* aRes)
 {
-  int status;
+  int status = BT_STATUS_FAIL;
+  bt_device_type_t type = BT_DEVICE_DEVTYPE_BLE;
 #if ANDROID_VERSION >= 19
   bt_bdaddr_t bdAddr;
 
   if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
-    status = mInterface->get_device_type(&bdAddr);
-  } else {
-    status = BT_STATUS_PARM_INVALID;
+    status = BT_STATUS_SUCCESS;
+    type = static_cast<bt_device_type_t>(mInterface->get_device_type(&bdAddr));
   }
 #else
   status = BT_STATUS_UNSUPPORTED;
 #endif
 
   if (aRes) {
-    DispatchBluetoothGattClientHALResult(
-      aRes, &BluetoothGattClientResultHandler::GetDeviceType,
+    DispatchBluetoothGattClientHALResult<
+      BluetoothGattClientGetDeviceTypeHALResultRunnable>(
+      aRes, &BluetoothGattClientResultHandler::GetDeviceType, type,
       ConvertDefault(status, STATUS_FAIL));
   }
 }

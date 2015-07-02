@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 
+class nsILoadInfo;
 class nsIPrincipal;
 
 namespace IPC {

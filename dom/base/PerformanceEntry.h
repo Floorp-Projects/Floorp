@@ -8,6 +8,8 @@
 #define mozilla_dom_PerformanceEntry_h___
 
 #include "nsDOMNavigationTiming.h"
+#include "nsString.h"
+#include "nsWrapperCache.h"
 
 class nsISupports;
 
