@@ -188,6 +188,8 @@ int nr_socket_wrapped_create(nr_socket *inner, nr_socket **outp) {
 // we have no reason to expect this will be initted to a nullptr yet.
 TestStunServer* TestStunServer::instance;
 TestStunTcpServer* TestStunTcpServer::instance;
+TestStunServer* TestStunServer::instance6;
+TestStunTcpServer* TestStunTcpServer::instance6;
 uint16_t TestStunServer::instance_port = 3478;
 uint16_t TestStunTcpServer::instance_port = 3478;
 
@@ -243,12 +245,14 @@ int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
   return 0;
 }
 
-int TestStunServer::Initialize() {
-  nr_local_addr addrs[100];
+int TestStunServer::Initialize(int address_family) {
+  static const size_t max_addrs = 100;
+  nr_local_addr addrs[max_addrs];
   int addr_ct;
   int r;
+  int i;
 
-  r = nr_stun_find_local_addresses(addrs, 100, &addr_ct);
+  r = nr_stun_find_local_addresses(addrs, max_addrs, &addr_ct);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't retrieve addresses");
     return R_INTERNAL;
@@ -259,10 +263,21 @@ int TestStunServer::Initialize() {
     return R_INTERNAL;
   }
 
+  for (i = 0; i < addr_ct; ++i) {
+    if (addrs[i].addr.addr->sa_family == address_family) {
+      break;
+    }
+  }
+
+  if (i == addr_ct) {
+    MOZ_MTLOG(ML_ERROR, "No local addresses of the configured IP version");
+    return R_INTERNAL;
+  }
+
   int tries = 100;
   while (tries--) {
-    // Bind to the first address (arbitrarily) on configured port (default 3478)
-    r = TryOpenListenSocket(&addrs[0], instance_port);
+    // Bind on configured port (default 3478)
+    r = TryOpenListenSocket(&addrs[i], instance_port);
     // We interpret R_ALREADY to mean the addr is probably in use. Try another.
     // Otherwise, it either worked or it didn't, and we check below.
     if (r != R_ALREADY) {
@@ -291,7 +306,7 @@ int TestStunServer::Initialize() {
 
   // Cache the address and port.
   char addr_string[INET6_ADDRSTRLEN];
-  r = nr_transport_addr_get_addrstring(&addrs[0].addr, addr_string,
+  r = nr_transport_addr_get_addrstring(&addrs[i].addr, addr_string,
                                        sizeof(addr_string));
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Failed to convert listen addr to a string representation");
@@ -304,12 +319,12 @@ int TestStunServer::Initialize() {
   return 0;
 }
 
-TestStunServer* TestStunServer::Create() {
+TestStunServer* TestStunServer::Create(int address_family) {
   NR_reg_init(NR_REG_MODE_LOCAL);
 
   ScopedDeletePtr<TestStunServer> server(new TestStunServer());
 
-  if (server->Initialize())
+  if (server->Initialize(address_family))
     return nullptr;
 
   NR_SOCKET fd;
@@ -328,18 +343,29 @@ void TestStunServer::ConfigurePort(uint16_t port) {
   instance_port = port;
 }
 
-TestStunServer* TestStunServer::GetInstance() {
-  if (!instance)
-    instance = Create();
+TestStunServer* TestStunServer::GetInstance(int address_family) {
+  switch (address_family) {
+    case AF_INET:
+      if (!instance)
+        instance = Create(address_family);
 
-  MOZ_ASSERT(instance);
-  return instance;
+      MOZ_ASSERT(instance);
+      return instance;
+    case AF_INET6:
+      if (!instance6)
+        instance6 = Create(address_family);
+
+      return instance6;
+    default:
+      MOZ_CRASH();
+  }
 }
 
 void TestStunServer::ShutdownInstance() {
   delete instance;
-
   instance = nullptr;
+  delete instance6;
+  instance6 = nullptr;
 }
 
 
@@ -453,9 +479,9 @@ nsresult TestStunServer::SetResponseAddr(const std::string& addr,
                                          uint16_t port) {
   nr_transport_addr addr2;
 
-  int r = nr_ip4_str_port_to_transport_addr(addr.c_str(),
-                                            port, IPPROTO_UDP,
-                                            &addr2);
+  int r = nr_str_port_to_transport_addr(addr.c_str(),
+                                        port, IPPROTO_UDP,
+                                        &addr2);
   if (r)
     return NS_ERROR_FAILURE;
 
@@ -479,12 +505,22 @@ void TestStunTcpServer::ConfigurePort(uint16_t port) {
   instance_port = port;
 }
 
-TestStunTcpServer* TestStunTcpServer::GetInstance() {
-  if (!instance)
-    instance = Create();
+TestStunTcpServer* TestStunTcpServer::GetInstance(int address_family) {
+  switch (address_family) {
+    case AF_INET:
+      if (!instance)
+        instance = Create(address_family);
 
-  MOZ_ASSERT(instance);
-  return instance;
+      MOZ_ASSERT(instance);
+      return instance;
+    case AF_INET6:
+      if (!instance6)
+        instance6 = Create(address_family);
+
+      return instance6;
+    default:
+      MOZ_CRASH();
+  }
 }
 
 void TestStunTcpServer::ShutdownInstance() {
@@ -523,12 +559,14 @@ int TestStunTcpServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
   return 0;
 }
 
-TestStunTcpServer* TestStunTcpServer::Create() {
+TestStunTcpServer* TestStunTcpServer::Create(int address_family) {
   NR_reg_init(NR_REG_MODE_LOCAL);
 
   ScopedDeletePtr<TestStunTcpServer> server(new TestStunTcpServer());
 
-  server->Initialize();
+  if (server->Initialize(address_family)) {
+    return nullptr;
+  }
 
   nr_socket_multi_tcp_set_readable_cb(server->listen_sock_,
     &TestStunServer::readable_cb, server.get());

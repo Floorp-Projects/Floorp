@@ -84,7 +84,7 @@ class DummyResolver {
                      void **handle) {
     nr_transport_addr addr;
 
-    nr_ip4_str_port_to_transport_addr(
+    nr_str_port_to_transport_addr(
         (char *)kProxyAddr.c_str(), kProxyPort, IPPROTO_TCP, &addr);
 
     cb(cb_arg, &addr);
@@ -120,11 +120,11 @@ class ProxyTunnelSocketTest : public ::testing::Test {
 
     nr_resolver_ = resolver_impl_.get_nr_resolver();
 
-    int r = nr_ip4_str_port_to_transport_addr(
+    int r = nr_str_port_to_transport_addr(
         (char *)kRemoteAddr.c_str(), kRemotePort, IPPROTO_TCP, &remote_addr_);
     ASSERT_EQ(0, r);
 
-    r = nr_ip4_str_port_to_transport_addr(
+    r = nr_str_port_to_transport_addr(
         (char *)kProxyAddr.c_str(), kProxyPort, IPPROTO_TCP, &proxy_addr_);
     ASSERT_EQ(0, r);
 
