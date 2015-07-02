@@ -697,56 +697,66 @@ OnSharedPreferenceChangeListener
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
                 pref.setOnPreferenceChangeListener(this);
-                if (!AppConstants.MOZ_UPDATER &&
-                    PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.NIGHTLY_BUILD &&
-                           PREFS_LOGIN_MANAGE.equals(key)) {
-                    preferences.removePreference(pref);
-                    i--;
-                } else if (AppConstants.RELEASE_BUILD &&
-                           PREFS_DISPLAY_REFLOW_ON_ZOOM.equals(key)) {
+                if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
+                    if (!AppConstants.MOZ_UPDATER) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_LOGIN_MANAGE.equals(key)) {
+                    if (!AppConstants.NIGHTLY_BUILD) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_DISPLAY_REFLOW_ON_ZOOM.equals(key)) {
                     // Remove UI for reflow on release builds.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.NIGHTLY_BUILD &&
-                        PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
+                    if (AppConstants.RELEASE_BUILD) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
                     // Remove UI for opening external links in private browsing on non-Nightly builds.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.NIGHTLY_BUILD &&
-                           (PREFS_TRACKING_PROTECTION.equals(key) ||
-                            PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key))) {
+                    if (!AppConstants.NIGHTLY_BUILD) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TRACKING_PROTECTION.equals(key) ||
+                           PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key)) {
                     // Remove UI for tracking protection preference on non-Nightly builds.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.MOZ_TELEMETRY_REPORTING &&
-                           PREFS_TELEMETRY_ENABLED.equals(key)) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.MOZ_SERVICES_HEALTHREPORT &&
-                           (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(key) ||
-                            PREFS_HEALTHREPORT_LINK.equals(key))) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.MOZ_CRASHREPORTER &&
-                           PREFS_CRASHREPORTER_ENABLED.equals(key)) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED &&
-                           (PREFS_GEO_REPORTING.equals(key) ||
-                            PREFS_GEO_LEARN_MORE.equals(key))) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
+                    if (!AppConstants.NIGHTLY_BUILD) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_TELEMETRY_ENABLED.equals(key)) {
+                    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(key) ||
+                           PREFS_HEALTHREPORT_LINK.equals(key)) {
+                    if (!AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_CRASHREPORTER_ENABLED.equals(key)) {
+                    if (!AppConstants.MOZ_CRASHREPORTER) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_GEO_REPORTING.equals(key) ||
+                           PREFS_GEO_LEARN_MORE.equals(key)) {
+                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 } else if (PREFS_DEVTOOLS_REMOTE_ENABLED.equals(key)) {
                     if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
@@ -763,12 +773,13 @@ OnSharedPreferenceChangeListener
                     CharSequence selectedEntry = listPref.getEntry();
                     listPref.setSummary(selectedEntry);
                     continue;
-                } else if (PREFS_SYNC.equals(key) &&
-                           !RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                } else if (PREFS_SYNC.equals(key)) {
                     // Don't show sync prefs while in guest mode.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
+                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 } else if (PREFS_SEARCH_RESTORE_DEFAULTS.equals(key)) {
                     pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                         @Override
@@ -778,12 +789,13 @@ OnSharedPreferenceChangeListener
                             return true;
                         }
                     });
-                } else if (PREFS_DISPLAY_TITLEBAR_MODE.equals(key) &&
-                           HardwareUtils.isTablet()) {
-                    // New tablet always shows URLS, not titles.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
+                } else if (PREFS_DISPLAY_TITLEBAR_MODE.equals(key)) {
+                    if (HardwareUtils.isTablet()) {
+                        // New tablet always shows URLS, not titles.
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 } else if (handlers.containsKey(key)) {
                     PrefHandler handler = handlers.get(key);
                     if (!handler.setupPref(this, pref)) {
@@ -791,23 +803,27 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-                } else if (!(AppConstants.MOZ_ANDROID_TAB_QUEUE && AppConstants.NIGHTLY_BUILD) && PREFS_TAB_QUEUE.equals(key)) {
+                } else if (PREFS_TAB_QUEUE.equals(key)) {
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (PREFS_VOICE_INPUT_ENABLED.equals(key) &&
-                           (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)))) {
-                    // Remove UI for voice input on non nightly builds.
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
-                } else if (PREFS_QRCODE_ENABLED.equals(key) &&
-                         (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsQrCodeReader(getApplicationContext()))) {
-                    // Remove UI for qr code input on non nightly builds
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
+                    if (!(AppConstants.MOZ_ANDROID_TAB_QUEUE && AppConstants.NIGHTLY_BUILD)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_VOICE_INPUT_ENABLED.equals(key)) {
+                    if (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt))) {
+                        // Remove UI for voice input on non nightly builds.
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_QRCODE_ENABLED.equals(key)) {
+                    if (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
+                        // Remove UI for qr code input on non nightly builds
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,

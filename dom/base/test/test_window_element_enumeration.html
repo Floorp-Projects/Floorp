@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=959992
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 959992</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=959992">Mozilla Bug 959992</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <img id="one" name="two">
+  <div id="three" name="four"></div>
+  <div id=""></div>
+  <img name="">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 959992 **/
+    var names1 = Object.getOwnPropertyNames(window);
+    var names2 = [];
+    var gsp = Object.getPrototypeOf(Window.prototype);
+    var names3 = Object.getOwnPropertyNames(gsp);
+    for (var i in window) {
+      names2.push(i);
+    }
+
+    is(names1.indexOf(""), -1,
+       "Element with empty id/name should not be in our own prop list");
+    is(names2.indexOf(""), -1,
+       "Element with empty id/name name should not be in our enumeration list");
+    is(names3.indexOf(""), -1,
+       "Element with empty id/name should not be in GSP own prop list");
+
+    is(names1.indexOf("one"), -1,
+       "<img> with id should not be in our own prop list");
+    is(names2.indexOf("one"), -1,
+       "<img> with id should not be in our enumeration list");
+    isnot(names3.indexOf("one"), -1,
+          "<img> with id should be in GSP own prop list");
+
+    is(names1.indexOf("two"), -1,
+       "<img> with name should not be in our own prop list");
+    is(names2.indexOf("two"), -1,
+       "<img> with name should not be in our enumeration list");
+    isnot(names3.indexOf("two"), -1,
+          "<img> with name should be in GSP own prop list");
+
+    is(names1.indexOf("three"), -1,
+       "<div> with id should not be in our own prop list");
+    is(names2.indexOf("three"), -1,
+       "<div> with id should not be in our enumeration list");
+    todo_isnot(names3.indexOf("three"), -1,
+               "<div> with id should be in GSP own prop list");
+
+    is(names1.indexOf("four"), -1,
+       "<div> with name should not be in our own prop list");
+    is(names2.indexOf("four"), -1,
+       "<div> with name should not be in our enumeration list");
+    is(names3.indexOf("four"), -1,
+       "<div> with name should not be in GSP own prop list");
+</script>
+</pre>
+</body>
+</html>

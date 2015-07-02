@@ -73,9 +73,11 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
       return nullptr;
 
     if (l->GetEffectiveOpacity() != 1.0 ||
-        l->GetMaskLayer() ||
+        l->HasMaskLayers() ||
         !(l->GetContentFlags() & Layer::CONTENT_OPAQUE))
+    {
       return nullptr;
+    }
 
     // cliprects are post-transform
     const Maybe<ParentLayerIntRect>& clipRect = l->GetEffectiveClipRect();

@@ -513,34 +513,25 @@ ContainerRender(ContainerT* aContainer,
       return;
     }
 
-    float opacity = aContainer->GetEffectiveOpacity();
-
-    gfx::IntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
+    gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
+    nsRefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
-      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
+      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);
       }
     }
 #endif
 
-    EffectChain effectChain(aContainer);
-    LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(aContainer->GetMaskLayer(),
-                                                            effectChain,
-                                                            !aContainer->GetTransform().CanDraw2D());
-    if (autoMaskEffect.Failed()) {
-      NS_WARNING("Failed to apply a mask effect.");
-      return;
-    }
-
-    aContainer->AddBlendModeEffect(effectChain);
-    effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
-
-    gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
-    gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-    aManager->GetCompositor()->DrawQuad(rect, clipRect, effectChain, opacity,
-                                        aContainer->GetEffectiveTransform());
+    nsRefPtr<ContainerT> container = aContainer;
+    RenderWithAllMasks(aContainer, compositor, aClipRect,
+                       [&, surface, compositor, container](EffectChain& effectChain, const Rect& clipRect) {
+      effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
+      compositor->DrawQuad(visibleRect, clipRect, effectChain,
+                           container->GetEffectiveOpacity(),
+                           container->GetEffectiveTransform());
+    });
   } else {
     RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
   }

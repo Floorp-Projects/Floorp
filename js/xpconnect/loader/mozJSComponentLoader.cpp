@@ -584,13 +584,11 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         *aRealFile = true;
 
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
-            nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
+            RootedObject locationObj(aCx);
             rv = xpc->WrapNative(aCx, obj, aComponentFile,
                                  NS_GET_IID(nsIFile),
-                                 getter_AddRefs(locationHolder));
+                                 locationObj.address());
             NS_ENSURE_SUCCESS(rv, nullptr);
-
-            RootedObject locationObj(aCx, locationHolder->GetJSObject());
             NS_ENSURE_TRUE(locationObj, nullptr);
 
             if (!JS_DefineProperty(aCx, obj, "__LOCATION__", locationObj, 0))

@@ -171,9 +171,7 @@ namespace js {
 template <> struct GCMethods<jsid>
 {
     static jsid initial() { return JSID_VOID; }
-    static bool needsPostBarrier(jsid id) { return false; }
-    static void postBarrier(jsid* idp) {}
-    static void relocate(jsid* idp) {}
+    static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 };
 
 // If the jsid is a GC pointer type, convert to that type and call |f| with

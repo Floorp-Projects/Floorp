@@ -1206,7 +1206,7 @@ public class GeckoAppShell
             // Some applications use this field to return to the same browser after processing the
             // Intent. While there is some danger (e.g. denial of service), other major browsers already
             // use it and so it's the norm.
-            intent.putExtra(Browser.EXTRA_APPLICATION_ID, GeckoApp.class.getPackage().getName());
+            intent.putExtra(Browser.EXTRA_APPLICATION_ID, AppConstants.ANDROID_PACKAGE_NAME);
         }
 
         return intent;

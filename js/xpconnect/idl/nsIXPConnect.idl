@@ -266,7 +266,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(241fbefa-89dc-42b2-b180-08167d4b351b)]
+[noscript, uuid(b91f1eeb-2fe4-44cc-9983-abcc06d69a94)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -303,13 +303,6 @@ interface nsIXPConnect : nsISupports
     /**
     * wrapNative will create a new JSObject or return an existing one.
     *
-    * The JSObject is returned inside a refcounted nsIXPConnectJSObjectHolder.
-    * As long as this holder is held the JSObject will be protected from
-    * collection by JavaScript's garbage collector. It is a good idea to
-    * transfer the JSObject to some equally protected place before releasing
-    * the holder (i.e. use JS_SetProperty to make this object a property of
-    * some other JSObject).
-    *
     * This method now correctly deals with cases where the passed in xpcom
     * object already has an associated JSObject for the cases:
     *  1) The xpcom object has already been wrapped for use in the same scope
@@ -332,11 +325,20 @@ interface nsIXPConnect : nsISupports
     *       NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT
     *       NS_ERROR_FAILURE
     */
-    nsIXPConnectJSObjectHolder
+    JSObjectPtr
     wrapNative(in JSContextPtr aJSContext,
                in JSObjectPtr  aScope,
                in nsISupports  aCOMObj,
                in nsIIDRef     aIID);
+
+    /**
+     * Same as wrapNative, but it returns the JSObject in an nsIXPConnectJSObjectHolder.
+     */
+    nsIXPConnectJSObjectHolder
+    wrapNativeHolder(in JSContextPtr aJSContext,
+                     in JSObjectPtr  aScope,
+                     in nsISupports  aCOMObj,
+                     in nsIIDRef     aIID);
 
     /**
      * Same as wrapNative, but it returns the JSObject in aVal. C++ callers
@@ -456,7 +458,7 @@ interface nsIXPConnect : nsISupports
     setFunctionThisTranslator(in nsIIDRef aIID,
                               in nsIXPCFunctionThisTranslator aTranslator);
 
-    nsIXPConnectJSObjectHolder
+    JSObjectPtr
     getWrappedNativePrototype(in JSContextPtr aJSContext,
                               in JSObjectPtr  aScope,
                               in nsIClassInfo aClassInfo);

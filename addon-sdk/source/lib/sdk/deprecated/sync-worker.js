@@ -30,7 +30,6 @@ const unload = require('../system/unload');
 const events = require('../system/events');
 const { getInnerId } = require("../window/utils");
 const { WorkerSandbox } = require('../content/sandbox');
-const { getTabForWindow } = require('../tabs/helpers');
 const { isPrivate } = require('../private-browsing/utils');
 
 // A weak map of workers to hold private attributes that
@@ -116,14 +115,6 @@ const Worker = Class({
   get contentURL () {
     let model = modelFor(this);
     return model.window ? model.window.document.URL : null;
-  },
-
-  get tab () {
-    let model = modelFor(this);
-    // model.window will be null after detach
-    if (model.window)
-      return getTabForWindow(model.window);
-    return null;
   },
 
   // Implemented to provide some of the previous features of exposing sandbox
