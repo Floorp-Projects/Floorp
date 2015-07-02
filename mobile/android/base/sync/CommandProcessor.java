@@ -18,6 +18,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.mozilla.gecko.tabqueue.TabQueueDispatcher;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -278,6 +279,7 @@ public class CommandProcessor {
 
     // Set pending intent associated with the notification.
     Intent notificationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+    notificationIntent.putExtra(TabQueueDispatcher.SKIP_TAB_QUEUE_FLAG, true);
     PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
     notification.setLatestEventInfo(context, notificationTitle, uri, contentIntent);
 
