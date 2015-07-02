@@ -7566,7 +7566,7 @@ DebuggerEnv_getType(JSContext* cx, unsigned argc, Value* vp)
     else
         s = "object";
 
-    JSAtom* str = Atomize(cx, s, strlen(s), InternAtom);
+    JSAtom* str = Atomize(cx, s, strlen(s), PinAtom);
     if (!str)
         return false;
     args.rval().setString(str);

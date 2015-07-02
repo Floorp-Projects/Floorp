@@ -21,9 +21,6 @@ template<typename IntTypeT>
 class IntegerIterator
 {
 public:
-  typedef const IntTypeT ValueType;
-  typedef typename MakeSigned<IntTypeT>::Type DifferenceType;
-
   template<typename IntType>
   explicit IntegerIterator(IntType aCurrent)
     : mCurrent(aCurrent) { }
@@ -32,9 +29,7 @@ public:
   IntegerIterator(const IntegerIterator<IntType>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
-  // Since operator* is required to return a reference, we return
-  // a reference to our member here.
-  const IntTypeT& operator*() const { return mCurrent; }
+  IntTypeT operator*() const { return mCurrent; }
 
   /* Increment and decrement operators */
 
@@ -42,25 +37,6 @@ public:
   IntegerIterator& operator--() { --mCurrent; return *this; }
   IntegerIterator operator++(int) { auto ret = *this; ++mCurrent; return ret; }
   IntegerIterator operator--(int) { auto ret = *this; --mCurrent; return ret; }
-
-  IntegerIterator operator+(DifferenceType aN) const
-  {
-    return IntegerIterator(mCurrent + aN);
-  }
-  IntegerIterator operator-(DifferenceType aN) const
-  {
-    return IntegerIterator(mCurrent - aN);
-  }
-  IntegerIterator& operator+=(DifferenceType aN)
-  {
-    mCurrent += aN;
-    return *this;
-  }
-  IntegerIterator& operator-=(DifferenceType aN)
-  {
-    mCurrent -= aN;
-    return *this;
-  }
 
   /* Comparison operators */
 
@@ -182,6 +158,7 @@ template<typename IntType>
 detail::IntegerRange<IntType>
 MakeRange(IntType aEnd)
 {
+  static_assert(IsIntegral<IntType>::value, "value must be integral");
   MOZ_ASSERT(detail::GeqZero<IntType>::check(aEnd),
              "Should never have negative value here");
   return detail::IntegerRange<IntType>(aEnd);
@@ -191,6 +168,8 @@ template<typename IntType1, typename IntType2>
 detail::IntegerRange<IntType2>
 MakeRange(IntType1 aBegin, IntType2 aEnd)
 {
+  static_assert(IsIntegral<IntType1>::value && IsIntegral<IntType2>::value,
+                "values must both be integral");
   static_assert(IsSigned<IntType1>::value == IsSigned<IntType2>::value,
                 "signed/unsigned mismatch");
   MOZ_ASSERT(aEnd >= aBegin, "End value should be larger than begin value");

@@ -17,11 +17,11 @@ registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
 
-function testTrackingPageOFF() {
+function testTrackingPageOff() {
   ok (TrackingProtection.container.hidden, "The container is hidden");
 }
 
-function testBenignPageOFF() {
+function testBenignPageOff() {
   ok (TrackingProtection.container.hidden, "The container is hidden");
 }
 
@@ -31,19 +31,18 @@ add_task(function* () {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
 
   TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
-  ok (TrackingProtection, "Functionality is attached to the browser window");
+  ok (TrackingProtection, "TP is attached to the browser window");
   is (TrackingProtection.enabled, Services.prefs.getBoolPref(PREF),
-    "The initial enabled value is based on the default pref value");
+    "TP.enabled is based on the original pref value");
 
-  info ("Disable Tracking Protection");
   Services.prefs.setBoolPref(PREF, false);
-  ok (!TrackingProtection.enabled, "Functionality is disabled after setting the pref");
+  ok (!TrackingProtection.enabled, "TP is disabled after setting the pref");
 
-  info ("Point tab to a test page containing tracking elements");
+  info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
-  testTrackingPageOFF();
+  testTrackingPageOff();
 
-  info ("Point tab to a test page NOT containing tracking elements");
+  info("Load a test page not containing tracking elements");
   yield promiseTabLoadEvent(tab, BENIGN_PAGE);
-  testBenignPageOFF();
+  testBenignPageOff();
 });

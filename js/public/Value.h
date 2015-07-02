@@ -1627,8 +1627,7 @@ SameType(const Value& lhs, const Value& rhs)
 /************************************************************************/
 
 namespace JS {
-JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep);
-JS_PUBLIC_API(void) HeapValueRelocate(Value* valuep);
+JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const Value& next);
 }
 
 namespace js {
@@ -1644,11 +1643,9 @@ template <> struct GCMethods<JS::Value>
     static gc::Cell* asGCThingOrNull(const JS::Value& v) {
         return v.isMarkable() ? v.toGCThing() : nullptr;
     }
-    static bool needsPostBarrier(const JS::Value& v) {
-        return v.isObject() && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(&v.toObject()));
+    static void postBarrier(JS::Value* v, const JS::Value& prev, const JS::Value& next) {
+        JS::HeapValuePostBarrier(v, prev, next);
     }
-    static void postBarrier(JS::Value* v) { JS::HeapValuePostBarrier(v); }
-    static void relocate(JS::Value* v) { JS::HeapValueRelocate(v); }
 };
 
 template <class Outer> class MutableValueOperations;

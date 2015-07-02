@@ -379,8 +379,13 @@ bool
 JitCompartment::initialize(JSContext* cx)
 {
     stubCodes_ = cx->new_<ICStubCodeMap>(cx);
-    if (!stubCodes_ || !stubCodes_->init())
+    if (!stubCodes_)
         return false;
+
+    if (!stubCodes_->init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
 
     return true;
 }
