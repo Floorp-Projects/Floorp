@@ -18,6 +18,7 @@ let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.j
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 
 let { WebGLFront } = devtools.require("devtools/server/actors/webgl");
+let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 let TiltGL = devtools.require("devtools/tilt/tilt-gl");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
@@ -36,10 +37,11 @@ waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
+  DevToolsUtils.testing = false;
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", gToolEnabled);
 

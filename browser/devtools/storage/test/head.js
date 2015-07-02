@@ -21,18 +21,19 @@ const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 waitForExplicitFinish();
 
 let gToolbox, gPanelWindow, gWindow, gUI;
 
 Services.prefs.setBoolPref(STORAGE_PREF, true);
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
   gToolbox = gPanelWindow = gWindow = gUI = null;
   Services.prefs.clearUserPref(STORAGE_PREF);
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }

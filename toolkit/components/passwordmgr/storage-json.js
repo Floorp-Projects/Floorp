@@ -60,7 +60,7 @@ this.LoginManagerStorage_json.prototype = {
 
       return Task.spawn(function () {
         // Load the data asynchronously.
-        this.log("Opening database at " + this._store.path);
+        this.log("Opening database at", this._store.path);
         yield this._store.load();
 
         // The import from previous versions operates the first time
@@ -92,7 +92,7 @@ this.LoginManagerStorage_json.prototype = {
         Services.prefs.setBoolPref("signon.importedFromSqlite", true);
       }.bind(this)).catch(Cu.reportError);
     } catch (e) {
-      this.log("Initialization failed: " + e);
+      this.log("Initialization failed:", e);
       throw new Error("Initialization failed");
     }
   },
@@ -257,7 +257,7 @@ this.LoginManagerStorage_json.prototype = {
     // decrypt entries for caller.
     logins = this._decryptLogins(logins);
 
-    this.log("_getAllLogins: returning " + logins.length + " logins.");
+    this.log("_getAllLogins: returning", logins.length, "logins.");
     if (count)
       count.value = logins.length; // needed for XPCOM
     return logins;
@@ -403,10 +403,10 @@ this.LoginManagerStorage_json.prototype = {
     }
 
     if (!foundLogins.length && fallbackLogins.length) {
-      this.log("_searchLogins: returning " + fallbackLogins.length + " fallback logins");
+      this.log("_searchLogins: returning", fallbackLogins.length, "fallback logins");
       return [fallbackLogins, fallbackIds];
     }
-    this.log("_searchLogins: returning " + foundLogins.length + " logins");
+    this.log("_searchLogins: returning", foundLogins.length, "logins");
     return [foundLogins, foundIds];
   },
 
@@ -437,7 +437,7 @@ this.LoginManagerStorage_json.prototype = {
 
     let disabledHosts = this._store.data.disabledHosts.slice(0);
 
-    this.log("_getAllDisabledHosts: returning " + disabledHosts.length + " disabled hosts.");
+    this.log("_getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
     if (count)
       count.value = disabledHosts.length; // needed for XPCOM
     return disabledHosts;
@@ -451,7 +451,7 @@ this.LoginManagerStorage_json.prototype = {
   getLoginSavingEnabled : function (hostname) {
     this._store.ensureDataReady();
 
-    this.log("Getting login saving is enabled for " + hostname);
+    this.log("Getting login saving is enabled for", hostname);
     return this._store.data.disabledHosts.indexOf(hostname) == -1;
   },
 
@@ -466,7 +466,7 @@ this.LoginManagerStorage_json.prototype = {
     // Throws if there are bogus values.
     LoginHelper.checkHostnameValue(hostname);
 
-    this.log("Setting login saving enabled for " + hostname + " to " + enabled);
+    this.log("Setting login saving enabled for", hostname, "to", enabled);
     let foundIndex = this._store.data.disabledHosts.indexOf(hostname);
     if (enabled) {
       if (foundIndex != -1) {
@@ -503,7 +503,7 @@ this.LoginManagerStorage_json.prototype = {
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
 
-    this.log("_findLogins: returning " + logins.length + " logins");
+    this.log("_findLogins: returning", logins.length, "logins");
     count.value = logins.length; // needed for XPCOM
     return logins;
   },
@@ -526,7 +526,7 @@ this.LoginManagerStorage_json.prototype = {
         matchData[field] = loginData[field];
     let [logins, ids] = this._searchLogins(matchData);
 
-    this.log("_countLogins: counted logins: " + logins.length);
+    this.log("_countLogins: counted logins:", logins.length);
     return logins.length;
   },
 

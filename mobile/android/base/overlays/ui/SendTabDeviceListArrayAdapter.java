@@ -10,7 +10,6 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.RemoteClient;
-import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
 import org.mozilla.gecko.overlays.ui.SendTabList.State;
 
 import android.app.AlertDialog;

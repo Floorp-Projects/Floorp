@@ -8,6 +8,7 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {ScratchpadManager} = Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", {});
 const {TargetFactory} = devtools;
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
@@ -29,9 +30,9 @@ function getFrameScript() {
   return mm;
 }
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");

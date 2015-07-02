@@ -27,6 +27,7 @@ import android.util.Log;
  */
 public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
     private static final String LOGTAG = "Gecko" + TabQueueDispatcher.class.getSimpleName();
+    public static final String SKIP_TAB_QUEUE_FLAG = "skip_tab_queue";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,13 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
         // For the moment lets exit early and start fennec as normal if we're not in nightly with
         // the tab queue build flag.
         if (!AppConstants.MOZ_ANDROID_TAB_QUEUE || !AppConstants.NIGHTLY_BUILD) {
+            loadNormally(safeIntent.getUnsafe());
+            return;
+        }
+
+        // Skip the Tab Queue if instructed.
+        boolean shouldSkipTabQueue = safeIntent.getBooleanExtra(SKIP_TAB_QUEUE_FLAG, false);
+        if (shouldSkipTabQueue) {
             loadNormally(safeIntent.getUnsafe());
             return;
         }
