@@ -68,30 +68,6 @@ function takeWindowSnapshot(win, ctx) {
   ctx.drawWindow(win.ownerGlobal, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(255,255,255)", flags);
 }
 
-function takeWidgetSnapshot(win, canvas, ctx) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawWidgetAsOnScreen(win.ownerGlobal);
-}
-
-function testWidgetSnapshot(win, canvas, ctx) {
-  try {
-    takeWidgetSnapshot(win, canvas, ctx);
-    if (verifyVideoRendering(ctx)) {
-      reportSnapshotResult(SNAPSHOT_VIDEO_OK);
-    } else {
-      reportSnapshotResult(SNAPSHOT_VIDEO_FAIL);
-    }
-
-    if (verifyLayersRendering(ctx)) {
-      reportSnapshotResult(SNAPSHOT_LAYERS_OK);
-    } else {
-      reportSnapshotResult(SNAPSHOT_LAYERS_FAIL);
-    }
-  } catch (e) {
-    reportSnapshotResult(SNAPSHOT_ERROR);
-  }
-}
-
 function setTimeout(aMs, aCallback) {
   var timer = Components.classes["@mozilla.org/timer;1"]
               .createInstance(Components.interfaces.nsITimer);
@@ -149,15 +125,6 @@ let listener = {
   utils: null,
   canvas: null,
 
-  // State flow:
-  //   onload -> WM_PAINT -> MozAfterPaint -> ready
-  //   WM_PAINT -> onload -> MozAfterPaint -> ready
-  //
-  // We always wait for the low-level paint message because this is what tells
-  // us whether or not the OS has actually started drawing.
-  windowLoaded: false,   // onload event has fired.
-  windowReady: false,    // widget has received an OS-level paint request.
-
   scheduleTest: function(win) {
     this.win = win;
     this.win.onload = this.onWindowLoaded.bind(this);
@@ -177,64 +144,7 @@ let listener = {
 
     // Perform the compositor backbuffer test, which currently we use for
     // actually deciding whether to enable hardware media decoding.
-    if (!testCompositor(this.win, this.ctx)) {
-      this.endTest();
-      return;
-    }
-
-    // Wait to perform the OS snapshot test. Since this waits for a series of
-    // events to occur, we set a timeout in case nothing happens.
-    setTimeout(OS_SNAPSHOT_TIMEOUT_SEC * 1000, (() => {
-      if (this.win) {
-        reportSnapshotResult(SNAPSHOT_TIMEOUT);
-        this.endTest();
-      }
-    }));
-
-    this.windowLoaded = true;
-    if (this.windowReady) {
-      this.waitForPaintsFlushed();
-    }
-  },
-
-  // Watch for the first OS-level paint message to the window.
-  observe: function(aSubject, aTopic, aData) {
-    if (aSubject != this.win || aTopic != "widget-first-paint") {
-      return;
-    }
-
-    this.windowReady = true;
-    if (this.windowLoaded) {
-      this.waitForPaintsFlushed();
-    }
-  },
-
-  // Wait for all layout-induced paints to flush.
-  waitForPaintsFlushed: function() {
-    // If the test ended prematurely due to a timeout, just ignore the event.
-    if (!this.win) {
-      return;
-    }
-
-    if (this.utils.isMozAfterPaintPending) {
-      let paintListener = (() => {
-        if (this.utils && this.utils.isMozAfterPaintPending) {
-          return;
-        }
-
-        this.win.removeEventListener("MozAfterPaint", paintListener);
-
-        if (this.utils) {
-          // Painting is finished, we will fail the above
-          // isMozAfterPaintPending test now.
-          this.waitForPaintsFlushed();
-        }
-      });
-      this.win.addEventListener("MozAfterPaint", paintListener);
-      return;
-    }
-
-    testWidgetSnapshot(this.win, this.canvas, this.ctx);
+    testCompositor(this.win, this.ctx);
     this.endTest();
   },
 
@@ -303,6 +213,10 @@ SanityTest.prototype = {
         "Test Page",
         "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0",
         null);
+
+    // There's no clean way to have an invisible window and ensure it's always painted.
+    // Instead, move the window far offscreen so it doesn't show up during launch.
+    sanityTest.moveTo(100000000,1000000000);
     listener.scheduleTest(sanityTest);
   },
 };
