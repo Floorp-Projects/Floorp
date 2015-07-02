@@ -539,6 +539,36 @@ template<class T>
 struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0))
 {};
 
+template<typename T>
+struct IsRefcountedSmartPointer : public mozilla::FalseType
+{};
+
+template<typename T>
+struct IsRefcountedSmartPointer<nsRefPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct StripSmartPointer
+{
+  typedef void Type;
+};
+
+template<typename T>
+struct StripSmartPointer<nsRefPtr<T>>
+{
+  typedef T Type;
+};
+
+template<typename T>
+struct StripSmartPointer<nsCOMPtr<T>>
+{
+  typedef T Type;
+};
+
 template<typename TWithoutPointer>
 struct PointerStorageClass
   : mozilla::Conditional<HasRefCountMethods<TWithoutPointer>::value,
@@ -557,11 +587,19 @@ struct LValueReferenceStorageClass
 {};
 
 template<typename T>
+struct SmartPointerStorageClass
+  : mozilla::Conditional<IsRefcountedSmartPointer<T>::value,
+                         StorensRefPtrPassByPtr<
+                           typename StripSmartPointer<T>::Type>,
+                         StoreCopyPassByValue<T>>
+{};
+
+template<typename T>
 struct NonLValueReferenceStorageClass
   : mozilla::Conditional<mozilla::IsRvalueReference<T>::value,
                          StoreCopyPassByRRef<
                            typename mozilla::RemoveReference<T>::Type>,
-                         StoreCopyPassByValue<T>>
+                         typename SmartPointerStorageClass<T>::Type>
 {};
 
 template<typename T>
@@ -591,6 +629,8 @@ struct NonParameterStorageClass
 // - const T&  -> StoreConstRefPassByConstLRef<T>: Store const T&, pass const T&.
 // - T&        -> StoreRefPassByLRef<T>          : Store T&, pass T&.
 // - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass Move(T).
+// - nsRefPtr<T>, nsCOMPtr<T>
+//             -> StorensRefPtrPassByPtr<T>      : Store nsRefPtr<T>, pass T*
 // - Other T   -> StoreCopyPassByValue<T>        : Store T, pass T.
 // Other available explicit options:
 // -              StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
