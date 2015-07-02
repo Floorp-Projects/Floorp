@@ -3618,6 +3618,39 @@ IsCaretWithCustomClip(nsDisplayItem* aItem, nsDisplayItem::Type aItemType)
     static_cast<nsDisplayCaret*>(aItem)->NeedsCustomScrollClip();
 }
 
+static DisplayItemClip
+GetScrollClipIntersection(nsDisplayListBuilder* aBuilder, const nsIFrame* aAnimatedGeometryRoot,
+                          const nsIFrame* aStopAtAnimatedGeometryRoot, bool aIsCaret)
+{
+  DisplayItemClip resultClip;
+  nsIFrame* fParent;
+  for (const nsIFrame* f = aAnimatedGeometryRoot;
+       f != aStopAtAnimatedGeometryRoot;
+       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(aBuilder,
+           fParent, aStopAtAnimatedGeometryRoot)) {
+    fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
+    if (!fParent) {
+      // This means aStopAtAnimatedGeometryRoot was not an ancestor
+      // of aAnimatedGeometryRoot. This is a weird case but it
+      // can happen, e.g. when a scrolled frame contains a frame with opacity
+      // which contains a frame that is not scrolled by the scrolled frame.
+      // For now, we just don't apply any specific scroll clip to this layer.
+      return DisplayItemClip();
+    }
+
+    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(f);
+    if (!scrollFrame) {
+      continue;
+    }
+
+    const DisplayItemClip* clip = scrollFrame->ComputeScrollClip(aIsCaret);
+    if (clip) {
+      resultClip.IntersectWith(*clip);
+    }
+  }
+  return resultClip;
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -3694,13 +3727,15 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     bool forceInactive;
     const nsIFrame* animatedGeometryRoot;
+    const nsIFrame* realAnimatedGeometryRootOfItem =
+      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
     if (mFlattenToSingleLayer) {
       forceInactive = true;
       animatedGeometryRoot = lastAnimatedGeometryRoot;
     } else {
       forceInactive = false;
       if (mManager->IsWidgetLayerManager()) {
-        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
+        animatedGeometryRoot = realAnimatedGeometryRootOfItem;
       } else {
         // For inactive layer subtrees, splitting content into PaintedLayers
         // based on animated geometry roots is pointless. It's more efficient
@@ -3714,9 +3749,20 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
     }
 
+    nsDisplayItem::Type itemType = item->GetType();
+
+    if (animatedGeometryRoot != realAnimatedGeometryRootOfItem) {
+      // Pick up any scroll clips that should apply to the item and apply them.
+      DisplayItemClip clip =
+        GetScrollClipIntersection(mBuilder, realAnimatedGeometryRootOfItem,
+                                  animatedGeometryRoot,
+                                  IsCaretWithCustomClip(item, itemType));
+      clip.IntersectWith(item->GetClip());
+      item->SetClip(mBuilder, clip);
+    }
+
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
-    nsDisplayItem::Type itemType = item->GetType();
     if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
