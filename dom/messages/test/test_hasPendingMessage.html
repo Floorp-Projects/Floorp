@@ -11,6 +11,7 @@
 
     const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
     Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
@@ -70,10 +71,23 @@
           test_frame.src = testURL + "#setMessageHandler2";
           return expectAlert(test_frame, "handle message", "message handled");
         }).then(() => {
-          // Setp 7. Check hasPendingMessages2
+          // Step 7. Check hasPendingMessages2
           return expectAlert(test_frame, "no hasPendingMessages",
                              "no hasPendingMessages after mozSetMessageHandler");
         }).then(() => {
+          // Be nice with the rest of the tests and clean up what we registered.
+          let appsSvc = Cc["@mozilla.org/AppsService;1"]
+                         .getService(Ci.nsIAppsService);
+          let appId = appsSvc.getAppLocalIdByManifestURL(manifestURL);
+          let subject = {
+            appId: appId,
+            browserOnly: false,
+            QueryInterface: XPCOMUtils.generateQI([
+              Ci.mozIApplicationClearPrivateDataParams
+            ])
+          };
+          Services.obs.notifyObservers(subject, "webapps-clear-data", null);
+
           test_frame.remove();
           finish();
         });
