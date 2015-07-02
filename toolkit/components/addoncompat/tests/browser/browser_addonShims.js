@@ -1,6 +1,8 @@
 let {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const ADDON_URL = "http://example.com/browser/toolkit/components/addoncompat/tests/browser/addon.xpi";
+const COMPAT_ADDON_URL = "http://example.com/browser/toolkit/components/addoncompat/tests/browser/compat-addon.xpi";
 
 // Install a test add-on that will exercise e10s shims.
 //   url: Location of the add-on.
@@ -56,4 +58,10 @@ add_task(function* test_addon_shims() {
   let addon = yield addAddon(ADDON_URL);
   yield window.runAddonShimTests({ok: ok, is: is, info: info});
   yield removeAddon(addon);
+
+  if (Services.appinfo.browserTabsRemoteAutostart) {
+    addon = yield addAddon(COMPAT_ADDON_URL);
+    yield window.runAddonTests({ok: ok, is: is, info: info});
+    yield removeAddon(addon);
+  }
 });
