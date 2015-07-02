@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-compacting'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'compacting'
+  metadata:
+    name: '[TC] Spidermonkey Compactng'
+    description: 'Spidermonkey Compacting'
+  extra:
+    treeherder:
+      symbol: cgc

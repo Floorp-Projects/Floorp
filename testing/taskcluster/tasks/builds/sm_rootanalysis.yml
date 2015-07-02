@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-rootanalysis'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'rootanalysis'
+  metadata:
+    name: '[TC] Spidermonkey Root Analysis'
+    description: 'Spidermonkey Root Analysis'
+  extra:
+    treeherder:
+      symbol: r
