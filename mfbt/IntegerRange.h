@@ -180,6 +180,7 @@ template<typename IntType>
 detail::IntegerRange<IntType>
 MakeRange(IntType aEnd)
 {
+  static_assert(IsIntegral<IntType>::value, "value must be integral");
   MOZ_ASSERT(detail::GeqZero<IntType>::check(aEnd),
              "Should never have negative value here");
   return detail::IntegerRange<IntType>(aEnd);
@@ -189,6 +190,8 @@ template<typename IntType1, typename IntType2>
 detail::IntegerRange<IntType2>
 MakeRange(IntType1 aBegin, IntType2 aEnd)
 {
+  static_assert(IsIntegral<IntType1>::value && IsIntegral<IntType2>::value,
+                "values must both be integral");
   static_assert(IsSigned<IntType1>::value == IsSigned<IntType2>::value,
                 "signed/unsigned mismatch");
   MOZ_ASSERT(aEnd >= aBegin, "End value should be larger than begin value");
