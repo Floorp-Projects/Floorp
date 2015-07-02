@@ -3089,7 +3089,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 Maybe<FrameMetricsAndClip>
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
-                                       const ContainerLayerParameters& aParameters) const
+                                       const ContainerLayerParameters& aParameters,
+                                       bool aIsForCaret) const
 {
   if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
     return Nothing();
@@ -3100,6 +3101,8 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     // For containerful frames, the clip is on the container frame.
     needsParentLayerClip = false;
   }
+
+  const DisplayItemClip* ancestorClip = aIsForCaret ? mAncestorClipForCaret : mAncestorClip;
 
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
@@ -3114,8 +3117,8 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       clip.height = NSToCoordRound(clip.height / res);
     }
 
-    if (mAncestorClip && mAncestorClip->HasClip()) {
-      clip = mAncestorClip->GetClipRect().Intersect(clip);
+    if (ancestorClip && ancestorClip->HasClip()) {
+      clip = ancestorClip->GetClipRect().Intersect(clip);
     }
 
     parentLayerClip = Some(clip);
@@ -3162,7 +3165,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     mScrolledFrame, mOuter, mOuter->GetContent(),
     aContainerReferenceFrame, aLayer, mScrollParentID,
     scrollport, parentLayerClip, isRootContent, aParameters);
-  result.clip = mAncestorClip;
+  result.clip = ancestorClip;
 
   return Some(result);
 }

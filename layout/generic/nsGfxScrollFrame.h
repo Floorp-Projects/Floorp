@@ -379,7 +379,8 @@ public:
   bool WantAsyncScroll() const;
   Maybe<FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const;
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -837,9 +838,10 @@ public:
   }
   virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const override
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters);
+    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
@@ -1232,9 +1234,10 @@ public:
   }
   virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const override
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters);
+    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
