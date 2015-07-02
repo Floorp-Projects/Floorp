@@ -6,7 +6,6 @@
 // IWYU pragma: private, include "nsString.h"
 
 #include "mozilla/Casting.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"
 
 #ifndef MOZILLA_INTERNAL_API
@@ -1001,23 +1000,14 @@ protected:
                                           size_type aNewLength)
   {
     aCutLength = XPCOM_MIN(aCutLength, mLength - aCutStart);
-
-    mozilla::CheckedInt<size_type> newTotalLen = mLength;
-    newTotalLen -= aCutLength;
-    newTotalLen += aNewLength;
-    if (!newTotalLen.isValid()) {
-      return false;
-    }
-
-    if (aCutStart == mLength && Capacity() > newTotalLen.value()) {
+    uint32_t newTotalLen = mLength - aCutLength + aNewLength;
+    if (aCutStart == mLength && Capacity() > newTotalLen) {
       mFlags &= ~F_VOIDED;
-      mData[newTotalLen.value()] = char_type(0);
-      mLength = newTotalLen.value();
+      mData[newTotalLen] = char_type(0);
+      mLength = newTotalLen;
       return true;
     }
-
-    return ReplacePrepInternal(aCutStart, aCutLength, aNewLength,
-                               newTotalLen.value());
+    return ReplacePrepInternal(aCutStart, aCutLength, aNewLength, newTotalLen);
   }
 
   MOZ_WARN_UNUSED_RESULT bool NS_FASTCALL ReplacePrepInternal(
