@@ -5,9 +5,13 @@
  * to the web console
  */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-762593-insecure-passwords-about-blank-web-console-warning.html";
-const INSECURE_PASSWORD_MSG = "Password fields present on an insecure (http://) page. This is a security risk that allows user login credentials to be stolen.";
+"use strict";
 
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-762593-insecure-passwords-about-blank-web-console-warning.html";
+const INSECURE_PASSWORD_MSG = "Password fields present on an insecure " +
+  "(http://) page. This is a security risk that allows user login " +
+  "credentials to be stolen.";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

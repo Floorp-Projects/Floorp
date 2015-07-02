@@ -8,11 +8,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 588342";
 
 let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-
-"use strict";
 
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);

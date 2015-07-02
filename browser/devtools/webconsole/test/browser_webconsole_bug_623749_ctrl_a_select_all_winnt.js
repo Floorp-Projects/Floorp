@@ -4,6 +4,8 @@
 // Test for https://bugzilla.mozilla.org/show_bug.cgi?id=623749
 // Map Control + A to Select All, In the web console input, on Windows
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,Test console for bug 623749";
 
 let test = asyncTest(function* () {
