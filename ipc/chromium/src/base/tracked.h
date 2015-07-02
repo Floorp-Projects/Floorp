@@ -94,8 +94,8 @@ class Births;
 
 class Tracked {
  public:
-  Tracked();
-  virtual ~Tracked();
+  B2G_ACL_EXPORT Tracked();
+  B2G_ACL_EXPORT virtual ~Tracked();
 
   // Used to record the FROM_HERE location of a caller.
   void SetBirthPlace(const Location& from_here);

@@ -303,7 +303,7 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  already_AddRefed<Image> CreateImage(ImageFormat aFormat);
+  B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
 
   /**
    * Set an Image as the current image to display. The Image must have
@@ -523,7 +523,7 @@ private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
   // Private destructor, to discourage deletion outside of Release():
-  ~ImageContainer();
+  B2G_ACL_EXPORT ~ImageContainer();
 
   void SetCurrentImageInternal(Image* aImage);
 
