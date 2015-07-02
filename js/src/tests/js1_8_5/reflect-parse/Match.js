@@ -42,6 +42,20 @@ var Match =
     Pattern.ANY = new Pattern;
     Pattern.ANY.template = Pattern.ANY;
 
+    Pattern.NUMBER = new Pattern;
+    Pattern.NUMBER.match = function (act) {
+      if (typeof act !== 'number') {
+        throw new MatchError("Expected number, got: " + quote(act));
+      }
+    }
+
+    Pattern.NATURAL = new Pattern
+    Pattern.NATURAL.match = function (act) {
+      if (typeof act !== 'number' || act !== Math.floor(act) || act < 0) {
+        throw new MatchError("Expected natural number, got: " + quote(act));
+      }
+    }
+
     var quote = uneval;
 
     function MatchError(msg) {

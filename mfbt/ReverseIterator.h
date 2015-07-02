@@ -12,7 +12,7 @@
 #define mozilla_ReverseIterator_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/IteratorTraits.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -20,9 +20,6 @@ template<typename IteratorT>
 class ReverseIterator
 {
 public:
-  typedef typename IteratorTraits<IteratorT>::ValueType ValueType;
-  typedef typename IteratorTraits<IteratorT>::DifferenceType DifferenceType;
-
   template<typename Iterator>
   explicit ReverseIterator(Iterator aIter)
     : mCurrent(aIter) { }
@@ -31,7 +28,7 @@ public:
   MOZ_IMPLICIT ReverseIterator(const ReverseIterator<Iterator>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
-  ValueType& operator*() const
+  decltype(*DeclVal<IteratorT>()) operator*() const
   {
     IteratorT tmp = mCurrent;
     return *--tmp;
@@ -43,25 +40,6 @@ public:
   ReverseIterator& operator--() { ++mCurrent; return *this; }
   ReverseIterator operator++(int) { auto ret = *this; mCurrent--; return ret; }
   ReverseIterator operator--(int) { auto ret = *this; mCurrent++; return ret; }
-
-  ReverseIterator operator+(DifferenceType aN) const
-  {
-    return ReverseIterator(mCurrent - aN);
-  }
-  ReverseIterator operator-(DifferenceType aN) const
-  {
-    return ReverseIterator(mCurrent + aN);
-  }
-  ReverseIterator& operator+=(DifferenceType aN)
-  {
-    mCurrent -= aN;
-    return *this;
-  }
-  ReverseIterator& operator-=(DifferenceType aN)
-  {
-    mCurrent += aN;
-    return *this;
-  }
 
   /* Comparison operators */
 

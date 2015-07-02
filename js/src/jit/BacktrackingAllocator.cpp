@@ -900,9 +900,17 @@ BacktrackingAllocator::tryMergeBundles(LiveBundle* bundle0, LiveBundle* bundle1)
         }
     }
 
+    // Limit the number of times we compare ranges if there are many ranges in
+    // one of the bundles, to avoid quadratic behavior.
+    static const size_t MAX_RANGES = 200;
+
     // Make sure that ranges in the bundles do not overlap.
     LiveRange::BundleLinkIterator iter0 = bundle0->rangesBegin(), iter1 = bundle1->rangesBegin();
+    size_t count = 0;
     while (iter0 && iter1) {
+        if (++count >= MAX_RANGES)
+            return true;
+
         LiveRange* range0 = LiveRange::get(*iter0);
         LiveRange* range1 = LiveRange::get(*iter1);
 

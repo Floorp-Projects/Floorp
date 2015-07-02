@@ -42,8 +42,10 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
         allocKind = GetBackgroundAllocKind(allocKind);
 
     ProxyValueArray* values = cx->zone()->new_<ProxyValueArray>();
-    if (!values)
+    if (!values) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     // Note: this will initialize the object's |data| to strange values, but we
     // will immediately overwrite those below.

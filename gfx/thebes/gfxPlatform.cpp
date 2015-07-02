@@ -2475,7 +2475,7 @@ gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
 /*static*/ bool
 gfxPlatform::AsyncPanZoomEnabled()
 {
-#if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_UIKIT)
   // For XUL applications (everything but B2G on mobile and desktop, and
   // Firefox on Android) we only want to use APZ when E10S is enabled. If
   // we ever get input events off the main thread we can consider relaxing
