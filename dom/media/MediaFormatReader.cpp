@@ -1104,9 +1104,7 @@ nsresult
 MediaFormatReader::ResetDecode()
 {
   MOZ_ASSERT(OnTaskQueue());
-
   LOGV("");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mAudio.mSeekRequest.DisconnectIfExists();
   mVideo.mSeekRequest.DisconnectIfExists();
