@@ -1509,9 +1509,6 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     else if (parent) {
       domainInfo->mChildWorkerCount++;
     }
-    else if (isServiceWorker) {
-      domainInfo->mActiveServiceWorkers.AppendElement(aWorkerPrivate);
-    }
     else {
       domainInfo->mActiveWorkers.AppendElement(aWorkerPrivate);
     }
@@ -1616,17 +1613,12 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       domainInfo->mQueuedWorkers.RemoveElementAt(index);
     }
     else if (parent) {
-      MOZ_ASSERT(domainInfo->mChildWorkerCount, "Must be non-zero!");
+      NS_ASSERTION(domainInfo->mChildWorkerCount, "Must be non-zero!");
       domainInfo->mChildWorkerCount--;
     }
-    else if (aWorkerPrivate->IsServiceWorker()) {
-      MOZ_ASSERT(domainInfo->mActiveServiceWorkers.Contains(aWorkerPrivate),
-                 "Don't know about this worker!");
-      domainInfo->mActiveServiceWorkers.RemoveElement(aWorkerPrivate);
-    }
     else {
-      MOZ_ASSERT(domainInfo->mActiveWorkers.Contains(aWorkerPrivate),
-                 "Don't know about this worker!");
+      NS_ASSERTION(domainInfo->mActiveWorkers.Contains(aWorkerPrivate),
+                   "Don't know about this worker!");
       domainInfo->mActiveWorkers.RemoveElement(aWorkerPrivate);
     }
 
@@ -1659,9 +1651,6 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
       if (queuedWorker->GetParent()) {
         domainInfo->mChildWorkerCount++;
-      }
-      else if (queuedWorker->IsServiceWorker()) {
-        domainInfo->mActiveServiceWorkers.AppendElement(queuedWorker);
       }
       else {
         domainInfo->mActiveWorkers.AppendElement(queuedWorker);
@@ -2225,17 +2214,12 @@ RuntimeService::AddAllTopLevelWorkersToArray(const nsACString& aKey,
 
 #ifdef DEBUG
   for (uint32_t index = 0; index < aData->mActiveWorkers.Length(); index++) {
-    MOZ_ASSERT(!aData->mActiveWorkers[index]->GetParent(),
-               "Shouldn't have a parent in this list!");
-  }
-  for (uint32_t index = 0; index < aData->mActiveServiceWorkers.Length(); index++) {
-    MOZ_ASSERT(!aData->mActiveServiceWorkers[index]->GetParent(),
-               "Shouldn't have a parent in this list!");
+    NS_ASSERTION(!aData->mActiveWorkers[index]->GetParent(),
+                 "Shouldn't have a parent in this list!");
   }
 #endif
 
   array->AppendElements(aData->mActiveWorkers);
-  array->AppendElements(aData->mActiveServiceWorkers);
 
   // These might not be top-level workers...
   for (uint32_t index = 0; index < aData->mQueuedWorkers.Length(); index++) {
