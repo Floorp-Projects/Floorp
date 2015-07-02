@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-arm-sim-osx'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'arm-sim-osx'
+  metadata:
+    name: '[TC] Spidermonkey ARM Simulator OSX'
+    description: 'Spidermonkey ARM Simulator OSX'
+  extra:
+    treeherder:
+      symbol: arm
