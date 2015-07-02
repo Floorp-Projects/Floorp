@@ -571,11 +571,12 @@ AudioBufferSourceNode::~AudioBufferSourceNode()
 void
 AudioBufferSourceNode::DestroyMediaStream()
 {
-  if (mStream) {
+  bool hadStream = mStream;
+  if (hadStream) {
     mStream->RemoveMainThreadListener(this);
   }
   AudioNode::DestroyMediaStream();
-  if (Context()) {
+  if (hadStream && Context()) {
     Context()->UnregisterAudioBufferSourceNode(this);
   }
 }
