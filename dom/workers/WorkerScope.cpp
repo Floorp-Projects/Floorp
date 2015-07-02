@@ -14,6 +14,7 @@
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
@@ -39,7 +40,12 @@
 #include "WorkerRunnable.h"
 #include "Performance.h"
 #include "ServiceWorkerClients.h"
+#include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistration.h"
+
+#ifdef XP_WIN
+#undef PostMessage
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
