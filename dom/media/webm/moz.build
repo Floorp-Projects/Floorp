@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'IntelWebMVideoDecoder.h',
+    'NesteggPacketHolder.h',
     'SoftwareWebMVideoDecoder.h',
     'WebMBufferedParser.h',
     'WebMDecoder.h',
