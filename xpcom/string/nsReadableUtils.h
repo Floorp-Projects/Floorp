@@ -119,7 +119,7 @@ char* ToNewCString(const nsACString& aSource);
  * @return a new |char| buffer you must free with |free|.
  */
 
-char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
+B2G_ACL_EXPORT char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
 
 
 /**
