@@ -281,8 +281,21 @@ public final class GeckoLoader {
             }
         }
 
-        final String abi = getCPUABI();
+        if (AppConstants.Versions.feature21Plus) {
+            String[] abis = Build.SUPPORTED_ABIS;
+            for (String abi : abis) {
+                if (tryLoadWithABI(lib, outDir, apkPath, abi)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            final String abi = getCPUABI();
+            return tryLoadWithABI(lib, outDir, apkPath, abi);
+        }
+    }
 
+    private static boolean tryLoadWithABI(String lib, String outDir, String apkPath, String abi) {
         try {
             final ZipFile zipFile = new ZipFile(new File(apkPath));
             try {
