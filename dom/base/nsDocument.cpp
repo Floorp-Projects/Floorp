@@ -9217,14 +9217,31 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 }
 
 static void
+DispatchCustomEventWithFlush(nsINode* aTarget, const nsAString& aEventType,
+                             bool aBubbles, bool aOnlyChromeDispatch)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
+  nsresult rv = event->InitEvent(aEventType, aBubbles, false);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  event->SetTrusted(true);
+  if (aOnlyChromeDispatch) {
+    event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  }
+  if (nsIPresShell* shell = aTarget->OwnerDoc()->GetShell()) {
+    shell->GetPresContext()->
+      RefreshDriver()->ScheduleEventDispatch(aTarget, event);
+  }
+}
+
+static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(aTarget,
-                             NS_LITERAL_STRING("mozfullscreenchange"),
-                             true,
-                             false);
-  asyncDispatcher->PostDOMEvent();
+  DispatchCustomEventWithFlush(
+    aTarget, NS_LITERAL_STRING("mozfullscreenchange"),
+    /* Bubbles */ true, /* OnlyChrome */ false);
 }
 
 void
@@ -11298,11 +11315,9 @@ nsDocument::RestorePreviousFullScreenState()
         if (!nsContentUtils::HaveEqualPrincipals(fullScreenDoc, doc) ||
             (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen") &&
              !static_cast<nsDocument*>(doc)->mIsApprovedForFullscreen)) {
-          nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-            new AsyncEventDispatcher(
-                doc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-                /* Bubbles */ true, /* ChromeOnly */ true);
-          asyncDispatcher->PostDOMEvent();
+          DispatchCustomEventWithFlush(
+            doc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+            /* Bubbles */ true, /* ChromeOnly */ true);
         }
       }
       break;
@@ -11857,11 +11872,9 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // shouldn't rely on this event itself.
   if (aRequest.mShouldNotifyNewOrigin &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
-    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(
-        this, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-        /* Bubbles */ true, /* ChromeOnly */ true);
-    asyncDispatcher->PostDOMEvent();
+    DispatchCustomEventWithFlush(
+      this, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+      /* Bubbles */ true, /* ChromeOnly */ true);
   }
 
   // Dispatch "mozfullscreenchange" events. Note this loop is in reverse
