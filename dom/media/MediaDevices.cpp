@@ -7,6 +7,7 @@
 #include "mozilla/dom/MediaDevicesBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/MediaManager.h"
+#include "MediaTrackConstraints.h"
 #include "nsIEventTarget.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
