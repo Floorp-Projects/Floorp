@@ -212,7 +212,8 @@ class NrIceCtx {
                                  bool offerer,
                                  bool set_interface_priorities = true,
                                  bool allow_loopback = false,
-                                 bool tcp_enabled = true);
+                                 bool tcp_enabled = true,
+                                 bool allow_link_local = false);
 
   // Deinitialize all ICE global state. Used only for testing.
   static void internal_DeinitializeGlobal();

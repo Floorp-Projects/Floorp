@@ -4773,11 +4773,10 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   if (canDraw2D) {
     // If the container's transform is animated off main thread, fix a suitable scale size
     // for animation
-    if (aContainerFrame->GetContent() &&
-        aContainerItem &&
+    if (aContainerItem &&
         aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
         nsLayoutUtils::HasAnimationsForCompositor(
-          aContainerFrame->GetContent(), eCSSProperty_transform)) {
+          aContainerFrame, eCSSProperty_transform)) {
       // Use the size of the nearest widget as the maximum size.  This
       // is important since it might be a popup that is bigger than the
       // pres context's size.
@@ -4795,7 +4794,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       // compute scale using the animation on the container (ignoring
       // its ancestors)
       scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(
-                aContainerFrame->GetContent(), aVisibleRect.Size(),
+                aContainerFrame, aVisibleRect.Size(),
                 displaySize);
       // multiply by the scale inherited from ancestors
       scale.width *= aIncomingScale.mXScale;

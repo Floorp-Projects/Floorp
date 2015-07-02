@@ -119,7 +119,7 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
 
 int
 nr_stun_get_addrs(nr_local_addr aAddrs[], int aMaxAddrs,
-                  int aDropLoopback, int* aCount)
+                  int aDropLoopback, int aDropLinkLocal, int* aCount)
 {
   nsresult rv;
   int r;
@@ -141,7 +141,6 @@ nr_stun_get_addrs(nr_local_addr aAddrs[], int aMaxAddrs,
   for (size_t i = 0; i < num_interface; ++i) {
     NetworkInterface &interface = interfaces[i];
     if (nr_sockaddr_to_transport_addr((sockaddr*)&(interface.addr),
-                                      sizeof(struct sockaddr_in),
                                       IPPROTO_UDP, 0, &(aAddrs[n].addr))) {
       r_log(NR_LOG_STUN, LOG_WARNING, "Problem transforming address");
       return R_FAILED;
@@ -154,7 +153,7 @@ nr_stun_get_addrs(nr_local_addr aAddrs[], int aMaxAddrs,
   }
 
   *aCount = n;
-  r = nr_stun_remove_duplicate_addrs(aAddrs, aDropLoopback, aCount);
+  r = nr_stun_remove_duplicate_addrs(aAddrs, aDropLoopback, aDropLinkLocal, aCount);
   if (r != 0) {
     return r;
   }

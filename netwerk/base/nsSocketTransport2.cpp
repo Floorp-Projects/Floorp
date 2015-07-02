@@ -7,6 +7,7 @@
 #include "nsSocketTransport2.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Telemetry.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
@@ -50,6 +51,11 @@
 #include <netinet/tcp.h>
 #endif
 /* End keepalive config inclusions. */
+
+#define SUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS 0
+#define UNSUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS 1
+#define SUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS 2
+#define UNSUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS 3
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -1501,6 +1507,16 @@ nsSocketTransport::RecoverFromError()
 
     bool tryAgain = false;
 
+    if (mSocketTransportService->IsTelemetryEnabled()) {
+        if (mNetAddr.raw.family == AF_INET) {
+            Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                                  UNSUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
+        } else if (mNetAddr.raw.family == AF_INET6) {
+            Telemetry::Accumulate(Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                                  UNSUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS);
+        }
+    }
+
     if (mConnectionFlags & (DISABLE_IPV6 | DISABLE_IPV4) &&
         mCondition == NS_ERROR_UNKNOWN_HOST &&
         mState == STATE_RESOLVING &&
@@ -1855,6 +1871,18 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
             // we are connected!
             //
             OnSocketConnected();
+
+            if (mSocketTransportService->IsTelemetryEnabled()) {
+                if (mNetAddr.raw.family == AF_INET) {
+                    Telemetry::Accumulate(
+                        Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                        SUCCESSFUL_CONNECTING_TO_IPV4_ADDRESS);
+                } else if (mNetAddr.raw.family == AF_INET6) {
+                    Telemetry::Accumulate(
+                        Telemetry::IPV4_AND_IPV6_ADDRESS_CONNECTIVITY,
+                        SUCCESSFUL_CONNECTING_TO_IPV6_ADDRESS);
+                }
+            }
         }
         else {
             PRErrorCode code = PR_GetError();

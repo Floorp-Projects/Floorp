@@ -3551,7 +3551,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
   if (!isNavigation) {
     MOZ_ASSERT(aDoc);
     aRv = GetDocumentController(aDoc->GetInnerWindow(), getter_AddRefs(serviceWorker));
-    clientInfo = new ServiceWorkerClientInfo(aDoc);
+    clientInfo = new ServiceWorkerClientInfo(aDoc, aDoc->GetWindow());
   } else {
     nsCOMPtr<nsIChannel> internalChannel;
     aRv = aChannel->GetChannel(getter_AddRefs(internalChannel));
@@ -3924,7 +3924,7 @@ EnumControlledDocuments(nsISupports* aKey,
     return PL_DHASH_NEXT;
   }
 
-  ServiceWorkerClientInfo clientInfo(document);
+  ServiceWorkerClientInfo clientInfo(document, document->GetWindow());
   data->mDocuments.AppendElement(clientInfo);
 
   return PL_DHASH_NEXT;
