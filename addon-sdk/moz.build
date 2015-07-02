@@ -29,7 +29,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
 
     EXTRA_JS_MODULES.commonjs.sdk.deprecated += [
         'source/lib/sdk/deprecated/api-utils.js',
-        'source/lib/sdk/deprecated/memory.js',
         'source/lib/sdk/deprecated/sync-worker.js',
         'source/lib/sdk/deprecated/unit-test-finder.js',
         'source/lib/sdk/deprecated/unit-test.js',
@@ -258,6 +257,10 @@ EXTRA_JS_MODULES.commonjs.sdk.content += [
     'source/lib/sdk/content/worker.js',
 ]
 
+EXTRA_JS_MODULES.commonjs.sdk.content.sandbox += [
+    'source/lib/sdk/content/sandbox/events.js',
+]
+
 EXTRA_JS_MODULES.commonjs.sdk['context-menu'] += [
     'source/lib/sdk/context-menu/context.js',
     'source/lib/sdk/context-menu/core.js',
@@ -307,7 +310,6 @@ EXTRA_JS_MODULES.commonjs.sdk.input += [
 EXTRA_JS_MODULES.commonjs.sdk.io += [
     'source/lib/sdk/io/buffer.js',
     'source/lib/sdk/io/byte-streams.js',
-    'source/lib/sdk/io/data.js',
     'source/lib/sdk/io/file.js',
     'source/lib/sdk/io/fs.js',
     'source/lib/sdk/io/stream.js',
@@ -453,7 +455,6 @@ EXTRA_JS_MODULES.commonjs.sdk.url += [
 
 EXTRA_JS_MODULES.commonjs.sdk.util += [
     'source/lib/sdk/util/array.js',
-    'source/lib/sdk/util/bond.js',
     'source/lib/sdk/util/collection.js',
     'source/lib/sdk/util/contract.js',
     'source/lib/sdk/util/deprecate.js',
