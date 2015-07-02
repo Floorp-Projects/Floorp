@@ -263,7 +263,7 @@ this.Keyboard = {
         break;
       case 'Keyboard:Register':
         this._keyboardMM = mm;
-        if (kbID !== null) {
+        if (kbID) {
           // keyboard identifies itself, use its kbID
           // this msg would be async, so no need to return
           this._keyboardID = kbID;
