@@ -53,22 +53,16 @@
                  class="identity-popup-text"
                  crop="end">&trackingProtection.notDetected;</label>
 
-          <button id="tracking-actions"
-            type="menu" label="&trackingContentBlocked.options;"
-            sizetopopup="none">
-            <menupopup>
-              <menuitem
-                id="tracking-action-unblock"
-                label="&trackingProtection.unblock.label;"
-                accesskey="&trackingProtection.unblock.accesskey;"
-                oncommand="TrackingProtection.disableForCurrentPage();"/>
-              <menuitem
-                id="tracking-action-block"
-                label="&trackingProtection.block.label;"
-                accesskey="&trackingProtection.block.accesskey;"
-                oncommand="TrackingProtection.enableForCurrentPage();"/>
-            </menupopup>
-          </button>
+          <button id="tracking-action-unblock"
+                  label="&trackingProtection.unblock.label;"
+                  class="identity-popup-button"
+                  accesskey="&trackingProtection.unblock.accesskey;"
+                  oncommand="TrackingProtection.disableForCurrentPage();" />
+          <button id="tracking-action-block"
+                  label="&trackingProtection.block.label;"
+                  class="identity-popup-button"
+                  accesskey="&trackingProtection.block.accesskey;"
+                  oncommand="TrackingProtection.enableForCurrentPage();" />
         </vbox>
       </hbox>
 

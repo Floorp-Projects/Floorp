@@ -14,16 +14,6 @@ module.metadata = {
 const { getTabForContentWindow, getTabForBrowser: getRawTabForBrowser } = require('./utils');
 const { modelFor } = require('../model/core');
 
-function getTabForWindow(win) {
-  let tab = getTabForContentWindow(win);
-  // We were unable to find the related tab!
-  if (!tab)
-    return null;
-
-  return modelFor(tab);
-}
-exports.getTabForWindow = getTabForWindow;
-
 exports.getTabForRawTab = modelFor;
 
 function getTabForBrowser(browser) {

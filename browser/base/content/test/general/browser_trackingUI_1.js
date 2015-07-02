@@ -27,9 +27,19 @@ function hidden(sel) {
   return display === "none";
 }
 
+function clickButton(sel) {
+  let win = gBrowser.ownerGlobal;
+  let el = win.document.querySelector(sel);
+  el.doCommand();
+}
+
 function testBenignPage() {
+  info("Non-tracking content must not be blocked");
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
+
+  ok (hidden("#tracking-action-block"), "blockButton is hidden");
+  ok (hidden("#tracking-action-unblock"), "unblockButton is hidden");
 
   // Make sure that the no tracking elements message appears
   ok (!hidden("#tracking-not-detected"), "labelNoTracking is visible");
@@ -38,8 +48,12 @@ function testBenignPage() {
 }
 
 function testTrackingPage() {
+  info("Tracking content must be blocked");
   ok (!TrackingProtection.content.hasAttribute("block-disabled"), "blocking not disabled");
   ok (TrackingProtection.content.hasAttribute("block-active"), "blocking is active");
+
+  ok (hidden("#tracking-action-block"), "blockButton is hidden");
+  ok (!hidden("#tracking-action-unblock"), "unblockButton is visible");
 
   // Make sure that the blocked tracking elements message appears
   ok (hidden("#tracking-not-detected"), "labelNoTracking is hidden");
@@ -48,8 +62,12 @@ function testTrackingPage() {
 }
 
 function testTrackingPageWhitelisted() {
+  info("Tracking content must be white-listed and not blocked");
   ok (TrackingProtection.content.hasAttribute("block-disabled"), "blocking is disabled");
   ok (!TrackingProtection.content.hasAttribute("block-active"), "blocking is not active");
+
+  ok (!hidden("#tracking-action-block"), "blockButton is visible");
+  ok (hidden("#tracking-action-unblock"), "unblockButton is hidden");
 
   // Make sure that the blocked tracking elements message appears
   ok (hidden("#tracking-not-detected"), "labelNoTracking is hidden");
@@ -65,37 +83,30 @@ add_task(function* () {
   TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
   ok (TrackingProtection, "Functionality is attached to the browser window");
   is (TrackingProtection.enabled, Services.prefs.getBoolPref(PREF),
-    "The initial enabled value is based on the default pref value");
+    "TP.enabled is based on the original pref value");
 
-  info("Enable Tracking Protection");
   Services.prefs.setBoolPref(PREF, true);
-  ok (TrackingProtection.enabled, "Functionality is enabled after setting the pref");
+  ok (TrackingProtection.enabled, "TP is enabled after setting the pref");
 
-  info("Point tab to a test page NOT containing tracking elements");
+  info("Load a test page not containing tracking elements");
   yield promiseTabLoadEvent(tab, BENIGN_PAGE);
   testBenignPage();
 
-  info("Point tab to a test page containing tracking elements");
+  info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
-
-  info("Tracking content must be blocked");
   testTrackingPage();
 
-  info("Disable Tracking Content Protection for the page (which reloads the page)");
-  TrackingProtection.disableForCurrentPage();
+  info("Disable TP for the page (which reloads the page)");
+  clickButton("#tracking-action-unblock");
 
-  info("Wait for tab to reload following tracking-protection page white-listing");
+  info("Wait for tab to reload following TP white-listing");
   yield promiseTabLoadEvent(tab);
-
-  info("Tracking content must be white-listed (NOT blocked)");
   testTrackingPageWhitelisted();
 
-  info("Re-enable Tracking Content Protection for the page (which reloads the page)");
-  TrackingProtection.enableForCurrentPage();
+  info("Re-enable TP for the page (which reloads the page)");
+  clickButton("#tracking-action-block");
 
-  info("Wait for tab to reload following tracking-protection page white-listing");
+  info("Wait for tab to reload following TP black-listing");
   yield promiseTabLoadEvent(tab);
-
-  info("Tracking content must be blocked");
   testTrackingPage();
 });

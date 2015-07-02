@@ -11,6 +11,7 @@ var expect = chai.expect;
 var ini = require("./update-ini");
 
 var addonINI = path.resolve("./test/addons/jetpack-addon.ini");
+var packageINI = path.resolve("./test/jetpack-package.ini");
 
 describe("Checking ini files", function () {
 
@@ -20,7 +21,10 @@ describe("Checking ini files", function () {
       if (err) {
         throw err;
       }
-      var text = data.toString();
+      // filter comments
+      var text = data.toString().split("\n").filter(function(line) {
+        return !/^\s*#/.test(line);
+      }).join("\n");
       var expected = "";
 
       ini.makeAddonIniContent()
@@ -28,7 +32,32 @@ describe("Checking ini files", function () {
         expected = contents;
 
         setTimeout(function end() {
-          expect(expected.trim()).to.be.equal(text.trim());
+          expect(text.trim()).to.be.equal(expected.trim());
+          done();
+        });
+      });
+    });
+
+  });
+
+  it("Check test/jetpack-package.ini", function (done) {
+
+    fs.readFile(packageINI, function (err, data) {
+      if (err) {
+        throw err;
+      }
+      // filter comments
+      var text = data.toString().split("\n").filter(function(line) {
+        return !/^\s*#/.test(line);
+      }).join("\n");
+      var expected = "";
+
+      ini.makePackageIniContent()
+      .then(function(contents) {
+        expected = contents;
+
+        setTimeout(function end() {
+          expect(text.trim()).to.be.equal(expected.trim());
           done();
         });
       });

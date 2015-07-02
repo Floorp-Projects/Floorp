@@ -6,10 +6,10 @@
 var { isNative } = require("@loader/options");
 
 exports["test local vs sdk module"] = function (assert) {
-  assert.notEqual(require("memory"),
-                  require("sdk/deprecated/memory"),
+  assert.notEqual(require("list"),
+                  require("sdk/util/list"),
                   "Local module takes the priority over sdk modules");
-  assert.ok(require("memory").local,
+  assert.ok(require("list").local,
             "this module is really the local one");
 }
 

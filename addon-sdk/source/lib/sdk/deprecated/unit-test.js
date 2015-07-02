@@ -7,7 +7,6 @@ module.metadata = {
   "stability": "deprecated"
 };
 
-const memory = require("./memory");
 const timer = require("../timers");
 const cfxArgs = require("../test/options");
 const { getTabs, closeTab, getURI, getTabId, getSelectedTab } = require("../tabs/utils");
@@ -47,7 +46,6 @@ const TestRunner = function TestRunner(options) {
 
   this.fs = options.fs;
   this.console = options.console || console;
-  memory.track(this);
   this.passed = 0;
   this.failed = 0;
   this.testRunSummary = [];
@@ -283,40 +281,46 @@ TestRunner.prototype = {
     }
 
     this.isDone = true;
+    this.pass("This test is done.");
+
     if (this.test.teardown) {
       this.test.teardown(this);
     }
+
     if (this.waitTimeout !== null) {
       timer.clearTimeout(this.waitTimeout);
       this.waitTimeout = null;
     }
+
     // Do not leave any callback set when calling to `waitUntil`
     this.waitUntilCallback = null;
     if (this.test.passed == 0 && this.test.failed == 0) {
       this._logTestFailed("empty test");
+
       if ("testMessage" in this.console) {
         this.console.testMessage(false, false, this.test.name, "Empty test");
       }
       else {
         this.console.error("fail:", "Empty test")
       }
+
       this.failed++;
       this.test.failed++;
     }
 
     let wins = windows(null, { includePrivate: true });
-    let winPromises = wins.map(win =>  {
-      let { promise, resolve } = defer();
-      if (["interactive", "complete"].indexOf(win.document.readyState) >= 0) {
-        resolve()
-      }
-      else {
-        win.addEventListener("DOMContentLoaded", function onLoad() {
-          win.removeEventListener("DOMContentLoaded", onLoad, false);
-          resolve();
-        }, false);
-      }
-      return promise;
+    let winPromises = wins.map(win => {
+      return new Promise(resolve => {
+        if (["interactive", "complete"].indexOf(win.document.readyState) >= 0) {
+          resolve()
+        }
+        else {
+          win.addEventListener("DOMContentLoaded", function onLoad() {
+            win.removeEventListener("DOMContentLoaded", onLoad, false);
+            resolve();
+          }, false);
+        }
+      });
     });
 
     PromiseDebugging.flushUncaughtErrors();
@@ -358,9 +362,17 @@ TestRunner.prototype = {
         }
       }
 
-      return null;
+      return failure;
     }).
-    then(cleanUI).
+    then(failure => {
+      if (!failure) {
+        this.pass("There was a clean UI.");
+        return null;
+      }
+      return cleanUI().then(() => {
+        this.pass("There is a clean UI.");
+      });
+    }).
     then(() => {
       this.testRunSummary.push({
         name: this.test.name,

@@ -1,0 +1,31 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Worker test</title>
+</head>
+<body>
+  <p id="paragraph">Lorem ipsum dolor sit amet.</p>
+  <script>
+    if ("addon" in window) {
+      var count = 1;
+      addon.port.on("get-result", () => {
+        console.log("get-result recieved");
+        addon.port.emit("result" + count++, extras && extras.test())
+      });
+    }
+
+    window.addEventListener("message", function getMessage({ data }) {
+      if (data.name == "start") {
+        window.postMessage({
+          name: "extras",
+          result: window.extras === undefined
+        }, '*');
+      }
+    }, false);
+  </script>
+</body>
+</html>

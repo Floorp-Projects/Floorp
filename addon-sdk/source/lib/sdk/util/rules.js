@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -10,9 +9,7 @@ module.metadata = {
 
 const { Class } = require('../core/heritage');
 const { MatchPattern } = require('./match-pattern');
-const { on, off, emit } = require('../event/core');
-const { method } = require('../lang/functional');
-const objectUtil = require('./object');
+const { emit } = require('../event/core');
 const { EventTarget } = require('../event/target');
 const { List, addListItem, removeListItem } = require('./list');
 
