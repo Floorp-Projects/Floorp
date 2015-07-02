@@ -12,7 +12,7 @@ const {AnimationsFront} = require("devtools/server/actors/animation");
 const {InspectorFront} = require("devtools/server/actors/inspector");
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "animation.html");
+  yield addTab(MAIN_DOMAIN + "animation.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -28,29 +28,24 @@ add_task(function*() {
   let players = yield animations.getAnimationPlayersForNode(node);
   is(players.length, 0, "The node has no animation players yet");
 
-  info("Listen for new animations");
-  let reportedMutations = [];
-  function onMutations(mutations) {
-    reportedMutations = [...reportedMutations, ...mutations];
-  }
-  animations.on("mutations", onMutations);
-
-  info("Transition the node by adding the expand class");
+  info("Play a transition by adding the expand class, wait for mutations");
+  let onMutations = expectMutationEvents(animations, 2);
   let cpow = content.document.querySelector(".all-transitions");
   cpow.classList.add("expand");
-  info("Wait for longer than the transition");
-  yield wait(500);
+  let reportedMutations = yield onMutations;
 
   is(reportedMutations.length, 2, "2 mutation events were received");
   is(reportedMutations[0].type, "added", "The first event was 'added'");
   is(reportedMutations[1].type, "added", "The second event was 'added'");
 
-  reportedMutations = [];
+  info("Wait for the transitions to be finished");
+  yield waitForEnd(reportedMutations[0].player);
+  yield waitForEnd(reportedMutations[1].player);
 
-  info("Transition back by removing the expand class");
+  info("Play the transition back by removing the class, wait for mutations");
+  onMutations = expectMutationEvents(animations, 4);
   cpow.classList.remove("expand");
-  info("Wait for longer than the transition");
-  yield wait(500);
+  reportedMutations = yield onMutations;
 
   is(reportedMutations.length, 4, "4 new mutation events were received");
   is(reportedMutations.filter(m => m.type === "removed").length, 2,
@@ -58,14 +53,34 @@ add_task(function*() {
   is(reportedMutations.filter(m => m.type === "added").length, 2,
     "2 'added' events were sent (for the new transitions)");
 
-  animations.off("mutations", onMutations);
-
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
 
-function wait(ms) {
+function expectMutationEvents(animationsFront, nbOfEvents) {
   return new Promise(resolve => {
-    setTimeout(resolve, ms);
+    let reportedMutations = [];
+    function onMutations(mutations) {
+      reportedMutations = [...reportedMutations, ...mutations];
+      info("Received " + reportedMutations.length + " mutation events, " +
+           "expecting " + nbOfEvents);
+      if (reportedMutations.length === nbOfEvents) {
+        animationsFront.off("mutations", onMutations);
+        resolve(reportedMutations);
+      }
+    }
+
+    info("Start listening for mutation events from the AnimationsFront");
+    animationsFront.on("mutations", onMutations);
   });
+}
+
+function* waitForEnd(animationFront) {
+  let playState;
+  while (playState !== "finished") {
+    let state = yield animationFront.getCurrentState();
+    playState = state.playState;
+    info("Wait for transition " + animationFront.state.name +
+         " to finish, playState=" + playState);
+  }
 }
