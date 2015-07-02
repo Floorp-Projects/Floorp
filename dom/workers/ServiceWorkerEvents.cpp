@@ -262,7 +262,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   nsAutoPtr<RespondWithClosure> closure(
       new RespondWithClosure(mInterceptedChannel, ir, worker->GetChannelInfo()));
   nsCOMPtr<nsIInputStream> body;
-  response->GetBody(getter_AddRefs(body));
+  ir->GetInternalBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
   if (body) {
     response->SetBodyUsed();
