@@ -275,6 +275,9 @@ pref("browser.search.order.US.3", "chrome://browser/locale/region.properties");
 // disable updating
 pref("browser.search.update", false);
 
+// enable tracking protection for private browsing
+pref("privacy.trackingprotection.pbmode.enabled", true);
+
 // disable search suggestions by default
 pref("browser.search.suggest.enabled", false);
 pref("browser.search.suggest.prompted", false);
