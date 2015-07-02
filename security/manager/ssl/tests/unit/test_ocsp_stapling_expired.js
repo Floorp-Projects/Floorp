@@ -21,7 +21,7 @@ function add_ocsp_test(aHost, aExpectedResult, aOCSPResponseToServe) {
       gOCSPRequestCount = 0;
     },
     function() {
-      do_check_eq(gOCSPRequestCount, 1);
+      equal(gOCSPRequestCount, 1, "Should have made 1 fallback OCSP request");
     });
 }
 
@@ -158,10 +158,15 @@ function check_ocsp_stapling_telemetry() {
                     .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
-  do_check_eq(histogram.counts[0], 0); // histogram bucket 0 is unused
-  do_check_eq(histogram.counts[1], 0); // 0 connections with a good response
-  do_check_eq(histogram.counts[2], 0); // 0 connections with no stapled resp.
-  do_check_eq(histogram.counts[3], 21); // 21 connections with an expired response
-  do_check_eq(histogram.counts[4], 0); // 0 connections with bad responses
+  equal(histogram.counts[0], 0,
+        "Should have 0 connections for unused histogram bucket 0");
+  equal(histogram.counts[1], 0,
+        "Actual and expected connections with a good response should match");
+  equal(histogram.counts[2], 0,
+        "Actual and expected connections with no stapled response should match");
+  equal(histogram.counts[3], 21,
+        "Actual and expected connections with an expired response should match");
+  equal(histogram.counts[4], 0,
+        "Actual and expected connections with bad responses should match");
   run_next_test();
 }

@@ -8,10 +8,11 @@ const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {})
 const { require } = devtools;
 const Editor  = require("devtools/sourceeditor/editor");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 /**

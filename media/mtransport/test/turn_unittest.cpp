@@ -132,7 +132,7 @@ class TurnClient : public ::testing::Test {
       net_socket_ = real_socket_;
     }
 
-    r = nr_ip4_str_port_to_transport_addr(turn_server_.c_str(), 3478,
+    r = nr_str_port_to_transport_addr(turn_server_.c_str(), 3478,
       protocol_, &addr);
     ASSERT_EQ(0, r);
 
@@ -237,10 +237,10 @@ class TurnClient : public ::testing::Test {
     std::string host = target.substr(4, offset - 4);
     std::string port = target.substr(offset + 1);
 
-    r = nr_ip4_str_port_to_transport_addr(host.c_str(),
-                                          atoi(port.c_str()),
-                                          IPPROTO_UDP,
-                                          &addr);
+    r = nr_str_port_to_transport_addr(host.c_str(),
+                                      atoi(port.c_str()),
+                                      IPPROTO_UDP,
+                                      &addr);
     ASSERT_EQ(0, r);
 
     r = nr_turn_client_ensure_perm(turn_ctx_, &addr);
@@ -324,10 +324,10 @@ class TurnClient : public ::testing::Test {
     std::string host = target.substr(4, offset - 4);
     std::string port = target.substr(offset + 1);
 
-    r = nr_ip4_str_port_to_transport_addr(host.c_str(),
-                                          atoi(port.c_str()),
-                                          IPPROTO_UDP,
-                                          &addr);
+    r = nr_str_port_to_transport_addr(host.c_str(),
+                                      atoi(port.c_str()),
+                                      IPPROTO_UDP,
+                                      &addr);
     ASSERT_EQ(0, r);
 
     unsigned char test[100];
@@ -488,8 +488,8 @@ int main(int argc, char **argv)
   }
   {
     nr_transport_addr addr;
-    if (nr_ip4_str_port_to_transport_addr(g_turn_server.c_str(), 3478,
-                                          IPPROTO_UDP, &addr)) {
+    if (nr_str_port_to_transport_addr(g_turn_server.c_str(), 3478,
+                                      IPPROTO_UDP, &addr)) {
       printf("Invalid TURN_SERVER_ADDRESS \"%s\". Only IP numbers supported.\n",
              g_turn_server.c_str());
       return 0;
@@ -504,7 +504,7 @@ int main(int argc, char **argv)
   std::string dummy("dummy");
   RUN_ON_THREAD(test_utils->sts_target(),
                 WrapRunnableNM(&NrIceCtx::Create,
-                               dummy, false, false, false, false),
+                               dummy, false, false, false, false, false),
                 NS_DISPATCH_SYNC);
 
   // Start the tests

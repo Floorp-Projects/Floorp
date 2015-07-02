@@ -446,9 +446,15 @@ nr_stun_attr_codec_addr_encode(nr_stun_attr_info *attr_info, void *data, int off
         break;
 
     case NR_IPV6:
-        assert(0);
-        ABORT(R_INTERNAL);
+        family = NR_STUN_IPV6_FAMILY;
+        if (nr_stun_encode_htons(20              , buflen, buf, &offset)
+         || nr_stun_encode(&pad, 1               , buflen, buf, &offset)
+         || nr_stun_encode(&family, 1            , buflen, buf, &offset)
+         || nr_stun_encode_htons(ntohs(addr->u.addr6.sin6_port), buflen, buf, &offset)
+         || nr_stun_encode(addr->u.addr6.sin6_addr.s6_addr, 16, buflen, buf, &offset))
+            ABORT(R_FAILED);
         break;
+
     default:
         assert(0);
         ABORT(R_INTERNAL);
@@ -470,6 +476,7 @@ nr_stun_attr_codec_addr_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR 
     UCHAR family;
     UINT2 port;
     UINT4 addr4;
+    struct in6_addr addr6;
     nr_transport_addr *result = data;
 
     if (nr_stun_decode(1, buf, buflen, &offset, &pad)
@@ -492,17 +499,17 @@ nr_stun_attr_codec_addr_decode(nr_stun_attr_info *attr_info, int attrlen, UCHAR 
         break;
 
     case NR_STUN_IPV6_FAMILY:
-        if (attrlen != 16) {
+        if (attrlen != 20) {
             r_log(NR_LOG_STUN, LOG_WARNING, "Illegal attribute length: %d", attrlen);
             ABORT(R_FAILED);
         }
 
-        r_log(NR_LOG_STUN, LOG_WARNING, "IPv6 not supported");
-#ifdef NDEBUG
-        ABORT(SKIP_ATTRIBUTE_DECODE);
-#else
-        UNIMPLEMENTED;
-#endif /* NDEBUG */
+        if (nr_stun_decode_htons(buf, buflen, &offset, &port)
+         || nr_stun_decode(16, buf, buflen, &offset, addr6.s6_addr))
+            ABORT(R_FAILED);
+
+        if (nr_ip6_port_to_transport_addr(&addr6, port, IPPROTO_UDP, result))
+            ABORT(R_FAILED);
         break;
 
     default:
@@ -1094,7 +1101,7 @@ nr_stun_attr_codec_xor_mapped_address_encode(nr_stun_attr_info *attr_info, void 
      * message ID for this */
     magic_cookie = ntohl(header->magic_cookie);
 
-    nr_stun_xor_mapped_address(magic_cookie, &xor_mapped_address->unmasked, &xor_mapped_address->masked);
+    nr_stun_xor_mapped_address(magic_cookie, header->id, &xor_mapped_address->unmasked, &xor_mapped_address->masked);
 
     r_log(NR_LOG_STUN, LOG_DEBUG, "Masked XOR-MAPPED-ADDRESS = %s", xor_mapped_address->masked.as_string);
 
@@ -1123,7 +1130,7 @@ nr_stun_attr_codec_xor_mapped_address_decode(nr_stun_attr_info *attr_info, int a
      * message ID for this */
     magic_cookie = ntohl(header->magic_cookie);
 
-    nr_stun_xor_mapped_address(magic_cookie, &xor_mapped_address->masked, &xor_mapped_address->unmasked);
+    nr_stun_xor_mapped_address(magic_cookie, header->id, &xor_mapped_address->masked, &xor_mapped_address->unmasked);
 
     r_log(NR_LOG_STUN, LOG_DEBUG, "Unmasked XOR-MAPPED-ADDRESS = %s", xor_mapped_address->unmasked.as_string);
 

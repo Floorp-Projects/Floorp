@@ -18,6 +18,7 @@
 #include "nsPIDOMWindow.h"
 
 class nsIConsoleAPIStorage;
+class nsIPrincipal;
 class nsIProfiler;
 class nsIXPConnectJSObjectHolder;
 

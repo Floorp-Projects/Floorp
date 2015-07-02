@@ -18,7 +18,6 @@ import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.overlays.OverlayConstants;
 import org.mozilla.gecko.overlays.service.OverlayActionService;
-import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
 import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
 import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
 import org.mozilla.gecko.sync.setup.activities.WebURLFinder;

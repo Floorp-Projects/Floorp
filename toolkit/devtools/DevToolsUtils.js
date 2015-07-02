@@ -651,3 +651,17 @@ exports.settleAll = values => {
 
   return deferred.promise;
 };
+
+/**
+ * When the testing flag is set, various behaviors may be altered from
+ * production mode, typically to enable easier testing or enhanced debugging.
+ */
+let testing = false;
+Object.defineProperty(exports, "testing", {
+  get: function() {
+    return testing;
+  },
+  set: function(state) {
+    testing = state;
+  }
+});

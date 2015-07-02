@@ -9,7 +9,8 @@
 
 import os
 import sys
-import xpidl, xpt
+import xpidl
+import xpt
 
 # A map of xpidl.py types to xpt.py types
 TypeMap = {
@@ -47,9 +48,11 @@ TypeMap = {
     'jsval':              xpt.Type.Tags.jsval
 }
 
+
 # XXXkhuey dipper types should go away (bug 677784)
 def isDipperType(type):
     return type == xpt.Type.Tags.DOMString or type == xpt.Type.Tags.AString or type == xpt.Type.Tags.CString or type == xpt.Type.Tags.UTF8String
+
 
 def build_interface(iface, ifaces):
     def get_type(type, calltype, iid_is=None, size_is=None):
@@ -59,16 +62,16 @@ def build_interface(iface, ifaces):
             type = type.realtype
 
         if isinstance(type, xpidl.Builtin):
-            if type.name == 'string' and size_is != None:
-                  return xpt.StringWithSizeType(size_is, size_is)
-            elif type.name == 'wstring' and size_is != None:
-                  return xpt.WideStringWithSizeType(size_is, size_is)
+            if type.name == 'string' and size_is is not None:
+                return xpt.StringWithSizeType(size_is, size_is)
+            elif type.name == 'wstring' and size_is is not None:
+                return xpt.WideStringWithSizeType(size_is, size_is)
             else:
-                  tag = TypeMap[type.name]
-                  isPtr = (tag == xpt.Type.Tags.char_ptr or tag == xpt.Type.Tags.wchar_t_ptr)
-                  return xpt.SimpleType(tag,
-                                        pointer=isPtr,
-                                        reference=False)
+                tag = TypeMap[type.name]
+                isPtr = (tag == xpt.Type.Tags.char_ptr or tag == xpt.Type.Tags.wchar_t_ptr)
+                return xpt.SimpleType(tag,
+                                      pointer=isPtr,
+                                      reference=False)
 
         if isinstance(type, xpidl.Array):
             # NB: For an Array<T> we pass down the iid_is to get the type of T.
@@ -97,7 +100,7 @@ def build_interface(iface, ifaces):
                 return xpt.SimpleType(TypeMap[type.specialtype],
                                       pointer=isPtr,
                                       reference=isRef)
-            elif iid_is != None:
+            elif iid_is is not None:
                 return xpt.InterfaceIsType(iid_is)
             else:
                 # void ptr
@@ -234,6 +237,7 @@ def build_interface(iface, ifaces):
                          function=iface.attributes.function,
                          builtinclass=iface.attributes.builtinclass,
                          main_process_scriptable_only=iface.attributes.main_process_scriptable_only)
+
 
 def write_typelib(idl, fd, filename):
     """ Generate the typelib. """

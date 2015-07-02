@@ -7,9 +7,6 @@
 
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
-  "resource://gre/modules/devtools/DevToolsUtils.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "HarExporter", function() {
   return devtools.require("devtools/netmonitor/har/har-exporter.js").HarExporter;
 });

@@ -12,6 +12,7 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const TargetFactory = devtools.TargetFactory;
 const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 
 // All tests are asynchronous
 waitForExplicitFinish();
@@ -40,9 +41,9 @@ Services.prefs.setBoolPref(NEW_UI_PREF, false);
 // Uncomment this pref to dump all devtools protocol traffic
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 
-// Set the testing flag on gDevTools and reset it when the test ends
-gDevTools.testing = true;
-registerCleanupFunction(() => gDevTools.testing = false);
+// Set the testing flag on DevToolsUtils and reset it when the test ends
+DevToolsUtils.testing = true;
+registerCleanupFunction(() => DevToolsUtils.testing = false);
 
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
@@ -162,9 +163,10 @@ let waitForAnimationInspectorReady = Task.async(function*(inspector) {
   let win = inspector.sidebar.getWindowForTab("animationinspector");
   let updated = inspector.once("inspector-updated");
 
-  // In e10s, if we wait for underlying toolbox actors to load (by setting
-  // gDevTools.testing to true), we miss the "animationinspector-ready" event on
-  // the sidebar, so check to see if the iframe is already loaded.
+  // In e10s, if we wait for underlying toolbox actors to
+  // load (by setting DevToolsUtils.testing to true), we miss the
+  // "animationinspector-ready" event on the sidebar, so check to see if the
+  // iframe is already loaded.
   let tabReady = win.document.readyState === "complete" ?
                  promise.resolve() :
                  inspector.sidebar.once("animationinspector-ready");

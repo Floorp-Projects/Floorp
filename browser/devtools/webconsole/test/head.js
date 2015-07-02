@@ -13,6 +13,7 @@ let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {require, TargetFactory} = devtools;
 let {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
 let {Messages} = require("devtools/webconsole/console-output");
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const asyncStorage = require("devtools/toolkit/shared/async-storage");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -41,7 +42,7 @@ const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/" +
                                "webconsole.properties";
 let WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 
 function asyncTest(generator) {
   return () => {
@@ -333,7 +334,7 @@ let finishTest = Task.async(function* () {
 });
 
 registerCleanupFunction(function*() {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 
   // Remove stored console commands in between tests
   yield asyncStorage.removeItem("webConsoleHistory");

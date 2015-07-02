@@ -5,8 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PerformanceEntry.h"
-#include "nsIURI.h"
+#include "MainThreadUtils.h"
 #include "mozilla/dom/PerformanceEntryBinding.h"
+#include "nsIURI.h"
 
 using namespace mozilla::dom;
 

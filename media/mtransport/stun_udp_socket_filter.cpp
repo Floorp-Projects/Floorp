@@ -21,42 +21,51 @@ extern "C" {
 
 namespace {
 
-class NetAddressAdapter {
+class NetAddrCompare {
  public:
-  MOZ_IMPLICIT NetAddressAdapter(const mozilla::net::NetAddr& netaddr)
-    : addr_(ntohl(netaddr.inet.ip)),
-      port_(ntohs(netaddr.inet.port)) {
-    MOZ_ASSERT(netaddr.raw.family == AF_INET);
-  }
+   bool operator()(const mozilla::net::NetAddr& lhs,
+                   const mozilla::net::NetAddr& rhs) const {
+     if (lhs.raw.family != rhs.raw.family) {
+       return lhs.raw.family < rhs.raw.family;
+     }
 
-  bool operator<(const NetAddressAdapter& rhs) const {
-    return addr_ != rhs.addr_ ? (addr_ < rhs.addr_) : (port_ < rhs.port_);
-  }
-
-  bool operator!=(const NetAddressAdapter& rhs) const {
-    return (*this < rhs) || (rhs < *this);
-  }
-
- private:
-  const uint32_t addr_;
-  const uint16_t port_;
+     switch (lhs.raw.family) {
+       case AF_INET:
+         if (lhs.inet.port != rhs.inet.port) {
+           return lhs.inet.port < rhs.inet.port;
+         }
+         return lhs.inet.ip < rhs.inet.ip;
+       case AF_INET6:
+         if (lhs.inet6.port != rhs.inet6.port) {
+           return lhs.inet6.port < rhs.inet6.port;
+         }
+         return memcmp(&lhs.inet6.ip, &rhs.inet6.ip, sizeof(lhs.inet6.ip)) < 0;
+       default:
+         MOZ_ASSERT(false);
+     }
+     return false;
+   }
 };
 
 class PendingSTUNRequest {
  public:
-  PendingSTUNRequest(const NetAddressAdapter& netaddr, const UINT12 &id)
+  PendingSTUNRequest(const mozilla::net::NetAddr& netaddr, const UINT12 &id)
     : id_(id),
       net_addr_(netaddr),
       is_id_set_(true) {}
 
-  MOZ_IMPLICIT PendingSTUNRequest(const NetAddressAdapter& netaddr)
+  MOZ_IMPLICIT PendingSTUNRequest(const mozilla::net::NetAddr& netaddr)
     : id_(),
       net_addr_(netaddr),
       is_id_set_(false) {}
 
   bool operator<(const PendingSTUNRequest& rhs) const {
-    if (net_addr_ != rhs.net_addr_) {
-      return net_addr_ < rhs.net_addr_;
+    if (NetAddrCompare()(net_addr_, rhs.net_addr_)) {
+      return true;
+    }
+
+    if (NetAddrCompare()(rhs.net_addr_, net_addr_)) {
+      return false;
     }
 
     if (!is_id_set_ && !rhs.is_id_set_) {
@@ -76,7 +85,7 @@ class PendingSTUNRequest {
 
  private:
   const UINT12 id_;
-  const NetAddressAdapter net_addr_;
+  const mozilla::net::NetAddr net_addr_;
   const bool is_id_set_;
 };
 
@@ -101,7 +110,7 @@ class STUNUDPSocketFilter : public nsIUDPSocketFilter {
                               const uint8_t *data,
                               uint32_t len);
 
-  std::set<NetAddressAdapter> white_list_;
+  std::set<mozilla::net::NetAddr, NetAddrCompare> white_list_;
   std::set<PendingSTUNRequest> pending_requests_;
   std::set<PendingSTUNRequest> response_allowed_;
 };
@@ -114,12 +123,6 @@ STUNUDPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
                                   uint32_t len,
                                   int32_t direction,
                                   bool *result) {
-  // Allowing IPv4 address only.
-  if (remote_addr->raw.family != AF_INET) {
-    *result = false;
-    return NS_OK;
-  }
-
   switch (direction) {
     case nsIUDPSocketFilter::SF_INCOMING:
       *result = filter_incoming_packet(remote_addr, data, len);
