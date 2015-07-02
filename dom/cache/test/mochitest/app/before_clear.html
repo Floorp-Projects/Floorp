@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1172562</title>
+    <script src='test.js'></script>
+    <script type='application/javascript;version=1.7'>
+
+function runTests() {
+  return Promise.resolve()
+    .then(() => { return navigator.serviceWorker.ready })
+    .then((registration) => {
+      return new Promise((resolve) => {
+        var worker = registration.waiting || registration.active;
+        worker.postMessage('write');
+        navigator.serviceWorker.onmessage = (message) => {
+          if (message.data.type == 'written') {
+            worker.postMessage('read');
+          } else if (message.data.type == 'done') {
+            ok(message.data.cached, 'Write success');
+            resolve();
+          }
+        };
+      });
+    })
+    .then(done);
+}
+  </script>
+  </head>
+  <body onload='runTests()'>
+  </body>
+</html>

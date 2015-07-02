@@ -25,6 +25,7 @@
 #include "nsCoord.h"
 #include "nsObjCExceptions.h"
 #include "nsWhitespaceTokenizer.h"
+#include <prdtoa.h>
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -38,11 +39,11 @@ using namespace mozilla::a11y;
 #define NSAccessibilityMathSuperscriptAttribute @"AXMathSuperscript"
 #define NSAccessibilityMathUnderAttribute @"AXMathUnder"
 #define NSAccessibilityMathOverAttribute @"AXMathOver"
+#define NSAccessibilityMathLineThicknessAttribute @"AXMathLineThickness"
 // XXX WebKit also defines the following attributes.
-// See bugs 1176970, 1176973 and 1176983.
+// See bugs 1176970 and 1176983.
 // - NSAccessibilityMathFencedOpenAttribute @"AXMathFencedOpen"
 // - NSAccessibilityMathFencedCloseAttribute @"AXMathFencedClose"
-// - NSAccessibilityMathLineThicknessAttribute @"AXMathLineThickness"
 // - NSAccessibilityMathPrescriptsAttribute @"AXMathPrescripts"
 // - NSAccessibilityMathPostscriptsAttribute @"AXMathPostscripts"
 
@@ -172,8 +173,7 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
     case roles::MATHML_FRACTION:
       [additional addObject:NSAccessibilityMathFractionNumeratorAttribute];
       [additional addObject:NSAccessibilityMathFractionDenominatorAttribute];
-      // XXX bug 1176973
-      // WebKit also defines NSAccessibilityMathLineThicknessAttribute
+      [additional addObject:NSAccessibilityMathLineThicknessAttribute];
       break;
     case roles::MATHML_SUB:
     case roles::MATHML_SUP:
@@ -422,8 +422,24 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
       return [self childAt:0];
     if ([attribute isEqualToString:NSAccessibilityMathFractionDenominatorAttribute])
       return [self childAt:1];
-    // XXX bug 1176973
-    // WebKit also defines NSAccessibilityMathLineThicknessAttribute
+    if ([attribute isEqualToString:NSAccessibilityMathLineThicknessAttribute]) {
+      // WebKit sets line thickness to some logical value parsed in the
+      // renderer object of the <mfrac> element. It's not clear whether the
+      // exact value is relevant to assistive technologies. From a semantic
+      // point of view, the only important point is to distinguish between
+      // <mfrac> elements that have a fraction bar and those that do not.
+      // Per the MathML 3 spec, the latter happens iff the linethickness
+      // attribute is of the form [zero-float][optional-unit]. In that case we
+      // set line thickness to zero and in the other cases we set it to one.
+      nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
+      nsAutoString thickness;
+      nsAccUtils::GetAccAttr(attributes, nsGkAtoms::linethickness_, thickness);
+      double value = 1.0;
+      if (!thickness.IsEmpty())
+        value = PR_strtod(NS_LossyConvertUTF16toASCII(thickness).get(),
+                          nullptr);
+      return [NSNumber numberWithInteger:(value ? 1 : 0)];
+    }
     break;
   case roles::MATHML_SUB:
     if ([attribute isEqualToString:NSAccessibilityMathBaseAttribute])

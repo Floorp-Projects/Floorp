@@ -6,6 +6,8 @@
 
 #include "nsIGlobalObject.h"
 #include "nsContentUtils.h"
+#include "nsThreadUtils.h"
+#include "nsHostObjectProtocolHandler.h"
 
 nsIGlobalObject::~nsIGlobalObject()
 {

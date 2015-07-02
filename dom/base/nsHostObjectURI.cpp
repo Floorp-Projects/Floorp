@@ -106,7 +106,7 @@ nsHostObjectURI::Serialize(mozilla::ipc::URIParams& aParams)
 
     hostParams.principal() = info;
   } else {
-    hostParams.principal() = void_t();
+    hostParams.principal() = mozilla::void_t();
   }
 
   aParams = hostParams;

@@ -17,6 +17,8 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 
+using mozilla::dom::Animation;
+
 nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
 
@@ -345,12 +347,12 @@ void
 nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
                                              AnimationMutation aMutationType)
 {
-  KeyframeEffectReadOnly* effect = aAnimation->GetEffect();
+  mozilla::dom::KeyframeEffectReadOnly* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
   }
 
-  Element* animationTarget = effect->GetTarget();
+  mozilla::dom::Element* animationTarget = effect->GetTarget();
   if (!animationTarget) {
     return;
   }
