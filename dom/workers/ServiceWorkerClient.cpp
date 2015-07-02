@@ -9,6 +9,7 @@
 #include "ServiceWorkerContainer.h"
 
 #include "mozilla/dom/MessageEvent.h"
+#include "mozilla/dom/Navigator.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "WorkerPrivate.h"

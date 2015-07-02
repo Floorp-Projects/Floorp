@@ -9,11 +9,17 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Cache.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIStreamLoader.h"
 #include "nsIThreadRetargetableRequest.h"
 
 #include "nsIPrincipal.h"
+#include "nsNetUtil.h"
+#include "nsScriptLoader.h"
 #include "Workers.h"
 
 using mozilla::dom::cache::Cache;
