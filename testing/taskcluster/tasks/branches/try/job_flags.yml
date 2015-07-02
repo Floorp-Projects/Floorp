@@ -130,6 +130,52 @@ builds:
         task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
+  sm-plain:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_plain.yml
+      debug:
+       task: tasks/builds/sm_plaindebug.yml
+  sm-arm-sim:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_arm_sim.yml
+  sm-arm-sim-osx:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_arm_sim_osx.yml
+  sm-compacting:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_compacting.yml
+  sm-generational:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_generational.yml
+  sm-rootanalysis:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_rootanalysis.yml
+  sm-warnaserr:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_warnaserr.yml
+      debug:
+        task: tasks/builds/sm_warnaserrdebug.yml
 
 tests:
   cppunit:
