@@ -85,7 +85,7 @@ public:
 
 class DecodedStream {
 public:
-  explicit DecodedStream(ReentrantMonitor& aMonitor);
+  DecodedStream();
   DecodedStreamData* GetData() const;
   void DestroyData();
   void RecreateData(MediaStreamGraph* aGraph);
@@ -100,7 +100,15 @@ private:
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
   nsTArray<OutputStreamData> mOutputStreams;
-  ReentrantMonitor& mMonitor;
+
+  // TODO: This is a temp solution to get rid of decoder monitor on the main
+  // thread in MDSM::AddOutputStream and MDSM::RecreateDecodedStream as
+  // required by bug 1146482. DecodedStream needs to release monitor before
+  // calling back into MDSM functions in order to prevent deadlocks.
+  //
+  // Please move all capture-stream related code from MDSM into DecodedStream
+  // and apply "dispatch + mirroring" to get rid of this monitor in the future.
+  mutable ReentrantMonitor mMonitor;
 };
 
 } // namespace mozilla
