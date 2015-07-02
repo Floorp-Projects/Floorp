@@ -503,16 +503,12 @@ Parent<Super>::Parent(bool aSameProcess)
   if (!gMediaParentLog)
     gMediaParentLog = PR_NewLogModule("MediaParent");
   LOG(("media::Parent: %p", this));
-
-  MOZ_COUNT_CTOR(Parent);
 }
 
 template<class Super>
 Parent<Super>::~Parent()
 {
   LOG(("~media::Parent: %p", this));
-
-  MOZ_COUNT_DTOR(Parent);
 }
 
 PMediaParent*
