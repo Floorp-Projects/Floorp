@@ -664,6 +664,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(dt, true, true, GROUP_DL_CONTENT, GROUP_INLINE_ELEMENT),
   ELEM(em, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(embed, false, false, GROUP_NONE, GROUP_NONE),
+  ELEM(extapp, true, true, GROUP_NONE, GROUP_NONE),
   ELEM(fieldset, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(figcaption, true, false, GROUP_FIGCAPTION, GROUP_FLOW_ELEMENT),
   ELEM(figure, true, true, GROUP_BLOCK,

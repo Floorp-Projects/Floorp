@@ -72,7 +72,7 @@ class AtomStateEntry
         MOZ_ASSERT((uintptr_t(ptr) & 0x1) == 0);
     }
 
-    bool isTagged() const {
+    bool isPinned() const {
         return bits & 0x1;
     }
 
@@ -80,8 +80,8 @@ class AtomStateEntry
      * Non-branching code sequence. Note that the const_cast is safe because
      * the hash function doesn't consider the tag to be a portion of the key.
      */
-    void setTagged(bool enabled) const {
-        const_cast<AtomStateEntry*>(this)->bits |= uintptr_t(enabled);
+    void setPinned(bool pinned) const {
+        const_cast<AtomStateEntry*>(this)->bits |= uintptr_t(pinned);
     }
 
     JSAtom* asPtr() const;
@@ -151,7 +151,7 @@ class PropertyName;
 }  /* namespace js */
 
 extern bool
-AtomIsInterned(JSContext* cx, JSAtom* atom);
+AtomIsPinned(JSContext* cx, JSAtom* atom);
 
 /* Well-known predefined C strings. */
 #define DECLARE_PROTO_STR(name,code,init,clasp) extern const char js_##name##_str[];
@@ -218,23 +218,23 @@ void
 MarkWellKnownSymbols(JSTracer* trc);
 
 /* N.B. must correspond to boolean tagging behavior. */
-enum InternBehavior
+enum PinningBehavior
 {
-    DoNotInternAtom = false,
-    InternAtom = true
+    DoNotPinAtom = false,
+    PinAtom = true
 };
 
 extern JSAtom*
 Atomize(ExclusiveContext* cx, const char* bytes, size_t length,
-        js::InternBehavior ib = js::DoNotInternAtom);
+        js::PinningBehavior pin = js::DoNotPinAtom);
 
 template <typename CharT>
 extern JSAtom*
 AtomizeChars(ExclusiveContext* cx, const CharT* chars, size_t length,
-             js::InternBehavior ib = js::DoNotInternAtom);
+             js::PinningBehavior pin = js::DoNotPinAtom);
 
 extern JSAtom*
-AtomizeString(ExclusiveContext* cx, JSString* str, js::InternBehavior ib = js::DoNotInternAtom);
+AtomizeString(ExclusiveContext* cx, JSString* str, js::PinningBehavior pin = js::DoNotPinAtom);
 
 template <AllowGC allowGC>
 extern JSAtom*

@@ -40,6 +40,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacLaunchHelper.mm',
         'nsNativeAppSupportCocoa.mm',
     ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    UNIFIED_SOURCES += [
+        'nsNativeAppSupportDefault.cpp',
+        'UIKitDirProvider.mm',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += ['nsQAppInstance.h']
     SOURCES += [

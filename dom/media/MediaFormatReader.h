@@ -16,12 +16,6 @@
 
 namespace mozilla {
 
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
-#define READER_DORMANT_HEURISTIC
-#else
-#undef READER_DORMANT_HEURISTIC
-#endif
-
 class MediaFormatReader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
@@ -78,7 +72,6 @@ public:
 
   // For Media Resource Management
   void SetIdle() override;
-  bool IsDormantNeeded() override;
   void ReleaseMediaResources() override;
   void SetSharedDecoderManager(SharedDecoderManager* aManager)
     override;

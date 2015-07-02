@@ -18,6 +18,7 @@ CppUnitTests([
     'TestEnumSet',
     'TestFloatingPoint',
     'TestIntegerPrintfMacros',
+    'TestIntegerRange',
     'TestJSONWriter',
     'TestMacroArgs',
     'TestMacroForEach',

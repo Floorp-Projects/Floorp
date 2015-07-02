@@ -129,6 +129,8 @@ interface OnlyForUseInConstructor {
  Constructor(TestInterface? iface),
  Constructor(long arg1, IndirectlyImplementedInterface iface),
  Constructor(Date arg1),
+ Constructor(ArrayBuffer arrayBuf),
+ Constructor(Uint8Array typedArr),
  // Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3),
  AvailableIn=CertifiedApps,
  NamedConstructor=Test,

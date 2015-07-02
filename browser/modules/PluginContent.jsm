@@ -723,12 +723,15 @@ PluginContent.prototype = {
         continue;
       }
       if (pluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
+        let overlay = this.getPluginUI(plugin, "main");
         pluginFound = true;
         if (newState == "block") {
+          if (overlay) {
+            overlay.addEventListener("click", this, true);
+          }
           plugin.reload(true);
         } else {
           if (this.canActivatePlugin(plugin)) {
-            let overlay = this.getPluginUI(plugin, "main");
             if (overlay) {
               overlay.removeEventListener("click", this, true);
             }

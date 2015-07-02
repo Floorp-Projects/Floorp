@@ -424,9 +424,17 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
         entry = nullptr;
       }
     } else {
+#ifdef DEBUG
+      static const char kMismatchedSizesMessage[] =
+        "Mismatched sizes were recorded in the memory leak logging table. "
+        "The usual cause of this is having a templated class that uses "
+        "MOZ_COUNT_{C,D}TOR in the constructor or destructor, respectively. "
+        "As a workaround, the MOZ_COUNT_{C,D}TOR calls can be moved to a "
+        "non-templated base class.";
       NS_ASSERTION(aInstanceSize == 0 ||
                    entry->GetClassSize() == aInstanceSize,
-                   "bad size recorded");
+                   kMismatchedSizesMessage);
+#endif
     }
   }
   return entry;

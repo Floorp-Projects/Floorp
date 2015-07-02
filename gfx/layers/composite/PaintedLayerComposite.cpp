@@ -107,12 +107,13 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
   PROFILER_LABEL("PaintedLayerComposite", "RenderLayer",
     js::ProfileEntry::Category::GRAPHICS);
 
-  MOZ_ASSERT(mBuffer->GetCompositor() == mCompositeManager->GetCompositor() &&
+  Compositor* compositor = mCompositeManager->GetCompositor();
+
+  MOZ_ASSERT(mBuffer->GetCompositor() == compositor &&
              mBuffer->GetLayer() == this,
              "buffer is corrupted");
 
   const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
-  gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
@@ -123,21 +124,22 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
   }
 #endif
 
-  EffectChain effectChain(this);
-  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
-  AddBlendModeEffect(effectChain);
 
-  mBuffer->SetPaintWillResample(MayResample());
+  RenderWithAllMasks(this, compositor, aClipRect,
+                     [&](EffectChain& effectChain, const Rect& clipRect) {
+    mBuffer->SetPaintWillResample(MayResample());
 
-  mBuffer->Composite(effectChain,
-                     GetEffectiveOpacity(),
-                     GetEffectiveTransform(),
-                     GetEffectFilter(),
-                     clipRect,
-                     &visibleRegion);
+    mBuffer->Composite(effectChain,
+                       GetEffectiveOpacity(),
+                       GetEffectiveTransform(),
+                       GetEffectFilter(),
+                       clipRect,
+                       &visibleRegion);
+  });
+
   mBuffer->BumpFlashCounter();
 
-  mCompositeManager->GetCompositor()->MakeCurrent();
+  compositor->MakeCurrent();
 }
 
 CompositableHost*

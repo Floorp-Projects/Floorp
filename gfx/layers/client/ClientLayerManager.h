@@ -390,6 +390,16 @@ public:
   {
     return static_cast<ClientLayer*>(aLayer->ImplData());
   }
+
+  template <typename LayerType>
+  static inline void RenderMaskLayers(LayerType* aLayer) {
+    if (aLayer->GetMaskLayer()) {
+      ToClientLayer(aLayer->GetMaskLayer())->RenderLayer();
+    }
+    for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
+      ToClientLayer(aLayer->GetAncestorMaskLayerAt(i))->RenderLayer();
+    }
+  }
 };
 
 // Create a shadow layer (PLayerChild) for aLayer, if we're forwarding

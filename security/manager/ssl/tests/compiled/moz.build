@@ -8,6 +8,11 @@ CppUnitTests([
     'TestSTSParser',
 ])
 
+LOCAL_INCLUDES += [
+    '/security/manager/ssl/',
+]
+
 GeckoCppUnitTests([
     'TestCertDB',
+    'TestMD4',
 ])

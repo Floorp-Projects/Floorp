@@ -290,9 +290,13 @@ public:
     NS_DECL_RDFIDATASOURCE
 
 protected:
-    static PLDHashOperator
-    SweepForwardArcsEntries(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                            uint32_t aNumber, void* aArg);
+    struct SweepInfo {
+        Assertion* mUnassertList;
+        PLDHashTable* mReverseArcs;
+    };
+
+    static void
+    SweepForwardArcsEntries(PLDHashTable* aTable, SweepInfo* aArg);
 
 public:
     // Implementation methods
@@ -1766,19 +1770,13 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
     return NS_OK;
 }
 
-
-struct SweepInfo {
-    Assertion* mUnassertList;
-    PLDHashTable* mReverseArcs;
-};
-
 NS_IMETHODIMP
 InMemoryDataSource::Sweep()
 {
     SweepInfo info = { nullptr, &mReverseArcs };
 
     // Remove all the assertions, but don't notify anyone.
-    PL_DHashTableEnumerate(&mForwardArcs, SweepForwardArcsEntries, &info);
+    SweepForwardArcsEntries(&mForwardArcs, &info);
 
     // Now do the notification.
     Assertion* as = info.mUnassertList;
@@ -1806,93 +1804,87 @@ InMemoryDataSource::Sweep()
 }
 
 
-PLDHashOperator
+void
 InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
-                                            PLDHashEntryHdr* aHdr,
-                                            uint32_t aNumber, void* aArg)
+                                            SweepInfo* aInfo)
 {
-    PLDHashOperator result = PL_DHASH_NEXT;
-    Entry* entry = static_cast<Entry*>(aHdr);
-    SweepInfo* info = static_cast<SweepInfo*>(aArg);
+    for (auto iter = aTable->RemovingIter(); !iter.Done(); iter.Next()) {
+        auto entry = static_cast<Entry*>(iter.Get());
 
-    Assertion* as = entry->mAssertions;
-    if (as && (as->mHashEntry))
-    {
-        // Stuff in sub-hashes must be swept recursively (max depth: 1)
-        PL_DHashTableEnumerate(as->u.hash.mPropertyHash,
-                               SweepForwardArcsEntries, info);
+        Assertion* as = entry->mAssertions;
+        if (as && (as->mHashEntry)) {
+            // Stuff in sub-hashes must be swept recursively (max depth: 1)
+            SweepForwardArcsEntries(as->u.hash.mPropertyHash, aInfo);
 
-        // If the sub-hash is now empty, clean it up.
-        if (!as->u.hash.mPropertyHash->EntryCount()) {
-            as->Release();
-            result = PL_DHASH_REMOVE;
+            // If the sub-hash is now empty, clean it up.
+            if (!as->u.hash.mPropertyHash->EntryCount()) {
+                as->Release();
+                iter.Remove();
+            }
+            continue;
         }
 
-        return result;
-    }
-
-    Assertion* prev = nullptr;
-    while (as) {
-        if (as->IsMarked()) {
-            prev = as;
-            as->Unmark();
-            as = as->mNext;
-        }
-        else {
-            // remove from the list of assertions in the datasource
-            Assertion* next = as->mNext;
-            if (prev) {
-                prev->mNext = next;
+        Assertion* prev = nullptr;
+        while (as) {
+            if (as->IsMarked()) {
+                prev = as;
+                as->Unmark();
+                as = as->mNext;
             }
             else {
-                // it's the first one. update the hashtable entry.
-                entry->mAssertions = next;
-            }
-
-            // remove from the reverse arcs
-            PLDHashEntryHdr* hdr =
-                PL_DHashTableSearch(info->mReverseArcs, as->u.as.mTarget);
-            NS_ASSERTION(hdr, "no assertion in reverse arcs");
-
-            Entry* rentry = static_cast<Entry*>(hdr);
-            Assertion* ras = rentry->mAssertions;
-            Assertion* rprev = nullptr;
-            while (ras) {
-                if (ras == as) {
-                    if (rprev) {
-                        rprev->u.as.mInvNext = ras->u.as.mInvNext;
-                    }
-                    else {
-                        // it's the first one. update the hashtable entry.
-                        rentry->mAssertions = ras->u.as.mInvNext;
-                    }
-                    as->u.as.mInvNext = nullptr; // for my sanity.
-                    break;
+                // remove from the list of assertions in the datasource
+                Assertion* next = as->mNext;
+                if (prev) {
+                    prev->mNext = next;
                 }
-                rprev = ras;
-                ras = ras->u.as.mInvNext;
+                else {
+                    // it's the first one. update the hashtable entry.
+                    entry->mAssertions = next;
+                }
+
+                // remove from the reverse arcs
+                PLDHashEntryHdr* hdr =
+                    PL_DHashTableSearch(aInfo->mReverseArcs, as->u.as.mTarget);
+                NS_ASSERTION(hdr, "no assertion in reverse arcs");
+
+                Entry* rentry = static_cast<Entry*>(hdr);
+                Assertion* ras = rentry->mAssertions;
+                Assertion* rprev = nullptr;
+                while (ras) {
+                    if (ras == as) {
+                        if (rprev) {
+                            rprev->u.as.mInvNext = ras->u.as.mInvNext;
+                        }
+                        else {
+                            // it's the first one. update the hashtable entry.
+                            rentry->mAssertions = ras->u.as.mInvNext;
+                        }
+                        as->u.as.mInvNext = nullptr; // for my sanity.
+                        break;
+                    }
+                    rprev = ras;
+                    ras = ras->u.as.mInvNext;
+                }
+
+                // Wow, it was the _only_ one. Unhash it.
+                if (! rentry->mAssertions) {
+                    PL_DHashTableRawRemove(aInfo->mReverseArcs, hdr);
+                }
+
+                // add to the list of assertions to unassert
+                as->mNext = aInfo->mUnassertList;
+                aInfo->mUnassertList = as;
+
+                // Advance to the next assertion
+                as = next;
             }
+        }
 
-            // Wow, it was the _only_ one. Unhash it.
-            if (! rentry->mAssertions)
-            {
-                PL_DHashTableRawRemove(info->mReverseArcs, hdr);
-            }
-
-            // add to the list of assertions to unassert
-            as->mNext = info->mUnassertList;
-            info->mUnassertList = as;
-
-            // Advance to the next assertion
-            as = next;
+        // if no more assertions exist for this resource, then unhash it.
+        if (! entry->mAssertions) {
+            iter.Remove();
         }
     }
-
-    // if no more assertions exist for this resource, then unhash it.
-    if (! entry->mAssertions)
-        result = PL_DHASH_REMOVE;
-
-    return result;
 }
 
 ////////////////////////////////////////////////////////////////////////

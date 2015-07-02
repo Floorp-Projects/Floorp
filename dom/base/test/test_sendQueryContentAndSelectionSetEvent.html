@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-const kLineBreak = kIsWin ? "\r\n" : kIsMac ? "\r" : "\n";
+const kLineBreak = kIsWin ? "\r\n" : "\n";
 
 var gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIDOMWindowUtils);

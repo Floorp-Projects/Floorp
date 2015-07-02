@@ -350,7 +350,7 @@ nsresult
 nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 {
 #define SET_JSID_TO_STRING(_id, _cx, _str)                                    \
-  if (JSString *str = ::JS_InternString(_cx, _str))                           \
+  if (JSString *str = ::JS_AtomizeAndPinString(_cx, _str))                             \
       _id = INTERNED_STRING_TO_JSID(_cx, str);                                \
   else                                                                        \
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1724,13 +1724,10 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   }
   NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
   nsresult rv =
-    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci,
-                                          getter_AddRefs(proto_holder));
+    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci, aProto.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aProto.set(proto_holder->GetJSObject());
   return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
 }
 

@@ -121,6 +121,11 @@ class StoreBuffer
             stores_.remove(v);
         }
 
+        bool has(StoreBuffer* owner, const T& v) {
+            sinkStores(owner);
+            return stores_.has(v);
+        }
+
         /* Trace the source of all edges in the store buffer. */
         void trace(StoreBuffer* owner, TenuringTracer& mover);
 
@@ -431,6 +436,19 @@ class StoreBuffer
     template <typename Key>
     void putCallback(void (*callback)(JSTracer* trc, Key* key, void* data), Key* key, void* data) {
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
+    }
+
+    void assertHasCellEdge(Cell** cellp) {
+        CellPtrEdge cpe(cellp);
+
+        MOZ_ASSERT(bufferCell.has(this, CellPtrEdge(cellp)) ||
+                   !CellPtrEdge(cellp).maybeInRememberedSet(nursery_));
+
+    }
+
+    void assertHasValueEdge(Value* vp) {
+        MOZ_ASSERT(bufferVal.has(this, ValueEdge(vp)) ||
+                   !ValueEdge(vp).maybeInRememberedSet(nursery_));
     }
 
     void setShouldCancelIonCompilations() {

@@ -167,7 +167,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
       mPlayState == PLAY_STATE_SHUTDOWN ||
       !mOwner->GetVideoFrameContainer() ||
       (mOwner->GetMediaElement() && mOwner->GetMediaElement()->IsBeingDestroyed()) ||
-      !mDecoderStateMachine->IsDormantNeeded())
+      !mDormantSupported)
   {
     return;
   }
@@ -338,6 +338,7 @@ MediaDecoder::MediaDecoder() :
   mNextFrameStatus(AbstractThread::MainThread(),
                    MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
                    "MediaDecoder::mNextFrameStatus (Mirror)"),
+  mDormantSupported(false),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mLogicalPosition(0.0),
@@ -1153,8 +1154,7 @@ void MediaDecoder::SetFragmentEndTime(double aTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mDecoderStateMachine) {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mDecoderStateMachine->SetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
+    mDecoderStateMachine->DispatchSetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
   }
 }
 

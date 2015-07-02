@@ -860,7 +860,8 @@ else:
 # can we find a better way of dealing with asm sources?
 
 # left out of UNIFIED_SOURCES for now; that's not C++ anyway, nothing else to unify it with
-if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
+#XXX: doesn't build with Apple's assembler
+if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] != 'Darwin':
     SOURCES += [
         'trunk/src/opts/memset.arm.S',
     ]

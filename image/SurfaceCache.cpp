@@ -1023,6 +1023,11 @@ SurfaceCache::Insert(imgFrame*         aSurface,
     return InsertOutcome::FAILURE;
   }
 
+  // Refuse null surfaces.
+  if (!aSurface) {
+    MOZ_CRASH("Don't pass null surfaces to SurfaceCache::Insert");
+  }
+
   MutexAutoLock lock(sInstance->GetMutex());
   Cost cost = ComputeCost(aSurface->GetSize(), aSurface->GetBytesPerPixel());
   return sInstance->Insert(aSurface, cost, aImageKey, aSurfaceKey, aLifetime);

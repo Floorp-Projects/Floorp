@@ -134,6 +134,12 @@ public:
   static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, Date&, ErrorResult&);
+  static
+  already_AddRefed<TestInterface>
+    Constructor(const GlobalObject&, const ArrayBuffer&, ErrorResult&);
+  static
+  already_AddRefed<TestInterface>
+    Constructor(const GlobalObject&, const Uint8Array&, ErrorResult&);
   /*  static
   already_AddRefed<TestInterface>
     Constructor(const GlobalObject&, uint32_t, uint32_t,

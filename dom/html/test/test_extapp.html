@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for extapp element being HTMLUnknownElement when permission is not available</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  assert_true(document.createElement("extapp") instanceof HTMLUnknownElement);
+}, "extapp should be HTMLUnknownElement when external-app permission is not enabled.");
+</script>

@@ -23,12 +23,6 @@ typedef std::deque<nsRefPtr<MediaRawData>> MediaSampleQueue;
 
 class MP4Stream;
 
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
-#define MP4_READER_DORMANT_HEURISTIC
-#else
-#undef MP4_READER_DORMANT_HEURISTIC
-#endif
-
 class MP4Reader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
@@ -71,7 +65,6 @@ public:
 
   // For Media Resource Management
   virtual void SetIdle() override;
-  virtual bool IsDormantNeeded() override;
   virtual void ReleaseMediaResources() override;
   virtual void SetSharedDecoderManager(SharedDecoderManager* aManager)
     override;
@@ -277,10 +270,6 @@ private:
   int64_t mLastSeenEnd;
   Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
-
-#if defined(MP4_READER_DORMANT_HEURISTIC)
-  const bool mDormantEnabled;
-#endif
 };
 
 } // namespace mozilla

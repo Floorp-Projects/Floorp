@@ -85,14 +85,12 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     // Remember stack depth without padding and arguments.
     masm.moveStackPtrTo(r19);
 
-    // If constructing, include newTarget.
-    // TODO: ARM64 support must be written.
-    //  Refer to git commit 7180509ff, Bug 1141865 Part 2.
+    // If constructing, include newTarget in argument vector.
     {
         Label noNewTarget;
         Imm32 constructingToken(CalleeToken_FunctionConstructing);
         masm.branchTest32(Assembler::Zero, reg_callee, constructingToken, &noNewTarget);
-        masm.breakpoint(); // TODO: include newTarget in the vector accounting.
+        masm.add32(Imm32(1), reg_argc);
         masm.bind(&noNewTarget);
     }
 
@@ -328,23 +326,43 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.Ldr(w0, MemOperand(masm.GetStackPointer64(), RectifierFrameLayout::offsetOfNumActualArgs()));
     masm.Ldr(x1, MemOperand(masm.GetStackPointer64(), RectifierFrameLayout::offsetOfCalleeToken()));
 
-    // Extract a JSFunction pointer from the callee token.
-    masm.And(x6, x1, Operand(CalleeTokenMask));
+    // Extract a JSFunction pointer from the callee token and keep the
+    // intermediary to avoid later recalculation.
+    masm.And(x5, x1, Operand(CalleeTokenMask));
 
     // Get the arguments from the function object.
-    masm.Ldrh(x6, MemOperand(x6, JSFunction::offsetOfNargs()));
-    masm.Mov(x7, x6);
+    masm.Ldrh(x6, MemOperand(x5, JSFunction::offsetOfNargs()));
+
+    static_assert(CalleeToken_FunctionConstructing == 0x1, "Constructing must be low-order bit");
+    masm.And(x4, x1, Operand(CalleeToken_FunctionConstructing));
+    masm.Add(x7, x6, x4);
 
     // Calculate the position that our arguments are at before sp gets modified.
+    MOZ_ASSERT(ArgumentsRectifierReg == r8, "x8 used for argc in Arguments Rectifier");
     masm.Add(x3, masm.GetStackPointer64(), Operand(x8, vixl::LSL, 3));
     masm.Add(x3, x3, Operand(sizeof(RectifierFrameLayout)));
 
-    // Pad to a multiple of 16 bytes.
+    // Pad to a multiple of 16 bytes. This neglects the |this| value,
+    // which will also be pushed, because the rest of the frame will
+    // round off that value. See pushes of |argc|, |callee| and |desc| below.
     Label noPadding;
-    masm.Tbnz(x6, 0, &noPadding);
+    masm.Tbnz(x7, 0, &noPadding);
     masm.asVIXL().Push(xzr);
     masm.Add(x7, x7, Operand(1));
     masm.bind(&noPadding);
+
+    {
+        Label notConstructing;
+        masm.Cbz(x4, &notConstructing);
+
+        // new.target lives at the end of the pushed args
+        // NB: The arg vector holder starts at the beginning of the last arg,
+        //     add a value to get to argv[argc]
+        masm.loadPtr(Address(r3, sizeof(Value)), r4);
+        masm.Push(r4);
+
+        masm.bind(&notConstructing);
+    }
 
     // Calculate the number of undefineds that need to be pushed.
     masm.Sub(w2, w6, w8);
@@ -361,7 +379,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
         masm.B(&undefLoopTop, Assembler::NonZero);
     }
 
-    // Arguments copy loop.
+    // Arguments copy loop. Copy for x8 >= 0 to include |this|.
     {
         Label copyLoopTop;
         masm.bind(&copyLoopTop);
@@ -371,7 +389,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
         masm.B(&copyLoopTop, Assembler::NotSigned);
     }
 
-    // Fix up the size of the stack frame.
+    // Fix up the size of the stack frame. +1 accounts for |this|.
     masm.Add(x6, x7, Operand(1));
     masm.Lsl(x6, x6, 3);
 
@@ -382,10 +400,8 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
               r1,  // Callee token.
               r6); // Frame descriptor.
 
-    // Didn't we just compute this? Can't we just stick that value in one of our 30 GPR's?
     // Load the address of the code that is getting called.
-    masm.And(x1, x1, Operand(CalleeTokenMask));
-    masm.Ldr(x3, MemOperand(x1, JSFunction::offsetOfNativeOrScript()));
+    masm.Ldr(x3, MemOperand(x5, JSFunction::offsetOfNativeOrScript()));
     masm.loadBaselineOrIonRaw(r3, r3, nullptr);
     masm.call(r3);
     uint32_t returnOffset = masm.currentOffset();

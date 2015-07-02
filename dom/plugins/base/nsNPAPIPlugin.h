@@ -129,7 +129,7 @@ inline bool
 NPStringIdentifierIsPermanent(NPIdentifier id)
 {
   AutoSafeJSContext cx;
-  return JS_StringHasBeenInterned(cx, NPIdentifierToString(id));
+  return JS_StringHasBeenPinned(cx, NPIdentifierToString(id));
 }
 
 #define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))

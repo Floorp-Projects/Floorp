@@ -156,9 +156,6 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTa
   , mIndexReady(false)
   , mLastSeenEnd(-1)
   , mDemuxerMonitor("MP4 Demuxer")
-#if defined(MP4_READER_DORMANT_HEURISTIC)
-  , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
-#endif
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -1099,15 +1096,6 @@ MP4Reader::GetBuffered()
   }
 
   return buffered;
-}
-
-bool MP4Reader::IsDormantNeeded()
-{
-#if defined(MP4_READER_DORMANT_HEURISTIC)
-  return mDormantEnabled;
-#else
-  return false;
-#endif
 }
 
 void MP4Reader::ReleaseMediaResources()

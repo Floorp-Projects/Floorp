@@ -680,17 +680,6 @@ MediaSourceReader::SwitchVideoSource(int64_t* aTarget)
   return SOURCE_NEW;
 }
 
-bool
-MediaSourceReader::IsDormantNeeded()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (GetVideoReader()) {
-    return GetVideoReader()->IsDormantNeeded();
-  }
-
-  return false;
-}
-
 void
 MediaSourceReader::ReleaseMediaResources()
 {

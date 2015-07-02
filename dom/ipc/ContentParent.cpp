@@ -2100,7 +2100,7 @@ ContentParent::StartForceKillTimer()
         return;
     }
 
-    int32_t timeoutSecs = Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
+    int32_t timeoutSecs = Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 0);
     if (timeoutSecs > 0) {
         mForceKillTimer = do_CreateInstance("@mozilla.org/timer;1");
         MOZ_ASSERT(mForceKillTimer);

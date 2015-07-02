@@ -307,10 +307,13 @@ ShapeTable::grow(ExclusiveContext* cx)
 
     MOZ_ASSERT(entryCount_ + removedCount_ <= size - 1);
 
-    if (!change(delta, cx) && entryCount_ + removedCount_ == size - 1) {
-        ReportOutOfMemory(cx);
-        return false;
+    if (!change(delta, cx)) {
+        if (entryCount_ + removedCount_ == size - 1)
+            return false;
+
+        cx->recoverFromOutOfMemory();
     }
+
     return true;
 }
 

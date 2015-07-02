@@ -82,17 +82,25 @@ static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
 
 namespace js {
 namespace oom {
-static inline bool ShouldFailWithOOM()
+
+static inline bool
+IsSimulatedOOMAllocation()
+{
+    return OOM_counter == OOM_maxAllocations ||
+           (OOM_counter > OOM_maxAllocations && OOM_failAlways);
+}
+
+static inline bool
+ShouldFailWithOOM()
 {
     OOM_counter++;
-    if (OOM_counter == OOM_maxAllocations ||
-        (OOM_counter > OOM_maxAllocations && OOM_failAlways))
-    {
+    if (IsSimulatedOOMAllocation()) {
         JS_OOM_CALL_BP_FUNC();
         return true;
     }
     return false;
 }
+
 } /* namespace oom */
 } /* namespace js */
 
@@ -114,6 +122,7 @@ static inline bool ShouldFailWithOOM()
 #  define JS_OOM_POSSIBLY_FAIL_BOOL() do {} while(0)
 namespace js {
 namespace oom {
+static inline bool IsSimulatedOOMAllocation() { return false; }
 static inline bool ShouldFailWithOOM() { return false; }
 } /* namespace oom */
 } /* namespace js */

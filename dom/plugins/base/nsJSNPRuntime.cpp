@@ -1053,7 +1053,7 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
     NPIdentifier id;
     if (v.isString()) {
       JS::Rooted<JSString*> str(cx, v.toString());
-      str = JS_InternJSString(cx, str);
+      str = JS_AtomizeAndPinJSString(cx, str);
       if (!str) {
         PR_Free(*idarray);
         return false;
@@ -1553,7 +1553,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
     if (npobj->_class->invoke) {
       JSFunction *fun = ::JS_GetObjectFunction(funobj);
       JS::Rooted<JSString*> funId(cx, ::JS_GetFunctionId(fun));
-      JSString *name = ::JS_InternJSString(cx, funId);
+      JSString *name = ::JS_AtomizeAndPinJSString(cx, funId);
       NPIdentifier id = StringToNPIdentifier(cx, name);
 
       ok = npobj->_class->invoke(npobj, id, npargs, argc, &v);
@@ -1942,66 +1942,6 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   return obj;
 }
 
-
-// Struct for passing an NPP and a JSContext to
-// NPObjWrapperPluginDestroyedCallback
-struct NppAndCx
-{
-  NPP npp;
-  JSContext *cx;
-};
-
-static PLDHashOperator
-NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                    uint32_t number, void *arg)
-{
-  NPObjWrapperHashEntry *entry = (NPObjWrapperHashEntry *)hdr;
-  NppAndCx *nppcx = reinterpret_cast<NppAndCx *>(arg);
-
-  if (entry->mNpp == nppcx->npp) {
-    // HACK: temporarily hide the hash we're enumerating so that invalidate()
-    // and deallocate() don't touch it.
-    PLDHashTable *tmp = static_cast<PLDHashTable*>(table);
-    sNPObjWrappers = nullptr;
-
-    NPObject *npobj = entry->mNPObj;
-
-    if (npobj->_class && npobj->_class->invalidate) {
-      npobj->_class->invalidate(npobj);
-    }
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-    {
-      int32_t refCnt = npobj->referenceCount;
-      while (refCnt) {
-        --refCnt;
-        NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
-      }
-    }
-#endif
-
-    // Force deallocation of plugin objects since the plugin they came
-    // from is being torn down.
-    if (npobj->_class && npobj->_class->deallocate) {
-      npobj->_class->deallocate(npobj);
-    } else {
-      PR_Free(npobj);
-    }
-
-    ::JS_SetPrivate(entry->mJSObj, nullptr);
-
-    sNPObjWrappers = tmp;
-
-    if (sDelayedReleases && sDelayedReleases->RemoveElement(npobj)) {
-      OnWrapperDestroyed();
-    }
-
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 // static
 void
 nsJSNPRuntime::OnPluginDestroy(NPP npp)
@@ -2028,13 +1968,51 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     sJSObjWrappersAccessible = true;
   }
 
-  // Use the safe JSContext here as we're not always able to find the
-  // JSContext associated with the NPP any more.
-  AutoSafeJSContext cx;
   if (sNPObjWrappers) {
-    NppAndCx nppcx = { npp, cx };
-    PL_DHashTableEnumerate(sNPObjWrappers,
-                           NPObjWrapperPluginDestroyedCallback, &nppcx);
+    for (auto i = sNPObjWrappers->RemovingIter(); !i.Done(); i.Next()) {
+      auto entry = static_cast<NPObjWrapperHashEntry*>(i.Get());
+
+      if (entry->mNpp == npp) {
+        // HACK: temporarily hide the table we're enumerating so that
+        // invalidate() and deallocate() don't touch it.
+        PLDHashTable *tmp = sNPObjWrappers;
+        sNPObjWrappers = nullptr;
+
+        NPObject *npobj = entry->mNPObj;
+
+        if (npobj->_class && npobj->_class->invalidate) {
+          npobj->_class->invalidate(npobj);
+        }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+        {
+          int32_t refCnt = npobj->referenceCount;
+          while (refCnt) {
+            --refCnt;
+            NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
+          }
+        }
+#endif
+
+        // Force deallocation of plugin objects since the plugin they came
+        // from is being torn down.
+        if (npobj->_class && npobj->_class->deallocate) {
+          npobj->_class->deallocate(npobj);
+        } else {
+          PR_Free(npobj);
+        }
+
+        ::JS_SetPrivate(entry->mJSObj, nullptr);
+
+        sNPObjWrappers = tmp;
+
+        if (sDelayedReleases && sDelayedReleases->RemoveElement(npobj)) {
+          OnWrapperDestroyed();
+        }
+
+        i.Remove();
+      }
+    }
   }
 }
 

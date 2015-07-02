@@ -73,9 +73,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mSeekable(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
-#if defined(READER_DORMANT_HEURISTIC)
-  , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
-#endif
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -1107,9 +1104,7 @@ nsresult
 MediaFormatReader::ResetDecode()
 {
   MOZ_ASSERT(OnTaskQueue());
-
   LOGV("");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mAudio.mSeekRequest.DisconnectIfExists();
   mVideo.mSeekRequest.DisconnectIfExists();
@@ -1434,15 +1429,6 @@ MediaFormatReader::GetBuffered()
   }
 
   return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
-}
-
-bool MediaFormatReader::IsDormantNeeded()
-{
-#if defined(READER_DORMANT_HEURISTIC)
-  return mDormantEnabled;
-#else
-  return false;
-#endif
 }
 
 void MediaFormatReader::ReleaseMediaResources()

@@ -1131,8 +1131,12 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         return JS::NullValue();
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers) &&
+        attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
+        attachment <= LOCAL_GL_COLOR_ATTACHMENT15)
+    {
         fb->EnsureColorAttachPoints(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
+    }
 
     MakeContextCurrent();
 

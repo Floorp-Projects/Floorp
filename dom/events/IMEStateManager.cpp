@@ -1384,8 +1384,19 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
       return composition ?
         composition->RequestToCommit(aWidget, true) : NS_OK;
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-      return composition && !isSynthesizedForTests ?
-        aWidget->NotifyIME(aNotification) : NS_OK;
+      if (!aOriginIsRemote && (!composition || isSynthesizedForTests)) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
+           "change notification from this process but there is no compostion"));
+        return NS_OK;
+      }
+      if (!sRemoteHasFocus && aOriginIsRemote) {
+        MOZ_LOG(sISMLog, LogLevel::Info,
+          ("ISM:   IMEStateManager::NotifyIME(), received content change "
+           "notification from the remote but it's already lost focus"));
+        return NS_OK;
+      }
+      return aWidget->NotifyIME(aNotification);
     default:
       MOZ_CRASH("Unsupported notification");
   }

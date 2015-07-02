@@ -358,8 +358,8 @@ class NewObjectCache
 
     static void copyCachedToObject(NativeObject* dst, NativeObject* src, gc::AllocKind kind) {
         js_memcpy(dst, src, gc::Arena::thingSize(kind));
-        Shape::writeBarrierPost(dst->shape_, &dst->shape_);
-        ObjectGroup::writeBarrierPost(dst->group_, &dst->group_);
+        Shape::writeBarrierPost(&dst->shape_, nullptr, dst->shape_);
+        ObjectGroup::writeBarrierPost(&dst->group_, nullptr, dst->group_);
     }
 };
 

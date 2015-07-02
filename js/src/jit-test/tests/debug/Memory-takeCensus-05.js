@@ -4,11 +4,11 @@
 var g = newGlobal();
 var dbg = new Debugger(g);
 
-assertEq("Int8Array" in dbg.memory.takeCensus().objects, false,
-         "There shouldn't exist any typed arrays in the census.");
+assertEq("AllocationMarker" in dbg.memory.takeCensus().objects, false,
+         "There shouldn't exist any allocation markers in the census.");
 
-this.ccw = g.eval("new Int8Array()");
+this.ccw = g.allocationMarker();
 
-assertEq(dbg.memory.takeCensus().objects.Int8Array.count, 1,
-         "Should have one typed array in the census, because there " +
-         "is one cross-compartment wrapper.");
+assertEq(dbg.memory.takeCensus().objects.AllocationMarker.count, 1,
+         "Should have one allocation marker in the census, because there " +
+         "is one cross-compartment wrapper referring to it.");

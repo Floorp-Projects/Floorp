@@ -436,7 +436,7 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
             JSFunction* fun = JS_GetObjectFunction(funObj);
             RootedString funName(cx, JS_GetFunctionId(fun));
             if (!funName)
-                funName = JS_InternString(cx, "");
+                funName = JS_AtomizeAndPinString(cx, "");
 
             if (!JS_StringToId(cx, funName, &id))
                 return false;

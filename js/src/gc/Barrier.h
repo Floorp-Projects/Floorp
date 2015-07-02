@@ -239,9 +239,7 @@ struct InternalGCMethods<T*>
 
     static void preBarrier(T* v) { T::writeBarrierPre(v); }
 
-    static void postBarrier(T** vp) { T::writeBarrierPost(*vp, vp); }
-    static void postBarrierRelocate(T** vp) { T::writeBarrierPostRelocate(*vp, vp); }
-    static void postBarrierRemove(T** vp) { T::writeBarrierPostRemove(*vp, vp); }
+    static void postBarrier(T** vp, T* prev, T* next) { T::writeBarrierPost(vp, prev, next); }
 
     static void readBarrier(T* v) { T::readBarrier(v); }
 };
@@ -263,31 +261,25 @@ struct InternalGCMethods<Value>
         DispatchValueTyped(PreBarrierFunctor<Value>(), v);
     }
 
-    static void postBarrier(Value* vp) {
+    static void postBarrier(Value* vp, const Value& prev, const Value& next) {
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        if (vp->isObject()) {
-            gc::StoreBuffer* sb = reinterpret_cast<gc::Cell*>(&vp->toObject())->storeBuffer();
-            if (sb)
-                sb->putValueFromAnyThread(vp);
-        }
-    }
-
-    static void postBarrierRelocate(Value* vp) {
-        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        if (vp->isObject()) {
-            gc::StoreBuffer* sb = reinterpret_cast<gc::Cell*>(&vp->toObject())->storeBuffer();
-            if (sb)
-                sb->putValueFromAnyThread(vp);
-        }
-    }
-
-    static void postBarrierRemove(Value* vp) {
         MOZ_ASSERT(vp);
-        MOZ_ASSERT(vp->isMarkable());
-        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        JSRuntime* rt = static_cast<js::gc::Cell*>(vp->toGCThing())->runtimeFromAnyThread();
-        JS::shadow::Runtime* shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->unputValueFromAnyThread(vp);
+
+        // If the target needs an entry, add it.
+        js::gc::StoreBuffer* sb;
+        if (next.isObject() && (sb = reinterpret_cast<gc::Cell*>(&next.toObject())->storeBuffer())) {
+            // If we know that the prev has already inserted an entry, we can skip
+            // doing the lookup to add the new entry.
+            if (prev.isObject() && reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer()) {
+                sb->assertHasValueEdge(vp);
+                return;
+            }
+            sb->putValueFromAnyThread(vp);
+            return;
+        }
+        // Remove the prev entry if the new value does not need it.
+        if (prev.isObject() && (sb = reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer()))
+            sb->unputValueFromAnyThread(vp);
     }
 
     static void readBarrier(const Value& v) {
@@ -301,9 +293,7 @@ struct InternalGCMethods<jsid>
     static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
     static void preBarrier(jsid id) { DispatchIdTyped(PreBarrierFunctor<jsid>(), id); }
-    static void postBarrier(jsid* idp) {}
-    static void postBarrierRelocate(jsid* idp) {}
-    static void postBarrierRemove(jsid* idp) {}
+    static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 };
 
 template <typename T>
@@ -341,7 +331,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 
     /* For users who need to manually barrier the raw types. */
     static void writeBarrierPre(const T& v) { InternalGCMethods<T>::preBarrier(v); }
-    static void writeBarrierPost(const T& v, T* vp) { InternalGCMethods<T>::postBarrier(vp); }
 
   protected:
     void pre() { InternalGCMethods<T>::preBarrier(value); }
@@ -409,8 +398,8 @@ class HeapPtr : public BarrieredBase<T>
 {
   public:
     HeapPtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(); }
-    explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(); }
+    explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(GCMethods<T>::initial(), v); }
+    explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(GCMethods<T>::initial(), v); }
 #ifdef DEBUG
     ~HeapPtr() {
         // No prebarrier necessary as this only happens when we are sweeping or
@@ -421,19 +410,20 @@ class HeapPtr : public BarrieredBase<T>
 
     void init(T v) {
         this->value = v;
-        post();
+        post(GCMethods<T>::initial(), v);
     }
 
     DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
 
   protected:
-    void post() { InternalGCMethods<T>::postBarrier(&this->value); }
+    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&this->value, prev, next); }
 
   private:
     void set(const T& v) {
         this->pre();
+        T tmp = this->value;
         this->value = v;
-        post();
+        post(tmp, this->value);
     }
 
     /*
@@ -494,8 +484,7 @@ class RelocatablePtr : public BarrieredBase<T>
   public:
     RelocatablePtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
     explicit RelocatablePtr(T v) : BarrieredBase<T>(v) {
-        if (GCMethods<T>::needsPostBarrier(v))
-            post();
+        post(GCMethods<T>::initial(), this->value);
     }
 
     /*
@@ -505,14 +494,12 @@ class RelocatablePtr : public BarrieredBase<T>
      * simply omit the rvalue variant.
      */
     RelocatablePtr(const RelocatablePtr<T>& v) : BarrieredBase<T>(v) {
-        if (GCMethods<T>::needsPostBarrier(this->value))
-            post();
+        post(GCMethods<T>::initial(), this->value);
     }
 
     ~RelocatablePtr() {
         this->pre();
-        if (GCMethods<T>::needsPostBarrier(this->value))
-            relocate();
+        post(this->value, GCMethods<T>::initial());
     }
 
     DECLARE_POINTER_ASSIGN_OPS(RelocatablePtr, T);
@@ -531,25 +518,13 @@ class RelocatablePtr : public BarrieredBase<T>
     }
 
     void postBarrieredSet(const T& v) {
-        if (GCMethods<T>::needsPostBarrier(v)) {
-            this->value = v;
-            post();
-        } else if (GCMethods<T>::needsPostBarrier(this->value)) {
-            relocate();
-            this->value = v;
-        } else {
-            this->value = v;
-        }
+        T tmp = this->value;
+        this->value = v;
+        post(tmp, this->value);
     }
 
-    void post() {
-        MOZ_ASSERT(GCMethods<T>::needsPostBarrier(this->value));
-        InternalGCMethods<T>::postBarrierRelocate(&this->value);
-    }
-
-    void relocate() {
-        MOZ_ASSERT(GCMethods<T>::needsPostBarrier(this->value));
-        InternalGCMethods<T>::postBarrierRemove(&this->value);
+    void post(T prev, T next) {
+        InternalGCMethods<T>::postBarrier(&this->value, prev, next);
     }
 };
 

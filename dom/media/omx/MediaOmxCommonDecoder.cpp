@@ -29,6 +29,7 @@ MediaOmxCommonDecoder::MediaOmxCommonDecoder()
   , mCanOffloadAudio(false)
   , mFallbackToStateMachine(false)
 {
+  mDormantSupported = true;
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }

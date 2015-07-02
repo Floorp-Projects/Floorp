@@ -784,7 +784,7 @@ HashableValue::setValue(JSContext* cx, HandleValue v)
 {
     if (v.isString()) {
         // Atomize so that hash() and operator==() are fast and infallible.
-        JSString* str = AtomizeString(cx, v.toString(), DoNotInternAtom);
+        JSString* str = AtomizeString(cx, v.toString(), DoNotPinAtom);
         if (!str)
             return false;
         value = StringValue(str);

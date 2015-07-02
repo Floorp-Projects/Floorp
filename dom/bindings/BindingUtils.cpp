@@ -558,7 +558,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     // Might as well intern, since we're going to need an atomized
     // version of name anyway when we stick our constructor on the
     // global.
-    JS::Rooted<JSString*> nameStr(cx, JS_InternString(cx, name));
+    JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
     if (!nameStr) {
       return nullptr;
     }

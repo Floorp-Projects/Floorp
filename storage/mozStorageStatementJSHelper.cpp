@@ -101,7 +101,7 @@ StatementJSHelper::getRow(Statement *aStatement,
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
-    rv = xpc->WrapNative(
+    rv = xpc->WrapNativeHolder(
       aCtx,
       ::JS_GetGlobalForObject(aCtx, scope),
       row,
@@ -146,7 +146,7 @@ StatementJSHelper::getParams(Statement *aStatement,
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
-    rv = xpc->WrapNative(
+    rv = xpc->WrapNativeHolder(
       aCtx,
       ::JS_GetGlobalForObject(aCtx, scope),
       params,

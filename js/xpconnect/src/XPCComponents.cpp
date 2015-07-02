@@ -307,15 +307,12 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
 
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
-            nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+            RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSIID*>(nsid),
                                              NS_GET_IID(nsIJSIID),
-                                             getter_AddRefs(holder)))) {
-                RootedObject idobj(cx);
-                if (holder &&
-                    // Assign, not compare
-                    (idobj = holder->GetJSObject())) {
+                                             idobj.address()))) {
+                if (idobj) {
                     *resolvedp = true;
                     *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
@@ -545,15 +542,12 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
             return NS_ERROR_OUT_OF_MEMORY;
 
         nsXPConnect* xpc = nsXPConnect::XPConnect();
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        RootedObject idobj(cx);
         if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                          static_cast<nsIJSIID*>(nsid),
-                                            NS_GET_IID(nsIJSIID),
-                                            getter_AddRefs(holder)))) {
-            RootedObject idobj(cx);
-            if (holder &&
-                // Assign, not compare
-                (idobj = holder->GetJSObject())) {
+                                         NS_GET_IID(nsIJSIID),
+                                         idobj.address()))) {
+            if (idobj) {
                 *resolvedp = true;
                 *_retval =
                     JS_DefinePropertyById(cx, obj, id, idobj,
@@ -765,15 +759,12 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
         nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.ptr());
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
-            nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+            RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSCID*>(nsid),
                                              NS_GET_IID(nsIJSCID),
-                                             getter_AddRefs(holder)))) {
-                RootedObject idobj(cx);
-                if (holder &&
-                    // Assign, not compare
-                        (idobj = holder->GetJSObject())) {
+                                             idobj.address()))) {
+                if (idobj) {
                     *resolvedp = true;
                     *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
@@ -1004,15 +995,12 @@ nsXPCComponents_ClassesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
         nsCOMPtr<nsIJSCID> nsid = nsJSCID::NewID(name.ptr());
         if (nsid) {
             nsXPConnect* xpc = nsXPConnect::XPConnect();
-            nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+            RootedObject idobj(cx);
             if (NS_SUCCEEDED(xpc->WrapNative(cx, obj,
                                              static_cast<nsIJSCID*>(nsid),
                                              NS_GET_IID(nsIJSCID),
-                                             getter_AddRefs(holder)))) {
-                RootedObject idobj(cx);
-                if (holder &&
-                    // Assign, not compare
-                    (idobj = holder->GetJSObject())) {
+                                             idobj.address()))) {
+                if (idobj) {
                     *resolvedp = true;
                     *_retval = JS_DefinePropertyById(cx, obj, id, idobj,
                                                      JSPROP_ENUMERATE |
@@ -1763,13 +1751,8 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
                                              parser.eStack,
                                              parser.eData);
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     RootedObject newObj(cx);
-
-    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException),
-                                  getter_AddRefs(holder))) || !holder ||
-        // Assign, not compare
-        !(newObj = holder->GetJSObject())) {
+    if (NS_FAILED(xpc->WrapNative(cx, obj, e, NS_GET_IID(nsIXPCException), newObj.address())) || !newObj) {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
     }
 
@@ -2011,19 +1994,11 @@ nsXPCConstructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,JSContext* 
     // security check not required because we are going to call through the
     // code which is reflected into JS which will do that for us later.
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> cidHolder;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> iidHolder;
     RootedObject cidObj(cx);
     RootedObject iidObj(cx);
 
-    if (NS_FAILED(xpc->WrapNative(cx, obj, mClassID, NS_GET_IID(nsIJSCID),
-                                  getter_AddRefs(cidHolder))) || !cidHolder ||
-        // Assign, not compare
-        !(cidObj = cidHolder->GetJSObject()) ||
-        NS_FAILED(xpc->WrapNative(cx, obj, mInterfaceID, NS_GET_IID(nsIJSIID),
-                                  getter_AddRefs(iidHolder))) || !iidHolder ||
-        // Assign, not compare
-        !(iidObj = iidHolder->GetJSObject())) {
+    if (NS_FAILED(xpc->WrapNative(cx, obj, mClassID, NS_GET_IID(nsIJSCID), cidObj.address())) || !cidObj ||
+        NS_FAILED(xpc->WrapNative(cx, obj, mInterfaceID, NS_GET_IID(nsIJSIID), iidObj.address())) || !iidObj) {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
     }
 
@@ -2260,7 +2235,6 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         // XXXjband support passing "Components.interfaces.foo"?
 
         nsCOMPtr<nsIXPCComponents_Interfaces> ifaces;
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         RootedObject ifacesObj(cx);
 
         // we do the lookup by asking the Components.interfaces object
@@ -2270,9 +2244,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         if (NS_FAILED(comp->GetInterfaces(getter_AddRefs(ifaces))) ||
             NS_FAILED(xpc->WrapNative(cx, obj, ifaces,
                                       NS_GET_IID(nsIXPCComponents_Interfaces),
-                                      getter_AddRefs(holder))) || !holder ||
-            // Assign, not compare
-            !(ifacesObj = holder->GetJSObject())) {
+                                      ifacesObj.address())) || !ifacesObj) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
 
@@ -2312,15 +2284,12 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
         // nsIJSCID objects work for us.
 
         nsCOMPtr<nsIXPCComponents_Classes> classes;
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         RootedObject classesObj(cx);
 
         if (NS_FAILED(comp->GetClasses(getter_AddRefs(classes))) ||
             NS_FAILED(xpc->WrapNative(cx, obj, classes,
                                       NS_GET_IID(nsIXPCComponents_Classes),
-                                      getter_AddRefs(holder))) || !holder ||
-            // Assign, not compare
-            !(classesObj = holder->GetJSObject())) {
+                                      classesObj.address())) || !classesObj) {
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
 
@@ -2342,13 +2311,9 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
     }
 
     nsCOMPtr<nsIXPCConstructor> ctor = new nsXPCConstructor(cClassID, cInterfaceID, cInitializer);
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder2;
     RootedObject newObj(cx);
 
-    if (NS_FAILED(xpc->WrapNative(cx, obj, ctor, NS_GET_IID(nsIXPCConstructor),
-                                  getter_AddRefs(holder2))) || !holder2 ||
-        // Assign, not compare
-        !(newObj = holder2->GetJSObject())) {
+    if (NS_FAILED(xpc->WrapNative(cx, obj, ctor, NS_GET_IID(nsIXPCConstructor), newObj.address())) || !newObj) {
         return ThrowAndFail(NS_ERROR_XPC_CANT_CREATE_WN, cx, _retval);
     }
 
