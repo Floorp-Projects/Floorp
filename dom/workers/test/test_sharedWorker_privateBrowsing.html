@@ -69,7 +69,7 @@ function doTests() {
           var sharedWorker3 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
           sharedWorker3.port.onmessage = function(event) {
             is(event.data, 2, "Only 2 sharedworker expected in the private window");
-            SimpleTest.finish();
+            runTest();
           }
         }
       }
