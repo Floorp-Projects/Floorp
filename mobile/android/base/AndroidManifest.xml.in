@@ -402,12 +402,7 @@
 
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
-
-            <path-permission android:pathPrefix="/search_suggest_query"
-                             android:readPermission="android.permission.GLOBAL_SEARCH" />
-
-        </provider>
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
 #ifdef MOZ_ANDROID_SHARE_OVERLAY
         <!-- Share overlay activity

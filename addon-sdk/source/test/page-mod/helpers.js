@@ -9,7 +9,7 @@ const { Loader } = require("sdk/test/loader");
 const { openTab, getBrowserForTab, closeTab } = require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 const { merge } = require("sdk/util/object");
-const httpd = require("./lib/httpd");
+const httpd = require("../lib/httpd");
 const { cleanUI } = require("sdk/test/utils");
 
 const PORT = 8099;
@@ -17,7 +17,7 @@ const PATH = '/test-contentScriptWhen.html';
 
 function createLoader () {
   let options = merge({}, require('@loader/options'),
-                      { id: "testloader", prefixURI: require('./fixtures').url() });
+                      { id: "testloader", prefixURI: require('../fixtures').url() });
   return Loader(module, null, options);
 }
 exports.createLoader = createLoader;
@@ -32,7 +32,7 @@ exports.openNewTab = openNewTab;
 // an evil function enables the creation of tests
 // that depend on delicate event timing. do not use.
 function testPageMod(assert, done, testURL, pageModOptions,
-                                           testCallback, timeout) {
+                     testCallback, timeout) {
   let loader = createLoader();
   let { PageMod } = loader.require("sdk/page-mod");
   let pageMods = [new PageMod(opts) for each (opts in pageModOptions)];
@@ -46,7 +46,7 @@ function testPageMod(assert, done, testURL, pageModOptions,
     // If we delay even more contentScriptWhen:'end', we may want to modify
     // this code again.
     setTimeout(testCallback, timeout,
-      b.contentWindow.wrappedJSObject,
+      b.contentWindow.wrappedJSObject,  // TODO: remove this CPOW
       function () {
         pageMods.forEach(function(mod) mod.destroy());
         // XXX leaks reported if we don't close the tab?

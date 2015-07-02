@@ -2,7 +2,7 @@ _VSPATH="/c/tools/vs2013"
 export WIN32_REDIST_DIR=${_VSPATH}/VC/redist/x86/Microsoft.VC120.CRT
 
 ## includes: win8.1 sdk includes, msvc std library, directx sdk for d3d9 ##
-export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/um:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
+export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/winrt:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
 
 ## libs: win8.1 sdk x86 (32-bit) libs, msvc (32-bit) std library, msvc atl libs, directx sdk (32-bit) for d3d9  ##
 export LIBPATH=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/Lib/winv6.3/um/x86:${_VSPATH}/vc/lib:${_VSPATH}/vc/atlmfc/lib:/c/tools/sdks/dx10/lib

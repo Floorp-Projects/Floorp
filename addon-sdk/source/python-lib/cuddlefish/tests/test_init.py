@@ -182,35 +182,6 @@ class TestCfxQuits(unittest.TestCase):
                                                   container)
             self.fail(standardMsg)
 
-    def test_cfx_run(self):
-        addon_path = os.path.join(tests_path,
-                                  "addons", "simplest-test")
-        rc, out, err = self.run_cfx(addon_path, ["run"])
-        self.assertEqual(rc, 0)
-        self.assertIn("Program terminated successfully.", err)
-
-    def test_cfx_test(self):
-        addon_path = os.path.join(tests_path, "addons", "simplest-test")
-        rc, out, err = self.run_cfx(addon_path, ["test"])
-        self.assertEqual(rc, 0)
-        self.assertIn("1 of 1 tests passed.", err)
-        self.assertIn("Program terminated successfully.", err)
-
-    def test_cfx_xpi(self):
-        addon_path = os.path.join(tests_path,
-                                  "addons", "simplest-test")
-        rc, out, err = self.run_cfx(addon_path, \
-          ["xpi", "--manifest-overload", "manifest-overload.json"])
-        self.assertEqual(rc, 0)
-        # Ensure that the addon version from our manifest overload is used
-        # in install.rdf
-        xpi_path = os.path.join(addon_path, "simplest-test.xpi")
-        xpi = zipfile.ZipFile(xpi_path, "r")
-        manifest = xpi.read("install.rdf")
-        self.assertIn("<em:version>1.0-nightly</em:version>", manifest)
-        xpi.close()
-        os.remove(xpi_path)
-
     def test_cfx_init(self):
         # Create an empty test directory
         addon_path = os.path.abspath(os.path.join(".test_tmp", "test-cfx-init"))
@@ -232,7 +203,7 @@ class TestCfxQuits(unittest.TestCase):
         # run cfx test
         rc, out, err = self.run_cfx(addon_path, ["test"])
         self.assertEqual(rc, 0)
-        self.assertIn("2 of 2 tests passed.", err)
+        self.assertIn("6 of 6 tests passed.", err)
         self.assertIn("Program terminated successfully.", err)
 
 
