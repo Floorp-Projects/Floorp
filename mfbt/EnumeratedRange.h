@@ -31,9 +31,6 @@ template<typename IntTypeT, typename EnumTypeT>
 class EnumeratedIterator
 {
 public:
-  typedef EnumTypeT ValueType;
-  typedef typename MakeSigned<IntTypeT>::Type DifferenceType;
-
   template<typename EnumType>
   explicit EnumeratedIterator(EnumType aCurrent)
     : mCurrent(aCurrent) { }
@@ -67,25 +64,6 @@ public:
     auto ret = *this;
     mCurrent = EnumTypeT(IntTypeT(mCurrent) - IntTypeT(1));
     return ret;
-  }
-
-  EnumeratedIterator operator+(DifferenceType aN) const
-  {
-    return EnumeratedIterator(EnumTypeT(IntTypeT(mCurrent) + aN));
-  }
-  EnumeratedIterator operator-(DifferenceType aN) const
-  {
-    return EnumeratedIterator(EnumTypeT(IntTypeT(mCurrent) - aN));
-  }
-  EnumeratedIterator& operator+=(DifferenceType aN)
-  {
-    mCurrent = EnumTypeT(IntTypeT(mCurrent) + aN);
-    return *this;
-  }
-  EnumeratedIterator& operator-=(DifferenceType aN)
-  {
-    mCurrent = EnumTypeT(IntTypeT(mCurrent) - aN);
-    return *this;
   }
 
   /* Comparison operators */
