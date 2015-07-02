@@ -67,6 +67,7 @@ int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_
 #ifdef WIN32
 int snprintf(char *buffer, size_t n, const char *format, ...);
 const char *inet_ntop(int af, const void *src, char *dst, size_t size);
+int inet_pton(int af, const char *src, void *dst);
 #endif
 
 #endif

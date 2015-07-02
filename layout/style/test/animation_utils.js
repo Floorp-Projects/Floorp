@@ -404,19 +404,23 @@ const ExpectComparisonTo = {
 };
 
 (function() {
-  window.omta_todo_is = function(elem, property, expected, runningOn, desc) {
+  window.omta_todo_is = function(elem, property, expected, runningOn, desc,
+                                 pseudo) {
     return omta_is_approx(elem, property, expected, 0, runningOn, desc,
-                          ExpectComparisonTo.Fail);
+                          ExpectComparisonTo.Fail, pseudo);
   };
 
-  window.omta_is = function(elem, property, expected, runningOn, desc) {
-    return omta_is_approx(elem, property, expected, 0, runningOn, desc);
+  window.omta_is = function(elem, property, expected, runningOn, desc,
+                            pseudo) {
+    return omta_is_approx(elem, property, expected, 0, runningOn, desc,
+                          ExpectComparisonTo.Pass, pseudo);
   };
 
   // Many callers of this method will pass 'undefined' for
   // expectedComparisonResult.
   window.omta_is_approx = function(elem, property, expected, tolerance,
-                                   runningOn, desc, expectedComparisonResult) {
+                                   runningOn, desc, expectedComparisonResult,
+                                   pseudo) {
     // Check input
     const omtaProperties = [ "transform", "opacity" ];
     if (omtaProperties.indexOf(property) === -1) {
@@ -434,8 +438,8 @@ const ExpectComparisonTo = {
 
     // Get actual values
     var compositorStr =
-      SpecialPowers.DOMWindowUtils.getOMTAStyle(elem, property);
-    var computedStr = window.getComputedStyle(elem)[property];
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(elem, property, pseudo);
+    var computedStr = window.getComputedStyle(elem, pseudo)[property];
 
     // Prepare expected value
     var expectedValue = normalize(expected);

@@ -441,7 +441,7 @@ PerformanceFront.prototype = {
    * Used only in tests.
    */
   _request: function (actorName, method, ...args) {
-    if (!gDevTools.testing) {
+    if (!DevToolsUtils.testing) {
       throw new Error("PerformanceFront._request may only be used in tests.");
     }
     let actor = this[`_${actorName}`];

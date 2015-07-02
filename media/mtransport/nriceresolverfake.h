@@ -63,7 +63,16 @@ class NrIceResolverFake {
   ~NrIceResolverFake();
 
   void SetAddr(const std::string& hostname, const PRNetAddr& addr) {
-    addrs_[hostname] = addr;
+    switch (addr.raw.family) {
+      case AF_INET:
+        addrs_[hostname] = addr;
+        break;
+      case AF_INET6:
+        addrs6_[hostname] = addr;
+        break;
+      default:
+        MOZ_CRASH();
+    }
   }
 
   nr_resolver *AllocateResolver();
@@ -83,11 +92,21 @@ private:
   static int cancel(void *obj, void *handle);
 
   // Get an address.
-  const PRNetAddr *Resolve(const std::string& hostname) {
-    if (!addrs_.count(hostname))
-      return nullptr;
+  const PRNetAddr *Resolve(const std::string& hostname, int address_family) {
+    switch (address_family) {
+      case AF_INET:
+        if (!addrs_.count(hostname))
+          return nullptr;
 
-    return &addrs_[hostname];
+        return &addrs_[hostname];
+      case AF_INET6:
+        if (!addrs6_.count(hostname))
+          return nullptr;
+
+        return &addrs6_[hostname];
+      default:
+        MOZ_CRASH();
+    }
   }
 
 
@@ -96,18 +115,21 @@ private:
                       const std::string& hostname,
                       uint16_t port,
                       int transport,
+                      int address_family,
                       int (*cb)(void *cb_arg, nr_transport_addr *addr),
                       void *cb_arg) :
         resolver_(resolver),
         hostname_(hostname),
         port_(port),
         transport_(transport),
+        address_family_(address_family),
         cb_(cb), cb_arg_(cb_arg) {}
 
     NrIceResolverFake *resolver_;
     std::string hostname_;
     uint16_t port_;
     int transport_;
+    int address_family_;
     int (*cb_)(void *cb_arg, nr_transport_addr *addr);
     void *cb_arg_;
     void *timer_handle_;
@@ -115,6 +137,7 @@ private:
 
   nr_resolver_vtbl* vtbl_;
   std::map<std::string, PRNetAddr> addrs_;
+  std::map<std::string, PRNetAddr> addrs6_;
   uint32_t delay_ms_;
   int allocated_resolvers_;
 };
