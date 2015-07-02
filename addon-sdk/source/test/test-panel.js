@@ -22,6 +22,7 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { URL } = require('sdk/url');
 const { wait } = require('./event/helpers');
 const packaging = require('@loader/options');
+const { cleanUI, after } = require("sdk/test/utils");
 
 const fixtures = require('./fixtures')
 
@@ -335,65 +336,27 @@ exports["test Anchor And Arrow"] = function(assert, done) {
   let { Panel } = loader.require('sdk/panel');
 
   let count = 0;
-  let queue = [];
-  let tab;
+  let url = 'data:text/html;charset=utf-8,' +
+    '<html><head><title>foo</title></head><body>' +
+    '</body></html>';
 
-  function newPanel(anchor) {
+  let panel = yield new Promise(resolve => {
+    let browserWindow = getMostRecentBrowserWindow();
+    let anchor = browserWindow.document.getElementById("identity-box");
     let panel = Panel({
       contentURL: "data:text/html;charset=utf-8,<html><body style='padding: 0; margin: 0; " +
                   "background: gray; text-align: center;'>Anchor: " +
                   anchor.id + "</body></html>",
       width: 200,
       height: 100,
-      onShow: function () {
-        panel.destroy();
-        next();
-      }
+      onShow: () => resolve(panel)
     });
-    queue.push({ panel: panel, anchor: anchor });
-  }
-
-  function next () {
-    if (!queue.length) {
-      assert.pass("All anchored panel test displayed");
-      tab.close(function () {
-        done();
-      });
-      return;
-    }
-    let { panel, anchor } = queue.shift();
     panel.show(null, anchor);
-  }
-
-  let tabs= require("sdk/tabs");
-  let url = 'data:text/html;charset=utf-8,' +
-    '<html><head><title>foo</title></head><body>' +
-    '<style>div {background: gray; position: absolute; width: 300px; ' +
-           'border: 2px solid black;}</style>' +
-    '<div id="tl" style="top: 0px; left: 0px;">Top Left</div>' +
-    '<div id="tr" style="top: 0px; right: 0px;">Top Right</div>' +
-    '<div id="bl" style="bottom: 0px; left: 0px;">Bottom Left</div>' +
-    '<div id="br" style="bottom: 0px; right: 0px;">Bottom right</div>' +
-    '</body></html>';
-
-  tabs.open({
-    url: url,
-    onReady: function(_tab) {
-      tab = _tab;
-      let browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"].
-                      getService(Ci.nsIWindowMediator).
-                      getMostRecentWindow("navigator:browser");
-      let window = browserWindow.content;
-      newPanel(window.document.getElementById('tl'));
-      newPanel(window.document.getElementById('tr'));
-      newPanel(window.document.getElementById('bl'));
-      newPanel(window.document.getElementById('br'));
-      let anchor = browserWindow.document.getElementById("identity-box");
-      newPanel(anchor);
-
-      next();
-    }
   });
+  assert.pass("All anchored panel test displayed");
+
+  panel.destroy();
+  assert.pass("panel was destroyed.");
 };
 
 exports["test Panel Focus True"] = function(assert, done) {
@@ -1351,6 +1314,11 @@ exports["test Panel without contentURL and contentScriptWhen=start should show"]
 
   loader.unload();
 }
+
+after(exports, function*(name, assert) {
+  yield cleanUI();
+  assert.pass("ui was cleaned.");
+});
 
 if (packaging.isNative) {
   module.exports = {

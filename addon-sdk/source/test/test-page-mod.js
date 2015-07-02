@@ -3,40 +3,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { Cc, Ci, Cu } = require("chrome");
 const { PageMod } = require("sdk/page-mod");
 const { testPageMod, handleReadyState, openNewTab,
-        contentScriptWhenServer, createLoader } = require("./pagemod-test-helpers");
-const { Loader } = require('sdk/test/loader');
+        contentScriptWhenServer, createLoader } = require("./page-mod/helpers");
+const { Loader } = require("sdk/test/loader");
 const tabs = require("sdk/tabs");
 const { setTimeout } = require("sdk/timers");
-const { Cc, Ci, Cu } = require("chrome");
 const system = require("sdk/system/events");
-const { open, getFrames, getMostRecentBrowserWindow, getInnerId } = require('sdk/window/utils');
+const { open, getFrames, getMostRecentBrowserWindow, getInnerId } = require("sdk/window/utils");
 const { getTabContentWindow, getActiveTab, setTabURL, openTab, closeTab,
-        getBrowserForTab } = require('sdk/tabs/utils');
+        getBrowserForTab } = require("sdk/tabs/utils");
 const xulApp = require("sdk/system/xul-app");
-const { isPrivateBrowsingSupported } = require('sdk/self');
-const { isPrivate } = require('sdk/private-browsing');
-const { openWebpage } = require('./private-browsing/helper');
-const { isTabPBSupported, isWindowPBSupported } = require('sdk/private-browsing/utils');
+const { isPrivateBrowsingSupported } = require("sdk/self");
+const { isPrivate } = require("sdk/private-browsing");
+const { openWebpage } = require("./private-browsing/helper");
+const { isTabPBSupported, isWindowPBSupported } = require("sdk/private-browsing/utils");
 const promise = require("sdk/core/promise");
-const { pb } = require('./private-browsing/helper');
+const { pb } = require("./private-browsing/helper");
 const { URL } = require("sdk/url");
-const { defer, all } = require('sdk/core/promise');
-
+const { defer, all, resolve } = require("sdk/core/promise");
 const { waitUntil } = require("sdk/test/utils");
 const data = require("./fixtures");
-
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { require: devtoolsRequire } = devtools;
-const contentGlobals = devtoolsRequire("devtools/server/content-globals");
-const { cleanUI } = require("sdk/test/utils");
+const { cleanUI, after } = require("sdk/test/utils");
 
 const testPageURI = data.url("test.html");
-
-// The following adds Debugger constructor to the global namespace.
-const { addDebuggerToGlobal } = require('resource://gre/modules/jsdebugger.jsm');
-addDebuggerToGlobal(this);
 
 function Isolate(worker) {
   return "(" + worker + ")()";
@@ -44,77 +35,154 @@ function Isolate(worker) {
 
 /* Tests for the PageMod APIs */
 
-exports.testPageMod1 = function(assert, done) {
-  let mods = testPageMod(assert, done, "about:", [{
-      include: /about:/,
-      contentScriptWhen: 'end',
-      contentScript: 'new ' + function WorkerScope() {
-        window.document.body.setAttribute("JEP-107", "worked");
-      },
-      onAttach: function() {
-        assert.equal(this, mods[0], "The 'this' object is the page mod.");
-      }
-    }],
-    function(win, done) {
-      assert.equal(
-        win.document.body.getAttribute("JEP-107"),
-        "worked",
-        "PageMod.onReady test"
-      );
-      done();
+exports.testPageMod1 = function*(assert) {
+  let modAttached = defer();
+  let mod = PageMod({
+    include: /about:/,
+    contentScriptWhen: "end",
+    contentScript: "new " + function WorkerScope() {
+      window.document.body.setAttribute("JEP-107", "worked");
+
+      self.port.once("done", () => {
+        self.port.emit("results", window.document.body.getAttribute("JEP-107"))
+      });
     },
-    100
-  );
+    onAttach: function(worker) {
+      assert.equal(this, mod, "The 'this' object is the page mod.");
+      mod.port.once("results", modAttached.resolve)
+      mod.port.emit("done");
+    }
+  });
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: "about:",
+      inBackground: true,
+      onReady: resolve
+    })
+  });
+  assert.pass("test tab was opened.");
+
+  let worked = yield modAttached.promise;
+  assert.pass("test mod was attached.");
+
+  mod.destroy();
+  assert.pass("test mod was destroyed.");
+
+  assert.equal(worked, "worked", "PageMod.onReady test");
 };
 
-exports.testPageMod2 = function(assert, done) {
-  testPageMod(assert, done, "about:", [{
-      include: "about:*",
-      contentScript: [
-        'new ' + function contentScript() {
-          window.AUQLUE = function() { return 42; }
-          try {
-            window.AUQLUE()
-          }
-          catch(e) {
-            throw new Error("PageMod scripts executed in order");
-          }
-          document.documentElement.setAttribute("first", "true");
-        },
-        'new ' + function contentScript() {
-          document.documentElement.setAttribute("second", "true");
+exports.testPageMod2 = function*(assert) {
+  let modAttached = defer();
+  let mod = PageMod({
+    include: testPageURI,
+    contentScriptWhen: "end",
+    contentScript: [
+      'new ' + function contentScript() {
+        window.AUQLUE = function() { return 42; }
+        try {
+          window.AUQLUE()
         }
-      ]
-    }], function(win, done) {
-      assert.equal(win.document.documentElement.getAttribute("first"),
-                       "true",
-                       "PageMod test #2: first script has run");
-      assert.equal(win.document.documentElement.getAttribute("second"),
-                       "true",
-                       "PageMod test #2: second script has run");
-      assert.equal("AUQLUE" in win, false,
-                       "PageMod test #2: scripts get a wrapped window");
-      done();
-    },
-    100
-  );
+        catch(e) {
+          throw new Error("PageMod scripts executed in order");
+        }
+        document.documentElement.setAttribute("first", "true");
+      },
+      'new ' + function contentScript() {
+        document.documentElement.setAttribute("second", "true");
+
+        self.port.once("done", () => {
+          self.port.emit("results", {
+            "first": window.document.documentElement.getAttribute("first"),
+            "second": window.document.documentElement.getAttribute("second"),
+            "AUQLUE": unsafeWindow.getAUQLUE()
+          });
+        });
+      }
+    ],
+    onAttach: modAttached.resolve
+  });
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: testPageURI,
+      inBackground: true,
+      onReady: resolve
+    })
+  });
+  assert.pass("test tab was opened.");
+
+  let worker = yield modAttached.promise;
+  assert.pass("test mod was attached.");
+
+  let results = yield new Promise(resolve => {
+    worker.port.once("results", resolve)
+    worker.port.emit("done");
+  });
+
+  mod.destroy();
+  assert.pass("test mod was destroyed.");
+
+  assert.equal(results["first"],
+               "true",
+               "PageMod test #2: first script has run");
+  assert.equal(results["second"],
+               "true",
+               "PageMod test #2: second script has run");
+  assert.equal(results["AUQLUE"], false,
+               "PageMod test #2: scripts get a wrapped window");
 };
 
-exports.testPageModIncludes = function(assert, done) {
-  var asserts = [];
+exports.testPageModIncludes = function*(assert) {
+  var modsAttached = [];
+  var modNumber = 0;
+  var modAttached = defer();
+  let includes = [
+    "*",
+    "*.google.com",
+    "resource:*",
+    "resource:",
+    testPageURI
+  ];
+  let expected = [
+    false,
+    false,
+    true,
+    false,
+    true
+  ]
+
+  let mod = PageMod({
+    include: testPageURI,
+    contentScript: 'new ' + function() {
+      self.port.on("get-local-storage", () => {
+        let result = {};
+        self.options.forEach(include => {
+          result[include] = !!window.localStorage[include]
+        });
+
+        self.port.emit("got-local-storage", result);
+
+        window.localStorage.clear();
+      });
+    },
+    contentScriptOptions: includes,
+    onAttach: modAttached.resolve
+  });
+
   function createPageModTest(include, expectedMatch) {
-    // Create an 'onload' test function...
-    asserts.push(function(test, win) {
-      var matches = include in win.localStorage;
-      assert.ok(expectedMatch ? matches : !matches,
-                  "'" + include + "' match test, expected: " + expectedMatch);
-    });
+    var modIndex = modNumber++;
+
+    let attached = defer();
+    modsAttached.push(expectedMatch ? attached.promise : resolve());
+
     // ...and corresponding PageMod options
-    return {
+    return PageMod({
       include: include,
       contentScript: 'new ' + function() {
         self.on("message", function(msg) {
-          window.localStorage[msg] = true;
+          window.localStorage[msg] = true
+          self.port.emit('done');
         });
       },
       // The testPageMod callback with test assertions is called on 'end',
@@ -122,27 +190,56 @@ exports.testPageModIncludes = function(assert, done) {
       // so we attach it on 'start'.
       contentScriptWhen: 'start',
       onAttach: function(worker) {
+        assert.pass("mod " + modIndex + " was attached");
+
+        worker.port.once("done", () => {
+          assert.pass("mod " + modIndex + " is done");
+          attached.resolve(worker);
+        });
         worker.postMessage(this.include[0]);
       }
-    };
+    });
   }
 
-  testPageMod(assert, done, testPageURI, [
-      createPageModTest("*", false),
-      createPageModTest("*.google.com", false),
-      createPageModTest("resource:*", true),
-      createPageModTest("resource:", false),
-      createPageModTest(testPageURI, true)
-    ],
-    function (win, done) {
-      waitUntil(() => win.localStorage[testPageURI],
-          testPageURI + " page-mod to be executed")
-        .then(() => {
-          asserts.forEach(fn => fn(assert, win));
-          win.localStorage.clear();
-          done();
-        });
+  let mods = [
+    createPageModTest("*", false),
+    createPageModTest("*.google.com", false),
+    createPageModTest("resource:*", true),
+    createPageModTest("resource:", false),
+    createPageModTest(testPageURI, true)
+  ];
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: testPageURI,
+      inBackground: true,
+      onReady: resolve
     });
+  });
+  assert.pass("tab was opened");
+
+  yield all(modsAttached);
+  assert.pass("all mods were attached.");
+
+  mods.forEach(mod => mod.destroy());
+  assert.pass("all mods were destroyed.");
+
+  yield modAttached.promise;
+  assert.pass("final test mod was attached.");
+
+  yield new Promise(resolve => {
+    mod.port.on("got-local-storage", (storage) => {
+      includes.forEach((include, i) => {
+        assert.equal(storage[include], expected[i], "localStorage is correct for " + include);
+      });
+      resolve();
+    });
+    mod.port.emit("get-local-storage");
+  });
+  assert.pass("final test of localStorage is complete.");
+
+  mod.destroy();
+  assert.pass("final test mod was destroyed.");
 };
 
 exports.testPageModExcludes = function(assert, done) {
@@ -257,96 +354,116 @@ exports.testPageModValidationExclude = function(assert) {
 };
 
 /* Tests for internal functions. */
-exports.testCommunication1 = function(assert, done) {
-  let workerDone = false,
-      callbackDone = null;
+exports.testCommunication1 = function*(assert) {
+  let workerDone = defer();
 
-  testPageMod(assert, done, "about:", [{
-      include: "about:*",
-      contentScriptWhen: 'end',
-      contentScript: 'new ' + function WorkerScope() {
-        self.on('message', function(msg) {
-          document.body.setAttribute('JEP-107', 'worked');
-          self.postMessage(document.body.getAttribute('JEP-107'));
-        })
-      },
-      onAttach: function(worker) {
-        worker.on('error', function(e) {
-          assert.fail('Errors where reported');
-        });
-        worker.on('message', function(value) {
-          assert.equal(
-            "worked",
-            value,
-            "test comunication"
-          );
-          workerDone = true;
-          if (callbackDone)
-            callbackDone();
-        });
-        worker.postMessage('do it!')
-      }
-    }],
-    function(win, done) {
-      (callbackDone = function() {
-        if (workerDone) {
-          assert.equal(
-            'worked',
-            win.document.body.getAttribute('JEP-107'),
-            'attribute should be modified'
-          );
-          done();
-        }
-      })();
+  let mod = PageMod({
+    include: "about:*",
+    contentScriptWhen: "end",
+    contentScript: 'new ' + function WorkerScope() {
+      self.on('message', function(msg) {
+        document.body.setAttribute('JEP-107', 'worked');
+        self.postMessage(document.body.getAttribute('JEP-107'));
+      });
+      self.port.on('get-jep-107', () => {
+        self.port.emit('got-jep-107', document.body.getAttribute('JEP-107'));
+      });
+    },
+    onAttach: function(worker) {
+      worker.on('error', function(e) {
+        assert.fail('Errors where reported');
+      });
+      worker.on('message', function(value) {
+        assert.equal(
+          "worked",
+          value,
+          "test comunication"
+        );
+        workerDone.resolve();
+      });
+      worker.postMessage("do it!")
     }
-  );
+  });
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: "about:",
+      onReady: resolve
+    });
+  });
+  assert.pass("opened tab");
+
+  yield workerDone.promise;
+  assert.pass("the worker has made a change");
+
+  let value = yield new Promise(resolve => {
+    mod.port.once("got-jep-107", resolve);
+    mod.port.emit("get-jep-107");
+  });
+
+  assert.equal("worked", value, "attribute should be modified");
+
+  mod.destroy();
+  assert.pass("the worker was destroyed");
 };
 
-exports.testCommunication2 = function(assert, done) {
-  let callbackDone = null,
-      window;
+exports.testCommunication2 = function*(assert) {
+  let workerDone = defer();
+  let url = data.url("test.html");
 
-  testPageMod(assert, done, "about:license", [{
-      include: "about:*",
-      contentScriptWhen: 'start',
-      contentScript: 'new ' + function WorkerScope() {
-        document.documentElement.setAttribute('AUQLUE', 42);
-        window.addEventListener('load', function listener() {
-          self.postMessage('onload');
-        }, false);
-        self.on("message", function() {
-          self.postMessage(document.documentElement.getAttribute("test"))
+  let mod = PageMod({
+    include: url,
+    contentScriptWhen: 'start',
+    contentScript: 'new ' + function WorkerScope() {
+      document.documentElement.setAttribute('AUQLUE', 42);
+
+      window.addEventListener('load', function listener() {
+        self.postMessage({
+          msg: 'onload',
+          AUQLUE: document.documentElement.getAttribute('AUQLUE')
         });
-      },
-      onAttach: function(worker) {
-        worker.on('error', function(e) {
-          assert.fail('Errors where reported');
+      }, false);
+
+      self.on("message", function(msg) {
+        if (msg == "get window.test") {
+          unsafeWindow.changesInWindow();
+        }
+
+        self.postMessage({
+          msg: document.documentElement.getAttribute("test")
         });
-        worker.on('message', function(msg) {
-          if ('onload' == msg) {
-            assert.equal(
-              '42',
-              window.document.documentElement.getAttribute('AUQLUE'),
-              'PageMod scripts executed in order'
-            );
-            window.document.documentElement.setAttribute('test', 'changes in window');
-            worker.postMessage('get window.test')
-          } else {
-            assert.equal(
-              'changes in window',
-              msg,
-              'PageMod test #2: second script has run'
-            )
-            callbackDone();
-          }
-        });
-      }
-    }],
-    function(win, done) {
-      window = win;
-      callbackDone = done;
+      });
+    },
+    onAttach: function(worker) {
+      worker.on('error', function(e) {
+        assert.fail('Errors where reported');
+      });
+      worker.on('message', function({ msg, AUQLUE }) {
+        if ('onload' == msg) {
+          assert.equal('42', AUQLUE, 'PageMod scripts executed in order');
+          worker.postMessage('get window.test');
+        }
+        else {
+          assert.equal('changes in window', msg, 'PageMod test #2: second script has run');
+          workerDone.resolve();
+        }
+      });
     }
-  );
+  });
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: url,
+      inBackground: true,
+      onReady: resolve
+    });
+  });
+  assert.pass("opened tab");
+
+  yield workerDone.promise;
+
+  mod.destroy();
+  assert.pass("the worker was destroyed");
 };
 
 exports.testEventEmitter = function(assert, done) {
@@ -1074,55 +1191,83 @@ exports.testPageModCss = function(assert, done) {
   );
 };
 
-exports.testPageModCssList = function(assert, done) {
-  let [pageMod] = testPageMod(assert, done,
-    'data:text/html;charset=utf-8,<div style="width:320px; max-width: 480px!important">css test</div>', [{
-      include: "data:*",
-      contentStyleFile: [
-        // Highlight evaluation order in this list
-        "data:text/css;charset=utf-8,div { border: 1px solid black; }",
-        "data:text/css;charset=utf-8,div { border: 10px solid black; }",
-        // Highlight evaluation order between contentStylesheet & contentStylesheetFile
-        "data:text/css;charset=utf-8s,div { height: 1000px; }",
-        // Highlight precedence between the author and user style sheet
-        "data:text/css;charset=utf-8,div { width: 200px; max-width: 640px!important}",
-      ],
-      contentStyle: [
-        "div { height: 10px; }",
-        "div { height: 100px; }"
-      ]
-    }],
-    function(win, done) {
-      let div = win.document.querySelector("div"),
-          style = win.getComputedStyle(div);
+exports.testPageModCssList = function*(assert) {
+  const URL = 'data:text/html;charset=utf-8,<div style="width:320px; max-width: 480px!important">css test</div>';
+  let modAttached = defer();
 
-      assert.equal(
-       div.clientHeight,
-        100,
-        "PageMod contentStyle list works and is evaluated after contentStyleFile"
-      );
+  let pageMod = PageMod({
+    include: "data:*",
+    contentStyleFile: [
+      // Highlight evaluation order in this list
+      "data:text/css;charset=utf-8,div { border: 1px solid black; }",
+      "data:text/css;charset=utf-8,div { border: 10px solid black; }",
+      // Highlight evaluation order between contentStylesheet & contentStylesheetFile
+      "data:text/css;charset=utf-8s,div { height: 1000px; }",
+      // Highlight precedence between the author and user style sheet
+      "data:text/css;charset=utf-8,div { width: 200px; max-width: 640px!important}",
+    ],
+    contentStyle: [
+      "div { height: 10px; }",
+      "div { height: 100px; }"
+    ],
+    contentScript:  'new ' + function WorkerScope() {
+      self.port.on('get-results', () => {
+        let div = window.document.querySelector('div');
+        let style = window.getComputedStyle(div);
 
-      assert.equal(
-        div.offsetHeight,
-        120,
-        "PageMod contentStyleFile list works"
-      );
+        self.port.emit("results", {
+          clientHeight: div.clientHeight,
+          offsetHeight: div.offsetHeight,
+          width: style.width,
+          maxWidth: style.maxWidth
+        });
+      })
+    },
+    onAttach: modAttached.resolve
+  });
 
-      assert.equal(
-        style.width,
-        "320px",
-        "PageMod add-on author/page author style sheet precedence works"
-      );
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: URL,
+      onReady: resolve
+    });
+  });
+  assert.pass("the tab was opened");
 
-      assert.equal(
-        style.maxWidth,
-        "480px",
-        "PageMod add-on author/page author style sheet precedence with !important works"
-      );
+  yield modAttached.promise;
+  assert.pass("the mod has been attached");
 
-      done();
-    }
+  let results = yield new Promise(resolve => {
+    pageMod.port.on("results", resolve);
+    pageMod.port.emit("get-results");
+  })
+
+  assert.equal(
+   results.clientHeight,
+    100,
+    "PageMod contentStyle list works and is evaluated after contentStyleFile"
   );
+
+  assert.equal(
+    results.offsetHeight,
+    120,
+    "PageMod contentStyleFile list works"
+  );
+
+  assert.equal(
+    results.width,
+    "320px",
+    "PageMod add-on author/page author style sheet precedence works"
+  );
+
+  assert.equal(
+    results.maxWidth,
+    "480px",
+    "PageMod add-on author/page author style sheet precedence with !important works"
+  );
+
+  pageMod.destroy();
+  assert.pass("the page mod was destroyed");
 };
 
 exports.testPageModCssDestroy = function(assert, done) {
@@ -1417,30 +1562,49 @@ exports.testIFramePostMessage = function(assert, done) {
   });
 };
 
-exports.testEvents = function(assert, done) {
+exports.testEvents = function*(assert) {
+  let modAttached = defer();
   let content = "<script>\n new " + function DocumentScope() {
     window.addEventListener("ContentScriptEvent", function () {
-      window.document.body.setAttribute("receivedEvent", true);
+      window.document.body.setAttribute("receivedEvent", "ok");
     }, false);
   } + "\n</script>";
   let url = "data:text/html;charset=utf-8," + encodeURIComponent(content);
-  testPageMod(assert, done, url, [{
-      include: "data:*",
-      contentScript: 'new ' + function WorkerScope() {
-        let evt = document.createEvent("Event");
-        evt.initEvent("ContentScriptEvent", true, true);
-        document.body.dispatchEvent(evt);
-      }
-    }],
-    function(win, done) {
-      assert.ok(
-        win.document.body.getAttribute("receivedEvent"),
-        "Content script sent an event and document received it"
-      );
-      done();
+
+  let mod = PageMod({
+    include: "data:*",
+    contentScript: 'new ' + function WorkerScope() {
+      let evt = document.createEvent("Event");
+      evt.initEvent("ContentScriptEvent", true, true);
+      document.body.dispatchEvent(evt);
+
+      self.port.on("get-result", () => {
+        self.port.emit("result", {
+          receivedEvent: window.document.body.getAttribute("receivedEvent")
+        });
+      });
     },
-    100
-  );
+    onAttach: modAttached.resolve
+  });
+
+  let tab = yield new Promise(resolve => {
+    tabs.open({
+      url: url,
+      onReady: resolve
+    });
+  });
+  assert.pass("the tab is ready");
+
+  yield modAttached.promise;
+  assert.pass("the mod was attached")
+
+  let result = yield new Promise(resolve => {
+    mod.port.once("result", resolve);
+    mod.port.emit("get-result");
+  });
+
+  assert.equal(result.receivedEvent, "ok",
+               "Content script sent an event and document received it");
 };
 
 exports["test page-mod on private tab"] = function (assert, done) {
@@ -1503,46 +1667,6 @@ exports.testWorkerTabClose = function(assert, done) {
     }],
     function(win, done) {
       callbackDone = done;
-    }
-  );
-};
-
-exports.testDebugMetadata = function(assert, done) {
-  let dbg = new Debugger;
-  let globalDebuggees = [];
-  dbg.onNewGlobalObject = function(global) {
-    globalDebuggees.push(global);
-  }
-
-  let mods = testPageMod(assert, done, "about:", [{
-      include: "about:",
-      contentScriptWhen: "start",
-      contentScript: "null;",
-    }], function(win, done) {
-      assert.ok(globalDebuggees.some(function(global) {
-        try {
-          let metadata = Cu.getSandboxMetadata(global.unsafeDereference());
-          return metadata && metadata.addonID && metadata.SDKContentScript &&
-                 metadata['inner-window-id'] == getInnerId(win);
-        } catch(e) {
-          // Some of the globals might not be Sandbox instances and thus
-          // will cause getSandboxMetadata to fail.
-          return false;
-        }
-      }), "one of the globals is a content script");
-      done();
-    }
-  );
-};
-
-exports.testDevToolsExtensionsGetContentGlobals = function(assert, done) {
-  let mods = testPageMod(assert, done, "about:", [{
-      include: "about:",
-      contentScriptWhen: "start",
-      contentScript: "null;",
-    }], function(win, done) {
-      assert.equal(contentGlobals.getContentGlobals({ 'inner-window-id': getInnerId(win) }).length, 1);
-      done();
     }
   );
 };
@@ -2062,5 +2186,10 @@ exports.testDontInjectConsole = function(assert, done) {
 
   let tab = openTab(getMostRecentBrowserWindow(), TEST_URL);
 }
+
+after(exports, function*(name, assert) {
+  assert.pass("cleaning ui.");
+  yield cleanUI();
+});
 
 require('sdk/test').run(exports);

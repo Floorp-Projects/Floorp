@@ -916,6 +916,29 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   padding: 0 3px;
 }
 
+#urlbar-search-footer {
+  border-top: 1px solid hsla(210,4%,10%,.14);
+  background-color: hsla(210,4%,10%,.07);
+}
+
+#urlbar-search-settings {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  color: inherit;
+  margin: 0;
+  border: 0;
+  padding: 8px 20px;
+  background: transparent;
+}
+
+#urlbar-search-settings:hover {
+  background-color: hsla(210,4%,10%,.07);
+}
+
+#urlbar-search-settings:hover:active {
+  background-color: hsla(210,4%,10%,.12);
+}
+
 #urlbar-search-splitter {
   -moz-appearance: none;
   width: 8px;

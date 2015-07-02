@@ -72,6 +72,32 @@
   background-position: calc(100% - 1em) 1em;
 }
 
+/* IN-CONTENT-PREF STYLE BUTTONS */
+
+.identity-popup-button {
+  -moz-appearance: none;
+  margin: 5px 0;
+  height: 30px;
+  color: #333;
+  line-height: 20px;
+  border: 1px solid #c1c1c1;
+  border-radius: 2px;
+  background-color: #fbfbfb;
+}
+
+.identity-popup-button:not([disabled="true"]):hover {
+  background-color: #ebebeb;
+}
+
+.identity-popup-button:not([disabled="true"]):hover:active {
+  background-color: #dadada;
+}
+
+.identity-popup-button[disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* EXPAND BUTTON */
 
 .identity-popup-expander {
@@ -211,7 +237,8 @@
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
 }
 
-#tracking-actions {
+#tracking-action-block,
+#tracking-action-unblock {
   margin: 1em 0 0;
 }
 

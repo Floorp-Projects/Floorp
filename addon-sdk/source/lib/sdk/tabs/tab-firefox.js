@@ -15,8 +15,6 @@ const { getBrowserForTab, setTabURL, getTabId, getTabURL, getTabForBrowser,
         getTabs, getTabTitle, setTabTitle, getIndex, closeTab, reload, move,
         activateTab, pin, unpin, isTab } = require('./utils');
 const { isBrowser, getInnerId, isWindowPrivate } = require('../window/utils');
-const { getFaviconURIForLocation } = require("../io/data");
-const { deprecateUsage } = require('../util/deprecate');
 const { getThumbnailURIForWindow, BLANK } = require("../content/thumbnail");
 const { when } = require('../system/unload');
 const { ignoreWindow, isPrivate } = require('../private-browsing/utils')
@@ -94,14 +92,6 @@ const Tab = Class({
       return;
 
     setTabURL(viewsFor.get(this), val);
-  },
-
-  get favicon() {
-    deprecateUsage(
-      'tab.favicon is deprecated, ' +
-      'please use require("sdk/places/favicon").getFavicon instead.'
-    );
-    return isDestroyed(this) ? undefined : getFaviconURIForLocation(this.url);
   },
 
   get contentType() {
