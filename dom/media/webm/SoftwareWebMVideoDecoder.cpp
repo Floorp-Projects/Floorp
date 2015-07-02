@@ -13,6 +13,7 @@
 #include "TimeUnits.h"
 #include "VorbisUtils.h"
 #include "WebMBufferedParser.h"
+#include "NesteggPacketHolder.h"
 
 #include <algorithm>
 
