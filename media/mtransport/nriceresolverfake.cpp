@@ -122,6 +122,7 @@ int NrIceResolverFake::resolve(void *obj,
                             resource->transport_protocol ?
                             resource->transport_protocol :
                             IPPROTO_UDP,
+                            resource->address_family,
                             cb, cb_arg);
 
   if ((r=NR_ASYNC_TIMER_SET(fake->delay_ms_,NrIceResolverFake::resolve_cb,
@@ -140,7 +141,8 @@ void NrIceResolverFake::resolve_cb(NR_SOCKET s, int how, void *cb_arg) {
   MOZ_ASSERT(cb_arg);
   PendingResolution *pending = static_cast<PendingResolution *>(cb_arg);
 
-  const PRNetAddr *addr=pending->resolver_->Resolve(pending->hostname_);
+  const PRNetAddr *addr=pending->resolver_->Resolve(pending->hostname_,
+                                                    pending->address_family_);
 
   if (addr) {
     nr_transport_addr transport_addr;

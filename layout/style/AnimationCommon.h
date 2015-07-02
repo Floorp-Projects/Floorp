@@ -161,19 +161,26 @@ protected:
     return false;
   }
 
+
+public:
   // Return an AnimationCollection* if we have an animation for
-  // the element aContent and pseudo-element indicator aElementProperty
-  // that can be performed on the compositor thread (as defined by 
-  // AnimationCollection::CanPerformOnCompositorThread).
+  // the frame aFrame that can be performed on the compositor thread (as
+  // defined by AnimationCollection::CanPerformOnCompositorThread).
   //
-  // Note that this does not test whether the element's layer uses
+  // Note that this does not test whether the frame's layer uses
   // off-main-thread compositing, although it does check whether
   // off-main-thread compositing is enabled as a whole.
-  static AnimationCollection*
-  GetAnimationsForCompositor(nsIContent* aContent,
-                             nsIAtom* aElementProperty,
+  AnimationCollection*
+  GetAnimationsForCompositor(const nsIFrame* aFrame,
                              nsCSSProperty aProperty);
 
+  // Given the frame aFrame with possibly animated content, finds its
+  // associated collection of animations. If it is a generated content
+  // frame, it may examine the parent frame to search for such animations.
+  AnimationCollection*
+  GetAnimationCollection(const nsIFrame* aFrame);
+
+protected:
   PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
   bool mIsObservingRefreshDriver;

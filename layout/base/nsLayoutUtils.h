@@ -2135,32 +2135,48 @@ public:
                                         bool clear);
 
   /**
-   * Returns true if the content node has animations or transitions that can be
+   * Given a frame with possibly animated content, finds the content node
+   * that contains its animations as well as the frame's pseudo-element type
+   * relative to the resulting content node. Returns true if animated content
+   * was found, otherwise it returns false and the output parameters are
+   * undefined.
+   */
+  static bool GetAnimationContent(const nsIFrame* aFrame,
+                                  nsIContent* &aContentResult,
+                                  nsCSSPseudoElements::Type &aPseudoTypeResult);
+
+  /**
+   * Returns true if the frame has animations or transitions that can be
    * performed on the compositor.
    */
-  static bool HasAnimationsForCompositor(nsIContent* aContent,
+  static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
 
   /**
-   * Returns true if the content node has animations or transitions for the
+   * Returns true if the frame has animations or transitions for the
    * property.
    */
-  static bool HasAnimations(nsIContent* aContent, nsCSSProperty aProperty);
+  static bool HasAnimations(const nsIFrame* aFrame, nsCSSProperty aProperty);
 
   /**
-   * Returns true if the content node has any current animations or transitions
-   * (depending on the value of |aAnimationProperty|).
+   * Returns true if the frame has any current animations.
    * A current animation is any animation that has not yet finished playing
    * including paused animations.
    */
-  static bool HasCurrentAnimations(nsIContent* aContent,
-                                   nsIAtom* aAnimationProperty);
+  static bool HasCurrentAnimations(const nsIFrame* aFrame);
 
   /**
-   * Returns true if the content node has any current animations or transitions
+   * Returns true if the frame has any current transitions.
+   * A current transition is any transition that has not yet finished playing
+   * including paused transitions.
+   */
+  static bool HasCurrentTransitions(const nsIFrame* aFrame);
+
+  /**
+   * Returns true if the frame has any current animations or transitions
    * for any of the specified properties.
    */
-  static bool HasCurrentAnimationsForProperties(nsIContent* aContent,
+  static bool HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
                                                 const nsCSSProperty* aProperties,
                                                 size_t aPropertyCount);
 
@@ -2175,7 +2191,7 @@ public:
   static bool IsAnimationLoggingEnabled();
 
   /**
-   * Find a suitable scale for an element (aContent) over the course of any
+   * Find a suitable scale for a element (aFrame's content) over the course of any
    * animations and transitions of the CSS transform property on the
    * element that run on the compositor thread.
    * It will check the maximum and minimum scale during the animations and
@@ -2185,7 +2201,7 @@ public:
    * @param aVisibleSize is the size of the area we want to paint
    * @param aDisplaySize is the size of the display area of the pres context
    */
-  static gfxSize ComputeSuitableScaleForAnimation(nsIContent* aContent,
+  static gfxSize ComputeSuitableScaleForAnimation(const nsIFrame* aFrame,
                                                   const nsSize& aVisibleSize,
                                                   const nsSize& aDisplaySize);
 

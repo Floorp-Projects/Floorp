@@ -86,6 +86,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       from, to { transform: translate(50px) }
     }
 
+    #withbefore::before, #withafter::after {
+      content: "test";
+      animation: anim4 1s linear alternate 3;
+      display:block;
+    }
+
     @keyframes multiprop {
       0% {
         transform: translate(10px); opacity: 0.3;
@@ -1436,8 +1442,72 @@ addAsyncAnimTest(function *() {
  * http://dev.w3.org/csswg/css3-animations/#the-animation-shorthand-property-
  */
 
-// (Unlike test_animations.html, pseudo-elements are not tested here since they
-//  are currently not run on the compositor thread.)
+/**
+ * Basic tests of animations on pseudo-elements
+ */
+addAsyncAnimTest(function *() {
+  new_div("");
+  listen();
+  gDiv.id = "withbefore";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":before test at 0ms", "::before");
+  advance_clock(400);
+  omta_is("transform", { ty: 40 }, RunningOn.Compositor,
+          ":before test at 400ms", "::before");
+  advance_clock(800);
+  omta_is("transform", { ty: 80 }, RunningOn.Compositor,
+          ":before test at 1200ms", "::before");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          ":before animation should not affect element");
+  advance_clock(800);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":before test at 2000ms", "::before");
+  advance_clock(300);
+  omta_is("transform", { ty: 30 }, RunningOn.Compositor,
+          ":before test at 2300ms", "::before");
+  advance_clock(700);
+  check_events([ { type: "animationstart", animationName: "anim4",
+                   elapsedTime: 0, pseudoElement: "::before" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 1, pseudoElement: "::before" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 2, pseudoElement: "::before" },
+                 { type: "animationend", animationName: "anim4",
+                   elapsedTime: 3, pseudoElement: "::before" }]);
+  done_div();
+
+  new_div("");
+  listen();
+  gDiv.id = "withafter";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":after test at 0ms", "::after");
+  advance_clock(400);
+  omta_is("transform", { ty: 40 }, RunningOn.Compositor,
+          ":after test at 400ms", "::after");
+  advance_clock(800);
+  omta_is("transform", { ty: 80 }, RunningOn.Compositor,
+          ":after test at 1200ms", "::after");
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          ":before animation should not affect element");
+  advance_clock(800);
+  omta_is("transform", { ty: 0 }, RunningOn.Compositor,
+          ":after test at 2000ms", "::after");
+  advance_clock(300);
+  omta_is("transform", { ty: 30 }, RunningOn.Compositor,
+          ":after test at 2300ms", "::after");
+  advance_clock(700);
+  check_events([ { type: "animationstart", animationName: "anim4",
+                   elapsedTime: 0, pseudoElement: "::after" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 1, pseudoElement: "::after" },
+                 { type: "animationiteration", animationName: "anim4",
+                   elapsedTime: 2, pseudoElement: "::after" },
+                 { type: "animationend", animationName: "anim4",
+                   elapsedTime: 3, pseudoElement: "::after" }]);
+  done_div();
+});
 
 /**
  * Test handling of properties that are present in only some of the

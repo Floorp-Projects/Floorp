@@ -88,6 +88,8 @@
                 # STUN
                 "./src/stun/addrs.c",
                 "./src/stun/addrs.h",
+                "./src/stun/ifaddrs-android.c",
+                "./src/stun/ifaddrs-android.h",
                 "./src/stun/nr_socket_turn.c",
                 "./src/stun/nr_socket_turn.h",
                 "./src/stun/nr_socket_buffered_stun.c",
