@@ -9,10 +9,11 @@ let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/framework/toolbox-hosts");
 const {defer} = require("sdk/core/promise");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 const TEST_URI_ROOT = "http://example.com/browser/browser/devtools/shared/test/";

@@ -11,7 +11,7 @@ let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared
 let clipboard = devtools.require("sdk/clipboard");
 let {setTimeout, clearTimeout} = devtools.require("sdk/timers");
 let {promiseInvoke} = devtools.require("devtools/async-utils");
-
+let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -23,9 +23,9 @@ SimpleTest.requestCompleteLog();
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
-// Set the testing flag on gDevTools and reset it when the test ends
-gDevTools.testing = true;
-registerCleanupFunction(() => gDevTools.testing = false);
+// Set the testing flag on DevToolsUtils and reset it when the test ends
+DevToolsUtils.testing = true;
+registerCleanupFunction(() => DevToolsUtils.testing = false);
 
 // Clear preferences that may be set during the course of tests.
 registerCleanupFunction(() => {

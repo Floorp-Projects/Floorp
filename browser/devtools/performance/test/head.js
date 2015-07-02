@@ -45,7 +45,7 @@ const EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 // All tests are asynchronous.
 waitForExplicitFinish();
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 
 let DEFAULT_PREFS = [
   "devtools.debugger.log",
@@ -84,7 +84,7 @@ function loadFrameScripts () {
 }
 
 registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
   info("finish() was called, cleaning up...");
 
   // Rollback any pref changes

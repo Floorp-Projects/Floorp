@@ -196,6 +196,7 @@ browser.jar:
         skin/classic/browser/controlcenter/conn-not-secure.svg  (../shared/controlcenter/conn-not-secure.svg)
         skin/classic/browser/controlcenter/conn-secure-dv.svg  (../shared/controlcenter/conn-secure-dv.svg)
         skin/classic/browser/controlcenter/conn-secure-ev.svg  (../shared/controlcenter/conn-secure-ev.svg)
+        skin/classic/browser/controlcenter/mcb-disabled.svg  (../shared/controlcenter/mcb-disabled.svg)
         skin/classic/browser/controlcenter/permissions.svg  (../shared/controlcenter/permissions.svg)
         skin/classic/browser/controlcenter/tracking-protection.svg                 (../shared/controlcenter/tracking-protection.svg)
         skin/classic/browser/controlcenter/tracking-protection-disabled.svg        (../shared/controlcenter/tracking-protection-disabled.svg)

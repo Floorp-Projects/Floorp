@@ -14,7 +14,8 @@ const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {require} = devtools;
 const promise = require("promise");
 const {AppProjects} = require("devtools/app-manager/app-projects");
-gDevTools.testing = true;
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+DevToolsUtils.testing = true;
 
 let TEST_BASE;
 if (window.location === "chrome://browser/content/browser.xul") {
@@ -37,7 +38,7 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.
 let registerCleanupFunction = registerCleanupFunction ||
                               SimpleTest.registerCleanupFunction;
 registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
   Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");

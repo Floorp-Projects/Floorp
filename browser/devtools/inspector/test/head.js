@@ -26,14 +26,15 @@ waitForExplicitFinish();
 
 let {TargetFactory, require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 registerCleanupFunction(() => {
