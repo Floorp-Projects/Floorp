@@ -20,8 +20,8 @@
 #ifndef mozilla_EnumeratedRange_h
 #define mozilla_EnumeratedRange_h
 
-#include "mozilla/IntegerRange.h"
 #include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/ReverseIterator.h"
 
 namespace mozilla {
 
@@ -31,7 +31,7 @@ template<typename IntTypeT, typename EnumTypeT>
 class EnumeratedIterator
 {
 public:
-  typedef const EnumTypeT ValueType;
+  typedef EnumTypeT ValueType;
   typedef typename MakeSigned<IntTypeT>::Type DifferenceType;
 
   template<typename EnumType>
@@ -42,9 +42,7 @@ public:
   EnumeratedIterator(const EnumeratedIterator<IntType, EnumType>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
-  // Since operator* is required to return a reference, we return
-  // a reference to our member here.
-  const EnumTypeT& operator*() const { return mCurrent; }
+  EnumTypeT operator*() const { return mCurrent; }
 
   /* Increment and decrement operators */
 

@@ -13,6 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/IteratorTraits.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -31,7 +32,7 @@ public:
   MOZ_IMPLICIT ReverseIterator(const ReverseIterator<Iterator>& aOther)
     : mCurrent(aOther.mCurrent) { }
 
-  ValueType& operator*() const
+  decltype(*DeclVal<IteratorT>()) operator*() const
   {
     IteratorT tmp = mCurrent;
     return *--tmp;
