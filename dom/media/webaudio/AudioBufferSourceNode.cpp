@@ -61,7 +61,7 @@ public:
     mLoopStart(0), mLoopEnd(0),
     mBufferSampleRate(0), mBufferPosition(0), mChannels(0),
     mDopplerShift(1.0f),
-    mDestination(static_cast<AudioNodeStream*>(aDestination->Stream())),
+    mDestination(aDestination->Stream()),
     mPlaybackRateTimeline(1.0f),
     mDetuneTimeline(0.0f),
     mLoop(false)
@@ -560,7 +560,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
 {
   AudioBufferSourceNodeEngine* engine = new AudioBufferSourceNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*>(mStream.get()));
+  engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);
 }
 
@@ -621,7 +621,7 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
   }
   mStartCalled = true;
 
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  AudioNodeStream* ns = mStream;
   if (!ns) {
     // Nothing to play, or we're already dead for some reason
     return;
@@ -646,8 +646,8 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
 void
 AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
 {
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!mStream) {
+  AudioNodeStream* ns = mStream;
+  if (!ns) {
     return;
   }
 
@@ -705,7 +705,7 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
     return;
   }
 
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  AudioNodeStream* ns = mStream;
   if (!ns || !Context()) {
     // We've already stopped and had our stream shut down
     return;

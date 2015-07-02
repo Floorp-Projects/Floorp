@@ -369,7 +369,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
   if (!aIsOffline) {
-    graph->NotifyWhenGraphStarted(mStream->AsAudioNodeStream());
+    graph->NotifyWhenGraphStarted(mStream);
   }
 
   if (aChannel != AudioChannel::Normal) {
@@ -438,9 +438,8 @@ AudioDestinationNode::NotifyMainThreadStreamFinished()
 void
 AudioDestinationNode::FireOfflineCompletionEvent()
 {
-  AudioNodeStream* stream = static_cast<AudioNodeStream*>(Stream());
   OfflineDestinationNodeEngine* engine =
-    static_cast<OfflineDestinationNodeEngine*>(stream->Engine());
+    static_cast<OfflineDestinationNodeEngine*>(Stream()->Engine());
   engine->FireOfflineCompletionEvent(this);
 }
 
