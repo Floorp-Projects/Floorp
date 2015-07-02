@@ -247,6 +247,8 @@ private:
   DECL_GFX_PREF(Once, "gfx.touch.resample.old-touch-threshold",TouchResampleOldTouchThreshold, int32_t, 17);
   DECL_GFX_PREF(Once, "gfx.touch.resample.vsync-adjust",       TouchVsyncSampleAdjust, int32_t, 5);
 
+  DECL_GFX_PREF(Once, "gfx.vr.mirror-textures",                VRMirrorTextures, bool, false);
+
   DECL_GFX_PREF(Live, "gfx.vsync.collect-scroll-transforms",   CollectScrollTransforms, bool, false);
   DECL_GFX_PREF(Once, "gfx.vsync.compositor",                  VsyncAlignedCompositor, bool, false);
   // On b2g, in really bad cases, I've seen up to 80 ms delays between touch events and the main thread

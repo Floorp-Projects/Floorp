@@ -18,6 +18,13 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 
+#include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/TextureHost.h"
+
+#ifndef M_PI
+# define M_PI 3.14159265358979323846
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -133,4 +140,53 @@ VRHMDManager::GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
 VRHMDManager::AllocateDeviceIndex()
 {
   return ++sDeviceBase;
+}
+
+/* static */ already_AddRefed<nsIScreen>
+VRHMDManager::MakeFakeScreen(int32_t x, int32_t y, uint32_t width, uint32_t height)
+{
+  nsCOMPtr<nsIScreen> screen = new FakeScreen(IntRect(x, y, width, height));
+  return screen.forget();
+}
+
+VRHMDRenderingSupport::RenderTargetSet::RenderTargetSet()
+  : currentRenderTarget(0)
+{
+}
+
+VRHMDRenderingSupport::RenderTargetSet::~RenderTargetSet()
+{
+}
+
+Matrix4x4
+VRFieldOfView::ConstructProjectionMatrix(float zNear, float zFar, bool rightHanded)
+{
+  float upTan = tan(upDegrees * M_PI / 180.0);
+  float downTan = tan(downDegrees * M_PI / 180.0);
+  float leftTan = tan(leftDegrees * M_PI / 180.0);
+  float rightTan = tan(rightDegrees * M_PI / 180.0);
+
+  float handednessScale = rightHanded ? -1.0 : 1.0;
+
+  float pxscale = 2.0f / (leftTan + rightTan);
+  float pxoffset = (leftTan - rightTan) * pxscale * 0.5;
+  float pyscale = 2.0f / (upTan + downTan);
+  float pyoffset = (upTan - downTan) * pyscale * 0.5;
+
+  Matrix4x4 mobj;
+  float *m = &mobj._11;
+
+  m[0*4+0] = pxscale;
+  m[2*4+0] = pxoffset * handednessScale;
+
+  m[1*4+1] = pyscale;
+  m[2*4+1] = -pyoffset * handednessScale;
+
+  m[2*4+2] = zFar / (zNear - zFar) * -handednessScale;
+  m[3*4+2] = (zFar * zNear) / (zNear - zFar);
+
+  m[2*4+3] = handednessScale;
+  m[3*4+3] = 0.0f;
+
+  return mobj;
 }
