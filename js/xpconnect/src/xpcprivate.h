@@ -242,8 +242,7 @@ static inline bool IS_WN_REFLECTOR(JSObject* obj)
 // to this rule are noted explicitly.
 
 class nsXPConnect final : public nsIXPConnect,
-                          public nsIThreadObserver,
-                          public nsSupportsWeakReference
+                          public nsIThreadObserver
 {
 public:
     // all the interface method declarations...

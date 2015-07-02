@@ -804,7 +804,7 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
             }
 
             RootedString str(cx, idval.toString());
-            str = JS_InternJSString(cx, str);
+            str = JS_AtomizeAndPinJSString(cx, str);
             if (!str) {
                 JS_ReportError(cx, "String internization failed.");
                 return false;

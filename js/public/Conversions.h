@@ -349,7 +349,9 @@ ToIntWidth(double d)
 inline int32_t
 ToInt32(double d)
 {
-#if defined (__arm__) && defined (__GNUC__)
+    // clang crashes compiling this when targeting arm-darwin:
+    // https://llvm.org/bugs/show_bug.cgi?id=22974
+#if defined (__arm__) && defined (__GNUC__) && !defined(__APPLE__)
     int32_t i;
     uint32_t    tmp0;
     uint32_t    tmp1;

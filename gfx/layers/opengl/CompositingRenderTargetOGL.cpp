@@ -37,7 +37,8 @@ CompositingRenderTargetOGL::BindRenderTarget()
     InitializeImpl();
   } else {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFBO);
+    GLuint fbo = mFBO == 0 ? mGL->GetDefaultFramebuffer() : mFBO;
+    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fbo);
     GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
       // The main framebuffer (0) of non-offscreen contexts
@@ -83,7 +84,9 @@ CompositingRenderTargetOGL::InitializeImpl()
 {
   MOZ_ASSERT(mInitParams.mStatus == InitParams::READY);
 
-  mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFBO);
+  //TODO: call mGL->GetBackbufferFB(), use that
+  GLuint fbo = mFBO == 0 ? mGL->GetDefaultFramebuffer() : mFBO;
+  mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fbo);
   mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                               LOCAL_GL_COLOR_ATTACHMENT0,
                               mInitParams.mFBOTextureTarget,

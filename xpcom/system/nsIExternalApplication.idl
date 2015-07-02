@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsPIDOMWindow;
+
+[builtinclass, uuid(adf6b501-609a-4f54-ac16-39b54d6358b5)]
+interface nsICustomEventDispatch : nsISupports {
+  // Dispatches an event named "externalappevent" with the data
+  // in a property named "data" on the event.
+  void dispatchExternalEvent(in AString data);
+};
+
+[builtinclass, uuid(4d797f32-a24d-4cbc-b608-1eb0fc8e442b)]
+interface nsICustomPropertyBag : nsISupports {
+  void setProperty(in AString name, in AString value);
+  void removeProperty(in AString name);
+};
+
+[builtinclass, uuid(c100de94-e699-4941-b528-eaff1af5b15c)]
+interface nsIExternalApplication : nsISupports {
+  void init(in nsPIDOMWindow window, in nsICustomPropertyBag bag, in nsICustomEventDispatch callback);
+  void postMessage(in AString message);
+};
+
+%{C++
+#define NS_EXTERNALAPP_CONTRACTID "@mozilla.org/externalapp;1"
+#define NS_EXTERNALAPP_CID {0x8ec5dce2, 0x67e1, 0x49cd, {0xa0, 0x12, 0xf9, 0xfe, 0x32, 0x00, 0xd0, 0x8e}}
+%}
