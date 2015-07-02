@@ -145,7 +145,7 @@ MarkupView.prototype = {
     this._onMouseMove = this._onMouseMove.bind(this);
     this._elt.addEventListener("mousemove", this._onMouseMove, false);
     this._onMouseLeave = this._onMouseLeave.bind(this);
-    this._elt.addEventListener("mouseout", this._onMouseLeave, false);
+    this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
 
     // Show markup-containers as hovered on toolbox "picker-node-hovered" event
     // which happens when the "pick" button is pressed
@@ -1495,7 +1495,7 @@ MarkupView.prototype = {
     this._boundOnDisplayChange = null;
 
     this._elt.removeEventListener("mousemove", this._onMouseMove, false);
-    this._elt.removeEventListener("mouseout", this._onMouseLeave, false);
+    this._elt.removeEventListener("mouseleave", this._onMouseLeave, false);
     this._elt = null;
 
     for (let [key, container] of this._containers) {

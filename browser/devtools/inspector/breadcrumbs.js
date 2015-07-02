@@ -71,7 +71,7 @@ HTMLBreadcrumbs.prototype = {
     this.container.addEventListener("mousedown", this, true);
     this.container.addEventListener("keypress", this, true);
     this.container.addEventListener("mouseover", this, true);
-    this.container.addEventListener("mouseout", this, true);
+    this.container.addEventListener("mouseleave", this, true);
 
     // We will save a list of already displayed nodes in this array.
     this.nodeHierarchy = [];
@@ -288,7 +288,7 @@ HTMLBreadcrumbs.prototype = {
       this.handleKeyPress(event);
     } else if (event.type == "mouseover") {
       this.handleMouseOver(event);
-    } else if (event.type == "mouseout") {
+    } else if (event.type == "mouseleave") {
       this.handleMouseLeave(event);
     }
   },
@@ -404,7 +404,7 @@ HTMLBreadcrumbs.prototype = {
     this.container.removeEventListener("mousedown", this, true);
     this.container.removeEventListener("keypress", this, true);
     this.container.removeEventListener("mouseover", this, true);
-    this.container.removeEventListener("mouseout", this, true);
+    this.container.removeEventListener("mouseleave", this, true);
 
     this.empty();
     this.separators.remove();
