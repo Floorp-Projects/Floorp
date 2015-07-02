@@ -222,7 +222,7 @@ let ContextView = {
       // Fire an event upon completed rendering, with extra information
       // if in testing mode only.
       let info = {};
-      if (gDevTools.testing) {
+      if (DevToolsUtils.testing) {
         info = gAudioNodes.getInfo();
       }
       window.emit(EVENTS.UI_GRAPH_RENDERED, info.nodes, info.edges, info.paramEdges);

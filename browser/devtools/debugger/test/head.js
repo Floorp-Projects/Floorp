@@ -31,9 +31,9 @@ let Toolbox = devtools.Toolbox;
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
-gDevTools.testing = true;
+DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
+  DevToolsUtils.testing = false;
 });
 
 // All tests are asynchronous.
