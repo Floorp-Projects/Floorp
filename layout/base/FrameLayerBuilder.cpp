@@ -3686,6 +3686,34 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       aList->SetNeedsTransparentSurface();
     }
 
+    LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+    if (layerState == LAYER_INACTIVE &&
+        nsDisplayItem::ForceActiveLayers()) {
+      layerState = LAYER_ACTIVE;
+    }
+
+    bool forceInactive;
+    const nsIFrame* animatedGeometryRoot;
+    if (mFlattenToSingleLayer) {
+      forceInactive = true;
+      animatedGeometryRoot = lastAnimatedGeometryRoot;
+    } else {
+      forceInactive = false;
+      if (mManager->IsWidgetLayerManager()) {
+        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
+      } else {
+        // For inactive layer subtrees, splitting content into PaintedLayers
+        // based on animated geometry roots is pointless. It's more efficient
+        // to build the minimum number of layers.
+        animatedGeometryRoot = mContainerAnimatedGeometryRoot;
+
+      }
+      if (animatedGeometryRoot != lastAnimatedGeometryRoot) {
+        lastAnimatedGeometryRoot = animatedGeometryRoot;
+        topLeft = animatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      }
+    }
+
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsDisplayItem::Type itemType = item->GetType();
@@ -3724,32 +3752,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     nsIntRect itemVisibleRect = itemDrawRect.Intersect(
       ScaleToOutsidePixels(item->GetVisibleRect(), false));
 
-    LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
-    if (layerState == LAYER_INACTIVE &&
-        nsDisplayItem::ForceActiveLayers()) {
-      layerState = LAYER_ACTIVE;
-    }
-
-    bool forceInactive;
-    const nsIFrame* animatedGeometryRoot;
-    if (mFlattenToSingleLayer) {
-      forceInactive = true;
-      animatedGeometryRoot = lastAnimatedGeometryRoot;
-    } else {
-      forceInactive = false;
-      if (mManager->IsWidgetLayerManager()) {
-        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
-      } else {
-        // For inactive layer subtrees, splitting content into PaintedLayers
-        // based on animated geometry roots is pointless. It's more efficient
-        // to build the minimum number of layers.
-        animatedGeometryRoot = mContainerAnimatedGeometryRoot;
-      }
-      if (animatedGeometryRoot != lastAnimatedGeometryRoot) {
-        lastAnimatedGeometryRoot = animatedGeometryRoot;
-        topLeft = animatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
-      }
-    }
     bool shouldFixToViewport = !animatedGeometryRoot->GetParent() &&
       item->ShouldFixToViewport(mManager);
 
