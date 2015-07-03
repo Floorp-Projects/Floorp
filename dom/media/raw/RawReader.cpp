@@ -231,16 +231,6 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
 nsRefPtr<MediaDecoderReader::SeekPromise>
 RawReader::Seek(int64_t aTime, int64_t aEndTime)
 {
-  nsresult res = SeekInternal(aTime);
-  if (NS_FAILED(res)) {
-    return SeekPromise::CreateAndReject(res, __func__);
-  } else {
-    return SeekPromise::CreateAndResolve(aTime, __func__);
-  }
-}
-
-nsresult RawReader::SeekInternal(int64_t aTime)
-{
   MOZ_ASSERT(OnTaskQueue());
 
   MediaResource *resource = mDecoder->GetResource();
@@ -248,39 +238,40 @@ nsresult RawReader::SeekInternal(int64_t aTime)
 
   uint32_t frame = mCurrentFrame;
   if (aTime >= UINT_MAX)
-    return NS_ERROR_FAILURE;
+    return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   mCurrentFrame = aTime * mFrameRate / USECS_PER_S;
 
   CheckedUint32 offset = CheckedUint32(mCurrentFrame) * mFrameSize;
   offset += sizeof(RawVideoHeader);
-  NS_ENSURE_TRUE(offset.isValid(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(offset.isValid(), SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
 
   nsresult rv = resource->Seek(nsISeekableStream::NS_SEEK_SET, offset.value());
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, SeekPromise::CreateAndReject(rv, __func__));
 
   mVideoQueue.Reset();
-
-  while(mVideoQueue.GetSize() == 0) {
-    bool keyframeSkip = false;
-    if (!DecodeVideoFrame(keyframeSkip, 0)) {
-      mCurrentFrame = frame;
-      return NS_ERROR_FAILURE;
+  nsRefPtr<SeekPromise::Private> p = new SeekPromise::Private(__func__);
+  nsRefPtr<RawReader> self = this;
+  InvokeUntil([self] () {
+    MOZ_ASSERT(self->OnTaskQueue());
+    NS_ENSURE_TRUE(!self->mShutdown, false);
+    bool skip = false;
+    return self->DecodeVideoFrame(skip, 0);
+  }, [self, aTime] () {
+    MOZ_ASSERT(self->OnTaskQueue());
+    return self->mVideoQueue.Peek() &&
+           self->mVideoQueue.Peek()->GetEndTime() >= aTime;
+  })->Then(TaskQueue(), __func__, [self, p, aTime] () {
+    while (self->mVideoQueue.GetSize() >= 2) {
+      nsRefPtr<VideoData> releaseMe = self->mVideoQueue.PopFront();
     }
+    p->Resolve(aTime, __func__);
+  }, [self, p, frame] {
+    self->mCurrentFrame = frame;
+    self->mVideoQueue.Reset();
+    p->Reject(NS_ERROR_FAILURE, __func__);
+  });
 
-    {
-      ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-      if (mDecoder->IsShutdown()) {
-        mCurrentFrame = frame;
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    if (mVideoQueue.PeekFront() && mVideoQueue.PeekFront()->GetEndTime() < aTime) {
-      nsRefPtr<VideoData> releaseMe = mVideoQueue.PopFront();
-    }
-  }
-
-  return NS_OK;
+  return p.forget();
 }
 
 media::TimeIntervals RawReader::GetBuffered()

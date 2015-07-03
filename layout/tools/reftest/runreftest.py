@@ -23,7 +23,6 @@ sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automationutils import (
     dumpScreen,
-    environment,
     printstatus,
     processLeakLog
 )
@@ -33,6 +32,7 @@ import mozinfo
 import mozprocess
 import mozprofile
 import mozrunner
+from mozrunner.utils import test_environment
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -273,7 +273,8 @@ class RefTest(object):
     return profile
 
   def environment(self, **kwargs):
-    return environment(**kwargs)
+    kwargs['log'] = log
+    return test_environment(**kwargs)
 
   def buildBrowserEnv(self, options, profileDir):
     browserEnv = self.environment(xrePath = options.xrePath, debugger=options.debugger)
