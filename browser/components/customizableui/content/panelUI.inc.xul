@@ -20,12 +20,21 @@
                        oncommand="gMenuButtonUpdateBadge.onMenuPanelCommand(event);"
                        wrap="true"
                        hidden="true"/>
-        <toolbarbutton id="PanelUI-fxa-status"
-                       defaultlabel="&fxaSignIn.label;"
-                       errorlabel="&fxaSignInError.label;"
-                       fxabrandname="&syncBrand.fxAccount.label;"
-                       oncommand="gFxAccounts.onMenuPanelCommand(event);"
-                       hidden="true"/>
+        <hbox id="PanelUI-footer-fxa">
+          <hbox id="PanelUI-fxa-status"
+                defaultlabel="&fxaSignIn.label;"
+                signedinTooltiptext="&fxaSignedIn.tooltip;"
+                errorlabel="&fxaSignInError.label;"
+                onclick="gFxAccounts.onMenuPanelCommand();">
+            <image id="PanelUI-fxa-avatar"/>
+            <toolbarbutton id="PanelUI-fxa-label"
+                           fxabrandname="&syncBrand.fxAccount.label;"/>
+          </hbox>
+          <toolbarseparator/>
+          <toolbarbutton id="PanelUI-fxa-icon"
+                         oncommand="gSyncUI.doSync();"
+                         closemenu="none"/>
+        </hbox>
 
         <hbox id="PanelUI-footer-inner">
           <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;"
