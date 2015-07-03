@@ -73,6 +73,38 @@ private:
   NesteggPacketHolder& operator= (NesteggPacketHolder const& aOther);
 };
 
+// Queue for holding nestegg packets.
+class WebMPacketQueue {
+ public:
+  int32_t GetSize() {
+    return mQueue.size();
+  }
+
+  void Push(NesteggPacketHolder* aItem) {
+    mQueue.push_back(aItem);
+  }
+
+  void PushFront(NesteggPacketHolder* aItem) {
+    mQueue.push_front(Move(aItem));
+  }
+
+  nsRefPtr<NesteggPacketHolder> PopFront() {
+    nsRefPtr<NesteggPacketHolder> result = mQueue.front();
+    mQueue.pop_front();
+    return result;
+  }
+
+  void Reset() {
+    while (!mQueue.empty()) {
+      mQueue.pop_front();
+    }
+  }
+
+private:
+  std::deque<nsRefPtr<NesteggPacketHolder>> mQueue;
+};
+
+
 } // namespace mozilla
 
 #endif
