@@ -674,6 +674,7 @@ loop.conversationViews = (function(mozL10n) {
             React.createElement(loop.shared.views.ConversationToolbar, {
               audio: this.props.audio, 
               dispatcher: this.props.dispatcher, 
+              edit: { visible: false, enabled: false}, 
               hangup: this.hangup, 
               publishStream: this.publishStream, 
               video: this.props.video})

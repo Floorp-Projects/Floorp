@@ -478,6 +478,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               audio={{enabled: !this.state.audioMuted,
                       visible: this._roomIsActive()}}
               dispatcher={this.props.dispatcher}
+              edit={{ visible: false, enabled: false }}
               enableHangup={this._roomIsActive()}
               hangup={this.leaveRoom}
               hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
