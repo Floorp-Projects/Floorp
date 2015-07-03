@@ -329,6 +329,8 @@ struct GLContextSymbols
     PFNGLFRAMEBUFFERRENDERBUFFER fFramebufferRenderbuffer;
     typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERTEXTURE2D) (GLenum target, GLenum attachmentPoint, GLenum textureTarget, GLuint texture, GLint level);
     PFNGLFRAMEBUFFERTEXTURE2D fFramebufferTexture2D;
+    typedef void (GLAPIENTRY * PFNGLFRAMEBUFFERTEXTURELAYERPROC) (GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
+    PFNGLFRAMEBUFFERTEXTURELAYERPROC fFramebufferTextureLayer;
     typedef void (GLAPIENTRY * PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIV) (GLenum target, GLenum attachment, GLenum pname, GLint* value);
     PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIV fGetFramebufferAttachmentParameteriv;
     typedef void (GLAPIENTRY * PFNGLGETRENDERBUFFERPARAMETERIV) (GLenum target, GLenum pname, GLint* value);
