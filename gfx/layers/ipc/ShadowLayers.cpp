@@ -350,31 +350,32 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 void
-ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
-                                 TextureClient* aTexture,
-                                 const nsIntRect* aPictureRect)
+ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
+                                  const nsTArray<TimedTextureClient>& aTextures)
 {
   MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
 
-  FenceHandle fence = aTexture->GetAcquireFenceHandle();
-  IntRect pictureRect = aPictureRect ? *aPictureRect :
-      IntRect(nsIntPoint(0, 0), IntSize(aTexture->GetSize()));
-  nsAutoTArray<TimedTexture,1> textures;
-  textures.AppendElement(TimedTexture(nullptr, aTexture->GetIPDLActor(),
-                                      fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
-                                      TimeStamp(), pictureRect));
+  nsAutoTArray<TimedTexture,4> textures;
+
+  for (auto& t : aTextures) {
+    MOZ_ASSERT(t.mTextureClient);
+    MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
+    textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
+                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                        t.mTimeStamp, t.mPictureRect));
+    if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
+        && t.mTextureClient->HasInternalBuffer()) {
+
+      // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
+      // race with updates on the main thread. In this case we want the transaction
+      // to be synchronous.
+      mTxn->MarkSyncTransaction();
+    }
+  }
   mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                              textures));
-  if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD
-      && aTexture->HasInternalBuffer()) {
-    // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
-    // race with updates on the main thread. In this case we want the transaction
-    // to be synchronous.
-    mTxn->MarkSyncTransaction();
-  }
 }
 
 void
