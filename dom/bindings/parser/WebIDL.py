@@ -1134,7 +1134,8 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                         member.getExtendedAttribute("Pref") or
                         member.getExtendedAttribute("Func") or
                         member.getExtendedAttribute("AvailableIn") or
-                        member.getExtendedAttribute("CheckPermissions")):
+                        member.getExtendedAttribute("CheckPermissions") or
+                        member.getExtendedAttribute("CheckAllPermissions")):
                         raise WebIDLError("[Alias] must not be used on a "
                                           "conditionally exposed operation",
                                           [member.location])
@@ -1166,12 +1167,13 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                               self.parentScope.primaryGlobalName,
                               [self.location])
 
-        if (self.getExtendedAttribute("CheckPermissions") and
-            self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
-            raise WebIDLError("[CheckPermissions] used on an interface that is "
-                              "not %s-only" %
-                              self.parentScope.primaryGlobalName,
-                              [self.location])
+        for attribute in ["CheckPermissions", "CheckAllPermissions"]:
+            if (self.getExtendedAttribute(attribute) and
+                self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
+                raise WebIDLError("[%s] used on an interface that is "
+                                  "not %s-only" %
+                                  (attribute, self.parentScope.primaryGlobalName),
+                                  [self.location])
 
         # Conditional exposure makes no sense for interfaces with no
         # interface object, unless they're navigator properties.
@@ -1385,7 +1387,8 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                   identifier == "NavigatorProperty" or
                   identifier == "AvailableIn" or
                   identifier == "Func" or
-                  identifier == "CheckPermissions"):
+                  identifier == "CheckPermissions" or
+                  identifier == "CheckAllPermissions"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,
@@ -1513,7 +1516,8 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                 self.getExtendedAttribute("ChromeOnly") or
                 self.getExtendedAttribute("Func") or
                 self.getExtendedAttribute("AvailableIn") or
-                self.getExtendedAttribute("CheckPermissions"))
+                self.getExtendedAttribute("CheckPermissions") or
+                self.getExtendedAttribute("CheckAllPermissions"))
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
@@ -3361,12 +3365,13 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
                               "%s-only" % self._globalScope.primaryGlobalName,
                               [self.location])
 
-        if (self.getExtendedAttribute("CheckPermissions") and
-            self.exposureSet != set([self._globalScope.primaryGlobalName])):
-            raise WebIDLError("[CheckPermissions] used on an interface member "
-                              "that is not %s-only" %
-                              self._globalScope.primaryGlobalName,
-                              [self.location])
+        for attribute in ["CheckPermissions", "CheckAllPermissions"]:
+            if (self.getExtendedAttribute(attribute) and
+                self.exposureSet != set([self._globalScope.primaryGlobalName])):
+                raise WebIDLError("[%s] used on an interface member that is "
+                                  "not %s-only" %
+                                  (attribute, self.parentScope.primaryGlobalName),
+                                  [self.location])
 
         if self.isAttr() or self.isMethod():
             if self.affects == "Everything" and self.dependsOn != "Everything":
@@ -3707,7 +3712,8 @@ class IDLConst(IDLInterfaceMember):
               identifier == "ChromeOnly" or
               identifier == "Func" or
               identifier == "AvailableIn" or
-              identifier == "CheckPermissions"):
+              identifier == "CheckPermissions" or
+              identifier == "CheckAllPermissions"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
@@ -3975,6 +3981,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "NewObject" or
               identifier == "UnsafeInPrerendering" or
               identifier == "CheckPermissions" or
+              identifier == "CheckAllPermissions" or
               identifier == "BinaryName"):
             # Known attributes that we don't need to do anything with here
             pass
@@ -4650,6 +4657,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Func" or
               identifier == "AvailableIn" or
               identifier == "CheckPermissions" or
+              identifier == "CheckAllPermissions" or
               identifier == "BinaryName" or
               identifier == "MethodIdentityTestable" or
               identifier == "StaticClassOverride"):
