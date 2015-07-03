@@ -1895,11 +1895,12 @@ class MemberCondition:
     None, they should be strings that have the pref name (for "pref")
     or function name (for "func" and "available").
     """
-    def __init__(self, pref, func, available=None, checkPermissions=None):
+    def __init__(self, pref, func, available=None, checkPermissions=None, checkAllPermissions=None):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
         assert available is None or isinstance(available, str)
         assert checkPermissions is None or isinstance(checkPermissions, int)
+        assert checkAllPermissions is None or isinstance(checkAllPermissions, int)
         self.pref = pref
 
         def toFuncPtr(val):
@@ -1912,11 +1913,16 @@ class MemberCondition:
             self.checkPermissions = "nullptr"
         else:
             self.checkPermissions = "permissions_%i" % checkPermissions
+        if checkAllPermissions is None:
+            self.checkAllPermissions = "nullptr"
+        else:
+            self.checkAllPermissions = "allpermissions_%i" % checkAllPermissions
 
     def __eq__(self, other):
         return (self.pref == other.pref and self.func == other.func and
                 self.available == other.available and
-                self.checkPermissions == other.checkPermissions)
+                self.checkPermissions == other.checkPermissions and
+                self.checkAllPermissions == other.checkAllPermissions)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1984,7 +1990,8 @@ class PropertyDefiner:
                                PropertyDefiner.getStringAttr(interfaceMember,
                                                              "Func"),
                                getAvailableInTestFunc(interfaceMember),
-                               descriptor.checkPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
+                               descriptor.checkPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
+                               descriptor.checkAllPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
 
     def generatePrefableArray(self, array, name, specFormatter, specTerminator,
                               specType, getCondition, getDataTuple, doIdArrays):
@@ -2022,7 +2029,7 @@ class PropertyDefiner:
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, %s, %s, %s, &%s[%d] }'
+        prefableTemplate = '  { true, %s, %s, %s, %s, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
 
         def switchToCondition(props, condition):
@@ -2037,6 +2044,7 @@ class PropertyDefiner:
                                  (condition.func,
                                   condition.available,
                                   condition.checkPermissions,
+                                  condition.checkAllPermissions,
                                   name + "_specs", len(specs)))
 
         switchToCondition(self, lastCondition)
@@ -3170,6 +3178,9 @@ class CGConstructorEnabled(CGAbstractMethod):
         checkPermissions = self.descriptor.checkPermissionsIndex
         if checkPermissions is not None:
             conditions.append("CheckPermissions(aCx, aObj, permissions_%i)" % checkPermissions)
+        checkAllPermissions = self.descriptor.checkAllPermissionsIndex
+        if checkAllPermissions is not None:
+            conditions.append("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions)
         # We should really have some conditions
         assert len(body) or len(conditions)
 
@@ -11436,14 +11447,16 @@ class CGDescriptor(CGThing):
         if descriptor.concrete and descriptor.wrapperCache:
             cgThings.append(CGClassObjectMovedHook(descriptor))
 
-        if len(descriptor.permissions):
-            for (k, v) in sorted(descriptor.permissions.items()):
-                perms = CGList((CGGeneric('"%s",' % p) for p in k), joiner="\n")
-                perms.append(CGGeneric("nullptr"))
-                cgThings.append(CGWrapper(CGIndenter(perms),
-                                          pre="static const char* const permissions_%i[] = {\n" % v,
-                                          post="\n};\n",
-                                          defineOnly=True))
+        for name in ["permissions", "allpermissions"]:
+            permissions = getattr(descriptor, name)
+            if len(permissions):
+                for (k, v) in sorted(permissions.items()):
+                    perms = CGList((CGGeneric('"%s",' % p) for p in k), joiner="\n")
+                    perms.append(CGGeneric("nullptr"))
+                    cgThings.append(CGWrapper(CGIndenter(perms),
+                                              pre="static const char* const %s_%i[] = {\n" % (name, v),
+                                              post="\n};\n",
+                                              defineOnly=True))
 
         # Generate the _ClearCachedFooValue methods before the property arrays that use them.
         if descriptor.interface.isJSImplemented():

@@ -2436,6 +2436,28 @@ CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[
   return false;
 }
 
+bool
+CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
+{
+  JS::Rooted<JSObject*> rootedObj(aCx, aObj);
+  nsPIDOMWindow* window = xpc::WindowGlobalOrNull(rootedObj);
+  if (!window) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  do {
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
+    permMgr->TestPermissionFromWindow(window, *aPermissions, &permission);
+    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+      return false;
+    }
+  } while (*(++aPermissions));
+  return true;
+}
+
 void
 HandlePrerenderingViolation(nsPIDOMWindow* aWindow)
 {
