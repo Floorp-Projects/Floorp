@@ -399,9 +399,7 @@ describe("loop.shared.views.TextChatView", function () {
     });
 
     it("should render a special entry for the context url", function() {
-      view = mountTestComponent({
-        showRoomName: true
-      });
+      view = mountTestComponent();
 
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "A Very Long Conversation Name",

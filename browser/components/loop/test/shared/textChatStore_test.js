@@ -204,6 +204,52 @@ describe("loop.store.TextChatStore", function () {
       ]);
     });
 
+    it("should not add more than one context message", function() {
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomOwner: "Mark",
+        roomUrl: "fake",
+        urls: [{
+          description: "A wonderful event",
+          location: "http://wonderful.invalid",
+          thumbnail: "fake"
+        }]
+      }));
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.SPECIAL,
+        contentType: CHAT_CONTENT_TYPES.CONTEXT,
+        message: "A wonderful event",
+        sentTimestamp: undefined,
+        receivedTimestamp: undefined,
+        extraData: {
+          location: "http://wonderful.invalid",
+          thumbnail: "fake"
+        }
+      }]);
+
+      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
+        roomOwner: "Mark",
+        roomUrl: "fake",
+        urls: [{
+          description: "A wonderful event2",
+          location: "http://wonderful.invalid2",
+          thumbnail: "fake2"
+        }]
+      }));
+
+      expect(store.getStoreState("messageList")).eql([{
+        type: CHAT_MESSAGE_TYPES.SPECIAL,
+        contentType: CHAT_CONTENT_TYPES.CONTEXT,
+        message: "A wonderful event2",
+        sentTimestamp: undefined,
+        receivedTimestamp: undefined,
+        extraData: {
+          location: "http://wonderful.invalid2",
+          thumbnail: "fake2"
+        }
+      }]);
+    });
+
     it("should not dispatch a LoopChatMessageAppended event", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
