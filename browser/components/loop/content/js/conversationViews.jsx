@@ -659,6 +659,7 @@ loop.conversationViews = (function(mozL10n) {
               <div className="video_wrapper remote_wrapper">
                 <div className="video_inner remote focus-stream">
                   <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
+                    isLoading={false}
                     mediaType="remote"
                     posterUrl={this.props.remotePosterUrl}
                     srcVideoObject={this.state.remoteSrcVideoObject} />
@@ -666,6 +667,7 @@ loop.conversationViews = (function(mozL10n) {
               </div>
               <div className={localStreamClasses}>
                 <sharedViews.MediaView displayAvatar={!this.props.video.enabled}
+                  isLoading={false}
                   mediaType="local"
                   posterUrl={this.props.localPosterUrl}
                   srcVideoObject={this.state.localSrcVideoObject} />
