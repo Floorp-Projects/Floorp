@@ -6,6 +6,7 @@
 ../mozbase/mozhttpd
 ../mozbase/mozinfo
 ../mozbase/mozinstall
+../mozbase/mozleak
 ../mozbase/mozlog
 ../mozbase/moznetwork
 ../mozbase/mozprocess
