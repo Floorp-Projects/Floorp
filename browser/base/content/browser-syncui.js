@@ -166,8 +166,15 @@ let gSyncUI = {
       return;
 
     let syncButton = document.getElementById("sync-button");
-    if (needsSetup && syncButton)
-      syncButton.removeAttribute("tooltiptext");
+    let statusButton = document.getElementById("PanelUI-fxa-icon");
+    if (needsSetup) {
+      if (syncButton) {
+        syncButton.removeAttribute("tooltiptext");
+      }
+      if (statusButton) {
+        statusButton.removeAttribute("tooltiptext");
+      }
+    }
 
     this._updateLastSyncTime();
   },
@@ -184,9 +191,9 @@ let gSyncUI = {
       if (button) {
         button.setAttribute("status", "active");
       }
-      button = document.getElementById("PanelUI-fxa-status");
-      if (button) {
-        button.setAttribute("syncstatus", "active");
+      let container = document.getElementById("PanelUI-footer-fxa");
+      if (container) {
+        container.setAttribute("syncstatus", "active");
       }
     }
   },
@@ -210,9 +217,9 @@ let gSyncUI = {
     if (syncButton) {
       syncButton.removeAttribute("status");
     }
-    let panelHorizontalButton = document.getElementById("PanelUI-fxa-status");
-    if (panelHorizontalButton) {
-      panelHorizontalButton.removeAttribute("syncstatus");
+    let fxaContainer = document.getElementById("PanelUI-footer-fxa");
+    if (fxaContainer) {
+      fxaContainer.removeAttribute("syncstatus");
     }
   },
 
@@ -418,8 +425,7 @@ let gSyncUI = {
       return;
 
     let syncButton = document.getElementById("sync-button");
-    if (!syncButton)
-      return;
+    let statusButton = document.getElementById("PanelUI-fxa-icon");
 
     let lastSync;
     try {
@@ -435,7 +441,12 @@ let gSyncUI = {
     }
     catch (e) { };
     if (!lastSync || this._needsSetup()) {
-      syncButton.removeAttribute("tooltiptext");
+      if (syncButton) {
+        syncButton.removeAttribute("tooltiptext");
+      }
+      if (statusButton) {
+        statusButton.removeAttribute("tooltiptext");
+      }
       return;
     }
 
@@ -444,7 +455,12 @@ let gSyncUI = {
     let lastSyncLabel =
       this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
 
-    syncButton.setAttribute("tooltiptext", lastSyncLabel);
+    if (syncButton) {
+      syncButton.setAttribute("tooltiptext", lastSyncLabel);
+    }
+    if (statusButton) {
+      statusButton.setAttribute("tooltiptext", lastSyncLabel);
+    }
   },
 
   clearError: function SUI_clearError(errorString) {

@@ -28,8 +28,7 @@ let test = asyncTest(function*() {
   let error = false;
   try {
     jsterm.complete(jsterm.COMPLETE_HINT_ONLY);
-  }
-  catch (ex) {
+  } catch (ex) {
     error = true;
   }
 
