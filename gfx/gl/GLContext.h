@@ -106,6 +106,7 @@ enum class GLFeature {
     gpu_shader4,
     instanced_arrays,
     instanced_non_arrays,
+    internalformat_query,
     invalidate_framebuffer,
     map_buffer_range,
     occlusion_query,
@@ -401,6 +402,7 @@ public:
         ARB_geometry_shader4,
         ARB_half_float_pixel,
         ARB_instanced_arrays,
+        ARB_internalformat_query,
         ARB_invalidate_subdata,
         ARB_map_buffer_range,
         ARB_occlusion_query2,
@@ -2531,6 +2533,17 @@ public:
         mSymbols.fVertexAttribDivisor(index, divisor);
         AFTER_GL_CALL;
     }
+
+// -----------------------------------------------------------------------------
+// Feature internalformat_query
+public:
+    void fGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetInternalformativ);
+        mSymbols.fGetInternalformativ(target, internalformat, pname, bufSize, params);
+        AFTER_GL_CALL;
+    }
+
 
 // -----------------------------------------------------------------------------
 // Package XXX_query_counter
