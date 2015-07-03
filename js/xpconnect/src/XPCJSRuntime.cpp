@@ -2505,9 +2505,8 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         "Memory being used by the GC's nursery.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery-malloced-buffers"),
-        KIND_NONHEAP, rtStats.runtime.gc.nurseryMallocedBuffers,
-        "Out-of-line slots and elements belonging to objects in the "
-        "nursery.");
+        KIND_HEAP, rtStats.runtime.gc.nurseryMallocedBuffers,
+        "Out-of-line slots and elements belonging to objects in the nursery.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
@@ -2553,7 +2552,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
 
     REPORT_BYTES(rtPath2 + NS_LITERAL_CSTRING("runtime/gc/nursery-decommitted"),
         KIND_NONHEAP, rtStats.runtime.gc.nurseryDecommitted,
-        "Memory allocated to the GC's nursery this is decommitted, i.e. it takes up "
+        "Memory allocated to the GC's nursery that is decommitted, i.e. it takes up "
         "address space but no physical memory or swap space.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),
