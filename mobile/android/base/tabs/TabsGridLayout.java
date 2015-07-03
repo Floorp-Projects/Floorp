@@ -319,7 +319,7 @@ class TabsGridLayout extends GridView
         TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
         Tab tab = Tabs.getInstance().getTab(itemView.getTabId());
 
-        Tabs.getInstance().closeTab(tab);
+        Tabs.getInstance().closeTab(tab, true);
     }
 
     private void animateRemoveTab(final Tab removedTab) {
