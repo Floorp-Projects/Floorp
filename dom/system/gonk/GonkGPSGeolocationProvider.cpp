@@ -115,6 +115,11 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
 
   MOZ_ASSERT(location);
 
+  const float kImpossibleAccuracy_m = 0.001;
+  if (location->accuracy < kImpossibleAccuracy_m) {
+    return;
+  }
+
   nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(location->latitude,
                                                         location->longitude,
                                                         location->altitude,
