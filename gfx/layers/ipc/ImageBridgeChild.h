@@ -220,13 +220,15 @@ public:
    * See CompositableForwarder::UseTexture
    */
   virtual void UseTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) override;
+                          TextureClient* aClient,
+                          const nsIntRect* aPictureRect = nullptr) override;
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;
 #ifdef MOZ_WIDGET_GONK
   virtual void UseOverlaySource(CompositableClient* aCompositable,
-                                const OverlaySource& aOverlay) override;
+                                const OverlaySource& aOverlay,
+                                const nsIntRect& aPictureRect) override;
 #endif
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
@@ -243,13 +245,6 @@ public:
   {
     NS_RUNTIMEABORT("should not be called");
   }
-
-  /**
-   * Communicate the picture rect of a YUV image in aLayer to the compositor
-   */
-  virtual void UpdatePictureRect(CompositableClient* aCompositable,
-                                 const gfx::IntRect& aRect) override;
-
 
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,

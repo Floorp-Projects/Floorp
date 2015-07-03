@@ -218,9 +218,13 @@ ContentHostTexture::Composite(EffectChain& aEffectChain,
 }
 
 void
-ContentHostTexture::UseTextureHost(TextureHost* aTexture)
+ContentHostTexture::UseTextureHost(TextureHost* aTexture,
+                                   const nsIntRect& aPictureRect)
 {
-  ContentHostBase::UseTextureHost(aTexture);
+  ContentHostBase::UseTextureHost(aTexture, aPictureRect);
+  MOZ_ASSERT(aPictureRect.IsEqualInterior(
+      nsIntRect(nsIntPoint(0, 0), nsIntSize(aTexture->GetSize()))),
+      "Only default picture rect supported");
   mTextureHost = aTexture;
   mTextureHostOnWhite = nullptr;
   mTextureSourceOnWhite = nullptr;

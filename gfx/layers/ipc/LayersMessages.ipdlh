@@ -349,17 +349,13 @@ struct OpUseTiledLayerBuffer {
 struct OpUseOverlaySource {
   PCompositable compositable;
   OverlaySource overlay;
+  IntRect picture;
 };
 
 struct OpPaintTextureRegion {
   PCompositable compositable;
   ThebesBufferData bufferData;
   nsIntRegion updatedRegion;
-};
-
-struct OpUpdatePictureRect {
-  PCompositable compositable;
-  IntRect picture;
 };
 
 /**
@@ -395,6 +391,7 @@ struct OpUseTexture {
   PCompositable compositable;
   PTexture texture;
   MaybeFence fence;
+  IntRect picture;
 };
 
 struct OpUseComponentAlphaTextures {
@@ -420,8 +417,6 @@ struct OpDeliverFenceToTracker {
 };
 
 union CompositableOperation {
-  OpUpdatePictureRect;
-
   OpPaintTextureRegion;
 
   OpUseTiledLayerBuffer;

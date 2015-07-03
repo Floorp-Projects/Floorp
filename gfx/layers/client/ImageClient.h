@@ -56,12 +56,6 @@ public:
    */
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) = 0;
 
-  /**
-   * The picture rect is the area of the texture which makes up the image. That
-   * is, the area that should be composited. In texture space.
-   */
-  virtual void UpdatePictureRect(gfx::IntRect aPictureRect);
-
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) = 0;
 
   void SetLayer(ClientLayer* aLayer) { mLayer = aLayer; }
@@ -91,7 +85,6 @@ protected:
   ClientLayer* mLayer;
   CompositableType mType;
   int32_t mLastPaintedImageSerial;
-  gfx::IntRect mPictureRect;
 };
 
 /**
