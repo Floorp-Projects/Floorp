@@ -18,20 +18,22 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
+
 void
-ColorLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
+ColorLayerComposite::RenderLayer(const IntRect& aClipRect)
 {
-  gfx::Rect rect(GetBounds());
-  const gfx::Matrix4x4& transform = GetEffectiveTransform();
+  Rect rect(GetBounds());
+  const Matrix4x4& transform = GetEffectiveTransform();
 
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const Rect& clipRect) {
     GenEffectChain(effectChain);
-    mCompositor->DrawQuad(rect, clipRect, effectChain, GetEffectiveOpacity(), transform);
+    mCompositor->DrawQuad(rect, clipRect, effectChain, GetEffectiveOpacity(),
+                          transform);
   });
 
-  mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR,
-                               rect, Rect(aClipRect),
+  mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR, rect, Rect(aClipRect),
                                transform);
 }
 
@@ -40,10 +42,8 @@ ColorLayerComposite::GenEffectChain(EffectChain& aEffect)
 {
   aEffect.mLayerRef = this;
   gfxRGBA color(GetColor());
-  aEffect.mPrimaryEffect = new EffectSolidColor(gfx::Color(color.r,
-                                                           color.g,
-                                                           color.b,
-                                                           color.a));
+  aEffect.mPrimaryEffect = new EffectSolidColor(
+      Color(color.r, color.g, color.b, color.a));
 }
 
 } /* layers */
