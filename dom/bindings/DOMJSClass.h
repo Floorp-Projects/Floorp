@@ -42,6 +42,9 @@ typedef bool
 bool
 CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
+bool
+CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
+
 struct ConstantSpec
 {
   const char* name;
@@ -56,7 +59,7 @@ struct Prefable {
     if (!enabled) {
       return false;
     }
-    if (!enabledFunc && !availableFunc && !checkPermissions) {
+    if (!enabledFunc && !availableFunc && !checkPermissions && !checkAllPermissions) {
       return true;
     }
     if (enabledFunc &&
@@ -70,6 +73,11 @@ struct Prefable {
     if (checkPermissions &&
         !CheckPermissions(cx, js::GetGlobalForObjectCrossCompartment(obj),
                           checkPermissions)) {
+      return false;
+    }
+    if (checkAllPermissions &&
+        !CheckAllPermissions(cx, js::GetGlobalForObjectCrossCompartment(obj),
+                             checkAllPermissions)) {
       return false;
     }
     return true;
@@ -87,6 +95,7 @@ struct Prefable {
   // implementations in case when we need to do two separate checks.
   PropertyEnabled availableFunc;
   const char* const* checkPermissions;
+  const char* const* checkAllPermissions;
   // Array of specs, terminated in whatever way is customary for T.
   // Null to indicate a end-of-array for Prefable, when such an
   // indicator is needed.
