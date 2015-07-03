@@ -418,6 +418,9 @@ endif
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
+ifndef UNIVERSAL_BINARY
+	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE))
+endif
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py --common '$(TEST_PACKAGE)' --jsshell '$(JSSHELL_NAME)' --dest-file $(MOZ_TEST_PACKAGES_FILE)
 
 package-tests:
