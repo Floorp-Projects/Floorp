@@ -313,7 +313,7 @@ let gFxAccounts = {
     fxAccounts.getSignedInUser().then(userData => {
       // userData may be null here when the user is not signed-in, but that's expected
       updateWithUserData(userData);
-      return fxAccounts.getSignedInUserProfile();
+      return userData ? fxAccounts.getSignedInUserProfile() : null;
     }).then(profile => {
       if (!profile) {
         return;
