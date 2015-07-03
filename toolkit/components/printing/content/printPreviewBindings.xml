@@ -203,8 +203,7 @@
       <method name="print">
         <body>
         <![CDATA[
-          let contentWindow = this.mPPBrowser.contentWindowAsCPOW;
-          PrintUtils.print(contentWindow, this.mPPBrowser);
+          PrintUtils.printWindow(this.mPPBrowser.outerWindowID, this.mPPBrowser);
         ]]>
         </body>
       </method>
