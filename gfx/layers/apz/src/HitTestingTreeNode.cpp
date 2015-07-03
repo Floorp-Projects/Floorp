@@ -207,10 +207,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
   if (mApzc) {
     localTransform = localTransform * mApzc->GetCurrentAsyncTransformWithOverscroll();
   }
-  gfx::Point4D point = localTransform.Inverse().ProjectPoint(aPoint.ToUnknownPoint());
-  return point.HasPositiveWCoord()
-        ? Some(ViewAs<LayerPixel>(point.As2DPoint()))
-        : Nothing();
+  return UntransformTo<LayerPixel>(localTransform.Inverse(), aPoint);
 }
 
 HitTestResult
