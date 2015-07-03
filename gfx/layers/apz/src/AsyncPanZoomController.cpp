@@ -951,7 +951,9 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   switch (aEvent.mInputType) {
   case MULTITOUCH_INPUT: {
     MultiTouchInput multiTouchInput = aEvent.AsMultiTouchInput();
-    multiTouchInput.TransformToLocal(aTransformToApzc);
+    if (!multiTouchInput.TransformToLocal(aTransformToApzc)) { 
+      return rv;
+    }
 
     nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
     if (listener) {
@@ -972,7 +974,9 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   }
   case PANGESTURE_INPUT: {
     PanGestureInput panGestureInput = aEvent.AsPanGestureInput();
-    panGestureInput.TransformToLocal(aTransformToApzc);
+    if (!panGestureInput.TransformToLocal(aTransformToApzc)) {
+      return rv;
+    }
 
     switch (panGestureInput.mType) {
       case PanGestureInput::PANGESTURE_MAYSTART: rv = OnPanMayBegin(panGestureInput); break;
@@ -989,21 +993,27 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   }
   case SCROLLWHEEL_INPUT: {
     ScrollWheelInput scrollInput = aEvent.AsScrollWheelInput();
-    scrollInput.TransformToLocal(aTransformToApzc);
+    if (!scrollInput.TransformToLocal(aTransformToApzc)) { 
+      return rv;
+    }
 
     rv = OnScrollWheel(scrollInput);
     break;
   }
   case PINCHGESTURE_INPUT: {
     PinchGestureInput pinchInput = aEvent.AsPinchGestureInput();
-    pinchInput.TransformToLocal(aTransformToApzc);
+    if (!pinchInput.TransformToLocal(aTransformToApzc)) { 
+      return rv;
+    }
 
     rv = HandleGestureEvent(pinchInput);
     break;
   }
   case TAPGESTURE_INPUT: {
     TapGestureInput tapInput = aEvent.AsTapGestureInput();
-    tapInput.TransformToLocal(aTransformToApzc);
+    if (!tapInput.TransformToLocal(aTransformToApzc)) { 
+      return rv;
+    }
 
     rv = HandleGestureEvent(tapInput);
     break;
@@ -1396,12 +1406,14 @@ bool
 AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* aOut)
 {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    Matrix4x4 transformToApzc = treeManagerLocal->GetScreenToApzcTransform(this);
-    Matrix4x4 transformToGecko = treeManagerLocal->GetApzcToGeckoTransform(this);
+    Matrix4x4 transformScreenToGecko = treeManagerLocal->GetScreenToApzcTransform(this) 
+                                     * treeManagerLocal->GetApzcToGeckoTransform(this);
+    
     // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
     // for this coordinate space and it maps the closest to LayoutDevicePoint.
+    MOZ_ASSERT(transformScreenToGecko.Is2D());
     LayoutDevicePoint layoutPoint = TransformTo<LayoutDevicePixel>(
-        transformToApzc * transformToGecko, aPoint);
+        transformScreenToGecko, aPoint);
 
     { // scoped lock to access mFrameMetrics
       ReentrantMonitorAutoEnter lock(mMonitor);
@@ -1837,6 +1849,7 @@ ScreenPoint AsyncPanZoomController::ToScreenCoordinates(const ParentLayerPoint& 
   return TransformVector<ScreenPixel>(GetTransformToThis().Inverse(), aVector, aAnchor);
 }
 
+// TODO: figure out a good way to check the w-coordinate is positive and return the result
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPoint& aVector,
                                                                   const ScreenPoint& aAnchor) const {
   return TransformVector<ParentLayerPixel>(GetTransformToThis(), aVector, aAnchor);
@@ -1845,14 +1858,17 @@ ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPo
 bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const
 {
   Matrix4x4 transformToThis = GetTransformToThis();
-  ParentLayerIntPoint point = TransformTo<ParentLayerPixel>(transformToThis, aPoint);
+  Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(transformToThis, aPoint);
+  if (!point) {
+    return false;
+  }
 
   ParentLayerIntRect cb;
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
     GetFrameMetrics().GetCompositionBounds().ToIntRect(&cb);
   }
-  return cb.Contains(point);
+  return cb.Contains(*point);
 }
 
 ScreenCoord AsyncPanZoomController::PanDistance() const {

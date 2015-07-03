@@ -212,37 +212,67 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
                                          1.0f));
 }
 
-void
+bool
 MultiTouchInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 {
   for (size_t i = 0; i < mTouches.Length(); i++) {
-    mTouches[i].mLocalScreenPoint = TransformTo<ParentLayerPixel>(aTransform, ScreenPoint(mTouches[i].mScreenPoint));
+    Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mTouches[i].mScreenPoint);
+    if (!point) { 
+      return false;
+    }
+    mTouches[i].mLocalScreenPoint = *point;
   }
+  return true;
 }
 
-void
+bool
 PanGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
-{
-  mLocalPanStartPoint = TransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
-  mLocalPanDisplacement = TransformVector<ParentLayerPixel>(aTransform, mPanDisplacement, mPanStartPoint);
+{ 
+  Maybe<ParentLayerPoint> panStartPoint = UntransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
+  if (!panStartPoint) {
+    return false;
+  }
+  mLocalPanStartPoint = *panStartPoint;
+  
+  Maybe<ParentLayerPoint> panDisplacement = UntransformVector<ParentLayerPixel>(aTransform, mPanDisplacement, mPanStartPoint);
+  if (!panDisplacement) {
+    return false;
+  }
+  mLocalPanDisplacement = *panDisplacement;
+  return true;
 }
 
-void
+bool
 PinchGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
-{
-  mLocalFocusPoint = TransformTo<ParentLayerPixel>(aTransform, mFocusPoint);
+{ 
+  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mFocusPoint);
+  if (!point) {
+    return false;
+  }
+  mLocalFocusPoint = *point;
+  return true;
 }
 
-void
+bool
 TapGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 {
-  mLocalPoint = TransformTo<ParentLayerPixel>(aTransform, mPoint);
+  Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mPoint);
+  if (!point) {
+    return false;
+  }
+  mLocalPoint = *point;
+  return true;
 }
 
-void
+bool
 ScrollWheelInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 {
-  mLocalOrigin = TransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  if (!point) {
+    return false;
+  }
+  mLocalOrigin = *point;
+  return true;
 }
 
 } // namespace mozilla
