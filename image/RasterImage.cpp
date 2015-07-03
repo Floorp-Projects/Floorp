@@ -907,7 +907,7 @@ RasterImage::UpdateImageContainer()
   mLastImageContainerDrawResult = result.first();
   nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
   imageList.AppendElement(
-      ImageContainer::NonOwningImage(result.second(), TimeStamp()));
+      ImageContainer::NonOwningImage(result.second()));
   container->SetCurrentImages(imageList);
 }
 

@@ -635,7 +635,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 
         nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
         imageList.AppendElement(
-            ImageContainer::NonOwningImage(image, TimeStamp()));
+            ImageContainer::NonOwningImage(image));
         container->SetCurrentImages(imageList);
     }
     else if (mImageContainer) {
