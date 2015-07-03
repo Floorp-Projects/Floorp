@@ -636,15 +636,16 @@ CDMProxy::Capabilites() {
   return mCapabilites;
 }
 
-void
-CDMProxy::Decrypt(MediaRawData* aSample,
-                  DecryptionClient* aClient,
-                  MediaTaskQueue* aTaskQueue)
+nsRefPtr<CDMProxy::DecryptPromise>
+CDMProxy::Decrypt(MediaRawData* aSample)
 {
-  nsRefPtr<DecryptJob> job(new DecryptJob(aSample, aClient, aTaskQueue));
+  nsRefPtr<DecryptJob> job(new DecryptJob(aSample));
+  nsRefPtr<DecryptPromise> promise(job->Ensure());
+
   nsCOMPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsRefPtr<DecryptJob>>(this, &CDMProxy::gmp_Decrypt, job));
   mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  return promise;
 }
 
 void
@@ -703,7 +704,6 @@ CDMProxy::DecryptJob::PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecry
   if (aDecryptedData.Length() != mSample->mSize) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
   }
-  mResult = aResult;
   if (GMP_SUCCEEDED(aResult)) {
     nsAutoPtr<MediaRawDataWriter> writer(mSample->CreateWriter());
     PodCopy(writer->mData,
@@ -717,17 +717,8 @@ CDMProxy::DecryptJob::PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecry
     nsAutoCString str("CDM returned decode failure GMPErr=");
     str.AppendInt(aResult);
     NS_WARNING(str.get());
-    mSample = nullptr;
   }
-  mTaskQueue->Dispatch(RefPtr<nsIRunnable>(this).forget());
-}
-
-nsresult
-CDMProxy::DecryptJob::Run()
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  mClient->Decrypted(mResult, mSample);
-  return NS_OK;
+  mPromise.Resolve(DecryptResult(aResult, mSample), __func__);
 }
 
 void
