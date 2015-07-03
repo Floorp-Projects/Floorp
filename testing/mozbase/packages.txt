@@ -7,6 +7,7 @@ mozfile.pth:testing/mozbase/mozfile
 mozhttpd.pth:testing/mozbase/mozhttpd
 mozinfo.pth:testing/mozbase/mozinfo
 mozinstall.pth:testing/mozbase/mozinstall
+mozleak.pth:testing/mozbase/mozleak
 mozlog.pth:testing/mozbase/mozlog
 moznetwork.pth:testing/mozbase/moznetwork
 mozprocess.pth:testing/mozbase/mozprocess
