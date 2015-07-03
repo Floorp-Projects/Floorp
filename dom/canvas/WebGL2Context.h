@@ -8,6 +8,12 @@
 
 #include "WebGLContext.h"
 
+/*
+ * Minimum value constants define in 6.2 State Tables of OpenGL ES - 3.0.4
+ */
+#define MINVALUE_GL_MAX_3D_TEXTURE_SIZE             256
+#define MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS        256
+
 namespace mozilla {
 
 class ErrorResult;

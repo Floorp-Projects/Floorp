@@ -121,8 +121,14 @@ UnmarkAttachment(WebGLFBAttachPoint& attachment)
 }
 
 void
-WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target,
-                                          GLint level)
+WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level)
+{
+    SetTexImageLayer(tex, target, level, 0);
+}
+
+void
+WebGLFBAttachPoint::SetTexImageLayer(WebGLTexture* tex, TexImageTarget target,
+                                     GLint level, GLint layer)
 {
     mFB->InvalidateFramebufferStatus();
 
@@ -132,6 +138,7 @@ WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target,
     mRenderbufferPtr = nullptr;
     mTexImageTarget = target;
     mTexImageLevel = level;
+    mTexImageLayer = layer;
 
     if (tex)
         tex->MarkAttachment(*this);
@@ -378,18 +385,44 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl,
 
         const GLenum imageTarget = ImageTarget().get();
         const GLint mipLevel = MipLevel();
+        const GLint layer = Layer();
         const GLuint glName = Texture()->mGLName;
 
-        if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-                                      imageTarget, glName, mipLevel);
-            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-                                      imageTarget, glName, mipLevel);
-        } else {
-            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc.get(),
-                                      imageTarget, glName, mipLevel);
+        switch (imageTarget) {
+        case LOCAL_GL_TEXTURE_2D:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+            if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                                          imageTarget, glName, mipLevel);
+                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
+                                          imageTarget, glName, mipLevel);
+            } else {
+                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc.get(),
+                                          imageTarget, glName, mipLevel);
+            }
+            break;
+
+        case LOCAL_GL_TEXTURE_2D_ARRAY:
+        case LOCAL_GL_TEXTURE_3D:
+            if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
+                                             LOCAL_GL_DEPTH_ATTACHMENT,
+                                             glName, mipLevel, layer);
+                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
+                                             LOCAL_GL_STENCIL_ATTACHMENT,
+                                             glName, mipLevel, layer);
+            } else {
+                gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, attachmentLoc.get(),
+                                             glName, mipLevel, layer);
+            }
+            break;
         }
-        return;
+        return ;
     }
 
     if (Renderbuffer()) {
@@ -483,6 +516,21 @@ WebGLFramebuffer::FramebufferTexture2D(FBAttachment attachPointEnum,
 
     WebGLFBAttachPoint& attachPoint = GetAttachPoint(attachPointEnum);
     attachPoint.SetTexImage(tex, texImageTarget, level);
+
+    InvalidateFramebufferStatus();
+}
+
+void
+WebGLFramebuffer::FramebufferTextureLayer(FBAttachment attachment, WebGLTexture* tex,
+                                          GLint level, GLint layer)
+{
+    MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
+               mContext->mBoundReadFramebuffer == this);
+    MOZ_ASSERT(tex);
+
+    WebGLFBAttachPoint& attachPoint = GetAttachPoint(attachment);
+    TexImageTarget texImageTarget = tex->Target();
+    attachPoint.SetTexImageLayer(tex, texImageTarget, level, layer);
 
     InvalidateFramebufferStatus();
 }
