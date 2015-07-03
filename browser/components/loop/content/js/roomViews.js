@@ -595,7 +595,8 @@ loop.roomViews = (function(mozL10n) {
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
       mozLoop: React.PropTypes.object.isRequired,
-      remotePosterUrl: React.PropTypes.string
+      remotePosterUrl: React.PropTypes.string,
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
     componentWillUpdate: function(nextProps, nextState) {
