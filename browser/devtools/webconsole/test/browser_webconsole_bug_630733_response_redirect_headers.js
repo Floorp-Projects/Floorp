@@ -7,8 +7,12 @@
  *   Mihai Sucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for bug 630733";
-const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-630733-response-redirect-headers.sjs";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
+                 "bug 630733";
+const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/" +
+                  "test/test-bug-630733-response-redirect-headers.sjs";
 
 let lastFinishedRequests = {};
 let webConsoleClient;
@@ -25,8 +29,7 @@ let test = asyncTest(function* () {
   performTest();
 });
 
-function consoleOpened(hud)
-{
+function consoleOpened(hud) {
   let deferred = promise.defer();
 
   webConsoleClient = hud.ui.webConsoleClient;
@@ -34,22 +37,21 @@ function consoleOpened(hud)
     ok(hud.ui._saveRequestAndResponseBodies,
       "The saveRequestAndResponseBodies property was successfully set.");
 
-    HUDService.lastFinishedRequest.callback = (aHttpRequest)  => {
+    HUDService.lastFinishedRequest.callback = (aHttpRequest) => {
       let status = aHttpRequest.response.status;
       lastFinishedRequests[status] = aHttpRequest;
       if ("301" in lastFinishedRequests &&
           "404" in lastFinishedRequests) {
         deferred.resolve();
       }
-    }
+    };
     content.location = TEST_URI2;
   });
 
   return deferred.promise;
 }
 
-function getHeaders()
-{
+function getHeaders() {
   let deferred = promise.defer();
 
   HUDService.lastFinishedRequest.callback = null;
@@ -58,32 +60,31 @@ function getHeaders()
   ok("404" in lastFinishedRequests, "request 2: 404 Not found");
 
   webConsoleClient.getResponseHeaders(lastFinishedRequests["301"].actor,
-    function (aResponse) {
-      lastFinishedRequests["301"].response.headers = aResponse.headers;
+    function(response) {
+      lastFinishedRequests["301"].response.headers = response.headers;
 
       webConsoleClient.getResponseHeaders(lastFinishedRequests["404"].actor,
-        function (aResponse) {
-          lastFinishedRequests["404"].response.headers = aResponse.headers;
+        function(resp) {
+          lastFinishedRequests["404"].response.headers = resp.headers;
           executeSoon(deferred.resolve);
         });
     });
   return deferred.promise;
 }
 
-function getContent()
-{
+function getContent() {
   let deferred = promise.defer();
 
   webConsoleClient.getResponseContent(lastFinishedRequests["301"].actor,
-    function (aResponse) {
-      lastFinishedRequests["301"].response.content = aResponse.content;
-      lastFinishedRequests["301"].discardResponseBody = aResponse.contentDiscarded;
+    function(response) {
+      lastFinishedRequests["301"].response.content = response.content;
+      lastFinishedRequests["301"].discardResponseBody = response.contentDiscarded;
 
       webConsoleClient.getResponseContent(lastFinishedRequests["404"].actor,
-        function (aResponse) {
-          lastFinishedRequests["404"].response.content = aResponse.content;
+        function(resp) {
+          lastFinishedRequests["404"].response.content = resp.content;
           lastFinishedRequests["404"].discardResponseBody =
-            aResponse.contentDiscarded;
+            resp.contentDiscarded;
 
           webConsoleClient = null;
           executeSoon(deferred.resolve);
@@ -92,12 +93,10 @@ function getContent()
   return deferred.promise;
 }
 
-function performTest()
-{
-  function readHeader(aName)
-  {
+function performTest() {
+  function readHeader(name) {
     for (let header of headers) {
-      if (header.name == aName) {
+      if (header.name == name) {
         return header.value;
       }
     }

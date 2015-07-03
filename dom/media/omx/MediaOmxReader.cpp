@@ -527,6 +527,7 @@ MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
+  nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
   if (container && container->GetImageContainer()) {
@@ -543,13 +544,23 @@ MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
     // seek the audio stream to match the video stream's time. Otherwise, the
     // audio and video streams won't be in sync after the seek.
     mVideoSeekTimeUs = aTarget;
-    const VideoData* v = DecodeToFirstVideoData();
-    mAudioSeekTimeUs = v ? v->mTime : aTarget;
+
+    nsRefPtr<MediaOmxReader> self = this;
+    mSeekRequest.Begin(DecodeToFirstVideoData()->Then(TaskQueue(), __func__, [self] (VideoData* v) {
+      self->mSeekRequest.Complete();
+      self->mAudioSeekTimeUs = v->mTime;
+      self->mSeekPromise.Resolve(self->mAudioSeekTimeUs, __func__);
+    }, [self, aTarget] () {
+      self->mSeekRequest.Complete();
+      self->mAudioSeekTimeUs = aTarget;
+      self->mSeekPromise.Resolve(aTarget, __func__);
+    }));
   } else {
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
+    mSeekPromise.Resolve(aTarget, __func__);
   }
 
-  return SeekPromise::CreateAndResolve(mAudioSeekTimeUs, __func__);
+  return p;
 }
 
 void MediaOmxReader::SetIdle() {

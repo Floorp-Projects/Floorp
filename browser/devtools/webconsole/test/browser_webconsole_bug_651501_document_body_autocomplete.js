@@ -5,9 +5,11 @@
  */
 
 // Tests that document.body autocompletes in the web console.
-const TEST_URI = "data:text/html;charset=utf-8,Web Console autocompletion bug in document.body";
 
 "use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console autocompletion " +
+                 "bug in document.body";
 
 let gHUD;
 
@@ -24,12 +26,11 @@ let test = asyncTest(function* () {
   gHUD = null;
 });
 
-function consoleOpened(aHud) {
+function consoleOpened() {
   let deferred = promise.defer();
 
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
-  let completeNode = jsterm.completeNode;
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -58,16 +59,15 @@ function consoleOpened(aHud) {
   return deferred.promise;
 }
 
-function autocompletePopupHidden()
-{
+function autocompletePopupHidden() {
   let deferred = promise.defer();
 
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
-  let inputNode = jsterm.inputNode;
 
-  popup._panel.removeEventListener("popuphidden", autocompletePopupHidden, false);
+  popup._panel.removeEventListener("popuphidden", autocompletePopupHidden,
+                                   false);
 
   ok(!popup.isOpen, "popup is not open");
 
@@ -84,8 +84,7 @@ function autocompletePopupHidden()
   return deferred.promise;
 }
 
-function testPropertyPanel()
-{
+function testPropertyPanel() {
   let deferred = promise.defer();
 
   let jsterm = gHUD.jsterm;
@@ -101,9 +100,8 @@ function testPropertyPanel()
   return deferred.promise;
 }
 
-function onVariablesViewReady(aView)
-{
-  return findVariableViewProperties(aView, [
+function onVariablesViewReady(view) {
+  return findVariableViewProperties(view, [
     { name: "body", value: "<body>" },
   ], { webconsole: gHUD });
 }

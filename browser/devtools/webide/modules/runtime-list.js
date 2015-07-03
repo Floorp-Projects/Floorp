@@ -205,7 +205,7 @@ RuntimeList.prototype = {
         }, true);
         panelItemNode.appendChild(connectButton);
 
-        if (r.configure && this._UI.isRuntimeConfigurationEnabled()) {
+        if (r.configure) {
           let configButton = doc.createElement(this._panelNodeEl);
           configButton.className = "configure-button";
           configButton.addEventListener("click", r.configure.bind(r), true);

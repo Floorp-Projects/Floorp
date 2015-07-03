@@ -15,7 +15,7 @@
 /* PANEL */
 
 #identity-popup,
-.panel-viewstack[viewtype="main"] > .panel-mainview[panelid=identity-popup] > #identity-popup-mainView {
+.panel-viewstack[viewtype="main"]:not([transitioning]) > .panel-mainview[panelid=identity-popup] > #identity-popup-mainView {
   /* Tiny hack to ensure the panel shrinks back to its original
      size after closing a subview that is bigger than the main view. */
   max-height: 0;

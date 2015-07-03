@@ -60,5 +60,5 @@ function testMessages() {
       category: CATEGORY_NETWORK,
       severity: SEVERITY_LOG,
     }],
-  })
+  });
 }
