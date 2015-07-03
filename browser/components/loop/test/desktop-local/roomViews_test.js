@@ -248,6 +248,39 @@ describe("loop.roomViews", function () {
         expect(view.refs.menu.props.show).to.eql(true);
       });
     });
+
+    describe("Edit Context", function() {
+      it("should show the 'Add some context' link", function() {
+        view = mountTestComponent();
+
+        expect(view.getDOMNode().querySelector(".room-invitation-addcontext")).
+          to.not.eql(null);
+      });
+
+      it("should call a callback when the link is clicked", function() {
+        var onAddContextClick = sinon.stub();
+        view = mountTestComponent({
+          onAddContextClick: onAddContextClick
+        });
+
+        var node = view.getDOMNode();
+        expect(node.querySelector(".room-context")).to.eql(null);
+
+        var addLink = node.querySelector(".room-invitation-addcontext");
+
+        React.addons.TestUtils.Simulate.click(addLink);
+
+        sinon.assert.calledOnce(onAddContextClick);
+      });
+
+      it("should show the edit context view", function() {
+        view = mountTestComponent({
+          showEditContext: true
+        });
+
+        expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
+      });
+    });
   });
 
   describe("DesktopRoomConversationView", function() {
@@ -577,6 +610,32 @@ describe("loop.roomViews", function () {
           expect(view.getDOMNode().querySelector(".local-stream-audio"))
             .not.eql(null);
         });
+    });
+
+    describe("Edit Context", function() {
+      it("should show the form when the edit button is clicked", function() {
+        view = mountTestComponent();
+        var node = view.getDOMNode();
+
+        expect(node.querySelector(".room-context")).to.eql(null);
+
+        var editButton = node.querySelector(".btn-mute-edit");
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
+      });
+
+      it("should hide the form when the edit button is clicked again", function() {
+        view = mountTestComponent();
+
+        var editButton = view.getDOMNode().querySelector(".btn-mute-edit");
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        // Click again.
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        expect(view.getDOMNode().querySelector(".room-context")).to.eql(null);
+      });
     });
   });
 
