@@ -43,9 +43,6 @@ const NS_BINDING_ABORTED = Components.results.NS_BINDING_ABORTED;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
 
-const URI_INHERITS_SECURITY_CONTEXT = Components.interfaces.nsIHttpProtocolHandler
-                                        .URI_INHERITS_SECURITY_CONTEXT;
-
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome"))
     return true;
@@ -402,14 +399,10 @@ nsBrowserContentHandler.prototype = {
           return localSchemes.has(uri.scheme);
         };
         if (isLocal(uri)) {
-          // only load URIs which do not inherit chrome privs
+          // If the URI is local, we are sure it won't wrongly inherit chrome privs
           var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-          var netutil = Components.classes["@mozilla.org/network/util;1"]
-                                  .getService(nsINetUtil);
-          if (!netutil.URIChainHasFlags(uri, URI_INHERITS_SECURITY_CONTEXT)) {
-            openWindow(null, uri.spec, "_blank", features);
-            cmdLine.preventDefault = true;
-          }
+          openWindow(null, uri.spec, "_blank", features);
+          cmdLine.preventDefault = true;
         } else {
           dump("*** Preventing load of web URI as chrome\n");
           dump("    If you're trying to load a webpage, do not pass --chrome.\n");
