@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var observedStatus = "nothing";
+
+var observer = function(subject, topic, data) {
+  observedStatus = JSON.parse(data).status;
+  info("Observed: " + observedStatus);  
+};
+SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request", false);
+
+SimpleTest.registerCleanupFunction(function() {
+  SpecialPowers.Services.obs.removeObserver(observer, "mediakeys-request");
+});
+
+function SetPrefs(prefs) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({"set": prefs}, function() { resolve(); });
+  });
+}
+
+function Test(test) {
+  var p = test.prefs ? SetPrefs(test.prefs) : Promise.resolve();
+  observedStatus = "nothing";
+  var name = "'" + test.keySystem + "'";
+  return p.then(function() {
+    return new Promise(function(resolve, reject) {
+      navigator.requestMediaKeySystemAccess(test.keySystem)
+      .then(
+        function(keySystemAccess) {
+          return keySystemAccess.createMediaKeys();
+        })
+      .then(
+        function(mediaKeys) {
+          ok(test.shouldPass, name + " passed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+          is(observedStatus, test.expectedStatus, name + " observer service result");
+          resolve();
+        }
+      )
+      .catch(
+        function() {
+          ok(!test.shouldPass, name + " failed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+          is(observedStatus, test.expectedStatus, name + " observer service result");
+          resolve();
+        }
+      );
+    });
+  });
+}
+
+const CLEARKEY_ID = 'org.w3.clearkey';
+
+var tests = [
+  {
+    keySystem: CLEARKEY_ID,
+    shouldPass: false,
+    expectedStatus: 'api-disabled',
+    prefs: [["media.eme.enabled", false], ["media.eme.clearkey.enabled", true]]
+  },
+  {
+    keySystem: CLEARKEY_ID,
+    shouldPass: false,
+    expectedStatus: 'cdm-disabled',
+    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", false]]
+  },
+  {
+    keySystem: 'unsupported-keysystem',
+    shouldPass: false,
+    expectedStatus: 'cdm-not-supported'
+  },
+  {
+    keySystem: CLEARKEY_ID + '.10000' , // A stupendously high min CDM version, presumably not installed.
+    shouldPass: false,
+    expectedStatus: 'cdm-insufficient-version',
+    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
+  },
+  {
+    keySystem: CLEARKEY_ID,
+    shouldPass: true,
+    expectedStatus: 'cdm-created',
+    prefs: [["media.eme.enabled", true], ["media.eme.clearkey.enabled", true]]
+  },
+];
+
+SetupEMEPref(function() {
+  tests.reduce(function(p,c,i,array) {
+    return p.then(function() { return Test(c); });
+  }, Promise.resolve()).then(SimpleTest.finish);
+});
+
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

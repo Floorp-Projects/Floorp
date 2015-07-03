@@ -29,7 +29,7 @@ public:
   OscillatorNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
     , mSource(nullptr)
-    , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
+    , mDestination(aDestination->Stream())
     , mStart(-1)
     , mStop(STREAM_TIME_MAX)
     // Keep the default values in sync with OscillatorNode::OscillatorNode.
@@ -387,7 +387,7 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
 {
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);
 }
 
@@ -419,6 +419,15 @@ JSObject*
 OscillatorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return OscillatorNodeBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+OscillatorNode::DestroyMediaStream()
+{
+  if (mStream) {
+    mStream->RemoveMainThreadListener(this);
+  }
+  AudioNode::DestroyMediaStream();
 }
 
 void
@@ -458,14 +467,13 @@ void OscillatorNode::SendPeriodicWaveToStream()
 {
   NS_ASSERTION(mType == OscillatorType::Custom,
                "Sending custom waveform to engine thread with non-custom type");
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  MOZ_ASSERT(ns, "Missing node stream.");
+  MOZ_ASSERT(mStream, "Missing node stream.");
   MOZ_ASSERT(mPeriodicWave, "Send called without PeriodicWave object.");
   SendInt32ParameterToStream(OscillatorNodeEngine::PERIODICWAVE,
                              mPeriodicWave->DataLength());
   nsRefPtr<ThreadSharedFloatArrayBufferList> data =
     mPeriodicWave->GetThreadSharedBuffer();
-  ns->SetBuffer(data.forget());
+  mStream->SetBuffer(data.forget());
 }
 
 void
@@ -482,15 +490,14 @@ OscillatorNode::Start(double aWhen, ErrorResult& aRv)
   }
   mStartCalled = true;
 
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!ns) {
+  if (!mStream) {
     // Nothing to play, or we're already dead for some reason
     return;
   }
 
   // TODO: Perhaps we need to do more here.
-  ns->SetStreamTimeParameter(OscillatorNodeEngine::START,
-                             Context(), aWhen);
+  mStream->SetStreamTimeParameter(OscillatorNodeEngine::START,
+                                  Context(), aWhen);
 
   MarkActive();
 }
@@ -508,15 +515,14 @@ OscillatorNode::Stop(double aWhen, ErrorResult& aRv)
     return;
   }
 
-  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
-  if (!ns || !Context()) {
+  if (!mStream || !Context()) {
     // We've already stopped and had our stream shut down
     return;
   }
 
   // TODO: Perhaps we need to do more here.
-  ns->SetStreamTimeParameter(OscillatorNodeEngine::STOP,
-                             Context(), std::max(0.0, aWhen));
+  mStream->SetStreamTimeParameter(OscillatorNodeEngine::STOP,
+                                  Context(), std::max(0.0, aWhen));
 }
 
 void

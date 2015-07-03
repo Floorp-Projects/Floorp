@@ -582,7 +582,6 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
                                         JS::Handle<JSObject*> aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
   MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
              "Passed object is not a global object!");
 
@@ -609,9 +608,9 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
   }
 
   nsRefPtr<IDBFactory> factory;
-  if (NS_FAILED(IDBFactory::CreateForChromeJS(aCx,
-                                              aGlobal,
-                                              getter_AddRefs(factory)))) {
+  if (NS_FAILED(IDBFactory::CreateForMainThreadJS(aCx,
+                                                  aGlobal,
+                                                  getter_AddRefs(factory)))) {
     return false;
   }
 
@@ -940,7 +939,7 @@ IndexedDatabaseManager::LoggingModePrefChangedCallback(
     return;
   }
 
-  bool useProfiler = 
+  bool useProfiler =
 #if defined(DEBUG) || defined(MOZ_ENABLE_PROFILER_SPS)
     Preferences::GetBool(kPrefLoggingProfiler);
 #if !defined(MOZ_ENABLE_PROFILER_SPS)
