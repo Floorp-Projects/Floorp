@@ -335,6 +335,8 @@ bool MediaDecoder::IsInfinite()
 MediaDecoder::MediaDecoder() :
   mWatchManager(this, AbstractThread::MainThread()),
   mBuffered(AbstractThread::MainThread(), TimeIntervals(), "MediaDecoder::mBuffered (Mirror)"),
+  mStateMachineIsShutdown(AbstractThread::MainThread(), true,
+                          "MediaDecoder::mStateMachineIsShutdown (Mirror)"),
   mNextFrameStatus(AbstractThread::MainThread(),
                    MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
                    "MediaDecoder::mNextFrameStatus (Mirror)"),
@@ -392,6 +394,9 @@ MediaDecoder::MediaDecoder() :
 
   // mDuration
   mWatchManager.Watch(mStateMachineDuration, &MediaDecoder::DurationChanged);
+
+  // mStateMachineIsShutdown
+  mWatchManager.Watch(mStateMachineIsShutdown, &MediaDecoder::ShutdownBitChanged);
 
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
@@ -851,7 +856,7 @@ double MediaDecoder::ComputePlaybackRate(bool* aReliable)
   int64_t length = mResource ? mResource->GetLength() : -1;
   if (!IsNaN(mDuration) && !mozilla::IsInfinite<double>(mDuration) && length >= 0) {
     *aReliable = true;
-    return length * mDuration;
+    return length / mDuration;
   }
   return mPlaybackStatistics->GetRateAtLastStop(aReliable);
 }
@@ -1254,11 +1259,13 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
   if (mDecoderStateMachine) {
     mStateMachineDuration.Connect(mDecoderStateMachine->CanonicalDuration());
     mBuffered.Connect(mDecoderStateMachine->CanonicalBuffered());
+    mStateMachineIsShutdown.Connect(mDecoderStateMachine->CanonicalIsShutdown());
     mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
     mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
   } else {
     mStateMachineDuration.DisconnectIfConnected();
     mBuffered.DisconnectIfConnected();
+    mStateMachineIsShutdown.DisconnectIfConnected();
     mNextFrameStatus.DisconnectIfConnected();
     mCurrentPosition.DisconnectIfConnected();
   }
@@ -1336,8 +1343,9 @@ MediaDecoder::NotifyWaitingForResourcesStatusChanged()
 }
 
 bool MediaDecoder::IsShutdown() const {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(GetStateMachine(), true);
-  return GetStateMachine()->IsShutdown();
+  return mStateMachineIsShutdown;
 }
 
 // Drop reference to state machine.  Only called during shutdown dance.
