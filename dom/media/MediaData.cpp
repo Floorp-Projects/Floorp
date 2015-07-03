@@ -116,6 +116,7 @@ VideoData::VideoData(int64_t aOffset,
                      IntSize aDisplay)
   : MediaData(VIDEO_DATA, aOffset, aTime, aDuration)
   , mDisplay(aDisplay)
+  , mSentToCompositor(false)
 {
   NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
