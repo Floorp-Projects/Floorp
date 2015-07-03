@@ -113,10 +113,11 @@ AudioParam::Stream()
   mStream = stream.forget();
 
   // Setup the AudioParam's stream as an input to the owner AudioNode's stream
-  MediaStream* nodeStream = mNode->Stream();
-  MOZ_ASSERT(nodeStream->AsProcessedStream());
-  ProcessedMediaStream* ps = static_cast<ProcessedMediaStream*>(nodeStream);
-  mNodeStreamPort = ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+  AudioNodeStream* nodeStream = mNode->GetStream();
+  if (nodeStream) {
+    mNodeStreamPort =
+      nodeStream->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
+  }
 
   // Let the MSG's copy of AudioParamTimeline know about the change in the stream
   mCallback(mNode);

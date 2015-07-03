@@ -27,7 +27,7 @@ NS_NewHTMLExtAppElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
   already_AddRefed<mozilla::dom::NodeInfo> aarni = ni.forget();
 
   if (!permissionManager) {
-    return new HTMLUnknownElement(aarni);
+    return new mozilla::dom::HTMLUnknownElement(aarni);
   }
 
   uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
@@ -35,10 +35,10 @@ NS_NewHTMLExtAppElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                                       "external-app",
                                                       &perm);
   if (perm != nsIPermissionManager::ALLOW_ACTION) {
-    return new HTMLUnknownElement(aarni);
+    return new mozilla::dom::HTMLUnknownElement(aarni);
   }
 
-  return new HTMLExtAppElement(aarni);
+  return new mozilla::dom::HTMLExtAppElement(aarni);
 }
 
 namespace mozilla {
