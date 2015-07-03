@@ -920,6 +920,8 @@ nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput,
 
     SetContentType(aContentType);
 
+    mIsUnsafe = false;
+
     FinishAsyncOpen();
 
     rv = mSynthesizedResponsePump->AsyncRead(this, nullptr);
