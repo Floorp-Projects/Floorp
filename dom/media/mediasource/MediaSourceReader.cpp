@@ -722,7 +722,8 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder,
 already_AddRefed<SourceBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType, int64_t aTimestampOffset)
 {
-  if (IsShutdown()) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDecoder->IsShutdown()) {
     return nullptr;
   }
 
@@ -837,12 +838,8 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aIgnored /* Used only for ogg whi
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(mAudioPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(mVideoPromise.IsEmpty());
+  MOZ_ASSERT(!mShutdown);
   nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
-
-  if (IsShutdown()) {
-    mSeekPromise.Reject(NS_ERROR_FAILURE, __func__);
-    return p;
-  }
 
   // Store pending seek target in case the track buffers don't contain
   // the desired time and we delay doing the seek.

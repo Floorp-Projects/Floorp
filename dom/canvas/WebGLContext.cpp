@@ -1823,9 +1823,6 @@ WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
                                        GLenum format, GLenum type,
                                        mozilla::dom::Element& elt)
 {
-    if (type == LOCAL_GL_HALF_FLOAT_OES)
-        type = LOCAL_GL_HALF_FLOAT;
-
     if (!ValidateTexImageFormatAndType(format, type,
                                        WebGLTexImageFunc::TexImage,
                                        WebGLTexDimensions::Tex2D))

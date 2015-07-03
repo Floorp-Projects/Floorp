@@ -1079,7 +1079,7 @@ MP4Reader::GetBuffered()
     return buffered;
   }
   UpdateIndex();
-  NS_ENSURE_TRUE(mStartTime >= 0, media::TimeIntervals());
+  NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
 
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
@@ -1090,8 +1090,8 @@ MP4Reader::GetBuffered()
     mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
     for (size_t i = 0; i < timeRanges.Length(); i++) {
       buffered += media::TimeInterval(
-        media::TimeUnit::FromMicroseconds(timeRanges[i].start - mStartTime),
-        media::TimeUnit::FromMicroseconds(timeRanges[i].end - mStartTime));
+        media::TimeUnit::FromMicroseconds(timeRanges[i].start - StartTime()),
+        media::TimeUnit::FromMicroseconds(timeRanges[i].end - StartTime()));
     }
   }
 

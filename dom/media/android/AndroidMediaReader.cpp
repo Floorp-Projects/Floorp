@@ -116,6 +116,8 @@ nsresult AndroidMediaReader::ResetDecode()
   if (mLastVideoFrame) {
     mLastVideoFrame = nullptr;
   }
+  mSeekRequest.DisconnectIfExists();
+  mSeekPromise.RejectIfExists(NS_OK, __func__);
   return MediaDecoderReader::ResetDecode();
 }
 
@@ -323,6 +325,7 @@ AndroidMediaReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
   if (mHasAudio && mHasVideo) {
     // The decoder seeks/demuxes audio and video streams separately. So if
     // we seek both audio and video to aTarget, the audio stream can typically
@@ -333,13 +336,23 @@ AndroidMediaReader::Seek(int64_t aTarget, int64_t aEndTime)
     // seek the audio stream to match the video stream's time. Otherwise, the
     // audio and video streams won't be in sync after the seek.
     mVideoSeekTimeUs = aTarget;
-    const VideoData* v = DecodeToFirstVideoData();
-    mAudioSeekTimeUs = v ? v->mTime : aTarget;
+
+    nsRefPtr<AndroidMediaReader> self = this;
+    mSeekRequest.Begin(DecodeToFirstVideoData()->Then(TaskQueue(), __func__, [self] (VideoData* v) {
+      self->mSeekRequest.Complete();
+      self->mAudioSeekTimeUs = v->mTime;
+      self->mSeekPromise.Resolve(self->mAudioSeekTimeUs, __func__);
+    }, [self, aTarget] () {
+      self->mSeekRequest.Complete();
+      self->mAudioSeekTimeUs = aTarget;
+      self->mSeekPromise.Resolve(aTarget, __func__);
+    }));
   } else {
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
+    mSeekPromise.Resolve(aTarget, __func__);
   }
 
-  return SeekPromise::CreateAndResolve(mAudioSeekTimeUs, __func__);
+  return p;
 }
 
 AndroidMediaReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :

@@ -1274,6 +1274,9 @@ pref("network.http.referer.XOriginPolicy", 0);
 // By default this is enabled for compatibility (see bug 141641)
 pref("network.http.sendSecureXSiteReferrer", true);
 
+// Controls whether referrer attributes in <a>, <img>, <area>, and <iframe> are honoured
+pref("network.http.enablePerElementReferrer", false);
+
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 20);
 
@@ -2248,6 +2251,9 @@ pref("layout.css.background-blend-mode.enabled", true);
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);
+
+// Is support for CSS text-combine-upright (tate-chu-yoko) enabled?
+pref("layout.css.text-combine-upright.enabled", false);
 
 // Is support for object-fit and object-position enabled?
 pref("layout.css.object-fit-and-position.enabled", true);

@@ -124,12 +124,6 @@ public:
 
   virtual void BreakCycles() override;
 
-  bool IsShutdown()
-  {
-    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
-    return mDecoder->IsShutdown();
-  }
-
   // Return true if all of the active tracks contain data for the specified time.
   bool TrackBuffersContainTime(int64_t aTime);
 
