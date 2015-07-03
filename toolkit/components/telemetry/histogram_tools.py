@@ -60,7 +60,6 @@ def exponential_buckets(dmin, dmax, n_buckets):
     bucket_index = 2;
     ret_array = [0] * n_buckets
     current = dmin
-    if current == 0: current = 1 # If starting from 0, the second bucket should be 1 rather than 0
     ret_array[1] = current
     for bucket_index in range(2, n_buckets):
         log_current = math.log(current)
@@ -174,7 +173,7 @@ is enabled."""
         """Return an array of lower bounds for each bucket in the histogram."""
         table = { 'boolean': linear_buckets,
                   'flag': linear_buckets,
-                  'count': exponential_buckets,
+                  'count': linear_buckets,
                   'enumerated': linear_buckets,
                   'linear': linear_buckets,
                   'exponential': exponential_buckets }
@@ -185,7 +184,7 @@ is enabled."""
         table = {
             'boolean': Histogram.boolean_flag_bucket_parameters,
             'flag': Histogram.boolean_flag_bucket_parameters,
-            'count': Histogram.count_bucket_parameters,
+            'count': Histogram.boolean_flag_bucket_parameters,
             'enumerated': Histogram.enumerated_bucket_parameters,
             'linear': Histogram.linear_bucket_parameters,
             'exponential': Histogram.exponential_bucket_parameters
@@ -200,7 +199,6 @@ is enabled."""
         table = {
             'boolean': always_allowed_keys,
             'flag': always_allowed_keys,
-            'count': always_allowed_keys,
             'count': always_allowed_keys,
             'enumerated': always_allowed_keys + ['n_values'],
             'linear': general_keys,
@@ -248,10 +246,6 @@ is enabled."""
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
         return (1, 2, 3)
-
-    @staticmethod
-    def count_bucket_parameters(definition):
-        return (1, 10000, 100)
 
     @staticmethod
     def linear_bucket_parameters(definition):
