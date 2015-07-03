@@ -38,8 +38,9 @@ public:
   void BlockUntilDecodedAndFinishObserving()
   {
     // Use GetFrame() to block until our image finishes decoding.
-    mImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                     imgIContainer::FLAG_SYNC_DECODE);
+    nsRefPtr<SourceSurface> surface =
+      mImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                       imgIContainer::FLAG_SYNC_DECODE);
 
     FinishObserving();
   }
