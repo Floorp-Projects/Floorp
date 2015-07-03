@@ -41,10 +41,6 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   }
 
   gfx::IntSize oldFrameSize = mImageContainer->GetCurrentSize();
-  TimeStamp lastPaintTime = mImageContainer->GetPaintTime();
-  if (!lastPaintTime.IsNull() && !mPaintTarget.IsNull()) {
-    mPaintDelay = lastPaintTime - mPaintTarget;
-  }
 
   // When using the OMX decoder, destruction of the current image can indirectly
   //  block on main thread I/O. If we let this happen while holding onto
@@ -67,8 +63,6 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   if (oldFrameSize != newFrameSize) {
     mImageSizeChanged = true;
   }
-
-  mPaintTarget = aTargetTime;
 }
 
 void VideoFrameContainer::ClearCurrentFrame()
@@ -91,8 +85,7 @@ ImageContainer* VideoFrameContainer::GetImageContainer() {
 
 double VideoFrameContainer::GetFrameDelay()
 {
-  MutexAutoLock lock(mMutex);
-  return mPaintDelay.ToSeconds();
+  return mImageContainer->GetPaintDelay().ToSeconds();
 }
 
 void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
