@@ -31,7 +31,7 @@ function install_ended(install, addon) {
 function finish_test(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
 
   var doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, TESTROOT + "triggerredirect.html#foo", "Should have redirected");

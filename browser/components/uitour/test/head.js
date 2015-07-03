@@ -212,7 +212,7 @@ function UITourTest() {
       gBrowser.removeTab(gTestTab);
     delete window.gTestTab;
     Services.prefs.clearUserPref("browser.uitour.enabled", true);
-    Services.perms.remove(testUri, "uitour");
+    Services.perms.remove("example.com", "uitour");
   });
 
   function done() {

@@ -36,7 +36,7 @@ function finish_test(count) {
   cm.remove("example.org", "xpinstall", "/browser/" + RELATIVE_DIR, false);
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();
