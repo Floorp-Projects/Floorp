@@ -86,9 +86,9 @@ public:
                   IDBFactory** aFactory);
 
   static nsresult
-  CreateForChromeJS(JSContext* aCx,
-                    JS::Handle<JSObject*> aOwningObject,
-                    IDBFactory** aFactory);
+  CreateForMainThreadJS(JSContext* aCx,
+                        JS::Handle<JSObject*> aOwningObject,
+                        IDBFactory** aFactory);
 
   static nsresult
   CreateForDatastore(JSContext* aCx,

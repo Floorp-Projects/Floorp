@@ -217,7 +217,7 @@ public:
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
-  virtual VideoFrameContainer* GetVideoFrameContainer() final override;
+  B2G_ACL_EXPORT virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer();
 
   // Dispatch events

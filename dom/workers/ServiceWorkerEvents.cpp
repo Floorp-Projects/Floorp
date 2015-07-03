@@ -232,6 +232,17 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+
+  // Allow opaque response interception to be disabled until we can ensure the
+  // security implications are not a complete disaster.
+  if (response->Type() == ResponseType::Opaque &&
+      !worker->OpaqueInterceptionEnabled()) {
+    return;
+  }
+
   // Section 4.2, step 2.2 "If either response's type is "opaque" and request's
   // mode is not "no-cors" or response's type is error, return a network error."
   if (((response->Type() == ResponseType::Opaque) && (mRequestMode != RequestMode::No_cors)) ||
@@ -248,14 +259,10 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-
   nsAutoPtr<RespondWithClosure> closure(
       new RespondWithClosure(mInterceptedChannel, ir, worker->GetChannelInfo()));
   nsCOMPtr<nsIInputStream> body;
-  response->GetBody(getter_AddRefs(body));
+  ir->GetInternalBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
   if (body) {
     response->SetBodyUsed();

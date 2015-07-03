@@ -7,7 +7,7 @@
 #include "mp4_demuxer/MP4Metadata.h"
 
 #include <stdint.h>
-#include <fstream>
+#include <stdio.h>
 #include <vector>
 
 extern "C" bool read_box_from_buffer(uint8_t *buffer, size_t size);
@@ -36,13 +36,15 @@ TEST(rust, MP4MetadataEmpty)
 
 TEST(rust, MP4Metadata)
 {
-  std::ifstream f("street.mp4");
-  ASSERT_TRUE(f.is_open());
+  FILE* f = fopen("street.mp4", "rb");
+  ASSERT_TRUE(f != nullptr);
 
   size_t len = 4096;
-  std::vector<uint8_t> buf;
-  buf.reserve(len);
-  f.read(reinterpret_cast<char*>(buf.data()), buf.size());
+  std::vector<uint8_t> buf(len);
+  size_t read = fread(buf.data(), sizeof(decltype(buf)::value_type), buf.size(), f);
+  buf.resize(read);
+  fclose(f);
+
   bool rv = read_box_from_buffer(buf.data(), buf.size());
-  ASSERT_FALSE(rv); // Expected fail: need to trap eof.
+  EXPECT_EQ(rv, true);
 }
