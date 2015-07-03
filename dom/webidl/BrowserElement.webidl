@@ -146,13 +146,12 @@ interface BrowserElementPrivileged {
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAllPermissions="browser input-manage"]
   DOMRequest setInputMethodActive(boolean isActive);
 
-  // Additional |nfc-manager| permission is required for setNFCFocus API
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAllPermissions="browser setNFCFocus"]
   void setNFCFocus(boolean isFocus);
 
   [Throws,
