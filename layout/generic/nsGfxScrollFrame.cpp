@@ -2677,45 +2677,30 @@ ShouldBeClippedByFrame(nsIFrame* aClipFrame, nsIFrame* aClippedFrame)
 }
 
 static void
-ClipItemsExceptCaret(nsDisplayList* aList, nsDisplayListBuilder* aBuilder,
-                     nsIFrame* aClipFrame, const DisplayItemClip& aClip)
+ClipItemsExceptCaret(nsDisplayList* aList,
+                     nsDisplayListBuilder* aBuilder,
+                     nsIFrame* aClipFrame,
+                     const DisplayItemClip& aNonCaretClip)
 {
-  nsDisplayItem* i = aList->GetBottom();
-  for (; i; i = i->GetAbove()) {
-    if (!::ShouldBeClippedByFrame(aClipFrame, i->Frame())) {
+  for (nsDisplayItem* i = aList->GetBottom(); i; i = i->GetAbove()) {
+    if (!ShouldBeClippedByFrame(aClipFrame, i->Frame())) {
       continue;
     }
 
-    bool unused;
-    nsRect bounds = i->GetBounds(aBuilder, &unused);
-    bool isAffectedByClip = aClip.IsRectAffectedByClip(bounds);
-    if (isAffectedByClip && nsDisplayItem::TYPE_CARET == i->GetType()) {
-      // Don't clip the caret if it overflows vertically only, and by half
-      // its height at most.  This is to avoid clipping it when the line-height
-      // is small.
-      auto half = bounds.height / 2;
-      bounds.y += half;
-      bounds.height -= half;
-      isAffectedByClip = aClip.IsRectAffectedByClip(bounds);
-      if (isAffectedByClip) {
-        // Don't clip the caret if it's just outside on the right side.
-        nsRect rightSide(bounds.x - 1, bounds.y, 1, bounds.height);
-        isAffectedByClip = aClip.IsRectAffectedByClip(rightSide);
-        // Also, avoid clipping it in a zero-height line box (heuristic only).
-        if (isAffectedByClip) {
-          isAffectedByClip = i->Frame()->GetRect().height != 0;
-        }
+    bool isCaret = i->GetType() == nsDisplayItem::TYPE_CARET;
+    if (!isCaret) {
+      bool unused;
+      nsRect bounds = i->GetBounds(aBuilder, &unused);
+      if (aNonCaretClip.IsRectAffectedByClip(bounds)) {
+        DisplayItemClip newClip;
+        newClip.IntersectWith(i->GetClip());
+        newClip.IntersectWith(aNonCaretClip);
+        i->SetClip(aBuilder, newClip);
       }
-    }
-    if (isAffectedByClip) {
-      DisplayItemClip newClip;
-      newClip.IntersectWith(i->GetClip());
-      newClip.IntersectWith(aClip);
-      i->SetClip(aBuilder, newClip);
     }
     nsDisplayList* children = i->GetSameCoordinateSystemChildren();
     if (children) {
-      ClipItemsExceptCaret(children, aBuilder, aClipFrame, aClip);
+      ClipItemsExceptCaret(children, aBuilder, aClipFrame, aNonCaretClip);
     }
   }
 }
@@ -2724,14 +2709,16 @@ static void
 ClipListsExceptCaret(nsDisplayListCollection* aLists,
                      nsDisplayListBuilder* aBuilder,
                      nsIFrame* aClipFrame,
-                     const DisplayItemClip& aClip)
+                     const nsRect& aNonCaretClip)
 {
-  ::ClipItemsExceptCaret(aLists->BorderBackground(), aBuilder, aClipFrame, aClip);
-  ::ClipItemsExceptCaret(aLists->BlockBorderBackgrounds(), aBuilder, aClipFrame, aClip);
-  ::ClipItemsExceptCaret(aLists->Floats(), aBuilder, aClipFrame, aClip);
-  ::ClipItemsExceptCaret(aLists->PositionedDescendants(), aBuilder, aClipFrame, aClip);
-  ::ClipItemsExceptCaret(aLists->Outlines(), aBuilder, aClipFrame, aClip);
-  ::ClipItemsExceptCaret(aLists->Content(), aBuilder, aClipFrame, aClip);
+  DisplayItemClip clip;
+  clip.SetTo(aNonCaretClip);
+  ClipItemsExceptCaret(aLists->BorderBackground(), aBuilder, aClipFrame, clip);
+  ClipItemsExceptCaret(aLists->BlockBorderBackgrounds(), aBuilder, aClipFrame, clip);
+  ClipItemsExceptCaret(aLists->Floats(), aBuilder, aClipFrame, clip);
+  ClipItemsExceptCaret(aLists->PositionedDescendants(), aBuilder, aClipFrame, clip);
+  ClipItemsExceptCaret(aLists->Outlines(), aBuilder, aClipFrame, clip);
+  ClipItemsExceptCaret(aLists->Content(), aBuilder, aClipFrame, clip);
 }
 
 void
@@ -2929,6 +2916,31 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   mScrollParentID = aBuilder->GetCurrentScrollParentId();
 
+  Maybe<nsRect> contentBoxClipForCaret;
+  Maybe<nsRect> contentBoxClipForNonCaretContent;
+  if (MOZ_UNLIKELY(mOuter->StyleDisplay()->mOverflowClipBox ==
+                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+    // We only clip if there is *scrollable* overflow, to avoid clipping
+    // *visual* overflow unnecessarily.
+    nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    nsRect so = mScrolledFrame->GetScrollableOverflowRect();
+    if (clipRect.width != so.width || clipRect.height != so.height ||
+        so.x < 0 || so.y < 0) {
+      clipRect.Deflate(mOuter->GetUsedPadding());
+      contentBoxClipForNonCaretContent = Some(clipRect);
+      if (nsIFrame* caretFrame = aBuilder->GetCaretFrame()) {
+        // Avoid clipping it in a zero-height line box (heuristic only).
+        if (caretFrame->GetRect().height != 0) {
+          nsRect caretRect = aBuilder->GetCaretRect();
+          // Allow the caret to stick out of the content box clip by half the
+          // caret height on the top, and its full width on the right.
+          clipRect.Inflate(nsMargin(caretRect.height / 2, caretRect.width, 0, 0));
+          contentBoxClipForCaret = Some(clipRect);
+        }
+      }
+    }
+  }
+
   nsDisplayListCollection scrolledContent;
   {
     // Note that setting the current scroll parent id here means that positioned children
@@ -2941,7 +2953,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         shouldBuildLayer && mScrolledFrame->GetContent()
             ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
             : aBuilder->GetCurrentScrollParentId());
+
+    // We need to apply at least one clip, potentially more, and each needs to be applied
+    // through a separate DisplayListClipState::AutoSaveRestore object.
+    // clipStatePtr will always point to the innermost used one.
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+    DisplayListClipState::AutoSaveRestore* clipStatePtr = &clipState;
     if (!mIsRoot || !usingDisplayport) {
       nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
       nscoord radii[8];
@@ -2952,6 +2969,17 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
       } else {
         clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
+      }
+    }
+
+    Maybe<DisplayListClipState::AutoSaveRestore> clipStateCaret;
+    if (contentBoxClipForCaret) {
+      clipStateCaret.emplace(aBuilder);
+      clipStatePtr = &*clipStateCaret;
+      if (mClipAllDescendants) {
+        clipStateCaret->ClipContentDescendants(*contentBoxClipForCaret);
+      } else {
+        clipStateCaret->ClipContainingBlockDescendants(*contentBoxClipForCaret);
       }
     }
 
@@ -2973,7 +3001,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //     build the scroll wrapper. This doesn't prevent us from painting
       //     the entire displayport, but it lets the compositor know to
       //     clip to the scroll port after compositing.
-      clipState.Clear();
+      clipStatePtr->Clear();
     }
 
     aBuilder->StoreDirtyRectForScrolledContents(mOuter, dirtyRect);
@@ -2996,23 +3024,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aBuilder->ForceLayerForScrollParent();
   }
 
-  if (MOZ_UNLIKELY(mOuter->StyleDisplay()->mOverflowClipBox ==
-                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
-    // We only clip if there is *scrollable* overflow, to avoid clipping
-    // *visual* overflow unnecessarily.
-    nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-    nsRect so = mScrolledFrame->GetScrollableOverflowRect();
-    if (clipRect.width != so.width || clipRect.height != so.height ||
-        so.x < 0 || so.y < 0) {
-      // The 'scrolledContent' items are clipped to the padding-box at this point.
-      // Now clip them again to the content-box, except the nsDisplayCaret item
-      // which we allow to overflow the content-box in various situations --
-      // see ::ClipItemsExceptCaret.
-      clipRect.Deflate(mOuter->GetUsedPadding());
-      DisplayItemClip clip;
-      clip.SetTo(clipRect);
-      ::ClipListsExceptCaret(&scrolledContent, aBuilder, mScrolledFrame, clip);
-    }
+  if (contentBoxClipForNonCaretContent) {
+    ClipListsExceptCaret(&scrolledContent, aBuilder, mScrolledFrame,
+                         *contentBoxClipForNonCaretContent);
   }
 
   if (shouldBuildLayer) {
