@@ -69,7 +69,7 @@ public:
 
     // getBufferQueue returns the GonkBufferQueue object to which this
     // GonkConsumerBase is connected.
-    sp<GonkBufferQueue> getBufferQueue() const;
+    B2G_ACL_EXPORT sp<GonkBufferQueue> getBufferQueue() const;
 
     // dump writes the current state to a string. Child classes should add
     // their state to the dump by overriding the dumpLocked method, which is

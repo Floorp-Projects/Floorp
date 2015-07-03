@@ -943,7 +943,7 @@ class ByUbinodeType : public CountType {
         count.~Count();
     }
 
-    bool count(CountBase& countBase, const Node& node) {
+    bool count(CountBase& countBase, const Node& node) override {
         Count& count = static_cast<Count&>(countBase);
         count.total_++;
 
@@ -1084,7 +1084,7 @@ class ByAllocationStack : public CountType {
         count.~Count();
     }
 
-    bool count(CountBase& countBase, const Node& node) {
+    bool count(CountBase& countBase, const Node& node) override {
         Count& count = static_cast<Count&>(countBase);
         count.total_++;
 

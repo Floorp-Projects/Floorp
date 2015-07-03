@@ -1125,16 +1125,20 @@ IMEStateManager::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
+  nsRefPtr<TabParent> tabParent =
+    aEventTargetNode->IsContent() ?
+      TabParent::GetFrom(aEventTargetNode->AsContent()) : nullptr;
+
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
      "aPresContext=0x%p, aCompositionEvent={ message=%s, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
-     "aIsSynthesized=%s)",
+     "aIsSynthesized=%s), tabParent=%p",
      aEventTargetNode, aPresContext,
      GetEventMessageName(aCompositionEvent->message),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted),
      GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
-     GetBoolName(aIsSynthesized)));
+     GetBoolName(aIsSynthesized), tabParent.get()));
 
   if (!aCompositionEvent->mFlags.mIsTrusted ||
       aCompositionEvent->mFlags.mPropagationStopped) {
@@ -1159,7 +1163,8 @@ IMEStateManager::DispatchCompositionEvent(
        "adding new TextComposition to the array"));
     MOZ_ASSERT(aCompositionEvent->message == NS_COMPOSITION_START);
     composition =
-      new TextComposition(aPresContext, aEventTargetNode, aCompositionEvent);
+      new TextComposition(aPresContext, aEventTargetNode, tabParent,
+                          aCompositionEvent);
     sTextCompositions->AppendElement(composition);
   }
 #ifdef DEBUG
@@ -1203,7 +1208,7 @@ IMEStateManager::DispatchCompositionEvent(
 // static
 void
 IMEStateManager::OnCompositionEventDiscarded(
-                   const WidgetCompositionEvent* aCompositionEvent)
+                   WidgetCompositionEvent* aCompositionEvent)
 {
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.

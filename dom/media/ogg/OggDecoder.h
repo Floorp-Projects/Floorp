@@ -18,13 +18,13 @@ public:
     , mShutdownBit(false)
   {}
 
-  virtual MediaDecoder* Clone() {
+  virtual MediaDecoder* Clone() override {
     if (!IsOggEnabled()) {
       return nullptr;
     }
     return new OggDecoder();
   }
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  virtual MediaDecoderStateMachine* CreateStateMachine() override;
 
   // For yucky legacy reasons, the ogg decoder needs to do a cross-thread read
   // to check for shutdown while it hogs its own task queue. We don't want to

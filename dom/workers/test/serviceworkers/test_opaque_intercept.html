@@ -1,0 +1,86 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - Test service worker post message </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  function start() {
+    return navigator.serviceWorker.register("opaque_intercept_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+
+  function testOpaqueIntercept(swr) {
+    var p = new Promise(function(res, rej) {
+      var ready = false;
+      var scriptLoaded = false;
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          ok(!ready, "ready message should only be received once");
+          ok(!scriptLoaded, "ready message should be received before script loaded");
+          if (ready) {
+            res();
+            return;
+          }
+          ready = true;
+          iframe.contentWindow.postMessage("REFRESH", "*");
+        } else if (e.data === "SCRIPT_LOADED") {
+          ok(ready, "script loaded should be received after ready");
+          ok(!scriptLoaded, "script loaded message should be received only once");
+          scriptLoaded = true;
+          res();
+        }
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/refresher.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    start()
+      .then(testOpaqueIntercept)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.serviceWorkers.interception.opaque.enabled", true],
+    ["dom.caches.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
