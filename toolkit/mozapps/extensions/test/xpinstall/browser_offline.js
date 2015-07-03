@@ -55,7 +55,7 @@ function finish_test(count) {
   } catch (ex) {
   }
 
-  Services.perms.remove("example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   wait_for_online();
 }

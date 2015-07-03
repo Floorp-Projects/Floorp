@@ -46,7 +46,7 @@ function finish_test(count) {
                           .getService(Components.interfaces.nsIHttpAuthManager);
   authMgr.clearAll();
 
-  Services.perms.remove("example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   gBrowser.removeTab(gNewTab);
   Harness.finish();

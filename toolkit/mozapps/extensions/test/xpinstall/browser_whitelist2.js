@@ -24,7 +24,7 @@ function allow_blocked(installInfo) {
 }
 
 function finish_test() {
-  Services.perms.remove("example.org", "install");
+  Services.perms.remove(makeURI("http://example.org"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();
