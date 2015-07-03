@@ -86,8 +86,15 @@ if (typeof(repr) == 'undefined') {
             }
         } catch (e) {
         }
+        var ostring;
         try {
-            var ostring = (o + "");
+            if (o === 0) {
+                ostring = (1 / o > 0) ? "+0" : "-0";
+            } else if (typeof o === "string") {
+                ostring = JSON.stringify(o);
+            } else {
+                ostring = (o + "");
+            }
         } catch (e) {
             return "[" + typeof(o) + "]";
         }
