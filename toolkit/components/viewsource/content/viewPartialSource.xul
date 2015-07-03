@@ -39,7 +39,7 @@
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
-  <command id="cmd_print" oncommand="PrintUtils.print();"/>
+  <command id="cmd_print" oncommand="PrintUtils.printWindow(gBrowser.outerWindowID, gBrowser);"/>
   <command id="cmd_printpreview" oncommand="PrintUtils.printPreview(PrintPreviewListener);"/>
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
