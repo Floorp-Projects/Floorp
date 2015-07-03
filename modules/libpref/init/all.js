@@ -4620,11 +4620,11 @@ pref("ui.touch_activation.duration_ms", 10);
 // actions when the fifo is written to.  Disable this in general.
 pref("memory_info_dumper.watch_fifo.enabled", false);
 
-pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
-pref("captivedetect.canonicalContent", "success\n");
+#ifdef MOZ_CAPTIVEDETECT
 pref("captivedetect.maxWaitingTime", 5000);
 pref("captivedetect.pollingTime", 3000);
 pref("captivedetect.maxRetryCount", 5);
+#endif
 
 #ifdef RELEASE_BUILD
 pref("dom.forms.inputmode", false);
