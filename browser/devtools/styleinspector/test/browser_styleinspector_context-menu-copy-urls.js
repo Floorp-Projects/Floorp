@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
+/* Tests both Copy URL and Copy Data URL context menu items */
+
 const PROPERTIES_URL = "chrome://global/locale/devtools/styleinspector.properties";
 const TEST_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=";
 
@@ -36,20 +40,24 @@ function* startTest() {
   let ruleViewData = yield openRuleView();
 
   info("Test valid background image URL in rule view");
-  yield testCopyImageDataUrlToClipboard(ruleViewData, ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard(ruleViewData, "data-uri", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard(ruleViewData, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in rue view");
-  yield testCopyImageDataUrlToClipboard(ruleViewData, ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard(ruleViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard(ruleViewData, "url", ".invalid-background", PROPERTIES_URL);
 
   info("Opening computed view");
   let computedViewData = yield openComputedView();
 
   info("Test valid background image URL in computed view");
-  yield testCopyImageDataUrlToClipboard(computedViewData, ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard(computedViewData, "data-uri", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard(computedViewData, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in computed view");
-  yield testCopyImageDataUrlToClipboard(computedViewData, ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard(computedViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard(computedViewData, "url", ".invalid-background", PROPERTIES_URL);
 }
 
-function* testCopyImageDataUrlToClipboard({view, inspector}, selector, expected) {
+function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   info("Select node in inspector panel");
   yield selectNode(selector, inspector);
 
@@ -74,8 +82,13 @@ function* testCopyImageDataUrlToClipboard({view, inspector}, selector, expected)
   info("Context menu is displayed");
   ok(!view.menuitemCopyImageDataUrl.hidden, "\"Copy Image Data-URL\" menu entry is displayed");
 
-  info("Click Copy Data URI and wait for clipboard");
-  yield waitForClipboard(() => view.menuitemCopyImageDataUrl.click(), expected);
+  if (type == "data-uri") {
+    info("Click Copy Data URI and wait for clipboard");
+    yield waitForClipboard(() => view.menuitemCopyImageDataUrl.click(), expected);
+  } else {
+    info("Click Copy URL and wait for clipboard");
+    yield waitForClipboard(() => view.menuitemCopyUrl.click(), expected);
+  }
 
   info("Hide context menu");
   view._contextmenu.hidePopup();
