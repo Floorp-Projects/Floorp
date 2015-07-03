@@ -20,6 +20,9 @@
 #include "mozilla/layers/PCompositableParent.h"
 
 namespace mozilla {
+
+using namespace gfx;
+
 namespace layers {
 
 class Compositor;
@@ -104,7 +107,8 @@ CompositableHost::FromIPDLActor(PCompositableParent* aActor)
 }
 
 void
-CompositableHost::UseTextureHost(TextureHost* aTexture)
+CompositableHost::UseTextureHost(TextureHost* aTexture,
+                                 const IntRect& aPictureRect)
 {
   if (!aTexture) {
     return;

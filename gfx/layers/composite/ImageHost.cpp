@@ -29,7 +29,6 @@ class ISurfaceAllocator;
 
 ImageHost::ImageHost(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
-  , mHasPictureRect(false)
   , mLocked(false)
 {}
 
@@ -37,14 +36,16 @@ ImageHost::~ImageHost()
 {}
 
 void
-ImageHost::UseTextureHost(TextureHost* aTexture)
+ImageHost::UseTextureHost(TextureHost* aTexture,
+                          const nsIntRect& aPictureRect)
 {
-  CompositableHost::UseTextureHost(aTexture);
+  CompositableHost::UseTextureHost(aTexture, aPictureRect);
   mFrontBuffer = aTexture;
   if (mFrontBuffer) {
     mFrontBuffer->Updated();
     mFrontBuffer->PrepareTextureSource(mTextureSource);
   }
+  mPictureRect = aPictureRect;
 }
 
 void
@@ -59,8 +60,11 @@ ImageHost::RemoveTextureHost(TextureHost* aTexture)
 }
 
 TextureHost*
-ImageHost::GetAsTextureHost()
+ImageHost::GetAsTextureHost(IntRect* aPictureRect)
 {
+  if (aPictureRect) {
+    *aPictureRect = mPictureRect;
+  }
   return mFrontBuffer;
 }
 
@@ -112,14 +116,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
   }
 
   aEffectChain.mPrimaryEffect = effect;
-  IntSize textureSize = mTextureSource->GetSize();
-  gfx::Rect gfxPictureRect
-    = mHasPictureRect ? gfx::Rect(0, 0, mPictureRect.width, mPictureRect.height)
-                      : gfx::Rect(0, 0, textureSize.width, textureSize.height);
-
-  gfx::Rect pictureRect(0, 0,
-                        mPictureRect.width,
-                        mPictureRect.height);
+  gfx::Rect pictureRect(0, 0, mPictureRect.width, mPictureRect.height);
   BigImageIterator* it = mTextureSource->AsBigImageIterator();
   if (it) {
 
@@ -143,15 +140,11 @@ ImageHost::Composite(EffectChain& aEffectChain,
     do {
       IntRect tileRect = it->GetTileRect();
       gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
-      if (mHasPictureRect) {
-        rect = rect.Intersect(pictureRect);
-        effect->mTextureCoords = Rect(Float(rect.x - tileRect.x)/ tileRect.width,
-                                      Float(rect.y - tileRect.y) / tileRect.height,
-                                      Float(rect.width) / tileRect.width,
-                                      Float(rect.height) / tileRect.height);
-      } else {
-        effect->mTextureCoords = Rect(0, 0, 1, 1);
-      }
+      rect = rect.Intersect(pictureRect);
+      effect->mTextureCoords = Rect(Float(rect.x - tileRect.x) / tileRect.width,
+                                    Float(rect.y - tileRect.y) / tileRect.height,
+                                    Float(rect.width) / tileRect.width,
+                                    Float(rect.height) / tileRect.height);
       if (mFrontBuffer->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
         effect->mTextureCoords.y = effect->mTextureCoords.YMost();
         effect->mTextureCoords.height = -effect->mTextureCoords.height;
@@ -163,32 +156,24 @@ ImageHost::Composite(EffectChain& aEffectChain,
     } while (it->NextTile());
     it->EndBigImageIteration();
     // layer border
-    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
-                                     gfxPictureRect, aClipRect,
-                                     aTransform, mFlashCounter);
+    GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE, pictureRect,
+                                     aClipRect, aTransform, mFlashCounter);
   } else {
     IntSize textureSize = mTextureSource->GetSize();
-    gfx::Rect rect;
-    if (mHasPictureRect) {
-      effect->mTextureCoords = Rect(Float(mPictureRect.x) / textureSize.width,
-                                    Float(mPictureRect.y) / textureSize.height,
-                                    Float(mPictureRect.width) / textureSize.width,
-                                    Float(mPictureRect.height) / textureSize.height);
-      rect = pictureRect;
-    } else {
-      effect->mTextureCoords = Rect(0, 0, 1, 1);
-      rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
-    }
+    effect->mTextureCoords = Rect(Float(mPictureRect.x) / textureSize.width,
+                                  Float(mPictureRect.y) / textureSize.height,
+                                  Float(mPictureRect.width) / textureSize.width,
+                                  Float(mPictureRect.height) / textureSize.height);
 
     if (mFrontBuffer->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
       effect->mTextureCoords.y = effect->mTextureCoords.YMost();
       effect->mTextureCoords.height = -effect->mTextureCoords.height;
     }
 
-    GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
+    GetCompositor()->DrawQuad(pictureRect, aClipRect, aEffectChain,
                               aOpacity, aTransform);
     GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
-                                     rect, aClipRect,
+                                     pictureRect, aClipRect,
                                      aTransform, mFlashCounter);
   }
 }
@@ -274,14 +259,9 @@ ImageHost::Unlock()
 IntSize
 ImageHost::GetImageSize() const
 {
-  if (mHasPictureRect) {
+  if (mFrontBuffer) {
     return IntSize(mPictureRect.width, mPictureRect.height);
   }
-
-  if (mFrontBuffer) {
-    return mFrontBuffer->GetSize();
-  }
-
   return IntSize();
 }
 
@@ -305,7 +285,6 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
 #ifdef MOZ_WIDGET_GONK
 ImageHostOverlay::ImageHostOverlay(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
-  , mHasPictureRect(false)
 {
 }
 
@@ -334,13 +313,8 @@ ImageHostOverlay::Composite(EffectChain& aEffectChain,
   gfx::Rect rect;
   gfx::Rect clipRect(aClipRect.x, aClipRect.y,
                      aClipRect.width, aClipRect.height);
-  if (mHasPictureRect) {
-    rect.SetRect(mPictureRect.x, mPictureRect.y,
-                 mPictureRect.width, mPictureRect.height);
-  } else {
-    rect.SetRect(0, 0,
-                 mOverlay.size().width, mOverlay.size().height);
-  }
+  rect.SetRect(mPictureRect.x, mPictureRect.y,
+               mPictureRect.width, mPictureRect.height);
 
   mCompositor->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
   mCompositor->DrawDiagnostics(DiagnosticFlags::IMAGE | DiagnosticFlags::BIGIMAGE,
@@ -358,19 +332,17 @@ ImageHostOverlay::GetRenderState()
 }
 
 void
-ImageHostOverlay::UseOverlaySource(OverlaySource aOverlay)
+ImageHostOverlay::UseOverlaySource(OverlaySource aOverlay,
+                                   const nsIntRect& aPictureRect)
 {
   mOverlay = aOverlay;
+  mPictureRect = aPictureRect;
 }
 
 IntSize
 ImageHostOverlay::GetImageSize() const
 {
-  if (mHasPictureRect) {
-    return IntSize(mPictureRect.width, mPictureRect.height);
-  }
-
-  return IntSize();
+  return IntSize(mPictureRect.width, mPictureRect.height);
 }
 
 void

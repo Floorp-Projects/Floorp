@@ -68,6 +68,15 @@ bool ScheduleComposition(const T& op)
   return true;
 }
 
+#if defined(DEBUG) || defined(MOZ_WIDGET_GONK)
+static bool ValidatePictureRect(const mozilla::gfx::IntSize& aSize,
+                                const nsIntRect& aPictureRect)
+{
+  return nsIntRect(0, 0, aSize.width, aSize.height).Contains(aPictureRect) &&
+      !aPictureRect.IsEmpty();
+}
+#endif
+
 bool
 CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                                      EditReplyVector& replyv)
@@ -100,13 +109,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         OpContentBufferSwap(op.compositableParent(), nullptr, frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
-      break;
-    }
-    case CompositableOperation::TOpUpdatePictureRect: {
-      const OpUpdatePictureRect& op = aEdit.get_OpUpdatePictureRect();
-      CompositableHost* compositable = AsCompositable(op);
-      MOZ_ASSERT(compositable);
-      compositable->SetPictureRect(op.picture());
       break;
     }
     case CompositableOperation::TOpUseTiledLayerBuffer: {
@@ -172,7 +174,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
       MOZ_ASSERT(tex.get());
-      compositable->UseTextureHost(tex);
+      if (!ValidatePictureRect(tex->GetSize(), op.picture())) {
+        return false;
+      }
+      compositable->UseTextureHost(tex, op.picture());
 
       MaybeFence maybeFence = op.fence();
       if (maybeFence.type() == MaybeFence::TFenceHandle) {
@@ -209,7 +214,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpUseOverlaySource& op = aEdit.get_OpUseOverlaySource();
       CompositableHost* compositable = AsCompositable(op);
       MOZ_ASSERT(compositable->GetType() == CompositableType::IMAGE_OVERLAY, "Invalid operation!");
-      compositable->UseOverlaySource(op.overlay());
+      if (!ValidatePictureRect(op.overlay().size(), op.picture())) {
+        return false;
+      }
+      compositable->UseOverlaySource(op.overlay(), op.picture());
       break;
     }
 #endif

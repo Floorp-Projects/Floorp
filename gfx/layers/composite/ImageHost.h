@@ -51,19 +51,14 @@ public:
                          const gfx::Rect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
 
-  virtual void UseTextureHost(TextureHost* aTexture) override;
+  virtual void UseTextureHost(TextureHost* aTexture,
+                              const nsIntRect& aPictureRect) override;
 
   virtual void RemoveTextureHost(TextureHost* aTexture) override;
 
-  virtual TextureHost* GetAsTextureHost() override;
+  virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual void SetPictureRect(const gfx::IntRect& aPictureRect) override
-  {
-    mPictureRect = aPictureRect;
-    mHasPictureRect = true;
-  }
 
   gfx::IntSize GetImageSize() const override;
 
@@ -88,7 +83,6 @@ protected:
   CompositableTextureHostRef mFrontBuffer;
   CompositableTextureSourceRef mTextureSource;
   gfx::IntRect mPictureRect;
-  bool mHasPictureRect;
   bool mLocked;
 };
 
@@ -111,17 +105,12 @@ public:
                          const gfx::Rect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
   virtual LayerRenderState GetRenderState() override;
-  virtual void UseOverlaySource(OverlaySource aOverlay) override;
+  virtual void UseOverlaySource(OverlaySource aOverlay,
+                                const gfx::IntRect& aPictureRect) override;
   virtual gfx::IntSize GetImageSize() const override;
-  virtual void SetPictureRect(const nsIntRect& aPictureRect) override
-  {
-    mPictureRect = aPictureRect;
-    mHasPictureRect = true;
-  }
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 protected:
   gfx::IntRect mPictureRect;
-  bool mHasPictureRect;
   OverlaySource mOverlay;
 };
 
