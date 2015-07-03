@@ -1,0 +1,31 @@
+{
+    "work_dir": ".",
+    "log_name": "multilocale",
+    "objdir": "obj-firefox",
+    "locales_file": "build/configs/mozilla/l10n-changesets_mobile-release.json",
+    "locales_platform": "android-multilocale",
+    "locales_dir": "mobile/android/locales",
+    "ignore_locales": ["en-US", "multi"],
+    "repos": [{
+        "repo": "https://hg.mozilla.org/%(user_repo_override)s/mozilla-release",
+        "dest": "build"
+    },{
+        "repo": "https://hg.mozilla.org/%(user_repo_override)s/buildbot-configs",
+        "dest": "build/configs"
+    },{
+        "repo": "https://hg.mozilla.org/%(user_repo_override)s/tools",
+        "dest": "tools"
+    },{
+        "repo": "https://hg.mozilla.org/%(user_repo_override)s/compare-locales",
+        "tag": "RELEASE_AUTOMATION"
+    }],
+    "l10n_repos": [{
+        "repo": "https://hg.mozilla.org/%(user_repo_override)s/buildbot-configs",
+        "dest": "build/configs"
+    }],
+    "hg_l10n_base": "https://hg.mozilla.org/%(user_repo_override)s",
+    "required_config_vars": ["tag_override", "user_repo_override"],
+    "l10n_dir": "mozilla-release",
+    "merge_locales": true,
+    "mozilla_dir": "build"
+}

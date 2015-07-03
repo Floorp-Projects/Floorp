@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+cd $B2G_SOURCE
+exec ./build.sh -j3 MOZCONFIG_PATH=$MOZCONFIG_PATH gecko
