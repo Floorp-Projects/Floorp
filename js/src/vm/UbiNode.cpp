@@ -33,6 +33,7 @@
 
 using mozilla::Some;
 using mozilla::UniquePtr;
+using JS::DispatchTraceKindTyped;
 using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
@@ -67,7 +68,7 @@ struct Node::ConstructFunctor : public js::BoolDefaultAdaptor<Value, false> {
 
 Node::Node(const JS::GCCellPtr &thing)
 {
-    js::gc::CallTyped(ConstructFunctor(), thing.asCell(), thing.kind(), this);
+    DispatchTraceKindTyped(ConstructFunctor(), thing.asCell(), thing.kind(), this);
 }
 
 Node::Node(HandleValue value)
@@ -117,9 +118,9 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
 
         // Don't trace permanent atoms and well-known symbols that are owned by
         // a parent JSRuntime.
-        if (thing.isString() && thing.toString()->isPermanentAtom())
+        if (thing.is<JSString>() && thing.to<JSString>().isPermanentAtom())
             return;
-        if (thing.isSymbol() && thing.toSymbol()->isWellKnownSymbol())
+        if (thing.is<JS::Symbol>() && thing.to<JS::Symbol>().isWellKnownSymbol())
             return;
 
         char16_t* name16 = nullptr;
@@ -204,7 +205,7 @@ TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
     if (!range)
         return nullptr;
 
-    if (!range->init(cx, ptr, ::js::gc::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!range->init(cx, ptr, JS::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
     return UniquePtr<EdgeRange>(range.release());
