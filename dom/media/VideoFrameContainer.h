@@ -77,13 +77,6 @@ protected:
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
   gfxIntSize mIntrinsicSize;
-  // The time at which the current video frame should have been painted.
-  // Access protected by mVideoUpdateLock.
-  TimeStamp mPaintTarget;
-  // The delay between the last video frame being presented and it being
-  // painted. This is time elapsed after mPaintTarget until the most recently
-  // painted frame appeared on screen.
-  TimeDuration mPaintDelay;
   // True when the intrinsic size has been changed by SetCurrentFrame() since
   // the last call to Invalidate().
   // The next call to Invalidate() will recalculate

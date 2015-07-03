@@ -437,14 +437,17 @@ public:
   }
 
   /**
-   * Returns the time at which the currently contained image was first
-   * painted.  This is reset every time a new image is set as the current
-   * image.  Note this may return a null timestamp if the current image
-   * has not yet been painted.  Can be called from any thread.
+   * Returns the delay between the last composited image's presentation
+   * timestamp and when it was first composited. It's possible for the delay
+   * to be negative if the first image in the list passed to SetCurrentImages
+   * has a presentation timestamp greater than "now".
+   * Returns 0 if the composited image had a null timestamp, or if no
+   * image has been composited yet.
    */
-  TimeStamp GetPaintTime() {
+  TimeDuration GetPaintDelay()
+  {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return mPaintTime;
+    return mPaintDelay;
   }
 
   /**
@@ -480,7 +483,6 @@ public:
   }
 
   PImageContainerChild* GetPImageContainerChild();
-
   static void NotifyComposite(const ImageCompositeNotification& aNotification);
 
 private:
@@ -497,9 +499,7 @@ private:
   // calling this function!
   void EnsureActiveImage();
 
-  // ReentrantMonitor to protect thread safe access to the "current
-  // image", and any other state which is shared between threads.
-  ReentrantMonitor mReentrantMonitor;
+  void NotifyCompositeInternal(const ImageCompositeNotification& aNotification);
 
   // Performs necessary housekeeping to ensure the painted frame statistics
   // are accurate. Must be called by SetCurrentImage() implementations with
@@ -510,7 +510,9 @@ private:
     mPaintTime = TimeStamp();
   }
 
-  void NotifyCompositeInternal(const ImageCompositeNotification& aNotification) {}
+  // ReentrantMonitor to protect thread safe access to the "current
+  // image", and any other state which is shared between threads.
+  ReentrantMonitor mReentrantMonitor;
 
   nsRefPtr<Image> mActiveImage;
   // Updates every time mActiveImage changes
@@ -524,6 +526,9 @@ private:
   // Time stamp at which the current image was first painted.  It's up to the
   // ImageContainer implementation to ensure accesses to this are threadsafe.
   TimeStamp mPaintTime;
+
+  // See GetPaintDelay. Accessed only with mReentrantMonitor held.
+  TimeDuration mPaintDelay;
 
   // Denotes whether the previous image was painted.
   bool mPreviousImagePainted;
