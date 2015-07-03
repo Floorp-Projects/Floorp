@@ -12,6 +12,7 @@
 #include "gfxPoint.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 
@@ -77,6 +78,9 @@ protected:
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
   gfxIntSize mIntrinsicSize;
+  // For SetCurrentFrame callers we maintain our own mFrameID which is auto-
+  // incremented at every SetCurrentFrame.
+  ImageContainer::FrameID mFrameID;
   // True when the intrinsic size has been changed by SetCurrentFrame() since
   // the last call to Invalidate().
   // The next call to Invalidate() will recalculate

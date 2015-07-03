@@ -303,10 +303,13 @@ public:
   B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
 
   struct NonOwningImage {
-    NonOwningImage(Image* aImage, TimeStamp aTimeStamp)
-      : mImage(aImage), mTimeStamp(aTimeStamp) {}
+    explicit NonOwningImage(Image* aImage = nullptr,
+                            TimeStamp aTimeStamp = TimeStamp(),
+                            FrameID aFrameID = 0)
+      : mImage(aImage), mTimeStamp(aTimeStamp), mFrameID(aFrameID) {}
     Image* mImage;
     TimeStamp mTimeStamp;
+    FrameID mFrameID;
   };
   /**
    * Set aImages as the list of timestamped to display. The Images must have
@@ -316,6 +319,10 @@ public:
    * aImages must be non-empty. The first timestamp in the list may be
    * null but the others must not be, and the timestamps must increase.
    * Every element of aImages must have non-null mImage.
+   * mFrameID can be zero, in which case you won't get meaningful
+   * painted/dropped frame counts. Otherwise you should use a unique and
+   * increasing ID for each decoded and submitted frame (but it's OK to
+   * pass the same frame to SetCurrentImages).
    * 
    * The Image data must not be modified after this method is called!
    * Note that this must not be called if ENABLE_ASYNC has not been set.
@@ -354,8 +361,7 @@ public:
    * The Image data must not be modified after this method is called!
    * Note that this must not be called if ENABLE_ASYNC been set.
    *
-   * Implementations must call CurrentImageChanged() while holding
-   * mReentrantMonitor.
+   * You won't get meaningful painted/dropped counts when using this method.
    */
   void SetCurrentImageInTransaction(Image* aImage);
 
@@ -475,7 +481,8 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   B2G_ACL_EXPORT ~ImageContainer();
 
-  void SetCurrentImageInternal(Image* aImage, const TimeStamp& aTimeStamp);
+  void SetCurrentImageInternal(Image* aImage, const TimeStamp& aTimeStamp,
+                               FrameID aFrameID);
 
   // This is called to ensure we have an active image, this may not be true
   // when we're storing image information in a RemoteImageData structure.
@@ -506,6 +513,7 @@ private:
   // See GetDroppedImageCount. Accessed only with mReentrantMonitor held.
   uint32_t mDroppedImageCount;
 
+  FrameID mCurrentImageFrameID;
   bool mCurrentImageComposited;
 
   // This is the image factory used by this container, layer managers using
