@@ -53,7 +53,7 @@ DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
     template type* DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
-FOR_EACH_GC_LAYOUT(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
+JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
 template <typename S>
@@ -193,7 +193,7 @@ js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind)
 {
     MOZ_ASSERT(thing);
     TraceChildrenFunctor f;
-    CallTyped(f, kind, trc, thing);
+    DispatchTraceKindTyped(f, kind, trc, thing);
 }
 
 JS_PUBLIC_API(void)
@@ -331,23 +331,23 @@ struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer
 void
 ObjectGroupCycleCollectorTracer::onChild(const JS::GCCellPtr& thing)
 {
-    if (thing.isObject() || thing.isScript()) {
+    if (thing.is<JSObject>() || thing.is<JSScript>()) {
         // Invoke the inner cycle collector callback on this child. It will not
         // recurse back into TraceChildren.
         innerTracer->onChild(thing);
         return;
     }
 
-    if (thing.isObjectGroup()) {
+    if (thing.is<ObjectGroup>()) {
         // If this group is required to be in an ObjectGroup chain, trace it
         // via the provided worklist rather than continuing to recurse.
-        ObjectGroup* group = static_cast<ObjectGroup*>(thing.asCell());
-        if (group->maybeUnboxedLayout()) {
+        ObjectGroup& group = thing.to<ObjectGroup>();
+        if (group.maybeUnboxedLayout()) {
             for (size_t i = 0; i < seen.length(); i++) {
-                if (seen[i] == group)
+                if (seen[i] == &group)
                     return;
             }
-            if (seen.append(group) && worklist.append(group)) {
+            if (seen.append(&group) && worklist.append(&group)) {
                 return;
             } else {
                 // If append fails, keep tracing normally. The worst that will

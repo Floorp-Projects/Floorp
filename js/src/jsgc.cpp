@@ -3721,7 +3721,7 @@ CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing)
 {
     TenuredCell* tenured = TenuredCell::fromPointer(thing.asCell());
 
-    JSCompartment* comp = CallTyped(MaybeCompartmentFunctor(), tenured, thing.kind());
+    JSCompartment* comp = DispatchTraceKindTyped(MaybeCompartmentFunctor(), tenured, thing.kind());
     if (comp && compartment) {
         MOZ_ASSERT(comp == compartment || runtime()->isAtomsCompartment(comp) ||
                    (srcKind == JS::TraceKind::Object &&
@@ -3744,7 +3744,8 @@ GCRuntime::checkForCompartmentMismatches()
             for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(thingKind);
-                trc.compartment = CallTyped(MaybeCompartmentFunctor(), trc.src, trc.srcKind);
+                trc.compartment = DispatchTraceKindTyped(MaybeCompartmentFunctor(),
+                                                         trc.src, trc.srcKind);
                 JS_TraceChildren(&trc, trc.src, trc.srcKind);
             }
         }
@@ -6972,7 +6973,7 @@ JS::GCTraceKindToAscii(JS::TraceKind kind)
 {
     switch(kind) {
 #define MAP_NAME(name, _0, _1) case JS::TraceKind::name: return #name;
-FOR_EACH_GC_LAYOUT(MAP_NAME);
+JS_FOR_EACH_TRACEKIND(MAP_NAME);
 #undef MAP_NAME
       default: return "Invalid";
     }
@@ -7002,8 +7003,8 @@ JS::GCCellPtr::outOfLineKind() const
 bool
 JS::GCCellPtr::mayBeOwnedByOtherRuntime() const
 {
-    return (isString() && toString()->isPermanentAtom()) ||
-           (isSymbol() && toSymbol()->isWellKnownSymbol());
+    return (is<JSString>() && to<JSString>().isPermanentAtom()) ||
+           (is<Symbol>() && to<Symbol>().isWellKnownSymbol());
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -7196,7 +7197,7 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
     if (!thing)
         return;
 
-    CallTyped(IncrementalReferenceBarrierFunctor(), thing.asCell(), thing.kind());
+    DispatchTraceKindTyped(IncrementalReferenceBarrierFunctor(), thing.asCell(), thing.kind());
 }
 
 JS_PUBLIC_API(void)

@@ -163,12 +163,10 @@ class JS_FRIEND_API(GCCellPtr)
     MOZ_IMPLICIT GCCellPtr(decltype(nullptr)) : ptr(checkedCast(nullptr, JS::TraceKind::Null)) {}
 
     // Construction from an explicit type.
-    explicit GCCellPtr(JSObject* obj) : ptr(checkedCast(obj, JS::TraceKind::Object)) { }
-    explicit GCCellPtr(JSFunction* fun) : ptr(checkedCast(fun, JS::TraceKind::Object)) { }
-    explicit GCCellPtr(JSString* str) : ptr(checkedCast(str, JS::TraceKind::String)) { }
+    template <typename T>
+    explicit GCCellPtr(T* ptr) : ptr(checkedCast(ptr, JS::MapTypeToTraceKind<T>::kind)) { }
+    explicit GCCellPtr(JSFunction* ptr) : ptr(checkedCast(ptr, JS::TraceKind::Object)) { }
     explicit GCCellPtr(JSFlatString* str) : ptr(checkedCast(str, JS::TraceKind::String)) { }
-    explicit GCCellPtr(JS::Symbol* sym) : ptr(checkedCast(sym, JS::TraceKind::Symbol)) { }
-    explicit GCCellPtr(JSScript* script) : ptr(checkedCast(script, JS::TraceKind::Script)) { }
     explicit GCCellPtr(const Value& v);
 
     JS::TraceKind kind() const {
@@ -185,31 +183,22 @@ class JS_FRIEND_API(GCCellPtr)
     }
 
     // Simplify checks to the kind.
-    bool isObject() const { return kind() == JS::TraceKind::Object; }
-    bool isScript() const { return kind() == JS::TraceKind::Script; }
-    bool isString() const { return kind() == JS::TraceKind::String; }
-    bool isSymbol() const { return kind() == JS::TraceKind::Symbol; }
-    bool isShape() const { return kind() == JS::TraceKind::Shape; }
-    bool isObjectGroup() const { return kind() == JS::TraceKind::ObjectGroup; }
+    template <typename T>
+    bool is() const { return kind() == JS::MapTypeToTraceKind<T>::kind; }
 
     // Conversions to more specific types must match the kind. Access to
     // further refined types is not allowed directly from a GCCellPtr.
-    JSObject* toObject() const {
-        MOZ_ASSERT(kind() == JS::TraceKind::Object);
-        return reinterpret_cast<JSObject*>(asCell());
+    template <typename T>
+    T& to() const {
+        MOZ_ASSERT(kind() == JS::MapTypeToTraceKind<T>::kind);
+        // We can't use static_cast here, because the fact that JSObject
+        // inherits from js::gc::Cell is not part of the public API.
+        return *reinterpret_cast<T*>(asCell());
     }
-    JSString* toString() const {
-        MOZ_ASSERT(kind() == JS::TraceKind::String);
-        return reinterpret_cast<JSString*>(asCell());
-    }
-    JSScript* toScript() const {
-        MOZ_ASSERT(kind() == JS::TraceKind::Script);
-        return reinterpret_cast<JSScript*>(asCell());
-    }
-    Symbol* toSymbol() const {
-        MOZ_ASSERT(kind() == JS::TraceKind::Symbol);
-        return reinterpret_cast<Symbol*>(asCell());
-    }
+
+    // Return a pointer to the cell this |GCCellPtr| refers to, or |nullptr|.
+    // (It would be more symmetrical with |to| for this to return a |Cell&|, but
+    // the result can be |nullptr|, and null references are undefined behavior.)
     js::gc::Cell* asCell() const {
         return reinterpret_cast<js::gc::Cell*>(ptr & ~OutOfLineTraceKindMask);
     }
