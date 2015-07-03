@@ -135,8 +135,6 @@ class MessageChannel : HasResultCodes
         return !mCxxStackFrames.empty();
     }
 
-    void CancelCurrentTransaction();
-
     /**
      * This function is used by hang annotation code to determine which IPDL
      * actor is highest in the call stack at the time of the hang. It should
@@ -244,7 +242,7 @@ class MessageChannel : HasResultCodes
 
     // DispatchMessage will route to one of these functions depending on the
     // protocol type of the message.
-    void DispatchSyncMessage(const Message &aMsg, Message*& aReply);
+    void DispatchSyncMessage(const Message &aMsg);
     void DispatchUrgentMessage(const Message &aMsg);
     void DispatchAsyncMessage(const Message &aMsg);
     void DispatchRPCMessage(const Message &aMsg);
@@ -266,8 +264,6 @@ class MessageChannel : HasResultCodes
     bool WaitResponse(bool aWaitTimedOut);
 
     bool ShouldContinueFromTimeout();
-
-    void CancelCurrentTransactionInternal();
 
     // The "remote view of stack depth" can be different than the
     // actual stack depth when there are out-of-turn replies.  When we
@@ -405,7 +401,6 @@ class MessageChannel : HasResultCodes
     // Tell the IO thread to close the channel and wait for it to ACK.
     void SynchronouslyClose();
 
-    bool WasTransactionCanceled(int transaction, int prio);
     bool ShouldDeferMessage(const Message& aMsg);
     void OnMessageReceivedFromLink(const Message& aMsg);
     void OnChannelErrorFromLink();
@@ -551,21 +546,17 @@ class MessageChannel : HasResultCodes
 
     class AutoEnterTransaction
     {
-     public:
+      public:
        explicit AutoEnterTransaction(MessageChannel *aChan, int32_t aMsgSeqno)
         : mChan(aChan),
-          mNewTransaction(0),
           mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
-           if (mChan->mCurrentTransaction == 0) {
-               mNewTransaction = aMsgSeqno;
+           if (mChan->mCurrentTransaction == 0)
                mChan->mCurrentTransaction = aMsgSeqno;
-           }
        }
        explicit AutoEnterTransaction(MessageChannel *aChan, const Message &aMessage)
         : mChan(aChan),
-          mNewTransaction(aMessage.transaction_id()),
           mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();
@@ -579,14 +570,12 @@ class MessageChannel : HasResultCodes
        }
        ~AutoEnterTransaction() {
            mChan->mMonitor->AssertCurrentThreadOwns();
-           if (mChan->mCurrentTransaction == mNewTransaction) {
-               mChan->mCurrentTransaction = mOldTransaction;
-           }
+           mChan->mCurrentTransaction = mOldTransaction;
        }
 
       private:
        MessageChannel *mChan;
-       int32_t mNewTransaction, mOldTransaction;
+       int32_t mOldTransaction;
     };
 
     // If a sync message times out, we store its sequence number here. Any
@@ -732,8 +721,8 @@ class MessageChannel : HasResultCodes
     int32_t mPeerPid;
 };
 
-void
-CancelCPOWs();
+bool
+ParentProcessIsBlocked();
 
 } // namespace ipc
 } // namespace mozilla
