@@ -8,6 +8,8 @@
 // Tests that the Web Console limits the number of lines displayed according to
 // the user's preferences.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,<p>test for bug 642108.";
 const LOG_LIMIT = 20;
 
@@ -55,7 +57,8 @@ function test() {
         severity: SEVERITY_WARNING,
       },
       {
-        text: "css log 24", // LOG_LIMIT + 5
+        // LOG_LIMIT + 5
+        text: "css log 24",
         category: CATEGORY_CSS,
         severity: SEVERITY_WARNING,
       }],
