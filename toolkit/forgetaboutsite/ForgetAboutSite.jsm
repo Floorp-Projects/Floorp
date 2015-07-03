@@ -133,7 +133,7 @@ this.ForgetAboutSite = {
     while (enumerator.hasMoreElements()) {
       let perm = enumerator.getNext().QueryInterface(Ci.nsIPermission);
       if (hasRootDomain(perm.host, aDomain))
-        pm.removePermission(perm);
+        pm.remove(perm.host, perm.type);
     }
 
     // Offline Storages

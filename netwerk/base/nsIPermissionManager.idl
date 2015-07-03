@@ -37,7 +37,7 @@ interface nsIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(0d1b8c65-0359-4a8c-b94d-4d3643b23e61)]
+[scriptable, uuid(93a156f8-bcc8-4568-a214-389b073332dd)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -106,16 +106,17 @@ interface nsIPermissionManager : nsISupports
                         [optional] in int64_t expireTime);
 
   /**
-   * Remove permission information for a given URI and permission type. This will
-   * remove the permission for the entire host described by the uri, acting as the
-   * opposite operation to the add() method.
+   * Remove permission information for a given host string and permission type.
+   * The host string represents the exact entry in the permission list (such as
+   * obtained from the enumerator), not a URI which that permission might apply
+   * to.
    *
-   * @param uri    the uri to remove the permission for
+   * @param host   the host to remove the permission for
    * @param type   a case-sensitive ASCII string, identifying the consumer. 
    *               The type must have been previously registered using the
    *               add() method.
    */
-  void remove(in nsIURI uri,
+  void remove(in AUTF8String host,
               in string type);
 
   /**
@@ -125,13 +126,6 @@ interface nsIPermissionManager : nsISupports
    * database.
    */
   void removeFromPrincipal(in nsIPrincipal principal, in string type);
-
-  /**
-   * Remove the given permission from the permission manager.
-   *
-   * @param perm   a permission obtained from the permission manager.
-   */
-  void removePermission(in nsIPermission perm);
 
   /**
    * Clear permission information for all websites.

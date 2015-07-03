@@ -177,7 +177,7 @@ function clearAllPermissionsByPrefix(aPrefix) {
   while (perms.hasMoreElements()) {
     let perm = perms.getNext();
     if (perm.type.startsWith(aPrefix)) {
-      Services.perms.removePermission(perm);
+      Services.perms.remove(perm.host, perm.type);
     }
   }
 }

@@ -31,7 +31,7 @@ function download_failed(install) {
 function finish_test(count) {
   is(count, 0, "0 Add-ons should have been successfully installed");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
   Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
 
   gBrowser.removeCurrentTab();

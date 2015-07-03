@@ -368,8 +368,7 @@ var gPermissionManager = {
     }
 
     for (let p of this._permissionsToDelete.values()) {
-      let uri = Services.io.newURI("http://" + p.host, null, null);
-      Services.perms.remove(uri, p.type);
+      Services.perms.remove(p.host, p.type);
     }
 
     window.close();

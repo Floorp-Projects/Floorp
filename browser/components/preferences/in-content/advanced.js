@@ -492,7 +492,7 @@ var gAdvancedPane = {
   },
 
   // XXX: duplicated in browser.js
-  _getOfflineAppUsage: function (perm, groups)
+  _getOfflineAppUsage: function (host, groups)
   {
     var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
                        getService(Components.interfaces.nsIApplicationCacheService);
@@ -502,7 +502,7 @@ var gAdvancedPane = {
     var usage = 0;
     for (var i = 0; i < groups.length; i++) {
       var uri = ios.newURI(groups[i], null, null);
-      if (uri.asciiHost == perm.host) {
+      if (uri.asciiHost == host) {
         var cache = cacheService.getActiveCache(groups[i]);
         usage += cache.usage;
       }
@@ -546,7 +546,7 @@ var gAdvancedPane = {
         row.className = "offlineapp";
         row.setAttribute("host", perm.host);
         var converted = DownloadUtils.
-                        convertByteUnits(this._getOfflineAppUsage(perm, groups));
+                        convertByteUnits(this._getOfflineAppUsage(perm.host, groups));
         row.setAttribute("usage",
                          bundle.getFormattedString("offlineAppUsage",
                                                    converted));
@@ -594,7 +594,7 @@ var gAdvancedPane = {
                 getService(Components.interfaces.nsIIOService);
       var groups = cacheService.getGroups();
       for (var i = 0; i < groups.length; i++) {
-          let uri = ios.newURI(groups[i], null, null);
+          var uri = ios.newURI(groups[i], null, null);
           if (uri.asciiHost == host) {
               var cache = cacheService.getActiveCache(groups[i]);
               cache.discard();
@@ -605,15 +605,10 @@ var gAdvancedPane = {
     // remove the permission
     var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                        .getService(Components.interfaces.nsIPermissionManager);
-    let uri;
-    try {
-      // file:// URIs are stored with their scheme. We try to parse them first, as
-      // URIs like http://file:///foo/bar/baz.html will parse as HTTP URIs.
-      uri = ios.newURI(host, null, null);
-    } catch (e) {
-      uri = ios.newURI("http://" + host, null, null);
-    }
-    pm.remove(uri, "offline-app");
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
 
     list.removeChild(item);
     gAdvancedPane.offlineAppSelected();

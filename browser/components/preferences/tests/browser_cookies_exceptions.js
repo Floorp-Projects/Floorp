@@ -64,8 +64,7 @@ var testRunner = {
         observances: [{ type: "popup", host: "test.com", data: "added",
                         capability: Ci.nsIPermissionManager.DENY_ACTION }],
         cleanUp: function(params) {
-          let uri = params.ioService.newURI("http://test.com", null, null);
-          params.pm.remove(uri, "popup");
+          params.pm.remove("test.com", "popup");
         },
       },
     ],

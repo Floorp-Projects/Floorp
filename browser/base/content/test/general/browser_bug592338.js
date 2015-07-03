@@ -37,7 +37,7 @@ function test_install_http() {
 
       gBrowser.removeTab(gBrowser.selectedTab);
 
-      pm.remove(makeURI("http://example.org/"), "install");
+      pm.remove("example.org", "install");
 
       runNextTest();
     });
@@ -66,7 +66,7 @@ function test_install_lwtheme() {
       LightweightThemeManager.currentTheme = null;
       gBrowser.removeTab(gBrowser.selectedTab);
 
-      Services.perms.remove(makeURI("http://example.com/"), "install");
+      Services.perms.remove("example.com", "install");
 
       runNextTest();
     });
@@ -106,7 +106,7 @@ function test_lwtheme_switch_theme() {
 
           gBrowser.removeTab(gBrowser.selectedTab);
 
-          Services.perms.remove(makeURI("http://example.com"), "install");
+          Services.perms.remove("example.com", "install");
 
           runNextTest();
         });

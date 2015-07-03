@@ -54,9 +54,9 @@ function setup(aCallback) {
 function cleanUp() {
   for (let type in TEST_PERMS) {
     if (type != "password") {
-      Services.perms.remove(TEST_URI_1, type);
-      Services.perms.remove(TEST_URI_2, type);
-      Services.perms.remove(TEST_URI_3, type);
+      Services.perms.remove(TEST_URI_1.host, type);
+      Services.perms.remove(TEST_URI_2.host, type);
+      Services.perms.remove(TEST_URI_3.host, type);
     }
   }
 }

@@ -2419,7 +2419,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Remove the current host from the 'trackingprotection' consumer
           // of the permission manager. This effectively removes this host
           // from the tracking protection allowlist.
-          Services.perms.remove(gBrowser.selectedBrowser.currentURI,
+          Services.perms.remove(gBrowser.selectedBrowser.currentURI.host,
             "trackingprotection");
           BrowserReload();
         ]]></body>

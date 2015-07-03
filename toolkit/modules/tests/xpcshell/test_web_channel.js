@@ -85,7 +85,7 @@ add_task(function test_web_channel_listen_permission() {
   return new Promise((resolve, reject) => {
     // add a new permission
     Services.perms.add(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME, Services.perms.ALLOW_ACTION);
-    do_register_cleanup(() => Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME));
+    do_register_cleanup(() => Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN.spec, TEST_PERMISSION_NAME));
     let channel = new WebChannel(VALID_WEB_CHANNEL_ID, TEST_PERMISSION_NAME, {
       broker: MockWebChannelBroker
     });
