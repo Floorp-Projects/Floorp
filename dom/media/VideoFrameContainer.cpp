@@ -20,6 +20,7 @@ VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
                                          already_AddRefed<ImageContainer> aContainer)
   : mElement(aElement),
     mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
+    mFrameID(0),
     mIntrinsicSizeChanged(false), mImageSizeChanged(false)
 {
   NS_ASSERTION(aElement, "aElement must not be null");
@@ -51,10 +52,12 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
   mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
+  ++mFrameID;
+
   if (aImage) {
     nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(
-        ImageContainer::NonOwningImage(aImage, aTargetTime));
+        ImageContainer::NonOwningImage(aImage, aTargetTime, mFrameID));
     mImageContainer->SetCurrentImages(imageList);
   } else {
     mImageContainer->ClearAllImages();
