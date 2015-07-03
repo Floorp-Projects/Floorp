@@ -46,7 +46,7 @@ function finish_test(count) {
 
   Services.ww = gWindowWatcher;
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
 
   Harness.finish();
 }

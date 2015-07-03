@@ -37,7 +37,7 @@ function finish_test(count) {
 
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

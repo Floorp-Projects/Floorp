@@ -81,8 +81,8 @@ function test() {
     Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
     Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
 
-    Services.perms.remove(makeURI("http://example.com"), "install");
-    Services.perms.remove(makeURI("http://example.org"), "install");
+    Services.perms.remove("example.com", "install");
+    Services.perms.remove("example.org", "install");
 
     while (gConcurrentTabs.length) {
       gBrowser.removeTab(gConcurrentTabs.shift());

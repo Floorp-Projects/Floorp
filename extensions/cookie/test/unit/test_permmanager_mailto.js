@@ -16,14 +16,14 @@ function run_test() {
   do_check_true(permission_exists(kTestAddr, kType, kCapability));
 
   // remove the permission, and make sure it was removed
-  Services.perms.remove(uri, kType);
+  Services.perms.remove(kTestAddr, kType);
   do_check_false(permission_exists(kTestAddr, kType, kCapability));
 
   uri = Services.io.newURI("mailto:" + kTestAddr, null, null);
   Services.perms.add(uri, kType, kCapability);
   do_check_true(permission_exists(kTestAddr, kType, kCapability));
 
-  Services.perms.remove(uri, kType);
+  Services.perms.remove(kTestAddr, kType);
   do_check_false(permission_exists(kTestAddr, kType, kCapability));
 }
 

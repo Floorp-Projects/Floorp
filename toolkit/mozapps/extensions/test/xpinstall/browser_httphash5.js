@@ -32,7 +32,7 @@ function install_ended(install, addon) {
 function finish_test(count) {
   is(count, 1, "1 Add-on should have been successfully installed");
 
-  Services.perms.remove(makeURI("http://example.com"), "install");
+  Services.perms.remove("example.com", "install");
   Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
 
   gBrowser.removeCurrentTab();

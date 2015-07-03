@@ -749,13 +749,14 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
     callback: function () {
       let uri = Services.io.newURI(aState.documentURI, null, null);
+      let host = getHost(uri);
       let perms = Services.perms;
       if (aState.camera &&
           perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
-        perms.remove(uri, "camera");
+        perms.remove(host, "camera");
       if (aState.microphone &&
           perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
-        perms.remove(uri, "microphone");
+        perms.remove(host, "microphone");
 
       let mm = notification.browser.messageManager;
       mm.sendAsyncMessage("webrtc:StopSharing", windowId);

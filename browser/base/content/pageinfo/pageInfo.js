@@ -862,7 +862,7 @@ function onBlockImage()
   if (checkbox.checked)
     permissionManager.add(uri, "image", nsIPermissionManager.DENY_ACTION);
   else
-    permissionManager.remove(uri, "image");
+    permissionManager.remove(uri.host, "image");
 }
 
 function onImageSelect()
