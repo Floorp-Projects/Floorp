@@ -392,7 +392,7 @@ nsBrowserContentHandler.prototype = {
       } else try {
         var uri = resolveURIInternal(cmdLine, chromeParam);
         let isLocal = (uri) => {
-          let localSchemes = new Set("chrome", "file", "resource");
+          let localSchemes = new Set(["chrome", "file", "resource"]);
           if (uri instanceof Components.interfaces.nsINestedURI) {
             uri = uri.QueryInterface(Components.interfaces.nsINestedURI).innerMostURI;
           }
