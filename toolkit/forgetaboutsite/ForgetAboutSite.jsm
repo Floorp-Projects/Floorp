@@ -160,8 +160,10 @@ this.ForgetAboutSite = {
                                caUtils);
     let httpURI = caUtils.makeURI("http://" + aDomain);
     let httpsURI = caUtils.makeURI("https://" + aDomain);
-    qm.clearStoragesForURI(httpURI);
-    qm.clearStoragesForURI(httpsURI);
+    let httpPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {});
+    let httpsPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpsURI, {});
+    qm.clearStoragesForPrincipal(httpPrincipal);
+    qm.clearStoragesForPrincipal(httpsPrincipal);
 
     function onContentPrefsRemovalFinished() {
       // Everybody else (including extensions)

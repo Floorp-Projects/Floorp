@@ -92,7 +92,7 @@ function testSteps()
 
   let usageBeforeMaintenance;
 
-  quotaManager.getUsageForURI(uri, (url, usage) => {
+  quotaManager.getUsageForPrincipal(principal, (principal, usage) => {
     ok(usage > 0, "Usage is non-zero");
     usageBeforeMaintenance = usage;
     continueToNextStep();
@@ -118,7 +118,7 @@ function testSteps()
 
   let usageAfterMaintenance;
 
-  quotaManager.getUsageForURI(uri, (url, usage) => {
+  quotaManager.getUsageForPrincipal(principal, (principal, usage) => {
     ok(usage > 0, "Usage is non-zero");
     usageAfterMaintenance = usage;
     continueToNextStep();
