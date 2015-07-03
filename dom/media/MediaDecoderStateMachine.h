@@ -982,6 +982,12 @@ protected:
            mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
 
+  // Whether we're currently in or transitioning to shutdown state.
+  Canonical<bool> mIsShutdown;
+public:
+  AbstractCanonical<bool>* CanonicalIsShutdown() { return &mIsShutdown; }
+protected:
+
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
   Canonical<NextFrameStatus> mNextFrameStatus;
