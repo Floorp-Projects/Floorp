@@ -2362,7 +2362,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "top" ],
-    other_values: [ "right", "left", "bottom", "top-outside", "bottom-outside" ],
+    other_values: [ "block-start", "block-end", "inline-start", "inline-end", "block-start-outside", "block-end-outside", "bottom", "left", "right", "top-outside", "bottom-outside" ],
     invalid_values: []
   },
   "clear": {
