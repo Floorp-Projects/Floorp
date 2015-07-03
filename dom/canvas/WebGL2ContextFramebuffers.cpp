@@ -336,12 +336,6 @@ WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint 
     GenerateWarning("framebufferTextureLayer: Not Implemented.");
 }
 
-void
-WebGL2Context::GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat, GLenum pname, JS::MutableHandleValue retval)
-{
-    GenerateWarning("getInternalformatParameter: Not Implemented.");
-}
-
 // Map attachments intended for the default buffer, to attachments for a non-
 // default buffer.
 static bool
@@ -534,15 +528,6 @@ WebGL2Context::ReadBuffer(GLenum mode)
     }
 
     gl->Screen()->SetReadBuffer(mode);
-}
-
-void
-WebGL2Context::RenderbufferStorageMultisample(GLenum target, GLsizei samples,
-                                              GLenum internalFormat,
-                                              GLsizei width, GLsizei height)
-{
-    RenderbufferStorage_base("renderbufferStorageMultisample", target, samples,
-                              internalFormat, width, height);
 }
 
 } // namespace mozilla
