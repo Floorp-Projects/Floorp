@@ -107,22 +107,22 @@ struct AutoEndTransaction {
 };
 
 void
-ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
-                             TextureClient* aTexture,
-                             const gfx::IntRect* aPictureRect)
+ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
+                              const nsTArray<TimedTextureClient>& aTextures)
 {
   MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
 
-  FenceHandle fence = aTexture->GetAcquireFenceHandle();
-  IntRect pictureRect = aPictureRect ? *aPictureRect :
-      IntRect(IntPoint(0, 0), IntSize(aTexture->GetSize()));
-  nsAutoTArray<TimedTexture,1> textures;
-  textures.AppendElement(TimedTexture(nullptr, aTexture->GetIPDLActor(),
-                                      fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
-                                      TimeStamp(), pictureRect));
+  nsAutoTArray<TimedTexture,4> textures;
+
+  for (auto& t : aTextures) {
+    MOZ_ASSERT(t.mTextureClient);
+    MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
+    textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
+                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                        t.mTimeStamp, t.mPictureRect));
+  }
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                                    textures));
 }
