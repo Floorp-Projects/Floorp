@@ -369,12 +369,10 @@ const CustomizableWidgets = [
       // Hardcode the addition of the "work offline" menuitem at the bottom:
       itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
       itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
-      fillSubviewFromMenuItems(itemsToDisplay, doc.getElementById("PanelUI-developerItems"));
 
-    },
-    onViewHiding: function(aEvent) {
-      let doc = aEvent.target.ownerDocument;
-      clearSubview(doc.getElementById("PanelUI-developerItems"));
+      let developerItems = doc.getElementById("PanelUI-developerItems");
+      clearSubview(developerItems);
+      fillSubviewFromMenuItems(itemsToDisplay, developerItems);
     }
   }, {
     id: "sidebar-button",
@@ -399,11 +397,9 @@ const CustomizableWidgets = [
       if (providerMenuSeps.length > 0)
         win.SocialSidebar.populateProviderMenu(providerMenuSeps[0]);
 
-      fillSubviewFromMenuItems([...menu.children], doc.getElementById("PanelUI-sidebarItems"));
-    },
-    onViewHiding: function(aEvent) {
-      let doc = aEvent.target.ownerDocument;
-      clearSubview(doc.getElementById("PanelUI-sidebarItems"));
+      let sidebarItems = doc.getElementById("PanelUI-sidebarItems");
+      clearSubview(sidebarItems);
+      fillSubviewFromMenuItems([...menu.children], sidebarItems);
     }
   }, {
     id: "social-share-button",

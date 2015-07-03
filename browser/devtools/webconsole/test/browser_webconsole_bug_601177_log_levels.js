@@ -8,13 +8,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 601177: log levels";
-const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-601177-log-levels.html";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "bug 601177: log levels";
+const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/" +
+                  "test/test-bug-601177-log-levels.html";
 
 let test = asyncTest(function* () {
   Services.prefs.setBoolPref("javascript.options.strict", true);
 
-  let { browser } = yield loadTab(TEST_URI);
+  yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
 

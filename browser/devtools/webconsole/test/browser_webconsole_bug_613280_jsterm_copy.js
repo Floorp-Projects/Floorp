@@ -6,6 +6,8 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613280";
 
 function test() {
@@ -20,7 +22,7 @@ function test() {
           severity: SEVERITY_LOG,
         }],
       }).then(performTest.bind(null, HUD));
-    })
+    });
   });
 }
 
@@ -30,11 +32,11 @@ function performTest(HUD, [result]) {
   let selection = getSelection();
   let contentSelection = content.getSelection();
 
-  let clipboard_setup = function() {
+  let clipboardSetup = function() {
     goDoCommand("cmd_copy");
   };
 
-  let clipboard_copy_done = function() {
+  let clipboardCopyDone = function() {
     finishTest();
   };
 
@@ -56,8 +58,8 @@ function performTest(HUD, [result]) {
     goUpdateCommand("cmd_copy");
   }
 
-  let controller = top.document.commandDispatcher.
-                   getControllerForCommand("cmd_copy");
+  let controller = top.document.commandDispatcher
+                               .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
 
   HUD.ui.output.selectMessage(msg);
@@ -65,16 +67,18 @@ function performTest(HUD, [result]) {
 
   goUpdateCommand("cmd_copy");
 
-  controller = top.document.commandDispatcher.
-               getControllerForCommand("cmd_copy");
+  controller = top.document.commandDispatcher
+                           .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
   // Remove new lines since getSelection() includes one between message and line
   // number, but the clipboard doesn't (see bug 1119503)
-  let selectionText = (HUD.iframeWindow.getSelection() + "").replace(/\r?\n|\r/g, " ");
+  let selectionText = (HUD.iframeWindow.getSelection() + "")
+    .replace(/\r?\n|\r/g, " ");
   isnot(selectionText.indexOf("foobarBazBug613280"), -1,
         "selection text includes 'foobarBazBug613280'");
 
-  waitForClipboard((str) => { return str.trim() == selectionText.trim(); },
-                   clipboard_setup, clipboard_copy_done, clipboard_copy_done);
+  waitForClipboard((str) => {
+    return str.trim() == selectionText.trim();
+  }, clipboardSetup, clipboardCopyDone, clipboardCopyDone);
 }

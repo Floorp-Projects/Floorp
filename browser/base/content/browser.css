@@ -6,6 +6,10 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
+:root {
+  --panelui-subview-transition-duration: 150ms;
+}
+
 #main-window:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
   min-width: 335px;
@@ -110,11 +114,12 @@ panelview {
 }
 
 .panel-mainview {
-  transition: transform 150ms;
+  transition: transform var(--panelui-subview-transition-duration);
 }
 
 panelview:not([mainview]):not([current]) {
-  display: none;
+  transition: visibility 0s linear var(--panelui-subview-transition-duration);
+  visibility: collapse;
 }
 
 tabbrowser {
