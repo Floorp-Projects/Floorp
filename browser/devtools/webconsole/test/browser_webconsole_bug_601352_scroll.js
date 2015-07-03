@@ -5,11 +5,14 @@
 // Test that the console output scrolls to JS eval results when there are many
 // messages displayed. See bug 601352.
 
+"use strict";
+
 function test() {
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
-    let {tab} = yield loadTab("data:text/html;charset=utf-8,Web Console test for bug 601352");
+    let {tab} = yield loadTab("data:text/html;charset=utf-8,Web Console test " +
+                              "for bug 601352");
     let hud = yield openConsole(tab);
     hud.jsterm.clearOutput();
 
@@ -49,7 +52,9 @@ function test() {
     let rectNode = node.getBoundingClientRect();
     let rectOutput = scrollNode.getBoundingClientRect();
     console.debug("rectNode", rectNode, "rectOutput", rectOutput);
-    console.log("scrollNode scrollHeight", scrollNode.scrollHeight, "scrollTop", scrollNode.scrollTop, "clientHeight", scrollNode.clientHeight);
+    console.log("scrollNode scrollHeight", scrollNode.scrollHeight,
+                "scrollTop", scrollNode.scrollTop, "clientHeight",
+                scrollNode.clientHeight);
 
     isnot(scrollNode.scrollTop, 0, "scroll location is not at the top");
 
@@ -59,10 +64,12 @@ function test() {
     // Visible scroll viewport.
     let height = rectOutput.height;
 
-    // Top and bottom coordinates of the last message node, relative to the outputNode.
+    // Top and bottom coordinates of the last message node, relative to the
+    // outputNode.
     let top = rectNode.top - rectOutput.top;
     let bottom = top + rectNode.height;
-    info("node top " + top + " node bottom " + bottom + " node clientHeight " + node.clientHeight);
+    info("node top " + top + " node bottom " + bottom + " node clientHeight " +
+         node.clientHeight);
 
     ok(top >= 0 && bottom <= height, "last message is visible");
   }

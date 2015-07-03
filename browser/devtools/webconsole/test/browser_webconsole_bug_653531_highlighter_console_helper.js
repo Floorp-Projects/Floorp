@@ -5,6 +5,8 @@
 
 // Tests that the $0 console helper works as intended.
 
+"use strict";
+
 let inspector, h1, outputNode;
 
 function createDocument() {
@@ -68,7 +70,6 @@ let runSelectionTests = Task.async(function*(aInspector) {
 });
 
 function performWebConsoleTests(hud) {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
   let jsterm = hud.jsterm;
   outputNode = hud.outputNode;
 
@@ -103,5 +104,6 @@ function test() {
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html;charset=utf-8,test for highlighter helper in web console";
+  content.location = "data:text/html;charset=utf-8,test for highlighter " +
+                     "helper in web console";
 }

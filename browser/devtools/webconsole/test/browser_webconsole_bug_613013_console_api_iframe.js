@@ -8,8 +8,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-613013-console-api-iframe.html";
+"use strict";
 
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-613013-console-api-iframe.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

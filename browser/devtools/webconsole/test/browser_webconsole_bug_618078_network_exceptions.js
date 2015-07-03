@@ -6,8 +6,11 @@
 // Tests that we report JS exceptions in event handlers coming from
 // network requests, like onreadystate for XHR. See bug 618078.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 618078";
-const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-618078-network-exceptions.html";
+const TEST_URI2 = "http://example.com/browser/browser/devtools/webconsole/" +
+                  "test/test-bug-618078-network-exceptions.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

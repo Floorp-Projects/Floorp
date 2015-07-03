@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete popup keyboard usage test";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
+                 "popup keyboard usage test";
 let HUD, popup, jsterm, inputNode, completeNode;
 
 let test = asyncTest(function*() {
@@ -54,7 +57,9 @@ let consoleOpened = Task.async(function*(aHud) {
     // toLocaleString toString toSource unwatch valueOf watch constructor.
     is(popup.itemCount, 19, "popup.itemCount is correct");
 
-    let sameItems = popup.getItems().reverse().map(function(e) {return e.label;});
+    let sameItems = popup.getItems().reverse().map(function(e) {
+      return e.label;
+    });
     ok(sameItems.every(function(prop, index) {
       return [
         "__defineGetter__",
@@ -76,7 +81,8 @@ let consoleOpened = Task.async(function*(aHud) {
         "unwatch",
         "valueOf",
         "watch",
-      ][index] === prop}), "getItems returns the items we expect");
+      ][index] === prop;
+    }), "getItems returns the items we expect");
 
     is(popup.selectedIndex, 18,
        "Index of the first item from bottom is selected.");
@@ -113,7 +119,8 @@ let consoleOpened = Task.async(function*(aHud) {
     currentSelectionIndex = popup.selectedIndex;
     EventUtils.synthesizeKey("VK_PAGE_UP", {});
 
-    ok(popup.selectedIndex < currentSelectionIndex, "Index is less after Page UP");
+    ok(popup.selectedIndex < currentSelectionIndex,
+       "Index is less after Page UP");
 
     EventUtils.synthesizeKey("VK_END", {});
     is(popup.selectedIndex, 18, "index is last after End");
@@ -136,8 +143,7 @@ let consoleOpened = Task.async(function*(aHud) {
   return deferred.promise;
 });
 
-function popupHideAfterTab()
-{
+function popupHideAfterTab() {
   let deferred = promise.defer();
 
   // At this point the completion suggestion should be accepted.
@@ -193,8 +199,7 @@ function popupHideAfterTab()
   return deferred.promise;
 }
 
-function testReturnKey()
-{
+function testReturnKey() {
   let deferred = promise.defer();
 
   popup._panel.addEventListener("popupshown", function onShown() {
@@ -250,23 +255,24 @@ function testReturnKey()
   return deferred.promise;
 }
 
-function dontShowArrayNumbers()
-{
+function dontShowArrayNumbers() {
   let deferred = promise.defer();
 
   info("dontShowArrayNumbers");
   content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
 
-  let jsterm = HUD.jsterm;
-  let popup = jsterm.autocompletePopup;
-  let completeNode = jsterm.completeNode;
+  jsterm = HUD.jsterm;
+  popup = jsterm.autocompletePopup;
 
   popup._panel.addEventListener("popupshown", function onShown() {
     popup._panel.removeEventListener("popupshown", onShown, false);
 
-    let sameItems = popup.getItems().map(function(e) {return e.label;});
-    ok(!sameItems.some(function(prop, index) { prop === "0"; }),
-       "Completing on an array doesn't show numbers.");
+    let sameItems = popup.getItems().map(function(e) {
+      return e.label;
+    });
+    ok(!sameItems.some(function(prop) {
+      prop === "0";
+    }), "Completing on an array doesn't show numbers.");
 
     popup._panel.addEventListener("popuphidden", function popupHidden() {
       popup._panel.removeEventListener("popuphidden", popupHidden, false);
@@ -286,8 +292,7 @@ function dontShowArrayNumbers()
   return deferred.promise;
 }
 
-function testReturnWithNoSelection()
-{
+function testReturnWithNoSelection() {
   let deferred = promise.defer();
 
   info("test pressing return with open popup, but no selection, see bug 873250");
@@ -316,20 +321,18 @@ function testReturnWithNoSelection()
   return deferred.promise;
 }
 
-function popupHideAfterReturnWithNoSelection()
-{
+function popupHideAfterReturnWithNoSelection() {
   ok(!popup.isOpen, "popup is not open after VK_RETURN");
 
   is(inputNode.value, "", "inputNode is empty after VK_RETURN");
   is(completeNode.value, "", "completeNode is empty");
-  is(jsterm.history[jsterm.history.length-1], "window.testBug",
+  is(jsterm.history[jsterm.history.length - 1], "window.testBug",
      "jsterm history is correct");
 
   return promise.resolve();
 }
 
-function testCompletionInText()
-{
+function testCompletionInText() {
   info("test that completion works inside text, see bug 812618");
 
   let deferred = promise.defer();
@@ -363,14 +366,14 @@ function testCompletionInText()
   return deferred.promise;
 }
 
-function popupHideAfterCompletionInText()
-{
+function popupHideAfterCompletionInText() {
   // At this point the completion suggestion should be accepted.
   ok(!popup.isOpen, "popup is not open");
   is(inputNode.value, "dump(window.testBug873250b)",
      "completion was successful after VK_TAB");
   is(inputNode.selectionStart, 26, "cursor location is correct");
-  is(inputNode.selectionStart, inputNode.selectionEnd, "cursor location (confirmed)");
+  is(inputNode.selectionStart, inputNode.selectionEnd,
+     "cursor location (confirmed)");
   ok(!completeNode.value, "completeNode is empty");
 
   return promise.resolve();

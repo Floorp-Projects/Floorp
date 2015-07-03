@@ -8,20 +8,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 595934 - message categories coverage.";
-const TESTS_PATH = "http://example.com/browser/browser/devtools/webconsole/test/";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "bug 595934 - message categories coverage.";
+const TESTS_PATH = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/";
 const TESTS = [
-  { // #0
+  {
+    // #0
     file: "test-bug-595934-css-loader.html",
     category: "CSS Loader",
     matchString: "text/css",
   },
-  { // #1
+  {
+    // #1
     file: "test-bug-595934-imagemap.html",
     category: "Layout: ImageMap",
     matchString: "shape=\"rect\"",
   },
-  { // #2
+  {
+    // #2
     file: "test-bug-595934-html.html",
     category: "HTML",
     matchString: "multipart/form-data",
@@ -30,43 +37,51 @@ const TESTS = [
       form.submit();
     },
   },
-  { // #3
+  {
+    // #3
     file: "test-bug-595934-workers.html",
     category: "Web Worker",
     matchString: "fooBarWorker",
     expectError: true,
   },
-  { // #4
+  {
+    // #4
     file: "test-bug-595934-malformedxml.xhtml",
     category: "malformed-xml",
     matchString: "no element found",
   },
-  { // #5
+  {
+    // #5
     file: "test-bug-595934-svg.xhtml",
     category: "SVG",
     matchString: "fooBarSVG",
   },
-  { // #6
+  {
+    // #6
     file: "test-bug-595934-css-parser.html",
     category: "CSS Parser",
     matchString: "foobarCssParser",
   },
-  { // #7
+  {
+    // #7
     file: "test-bug-595934-malformedxml-external.html",
     category: "malformed-xml",
     matchString: "</html>",
   },
-  { // #8
+  {
+    // #8
     file: "test-bug-595934-empty-getelementbyid.html",
     category: "DOM",
     matchString: "getElementById",
   },
-  { // #9
+  {
+    // #9
     file: "test-bug-595934-canvas-css.html",
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
-  { // #10
+  {
+    // #10
     file: "test-bug-595934-image.html",
     category: "Image",
     matchString: "corrupt",
@@ -87,30 +102,28 @@ let testEnded = false;
 let TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function test_observe(aSubject)
-  {
-    if (testEnded || !(aSubject instanceof Ci.nsIScriptError)) {
+  observe: function testObserve(subject) {
+    if (testEnded || !(subject instanceof Ci.nsIScriptError)) {
       return;
     }
 
-    var expectedCategory = TESTS[pos].category;
+    let expectedCategory = TESTS[pos].category;
 
-    info("test #" + pos + " console observer got " + aSubject.category +
+    info("test #" + pos + " console observer got " + subject.category +
          ", is expecting " + expectedCategory);
 
-    if (aSubject.category == expectedCategory) {
+    if (subject.category == expectedCategory) {
       foundCategory = true;
       startNextTest();
-    }
-    else {
-      info("unexpected message was: " + aSubject.sourceName + ":" +
-           aSubject.lineNumber + "; " + aSubject.errorMessage);
+    } else {
+      info("unexpected message was: " + subject.sourceName + ":" +
+           subject.lineNumber + "; " + subject.errorMessage);
     }
   }
 };
 
-function consoleOpened(aHud) {
-  hud = aHud;
+function consoleOpened(hudConsole) {
+  hud = hudConsole;
   output = hud.outputNode;
   jsterm = hud.jsterm;
 
@@ -131,12 +144,12 @@ function testNext() {
   pos++;
   info("testNext: #" + pos);
   if (pos < TESTS.length) {
-    let test = TESTS[pos];
+    test = TESTS[pos];
 
     waitForMessages({
       webconsole: hud,
       messages: [{
-        name: "message for test #" + pos + ": '" + test.matchString +"'",
+        name: "message for test #" + pos + ": '" + test.matchString + "'",
         text: test.matchString,
       }],
     }).then(() => {
@@ -145,14 +158,14 @@ function testNext() {
     });
 
     let testLocation = TESTS_PATH + test.file;
-    gBrowser.selectedBrowser.addEventListener("load", function onLoad(aEvent) {
+    gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
       if (content.location.href != testLocation) {
         return;
       }
-      gBrowser.selectedBrowser.removeEventListener(aEvent.type, onLoad, true);
+      gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
 
       pageLoaded = true;
-      test.onload && test.onload(aEvent);
+      test.onload && test.onload(evt);
 
       if (test.expectError) {
         content.addEventListener("error", function _onError() {
@@ -161,8 +174,7 @@ function testNext() {
           startNextTest();
         });
         expectUncaughtException();
-      }
-      else {
+      } else {
         pageError = true;
       }
 
@@ -170,8 +182,7 @@ function testNext() {
     }, true);
 
     content.location = testLocation;
-  }
-  else {
+  } else {
     testEnded = true;
     finishTest();
   }
@@ -200,4 +211,3 @@ function test() {
     openConsole().then(consoleOpened);
   });
 }
-

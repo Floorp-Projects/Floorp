@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-bug-837351-security-errors.html";
+"use strict";
+
+const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-837351-security-errors.html";
 
 let test = asyncTest(function* () {
   yield pushPrefEnv();
@@ -26,10 +29,11 @@ let test = asyncTest(function* () {
   });
 });
 
-function pushPrefEnv()
-{
+function pushPrefEnv() {
   let deferred = promise.defer();
-  let options = {'set': [["security.mixed_content.block_active_content", true]]};
+  let options = {
+    set: [["security.mixed_content.block_active_content", true]]
+  };
   SpecialPowers.pushPrefEnv(options, deferred.resolve);
   return deferred.promise;
 }

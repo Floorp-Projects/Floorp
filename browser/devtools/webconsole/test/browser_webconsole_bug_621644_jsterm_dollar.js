@@ -7,7 +7,10 @@
  *   Mihai Sucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-621644-jsterm-dollar.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-621644-jsterm-dollar.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -17,7 +20,6 @@ let test = asyncTest(function* () {
   yield test$(hud);
   yield test$$(hud);
 });
-
 
 function* test$(HUD) {
   let deferred = promise.defer();

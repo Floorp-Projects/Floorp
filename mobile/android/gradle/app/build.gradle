@@ -33,11 +33,11 @@ android {
     sourceSets {
         androidTest {
             java {
-                srcDir "${topobjdir}/mobile/android/gradle/app/src/robocop_harness"
-                srcDir "${topobjdir}/mobile/android/gradle/app/src/robocop"
-                srcDir "${topobjdir}/mobile/android/gradle/app/src/background"
-                srcDir "${topobjdir}/mobile/android/gradle/app/src/browser"
-                srcDir "${topobjdir}/mobile/android/gradle/app/src/javaaddons"
+                srcDir "src/robocop_harness"
+                srcDir "src/robocop"
+                srcDir "src/background"
+                srcDir "src/browser"
+                srcDir "src/javaaddons"
             }
         }
     }

@@ -75,7 +75,7 @@ function consoleOpened(HUD) {
     goDoCommand("cmd_paste");
     let notificationbox = jsterm.hud.document.getElementById("webconsole-notificationbox");
     let notification = notificationbox.getNotificationWithValue("selfxss-notification");
-    ok(notification,  "Self-xss notification shown");
+    ok(notification, "Self-xss notification shown");
     is(oldVal, jsterm.inputNode.value, "Paste blocked by self-xss prevention");
 
     // Allow pasting

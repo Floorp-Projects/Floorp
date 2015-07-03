@@ -7,12 +7,15 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  */
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 614793: jsterm result scroll";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "bug 614793: jsterm result scroll";
 
 "use strict";
 
 let test = asyncTest(function* () {
-  let { browser } = yield loadTab(TEST_URI);
+  yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
 
@@ -46,8 +49,7 @@ function consoleOpened(hud) {
     hud.jsterm.execute("'hello world'").then(onExecute);
   });
 
-  function onExecute(msg)
-  {
+  function onExecute(msg) {
     isnot(scrollNode.scrollTop, oldScrollTop, "scroll location updated");
 
     oldScrollTop = scrollNode.scrollTop;

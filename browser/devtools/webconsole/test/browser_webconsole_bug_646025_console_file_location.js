@@ -6,7 +6,10 @@
 // Tests that console logging methods display the method location along with
 // the output in the console.
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console file location display test";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console file location " +
+                 "display test";
 const TEST_URI2 = "http://example.com/browser/browser/devtools/" +
                  "webconsole/test/" +
                  "test-bug-646025-console-file-location.html";

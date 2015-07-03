@@ -720,10 +720,6 @@ let UI = {
     return Services.prefs.getBoolPref("devtools.webide.showProjectEditor");
   },
 
-  isRuntimeConfigurationEnabled: function() {
-    return Services.prefs.getBoolPref("devtools.webide.enableRuntimeConfiguration");
-  },
-
   openProject: function() {
     let project = AppManager.selectedProject;
 

@@ -101,9 +101,9 @@ browser.jar:
 #else
   content/browser/loop/shared/libs/react-0.12.2.js    (content/shared/libs/react-0.12.2-prod.js)
 #endif
-  content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
+  content/browser/loop/shared/libs/lodash-3.9.3.js    (content/shared/libs/lodash-3.9.3.js)
   content/browser/loop/shared/libs/jquery-2.1.4.js    (content/shared/libs/jquery-2.1.4.js)
-  content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)
+  content/browser/loop/shared/libs/backbone-1.2.1.js  (content/shared/libs/backbone-1.2.1.js)
 
   # Shared sounds
   content/browser/loop/shared/sounds/ringtone.ogg       (content/shared/sounds/ringtone.ogg)
