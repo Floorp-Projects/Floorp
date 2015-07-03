@@ -32,7 +32,8 @@ let test = asyncTest(function* () {
   prefBranch.setIntPref("console", 20);
 
   for (let i = 0; i < 30; i++) {
-    console.log("foo #" + i); // must change message to prevent repeats
+    // must change message to prevent repeats
+    console.log("foo #" + i);
   }
 
   yield waitForMessages({
@@ -63,7 +64,8 @@ let test = asyncTest(function* () {
 
   prefBranch.setIntPref("console", 30);
   for (let i = 0; i < 20; i++) {
-    console.log("boo #" + i); // must change message to prevent repeats
+    // must change message to prevent repeats
+    console.log("boo #" + i);
   }
 
   yield waitForMessages({
@@ -86,4 +88,3 @@ let test = asyncTest(function* () {
 function countMessageNodes() {
   return outputNode.querySelectorAll(".message").length;
 }
-

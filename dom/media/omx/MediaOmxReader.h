@@ -46,6 +46,9 @@ class MediaOmxReader : public MediaOmxCommonReader
   bool mIsShutdown;
   MediaPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
   MediaPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
+
+  MediaPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
+  MediaPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
   android::sp<android::MediaExtractor> mExtractor;
@@ -72,6 +75,13 @@ public:
 protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
 public:
+
+  virtual nsresult ResetDecode()
+  {
+    mSeekRequest.DisconnectIfExists();
+    mSeekPromise.RejectIfExists(NS_OK, __func__);
+    return MediaDecoderReader::ResetDecode();
+  }
 
   virtual bool DecodeAudioData();
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,

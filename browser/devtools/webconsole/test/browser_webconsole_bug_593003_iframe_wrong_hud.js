@@ -3,11 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-593003-iframe-wrong-hud.html";
+"use strict";
 
-const TEST_IFRAME_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-593003-iframe-wrong-hud-iframe.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-593003-iframe-wrong-hud.html";
 
-const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_IFRAME_URI = "http://example.com/browser/browser/devtools/" +
+                        "webconsole/test/test-bug-593003-iframe-wrong-" +
+                        "hud-iframe.html";
+
+const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/" +
+                       "webconsole/test/test-console.html";
 
 let tab1, tab2;
 

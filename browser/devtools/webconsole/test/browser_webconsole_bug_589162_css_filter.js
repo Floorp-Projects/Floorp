@@ -9,10 +9,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-"use strict"
+"use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,<div style='font-size:3em;" +
-  "foobarCssParser:baz'>test CSS parser filter</div>";
+                 "foobarCssParser:baz'>test CSS parser filter</div>";
 
 /**
  * Unit test for bug 589162:

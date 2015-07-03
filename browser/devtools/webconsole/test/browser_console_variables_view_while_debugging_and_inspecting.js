@@ -6,6 +6,8 @@
 // Test that makes sure web console eval works while the js debugger paused the
 // page, and while the inspector is active. See bug 886137.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-eval-in-stackframe.html";
 
@@ -26,9 +28,9 @@ function consoleOpened(hud) {
   openDebugger().then(debuggerOpened);
 }
 
-function debuggerOpened(aResult) {
+function debuggerOpened(result) {
   info("debugger opened");
-  gDebuggerWin = aResult.panelWin;
+  gDebuggerWin = result.panelWin;
   gDebuggerController = gDebuggerWin.DebuggerController;
   gThread = gDebuggerController.activeThread;
   gStackframes = gDebuggerController.StackFrames;
@@ -36,7 +38,7 @@ function debuggerOpened(aResult) {
   openInspector().then(inspectorOpened);
 }
 
-function inspectorOpened(aPanel) {
+function inspectorOpened() {
   info("inspector opened");
   gThread.addOneTimeListener("framesadded", onFramesAdded);
 

@@ -5,9 +5,10 @@
 
 // Tests that adding text to one of the output labels doesn't cause errors.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
-
 "use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -50,4 +51,3 @@ function testTextNodeInsertion(hud) {
   });
   return deferred.promise;
 }
-

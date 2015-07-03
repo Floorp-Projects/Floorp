@@ -3,10 +3,13 @@
 
 // Test that the cd() jsterm helper function works as expected. See bug 609872.
 
+"use strict";
+
 function test() {
   let hud;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-609872-cd-iframe-parent.html";
+  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/test-bug-609872-cd-iframe-parent.html";
 
   const parentMessages = [{
     name: "document.title in parent iframe",

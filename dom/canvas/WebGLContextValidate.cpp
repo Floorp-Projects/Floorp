@@ -1078,6 +1078,10 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format, GLenum type,
                                             WebGLTexImageFunc func,
                                             WebGLTexDimensions dims)
 {
+    if (type == LOCAL_GL_HALF_FLOAT_OES) {
+        type = LOCAL_GL_HALF_FLOAT;
+    }
+
     if (IsCompressedFunc(func) || IsCopyFunc(func)) {
         MOZ_ASSERT(type == LOCAL_GL_NONE && format == LOCAL_GL_NONE);
         return true;

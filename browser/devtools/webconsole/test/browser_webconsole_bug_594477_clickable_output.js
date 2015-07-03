@@ -8,12 +8,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 let HUD;
 let outputItem;
 let outputNode;
-
-"use strict";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -118,7 +119,7 @@ function networkPanelHidden() {
       info("jsterm execute 'document' callback");
 
       HUD.jsterm.once("variablesview-open", deferred.resolve);
-      let outputItem = msg.querySelector(".message-body a");
+      outputItem = msg.querySelector(".message-body a");
       ok(outputItem, "jsterm output message found");
 
       // Send the mousedown and click events such that the property panel opens.

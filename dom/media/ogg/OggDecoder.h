@@ -13,6 +13,11 @@ namespace mozilla {
 class OggDecoder : public MediaDecoder
 {
 public:
+  OggDecoder()
+    : mShutdownBitMonitor("mShutdownBitMonitor")
+    , mShutdownBit(false)
+  {}
+
   virtual MediaDecoder* Clone() {
     if (!IsOggEnabled()) {
       return nullptr;
@@ -20,6 +25,26 @@ public:
     return new OggDecoder();
   }
   virtual MediaDecoderStateMachine* CreateStateMachine();
+
+  // For yucky legacy reasons, the ogg decoder needs to do a cross-thread read
+  // to check for shutdown while it hogs its own task queue. We don't want to
+  // protect the general state with a lock, so we make a special copy and a
+  // special-purpose lock. This method may be called on any thread.
+  bool IsOggDecoderShutdown() override
+  {
+    MonitorAutoLock lock(mShutdownBitMonitor);
+    return mShutdownBit;
+  }
+
+protected:
+  void ShutdownBitChanged() override
+  {
+    MonitorAutoLock lock(mShutdownBitMonitor);
+    mShutdownBit = mStateMachineIsShutdown;
+  }
+
+  Monitor mShutdownBitMonitor;
+  bool mShutdownBit;
 };
 
 } // namespace mozilla

@@ -5,7 +5,10 @@
 
 // Tests for bug 704295
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -16,8 +19,8 @@ let test = asyncTest(function* () {
 });
 
 function testCompletion(hud) {
-  var jsterm = hud.jsterm;
-  var input = jsterm.inputNode;
+  let jsterm = hud.jsterm;
+  let input = jsterm.inputNode;
 
   // Test typing 'var d = 5;' and press RETURN
   jsterm.setInputValue("var d = ");
@@ -36,4 +39,3 @@ function testCompletion(hud) {
   EventUtils.synthesizeKey("VK_RETURN", {});
   is(jsterm.completeNode.value, "", "clear completion on execute()");
 }
-

@@ -4,7 +4,11 @@
 
 // This is a test for the Open URL context menu item
 // that is shown for network requests
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html"
+
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 const COMMAND_NAME = "consoleCmd_openURL";
 const CONTEXT_MENU_ID = "#menu_openURL";
 
@@ -22,11 +26,13 @@ let test = asyncTest(function* () {
   let results2 = yield testOnNetActivity();
   let msg = yield onNetworkMessage(results2);
 
-  yield testOnNetActivity_contextmenu(msg);
+  yield testOnNetActivityContextMenu(msg);
 
   Services.prefs.clearUserPref("devtools.webconsole.filter.networkinfo");
 
-  HUD = null, outputNode = null, contextMenu = null;
+  HUD = null;
+  outputNode = null;
+  contextMenu = null;
 });
 
 function consoleOpened() {
@@ -47,9 +53,9 @@ function consoleOpened() {
   });
 }
 
-function onConsoleMessage(aResults) {
+function onConsoleMessage(results) {
   outputNode.focus();
-  outputNode.selectedItem = [...aResults[0].matched][0];
+  outputNode.selectedItem = [...results[0].matched][0];
 
   // Check if the command is disabled non-network messages.
   goUpdateCommand(COMMAND_NAME);
@@ -82,20 +88,20 @@ function testOnNetActivity() {
   });
 }
 
-function onNetworkMessage(aResults) {
+function onNetworkMessage(results) {
   let deferred = promise.defer();
 
   outputNode.focus();
-  let msg = [...aResults[0].matched][0];
+  let msg = [...results[0].matched][0];
   ok(msg, "network message");
   HUD.ui.output.selectMessage(msg);
 
   let currentTab = gBrowser.selectedTab;
   let newTab = null;
 
-  gBrowser.tabContainer.addEventListener("TabOpen", function onOpen(aEvent) {
+  gBrowser.tabContainer.addEventListener("TabOpen", function onOpen(evt) {
     gBrowser.tabContainer.removeEventListener("TabOpen", onOpen, true);
-    newTab = aEvent.target;
+    newTab = evt.target;
     newTab.linkedBrowser.addEventListener("load", onTabLoaded, true);
   }, true);
 
@@ -119,7 +125,7 @@ function onNetworkMessage(aResults) {
   return deferred.promise;
 }
 
-function testOnNetActivity_contextmenu(msg) {
+function testOnNetActivityContextMenu(msg) {
   let deferred = promise.defer();
 
   outputNode.focus();

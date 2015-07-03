@@ -8,10 +8,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 let inputNode, values;
 
-let TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 594497 and bug 619598";
-"use strict";
+let TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+               "bug 594497 and bug 619598";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

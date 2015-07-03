@@ -9,6 +9,8 @@
 // Bug 875456 - Log mixed content messages from the Mixed Content
 // Blocker to the Security Pane in the Web Console
 
+"use strict";
+
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-mixedcontent-securityerrors.html";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +

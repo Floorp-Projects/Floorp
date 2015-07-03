@@ -4,6 +4,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  * ***** END LICENSE BLOCK ***** */
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test" +
                  "/test-bug-782653-css-errors.html";
 
@@ -20,8 +22,7 @@ let test = asyncTest(function* () {
   nodes = hud = StyleEditorUI = null;
 });
 
-function testViewSource()
-{
+function testViewSource() {
   let deferred = promise.defer();
 
   waitForMessages({
@@ -57,13 +58,22 @@ function testViewSource()
   return deferred.promise;
 }
 
-function onStyleEditorReady(aPanel)
-{
+function onStyleEditorReady(panel) {
   let deferred = promise.defer();
 
-  let win = aPanel.panelWindow;
+  let win = panel.panelWindow;
   ok(win, "Style Editor Window is defined");
   ok(StyleEditorUI, "Style Editor UI is defined");
+
+  function fireEvent(toolbox, href, line) {
+    toolbox.once("styleeditor-selected", function(evt) {
+      info(evt + " event fired");
+
+      checkStyleEditorForSheetAndLine(href, line - 1).then(deferred.resolve);
+    });
+
+    EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
+  }
 
   waitForFocus(function() {
     info("style editor window focused");
@@ -78,20 +88,13 @@ function onStyleEditorReady(aPanel)
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       let toolbox = gDevTools.getToolbox(target);
 
-      let href = nodes[1].getAttribute("title");
-      let line = nodes[1].sourceLine;
+      href = nodes[1].getAttribute("title");
+      line = nodes[1].sourceLine;
       ok(line, "found source line");
 
       toolbox.selectTool("webconsole").then(function() {
         info("webconsole selected");
-
-        toolbox.once("styleeditor-selected", function(aEvent) {
-          info(aEvent + " event fired");
-
-          checkStyleEditorForSheetAndLine(href, line - 1).then(deferred.resolve);
-        });
-
-        EventUtils.sendMouseEvent({ type: "click" }, nodes[1]);
+        fireEvent(toolbox, href, line);
       });
     });
   }, win);
@@ -99,29 +102,26 @@ function onStyleEditorReady(aPanel)
   return deferred.promise;
 }
 
-function checkStyleEditorForSheetAndLine(aHref, aLine)
-{
+function checkStyleEditorForSheetAndLine(href, line) {
   let foundEditor = null;
   for (let editor of StyleEditorUI.editors) {
-    if (editor.styleSheet.href == aHref) {
+    if (editor.styleSheet.href == href) {
       foundEditor = editor;
       break;
     }
   }
 
-  ok(foundEditor, "found style editor for " + aHref);
-  return performLineCheck(foundEditor, aLine);
+  ok(foundEditor, "found style editor for " + href);
+  return performLineCheck(foundEditor, line);
 }
 
-function performLineCheck(aEditor, aLine)
-{
+function performLineCheck(editor, line) {
   let deferred = promise.defer();
 
-  function checkForCorrectState()
-  {
-    is(aEditor.sourceEditor.getCursor().line, aLine,
+  function checkForCorrectState() {
+    is(editor.sourceEditor.getCursor().line, line,
        "correct line is selected");
-    is(StyleEditorUI.selectedStyleSheetIndex, aEditor.styleSheet.styleSheetIndex,
+    is(StyleEditorUI.selectedStyleSheetIndex, editor.styleSheet.styleSheetIndex,
        "correct stylesheet is selected in the editor");
 
     executeSoon(deferred.resolve);
@@ -131,7 +131,7 @@ function performLineCheck(aEditor, aLine)
 
   // Get out of the styleeditor-selected event loop.
   executeSoon(() => {
-    aEditor.getSourceEditor().then(() => {
+    editor.getSourceEditor().then(() => {
       // Get out of the editor's source-editor-load event loop.
       executeSoon(checkForCorrectState);
     });

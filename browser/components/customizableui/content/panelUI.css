@@ -23,9 +23,9 @@
 }
 
 .panel-subviews[panelopen] {
-  transition: transform 150ms;
+  transition: transform var(--panelui-subview-transition-duration);
 }
 
 .panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning="true"]) {
-  transition: height 150ms;
+  transition: height var(--panelui-subview-transition-duration);
 }
