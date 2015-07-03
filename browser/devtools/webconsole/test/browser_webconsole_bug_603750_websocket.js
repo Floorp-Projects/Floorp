@@ -8,11 +8,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-603750-websocket.html";
-const TEST_URI2 = "data:text/html;charset=utf-8,Web Console test for bug 603750: Web Socket errors";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-603750-websocket.html";
+const TEST_URI2 = "data:text/html;charset=utf-8,Web Console test for " +
+                  "bug 603750: Web Socket errors";
 
 let test = asyncTest(function* () {
-  let { browser } = yield loadTab(TEST_URI2);
+  yield loadTab(TEST_URI2);
 
   let hud = yield openConsole();
 
@@ -33,5 +37,6 @@ let test = asyncTest(function* () {
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
       },
-    ]});
+    ]
+  });
 });

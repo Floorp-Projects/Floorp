@@ -8,9 +8,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "http://example.com/";
-
 "use strict";
+
+const TEST_URI = "http://example.com/";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -18,10 +18,9 @@ let test = asyncTest(function* () {
   let hud = yield openConsole();
   yield testSelectionWhenMovingBetweenBoxes(hud);
   performTestsAfterOutput(hud);
-})
+});
 
-let testSelectionWhenMovingBetweenBoxes = Task.async(function *(aHud) {
-  let hud = aHud;
+let testSelectionWhenMovingBetweenBoxes = Task.async(function*(hud) {
   let jsterm = hud.jsterm;
 
   // Fill the console with some output.
@@ -47,8 +46,7 @@ let testSelectionWhenMovingBetweenBoxes = Task.async(function *(aHud) {
   });
 });
 
-function performTestsAfterOutput(aHud) {
-  let hud = aHud;
+function performTestsAfterOutput(hud) {
   let outputNode = hud.outputNode;
 
   ok(outputNode.childNodes.length >= 3, "the output node has children after " +

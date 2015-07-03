@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-632275-getters.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug-632275-getters.html";
 
 let getterValue = null;
 
@@ -20,8 +23,7 @@ function consoleOpened(hud) {
   hud.jsterm.once("variablesview-fetched", onOpen);
 }
 
-function onViewOpened(hud, event, view)
-{
+function onViewOpened(hud, event, view) {
   let doc = content.wrappedJSObject.document;
 
   findVariableViewProperties(view, [
@@ -30,8 +32,8 @@ function onViewOpened(hud, event, view)
     { name: "foobar.val", isGetter: true },
   ], { webconsole: hud }).then(function() {
     is(doc.foobar._val, getterValue, "getter did not execute");
-    is(doc.foobar.val, getterValue+1, "getter executed");
-    is(doc.foobar._val, getterValue+1, "getter executed (recheck)");
+    is(doc.foobar.val, getterValue + 1, "getter executed");
+    is(doc.foobar._val, getterValue + 1, "getter executed (recheck)");
 
     let textContent = hud.outputNode.textContent;
     is(textContent.indexOf("document.body.client"), -1,
