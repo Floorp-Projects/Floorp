@@ -355,7 +355,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize) {
     if (gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
-      texture = new CairoTextureClientD3D9(aAllocator, aFormat, aTextureFlags);
+      texture = new TextureClientD3D9(aAllocator, aFormat, aTextureFlags);
     }
   }
 
