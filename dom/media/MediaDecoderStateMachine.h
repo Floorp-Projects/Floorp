@@ -93,6 +93,7 @@ hardware (via AudioStream).
 #include "MediaTimer.h"
 #include "StateMirroring.h"
 #include "DecodedStream.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 
@@ -123,6 +124,8 @@ public:
   typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
   typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
+  typedef mozilla::layers::ImageContainer::ProducerID ProducerID;
+  typedef mozilla::layers::ImageContainer::FrameID FrameID;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
                            MediaDecoderReader* aReader,
                            bool aRealTime = false);
@@ -488,9 +491,18 @@ protected:
   // machine thread, caller must hold the decoder lock.
   void UpdatePlaybackPositionInternal(int64_t aTime);
 
-  // Pushes the image down the rendering pipeline. Called on the shared state
-  // machine thread. The decoder monitor must *not* be held when calling this.
-  void RenderVideoFrame(VideoData* aData, TimeStamp aTarget);
+  // Decode monitor must be held.
+  void CheckTurningOffHardwareDecoder(VideoData* aData);
+
+  // Sets VideoQueue images into the VideoFrameContainer. Called on the shared
+  // state machine thread. Decode monitor must be held. The first aMaxFrames
+  // (at most) are set.
+  // aClockTime and aClockTimeStamp are used as the baseline for deriving
+  // timestamps for the frames; when omitted, aMaxFrames must be 1 and
+  // a null timestamp is passed to the VideoFrameContainer.
+  // If the VideoQueue is empty, this does nothing.
+  void RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime = 0,
+                         const TimeStamp& aClickTimeStamp = TimeStamp());
 
   // If we have video, display a video frame if it's time for display has
   // arrived, otherwise sleep until it's time for the next frame. Update the
@@ -707,6 +719,10 @@ private:
 
   // State-watching manager.
   WatchManager<MediaDecoderStateMachine> mWatchManager;
+
+  // Producer ID to help ImageContainer distinguish different streams of
+  // FrameIDs. A unique and immutable value per MDSM.
+  const ProducerID mProducerID;
 
   // True is we are decoding a realtime stream, like a camera stream.
   const bool mRealTime;
@@ -943,6 +959,9 @@ protected:
   // Recomputes the canonical duration from various sources.
   void RecomputeDuration();
 
+
+  // FrameID which increments every time a frame is pushed to our queue.
+  FrameID mCurrentFrameID;
   // The duration according to the demuxer's current estimate, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mEstimatedDuration;
 
