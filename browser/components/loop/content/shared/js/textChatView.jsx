@@ -97,7 +97,7 @@ loop.shared.views.chat = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      messageList: React.PropTypes.array.isRequired
+      messageList: React.PropTypes.arrayOf(React.PropTypes.object).isRequired
     },
 
     getInitialState: function() {

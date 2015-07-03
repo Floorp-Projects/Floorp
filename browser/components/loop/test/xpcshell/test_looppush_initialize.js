@@ -93,7 +93,8 @@ add_test(function test_reconnect_websocket() {
 // The uaID is cleared to force re-regsitration of all notification channels.
 add_test(function test_reopen_websocket() {
   MozLoopPushHandler.uaID = undefined;
-  MozLoopPushHandler.registeredChannels = {}; //Do this to force a new registration callback.
+  // Do this to force a new registration callback.
+  MozLoopPushHandler.registeredChannels = {};
   mockWebSocket.serverClose();
   // Previously registered onRegistration callbacks will fire and be checked (see above).
 });
