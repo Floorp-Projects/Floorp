@@ -890,7 +890,10 @@ let MozLoopServiceInternal = {
           // When the chat box or messages are shown, resize the panel or window
           // to be slightly higher to accomodate them.
           let customSize = kSizeMap[ev.type];
-          if (customSize) {
+          let currSize = chatbox.getAttribute("customSize");
+          // If the size is already at the requested one or at the maximum size
+          // already, don't do anything. Especially don't make it shrink.
+          if (customSize && currSize != customSize && currSize != "loopChatMessageAppended") {
             chatbox.setAttribute("customSize", customSize);
             chatbox.parentNode.setAttribute("customSize", customSize);
           }
