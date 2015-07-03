@@ -2309,6 +2309,10 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         cStats.regexpCompartment,
         "The regexp compartment and regexp data.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
+        cStats.savedStacksSet,
+        "The saved stacks set.");
+
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
