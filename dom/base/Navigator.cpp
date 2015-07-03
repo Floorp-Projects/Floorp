@@ -2308,35 +2308,6 @@ Navigator::MayResolve(jsid aId)
   return nameSpaceManager->LookupNavigatorName(name);
 }
 
-struct NavigatorNameEnumeratorClosure
-{
-  NavigatorNameEnumeratorClosure(JSContext* aCx, JSObject* aWrapper,
-                                 nsTArray<nsString>& aNames)
-    : mCx(aCx),
-      mWrapper(aCx, aWrapper),
-      mNames(aNames)
-  {
-  }
-
-  JSContext* mCx;
-  JS::Rooted<JSObject*> mWrapper;
-  nsTArray<nsString>& mNames;
-};
-
-static PLDHashOperator
-SaveNavigatorName(const nsAString& aName,
-                  const nsGlobalNameStruct& aNameStruct,
-                  void* aClosure)
-{
-  NavigatorNameEnumeratorClosure* closure =
-    static_cast<NavigatorNameEnumeratorClosure*>(aClosure);
-  if (!aNameStruct.mConstructorEnabled ||
-      aNameStruct.mConstructorEnabled(closure->mCx, closure->mWrapper)) {
-    closure->mNames.AppendElement(aName);
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                                ErrorResult& aRv)
@@ -2348,8 +2319,14 @@ Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
     return;
   }
 
-  NavigatorNameEnumeratorClosure closure(aCx, GetWrapper(), aNames);
-  nameSpaceManager->EnumerateNavigatorNames(SaveNavigatorName, &closure);
+  JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
+  for (auto i = nameSpaceManager->NavigatorNameIter(); !i.Done(); i.Next()) {
+    const GlobalNameMapEntry* entry = i.Get();
+    if (!entry->mGlobalName.mConstructorEnabled ||
+        entry->mGlobalName.mConstructorEnabled(aCx, wrapper)) {
+      aNames.AppendElement(entry->mKey);
+    }
+  }
 }
 
 JSObject*

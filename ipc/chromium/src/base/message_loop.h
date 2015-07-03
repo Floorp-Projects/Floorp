@@ -109,7 +109,7 @@ public:
   // NOTE: These methods may be called on any thread.  The Task will be invoked
   // on the thread that executes MessageLoop::Run().
 
-  void PostTask(
+  B2G_ACL_EXPORT void PostTask(
       const tracked_objects::Location& from_here, Task* task);
 
   void PostDelayedTask(

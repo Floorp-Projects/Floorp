@@ -82,12 +82,40 @@ ContentEventHandler::InitCommon()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // This shell doesn't support selection.
-  if (NS_WARN_IF(!mSelection->RangeCount())) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  mFirstSelectedRange = mSelection->GetRangeAt(0);
+  if (!mSelection->RangeCount()) {
+    // If there is no selection range, we should compute the selection root
+    // from ancestor limiter or root content of the document.
+    rv = mSelection->GetAncestorLimiter(getter_AddRefs(mRootContent));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!mRootContent) {
+      mRootContent = mPresShell->GetDocument()->GetRootElement();
+      if (NS_WARN_IF(!mRootContent)) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+    }
 
+    // Assume that there is selection at beginning of the root content.
+    rv = nsRange::CreateRange(mRootContent, 0, mRootContent, 0,
+                              getter_AddRefs(mFirstSelectedRange));
+    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!mFirstSelectedRange)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+  }
+
+  mFirstSelectedRange = mSelection->GetRangeAt(0);
+  if (NS_WARN_IF(!mFirstSelectedRange)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // If there is a selection, we should retrieve the selection root from
+  // the range since when the window is inactivated, the ancestor limiter
+  // of mSelection was cleared by blur event handler of nsEditor but the
+  // selection range still keeps storing the nodes.  If the active element of
+  // the deactive window is <input> or <textarea>, we can compute the selection
+  // root from them.
   nsINode* startNode = mFirstSelectedRange->GetStartParent();
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   nsINode* endNode = mFirstSelectedRange->GetEndParent();

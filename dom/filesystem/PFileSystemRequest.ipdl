@@ -20,6 +20,11 @@ struct FileSystemDirectoryResponse
   nsString realPath;
 };
 
+struct FileSystemDirectoryListingResponse
+{
+  PBlob[] blobs;
+};
+
 struct FileSystemErrorResponse
 {
   nsresult error;
@@ -34,6 +39,7 @@ union FileSystemResponseValue
 {
   FileSystemBooleanResponse;
   FileSystemDirectoryResponse;
+  FileSystemDirectoryListingResponse;
   FileSystemFileResponse;
   FileSystemErrorResponse;
 };
