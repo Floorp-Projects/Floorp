@@ -287,17 +287,15 @@ var Harness = {
     if (this.finalContentEvent && !this.waitingForEvent) {
       this.waitingForEvent = true;
       info("Waiting for " + this.finalContentEvent);
-      let mm = gBrowser.selectedBrowser.messageManager;
-      mm.loadFrameScript(`data:,content.addEventListener("${this.finalContentEvent}", () => { sendAsyncMessage("Test:GotNewInstallEvent"); });`, false);
       let win = gBrowser.contentWindow;
       let listener = () => {
         info("Saw " + this.finalContentEvent);
-        mm.removeMessageListener("Test:GotNewInstallEvent", listener);
+        win.removeEventListener(this.finalContentEvent, listener, false);
         this.waitingForEvent = false;
         if (this.pendingCount == 0)
           this.endTest();
       }
-      mm.addMessageListener("Test:GotNewInstallEvent", listener);
+      win.addEventListener(this.finalContentEvent, listener, false);
     }
   },
 

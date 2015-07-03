@@ -4,7 +4,7 @@ namespace _ipdltest {
 prio(normal upto high) sync protocol PTestUrgency
 {
 parent:
-    prio(high) sync Test1() returns (uint32_t result);
+    sync Test1() returns (uint32_t result);
     async Test2();
     sync Test3() returns (uint32_t result);
     sync FinalTest_Begin();
