@@ -460,6 +460,7 @@ public:
 
   // The scroll port clip. Only valid during painting.
   const DisplayItemClip* mAncestorClip;
+  const DisplayItemClip* mAncestorClipForCaret;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
