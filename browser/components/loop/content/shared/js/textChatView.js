@@ -68,7 +68,8 @@ loop.shared.views.chat = (function(mozL10n) {
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
-      message: React.PropTypes.string.isRequired
+      message: React.PropTypes.string.isRequired,
+      useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
     render: function() {
@@ -97,7 +98,8 @@ loop.shared.views.chat = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      messageList: React.PropTypes.arrayOf(React.PropTypes.object).isRequired
+      messageList: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+      useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
@@ -157,7 +159,12 @@ loop.shared.views.chat = (function(mozL10n) {
                 if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
                   switch (entry.contentType) {
                     case CHAT_CONTENT_TYPES.ROOM_NAME:
-                      return React.createElement(TextChatRoomName, {key: i, message: entry.message});
+                      return (
+                        React.createElement(TextChatRoomName, {
+                          key: i, 
+                          message: entry.message, 
+                          useDesktopPaths: this.props.useDesktopPaths})
+                      );
                     case CHAT_CONTENT_TYPES.CONTEXT:
                       return (
                         React.createElement("div", {className: "context-url-view-wrapper", key: i}, 
@@ -168,7 +175,7 @@ loop.shared.views.chat = (function(mozL10n) {
                             showContextTitle: true, 
                             thumbnail: entry.extraData.thumbnail, 
                             url: entry.extraData.location, 
-                            useDesktopPaths: false})
+                            useDesktopPaths: this.props.useDesktopPaths})
                         )
                       );
                     default:
@@ -334,11 +341,8 @@ loop.shared.views.chat = (function(mozL10n) {
    * as a field for entering new messages.
    *
    * @property {loop.Dispatcher} dispatcher
-   * @property {Boolean} showAlways         If false, the view will not be rendered
-   *                                        if text chat is not enabled and the
-   *                                        message list is empty.
-   * @property {Boolean} showRoomName       Set to true to show the room name special
-   *                                        list item.
+   * @property {Boolean}         showRoomName Set to true to show the room name
+   *                                          special list item.
    */
   var TextChatView = React.createClass({displayName: "TextChatView",
     mixins: [
@@ -348,8 +352,8 @@ loop.shared.views.chat = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      showAlways: React.PropTypes.bool.isRequired,
-      showRoomName: React.PropTypes.bool.isRequired
+      showRoomName: React.PropTypes.bool.isRequired,
+      useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
@@ -366,14 +370,14 @@ loop.shared.views.chat = (function(mozL10n) {
           return item.type !== CHAT_MESSAGE_TYPES.SPECIAL;
         });
       } else {
-        // XXX Desktop should be showing the initial context here (bug 1171940).
         messageList = this.state.messageList.filter(function(item) {
-          return item.type !== CHAT_MESSAGE_TYPES.SPECIAL;
+          return item.type !== CHAT_MESSAGE_TYPES.SPECIAL ||
+            item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME;
         });
         hasNonSpecialMessages = !!messageList.length;
       }
 
-      if (!this.props.showAlways && !this.state.textChatEnabled && !messageList.length) {
+      if (!this.state.textChatEnabled && !messageList.length) {
         return null;
       }
 
@@ -386,7 +390,8 @@ loop.shared.views.chat = (function(mozL10n) {
         React.createElement("div", {className: textChatViewClasses}, 
           React.createElement(TextChatEntriesView, {
             dispatcher: this.props.dispatcher, 
-            messageList: messageList}), 
+            messageList: messageList, 
+            useDesktopPaths: this.props.useDesktopPaths}), 
           React.createElement(TextChatInputView, {
             dispatcher: this.props.dispatcher, 
             showPlaceholder: !hasNonSpecialMessages, 
