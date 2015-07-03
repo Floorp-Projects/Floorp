@@ -2,7 +2,7 @@ default-preferences pref(layout.css.box-decoration-break.enabled,true)
 
 == box-decoration-break-1.html box-decoration-break-1-ref.html
 fuzzy(1,20) == box-decoration-break-with-inset-box-shadow-1.html box-decoration-break-with-inset-box-shadow-1-ref.html
-fuzzy(16,460) fuzzy-if(Android,10,3667) == box-decoration-break-with-outset-box-shadow-1.html box-decoration-break-with-outset-box-shadow-1-ref.html
+fuzzy(16,460) fuzzy-if(Android,10,3673) == box-decoration-break-with-outset-box-shadow-1.html box-decoration-break-with-outset-box-shadow-1-ref.html
 random-if(!gtkWidget) HTTP(..) == box-decoration-break-border-image.html box-decoration-break-border-image-ref.html
 == box-decoration-break-block-border-padding.html box-decoration-break-block-border-padding-ref.html
 == box-decoration-break-block-margin.html box-decoration-break-block-margin-ref.html
