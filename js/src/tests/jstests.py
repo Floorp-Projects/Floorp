@@ -299,6 +299,7 @@ def load_tests(options, requested_paths, excluded_paths):
                     tmp_test.jitflags = copy(test.jitflags)
                     tmp_test.jitflags.extend(jitflags)
                     yield tmp_test
+        test_count = test_count * len(flags_list)
         test_gen = flag_gen(test_gen)
 
     if options.test_file:

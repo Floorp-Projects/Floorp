@@ -180,18 +180,26 @@ IDBFactory::CreateForWindow(nsPIDOMWindow* aWindow,
 
 // static
 nsresult
-IDBFactory::CreateForChromeJS(JSContext* aCx,
-                              JS::Handle<JSObject*> aOwningObject,
-                              IDBFactory** aFactory)
+IDBFactory::CreateForMainThreadJS(JSContext* aCx,
+                                  JS::Handle<JSObject*> aOwningObject,
+                                  IDBFactory** aFactory)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  nsAutoPtr<PrincipalInfo> principalInfo(
-    new PrincipalInfo(SystemPrincipalInfo()));
+  nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
+  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aOwningObject);
+  MOZ_ASSERT(principal);
+  bool isSystem;
+  if (!AllowedForPrincipal(principal, &isSystem)) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
-  nsresult rv =
-    CreateForMainThreadJSInternal(aCx, aOwningObject, principalInfo, aFactory);
+  nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = CreateForMainThreadJSInternal(aCx, aOwningObject, principalInfo, aFactory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

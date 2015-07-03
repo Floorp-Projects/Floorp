@@ -387,8 +387,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
       iter->GetNext(getter_AddRefs(tmp));
       nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(tmp);
-      NS_WARN_IF_FALSE(domBlob,
-                       "Null file object from FilePicker's file enumerator?");
+      MOZ_ASSERT(domBlob,
+                 "Null file object from FilePicker's file enumerator?");
       if (domBlob) {
         newFiles.AppendElement(static_cast<File*>(domBlob.get()));
       }

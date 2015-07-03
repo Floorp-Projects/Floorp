@@ -34,7 +34,7 @@ public:
                          AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
     , mSource(nullptr)
-    , mDestination(static_cast<AudioNodeStream*>(aDestination->Stream()))
+    , mDestination(aDestination->Stream())
     // Keep the default value in sync with the default value in
     // StereoPannerNode::StereoPannerNode.
     , mPan(0.f)
@@ -183,7 +183,7 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
   StereoPannerNodeEngine* engine = new StereoPannerNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine,
                                                      MediaStreamGraph::INTERNAL_STREAM);
-  engine->SetSourceStream(static_cast<AudioNodeStream*>(mStream.get()));
+  engine->SetSourceStream(mStream);
 }
 
 StereoPannerNode::~StereoPannerNode()

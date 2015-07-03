@@ -77,6 +77,14 @@ public:
   already_AddRefed<Promise>
   RemoveDeep(const StringOrFileOrDirectory& aPath, ErrorResult& aRv);
 
+  // From https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface :
+
+  void
+  GetPath(nsAString& aRetval) const;
+
+  already_AddRefed<Promise>
+  GetFilesAndDirectories();
+
   // =========== End WebIDL bindings.============
 
   FileSystemBase*

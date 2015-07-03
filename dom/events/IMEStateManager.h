@@ -157,7 +157,7 @@ public:
    * to dispatch events.
    */
   static void OnCompositionEventDiscarded(
-                const WidgetCompositionEvent* aCompositionEvent);
+                WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Get TextComposition from widget.

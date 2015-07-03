@@ -349,6 +349,7 @@ MediaKeySystemAccess::NotifyObservers(nsIDOMWindow* aWindow,
   data.mStatus = aStatus;
   nsAutoString json;
   data.ToJSON(json);
+  EME_LOG("MediaKeySystemAccess::NotifyObservers() %s", NS_ConvertUTF16toUTF8(json).get());
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(aWindow, "mediakeys-request", json.get());
