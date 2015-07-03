@@ -11,11 +11,6 @@
 const Ci = Components.interfaces;
 var mainWindow;
 
-var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-prefBranch.setIntPref("browser.startup.page", 0);
-prefBranch.setCharPref("browser.startup.homepage_override.mstone", "ignore");
-
 var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
 
 function testOnWindow(aIsPrivate, aCallback) {
@@ -69,7 +64,7 @@ function doTests() {
           var sharedWorker3 = new wP.content.SharedWorker('sharedWorker_privateBrowsing.js');
           sharedWorker3.port.onmessage = function(event) {
             is(event.data, 2, "Only 2 sharedworker expected in the private window");
-            SimpleTest.finish();
+            runTest();
           }
         }
       }
@@ -87,9 +82,6 @@ function runTest() {
     wN.close();
     wP.close();
 
-    prefBranch.clearUserPref("browser.startup.page")
-    prefBranch.clearUserPref("browser.startup.homepage_override.mstone");
-
     SimpleTest.finish();
     return;
   }
@@ -99,7 +91,11 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.workers.sharedWorkers.enabled", true]]}, runTest);
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.workers.sharedWorkers.enabled", true],
+  ["browser.startup.page", 0],
+  ["browser.startup.homepage_override.mstone", "ignore"],
+]}, runTest);
 
 </script>
 </body>

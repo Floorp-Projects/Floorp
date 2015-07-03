@@ -125,11 +125,14 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
             aAttributes->getValue(nsHtml5AttributeName::ATTR_SRCSET);
           nsString* crossOrigin =
             aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+          nsString* referrerPolicy =
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRER);
           nsString* sizes =
             aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
           mSpeculativeLoadQueue.AppendElement()->
             InitImage(url ? *url : NullString(),
                       crossOrigin ? *crossOrigin : NullString(),
+                      referrerPolicy ? *referrerPolicy : NullString(),
                       srcset ? *srcset : NullString(),
                       sizes ? *sizes : NullString());
         } else if (nsHtml5Atoms::source == aName) {
@@ -203,6 +206,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString(),
                                                              NullString(),
+                                                             NullString(),
                                                              NullString());
           }
         } else if (nsHtml5Atoms::style == aName) {
@@ -238,6 +242,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString(),
+                                                             NullString(),
                                                              NullString(),
                                                              NullString());
           }
