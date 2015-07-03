@@ -99,7 +99,7 @@ const int64_t NO_VIDEO_AMPLE_AUDIO_DIVISOR = 8;
 // If we have fewer than LOW_VIDEO_FRAMES decoded frames, and
 // we're not "prerolling video", we'll skip the video up to the next keyframe
 // which is at or after the current playback position.
-static const uint32_t LOW_VIDEO_FRAMES = 1;
+static const uint32_t LOW_VIDEO_FRAMES = 2;
 
 // Threshold in usecs that used to check if we are low on decoded video.
 // If the last video frame's end time |mDecodedVideoEndTime| is more than
@@ -344,7 +344,7 @@ bool MediaDecoderStateMachine::HaveNextFrameData()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   return (!HasAudio() || HasFutureAudio()) &&
-         (!HasVideo() || VideoQueue().GetSize() > 0);
+         (!HasVideo() || VideoQueue().GetSize() > 1);
 }
 
 int64_t MediaDecoderStateMachine::GetDecodedAudioDuration()
@@ -415,7 +415,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
 
-  if (static_cast<uint32_t>(VideoQueue().GetSize()) < GetAmpleVideoFrames() * mPlaybackRate) {
+  if (VideoQueue().GetSize() - 1 < GetAmpleVideoFrames() * mPlaybackRate) {
     return false;
   }
 
@@ -2154,7 +2154,7 @@ MediaDecoderStateMachine::SeekCompleted()
     SetState(DECODER_STATE_SEEKING);
   } else if (GetMediaTime() == Duration().ToMicroseconds() && !isLiveStream) {
     // Seeked to end of media, move to COMPLETED state. Note we don't do
-    // this if we're playing a live stream, since the end of media will advance
+    // this when playing a live stream, since the end of media will advance
     // once we download more data!
     DECODER_LOG("Changed state from SEEKING (to %lld) to COMPLETED", seekTime);
     // Explicitly set our state so we don't decode further, and so
@@ -2387,7 +2387,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // Play the remaining media. We want to run AdvanceFrame() at least
       // once to ensure the current playback position is advanced to the
       // end of the media, and so that we update the readyState.
-      if (VideoQueue().GetSize() > 0 ||
+      if (VideoQueue().GetSize() > 1 ||
           (HasAudio() && !mAudioCompleted) ||
           (mAudioCaptured && !mDecodedStream->IsFinished()))
       {
@@ -2512,6 +2512,7 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
     } else {
       mCorruptFrames.insert(0);
     }
+    aData->mSentToCompositor = true;
     container->SetCurrentFrame(aData->mDisplay, aData->mImage, aTarget);
     MOZ_ASSERT(container->GetFrameDelay() >= 0 || IsRealTime());
   }
@@ -2613,31 +2614,32 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   TimeStamp nowTime;
   const int64_t clockTime = GetClock(&nowTime);
   // Skip frames up to the frame at the playback position, and figure out
-  // the time remaining until it's time to display the next frame.
-  int64_t remainingTime = AUDIO_DURATION_USECS;
+  // the time remaining until it's time to display the next frame and drop
+  // the current frame.
   NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
+  int64_t remainingTime = AUDIO_DURATION_USECS;
   nsRefPtr<VideoData> currentFrame;
   if (VideoQueue().GetSize() > 0) {
-    VideoData* frame = VideoQueue().PeekFront();
-    int32_t droppedFrames = 0;
-    while (IsRealTime() || clockTime >= frame->mTime) {
-      mVideoFrameEndTime = frame->GetEndTime();
-      if (currentFrame) {
-        mDecoder->NotifyDecodedFrames(0, 0, 1);
-        VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
-                    currentFrame->mTime, clockTime, ++droppedFrames);
-      }
-      currentFrame = frame;
-      nsRefPtr<VideoData> releaseMe = VideoQueue().PopFront();
-      OnPlaybackOffsetUpdate(frame->mOffset);
-      if (VideoQueue().GetSize() == 0)
+    currentFrame = VideoQueue().PopFront();
+    int32_t framesRemoved = 0;
+    while (VideoQueue().GetSize() > 0) {
+      VideoData* nextFrame = VideoQueue().PeekFront();
+      if (!IsRealTime() && nextFrame->mTime > clockTime) {
+        remainingTime = nextFrame->mTime - clockTime;
         break;
-      frame = VideoQueue().PeekFront();
+      }
+      ++framesRemoved;
+      if (!currentFrame->mSentToCompositor) {
+        mDecoder->NotifyDecodedFrames(0, 0, 1);
+        VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld",
+                    currentFrame->mTime, clockTime);
+      }
+      currentFrame = VideoQueue().PopFront();
     }
-    // Current frame has already been presented, wait until it's time to
-    // present the next frame.
-    if (frame && !currentFrame) {
-      remainingTime = frame->mTime - clockTime;
+    VideoQueue().PushFront(currentFrame);
+    if (framesRemoved > 0) {
+      OnPlaybackOffsetUpdate(currentFrame->mOffset);
+      mVideoFrameEndTime = currentFrame->GetEndTime();
     }
   }
 
@@ -2656,9 +2658,6 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
                      (OutOfDecodedVideo() && mVideoWaitRequest.Exists());
     }
     if (shouldBuffer) {
-      if (currentFrame) {
-        PushFront(currentFrame);
-      }
       StartBuffering();
       // Don't go straight back to the state machine loop since that might
       // cause us to start decoding again and we could flip-flop between
@@ -2703,28 +2702,8 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     currentFrame = nullptr;
   }
 
-  // The remainingTime is negative (include zero):
-  // 1. When the clockTime is larger than the latest video frame's endtime.
-  // All the video frames should be rendered or dropped, nothing left in
-  // VideoQueue. And since the VideoQueue is empty, we don't need to wake up
-  // statemachine thread immediately, so set the remainingTime to default value.
-  // 2. Current frame's endtime is smaller than clockTime but there still exist
-  // newer frames in queue. Re-calculate the remainingTime.
-  if (remainingTime <= 0) {
-    VideoData* nextFrame = VideoQueue().PeekFront();
-    if (nextFrame) {
-      remainingTime = nextFrame->mTime - clockTime;
-    } else {
-      remainingTime = AUDIO_DURATION_USECS;
-    }
-  }
-
-  int64_t delay = remainingTime / mPlaybackRate;
-  if (delay > 0) {
-    ScheduleStateMachineIn(delay);
-  } else {
-    ScheduleStateMachine();
-  }
+  int64_t delay = std::max<int64_t>(1, remainingTime / mPlaybackRate);
+  ScheduleStateMachineIn(delay);
 }
 
 nsresult

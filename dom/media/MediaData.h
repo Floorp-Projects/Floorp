@@ -280,6 +280,8 @@ public:
   nsRefPtr<Image> mImage;
 
 
+  bool mSentToCompositor;
+
   VideoData(int64_t aOffset,
             int64_t aTime,
             int64_t aDuration,
