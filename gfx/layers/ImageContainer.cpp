@@ -16,6 +16,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/LayersMessages.h"
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
@@ -343,6 +344,17 @@ ImageContainer::GetCurrentSize()
   }
 
   return mActiveImage->GetSize();
+}
+
+void
+ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotification)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (!aNotification.imageTimeStamp().IsNull()) {
+    mPaintDelay = aNotification.firstCompositeTimeStamp() -
+        aNotification.imageTimeStamp();
+  }
 }
 
 PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
