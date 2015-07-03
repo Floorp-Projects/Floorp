@@ -60,6 +60,7 @@ UNIFIED_SOURCES += [
     'WebGL2ContextMRTs.cpp',
     'WebGL2ContextPrograms.cpp',
     'WebGL2ContextQueries.cpp',
+    'WebGL2ContextRenderbuffers.cpp',
     'WebGL2ContextSamplers.cpp',
     'WebGL2ContextState.cpp',
     'WebGL2ContextSync.cpp',
