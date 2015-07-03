@@ -26,6 +26,8 @@ public:
     bool RecvTest1_InnerEvent(uint32_t* aResult) override;
     bool RecvTest2_Start() override;
     bool RecvTest2_OutOfOrder() override;
+    bool RecvTest3_Start(uint32_t* aResult) override;
+    bool RecvTest3_InnerEvent(uint32_t* aResult) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -57,6 +59,7 @@ public:
     bool RecvTest1_NoReenter(uint32_t* aResult) override;
     bool RecvTest2_FirstUrgent() override;
     bool RecvTest2_SecondUrgent() override;
+    bool RecvTest3_WakeUp(uint32_t* aResult) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

@@ -1,40 +1,38 @@
 dump('loaded child cpow test\n');
 
+content.document.title = "Hello, Kitty";
 const Cu = Components.utils;
 
+var done_count = 0;
+var is_remote;
+
 (function start() {
-  [is_remote] = sendRpcMessage("cpows:is_remote");
-
-  var tests = [
-    parent_test,
-    error_reporting_test,
-    dom_test,
-    xray_test,
-    symbol_test,
-    compartment_test,
-    regexp_test,
-    postmessage_test,
-    sync_test,
-    async_test,
-    rpc_test,
-    lifetime_test
-  ];
-
-  function go() {
-    if (tests.length == 0) {
-      sendRpcMessage("cpows:done", {});
-      return;
+    [is_remote] = sendSyncMessage("cpows:is_remote");
+    parent_test();
+    error_reporting_test();
+    dom_test();
+    xray_test();
+    if (typeof Symbol === "function") {
+      symbol_test();
     }
-
-    var test = tests[0];
-    tests.shift();
-    test(function() {
-      go();
+    compartment_test();
+    regexp_test();
+    postmessage_test();
+    sync_test();
+    async_test();
+    rpc_test();
+    nested_sync_test();
+    // The sync-ness of this call is important, because otherwise
+    // we tear down the child's document while we are
+    // still in the async test in the parent.
+    // This test races with itself to be the final test.
+    lifetime_test(function() {
+      done_count++;
+      if (done_count == 2)
+        sendSyncMessage("cpows:done", {});
     });
   }
-
-  go();
-})();
+)();
 
 function ok(condition, message) {
   dump('condition: ' + condition  + ', ' + message + '\n');
@@ -71,7 +69,6 @@ function make_object()
 
   let with_null_proto = Object.create(null);
 
-  content.document.title = "Hello, Kitty";
   return { "data": o,
            "throwing": throwing,
            "document": content.document,
@@ -87,7 +84,7 @@ function make_json()
   return { check: "ok" };
 }
 
-function parent_test(finish)
+function parent_test()
 {
   function f(check_func) {
     let result = check_func(10);
@@ -107,39 +104,38 @@ function parent_test(finish)
     sb.func = func;
     ok(sb.eval('func()') == 101, "can call parent's function in child");
 
-    finish();
+    done_count++;
+    if (done_count == 2)
+      sendSyncMessage("cpows:done", {});
   });
-  sendRpcMessage("cpows:parent_test", {}, {func: f});
+  sendSyncMessage("cpows:parent_test", {}, {func: f});
 }
 
-function error_reporting_test(finish) {
-  sendRpcMessage("cpows:error_reporting_test", {}, {});
-  finish();
+function error_reporting_test() {
+  sendSyncMessage("cpows:error_reporting_test", {}, {});
 }
 
-function dom_test(finish)
+function dom_test()
 {
   let element = content.document.createElement("div");
   element.id = "it_works";
   content.document.body.appendChild(element);
 
-  sendRpcMessage("cpows:dom_test", {}, {element: element});
+  sendAsyncMessage("cpows:dom_test", {}, {element: element});
   Components.utils.schedulePreciseGC(function() {
-    sendRpcMessage("cpows:dom_test_after_gc");
-    finish();
+    sendSyncMessage("cpows:dom_test_after_gc");
   });
 }
 
-function xray_test(finish)
+function xray_test()
 {
   let element = content.document.createElement("div");
   element.wrappedJSObject.foo = "hello";
 
-  sendRpcMessage("cpows:xray_test", {}, {element: element});
-  finish();
+  sendSyncMessage("cpows:xray_test", {}, {element: element});
 }
 
-function symbol_test(finish)
+function symbol_test()
 {
   let iterator = Symbol.iterator;
   let named = Symbol.for("cpow-test");
@@ -149,18 +145,16 @@ function symbol_test(finish)
     [named]: named,
   };
   let test = ['a'];
-  sendRpcMessage("cpows:symbol_test", {}, {object: object, test: test});
-  finish();
+  sendSyncMessage("cpows:symbol_test", {}, {object: object, test: test});
 }
 
 // Parent->Child references should go X->parent.privilegedJunkScope->child.privilegedJunkScope->Y
 // Child->Parent references should go X->child.privilegedJunkScope->parent.unprivilegedJunkScope->Y
-function compartment_test(finish)
+function compartment_test()
 {
   // This test primarily checks various compartment invariants for CPOWs, and
   // doesn't make sense to run in-process.
   if (!is_remote) {
-    finish();
     return;
   }
 
@@ -184,47 +178,41 @@ function compartment_test(finish)
 
     return results;
   }
-  sendRpcMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
-                                                 testParentObject: testParentObject });
-  finish();
+  sendSyncMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
+                                                  testParentObject: testParentObject });
 }
 
-function regexp_test(finish)
+function regexp_test()
 {
-  sendRpcMessage("cpows:regexp_test", {}, { regexp: /myRegExp/g });
-  finish();
+  sendSyncMessage("cpows:regexp_test", {}, { regexp: /myRegExp/g });
 }
 
-function postmessage_test(finish)
+function postmessage_test()
 {
-  sendRpcMessage("cpows:postmessage_test", {}, { win: content.window });
-  finish();
+  sendSyncMessage("cpows:postmessage_test", {}, { win: content.window });
 }
 
-function sync_test(finish)
+function sync_test()
 {
   dump('beginning cpow sync test\n');
   sync_obj = make_object();
-  sendRpcMessage("cpows:sync",
+  sendSyncMessage("cpows:sync",
     make_json(),
     make_object());
-  finish();
 }
 
-function async_test(finish)
+function async_test()
 {
   dump('beginning cpow async test\n');
   async_obj = make_object();
   sendAsyncMessage("cpows:async",
     make_json(),
     async_obj);
-
-  addMessageListener("cpows:async_done", finish);
 }
 
 var rpc_obj;
 
-function rpc_test(finish)
+function rpc_test()
 {
   dump('beginning cpow rpc test\n');
   rpc_obj = make_object();
@@ -235,7 +223,26 @@ function rpc_test(finish)
   sendRpcMessage("cpows:rpc",
     make_json(),
     rpc_obj);
-  finish();
+}
+
+function nested_sync_test()
+{
+  dump('beginning cpow nested sync test\n');
+  sync_obj = make_object();
+  sync_obj.data.reenter = function () {
+    let caught = false;
+    try {
+       sendSyncMessage("cpows:reenter_sync", { }, { });
+    } catch (e) {
+      caught = true;
+    }
+    if (!ok(caught, "should not allow nested sync"))
+      return "fail";
+    return "ok";
+  }
+  sendSyncMessage("cpows:nested_sync",
+    make_json(),
+    rpc_obj);
 }
 
 function lifetime_test(finish)
@@ -250,7 +257,7 @@ function lifetime_test(finish)
 
   dump("beginning lifetime test\n");
   var obj = {"will_die": {"f": 1}};
-  let [result] = sendRpcMessage("cpows:lifetime_test_1", {}, {obj: obj});
+  let [result] = sendSyncMessage("cpows:lifetime_test_1", {}, {obj: obj});
   ok(result == 10, "got sync result");
   ok(obj.wont_die.f == 2, "got reverse CPOW");
   obj.will_die = null;
@@ -259,6 +266,6 @@ function lifetime_test(finish)
       ok(obj.wont_die.f == 2, "reverse CPOW still works");
       finish();
     });
-    sendRpcMessage("cpows:lifetime_test_2");
+    sendSyncMessage("cpows:lifetime_test_2");
   });
 }
