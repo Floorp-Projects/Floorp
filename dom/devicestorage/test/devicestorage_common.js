@@ -77,3 +77,44 @@ function reportErrorAndQuit(e) {
   ok(false, "handleError was called : " + e.target.error.name);
   devicestorage_cleanup();
 }
+
+function createTestFiles(storage, paths) {
+  function createTestFile(path) {
+    return new Promise(function(resolve, reject) {
+      function addNamed() {
+        var req = storage.addNamed(createRandomBlob("image/png"), path);
+
+        req.onsuccess = function() {
+          ok(true, path + " was created.");
+          resolve();
+        };
+
+        req.onerror = function(e) {
+          ok(false, "Failed to create " + path + ': ' + e.target.error.name);
+          reject();
+        };
+      }
+
+      // Bug 980136. Check if the file exists before we create.
+      var req = storage.get(path);
+
+      req.onsuccess = function() {
+        ok(true, path + " exists. Do not need to create.");
+        resolve();
+      };
+
+      req.onerror = function(e) {
+        ok(true, path + " does not exists: " + e.target.error.name);
+        addNamed();
+      };
+    });
+  }
+
+  var arr = [];
+
+  paths.forEach(function(path) {
+    arr.push(createTestFile(path));
+  });
+
+  return Promise.all(arr);
+}

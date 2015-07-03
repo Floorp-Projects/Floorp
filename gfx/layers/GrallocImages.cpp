@@ -34,6 +34,7 @@ int32_t GrallocImage::sColorIdMap[] = {
     HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED, HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED,
     HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS, HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS,
     HAL_PIXEL_FORMAT_YV12, OMX_COLOR_FormatYUV420Planar,
+    HAL_PIXEL_FORMAT_RGBA_8888, -1,
     0, 0
 };
 
@@ -358,6 +359,21 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
                            aSurface->GetSize(),
                            aMappedSurface->mData,
                            aMappedSurface->mStride);
+    return OK;
+  }
+
+  if (format == HAL_PIXEL_FORMAT_RGBA_8888) {
+    uint32_t* src = (uint32_t*)(buffer);
+    uint16_t* dest = (uint16_t*)(aMappedSurface->mData);
+
+    // Convert RGBA8888 to RGB565
+    for (size_t i = 0; i < width * height; i++) {
+      uint32_t r = ((*src >> 0 ) & 0xFF);
+      uint32_t g = ((*src >> 8 ) & 0xFF);
+      uint32_t b = ((*src >> 16) & 0xFF);
+      *dest++ = ((r >> 3) << 11) | ((g >> 2) << 5) | ((b >> 3) << 0);
+      src++;
+    }
     return OK;
   }
 
