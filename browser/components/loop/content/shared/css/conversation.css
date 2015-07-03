@@ -54,7 +54,7 @@
     margin-right: 16px;
   }
 
-.btn-screen-share-entry {
+.btn-edit-entry {
   float: right !important;
   border-left: 1px solid #5a5a5a;
 }
@@ -210,10 +210,15 @@
 }
 
 /* Screen share button */
+.btn-mute-edit,
 .btn-screen-share {
   position: relative;
-  background-image: url(../img/icons-16x16.svg#screen-white);
+  background-image: url(../img/icons-10x10.svg#edit-white);
   background-size: 16px 16px;
+}
+
+.btn-screen-share {
+  background-image: url(../img/icons-16x16.svg#screen-white);
   width: 42px;
 }
 
@@ -225,6 +230,10 @@
 .btn-screen-share.active {
   background-image: url(../img/icons-16x16.svg#screenmute-white);
   background-color: #6CB23E;
+}
+
+.btn-mute-edit.muted,
+.btn-screen-share.active {
   opacity: 1;
 }
 
@@ -986,6 +995,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   margin-bottom: 1em;
 }
 
+.room-context-label,
 .room-context > .checkbox-wrapper > label {
   color: #fff;
 }

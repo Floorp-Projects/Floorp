@@ -334,6 +334,17 @@ loop.roomViews = (function(mozL10n) {
         }
       }
 
+      // Feature support: when a context save completed without error, we can
+      // close the context edit form.
+      if (("savingContext" in nextProps) && this.props.savingContext &&
+          this.props.savingContext !== nextProps.savingContext && this.state.show
+          && !this.props.error && !nextProps.error) {
+        newState.show = false;
+        if (this.props.onClose) {
+          this.props.onClose();
+        }
+      }
+
       if (Object.getOwnPropertyNames(newState).length) {
         this.setState(newState);
       }
@@ -668,6 +679,10 @@ loop.roomViews = (function(mozL10n) {
       this.setState({ showEditContext: true });
     },
 
+    handleEditContextClick: function() {
+      this.setState({ showEditContext: !this.state.showEditContext });
+    },
+
     handleEditContextClose: function() {
       this.setState({ showEditContext: false });
     },
@@ -748,7 +763,9 @@ loop.roomViews = (function(mozL10n) {
                   <sharedViews.ConversationToolbar
                     audio={{enabled: !this.state.audioMuted, visible: true}}
                     dispatcher={this.props.dispatcher}
+                    edit={{ visible: this.state.contextEnabled, enabled: !this.state.showEditContext }}
                     hangup={this.leaveRoom}
+                    onEditClick={this.handleEditContextClick}
                     publishStream={this.publishStream}
                     screenShare={screenShareData}
                     video={{enabled: !this.state.videoMuted, visible: true}} />
