@@ -7,7 +7,10 @@
 // Tests that the Web Console limits the number of lines displayed according to
 // the limit set for each category.
 
-const INIT_URI = "data:text/html;charset=utf-8,Web Console test for bug 644419: Console should " +
+"use strict";
+
+const INIT_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "bug 644419: Console should " +
                  "have user-settable log limits for each message category";
 
 const TEST_URI = "http://example.com/browser/browser/devtools/" +
@@ -54,7 +57,7 @@ function testWebDevLimits() {
       category: CATEGORY_JS,
       severity: SEVERITY_ERROR,
     }],
-  })
+  });
 }
 
 function testWebDevLimits2() {
@@ -71,7 +74,8 @@ function testWebDevLimits2() {
       severity: SEVERITY_LOG,
     }],
   }).then(() => {
-    testLogEntry(outputNode, "test message 0", "first message is pruned", false, true);
+    testLogEntry(outputNode, "test message 0", "first message is pruned",
+                 false, true);
     findLogEntry("test message 1");
     // Check if the sentinel entry is still there.
     findLogEntry("bar is not defined");
@@ -101,7 +105,7 @@ function testJsLimits2() {
   // Fill the log with JS errors.
   let head = content.document.getElementsByTagName("head")[0];
   for (let i = 0; i < 11; i++) {
-    var script = content.document.createElement("script");
+    let script = content.document.createElement("script");
     script.text = "fubar" + i + ".bogus(6);";
 
     expectUncaughtException();
@@ -116,7 +120,8 @@ function testJsLimits2() {
       severity: SEVERITY_ERROR,
     }],
   }).then(() => {
-    testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned", false, true);
+    testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned",
+                 false, true);
     findLogEntry("fubar1 is not defined");
     // Check if the sentinel entry is still there.
     findLogEntry("testing JS limits");
@@ -125,7 +130,7 @@ function testJsLimits2() {
   });
 }
 
-var gCounter, gImage;
+let gCounter, gImage;
 
 function testNetLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
@@ -156,7 +161,7 @@ function loadImage() {
     body.insertBefore(gImage, body.firstChild);
     gImage.addEventListener("load", loadImage, true);
     gCounter++;
-    return;
+    return true;
   }
 
   is(gCounter, 11, "loaded 11 files");
@@ -201,7 +206,7 @@ function testCssLimits2() {
   // Fill the log with CSS errors.
   let body = content.document.getElementsByTagName("body")[0];
   for (let i = 0; i < 11; i++) {
-    var div = content.document.createElement("div");
+    let div = content.document.createElement("div");
     div.setAttribute("style", "-moz-foobar" + i + ": 42;");
     body.insertBefore(div, body.firstChild);
   }
