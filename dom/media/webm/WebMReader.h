@@ -24,37 +24,7 @@ static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;
 
 class WebMBufferedState;
-
-// Queue for holding nestegg packets.
-class WebMPacketQueue {
- public:
-  int32_t GetSize() {
-    return mQueue.size();
-  }
-
-  void Push(already_AddRefed<NesteggPacketHolder> aItem) {
-    mQueue.push_back(Move(aItem));
-  }
-
-  void PushFront(already_AddRefed<NesteggPacketHolder> aItem) {
-    mQueue.push_front(Move(aItem));
-  }
-
-  already_AddRefed<NesteggPacketHolder> PopFront() {
-    nsRefPtr<NesteggPacketHolder> result = mQueue.front().forget();
-    mQueue.pop_front();
-    return result.forget();
-  }
-
-  void Reset() {
-    while (!mQueue.empty()) {
-      mQueue.pop_front();
-    }
-  }
-
-private:
-  std::deque<nsRefPtr<NesteggPacketHolder>> mQueue;
-};
+class WebMPacketQueue;
 
 class WebMReader;
 
@@ -135,10 +105,10 @@ public:
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read.
-  already_AddRefed<NesteggPacketHolder> NextPacket(TrackType aTrackType);
+  nsRefPtr<NesteggPacketHolder> NextPacket(TrackType aTrackType);
 
   // Pushes a packet to the front of the video packet queue.
-  virtual void PushVideoPacket(already_AddRefed<NesteggPacketHolder> aItem);
+  virtual void PushVideoPacket(NesteggPacketHolder* aItem);
 
   int GetVideoCodec();
   nsIntRect GetPicture();
@@ -181,7 +151,7 @@ private:
 
   // Internal method that demuxes the next packet from the stream. The caller
   // is responsible for making sure it doesn't get lost.
-  already_AddRefed<NesteggPacketHolder> DemuxPacket();
+  nsRefPtr<NesteggPacketHolder> DemuxPacket();
 
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.
