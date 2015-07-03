@@ -122,6 +122,13 @@ processor
 
    Always defined.
 
+release_build
+   Whether this is a release build.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
+
 tests_enabled
    Whether tests are enabled for this build.
 
