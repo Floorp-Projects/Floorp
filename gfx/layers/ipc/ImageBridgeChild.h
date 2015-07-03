@@ -217,11 +217,10 @@ public:
   virtual bool IsImageBridgeChild() const override { return true; }
 
   /**
-   * See CompositableForwarder::UseTexture
+   * See CompositableForwarder::UseTextures
    */
-  virtual void UseTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient,
-                          const nsIntRect* aPictureRect = nullptr) override;
+  virtual void UseTextures(CompositableClient* aCompositable,
+                           const nsTArray<TimedTextureClient>& aTextures) override;
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;

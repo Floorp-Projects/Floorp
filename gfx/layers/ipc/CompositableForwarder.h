@@ -128,16 +128,17 @@ public:
     mTexturesToRemove.Clear();
   }
 
+  struct TimedTextureClient {
+    TextureClient* mTextureClient;
+    TimeStamp mTimeStamp;
+    nsIntRect mPictureRect;
+  };
   /**
-   * Tell the CompositableHost on the compositor side what texture to use for
+   * Tell the CompositableHost on the compositor side what textures to use for
    * the next composition.
-   * If non-null, aPictureRect is the area of the texture which makes up the
-   * image. That is, the area that should be composited. In texture space.
-   * When aPictureRect is null, the entire area of the texture is used.
    */
-  virtual void UseTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient,
-                          const nsIntRect* aPictureRect = nullptr) = 0;
+  virtual void UseTextures(CompositableClient* aCompositable,
+                           const nsTArray<TimedTextureClient>& aTextures) = 0;
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) = 0;

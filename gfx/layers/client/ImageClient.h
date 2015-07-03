@@ -106,7 +106,11 @@ public:
                               AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
 
 protected:
-  RefPtr<TextureClient> mFrontBuffer;
+  struct Buffer {
+    RefPtr<TextureClient> mTextureClient;
+    int32_t mImageSerial;
+  };
+  nsTArray<Buffer> mBuffers;
 };
 
 /**

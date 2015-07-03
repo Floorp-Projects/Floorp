@@ -376,6 +376,7 @@ public:
 
   struct OwningImage {
     nsRefPtr<Image> mImage;
+    TimeStamp mTimeStamp;
   };
   /**
    * Copy the current Image list to aImages.
