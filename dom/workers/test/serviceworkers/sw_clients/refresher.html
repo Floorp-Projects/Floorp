@@ -6,8 +6,9 @@
 <html>
 <head>
   <title>Bug 982726 - test match_all not crashing</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <!-- some tests will intercept this bogus script request -->
+  <script type="text/javascript" src="does_not_exist.js"></script>
 </head>
 <body>
 <p id="display"></p>
@@ -16,7 +17,7 @@
 <script class="testbody" type="text/javascript">
 
   if (!parent) {
-    info("sw_clients/simple.html shouldn't be launched directly!");
+    dump("sw_clients/simple.html shouldn't be launched directly!");
   }
 
   window.addEventListener("message", function(event) {

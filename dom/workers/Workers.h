@@ -202,6 +202,7 @@ enum WorkerPreference
   WORKERPREF_DOM_WORKERNOTIFICATION, // dom.webnotifications.workers.enabled
   WORKERPREF_DOM_CACHES_TESTING, // dom.caches.testing.enabled
   WORKERPREF_SERVICEWORKERS_TESTING, // dom.serviceWorkers.testing.enabled
+  WORKERPREF_INTERCEPTION_OPAQUE_ENABLED, // dom.serviceWorkers.interception.opaque.enabled
   WORKERPREF_COUNT
 };
 

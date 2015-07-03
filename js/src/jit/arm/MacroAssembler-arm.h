@@ -1824,16 +1824,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         load32(Source, lr);
         storeValue(JSVAL_TYPE_INT32, lr, Dest);
     }
-    void memMove32(Address Source, Address Dest) {
-        loadPtr(Source, lr);
-        storePtr(lr, Dest);
-    }
-    void memMove64(Address Source, Address Dest) {
-        loadPtr(Source, lr);
-        storePtr(lr, Dest);
-        loadPtr(Address(Source.base, Source.offset+4), lr);
-        storePtr(lr, Address(Dest.base, Dest.offset+4));
-    }
 
     void lea(Operand addr, Register dest) {
         ma_add(addr.baseReg(), Imm32(addr.disp()), dest);

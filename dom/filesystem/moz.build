@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'FileSystemRequestParent.cpp',
     'FileSystemTaskBase.cpp',
     'FileSystemUtils.cpp',
+    'GetDirectoryListingTask.cpp',
     'GetFileOrDirectoryTask.cpp',
     'RemoveTask.cpp',
 ]
