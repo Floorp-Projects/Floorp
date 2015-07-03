@@ -108,7 +108,8 @@ struct AutoEndTransaction {
 
 void
 ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
-                             TextureClient* aTexture)
+                             TextureClient* aTexture,
+                             const gfx::IntRect* aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTexture);
@@ -116,9 +117,12 @@ ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
   MOZ_ASSERT(aTexture->GetIPDLActor());
 
   FenceHandle fence = aTexture->GetAcquireFenceHandle();
+  IntRect pictureRect = aPictureRect ? *aPictureRect :
+      IntRect(IntPoint(0, 0), IntSize(aTexture->GetSize()));
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                                    nullptr, aTexture->GetIPDLActor(),
-                                   fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t())));
+                                   fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                   pictureRect));
 }
 
 void
@@ -141,21 +145,14 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
 #ifdef MOZ_WIDGET_GONK
 void
 ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
-                                   const OverlaySource& aOverlay)
+                                   const OverlaySource& aOverlay,
+                                   const nsIntRect& aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
-  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(), aOverlay));
+  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
+      aOverlay, aPictureRect));
 }
 #endif
-
-void
-ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
-                                    const gfx::IntRect& aRect)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  mTxn->AddNoSwapEdit(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
-}
 
 // Singleton
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;

@@ -245,9 +245,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
 
   mFrontBuffer = texture;
-  GetForwarder()->UseTexture(this, texture);
-
-  UpdatePictureRect(image->GetPictureRect());
+  IntRect pictureRect = image->GetPictureRect();
+  GetForwarder()->UseTexture(this, texture, &pictureRect);
 
   mLastPaintedImageSerial = image->GetSerial();
   aContainer->NotifyPaintedImage(image);
@@ -277,17 +276,6 @@ ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
 , mType(aType)
 , mLastPaintedImageSerial(0)
 {}
-
-void
-ImageClient::UpdatePictureRect(IntRect aRect)
-{
-  if (mPictureRect == aRect) {
-    return;
-  }
-  mPictureRect = aRect;
-  MOZ_ASSERT(mForwarder);
-  GetForwarder()->UpdatePictureRect(this, aRect);
-}
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
@@ -364,9 +352,8 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
     OverlaySource source;
     source.handle() = OverlayHandle(overlayId);
     source.size() = size;
-    GetForwarder()->UseOverlaySource(this, source);
+    GetForwarder()->UseOverlaySource(this, source, image->GetPictureRect());
   }
-  UpdatePictureRect(image->GetPictureRect());
   return true;
 }
 

@@ -131,7 +131,8 @@ public:
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual void UseTextureHost(TextureHost* aTexture) override;
+  virtual void UseTextureHost(TextureHost* aTexture,
+                              const nsIntRect& aPictureRect) override;
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                          TextureHost* aTextureOnWhite) override;
 

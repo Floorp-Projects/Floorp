@@ -39,8 +39,9 @@ class Shmem;
 
 namespace layers {
 
-using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
+using namespace mozilla::ipc;
 
 class ClientTiledLayerBuffer;
 
@@ -349,17 +350,9 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 void
-ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
-                                        const gfx::IntRect& aRect)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  mTxn->AddNoSwapPaint(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
-}
-
-void
 ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
-                                 TextureClient* aTexture)
+                                 TextureClient* aTexture,
+                                 const nsIntRect* aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTexture);
@@ -367,9 +360,12 @@ ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
   MOZ_ASSERT(aTexture->GetIPDLActor());
 
   FenceHandle fence = aTexture->GetAcquireFenceHandle();
+  IntRect pictureRect = aPictureRect ? *aPictureRect :
+      IntRect(nsIntPoint(0, 0), IntSize(aTexture->GetSize()));
   mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                              nullptr, aTexture->GetIPDLActor(),
-                             fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t())));
+                             fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                             pictureRect));
   if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD
       && aTexture->HasInternalBuffer()) {
     // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
@@ -399,10 +395,12 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
 #ifdef MOZ_WIDGET_GONK
 void
 ShadowLayerForwarder::UseOverlaySource(CompositableClient* aCompositable,
-                                       const OverlaySource& aOverlay)
+                                       const OverlaySource& aOverlay,
+                                       const nsIntRect& aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
-  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(), aOverlay));
+  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
+      aOverlay, aPictureRect));
 }
 #endif
 
