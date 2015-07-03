@@ -91,6 +91,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_geometry_shader4",
     "GL_ARB_half_float_pixel",
     "GL_ARB_instanced_arrays",
+    "GL_ARB_internalformat_query",
     "GL_ARB_invalidate_subdata",
     "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
@@ -1459,6 +1460,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::uniform_matrix_nonsquare);
                 ClearSymbols(umnSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::internalformat_query)) {
+            SymLoadStruct coreSymbols[] = {
+                CORE_SYMBOL(GetInternalformativ),
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&coreSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports internalformat query without supplying its functions.");
+
+                MarkUnsupported(GLFeature::internalformat_query);
+                ClearSymbols(coreSymbols);
             }
         }
 

@@ -489,6 +489,10 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBDIVISOR) (GLuint index, GLuint divisor);
     PFNGLVERTEXATTRIBDIVISOR fVertexAttribDivisor;
 
+    // ARB_internalformat_query
+    typedef void (GLAPIENTRY * PFNGLGETINTERNALFORMATIVPROC) (GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint* params);
+    PFNGLGETINTERNALFORMATIVPROC fGetInternalformativ;
+
     // ARB_transform_feedback2 / OpenGL 4.0 / OpenGL ES 3.0
     typedef void (GLAPIENTRY * PFNGLBINDBUFFERBASE) (GLenum target, GLuint index, GLuint buffer);
     PFNGLBINDBUFFERBASE fBindBufferBase;

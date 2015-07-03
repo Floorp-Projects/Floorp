@@ -352,6 +352,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "internalformat_query",
+        GLVersion::GL4_2,
+        GLESVersion::ES3,
+        GLContext::ARB_internalformat_query,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "invalidate_framebuffer",
         GLVersion::GL4_3,
         GLESVersion::ES3,
