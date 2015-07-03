@@ -87,7 +87,8 @@ if CONFIG['MOZ_TOOLKIT_SEARCH']:
 if CONFIG['MOZ_URL_CLASSIFIER']:
     DIRS += ['url-classifier']
 
-DIRS += ['captivedetect']
+if CONFIG['MOZ_CAPTIVEDETECT']:
+    DIRS += ['captivedetect']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk" and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['terminator']
