@@ -779,10 +779,13 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
     mPipeStream = ctx->Graph()->CreateAudioNodeStream(engine,
                                                       MediaStreamGraph::EXTERNAL_STREAM,
                                                       ctx->SampleRate());
-    mInputPort = mPipeStream->AllocateInputPort(aSrcAudioNode.Stream(),
-                                                MediaInputPort::FLAG_BLOCK_INPUT,
-                                                0,
-                                                aSrcOutput);
+    AudioNodeStream* ns = aSrcAudioNode.GetStream();
+    if (ns) {
+      mInputPort = mPipeStream->AllocateInputPort(aSrcAudioNode.GetStream(),
+                                                  MediaInputPort::FLAG_BLOCK_INPUT,
+                                                  0,
+                                                  aSrcOutput);
+    }
   }
   mAudioNode = &aSrcAudioNode;
   if (!gMediaRecorderLog) {
@@ -1140,7 +1143,7 @@ MediaRecorder::GetSourceMediaStream()
     return mDOMStream->GetStream();
   }
   MOZ_ASSERT(mAudioNode != nullptr);
-  return mPipeStream != nullptr ? mPipeStream : mAudioNode->Stream();
+  return mPipeStream ? mPipeStream.get() : mAudioNode->GetStream();
 }
 
 nsIPrincipal*

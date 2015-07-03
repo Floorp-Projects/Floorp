@@ -311,13 +311,13 @@ public:
    * for wide strings. Call this version when you know the
    * length of 'data'.
    */
-  bool NS_FASTCALL EqualsASCII(const char* aData, size_type aLen) const;
+  bool NS_FASTCALL B2G_ACL_EXPORT EqualsASCII(const char* aData, size_type aLen) const;
   /**
    * An efficient comparison with ASCII that can be used even
    * for wide strings. Call this version when 'data' is
    * null-terminated.
    */
-  bool NS_FASTCALL EqualsASCII(const char* aData) const;
+  bool NS_FASTCALL B2G_ACL_EXPORT EqualsASCII(const char* aData) const;
 
   // EqualsLiteral must ONLY be applied to an actual literal string, or
   // a char array *constant* declared without an explicit size.
@@ -952,7 +952,7 @@ protected:
    * any of its member variables.  in other words, this function acts
    * like a destructor.
    */
-  void NS_FASTCALL Finalize();
+  void NS_FASTCALL B2G_ACL_EXPORT Finalize();
 
   /**
    * this function prepares mData to be mutated.

@@ -540,9 +540,10 @@ PannerNode::FindConnectedSources(AudioNode* aNode,
     // Recurse
     FindConnectedSources(inputNodes[i].mInputNode, aSources, aNodesSeen);
 
-    // Check if this node is an AudioBufferSourceNode
+    // Check if this node is an AudioBufferSourceNode that still have a stream,
+    // which means it has not finished playing.
     AudioBufferSourceNode* node = inputNodes[i].mInputNode->AsAudioBufferSourceNode();
-    if (node) {
+    if (node && node->GetStream()) {
       aSources.AppendElement(node);
     }
   }

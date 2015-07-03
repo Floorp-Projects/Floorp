@@ -4315,40 +4315,6 @@ nsGlobalWindow::MayResolve(jsid aId)
   return name_struct;
 }
 
-struct GlobalNameEnumeratorClosure
-{
-  GlobalNameEnumeratorClosure(JSContext* aCx, nsGlobalWindow* aWindow,
-                              nsTArray<nsString>& aNames)
-    : mCx(aCx),
-      mWindow(aWindow),
-      mWrapper(aCx, aWindow->GetWrapper()),
-      mNames(aNames)
-  {
-  }
-
-  JSContext* mCx;
-  nsGlobalWindow* mWindow;
-  JS::Rooted<JSObject*> mWrapper;
-  nsTArray<nsString>& mNames;
-};
-
-static PLDHashOperator
-EnumerateGlobalName(const nsAString& aName,
-                    const nsGlobalNameStruct& aNameStruct,
-                    void* aClosure)
-{
-  GlobalNameEnumeratorClosure* closure =
-    static_cast<GlobalNameEnumeratorClosure*>(aClosure);
-
-  if (nsWindowSH::NameStructEnabled(closure->mCx, closure->mWindow, aName,
-                                    aNameStruct) &&
-      (!aNameStruct.mConstructorEnabled ||
-       aNameStruct.mConstructorEnabled(closure->mCx, closure->mWrapper))) {
-    closure->mNames.AppendElement(aName);
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                                     ErrorResult& aRv)
@@ -4358,8 +4324,16 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
 
   nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
   if (nameSpaceManager) {
-    GlobalNameEnumeratorClosure closure(aCx, this, aNames);
-    nameSpaceManager->EnumerateGlobalNames(EnumerateGlobalName, &closure);
+    JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
+    for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
+      const GlobalNameMapEntry* entry = i.Get();
+      if (nsWindowSH::NameStructEnabled(aCx, this, entry->mKey,
+                                        entry->mGlobalName) &&
+          (!entry->mGlobalName.mConstructorEnabled ||
+           entry->mGlobalName.mConstructorEnabled(aCx, wrapper))) {
+        aNames.AppendElement(entry->mKey);
+      }
+    }
   }
 }
 
