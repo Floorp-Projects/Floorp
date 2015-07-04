@@ -185,9 +185,12 @@ OutputStreamData::Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStr
   aStream->AddListener(mListener);
 }
 
-DecodedStream::DecodedStream()
+DecodedStream::DecodedStream(MediaQueue<AudioData>& aAudioQueue,
+                             MediaQueue<VideoData>& aVideoQueue)
   : mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
+  , mAudioQueue(aAudioQueue)
+  , mVideoQueue(aVideoQueue)
 {
   //
 }
@@ -454,7 +457,6 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
 void
 DecodedStream::SendAudio(int64_t aStartTime,
                          const MediaInfo& aInfo,
-                         MediaQueue<AudioData>& aQueue,
                          double aVolume, bool aIsSameOrigin)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
@@ -471,7 +473,7 @@ DecodedStream::SendAudio(int64_t aStartTime,
 
   // It's OK to hold references to the AudioData because AudioData
   // is ref-counted.
-  aQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
+  mAudioQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
   for (uint32_t i = 0; i < audio.Length(); ++i) {
     SendStreamAudio(mData.get(), aStartTime, audio[i], &output, rate, aVolume);
   }
@@ -487,7 +489,7 @@ DecodedStream::SendAudio(int64_t aStartTime,
     sourceStream->AppendToTrack(audioTrackId, &output);
   }
 
-  if (aQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
+  if (mAudioQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
     sourceStream->EndTrack(audioTrackId);
     mData->mHaveSentFinishAudio = true;
   }
@@ -522,7 +524,6 @@ ZeroDurationAtLastChunk(VideoSegment& aInput)
 void
 DecodedStream::SendVideo(int64_t aStartTime,
                          const MediaInfo& aInfo,
-                         MediaQueue<VideoData>& aQueue,
                          bool aIsSameOrigin)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
@@ -538,7 +539,7 @@ DecodedStream::SendVideo(int64_t aStartTime,
 
   // It's OK to hold references to the VideoData because VideoData
   // is ref-counted.
-  aQueue.GetElementsAfter(mData->mNextVideoTime, &video);
+  mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i];
@@ -580,7 +581,7 @@ DecodedStream::SendVideo(int64_t aStartTime,
     sourceStream->AppendToTrack(videoTrackId, &output);
   }
 
-  if (aQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
+  if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
     if (mData->mEOSVideoCompensation) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
@@ -627,19 +628,17 @@ DecodedStream::AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo)
 bool
 DecodedStream::SendData(int64_t aStartTime,
                         const MediaInfo& aInfo,
-                        MediaQueue<AudioData>& aAudioQueue,
-                        MediaQueue<VideoData>& aVideoQueue,
                         double aVolume, bool aIsSameOrigin)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
   InitTracks(aStartTime, aInfo);
-  SendAudio(aStartTime, aInfo, aAudioQueue, aVolume, aIsSameOrigin);
-  SendVideo(aStartTime, aInfo, aVideoQueue, aIsSameOrigin);
+  SendAudio(aStartTime, aInfo, aVolume, aIsSameOrigin);
+  SendVideo(aStartTime, aInfo, aIsSameOrigin);
   AdvanceTracks(aStartTime, aInfo);
 
-  bool finished = (!aInfo.HasAudio() || aAudioQueue.IsFinished()) &&
-                  (!aInfo.HasVideo() || aVideoQueue.IsFinished());
+  bool finished = (!aInfo.HasAudio() || mAudioQueue.IsFinished()) &&
+                  (!aInfo.HasVideo() || mVideoQueue.IsFinished());
 
   if (finished && !mData->mHaveSentFinish) {
     mData->mHaveSentFinish = true;
