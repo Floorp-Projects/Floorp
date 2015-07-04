@@ -244,7 +244,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
-  mDecodedStream(new DecodedStream())
+  mDecodedStream(new DecodedStream(mAudioQueue, mVideoQueue))
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -372,8 +372,7 @@ void MediaDecoderStateMachine::SendStreamData()
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
 
   bool finished = mDecodedStream->SendData(
-      mStreamStartTime, mInfo, AudioQueue(), VideoQueue(),
-      mVolume, mDecoder->IsSameOriginMedia());
+      mStreamStartTime, mInfo, mVolume, mDecoder->IsSameOriginMedia());
 
   if (mInfo.HasAudio()) {
     CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime(
