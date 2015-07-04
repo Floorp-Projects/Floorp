@@ -35,6 +35,7 @@ function test() {
     "dom/media/webaudio/test/browser_mozAudioChannel_muted.html";
 
   SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", "content" ],
+                                     ["media.useAudioChannelAPI", true ],
                                      ["media.useAudioChannelService", true ]]},
     function() {
       let tab1 = gBrowser.addTab(testURL);
