@@ -99,15 +99,9 @@ BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
   BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result =
-    new BluetoothVoidReplyRunnable(
-      nullptr /* DOMRequest */,
-      promise,
-      NS_LITERAL_STRING("GattClientStartNotifications"));
-  bs->GattClientStartNotificationsInternal(mService->GetAppUuid(),
-                                           mService->GetServiceId(),
-                                           mCharId,
-                                           result);
+  bs->GattClientStartNotificationsInternal(
+    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -128,15 +122,9 @@ BluetoothGattCharacteristic::StopNotifications(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
   BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result =
-    new BluetoothVoidReplyRunnable(
-      nullptr /* DOMRequest */,
-      promise,
-      NS_LITERAL_STRING("GattClientStopNotifications"));
-  bs->GattClientStopNotificationsInternal(mService->GetAppUuid(),
-                                          mService->GetServiceId(),
-                                          mCharId,
-                                          result);
+  bs->GattClientStopNotificationsInternal(
+    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -212,9 +200,7 @@ class ReadValueTask final : public BluetoothReplyRunnable
 {
 public:
   ReadValueTask(BluetoothGattCharacteristic* aCharacteristic, Promise* aPromise)
-    : BluetoothReplyRunnable(
-        nullptr, aPromise,
-        NS_LITERAL_STRING("GattClientReadCharacteristicValue"))
+    : BluetoothReplyRunnable(nullptr, aPromise)
     , mCharacteristic(aCharacteristic)
   {
     MOZ_ASSERT(aCharacteristic);
@@ -271,11 +257,9 @@ BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result = new ReadValueTask(this, promise);
-  bs->GattClientReadCharacteristicValueInternal(mService->GetAppUuid(),
-                                                mService->GetServiceId(),
-                                                mCharId,
-                                                result);
+  bs->GattClientReadCharacteristicValueInternal(
+    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    new ReadValueTask(this, promise));
 
   return promise.forget();
 }
@@ -308,14 +292,10 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result = new BluetoothVoidReplyRunnable(
-    nullptr, promise, NS_LITERAL_STRING("GattClientWriteCharacteristicValue"));
-  bs->GattClientWriteCharacteristicValueInternal(mService->GetAppUuid(),
-                                                 mService->GetServiceId(),
-                                                 mCharId,
-                                                 mWriteType,
-                                                 value,
-                                                 result);
+  bs->GattClientWriteCharacteristicValueInternal(
+    mService->GetAppUuid(), mService->GetServiceId(),
+    mCharId, mWriteType, value,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
