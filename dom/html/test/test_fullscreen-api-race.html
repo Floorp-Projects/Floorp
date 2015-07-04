@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for race conditions of Fullscreen API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+function Deferred() {
+  this.promise = new Promise(resolve => {
+    this.resolve = resolve;
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+  SpecialPowers.pushPrefEnv({
+    "set": [["full-screen-api.allow-trusted-requests-only", false]]
+  }, next);
+});
+
+const OPEN_WINDOW_FUNCS = [
+  function openNewTab() {
+    return window.open("about:blank");
+  },
+  function openNewWindow() {
+    return window.open("about:blank", "", "width=300,height=200");
+  }
+];
+
+const ACTION_FUNCS = [
+  function navigate(win) {
+    info("About to navigate to another page");
+    var deferred = new Deferred();
+    win.location = "data:text/html,<html>";
+    setTimeout(() => {
+      SimpleTest.waitForFocus(() => {
+        ok(!win.fullScreen, "The window should no longer be in fullscreen");
+        win.close();
+        deferred.resolve();
+      }, win);
+    }, 0);
+    return deferred.promise;
+  },
+  function closeWindow(win) {
+    info("About to close the window");
+    win.close();
+    return Promise.resolve();
+  },
+  function exitFullscreen(win) {
+    info("About to cancel fullscreen");
+    var deferred = new Deferred();
+    function listener() {
+      win.removeEventListener("mozfullscreenchange", listener);
+      ok(!win.document.mozFullScreen, "Should exit fullscreen");
+      ok(!win.fullScreen, "The window should no longer be in fullscreen");
+      win.close();
+      deferred.resolve();
+    }
+    win.addEventListener("mozfullscreenchange", listener);
+    win.document.mozCancelFullScreen();
+    return deferred.promise;
+  },
+  function exitAndClose(win) {
+    info("About to cancel fullscreen and close the window");
+    win.document.mozCancelFullScreen();
+    win.close();
+    return Promise.resolve();
+  }
+];
+
+function* testGenerator() {
+  for (var openWinFunc of OPEN_WINDOW_FUNCS) {
+    for (var actionFunc of ACTION_FUNCS) {
+      info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
+      yield { openWinFunc: openWinFunc, actionFunc: actionFunc };
+    }
+  }
+}
+
+var tests = testGenerator();
+
+function next() {
+  var test = tests.next().value;
+  if (!test) {
+    SimpleTest.finish();
+    return;
+  }
+  var win = test.openWinFunc();
+  new Promise(resolve => {
+    SimpleTest.waitForFocus(resolve, win, true);
+  }).then(() => {
+    return new Promise(resolve => {
+      function listener() {
+        win.removeEventListener("mozfullscreenchange", listener);
+        ok(win.document.mozFullScreen, "Should have entered fullscreen");
+        ok(win.fullScreen, "The window should be in fullscreen");
+        test.actionFunc(win).then(resolve);
+      }
+      win.addEventListener("mozfullscreenchange", listener);
+      win.document.documentElement.mozRequestFullScreen();
+    });
+  }).then(() => {
+    ok(win.closed, "The window should have been closed");
+    SimpleTest.waitForFocus(next);
+  });
+}
+
+</script>
+</body>
+</html>
