@@ -262,7 +262,7 @@ static nsresult InitNSSInContent()
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
 
-  if (XRE_GetProcessType() != GeckoProcessType_Content) {
+  if (!XRE_IsContentProcess()) {
     MOZ_ASSERT_UNREACHABLE("Must be called in content process");
     return NS_ERROR_FAILURE;
   }
@@ -493,6 +493,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
   return NS_OK;
 }
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 /**
  * In JS, an RTCConfiguration looks like this:
  *
@@ -500,28 +501,38 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
  *                   { url:"turn:turn.example.org?transport=udp",
  *                     username: "jib", credential:"mypass"} ] }
  *
- * This function converts that into an internal IceConfiguration object.
+ * This function converts that into an internal PeerConnectionConfiguration
+ * object.
  */
 nsresult
-PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
-                                            IceConfiguration *aDst)
+PeerConnectionConfiguration::Init(const RTCConfiguration& aSrc)
 {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   if (aSrc.mIceServers.WasPassed()) {
     for (size_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
-      nsresult rv = AddIceServer(aSrc.mIceServers.Value()[i], aDst);
+      nsresult rv = AddIceServer(aSrc.mIceServers.Value()[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-#endif
+
+  switch (aSrc.mBundlePolicy) {
+    case dom::RTCBundlePolicy::Balanced:
+      setBundlePolicy(kBundleBalanced);
+      break;
+    case dom::RTCBundlePolicy::Max_compat:
+      setBundlePolicy(kBundleMaxCompat);
+      break;
+    case dom::RTCBundlePolicy::Max_bundle:
+      setBundlePolicy(kBundleMaxBundle);
+      break;
+    default:
+      MOZ_CRASH();
+  }
   return NS_OK;
 }
 
 nsresult
-PeerConnectionImpl::AddIceServer(const RTCIceServer &aServer,
-                                 IceConfiguration *aDst)
+PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
 {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   NS_ENSURE_STATE(aServer.mUrls.WasPassed());
   NS_ENSURE_STATE(aServer.mUrls.Value().IsStringSequence());
   auto &urls = aServer.mUrls.Value().GetAsStringSequence();
@@ -598,39 +609,36 @@ PeerConnectionImpl::AddIceServer(const RTCIceServer &aServer,
 
       // Bug 1039655 - TURN TCP is not e10s ready
       if ((transport == kNrIceTransportTcp) &&
-          (XRE_GetProcessType() != GeckoProcessType_Default)) {
+          (!XRE_IsParentProcess())) {
         continue;
       }
 
-      if (!aDst->addTurnServer(host.get(), port,
-                               username.get(),
-                               credential.get(),
-                               (transport.IsEmpty() ?
-                                kNrIceTransportUdp : transport.get()))) {
+      if (!addTurnServer(host.get(), port,
+                         username.get(),
+                         credential.get(),
+                         (transport.IsEmpty() ?
+                          kNrIceTransportUdp : transport.get()))) {
         return NS_ERROR_FAILURE;
       }
     } else {
-      if (!aDst->addStunServer(host.get(), port, (transport.IsEmpty() ?
-                                kNrIceTransportUdp : transport.get()))) {
+      if (!addStunServer(host.get(), port, (transport.IsEmpty() ?
+                         kNrIceTransportUdp : transport.get()))) {
         return NS_ERROR_FAILURE;
       }
     }
   }
-#endif
   return NS_OK;
 }
+#endif
 
-NS_IMETHODIMP
+nsresult
 PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                nsGlobalWindow* aWindow,
-                               const IceConfiguration* aConfiguration,
-                               const RTCConfiguration* aRTCConfiguration,
+                               const PeerConnectionConfiguration& aConfiguration,
                                nsISupports* aThread)
 {
   nsresult res;
 
-  // Invariant: we receive configuration one way or the other but not both (XOR)
-  MOZ_ASSERT(!aConfiguration != !aRTCConfiguration);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
@@ -646,7 +654,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   // Initialize NSS if we are in content process. For chrome process, NSS should already
   // been initialized.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     // This code interferes with the C++ unit test startup code.
     nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &res);
     NS_ENSURE_SUCCESS(res, res);
@@ -659,11 +667,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   MOZ_ASSERT(aWindow);
   mWindow = aWindow;
   NS_ENSURE_STATE(mWindow);
-
-  if (!aRTCConfiguration->mPeerIdentity.IsEmpty()) {
-    mPeerIdentity = new PeerIdentity(aRTCConfiguration->mPeerIdentity);
-    mPrivacyRequested = true;
-  }
 #endif // MOZILLA_INTERNAL_API
 
   PRTime timestamp = PR_Now();
@@ -723,17 +726,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   res = PeerConnectionCtx::InitializeGlobal(mThread, mSTSThread);
   NS_ENSURE_SUCCESS(res, res);
 
-
-  IceConfiguration converted;
-  if (aRTCConfiguration) {
-    res = ConvertRTCConfiguration(*aRTCConfiguration, &converted);
-    if (NS_FAILED(res)) {
-      CSFLogError(logTag, "%s: Invalid RTCConfiguration", __FUNCTION__);
-      return res;
-    }
-    aConfiguration = &converted;
-  }
-
   mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
@@ -750,8 +742,8 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mMedia->SignalCandidate.connect(this, &PeerConnectionImpl::CandidateReady);
 
   // Initialize the media object.
-  res = mMedia->Init(aConfiguration->getStunServers(),
-                     aConfiguration->getTurnServers());
+  res = mMedia->Init(aConfiguration.getStunServers(),
+                     aConfiguration.getTurnServers());
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: Couldn't initialize media object", __FUNCTION__);
     return res;
@@ -801,8 +793,45 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
+  res = mJsepSession->SetBundlePolicy(aConfiguration.getBundlePolicy());
+  if (NS_FAILED(res)) {
+    CSFLogError(logTag, "%s: Couldn't set bundle policy, res=%u, error=%s",
+                        __FUNCTION__,
+                        static_cast<unsigned>(res),
+                        mJsepSession->GetLastError().c_str());
+    return res;
+  }
+
   return NS_OK;
 }
+
+#ifndef MOZILLA_EXTERNAL_LINKAGE
+void
+PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
+                               nsGlobalWindow& aWindow,
+                               const RTCConfiguration& aConfiguration,
+                               nsISupports* aThread,
+                               ErrorResult &rv)
+{
+  PeerConnectionConfiguration converted;
+  nsresult res = converted.Init(aConfiguration);
+  if (NS_FAILED(res)) {
+    CSFLogError(logTag, "%s: Invalid RTCConfiguration", __FUNCTION__);
+    rv.Throw(res);
+    return;
+  }
+
+  res = Initialize(aObserver, &aWindow, converted, aThread);
+  if (NS_FAILED(res)) {
+    rv.Throw(res);
+  }
+
+  if (!aConfiguration.mPeerIdentity.IsEmpty()) {
+    mPeerIdentity = new PeerIdentity(aConfiguration.mPeerIdentity);
+    mPrivacyRequested = true;
+  }
+}
+#endif
 
 class CompareCodecPriority {
   public:

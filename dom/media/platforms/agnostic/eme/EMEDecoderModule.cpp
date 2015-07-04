@@ -13,8 +13,20 @@
 #include "mozilla/unused.h"
 #include "nsServiceManagerUtils.h"
 #include "MediaInfo.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
+
+typedef MediaPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
+
+static PLDHashOperator
+DropDecryptPromises(MediaRawData* aKey,
+                    nsAutoPtr<DecryptPromiseRequestHolder>& aData,
+                    void* aUserArg)
+{
+  aData->DisconnectIfExists();
+  return PL_DHASH_REMOVE;
+}
 
 class EMEDecryptor : public MediaDataDecoder {
 
@@ -38,19 +50,6 @@ public:
     return mDecoder->Init();
   }
 
-  class DeliverDecrypted : public DecryptionClient {
-  public:
-    explicit DeliverDecrypted(EMEDecryptor* aDecryptor)
-      : mDecryptor(aDecryptor)
-    { }
-    virtual void Decrypted(GMPErr aResult, MediaRawData* aSample) override {
-      mDecryptor->Decrypted(aResult, aSample);
-      mDecryptor = nullptr;
-    }
-  private:
-    nsRefPtr<EMEDecryptor> mDecryptor;
-  };
-
   virtual nsresult Input(MediaRawData* aSample) override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
@@ -62,29 +61,45 @@ public:
     mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
                                   writer->mCrypto.mSessionIds);
 
-    mProxy->Decrypt(aSample, new DeliverDecrypted(this), mTaskQueue);
+    mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
+    mDecrypts.Get(aSample)->Begin(mProxy->Decrypt(aSample)->Then(
+      mTaskQueue, __func__, this,
+      &EMEDecryptor::Decrypted,
+      &EMEDecryptor::Decrypted));
     return NS_OK;
   }
 
-  void Decrypted(GMPErr aResult, MediaRawData* aSample) {
+  void Decrypted(const DecryptResult& aDecrypted) {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    MOZ_ASSERT(aDecrypted.mSample);
+
+    nsAutoPtr<DecryptPromiseRequestHolder> holder;
+    mDecrypts.RemoveAndForget(aDecrypted.mSample, holder);
+    if (holder) {
+      holder->Complete();
+    } else {
+      // Decryption is not in the list of decrypt operations waiting
+      // for a result. It must have been flushed or drained. Ignore result.
+      return;
+    }
+
     if (mIsShutdown) {
       NS_WARNING("EME decrypted sample arrived after shutdown");
       return;
     }
-    if (aResult == GMPNoKeyErr) {
+
+    if (aDecrypted.mStatus == GMPNoKeyErr) {
       // Key became unusable after we sent the sample to CDM to decrypt.
       // Call Input() again, so that the sample is enqueued for decryption
       // if the key becomes usable again.
-      Input(aSample);
-    } else if (GMP_FAILED(aResult)) {
+      Input(aDecrypted.mSample);
+    } else if (GMP_FAILED(aDecrypted.mStatus)) {
       if (mCallback) {
         mCallback->Error();
       }
-      MOZ_ASSERT(!aSample);
     } else {
       MOZ_ASSERT(!mIsShutdown);
-      nsresult rv = mDecoder->Input(aSample);
+      nsresult rv = mDecoder->Input(aDecrypted.mSample);
       unused << NS_WARN_IF(NS_FAILED(rv));
     }
   }
@@ -92,6 +107,7 @@ public:
   virtual nsresult Flush() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
+    mDecrypts.Enumerate(&DropDecryptPromises, nullptr);
     nsresult rv = mDecoder->Flush();
     unused << NS_WARN_IF(NS_FAILED(rv));
     mSamplesWaitingForKey->Flush();
@@ -101,6 +117,7 @@ public:
   virtual nsresult Drain() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
+    mDecrypts.Enumerate(&DropDecryptPromises, nullptr);
     nsresult rv = mDecoder->Drain();
     unused << NS_WARN_IF(NS_FAILED(rv));
     return rv;
@@ -126,6 +143,7 @@ private:
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
+  nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder> mDecrypts;
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   bool mIsShutdown;
 };

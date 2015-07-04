@@ -652,7 +652,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   // we only attempt to get the nearest window if this really is a "windowless" plugin so as not
   // to change any behaviour for the much more common windowed plugins,
   // though why this method would even be being called for a windowed plugin escapes me.
-  if (XRE_GetProcessType() != GeckoProcessType_Content &&
+  if (!XRE_IsContentProcess() &&
       mPluginWindow && mPluginWindow->type == NPWindowTypeDrawable) {
     // it turns out that flash also uses this window for determining focus, and is currently
     // unable to show a caret correctly if we return the enclosing window. Therefore for
@@ -2840,7 +2840,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       parentWidget = nsContentUtils::WidgetForDocument(doc);
 #ifndef XP_MACOSX
       // If we're running in the content process, we need a remote widget created in chrome.
-      if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      if (XRE_IsContentProcess()) {
         nsCOMPtr<nsIDOMWindow> window = doc->GetWindow();
         if (window) {
           nsCOMPtr<nsIDOMWindow> topWindow;
@@ -2962,7 +2962,7 @@ void nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
     mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
   }
-  else if (XRE_GetProcessType() != GeckoProcessType_Default)
+  else if (!XRE_IsParentProcess())
   {
     // For e10s we only support async windowless plugin. This means that
     // we're always going to allocate a full window for the plugin to draw
@@ -3156,7 +3156,7 @@ nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
   // to be forwarded over after the active state is updated. If we
   // don't hide plugin widgets in hidden tabs, the native child window
   // in chrome will remain visible after a tab switch.
-  if (mWidget && XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (mWidget && XRE_IsContentProcess()) {
     mWidget->Show(aIsActive);
     mWidget->Enable(aIsActive);
   }

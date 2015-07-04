@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TableTicker_h
-#define TableTicker_h
+#ifndef GeckoSampler_h
+#define GeckoSampler_h
 
 #include "platform.h"
 #include "ProfileEntry.h"
 #include "mozilla/Vector.h"
+#include "ThreadProfile.h"
+#include "ThreadInfo.h"
 #ifndef SPS_STANDALONE
 #include "IntelPowerGadget.h"
 #endif
@@ -41,12 +43,12 @@ extern mozilla::TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;
 
-class TableTicker: public Sampler {
+class GeckoSampler: public Sampler {
  public:
-  TableTicker(double aInterval, int aEntrySize,
+  GeckoSampler(double aInterval, int aEntrySize,
               const char** aFeatures, uint32_t aFeatureCount,
               const char** aThreadNameFilters, uint32_t aFilterCount);
-  ~TableTicker();
+  ~GeckoSampler();
 
   void RegisterThread(ThreadInfo* aInfo) {
     if (!aInfo->IsMainThread() && !mProfileThreads) {

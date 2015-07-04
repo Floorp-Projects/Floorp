@@ -12,7 +12,9 @@ if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
     ]
 
 LOCAL_INCLUDES += [
-    '/tools/profiler',
+    '/tools/profiler/core',
+    '/tools/profiler/gecko',
+    '/tools/profiler/lul',
 ]
 
 UNIFIED_SOURCES += [

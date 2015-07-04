@@ -24,7 +24,7 @@ void
 NotifyGamepadChange(const T& aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   GamepadChangeEvent e(aInfo);
   nsTArray<ContentParent*> t;
   ContentParent::GetAll(t);
@@ -44,7 +44,7 @@ AddGamepad(const char* aID,
            uint32_t aNumButtons, uint32_t aNumAxes)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   int index = gGamepadIndex;
   gGamepadIndex++;
@@ -59,7 +59,7 @@ void
 RemoveGamepad(uint32_t aIndex)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   GamepadRemoved a(aIndex);
   NotifyGamepadChange<GamepadRemoved>(a);
 }
@@ -69,7 +69,7 @@ NewButtonEvent(uint32_t aIndex, uint32_t aButton,
                bool aPressed, double aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   GamepadButtonInformation a(aIndex, aButton, aPressed, aValue);
   NotifyGamepadChange<GamepadButtonInformation>(a);
 }
@@ -79,7 +79,7 @@ NewButtonEvent(uint32_t aIndex, uint32_t aButton,
                bool aPressed)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   // When only a digital button is available the value will be synthesized.
   NewButtonEvent(aIndex, aButton, aPressed, aPressed ? 1.0L : 0.0L);
 }
@@ -89,7 +89,7 @@ NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                  double aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   GamepadAxisInformation a(aIndex, aAxis, aValue);
   NotifyGamepadChange<GamepadAxisInformation>(a);
 }
@@ -98,7 +98,7 @@ void
 ResetGamepadIndexes()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
   gGamepadIndex = 0;
 }
 

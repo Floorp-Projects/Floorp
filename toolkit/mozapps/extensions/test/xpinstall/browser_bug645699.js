@@ -28,7 +28,7 @@ function confirm_install(window) {
 
 function finish_test(count) {
   is(count, 0, "0 Add-ons should have been successfully installed");
-  Services.perms.remove("addons.mozilla.org", "install");
+  Services.perms.remove(makeURI("http://addons.mozilla.org"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

@@ -5,7 +5,7 @@
 #include "mozilla/ProfileGatherer.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
-#include "TableTicker.h"
+#include "GeckoSampler.h"
 
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::Promise;
@@ -14,7 +14,7 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS0(ProfileGatherer)
 
-ProfileGatherer::ProfileGatherer(TableTicker* aTicker,
+ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker,
                                  double aSinceTime,
                                  Promise* aPromise)
   : mPromise(aPromise)
@@ -74,7 +74,7 @@ ProfileGatherer::Finish()
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
     // We're really hosed if we can't get a JS context for some reason.
-    // We'll tell the TableTicker that we've gathered the profile just
+    // We'll tell the GeckoSampler that we've gathered the profile just
     // so that it can drop the reference to this ProfileGatherer and maybe
     // the user can try again.
     mTicker->ProfileGathered();

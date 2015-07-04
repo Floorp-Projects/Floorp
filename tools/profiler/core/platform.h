@@ -58,6 +58,17 @@
 #include "v8-support.h"
 #include <vector>
 
+// We need a definition of gettid(), but glibc doesn't provide a
+// wrapper for it.
+#if defined(__GLIBC__)
+#include <unistd.h>
+#include <sys/syscall.h>
+static inline pid_t gettid()
+{
+  return (pid_t) syscall(SYS_gettid);
+}
+#endif
+
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -95,6 +106,8 @@ bool moz_profiler_verbose();
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
 #define ENABLE_SPS_LEAF_DATA
 #endif
+
+typedef int32_t Atomic32;
 
 extern mozilla::TimeStamp sStartTime;
 
@@ -300,7 +313,7 @@ class TickSample {
 
 class ThreadInfo;
 class PlatformData;
-class TableTicker;
+class GeckoSampler;
 class SyncProfile;
 class Sampler {
  public:
@@ -370,8 +383,8 @@ class Sampler {
   // Should only be called on shutdown
   static void Shutdown();
 
-  static TableTicker* GetActiveSampler() { return sActiveSampler; }
-  static void SetActiveSampler(TableTicker* sampler) { sActiveSampler = sampler; }
+  static GeckoSampler* GetActiveSampler() { return sActiveSampler; }
+  static void SetActiveSampler(GeckoSampler* sampler) { sActiveSampler = sampler; }
 
   static mozilla::UniquePtr<Mutex> sRegisteredThreadsMutex;
 
@@ -390,7 +403,7 @@ class Sampler {
 
  protected:
   static std::vector<ThreadInfo*>* sRegisteredThreads;
-  static TableTicker* sActiveSampler;
+  static GeckoSampler* sActiveSampler;
 
  private:
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
@@ -409,60 +422,6 @@ class Sampler {
   bool signal_sender_launched_;
   pthread_t signal_sender_thread_;
 #endif
-};
-
-class ThreadInfo {
- public:
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop);
-
-  virtual ~ThreadInfo();
-
-  const char* Name() const { return mName; }
-  int ThreadId() const { return mThreadId; }
-
-  bool IsMainThread() const { return mIsMainThread; }
-  PseudoStack* Stack() const { return mPseudoStack; }
-
-  void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
-  ThreadProfile* Profile() const { return mProfile; }
-
-  PlatformData* GetPlatformData() const { return mPlatformData; }
-  void* StackTop() const { return mStackTop; }
-
-  virtual void SetPendingDelete();
-  bool IsPendingDelete() const { return mPendingDelete; }
-
-#ifdef MOZ_NUWA_PROCESS
-  void SetThreadId(int aThreadId) { mThreadId = aThreadId; }
-#endif
-
-#ifndef SPS_STANDALONE
-  /**
-   * May be null for the main thread if the profiler was started during startup
-   */
-  nsIThread* GetThread() const { return mThread.get(); }
-#endif
- private:
-  char* mName;
-  int mThreadId;
-  const bool mIsMainThread;
-  PseudoStack* mPseudoStack;
-  PlatformData* mPlatformData;
-  ThreadProfile* mProfile;
-  void* const mStackTop;
-#ifndef SPS_STANDALONE
-  nsCOMPtr<nsIThread> mThread;
-#endif
-  bool mPendingDelete;
-};
-
-// Just like ThreadInfo, but owns a reference to the PseudoStack.
-class StackOwningThreadInfo : public ThreadInfo {
- public:
-  StackOwningThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop);
-  virtual ~StackOwningThreadInfo();
-
-  virtual void SetPendingDelete();
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
