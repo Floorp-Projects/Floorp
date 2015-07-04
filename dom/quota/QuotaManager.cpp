@@ -1075,12 +1075,6 @@ public:
   }
 };
 
-bool
-IsMainProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 void
 SanitizeOriginString(nsCString& aOrigin)
 {
@@ -2393,7 +2387,7 @@ nsresult
 QuotaManager::Init()
 {
   nsresult rv;
-  if (IsMainProcess()) {
+  if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIFile> baseDir;
     rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
                                 getter_AddRefs(baseDir));
@@ -3739,7 +3733,7 @@ QuotaManager::GetUsageForURI(nsIURI* aURI,
   NS_ENSURE_ARG_POINTER(aCallback);
 
   // This only works from the main process.
-  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
 
   if (!aOptionalArgCount) {
     aAppId = nsIScriptSecurityManager::NO_APP_ID;
@@ -3799,7 +3793,7 @@ QuotaManager::ClearStoragesForURI(nsIURI* aURI,
   }
 
   // This only works from the main process.
-  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
 
   if (!aOptionalArgCount) {
     aAppId = nsIScriptSecurityManager::NO_APP_ID;
@@ -3853,7 +3847,7 @@ QuotaManager::Observe(nsISupports* aSubject,
       NS_ERROR("Shutdown more than once?!");
     }
 
-    if (IsMainProcess()) {
+    if (XRE_IsParentProcess()) {
       // Kick off the shutdown timer.
       if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
                                          nsITimer::TYPE_ONE_SHOT))) {
@@ -3896,7 +3890,7 @@ QuotaManager::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
-    NS_ASSERTION(IsMainProcess(), "Should only happen in the main process!");
+    NS_ASSERTION(XRE_IsParentProcess(), "Should only happen in the main process!");
 
     NS_WARNING("Some storage operations are taking longer than expected "
                "during shutdown and will be aborted!");
@@ -3998,7 +3992,7 @@ QuotaManager::ClearStoragesForApp(uint32_t aAppId, bool aBrowserOnly)
   NS_ASSERTION(aAppId != kUnknownAppId, "Bad appId!");
 
   // This only works from the main process.
-  NS_ENSURE_TRUE(IsMainProcess(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
 
   nsAutoCString pattern;
   GetOriginPatternStringMaybeIgnoreBrowser(aAppId, aBrowserOnly, pattern);

@@ -228,7 +228,7 @@ nsresult
 nsSiteSecurityService::Init()
 {
    // Child processes are not allowed direct access to this.
-   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+   if (!XRE_IsParentProcess()) {
      MOZ_CRASH("Child process: no direct access to nsSiteSecurityService");
    }
 

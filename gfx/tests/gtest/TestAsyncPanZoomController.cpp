@@ -643,7 +643,7 @@ ApzcPanNoFling(const nsRefPtr<TestAsyncPanZoomController>& aApzc,
 
 template<class InputReceiver> static void
 PinchWithPinchInput(const nsRefPtr<InputReceiver>& aTarget,
-                    int aFocusX, int aFocusY, float aScale,
+                    int aFocusX, int aFocusY, int aSecondFocusX, int aSecondFocusY, float aScale,
                     nsEventStatus (*aOutEventStatuses)[3] = nullptr)
 {
   nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
@@ -655,7 +655,7 @@ PinchWithPinchInput(const nsRefPtr<InputReceiver>& aTarget,
   }
   actualStatus = aTarget->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aFocusX, aFocusY, 10.0 * aScale, 10.0),
+                              aSecondFocusX, aSecondFocusY, 10.0 * aScale, 10.0),
       nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = actualStatus;
@@ -677,7 +677,7 @@ PinchWithPinchInputAndCheckStatus(const nsRefPtr<InputReceiver>& aTarget,
                                   bool aShouldTriggerPinch)
 {
   nsEventStatus statuses[3];  // scalebegin, scale, scaleend
-  PinchWithPinchInput(aTarget, aFocusX, aFocusY, aScale, &statuses);
+  PinchWithPinchInput(aTarget, aFocusX, aFocusY, aFocusX, aFocusY, aScale, &statuses);
 
   nsEventStatus expectedStatus = aShouldTriggerPinch
       ? nsEventStatus_eConsumeNoDefault
@@ -1049,6 +1049,24 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
 
   childApzc->Destroy();
+}
+
+TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
+  // set up APZ
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  MakeApzcUnzoomable();
+
+  nsEventStatus statuses[3];  // scalebegin, scale, scaleend
+  PinchWithPinchInput(apzc, 250, 350, 200, 300, 10, &statuses);
+
+  FrameMetrics fm = apzc->GetFrameMetrics();
+
+  // It starts from (300, 300), then moves the focus point from (250, 350) to
+  // (200, 300) pans by (50, 50) screen pixels, but there is a 2x zoom, which
+  // causes the scroll offset to change by half of that (25, 25) pixels.
+  EXPECT_EQ(325, fm.GetScrollOffset().x);
+  EXPECT_EQ(325, fm.GetScrollOffset().y);
+  EXPECT_EQ(2.0, fm.GetZoom().ToScaleFactor().scale);
 }
 
 class APZCPanningTester : public APZCBasicTester {

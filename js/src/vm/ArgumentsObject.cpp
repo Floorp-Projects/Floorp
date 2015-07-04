@@ -157,17 +157,14 @@ struct CopyScriptFrameIterArgs
     }
 };
 
-template <typename CopyArgs>
-/* static */ ArgumentsObject*
-ArgumentsObject::create(JSContext* cx, HandleScript script, HandleFunction callee,
-                        unsigned numActuals, CopyArgs& copy)
+ArgumentsObject*
+ArgumentsObject::createTemplateObject(JSContext* cx, bool strict)
 {
-    RootedObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
+    const Class* clasp = strict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
+
+    RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));
     if (!proto)
         return nullptr;
-
-    bool strict = callee->strict();
-    const Class* clasp = strict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
 
     RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, TaggedProto(proto.get())));
     if (!group)
@@ -178,6 +175,45 @@ ArgumentsObject::create(JSContext* cx, HandleScript script, HandleFunction calle
     if (!shape)
         return nullptr;
 
+    JSObject* base = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group);
+    if (!base)
+        return nullptr;
+
+    ArgumentsObject* obj = &base->as<js::ArgumentsObject>();
+    obj->initFixedSlot(ArgumentsObject::DATA_SLOT, PrivateValue(nullptr));
+    return obj;
+}
+
+ArgumentsObject*
+JSCompartment::getOrCreateArgumentsTemplateObject(JSContext* cx, bool strict)
+{
+    ReadBarriered<ArgumentsObject*>& obj =
+        strict ? strictArgumentsTemplate_ : normalArgumentsTemplate_;
+
+    ArgumentsObject* templateObj = obj;
+    if (templateObj)
+        return templateObj;
+
+    templateObj = ArgumentsObject::createTemplateObject(cx, strict);
+    if (!templateObj)
+        return nullptr;
+
+    obj.set(templateObj);
+    return templateObj;
+}
+
+template <typename CopyArgs>
+/* static */ ArgumentsObject*
+ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActuals, CopyArgs& copy)
+{
+    bool strict = callee->strict();
+    ArgumentsObject* templateObj = cx->compartment()->getOrCreateArgumentsTemplateObject(cx, strict);
+    if (!templateObj)
+        return nullptr;
+
+    RootedShape shape(cx, templateObj->lastProperty());
+    RootedObjectGroup group(cx, templateObj->group());
+
     unsigned numFormals = callee->nargs();
     unsigned numDeletedWords = NumWordsForBitArrayOfLength(numActuals);
     unsigned numArgs = Max(numActuals, numFormals);
@@ -186,9 +222,7 @@ ArgumentsObject::create(JSContext* cx, HandleScript script, HandleFunction calle
                         numArgs * sizeof(Value);
 
     Rooted<ArgumentsObject*> obj(cx);
-    JSObject* base = JSObject::create(cx, FINALIZE_KIND,
-                                      GetInitialHeap(GenericObject, clasp),
-                                      shape, group);
+    JSObject* base = JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group);
     if (!base)
         return nullptr;
     obj = &base->as<ArgumentsObject>();
@@ -204,7 +238,7 @@ ArgumentsObject::create(JSContext* cx, HandleScript script, HandleFunction calle
     data->numArgs = numArgs;
     data->dataBytes = numBytes;
     data->callee.init(ObjectValue(*callee.get()));
-    data->script = script;
+    data->script = callee->nonLazyScript();
 
     // Zero the argument Values. This sets each value to DoubleValue(0), which
     // is safe for GC tracing.
@@ -233,10 +267,9 @@ ArgumentsObject*
 ArgumentsObject::createExpected(JSContext* cx, AbstractFramePtr frame)
 {
     MOZ_ASSERT(frame.script()->needsArgsObj());
-    RootedScript script(cx, frame.script());
     RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
-    ArgumentsObject* argsobj = create(cx, script, callee, frame.numActualArgs(), copy);
+    ArgumentsObject* argsobj = create(cx, callee, frame.numActualArgs(), copy);
     if (!argsobj)
         return nullptr;
 
@@ -247,19 +280,17 @@ ArgumentsObject::createExpected(JSContext* cx, AbstractFramePtr frame)
 ArgumentsObject*
 ArgumentsObject::createUnexpected(JSContext* cx, ScriptFrameIter& iter)
 {
-    RootedScript script(cx, iter.script());
     RootedFunction callee(cx, iter.callee(cx));
     CopyScriptFrameIterArgs copy(iter);
-    return create(cx, script, callee, iter.numActualArgs(), copy);
+    return create(cx, callee, iter.numActualArgs(), copy);
 }
 
 ArgumentsObject*
 ArgumentsObject::createUnexpected(JSContext* cx, AbstractFramePtr frame)
 {
-    RootedScript script(cx, frame.script());
     RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
-    return create(cx, script, callee, frame.numActualArgs(), copy);
+    return create(cx, callee, frame.numActualArgs(), copy);
 }
 
 ArgumentsObject*
@@ -267,11 +298,10 @@ ArgumentsObject::createForIon(JSContext* cx, jit::JitFrameLayout* frame, HandleO
 {
     jit::CalleeToken token = frame->calleeToken();
     MOZ_ASSERT(jit::CalleeTokenIsFunction(token));
-    RootedScript script(cx, jit::ScriptFromCalleeToken(token));
     RootedFunction callee(cx, jit::CalleeTokenToFunction(token));
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
     CopyJitFrameArgs copy(frame, callObj);
-    return create(cx, script, callee, frame->numActualArgs(), copy);
+    return create(cx, callee, frame->numActualArgs(), copy);
 }
 
 static bool
@@ -544,10 +574,11 @@ void
 ArgumentsObject::trace(JSTracer* trc, JSObject* obj)
 {
     ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
-    ArgumentsData* data = argsobj.data();
-    TraceEdge(trc, &data->callee, js_callee_str);
-    TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
-    TraceManuallyBarrieredEdge(trc, &data->script, "script");
+    if (ArgumentsData* data = argsobj.data()) { // Template objects have no ArgumentsData.
+        TraceEdge(trc, &data->callee, js_callee_str);
+        TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
+        TraceManuallyBarrieredEdge(trc, &data->script, "script");
+    }
 }
 
 /* static */ size_t

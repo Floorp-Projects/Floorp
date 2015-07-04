@@ -29,7 +29,6 @@
 // Set this to 1 for verbose logging
 #define DEBUG_MAIN 0
 
-
 namespace lul {
 
 using std::string;

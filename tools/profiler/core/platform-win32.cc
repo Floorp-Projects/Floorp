@@ -30,14 +30,14 @@
 #include <mmsystem.h>
 #include <process.h>
 #include "platform.h"
-#include "TableTicker.h"
+#include "GeckoSampler.h"
 #include "ThreadResponsiveness.h"
 #include "ProfileEntry.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
-class PlatformData : public Malloced {
+class PlatformData {
  public:
   // Get a handle to the calling thread. This is the thread that we are
   // going to profile. We need to make a copy of the handle because we are

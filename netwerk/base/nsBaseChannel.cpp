@@ -279,7 +279,7 @@ nsBaseChannel::ClassifyURI()
 {
   // For channels created in the child process, delegate to the parent to
   // classify URIs.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     return;
   }
 

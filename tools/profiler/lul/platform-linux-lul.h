@@ -6,6 +6,8 @@
 #ifndef MOZ_PLATFORM_LINUX_LUL_H
 #define MOZ_PLATFORM_LINUX_LUL_H
 
+#include "platform.h"
+
 // Find out, in a platform-dependent way, where the code modules got
 // mapped in the process' virtual address space, and get |aLUL| to
 // load unwind info for them.
@@ -15,17 +17,6 @@ read_procmaps(lul::LUL* aLUL);
 // LUL needs a callback for its logging sink.
 void
 logging_sink_for_LUL(const char* str);
-
-// We need a definition of gettid(), but glibc doesn't provide a
-// wrapper for it.
-#if defined(__GLIBC__)
-#include <unistd.h>
-#include <sys/syscall.h>
-static inline pid_t gettid()
-{
-  return (pid_t) syscall(SYS_gettid);
-}
-#endif
 
 // A singleton instance of the library.
 extern lul::LUL* sLUL;

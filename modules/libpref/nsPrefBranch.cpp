@@ -51,7 +51,7 @@ using mozilla::dom::ContentChild;
 static ContentChild*
 GetContentChild()
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
     if (!cpc) {
       NS_RUNTIMEABORT("Content Protocol is NULL!  We're going to crash!");

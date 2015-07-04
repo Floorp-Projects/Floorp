@@ -355,11 +355,10 @@ var FullScreen = {
                            "fullscreen",
                            Services.perms.ALLOW_ACTION,
                            Services.perms.EXPIRE_SESSION);
-        let host = uri.host;
         var onFullscreenchange = function onFullscreenchange(event) {
           if (event.target == document && document.mozFullScreenElement == null) {
             // The chrome document has left fullscreen. Remove the temporary permission grant.
-            Services.perms.remove(host, "fullscreen");
+            Services.perms.remove(uri, "fullscreen");
             document.removeEventListener("mozfullscreenchange", onFullscreenchange);
           }
         }

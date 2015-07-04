@@ -2183,7 +2183,7 @@ HttpBaseChannel::AddCookiesToRequest()
   }
 
   bool useCookieService =
-    (XRE_GetProcessType() == GeckoProcessType_Default);
+    (XRE_IsParentProcess());
   nsXPIDLCString cookie;
   if (useCookieService) {
     nsICookieService *cs = gHttpHandler->GetCookieService();

@@ -35,6 +35,7 @@ public:
         mWasOffererLastTime(false),
         mIceControlling(false),
         mRemoteIsIceLite(false),
+        mBundlePolicy(kBundleBalanced),
         mSessionId(0),
         mSessionVersion(0),
         mUuidGen(Move(uuidgen))
@@ -51,6 +52,7 @@ public:
 
   virtual nsresult SetIceCredentials(const std::string& ufrag,
                                      const std::string& pwd) override;
+  nsresult SetBundlePolicy(JsepBundlePolicy policy) override;
 
   virtual bool
   RemoteIsIceLite() const override
@@ -303,14 +305,16 @@ private:
   const SdpMediaSection* FindMsectionByMid(const Sdp& sdp,
                                            const std::string& mid) const;
 
-  const SdpGroupAttributeList::Group* FindBundleGroup(const Sdp& sdp) const;
+  void GetBundleGroups(const Sdp& sdp,
+                       std::vector<SdpGroupAttributeList::Group>* groups) const;
 
-  nsresult GetNegotiatedBundleInfo(std::set<std::string>* bundleMids,
-                                   const SdpMediaSection** bundleMsection);
+  // Maps each mid to the m-section that is the master of its bundle.
+  // Mids that do not appear in an a=group:BUNDLE do not appear here.
+  typedef std::map<std::string, const SdpMediaSection*> BundledMids;
 
-  nsresult GetBundleInfo(const Sdp& sdp,
-                         std::set<std::string>* bundleMids,
-                         const SdpMediaSection** bundleMsection);
+  nsresult GetNegotiatedBundledMids(BundledMids* bundledMids);
+
+  nsresult GetBundledMids(const Sdp& sdp, BundledMids* bundledMids);
 
   bool IsBundleSlave(const Sdp& localSdp, uint16_t level);
 
@@ -341,6 +345,7 @@ private:
   std::string mIcePwd;
   bool mRemoteIsIceLite;
   std::vector<std::string> mIceOptions;
+  JsepBundlePolicy mBundlePolicy;
   std::vector<JsepDtlsFingerprint> mDtlsFingerprints;
   uint64_t mSessionId;
   uint64_t mSessionVersion;

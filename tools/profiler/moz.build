@@ -9,75 +9,78 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     XPIDL_MODULE = 'profiler'
     XPIDL_SOURCES += [
-        'nsIProfiler.idl',
-        'nsIProfileSaveEvent.idl',
+        'gecko/nsIProfiler.idl',
+        'gecko/nsIProfileSaveEvent.idl',
     ]
     EXPORTS += [
-        'GeckoProfilerFunc.h',
-        'GeckoProfilerImpl.h',
-        'ProfilerBacktrace.h',
-        'ProfilerMarkers.h',
-        'PseudoStack.h',
-        'shared-libraries.h',
+        'public/GeckoProfilerFunc.h',
+        'public/GeckoProfilerImpl.h',
+        'public/ProfilerBacktrace.h',
+        'public/ProfilerMarkers.h',
+        'public/PseudoStack.h',
+        'public/shared-libraries.h',
     ]
     EXPORTS.mozilla += [
-        'ProfileGatherer.h',
+        'public/ProfileGatherer.h',
     ]
     EXTRA_JS_MODULES += [
-        'Profiler.jsm',
+        'gecko/Profiler.jsm',
     ]
     UNIFIED_SOURCES += [
-        'nsProfiler.cpp',
-        'nsProfilerFactory.cpp',
-        'nsProfilerStartParams.cpp',
-        'platform.cpp',
-        'ProfileEntry.cpp',
-        'ProfileGatherer.cpp',
-        'ProfileJSONWriter.cpp',
-        'ProfilerBacktrace.cpp',
-        'ProfilerIOInterposeObserver.cpp',
-        'ProfilerMarkers.cpp',
-        'SaveProfileTask.cpp',
-        'SyncProfile.cpp',
-        'TableTicker.cpp',
-        'ThreadResponsiveness.cpp',
+        'core/GeckoSampler.cpp',
+        'core/platform.cpp',
+        'core/ProfileBuffer.cpp',
+        'core/ProfileEntry.cpp',
+        'core/ProfileJSONWriter.cpp',
+        'core/ProfilerBacktrace.cpp',
+        'core/ProfilerMarkers.cpp',
+        'core/SyncProfile.cpp',
+        'core/ThreadInfo.cpp',
+        'core/ThreadProfile.cpp',
+        'gecko/nsProfiler.cpp',
+        'gecko/nsProfilerFactory.cpp',
+        'gecko/nsProfilerStartParams.cpp',
+        'gecko/ProfileGatherer.cpp',
+        'gecko/ProfilerIOInterposeObserver.cpp',
+        'gecko/SaveProfileTask.cpp',
+        'gecko/ThreadResponsiveness.cpp',
     ]
 
     # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
     SOURCES += [
-        'local_debug_info_symbolizer.cc',
+        'gecko/local_debug_info_symbolizer.cc',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
         UNIFIED_SOURCES += [
-            'AutoObjectMapper.cpp',
-            'LulCommon.cpp',
-            'LulDwarf.cpp',
-            'LulDwarfSummariser.cpp',
-            'LulElf.cpp',
-            'LulMain.cpp',
-            'platform-linux-lul.cpp',
+            'lul/AutoObjectMapper.cpp',
+            'lul/LulCommon.cpp',
+            'lul/LulDwarf.cpp',
+            'lul/LulDwarfSummariser.cpp',
+            'lul/LulElf.cpp',
+            'lul/LulMain.cpp',
+            'lul/platform-linux-lul.cpp',
         ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
-            'platform-linux.cc',
-            'shared-libraries-linux.cc',
+            'core/platform-linux.cc',
+            'core/shared-libraries-linux.cc',
         ]
         if CONFIG['CPU_ARCH'] == 'arm':
             SOURCES += [
-                'EHABIStackWalk.cpp',
+                'core/EHABIStackWalk.cpp',
             ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         UNIFIED_SOURCES += [
-            'platform-macos.cc',
-            'shared-libraries-macos.cc',
-            'shim_mac_dump_syms.mm',
+            'core/platform-macos.cc',
+            'core/shared-libraries-macos.cc',
+            'core/shim_mac_dump_syms.mm',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += [
-            'IntelPowerGadget.cpp',
-            'platform-win32.cc',
-            'shared-libraries-win32.cc',
+            'core/IntelPowerGadget.cpp',
+            'core/platform-win32.cc',
+            'core/shared-libraries-win32.cc',
         ]
 
     LOCAL_INCLUDES += [
@@ -85,6 +88,8 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         '/ipc/chromium/src',
         '/mozglue/linker',
         '/toolkit/crashreporter/google-breakpad/src',
+        '/tools/profiler/core/',
+        '/tools/profiler/gecko/',
         '/xpcom/base',
     ]
 
@@ -106,18 +111,18 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FINAL_LIBRARY = 'xul'
 
 EXPORTS += [
-    'GeckoProfiler.h',
+    'public/GeckoProfiler.h',
 ]
 
 if CONFIG['MOZ_TASK_TRACER']:
     EXPORTS += [
-        'GeckoTaskTracer.h',
-        'GeckoTaskTracerImpl.h',
-        'TracedTaskCommon.h',
+        'public/GeckoTaskTracer.h',
+        'public/GeckoTaskTracerImpl.h',
+        'public/TracedTaskCommon.h',
     ]
     UNIFIED_SOURCES += [
-        'GeckoTaskTracer.cpp',
-        'TracedTaskCommon.cpp',
+        'tasktracer/GeckoTaskTracer.cpp',
+        'tasktracer/TracedTaskCommon.cpp',
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
