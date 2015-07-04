@@ -188,37 +188,44 @@ protected:
   void InitChildReflowState(nsPresContext&    aPresContext,                     
                             nsHTMLReflowState& aReflowState);
 
-  uint8_t GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE
+  // Get a NS_STYLE_CAPTION_SIDE_* value, with physically-specified sides
+  // resolved to logical sides, or NO_SIDE if no caption is present.
+  uint8_t GetLogicalCaptionSide(mozilla::WritingMode aWM);
 
-  bool HasSideCaption() {
-    uint8_t captionSide = GetCaptionSide();
-    return captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
-           captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
+  bool HasSideCaption(mozilla::WritingMode aWM) {
+    uint8_t captionSide = GetLogicalCaptionSide(aWM);
+    return captionSide == NS_STYLE_CAPTION_SIDE_ISTART ||
+           captionSide == NS_STYLE_CAPTION_SIDE_IEND;
   }
   
   uint8_t GetCaptionVerticalAlign();
 
-  void SetDesiredSize(uint8_t         aCaptionSide,
-                      const nsMargin& aInnerMargin,
-                      const nsMargin& aCaptionMargin,
-                      nscoord&        aWidth,
-                      nscoord&        aHeight);
+  void SetDesiredSize(uint8_t                       aCaptionSide,
+                      const mozilla::LogicalSize&   aInnerSize,
+                      const mozilla::LogicalSize&   aCaptionSize,
+                      const mozilla::LogicalMargin& aInnerMargin,
+                      const mozilla::LogicalMargin& aCaptionMargin,
+                      nscoord&                      aISize,
+                      nscoord&                      aBSize,
+                      mozilla::WritingMode          aWM);
 
   nsresult   GetCaptionOrigin(uint32_t         aCaptionSide,
-                              const nsSize&    aContainBlockSize,
-                              const nsSize&    aInnerSize, 
-                              const nsMargin&  aInnerMargin,
-                              const nsSize&    aCaptionSize,
-                              nsMargin&        aCaptionMargin,
-                              nsPoint&         aOrigin);
+                              const mozilla::LogicalSize&    aContainBlockSize,
+                              const mozilla::LogicalSize&    aInnerSize, 
+                              const mozilla::LogicalMargin&  aInnerMargin,
+                              const mozilla::LogicalSize&    aCaptionSize,
+                              mozilla::LogicalMargin&        aCaptionMargin,
+                              mozilla::LogicalPoint&         aOrigin,
+                              mozilla::WritingMode           aWM);
 
   nsresult   GetInnerOrigin(uint32_t         aCaptionSide,
-                            const nsSize&    aContainBlockSize,
-                            const nsSize&    aCaptionSize, 
-                            const nsMargin&  aCaptionMargin,
-                            const nsSize&    aInnerSize,
-                            nsMargin&        aInnerMargin,
-                            nsPoint&         aOrigin);
+                            const mozilla::LogicalSize&    aContainBlockSize,
+                            const mozilla::LogicalSize&    aCaptionSize, 
+                            const mozilla::LogicalMargin&  aCaptionMargin,
+                            const mozilla::LogicalSize&    aInnerSize,
+                            mozilla::LogicalMargin&        aInnerMargin,
+                            mozilla::LogicalPoint&         aOrigin,
+                            mozilla::WritingMode           aWM);
   
   // reflow the child (caption or innertable frame)
   void OuterBeginReflowChild(nsPresContext*                     aPresContext,
@@ -233,14 +240,10 @@ protected:
                           nsHTMLReflowMetrics&     aMetrics,
                           nsReflowStatus&          aStatus);
 
-  // Set the reflow metrics
-  void UpdateReflowMetrics(uint8_t              aCaptionSide,
-                           nsHTMLReflowMetrics& aMet,
-                           const nsMargin&      aInnerMargin,
-                           const nsMargin&      aCaptionMargin);
+  // Set the overflow areas in our reflow metrics
+  void UpdateOverflowAreas(nsHTMLReflowMetrics& aMet);
 
-  // Get the margin.  aMarginNoAuto is aMargin, but with auto 
-  // margins set to 0
+  // Get the margin.
   void GetChildMargin(nsPresContext*           aPresContext,
                       const nsHTMLReflowState& aOuterRS,
                       nsIFrame*                aChildFrame,

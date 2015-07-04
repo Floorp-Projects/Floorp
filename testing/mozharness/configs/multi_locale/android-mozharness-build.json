@@ -1,0 +1,5 @@
+{
+    "work_dir": "build",
+    "locales_file": "src/mobile/android/locales/maemo-locales",
+    "mozilla_dir": "src"
+}

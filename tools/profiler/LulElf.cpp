@@ -63,9 +63,6 @@
 #include "LulPlatformMacros.h"
 #include "LulCommonExt.h"
 #include "LulDwarfExt.h"
-#if defined(LUL_PLAT_arm_android)
-# include "LulExidxExt.h"
-#endif
 #include "LulElfInt.h"
 #include "LulMainInt.h"
 
@@ -232,97 +229,6 @@ bool LoadDwarfCFI(const string& dwarf_filename,
 
   return true;
 }
-
-#if defined(LUL_PLAT_arm_android)
-template<typename ElfClass>
-bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
-                  const typename ElfClass::Shdr* exidx_section,
-                  const typename ElfClass::Shdr* extab_section,
-                  uintptr_t text_bias,
-                  uintptr_t rx_avma, size_t rx_size,
-                  SecMap* smap,
-                  void (*log)(const char*)) {
-  // To do this properly we need to know:
-  // * the bounds of the .ARM.exidx section in the process image
-  // * the bounds of the .ARM.extab section in the process image
-  // * the vma of the last byte in the text section associated with the .exidx
-  // The first two are easy.  The third is a bit tricky.  If we can't
-  // figure out what it is, just pass in zero.
-  // Note that we are reading EXIDX directly out of the mapped in
-  // executable image.  Unlike with the CFI reader, there is no
-  // auxiliary, temporary mapping used to read the unwind data.
-  //
-  // An .exidx section is always required, but the .extab section
-  // can be optionally omitted, provided that .exidx does not refer
-  // to it.  If the .exidx is erroneous and does refer to .extab even
-  // though .extab is missing, the range checks done by GET_EX_U32 in
-  // ExceptionTableInfo::ExtabEntryExtract should prevent any invalid
-  // memory accesses, and cause the .extab to be rejected as invalid.
-
-  uintptr_t exidx_svma = exidx_section->sh_addr;
-  uintptr_t exidx_avma = exidx_svma + text_bias;
-  size_t    exidx_size = exidx_section->sh_size;
-
-  uintptr_t extab_svma = 0;
-  uintptr_t extab_avma = 0;
-  size_t    extab_size = 0;
-  if (extab_section) {
-    extab_svma = extab_section->sh_addr;
-    extab_avma = extab_svma + text_bias;
-    extab_size = extab_section->sh_size;
-  }
-
-  // Because we are reading EXIDX directly out of the executing image,
-  // we need to be careful to check that the relevant sections have
-  // really been mapped with r permissions, so as to guarantee that
-  // reading them won't segfault.  Do this by checking that rx mapped
-  // area covers the exidx and extab as mapped in.
-
-  if (rx_size == 0)
-    // This seems sufficiently bogus that we shouldn't proceed further.
-    return false;
-
-  if (exidx_size == 0)
-    // There's no EXIDX data.  No point in continuing.
-    return false;
-
-  if (!(exidx_avma >= rx_avma && exidx_avma + exidx_size <= rx_avma + rx_size))
-    // The mapped .exidx isn't entirely inside the rx area.
-    return false;
-
-  if (extab_section &&
-      !(extab_avma >= rx_avma && extab_avma + extab_size <= rx_avma + rx_size))
-    // There an .extab section, but it isn't entirely inside the rx area.
-    return false;
-
-  // The sh_link field of the exidx section gives the section number
-  // for the associated text section.
-  uint32_t exidx_text_last_avma = 0;
-  int exidx_text_sno = exidx_section->sh_link;
-  typedef typename ElfClass::Shdr Shdr;
-  // |sections| points to the section header table
-  const Shdr* sections
-    = GetOffset<ElfClass, Shdr>(elf_header, elf_header->e_shoff);
-  const int num_sections = elf_header->e_shnum;
-  if (exidx_text_sno >= 0 && exidx_text_sno < num_sections) {
-    const Shdr* exidx_text_shdr = &sections[exidx_text_sno];
-    if (exidx_text_shdr->sh_size > 0) {
-      uint32_t exidx_text_last_svma
-        = exidx_text_shdr->sh_addr + exidx_text_shdr->sh_size - 1;
-      exidx_text_last_avma
-        = exidx_text_last_svma + text_bias;
-    }
-  }
-
-  lul::ARMExToModule handler(smap, log);
-  lul::ExceptionTableInfo
-    parser(reinterpret_cast<const char*>(exidx_avma), exidx_size,
-           reinterpret_cast<const char*>(extab_avma), extab_size,
-           exidx_text_last_avma, &handler, log);
-  parser.Start();
-  return true;
-}
-#endif /* defined(LUL_PLAT_arm_android) */
 
 bool LoadELF(const string& obj_file, MmapWrapper* map_wrapper,
              void** elf_header) {
@@ -527,40 +433,6 @@ bool LoadSymbols(const string& obj_file,
     if (result)
       log("LoadSymbols:   read CFI from .eh_frame");
   }
-
-# if defined(LUL_PLAT_arm_android)
-  // ARM has special unwind tables that can be used.  .exidx is
-  // always required, and .extab is normally required, but may
-  // be omitted if it is empty.  See comments on LoadARMexidx()
-  // for more details.
-  const Shdr* arm_exidx_section =
-      FindElfSectionByName<ElfClass>(".ARM.exidx", SHT_ARM_EXIDX,
-                                     sections, names, names_end,
-                                     elf_header->e_shnum);
-  const Shdr* arm_extab_section =
-      FindElfSectionByName<ElfClass>(".ARM.extab", SHT_PROGBITS,
-                                     sections, names, names_end,
-                                     elf_header->e_shnum);
-  const Shdr* debug_info_section =
-      FindElfSectionByName<ElfClass>(".debug_info", SHT_PROGBITS,
-                                     sections, names, names_end,
-                                     elf_header->e_shnum);
-  // Only load information from this section if there isn't a .debug_info
-  // section.
-  if (!debug_info_section && arm_exidx_section) {
-    info->LoadedSection(".ARM.exidx");
-    if (arm_extab_section)
-      info->LoadedSection(".ARM.extab");
-    bool result = LoadARMexidx<ElfClass>(elf_header,
-                                         arm_exidx_section, arm_extab_section,
-                                         text_bias,
-                                         reinterpret_cast<uintptr_t>(rx_avma),
-                                         rx_size, smap, log);
-    found_usable_info = found_usable_info || result;
-    if (result)
-      log("LoadSymbols:   read EXIDX from .ARM.{exidx,extab}");
-  }
-# endif /* defined(LUL_PLAT_arm_android) */
 
   snprintf(buf, sizeof(buf), "LoadSymbols: END     %s\n", obj_file.c_str());
   buf[sizeof(buf)-1] = 0;

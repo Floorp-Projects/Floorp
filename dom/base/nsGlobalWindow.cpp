@@ -3911,7 +3911,6 @@ nsGlobalWindow::GetRealTop(nsIDOMWindow** aTop)
   if (IsInnerWindow()) {
     outer = GetOuterWindowInternal();
     if (!outer) {
-      NS_WARNING("No outer window available!");
       return NS_ERROR_NOT_INITIALIZED;
     }
   } else {

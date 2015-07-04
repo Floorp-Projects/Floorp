@@ -357,6 +357,62 @@ public:
   }
 
   /**
+   * Returns the logical side corresponding to the specified physical side,
+   * given the current writing mode.
+   * (This is the inverse of the PhysicalSide() method above.)
+   */
+  LogicalSide LogicalSideForPhysicalSide(mozilla::css::Side aSide) const
+  {
+    // indexes are four-bit values:
+    //   bit 0 = the eOrientationMask value
+    //   bit 1 = the eInlineFlowMask value
+    //   bit 2 = the eBlockFlowMask value
+    //   bit 3 = the eLineOrientMask value
+    static const LogicalSide kPhysicalToLogicalSides[][4] = {
+      // top                right
+      // bottom             left
+      { eLogicalSideBStart, eLogicalSideIEnd,
+        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb         ltr
+      { eLogicalSideIStart, eLogicalSideBStart,
+        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl           ltr
+      { eLogicalSideBStart, eLogicalSideIStart,
+        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb         rtl
+      { eLogicalSideIEnd,   eLogicalSideBStart,
+        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl           rtl
+      { eLogicalSideBEnd,   eLogicalSideIStart,
+        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt) (inv) ltr
+      { eLogicalSideIStart, eLogicalSideBEnd,
+        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr   sw-left rtl
+      { eLogicalSideBEnd,   eLogicalSideIEnd,
+        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt) (inv) rtl
+      { eLogicalSideIEnd,   eLogicalSideBEnd,
+        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr   sw-left ltr
+      { eLogicalSideBStart, eLogicalSideIEnd,
+        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb   (inv) rtl
+      { eLogicalSideIStart, eLogicalSideBStart,
+        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl   sw-left rtl
+      { eLogicalSideBStart, eLogicalSideIStart,
+        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb   (inv) ltr
+      { eLogicalSideIEnd,   eLogicalSideBStart,
+        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl   sw-left ltr
+      { eLogicalSideBEnd,   eLogicalSideIEnd,
+        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt)       ltr
+      { eLogicalSideIStart, eLogicalSideBEnd,
+        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr           ltr
+      { eLogicalSideBEnd,   eLogicalSideIStart,
+        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt)       rtl
+      { eLogicalSideIEnd,   eLogicalSideBEnd,
+        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr           rtl
+    };
+
+    static_assert(eOrientationMask == 0x01 && eInlineFlowMask == 0x02 &&
+                  eBlockFlowMask == 0x04 && eLineOrientMask == 0x08,
+                  "unexpected mask values");
+    int index = mWritingMode & 0x0F;
+    return kPhysicalToLogicalSides[index][aSide];
+  }
+
+  /**
    * Returns the logical side corresponding to the specified
    * line-relative direction, given the current writing mode.
    */
@@ -1954,6 +2010,43 @@ nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
 {
   return aWM.IsVertical() ? MaxWidthDependsOnContainer()
                           : MaxHeightDependsOnContainer();
+}
+
+inline uint8_t
+nsStyleTableBorder::LogicalCaptionSide(mozilla::WritingMode aWM) const
+{
+  // sanity-check that constants we're using have the expected relationships
+  static_assert(NS_STYLE_CAPTION_SIDE_BSTART == mozilla::eLogicalSideBStart &&
+                NS_STYLE_CAPTION_SIDE_BEND == mozilla::eLogicalSideBEnd &&
+                NS_STYLE_CAPTION_SIDE_ISTART == mozilla::eLogicalSideIStart &&
+                NS_STYLE_CAPTION_SIDE_IEND == mozilla::eLogicalSideIEnd,
+                "bad logical caption-side values");
+  static_assert((NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP ==
+                 NS_STYLE_CAPTION_SIDE_BOTTOM - NS_SIDE_BOTTOM) &&
+                (NS_STYLE_CAPTION_SIDE_LEFT - NS_SIDE_LEFT ==
+                 NS_STYLE_CAPTION_SIDE_RIGHT - NS_SIDE_RIGHT) &&
+                (NS_STYLE_CAPTION_SIDE_LEFT - NS_SIDE_LEFT ==
+                 NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP),
+                "mismatch between caption-side and side values");
+  switch (mCaptionSide) {
+    case NS_STYLE_CAPTION_SIDE_TOP:
+    case NS_STYLE_CAPTION_SIDE_RIGHT:
+    case NS_STYLE_CAPTION_SIDE_BOTTOM:
+    case NS_STYLE_CAPTION_SIDE_LEFT: {
+      uint8_t side = mCaptionSide - (NS_STYLE_CAPTION_SIDE_TOP - NS_SIDE_TOP);
+      return aWM.LogicalSideForPhysicalSide(mozilla::css::Side(side));
+    }
+
+    case NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE:
+      return aWM.IsVertical() ? aWM.LogicalSideForPhysicalSide(NS_SIDE_TOP)
+                              : NS_STYLE_CAPTION_SIDE_BSTART_OUTSIDE;
+
+    case NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE:
+      return aWM.IsVertical() ? aWM.LogicalSideForPhysicalSide(NS_SIDE_BOTTOM)
+                              : NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE;
+  }
+  MOZ_ASSERT(mCaptionSide <= NS_STYLE_CAPTION_SIDE_BEND_OUTSIDE);
+  return mCaptionSide;
 }
 
 #endif // WritingModes_h_

@@ -129,7 +129,9 @@ loop.contacts = (function(_, mozL10n) {
       });
       return (
         React.createElement("div", {className: "contacts-gravatar-promo"}, 
-          React.createElement(Button, {additionalClass: "button-close", onClick: this.handleCloseButtonClick}), 
+          React.createElement(Button, {additionalClass: "button-close", 
+                  caption: "", 
+                  onClick: this.handleCloseButtonClick}), 
           React.createElement("p", {dangerouslySetInnerHTML: {__html: message}, 
              onClick: this.handleLinkClick}), 
           React.createElement(ButtonGroup, null, 

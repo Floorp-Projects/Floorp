@@ -64,9 +64,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'shared-libraries-linux.cc',
         ]
         if CONFIG['CPU_ARCH'] == 'arm':
-            UNIFIED_SOURCES += [
-                'LulExidx.cpp',
-            ]
             SOURCES += [
                 'EHABIStackWalk.cpp',
             ]

@@ -2356,6 +2356,11 @@ struct nsStyleTableBorder {
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
+  // Return the mCaptionSide value, with physical values resolved to
+  // the appropriate logical value for the given writing mode.
+  // (The definition of this is in WritingModes.h.)
+  inline uint8_t LogicalCaptionSide(mozilla::WritingMode aWM) const;
+
   nscoord       mBorderSpacingCol;// [inherited]
   nscoord       mBorderSpacingRow;// [inherited]
   uint8_t       mBorderCollapse;// [inherited]

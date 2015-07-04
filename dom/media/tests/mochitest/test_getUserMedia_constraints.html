@@ -65,12 +65,40 @@ var tests = [
     error: null },
 ];
 
+var mustSupport = [
+  'width', 'height', 'frameRate', 'facingMode', 'deviceId',
+// Yet to add:
+//  'aspectRatio', 'frameRate', 'volume', 'sampleRate', 'sampleSize',
+//  'echoCancellation', 'latency', 'groupId'
+
+  // http://fluffy.github.io/w3c-screen-share/#screen-based-video-constraints
+  // OBE by http://w3c.github.io/mediacapture-screen-share
+  'mediaSource',
+
+  // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
+  'browserWindow', 'scrollWithPage',
+];
+
 /**
  * Starts the test run by running through each constraint
  * test by verifying that the right resolution and rejection is fired.
  */
 
 runTest(function() {
+
+  // Check supported constraints first.
+  var dict = navigator.mediaDevices.getSupportedConstraints();
+  var supported = Object.keys(dict);
+
+  mustSupport.forEach(key => ok(supported.includes(key) && dict[key],
+                                "Supports " + key));
+
+  var unexpected = supported.filter(key => !mustSupport.includes(key));
+  is(unexpected.length, 0,
+     "Unexpected support (please update test): " + unexpected);
+
+  // Run constraint tests
+
   var p = new Promise(resolve => SpecialPowers.pushPrefEnv({
       set : [ ['media.getusermedia.browser.enabled', false],
               ['media.getusermedia.screensharing.enabled', false] ]

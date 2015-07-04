@@ -10,6 +10,7 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #include "nsCycleCollectionParticipant.h"

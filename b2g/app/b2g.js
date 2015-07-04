@@ -940,10 +940,6 @@ pref("consoleservice.buffered", false);
 pref("toolkit.storage.pageSize", 2048);
 #endif
 
-// Enable captive portal detection.
-pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
-pref("captivedetect.canonicalContent", "success\n");
-
 // The url of the manifest we use for ADU pings.
 pref("ping.manifestURL", "https://marketplace.firefox.com/packaged.webapp");
 

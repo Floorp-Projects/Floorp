@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+html {
+  font: 0px sans-serif;
+}
+body > div {
+  margin-bottom: 10px;
+}
+.h {
+  writing-mode: horizontal-tb;
+}
+.vlr {
+  writing-mode: vertical-lr;
+}
+.vrl {
+  writing-mode: vertical-rl;
+}
+.t {
+  width: 200px;
+  height: 100px;
+  background: silver;
+  display: inline-block;
+}
+.c {
+  background: cyan;
+  text-align: center;
+  min-block-size: 20px;
+  display: inline-block;
+  font-size: 12px;
+  vertical-align: top;
+}
+</style>
+</head>
+<body>
+
+<div class="h">
+  <div class="t"></div>
+  <div class="c" style="inline-size: -moz-min-content">table caption</div>
+</div>
+
+<div class="h">
+  <div class="c" style="inline-size: -moz-min-content">table caption</div>
+  <div class="t"></div>
+</div>
+
+<div class="vlr">
+  <div class="t"></div>
+  <div class="c" style="inline-size: -moz-min-content; vertical-align: bottom">table caption</div>
+</div>
+
+<div class="vrl">
+  <div class="t"></div>
+  <div class="c" style="inline-size: -moz-min-content">table caption</div>
+</div>

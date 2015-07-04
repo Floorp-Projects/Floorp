@@ -1503,7 +1503,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.htm
 random != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref: "fails" under harfbuzz, which doesn't consider the sequence invalid
 fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkiaGL) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
-skip-if(B2G||Mulet) fails-if(Android) == 557087-1.html 557087-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == 557087-1.html 557087-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) == 557087-2.html 557087-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 557736-1.html 557736-1-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) != 558011-1.xul 558011-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
