@@ -690,7 +690,7 @@ nsLookAndFeel::RefreshImpl()
   // We should only clear the cache if we're in the main browser process.
   // Otherwise, we should wait for the parent to inform us of new values
   // to cache via LookAndFeel::SetIntCache.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     mUseOverlayScrollbarsCached = false;
     mAllowOverlayScrollbarsOverlapCached = false;
   }

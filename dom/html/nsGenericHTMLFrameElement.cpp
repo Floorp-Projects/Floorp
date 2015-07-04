@@ -596,7 +596,7 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
 
   // Only allow content process to embed an app when nested content
   // process is enabled.
-  if (XRE_GetProcessType() != GeckoProcessType_Default &&
+  if (!XRE_IsParentProcess() &&
       !(GetBoolAttr(nsGkAtoms::Remote) && NestedEnabled())){
     NS_WARNING("Can't embed-apps. Embed-apps is restricted to in-proc apps "
                "or content processes with nested pref enabled, see bug 1097479");

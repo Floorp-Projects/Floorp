@@ -88,8 +88,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
         factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext, caps, forwarder, mFlags);
 #else
         if (mGLContext->GetContextType() == GLContextType::EGL) {
-          bool isCrossProcess = (XRE_GetProcessType() != GeckoProcessType_Default);
-          if (!isCrossProcess) {
+          if (XRE_IsParentProcess()) {
             factory = SurfaceFactory_EGLImage::Create(mGLContext, caps, forwarder,
                                                       mFlags);
           }

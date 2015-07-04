@@ -72,7 +72,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      nsIPrincipal * aPrincipal,
                                                      bool aInPrivateBrowsing)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
 
     if (aAlertListener)
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
 NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
                                           nsIPrincipal* aPrincipal)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
     cpc->SendCloseAlert(nsAutoString(aAlertName), IPC::Principal(aPrincipal));
     return NS_OK;

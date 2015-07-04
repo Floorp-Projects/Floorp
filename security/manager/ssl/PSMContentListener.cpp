@@ -402,7 +402,7 @@ PSMContentListener::DoContent(const nsACString& aContentType,
   }
   if (type != UNKNOWN_TYPE) {
     nsCOMPtr<nsIStreamListener> downloader;
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
       downloader = new PSMContentStreamListener(type);
     } else {
       downloader = static_cast<PSMContentDownloaderChild*>(

@@ -193,7 +193,7 @@ BluetoothService*
 BluetoothService::Create()
 {
 #if defined(MOZ_B2G_BT)
-  if (!IsMainProcess()) {
+  if (!XRE_IsParentProcess()) {
     return BluetoothServiceChildProcess::Create();
   }
 
@@ -227,7 +227,7 @@ BluetoothService::Init()
   }
 
   // Only the main process should observe bluetooth settings changes.
-  if (IsMainProcess() &&
+  if (XRE_IsParentProcess() &&
       NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false))) {
     BT_WARNING("Failed to add settings change observer!");
     return false;
@@ -269,7 +269,7 @@ BluetoothService::RegisterBluetoothSignalHandler(
 
   // Distribute pending pairing requests when pairing listener has been added
   // to signal observer table.
-  if (IsMainProcess() &&
+  if (XRE_IsParentProcess() &&
       !mPendingPairReqSignals.IsEmpty() &&
       aNodeName.EqualsLiteral(KEY_PAIRING_LISTENER)) {
     for (uint32_t i = 0; i < mPendingPairReqSignals.Length(); ++i) {
