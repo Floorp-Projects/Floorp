@@ -338,7 +338,7 @@ FMRadioChild::EnableAudio(bool aAudioEnabled)
 FMRadioChild*
 FMRadioChild::Singleton()
 {
-  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
+  MOZ_ASSERT(!XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sFMRadioChild) {

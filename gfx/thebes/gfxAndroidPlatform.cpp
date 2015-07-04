@@ -392,7 +392,7 @@ gfxAndroidPlatform::RequiresLinearZoom()
     // On B2G, we need linear zoom for the browser, but otherwise prefer
     // the improved glyph spacing that results from respecting the device
     // pixel resolution for glyph layout (see bug 816614).
-    return XRE_GetProcessType() == GeckoProcessType_Content &&
+    return XRE_IsContentProcess() &&
            ContentChild::GetSingleton()->IsForBrowser();
 #endif
 

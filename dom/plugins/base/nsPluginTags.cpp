@@ -651,7 +651,7 @@ nsPluginTag::GetBlocklistState(uint32_t *aResult)
     return NS_OK;
   }
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     *aResult = nsIBlocklistService::STATE_BLOCKED;
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
     if (!cp->SendGetBlocklistState(mId, aResult)) {

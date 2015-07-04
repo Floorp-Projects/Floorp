@@ -2830,7 +2830,7 @@ uint64_t
 NextWindowID()
 {
   uint64_t processID = 0;
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     ContentChild* cc = ContentChild::GetSingleton();
     processID = cc->GetID();
   }
