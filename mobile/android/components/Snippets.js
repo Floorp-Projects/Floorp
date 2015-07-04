@@ -251,7 +251,7 @@ function removeSnippet(snippetId) {
 function writeStat(snippetId, timestamp) {
   let data = gEncoder.encode(snippetId + "," + timestamp + ";");
 
-  Task.spawn(function* () {
+  Task.spawn(function() {
     try {
       let file = yield OS.File.open(gStatsPath, { append: true, write: true });
       try {

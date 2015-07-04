@@ -14,7 +14,7 @@ interface nsIAutoCompleteSimpleResultListener;
  * an array.
  */
 
-[scriptable, uuid(fe8802f9-c2b7-4141-8e5b-280df3f62251)]
+[scriptable, uuid(457ce8da-9631-45c5-b3b0-293ab0928df1)]
 interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
   /**
@@ -46,6 +46,30 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
    * because a result is only intended for type-ahead completion.
    */
   void setTypeAheadResult(in boolean aHidden);
+
+  /**
+   * Inserts a match consisting of the given value, comment, image, style and
+   * the value to use for defaultIndex completion at a given position.
+   * @param aIndex
+   *        The index to insert at
+   * @param aValue
+   *        The value to autocomplete to
+   * @param aComment
+   *        Comment shown in the autocomplete widget to describe this match
+   * @param aImage
+   *        Image shown in the autocomplete widget for this match.
+   * @param aStyle
+   *        Describes how to style the match in the autocomplete widget
+   * @param aFinalCompleteValue
+   *        Value used when the user confirms selecting this match. If not
+   *        provided, aValue will be used.
+   */
+  void insertMatchAt(in long aIndex,
+                     in AString aValue,
+                     in AString aComment,
+                     [optional] in AString aImage,
+                     [optional] in AString aStyle,
+                     [optional] in AString aFinalCompleteValue);
 
   /**
    * Appends a match consisting of the given value, comment, image, style and

@@ -394,9 +394,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @private
      */
     _shouldRenderRemoteLoading: function() {
-      return this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-             !this.state.remoteSrcVideoObject &&
-             !this.state.mediaConnected;
+      return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
+                !this.state.remoteSrcVideoObject &&
+                !this.state.mediaConnected);
     },
 
     /**
@@ -464,7 +464,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
                 showAlways={true}
-                showRoomName={true} />
+                showRoomName={true}
+                useDesktopPaths={false} />
               <div className="local">
                 <sharedViews.MediaView displayAvatar={this.state.videoMuted}
                   isLoading={this._shouldRenderLocalLoading()}
@@ -477,6 +478,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               audio={{enabled: !this.state.audioMuted,
                       visible: this._roomIsActive()}}
               dispatcher={this.props.dispatcher}
+              edit={{ visible: false, enabled: false }}
               enableHangup={this._roomIsActive()}
               hangup={this.leaveRoom}
               hangupButtonLabel={mozL10n.get("rooms_leave_button_label")}
