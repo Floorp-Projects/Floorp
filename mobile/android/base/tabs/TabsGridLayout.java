@@ -124,6 +124,9 @@ class TabsGridLayout extends GridView
         for (int x = 1, i = (removedPosition - firstPosition) + 1; i < childCount; i++, x++) {
             final View child = getChildAt(i);
             if (child != null) {
+                // Reset the transformations here in case the user is swiping tabs away fast and they swipe a tab
+                // before the last animation has finished (bug 1179195).
+                resetTransforms(child);
                 mTabLocations.append(x, new PointF(child.getX(), child.getY()));
             }
         }
@@ -316,7 +319,7 @@ class TabsGridLayout extends GridView
         TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
         Tab tab = Tabs.getInstance().getTab(itemView.getTabId());
 
-        Tabs.getInstance().closeTab(tab);
+        Tabs.getInstance().closeTab(tab, true);
     }
 
     private void animateRemoveTab(final Tab removedTab) {
