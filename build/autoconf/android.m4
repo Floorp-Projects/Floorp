@@ -260,16 +260,6 @@ if test -n "$MOZ_NATIVE_DEVICES" ; then
     AC_SUBST(ANDROID_APPCOMPAT_LIB)
     AC_SUBST(ANDROID_APPCOMPAT_RES)
 
-    ANDROID_RECYCLERVIEW_LIB="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/libs/android-support-v7-recyclerview.jar"
-    ANDROID_RECYCLERVIEW_RES="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/res"
-    AC_MSG_CHECKING([for v7 recyclerview library])
-    if ! test -e $ANDROID_RECYCLERVIEW_LIB ; then
-        AC_MSG_ERROR([You must download the v7 recyclerview Android support library.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_RECYCLERVIEW_LIB)])
-    fi
-    AC_MSG_RESULT([$ANDROID_RECYCLERVIEW_LIB])
-    AC_SUBST(ANDROID_RECYCLERVIEW_LIB)
-    AC_SUBST(ANDROID_RECYCLERVIEW_RES)
-
     ANDROID_MEDIAROUTER_LIB="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/libs/android-support-v7-mediarouter.jar"
     ANDROID_MEDIAROUTER_RES="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/res"
     AC_MSG_CHECKING([for v7 mediarouter library])
@@ -389,6 +379,16 @@ case "$target" in
         AC_MSG_ERROR([You must download the Android v4 support library when targeting Android.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_COMPAT_LIB)])
     fi
     AC_MSG_RESULT([$ANDROID_COMPAT_LIB])
+
+    ANDROID_RECYCLERVIEW_LIB="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/libs/android-support-v7-recyclerview.jar"
+    ANDROID_RECYCLERVIEW_RES="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/res"
+    AC_MSG_CHECKING([for v7 recyclerview library])
+    if ! test -e $ANDROID_RECYCLERVIEW_LIB ; then
+        AC_MSG_ERROR([You must download the v7 recyclerview Android support library.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_RECYCLERVIEW_LIB)])
+    fi
+    AC_MSG_RESULT([$ANDROID_RECYCLERVIEW_LIB])
+    AC_SUBST(ANDROID_RECYCLERVIEW_LIB)
+    AC_SUBST(ANDROID_RECYCLERVIEW_RES)
 
     dnl Google has a history of moving the Android tools around.  We don't
     dnl care where they are, so let's try to find them anywhere we can.

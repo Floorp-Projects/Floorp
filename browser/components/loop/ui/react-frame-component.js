@@ -25,6 +25,10 @@ window.queuedFrames = [];
  */
 window.Frame = React.createClass({
   propTypes: {
+    children: React.PropTypes.oneOfType([
+      React.PropTypes.element,
+      React.PropTypes.arrayOf(React.PropTypes.element)
+    ]).isRequired,
     className: React.PropTypes.string,
     /* By default, <link rel="stylesheet> nodes from the containing frame's
        head will be cloned into this iframe.  However, if the link also has

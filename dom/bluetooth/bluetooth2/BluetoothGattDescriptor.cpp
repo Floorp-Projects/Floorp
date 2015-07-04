@@ -122,9 +122,7 @@ class ReadValueTask final : public BluetoothReplyRunnable
 {
 public:
   ReadValueTask(BluetoothGattDescriptor* aDescriptor, Promise* aPromise)
-    : BluetoothReplyRunnable(
-        nullptr, aPromise,
-        NS_LITERAL_STRING("GattClientReadDescriptorValue"))
+    : BluetoothReplyRunnable(nullptr, aPromise)
     , mDescriptor(aDescriptor)
   {
     MOZ_ASSERT(aDescriptor);
@@ -177,13 +175,12 @@ BluetoothGattDescriptor::ReadValue(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result = new ReadValueTask(this, promise);
   bs->GattClientReadDescriptorValueInternal(
     mCharacteristic->Service()->GetAppUuid(),
     mCharacteristic->Service()->GetServiceId(),
     mCharacteristic->GetCharacteristicId(),
     mDescriptorId,
-    result);
+    new ReadValueTask(this, promise));
 
   return promise.forget();
 }
@@ -209,15 +206,13 @@ BluetoothGattDescriptor::WriteValue(
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<BluetoothReplyRunnable> result = new BluetoothVoidReplyRunnable(
-    nullptr, promise, NS_LITERAL_STRING("GattClientWriteDescriptorValue"));
   bs->GattClientWriteDescriptorValueInternal(
     mCharacteristic->Service()->GetAppUuid(),
     mCharacteristic->Service()->GetServiceId(),
     mCharacteristic->GetCharacteristicId(),
     mDescriptorId,
     value,
-    result);
+    new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }

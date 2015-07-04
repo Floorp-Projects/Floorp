@@ -230,6 +230,7 @@
 <!ENTITY fxaccount_remove_account_toast 'Firefox Account &formatS; removed.'>
 
 <!ENTITY fxaccount_remove_account_menu_item 'Remove Account'>
+<!ENTITY fxaccount_enable_debug_mode 'Enable Debug Mode'>
 
 <!-- Localization note: this is the name shown by the Android system
      itself for a Firefox Account. Don't localize this. -->
