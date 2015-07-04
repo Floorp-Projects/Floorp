@@ -262,7 +262,7 @@ static nsresult InitNSSInContent()
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
 
-  if (XRE_GetProcessType() != GeckoProcessType_Content) {
+  if (!XRE_IsContentProcess()) {
     MOZ_ASSERT_UNREACHABLE("Must be called in content process");
     return NS_ERROR_FAILURE;
   }
@@ -609,7 +609,7 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
 
       // Bug 1039655 - TURN TCP is not e10s ready
       if ((transport == kNrIceTransportTcp) &&
-          (XRE_GetProcessType() != GeckoProcessType_Default)) {
+          (!XRE_IsParentProcess())) {
         continue;
       }
 
@@ -654,7 +654,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   // Initialize NSS if we are in content process. For chrome process, NSS should already
   // been initialized.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     // This code interferes with the C++ unit test startup code.
     nsCOMPtr<nsISupports> nssDummy = do_GetService("@mozilla.org/psm;1", &res);
     NS_ENSURE_SUCCESS(res, res);

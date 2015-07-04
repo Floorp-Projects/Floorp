@@ -238,7 +238,7 @@ bool
 BluetoothHfpManager::Init()
 {
   // The function must run at b2g process since it would access SettingsService.
-  MOZ_ASSERT(IsMainProcess());
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   MOZ_ASSERT(NS_IsMainThread());
 

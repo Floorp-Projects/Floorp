@@ -592,7 +592,7 @@ DOMStorageManager::Observe(const char* aTopic, const nsACString& aScopePrefix)
   }
 
   if (!strcmp(aTopic, "test-flushed")) {
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!XRE_IsParentProcess()) {
       nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
       if (obs) {
         obs->NotifyObservers(nullptr, "domstorage-test-flushed", nullptr);
@@ -615,7 +615,7 @@ DOMLocalStorageManager::DOMLocalStorageManager()
   NS_ASSERTION(!sSelf, "Somebody is trying to do_CreateInstance(\"@mozilla/dom/localStorage-manager;1\"");
   sSelf = this;
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     // Do this only on the child process.  The thread IPC bridge
     // is also used to communicate chrome observer notifications.
     // Note: must be called after we set sSelf
@@ -648,7 +648,7 @@ DOMLocalStorageManager::Ensure()
 DOMSessionStorageManager::DOMSessionStorageManager()
   : DOMStorageManager(SessionStorage)
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     // Do this only on the child process.  The thread IPC bridge
     // is also used to communicate chrome observer notifications.
     DOMStorageCache::StartDatabase();

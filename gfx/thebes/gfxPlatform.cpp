@@ -714,7 +714,7 @@ gfxPlatform::InitLayersIPC()
 
     AsyncTransactionTrackersHolder::Initialize();
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default)
+    if (XRE_IsParentProcess())
     {
         mozilla::layers::CompositorParent::StartUp();
 #ifndef MOZ_WIDGET_GONK
@@ -736,7 +736,7 @@ gfxPlatform::ShutdownLayersIPC()
     }
     sLayersIPCIsUp = false;
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default)
+    if (XRE_IsParentProcess())
     {
         // This must happen after the shutdown of media and widgets, which
         // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
@@ -1070,7 +1070,7 @@ gfxPlatform::ComputeTileSize()
 {
   // The tile size should be picked in the parent processes
   // and sent to the child processes over IPDL GetTileSize.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     NS_RUNTIMEABORT("wrong process.");
   }
 

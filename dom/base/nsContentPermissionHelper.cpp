@@ -336,7 +336,7 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, n
   NS_ENSURE_STATE(aWindow && aWindow->IsCurrentInnerWindow());
 
   // for content process
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
 
     nsRefPtr<RemotePermissionRequest> req =
       new RemotePermissionRequest(aRequest, aWindow);

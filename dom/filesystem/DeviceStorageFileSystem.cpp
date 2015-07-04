@@ -47,7 +47,7 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(
   // Get the local path of the file system root.
   // Since the child process is not allowed to access the file system, we only
   // do this from the parent process.
-  if (!FileSystemUtils::IsParentProcess()) {
+  if (!XRE_IsParentProcess()) {
     return;
   }
   nsCOMPtr<nsIFile> rootFile;
@@ -100,7 +100,7 @@ DeviceStorageFileSystem::GetWindow() const
 already_AddRefed<nsIFile>
 DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
 {
-  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+  MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   nsAutoString localPath;
   FileSystemUtils::NormalizedPathToLocalPath(aRealPath, localPath);
@@ -116,7 +116,7 @@ DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
 bool
 DeviceStorageFileSystem::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
 {
-  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+  MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   MOZ_ASSERT(aFile, "aFile Should not be null.");
 
@@ -141,7 +141,7 @@ DeviceStorageFileSystem::GetRootName() const
 bool
 DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
 {
-  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+  MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be on parent process!");
   MOZ_ASSERT(aFile);
 

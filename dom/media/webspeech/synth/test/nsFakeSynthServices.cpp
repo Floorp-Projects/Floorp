@@ -328,7 +328,7 @@ nsFakeSynthServices*
 nsFakeSynthServices::GetInstance()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     MOZ_ASSERT(false, "nsFakeSynthServices can only be started on main gecko process");
     return nullptr;
   }

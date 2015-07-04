@@ -555,7 +555,7 @@ already_AddRefed<AudioManager>
 AudioManager::GetInstance()
 {
   // Avoid createing AudioManager from content process.
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     MOZ_CRASH("Non-chrome processes should not get here.");
   }
 

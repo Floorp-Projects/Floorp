@@ -31,7 +31,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     // Re-direct to the clipboard proxy.
     nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
     return clipboardProxy->SetData(aTransferable, anOwner, aWhichClipboard);
@@ -64,7 +64,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (!XRE_IsParentProcess()) {
     // Re-direct to the clipboard proxy.
     nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
     return clipboardProxy->GetData(aTransferable, aWhichClipboard);
@@ -104,7 +104,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     mClipboard.Truncate(0);
   } else {
     ContentChild::GetSingleton()->SendEmptyClipboard(aWhichClipboard);
@@ -122,7 +122,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     *aHasType = !mClipboard.IsEmpty();
   } else {
     nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();

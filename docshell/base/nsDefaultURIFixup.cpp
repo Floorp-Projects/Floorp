@@ -416,7 +416,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
   }
   keyword.Trim(" ");
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
     if (!contentChild) {
       return NS_ERROR_NOT_AVAILABLE;

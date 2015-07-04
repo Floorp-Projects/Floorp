@@ -305,7 +305,7 @@ nsIOService::InitializeNetworkLinkService()
     }
 
     // go into managed mode if we can, and chrome process
-    if (XRE_GetProcessType() == GeckoProcessType_Default)
+    if (XRE_IsParentProcess())
     {
         mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
     }
@@ -973,7 +973,7 @@ nsIOService::SetOffline(bool offline)
 
     NS_ASSERTION(observerService, "The observer service should not be null");
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
         if (observerService) {
             (void)observerService->NotifyObservers(nullptr,
                 NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
@@ -1062,7 +1062,7 @@ nsIOService::SetConnectivity(bool aConnectivity)
 {
     // This should only be called from ContentChild to pass the connectivity
     // value from the chrome process to the content process.
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
         return NS_ERROR_NOT_AVAILABLE;
     }
     return SetConnectivityInternal(aConnectivity);
@@ -1084,7 +1084,7 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
         return NS_OK;
     }
     // This notification sends the connectivity to the child processes
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    if (XRE_IsParentProcess()) {
         observerService->NotifyObservers(nullptr,
             NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC, aConnectivity ?
             MOZ_UTF16("true") :

@@ -632,7 +632,7 @@ nsFileInputStream::Deserialize(const InputStreamParams& aParams,
 
     mBehaviorFlags = params.behaviorFlags();
 
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    if (!XRE_IsParentProcess()) {
         // A child process shouldn't close when it reads the end because it will
         // not be able to reopen the file later.
         mBehaviorFlags &= ~nsIFileInputStream::CLOSE_ON_EOF;

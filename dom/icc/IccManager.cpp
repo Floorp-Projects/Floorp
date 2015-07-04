@@ -143,7 +143,7 @@ NS_CreateIccService()
 {
   nsCOMPtr<nsIIccService> service;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     service = new mozilla::dom::icc::IccIPCService();
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
   } else {

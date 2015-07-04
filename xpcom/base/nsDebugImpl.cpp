@@ -406,7 +406,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
       // Updating crash annotations in the child causes us to do IPC. This can
       // really cause trouble if we're asserting from within IPC code. So we
       // have to do without the annotations in that case.
-      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      if (XRE_IsParentProcess()) {
         nsCString note("xpcom_runtime_abort(");
         note += buf.buffer;
         note += ")";

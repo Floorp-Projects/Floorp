@@ -887,7 +887,7 @@ ProcessHangMonitor::ProcessHangMonitor()
 
   MOZ_COUNT_CTOR(ProcessHangMonitor);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     obs->AddObserver(this, "xpcom-shutdown", false);
   }

@@ -146,7 +146,7 @@ NS_IMETHODIMP
 nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
                     uint32_t aChannels, uint32_t aRate, uint8_t argc)
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   LOG(LogLevel::Debug, ("nsSpeechTask::Setup"));
 
@@ -197,7 +197,7 @@ NS_IMETHODIMP
 nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLandmarks,
                         JSContext* aCx)
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if(NS_WARN_IF(!(mStream))) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -247,7 +247,7 @@ nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLand
 NS_IMETHODIMP
 nsSpeechTask::SendAudioNative(int16_t* aData, uint32_t aDataLen)
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if(NS_WARN_IF(!(mStream))) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -508,7 +508,7 @@ nsSpeechTask::DispatchMarkImpl(const nsAString& aName,
 void
 nsSpeechTask::Pause()
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if (mCallback) {
     DebugOnly<nsresult> rv = mCallback->OnPause();
@@ -524,7 +524,7 @@ nsSpeechTask::Pause()
 void
 nsSpeechTask::Resume()
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if (mCallback) {
     DebugOnly<nsresult> rv = mCallback->OnResume();
@@ -540,7 +540,7 @@ nsSpeechTask::Resume()
 void
 nsSpeechTask::Cancel()
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   LOG(LogLevel::Debug, ("nsSpeechTask::Cancel"));
 

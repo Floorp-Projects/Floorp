@@ -583,8 +583,9 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     if (testFile) {
         *aRealFile = true;
 
-        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        if (XRE_IsParentProcess()) {
             RootedObject locationObj(aCx);
+
             rv = xpc->WrapNative(aCx, obj, aComponentFile,
                                  NS_GET_IID(nsIFile),
                                  locationObj.address());

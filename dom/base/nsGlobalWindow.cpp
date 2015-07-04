@@ -8960,7 +8960,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
                             (aUrl, aArgument, aOptions, aError), aError,
                             nullptr);
 
-  if (!IsShowModalDialogEnabled() || XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (!IsShowModalDialogEnabled() || XRE_IsContentProcess()) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
@@ -10749,7 +10749,7 @@ nsGlobalWindow::ShowSlowScriptDialog()
   unsigned lineno;
   bool hasFrame = JS::DescribeScriptedCaller(cx, &filename, &lineno);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+  if (XRE_IsContentProcess() &&
       ProcessHangMonitor::Get()) {
     ProcessHangMonitor::SlowScriptAction action;
     nsRefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
