@@ -1631,8 +1631,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
               return;
 
-            if (this._matchCount > 0 && this.selectedIndex == -1)
+            if (this._matchCount > 0 && this.selectedIndex == -1) {
+              // Don't handle this as a user-initiated action.
+              this._ignoreNextSelect = true;
               this.selectedIndex = 0;
+              this._ignoreNextSelect = false;
+            }
 
             this.input.gotResultForCurrentQuery = true;
             if (this.input.handleEnterWhenGotResult) {
@@ -1644,6 +1648,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </method>
 
     </implementation>
+    <handlers>
+
+      <handler event="select"><![CDATA[
+        // When the user selects one of matches, stop the search to avoid
+        // changing the underlying result unexpectedly.
+        if (!this._ignoreNextSelect && this.selectedIndex >= 0) {
+          let controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+          controller.stopSearch();
+        }
+      ]]></handler>
+
+    </handlers>
   </binding>
 
   <binding id="addon-progress-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">

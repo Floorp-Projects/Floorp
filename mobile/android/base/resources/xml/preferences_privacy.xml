@@ -8,7 +8,7 @@
                   android:title="@string/pref_category_privacy_short"
                   android:enabled="false">
 
-    <CheckBoxPreference android:key="privacy.trackingprotection.enabled"
+    <CheckBoxPreference android:key="privacy.trackingprotection.pbmode.enabled"
                         android:title="@string/pref_tracking_protection_title"
                         android:summary="@string/pref_tracking_protection_summary"
                         android:persistent="false" />

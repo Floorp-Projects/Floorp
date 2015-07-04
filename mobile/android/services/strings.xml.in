@@ -238,3 +238,6 @@
 
 <string name="fxaccount_sync_finish_migrating_notification_title">&fxaccount_sync_finish_migrating_notification_title;</string>
 <string name="fxaccount_sync_finish_migrating_notification_text">&fxaccount_sync_finish_migrating_notification_text;</string>
+
+<!-- Log Personal information -->
+<string name="fxaccount_enable_debug_mode">&fxaccount_enable_debug_mode;</string>

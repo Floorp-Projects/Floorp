@@ -241,17 +241,17 @@ input[type="radio"]:focus {
 }
 
 /* we need to be specific for selects because the above rules are specific too */
-textarea[disabled],
-select[size][disabled],
-select[multiple][disabled],
-select[size][multiple][disabled],
-select:not([size]):not([multiple])[disabled],
-select[size="0"][disabled],
-select[size="1"][disabled],
-button[disabled],
-button[disabled]:active,
-* > input:not([type="image"])[disabled],
-* > input:not([type="image"])[disabled]:active {
+textarea:disabled,
+select[size]:disabled,
+select[multiple]:disabled,
+select[size][multiple]:disabled,
+select:not([size]):not([multiple]):disabled,
+select[size="0"]:disabled,
+select[size="1"]:disabled,
+button:disabled,
+button:disabled:active,
+* > input:not([type="image"]):disabled,
+* > input:not([type="image"]):disabled:active {
   color: @form_text_disabled@;
   border-color: @form_border@;
   border-style: solid;
@@ -259,20 +259,20 @@ button[disabled]:active,
   background: @form_background_disabled@;
 }
 
-select:not([size]):not([multiple])[disabled],
-select[size="0"][disabled],
-select[size="1"][disabled] {
+select:not([size]):not([multiple]):disabled,
+select[size="0"]:disabled,
+select[size="1"]:disabled {
   background: @form_background_disabled@;
 }
 
-input[type="button"][disabled],
-input[type="button"][disabled]:active,
-input[type="submit"][disabled],
-input[type="submit"][disabled]:active,
-input[type="reset"][disabled],
-input[type="reset"][disabled]:active,
-button[disabled],
-button[disabled]:active {
+input[type="button"]:disabled,
+input[type="button"]:disabled:active,
+input[type="submit"]:disabled,
+input[type="submit"]:disabled:active,
+input[type="reset"]:disabled,
+input[type="reset"]:disabled:active,
+button:disabled,
+button:disabled:active {
   -moz-padding-start: 7px;
   -moz-padding-end: 7px;
   padding-block-start: 0;
@@ -280,18 +280,18 @@ button[disabled]:active {
   background: @form_background_disabled@;
 }
 
-input[type="radio"][disabled],
-input[type="radio"][disabled]:active,
-input[type="radio"][disabled]:hover,
-input[type="radio"][disabled]:hover:active,
-input[type="checkbox"][disabled],
-input[type="checkbox"][disabled]:active,
-input[type="checkbox"][disabled]:hover,
-input[type="checkbox"][disabled]:hover:active {
+input[type="radio"]:disabled,
+input[type="radio"]:disabled:active,
+input[type="radio"]:disabled:hover,
+input[type="radio"]:disabled:hover:active,
+input[type="checkbox"]:disabled,
+input[type="checkbox"]:disabled:active,
+input[type="checkbox"]:disabled:hover,
+input[type="checkbox"]:disabled:hover:active {
   border:1px solid @form_border@ !important;
 }
 
-select[disabled] > button {
+select:disabled > button {
   opacity: 0.6;
   -moz-padding-start: 7px;
   -moz-padding-end: 7px;
@@ -306,10 +306,10 @@ select[disabled] > button {
 
 *:-moz-any-link:active,
 *[role=button]:active,
-button:not([disabled]):active,
-input:not(:focus):not([disabled]):active,
-select:not([disabled]):active,
-textarea:not(:focus):not([disabled]):active,
+button:not(:disabled):active,
+input:not(:focus):not(:disabled):active,
+select:not(:disabled):active,
+textarea:not(:focus):not(:disabled):active,
 option:active,
 label:active,
 xul|menulist:active {
