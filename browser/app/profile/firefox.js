@@ -495,6 +495,12 @@ pref("browser.tabs.drawInTitlebar", true);
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
 
+#ifdef RELEASE_BUILD
+pref("browser.tabs.showAudioPlayingIcon", false);
+#else
+pref("browser.tabs.showAudioPlayingIcon", true);
+#endif
+
 pref("browser.ctrlTab.previews", false);
 
 // By default, do not export HTML at shutdown.

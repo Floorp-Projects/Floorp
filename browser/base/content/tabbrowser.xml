@@ -4237,6 +4237,40 @@
           this.setIcon(tab, icon);
         ]]>
       </handler>
+      <handler event="DOMMediaPlaybackStarted">
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !event.isTrusted)
+            return;
+
+          var browser = event.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          if (!tab)
+            return;
+
+          if (!tab.hasAttribute("soundplaying")) {
+            tab.setAttribute("soundplaying", true);
+            this._tabAttrModified(tab, ["soundplaying"]);
+          }
+        ]]>
+      </handler>
+      <handler event="DOMMediaPlaybackStopped">
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !event.isTrusted)
+            return;
+
+          var browser = event.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          if (!tab)
+            return;
+
+          if (tab.hasAttribute("soundplaying")) {
+            tab.removeAttribute("soundplaying");
+            this._tabAttrModified(tab, ["soundplaying"]);
+          }
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -5651,13 +5685,16 @@
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned"
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
                      xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
                      class="tab-text tab-label"
+                     role="presentation"/>
+          <xul:image xbl:inherits="soundplaying,pinned"
+                     class="tab-icon-sound"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected,visuallyselected"
