@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1433888926000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1435698725000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -3048,6 +3048,18 @@
       <pluginItem  blockID="p912">
       <match name="name" exp="Java(\(TM\))? Plug-in 11\.(\d|[1-3]\d|4[0-4])(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p928">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="13.0.0.269" maxVersion="13.0.0.295" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p930">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="16.0.0.305" maxVersion="18.0.0.193" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p932">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.442" maxVersion="11.2.202.467" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
     </pluginItems>
 
