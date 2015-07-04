@@ -73,7 +73,7 @@
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
 #include "nsThreadUtils.h"
-#include "TableTicker.h"
+#include "GeckoSampler.h"
 #include "ThreadResponsiveness.h"
 
 #if defined(__ARM_EABI__) && defined(MOZ_WIDGET_GONK)
@@ -82,8 +82,8 @@
 # include "EHABIStackWalk.h"
 #elif defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
-# include "LulMain.h"
-# include "platform-linux-lul.h"
+# include "lul/LulMain.h"
+# include "lul/platform-linux-lul.h"
 #endif
 
 // Memory profile
@@ -273,7 +273,7 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
 
-class PlatformData : public Malloced {
+class PlatformData {
  public:
   PlatformData()
   {}

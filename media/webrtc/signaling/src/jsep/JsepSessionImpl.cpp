@@ -157,6 +157,20 @@ JsepSessionImpl::SetIceCredentials(const std::string& ufrag,
 }
 
 nsresult
+JsepSessionImpl::SetBundlePolicy(JsepBundlePolicy policy)
+{
+  mLastError.clear();
+  if (mCurrentLocalDescription) {
+    JSEP_SET_ERROR("Changing the bundle policy is only supported before the "
+                   "first SetLocalDescription.");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mBundlePolicy = policy;
+  return NS_OK;
+}
+
+nsresult
 JsepSessionImpl::AddDtlsFingerprint(const std::string& algorithm,
                                     const std::vector<uint8_t>& value)
 {
@@ -514,6 +528,7 @@ void
 JsepSessionImpl::SetupBundle(Sdp* sdp) const
 {
   std::vector<std::string> mids;
+  std::set<SdpMediaSection::MediaType> observedTypes;
 
   // This has the effect of changing the bundle level if the first m-section
   // goes from disabled to enabled. This is kinda inefficient.
@@ -521,11 +536,36 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
   for (size_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
     auto& attrs = sdp->GetMediaSection(i).GetAttributeList();
     if (attrs.HasAttribute(SdpAttribute::kMidAttribute)) {
+      bool useBundleOnly = false;
+      switch (mBundlePolicy) {
+        case kBundleMaxCompat:
+          // We don't use bundle-only for max-compat
+          break;
+        case kBundleBalanced:
+          // balanced means we use bundle-only on everything but the first
+          // m-section of a given type
+          if (observedTypes.count(sdp->GetMediaSection(i).GetMediaType())) {
+            useBundleOnly = true;
+          }
+          observedTypes.insert(sdp->GetMediaSection(i).GetMediaType());
+          break;
+        case kBundleMaxBundle:
+          // max-bundle means we use bundle-only on everything but the first
+          // m-section
+          useBundleOnly = !mids.empty();
+          break;
+      }
+
+      if (useBundleOnly) {
+        attrs.SetAttribute(
+            new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
+      }
+
       mids.push_back(attrs.GetMid());
     }
   }
 
-  if (!mids.empty()) {
+  if (mids.size() > 1) {
     UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());
@@ -987,13 +1027,12 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
 
   const Sdp& offer = *mPendingRemoteDescription;
 
-  auto* group = FindBundleGroup(offer);
-  if (group) {
-    // Copy the bundle group into our answer
-    UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
-    groupAttr->mGroups.push_back(*group);
-    sdp->GetAttributeList().SetAttribute(groupAttr.release());
-  }
+  std::vector<SdpGroupAttributeList::Group> bundleGroups;
+
+  // Copy the bundle groups into our answer
+  UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
+  GetBundleGroups(offer, &groupAttr->mGroups);
+  sdp->GetAttributeList().SetAttribute(groupAttr.release());
 
   // Disable send for local tracks if the offer no longer allows it
   // (i.e., the m-section is recvonly, inactive or disabled)
@@ -1519,10 +1558,8 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
 
   const Sdp& answer = mIsOfferer ? *remote : *local;
 
-  std::set<std::string> bundleMids;
-  const SdpMediaSection* bundleMsection = nullptr;
-  // TODO(bug 1112692): Support more than one bundle group
-  nsresult rv = GetBundleInfo(answer, &bundleMids, &bundleMsection);
+  BundledMids bundledMids;
+  nsresult rv = GetBundledMids(answer, &bundledMids);
   NS_ENSURE_SUCCESS(rv, rv);
 
   std::vector<JsepTrackPair> trackPairs;
@@ -1550,8 +1587,10 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
       const SdpMediaSection& answerMsection(answer.GetMediaSection(i));
       if (answerMsection.GetAttributeList().HasAttribute(
             SdpAttribute::kMidAttribute)) {
-        if (bundleMids.count(answerMsection.GetAttributeList().GetMid())) {
-          transportLevel = bundleMsection->GetLevel();
+        if (bundledMids.count(answerMsection.GetAttributeList().GetMid())) {
+          const SdpMediaSection* masterBundleMsection =
+            bundledMids[answerMsection.GetAttributeList().GetMid()];
+          transportLevel = masterBundleMsection->GetLevel();
           usingBundle = true;
           if (i != transportLevel) {
             mTransports[i]->Close();
@@ -2262,14 +2301,13 @@ JsepSessionImpl::ValidateRemoteDescription(const Sdp& description)
     return NS_ERROR_INVALID_ARG;
   }
 
-  std::set<std::string> oldBundleMids;
-  const SdpMediaSection* oldBundleMsection;
-  nsresult rv = GetNegotiatedBundleInfo(&oldBundleMids, &oldBundleMsection);
+  // These are solely to check that bundle is valid
+  BundledMids bundledMids;
+  nsresult rv = GetNegotiatedBundledMids(&bundledMids);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  std::set<std::string> newBundleMids;
-  const SdpMediaSection* newBundleMsection;
-  rv = GetBundleInfo(description, &newBundleMids, &newBundleMsection);
+  BundledMids newBundledMids;
+  rv = GetBundledMids(description, &newBundledMids);
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (size_t i = 0;
@@ -2734,6 +2772,14 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
     return NS_OK;
   }
 
+  BundledMids bundledMids;
+  nsresult rv = GetNegotiatedBundledMids(&bundledMids);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false);
+    mLastError += " (This should have been caught sooner!)";
+    return NS_ERROR_FAILURE;
+  }
+
   std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
   if (mState == kJsepStateStable && mTransports[level]->mComponents == 1) {
     // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
@@ -2743,38 +2789,35 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
 
   SdpMediaSection& msection = sdp->GetMediaSection(level);
 
+  // TODO(bug 1142105): Factor some of this out into a helper class
   if (mState == kJsepStateStable) {
     // offer/answer is done. Do we actually incorporate these defaults?
-    const Sdp* answer(GetAnswer());
-    std::set<std::string> bundleMids;
-    const SdpMediaSection* bundleMsection;
-    nsresult rv = GetBundleInfo(*answer, &bundleMids, &bundleMsection);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false);
-      mLastError += " (This should have been caught sooner!)";
-      return NS_ERROR_FAILURE;
-    }
-
-    if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute) &&
-        bundleMids.count(msection.GetAttributeList().GetMid())) {
-      if (msection.GetLevel() != bundleMsection->GetLevel()) {
-        // Slave bundle m-section. Skip.
-        return NS_OK;
-      }
-
-      // Master bundle m-section. Set defaultCandidateAddr and
-      // defaultCandidatePort on all bundled m-sections.
-      for (auto i = bundleMids.begin(); i != bundleMids.end(); ++i) {
-        SdpMediaSection* bundledMsection = FindMsectionByMid(*sdp, *i);
-        if (!bundledMsection) {
-          MOZ_ASSERT(false);
-          continue;
+    if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMidAttribute)) {
+      std::string mid(msection.GetAttributeList().GetMid());
+      if (bundledMids.count(mid)) {
+        const SdpMediaSection* masterBundleMsection(bundledMids[mid]);
+        if (msection.GetLevel() != masterBundleMsection->GetLevel()) {
+          // Slave bundle m-section. Skip.
+          return NS_OK;
         }
-        SetDefaultAddresses(defaultCandidateAddr,
-                            defaultCandidatePort,
-                            defaultRtcpCandidateAddrCopy,
-                            defaultRtcpCandidatePort,
-                            bundledMsection);
+
+        // Master bundle m-section. Set defaultCandidateAddr and
+        // defaultCandidatePort on all bundled m-sections.
+        for (auto i = bundledMids.begin(); i != bundledMids.end(); ++i) {
+          if (i->second != masterBundleMsection) {
+            continue;
+          }
+          SdpMediaSection* bundledMsection = FindMsectionByMid(*sdp, i->first);
+          if (!bundledMsection) {
+            MOZ_ASSERT(false);
+            continue;
+          }
+          SetDefaultAddresses(defaultCandidateAddr,
+                              defaultCandidatePort,
+                              defaultRtcpCandidateAddrCopy,
+                              defaultRtcpCandidatePort,
+                              bundledMsection);
+        }
       }
     }
   }
@@ -2825,77 +2868,67 @@ JsepSessionImpl::FindMsectionByMid(const Sdp& sdp,
   return nullptr;
 }
 
-const SdpGroupAttributeList::Group*
-JsepSessionImpl::FindBundleGroup(const Sdp& sdp) const
+void
+JsepSessionImpl::GetBundleGroups(
+    const Sdp& sdp,
+    std::vector<SdpGroupAttributeList::Group>* bundleGroups) const
 {
   if (sdp.GetAttributeList().HasAttribute(SdpAttribute::kGroupAttribute)) {
-    auto& groups = sdp.GetAttributeList().GetGroup().mGroups;
-    for (auto i = groups.begin(); i != groups.end(); ++i) {
-      if (i->semantics == SdpGroupAttributeList::kBundle) {
-        return &(*i);
+    for (auto& group : sdp.GetAttributeList().GetGroup().mGroups) {
+      if (group.semantics == SdpGroupAttributeList::kBundle) {
+        bundleGroups->push_back(group);
       }
     }
   }
-
-  return nullptr;
 }
 
 nsresult
-JsepSessionImpl::GetNegotiatedBundleInfo(
-    std::set<std::string>* bundleMids,
-    const SdpMediaSection** bundleMsection)
+JsepSessionImpl::GetNegotiatedBundledMids(BundledMids* bundledMids)
 {
-  mozilla::Sdp* answerSdp = 0;
-  *bundleMsection = nullptr;
+  const Sdp* answerSdp = GetAnswer();
 
-  if (IsOfferer()) {
-    if (!mCurrentRemoteDescription) {
-      // Offer/answer not done.
-      return NS_OK;
-    }
-
-    answerSdp = mCurrentRemoteDescription.get();
-  } else {
-    if (mPendingLocalDescription) {
-      answerSdp = mPendingLocalDescription.get();
-    } else if (mCurrentLocalDescription) {
-      answerSdp = mCurrentLocalDescription.get();
-    } else {
-      MOZ_ASSERT(false);
-      JSEP_SET_ERROR("Is answerer, but no local description. This is a bug.");
-      return NS_ERROR_FAILURE;
-    }
+  if (!answerSdp) {
+    return NS_OK;
   }
 
-  return GetBundleInfo(*answerSdp, bundleMids, bundleMsection);
+  return GetBundledMids(*answerSdp, bundledMids);
 }
 
 nsresult
-JsepSessionImpl::GetBundleInfo(const Sdp& sdp,
-                               std::set<std::string>* bundleMids,
-                               const SdpMediaSection** bundleMsection)
+JsepSessionImpl::GetBundledMids(const Sdp& sdp, BundledMids* bundledMids)
 {
-  *bundleMsection = nullptr;
+  std::vector<SdpGroupAttributeList::Group> bundleGroups;
+  GetBundleGroups(sdp, &bundleGroups);
 
-  auto* group = FindBundleGroup(sdp);
-  if (group && !group->tags.empty()) {
-    bundleMids->insert(group->tags.begin(), group->tags.end());
-    *bundleMsection = FindMsectionByMid(sdp, group->tags[0]);
-  }
-
-  if (!bundleMids->empty()) {
-    if (!*bundleMsection) {
-      JSEP_SET_ERROR("mid specified for bundle transport in group attribute"
-          " does not exist in the SDP. (mid="
-          << group->tags[0] << ")");
+  for (SdpGroupAttributeList::Group& group : bundleGroups) {
+    if (group.tags.empty()) {
+      JSEP_SET_ERROR("Empty BUNDLE group");
       return NS_ERROR_INVALID_ARG;
     }
 
-    if (MsectionIsDisabled(**bundleMsection)) {
+    const SdpMediaSection* masterBundleMsection(
+        FindMsectionByMid(sdp, group.tags[0]));
+
+    if (!masterBundleMsection) {
       JSEP_SET_ERROR("mid specified for bundle transport in group attribute"
-          " points at a disabled m-section. (mid="
-          << group->tags[0] << ")");
+          " does not exist in the SDP. (mid=" << group.tags[0] << ")");
       return NS_ERROR_INVALID_ARG;
+    }
+
+    if (MsectionIsDisabled(*masterBundleMsection)) {
+      JSEP_SET_ERROR("mid specified for bundle transport in group attribute"
+          " points at a disabled m-section. (mid=" << group.tags[0] << ")");
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    for (const std::string& mid : group.tags) {
+      if (bundledMids->count(mid)) {
+        JSEP_SET_ERROR("mid \'" << mid << "\' appears more than once in a "
+                       "BUNDLE group");
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      (*bundledMids)[mid] = masterBundleMsection;
     }
   }
 
@@ -2911,23 +2944,17 @@ JsepSessionImpl::IsBundleSlave(const Sdp& sdp, uint16_t level)
     // No mid, definitely no bundle for this m-section
     return false;
   }
+  std::string mid(msection.GetAttributeList().GetMid());
 
-  std::set<std::string> bundleMids;
-  const SdpMediaSection* bundleMsection;
-  nsresult rv = GetBundleInfo(sdp, &bundleMids, &bundleMsection);
+  BundledMids bundledMids;
+  nsresult rv = GetBundledMids(sdp, &bundledMids);
   if (NS_FAILED(rv)) {
     // Should have been caught sooner.
     MOZ_ASSERT(false);
     return false;
   }
 
-  if (!bundleMsection) {
-    return false;
-  }
-
-  std::string mid(msection.GetAttributeList().GetMid());
-
-  if (bundleMids.count(mid) && level != bundleMsection->GetLevel()) {
+  if (bundledMids.count(mid) && level != bundledMids[mid]->GetLevel()) {
     // mid is bundled, and isn't the bundle m-section
     return true;
   }

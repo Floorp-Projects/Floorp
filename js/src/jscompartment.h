@@ -426,6 +426,7 @@ struct JSCompartment
     void sweepDebugScopes();
     void sweepWeakMaps();
     void sweepNativeIterators();
+    void sweepTemplateObjects();
 
     void purge();
     void clearTables();
@@ -578,6 +579,9 @@ struct JSCompartment
   private:
     js::jit::JitCompartment* jitCompartment_;
 
+    js::ReadBarriered<js::ArgumentsObject*> normalArgumentsTemplate_;
+    js::ReadBarriered<js::ArgumentsObject*> strictArgumentsTemplate_;
+
   public:
     bool ensureJitCompartmentExists(JSContext* cx);
     js::jit::JitCompartment* jitCompartment() {
@@ -596,6 +600,8 @@ struct JSCompartment
         RegExpSourceProperty = 8,           // ES5
         DeprecatedLanguageExtensionCount
     };
+
+    js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool strict);
 
   private:
     // Used for collecting telemetry on SpiderMonkey's deprecated language extensions.

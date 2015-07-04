@@ -1266,7 +1266,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
     return nullptr;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+  if (XRE_IsParentProcess()) {
     // In-process transfer
     bs->SendFile(aDeviceAddress, &aBlob, results);
   } else {

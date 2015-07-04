@@ -379,7 +379,9 @@ public:
   bool WantAsyncScroll() const;
   Maybe<FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const;
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const;
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -460,6 +462,7 @@ public:
 
   // The scroll port clip. Only valid during painting.
   const DisplayItemClip* mAncestorClip;
+  const DisplayItemClip* mAncestorClipForCaret;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
@@ -836,9 +839,14 @@ public:
   }
   virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const override
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters);
+    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
+  }
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  {
+    return mHelper.ComputeScrollClip(aIsForCaret);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
@@ -1231,9 +1239,14 @@ public:
   }
   virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
-    const ContainerLayerParameters& aParameters) const override
+    const ContainerLayerParameters& aParameters,
+    bool aIsForCaret) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters);
+    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
+  }
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  {
+    return mHelper.ComputeScrollClip(aIsForCaret);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();

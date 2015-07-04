@@ -14,6 +14,18 @@ XRE_GetProcessType()
   return GeckoProcessType_Default;
 }
 
+bool
+XRE_IsParentProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
+bool
+XRE_IsContentProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Content;
+}
+
 #define PRINT_CALLED fprintf(stderr, "!!! ERROR: function %s defined in file %s should not be called, needs to be correctly implemented.\n", __FUNCTION__, __FILE__)
 
 class nsAString;

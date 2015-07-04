@@ -77,7 +77,9 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     compartmentStats(nullptr),
     scheduledForDestruction(false),
     maybeAlive(true),
-    jitCompartment_(nullptr)
+    jitCompartment_(nullptr),
+    normalArgumentsTemplate_(nullptr),
+    strictArgumentsTemplate_(nullptr)
 {
     PodArrayZero(sawDeprecatedLanguageExtension);
     runtime_->numCompartments++;
@@ -655,7 +657,18 @@ JSCompartment::sweepCrossCompartmentWrappers()
     }
 }
 
-void JSCompartment::fixupAfterMovingGC()
+void
+JSCompartment::sweepTemplateObjects()
+{
+    if (normalArgumentsTemplate_ && IsAboutToBeFinalized(&normalArgumentsTemplate_))
+        normalArgumentsTemplate_.set(nullptr);
+
+    if (strictArgumentsTemplate_ && IsAboutToBeFinalized(&strictArgumentsTemplate_))
+        strictArgumentsTemplate_.set(nullptr);
+}
+
+void
+JSCompartment::fixupAfterMovingGC()
 {
     fixupGlobal();
     fixupInitialShapeTable();

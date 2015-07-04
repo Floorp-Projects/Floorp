@@ -312,14 +312,8 @@ protected:
       return false;
     }
 
-    if (p1.mBundleLevel.isSome() != p2.mBundleLevel.isSome()) {
-      return false;
-    }
-
-    if (p1.mBundleLevel.isSome() &&
-        *p1.mBundleLevel != *p2.mBundleLevel) {
-      return false;
-    }
+    // We don't check things like mBundleLevel, since that can change without
+    // any changes to the transport, which is what we're really interested in.
 
     if (p1.mSending.get() != p2.mSending.get()) {
       return false;
@@ -794,6 +788,20 @@ protected:
       ASSERT_FALSE(msection.GetAttributeList().HasAttribute(
             SdpAttribute::kEndOfCandidatesAttribute))
         << context << " (level " << msection.GetLevel() << ")";
+    }
+  }
+
+  void CheckPairs(const JsepSession& session, const std::string& context)
+  {
+    auto pairs = session.GetNegotiatedTrackPairs();
+
+    for (JsepTrackPair& pair : pairs) {
+      if (types.size() == 1) {
+        ASSERT_FALSE(pair.mBundleLevel.isSome()) << context;
+      } else {
+        ASSERT_TRUE(pair.mBundleLevel.isSome()) << context;
+        ASSERT_EQ(0U, *pair.mBundleLevel) << context;
+      }
     }
   }
 
@@ -1888,6 +1896,12 @@ TEST_P(JsepSessionTest, RenegotiationOffererEnablesBundle)
 {
   AddTracks(mSessionOff);
   AddTracks(mSessionAns);
+
+  if (types.size() < 2) {
+    // No bundle will happen here.
+    return;
+  }
+
   std::string offer = CreateOffer();
 
   DisableBundle(&offer);
@@ -3617,6 +3631,82 @@ TEST_P(JsepSessionTest, TestInvalidRollback)
             mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
   ASSERT_EQ(NS_ERROR_UNEXPECTED,
             mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+}
+
+size_t GetActiveTransportCount(const JsepSession& session)
+{
+  auto transports = session.GetTransports();
+  size_t activeTransportCount = 0;
+  for (RefPtr<JsepTransport>& transport : transports) {
+    activeTransportCount += transport->mComponents;
+  }
+  return activeTransportCount;
+}
+
+TEST_P(JsepSessionTest, TestBalancedBundle)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  mSessionOff.SetBundlePolicy(kBundleBalanced);
+
+  std::string offer = CreateOffer();
+  SipccSdpParser parser;
+  UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
+  ASSERT_TRUE(parsedOffer.get());
+
+  std::map<SdpMediaSection::MediaType, SdpMediaSection*> firstByType;
+
+  for (size_t i = 0; i < parsedOffer->GetMediaSectionCount(); ++i) {
+    SdpMediaSection& msection(parsedOffer->GetMediaSection(i));
+    bool firstOfType = !firstByType.count(msection.GetMediaType());
+    if (firstOfType) {
+      firstByType[msection.GetMediaType()] = &msection;
+    }
+    ASSERT_EQ(!firstOfType,
+              msection.GetAttributeList().HasAttribute(
+                SdpAttribute::kBundleOnlyAttribute));
+  }
+
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  CheckPairs(mSessionOff, "Offerer pairs");
+  CheckPairs(mSessionAns, "Answerer pairs");
+  EXPECT_EQ(1U, GetActiveTransportCount(mSessionOff));
+  EXPECT_EQ(1U, GetActiveTransportCount(mSessionAns));
+}
+
+TEST_P(JsepSessionTest, TestMaxBundle)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  mSessionOff.SetBundlePolicy(kBundleMaxBundle);
+  OfferAnswer();
+
+  std::string offer = mSessionOff.GetLocalDescription();
+  SipccSdpParser parser;
+  UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
+  ASSERT_TRUE(parsedOffer.get());
+
+  ASSERT_FALSE(
+      parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kBundleOnlyAttribute));
+  for (size_t i = 1; i < parsedOffer->GetMediaSectionCount(); ++i) {
+    ASSERT_TRUE(
+        parsedOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
+          SdpAttribute::kBundleOnlyAttribute));
+  }
+
+
+  CheckPairs(mSessionOff, "Offerer pairs");
+  CheckPairs(mSessionAns, "Answerer pairs");
+  EXPECT_EQ(1U, GetActiveTransportCount(mSessionOff));
+  EXPECT_EQ(1U, GetActiveTransportCount(mSessionAns));
 }
 
 } // namespace mozilla

@@ -19,7 +19,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "PseudoStack.h"
-#include "TableTicker.h"
+#include "GeckoSampler.h"
 #ifndef SPS_STANDALONE
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceUtils.h"
@@ -38,13 +38,13 @@
 #ifndef SPS_STANDALONE
 #if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
-# include "LulMain.h"
-# include "platform-linux-lul.h"
+# include "lul/LulMain.h"
+# include "lul/platform-linux-lul.h"
 #endif
 #endif
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
-mozilla::ThreadLocal<TableTicker *> tlsTicker;
+mozilla::ThreadLocal<GeckoSampler *> tlsTicker;
 mozilla::ThreadLocal<void *> tlsStackTop;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
@@ -83,7 +83,7 @@ static int sProfileEntries;   /* how many entries do we store? */
 std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
 mozilla::UniquePtr< ::Mutex> Sampler::sRegisteredThreadsMutex;
 
-TableTicker* Sampler::sActiveSampler;
+GeckoSampler* Sampler::sActiveSampler;
 
 #ifndef SPS_STANDALONE
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
@@ -127,43 +127,6 @@ void Sampler::Shutdown() {
     sLUL = nullptr;
   }
 #endif
-}
-
-ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
-                       bool aIsMainThread, PseudoStack* aPseudoStack,
-                       void* aStackTop)
-  : mName(strdup(aName))
-  , mThreadId(aThreadId)
-  , mIsMainThread(aIsMainThread)
-  , mPseudoStack(aPseudoStack)
-  , mPlatformData(Sampler::AllocPlatformData(aThreadId))
-  , mProfile(nullptr)
-  , mStackTop(aStackTop)
-  , mPendingDelete(false)
-{
-#ifndef SPS_STANDALONE
-  mThread = NS_GetCurrentThread();
-#endif
-}
-
-ThreadInfo::~ThreadInfo() {
-  free(mName);
-
-  if (mProfile)
-    delete mProfile;
-
-  Sampler::FreePlatformData(mPlatformData);
-}
-
-void
-ThreadInfo::SetPendingDelete()
-{
-  mPendingDelete = true;
-  // We don't own the pseudostack so disconnect it.
-  mPseudoStack = nullptr;
-  if (mProfile) {
-    mProfile->SetPendingDelete();
-  }
 }
 
 StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
@@ -547,7 +510,7 @@ void mozilla_sampler_shutdown()
     return;
 
   // Save the profile on shutdown if requested.
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (t) {
     const char *val = getenv("MOZ_PROFILER_SHUTDOWN");
     if (val) {
@@ -579,7 +542,7 @@ void mozilla_sampler_shutdown()
 
 void mozilla_sampler_save()
 {
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t) {
     return;
   }
@@ -592,7 +555,7 @@ void mozilla_sampler_save()
 
 mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
 {
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t) {
     return nullptr;
   }
@@ -603,7 +566,7 @@ mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
 #ifndef SPS_STANDALONE
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, double aSinceTime)
 {
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t) {
     return nullptr;
   }
@@ -614,7 +577,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, double aSinceTime)
 void mozilla_sampler_get_profile_data_async(double aSinceTime,
                                             mozilla::dom::Promise* aPromise)
 {
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (NS_WARN_IF(!t)) {
     return;
   }
@@ -625,7 +588,7 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
 
 void mozilla_sampler_save_profile_to_file(const char* aFilename)
 {
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t) {
     return;
   }
@@ -702,7 +665,7 @@ void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTota
   if (!stack_key_initialized)
     return;
 
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t)
     return;
 
@@ -732,8 +695,8 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   // Reset the current state if the profiler is running
   profiler_stop();
 
-  TableTicker* t;
-  t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
+  GeckoSampler* t;
+  t = new GeckoSampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                       aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
                       aFeatures, aFeatureCount,
                       aThreadNameFilters, aFilterCount);
@@ -827,7 +790,7 @@ void mozilla_sampler_stop()
   if (!stack_key_initialized)
     return;
 
-  TableTicker *t = tlsTicker.get();
+  GeckoSampler *t = tlsTicker.get();
   if (!t) {
     LOG("END   mozilla_sampler_stop-early");
     return;
@@ -1037,7 +1000,7 @@ ProfilerBacktrace* mozilla_sampler_get_backtrace()
     return nullptr;
   }
 
-  TableTicker* t = tlsTicker.get();
+  GeckoSampler* t = tlsTicker.get();
   if (!t) {
     return nullptr;
   }
@@ -1157,5 +1120,3 @@ mozilla::UniquePtr< ::Mutex> OS::CreateMutex(const char* aDesc) {
 
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
-
-

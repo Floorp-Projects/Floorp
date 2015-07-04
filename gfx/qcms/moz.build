@@ -17,7 +17,7 @@ SOURCES += [
     'transform_util.c',
 ]
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wno-missing-field-initializers']

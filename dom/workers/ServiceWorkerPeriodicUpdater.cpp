@@ -28,7 +28,7 @@ ServiceWorkerPeriodicUpdater::sPeriodicUpdatesEnabled = true;
 already_AddRefed<ServiceWorkerPeriodicUpdater>
 ServiceWorkerPeriodicUpdater::GetSingleton()
 {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   if (!sInstance) {
     sInstance = new ServiceWorkerPeriodicUpdater();

@@ -129,8 +129,8 @@ class ArgumentsObject : public NativeObject
 
   protected:
     template <typename CopyArgs>
-    static ArgumentsObject* create(JSContext* cx, HandleScript script, HandleFunction callee,
-                                   unsigned numActuals, CopyArgs& copy);
+    static ArgumentsObject* create(JSContext* cx, HandleFunction callee, unsigned numActuals,
+                                   CopyArgs& copy);
 
     ArgumentsData* data() const {
         return reinterpret_cast<ArgumentsData*>(getFixedSlot(DATA_SLOT).toPrivate());
@@ -153,6 +153,8 @@ class ArgumentsObject : public NativeObject
     static ArgumentsObject* createUnexpected(JSContext* cx, AbstractFramePtr frame);
     static ArgumentsObject* createForIon(JSContext* cx, jit::JitFrameLayout* frame,
                                          HandleObject scopeChain);
+
+    static ArgumentsObject* createTemplateObject(JSContext* cx, bool strict);
 
     /*
      * Return the initial length of the arguments.  This may differ from the

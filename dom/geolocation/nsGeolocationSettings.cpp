@@ -49,7 +49,7 @@ already_AddRefed<nsGeolocationSettings>
 nsGeolocationSettings::GetGeolocationSettings()
 {
   // this singleton is only needed in the parent process...
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     return nullptr;
   }
 

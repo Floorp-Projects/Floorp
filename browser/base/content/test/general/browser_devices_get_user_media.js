@@ -567,7 +567,7 @@ let gTests = [
           is(devicePerms, aExpected ? Perms.ALLOW_ACTION : Perms.DENY_ACTION,
              aDevice + " persistently " + (aExpected ? "allowed" : "denied"));
         }
-        Perms.remove(uri.host, aDevice);
+        Perms.remove(uri, aDevice);
       }
       checkDevicePermissions("microphone", aExpectedAudioPerm);
       checkDevicePermissions("camera", aExpectedVideoPerm);
@@ -673,8 +673,8 @@ let gTests = [
         }
       }
 
-      Perms.remove(uri.host, "camera");
-      Perms.remove(uri.host, "microphone");
+      Perms.remove(uri, "camera");
+      Perms.remove(uri, "microphone");
     }
 
     // Set both permissions identically
@@ -794,8 +794,8 @@ let gTests = [
       // Cleanup.
       yield closeStream(true);
 
-      Perms.remove(uri.host, "camera");
-      Perms.remove(uri.host, "microphone");
+      Perms.remove(uri, "camera");
+      Perms.remove(uri, "microphone");
     }
 
     info("request audio+video, stop sharing resets both");
@@ -888,8 +888,8 @@ let gTests = [
 
     // Cleanup.
     yield closeStream(true);
-    Perms.remove(uri.host, "camera");
-    Perms.remove(uri.host, "microphone");
+    Perms.remove(uri, "camera");
+    Perms.remove(uri, "microphone");
   }
 }
 
