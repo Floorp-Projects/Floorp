@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(b5fd5629-d04c-4138-9529-9311f291ecd4)]
+interface nsICaptivePortalServiceCallback : nsISupports
+{
+  /**
+   * Invoke callbacks after captive portal detection finished.
+   */
+  void complete(in bool success, in nsresult error);
+};
+
+/**
+ * Service used for captive portal detection.
+ */
+[scriptable, uuid(bdbe0555-fc3d-4f7b-9205-c309ceb2d641)]
+interface nsICaptivePortalService : nsISupports
+{
+  const long UNKNOWN          = 0;
+  const long NOT_CAPTIVE      = 1;
+  const long UNLOCKED_PORTAL  = 2;
+  const long LOCKED_PORTAL    = 3;
+
+  /**
+   * Called from XPCOM to trigger a captive portal recheck.
+   * A network request will only be performed if no other checks are currently
+   * ongoing.
+   */
+  void recheckCaptivePortal();
+
+  /**
+   * Returns the state of the captive portal.
+   */
+  readonly attribute long state;
+
+  /**
+   * Returns the time difference between NOW and the last time a request was
+   * completed in milliseconds.
+   */
+  readonly attribute unsigned long long lastChecked;
+};

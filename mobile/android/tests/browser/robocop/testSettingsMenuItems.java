@@ -32,7 +32,6 @@ public class testSettingsMenuItems extends PixelTest {
 
     // Privacy menu items.
     String[] PATH_PRIVACY;
-    String[] TRACKING_PROTECTION_LABEL_ARR;
     String[] MANAGE_LOGINS_ARR;
     String[][] OPTIONS_PRIVACY;
 
@@ -96,10 +95,9 @@ public class testSettingsMenuItems extends PixelTest {
         };
 
         PATH_PRIVACY = new String[] { mStringHelper.PRIVACY_SECTION_LABEL };
-        TRACKING_PROTECTION_LABEL_ARR = new String[] { mStringHelper.TRACKING_PROTECTION_LABEL };
         MANAGE_LOGINS_ARR = new String[] { mStringHelper.MANAGE_LOGINS_LABEL };
         OPTIONS_PRIVACY = new String[][] {
-                TRACKING_PROTECTION_LABEL_ARR,
+                { mStringHelper.TRACKING_PROTECTION_LABEL },
                 { mStringHelper.DNT_LABEL },
                 { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
                 { mStringHelper.REMEMBER_LOGINS_LABEL },
@@ -196,7 +194,6 @@ public class testSettingsMenuItems extends PixelTest {
 
         if (!AppConstants.NIGHTLY_BUILD) {
             final List<String[]> privacy = settingsMap.get(PATH_PRIVACY);
-            privacy.remove(TRACKING_PROTECTION_LABEL_ARR);
             privacy.remove(MANAGE_LOGINS_ARR);
         }
 

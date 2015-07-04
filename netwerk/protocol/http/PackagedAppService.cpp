@@ -505,11 +505,18 @@ PackagedAppService::OpenNewPackageInternal(nsIURI *aURI,
     return NS_OK;
   }
 
+  // We need to set this flag, because the package metadata
+  // needs to have a separate entry for anonymous channels.
+  uint32_t extra_flags = 0;
+  if (aInfo->IsAnonymous()) {
+    extra_flags = nsIRequest::LOAD_ANONYMOUS;
+  }
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(
     getter_AddRefs(channel), packageURI, nsContentUtils::GetSystemPrincipal(),
     nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_OTHER, nullptr, nullptr,
-    nsIRequest::LOAD_NORMAL);
+    nsIRequest::LOAD_NORMAL | extra_flags);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

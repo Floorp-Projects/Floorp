@@ -16,6 +16,7 @@ namespace dom {
 
 class Promise;
 struct MediaStreamConstraints;
+struct MediaTrackSupportedConstraints;
 
 #define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID \
 { 0x2f784d8a, 0x7485, 0x4280, \
@@ -31,6 +32,9 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
   JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+
+  // No code needed, as MediaTrackSupportedConstraints members default to true.
+  void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult) {};
 
   already_AddRefed<Promise>
   GetUserMedia(const MediaStreamConstraints& aConstraints, ErrorResult &aRv);

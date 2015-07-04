@@ -1686,7 +1686,7 @@ nsStyleTableBorder::nsStyleTableBorder()
   mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
 
   mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-  mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
+  mCaptionSide = NS_STYLE_CAPTION_SIDE_BSTART;
   mBorderSpacingCol = 0;
   mBorderSpacingRow = 0;
 }

@@ -259,9 +259,31 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
   return NS_OK;
 }
 
+// GetBestFitnessDistance returns the best distance the capture device can offer
+// as a whole, given an accumulated number of ConstraintSets.
+// Ideal values are considered in the first ConstraintSet only.
+// Plain values are treated as Ideal in the first ConstraintSet.
+// Plain values are treated as Exact in subsequent ConstraintSets.
+// Infinity = UINT32_MAX e.g. device cannot satisfy accumulated ConstraintSets.
+// A finite result may be used to calculate this device's ranking as a choice.
+
+uint32_t MediaEngineWebRTCAudioSource::GetBestFitnessDistance(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId)
+{
+  uint32_t distance = 0;
+
+  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+    break; // distance is read from first entry only
+  }
+  return distance;
+}
+
 nsresult
 MediaEngineWebRTCAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                                       const MediaEnginePrefs &aPrefs)
+                                       const MediaEnginePrefs &aPrefs,
+                                       const nsString& aDeviceId)
 {
   if (mState == kReleased) {
     if (mInitDone) {

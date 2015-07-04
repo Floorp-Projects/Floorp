@@ -12,6 +12,9 @@
 
 namespace mozilla {
 namespace dom {
+
+class Promise;
+
 namespace workers {
 
 class ServiceWorkerWindowClient final : public ServiceWorkerClient

@@ -9,18 +9,22 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "ServiceWorker.h"
+#include "ServiceWorkerManager.h"
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 
+#include "WorkerPrivate.h"
 #include "Workers.h"
+#include "WorkerScope.h"
 
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushManagerBinding.h"

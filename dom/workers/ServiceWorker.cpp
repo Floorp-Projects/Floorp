@@ -6,6 +6,7 @@
 
 #include "ServiceWorker.h"
 
+#include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 #include "ServiceWorkerClient.h"
 #include "ServiceWorkerManager.h"

@@ -1243,8 +1243,8 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(TextChatView, {dispatcher: dispatcher, 
-                              showAlways: false, 
-                              showRoomName: false})
+                              showRoomName: false, 
+                              useDesktopPaths: false})
               )
             ), 
 
@@ -1257,8 +1257,8 @@
                 React.createElement("div", {className: "media-wrapper"}, 
                   React.createElement(TextChatView, {
                     dispatcher: dispatcher, 
-                    showAlways: true, 
-                    showRoomName: true})
+                    showRoomName: true, 
+                    useDesktopPaths: false})
                 )
               )
             )
@@ -1313,7 +1313,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 53;
+      var expectedWarningsCount = 29;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +

@@ -23,7 +23,14 @@ var getVideoImagePixelData = function(v) {
          "a" + imgData[3];
 }
 
-navigator.mozGetUserMedia({video: true, fake: true}, function(stream) {
+// This test does not appear to work with the "Dummy video source" provided on
+// linux through the "media.video_loopback_dev" pref in the tree test environment.
+// To force the built-in fake streams to always be used instead, we specify
+// fakeTracks, a feature solely of the built-in fake streams (even though we
+// don't use the extra tracks).
+
+navigator.mozGetUserMedia({video: true, fake: true, fakeTracks: true },
+                          function(stream) {
   var stream = stream;
   var video1 = document.getElementById('video1');
   var video2 = document.getElementById('video2');

@@ -14,6 +14,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsIIOService.h"
 #include "nsIProtocolHandler.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamLoader.h"
 #include "nsIStreamListenerTee.h"
@@ -42,14 +43,18 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheStorage.h"
+#include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/UniquePtr.h"
 #include "Principal.h"
 #include "WorkerFeature.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "WorkerScope.h"
 
 #define MAX_CONCURRENT_SCRIPTS 1000
 
@@ -60,6 +65,9 @@ using mozilla::dom::cache::CacheStorage;
 using mozilla::dom::Promise;
 using mozilla::dom::PromiseNativeHandler;
 using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
+using mozilla::ErrorResult;
+using mozilla::ipc::PrincipalInfo;
+using mozilla::UniquePtr;
 
 namespace {
 
@@ -434,7 +442,7 @@ private:
   bool mFailed;
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIURI> mBaseURI;
-  ChannelInfo mChannelInfo;
+  mozilla::dom::ChannelInfo mChannelInfo;
   UniquePtr<PrincipalInfo> mPrincipalInfo;
 };
 
@@ -598,8 +606,8 @@ private:
     MOZ_ASSERT(channel == loadInfo.mChannel);
 
     // We synthesize the result code, but its never exposed to content.
-    nsRefPtr<InternalResponse> ir =
-      new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+    nsRefPtr<mozilla::dom::InternalResponse> ir =
+      new mozilla::dom::InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(mReader);
 
     // Set the channel info of the channel on the response so that it's
@@ -627,9 +635,10 @@ private:
 
     ir->SetPrincipalInfo(Move(principalInfo));
 
-    nsRefPtr<Response> response = new Response(mCacheCreator->Global(), ir);
+    nsRefPtr<mozilla::dom::Response> response =
+      new mozilla::dom::Response(mCacheCreator->Global(), ir);
 
-    RequestOrUSVString request;
+    mozilla::dom::RequestOrUSVString request;
 
     MOZ_ASSERT(!loadInfo.mFullURL.IsEmpty());
     request.SetAsUSVString().Rebind(loadInfo.mFullURL.Data(),
@@ -1077,7 +1086,7 @@ private:
   void
   DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
                         uint32_t aStringLen,
-                        const ChannelInfo& aChannelInfo,
+                        const mozilla::dom::ChannelInfo& aChannelInfo,
                         UniquePtr<PrincipalInfo> aPrincipalInfo)
   {
     AssertIsOnMainThread();
@@ -1102,14 +1111,14 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
-      DebugOnly<nsIPrincipal*> principal = mWorkerPrivate->GetPrincipal();
+      mozilla::DebugOnly<nsIPrincipal*> principal = mWorkerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
 
       nsCOMPtr<nsIPrincipal> responsePrincipal =
         PrincipalInfoToPrincipal(*aPrincipalInfo);
-      DebugOnly<bool> equal = false;
+      mozilla::DebugOnly<bool> equal = false;
       MOZ_ASSERT(responsePrincipal && NS_SUCCEEDED(responsePrincipal->Equals(principal, &equal)));
       MOZ_ASSERT(equal);
 
@@ -1245,7 +1254,7 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   MOZ_ASSERT(xpc, "This should never be null!");
 
-  AutoSafeJSContext cx;
+  mozilla::AutoSafeJSContext cx;
   nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
   nsresult rv = xpc->CreateSandbox(cx, aPrincipal, getter_AddRefs(sandbox));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1269,7 +1278,7 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
   // to this point.
   ErrorResult error;
   mCacheStorage =
-    CacheStorage::CreateOnMainThread(cache::CHROME_ONLY_NAMESPACE,
+    CacheStorage::CreateOnMainThread(mozilla::dom::cache::CHROME_ONLY_NAMESPACE,
                                      mSandboxGlobalObject,
                                      aPrincipal, mPrivateBrowsing,
                                      true /* force trusted origin */,
@@ -1422,11 +1431,11 @@ CacheScriptLoader::Load(Cache* aCache)
   MOZ_ASSERT(mLoadInfo.mFullURL.IsEmpty());
   CopyUTF8toUTF16(spec, mLoadInfo.mFullURL);
 
-  RequestOrUSVString request;
+  mozilla::dom::RequestOrUSVString request;
   request.SetAsUSVString().Rebind(mLoadInfo.mFullURL.Data(),
                                   mLoadInfo.mFullURL.Length());
 
-  CacheQueryOptions params;
+  mozilla::dom::CacheQueryOptions params;
 
   ErrorResult error;
   nsRefPtr<Promise> promise = aCache->Match(request, params, error);
@@ -1468,7 +1477,7 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   MOZ_ASSERT(aValue.isObject());
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-  Response* response = nullptr;
+  mozilla::dom::Response* response = nullptr;
   nsresult rv = UNWRAP_OBJECT(Response, obj, response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
@@ -1478,10 +1487,9 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
   mChannelInfo = response->GetChannelInfo();
-  const UniquePtr<mozilla::ipc::PrincipalInfo>& pInfo =
-    response->GetPrincipalInfo();
+  const UniquePtr<PrincipalInfo>& pInfo = response->GetPrincipalInfo();
   if (pInfo) {
-    mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*pInfo);
+    mPrincipalInfo = mozilla::MakeUnique<PrincipalInfo>(*pInfo);
   }
 
   if (!inputStream) {
