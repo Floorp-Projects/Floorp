@@ -96,7 +96,8 @@ public:
 class DecodedStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
-  DecodedStream();
+  DecodedStream(MediaQueue<AudioData>& aAudioQueue,
+                MediaQueue<VideoData>& aVideoQueue);
   void DestroyData();
   void RecreateData();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
@@ -111,8 +112,6 @@ public:
   // Return true if stream is finished.
   bool SendData(int64_t aStartTime,
                 const MediaInfo& aInfo,
-                MediaQueue<AudioData>& aAudioQueue,
-                MediaQueue<VideoData>& aVideoQueue,
                 double aVolume, bool aIsSameOrigin);
 
 protected:
@@ -128,12 +127,10 @@ private:
 
   void SendAudio(int64_t aStartTime,
                  const MediaInfo& aInfo,
-                 MediaQueue<AudioData>& aQueue,
                  double aVolume, bool aIsSameOrigin);
 
   void SendVideo(int64_t aStartTime,
                  const MediaInfo& aInfo,
-                 MediaQueue<VideoData>& aQueue,
                  bool aIsSameOrigin);
 
   UniquePtr<DecodedStreamData> mData;
@@ -150,6 +147,8 @@ private:
   mutable ReentrantMonitor mMonitor;
 
   bool mPlaying;
+  MediaQueue<AudioData>& mAudioQueue;
+  MediaQueue<VideoData>& mVideoQueue;
 };
 
 } // namespace mozilla
