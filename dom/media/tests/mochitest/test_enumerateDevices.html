@@ -8,10 +8,24 @@
 <script type="application/javascript">
 createHTML({ title: "Run enumerateDevices code", bug: "1046245" });
 /**
-  Tests covering enumerateDevices API. Exercise code.
+  Tests covering enumerateDevices API and deviceId constraint. Exercise code.
 */
 
-runTest(() => navigator.mediaDevices.enumerateDevices()
+function mustSucceed(msg, f) {
+  return f().then(() => ok(true, msg + " must succeed"),
+                  e => is(e.name, null, msg + " must succeed: " + e.message));
+}
+
+function mustFailWith(msg, reason, f) {
+  return f().then(() => ok(false, msg + " must fail"),
+                  e => is(e.name, reason, msg + " must fail: " + e.message));
+}
+
+var pushPrefs = dict => new Promise(res => SpecialPowers.pushPrefEnv(dict, res));
+
+runTest(() =>
+  pushPrefs({ set : [["media.navigator.streams.fake", true]] })
+  .then(() => navigator.mediaDevices.enumerateDevices())
   .then(devices => {
     ok(devices.length > 0, "At least one device found");
     devices.forEach(d => {
@@ -20,7 +34,28 @@ runTest(() => navigator.mediaDevices.enumerateDevices()
       ok(d.label.length !== undefined, "Device label: " + d.label);
       is(d.groupId, "", "Don't support groupId yet");
     });
-  }));
+  })
+  // Check deviceId failure paths for video.
+  .then(() => mustSucceed("unknown plain deviceId on video",
+                          () => navigator.mediaDevices.getUserMedia({
+    video: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
+    fake: true,
+  })))
+  .then(() => mustSucceed("unknown plain deviceId on audio",
+                          () => navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
+    fake: true,
+  })))
+  .then(() => mustFailWith("unknown exact deviceId on video", "NotFoundError",
+                       () => navigator.mediaDevices.getUserMedia({
+    video: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
+    fake: true,
+  })))
+  .then(() => mustFailWith("unknown exact deviceId on audio", "NotFoundError",
+                       () => navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
+    fake: true,
+  }))));
 
 </script>
 </pre>

@@ -68,9 +68,24 @@ MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
   return;
 }
 
+uint32_t
+MediaEngineDefaultVideoSource::GetBestFitnessDistance(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId)
+{
+  uint32_t distance = 0;
+
+  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+    break; // distance is read from first entry only
+  }
+  return distance;
+}
+
 nsresult
 MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                                        const MediaEnginePrefs &aPrefs)
+                                        const MediaEnginePrefs &aPrefs,
+                                        const nsString& aDeviceId)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -348,9 +363,24 @@ MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
   return;
 }
 
+uint32_t
+MediaEngineDefaultAudioSource::GetBestFitnessDistance(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId)
+{
+  uint32_t distance = 0;
+
+  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+    distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
+    break; // distance is read from first entry only
+  }
+  return distance;
+}
+
 nsresult
 MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                                        const MediaEnginePrefs &aPrefs)
+                                        const MediaEnginePrefs &aPrefs,
+                                        const nsString& aDeviceId)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;

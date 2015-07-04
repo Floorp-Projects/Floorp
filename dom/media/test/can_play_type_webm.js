@@ -7,24 +7,28 @@ function check_webm(v, enabled) {
   check("video/webm", "maybe");
   check("audio/webm", "maybe");
 
+  var video = ['vp8', 'vp8.0', 'vp9', 'vp9.0'];
+  var audio = ['vorbis', 'opus'];
+  // Check for FxOS case.
   // Since we want to use OMX webm HW acceleration to speed up vp8 decoding,
   // we enabled it after Android version 16(JB) as MOZ_OMX_WEBM_DECODER
   // defined in moz.build. More information is on Bug 986381.
   // Currently OMX (KK included) webm decoders can only support vp8 and vorbis,
   // so only vp8 and vorbis will be tested when OMX webm decoder is enabled.
-  var androidVer = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                  .getProperty('version');
-  info("android version:"+androidVer);
-  //Check for FxOS case
   if (navigator.userAgent.indexOf("Mobile") != -1 &&
-      navigator.userAgent.indexOf("Android") == -1 && androidVer > 15) {
-    var video = ['vp8', 'vp8.0'];
-    var audio = ['vorbis'];
-  } else {
-    var video = ['vp8', 'vp8.0', 'vp9', 'vp9.0'];
-    var audio = ['vorbis', 'opus'];
+      navigator.userAgent.indexOf("Android") == -1) {
+    // See nsSystemInfo.cpp, the getProperty('version') and
+    // getProperty('sdk_version') are different.
+    var androidSDKVer = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                     .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                     .getProperty('sdk_version');
+    info("android version:"+androidSDKVer);
+    if (androidSDKVer > 15) {
+      video = ['vp8', 'vp8.0'];
+      audio = ['vorbis'];
+    }
   }
+
   audio.forEach(function(acodec) {
     check("audio/webm; codecs=" + acodec, "probably");
     check("video/webm; codecs=" + acodec, "probably");

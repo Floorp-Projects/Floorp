@@ -3,4 +3,9 @@
   <item
     android:id="@+id/remove_account"
     android:title="@string/fxaccount_remove_account_menu_item" />
+  <item
+      android:id="@+id/enable_debug_mode"
+      android:checkable="true"
+      android:checked="false"
+      android:title="@string/fxaccount_enable_debug_mode" />
 </menu>

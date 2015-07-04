@@ -8,10 +8,16 @@
 #include "ServiceWorkerWindowClient.h"
 
 #include "mozilla/dom/ClientBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/UniquePtr.h"
+#include "nsGlobalWindow.h"
+#include "WorkerPrivate.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
+
+using mozilla::UniquePtr;
 
 JSObject*
 ServiceWorkerWindowClient::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -84,7 +90,7 @@ public:
     UniquePtr<ServiceWorkerClientInfo> clientInfo;
 
     if (window) {
-      ErrorResult result;
+      mozilla::ErrorResult result;
       //FIXME(catalinb): Bug 1144660 - check if we are allowed to focus here.
       window->Focus(result);
       clientInfo.reset(new ServiceWorkerClientInfo(window->GetDocument(),

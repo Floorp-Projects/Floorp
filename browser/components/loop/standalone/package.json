@@ -12,8 +12,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "eslint": "0.21.x",
-    "eslint-plugin-react": "2.3.x",
+    "eslint": "0.24.x",
+    "eslint-plugin-react": "2.6.x",
     "express": "4.x"
   },
   "scripts": {

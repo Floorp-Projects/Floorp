@@ -16,7 +16,8 @@
 
 namespace mozilla {
 
-class MediaEngineCameraVideoSource : public MediaEngineVideoSource
+class MediaEngineCameraVideoSource : public MediaEngineVideoSource,
+                                     private MediaConstraintsHelper
 {
 public:
   explicit MediaEngineCameraVideoSource(int aIndex,
@@ -59,7 +60,8 @@ public:
   }
 
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) override;
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) override;
 
   virtual void Shutdown() override {};
 
@@ -80,28 +82,18 @@ protected:
                              layers::Image* aImage,
                              TrackID aID,
                              StreamTime delta);
-  template<class ValueType, class ConstrainRange>
-  static uint32_t FitnessDistance(ValueType aN, const ConstrainRange& aRange);
-  static uint32_t FitnessDistance(int32_t aN,
-      const dom::OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced);
-  static uint32_t FitnessDistance(double aN,
-      const dom::OwningDoubleOrConstrainDoubleRange& aConstraint, bool aAdvanced);
-  static uint32_t FitnessDistance(nsString aN,
-    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint,
-    bool aAdvanced);
-  static uint32_t FitnessDistance(nsString aN,
-      const dom::ConstrainDOMStringParameters& aParams);
-
   uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
                               const dom::MediaTrackConstraintSet &aConstraints,
-                              bool aAdvanced);
+                              bool aAdvanced,
+                              const nsString& aDeviceId);
   static void TrimLessFitCandidates(CapabilitySet& set);
   static void LogConstraints(const dom::MediaTrackConstraintSet& aConstraints,
                              bool aAdvanced);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
   bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
-                        const MediaEnginePrefs &aPrefs);
+                        const MediaEnginePrefs &aPrefs,
+                        const nsString& aDeviceId);
   void SetName(nsString aName);
   void SetUUID(const char* aUUID);
   const nsCString& GetUUID(); // protected access

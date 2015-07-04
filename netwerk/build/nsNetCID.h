@@ -469,6 +469,17 @@
     { 0xae, 0xcf, 0x05, 0xf8, 0xfa, 0xf0, 0x0c, 0x9b } \
 }
 
+// captive portal service implementing nsICaptivePortalService
+#define NS_CAPTIVEPORTAL_CONTRACTID \
+    "@mozilla.org/network/captive-portal-service;1"
+#define NS_CAPTIVEPORTAL_CID \
+{ /* bdbe0555-fc3d-4f7b-9205-c309ceb2d641 */ \
+    0xbdbe0555, \
+    0xfc3d, \
+    0x4f7b, \
+  { 0x92, 0x05, 0xc3, 0x09, 0xce, 0xb2, 0xd6, 0x41 } \
+}
+
 /******************************************************************************
  * netwerk/cache/ classes
  */

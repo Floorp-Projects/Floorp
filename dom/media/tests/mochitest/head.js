@@ -99,17 +99,13 @@ function createMediaElement(type, label) {
 
 
 /**
- * Wrapper function for mozGetUserMedia to allow a singular area of control
- * for determining whether we run this with fake devices or not.
+ * Wrapper function for mediaDevices.getUserMedia used by some tests. Whether
+ * to use fake devices or not is now determined in pref further below instead.
  *
  * @param {Dictionary} constraints
  *        The constraints for this mozGetUserMedia callback
  */
 function getUserMedia(constraints) {
-  if (!("fake" in constraints) && FAKE_ENABLED) {
-    constraints["fake"] = FAKE_ENABLED;
-  }
-
   info("Call getUserMedia for " + JSON.stringify(constraints));
   return navigator.mediaDevices.getUserMedia(constraints);
 }
@@ -138,6 +134,7 @@ function setupEnvironment() {
       ['media.peerconnection.ice.stun_client_maximum_transmits', 14],
       ['media.peerconnection.ice.trickle_grace_period', 30000],
       ['media.navigator.permission.disabled', true],
+      ['media.navigator.streams.fake', FAKE_ENABLED],
       ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.screensharing.allowed_domains', "mochi.test"]
     ]

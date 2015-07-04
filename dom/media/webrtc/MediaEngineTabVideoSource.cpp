@@ -120,7 +120,8 @@ MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid)
 
 nsresult
 MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstraints,
-                                    const MediaEnginePrefs& aPrefs)
+                                    const MediaEnginePrefs& aPrefs,
+                                    const nsString& aDeviceId)
 {
   // windowId and scrollWithPage are not proper constraints, so just read them.
   // They have no well-defined behavior in advanced, so ignore them there.

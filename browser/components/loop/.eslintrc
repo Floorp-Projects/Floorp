@@ -36,6 +36,7 @@
 
     // Eslint built-in rules are documented at <http://eslint.org/docs/rules/>
     "camelcase": 0,               // TODO: Remove (use default)
+    "computed-property-spacing": [2, "never"],
     "consistent-return": 0,       // TODO: Remove (use default)
     dot-location: 0,              // [2, property],
     "eqeqeq": 0,                  // TBD. Might need to be separate for content & chrome
@@ -52,11 +53,14 @@
     "no-redeclare": 0,            // TODO: Remove (use default)
     "no-return-assign": 0,        // TODO: Remove (use default)
     "no-underscore-dangle": 0,    // Leave as 0. Commonly used for private variables.
+    "no-unexpected-multiline": 2,
     "no-unneeded-ternary": 2,
     "no-unused-expressions": 0,   // TODO: Remove (use default)
     "no-unused-vars": 0,          // TODO: Remove (use default)
     "no-use-before-define": 0,    // TODO: Remove (use default)
+    "object-curly-spacing": 0,    // [2, "always"],
     "quotes": [2, "double", "avoid-escape"],
+    "spaced-comment": [2, "always"],
     "strict": 0,                  // [2, "function"],
     // eslint-plugin-react rules. These are documented at
     // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>

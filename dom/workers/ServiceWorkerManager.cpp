@@ -63,6 +63,7 @@
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerScriptCache.h"
 #include "ServiceWorkerEvents.h"
+#include "SharedWorker.h"
 #include "WorkerInlines.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
