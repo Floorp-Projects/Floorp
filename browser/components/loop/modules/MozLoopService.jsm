@@ -15,7 +15,7 @@ const LOOP_SESSION_TYPE = {
   FXA: 2
 };
 
-/***
+/**
  * Values that we segment 2-way media connection length telemetry probes
  * into.
  *
@@ -614,7 +614,8 @@ let MozLoopServiceInternal = {
               return this.hawkRequestInternal(sessionType, path, method, payloadObj, false);
             },
             () => {
-              return handle401Error(error); //Process the original error that triggered the retry.
+              // Process the original error that triggered the retry.
+              return handle401Error(error);
             }
           );
         }
@@ -889,7 +890,10 @@ let MozLoopServiceInternal = {
           // When the chat box or messages are shown, resize the panel or window
           // to be slightly higher to accomodate them.
           let customSize = kSizeMap[ev.type];
-          if (customSize) {
+          let currSize = chatbox.getAttribute("customSize");
+          // If the size is already at the requested one or at the maximum size
+          // already, don't do anything. Especially don't make it shrink.
+          if (customSize && currSize != customSize && currSize != "loopChatMessageAppended") {
             chatbox.setAttribute("customSize", customSize);
             chatbox.parentNode.setAttribute("customSize", customSize);
           }
@@ -916,10 +920,10 @@ let MozLoopServiceInternal = {
             // Not ideal but insert our data amidst existing data like this:
             // - 000 (id=00 url=http)
             // + 000 (session=000 call=000 id=00 url=http)
-            var pair = pc.id.split("(");  //)
+            var pair = pc.id.split("(");
             if (pair.length == 2) {
               pc.id = pair[0] + "(session=" + context.sessionId +
-                  (context.callId ? " call=" + context.callId : "") + " " + pair[1]; //)
+                  (context.callId ? " call=" + context.callId : "") + " " + pair[1];
             }
           }
 

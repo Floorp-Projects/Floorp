@@ -285,3 +285,110 @@ add_task(function* restrictToken() {
 
   yield cleanUpSuggestions();
 });
+
+add_task(function* mixup_frecency() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  // Add a visit and a bookmark.  Actually, make the bookmark visited too so
+  // that it's guaranteed, with its higher frecency, to appear above the search
+  // suggestions.
+  yield PlacesTestUtils.addVisits([
+    { uri: NetUtil.newURI("http://example.com/lo0"),
+      title: "low frecency 0" },
+    { uri: NetUtil.newURI("http://example.com/lo1"),
+      title: "low frecency 1" },
+    { uri: NetUtil.newURI("http://example.com/lo2"),
+      title: "low frecency 2" },
+    { uri: NetUtil.newURI("http://example.com/lo3"),
+      title: "low frecency 3" },
+    { uri: NetUtil.newURI("http://example.com/lo4"),
+      title: "low frecency 4" },
+  ]);
+
+  for (let i = 0; i < 4; i++) {
+    let href = `http://example.com/lo${i}`;
+    let frecency = frecencyForUrl(href);
+    Assert.ok(frecency < FRECENCY_DEFAULT,
+              `frecency for ${href}: ${frecency}, should be lower than ${FRECENCY_DEFAULT}`);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    yield PlacesTestUtils.addVisits([
+      { uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        transition: TRANSITION_TYPED },
+      { uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        transition: TRANSITION_TYPED },
+      { uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        transition: TRANSITION_TYPED },
+      { uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        transition: TRANSITION_TYPED },
+    ]);
+  }
+
+  for (let i = 0; i < 4; i++) {
+    let href = `http://example.com/hi${i}`;
+    yield addBookmark({ uri: href, title: `high frecency ${i}` });
+    let frecency = frecencyForUrl(href);
+    Assert.ok(frecency > FRECENCY_DEFAULT,
+              `frecency for ${href}: ${frecency}, should be higher than ${FRECENCY_DEFAULT}`);
+  }
+
+  // Do an unrestricted search to make sure everything appears in it, including
+  // the visit and bookmark.
+  yield check_autocomplete({
+    checkSorting: true,
+    search: "frecency",
+    matches: [
+      { uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4" },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency foo",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency bar",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      { uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3" },
+      { uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2" },
+      { uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1" },
+      { uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0" },
+    ],
+  });
+
+  yield cleanUpSuggestions();
+});

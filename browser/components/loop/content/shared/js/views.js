@@ -26,6 +26,7 @@ loop.shared.views = (function(_, l10n) {
       action: React.PropTypes.func.isRequired,
       enabled: React.PropTypes.bool.isRequired,
       scope: React.PropTypes.string.isRequired,
+      title: React.PropTypes.string,
       type: React.PropTypes.string.isRequired,
       visible: React.PropTypes.bool.isRequired
     },
@@ -54,6 +55,10 @@ loop.shared.views = (function(_, l10n) {
     },
 
     _getTitle: function(enabled) {
+      if (this.props.title) {
+        return this.props.title;
+      }
+
       var prefix = this.props.enabled ? "mute" : "unmute";
       var suffix = "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
@@ -183,6 +188,7 @@ loop.shared.views = (function(_, l10n) {
       return {
         video: {enabled: true, visible: true},
         audio: {enabled: true, visible: true},
+        edit: {enabled: false, visible: false},
         screenShare: {state: SCREEN_SHARE_STATES.INACTIVE, visible: false},
         enableHangup: true
       };
@@ -191,9 +197,11 @@ loop.shared.views = (function(_, l10n) {
     propTypes: {
       audio: React.PropTypes.object.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      edit: React.PropTypes.object.isRequired,
       enableHangup: React.PropTypes.bool,
       hangup: React.PropTypes.func.isRequired,
       hangupButtonLabel: React.PropTypes.string,
+      onEditClick: React.PropTypes.func,
       publishStream: React.PropTypes.func.isRequired,
       screenShare: React.PropTypes.object,
       video: React.PropTypes.object.isRequired
@@ -209,6 +217,12 @@ loop.shared.views = (function(_, l10n) {
 
     handleToggleAudio: function() {
       this.props.publishStream("audio", !this.props.audio.enabled);
+    },
+
+    handleToggleEdit: function() {
+      if (this.props.onEditClick) {
+        this.props.onEditClick(!this.props.edit.enabled);
+      }
     },
 
     _getHangupButtonLabel: function() {
@@ -238,10 +252,19 @@ loop.shared.views = (function(_, l10n) {
                                 scope: "local", type: "audio", 
                                 visible: this.props.audio.visible})
           ), 
-          React.createElement("li", {className: "conversation-toolbar-btn-box btn-screen-share-entry"}, 
+          React.createElement("li", {className: "conversation-toolbar-btn-box"}, 
             React.createElement(ScreenShareControlButton, {dispatcher: this.props.dispatcher, 
                                       state: this.props.screenShare.state, 
                                       visible: this.props.screenShare.visible})
+          ), 
+          React.createElement("li", {className: "conversation-toolbar-btn-box btn-edit-entry"}, 
+            React.createElement(MediaControlButton, {action: this.handleToggleEdit, 
+                                enabled: this.props.edit.enabled, 
+                                scope: "local", 
+                                title: l10n.get(this.props.edit.enabled ?
+                                  "context_edit_tooltip" : "context_hide_tooltip"), 
+                                type: "edit", 
+                                visible: this.props.edit.visible})
           )
         )
       );
@@ -300,7 +323,7 @@ loop.shared.views = (function(_, l10n) {
           };
         }
 
-        this.listenTo(this.props.sdk, "exception", this._handleSdkException.bind(this));
+        this.listenTo(this.props.sdk, "exception", this._handleSdkException);
 
         this.listenTo(this.props.model, "session:connected",
                                         this._onSessionConnected);
@@ -402,14 +425,14 @@ loop.shared.views = (function(_, l10n) {
           audio: {enabled: ev.stream.hasAudio},
           video: {enabled: ev.stream.hasVideo}
         });
-      }.bind(this));
+      });
 
       this.listenTo(this.publisher, "streamDestroyed", function() {
         this.setState({
           audio: {enabled: false},
           video: {enabled: false}
         });
-      }.bind(this));
+      });
 
       this.props.model.publish(this.publisher);
     },
@@ -519,7 +542,7 @@ loop.shared.views = (function(_, l10n) {
     componentDidMount: function() {
       this.listenTo(this.props.notifications, "reset add remove", function() {
         this.forceUpdate();
-      }.bind(this));
+      });
     },
 
     componentWillUnmount: function() {

@@ -18,19 +18,6 @@ describe("loop.conversationViews", function () {
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
-  // XXX refactor to Just Work with "sandbox.stubComponent" or else
-  // just pass in the sandbox and put somewhere generally usable
-
-  function stubComponent(obj, component, mockTagName){
-    var reactClass = React.createClass({
-      render: function() {
-        var tagName = mockTagName || "div";
-        return React.DOM[tagName](null, this.props.children);
-      }
-    });
-    return sandbox.stub(obj, component, reactClass);
-  }
-
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers();

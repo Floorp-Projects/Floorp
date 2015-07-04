@@ -17,12 +17,10 @@ using namespace mozilla::dom;
 USING_BLUETOOTH_NAMESPACE
 
 BluetoothReplyRunnable::BluetoothReplyRunnable(nsIDOMDOMRequest* aReq,
-                                               Promise* aPromise,
-                                               const nsAString& aName)
+                                               Promise* aPromise)
   : mDOMRequest(aReq)
   , mPromise(aPromise)
   , mErrorStatus(STATUS_FAIL)
-  , mName(aName)
 {}
 
 void
@@ -121,9 +119,8 @@ BluetoothReplyRunnable::Run()
 }
 
 BluetoothVoidReplyRunnable::BluetoothVoidReplyRunnable(nsIDOMDOMRequest* aReq,
-                                                       Promise* aPromise,
-                                                       const nsAString& aName)
-  : BluetoothReplyRunnable(aReq, aPromise, aName)
+                                                       Promise* aPromise)
+  : BluetoothReplyRunnable(aReq, aPromise)
 {}
 
 BluetoothVoidReplyRunnable::~BluetoothVoidReplyRunnable()

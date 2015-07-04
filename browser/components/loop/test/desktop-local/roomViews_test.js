@@ -141,8 +141,9 @@ describe("loop.roomViews", function () {
         dispatcher: dispatcher,
         mozLoop: fakeMozLoop,
         roomData: {},
+        savingContext: false,
         show: true,
-        showContext: false
+        showEditContext: false
       }, props);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.roomViews.DesktopRoomInvitationView, props));
@@ -248,75 +249,36 @@ describe("loop.roomViews", function () {
       });
     });
 
-    describe("Context", function() {
-      it("should not render the context data when told not to", function() {
+    describe("Edit Context", function() {
+      it("should show the 'Add some context' link", function() {
         view = mountTestComponent();
 
-        expect(view.getDOMNode().querySelector(".room-context")).to.eql(null);
+        expect(view.getDOMNode().querySelector(".room-invitation-addcontext")).
+          to.not.eql(null);
       });
 
-      it("should render context when data is available", function() {
+      it("should call a callback when the link is clicked", function() {
+        var onAddContextClick = sinon.stub();
         view = mountTestComponent({
-          showContext: true,
-          roomData: {
-            roomContextUrls: [fakeContextURL]
-          }
+          onAddContextClick: onAddContextClick
+        });
+
+        var node = view.getDOMNode();
+        expect(node.querySelector(".room-context")).to.eql(null);
+
+        var addLink = node.querySelector(".room-invitation-addcontext");
+
+        React.addons.TestUtils.Simulate.click(addLink);
+
+        sinon.assert.calledOnce(onAddContextClick);
+      });
+
+      it("should show the edit context view", function() {
+        view = mountTestComponent({
+          showEditContext: true
         });
 
         expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
-      });
-
-      it("should render the context in editMode when the pencil is clicked", function() {
-        view = mountTestComponent({
-          showContext: true,
-          roomData: {
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        var pencil = view.getDOMNode().querySelector(".room-context-btn-edit");
-        expect(pencil).to.not.eql(null);
-
-        React.addons.TestUtils.Simulate.click(pencil);
-
-        expect(view.state.editMode).to.eql(true);
-        var node = view.getDOMNode();
-        expect(node.querySelector("form")).to.not.eql(null);
-        // No text paragraphs should be visible in editMode.
-        var visiblePs = Array.slice(node.querySelector("p")).filter(function(p) {
-          return p.classList.contains("hide") || p.classList.contains("error");
-        });
-        expect(visiblePs.length).to.eql(0);
-      });
-
-      it("should format the context url for display", function() {
-        sandbox.stub(sharedUtils, "formatURL").returns({
-          location: "location",
-          hostname: "hostname"
-        });
-
-        view = mountTestComponent({
-          showContext: true,
-          roomData: {
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        expect(view.getDOMNode().querySelector(".room-context-url").textContent)
-          .eql("hostname");
-      });
-
-      it("should show a default favicon when none is available", function() {
-        fakeContextURL.thumbnail = null;
-        view = mountTestComponent({
-          showContext: true,
-          roomData: {
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        expect(view.getDOMNode().querySelector(".room-context-thumbnail").src)
-          .to.match(/loop\/shared\/img\/icons-16x16.svg#globe$/);
       });
     });
   });
@@ -331,6 +293,12 @@ describe("loop.roomViews", function () {
         })
       });
       sandbox.stub(dispatcher, "dispatch");
+      fakeMozLoop.getLoopPref = function(prefName) {
+        if (prefName == "contextInConversations.enabled") {
+          return true;
+        }
+        return "test";
+      };
     });
 
     function mountTestComponent() {
@@ -643,6 +611,32 @@ describe("loop.roomViews", function () {
             .not.eql(null);
         });
     });
+
+    describe("Edit Context", function() {
+      it("should show the form when the edit button is clicked", function() {
+        view = mountTestComponent();
+        var node = view.getDOMNode();
+
+        expect(node.querySelector(".room-context")).to.eql(null);
+
+        var editButton = node.querySelector(".btn-mute-edit");
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
+      });
+
+      it("should hide the form when the edit button is clicked again", function() {
+        view = mountTestComponent();
+
+        var editButton = view.getDOMNode().querySelector(".btn-mute-edit");
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        // Click again.
+        React.addons.TestUtils.Simulate.click(editButton);
+
+        expect(view.getDOMNode().querySelector(".room-context")).to.eql(null);
+      });
+    });
   });
 
   describe("SocialShareDropdown", function() {
@@ -741,7 +735,7 @@ describe("loop.roomViews", function () {
     });
   });
 
-  describe("DesktopRoomContextView", function() {
+  describe("DesktopRoomEditContextView", function() {
     var view;
 
     afterEach(function() {
@@ -759,35 +753,10 @@ describe("loop.roomViews", function () {
         }
       }, props);
       return TestUtils.renderIntoDocument(
-        React.createElement(loop.roomViews.DesktopRoomContextView, props));
+        React.createElement(loop.roomViews.DesktopRoomEditContextView, props));
     }
 
     describe("#render", function() {
-      it("should show the context information properly when available", function() {
-        view = mountTestComponent({
-          roomData: {
-            roomDescription: "Hello, is it me you're looking for?",
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        var node = view.getDOMNode();
-        expect(node).to.not.eql(null);
-        expect(node.querySelector(".room-context-thumbnail").src).to.
-          eql(fakeContextURL.thumbnail);
-        expect(node.querySelector(".room-context-description").firstChild.textContent).
-          to.eql(fakeContextURL.description);
-      });
-
-      it("should not render optional data", function() {
-        view = mountTestComponent({
-          roomData: { roomContextUrls: [fakeContextURL] }
-        });
-
-        expect(view.getDOMNode().querySelector(".room-context-comment")).to.
-          eql(null);
-      });
-
       it("should not render the component when 'show' is false", function() {
         view = mountTestComponent({
           show: false
@@ -806,10 +775,9 @@ describe("loop.roomViews", function () {
         expect(view.getDOMNode()).to.eql(null);
       });
 
-      it("should render the view in editMode when appropriate", function() {
+      it("should render the view correctly", function() {
         var roomName = "Hello, is it me you're looking for?";
         view = mountTestComponent({
-          editMode: true,
           roomData: {
             roomName: roomName,
             roomContextUrls: [fakeContextURL]
@@ -826,7 +794,6 @@ describe("loop.roomViews", function () {
 
       it("should show the checkbox as disabled when context is already set", function() {
         view = mountTestComponent({
-          editMode: true,
           roomData: {
             roomToken: "fakeToken",
             roomName: "fakeName",
@@ -838,34 +805,7 @@ describe("loop.roomViews", function () {
         expect(checkbox.classList.contains("disabled")).to.eql(true);
       });
 
-      it("should render the editMode view when the edit button is clicked", function(done) {
-        var roomName = "Hello, is it me you're looking for?";
-        view = mountTestComponent({
-          roomData: {
-            roomToken: "fakeToken",
-            roomName: roomName,
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        // Switch to editMode via setting the prop, since we can control that
-        // better.
-        view.setProps({ editMode: true }, function() {
-          // First check if availableContext is set correctly.
-          expect(view.state.availableContext).to.not.eql(null);
-          expect(view.state.availableContext.previewImage).to.eql(favicon);
-
-          var node = view.getDOMNode();
-          expect(node.querySelector(".checkbox-wrapper").classList.contains("disabled")).to.eql(true);
-          expect(node.querySelector(".room-context-name").value).to.eql(roomName);
-          expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
-          expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
-
-          done();
-        });
-      });
-
-      it("should hide the checkbox when no context data is stored or available", function(done) {
+      it("should hide the checkbox when no context data is stored or available", function() {
         view = mountTestComponent({
           roomData: {
             roomToken: "fakeToken",
@@ -873,18 +813,12 @@ describe("loop.roomViews", function () {
           }
         });
 
-        // Switch to editMode via setting the prop, since we can control that
-        // better.
-        view.setProps({ editMode: true }, function() {
-          // First check if availableContext is set correctly.
-          expect(view.state.availableContext).to.not.eql(null);
-          expect(view.state.availableContext.previewImage).to.eql(favicon);
+        // First check if availableContext is set correctly.
+        expect(view.state.availableContext).to.not.eql(null);
+        expect(view.state.availableContext.previewImage).to.eql(favicon);
 
-          var node = view.getDOMNode();
-          expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
-
-          done();
-        });
+        var node = view.getDOMNode();
+        expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
       });
     });
 
@@ -952,8 +886,8 @@ describe("loop.roomViews", function () {
 
           // Now simulate a successful save.
           view.setProps({ savingContext: false }, function() {
-            // The editMode flag should be updated.
-            expect(view.state.editMode).to.eql(false);
+            // The 'show flag should be updated.
+            expect(view.state.show).to.eql(false);
             done();
           });
         });
@@ -964,13 +898,12 @@ describe("loop.roomViews", function () {
       var node, checkbox;
 
       beforeEach(function() {
+        fakeMozLoop.getSelectedTabMetadata = sinon.stub().callsArgWith(0, {
+          favicon: fakeContextURL.thumbnail,
+          title: fakeContextURL.description,
+          url: fakeContextURL.location
+        });
         view = mountTestComponent({
-          availableContext: {
-            description: fakeContextURL.description,
-            previewImage: fakeContextURL.thumbnail,
-            url: fakeContextURL.location
-          },
-          editMode: true,
           roomData: {
             roomToken: "fakeToken",
             roomName: "fakeName"
