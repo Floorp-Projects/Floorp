@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for audio controller in windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+</pre>
+<iframe></iframe>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var expectedNotification = null;
+var iframe = null;
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "media-playback", "media-playback received");
+    is(data, expectedNotification, "This is the right notification");
+    runTest();
+  }
+};
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var tests = [
+  function() {
+    iframe = document.querySelector("iframe");
+    SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true]]}, runTest);
+  },
+
+  function() {
+    observerService.addObserver(observer, "media-playback", false);
+    ok(true, "Observer set");
+    runTest();
+  },
+
+  function() {
+    expectedNotification = 'active';
+    iframe.src = "file_audioLoop.html";
+  },
+
+  function() {
+    expectedNotification = 'inactive';
+    iframe.src = "data:text/html,page without audio";
+  },
+
+  function() {
+    observerService.removeObserver(observer, "media-playback");
+    ok(true, "Observer removed");
+    runTest();
+  }
+];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+onload = runTest;
+
+</script>
+</body>
+</html>
+
