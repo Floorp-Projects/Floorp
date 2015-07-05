@@ -49,7 +49,7 @@ public:
 
   nsRefPtr<AudioDataPromise> RequestAudioData() override;
   nsRefPtr<VideoDataPromise>
-  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
+  RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold, bool aForceDecodeAhead) override;
 
   virtual size_t SizeOfVideoQueueInFrames() override;
   virtual size_t SizeOfAudioQueueInFrames() override;
@@ -254,6 +254,8 @@ private:
   // These are read and written on the decode task queue threads.
   int64_t mLastAudioTime;
   int64_t mLastVideoTime;
+
+  bool mForceVideoDecodeAhead;
 
   MediaPromiseRequestHolder<SeekPromise> mAudioSeekRequest;
   MediaPromiseRequestHolder<SeekPromise> mVideoSeekRequest;
