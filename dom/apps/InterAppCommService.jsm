@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = ["InterAppCommService"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 const DEBUG = false;
 function debug(aMsg) {
@@ -220,6 +219,24 @@ this.InterAppCommService = {
     this._messagePortPairs = {};
   },
 
+  /* These attributes main use is to allow testing this in an isolated way
+   * that doesn't depend on the app service, or the system messenger working on
+   * the test environment
+   */
+  get appsService() {
+    return this._appsService || appsService;
+  },
+  set appsService(aService) {
+    this._appsService = aService;
+  },
+  get messenger() {
+    return this._messenger || messenger;
+  },
+  set messenger(aMessenger) {
+    this._messenger = aMessenger;
+  },
+
+
   /**
    * Registration of a page that wants to be connected to other apps through
    * the Inter-App Communication API.
@@ -389,8 +406,8 @@ this.InterAppCommService = {
   _matchRules: function(aPubAppManifestURL, aPubRules,
                         aSubAppManifestURL, aSubRules,
                         aPubPageURL, aSubPageURL) {
-    let pubApp = appsService.getAppByManifestURL(aPubAppManifestURL);
-    let subApp = appsService.getAppByManifestURL(aSubAppManifestURL);
+    let pubApp = this.appsService.getAppByManifestURL(aPubAppManifestURL);
+    let subApp = this.appsService.getAppByManifestURL(aSubAppManifestURL);
 
     let isPubAppCertified =
       (pubApp.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED);
@@ -514,7 +531,7 @@ this.InterAppCommService = {
       };
 
       // Fire system message to deliver the message port to the subscriber.
-      messenger.sendMessage("connection",
+      this.messenger.sendMessage("connection",
         { keyword: aKeyword,
           messagePortID: messagePortID,
           pubPageURL: aPubPageURL},
@@ -677,7 +694,7 @@ this.InterAppCommService = {
     };
 
     let glue = Cc["@mozilla.org/dom/apps/inter-app-comm-ui-glue;1"]
-                 .createInstance(Ci.nsIInterAppCommUIGlue);
+        .createInstance(Ci.nsIInterAppCommUIGlue);
     if (glue) {
       glue.selectApps(callerID, pubAppManifestURL, keyword, appsToSelect).then(
         function(aData) {
@@ -699,7 +716,7 @@ this.InterAppCommService = {
       );
     } else {
       if (DEBUG) {
-        debug("Error! The UI glue component is not implemented.")
+        debug("Error! The UI glue component is not implemented.");
       }
 
       // Resolve the caller as if there were no selected apps.
@@ -951,14 +968,14 @@ this.InterAppCommService = {
     if (selectedApps.length == 0) {
       // Only do the connections for the existing allowed subscribers because
       // no new apps are selected to connect.
-      if (DEBUG) debug("No new apps are selected to connect.")
+      if (DEBUG) debug("No new apps are selected to connect.");
 
       allowedSubAppManifestURLs =
         this._getAllowedSubAppManifestURLs(keyword, pubAppManifestURL);
     } else {
       // Do connections for for the existing allowed subscribers and the newly
       // selected subscribers.
-      if (DEBUG) debug("Some new apps are selected to connect.")
+      if (DEBUG) debug("Some new apps are selected to connect.");
 
       allowedSubAppManifestURLs =
         this._addSelectedApps(keyword, pubAppManifestURL, selectedApps);
@@ -1044,7 +1061,8 @@ this.InterAppCommService = {
           return;
         }
 
-        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        let manifestURL =
+                     this.appsService.getManifestURLByLocalId(params.appId);
         if (!manifestURL) {
           if (DEBUG) {
             debug("Error updating registered/allowed connections for an " +
