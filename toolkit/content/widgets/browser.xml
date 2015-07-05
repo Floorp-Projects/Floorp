@@ -683,6 +683,31 @@
         </body>
       </method>
 
+      <field name="_audioMuted">false</field>
+      <property name="audioMuted"
+                onget="return this._audioMuted;"
+                readonly="true"/>
+
+      <method name="mute">
+        <body>
+          <![CDATA[
+            this._audioMuted = true;
+            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+                                                 {type: "mute"});
+          ]]>
+        </body>
+      </method>
+
+      <method name="unmute">
+        <body>
+          <![CDATA[
+            this._audioMuted = false;
+            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+                                                 {type: "unmute"});
+          ]]>
+        </body>
+      </method>
+
       <property name="securityUI">
         <getter>
           <![CDATA[
