@@ -265,6 +265,11 @@ let gFxAccounts = {
     let errorLabel = this.panelUIStatus.getAttribute("errorlabel");
 
     let updateWithUserData = (userData) => {
+      // Window might have been closed while fetching data.
+      if (window.closed) {
+        return;
+      }
+
       // Reset the button to its original state.
       this.panelUILabel.setAttribute("label", defaultLabel);
       this.panelUIStatus.removeAttribute("tooltiptext");
