@@ -42,7 +42,7 @@ public:
         return "FakeSurfaceComposer";
     }
 
-    // Instantiate MediaResourceManagerService and register to service manager.
+    // Instantiate FakeSurfaceComposer and register to service manager.
     // If service manager is not present, wait until service manager becomes present.
     static  void instantiate();
 
