@@ -4,11 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE bindings [
-<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
-%tabBrowserDTD;
-]>
-
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -3871,11 +3866,21 @@
             event.preventDefault();
             return;
           }
-          event.target.setAttribute("label",
-                                    tab.mOverCloseButton ?
-                                    tab.getAttribute("closetabtext") :
-                                    tab.getAttribute("label") +
-                                      (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : ""));
+          var stringID, label;
+          if (tab.mOverCloseButton) {
+            stringID = "tabs.closeTab.tooltip";
+          } else if (tab._overPlayingIcon) {
+            stringID = tab.linkedBrowser.audioMuted ?
+              "tabs.mutedAudio.tooltip" :
+              "tabs.playingAudio.tooltip";
+          } else {
+            label = tab.getAttribute("label") +
+                      (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
+          }
+          if (stringID && !label) {
+            label = this.mStringBundle.getString(stringID);
+          }
+          event.target.setAttribute("label", label);
         ]]></body>
       </method>
 
@@ -5663,7 +5668,7 @@
       <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
-    <content context="tabContextMenu" closetabtext="&closeTab.label;">
+    <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
         <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,fadein"
                   class="tab-background">
@@ -5686,6 +5691,7 @@
                      validate="never"
                      role="presentation"/>
           <xul:image xbl:inherits="crashed,busy,soundplaying,pinned"
+                     anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:label flex="1"
@@ -5694,6 +5700,7 @@
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:image xbl:inherits="soundplaying,pinned"
+                     anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
@@ -5808,6 +5815,7 @@
       </property>
 
       <field name="mOverCloseButton">false</field>
+      <field name="_overPlayingIcon">false</field>
       <field name="mCorrespondingMenuitem">null</field>
 
       <!--
@@ -5871,6 +5879,9 @@
         let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = true;
+        else if ((anonid == "soundplaying-icon") ||
+                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+          this._overPlayingIcon = true;
 
         this._mouseenter();
       ]]></handler>
@@ -5878,6 +5889,9 @@
         let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
+        else if ((anonid == "soundplaying-icon") ||
+                 ((anonid == "overlay-icon") && this.hasAttribute("soundplaying")))
+          this._overPlayingIcon = false;
 
         this._mouseleave();
       ]]></handler>
