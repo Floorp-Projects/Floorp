@@ -413,7 +413,10 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
     return false;
   }
 
-  return !mAudioCaptured || mDecodedStream->HaveEnoughAudio(mInfo);
+  // We don't have to check SourceMediaStream::HaveEnoughBuffered() in the
+  // case of stream-capture for MDSM will ensure buffering level is high enough
+  // for playback speed at 1x at which the DecodedStream is playing.
+  return true;
 }
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
@@ -425,7 +428,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
     return false;
   }
 
-  return !mAudioCaptured || mDecodedStream->HaveEnoughVideo(mInfo);
+  return true;
 }
 
 bool

@@ -346,36 +346,6 @@ DecodedStream::SetPlaying(bool aPlaying)
   }
 }
 
-bool
-DecodedStream::HaveEnoughAudio(const MediaInfo& aInfo) const
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  if (mData->mStreamInitialized && !mData->mHaveSentFinishAudio) {
-    MOZ_ASSERT(aInfo.HasAudio());
-    TrackID audioTrackId = aInfo.mAudio.mTrackId;
-    if (!mData->mStream->HaveEnoughBuffered(audioTrackId)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool
-DecodedStream::HaveEnoughVideo(const MediaInfo& aInfo) const
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  if (mData->mStreamInitialized && !mData->mHaveSentFinishVideo) {
-    MOZ_ASSERT(aInfo.HasVideo());
-    TrackID videoTrackId = aInfo.mVideo.mTrackId;
-    if (!mData->mStream->HaveEnoughBuffered(videoTrackId)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void
 DecodedStream::InitTracks(int64_t aStartTime, const MediaInfo& aInfo)
 {
