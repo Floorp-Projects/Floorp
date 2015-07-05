@@ -78,10 +78,25 @@ function runTest() {
 
   utils.audioVolume = 0;
   is(utils.audioVolume, 0.0, "utils.audioVolume is ok");
-  utils.audioVolume = 1.0;
-  is(utils.audioVolume, 1.0, "utils.audioVolume is ok");
+  utils.audioVolume = 0.6;
+  is(utils.audioVolume.toFixed(2), "0.60", "utils.audioVolume is ok");
+  utils.audioMuted = true;
 
-  SimpleTest.finish();
+  // Navigate the iframe to another URL, and verify that the volume and muted
+  // information is preserved.
+  iframe.onload = function() {
+    utils = SpecialPowers.wrap(iframe.contentWindow).
+          QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+          getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+    ok(utils, "nsIDOMWindowUtils");
+
+    ok(utils.audioMuted, "Audio should still be muted");
+    utils.audioMuted = false;
+    ok(utils.audioVolume.toFixed(2), "0.60", "Volume should be preserved");
+
+    SimpleTest.finish();
+  };
+  iframe.src = "data:text/html,page";
 }
 
 SpecialPowers.pushPrefEnv({ "set": [["media.useAudioChannelService", true]]}, runTest);
