@@ -403,7 +403,7 @@ AudioDestinationNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-AudioDestinationNode::DestroyMediaStream()
+AudioDestinationNode::DestroyAudioChannelAgent()
 {
   if (mAudioChannelAgent && !Context()->IsOffline()) {
     mAudioChannelAgent->StopPlaying();
@@ -416,6 +416,12 @@ AudioDestinationNode::DestroyMediaStream()
                                       mEventProxyHelper,
                                       /* useCapture = */ true);
   }
+}
+
+void
+AudioDestinationNode::DestroyMediaStream()
+{
+  DestroyAudioChannelAgent();
 
   if (!mStream)
     return;
