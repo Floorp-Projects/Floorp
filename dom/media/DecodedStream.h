@@ -103,8 +103,6 @@ public:
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
-  bool HaveEnoughAudio(const MediaInfo& aInfo) const;
-  bool HaveEnoughVideo(const MediaInfo& aInfo) const;
   CheckedInt64 AudioEndTime(int64_t aStartTime, uint32_t aRate) const;
   int64_t GetPosition() const;
   bool IsFinished() const;
