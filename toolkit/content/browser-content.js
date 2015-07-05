@@ -697,6 +697,7 @@ let MediaPlaybackListener = {
 
   init() {
     Services.obs.addObserver(this, "media-playback", false);
+    addMessageListener("MediaPlaybackMute", this);
     addEventListener("unload", () => {
       MediaPlaybackListener.uninit();
     });
@@ -704,6 +705,7 @@ let MediaPlaybackListener = {
 
   uninit() {
     Services.obs.removeObserver(this, "media-playback");
+    removeMessageListener("MediaPlaybackMute", this);
   },
 
   observe(subject, topic, data) {
@@ -713,6 +715,14 @@ let MediaPlaybackListener = {
         name += (data === "active") ? "Start" : "Stop";
         sendAsyncMessage(name);
       }
+    }
+  },
+
+  receiveMessage(msg) {
+    if (msg.name == "MediaPlaybackMute") {
+      let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
+      utils.audioMuted = msg.data.type === "mute";
     }
   },
 };
