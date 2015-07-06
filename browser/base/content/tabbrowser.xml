@@ -2997,7 +2997,7 @@
             // How long to wait for a tab's layers to load. After this
             // time elapses, we're free to put up the spinner and start
             // trying to load a different tab.
-            TAB_SWITCH_TIMEOUT: 300 /* ms */,
+            TAB_SWITCH_TIMEOUT: 400 /* ms */,
 
             // When the user hasn't switched tabs for this long, we unload
             // layers for all tabs that aren't in use.
