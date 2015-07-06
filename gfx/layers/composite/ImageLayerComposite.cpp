@@ -98,7 +98,7 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect)
   RenderWithAllMasks(this, mCompositor, aClipRect,
                      [&](EffectChain& effectChain, const Rect& clipRect) {
     mImageHost->SetCompositor(mCompositor);
-    mImageHost->Composite(effectChain,
+    mImageHost->Composite(this, effectChain,
                           GetEffectiveOpacity(),
                           GetEffectiveTransformForBuffer(),
                           GetEffectFilter(),

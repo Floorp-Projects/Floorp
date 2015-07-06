@@ -125,7 +125,7 @@ public:
                     TextureFlags aFlags);
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) override;
-  virtual bool Connect() override { return false; }
+  virtual bool Connect(ImageContainer* aImageContainer) override { return false; }
 
   virtual TextureInfo GetTextureInfo() const override
   {

@@ -22,6 +22,7 @@ namespace layers {
 
 class CompositableClient;
 class AsyncTransactionTracker;
+class ImageContainer;
 struct TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
@@ -50,7 +51,8 @@ public:
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  virtual void Connect(CompositableClient* aCompositable) = 0;
+  virtual void Connect(CompositableClient* aCompositable,
+                       ImageContainer* aImageContainer = nullptr) = 0;
 
   /**
    * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
@@ -129,9 +131,14 @@ public:
   }
 
   struct TimedTextureClient {
+    TimedTextureClient()
+        : mTextureClient(nullptr), mFrameID(0), mProducerID(0) {}
+
     TextureClient* mTextureClient;
     TimeStamp mTimeStamp;
     nsIntRect mPictureRect;
+    int32_t mFrameID;
+    int32_t mProducerID;
   };
   /**
    * Tell the CompositableHost on the compositor side what textures to use for

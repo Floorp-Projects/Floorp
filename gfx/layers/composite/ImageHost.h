@@ -32,6 +32,7 @@ namespace layers {
 
 class Compositor;
 struct EffectChain;
+class ImageContainerParent;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
@@ -44,7 +45,8 @@ public:
 
   virtual CompositableType GetType() override { return mTextureInfo.mCompositableType; }
 
-  virtual void Composite(EffectChain& aEffectChain,
+  virtual void Composite(LayerComposite* aLayer,
+                         EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
@@ -62,6 +64,8 @@ public:
                       AttachFlags aFlags = NO_FLAGS) override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual void SetImageContainer(ImageContainerParent* aImageContainer) override;
 
   gfx::IntSize GetImageSize() const override;
 
@@ -87,6 +91,8 @@ protected:
     CompositableTextureSourceRef mTextureSource;
     TimeStamp mTimeStamp;
     gfx::IntRect mPictureRect;
+    int32_t mFrameID;
+    int32_t mProducerID;
   };
 
   /**
@@ -99,6 +105,10 @@ protected:
   int ChooseImageIndex() const;
 
   nsTArray<TimedImage> mImages;
+  // Weak reference, will be null if mImageContainer has been destroyed.
+  ImageContainerParent* mImageContainer;
+  int32_t mLastFrameID;
+  int32_t mLastProducerID;
 
   bool mLocked;
 };
@@ -115,7 +125,8 @@ public:
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
-  virtual void Composite(EffectChain& aEffectChain,
+  virtual void Composite(LayerComposite* aLayer,
+                         EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,

@@ -364,7 +364,8 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
     FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
-                                        t.mTimeStamp, t.mPictureRect));
+                                        t.mTimeStamp, t.mPictureRect,
+                                        t.mFrameID, t.mProducerID));
     if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
         && t.mTextureClient->HasInternalBuffer()) {
 
@@ -767,7 +768,8 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
 void
-ShadowLayerForwarder::Connect(CompositableClient* aCompositable)
+ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
+                              ImageContainer* aImageContainer)
 {
 #ifdef GFX_COMPOSITOR_LOGGING
   printf("ShadowLayerForwarder::Connect(Compositable)\n");

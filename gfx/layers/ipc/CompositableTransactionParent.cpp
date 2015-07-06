@@ -180,6 +180,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         MOZ_ASSERT(t->mTexture);
         t->mTimeStamp = timedTexture.timeStamp();
         t->mPictureRect = timedTexture.picture();
+        t->mFrameID = timedTexture.frameID();
+        t->mProducerID = timedTexture.producerID();
         MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 
         MaybeFence maybeFence = timedTexture.fence();

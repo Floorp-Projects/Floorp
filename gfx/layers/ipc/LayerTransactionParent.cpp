@@ -581,7 +581,6 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!Attach(cast(op.layerParent()), host, true)) {
         return false;
       }
-
       host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }

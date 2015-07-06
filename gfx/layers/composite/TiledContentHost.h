@@ -235,12 +235,13 @@ public:
   bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                            const SurfaceDescriptorTiles& aTiledDescriptor);
 
-  void Composite(EffectChain& aEffectChain,
-                 float aOpacity,
-                 const gfx::Matrix4x4& aTransform,
-                 const gfx::Filter& aFilter,
-                 const gfx::Rect& aClipRect,
-                 const nsIntRegion* aVisibleRegion = nullptr) override;
+  virtual void Composite(LayerComposite* aLayer,
+                         EffectChain& aEffectChain,
+                         float aOpacity,
+                         const gfx::Matrix4x4& aTransform,
+                         const gfx::Filter& aFilter,
+                         const gfx::Rect& aClipRect,
+                         const nsIntRegion* aVisibleRegion = nullptr) override;
 
   virtual CompositableType GetType() override { return CompositableType::CONTENT_TILED; }
 

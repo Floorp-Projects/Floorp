@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/RefPtr.h"
@@ -261,6 +262,15 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
+  void AppendImageCompositeNotification(const ImageCompositeNotification& aNotification)
+  {
+    mImageCompositeNotifications.AppendElement(aNotification);
+  }
+  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotification>* aNotifications)
+  {
+    aNotifications->MoveElementsFrom(mImageCompositeNotifications);
+  }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -306,6 +316,8 @@ private:
   bool mUnusedApzTransformWarning;
   RefPtr<Compositor> mCompositor;
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
+
+  nsTArray<ImageCompositeNotification> mImageCompositeNotifications;
 
   /**
    * Context target, nullptr when drawing directly to our swap chain.
@@ -367,6 +379,8 @@ public:
   virtual Layer* GetLayer() = 0;
 
   virtual void SetLayerManager(LayerManagerComposite* aManager);
+
+  LayerManagerComposite* GetLayerManager() const { return mCompositeManager; }
 
   /**
    * Perform a first pass over the layer tree to render all of the intermediate
