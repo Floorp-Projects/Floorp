@@ -90,6 +90,10 @@ describe("loop.store.RoomStore", function () {
           DELETE_SUCCESS: 0,
           DELETE_FAIL: 1
         },
+        ROOM_CONTEXT_ADD: {
+          ADD_FROM_PANEL: 0,
+          ADD_FROM_CONVERSATION: 1
+        },
         copyString: function() {},
         getLoopPref: function(pref) {
           return pref;
@@ -233,14 +237,15 @@ describe("loop.store.RoomStore", function () {
       var fakeNameTemplate = "Conversation {{conversationLabel}}";
       var fakeLocalRoomId = "777";
       var fakeOwner = "fake@invalid";
-      var fakeRoomCreationData = {
-        nameTemplate: fakeNameTemplate,
-        roomOwner: fakeOwner
-      };
+      var fakeRoomCreationData;
 
       beforeEach(function() {
         sandbox.stub(dispatcher, "dispatch");
         store.setStoreState({pendingCreation: false, rooms: []});
+        fakeRoomCreationData = {
+          nameTemplate: fakeNameTemplate,
+          roomOwner: fakeOwner
+        };
       });
 
       it("should clear any existing room errors", function() {
@@ -251,6 +256,24 @@ describe("loop.store.RoomStore", function () {
         sinon.assert.calledOnce(fakeNotifications.remove);
         sinon.assert.calledWithExactly(fakeNotifications.remove,
           "create-room-error");
+      });
+
+      it("should log a telemetry event when the operation with context is successful", function() {
+        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
+          cb(null, {roomToken: "fakeToken"});
+        });
+
+        fakeRoomCreationData.urls = [{
+          location: "http://invalid.com",
+          description: "fakeSite",
+          thumbnail: "fakeimage.png"
+        }];
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledTwice(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_CONTEXT_ADD", 0);
       });
 
       it("should request creation of a new room", function() {
