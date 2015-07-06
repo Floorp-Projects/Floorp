@@ -1065,7 +1065,7 @@ Clamp(JSContext* cx, unsigned argc, Value* vp)
 
 template<typename V, typename MaskType>
 static bool
-BitSelect(JSContext* cx, unsigned argc, Value* vp)
+SelectBits(JSContext* cx, unsigned argc, Value* vp)
 {
     typedef typename V::Elem Elem;
     typedef typename MaskType::Elem MaskTypeElem;
