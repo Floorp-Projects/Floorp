@@ -754,7 +754,7 @@ HTMLImageElement::NaturalHeight()
 
   if (mResponsiveSelector) {
     double density = mResponsiveSelector->GetSelectedImageDensity();
-    MOZ_ASSERT(IsFinite(density) && density > 0.0);
+    MOZ_ASSERT(density >= 0.0);
     height = NSToIntRound(double(height) / density);
     height = std::max(height, 0u);
   }
@@ -782,7 +782,7 @@ HTMLImageElement::NaturalWidth()
 
   if (mResponsiveSelector) {
     double density = mResponsiveSelector->GetSelectedImageDensity();
-    MOZ_ASSERT(IsFinite(density) && density > 0.0);
+    MOZ_ASSERT(density >= 0.0);
     width = NSToIntRound(double(width) / density);
     width = std::max(width, 0u);
   }
