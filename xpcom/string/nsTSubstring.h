@@ -997,18 +997,7 @@ protected:
    */
   MOZ_WARN_UNUSED_RESULT bool ReplacePrep(index_type aCutStart,
                                           size_type aCutLength,
-                                          size_type aNewLength)
-  {
-    aCutLength = XPCOM_MIN(aCutLength, mLength - aCutStart);
-    uint32_t newTotalLen = mLength - aCutLength + aNewLength;
-    if (aCutStart == mLength && Capacity() > newTotalLen) {
-      mFlags &= ~F_VOIDED;
-      mData[newTotalLen] = char_type(0);
-      mLength = newTotalLen;
-      return true;
-    }
-    return ReplacePrepInternal(aCutStart, aCutLength, aNewLength, newTotalLen);
-  }
+                                          size_type aNewLength);
 
   MOZ_WARN_UNUSED_RESULT bool NS_FASTCALL ReplacePrepInternal(
     index_type aCutStart,
