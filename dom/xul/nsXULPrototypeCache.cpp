@@ -18,7 +18,6 @@
 #include "nsIStringStream.h"
 #include "nsIStorageStream.h"
 
-#include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "js/TracingAPI.h"

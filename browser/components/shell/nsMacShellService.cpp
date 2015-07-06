@@ -17,7 +17,6 @@
 #include "nsIURL.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsMacShellService.h"
-#include "nsNetUtil.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsShellService.h"

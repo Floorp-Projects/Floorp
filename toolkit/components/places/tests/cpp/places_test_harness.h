@@ -7,12 +7,12 @@
 #include "TestHarness.h"
 #include "nsMemory.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
 #include "nsDocShellCID.h"
 
 #include "nsToolkitCompsCID.h"
 #include "nsINavHistoryService.h"
 #include "nsIObserverService.h"
+#include "nsIURI.h"
 #include "mozilla/IHistory.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"

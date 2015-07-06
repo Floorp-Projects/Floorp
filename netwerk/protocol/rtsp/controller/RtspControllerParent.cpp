@@ -12,7 +12,6 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
-#include "nsNetUtil.h"
 #include "mozilla/Logging.h"
 
 #include <sys/types.h>

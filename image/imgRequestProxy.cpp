@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsCRTGlue.h"
 #include "imgINotificationObserver.h"
-#include "nsNetUtil.h"
 
 using namespace mozilla::image;
 

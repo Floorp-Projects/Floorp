@@ -28,7 +28,6 @@
 #include "nsString.h"
 #include "nsEscape.h"
 #include "nsISupportsPrimitives.h"
-#include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsCWebBrowserPersist.h"
 #include "nsToolkit.h"

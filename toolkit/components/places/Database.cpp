@@ -11,6 +11,7 @@
 #include "nsINavBookmarksService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFile.h"
+#include "nsIWritablePropertyBag2.h"
 
 #include "nsNavHistory.h"
 #include "nsPlacesTables.h"

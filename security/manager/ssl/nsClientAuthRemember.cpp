@@ -9,7 +9,6 @@
 #include "nsIX509Cert.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
-#include "nsNetUtil.h"
 #include "nsNSSCertHelper.h"
 #include "nsIObserverService.h"
 #include "nsNetUtil.h"

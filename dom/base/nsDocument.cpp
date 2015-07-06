@@ -84,7 +84,7 @@
 #include "nsIScriptError.h"
 #include "nsStyleSheetService.h"
 
-#include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
+#include "nsNetUtil.h"     // for NS_NewURI
 #include "nsIInputStreamChannel.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"

@@ -23,7 +23,6 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
-#include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsXPCOMCIDInternal.h"

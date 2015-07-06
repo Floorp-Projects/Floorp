@@ -24,7 +24,6 @@
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"

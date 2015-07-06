@@ -18,7 +18,6 @@
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Preferences.h"
 #include "nsStringStream.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "nsIObserverService.h"

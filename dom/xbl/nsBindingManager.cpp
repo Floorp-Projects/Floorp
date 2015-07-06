@@ -13,7 +13,6 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
-#include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
