@@ -844,7 +844,7 @@ public:
   {
     return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
   }
-  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const override
   {
     return mHelper.ComputeScrollClip(aIsForCaret);
   }
@@ -1244,7 +1244,7 @@ public:
   {
     return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aIsForCaret);
   }
-  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const
+  virtual const mozilla::DisplayItemClip* ComputeScrollClip(bool aIsForCaret) const override
   {
     return mHelper.ComputeScrollClip(aIsForCaret);
   }

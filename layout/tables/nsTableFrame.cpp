@@ -5720,7 +5720,7 @@ nsTableFrame::CalcBCBorders()
   // segments that are on the table border edges need
   // to be initialized only once
   bool tableBorderReset[4];
-  for (uint32_t sideX = eLogicalSideBStart; sideX <= eLogicalSideIStart; sideX++) {
+  for (uint32_t sideX = 0; sideX < ArrayLength(tableBorderReset); sideX++) {
     tableBorderReset[sideX] = false;
   }
 

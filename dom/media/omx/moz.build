@@ -94,7 +94,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
     '/ipc/chromium/src',
-    'mediaresourcemanager',
 ]
 
 CXXFLAGS += [

@@ -9,11 +9,19 @@
 
 #include "nsRefPtr.h"
 #include "nsTArray.h"
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 
+class AudioData;
+class VideoData;
+class MediaInfo;
+class AudioSegment;
+class MediaStream;
 class MediaInputPort;
 class SourceMediaStream;
 class ProcessedMediaStream;
@@ -22,6 +30,8 @@ class DecodedStreamGraphListener;
 class OutputStreamListener;
 class ReentrantMonitor;
 class MediaStreamGraph;
+
+template <class T> class MediaQueue;
 
 namespace layers {
 class Image;
@@ -37,7 +47,7 @@ class Image;
  */
 class DecodedStreamData {
 public:
-  explicit DecodedStreamData(SourceMediaStream* aStream);
+  DecodedStreamData(SourceMediaStream* aStream, bool aPlaying);
   ~DecodedStreamData();
   bool IsFinished() const;
   int64_t GetPosition() const;
@@ -84,18 +94,47 @@ public:
 };
 
 class DecodedStream {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
   DecodedStream();
-  DecodedStreamData* GetData() const;
   void DestroyData();
-  void RecreateData(MediaStreamGraph* aGraph);
-  nsTArray<OutputStreamData>& OutputStreams();
-  ReentrantMonitor& GetReentrantMonitor() const;
+  void RecreateData();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
+  bool HaveEnoughAudio(const MediaInfo& aInfo) const;
+  bool HaveEnoughVideo(const MediaInfo& aInfo) const;
+  CheckedInt64 AudioEndTime(int64_t aStartTime, uint32_t aRate) const;
+  int64_t GetPosition() const;
+  bool IsFinished() const;
+
+  // Return true if stream is finished.
+  bool SendData(int64_t aStartTime,
+                const MediaInfo& aInfo,
+                MediaQueue<AudioData>& aAudioQueue,
+                MediaQueue<VideoData>& aVideoQueue,
+                double aVolume, bool aIsSameOrigin);
+
+protected:
+  virtual ~DecodedStream() {}
 
 private:
+  ReentrantMonitor& GetReentrantMonitor() const;
+  void RecreateData(MediaStreamGraph* aGraph);
   void Connect(OutputStreamData* aStream);
+  nsTArray<OutputStreamData>& OutputStreams();
+  void InitTracks(int64_t aStartTime, const MediaInfo& aInfo);
+  void AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo);
+
+  void SendAudio(int64_t aStartTime,
+                 const MediaInfo& aInfo,
+                 MediaQueue<AudioData>& aQueue,
+                 double aVolume, bool aIsSameOrigin);
+
+  void SendVideo(int64_t aStartTime,
+                 const MediaInfo& aInfo,
+                 MediaQueue<VideoData>& aQueue,
+                 bool aIsSameOrigin);
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
@@ -109,6 +148,8 @@ private:
   // Please move all capture-stream related code from MDSM into DecodedStream
   // and apply "dispatch + mirroring" to get rid of this monitor in the future.
   mutable ReentrantMonitor mMonitor;
+
+  bool mPlaying;
 };
 
 } // namespace mozilla

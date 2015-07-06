@@ -17,7 +17,7 @@
 
 #include "AudioChannelFormat.h"
 #include "GrallocImages.h"
-#include <mozilla/Monitor.h>
+#include "mozilla/Monitor.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 
 using namespace mozilla;
@@ -45,27 +45,21 @@ enum BufferState
 bool
 OMXCodecReservation::ReserveOMXCodec()
 {
-  if (!mManagerService.get()) {
-    sp<MediaResourceManagerClient::EventListener> listener = this;
-    mClient = new MediaResourceManagerClient(listener);
-
-    mManagerService = mClient->getMediaResourceManagerService();
-    if (!mManagerService.get()) {
-      mClient = nullptr;
-      return true; // not really in use, but not usable
-    }
+  if (mClient) {
+    // Already tried reservation.
+    return false;
   }
-  return (mManagerService->requestMediaResource(mClient, mType, false) == OK); // don't wait
+  mClient = new mozilla::MediaSystemResourceClient(mType);
+  return mClient->AcquireSyncNoWait(); // don't wait if resrouce is not available
 }
 
 void
 OMXCodecReservation::ReleaseOMXCodec()
 {
-  if (!mManagerService.get() || !mClient.get()) {
+  if (!mClient) {
     return;
   }
-
-  mManagerService->cancelClient(mClient, mType);
+  mClient->ReleaseResource();
 }
 
 OMXAudioEncoder*
