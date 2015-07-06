@@ -77,7 +77,7 @@ enum class OscillatorType : uint32_t;
 class BasicWaveFormCache
 {
 public:
-  BasicWaveFormCache(uint32_t aSampleRate);
+  explicit BasicWaveFormCache(uint32_t aSampleRate);
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BasicWaveFormCache)
   WebCore::PeriodicWave* GetBasicWaveForm(OscillatorType aType);
 private:
