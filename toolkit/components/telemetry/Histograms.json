@@ -7634,6 +7634,21 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of times a room delete action is performed (0=DELETE_SUCCESS, 2=DELETE_FAIL)"
   },
+  "LOOP_ROOM_CONTEXT_ADD": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
+    "expires_in_version": "44",
+    "kind": "enumerated",
+    "n_values": 8,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of times a room context action is performed (0=ADD_FROM_PANEL, 1=ADD_FROM_CONVERSATION)"
+  },
+  "LOOP_ROOM_CONTEXT_CLICK": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
+    "expires_in_version": "44",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number times room context is clicked to visit the attached URL"
+  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",
