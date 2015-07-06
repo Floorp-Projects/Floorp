@@ -103,6 +103,10 @@
   opacity: 0.5;
 }
 
+.identity-popup-button:-moz-focusring {
+  border-color: transparent;
+}
+
 /* EXPAND BUTTON */
 
 .identity-popup-expander {
