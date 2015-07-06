@@ -168,14 +168,6 @@ public:
   void
   NoteDeletion();
 
-  bool
-  IsDeleted() const
-  {
-    AssertIsOnOwningThread();
-
-    return !!mDeletedMetadata;
-  }
-
   void
   AssertIsOnOwningThread() const
 #ifdef DEBUG
