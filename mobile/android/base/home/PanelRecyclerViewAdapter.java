@@ -18,6 +18,7 @@ import android.widget.FrameLayout;
 public class PanelRecyclerViewAdapter extends RecyclerView.Adapter<PanelRecyclerViewAdapter.PanelViewHolder> {
     private static final int VIEW_TYPE_ITEM = 0;
     private static final int VIEW_TYPE_BACK = 1;
+    private static final int VIEW_TYPE_HEADER = 2;
 
     public static class PanelViewHolder extends RecyclerView.ViewHolder {
         public static PanelViewHolder create(View itemView) {
@@ -67,7 +68,9 @@ public class PanelRecyclerViewAdapter extends RecyclerView.Adapter<PanelRecycler
 
     @Override
     public int getItemViewType(int position) {
-        if (isShowingBack() && position == 0) {
+        if (viewConfig.hasHeaderConfig() && position == 0) {
+            return VIEW_TYPE_HEADER;
+        } else if (isShowingBack() && position == getBackPosition()) {
             return VIEW_TYPE_BACK;
         } else {
             return VIEW_TYPE_ITEM;
@@ -77,6 +80,8 @@ public class PanelRecyclerViewAdapter extends RecyclerView.Adapter<PanelRecycler
     @Override
     public PanelViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         switch (viewType) {
+            case VIEW_TYPE_HEADER:
+                return PanelViewHolder.create(new PanelHeaderView(context, viewConfig.getHeaderConfig()));
             case VIEW_TYPE_BACK:
                 return PanelViewHolder.create(new PanelBackItemView(context, viewConfig.getBackImageUrl()));
             case VIEW_TYPE_ITEM:
@@ -90,21 +95,33 @@ public class PanelRecyclerViewAdapter extends RecyclerView.Adapter<PanelRecycler
     public void onBindViewHolder(PanelViewHolder panelViewHolder, int position) {
         final View view = ((FrameLayout) panelViewHolder.itemView).getChildAt(0);
 
-        if (isShowingBack()) {
+        if (viewConfig.hasHeaderConfig()) {
             if (position == 0) {
+                // Nothing to do here, the header is static
+                return;
+            }
+        }
+
+        if (isShowingBack()) {
+            if (position == getBackPosition()) {
                 final PanelBackItemView item = (PanelBackItemView) view;
                 item.updateFromFilter(filterManager.getPreviousFilter());
                 return;
             }
-
-            position--;
         }
 
+        int actualPosition = position
+                - (isShowingBack() ? 1 : 0)
+                - (viewConfig.hasHeaderConfig() ? 1 : 0);
 
-        cursor.moveToPosition(position);
+        cursor.moveToPosition(actualPosition);
 
         final PanelItemView panelItemView = (PanelItemView) view;
         panelItemView.updateFromCursor(cursor);
+    }
+
+    private int getBackPosition() {
+        return viewConfig.hasHeaderConfig() ? 1 : 0;
     }
 
     @Override
@@ -113,6 +130,8 @@ public class PanelRecyclerViewAdapter extends RecyclerView.Adapter<PanelRecycler
             return 0;
         }
 
-        return cursor.getCount() + (isShowingBack() ? 1 : 0);
+        return cursor.getCount()
+                + (isShowingBack() ? 1 : 0)
+                + (viewConfig.hasHeaderConfig() ? 1 : 0);
     }
 }

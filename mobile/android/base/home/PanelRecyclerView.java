@@ -28,6 +28,7 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
     private final PanelViewItemHandler itemHandler;
     private final float columnWidth;
     private final boolean autoFit;
+    private final HomeConfig.ViewConfig viewConfig;
 
     private PanelLayout.OnItemOpenListener itemOpenListener;
     private HomeContextMenuInfo contextMenuInfo;
@@ -35,6 +36,8 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
 
     public PanelRecyclerView(Context context, HomeConfig.ViewConfig viewConfig) {
         super(context);
+
+        this.viewConfig = viewConfig;
 
         final Resources resources = context.getResources();
 
@@ -51,6 +54,8 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
         layoutManager = new GridLayoutManager(context, spanCount);
         adapter = new PanelRecyclerViewAdapter(context, viewConfig);
         itemHandler = new PanelViewItemHandler();
+
+        layoutManager.setSpanSizeLookup(new PanelSpanSizeLookup());
 
         setLayoutManager(layoutManager);
         setAdapter(adapter);
@@ -119,6 +124,15 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
 
     @Override
     public void onClick(View view, int position) {
+        if (viewConfig.hasHeaderConfig()) {
+            if (position == 0) {
+                itemOpenListener.onItemOpen(viewConfig.getHeaderConfig().getUrl(), null);
+                return;
+            }
+
+            position--;
+        }
+
         itemHandler.openItemAtPosition(adapter.getCursor(), position);
     }
 
@@ -129,5 +143,16 @@ public class PanelRecyclerView extends RecyclerView implements DatasetBacked, Pa
 
         contextMenuInfo = contextMenuInfoFactory.makeInfoForCursor(view, position, -1, cursor);
         showContextMenuForChild(PanelRecyclerView.this);
+    }
+
+    private class PanelSpanSizeLookup extends GridLayoutManager.SpanSizeLookup {
+        @Override
+        public int getSpanSize(int position) {
+            if (position == 0 && viewConfig.hasHeaderConfig()) {
+                return layoutManager.getSpanCount();
+            }
+
+            return 1;
+        }
     }
 }

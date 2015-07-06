@@ -636,6 +636,7 @@ public final class HomeConfig {
         private final String mBackImageUrl;
         private final String mFilter;
         private final EmptyViewConfig mEmptyViewConfig;
+        private final HeaderConfig mHeaderConfig;
         private final EnumSet<Flags> mFlags;
 
         static final String JSON_KEY_TYPE = "type";
@@ -645,6 +646,7 @@ public final class HomeConfig {
         static final String JSON_KEY_BACK_IMAGE_URL = "backImageUrl";
         static final String JSON_KEY_FILTER = "filter";
         static final String JSON_KEY_EMPTY = "empty";
+        static final String JSON_KEY_HEADER = "header";
         static final String JSON_KEY_REFRESH_ENABLED = "refreshEnabled";
 
         public enum Flags {
@@ -667,6 +669,9 @@ public final class HomeConfig {
                 mEmptyViewConfig = null;
             }
 
+            final JSONObject jsonHeaderConfig = json.optJSONObject(JSON_KEY_HEADER);
+            mHeaderConfig = jsonHeaderConfig != null ? new HeaderConfig(jsonHeaderConfig) : null;
+
             mFlags = EnumSet.noneOf(Flags.class);
             if (json.optBoolean(JSON_KEY_REFRESH_ENABLED, false)) {
                 mFlags.add(Flags.REFRESH_ENABLED);
@@ -685,6 +690,7 @@ public final class HomeConfig {
             mBackImageUrl = in.readString();
             mFilter = in.readString();
             mEmptyViewConfig = (EmptyViewConfig) in.readParcelable(getClass().getClassLoader());
+            mHeaderConfig = (HeaderConfig) in.readParcelable(getClass().getClassLoader());
             mFlags = (EnumSet<Flags>) in.readSerializable();
 
             validate();
@@ -699,23 +705,8 @@ public final class HomeConfig {
             mBackImageUrl = viewConfig.mBackImageUrl;
             mFilter = viewConfig.mFilter;
             mEmptyViewConfig = viewConfig.mEmptyViewConfig;
+            mHeaderConfig = viewConfig.mHeaderConfig;
             mFlags = viewConfig.mFlags.clone();
-
-            validate();
-        }
-
-        public ViewConfig(int index, ViewType type, String datasetId, ItemType itemType,
-                          ItemHandler itemHandler, String backImageUrl, String filter,
-                          EmptyViewConfig emptyViewConfig, EnumSet<Flags> flags) {
-            mIndex = index;
-            mType = type;
-            mDatasetId = datasetId;
-            mItemType = itemType;
-            mItemHandler = itemHandler;
-            mBackImageUrl = backImageUrl;
-            mFilter = filter;
-            mEmptyViewConfig = emptyViewConfig;
-            mFlags = flags;
 
             validate();
         }
@@ -774,6 +765,14 @@ public final class HomeConfig {
             return mEmptyViewConfig;
         }
 
+        public HeaderConfig getHeaderConfig() {
+            return mHeaderConfig;
+        }
+
+        public boolean hasHeaderConfig() {
+            return mHeaderConfig != null;
+        }
+
         public boolean isRefreshEnabled() {
             return mFlags.contains(Flags.REFRESH_ENABLED);
         }
@@ -798,6 +797,10 @@ public final class HomeConfig {
                 json.put(JSON_KEY_EMPTY, mEmptyViewConfig.toJSON());
             }
 
+            if (mHeaderConfig != null) {
+                json.put(JSON_KEY_HEADER, mHeaderConfig.toJSON());
+            }
+
             if (mFlags.contains(Flags.REFRESH_ENABLED)) {
                 json.put(JSON_KEY_REFRESH_ENABLED, true);
             }
@@ -820,6 +823,7 @@ public final class HomeConfig {
             dest.writeString(mBackImageUrl);
             dest.writeString(mFilter);
             dest.writeParcelable(mEmptyViewConfig, 0);
+            dest.writeParcelable(mHeaderConfig, 0);
             dest.writeSerializable(mFlags);
         }
 
@@ -900,6 +904,64 @@ public final class HomeConfig {
             @Override
             public EmptyViewConfig[] newArray(final int size) {
                 return new EmptyViewConfig[size];
+            }
+        };
+    }
+
+    public static class HeaderConfig implements Parcelable {
+        static final String JSON_KEY_IMAGE_URL = "image_url";
+        static final String JSON_KEY_URL = "url";
+
+        private final String mImageUrl;
+        private final String mUrl;
+
+        public HeaderConfig(JSONObject json) {
+            mImageUrl = json.optString(JSON_KEY_IMAGE_URL);
+            mUrl = json.optString(JSON_KEY_URL);
+        }
+
+        public HeaderConfig(Parcel in) {
+            mImageUrl = in.readString();
+            mUrl = in.readString();
+        }
+
+        public String getImageUrl() {
+            return mImageUrl;
+        }
+
+        public String getUrl() {
+            return mUrl;
+        }
+
+        public JSONObject toJSON() throws JSONException {
+            JSONObject json = new JSONObject();
+
+            json.put(JSON_KEY_IMAGE_URL, mImageUrl);
+            json.put(JSON_KEY_URL, mUrl);
+
+            return json;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(mImageUrl);
+            dest.writeString(mUrl);
+        }
+
+        public static final Creator<HeaderConfig> CREATOR = new Creator<HeaderConfig>() {
+            @Override
+            public HeaderConfig createFromParcel(Parcel source) {
+                return new HeaderConfig(source);
+            }
+
+            @Override
+            public HeaderConfig[] newArray(int size) {
+                return new HeaderConfig[size];
             }
         };
     }
