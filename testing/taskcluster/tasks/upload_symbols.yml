@@ -1,0 +1,45 @@
+# This is a sample task for uploading debug symbols to the socorro api
+---
+taskId: {{build_slugid}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+    name: '[TC] Upload Symbols'
+    description: 'Upload Symbols'
+
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+
+  payload:
+    image: 'quay.io/amiyaguchi/upload_symbols:0.0.2'
+
+    maxRunTime: 600
+
+    # All builds share a common artifact directory for ease of uploading.
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+    command: ["/bin/bash", "bin/upload.sh"]
+
+    env:
+      ARTIFACT_TASKID: '{{artifact_taskid}}'
+
+  extra:
+    index:
+      rank: {{pushlog_id}}
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
