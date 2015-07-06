@@ -705,7 +705,7 @@ nsUrlClassifierDBServiceWorker::CacheMisses(PrefixArray *results)
 
   for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
     mMissCache.AppendElement(resultsPtr->ElementAt(i));
-   }
+  }
   return NS_OK;
 }
 
@@ -914,7 +914,9 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
     LookupResult& result = mResults->ElementAt(i);
 
     // Now, see if it verifies a lookup
-    if (result.CompleteHash() == hash && result.mTableName.Equals(tableName)) {
+    if (!result.mNoise
+        && result.CompleteHash() == hash
+        && result.mTableName.Equals(tableName)) {
       result.mProtocolConfirmed = true;
     }
   }
