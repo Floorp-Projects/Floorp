@@ -47,7 +47,7 @@ class Image;
  */
 class DecodedStreamData {
 public:
-  explicit DecodedStreamData(SourceMediaStream* aStream);
+  DecodedStreamData(SourceMediaStream* aStream, bool aPlaying);
   ~DecodedStreamData();
   bool IsFinished() const;
   int64_t GetPosition() const;
@@ -94,17 +94,19 @@ public:
 };
 
 class DecodedStream {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
   DecodedStream();
-  DecodedStreamData* GetData() const;
   void DestroyData();
-  void RecreateData(MediaStreamGraph* aGraph);
+  void RecreateData();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
   bool HaveEnoughAudio(const MediaInfo& aInfo) const;
   bool HaveEnoughVideo(const MediaInfo& aInfo) const;
   CheckedInt64 AudioEndTime(int64_t aStartTime, uint32_t aRate) const;
+  int64_t GetPosition() const;
+  bool IsFinished() const;
 
   // Return true if stream is finished.
   bool SendData(int64_t aStartTime,
@@ -113,8 +115,12 @@ public:
                 MediaQueue<VideoData>& aVideoQueue,
                 double aVolume, bool aIsSameOrigin);
 
+protected:
+  virtual ~DecodedStream() {}
+
 private:
   ReentrantMonitor& GetReentrantMonitor() const;
+  void RecreateData(MediaStreamGraph* aGraph);
   void Connect(OutputStreamData* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
   void InitTracks(int64_t aStartTime, const MediaInfo& aInfo);
@@ -142,6 +148,8 @@ private:
   // Please move all capture-stream related code from MDSM into DecodedStream
   // and apply "dispatch + mirroring" to get rid of this monitor in the future.
   mutable ReentrantMonitor mMonitor;
+
+  bool mPlaying;
 };
 
 } // namespace mozilla

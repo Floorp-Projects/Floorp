@@ -239,7 +239,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodingFrozenAtStateDecoding(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
-  mSentPlaybackEndedEvent(false)
+  mSentPlaybackEndedEvent(false),
+  mDecodedStream(new DecodedStream())
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -363,12 +364,12 @@ void MediaDecoderStateMachine::SendStreamData()
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
 
-  bool finished = mDecodedStream.SendData(
+  bool finished = mDecodedStream->SendData(
       mStreamStartTime, mInfo, AudioQueue(), VideoQueue(),
       mVolume, mDecoder->IsSameOriginMedia());
 
   if (mInfo.HasAudio()) {
-    CheckedInt64 playedUsecs = mDecodedStream.AudioEndTime(
+    CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime(
         mStreamStartTime, mInfo.mAudio.mRate);
     if (playedUsecs.isValid()) {
       OnAudioEndTimeUpdate(playedUsecs.value());
@@ -406,7 +407,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
     return false;
   }
 
-  return !mAudioCaptured || mDecodedStream.HaveEnoughAudio(mInfo);
+  return !mAudioCaptured || mDecodedStream->HaveEnoughAudio(mInfo);
 }
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
@@ -418,7 +419,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
     return false;
   }
 
-  return !mAudioCaptured || mDecodedStream.HaveEnoughVideo(mInfo);
+  return !mAudioCaptured || mDecodedStream->HaveEnoughVideo(mInfo);
 }
 
 bool
@@ -1563,9 +1564,7 @@ MediaDecoderStateMachine::InitiateSeek()
   mCurrentSeek.mTarget.mTime = seekTime;
 
   if (mAudioCaptured) {
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArgs<MediaStreamGraph*>(
-      this, &MediaDecoderStateMachine::RecreateDecodedStream, nullptr);
-    AbstractThread::MainThread()->Dispatch(r.forget());
+    mDecodedStream->RecreateData();
   }
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
@@ -2386,7 +2385,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // end of the media, and so that we update the readyState.
       if (VideoQueue().GetSize() > 0 ||
           (HasAudio() && !mAudioCompleted) ||
-          (mAudioCaptured && !GetDecodedStream()->IsFinished()))
+          (mAudioCaptured && !mDecodedStream->IsFinished()))
       {
         // Start playback if necessary to play the remaining media.
         MaybeStartPlayback();
@@ -2545,7 +2544,7 @@ int64_t MediaDecoderStateMachine::GetStreamClock() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  return mStreamStartTime + GetDecodedStream()->GetPosition();
+  return mStreamStartTime + mDecodedStream->GetPosition();
 }
 
 int64_t MediaDecoderStateMachine::GetVideoStreamPosition() const
@@ -2929,9 +2928,11 @@ void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
 
   if (mAudioSink) {
     mAudioSink->SetPlaying(!mPlayStartTime.IsNull());
-  } else if (mAudioCaptured) {
-    mDecodedStream.SetPlaying(!mPlayStartTime.IsNull());
   }
+  // Have DecodedStream remember the playing state so it doesn't need to
+  // ask MDSM about IsPlaying(). Note we have to do this even before capture
+  // happens since capture could happen in the middle of playback.
+  mDecodedStream->SetPlaying(!mPlayStartTime.IsNull());
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
@@ -3112,11 +3113,6 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
     : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
-DecodedStreamData* MediaDecoderStateMachine::GetDecodedStream() const
-{
-  return mDecodedStream.GetData();
-}
-
 void MediaDecoderStateMachine::DispatchAudioCaptured()
 {
   nsRefPtr<MediaDecoderStateMachine> self = this;
@@ -3143,26 +3139,8 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
 {
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
-
-  if (!GetDecodedStream()) {
-    RecreateDecodedStream(aStream->Graph());
-  }
-  mDecodedStream.Connect(aStream, aFinishWhenEnded);
+  mDecodedStream->Connect(aStream, aFinishWhenEnded);
   DispatchAudioCaptured();
-}
-
-void MediaDecoderStateMachine::RecreateDecodedStream(MediaStreamGraph* aGraph)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mDecodedStream.RecreateData(aGraph);
-
-  nsRefPtr<MediaDecoderStateMachine> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
-  {
-    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-    self->mDecodedStream.SetPlaying(self->IsPlaying());
-  });
-  TaskQueue()->Dispatch(r.forget());
 }
 
 } // namespace mozilla
