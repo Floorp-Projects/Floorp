@@ -877,7 +877,6 @@ for (var i = 1; i < 64; i++) {
 const I32SEL = 'var i4sel = i4.select;'
 const F32SEL = 'var f4sel = f4.select;'
 const I32BSEL = 'var i4sel = i4.selectBits;'
-const F32BSEL = 'var f4sel = f4.selectBits;'
 
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + CI32 + I32SEL + "function f() {var x=f4(1,2,3,4); return ci4(i4sel(x,x,x));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + CI32 + I32SEL + "function f() {var m=f4(1,2,3,4); var x=i4(1,2,3,4); return ci4(i4sel(m,x,x));} return f");
@@ -920,11 +919,6 @@ assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + I32BSEL + "function
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + I32BSEL + "function f() {var m=i4(0,0xffffffff,0,0xffffffff); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return ci4(i4sel(m,x,y)); } return f"), this)(), [5, 2, 7, 4]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + I32BSEL + "function f() {var m=i4(0,0,0xffffffff,0xffffffff); var x=i4(1,2,3,4); var y=i4(5,6,7,8); return ci4(i4sel(m,x,y)); } return f"), this)(), [5, 6, 3, 4]);
 
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CF32 + F32BSEL + "function f() {var m=i4(0,0,0,0); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return cf4(f4sel(m,x,y)); } return f"), this)(), [5, 6, 7, 8]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CF32 + F32BSEL + "function f() {var m=i4(0xffffffff,0xffffffff,0xffffffff,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return cf4(f4sel(m,x,y)); } return f"), this)(), [1, 2, 3, 4]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CF32 + F32BSEL + "function f() {var m=i4(0,0xffffffff,0,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return cf4(f4sel(m,x,y)); } return f"), this)(), [5, 2, 7, 4]);
-assertEqX4(asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CF32 + F32BSEL + "function f() {var m=i4(0,0,0xffffffff,0xffffffff); var x=f4(1,2,3,4); var y=f4(5,6,7,8); return cf4(f4sel(m,x,y)); } return f"), this)(), [5, 6, 3, 4]);
-
 // Specific selectBits tests
 var masks = [
     SIMD.Int32x4(1337, 0x1337, 0x42, 42),
@@ -944,18 +938,6 @@ for (var mask of masks) {
         assertEqX4(i32bsel(mask, x, y), simdToArray(SIMD.Int32x4.selectBits(mask, x, y)));
     }
 }
-
-inputs = [
-    [SIMD.Float32x4(0.125,4.25,9.75,16.125), SIMD.Float32x4(1.5,2.75,3.25,4.5)],
-    [SIMD.Float32x4(-1.5,-0,NaN,-Infinity),  SIMD.Float32x4(1,-2,13.37,3.13)],
-    [SIMD.Float32x4(1.5,2.75,NaN,Infinity),  SIMD.Float32x4(-NaN,-Infinity,9.75,16.125)]
-];
-
-var f32bsel = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CI32 + CF32 + F32BSEL + "function f(mask, ifTrue, ifFalse) {mask=ci4(mask); ifTrue=cf4(ifTrue); ifFalse=cf4(ifFalse); return cf4(f4sel(mask,ifTrue,ifFalse)); } return f"), this)
-
-for (var mask of masks)
-    for (var [x, y] of inputs)
-        assertEqX4(f32bsel(mask, x, y), simdToArray(SIMD.Float32x4.selectBits(mask, x, y)));
 
 // Splat
 const I32SPLAT = 'var splat=i4.splat;'
