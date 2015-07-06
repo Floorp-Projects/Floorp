@@ -177,6 +177,10 @@ builds:
       debug:
         task: tasks/builds/sm_warnaserrdebug.yml
 
+post-build:
+  upload-symbols:
+    task: tasks/upload_symbols.yml
+
 tests:
   cppunit:
     allowed_build_tasks:
