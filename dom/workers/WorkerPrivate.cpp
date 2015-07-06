@@ -3542,11 +3542,37 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
   AssertIsOnMainThread();
 
   JSAutoStructuredCloneBuffer buffer(Move(aBuffer));
+  const JSStructuredCloneCallbacks* callbacks =
+    WorkerStructuredCloneCallbacks(true);
+
+  class MOZ_STACK_CLASS AutoCloneBufferCleaner final
+  {
+  public:
+    AutoCloneBufferCleaner(JSAutoStructuredCloneBuffer& aBuffer,
+                           const JSStructuredCloneCallbacks* aCallbacks,
+                           WorkerStructuredCloneClosure& aClosure)
+      : mBuffer(aBuffer)
+      , mCallbacks(aCallbacks)
+      , mClosure(aClosure)
+    {}
+
+    ~AutoCloneBufferCleaner()
+    {
+      mBuffer.clear(mCallbacks, &mClosure);
+    }
+
+  private:
+    JSAutoStructuredCloneBuffer& mBuffer;
+    const JSStructuredCloneCallbacks* mCallbacks;
+    WorkerStructuredCloneClosure& mClosure;
+  };
 
   WorkerStructuredCloneClosure closure;
   closure.mClonedObjects.SwapElements(aClosure.mClonedObjects);
   MOZ_ASSERT(aClosure.mMessagePorts.IsEmpty());
   closure.mMessagePortIdentifiers.SwapElements(aClosure.mMessagePortIdentifiers);
+
+  AutoCloneBufferCleaner bufferCleaner(buffer, callbacks, closure);
 
   SharedWorker* sharedWorker;
   if (!mSharedWorkers.Get(aMessagePortSerial, &sharedWorker)) {
@@ -3574,8 +3600,6 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
                    &closure)) {
     return false;
   }
-
-  buffer.clear();
 
   nsRefPtr<MessageEvent> event = new MessageEvent(port, nullptr, nullptr);
   nsresult rv =
