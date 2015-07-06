@@ -308,6 +308,6 @@ def dumpScreen(utilityPath):
     returncode = subprocess.call(utility + [imgfilename])
     printstatus(returncode, utilityname)
   except OSError, err:
-    log.info("Failed to start %s for screenshot: %s" %
-             utility[0], err.strerror)
+    log.info("Failed to start %s for screenshot: %s"
+             % (utility[0], err.strerror))
     return
