@@ -7,20 +7,23 @@
 
 const { utils: Cu } = Components;
 
-const DEBUGGER_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
+const DEBUGGER_USB_ENABLED = "devtools.remote.usb.enabled";
 
 Cu.import("resource://gre/modules/Services.jsm");
+const { DebuggerServer } =
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
 add_test(function() {
   let window = Services.wm.getMostRecentWindow("navigator:browser");
 
+  window.RemoteDebugger.init();
+
   // Enable the debugger via the pref it listens for
   do_register_cleanup(function() {
-    Services.prefs.clearUserPref(DEBUGGER_REMOTE_ENABLED);
+    Services.prefs.clearUserPref(DEBUGGER_USB_ENABLED);
   });
-  Services.prefs.setBoolPref(DEBUGGER_REMOTE_ENABLED, true);
+  Services.prefs.setBoolPref(DEBUGGER_USB_ENABLED, true);
 
-  let DebuggerServer = window.DebuggerServer;
   do_check_true(DebuggerServer.initialized);
   do_check_eq(DebuggerServer.listeningSockets, 1);
 
