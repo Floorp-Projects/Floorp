@@ -353,7 +353,8 @@ MediaCodecReader::RequestAudioData()
 
 nsRefPtr<MediaDecoderReader::VideoDataPromise>
 MediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                   int64_t aTimeThreshold)
+                                   int64_t aTimeThreshold,
+                                   bool aForceDecodeAhead)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(HasVideo());
