@@ -162,7 +162,8 @@ describe("loop.roomViews", function () {
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.EmailRoomUrl({
             roomUrl: "http://invalid",
-            roomDescription: undefined
+            roomDescription: undefined,
+            from: "conversation"
           }));
       });
 
@@ -185,7 +186,8 @@ describe("loop.roomViews", function () {
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.EmailRoomUrl({
             roomUrl: url,
-            roomDescription: description
+            roomDescription: description,
+            from: "conversation"
           }));
       });
 
@@ -203,8 +205,10 @@ describe("loop.roomViews", function () {
           React.addons.TestUtils.Simulate.click(copyBtn);
 
           sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWith(dispatcher.dispatch,
-            new sharedActions.CopyRoomUrl({roomUrl: "http://invalid"}));
+          sinon.assert.calledWith(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
+            roomUrl: "http://invalid",
+            from: "conversation"
+          }));
         });
 
       it("should change the text when the url has been copied", function() {

@@ -674,6 +674,13 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    SHARING_ROOM_URL: {
+      enumerable: true,
+      get: function() {
+        return Cu.cloneInto(SHARING_ROOM_URL, targetWindow);
+      }
+    },
+
     fxAEnabled: {
       enumerable: true,
       get: function() {
