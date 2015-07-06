@@ -703,8 +703,8 @@ ResponsiveImageCandidate::Density(int32_t aMatchingWidth) const
   if (mType == eCandidateType_Density) {
     return mValue.mDensity;
   } else if (mType == eCandidateType_ComputedFromWidth) {
-    if (aMatchingWidth <= 0) {
-      MOZ_ASSERT(false, "0 or negative matching width is invalid per spec");
+    if (aMatchingWidth < 0) {
+      MOZ_ASSERT(false, "Don't expect to have a negative matching width at this point");
       return 1.0;
     }
     double density = double(mValue.mWidth) / double(aMatchingWidth);
