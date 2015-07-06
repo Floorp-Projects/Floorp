@@ -27,7 +27,6 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"

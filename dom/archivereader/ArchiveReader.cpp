@@ -11,7 +11,6 @@
 
 #include "nsIURI.h"
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 
 #include "mozilla/dom/ArchiveReaderBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"

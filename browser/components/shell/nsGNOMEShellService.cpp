@@ -21,7 +21,6 @@
 #include "nsIStringBundle.h"
 #include "nsIOutputStream.h"
 #include "nsIProcess.h"
-#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDOMHTMLImageElement.h"

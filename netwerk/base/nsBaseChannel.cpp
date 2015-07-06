@@ -6,7 +6,6 @@
 
 #include "nsBaseChannel.h"
 #include "nsURLHelper.h"
-#include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsMimeTypes.h"
 #include "nsIContentSniffer.h"

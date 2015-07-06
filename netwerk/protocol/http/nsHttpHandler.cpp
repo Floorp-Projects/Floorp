@@ -29,7 +29,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "prprf.h"
-#include "nsNetUtil.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"

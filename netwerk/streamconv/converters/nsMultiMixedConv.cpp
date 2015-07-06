@@ -7,7 +7,6 @@
 #include "plstr.h"
 #include "nsIHttpChannel.h"
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIStringStream.h"
 #include "nsCRT.h"

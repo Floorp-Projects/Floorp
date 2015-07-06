@@ -11,7 +11,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
-#include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsFrameLoader.h"
 #include "xpcpublic.h"

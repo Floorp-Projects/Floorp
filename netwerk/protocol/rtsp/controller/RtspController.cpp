@@ -30,7 +30,6 @@
 #include "nsStringStream.h"
 #include "nsAlgorithm.h"
 #include "nsProxyRelease.h"
-#include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"

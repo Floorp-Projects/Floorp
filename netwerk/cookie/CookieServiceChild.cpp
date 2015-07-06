@@ -9,7 +9,6 @@
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "SerializedLoadContext.h"
 

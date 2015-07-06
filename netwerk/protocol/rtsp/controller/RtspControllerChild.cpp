@@ -10,7 +10,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "nsITabChild.h"
 #include "nsILoadContext.h"
-#include "nsNetUtil.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsStringStream.h"

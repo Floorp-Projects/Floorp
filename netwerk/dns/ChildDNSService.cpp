@@ -4,7 +4,6 @@
 
 #include "mozilla/net/ChildDNSService.h"
 #include "nsIDNSListener.h"
-#include "nsNetUtil.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsIXPConnect.h"

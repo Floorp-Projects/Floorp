@@ -15,6 +15,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "mozJSComponentLoader.h"
+#include "nsNetUtil.h"
 
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
