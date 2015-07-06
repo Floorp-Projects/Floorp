@@ -455,6 +455,9 @@ void
 EventStateManager::OnStartToObserveContent(
                      IMEContentObserver* aIMEContentObserver)
 {
+  if (mIMEContentObserver == aIMEContentObserver) {
+    return;
+  }
   ReleaseCurrentIMEContentObserver();
   mIMEContentObserver = aIMEContentObserver;
 }
