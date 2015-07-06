@@ -18,6 +18,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Vector.h"
+#include "mozilla/TimeStamp.h"
 
 /**
  * A directory service key which provides the platform-correct "application
@@ -453,7 +454,7 @@ XRE_API(void,
         XRE_TelemetryAccumulate, (int aID, uint32_t aSample))
 
 XRE_API(void,
-        XRE_StartupTimelineRecord, (int aEvent, PRTime aWhen))
+        XRE_StartupTimelineRecord, (int aEvent, mozilla::TimeStamp aWhen))
 
 XRE_API(void,
         XRE_InitOmnijar, (nsIFile* aGreOmni,
