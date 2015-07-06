@@ -331,6 +331,19 @@ class Graph(object):
                 message = '({}), extra.treeherder.collection must contain one type'
                 raise ValueError(message.fomrat(build['task']))
 
+            if 'post-build' in build:
+                post_parameters = copy.copy(build_parameters)
+                post_parameters['artifact_taskid'] = build_parameters['build_slugid']
+                post_task = templates.load(build['post-build']['task'], post_parameters)
+                post_task['taskId'] = slugid()
+
+                if 'requires' not in post_task:
+                    post_task['requires'] = []
+
+                post_task['requires'].append(build_parameters['build_slugid'])
+
+                graph['tasks'].append(post_task)
+
             for test in build['dependents']:
                 test = test['allowed_build_tasks'][build['task']]
                 test_parameters = copy.copy(build_parameters)
@@ -340,7 +353,6 @@ class Graph(object):
                     test_parameters['tests_url'] = tests_url
                 if test_packages_url:
                     test_parameters['test_packages_url'] = test_packages_url
-
                 test_definition = templates.load(test['task'], {})['task']
                 chunk_config = test_definition['extra']['chunks']
 

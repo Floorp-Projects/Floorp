@@ -262,6 +262,7 @@ def parse_commit(message, jobs):
             # Node for this particular build type
             result.append({
                 'task': build_task,
+                'post-build': jobs['post-build']['upload-symbols'],
                 'dependents': extract_tests_from_platform(
                     jobs['tests'], platform_builds, build_task, tests
                 ),
