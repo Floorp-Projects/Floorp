@@ -88,7 +88,7 @@ UpdateStreamBlocking(MediaStream* aStream, bool aBlocking)
   }
 }
 
-DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream)
+DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream, bool aPlaying)
   : mAudioFramesWritten(0)
   , mNextVideoTime(-1)
   , mNextAudioTime(-1)
@@ -97,13 +97,16 @@ DecodedStreamData::DecodedStreamData(SourceMediaStream* aStream)
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
   , mStream(aStream)
-  , mPlaying(false)
+  , mPlaying(aPlaying)
   , mEOSVideoCompensation(false)
 {
   mListener = new DecodedStreamGraphListener(mStream);
   mStream->AddListener(mListener);
-  // Block the stream as mPlaying is initially false.
-  UpdateStreamBlocking(mStream, true);
+
+  // Block the stream if we are not playing.
+  if (!aPlaying) {
+    UpdateStreamBlocking(mStream, true);
+  }
 }
 
 DecodedStreamData::~DecodedStreamData()
@@ -184,15 +187,9 @@ OutputStreamData::Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStr
 
 DecodedStream::DecodedStream()
   : mMonitor("DecodedStream::mMonitor")
+  , mPlaying(false)
 {
   //
-}
-
-DecodedStreamData*
-DecodedStream::GetData() const
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return mData.get();
 }
 
 void
@@ -231,6 +228,16 @@ DecodedStream::DestroyData()
 }
 
 void
+DecodedStream::RecreateData()
+{
+  nsRefPtr<DecodedStream> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void {
+    self->RecreateData(nullptr);
+  });
+  AbstractThread::MainThread()->Dispatch(r.forget());
+}
+
+void
 DecodedStream::RecreateData(MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -243,7 +250,7 @@ DecodedStream::RecreateData(MediaStreamGraph* aGraph)
   }
   auto source = aGraph->CreateSourceStream(nullptr);
   DestroyData();
-  mData.reset(new DecodedStreamData(source));
+  mData.reset(new DecodedStreamData(source, mPlaying));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
@@ -292,6 +299,10 @@ DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
+  if (!mData) {
+    RecreateData(aStream->Graph());
+  }
+
   OutputStreamData* os = OutputStreams().AppendElement();
   os->Init(this, aStream);
   Connect(os);
@@ -326,8 +337,10 @@ void
 DecodedStream::SetPlaying(bool aPlaying)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT(mData);
-  mData->SetPlaying(aPlaying);
+  mPlaying = aPlaying;
+  if (mData) {
+    mData->SetPlaying(aPlaying);
+  }
 }
 
 bool
@@ -641,6 +654,20 @@ DecodedStream::AudioEndTime(int64_t aStartTime, uint32_t aRate) const
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   return aStartTime + FramesToUsecs(mData->mAudioFramesWritten, aRate);
+}
+
+int64_t
+DecodedStream::GetPosition() const
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return mData->GetPosition();
+}
+
+bool
+DecodedStream::IsFinished() const
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return mData->IsFinished();
 }
 
 } // namespace mozilla
