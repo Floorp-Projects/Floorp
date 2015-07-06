@@ -267,11 +267,11 @@ protected:
  * An ImageContainer can operate in one of these modes:
  * 1) Normal. Triggered by constructing the ImageContainer with
  * DISABLE_ASYNC or when compositing is happening on the main thread.
- * SetCurrentImage changes ImageContainer state but nothing is sent to the
+ * SetCurrentImages changes ImageContainer state but nothing is sent to the
  * compositor until the next layer transaction.
  * 2) Asynchronous. Initiated by constructing the ImageContainer with
  * ENABLE_ASYNC when compositing is happening on the main thread.
- * SetCurrentImage sends a message through the ImageBridge to the compositor
+ * SetCurrentImages sends a message through the ImageBridge to the compositor
  * thread to update the image, without going through the main thread or
  * a layer transaction.
  * The ImageContainer uses a shared memory block containing a cross-process mutex
@@ -302,24 +302,32 @@ public:
    */
   B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
 
+  struct NonOwningImage {
+    NonOwningImage(Image* aImage, TimeStamp aTimeStamp)
+      : mImage(aImage), mTimeStamp(aTimeStamp) {}
+    Image* mImage;
+    TimeStamp mTimeStamp;
+  };
   /**
-   * Set an Image as the current image to display. The Image must have
+   * Set aImages as the list of timestamped to display. The Images must have
    * been created by this ImageContainer.
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
-   * aImage can be null. While it's null, nothing will be painted.
+   * aImages must be non-empty. The first timestamp in the list may be
+   * null but the others must not be, and the timestamps must increase.
+   * Every element of aImages must have non-null mImage.
    * 
    * The Image data must not be modified after this method is called!
    * Note that this must not be called if ENABLE_ASYNC has not been set.
    *
-   * Implementations must call CurrentImageChanged() while holding
+   * The implementation calls CurrentImageChanged() while holding
    * mReentrantMonitor.
    *
    * If this ImageContainer has an ImageClient for async video:
    * Schedule a task to send the image to the compositor using the
    * PImageBridge protcol without using the main thread.
    */
-  void SetCurrentImage(Image* aImage);
+  void SetCurrentImages(const nsTArray<NonOwningImage>& aImages);
 
   /**
    * Clear all images. Let ImageClient release all TextureClients.

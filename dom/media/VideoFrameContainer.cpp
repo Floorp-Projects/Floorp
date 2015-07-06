@@ -55,7 +55,14 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
   mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
-  mImageContainer->SetCurrentImage(aImage);
+  if (aImage) {
+    nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+    imageList.AppendElement(
+        ImageContainer::NonOwningImage(aImage, aTargetTime));
+    mImageContainer->SetCurrentImages(imageList);
+  } else {
+    mImageContainer->ClearAllImages();
+  }
   gfx::IntSize newFrameSize = mImageContainer->GetCurrentSize();
   if (oldFrameSize != newFrameSize) {
     mImageSizeChanged = true;
