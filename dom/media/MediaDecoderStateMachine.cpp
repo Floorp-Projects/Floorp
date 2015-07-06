@@ -45,7 +45,6 @@
 namespace mozilla {
 
 using namespace mozilla::dom;
-using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::media;
 
@@ -171,6 +170,7 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
 
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
+static const uint32_t SCARCE_VIDEO_QUEUE_SIZE = 1;
 
 static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
 static uint32_t sVideoQueueHWAccelSize = MIN_VIDEO_QUEUE_SIZE;
@@ -239,7 +239,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodingFrozenAtStateDecoding(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
-  mSentPlaybackEndedEvent(false)
+  mSentPlaybackEndedEvent(false),
+  mDecodedStream(new DecodedStream())
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -357,236 +358,21 @@ int64_t MediaDecoderStateMachine::GetDecodedAudioDuration()
   return audioDecoded;
 }
 
-void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
-                                               DecodedStreamData* aStream,
-                                               AudioSegment* aOutput)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  AssertCurrentThreadInMonitor();
-
-  // This logic has to mimic AudioSink closely to make sure we write
-  // the exact same silences
-  CheckedInt64 audioWrittenOffset = aStream->mAudioFramesWritten +
-      UsecsToFrames(mStreamStartTime, mInfo.mAudio.mRate);
-  CheckedInt64 frameOffset = UsecsToFrames(aAudio->mTime, mInfo.mAudio.mRate);
-
-  if (!audioWrittenOffset.isValid() ||
-      !frameOffset.isValid() ||
-      // ignore packet that we've already processed
-      frameOffset.value() + aAudio->mFrames <= audioWrittenOffset.value()) {
-    return;
-  }
-
-  if (audioWrittenOffset.value() < frameOffset.value()) {
-    int64_t silentFrames = frameOffset.value() - audioWrittenOffset.value();
-    // Write silence to catch up
-    VERBOSE_LOG("writing %lld frames of silence to MediaStream", silentFrames);
-    AudioSegment silence;
-    silence.InsertNullDataAtStart(silentFrames);
-    aStream->mAudioFramesWritten += silentFrames;
-    audioWrittenOffset += silentFrames;
-    aOutput->AppendFrom(&silence);
-  }
-
-  MOZ_ASSERT(audioWrittenOffset.value() >= frameOffset.value());
-
-  int64_t offset = audioWrittenOffset.value() - frameOffset.value();
-  size_t framesToWrite = aAudio->mFrames - offset;
-
-  aAudio->EnsureAudioBuffer();
-  nsRefPtr<SharedBuffer> buffer = aAudio->mAudioBuffer;
-  AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
-  nsAutoTArray<const AudioDataValue*,2> channels;
-  for (uint32_t i = 0; i < aAudio->mChannels; ++i) {
-    channels.AppendElement(bufferData + i*aAudio->mFrames + offset);
-  }
-  aOutput->AppendFrames(buffer.forget(), channels, framesToWrite);
-  VERBOSE_LOG("writing %u frames of data to MediaStream for AudioData at %lld",
-              static_cast<unsigned>(framesToWrite),
-              aAudio->mTime);
-  aStream->mAudioFramesWritten += framesToWrite;
-  aOutput->ApplyVolume(mVolume);
-
-  aStream->mNextAudioTime = aAudio->GetEndTime();
-}
-
-static void WriteVideoToMediaStream(MediaStream* aStream,
-                                    layers::Image* aImage,
-                                    int64_t aEndMicroseconds,
-                                    int64_t aStartMicroseconds,
-                                    const IntSize& aIntrinsicSize,
-                                    VideoSegment* aOutput)
-{
-  nsRefPtr<layers::Image> image = aImage;
-  StreamTime duration =
-      aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
-      aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
-  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize);
-}
-
-static bool ZeroDurationAtLastChunk(VideoSegment& aInput)
-{
-  // Get the last video frame's start time in VideoSegment aInput.
-  // If the start time is equal to the duration of aInput, means the last video
-  // frame's duration is zero.
-  StreamTime lastVideoStratTime;
-  aInput.GetLastFrame(&lastVideoStratTime);
-  return lastVideoStratTime == aInput.GetDuration();
-}
-
 void MediaDecoderStateMachine::SendStreamData()
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
-  MOZ_ASSERT(mStreamStartTime != -1);
 
-  DecodedStreamData* stream = GetDecodedStream();
+  bool finished = mDecodedStream->SendData(
+      mStreamStartTime, mInfo, AudioQueue(), VideoQueue(),
+      mVolume, mDecoder->IsSameOriginMedia());
 
-  bool finished =
-      (!mInfo.HasAudio() || AudioQueue().IsFinished()) &&
-      (!mInfo.HasVideo() || VideoQueue().IsFinished());
-
-  {
-    SourceMediaStream* mediaStream = stream->mStream;
-    StreamTime endPosition = 0;
-    const bool isSameOrigin = mDecoder->IsSameOriginMedia();
-
-    if (!stream->mStreamInitialized) {
-      if (mInfo.HasAudio()) {
-        TrackID audioTrackId = mInfo.mAudio.mTrackId;
-        AudioSegment* audio = new AudioSegment();
-        mediaStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio,
-                                   SourceMediaStream::ADDTRACK_QUEUED);
-        stream->mNextAudioTime = mStreamStartTime;
-      }
-      if (mInfo.HasVideo()) {
-        TrackID videoTrackId = mInfo.mVideo.mTrackId;
-        VideoSegment* video = new VideoSegment();
-        mediaStream->AddTrack(videoTrackId, 0, video,
-                              SourceMediaStream::ADDTRACK_QUEUED);
-        stream->mNextVideoTime = mStreamStartTime;
-      }
-      mediaStream->FinishAddTracks();
-      stream->mStreamInitialized = true;
-    }
-
-    if (mInfo.HasAudio()) {
-      MOZ_ASSERT(stream->mNextAudioTime != -1, "Should've been initialized");
-      TrackID audioTrackId = mInfo.mAudio.mTrackId;
-      nsAutoTArray<nsRefPtr<AudioData>,10> audio;
-      // It's OK to hold references to the AudioData because AudioData
-      // is ref-counted.
-      AudioQueue().GetElementsAfter(stream->mNextAudioTime, &audio);
-      AudioSegment output;
-      for (uint32_t i = 0; i < audio.Length(); ++i) {
-        SendStreamAudio(audio[i], stream, &output);
-      }
-      if (!isSameOrigin) {
-        output.ReplaceWithDisabled();
-      }
-      // |mNextAudioTime| is updated as we process each audio sample in
-      // SendStreamAudio(). This is consistent with how |mNextVideoTime|
-      // is updated for video samples.
-      if (output.GetDuration() > 0) {
-        mediaStream->AppendToTrack(audioTrackId, &output);
-      }
-      if (AudioQueue().IsFinished() && !stream->mHaveSentFinishAudio) {
-        mediaStream->EndTrack(audioTrackId);
-        stream->mHaveSentFinishAudio = true;
-      }
-      endPosition = std::max(endPosition,
-          mediaStream->TicksToTimeRoundDown(mInfo.mAudio.mRate,
-                                            stream->mAudioFramesWritten));
-
-      CheckedInt64 playedUsecs = mStreamStartTime +
-          FramesToUsecs(stream->mAudioFramesWritten, mInfo.mAudio.mRate);
-      if (playedUsecs.isValid()) {
-        OnAudioEndTimeUpdate(playedUsecs.value());
-      }
-    }
-
-    if (mInfo.HasVideo()) {
-      MOZ_ASSERT(stream->mNextVideoTime != -1, "Should've been initialized");
-      TrackID videoTrackId = mInfo.mVideo.mTrackId;
-      nsAutoTArray<nsRefPtr<VideoData>,10> video;
-      // It's OK to hold references to the VideoData because VideoData
-      // is ref-counted.
-      VideoQueue().GetElementsAfter(stream->mNextVideoTime, &video);
-      VideoSegment output;
-      for (uint32_t i = 0; i < video.Length(); ++i) {
-        VideoData* v = video[i];
-        if (stream->mNextVideoTime < v->mTime) {
-          VERBOSE_LOG("writing last video to MediaStream %p for %lldus",
-                      mediaStream, v->mTime - stream->mNextVideoTime);
-          // Write last video frame to catch up. mLastVideoImage can be null here
-          // which is fine, it just means there's no video.
-
-          // TODO: |mLastVideoImage| should come from the last image rendered
-          // by the state machine. This will avoid the black frame when capture
-          // happens in the middle of playback (especially in th middle of a
-          // video frame). E.g. if we have a video frame that is 30 sec long
-          // and capture happens at 15 sec, we'll have to append a black frame
-          // that is 15 sec long.
-          WriteVideoToMediaStream(mediaStream, stream->mLastVideoImage,
-            v->mTime, stream->mNextVideoTime, stream->mLastVideoImageDisplaySize,
-              &output);
-          stream->mNextVideoTime = v->mTime;
-        }
-        if (stream->mNextVideoTime < v->GetEndTime()) {
-          VERBOSE_LOG("writing video frame %lldus to MediaStream %p for %lldus",
-                      v->mTime, mediaStream, v->GetEndTime() - stream->mNextVideoTime);
-          WriteVideoToMediaStream(mediaStream, v->mImage,
-              v->GetEndTime(), stream->mNextVideoTime, v->mDisplay,
-              &output);
-          stream->mNextVideoTime = v->GetEndTime();
-          stream->mLastVideoImage = v->mImage;
-          stream->mLastVideoImageDisplaySize = v->mDisplay;
-        } else {
-          VERBOSE_LOG("skipping writing video frame %lldus (end %lldus) to MediaStream",
-                      v->mTime, v->GetEndTime());
-        }
-      }
-      // Check the output is not empty.
-      if (output.GetLastFrame()) {
-        stream->mEOSVideoCompensation = ZeroDurationAtLastChunk(output);
-      }
-      if (!isSameOrigin) {
-        output.ReplaceWithDisabled();
-      }
-      if (output.GetDuration() > 0) {
-        mediaStream->AppendToTrack(videoTrackId, &output);
-      }
-      if (VideoQueue().IsFinished() && !stream->mHaveSentFinishVideo) {
-        if (stream->mEOSVideoCompensation) {
-          VideoSegment endSegment;
-          // Calculate the deviation clock time from DecodedStream.
-          int64_t deviation_usec = mediaStream->StreamTimeToMicroseconds(1);
-          WriteVideoToMediaStream(mediaStream, stream->mLastVideoImage,
-            stream->mNextVideoTime + deviation_usec, stream->mNextVideoTime,
-            stream->mLastVideoImageDisplaySize, &endSegment);
-          stream->mNextVideoTime += deviation_usec;
-          MOZ_ASSERT(endSegment.GetDuration() > 0);
-          if (!isSameOrigin) {
-            endSegment.ReplaceWithDisabled();
-          }
-          mediaStream->AppendToTrack(videoTrackId, &endSegment);
-        }
-        mediaStream->EndTrack(videoTrackId);
-        stream->mHaveSentFinishVideo = true;
-      }
-      endPosition = std::max(endPosition,
-          mediaStream->MicrosecondsToStreamTimeRoundDown(
-              stream->mNextVideoTime - mStreamStartTime));
-    }
-
-    if (!stream->mHaveSentFinish) {
-      stream->mStream->AdvanceKnownTracksTime(endPosition);
-    }
-
-    if (finished && !stream->mHaveSentFinish) {
-      stream->mHaveSentFinish = true;
-      stream->mStream->Finish();
+  if (mInfo.HasAudio()) {
+    CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime(
+        mStreamStartTime, mInfo.mAudio.mRate);
+    if (playedUsecs.isValid()) {
+      OnAudioEndTimeUpdate(playedUsecs.value());
     }
   }
 
@@ -620,21 +406,8 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio(int64_t aAmpleAudioUSecs)
       GetDecodedAudioDuration() < aAmpleAudioUSecs) {
     return false;
   }
-  if (!mAudioCaptured) {
-    return true;
-  }
 
-  DecodedStreamData* stream = GetDecodedStream();
-
-  if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishAudio) {
-    MOZ_ASSERT(mInfo.HasAudio());
-    TrackID audioTrackId = mInfo.mAudio.mTrackId;
-    if (!stream->mStream->HaveEnoughBuffered(audioTrackId)) {
-      return false;
-    }
-  }
-
-  return true;
+  return !mAudioCaptured || mDecodedStream->HaveEnoughAudio(mInfo);
 }
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
@@ -646,17 +419,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
     return false;
   }
 
-  DecodedStreamData* stream = GetDecodedStream();
-
-  if (stream && stream->mStreamInitialized && !stream->mHaveSentFinishVideo) {
-    MOZ_ASSERT(mInfo.HasVideo());
-    TrackID videoTrackId = mInfo.mVideo.mTrackId;
-    if (!stream->mStream->HaveEnoughBuffered(videoTrackId)) {
-      return false;
-    }
-  }
-
-  return true;
+  return !mAudioCaptured || mDecodedStream->HaveEnoughVideo(mInfo);
 }
 
 bool
@@ -1801,9 +1564,7 @@ MediaDecoderStateMachine::InitiateSeek()
   mCurrentSeek.mTarget.mTime = seekTime;
 
   if (mAudioCaptured) {
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArgs<MediaStreamGraph*>(
-      this, &MediaDecoderStateMachine::RecreateDecodedStream, nullptr);
-    AbstractThread::MainThread()->Dispatch(r.forget());
+    mDecodedStream->RecreateData();
   }
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
@@ -1939,6 +1700,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   bool skipToNextKeyFrame = NeedToSkipToNextKeyframe();
   int64_t currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
+  bool forceDecodeAhead = static_cast<uint32_t>(VideoQueue().GetSize()) <= SCARCE_VIDEO_QUEUE_SIZE;
 
   // Time the video decode, so that if it's slow, we can increase our low
   // audio threshold to reduce the chance of an audio underrun while we're
@@ -1951,7 +1713,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                          &MediaDecoderReader::RequestVideoData,
-                                         skipToNextKeyFrame, currentTime)
+                                         skipToNextKeyFrame, currentTime, forceDecodeAhead)
     ->Then(TaskQueue(), __func__, this,
            &MediaDecoderStateMachine::OnVideoDecoded,
            &MediaDecoderStateMachine::OnVideoNotDecoded));
@@ -2269,7 +2031,7 @@ MediaDecoderStateMachine::DecodeFirstFrame()
       mVideoDecodeStartTime = TimeStamp::Now();
       mVideoDataRequest.Begin(
         ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestVideoData, false, int64_t(0))
+                       &MediaDecoderReader::RequestVideoData, false, int64_t(0), false)
         ->Then(TaskQueue(), __func__, mStartTimeRendezvous.get(),
                &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise>,
                &StartTimeRendezvous::FirstSampleRejected<VideoData>)
@@ -2623,7 +2385,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // end of the media, and so that we update the readyState.
       if (VideoQueue().GetSize() > 0 ||
           (HasAudio() && !mAudioCompleted) ||
-          (mAudioCaptured && !GetDecodedStream()->IsFinished()))
+          (mAudioCaptured && !mDecodedStream->IsFinished()))
       {
         // Start playback if necessary to play the remaining media.
         MaybeStartPlayback();
@@ -2782,8 +2544,7 @@ int64_t MediaDecoderStateMachine::GetStreamClock() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mStreamStartTime != -1);
-  return mStreamStartTime + GetDecodedStream()->GetPosition();
+  return mStreamStartTime + mDecodedStream->GetPosition();
 }
 
 int64_t MediaDecoderStateMachine::GetVideoStreamPosition() const
@@ -3167,9 +2928,11 @@ void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
 
   if (mAudioSink) {
     mAudioSink->SetPlaying(!mPlayStartTime.IsNull());
-  } else if (mAudioCaptured) {
-    mDecodedStream.SetPlaying(!mPlayStartTime.IsNull());
   }
+  // Have DecodedStream remember the playing state so it doesn't need to
+  // ask MDSM about IsPlaying(). Note we have to do this even before capture
+  // happens since capture could happen in the middle of playback.
+  mDecodedStream->SetPlaying(!mPlayStartTime.IsNull());
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
@@ -3350,11 +3113,6 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
     : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
-DecodedStreamData* MediaDecoderStateMachine::GetDecodedStream() const
-{
-  return mDecodedStream.GetData();
-}
-
 void MediaDecoderStateMachine::DispatchAudioCaptured()
 {
   nsRefPtr<MediaDecoderStateMachine> self = this;
@@ -3365,9 +3123,6 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
     if (!self->mAudioCaptured) {
       // Stop the audio sink if it's running.
       self->StopAudioThread();
-      // GetMediaTime() could return -1 because we haven't decoded
-      // the 1st frame. But this is OK since we will update mStreamStartTime
-      // again in SetStartTime().
       self->mStreamStartTime = self->GetMediaTime();
       // Reset mAudioEndTime which will be updated as we send audio data to
       // stream. Otherwise it will remain -1 if we don't have audio.
@@ -3384,26 +3139,8 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
 {
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
-
-  if (!GetDecodedStream()) {
-    RecreateDecodedStream(aStream->Graph());
-  }
-  mDecodedStream.Connect(aStream, aFinishWhenEnded);
+  mDecodedStream->Connect(aStream, aFinishWhenEnded);
   DispatchAudioCaptured();
-}
-
-void MediaDecoderStateMachine::RecreateDecodedStream(MediaStreamGraph* aGraph)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mDecodedStream.RecreateData(aGraph);
-
-  nsRefPtr<MediaDecoderStateMachine> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
-  {
-    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-    self->mDecodedStream.SetPlaying(self->IsPlaying());
-  });
-  TaskQueue()->Dispatch(r.forget());
 }
 
 } // namespace mozilla

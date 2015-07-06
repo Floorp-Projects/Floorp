@@ -21,6 +21,8 @@
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/media/MediaSystemResourceManager.h" // for MediaSystemResourceManager
+#include "mozilla/media/MediaSystemResourceManagerChild.h" // for MediaSystemResourceManagerChild
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
 #include "mozilla/layers/CompositorParent.h" // for CompositorParent
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
@@ -49,6 +51,7 @@ using base::Thread;
 using base::ProcessId;
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 
 typedef std::vector<CompositableOperation> OpVector;
 
@@ -171,6 +174,9 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
+
+  MediaSystemResourceManager::Shutdown();
+
   if (sImageBridgeChildSingleton) {
     // Force all managed protocols to shut themselves down cleanly
     InfallibleTArray<PCompositableChild*> compositables;
@@ -188,6 +194,7 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     // From now on, no message can be sent through the image bridge from the
     // client side except the final Stop message.
   }
+
   *aDone = true;
   aBarrier->NotifyAll();
 }
@@ -819,6 +826,21 @@ bool
 ImageBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 {
   return TextureClient::DestroyIPDLActor(actor);
+}
+
+PMediaSystemResourceManagerChild*
+ImageBridgeChild::AllocPMediaSystemResourceManagerChild()
+{
+  MOZ_ASSERT(!mShuttingDown);
+  return new mozilla::media::MediaSystemResourceManagerChild();
+}
+
+bool
+ImageBridgeChild::DeallocPMediaSystemResourceManagerChild(PMediaSystemResourceManagerChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete static_cast<mozilla::media::MediaSystemResourceManagerChild*>(aActor);
+  return true;
 }
 
 bool

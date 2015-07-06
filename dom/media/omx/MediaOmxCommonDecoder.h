@@ -64,6 +64,9 @@ protected:
   // Set when offload playback of current track fails in the middle and need to
   // fallback to state machine
   bool mFallbackToStateMachine;
+
+  // True if the media element is captured.
+  bool mIsCaptured;
 };
 
 } // namespace mozilla

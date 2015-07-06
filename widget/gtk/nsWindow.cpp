@@ -1520,7 +1520,8 @@ nsWindow::GetClientOffset()
 {
     PROFILER_LABEL("nsWindow", "GetClientOffset", js::ProfileEntry::Category::GRAPHICS);
 
-    if (!mIsTopLevel) {
+    if (!mIsTopLevel || !mShell || !mGdkWindow ||
+        gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
         return nsIntPoint(0, 0);
     }
 
@@ -1530,10 +1531,8 @@ nsWindow::GetClientOffset()
     int format_returned;
     int length_returned;
     long *frame_extents;
-    GdkWindow* window;
 
-    if (!mShell || !(window = gtk_widget_get_window(mShell)) ||
-        !gdk_property_get(window,
+    if (!gdk_property_get(mGdkWindow,
                           gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
                           cardinal_atom,
                           0, // offset
@@ -2360,13 +2359,9 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     // This event indicates that the window position may have changed.
     // mBounds.Size() is updated in OnSizeAllocate().
 
-    // (The gtk_window_get_window_type() function is only available from
-    // version 2.20.)
     NS_ASSERTION(GTK_IS_WINDOW(aWidget),
                  "Configure event on widget that is not a GtkWindow");
-    gint type;
-    g_object_get(aWidget, "type", &type, nullptr);
-    if (type == GTK_WINDOW_POPUP) {
+    if (gtk_window_get_window_type(GTK_WINDOW(aWidget)) == GTK_WINDOW_POPUP) {
         // Override-redirect window
         //
         // These windows should not be moved by the window manager, and so any
@@ -3627,7 +3622,7 @@ nsWindow::Create(nsIWidget        *aParent,
             if (aInitData->mNoAutoHide) {
                 gint wmd = ConvertBorderStyles(mBorderStyle);
                 if (wmd != -1)
-                  gdk_window_set_decorations(gtk_widget_get_window(mShell), (GdkWMDecoration) wmd);
+                  gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration) wmd);
             }
 
             // If the popup ignores mouse events, set an empty input shape.
@@ -3850,8 +3845,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   res_name[0] = toupper(res_name[0]);
   if (!role) role = res_name;
 
-  GdkWindow *shellWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-  gdk_window_set_role(shellWindow, role);
+  gdk_window_set_role(mGdkWindow, role);
 
 #ifdef MOZ_X11
   GdkDisplay *display = gdk_display_get_default();
@@ -3867,7 +3861,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
       // Can't use gtk_window_set_wmclass() for this; it prints
       // a warning & refuses to make the change.
       XSetClassHint(GDK_DISPLAY_XDISPLAY(display),
-                    gdk_x11_window_get_xid(shellWindow),
+                    gdk_x11_window_get_xid(mGdkWindow),
                     class_hint);
       XFree(class_hint);
   }
@@ -4300,9 +4294,8 @@ nsWindow::ApplyTransparencyBitmap()
     // We use X11 calls where possible, because GDK handles expose events
     // for shaped windows in a way that's incompatible with us (Bug 635903).
     // It doesn't occur when the shapes are set through X.
-    GdkWindow *shellWindow = gtk_widget_get_window(mShell);
-    Display* xDisplay = GDK_WINDOW_XDISPLAY(shellWindow);
-    Window xDrawable = GDK_WINDOW_XID(shellWindow);
+    Display* xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
+    Window xDrawable = GDK_WINDOW_XID(mGdkWindow);
     Pixmap maskPixmap = XCreateBitmapFromData(xDisplay,
                                               xDrawable,
                                               mTransparencyBitmap,
@@ -4315,7 +4308,7 @@ nsWindow::ApplyTransparencyBitmap()
 #else
 #if (MOZ_WIDGET_GTK == 2)
     gtk_widget_reset_shapes(mShell);
-    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(gtk_widget_get_window(mShell),
+    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mGdkWindow,
             mTransparencyBitmap,
             mTransparencyBitmapWidth, mTransparencyBitmapHeight);
     if (!maskBitmap)
@@ -4356,12 +4349,11 @@ nsWindow::ClearTransparencyBitmap()
         return;
 
 #ifdef MOZ_X11
-    GdkWindow *window = gtk_widget_get_window(mShell);
-    if (!window)
+    if (!mGdkWindow)
         return;
 
-    Display* xDisplay = GDK_WINDOW_XDISPLAY(window);
-    Window xWindow = gdk_x11_window_get_xid(window);
+    Display* xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
+    Window xWindow = gdk_x11_window_get_xid(mGdkWindow);
 
     XShapeCombineMask(xDisplay, xWindow, ShapeBounding, 0, 0, None, ShapeSet);
 #endif
@@ -4735,9 +4727,8 @@ nsWindow::HideWindowChrome(bool aShouldHide)
     // confused if we change the window decorations while the window
     // is visible.
     bool wasVisible = false;
-    GdkWindow *shellWindow = gtk_widget_get_window(mShell);
-    if (gdk_window_is_visible(shellWindow)) {
-        gdk_window_hide(shellWindow);
+    if (gdk_window_is_visible(mGdkWindow)) {
+        gdk_window_hide(mGdkWindow);
         wasVisible = true;
     }
 
@@ -4748,10 +4739,10 @@ nsWindow::HideWindowChrome(bool aShouldHide)
         wmd = ConvertBorderStyles(mBorderStyle);
 
     if (wmd != -1)
-      gdk_window_set_decorations(shellWindow, (GdkWMDecoration) wmd);
+      gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration) wmd);
 
     if (wasVisible)
-        gdk_window_show(shellWindow);
+        gdk_window_show(mGdkWindow);
 
     // For some window managers, adding or removing window decorations
     // requires unmapping and remapping our toplevel window.  Go ahead
