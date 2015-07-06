@@ -23,6 +23,7 @@ CERT_CacheOCSPResponseFromSideChannel
 CERT_CertChainFromCert
 CERT_CertificateRequestTemplate DATA
 CERT_CertificateTemplate DATA
+CERT_CertListFromCert
 CERT_ChangeCertTrust
 CERT_CheckCertUsage
 CERT_CheckCertValidTimes
