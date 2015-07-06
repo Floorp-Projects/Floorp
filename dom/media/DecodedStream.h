@@ -89,13 +89,14 @@ public:
   DecodedStreamData* GetData() const;
   void DestroyData();
   void RecreateData(MediaStreamGraph* aGraph);
-  nsTArray<OutputStreamData>& OutputStreams();
-  ReentrantMonitor& GetReentrantMonitor() const;
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
 
 private:
+  ReentrantMonitor& GetReentrantMonitor() const;
   void Connect(OutputStreamData* aStream);
+  nsTArray<OutputStreamData>& OutputStreams();
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
