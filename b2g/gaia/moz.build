@@ -4,19 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Program(CONFIG['MOZ_APP_NAME'])
+if not CONFIG['MOZ_B2GDROID']:
+    # b2gdroid does not build a runner executable, but it does build gaia; see Makefile.in.
+    Program(CONFIG['MOZ_APP_NAME'])
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += [
-        'run-b2g.cpp',
-    ]
-    DEFINES['B2G_NAME'] = 'L"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
-    DEFINES['GAIA_PATH'] = 'L"gaia\\\\profile"'
-else:
-    SOURCES += [
-        'run-b2g.c',
-    ]
-    DEFINES['B2G_NAME'] = '"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
-    DEFINES['GAIA_PATH'] = '"gaia/profile"'
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        SOURCES += [
+            'run-b2g.cpp',
+        ]
+        DEFINES['B2G_NAME'] = 'L"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
+        DEFINES['GAIA_PATH'] = 'L"gaia\\\\profile"'
+    else:
+        SOURCES += [
+            'run-b2g.c',
+        ]
+        DEFINES['B2G_NAME'] = '"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
+        DEFINES['GAIA_PATH'] = '"gaia/profile"'
 
 FAIL_ON_WARNINGS = True
