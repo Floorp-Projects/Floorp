@@ -372,6 +372,7 @@ WEBIDL_FILES = [
     'ResourceStatsManager.webidl',
     'Response.webidl',
     'RGBColor.webidl',
+    'RTCCertificate.webidl',
     'RTCConfiguration.webidl',
     'RTCIceCandidate.webidl',
     'RTCIdentityAssertion.webidl',
