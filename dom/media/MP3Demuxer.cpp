@@ -93,20 +93,14 @@ MP3Demuxer::NotifyDataRemoved() {
 // MP3TrackDemuxer
 
 MP3TrackDemuxer::MP3TrackDemuxer(MediaResource* aSource)
-  : mSource(aSource),
-    mOffset(0),
-    mFirstFrameOffset(0),
-    mNumParsedFrames(0),
-    mFrameIndex(0),
-    mTotalFrameLen(0),
-    mSamplesPerFrame(0),
-    mSamplesPerSecond(0),
-    mChannels(0)
+  : mSource(aSource)
 {
+  Reset();
 }
 
 bool
 MP3TrackDemuxer::Init() {
+  Reset();
   FastSeek(TimeUnit());
   // Read the first frame to fetch sample rate and other meta data.
   nsRefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
@@ -232,7 +226,14 @@ MP3TrackDemuxer::GetSamples(int32_t aNumSamples) {
 
 void
 MP3TrackDemuxer::Reset() {
-  FastSeek(TimeUnit());
+  mOffset = 0;
+  mFirstFrameOffset = 0;
+  mNumParsedFrames = 0;
+  mFrameIndex = 0;
+  mTotalFrameLen = 0;
+  mSamplesPerFrame = 0;
+  mSamplesPerSecond = 0;
+  mChannels = 0;
 }
 
 nsRefPtr<MP3TrackDemuxer::SkipAccessPointPromise>
@@ -396,9 +397,10 @@ MP3TrackDemuxer::UpdateState(const MediaByteRange& aRange) {
 
 int32_t
 MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize) {
-  aSize = std::min<int64_t>(aSize, StreamLength() - aOffset);
-  if (aSize <= 0) {
-    return 0;
+  const int64_t streamLen = StreamLength();
+  if (mInfo && streamLen > 0) {
+    // Prevent blocking reads after successful initialization.
+    aSize = std::min<int64_t>(aSize, streamLen - aOffset);
   }
 
   uint32_t read = 0;
