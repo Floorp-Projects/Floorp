@@ -81,6 +81,9 @@ public:
                                               const TextureFlags& aFlags) override;
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 
+  PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent() override;
+  bool DeallocPMediaSystemResourceManagerParent(PMediaSystemResourceManagerParent* aActor) override;
+
   virtual bool
   RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages) override;
 

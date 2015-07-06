@@ -15,22 +15,21 @@
 #include "AudioSegment.h"
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
-
-#include "IMediaResourceManagerService.h"
-#include "MediaResourceManagerClient.h"
+#include "mozilla/media/MediaSystemResourceClient.h"
+#include "nsRefPtr.h"
 
 #include <speex/speex_resampler.h>
 
 namespace android {
 
 // Wrapper class for managing HW codec reservations
-class OMXCodecReservation : public MediaResourceManagerClient::EventListener
+class OMXCodecReservation : public RefBase
 {
 public:
   OMXCodecReservation(bool aEncoder)
   {
-    mType = aEncoder ? IMediaResourceManagerService::HW_VIDEO_ENCODER :
-            IMediaResourceManagerService::HW_VIDEO_DECODER;
+    mType = aEncoder ? mozilla::MediaSystemResourceType::VIDEO_ENCODER :
+            mozilla::MediaSystemResourceType::VIDEO_DECODER;
   }
 
   virtual ~OMXCodecReservation()
@@ -44,14 +43,10 @@ public:
   /** Release the Encode or Decode resource for this instance */
   virtual void ReleaseOMXCodec();
 
-  // MediaResourceManagerClient::EventListener
-  virtual void statusChanged(int event) {}
-
 private:
-  IMediaResourceManagerService::ResourceType mType;
+  mozilla::MediaSystemResourceType mType;
 
-  sp<MediaResourceManagerClient> mClient;
-  sp<IMediaResourceManagerService> mManagerService;
+  nsRefPtr<mozilla::MediaSystemResourceClient> mClient;
 };
 
 
