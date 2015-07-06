@@ -145,8 +145,6 @@ public:
     DECODER_STATE_ERROR
   };
 
-  DecodedStreamData* GetDecodedStream() const;
-
   void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
   // Set/Unset dormant state.
@@ -159,11 +157,6 @@ private:
   void InitializationTask();
 
   void DispatchAudioCaptured();
-
-  // Recreates mDecodedStream. Call this to create mDecodedStream at first,
-  // and when seeking, to ensure a new stream is set up with fresh buffers.
-  // Decoder monitor must be held.
-  void RecreateDecodedStream(MediaStreamGraph* aGraph);
 
   void Shutdown();
 public:
@@ -320,7 +313,7 @@ public:
     if (mReader) {
       mReader->BreakCycles();
     }
-    mDecodedStream.DestroyData();
+    mDecodedStream->DestroyData();
     mDecoder = nullptr;
   }
 
@@ -634,11 +627,6 @@ protected:
   // to run.
   // The decoder monitor must be held.
   void CheckIfDecodeComplete();
-
-  // Copy audio from an AudioData packet to aOutput. This may require
-  // inserting silence depending on the timing of the audio packet.
-  void SendStreamAudio(AudioData* aAudio, DecodedStreamData* aStream,
-                       AudioSegment* aOutput);
 
   // Performs one "cycle" of the state machine. Polls the state, and may send
   // a video frame to be displayed, and generally manages the decode. Called
@@ -1361,7 +1349,7 @@ protected:
   // Only written on the main thread while holding the monitor. Therefore it
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
-  DecodedStream mDecodedStream;
+  nsRefPtr<DecodedStream> mDecodedStream;
 };
 
 } // namespace mozilla;
