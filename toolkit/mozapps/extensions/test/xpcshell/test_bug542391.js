@@ -27,14 +27,14 @@ var gCheckUpdates = false;
 // This will be called to show the compatibility update dialog.
 var WindowWatcher = {
   expected: false,
-  arguments: null,
+  args: null,
 
   openWindow: function(parent, url, name, features, args) {
     do_check_true(Services.startup.interrupted);
     do_check_eq(url, URI_EXTENSION_UPDATE_DIALOG);
     do_check_true(this.expected);
     this.expected = false;
-    this.arguments = args.QueryInterface(AM_Ci.nsIVariant);
+    this.args = args.QueryInterface(AM_Ci.nsIVariant);
 
     var updated = !gCheckUpdates;
     if (gCheckUpdates) {
@@ -387,9 +387,9 @@ add_task(function* run_test_1() {
                                          "override1x2-1x3@tests.mozilla.org"]);
   check_state_v3(addons);
 
-  do_check_eq(WindowWatcher.arguments.length, 2);
-  do_check_true(WindowWatcher.arguments.indexOf("upgradeable1x2-3@tests.mozilla.org") >= 0);
-  do_check_true(WindowWatcher.arguments.indexOf("override1x2-1x3@tests.mozilla.org") >= 0);
+  do_check_eq(WindowWatcher.args.length, 2);
+  do_check_true(WindowWatcher.args.indexOf("upgradeable1x2-3@tests.mozilla.org") >= 0);
+  do_check_true(WindowWatcher.args.indexOf("override1x2-1x3@tests.mozilla.org") >= 0);
 });
 
 // Downgrade to version 2 which will remove appDisable from two add-ons
@@ -440,8 +440,8 @@ add_task(function* run_test_5() {
                                          "override1x2-1x3@tests.mozilla.org"]);
   check_state_v3_2(addons);
 
-  do_check_eq(WindowWatcher.arguments.length, 1);
-  do_check_true(WindowWatcher.arguments.indexOf("upgradeable1x2-3@tests.mozilla.org") >= 0);
+  do_check_eq(WindowWatcher.args.length, 1);
+  do_check_true(WindowWatcher.args.indexOf("upgradeable1x2-3@tests.mozilla.org") >= 0);
 });
 
 // Downgrade to version 1 which will appEnable all the add-ons
