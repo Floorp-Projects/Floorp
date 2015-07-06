@@ -4365,7 +4365,7 @@ ScrollFrameHelper::IsScrollingActive(nsDisplayListBuilder* aBuilder) const
 {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL) &&
-    aBuilder->IsInWillChangeBudget(mOuter)) {
+    aBuilder->IsInWillChangeBudget(mOuter, GetScrollPositionClampingScrollPortSize())) {
     return true;
   }
 
