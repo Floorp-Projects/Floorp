@@ -204,7 +204,7 @@ IsAndroidAvailable()
   return false;
 #else
   // We need android.media.MediaCodec which exists in API level 16 and higher.
-  return AndroidBridge::Bridge()->GetAPIVersion() >= 16;
+  return AndroidBridge::Bridge() && (AndroidBridge::Bridge()->GetAPIVersion() >= 16);
 #endif
 }
 
