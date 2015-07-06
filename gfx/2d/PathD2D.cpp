@@ -224,18 +224,36 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
     // beginning and an end point. This means the circle will be the wrong way
     // around if the start angle is smaller than the end angle. It might seem
     // tempting to invert aAntiClockwise but that would change the sweeping
-    // direction of the arc to instead we exchange start/begin.
+    // direction of the arc so instead we exchange start/begin.
     Float oldStart = aStartAngle;
     aStartAngle = aEndAngle;
     aEndAngle = oldStart;
   }
 
+  const Float kSmallRadius = 0.007f;
+  Float midAngle = 0;
+  bool smallFullCircle = false;
+
   // XXX - Workaround for now, D2D does not appear to do the desired thing when
   // the angle sweeps a complete circle.
   if (aEndAngle - aStartAngle >= 2 * M_PI) {
-    aEndAngle = Float(aStartAngle + M_PI * 1.9999);
+    if (aRadius > kSmallRadius) {
+      aEndAngle = Float(aStartAngle + M_PI * 1.9999);
+    }
+    else {
+      smallFullCircle = true;
+      midAngle = Float(aStartAngle + M_PI);
+      aEndAngle = Float(aStartAngle + 2 * M_PI);
+    }
   } else if (aStartAngle - aEndAngle >= 2 * M_PI) {
-    aStartAngle = Float(aEndAngle + M_PI * 1.9999);
+    if (aRadius > kSmallRadius) {
+      aStartAngle = Float(aEndAngle + M_PI * 1.9999);
+    }
+    else {
+      smallFullCircle = true;
+      midAngle = Float(aEndAngle + M_PI);
+      aStartAngle = Float(aEndAngle + 2 * M_PI);
+    }
   }
 
   Point startPoint;
@@ -253,23 +271,46 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
   endPoint.y = aOrigin.y + aRadius * sin(aEndAngle);
 
   D2D1_ARC_SIZE arcSize = D2D1_ARC_SIZE_SMALL;
+  D2D1_SWEEP_DIRECTION direction =
+    aAntiClockwise ? D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE :
+                     D2D1_SWEEP_DIRECTION_CLOCKWISE;
 
-  if (aAntiClockwise) {
-    if (aStartAngle - aEndAngle > M_PI) {
-      arcSize = D2D1_ARC_SIZE_LARGE;
+  if (!smallFullCircle) {
+
+    if (aAntiClockwise) {
+      if (aStartAngle - aEndAngle > M_PI) {
+        arcSize = D2D1_ARC_SIZE_LARGE;
+      }
+    } else {
+      if (aEndAngle - aStartAngle > M_PI) {
+        arcSize = D2D1_ARC_SIZE_LARGE;
+      }
     }
-  } else {
-    if (aEndAngle - aStartAngle > M_PI) {
-      arcSize = D2D1_ARC_SIZE_LARGE;
-    }
+
+    mSink->AddArc(D2D1::ArcSegment(D2DPoint(endPoint),
+                                   D2D1::SizeF(aRadius, aRadius),
+                                   0.0f,
+                                   direction,
+                                   arcSize));
   }
+  else {
+    // draw small circles as two half-circles
+    Point midPoint;
+    midPoint.x = aOrigin.x + aRadius * cos(midAngle);
+    midPoint.y = aOrigin.y + aRadius * sin(midAngle);
 
-  mSink->AddArc(D2D1::ArcSegment(D2DPoint(endPoint),
-                                 D2D1::SizeF(aRadius, aRadius),
-                                 0.0f,
-                                 aAntiClockwise ? D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE :
-                                                  D2D1_SWEEP_DIRECTION_CLOCKWISE,
-                                 arcSize));
+    mSink->AddArc(D2D1::ArcSegment(D2DPoint(midPoint),
+                                   D2D1::SizeF(aRadius, aRadius),
+                                   0.0f,
+                                   direction,
+                                   arcSize));
+
+    mSink->AddArc(D2D1::ArcSegment(D2DPoint(endPoint),
+                                   D2D1::SizeF(aRadius, aRadius),
+                                   0.0f,
+                                   direction,
+                                   arcSize));
+  }
 
   mCurrentPoint = endPoint;
 }
