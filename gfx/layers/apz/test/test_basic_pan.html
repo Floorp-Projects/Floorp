@@ -45,7 +45,9 @@ window.onload = function() {
         // The B2G emulator is hella slow, and needs more than 300ms to run the
         // main-thread code that deals with layerizing subframes and running
         // touch listeners. In my local runs this needs to be at least 1000.
-        ["apz.content_response_timeout", "5000"]
+        // On try this sometimes needs to be as long as 8 seconds (bug 1176798)
+        // so we make it 15 seconds just to be extra safe.
+        ["apz.content_response_timeout", "15000"]
       ]
     }, testDone);
 };
