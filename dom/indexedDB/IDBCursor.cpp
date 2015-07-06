@@ -207,31 +207,6 @@ IDBCursor::DropJSObjects()
   mozilla::DropJSObjects(this);
 }
 
-bool
-IDBCursor::IsSourceDeleted() const
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mTransaction->IsOpen());
-
-  IDBObjectStore* sourceObjectStore;
-  if (mType == Type_Index || mType == Type_IndexKey) {
-    MOZ_ASSERT(mSourceIndex);
-
-    if (mSourceIndex->IsDeleted()) {
-      return true;
-    }
-
-    sourceObjectStore = mSourceIndex->ObjectStore();
-    MOZ_ASSERT(sourceObjectStore);
-  } else {
-    MOZ_ASSERT(mSourceObjectStore);
-    sourceObjectStore = mSourceObjectStore;
-  }
-
-  return sourceObjectStore->IsDeleted();
-}
-
 void
 IDBCursor::Reset()
 {
@@ -417,7 +392,7 @@ IDBCursor::Continue(JSContext* aCx,
     return;
   }
 
-  if (IsSourceDeleted() || !mHaveValue || mContinueCalled) {
+  if (!mHaveValue || mContinueCalled) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return;
   }
@@ -493,19 +468,18 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
 {
   AssertIsOnOwningThread();
 
-  if (!aCount) {
-    aRv.ThrowTypeError(MSG_INVALID_ADVANCE_COUNT);
-    return;
-  }
-
   if (!mTransaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
 
-
-  if (IsSourceDeleted() || !mHaveValue || mContinueCalled) {
+  if (!mHaveValue || mContinueCalled) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+    return;
+  }
+
+  if (!aCount) {
+    aRv.ThrowTypeError(MSG_INVALID_ADVANCE_COUNT);
     return;
   }
 
@@ -557,16 +531,13 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
     return nullptr;
   }
 
-  if (!mTransaction->IsWriteAllowed()) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR);
+  if (!mHaveValue || mType == Type_ObjectStoreKey || mType == Type_IndexKey) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
 
-  if (IsSourceDeleted() ||
-      !mHaveValue ||
-      mType == Type_ObjectStoreKey ||
-      mType == Type_IndexKey) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+  if (!mTransaction->IsWriteAllowed()) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR);
     return nullptr;
   }
 
@@ -674,16 +645,13 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (!mTransaction->IsWriteAllowed()) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR);
+  if (!mHaveValue || mType == Type_ObjectStoreKey || mType == Type_IndexKey) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
 
-  if (IsSourceDeleted() ||
-      !mHaveValue ||
-      mType == Type_ObjectStoreKey ||
-      mType == Type_IndexKey) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
+  if (!mTransaction->IsWriteAllowed()) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_READ_ONLY_ERR);
     return nullptr;
   }
 
