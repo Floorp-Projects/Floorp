@@ -3003,6 +3003,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // Emit a BLR or NOP instruction. ToggleCall can be used to patch
     // this instruction.
     CodeOffsetLabel toggledCall(JitCode* target, bool enabled) {
+        // The returned offset must be to the first instruction generated,
+        // for the debugger to match offset with Baseline's pcMappingEntries_.
+        BufferOffset offset = nextOffset();
+
         // TODO: Random pool insertion between instructions below is terrible.
         // Unfortunately, we can't forbid pool prevention, because we're trying
         // to add an entry to a pool. So as a temporary fix, just flush the pool
@@ -3012,7 +3016,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
         syncStackPtr();
 
-        BufferOffset offset = nextOffset();
         BufferOffset loadOffset;
         {
             vixl::UseScratchRegisterScope temps(this);
