@@ -992,12 +992,13 @@ class MozCheckAction : public PluginASTAction {
 public:
   ASTConsumerPtr CreateASTConsumer(CompilerInstance &CI, StringRef fileName) override {
 #if CLANG_VERSION_FULL >= 306
-    std::unique_ptr<MozChecker> checker(make_unique<MozChecker>(CI));
+    std::unique_ptr<MozChecker> checker(llvm::make_unique<MozChecker>(CI));
+    ASTConsumerPtr other(checker->getOtherConsumer());
 
-    std::vector<std::unique_ptr<ASTConsumer>> consumers;
+    std::vector<ASTConsumerPtr> consumers;
     consumers.push_back(std::move(checker));
-    consumers.push_back(checker->getOtherConsumer());
-    return make_unique<MultiplexConsumer>(std::move(consumers));
+    consumers.push_back(std::move(other));
+    return llvm::make_unique<MultiplexConsumer>(std::move(consumers));
 #else
     MozChecker *checker = new MozChecker(CI);
 
