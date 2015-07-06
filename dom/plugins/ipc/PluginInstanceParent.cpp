@@ -633,7 +633,10 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
         cairoImage->SetData(cairoData);
 
-        container->SetCurrentImage(cairoImage);
+        nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+        imageList.AppendElement(
+            ImageContainer::NonOwningImage(image, TimeStamp()));
+        container->SetCurrentImages(imageList);
     }
     else if (mImageContainer) {
         mImageContainer->ClearAllImages();
