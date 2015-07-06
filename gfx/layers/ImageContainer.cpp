@@ -252,18 +252,15 @@ ImageContainer::ClearCurrentImage()
 }
 
 void
-ImageContainer::SetCurrentImage(Image *aImage)
+ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
 {
-  if (!aImage) {
-    ClearAllImages();
-    return;
-  }
-
+  MOZ_ASSERT(!aImages.IsEmpty());
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (IsAsync()) {
     ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
   }
-  SetCurrentImageInternal(aImage);
+  MOZ_ASSERT(aImages.Length() == 1);
+  SetCurrentImageInternal(aImages[0].mImage);
 }
 
  void
