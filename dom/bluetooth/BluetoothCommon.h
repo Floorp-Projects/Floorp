@@ -694,6 +694,27 @@ enum BluetoothGattCharPropBit {
 typedef uint8_t BluetoothGattCharProp;
 #define BLUETOOTH_EMPTY_GATT_CHAR_PROP  static_cast<BluetoothGattCharProp>(0x00)
 
+/*
+ * Bluetooth GATT Attribute Permissions bit field
+ */
+enum BluetoothGattAttrPermBit {
+  GATT_ATTR_PERM_BIT_READ                 = (1 << 0),
+  GATT_ATTR_PERM_BIT_READ_ENCRYPTED       = (1 << 1),
+  GATT_ATTR_PERM_BIT_READ_ENCRYPTED_MITM  = (1 << 2),
+  GATT_ATTR_PERM_BIT_WRITE                = (1 << 4),
+  GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED      = (1 << 5),
+  GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED_MITM = (1 << 6),
+  GATT_ATTR_PERM_BIT_WRITE_SIGNED         = (1 << 7),
+  GATT_ATTR_PERM_BIT_WRITE_SIGNED_MITM    = (1 << 8)
+};
+
+/*
+ * BluetoothGattAttrPerm is used to store a bit mask value which contains
+ * each corresponding bit value of each BluetoothGattAttrPermBit.
+ */
+typedef int32_t BluetoothGattAttrPerm;
+#define BLUETOOTH_EMPTY_GATT_ATTR_PERM  static_cast<BluetoothGattAttrPerm>(0x00)
+
 struct BluetoothGattAdvData {
   uint8_t mAdvData[62];
 };
@@ -765,6 +786,14 @@ struct BluetoothGattTestParam {
   uint16_t mU3;
   uint16_t mU4;
   uint16_t mU5;
+};
+
+struct BluetoothGattResponse {
+  uint16_t mHandle;
+  uint16_t mOffset;
+  uint16_t mLength;
+  BluetoothGattAuthReq mAuthReq;
+  uint8_t mValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
 };
 
 /**

@@ -793,6 +793,40 @@ Convert(int aIn, BluetoothGattStatus& aOut)
   };
   if (static_cast<uint32_t>(aIn) >= MOZ_ARRAY_LENGTH(sGattStatus)) {
     aOut = GATT_STATUS_UNKNOWN_ERROR;
+    return NS_ERROR_ILLEGAL_VALUE;
+  } else {
+    aOut = sGattStatus[aIn];
+  }
+  return NS_OK;
+}
+
+inline nsresult
+Convert(BluetoothGattStatus aIn, int& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const int sGattStatus[] = {
+    CONVERT(GATT_STATUS_SUCCESS, 0x0000),
+    CONVERT(GATT_STATUS_INVALID_HANDLE, 0x0001),
+    CONVERT(GATT_STATUS_READ_NOT_PERMITTED, 0x0002),
+    CONVERT(GATT_STATUS_WRITE_NOT_PERMITTED, 0x0003),
+    CONVERT(GATT_STATUS_INVALID_PDU, 0x0004),
+    CONVERT(GATT_STATUS_INSUFFICIENT_AUTHENTICATION, 0x0005),
+    CONVERT(GATT_STATUS_REQUEST_NOT_SUPPORTED, 0x0006),
+    CONVERT(GATT_STATUS_INVALID_OFFSET, 0x0007),
+    CONVERT(GATT_STATUS_INSUFFICIENT_AUTHORIZATION, 0x0008),
+    CONVERT(GATT_STATUS_PREPARE_QUEUE_FULL, 0x0009),
+    CONVERT(GATT_STATUS_ATTRIBUTE_NOT_FOUND, 0x000a),
+    CONVERT(GATT_STATUS_ATTRIBUTE_NOT_LONG, 0x000b),
+    CONVERT(GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE, 0x000c),
+    CONVERT(GATT_STATUS_INVALID_ATTRIBUTE_LENGTH, 0x000d),
+    CONVERT(GATT_STATUS_UNLIKELY_ERROR, 0x000e),
+    CONVERT(GATT_STATUS_INSUFFICIENT_ENCRYPTION, 0x000f),
+    CONVERT(GATT_STATUS_UNSUPPORTED_GROUP_TYPE, 0x0010),
+    CONVERT(GATT_STATUS_INSUFFICIENT_RESOURCES, 0x0011)
+  };
+  if (static_cast<uint32_t>(aIn) >= MOZ_ARRAY_LENGTH(sGattStatus)) {
+    aOut = -1;
+    return NS_ERROR_ILLEGAL_VALUE;
   } else {
     aOut = sGattStatus[aIn];
   }
@@ -801,6 +835,30 @@ Convert(int aIn, BluetoothGattStatus& aOut)
 
 nsresult
 Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut);
+
+inline nsresult
+Convert(BluetoothGattAttrPerm aIn, int& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const uint16_t sGattAttrPermBit[] = {
+    CONVERT(0, GATT_ATTR_PERM_BIT_READ),
+    CONVERT(1, GATT_ATTR_PERM_BIT_READ_ENCRYPTED),
+    CONVERT(2, GATT_ATTR_PERM_BIT_READ_ENCRYPTED_MITM),
+    CONVERT(3, 0),
+    CONVERT(4, GATT_ATTR_PERM_BIT_WRITE),
+    CONVERT(5, GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED),
+    CONVERT(6, GATT_ATTR_PERM_BIT_WRITE_ENCRYPTED_MITM),
+    CONVERT(7, GATT_ATTR_PERM_BIT_WRITE_SIGNED),
+    CONVERT(8, GATT_ATTR_PERM_BIT_WRITE_SIGNED_MITM)
+  };
+  aOut = 0;
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sGattAttrPermBit); i++) {
+    if (aIn & sGattAttrPermBit[i]) {
+      aOut |= (1 << i);
+    }
+  }
+  return NS_OK;
+}
 
 inline nsresult
 Convert(int aIn, BluetoothGattCharProp& aOut)
@@ -820,6 +878,29 @@ Convert(int aIn, BluetoothGattCharProp& aOut)
   for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sGattCharPropBit); i++) {
     if (aIn & (1 << i)) {
       aOut |= sGattCharPropBit[i];
+    }
+  }
+  return NS_OK;
+}
+
+inline nsresult
+Convert(BluetoothGattCharProp aIn, int& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const uint8_t sGattCharPropBit[] = {
+    CONVERT(0, GATT_CHAR_PROP_BIT_BROADCAST),
+    CONVERT(1, GATT_CHAR_PROP_BIT_READ),
+    CONVERT(2, GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE),
+    CONVERT(3, GATT_CHAR_PROP_BIT_WRITE),
+    CONVERT(4, GATT_CHAR_PROP_BIT_NOTIFY),
+    CONVERT(5, GATT_CHAR_PROP_BIT_INDICATE),
+    CONVERT(6, GATT_CHAR_PROP_BIT_SIGNED_WRITE),
+    CONVERT(7, GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES)
+  };
+  aOut = 0;
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sGattCharPropBit); i++) {
+    if (aIn & sGattCharPropBit[i]) {
+      aOut |= (1 << i);
     }
   }
   return NS_OK;
@@ -894,11 +975,6 @@ Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut);
 
 nsresult
 Convert(const BluetoothGattTestParam& aIn, btgatt_test_params_t& aOut);
-#endif // ANDROID_VERSION >= 19
-
-#if ANDROID_VERSION >= 21
-nsresult
-Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut);
 
 inline nsresult
 Convert(BluetoothTransport aIn, int& aOut)
@@ -909,11 +985,20 @@ Convert(BluetoothTransport aIn, int& aOut)
     CONVERT(TRANSPORT_LE, 2)
   };
   if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sTransport))) {
+    aOut = -1;
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sTransport[aIn];
   return NS_OK;
 }
+
+nsresult
+Convert(const BluetoothGattResponse& aIn, btgatt_response_t& aOut);
+#endif // ANDROID_VERSION >= 19
+
+#if ANDROID_VERSION >= 21
+nsresult
+Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut);
 
 nsresult
 Convert(const bt_activity_energy_info& aIn, BluetoothActivityEnergyInfo& aOut);
@@ -1618,6 +1703,373 @@ private:
   Tin3 mArg3;
   Tin4 mArg4;
   Tin5 mArg5;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
+          typename Tin4, typename Tin5, typename Tin6,
+          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
+          typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6>
+class BluetoothNotificationHALRunnable6 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationHALRunnable6<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Tin5, Tin6,
+    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6> SelfType;
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3,
+    const T4& aIn4, const T5& aIn5, const T6& aIn6)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4, aIn5,
+                                          aIn6))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3,
+           const T4& aIn4, const T5& aIn5, const T6& aIn6)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod,
+                                         aIn1, aIn2, aIn3, aIn4, aIn5, aIn6);
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationHALRunnable6::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5, mArg6);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationHALRunnable6(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+                const T4& aIn4, const T5& aIn5, const T6& aIn6)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn4, mArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn5, mArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn6, mArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+  Tin4 mArg4;
+  Tin5 mArg5;
+  Tin6 mArg6;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
+          typename Tin4, typename Tin5, typename Tin6,
+          typename Tin7,
+          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
+          typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6,
+          typename Arg7=Tin7>
+class BluetoothNotificationHALRunnable7 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationHALRunnable7<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Tin5, Tin6, Tin7,
+    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7> SelfType;
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6, typename T7>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3,
+    const T4& aIn4, const T5& aIn5, const T6& aIn6,
+    const T7& aIn7)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4, aIn5,
+                                          aIn6, aIn7))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6, typename T7>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3,
+           const T4& aIn4, const T5& aIn5, const T6& aIn6,
+           const T7& aIn7)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod,
+                                         aIn1, aIn2, aIn3, aIn4, aIn5, aIn6,
+                                         aIn7);
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationHALRunnable7::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5, mArg6, mArg7);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationHALRunnable7(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6, typename T7>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+                const T4& aIn4, const T5& aIn5, const T6& aIn6,
+                const T7& aIn7)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn4, mArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn5, mArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn6, mArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn7, mArg7);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+  Tin4 mArg4;
+  Tin5 mArg5;
+  Tin6 mArg6;
+  Tin7 mArg7;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
+          typename Tin4, typename Tin5, typename Tin6,
+          typename Tin7, typename Tin8,
+          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
+          typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6,
+          typename Arg7=Tin7, typename Arg8=Tin8>
+class BluetoothNotificationHALRunnable8 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationHALRunnable8<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Tin5, Tin6, Tin7, Tin8,
+    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8> SelfType;
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6, typename T7, typename T8>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3,
+    const T4& aIn4, const T5& aIn5, const T6& aIn6,
+    const T7& aIn7, const T8& aIn8)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4, aIn5,
+                                          aIn6, aIn7, aIn8))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5,
+            typename T6, typename T7, typename T8>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7,
+                                      Arg8),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3,
+           const T4& aIn4, const T5& aIn5, const T6& aIn6,
+           const T7& aIn7, const T8& aIn8)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod,
+                                         aIn1, aIn2, aIn3, aIn4, aIn5, aIn6,
+                                         aIn7, aIn8);
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationHALRunnable8::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5, mArg6, mArg7, mArg8);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationHALRunnable8(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5,
+           typename T6, typename T7, typename T8>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+                const T4& aIn4, const T5& aIn5, const T6& aIn6,
+                const T7& aIn7, const T8& aIn8)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn4, mArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn5, mArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn6, mArg6);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn7, mArg7);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn8, mArg8);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+  Tin4 mArg4;
+  Tin5 mArg5;
+  Tin6 mArg6;
+  Tin7 mArg7;
+  Tin8 mArg8;
 };
 
 END_BLUETOOTH_NAMESPACE
