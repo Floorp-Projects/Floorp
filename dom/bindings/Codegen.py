@@ -1138,6 +1138,9 @@ class CGHeaders(CGWrapper):
 
             for m in desc.interface.members:
                 addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
+                staticTypeOverride = PropertyDefiner.getStringAttr(m, "StaticClassOverride")
+                if staticTypeOverride:
+                    bindingHeaders.add("/".join(staticTypeOverride.split("::")) + ".h")
             # getExtendedAttribute() returns a list, extract the entry.
             funcList = desc.interface.getExtendedAttribute("Func")
             if funcList is not None:
@@ -6771,8 +6774,11 @@ class CGPerSignatureCall(CGThing):
 
         argsPre = []
         if static:
-            nativeMethodName = "%s::%s" % (descriptor.nativeType,
-                                           nativeMethodName)
+            nativeType = descriptor.nativeType
+            staticTypeOverride = PropertyDefiner.getStringAttr(idlNode, "StaticClassOverride")
+            if (staticTypeOverride):
+                nativeType = staticTypeOverride
+            nativeMethodName = "%s::%s" % (nativeType, nativeMethodName)
             # If we're a constructor, "obj" may not be a function, so calling
             # XrayAwareCalleeGlobal() on it is not safe.  Of course in the
             # constructor case either "obj" is an Xray or we're already in the
@@ -6809,9 +6815,10 @@ class CGPerSignatureCall(CGThing):
             needsUnwrappedVar = False
             unwrappedVar = "obj"
         elif descriptor.interface.isJSImplemented():
-            needsUnwrap = True
-            needsUnwrappedVar = True
-            argsPost.append("js::GetObjectCompartment(unwrappedObj ? *unwrappedObj : obj)")
+            if not idlNode.isStatic():
+                needsUnwrap = True
+                needsUnwrappedVar = True
+                argsPost.append("js::GetObjectCompartment(unwrappedObj ? *unwrappedObj : obj)")
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
                              descriptor.wrapperCache, True,
                              idlNode.getExtendedAttribute("StoreInSlot")):
@@ -13283,7 +13290,7 @@ class CGBindingImplClass(CGClass):
     """
     Common codegen for generating a C++ implementation of a WebIDL interface
     """
-    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter, wantGetParent=True, wrapMethodName="WrapObject"):
+    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter, wantGetParent=True, wrapMethodName="WrapObject", skipStaticMethods=False):
         """
         cgMethod, cgGetter and cgSetter are classes used to codegen methods,
         getters and setters.
@@ -13314,7 +13321,8 @@ class CGBindingImplClass(CGClass):
             if m.isMethod():
                 if m.isIdentifierLess():
                     continue
-                appendMethod(m)
+                if not m.isStatic() or not skipStaticMethods:
+                    appendMethod(m)
             elif m.isAttr():
                 self.methodDecls.append(cgGetter(descriptor, m))
                 if not m.readonly:
@@ -13809,7 +13817,7 @@ class CGJSImplSetter(CGJSImplMember):
 
 class CGJSImplClass(CGBindingImplClass):
     def __init__(self, descriptor):
-        CGBindingImplClass.__init__(self, descriptor, CGJSImplMethod, CGJSImplGetter, CGJSImplSetter)
+        CGBindingImplClass.__init__(self, descriptor, CGJSImplMethod, CGJSImplGetter, CGJSImplSetter, skipStaticMethods=True)
 
         if descriptor.interface.parent:
             parentClass = descriptor.getDescriptor(
