@@ -385,6 +385,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   animation->iterationCount() = timing.mIterationCount;
   animation->direction() = timing.mDirection;
   animation->property() = aProperty.mProperty;
+  animation->playbackRate() = aAnimation->PlaybackRate();
   animation->data() = aData;
 
   for (uint32_t segIdx = 0; segIdx < aProperty.mSegments.Length(); segIdx++) {
