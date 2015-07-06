@@ -12,7 +12,6 @@ TEST_DIRS += [
     'test_cert_version',
     'test_intermediate_basic_usage_constraints',
     'test_pinning_dynamic',
-    'test_ocsp_url',
 ]
 
 if not CONFIG['MOZ_NO_SMART_CARDS']:
