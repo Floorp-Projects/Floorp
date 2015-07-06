@@ -21,4 +21,5 @@ DIRS += [
     '../geckoview_library',
     '/b2g/components',
     '/b2g/chrome',
+    '/b2g/gaia',
 ]
