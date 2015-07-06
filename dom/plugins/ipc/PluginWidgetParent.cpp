@@ -70,6 +70,9 @@ PluginWidgetParent::GetTabParent()
 void
 PluginWidgetParent::SetParent(nsIWidget* aParent)
 {
+  // This will trigger sync send messages to the plugin process window
+  // procedure and a cascade of events to that window related to focus
+  // and activation.
   if (mWidget && aParent) {
     mWidget->SetParent(aParent);
   }
@@ -216,7 +219,7 @@ PluginWidgetParent::RecvSetNativeChildWindow(const uintptr_t& aChildWindow)
 #if defined(XP_WIN)
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetNativeChildWindow(%p)\n",
-        static_cast<void*>(aChildWindow));
+        (void*)aChildWindow);
   mWidget->SetNativeData(NS_NATIVE_CHILD_WINDOW, aChildWindow);
   return true;
 #else
