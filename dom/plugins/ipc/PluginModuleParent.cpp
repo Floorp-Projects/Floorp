@@ -350,7 +350,9 @@ bool PluginModuleMapping::sIsLoadModuleOnStack = false;
 } // anonymous namespace
 
 void
-mozilla::plugins::TerminatePlugin(uint32_t aPluginId, const nsString& aBrowserDumpId)
+mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
+                                  const nsCString& aMonitorDescription,
+                                  const nsAString& aBrowserDumpId)
 {
     MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -360,8 +362,11 @@ mozilla::plugins::TerminatePlugin(uint32_t aPluginId, const nsString& aBrowserDu
         return;
     }
     nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mPlugin;
-    PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
-    chromeParent->TerminateChildProcess(MessageLoop::current(), aBrowserDumpId);
+    PluginModuleChromeParent* chromeParent =
+        static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
+    chromeParent->TerminateChildProcess(MessageLoop::current(),
+                                        aMonitorDescription,
+                                        aBrowserDumpId);
 }
 
 /* static */ PluginLibrary*
@@ -1154,7 +1159,9 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
     // original plugin hang behaviour and kill the plugin container.
     FinishHangUI();
 #endif // XP_WIN
-    TerminateChildProcess(MessageLoop::current(), EmptyString());
+    TerminateChildProcess(MessageLoop::current(),
+                          NS_LITERAL_CSTRING("ModalHangUI"),
+                          EmptyString());
     GetIPCChannel()->CloseWithTimeout();
     return false;
 }
@@ -1178,6 +1185,7 @@ PluginModuleContentParent::OnExitedSyncSend()
 
 void
 PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
+                                                const nsCString& aMonitorDescription,
                                                 const nsAString& aBrowserDumpId)
 {
 #ifdef MOZ_CRASHREPORTER
@@ -1194,6 +1202,8 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
 #endif
     crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("PluginHang"),
                                        NS_LITERAL_CSTRING("1"));
+    crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("HangMonitorDescription"),
+                                       aMonitorDescription);
 #ifdef XP_WIN
     if (mHangUIParent) {
         unsigned int hangUIDuration = mHangUIParent->LastShowDurationMs();

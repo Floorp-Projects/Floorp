@@ -25,7 +25,9 @@ FindPluginsForContent(uint32_t aPluginEpoch,
                       uint32_t* aNewPluginEpoch);
 
 void
-TerminatePlugin(uint32_t aPluginId, const nsString& aBrowserDumpId);
+TerminatePlugin(uint32_t aPluginId,
+                const nsCString& aMonitorDescription,
+                const nsAString& aBrowserDumpId);
 
 } // namespace plugins
 } // namespace mozilla

@@ -386,12 +386,17 @@ class PluginModuleChromeParent
      *
      * @param aMsgLoop the main message pump associated with the module
      *   protocol.
+     * @param aMonitorDescription a string describing the hang monitor that
+     *   is making this call. This string is added to the crash reporter
+     *   annotations for the plugin process.
      * @param aBrowserDumpId (optional) previously taken browser dump id. If
      *   provided TerminateChildProcess will use this browser dump file in
      *   generating a multi-process crash report. If not provided a browser
      *   dump will be taken at the time of this call.
      */
-    void TerminateChildProcess(MessageLoop* aMsgLoop, const nsAString& aBrowserDumpId);
+    void TerminateChildProcess(MessageLoop* aMsgLoop,
+                               const nsCString& aMonitorDescription,
+                               const nsAString& aBrowserDumpId);
 
 #ifdef XP_WIN
     /**

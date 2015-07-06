@@ -817,7 +817,8 @@ HangMonitoredProcess::TerminatePlugin()
   }
 
   uint32_t id = mHangData.get_PluginHangData().pluginId();
-  plugins::TerminatePlugin(id, mBrowserDumpId);
+  plugins::TerminatePlugin(id, NS_LITERAL_CSTRING("HangMonitor"),
+                           mBrowserDumpId);
 
   if (mActor) {
     mActor->CleanupPluginHang(id, false);
