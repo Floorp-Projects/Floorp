@@ -635,11 +635,6 @@ protected:
   // The decoder monitor must be held.
   void CheckIfDecodeComplete();
 
-  // Copy audio from an AudioData packet to aOutput. This may require
-  // inserting silence depending on the timing of the audio packet.
-  void SendStreamAudio(AudioData* aAudio, DecodedStreamData* aStream,
-                       AudioSegment* aOutput);
-
   // Performs one "cycle" of the state machine. Polls the state, and may send
   // a video frame to be displayed, and generally manages the decode. Called
   // periodically via timer to ensure the video stays in sync.
