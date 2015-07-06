@@ -8,7 +8,6 @@
 
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
-#include "nsNetUtil.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"

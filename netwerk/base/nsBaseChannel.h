@@ -25,7 +25,6 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "PrivateBrowsingChannel.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
 
 class nsIInputStream;
 

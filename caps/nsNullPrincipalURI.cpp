@@ -11,7 +11,6 @@
 
 #include "mozilla/ipc/URIParams.h"
 
-#include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
 #include "nsIUUIDGenerator.h"

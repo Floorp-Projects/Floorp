@@ -116,7 +116,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsIThreadPool.h"
-#include "nsNetUtil.h"
 #include "nsISocketProvider.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"

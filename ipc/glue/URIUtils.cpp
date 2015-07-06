@@ -17,7 +17,6 @@
 #include "nsNullPrincipalURI.h"
 #include "nsJSProtocolHandler.h"
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 #include "nsSimpleNestedURI.h"
 #include "nsThreadUtils.h"
 

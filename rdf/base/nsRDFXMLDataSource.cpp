@@ -76,7 +76,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIFileURL.h"
-#include "nsNetUtil.h"
 #include "nsISafeOutputStream.h"
 #include "nsIChannel.h"
 #include "nsRDFCID.h"

@@ -41,6 +41,7 @@
 #include "nsWindowMemoryReporter.h"
 #include "WindowNamedPropertiesHandler.h"
 #include "nsFrameSelection.h"
+#include "nsNetUtil.h"
 
 // Helper Classes
 #include "nsJSUtils.h"

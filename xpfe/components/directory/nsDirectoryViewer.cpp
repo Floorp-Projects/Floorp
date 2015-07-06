@@ -51,6 +51,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 

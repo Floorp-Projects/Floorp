@@ -15,7 +15,7 @@
 #include "nsMemory.h"
 #include "nsIStringStream.h"
 #include "nsIURL.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsIPipe.h"
 #include "nsIOutputStream.h"
 #include "nsIMIMEService.h"

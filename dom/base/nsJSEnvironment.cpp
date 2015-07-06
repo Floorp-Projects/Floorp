@@ -34,7 +34,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"
-#include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"

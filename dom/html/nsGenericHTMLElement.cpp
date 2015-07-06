@@ -37,7 +37,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"

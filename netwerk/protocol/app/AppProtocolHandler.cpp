@@ -8,6 +8,7 @@
 #include "nsBaseChannel.h"
 #include "nsJARChannel.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsIStandardURL.h"
 #include "nsIAppsService.h"
 #include "nsILoadInfo.h"
