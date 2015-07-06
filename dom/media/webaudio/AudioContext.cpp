@@ -851,8 +851,6 @@ AudioContext::Suspend(ErrorResult& aRv)
     return promise.forget();
   }
 
-  Destination()->DestroyAudioChannelAgent();
-
   MediaStream* ds = DestinationStream();
   if (ds) {
     ds->BlockStreamIfNeeded();
@@ -891,8 +889,6 @@ AudioContext::Resume(ErrorResult& aRv)
     return promise.forget();
   }
 
-  Destination()->CreateAudioChannelAgent();
-
   MediaStream* ds = DestinationStream();
   if (ds) {
     ds->UnblockStreamIfNeeded();
@@ -926,10 +922,6 @@ AudioContext::Close(ErrorResult& aRv)
   }
 
   mCloseCalled = true;
-
-  if (Destination()) {
-    Destination()->DestroyAudioChannelAgent();
-  }
 
   mPromiseGripArray.AppendElement(promise);
 
