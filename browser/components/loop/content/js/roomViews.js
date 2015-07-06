@@ -398,7 +398,10 @@ loop.roomViews = (function(mozL10n) {
         return;
       }
 
-      this.props.mozLoop.openURL(url.location);
+      var mozLoop = this.props.mozLoop;
+      mozLoop.openURL(url.location);
+
+      mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
     },
 
     handleCheckboxChange: function(state) {
