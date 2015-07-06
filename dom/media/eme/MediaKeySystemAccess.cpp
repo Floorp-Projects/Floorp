@@ -165,16 +165,6 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     return MediaKeySystemStatus::Cdm_not_installed;
   }
 
-  if (aMinCdmVersion == NO_CDM_VERSION) {
-    return MediaKeySystemStatus::Available;
-  }
-
-  nsresult rv;
-  int32_t version = versionStr.ToInteger(&rv);
-  if (NS_FAILED(rv) || version < 0 || aMinCdmVersion > version) {
-    return MediaKeySystemStatus::Cdm_insufficient_version;
-  }
-
 #ifdef XP_WIN
   if (aKeySystem.EqualsLiteral("com.adobe.access") ||
       aKeySystem.EqualsLiteral("com.adobe.primetime")) {
@@ -191,6 +181,13 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     }
   }
 #endif
+
+  nsresult rv;
+  int32_t version = versionStr.ToInteger(&rv);
+  if (aMinCdmVersion != NO_CDM_VERSION &&
+      (NS_FAILED(rv) || version < 0 || aMinCdmVersion > version)) {
+    return MediaKeySystemStatus::Cdm_insufficient_version;
+  }
 
   return MediaKeySystemStatus::Available;
 }
