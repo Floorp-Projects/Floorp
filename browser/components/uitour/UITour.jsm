@@ -716,6 +716,22 @@ this.UITour = {
         targetPromise.then(target => {
           ReaderParent.toggleReaderMode({target: target.node});
         });
+        break;
+      }
+
+      case "setDefaultBrowser": {
+        let shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+                              .getService(Components.interfaces.nsIShellService);
+        shell.setDefaultBrowser(true, false);
+        break;
+      }
+
+      case "isDefaultBrowser": {
+        let shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+                              .getService(Components.interfaces.nsIShellService);
+        let isDefault = shell.isDefaultBrowser(false);
+        this.sendPageCallback(messageManager, data.callbackID, { value: isDefault });
+        break;
       }
     }
 
