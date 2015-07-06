@@ -49,45 +49,6 @@ private:
 
 namespace {
 
-void
-GetOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin, ErrorResult& aRv)
-{
-  MOZ_ASSERT(aPrincipal);
-
-  nsAutoString tmp;
-  aRv = nsContentUtils::GetUTFOrigin(aPrincipal, tmp);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  // 'null' means an unknown origin (it can be chrome code or it can be some
-  // about: page).
-
-  aOrigin = tmp;
-  if (!aOrigin.EqualsASCII("null")) {
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  aRv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (NS_WARN_IF(!uri)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsAutoCString spec;
-  aRv = uri->GetSpec(spec);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  aOrigin = NS_ConvertUTF8toUTF16(spec);
-}
-
 nsIPrincipal*
 GetPrincipalFromWorkerPrivate(WorkerPrivate* aWorkerPrivate)
 {
@@ -108,7 +69,7 @@ GetPrincipalFromWorkerPrivate(WorkerPrivate* aWorkerPrivate)
 class InitializeRunnable final : public WorkerMainThreadRunnable
 {
 public:
-  InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsAString& aOrigin,
+  InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsACString& aOrigin,
                      PrincipalInfo& aPrincipalInfo, bool& aPrivateBrowsing,
                      ErrorResult& aRv)
     : WorkerMainThreadRunnable(aWorkerPrivate)
@@ -147,7 +108,7 @@ public:
       return true;
     }
 
-    GetOrigin(principal, mOrigin, mRv);
+    mRv = principal->GetOrigin(mOrigin);
     if (NS_WARN_IF(mRv.Failed())) {
       return true;
     }
@@ -177,7 +138,7 @@ public:
 
 private:
   WorkerPrivate* mWorkerPrivate;
-  nsAString& mOrigin;
+  nsACString& mOrigin;
   PrincipalInfo& mPrincipalInfo;
   bool& mPrivateBrowsing;
   ErrorResult& mRv;
@@ -384,7 +345,7 @@ BroadcastChannel::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 
 BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
                                    const PrincipalInfo& aPrincipalInfo,
-                                   const nsAString& aOrigin,
+                                   const nsACString& aOrigin,
                                    const nsAString& aChannel,
                                    bool aPrivateBrowsing)
   : DOMEventTargetHelper(aWindow)
@@ -420,7 +381,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   // Window is null in workers.
 
-  nsAutoString origin;
+  nsAutoCString origin;
   PrincipalInfo principalInfo;
   bool privateBrowsing = false;
   WorkerPrivate* workerPrivate = nullptr;
@@ -450,7 +411,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    GetOrigin(principal, origin, aRv);
+    aRv = principal->GetOrigin(origin);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
