@@ -114,7 +114,8 @@ public:
     , mLocked(false)
   { }
 
-  virtual void Composite(EffectChain& aEffectChain,
+  virtual void Composite(LayerComposite* aLayer,
+                         EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,

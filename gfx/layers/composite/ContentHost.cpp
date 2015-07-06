@@ -35,7 +35,8 @@ ContentHostBase::~ContentHostBase()
 }
 
 void
-ContentHostTexture::Composite(EffectChain& aEffectChain,
+ContentHostTexture::Composite(LayerComposite* aLayer,
+                              EffectChain& aEffectChain,
                               float aOpacity,
                               const gfx::Matrix4x4& aTransform,
                               const Filter& aFilter,

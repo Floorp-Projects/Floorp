@@ -38,6 +38,7 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/FrameUniformityData.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
@@ -1841,6 +1842,13 @@ CompositorParent::DidComposite()
   if (mPendingTransaction) {
     unused << SendDidComposite(0, mPendingTransaction);
     mPendingTransaction = 0;
+  }
+  if (mLayerManager) {
+    nsTArray<ImageCompositeNotification> notifications;
+    mLayerManager->ExtractImageCompositeNotifications(&notifications);
+    if (!notifications.IsEmpty()) {
+      unused << ImageBridgeParent::NotifyImageComposites(notifications);
+    }
   }
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);

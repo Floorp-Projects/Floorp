@@ -7,6 +7,7 @@
 
 include LayersSurfaces;
 include LayersMessages;
+include protocol PLayer;
 include protocol PLayerTransaction;
 include "mozilla/GfxMessageUtils.h";
 include "nsRegion.h";
@@ -42,6 +43,8 @@ child:
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying
   // the root layer tree).
+  // transactionId is the id of the transaction before this composite, or 0
+  // if there was no transaction since the last composite.
   async DidComposite(uint64_t id, uint64_t transactionId);
 
   // The parent sends the child the requested fill ratio numbers.

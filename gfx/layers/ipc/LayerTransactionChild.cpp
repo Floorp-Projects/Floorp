@@ -9,6 +9,7 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
+#include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
