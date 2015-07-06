@@ -440,7 +440,6 @@ void MediaDecoderStateMachine::SendStreamData()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
-  MOZ_ASSERT(mStreamStartTime != -1);
 
   DecodedStreamData* stream = GetDecodedStream();
 
@@ -2784,7 +2783,6 @@ int64_t MediaDecoderStateMachine::GetStreamClock() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mStreamStartTime != -1);
   return mStreamStartTime + GetDecodedStream()->GetPosition();
 }
 
@@ -3367,9 +3365,6 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
     if (!self->mAudioCaptured) {
       // Stop the audio sink if it's running.
       self->StopAudioThread();
-      // GetMediaTime() could return -1 because we haven't decoded
-      // the 1st frame. But this is OK since we will update mStreamStartTime
-      // again in SetStartTime().
       self->mStreamStartTime = self->GetMediaTime();
       // Reset mAudioEndTime which will be updated as we send audio data to
       // stream. Otherwise it will remain -1 if we don't have audio.
