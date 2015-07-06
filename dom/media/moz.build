@@ -65,7 +65,6 @@ if CONFIG['MOZ_WEBRTC']:
 
 if CONFIG['MOZ_OMX_DECODER']:
     DIRS += ['omx']
-    DIRS += ['omx/mediaresourcemanager']
 
 if CONFIG['MOZ_EME']:
     DIRS += ['eme']
