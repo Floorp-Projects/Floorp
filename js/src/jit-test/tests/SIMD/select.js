@@ -2,23 +2,12 @@ load(libdir + 'simd.js');
 
 setJitCompilerOption("ion.warmup.trigger", 50);
 
-function Int32x4FromTypeBits(type, vec) {
-    if (type == SIMD.Int32x4)
-        return vec;
-    if (type == SIMD.Float32x4)
-        return SIMD.Int32x4.fromFloat32x4Bits(vec);
-    throw 'unimplemented';
-}
-
-function selectBits(type, mask, ifTrue, ifFalse) {
+function selectBits(mask, ifTrue, ifFalse) {
     var Int32x4 = SIMD.Int32x4;
-    var tv = Int32x4FromTypeBits(type, ifTrue);
-    var fv = Int32x4FromTypeBits(type, ifFalse);
-    var tr = Int32x4.and(mask, tv);
-    var fr = Int32x4.and(Int32x4.not(mask), fv);
+    var tr = Int32x4.and(mask, ifTrue);
+    var fr = Int32x4.and(Int32x4.not(mask), ifFalse);
     var orApplied = Int32x4.or(tr, fr);
-    var converted = type == Int32x4 ? orApplied : type.fromInt32x4Bits(orApplied);
-    return simdToArray(converted);
+    return simdToArray(orApplied);
 }
 
 function select(type, mask, ifTrue, ifFalse) {
@@ -45,11 +34,11 @@ function f() {
     for (var i = 0; i < 150; i++) {
         assertEqX4(SIMD.Float32x4.select(TTFT, f1, f2), select(SIMD.Float32x4, TTFT, f1, f2));
         assertEqX4(SIMD.Float32x4.select(TFTF, f1, f2), select(SIMD.Float32x4, TFTF, f1, f2));
+
         assertEqX4(SIMD.Int32x4.select(TFTF, i1, i2), select(SIMD.Int32x4, TFTF, i1, i2));
         assertEqX4(SIMD.Int32x4.select(TTFT, i1, i2), select(SIMD.Int32x4, TTFT, i1, i2));
 
-        assertEqX4(SIMD.Float32x4.selectBits(mask, f1, f2), selectBits(SIMD.Float32x4, mask, f1, f2));
-        assertEqX4(SIMD.Int32x4.selectBits(mask, i1, i2), selectBits(SIMD.Int32x4, mask, i1, i2));
+        assertEqX4(SIMD.Int32x4.selectBits(mask, i1, i2), selectBits(mask, i1, i2));
     }
 }
 

@@ -64,7 +64,6 @@
   V(clamp, Clamp<Float32x4>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
   V(select, (Select<Float32x4, Int32x4>), 3)                                          \
-  V(selectBits, (SelectBits<Float32x4, Int32x4>), 3)                                    \
   V(store,  (Store<Float32x4, 4>), 3)                                                 \
   V(store3, (Store<Float32x4, 3>), 3)                                                 \
   V(store2, (Store<Float32x4, 2>), 3)                                                 \
@@ -118,7 +117,6 @@
   V(clamp, Clamp<Float64x2>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
   V(select, (Select<Float64x2, Int32x4>), 3)                                          \
-  V(selectBits, (SelectBits<Float64x2, Int32x4>), 3)                                          \
   V(store,  (Store<Float64x2, 2>), 3)                                                 \
   V(store1, (Store<Float64x2, 1>), 3)
 
@@ -292,6 +290,7 @@
     _(fromFloat32x4Bits)
 #define FOREACH_INT32X4_SIMD_OP(_)   \
     CONVERSION_INT32X4_SIMD_OP(_)    \
+    _(selectBits)                    \
     _(shiftLeftByScalar)             \
     _(shiftRightArithmeticByScalar)  \
     _(shiftRightLogicalByScalar)
@@ -333,7 +332,6 @@
     _(extractLane)                   \
     _(replaceLane)                   \
     _(select)                        \
-    _(selectBits)                    \
     _(splat)                         \
     _(not)                           \
     _(neg)                           \
