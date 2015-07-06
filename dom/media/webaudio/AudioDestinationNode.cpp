@@ -598,7 +598,7 @@ AudioDestinationNode::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& a
 bool
 AudioDestinationNode::CheckAudioChannelPermissions(AudioChannel aValue)
 {
-  if (!Preferences::GetBool("media.useAudioChannelService")) {
+  if (!UseAudioChannelService()) {
     return true;
   }
 
