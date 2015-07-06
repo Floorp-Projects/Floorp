@@ -526,8 +526,10 @@ describe("loop.panel", function() {
         TestUtils.Simulate.click(copyButton);
 
         sinon.assert.called(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.CopyRoomUrl({roomUrl: roomData.roomUrl}));
+        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
+          roomUrl: roomData.roomUrl,
+          from: "panel"
+        }));
       });
 
       it("should set state.urlCopied when the click event fires", function() {

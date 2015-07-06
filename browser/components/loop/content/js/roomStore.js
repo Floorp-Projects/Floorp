@@ -325,6 +325,14 @@ loop.store = loop.store || {};
     copyRoomUrl: function(actionData) {
       this._mozLoop.copyString(actionData.roomUrl);
       this._mozLoop.notifyUITour("Loop:RoomURLCopied");
+
+      var from = actionData.from;
+      var bucket = this._mozLoop.SHARING_ROOM_URL["COPY_FROM_" + from.toUpperCase()];
+      if (typeof bucket === "undefined") {
+        console.error("No URL sharing type bucket found for '" + from + "'");
+        return;
+      }
+      this._mozLoop.telemetryAddValue("LOOP_SHARING_ROOM_URL", bucket);
     },
 
     /**
@@ -334,7 +342,7 @@ loop.store = loop.store || {};
      */
     emailRoomUrl: function(actionData) {
       loop.shared.utils.composeCallUrlEmail(actionData.roomUrl, null,
-        actionData.roomDescription);
+        actionData.roomDescription, actionData.from);
       this._mozLoop.notifyUITour("Loop:RoomURLEmailed");
     },
 
