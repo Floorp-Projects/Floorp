@@ -681,6 +681,20 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    ROOM_CREATE: {
+      enumerable: true,
+      get: function() {
+        return Cu.cloneInto(ROOM_CREATE, targetWindow);
+      }
+    },
+
+    ROOM_DELETE: {
+      enumerable: true,
+      get: function() {
+        return Cu.cloneInto(ROOM_DELETE, targetWindow);
+      }
+    },
+
     fxAEnabled: {
       enumerable: true,
       get: function() {
