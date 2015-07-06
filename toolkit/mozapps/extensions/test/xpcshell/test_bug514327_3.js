@@ -60,13 +60,13 @@ var PluginHost = {
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, arguments) {
+  openWindow: function(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
     // Should only include one item
-    do_check_eq(arguments.wrappedJSObject.list.length, 1);
+    do_check_eq(args.wrappedJSObject.list.length, 1);
     // And that item should be the blocked plugin, not the outdated one
-    var item = arguments.wrappedJSObject.list[0];
+    var item = args.wrappedJSObject.list[0];
     do_check_true(item.item instanceof Ci.nsIPluginTag);
     do_check_neq(item.name, "test_bug514327_outdated");
 

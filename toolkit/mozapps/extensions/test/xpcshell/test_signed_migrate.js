@@ -27,8 +27,8 @@ profileDir.append("extensions");
 var WindowWatcher = {
   sawAddon: false,
 
-  openWindow: function(parent, url, name, features, arguments) {
-    let ids = arguments.QueryInterface(AM_Ci.nsIVariant);
+  openWindow: function(parent, url, name, features, args) {
+    let ids = args.QueryInterface(AM_Ci.nsIVariant);
     this.sawAddon = ids.indexOf(ID) >= 0;
   },
 
