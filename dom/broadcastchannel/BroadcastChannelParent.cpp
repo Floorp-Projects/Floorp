@@ -20,7 +20,7 @@ namespace dom {
 
 BroadcastChannelParent::BroadcastChannelParent(
                                             const PrincipalInfo& aPrincipalInfo,
-                                            const nsAString& aOrigin,
+                                            const nsACString& aOrigin,
                                             const nsAString& aChannel,
                                             bool aPrivateBrowsing)
   : mService(BroadcastChannelService::GetOrCreate())
@@ -91,7 +91,7 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 
 void
 BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
-                                        const nsString& aOrigin,
+                                        const nsCString& aOrigin,
                                         uint64_t aAppId,
                                         bool aInBrowserElement,
                                         const nsString& aChannel,
