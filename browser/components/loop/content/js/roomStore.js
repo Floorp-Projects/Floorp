@@ -275,7 +275,9 @@ loop.store = loop.store || {};
       this._notifications.remove("create-room-error");
 
       this._mozLoop.rooms.create(roomCreationData, function(err, createdRoom) {
+        var buckets = this._mozLoop.ROOM_CREATE;
         if (err) {
+          this._mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
           this.dispatchAction(new sharedActions.CreateRoomError({error: err}));
           return;
         }
@@ -283,6 +285,7 @@ loop.store = loop.store || {};
         this.dispatchAction(new sharedActions.CreatedRoom({
           roomToken: createdRoom.roomToken
         }));
+        this._mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_SUCCESS);
       }.bind(this));
     },
 
@@ -398,9 +401,12 @@ loop.store = loop.store || {};
      */
     deleteRoom: function(actionData) {
       this._mozLoop.rooms.delete(actionData.roomToken, function(err) {
+        var buckets = this._mozLoop.ROOM_DELETE;
         if (err) {
-         this.dispatchAction(new sharedActions.DeleteRoomError({error: err}));
+          this.dispatchAction(new sharedActions.DeleteRoomError({error: err}));
         }
+        this._mozLoop.telemetryAddValue("LOOP_ROOM_DELETE", buckets[err ?
+          "DELETE_FAIL" : "DELETE_SUCCESS"]);
       }.bind(this));
     },
 
