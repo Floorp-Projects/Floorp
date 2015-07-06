@@ -155,6 +155,9 @@
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
 <!ENTITY pref_category_devtools "Developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
+<!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
+<!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
+<!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">
 <!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons2 "Remember logins">
 <!ENTITY pref_open_external_urls_privately_title "Open links in Private browsing">
@@ -665,3 +668,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY find_matchcase "Aa">
 
 <!ENTITY intent_uri_cannot_open "Cannot open link">
+
+<!-- DevTools Authentication -->
+<!-- LOCALIZATION NOTE (devtools_auth_scan_header): This header text appears
+     above a QR reader that is actively scanning for QR codes.  The expected QR
+     code has already been displayed by the client trying to connect (such as
+     desktop Firefox via WebIDE), so you just need to aim this device at the QR
+     code. -->
+<!ENTITY devtools_auth_scan_header "Scanning for the QR code displayed on your other device">
