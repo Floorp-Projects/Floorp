@@ -86,7 +86,7 @@ let SilentAssert = {
   }
 };
 
-let isShuttingDown = false;
+
 function monotinicity_tester(source, testName) {
   // In the background, check invariants:
   // - numeric data can only ever increase;
@@ -130,10 +130,6 @@ function monotinicity_tester(source, testName) {
   };
   let iteration = 0;
   let frameCheck = Task.async(function*() {
-    if (isShuttingDown) {
-      window.clearInterval(interval);
-      return;
-    }
     let name = `${testName}: ${iteration++}`;
     let snapshot = yield source();
     if (!snapshot) {
@@ -240,19 +236,13 @@ add_task(function* test() {
       info("Searching by title, we didn't find the main frame");
       continue;
     }
-    info("Found the main frame");
 
-    if (skipTotalUserTime) {
-      info("Not looking for total user time on this platform, we're done");
-    } else if (parent.jank.totalUserTime > 1000) {
-      info("Enough CPU time detected, we're done");
+    if (skipTotalUserTime || parent.jank.totalUserTime > 1000) {
       break;
     } else {
-      info(`Not enough CPU time detected: ${parent.jank.totalUserTime}`);
-      info(`Details: ${JSON.stringify(parent, null, "\t")}`);
+      info(`Not enough CPU time detected: ${parent.jank.totalUserTime}`)
     }
   }
-  isShuttingDown = true;
 
   // Cleanup
   gBrowser.removeTab(newTab);
