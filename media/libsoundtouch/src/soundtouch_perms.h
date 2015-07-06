@@ -12,6 +12,7 @@
 
 #pragma GCC visibility push(default)
 #include "SoundTouch.h"
+#include "SoundTouchFactory.h"
 #pragma GCC visibility pop
 
 #endif // MOZILLA_SOUNDTOUCH_PERMS_H
