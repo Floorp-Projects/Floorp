@@ -42,20 +42,19 @@ typedef nsTArray<float> AudioFloatArray;
 
 class PeriodicWave {
 public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebCore::PeriodicWave);
 
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeriodicWave);
-
-    static PeriodicWave* createSine(float sampleRate);
-    static PeriodicWave* createSquare(float sampleRate);
-    static PeriodicWave* createSawtooth(float sampleRate);
-    static PeriodicWave* createTriangle(float sampleRate);
+    static already_AddRefed<PeriodicWave> createSine(float sampleRate);
+    static already_AddRefed<PeriodicWave> createSquare(float sampleRate);
+    static already_AddRefed<PeriodicWave> createSawtooth(float sampleRate);
+    static already_AddRefed<PeriodicWave> createTriangle(float sampleRate);
 
     // Creates an arbitrary periodic wave given the frequency components
     // (Fourier coefficients).
-    static PeriodicWave* create(float sampleRate,
-                                const float* real,
-                                const float* imag,
-                                size_t numberOfComponents);
+    static already_AddRefed<PeriodicWave> create(float sampleRate,
+                                                 const float* real,
+                                                 const float* imag,
+                                                 size_t numberOfComponents);
 
     // Returns pointers to the lower and higher wave data for the pitch range
     // containing the given fundamental frequency. These two tables are in
