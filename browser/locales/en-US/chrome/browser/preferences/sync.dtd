@@ -74,6 +74,7 @@ both, to better adapt this sentence to their language.
 
 <!ENTITY notSignedIn.label           "You are not signed in.">
 <!ENTITY signIn.label                "Sign in">
+<!ENTITY profilePicture.tooltip      "Change profile picture">
 <!ENTITY manage.label                "Manage">
 <!ENTITY disconnect.label            "Disconnect…">
 <!ENTITY verify.label                "Verify Email">

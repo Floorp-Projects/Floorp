@@ -228,7 +228,7 @@ description > html|a {
 }
 
 #fxaProfileImage:hover {
-  border-color: blue;
+  box-shadow: 0px 0px 0px 1px #0095DD;
 }
 
 #noFxaAccount {
