@@ -927,7 +927,9 @@ AudioContext::Close(ErrorResult& aRv)
 
   mCloseCalled = true;
 
-  Destination()->DestroyAudioChannelAgent();
+  if (Destination()) {
+    Destination()->DestroyAudioChannelAgent();
+  }
 
   mPromiseGripArray.AppendElement(promise);
 
