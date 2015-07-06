@@ -82,6 +82,14 @@ describe("loop.store.RoomStore", function () {
           EMAIL_FROM_PANEL: 2,
           EMAIL_FROM_CONVERSATION: 3
         },
+        ROOM_CREATE: {
+          CREATE_SUCCESS: 0,
+          CREATE_FAIL: 1
+        },
+        ROOM_DELETE: {
+          DELETE_SUCCESS: 0,
+          DELETE_FAIL: 1
+        },
         copyString: function() {},
         getLoopPref: function(pref) {
           return pref;
@@ -89,6 +97,7 @@ describe("loop.store.RoomStore", function () {
         notifyUITour: function() {},
         rooms: {
           create: function() {},
+          delete: function() {},
           getAll: function() {},
           open: function() {},
           rename: function() {},
@@ -321,6 +330,31 @@ describe("loop.store.RoomStore", function () {
               error: err
             }));
         });
+
+      it("should log a telemetry event when the operation is successful", function() {
+        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
+          cb(null, {roomToken: "fakeToken"});
+        });
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_CREATE", 0);
+      });
+
+      it("should log a telemetry event when the operation fails", function() {
+        var err = new Error("fake");
+        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
+          cb(err);
+        });
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_CREATE", 1);
+      });
    });
 
    describe("#createdRoom", function() {
@@ -373,6 +407,70 @@ describe("loop.store.RoomStore", function () {
           id: "create-room-error",
           level: "error"
         });
+      });
+    });
+
+    describe("#deleteRoom", function() {
+      var fakeRoomToken = "42abc";
+
+      beforeEach(function() {
+        sandbox.stub(dispatcher, "dispatch");
+      });
+
+      it("should request deletion of a room", function() {
+        sandbox.stub(fakeMozLoop.rooms, "delete");
+
+        store.deleteRoom(new sharedActions.DeleteRoom({
+          roomToken: fakeRoomToken
+        }));
+
+        sinon.assert.calledWith(fakeMozLoop.rooms.delete, fakeRoomToken);
+      });
+
+      it("should dispatch a DeleteRoomError action if the operation fails", function() {
+        var err = new Error("fake");
+        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
+          cb(err);
+        });
+
+        store.deleteRoom(new sharedActions.DeleteRoom({
+          roomToken: fakeRoomToken
+        }));
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DeleteRoomError({
+            error: err
+          }));
+      });
+
+      it("should log a telemetry event when the operation is successful", function() {
+        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
+          cb();
+        });
+
+        store.deleteRoom(new sharedActions.DeleteRoom({
+          roomToken: fakeRoomToken
+        }));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_DELETE", 0);
+      });
+
+      it("should log a telemetry event when the operation fails", function() {
+        var err = new Error("fake");
+        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
+          cb(err);
+        });
+
+        store.deleteRoom(new sharedActions.DeleteRoom({
+          roomToken: fakeRoomToken
+        }));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_DELETE", 1);
       });
     });
 

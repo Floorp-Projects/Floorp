@@ -55,6 +55,26 @@ const SHARING_ROOM_URL = {
   EMAIL_FROM_CONVERSATION: 3
 };
 
+/**
+ * Values that we segment room create action telemetry probes into.
+ *
+ * @type {{CREATE_SUCCESS: Number, CREATE_FAIL: Number}}
+ */
+const ROOM_CREATE = {
+  CREATE_SUCCESS: 0,
+  CREATE_FAIL: 1
+};
+
+/**
+ * Values that we segment room delete action telemetry probes into.
+ *
+ * @type {{DELETE_SUCCESS: Number, DELETE_FAIL: Number}}
+ */
+const ROOM_DELETE = {
+  DELETE_SUCCESS: 0,
+  DELETE_FAIL: 1
+};
+
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "loop.debug.loglevel";
 
@@ -69,7 +89,8 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE",
-  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE", "SHARING_ROOM_URL"];
+  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE", "SHARING_ROOM_URL",
+  "ROOM_CREATE", "ROOM_DELETE"];
 
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");

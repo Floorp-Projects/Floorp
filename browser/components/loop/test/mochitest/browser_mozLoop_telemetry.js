@@ -106,3 +106,41 @@ add_task(function* test_mozLoop_telemetryAdd_sharingURL_buckets() {
   Assert.strictEqual(snapshot.counts[SHARING_TYPES.EMAIL_FROM_CONVERSATION], 4,
     "SHARING_ROOM_URL.EMAIL_FROM_CONVERSATION");
 });
+
+add_task(function* test_mozLoop_telemetryAdd_roomCreate_buckets() {
+  let histogramId = "LOOP_ROOM_CREATE";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gMozLoopAPI.ROOM_CREATE;
+
+  histogram.clear();
+  for (let value of [ACTION_TYPES.CREATE_SUCCESS,
+                     ACTION_TYPES.CREATE_FAIL,
+                     ACTION_TYPES.CREATE_FAIL]) {
+    gMozLoopAPI.telemetryAddValue(histogramId, value);
+  }
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.CREATE_SUCCESS], 1,
+    "SHARING_ROOM_URL.CREATE_SUCCESS");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.CREATE_FAIL], 2,
+    "SHARING_ROOM_URL.CREATE_FAIL");
+});
+
+add_task(function* test_mozLoop_telemetryAdd_roomDelete_buckets() {
+  let histogramId = "LOOP_ROOM_DELETE";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+  const ACTION_TYPES = gMozLoopAPI.ROOM_DELETE;
+
+  histogram.clear();
+  for (let value of [ACTION_TYPES.DELETE_SUCCESS,
+                     ACTION_TYPES.DELETE_FAIL,
+                     ACTION_TYPES.DELETE_FAIL]) {
+    gMozLoopAPI.telemetryAddValue(histogramId, value);
+  }
+
+  let snapshot = histogram.snapshot();
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.DELETE_SUCCESS], 1,
+    "SHARING_ROOM_URL.DELETE_SUCCESS");
+  Assert.strictEqual(snapshot.counts[ACTION_TYPES.DELETE_FAIL], 2,
+    "SHARING_ROOM_URL.DELETE_FAIL");
+});
