@@ -364,11 +364,11 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     typedef bool IsElementWise;
     if (native == js::simd_int32x4_select)
         return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::Int32x4);
-    if (native == js::simd_int32x4_bitselect)
+    if (native == js::simd_int32x4_selectBits)
         return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_select)
         return inlineSimdSelect(callInfo, native, IsElementWise(true), SimdTypeDescr::Float32x4);
-    if (native == js::simd_float32x4_bitselect)
+    if (native == js::simd_float32x4_selectBits)
         return inlineSimdSelect(callInfo, native, IsElementWise(false), SimdTypeDescr::Float32x4);
 
     if (native == js::simd_int32x4_swizzle)

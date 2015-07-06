@@ -61,10 +61,10 @@
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
-  V(bitselect, (BitSelect<Float32x4, Int32x4>), 3)                                    \
   V(clamp, Clamp<Float32x4>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
   V(select, (Select<Float32x4, Int32x4>), 3)                                          \
+  V(selectBits, (SelectBits<Float32x4, Int32x4>), 3)                                    \
   V(store,  (Store<Float32x4, 4>), 3)                                                 \
   V(store3, (Store<Float32x4, 3>), 3)                                                 \
   V(store2, (Store<Float32x4, 2>), 3)                                                 \
@@ -115,10 +115,10 @@
   V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)
 
 #define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                            \
-  V(bitselect, (BitSelect<Float64x2, Int32x4>), 3)                                    \
   V(clamp, Clamp<Float64x2>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
   V(select, (Select<Float64x2, Int32x4>), 3)                                          \
+  V(selectBits, (SelectBits<Float64x2, Int32x4>), 3)                                          \
   V(store,  (Store<Float64x2, 2>), 3)                                                 \
   V(store1, (Store<Float64x2, 1>), 3)
 
@@ -162,9 +162,9 @@
   V(xor, (BinaryFunc<Int8x16, Xor, Int8x16>), 2)
 
 #define INT8X16_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int8x16, Int8x16>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int8x16>), 3)                                           \
   V(select, (Select<Int8x16, Int8x16>), 3)                                            \
+  V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                            \
   V(store, (Store<Int8x16, 16>), 3)
 
 #define INT8X16_BOOL_FUNCTION_LIST(V)                                                 \
@@ -211,9 +211,9 @@
   V(xor, (BinaryFunc<Int16x8, Xor, Int16x8>), 2)
 
 #define INT16X8_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int16x8, Int16x8>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int16x8>), 3)                                           \
   V(select, (Select<Int16x8, Int16x8>), 3)                                            \
+  V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                            \
   V(store, (Store<Int16x8, 8>), 3)
 
 #define INT16X8_BOOL_FUNCTION_LIST(V)                                                 \
@@ -265,9 +265,9 @@
   V(xor, (BinaryFunc<Int32x4, Xor, Int32x4>), 2)
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int32x4, Int32x4>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int32x4>), 3)                                           \
   V(select, (Select<Int32x4, Int32x4>), 3)                                            \
+  V(selectBits, (SelectBits<Int32x4, Int32x4>), 3)                                            \
   V(store,  (Store<Int32x4, 4>), 3)                                                   \
   V(store3, (Store<Int32x4, 3>), 3)                                                   \
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
@@ -332,8 +332,8 @@
     BITWISE_COMMONX4_SIMD_OP(_)      \
     _(extractLane)                   \
     _(replaceLane)                   \
-    _(bitselect)                     \
     _(select)                        \
+    _(selectBits)                    \
     _(splat)                         \
     _(not)                           \
     _(neg)                           \

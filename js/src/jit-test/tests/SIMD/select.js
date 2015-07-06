@@ -10,7 +10,7 @@ function Int32x4FromTypeBits(type, vec) {
     throw 'unimplemented';
 }
 
-function bitselect(type, mask, ifTrue, ifFalse) {
+function selectBits(type, mask, ifTrue, ifFalse) {
     var Int32x4 = SIMD.Int32x4;
     var tv = Int32x4FromTypeBits(type, ifTrue);
     var fv = Int32x4FromTypeBits(type, ifFalse);
@@ -48,8 +48,8 @@ function f() {
         assertEqX4(SIMD.Int32x4.select(TFTF, i1, i2), select(SIMD.Int32x4, TFTF, i1, i2));
         assertEqX4(SIMD.Int32x4.select(TTFT, i1, i2), select(SIMD.Int32x4, TTFT, i1, i2));
 
-        assertEqX4(SIMD.Float32x4.bitselect(mask, f1, f2), bitselect(SIMD.Float32x4, mask, f1, f2));
-        assertEqX4(SIMD.Int32x4.bitselect(mask, i1, i2), bitselect(SIMD.Int32x4, mask, i1, i2));
+        assertEqX4(SIMD.Float32x4.selectBits(mask, f1, f2), selectBits(SIMD.Float32x4, mask, f1, f2));
+        assertEqX4(SIMD.Int32x4.selectBits(mask, i1, i2), selectBits(SIMD.Int32x4, mask, i1, i2));
     }
 }
 
