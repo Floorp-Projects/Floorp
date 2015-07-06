@@ -334,6 +334,7 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& a
     nsAutoTArray<ImageCompositeNotification,1> notifications;
     notifications.AppendElement(aNotifications[i]);
     uint32_t end = i + 1;
+    MOZ_ASSERT(aNotifications[i].imageContainerParent());
     ProcessId pid = aNotifications[i].imageContainerParent()->OtherPid();
     while (end < aNotifications.Length() &&
            aNotifications[end].imageContainerParent()->OtherPid() == pid) {
