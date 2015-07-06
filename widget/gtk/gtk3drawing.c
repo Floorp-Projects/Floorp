@@ -574,10 +574,10 @@ static gint
 ensure_menu_popup_widget()
 {
     if (!gMenuPopupWidget) {
-        ensure_menu_bar_item_widget();
+        ensure_window_widget();
         gMenuPopupWidget = gtk_menu_new();
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(gMenuBarItemWidget),
-                                  gMenuPopupWidget);
+        gtk_menu_attach_to_widget(GTK_MENU(gMenuPopupWidget), gProtoWindow,
+                                  NULL);
         gtk_widget_realize(gMenuPopupWidget);
     }
     return MOZ_GTK_SUCCESS;
