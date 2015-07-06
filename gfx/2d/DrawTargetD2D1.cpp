@@ -50,7 +50,12 @@ DrawTargetD2D1::~DrawTargetD2D1()
     // mSnapshot will be cleared now.
   }
 
-  mDC->EndDraw();
+  if (mDC) {
+    // The only way mDC can be null is if Init failed, but it can happen and the
+    // destructor is the only place where we need to check for it since the
+    // DrawTarget will destroyed right after Init fails.
+    mDC->EndDraw();
+  }
 
   // Targets depending on us can break that dependency, since we're obviously not going to
   // be modified in the future.
