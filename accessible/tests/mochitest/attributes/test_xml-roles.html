@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>XML landmark tests</title>
+  <title>XML roles tests</title>
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
@@ -35,6 +35,60 @@
       testAttrs("main_element", {"xml-roles" : "main"}, true);
 
       testAttrs("search", {"xml-roles" : "searchbox"}, true);
+
+      testAttrs("open-1", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-2", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-3", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-4", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-5", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-6", {"xml-roles" : "open-fence"}, true);
+      testAttrs("open-7", {"xml-roles" : "open-fence"}, true);
+
+      testAttrs("sep-1", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-2", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-3", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-4", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-5", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-6", {"xml-roles" : "separator"}, true);
+      testAttrs("sep-7", {"xml-roles" : "separator"}, true);
+
+      testAttrs("close-1", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-2", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-3", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-4", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-5", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-6", {"xml-roles" : "close-fence"}, true);
+      testAttrs("close-7", {"xml-roles" : "close-fence"}, true);
+
+      testAttrs("num", {"xml-roles" : "numerator"}, true);
+      testAttrs("den", {"xml-roles" : "denominator"}, true);
+
+      testAttrs("sub-1", {"xml-roles" : "subscript"}, true);
+      testAttrs("sub-2", {"xml-roles" : "subscript"}, true);
+      testAttrs("sub-3", {"xml-roles" : "subscript"}, true);
+      testAttrs("sup-1", {"xml-roles" : "superscript"}, true);
+      testAttrs("sup-2", {"xml-roles" : "superscript"}, true);
+      testAttrs("sup-3", {"xml-roles" : "superscript"}, true);
+      testAttrs("sup-4", {"xml-roles" : "superscript"}, true);
+      testAttrs("presub-1", {"xml-roles" : "presubscript"}, true);
+      testAttrs("presub-2", {"xml-roles" : "presubscript"}, true);
+      testAttrs("presup-1", {"xml-roles" : "presuperscript"}, true);
+
+      testAttrs("under-1", {"xml-roles" : "underscript"}, true);
+      testAttrs("under-2", {"xml-roles" : "underscript"}, true);
+      testAttrs("over-1", {"xml-roles" : "overscript"}, true);
+      testAttrs("over-2", {"xml-roles" : "overscript"}, true);
+
+      testAttrs("root-index-1", {"xml-roles" : "root-index"}, true);
+
+      testAttrs("base-1", {"xml-roles" : "base"}, true);
+      testAttrs("base-2", {"xml-roles" : "base"}, true);
+      testAttrs("base-3", {"xml-roles" : "base"}, true);
+      testAttrs("base-4", {"xml-roles" : "base"}, true);
+      testAttrs("base-5", {"xml-roles" : "base"}, true);
+      testAttrs("base-6", {"xml-roles" : "base"}, true);
+      testAttrs("base-7", {"xml-roles" : "base"}, true);
+      testAttrs("base-8", {"xml-roles" : "base"}, true);
 
       SimpleTest.finish();
     }
@@ -109,5 +163,87 @@
   <main id="main_element">another main area</main>
 
   <input id="search" type="search"/>
+
+  <!-- open-fence, separator, close-fence -->
+  <math><mo id="open-1">(</mo><mi>x</mi><mo id="sep-1">,</mo><mi>y</mi><mo id="close-1">)</mo></math>
+  <math><mrow><mo id="open-2">(</mo><mi>x</mi><mo id="sep-2">,</mo><mi>y</mi><mo id="close-2">)</mo></mrow></math>
+  <math><mstyle><mo id="open-3">(</mo><mi>x</mi><mo id="sep-3">,</mo><mi>y</mi><mo id="close-3">)</mo></mstyle></math>
+  <math><msqrt><mo id="open-4">(</mo><mi>x</mi><mo id="sep-4">,</mo><mi>y</mi><mo id="close-4">)</mo></msqrt></math>
+  <math><menclose><mo id="open-5">(</mo><mi>x</mi><mo id="sep-5">,</mo><mi>y</mi><mo id="close-5">)</mo></menclose></math>
+  <math><merror><mo id="open-6">(</mo><mi>x</mi><mo id="sep-6">,</mo><mi>y</mi><mo id="close-6">)</mo></merror></math>
+  <math><mtable><mtr><mtd><mo id="open-7">(</mo><mi>x</mi><mo id="sep-7">,</mo><mi>y</mi><mo id="close-7">)</mo></mtd></mtr></mtable></math>
+
+  <!-- numerator, denominator -->
+  <math>
+    <mfrac>
+      <mi id="num">a</mi>
+      <mi id="den">b</mi>
+    </mfrac>
+  </math>
+
+  <!-- subscript, superscript, presubscript, presuperscript -->
+  <math>
+    <msub>
+      <mi id="base-1">a</mi>
+      <mi id="sub-1">b</mi>
+    </msub>
+  </math>
+  <math>
+    <msup>
+      <mi id="base-2">a</mi>
+      <mi id="sup-1">b</mi>
+    </msup>
+  </math>
+  <math>
+    <msubsup>
+      <mi id="base-3">a</mi>
+      <mi id="sub-2">b</mi>
+      <mi id="sup-2">c</mi>
+    </msubsup>
+  </math>
+  <math>
+    <mmultiscripts>
+      <mi id="base-4">a</mi>
+      <mi id="sub-3">b</mi>
+      <mi id="sup-3">c</mi>
+      <none/>
+      <mi id="sup-4">d</mi>
+      <mprescripts/>
+      <mi id="presub-1">e</mi>
+      <none/>
+      <mi id="presub-2">f</mi>
+      <mi id="presup-1">g</mi>
+    </mmultiscripts>
+  </math>
+
+  <!-- underscript, overscript -->
+  <math>
+    <munder>
+      <mi id="base-5">a</mi>
+      <mi id="under-1">b</mi>
+    </munder>
+  </math>
+  <math>
+    <mover>
+      <mi id="base-6">a</mi>
+      <mi id="over-1">b</mi>
+    </mover>
+  </math>
+  <math>
+    <munderover>
+      <mi id="base-7">a</mi>
+      <mi id="under-2">b</mi>
+      <mi id="over-2">c</mi>
+    </munderover>
+  </math>
+
+  <!-- root-index -->
+  <math>
+    <mroot>
+      <mi id="base-8">a</mi>
+      <mi id="root-index-1">b</mi>
+    </mroot>
+  </math>
+
 </body>
 </html>
