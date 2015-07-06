@@ -268,12 +268,12 @@ ActiveLayerTracker::IsStyleAnimated(nsDisplayListBuilder* aBuilder,
   // TODO: Add some abuse restrictions
   if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) &&
       aProperty == eCSSProperty_transform &&
-      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame))) {
+      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
     return true;
   }
   if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       aProperty == eCSSProperty_opacity &&
-      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame))) {
+      (!aBuilder || aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
     return true;
   }
 
