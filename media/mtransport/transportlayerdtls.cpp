@@ -497,7 +497,7 @@ bool TransportLayerDtls::Setup() {
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
                                 identity_->privkey(),
-                                kt_rsa);
+                                identity_->auth_type());
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't set identity");
       return false;
