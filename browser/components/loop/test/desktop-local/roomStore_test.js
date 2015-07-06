@@ -76,6 +76,12 @@ describe("loop.store.RoomStore", function () {
 
     beforeEach(function() {
       fakeMozLoop = {
+        SHARING_ROOM_URL: {
+          COPY_FROM_PANEL: 0,
+          COPY_FROM_CONVERSATION: 1,
+          EMAIL_FROM_PANEL: 2,
+          EMAIL_FROM_CONVERSATION: 3
+        },
         copyString: function() {},
         getLoopPref: function(pref) {
           return pref;
@@ -87,7 +93,8 @@ describe("loop.store.RoomStore", function () {
           open: function() {},
           rename: function() {},
           on: sandbox.stub()
-        }
+        },
+        telemetryAddValue: sinon.stub()
       };
       fakeNotifications = {
         set: sinon.stub(),
@@ -374,11 +381,34 @@ describe("loop.store.RoomStore", function () {
         var copyString = sandbox.stub(fakeMozLoop, "copyString");
 
         store.copyRoomUrl(new sharedActions.CopyRoomUrl({
-          roomUrl: "http://invalid"
+          roomUrl: "http://invalid",
+          from: "conversation"
         }));
 
         sinon.assert.calledOnce(copyString);
         sinon.assert.calledWithExactly(copyString, "http://invalid");
+      });
+
+      it("should send a telemetry event for copy from panel", function() {
+        store.copyRoomUrl(new sharedActions.CopyRoomUrl({
+          roomUrl: "http://invalid",
+          from: "panel"
+        }));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_SHARING_ROOM_URL", 0);
+      });
+
+      it("should send a telemetry event for copy from conversation", function() {
+        store.copyRoomUrl(new sharedActions.CopyRoomUrl({
+          roomUrl: "http://invalid",
+          from: "conversation"
+        }));
+
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_SHARING_ROOM_URL", 1);
       });
     });
 
@@ -387,12 +417,13 @@ describe("loop.store.RoomStore", function () {
         sandbox.stub(sharedUtils, "composeCallUrlEmail");
 
         store.emailRoomUrl(new sharedActions.EmailRoomUrl({
-          roomUrl: "http://invalid"
+          roomUrl: "http://invalid",
+          from: "conversation"
         }));
 
         sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
         sinon.assert.calledWith(sharedUtils.composeCallUrlEmail,
-          "http://invalid");
+          "http://invalid", null, undefined, "conversation");
       });
 
       it("should call composeUrlEmail differently with context", function() {
@@ -402,12 +433,13 @@ describe("loop.store.RoomStore", function () {
         var description = "Hello, is it me you're looking for?";
         store.emailRoomUrl(new sharedActions.EmailRoomUrl({
           roomUrl: url,
-          roomDescription: description
+          roomDescription: description,
+          from: "conversation"
         }));
 
         sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
         sinon.assert.calledWithExactly(sharedUtils.composeCallUrlEmail,
-          url, null, description);
+          url, null, description, "conversation");
       });
     });
 

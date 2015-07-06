@@ -388,9 +388,11 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param {String} callUrl              The call URL.
    * @param {String} [recipient]          The recipient email address (optional).
    * @param {String} [contextDescription] The context description (optional).
+   * @param {String} [from]               The area from which this function is called.
    */
-  function composeCallUrlEmail(callUrl, recipient, contextDescription) {
-    if (typeof navigator.mozLoop === "undefined") {
+  function composeCallUrlEmail(callUrl, recipient, contextDescription, from) {
+    var mozLoop = navigator.mozLoop;
+    if (typeof mozLoop === "undefined") {
       console.warn("composeCallUrlEmail isn't available for Loop standalone.");
       return;
     }
@@ -399,7 +401,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     var brandShortname = mozL10n.get("brandShortname");
     var clientShortname2 = mozL10n.get("clientShortname2");
     var clientSuperShortname = mozL10n.get("clientSuperShortname");
-    var learnMoreUrl = navigator.mozLoop.getLoopPref("learnMoreUrl");
+    var learnMoreUrl = mozLoop.getLoopPref("learnMoreUrl");
 
     if (contextDescription) {
       subject = mozL10n.get("share_email_subject_context", {
@@ -427,11 +429,18 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
       });
     }
 
-    navigator.mozLoop.composeEmail(
+    mozLoop.composeEmail(
       subject,
       body.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n"),
       recipient
     );
+
+    var bucket = mozLoop.SHARING_ROOM_URL["EMAIL_FROM_" + (from || "").toUpperCase()];
+    if (typeof bucket === "undefined") {
+      console.error("No URL sharing type bucket found for '" + from + "'");
+      return;
+    }
+    mozLoop.telemetryAddValue("LOOP_SHARING_ROOM_URL", bucket);
   }
 
   // We can alias `subarray` to `slice` when the latter is not available, because
