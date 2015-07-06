@@ -6,7 +6,13 @@
 
 #include "DecodedStream.h"
 #include "MediaStreamGraph.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "AudioSegment.h"
+#include "VideoSegment.h"
+#include "MediaQueue.h"
+#include "MediaData.h"
+#include "MediaInfo.h"
+#include "SharedBuffer.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -322,6 +328,319 @@ DecodedStream::SetPlaying(bool aPlaying)
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   MOZ_ASSERT(mData);
   mData->SetPlaying(aPlaying);
+}
+
+bool
+DecodedStream::HaveEnoughAudio(const MediaInfo& aInfo) const
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  if (mData->mStreamInitialized && !mData->mHaveSentFinishAudio) {
+    MOZ_ASSERT(aInfo.HasAudio());
+    TrackID audioTrackId = aInfo.mAudio.mTrackId;
+    if (!mData->mStream->HaveEnoughBuffered(audioTrackId)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+DecodedStream::HaveEnoughVideo(const MediaInfo& aInfo) const
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  if (mData->mStreamInitialized && !mData->mHaveSentFinishVideo) {
+    MOZ_ASSERT(aInfo.HasVideo());
+    TrackID videoTrackId = aInfo.mVideo.mTrackId;
+    if (!mData->mStream->HaveEnoughBuffered(videoTrackId)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void
+DecodedStream::InitTracks(int64_t aStartTime, const MediaInfo& aInfo)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (mData->mStreamInitialized) {
+    return;
+  }
+
+  SourceMediaStream* sourceStream = mData->mStream;
+
+  if (aInfo.HasAudio()) {
+    TrackID audioTrackId = aInfo.mAudio.mTrackId;
+    AudioSegment* audio = new AudioSegment();
+    sourceStream->AddAudioTrack(audioTrackId, aInfo.mAudio.mRate, 0, audio,
+                                SourceMediaStream::ADDTRACK_QUEUED);
+    mData->mNextAudioTime = aStartTime;
+  }
+
+  if (aInfo.HasVideo()) {
+    TrackID videoTrackId = aInfo.mVideo.mTrackId;
+    VideoSegment* video = new VideoSegment();
+    sourceStream->AddTrack(videoTrackId, 0, video,
+                           SourceMediaStream::ADDTRACK_QUEUED);
+    mData->mNextVideoTime = aStartTime;
+  }
+
+  sourceStream->FinishAddTracks();
+  mData->mStreamInitialized = true;
+}
+
+static void
+SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
+                AudioData* aAudio, AudioSegment* aOutput,
+                uint32_t aRate, double aVolume)
+{
+  // This logic has to mimic AudioSink closely to make sure we write
+  // the exact same silences
+  CheckedInt64 audioWrittenOffset = aStream->mAudioFramesWritten +
+                                    UsecsToFrames(aStartTime, aRate);
+  CheckedInt64 frameOffset = UsecsToFrames(aAudio->mTime, aRate);
+
+  if (!audioWrittenOffset.isValid() ||
+      !frameOffset.isValid() ||
+      // ignore packet that we've already processed
+      frameOffset.value() + aAudio->mFrames <= audioWrittenOffset.value()) {
+    return;
+  }
+
+  if (audioWrittenOffset.value() < frameOffset.value()) {
+    int64_t silentFrames = frameOffset.value() - audioWrittenOffset.value();
+    // Write silence to catch up
+    AudioSegment silence;
+    silence.InsertNullDataAtStart(silentFrames);
+    aStream->mAudioFramesWritten += silentFrames;
+    audioWrittenOffset += silentFrames;
+    aOutput->AppendFrom(&silence);
+  }
+
+  MOZ_ASSERT(audioWrittenOffset.value() >= frameOffset.value());
+
+  int64_t offset = audioWrittenOffset.value() - frameOffset.value();
+  size_t framesToWrite = aAudio->mFrames - offset;
+
+  aAudio->EnsureAudioBuffer();
+  nsRefPtr<SharedBuffer> buffer = aAudio->mAudioBuffer;
+  AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
+  nsAutoTArray<const AudioDataValue*, 2> channels;
+  for (uint32_t i = 0; i < aAudio->mChannels; ++i) {
+    channels.AppendElement(bufferData + i * aAudio->mFrames + offset);
+  }
+  aOutput->AppendFrames(buffer.forget(), channels, framesToWrite);
+  aStream->mAudioFramesWritten += framesToWrite;
+  aOutput->ApplyVolume(aVolume);
+
+  aStream->mNextAudioTime = aAudio->GetEndTime();
+}
+
+void
+DecodedStream::SendAudio(int64_t aStartTime,
+                         const MediaInfo& aInfo,
+                         MediaQueue<AudioData>& aQueue,
+                         double aVolume, bool aIsSameOrigin)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (!aInfo.HasAudio()) {
+    return;
+  }
+
+  AudioSegment output;
+  uint32_t rate = aInfo.mAudio.mRate;
+  nsAutoTArray<nsRefPtr<AudioData>,10> audio;
+  TrackID audioTrackId = aInfo.mAudio.mTrackId;
+  SourceMediaStream* sourceStream = mData->mStream;
+
+  // It's OK to hold references to the AudioData because AudioData
+  // is ref-counted.
+  aQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
+  for (uint32_t i = 0; i < audio.Length(); ++i) {
+    SendStreamAudio(mData.get(), aStartTime, audio[i], &output, rate, aVolume);
+  }
+
+  if (!aIsSameOrigin) {
+    output.ReplaceWithDisabled();
+  }
+
+  // |mNextAudioTime| is updated as we process each audio sample in
+  // SendStreamAudio(). This is consistent with how |mNextVideoTime|
+  // is updated for video samples.
+  if (output.GetDuration() > 0) {
+    sourceStream->AppendToTrack(audioTrackId, &output);
+  }
+
+  if (aQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
+    sourceStream->EndTrack(audioTrackId);
+    mData->mHaveSentFinishAudio = true;
+  }
+}
+
+static void
+WriteVideoToMediaStream(MediaStream* aStream,
+                        layers::Image* aImage,
+                        int64_t aEndMicroseconds,
+                        int64_t aStartMicroseconds,
+                        const mozilla::gfx::IntSize& aIntrinsicSize,
+                        VideoSegment* aOutput)
+{
+  nsRefPtr<layers::Image> image = aImage;
+  StreamTime duration =
+      aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
+      aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
+  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize);
+}
+
+static bool
+ZeroDurationAtLastChunk(VideoSegment& aInput)
+{
+  // Get the last video frame's start time in VideoSegment aInput.
+  // If the start time is equal to the duration of aInput, means the last video
+  // frame's duration is zero.
+  StreamTime lastVideoStratTime;
+  aInput.GetLastFrame(&lastVideoStratTime);
+  return lastVideoStratTime == aInput.GetDuration();
+}
+
+void
+DecodedStream::SendVideo(int64_t aStartTime,
+                         const MediaInfo& aInfo,
+                         MediaQueue<VideoData>& aQueue,
+                         bool aIsSameOrigin)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  if (!aInfo.HasVideo()) {
+    return;
+  }
+
+  VideoSegment output;
+  TrackID videoTrackId = aInfo.mVideo.mTrackId;
+  nsAutoTArray<nsRefPtr<VideoData>, 10> video;
+  SourceMediaStream* sourceStream = mData->mStream;
+
+  // It's OK to hold references to the VideoData because VideoData
+  // is ref-counted.
+  aQueue.GetElementsAfter(mData->mNextVideoTime, &video);
+
+  for (uint32_t i = 0; i < video.Length(); ++i) {
+    VideoData* v = video[i];
+
+    if (mData->mNextVideoTime < v->mTime) {
+      // Write last video frame to catch up. mLastVideoImage can be null here
+      // which is fine, it just means there's no video.
+
+      // TODO: |mLastVideoImage| should come from the last image rendered
+      // by the state machine. This will avoid the black frame when capture
+      // happens in the middle of playback (especially in th middle of a
+      // video frame). E.g. if we have a video frame that is 30 sec long
+      // and capture happens at 15 sec, we'll have to append a black frame
+      // that is 15 sec long.
+      WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage, v->mTime,
+          mData->mNextVideoTime, mData->mLastVideoImageDisplaySize, &output);
+      mData->mNextVideoTime = v->mTime;
+    }
+
+    if (mData->mNextVideoTime < v->GetEndTime()) {
+      WriteVideoToMediaStream(sourceStream, v->mImage,
+          v->GetEndTime(), mData->mNextVideoTime, v->mDisplay, &output);
+      mData->mNextVideoTime = v->GetEndTime();
+      mData->mLastVideoImage = v->mImage;
+      mData->mLastVideoImageDisplaySize = v->mDisplay;
+    }
+  }
+
+  // Check the output is not empty.
+  if (output.GetLastFrame()) {
+    mData->mEOSVideoCompensation = ZeroDurationAtLastChunk(output);
+  }
+
+  if (!aIsSameOrigin) {
+    output.ReplaceWithDisabled();
+  }
+
+  if (output.GetDuration() > 0) {
+    sourceStream->AppendToTrack(videoTrackId, &output);
+  }
+
+  if (aQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
+    if (mData->mEOSVideoCompensation) {
+      VideoSegment endSegment;
+      // Calculate the deviation clock time from DecodedStream.
+      int64_t deviation_usec = sourceStream->StreamTimeToMicroseconds(1);
+      WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage,
+          mData->mNextVideoTime + deviation_usec, mData->mNextVideoTime,
+          mData->mLastVideoImageDisplaySize, &endSegment);
+      mData->mNextVideoTime += deviation_usec;
+      MOZ_ASSERT(endSegment.GetDuration() > 0);
+      if (!aIsSameOrigin) {
+        endSegment.ReplaceWithDisabled();
+      }
+      sourceStream->AppendToTrack(videoTrackId, &endSegment);
+    }
+    sourceStream->EndTrack(videoTrackId);
+    mData->mHaveSentFinishVideo = true;
+  }
+}
+
+void
+DecodedStream::AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo)
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  StreamTime endPosition = 0;
+
+  if (aInfo.HasAudio()) {
+    StreamTime audioEnd = mData->mStream->TicksToTimeRoundDown(
+        aInfo.mAudio.mRate, mData->mAudioFramesWritten);
+    endPosition = std::max(endPosition, audioEnd);
+  }
+
+  if (aInfo.HasVideo()) {
+    StreamTime videoEnd = mData->mStream->MicrosecondsToStreamTimeRoundDown(
+        mData->mNextVideoTime - aStartTime);
+    endPosition = std::max(endPosition, videoEnd);
+  }
+
+  if (!mData->mHaveSentFinish) {
+    mData->mStream->AdvanceKnownTracksTime(endPosition);
+  }
+}
+
+bool
+DecodedStream::SendData(int64_t aStartTime,
+                        const MediaInfo& aInfo,
+                        MediaQueue<AudioData>& aAudioQueue,
+                        MediaQueue<VideoData>& aVideoQueue,
+                        double aVolume, bool aIsSameOrigin)
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+
+  InitTracks(aStartTime, aInfo);
+  SendAudio(aStartTime, aInfo, aAudioQueue, aVolume, aIsSameOrigin);
+  SendVideo(aStartTime, aInfo, aVideoQueue, aIsSameOrigin);
+  AdvanceTracks(aStartTime, aInfo);
+
+  bool finished = (!aInfo.HasAudio() || aAudioQueue.IsFinished()) &&
+                  (!aInfo.HasVideo() || aVideoQueue.IsFinished());
+
+  if (finished && !mData->mHaveSentFinish) {
+    mData->mHaveSentFinish = true;
+    mData->mStream->Finish();
+  }
+
+  return finished;
+}
+
+CheckedInt64
+DecodedStream::AudioEndTime(int64_t aStartTime, uint32_t aRate) const
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return aStartTime + FramesToUsecs(mData->mAudioFramesWritten, aRate);
 }
 
 } // namespace mozilla
