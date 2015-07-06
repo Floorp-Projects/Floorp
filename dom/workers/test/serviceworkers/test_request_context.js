@@ -48,7 +48,7 @@ function runTest() {
     } else if (e.data.status == "todo") {
       todo(e.data.result, e.data.message);
     } else if (e.data.status == "registrationdone") {
-      iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/index.html";
+      iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/index.html?" + gTest;
     } else if (e.data.status == "done") {
       iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/unregister.html";
     } else if (e.data.status == "unregistrationdone") {
