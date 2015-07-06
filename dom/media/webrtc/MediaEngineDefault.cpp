@@ -74,11 +74,12 @@ MediaEngineDefaultVideoSource::GetBestFitnessDistance(
     const nsString& aDeviceId)
 {
   uint32_t distance = 0;
-
-  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+#ifdef MOZ_WEBRTC
+  for (const dom::MediaTrackConstraintSet* cs : aConstraintSets) {
     distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
     break; // distance is read from first entry only
   }
+#endif
   return distance;
 }
 
@@ -369,11 +370,12 @@ MediaEngineDefaultAudioSource::GetBestFitnessDistance(
     const nsString& aDeviceId)
 {
   uint32_t distance = 0;
-
-  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
+#ifdef MOZ_WEBRTC
+  for (const dom::MediaTrackConstraintSet* cs : aConstraintSets) {
     distance = GetMinimumFitnessDistance(*cs, false, aDeviceId);
     break; // distance is read from first entry only
   }
+#endif
   return distance;
 }
 
