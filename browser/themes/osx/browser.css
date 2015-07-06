@@ -1333,7 +1333,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
   /* Active styling: transparent white over toolbar colors */
   #forward-button:hover:active:not(:-moz-lwtheme),
-  #back-button:hover:active:not(:-moz-lwtheme) {
+  #back-button:not([disabled="true"]):hover:active:not(:-moz-lwtheme) {
     background-image: linear-gradient(to bottom, rgba(255,255,255, 0.3), rgba(255,255,255, 0.4));
     background-color: transparent;
     box-shadow: none;
