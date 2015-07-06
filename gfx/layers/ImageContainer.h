@@ -98,6 +98,9 @@ namespace mozilla {
 namespace layers {
 
 class ImageClient;
+class ImageCompositeNotification;
+class ImageContainerChild;
+class PImageContainerChild;
 class SharedPlanarYCbCrImage;
 class TextureClient;
 class CompositableClient;
@@ -285,6 +288,10 @@ public:
 
   explicit ImageContainer(ImageContainer::Mode flag = SYNCHRONOUS);
 
+  typedef int32_t FrameID;
+  typedef int32_t ProducerID;
+
+
   /**
    * Create an Image in one of the given formats.
    * Picks the "best" format from the list and creates an Image of that
@@ -377,6 +384,8 @@ public:
   struct OwningImage {
     nsRefPtr<Image> mImage;
     TimeStamp mTimeStamp;
+    FrameID mFrameID;
+    ProducerID mProducerID;
   };
   /**
    * Copy the current Image list to aImages.
@@ -462,6 +471,10 @@ public:
     }
   }
 
+  PImageContainerChild* GetPImageContainerChild();
+
+  static void NotifyComposite(const ImageCompositeNotification& aNotification);
+
 private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
@@ -488,6 +501,8 @@ private:
     mPreviousImagePainted = !mPaintTime.IsNull();
     mPaintTime = TimeStamp();
   }
+
+  void NotifyCompositeInternal(const ImageCompositeNotification& aNotification) {}
 
   nsRefPtr<Image> mActiveImage;
   // Updates every time mActiveImage changes
@@ -522,6 +537,10 @@ private:
   // frames to the compositor through transactions in the main thread rather than
   // asynchronusly using the ImageBridge IPDL protocol.
   ImageClient* mImageClient;
+
+  // Object must be released on the ImageBridge thread. Field is immutable
+  // after creation of the ImageContainer.
+  ImageContainerChild* mIPDLChild;
 
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };

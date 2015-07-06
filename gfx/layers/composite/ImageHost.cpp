@@ -4,11 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageHost.h"
+
 #include "LayersLogging.h"              // for AppendToString
 #include "composite/CompositableHost.h"  // for CompositableHost, etc
 #include "ipc/IPCMessageUtils.h"        // for null_t
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
+#include "mozilla/layers/ImageContainerParent.h"
+#include "mozilla/layers/LayerManagerComposite.h"     // for TexturedEffect, Effect, etc
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -29,11 +32,16 @@ class ISurfaceAllocator;
 
 ImageHost::ImageHost(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
+  , mImageContainer(nullptr)
+  , mLastFrameID(-1)
+  , mLastProducerID(-1)
   , mLocked(false)
 {}
 
 ImageHost::~ImageHost()
-{}
+{
+  SetImageContainer(nullptr);
+}
 
 void
 ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
@@ -54,9 +62,18 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 
   // Create new TimedImage entries and recycle any mTextureSources that match
   // our mFrontBuffers.
-  for (auto& t : aTextures) {
-    TimedImage& img = *newImages.AppendElement();
+  for (uint32_t i = 0; i < aTextures.Length(); ++i) {
+    const TimedTexture& t = aTextures[i];
     MOZ_ASSERT(t.mTexture);
+    if (i + 1 < aTextures.Length() &&
+        t.mProducerID == mLastProducerID && t.mFrameID < mLastFrameID) {
+      // Ignore frames before a frame that we already composited. We don't
+      // ever want to display these frames. This could be important if
+      // the frame producer adjusts timestamps (e.g. to track the audio clock)
+      // and the new frame times are earlier.
+      continue;
+    }
+    TimedImage& img = *newImages.AppendElement();
     img.mFrontBuffer = t.mTexture;
     for (uint32_t i = 0; i < mImages.Length(); ++i) {
       if (mImages[i].mFrontBuffer == img.mFrontBuffer) {
@@ -67,6 +84,8 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
     }
     img.mTimeStamp = t.mTimeStamp;
     img.mPictureRect = t.mPictureRect;
+    img.mFrameID = t.mFrameID;
+    img.mProducerID = t.mProducerID;
   }
   // Recycle any leftover mTextureSources and call PrepareTextureSource on all
   // images.
@@ -107,8 +126,10 @@ int ImageHost::ChooseImageIndex() const
     // Not in a composition, so just return the last image we composited
     // (if it's one of the current images).
     for (uint32_t i = 0; i < mImages.Length(); ++i) {
-      // For now there's only one image so we'll cheat until we can do better.
-      return i;
+      if (mImages[i].mFrameID == mLastFrameID &&
+          mImages[i].mProducerID == mLastProducerID) {
+        return i;
+      }
     }
     return -1;
   }
@@ -158,7 +179,8 @@ void ImageHost::Attach(Layer* aLayer,
 }
 
 void
-ImageHost::Composite(EffectChain& aEffectChain,
+ImageHost::Composite(LayerComposite* aLayer,
+                     EffectChain& aEffectChain,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,
                      const gfx::Filter& aFilter,
@@ -210,6 +232,17 @@ ImageHost::Composite(EffectChain& aEffectChain,
     return;
   }
 
+  if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
+    if (mImageContainer) {
+      aLayer->GetLayerManager()->
+          AppendImageCompositeNotification(ImageCompositeNotification(
+              mImageContainer, nullptr,
+              img->mTimeStamp, GetCompositor()->GetCompositionTime(),
+              img->mFrameID, img->mProducerID));
+    }
+    mLastFrameID = img->mFrameID;
+    mLastProducerID = img->mProducerID;
+  }
   aEffectChain.mPrimaryEffect = effect;
   gfx::Rect pictureRect(0, 0, img->mPictureRect.width, img->mPictureRect.height);
   BigImageIterator* it = img->mTextureSource->AsBigImageIterator();
@@ -391,6 +424,18 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
                               GetRenderState());
 }
 
+void
+ImageHost::SetImageContainer(ImageContainerParent* aImageContainer)
+{
+  if (mImageContainer) {
+    mImageContainer->mImageHosts.RemoveElement(this);
+  }
+  mImageContainer = aImageContainer;
+  if (mImageContainer) {
+    mImageContainer->mImageHosts.AppendElement(this);
+  }
+}
+
 #ifdef MOZ_WIDGET_GONK
 ImageHostOverlay::ImageHostOverlay(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
@@ -402,7 +447,8 @@ ImageHostOverlay::~ImageHostOverlay()
 }
 
 void
-ImageHostOverlay::Composite(EffectChain& aEffectChain,
+ImageHostOverlay::Composite(LayerComposite* aLayer,
+                            EffectChain& aEffectChain,
                             float aOpacity,
                             const gfx::Matrix4x4& aTransform,
                             const gfx::Filter& aFilter,

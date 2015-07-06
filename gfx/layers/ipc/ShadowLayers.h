@@ -27,6 +27,7 @@ namespace mozilla {
 namespace layers {
 
 class EditReply;
+class ImageContainer;
 class Layer;
 class PLayerChild;
 class PLayerTransactionChild;
@@ -123,7 +124,8 @@ public:
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  void Connect(CompositableClient* aCompositable) override;
+  virtual void Connect(CompositableClient* aCompositable,
+                       ImageContainer* aImageContainer) override;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) override;

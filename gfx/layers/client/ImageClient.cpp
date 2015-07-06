@@ -249,6 +249,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     t->mTextureClient = texture;
     t->mTimeStamp = img.mTimeStamp;
     t->mPictureRect = image->GetPictureRect();
+    t->mFrameID = img.mFrameID;
+    t->mProducerID = img.mProducerID;
 
     Buffer* newBuf = newBuffers.AppendElement();
     newBuf->mImageSerial = image->GetSerial();

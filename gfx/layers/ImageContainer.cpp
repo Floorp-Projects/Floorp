@@ -14,6 +14,7 @@
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
+#include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
@@ -139,27 +140,55 @@ BufferRecycleBin::GetBuffer(uint32_t aSize)
   return result;
 }
 
-ImageContainer::ImageContainer(ImageContainer::Mode flag)
+/**
+ * The child side of PImageContainer. It's best to avoid ImageContainer filling
+ * this role since IPDL objects should be associated with a single thread and
+ * ImageContainer definitely isn't. This object belongs to (and is always
+ * destroyed on) the ImageBridge thread, except when we need to destroy it
+ * during shutdown.
+ * An ImageContainer owns one of these; we have a weak reference to our
+ * ImageContainer.
+ */
+class ImageContainerChild : public PImageContainerChild {
+public:
+  explicit ImageContainerChild(ImageContainer* aImageContainer)
+    : mLock("ImageContainerChild"), mImageContainer(aImageContainer) {}
+  void ForgetImageContainer()
+  {
+    MutexAutoLock lock(mLock);
+    mImageContainer = nullptr;
+  }
+
+  // This protects mImageContainer. This is always taken before the
+  // mImageContainer's monitor (when both need to be held).
+  Mutex mLock;
+  ImageContainer* mImageContainer;
+};
+
+ImageContainer::ImageContainer(Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mPreviousImagePainted(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
-  mImageClient(nullptr)
+  mImageClient(nullptr),
+  mIPDLChild(nullptr)
 {
   if (ImageBridgeChild::IsCreated()) {
     // the refcount of this ImageClient is 1. we don't use a RefPtr here because the refcount
     // of this class must be done on the ImageBridge thread.
-    switch(flag) {
+    switch (flag) {
       case SYNCHRONOUS:
         break;
       case ASYNCHRONOUS:
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE).take();
+        mIPDLChild = new ImageContainerChild(this);
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE, this).take();
         MOZ_ASSERT(mImageClient);
         break;
       case ASYNCHRONOUS_OVERLAY:
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY).take();
+        mIPDLChild = new ImageContainerChild(this);
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY, this).take();
         MOZ_ASSERT(mImageClient);
         break;
       default:
@@ -172,7 +201,8 @@ ImageContainer::ImageContainer(ImageContainer::Mode flag)
 ImageContainer::~ImageContainer()
 {
   if (IsAsync()) {
-    ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
+    mIPDLChild->ForgetImageContainer();
+    ImageBridgeChild::DispatchReleaseImageClient(mImageClient, mIPDLChild);
   }
 }
 
@@ -187,7 +217,8 @@ ImageContainer::CreateImage(ImageFormat aFormat)
       // If this ImageContainer is async but the image type mismatch, fix it here
       if (ImageBridgeChild::IsCreated()) {
         ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY).take();
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(
+            CompositableType::IMAGE_OVERLAY, this).take();
       }
     }
   }
@@ -295,7 +326,10 @@ ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (mActiveImage) {
-    aImages->AppendElement()->mImage = mActiveImage;
+    OwningImage* img = aImages->AppendElement();
+    img->mImage = mActiveImage;
+    img->mFrameID = mGenerationCounter;
+    img->mProducerID = 0;
   }
   if (aGenerationCounter) {
     *aGenerationCounter = mGenerationCounter;
@@ -550,6 +584,25 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 
   mTextureClients.Put(forwarder->GetSerial(), textureClient);
   return textureClient;
+}
+
+PImageContainerChild*
+ImageContainer::GetPImageContainerChild()
+{
+  return mIPDLChild;
+}
+
+/* static */ void
+ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
+{
+  ImageContainerChild* child =
+      static_cast<ImageContainerChild*>(aNotification.imageContainerChild());
+  if (child) {
+    MutexAutoLock lock(child->mLock);
+    if (child->mImageContainer) {
+      child->mImageContainer->NotifyCompositeInternal(aNotification);
+    }
+  }
 }
 
 } // namespace
