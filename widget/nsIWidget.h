@@ -119,8 +119,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x483BF75C, 0xF909, 0x45C3, \
-  { 0x95, 0xBE, 0x41, 0x89, 0xDB, 0xCE, 0x2E, 0x13 } };
+{ 0x53376F57, 0xF081, 0x4949, \
+  { 0xB5, 0x5E, 0x87, 0xEF, 0x6A, 0xE9, 0xE3, 0x5A } };
 
 /*
  * Window shadow styles
@@ -941,8 +941,6 @@ class nsIWidget : public nsISupports {
      */
     virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
     virtual nsIWidgetListener* GetAttachedWidgetListener() = 0;
-    virtual void SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
-    virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() = 0;
 
     /**
      * Accessor functions to get and set the listener which handles various
