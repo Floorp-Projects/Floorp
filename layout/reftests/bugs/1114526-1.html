@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+var startPaintCount = 0;
+function doTest() {
+  startPaintCount = window.mozPaintCount;
+  setTimeout(check, 200);
+}
+var calls = 0;
+function check() {
+  calls++;
+  if ((window.mozPaintCount - startPaintCount) > 2) {
+    finishSuccess();
+    return;
+  }
+  if (calls > 10) {
+    finishFail();
+    return;
+  }
+  setTimeout(check, 200);
+}
+function finishSuccess() {
+  cleanup();
+  document.documentElement.className = "";
+}
+function finishFail() {
+  cleanup();
+  document.body.appendChild(document.createTextNode("FAIL FAIL FAIL"));
+  document.documentElement.className = "";
+}
+function cleanup() {
+  var src = document.getElementById("src");
+  var dest = document.getElementById("dest");
+  src.parentNode.removeChild(src);
+  dest.parentNode.removeChild(dest);
+}
+</script>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+}
+
+#src {
+  background-image: url('1114526-1.gif');
+  top: -500px;
+}
+
+#dest {
+  background-image: -moz-element(#src);
+  top: 100px;
+}
+</style>
+</head>
+<body>
+  <div id="src"></div>
+  <div id="dest"></div>
+<script>
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
