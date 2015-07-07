@@ -41,6 +41,10 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
     params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
   }
 
+  if (!mAddonId.IsEmpty()) {
+    params->Set(NS_LITERAL_STRING("addonId"), mAddonId);
+  }
+
   aStr.Truncate();
 
   params->Serialize(value);
@@ -85,6 +89,12 @@ public:
       }
 
       mOriginAttributes->mInBrowser = true;
+      return true;
+    }
+
+    if (aName.EqualsLiteral("addonId")) {
+      MOZ_RELEASE_ASSERT(mOriginAttributes->mAddonId.IsEmpty());
+      mOriginAttributes->mAddonId.Assign(aValue);
       return true;
     }
 
