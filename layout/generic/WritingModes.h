@@ -720,9 +720,9 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     if (aWritingMode.IsVertical()) {
-      B() = aY;
-    } else {
       I() = aY;
+    } else {
+      B() = aY;
     }
   }
 
