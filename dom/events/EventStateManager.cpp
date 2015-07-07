@@ -1604,7 +1604,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   if (IsTrackingDragGesture()) {
     mCurrentTarget = mGestureDownFrameOwner->GetPrimaryFrame();
 
-    if (!mCurrentTarget) {
+    if (!mCurrentTarget || !mCurrentTarget->GetNearestWidget()) {
       StopTrackingDragGesture();
       return;
     }
