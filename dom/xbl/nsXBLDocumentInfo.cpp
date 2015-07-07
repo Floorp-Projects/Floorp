@@ -77,7 +77,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 static void
 UnmarkXBLJSObject(JS::GCCellPtr aPtr, const char* aName, void* aClosure)
 {
-  JS::ExposeObjectToActiveJS(aPtr.toObject());
+  JS::ExposeObjectToActiveJS(&aPtr.as<JSObject>());
 }
 
 static PLDHashOperator

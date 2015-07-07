@@ -526,7 +526,7 @@ BufferGrayRootsTracer::onChild(const JS::GCCellPtr& thing)
         // objects and scripts. We rely on gray root buffering for this to work,
         // but we only need to worry about uncollected dead compartments during
         // incremental GCs (when we do gray root buffering).
-        CallTyped(SetMaybeAliveFunctor(), tenured, thing.kind());
+        DispatchTraceKindTyped(SetMaybeAliveFunctor(), tenured, thing.kind());
 
         if (!zone->gcGrayRoots.append(tenured))
             bufferingGrayRootsFailed = true;
