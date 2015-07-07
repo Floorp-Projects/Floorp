@@ -13,5 +13,4 @@
 [Func="nsDocument::IsWebAnimationsEnabled",
  HeaderFile="nsAnimationManager.h"]
 interface CSSAnimation : Animation {
-  [Constant] readonly attribute DOMString animationName;
 };
