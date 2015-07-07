@@ -264,7 +264,14 @@ public:
 
   void AppendImageCompositeNotification(const ImageCompositeNotification& aNotification)
   {
-    mImageCompositeNotifications.AppendElement(aNotification);
+    // Only send composite notifications when we're drawing to the screen,
+    // because that's what they mean.
+    // Also when we're not drawing to the screen, DidComposite will not be
+    // called to extract and send these notifications, so they might linger
+    // and contain stale ImageContainerParent pointers.
+    if (!mCompositor->GetTargetContext()) {
+      mImageCompositeNotifications.AppendElement(aNotification);
+    }
   }
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotification>* aNotifications)
   {

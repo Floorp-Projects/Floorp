@@ -229,6 +229,10 @@ public:
     mTarget = aTarget;
     mTargetBounds = aRect;
   }
+  gfx::DrawTarget* GetTargetContext() const
+  {
+    return mTarget;
+  }
   void ClearTargetContext()
   {
     mTarget = nullptr;
