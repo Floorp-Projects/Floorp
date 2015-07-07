@@ -351,6 +351,9 @@ static void
 UnregisterGCCallbacks()
 {
   MOZ_ASSERT(sCallbackRuntime);
+  if (!sCallbackRuntime) {
+    return;
+  }
 
   JSRuntime *jsRuntime = nullptr;
   sCallbackRuntime->GetRuntime(&jsRuntime);
