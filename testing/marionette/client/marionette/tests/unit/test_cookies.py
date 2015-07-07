@@ -19,19 +19,19 @@ class CookieTest(MarionetteTestCase):
         self.marionette.delete_all_cookies()
         MarionetteTestCase.tearDown(self)
 
-    def testAddCookie(self):
+    def test_add_cookie(self):
         self.marionette.add_cookie(self.COOKIE_A)
         cookie_returned = str(self.marionette.execute_script("return document.cookie"))
         self.assertTrue(self.COOKIE_A["name"] in cookie_returned)
 
-    def testAddingACookieThatExpiredInThePast(self):
+    def test_adding_a_cookie_that_expired_in_the_past(self):
         cookie = self.COOKIE_A.copy()
         cookie["expiry"] = calendar.timegm(time.gmtime()) - 1
         self.marionette.add_cookie(cookie)
         cookies = self.marionette.get_cookies()
         self.assertEquals(0, len(cookies))
 
-    def testDeleteAllCookie(self):
+    def test_delete_all_cookie(self):
         self.marionette.add_cookie(self.COOKIE_A)
         cookie_returned = str(self.marionette.execute_script("return document.cookie"))
         print cookie_returned
@@ -39,7 +39,7 @@ class CookieTest(MarionetteTestCase):
         self.marionette.delete_all_cookies()
         self.assertFalse(self.marionette.get_cookies())
 
-    def testDeleteCookie(self):
+    def test_delete_cookie(self):
         self.marionette.add_cookie(self.COOKIE_A)
         cookie_returned = str(self.marionette.execute_script("return document.cookie"))
         self.assertTrue(self.COOKIE_A["name"] in cookie_returned)
@@ -47,14 +47,14 @@ class CookieTest(MarionetteTestCase):
         cookie_returned = str(self.marionette.execute_script("return document.cookie"))
         self.assertFalse(self.COOKIE_A["name"] in cookie_returned)
 
-    def testShouldGetCookieByName(self): 
+    def test_should_get_cookie_by_name(self):
         key = "key_%d" % int(random.random()*10000000)
         self.marionette.execute_script("document.cookie = arguments[0] + '=set';", [key])
 
         cookie = self.marionette.get_cookie(key)
         self.assertEquals("set", cookie["value"])
 
-    def testGetAllCookies(self):
+    def test_get_all_cookies(self):
         key1 = "key_%d" % int(random.random()*10000000)
         key2 = "key_%d" % int(random.random()*10000000)
 
@@ -74,7 +74,7 @@ class CookieTest(MarionetteTestCase):
         cookies = self.marionette.get_cookies()
         self.assertEquals(count + 2, len(cookies))
 
-    def testShouldNotDeleteCookiesWithASimilarName(self):
+    def test_should_not_delete_cookies_with_a_similar_name(self):
         cookieOneName = "fish"
         cookie1 = {"name" :cookieOneName,
                     "value":"cod"}
