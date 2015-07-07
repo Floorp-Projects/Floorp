@@ -19,11 +19,33 @@ XPCOMUtils.defineLazyServiceGetter(this, "tm",
   "@mozilla.org/thread-manager;1", "nsIThreadManager");
 
 /*
- * A WeakMap to map input method iframe window to its active status and kbID.
+ * A WeakMap to map input method iframe window to
+ * it's active status, kbID, and ipcHelper.
  */
 let WindowMap = {
   // WeakMap of <window, object> pairs.
   _map: null,
+
+  /*
+   * Set the object associated to the window and return it.
+   */
+  _getObjForWin: function(win) {
+    if (!this._map) {
+      this._map = new WeakMap();
+    }
+    if (this._map.has(win)) {
+      return this._map.get(win);
+    } else {
+      let obj = {
+        active: false,
+        kbID: undefined,
+        ipcHelper: null
+      };
+      this._map.set(win, obj);
+
+      return obj;
+    }
+  },
 
   /*
    * Check if the given window is active.
@@ -33,12 +55,7 @@ let WindowMap = {
       return false;
     }
 
-    let obj = this._map.get(win);
-    if (obj && 'active' in obj) {
-      return obj.active;
-    }else{
-      return false;
-    }
+    return this._getObjForWin(win).active;
   },
 
   /*
@@ -48,45 +65,59 @@ let WindowMap = {
     if (!win) {
       return;
     }
-    if (!this._map) {
-      this._map = new WeakMap();
-    }
-    if (!this._map.has(win)) {
-      this._map.set(win, {});
-    }
-    this._map.get(win).active = isActive;
+    let obj = this._getObjForWin(win);
+    obj.active = isActive;
   },
 
   /*
-   * Get the keyboard ID (assigned by Keyboard.ksm) of the given window.
+   * Get the keyboard ID (assigned by Keyboard.jsm) of the given window.
    */
   getKbID: function(win) {
     if (!this._map || !win) {
-      return null;
+      return undefined;
     }
 
-    let obj = this._map.get(win);
-    if (obj && 'kbID' in obj) {
-      return obj.kbID;
-    }else{
-      return null;
-    }
+    let obj = this._getObjForWin(win);
+    return obj.kbID;
   },
 
   /*
-   * Set the keyboard ID (assigned by Keyboard.ksm) of the given window.
+   * Set the keyboard ID (assigned by Keyboard.jsm) of the given window.
    */
   setKbID: function(win, kbID) {
     if (!win) {
       return;
     }
-    if (!this._map) {
-      this._map = new WeakMap();
+    let obj = this._getObjForWin(win);
+    obj.kbID = kbID;
+  },
+
+  /*
+   * Get InputContextDOMRequestIpcHelper instance attached to this window.
+   */
+  getInputContextIpcHelper: function(win) {
+    if (!win) {
+      return;
     }
-    if (!this._map.has(win)) {
-      this._map.set(win, {});
+    let obj = this._getObjForWin(win);
+    if (!obj.ipcHelper) {
+      obj.ipcHelper = new InputContextDOMRequestIpcHelper(win);
     }
-    this._map.get(win).kbID = kbID;
+    return obj.ipcHelper;
+  },
+
+  /*
+   * Unset InputContextDOMRequestIpcHelper instance.
+   */
+  unsetInputContextIpcHelper: function(win) {
+    if (!win) {
+      return;
+    }
+    let obj = this._getObjForWin(win);
+    if (!obj.ipcHelper) {
+      return;
+    }
+    obj.ipcHelper = null;
   }
 };
 
@@ -332,9 +363,9 @@ MozInputMethod.prototype = {
       // Note: if we need to get it from Keyboard.jsm,
       // we have to use a synchronous message
       var kbID = WindowMap.getKbID(this._window);
-      if (kbID !== null) {
+      if (kbID) {
         cpmmSendAsyncMessageWithKbID(this, 'Keyboard:Register', {});
-      }else{
+      } else {
         let res = cpmm.sendSyncMessage('Keyboard:Register', {});
         WindowMap.setKbID(this._window, res[0]);
       }
@@ -417,6 +448,61 @@ MozInputMethod.prototype = {
 
  /**
  * ==============================================
+ * InputContextDOMRequestIpcHelper
+ * ==============================================
+ */
+function InputContextDOMRequestIpcHelper(win) {
+  this.initDOMRequestHelper(win,
+    ["Keyboard:GetText:Result:OK",
+     "Keyboard:GetText:Result:Error",
+     "Keyboard:SetSelectionRange:Result:OK",
+     "Keyboard:ReplaceSurroundingText:Result:OK",
+     "Keyboard:SendKey:Result:OK",
+     "Keyboard:SendKey:Result:Error",
+     "Keyboard:SetComposition:Result:OK",
+     "Keyboard:EndComposition:Result:OK",
+     "Keyboard:SequenceError"]);
+}
+
+InputContextDOMRequestIpcHelper.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
+  _inputContext: null,
+
+  attachInputContext: function(inputCtx) {
+    if (this._inputContext) {
+      throw new Error("InputContextDOMRequestIpcHelper: detach the context first.");
+    }
+
+    this._inputContext = inputCtx;
+  },
+
+  // Unset ourselves when the window is destroyed.
+  uninit: function() {
+    WindowMap.unsetInputContextIpcHelper(this._window);
+  },
+
+  detachInputContext: function() {
+    // All requests that are still pending need to be invalidated
+    // because the context is no longer valid.
+    this.forEachPromiseResolver(k => {
+      this.takePromiseResolver(k).reject("InputContext got destroyed");
+    });
+
+    this._inputContext = null;
+  },
+
+  receiveMessage: function(msg) {
+    if (!this._inputContext) {
+      dump('InputContextDOMRequestIpcHelper received message without context attached.\n');
+      return;
+    }
+
+    this._inputContext.receiveMessage(msg);
+  }
+};
+
+ /**
+ * ==============================================
  * InputContext
  * ==============================================
  */
@@ -438,11 +524,10 @@ function MozInputContext(ctx) {
 }
 
 MozInputContext.prototype = {
-  __proto__: DOMRequestIpcHelper.prototype,
-
   _window: null,
   _context: null,
   _contextId: -1,
+  _ipcHelper: null,
 
   classID: Components.ID("{1e38633d-d08b-4867-9944-afa5c648adb6}"),
 
@@ -453,30 +538,12 @@ MozInputContext.prototype = {
 
   init: function ic_init(win) {
     this._window = win;
-    this._utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils);
-    this.initDOMRequestHelper(win,
-      ["Keyboard:GetText:Result:OK",
-       "Keyboard:GetText:Result:Error",
-       "Keyboard:SetSelectionRange:Result:OK",
-       "Keyboard:ReplaceSurroundingText:Result:OK",
-       "Keyboard:SendKey:Result:OK",
-       "Keyboard:SendKey:Result:Error",
-       "Keyboard:SetComposition:Result:OK",
-       "Keyboard:EndComposition:Result:OK",
-       "Keyboard:SequenceError"]);
+
+    this._ipcHelper = WindowMap.getInputContextIpcHelper(win);
+    this._ipcHelper.attachInputContext(this);
   },
 
   destroy: function ic_destroy() {
-    let self = this;
-
-    // All requests that are still pending need to be invalidated
-    // because the context is no longer valid.
-    this.forEachPromiseResolver(function(k) {
-      self.takePromiseResolver(k).reject("InputContext got destroyed");
-    });
-    this.destroyDOMRequestHelper();
-
     // A consuming application might still hold a cached version of
     // this object. After destroying all methods will throw because we
     // cannot create new promises anymore, but we still hold
@@ -486,6 +553,9 @@ MozInputContext.prototype = {
         this._context[k] = null;
       }
     }
+
+    this._ipcHelper.detachInputContext();
+    this._ipcHelper = null;
 
     this._window = null;
   },
@@ -497,9 +567,10 @@ MozInputContext.prototype = {
     }
 
     let json = msg.json;
-    let resolver = this.takePromiseResolver(json.requestId);
+    let resolver = this._ipcHelper.takePromiseResolver(json.requestId);
 
     if (!resolver) {
+      dump('InputContext received invalid requestId.\n');
       return;
     }
 
@@ -715,10 +786,10 @@ MozInputContext.prototype = {
 
   _sendPromise: function(callback) {
     let self = this;
-    return this.createPromise(function(resolve, reject) {
-      let resolverId = self.getPromiseResolverId({ resolve: resolve, reject: reject });
+    return this._ipcHelper.createPromise(function(resolve, reject) {
+      let resolverId = self._ipcHelper.getPromiseResolverId({ resolve: resolve, reject: reject });
       if (!WindowMap.isActive(self._window)) {
-        self.removePromiseResolver(resolverId);
+        self._ipcHelper.removePromiseResolver(resolverId);
         reject('Input method is not active.');
         return;
       }

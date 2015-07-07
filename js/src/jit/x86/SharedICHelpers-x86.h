@@ -43,7 +43,7 @@ EmitCallIC(CodeOffsetLabel* patchOffset, MacroAssembler& masm)
 
     // Load stubcode pointer from BaselineStubEntry into ICTailCallReg
     // ICTailCallReg will always be unused in the contexts where ICs are called.
-    masm.call(Operand(ICStubReg, ICStub::offsetOfStubCode()));
+    masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
 }
 
 inline void
@@ -236,7 +236,7 @@ EmitCallTypeUpdateIC(MacroAssembler& masm, JitCode* code, uint32_t objectOffset)
                  ICStubReg);
 
     // Call the stubcode.
-    masm.call(Operand(ICStubReg, ICStub::offsetOfStubCode()));
+    masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
 
     // Restore the old stub reg.
     masm.pop(ICStubReg);

@@ -32,7 +32,7 @@ function kbFrameScript() {
       }, function(e){
         sendAsyncMessage('test:InputMethod:getText:Reject');
       });
-    }else{
+    } else {
       dump("Could not get inputcontext") ;
     }
   }
@@ -103,7 +103,7 @@ function runTest() {
           mmKeyboardB.loadFrameScript('data:,(' + kbFrameScript.toString() + ')();', false);
 
           mmKeyboardB.addMessageListener('test:InputMethod:getText:Resolve', function() {
-            ok(true, 'getText() was resolved');
+            info('getText() was resolved');
             inputmethod_cleanup();
           });
 
@@ -124,6 +124,7 @@ function runTest() {
 
   // STEP 2: Set keyboard A active
   function step2() {
+    info('step2');
     let req = keyboardA.setInputMethodActive(true);
 
     req.onsuccess = function(){
@@ -140,6 +141,7 @@ function runTest() {
 
   // STEP 3: Set keyboard B active
   function step3() {
+    info('step3');
     let req = keyboardB.setInputMethodActive(true);
 
     req.onsuccess = function(){
@@ -156,6 +158,7 @@ function runTest() {
 
   // STEP 4: Set keyboard A inactive
   function step4() {
+    info('step4');
     let req = keyboardA.setInputMethodActive(false);
 
     req.onsuccess = function(){
@@ -172,6 +175,7 @@ function runTest() {
 
   // STEP 5: getText
   function step5() {
+    info('step5');
     mmKeyboardB.sendAsyncMessage('test:InputMethod:getText:Do');
   }
 

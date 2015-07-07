@@ -1984,17 +1984,23 @@ JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer&& other)
 }
 
 void
-JSAutoStructuredCloneBuffer::clear()
+JSAutoStructuredCloneBuffer::clear(const JSStructuredCloneCallbacks* optionalCallbacks,
+                                   void* optionalClosure)
 {
-    if (data_) {
-        if (ownTransferables_ == OwnsTransferablesIfAny)
-            DiscardTransferables(data_, nbytes_, callbacks_, closure_);
-        ownTransferables_ = NoTransferables;
-        js_free(data_);
-        data_ = nullptr;
-        nbytes_ = 0;
-        version_ = 0;
-    }
+    if (!data_)
+        return;
+
+    const JSStructuredCloneCallbacks* callbacks =
+        optionalCallbacks ?  optionalCallbacks : callbacks_;
+    void* closure = optionalClosure ?  optionalClosure : closure_;
+
+    if (ownTransferables_ == OwnsTransferablesIfAny)
+        DiscardTransferables(data_, nbytes_, callbacks, closure);
+    ownTransferables_ = NoTransferables;
+    js_free(data_);
+    data_ = nullptr;
+    nbytes_ = 0;
+    version_ = 0;
 }
 
 bool
