@@ -55,8 +55,6 @@ const ARCHIVE_SIZE_PROBE_SPECIAL_VALUE = 300;
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-let isPingDirectoryCreated = false;
-
 /**
  * This is a policy object used to override behavior for testing.
  */
@@ -909,19 +907,18 @@ let TelemetryStorageImpl = {
    * compression will be used.
    * @returns {promise}
    */
-  savePingToFile: function(ping, filePath, overwrite, compress = false) {
-    return Task.spawn(function*() {
-      try {
-        let pingString = JSON.stringify(ping);
-        let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
-        if (compress) {
-          options.compression = "lz4";
-        }
-        yield OS.File.writeAtomic(filePath, pingString, options);
-      } catch(e if e.becauseExists) {
+  savePingToFile: Task.async(function*(ping, filePath, overwrite, compress = false) {
+    try {
+      this._log.trace("savePingToFile - path: " + filePath);
+      let pingString = JSON.stringify(ping);
+      let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
+      if (compress) {
+        options.compression = "lz4";
       }
-    })
-  },
+      yield OS.File.writeAtomic(filePath, pingString, options);
+    } catch(e if e.becauseExists) {
+    }
+  }),
 
   /**
    * Save a ping to its file.
@@ -986,6 +983,7 @@ let TelemetryStorageImpl = {
         path: path,
         lastModificationDate: Policy.now().getTime(),
       });
+      this._log.trace("savePendingPing - saved ping with id " + ping.id);
     });
   },
 
@@ -1024,14 +1022,15 @@ let TelemetryStorageImpl = {
       return Promise.resolve(this._buildPingList());
     }
 
-    // Make sure to clear the task once done.
-    let clear = pings => {
+    // Since there's no pending pings scan task running, start it.
+    // Also make sure to clear the task once done.
+    this._scanPendingPingsTask = this._scanPendingPings().then(pings => {
       this._scanPendingPingsTask = null;
       return pings;
-    };
-
-    // Since there's no pending pings scan task running, start it.
-    this._scanPendingPingsTask = this._scanPendingPings().then(clear, clear);
+    }, ex => {
+      this._scanPendingPingsTask = null;
+      throw ex;
+    });
     return this._scanPendingPingsTask;
   },
 
@@ -1059,16 +1058,23 @@ let TelemetryStorageImpl = {
         return [];
       }
 
-      let info = yield OS.File.stat(file.path);
+      let info;
+      try {
+        info = yield OS.File.stat(file.path);
+      } catch (ex) {
+        this._log.error("_scanPendingPings - failed to stat file " + file.path, ex);
+        continue;
+      }
+
       let id = OS.Path.basename(file.path);
       if (!UUID_REGEX.test(id)) {
-        this._log.trace("_scanPendingPings - unknown filename is not a UUID: " + id);
+        this._log.trace("_scanPendingPings - filename is not a UUID: " + id);
         id = Utils.generateUUID();
       }
 
       this._pendingPings.set(id, {
         path: file.path,
-        lastModificationDate: info.lastModificationDate,
+        lastModificationDate: info.lastModificationDate.getTime(),
       });
     }
 
@@ -1241,9 +1247,8 @@ function getPingDirectory() {
   return Task.spawn(function*() {
     let directory = TelemetryStorage.pingDirectoryPath;
 
-    if (!isPingDirectoryCreated) {
+    if (!(yield OS.File.exists(directory))) {
       yield OS.File.makeDir(directory, { unixMode: OS.Constants.S_IRWXU });
-      isPingDirectoryCreated = true;
     }
 
     return directory;
