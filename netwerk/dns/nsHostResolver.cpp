@@ -625,7 +625,7 @@ nsHostResolver::FlushCache()
     }
 
     // Refresh the cache entries that are resolving RIGHT now, remove the rest.
-    for (auto iter = mDB.RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<nsHostDBEnt *>(iter.Get());
         // Try to remove the record, or mark it for refresh.
         if (entry->rec->RemoveOrRefresh()) {
