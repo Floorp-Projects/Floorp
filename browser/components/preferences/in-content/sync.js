@@ -237,9 +237,6 @@ let gSyncPane = {
     setEventListener("rejectUnlinkFxaAccount", "click", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
-    setEventListener("fxaSyncComputerName", "change", function (e) {
-      gSyncUtils.changeName(e.target);
-    });
     setEventListener("tosPP-small-ToS", "click", gSyncPane.openToS);
     setEventListener("tosPP-small-PP", "click", gSyncPane.openPrivacyPolicy);
     setEventListener("sync-migrate-upgrade", "click", function () {
