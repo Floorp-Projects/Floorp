@@ -1,5 +1,7 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
 var float32x4 = SIMD.float32x4;
+var int8x16 = SIMD.int8x16;
+var int16x8 = SIMD.int16x8;
 var int32x4 = SIMD.int32x4;
 
 
@@ -136,6 +138,140 @@ function testFloat32x4xor() {
   }
 }
 
+var i8x16vals = [
+  [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+   [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]],
+  [[INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, -2, -3, -4, -5, -6, -7, -8, -9],
+   [1, 1, -1, -1, INT8_MAX, INT8_MAX, INT8_MIN, INT8_MIN, 8, 9, 10, 11, 12, 13, 14, 15]]
+];
+
+function testInt8x16add() {
+  function addi(a, b) {
+    return (a + b) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.add, addi);
+  }
+}
+
+function testInt8x16and() {
+  function andi(a, b) {
+    return (a & b) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.and, andi);
+  }
+}
+
+function testInt8x16mul() {
+  function muli(x, y) {
+    return (x * y) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.mul, muli);
+  }
+}
+
+function testInt8x16or() {
+  function ori(a, b) {
+    return (a | b) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.or, ori);
+  }
+}
+
+function testInt8x16sub() {
+  function subi(a, b) {
+    return (a - b) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.sub, subi);
+  }
+}
+
+function testInt8x16xor() {
+  function xori(a, b) {
+    return (a ^ b) << 24 >> 24;
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.xor, xori);
+  }
+}
+
+var i16x8vals = [
+  [[1, 2, 3, 4, 5, 6, 7, 8],
+   [10, 20, 30, 40, 50, 60, 70, 80]],
+  [[INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN],
+   [1, 1, -1, -1, INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN]]
+];
+
+function testInt16x8add() {
+  function addi(a, b) {
+    return (a + b) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.add, addi);
+  }
+}
+
+function testInt16x8and() {
+  function andi(a, b) {
+    return (a & b) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.and, andi);
+  }
+}
+
+function testInt16x8mul() {
+  function muli(x, y) {
+    return (x * y) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.mul, muli);
+  }
+}
+
+function testInt16x8or() {
+  function ori(a, b) {
+    return (a | b) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.or, ori);
+  }
+}
+
+function testInt16x8sub() {
+  function subi(a, b) {
+    return (a - b) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.sub, subi);
+  }
+}
+
+function testInt16x8xor() {
+  function xori(a, b) {
+    return (a ^ b) << 16 >> 16;
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.xor, xori);
+  }
+}
+
 function testInt32x4add() {
   function addi(a, b) {
     return (a + b) | 0;
@@ -234,6 +370,20 @@ function test() {
   testFloat32x4or();
   testFloat32x4sub();
   testFloat32x4xor();
+
+  testInt8x16add();
+  testInt8x16and();
+  testInt8x16mul();
+  testInt8x16or();
+  testInt8x16sub();
+  testInt8x16xor();
+
+  testInt16x8add();
+  testInt16x8and();
+  testInt16x8mul();
+  testInt16x8or();
+  testInt16x8sub();
+  testInt16x8xor();
 
   testInt32x4add();
   testInt32x4and();
