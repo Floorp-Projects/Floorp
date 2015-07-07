@@ -35,8 +35,6 @@ private:
 class DelayedResolveOrReject : public nsRunnable
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DelayedResolveOrReject)
-
   DelayedResolveOrReject(MediaTaskQueue* aTaskQueue,
                          TestPromise::Private* aPromise,
                          TestPromise::ResolveOrRejectValue aValue,

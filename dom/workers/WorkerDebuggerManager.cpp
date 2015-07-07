@@ -25,8 +25,6 @@ public:
   : mManager(aManager), mDebugger(aDebugger), mHasListeners(aHasListeners)
   { }
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-
 private:
   ~RegisterDebuggerRunnable()
   { }
@@ -39,8 +37,6 @@ private:
     return NS_OK;
   }
 };
-
-NS_IMPL_ISUPPORTS(RegisterDebuggerRunnable, nsIRunnable);
 
 BEGIN_WORKERS_NAMESPACE
 
