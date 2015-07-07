@@ -67,9 +67,15 @@ var startTest = function(media, token) {
   v2.onplay = checkDrawImageEventHandler;
   v3.onplay = checkDrawImageEventHandler;
 
-  v1.onplaying = checkDrawImageEventHandler;
-  v2.onplaying = checkDrawImageEventHandler;
-  v3.onplaying = checkDrawImageEventHandler;
+  function onplaying(ev) {
+    if (!ev.target.gotPlaying) {
+      ev.target.gotPlaying = true;
+      checkDrawImageEventHandler(ev);
+    }
+  }
+  v1.onplaying = onplaying;
+  v2.onplaying = onplaying;
+  v3.onplaying = onplaying;
 
   var onloadeddata = function(ev) {
     ev.target.gotLoadeddata = true;
