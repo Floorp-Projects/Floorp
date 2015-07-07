@@ -51,7 +51,6 @@ const MATCH_BEGINNING_CASE_SENSITIVE = Ci.mozIPlacesAutoComplete.MATCH_BEGINNING
 const QUERYTYPE_FILTERED            = 0;
 const QUERYTYPE_AUTOFILL_HOST       = 1;
 const QUERYTYPE_AUTOFILL_URL        = 2;
-const QUERYTYPE_AUTOFILL_PREDICTURL = 3;
 
 // This separator is used as an RTL-friendly way to split the title and tags.
 // It can also be used by an nsIAutoCompleteResult consumer to re-split the
@@ -212,22 +211,18 @@ const SQL_BOOKMARKED_HOST_QUERY = bookmarkedHostQuery();
 const SQL_BOOKMARKED_TYPED_HOST_QUERY = bookmarkedHostQuery("AND typed = 1");
 
 function urlQuery(conditions = "") {
-  let query =
-    `/* do not warn (bug no): cannot use an index */
-     SELECT :query_type, h.url, NULL, f.url AS favicon_url,
+  return `/* do not warn (bug no): cannot use an index to sort */
+          SELECT :query_type, h.url, NULL, f.url AS favicon_url,
             foreign_count > 0 AS bookmarked,
             NULL, NULL, NULL, NULL, NULL, NULL, h.frecency
-     FROM moz_places h
-     LEFT JOIN moz_favicons f ON h.favicon_id = f.id
-     WHERE h.frecency <> 0
-     ${conditions}
-     AND AUTOCOMPLETE_MATCH(:searchString, h.url,
-     h.title, '',
-     h.visit_count, h.typed, bookmarked, 0,
-     :matchBehavior, :searchBehavior)
-     ORDER BY h.frecency DESC, h.id DESC
-     LIMIT 1`;
-  return query;
+          FROM moz_places h
+          LEFT JOIN moz_favicons f ON h.favicon_id = f.id
+          WHERE (rev_host = :revHost OR rev_host = :revHost || "www.")
+          AND h.frecency <> 0
+          AND fixup_url(h.url) BETWEEN :searchString AND :searchString || X'FFFF'
+          ${conditions}
+          ORDER BY h.frecency DESC, h.id DESC
+          LIMIT 1`;
 }
 
 const SQL_URL_QUERY = urlQuery();
@@ -818,10 +813,7 @@ Search.prototype = {
     let shouldAutofill = this._shouldAutofill;
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // It may also look like a URL we know from the database.
-      // Here we can only try to predict whether the URL autofill query is
-      // likely to return a result.  If the prediction ends up being wrong,
-      // later we will need to make up for the lack of a special first result.
-      hasFirstResult = yield this._matchKnownUrl(conn, queries);
+      hasFirstResult = yield this._matchKnownUrl(conn);
     }
 
     if (this.pending && !hasFirstResult && shouldAutofill) {
@@ -832,11 +824,21 @@ Search.prototype = {
     if (this.pending && this._enableActions && !hasFirstResult) {
       // If we don't have a result that matches what we know about, then
       // we use a fallback for things we don't know about.
-      yield this._matchHeuristicFallback();
+
+      // We may not have auto-filled, but this may still look like a URL.
+      // However, even if the input is a valid URL, we may not want to use
+      // it as such. This can happen if the host would require whitelisting,
+      // but isn't in the whitelist.
+      hasFirstResult = yield this._matchUnknownUrl();
     }
 
-    // IMPORTANT: No other first result heuristics should run after
-    // _matchHeuristicFallback().
+    if (this.pending && this._enableActions && !hasFirstResult) {
+      // When all else fails, we search using the current search engine.
+      hasFirstResult = yield this._matchCurrentSearchEngine();
+    }
+
+    // IMPORTANT: No other first result heuristics should run after this point.
+
     yield this._sleep(Prefs.delay);
     if (!this.pending)
       return;
@@ -846,15 +848,7 @@ Search.prototype = {
       return;
 
     for (let [query, params] of queries) {
-      let hasResult = yield conn.executeCached(query, params, this._onResultRow.bind(this));
-
-      if (this.pending && this._enableActions && !hasResult &&
-          params.query_type == QUERYTYPE_AUTOFILL_URL) {
-        // If we predicted that our URL autofill query might have gotten a
-        // result, but it didn't, then we need to recover.
-        yield this._matchHeuristicFallback();
-      }
-
+      yield conn.executeCached(query, params, this._onResultRow.bind(this));
       if (!this.pending)
         return;
     }
@@ -908,7 +902,7 @@ Search.prototype = {
     }
   },
 
-  _matchKnownUrl: function* (conn, queries) {
+  _matchKnownUrl: function* (conn) {
     // Hosts have no "/" in them.
     let lastSlashIndex = this._searchString.lastIndexOf("/");
     // Search only URLs if there's a slash in the search string...
@@ -921,14 +915,13 @@ Search.prototype = {
         // assuming that if we get a result from a *host* query and it *looks*
         // like a URL, then we'll probably have a result.
         let gotResult = false;
-        let [ query, params ] = this._urlPredictQuery;
+        let [ query, params ] = this._urlQuery;
         yield conn.executeCached(query, params, row => {
           gotResult = true;
-          queries.unshift(this._urlQuery);
+          this._onResultRow(row);
         });
         return gotResult;
       }
-
       return false;
     }
 
@@ -938,7 +931,6 @@ Search.prototype = {
       gotResult = true;
       this._onResultRow(row);
     });
-
     return gotResult;
   },
 
@@ -1042,10 +1034,11 @@ Search.prototype = {
   _matchCurrentSearchEngine: function* () {
     let match = yield PlacesSearchAutocompleteProvider.getDefaultMatch();
     if (!match)
-      return;
+      return false;
 
     let query = this._originalSearchString;
     this._addSearchEngineMatch(match, query);
+    return true;
   },
 
   _addSearchEngineMatch(match, query, suggestion) {
@@ -1069,23 +1062,6 @@ Search.prototype = {
       frecency: FRECENCY_DEFAULT,
       remote: !!suggestion
     });
-  },
-
-  // These are separated out so we can run them in two distinct cases:
-  // (1) We didn't match on anything that we know about
-  // (2) Our predictive query for URL autofill thought we may get a result,
-  //     but we didn't.
-  _matchHeuristicFallback: function* () {
-    // We may not have auto-filled, but this may still look like a URL.
-    let hasFirstResult = yield this._matchUnknownUrl();
-    // However, even if the input is a valid URL, we may not want to use
-    // it as such. This can happen if the host would require whitelisting,
-    // but isn't in the whitelist.
-
-    if (this.pending && !hasFirstResult) {
-      // When all else fails, we search using the current search engine.
-      yield this._matchCurrentSearchEngine();
-    }
   },
 
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
@@ -1157,8 +1133,6 @@ Search.prototype = {
     switch (queryType) {
       case QUERYTYPE_AUTOFILL_HOST:
         this._result.setDefaultIndex(0);
-        // Fall through.
-      case QUERYTYPE_AUTOFILL_PREDICTURL:
         match = this._processHostRow(row);
         break;
       case QUERYTYPE_AUTOFILL_URL:
@@ -1556,51 +1530,21 @@ Search.prototype = {
   },
 
   /**
-   * Obtains a query to predict whether this._urlQuery is likely to return a
-   * result. We do by extracting what should be a host out of the input and
-   * performing a host query based on that.
-   */
-  get _urlPredictQuery() {
-    // We expect this to be a full URL, not just a host. We want to extract the
-    // host and use that as a guess for whether we'll get a result from a URL
-    // query.
-    let slashIndex = this._searchString.indexOf("/");
-
-    let host = this._searchString.substring(0, slashIndex);
-    host = host.toLowerCase();
-
-    return [
-      SQL_HOST_QUERY,
-      {
-        query_type: QUERYTYPE_AUTOFILL_PREDICTURL,
-        searchString: host
-      }
-    ];
-  },
-
-  /**
    * Obtains the query to search for autoFill url results.
    *
    * @return an array consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
-  get _urlQuery()  {
+  get _urlQuery() {
+    // We expect this to be a full URL, not just a host. We want to extract the
+    // host and use that as a guess for whether we'll get a result from a URL
+    // query.
+    let slashIndex = this._autofillUrlSearchString.indexOf("/");
+    let revHost = this._autofillUrlSearchString.substring(0, slashIndex).toLowerCase()
+                      .split("").reverse().join("") + ".";
+
     let typed = Prefs.autofillTyped || this.hasBehavior("typed");
     let bookmarked = this.hasBehavior("bookmark") && !this.hasBehavior("history");
-    let searchBehavior = Ci.mozIPlacesAutoComplete.BEHAVIOR_URL;
-
-    // Enable searches in typed history if autofillTyped pref or typed behavior
-    // is true.
-    if (typed) {
-      searchBehavior |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
-                        Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED;
-    } else {
-      // Search in entire history.
-      searchBehavior |= Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY;
-    }
-    if (bookmarked) {
-      searchBehavior |= Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
-    }
 
     return [
       bookmarked ? typed ? SQL_BOOKMARKED_TYPED_URL_QUERY
@@ -1610,8 +1554,7 @@ Search.prototype = {
       {
         query_type: QUERYTYPE_AUTOFILL_URL,
         searchString: this._autofillUrlSearchString,
-        matchBehavior: MATCH_BEGINNING_CASE_SENSITIVE,
-        searchBehavior: searchBehavior
+        revHost
       }
     ];
   },
