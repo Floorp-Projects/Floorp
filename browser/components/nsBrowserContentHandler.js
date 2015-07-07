@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.importGlobalProperties(["URLSearchParams"]);
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
@@ -727,10 +729,42 @@ nsDefaultCommandLineHandler.prototype = {
       }
     }
 
+    let redirectWinSearch = false;
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      redirectWinSearch = Services.prefs.getBoolPref("browser.search.redirectWindowsSearch");
+    }
+
     try {
       var ar;
       while ((ar = cmdLine.handleFlagWithParam("url", false))) {
         var uri = resolveURIInternal(cmdLine, ar);
+
+        // Searches in the Windows 10 task bar searchbox simply open the default browser
+        // with a URL for a search on Bing. Here we extract the search term and use the
+        // user's default search engine instead.
+        if (redirectWinSearch && uri.spec.startsWith("https://www.bing.com/search")) {
+          try {
+            var url = uri.QueryInterface(Components.interfaces.nsIURL);
+            var params = new URLSearchParams(url.query);
+            // We don't want to rewrite all Bing URLs coming from external apps. Look
+            // for the magic URL parm that's present in searches from the task bar.
+            // (Typed searches use "form=WNSGPH", Cortana voice searches use "FORM=WNSBOX")
+            var formParam = params.get("form");
+            if (!formParam) {
+              formParam = params.get("FORM");
+            }
+            if (formParam == "WNSGPH" || formParam == "WNSBOX") {
+              var term = params.get("q");
+              var ss = Components.classes["@mozilla.org/browser/search-service;1"]
+                                 .getService(nsIBrowserSearchService);
+              var submission = ss.defaultEngine.getSubmission(term, null, "searchbar");
+              uri = submission.uri;
+            }
+          } catch (e) {
+            Components.utils.reportError("Couldn't redirect Windows search: " + e);
+          }
+        }
+
         urilist.push(uri);
       }
     }
