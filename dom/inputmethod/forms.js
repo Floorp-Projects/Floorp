@@ -671,7 +671,8 @@ let FormAssistant = {
       target = target.parentNode;
 
     this.setFocusedElement(target);
-    this.isHandlingFocus = this.sendInputState(target);
+    this.sendInputState(target);
+    this.isHandlingFocus = true;
   },
 
   unhandleFocus: function fa_unhandleFocus() {
@@ -690,7 +691,8 @@ let FormAssistant = {
       return true;
 
     return (element instanceof HTMLInputElement &&
-            !this.ignoredInputTypes.has(element.type));
+            !this.ignoredInputTypes.has(element.type) &&
+            !element.readOnly);
   },
 
   getTopLevelEditable: function fa_getTopLevelEditable(element) {
@@ -705,15 +707,7 @@ let FormAssistant = {
   },
 
   sendInputState: function(element) {
-    // FIXME/bug 729623: work around apparent bug in the IME manager
-    // in gecko.
-    let readonly = element.getAttribute("readonly");
-    if (readonly) {
-      return false;
-    }
-
     sendAsyncMessage("Forms:Input", getJSON(element, this._focusCounter));
-    return true;
   },
 
   getSelectionInfo: function fa_getSelectionInfo() {

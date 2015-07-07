@@ -59,7 +59,7 @@ MacroAssembler::PushWithPatch(ImmPtr imm)
 }
 
 // ===============================================================
-// Call functions.
+// Simple call functions.
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, const Register reg)

@@ -55,8 +55,6 @@
 #include <string>
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-#include "gfxD2DSurface.h"
-
 #include <d3d10_1.h>
 
 #include "mozilla/gfx/2D.h"
@@ -115,38 +113,6 @@ static const char *kFeatureLevelPref =
   "gfx.direct3d.last_used_feature_level_idx";
 static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0 };
-
-class GfxD2DSurfaceReporter final : public nsIMemoryReporter
-{
-    ~GfxD2DSurfaceReporter() {}
-
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData, bool aAnonymize)
-    {
-        nsresult rv;
-
-        int64_t amount = cairo_d2d_get_image_surface_cache_usage();
-        rv = MOZ_COLLECT_REPORT(
-            "gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES, amount,
-            "Memory used by the Direct2D internal surface cache.");
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        cairo_device_t *device =
-            gfxWindowsPlatform::GetPlatform()->GetD2DDevice();
-        amount = device ? cairo_d2d_get_surface_vram_usage(device) : 0;
-        rv = MOZ_COLLECT_REPORT(
-            "gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES, amount,
-            "Video memory used by D2D surfaces.");
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS(GfxD2DSurfaceReporter, nsIMemoryReporter)
 
 #endif
 
@@ -421,10 +387,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
      */ 
     CoInitialize(nullptr); 
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-    RegisterStrongMemoryReporter(new GfxD2DSurfaceReporter());
-    mD2DDevice = nullptr;
-#endif
     RegisterStrongMemoryReporter(new GfxD2DVramReporter());
 
     if (gfxPrefs::Direct2DUse1_1()) {
@@ -443,17 +405,10 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
     mDeviceManager = nullptr;
+    mD3D10Device = nullptr;
     mD3D11Device = nullptr;
     mD3D11ContentDevice = nullptr;
     mD3D11ImageBridgeDevice = nullptr;
-
-    // not calling FT_Done_FreeType because cairo may still hold references to
-    // these FT_Faces.  See bug 458169.
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mD2DDevice) {
-        cairo_release_device(mD2DDevice);
-    }
-#endif
 
     mozilla::gfx::Factory::D2DCleanup();
 
@@ -548,12 +503,12 @@ gfxWindowsPlatform::UpdateRenderMode()
         mDoesD3D11TextureSharingWork) {
 
         VerifyD2DDevice(d2dForceEnabled);
-        if (mD2DDevice && GetD3D11Device()) {
+        if (mD3D10Device && GetD3D11Device()) {
             mRenderMode = RENDER_DIRECT2D;
             mUseDirectWrite = true;
         }
     } else {
-        mD2DDevice = nullptr;
+        mD3D10Device = nullptr;
     }
 #endif
 
@@ -631,7 +586,7 @@ gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
   if (!createD3DDevice)
     return E_FAIL;
 
-  nsRefPtr<ID3D10Device1> device;
+  ID3D10Device1* device = nullptr;
   HRESULT hr =
     createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
 #ifdef DEBUG
@@ -641,14 +596,17 @@ gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
                     D3D10_CREATE_DEVICE_BGRA_SUPPORT |
                     D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                     static_cast<D3D10_FEATURE_LEVEL1>(kSupportedFeatureLevels[featureLevelIndex]),
-                    D3D10_1_SDK_VERSION, getter_AddRefs(device));
+                    D3D10_1_SDK_VERSION, &device);
 
   // If we fail here, the DirectX version or video card probably
   // changed.  We previously could use 10.1 but now we can't
   // anymore.  Revert back to doing a 10.0 check first before
   // the 10.1 check.
   if (device) {
-    mD2DDevice = cairo_d2d_create_device_from_d3d10device(device);
+    mD3D10Device = device;
+
+    // Leak the module while the D3D 10 device is being used.
+    d3d10module.disown();
 
     // Setup a pref for future launch optimizaitons when in main process.
     if (XRE_IsParentProcess()) {
@@ -669,13 +627,11 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
       return;
     }
 
-    if (mD2DDevice) {
-        ID3D10Device1 *device = cairo_d2d_device_get_device(mD2DDevice);
-
-        if (SUCCEEDED(device->GetDeviceRemovedReason())) {
+    if (mD3D10Device) {
+        if (SUCCEEDED(mD3D10Device->GetDeviceRemovedReason())) {
             return;
         }
-        mD2DDevice = nullptr;
+        mD3D10Device = nullptr;
 
         // Surface cache needs to be invalidated since it may contain vector
         // images rendered with our old, broken D2D device.
@@ -683,8 +639,6 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
     }
 
     mozilla::ScopedGfxFeatureReporter reporter("D2D", aAttemptForce);
-
-    nsRefPtr<ID3D10Device1> device;
 
     int supportedFeatureLevelsCount = ArrayLength(kSupportedFeatureLevels);
 
@@ -724,13 +678,9 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
       }
     }
 
-    if (!mD2DDevice && aAttemptForce) {
-        mD2DDevice = cairo_d2d_create_device();
-    }
-
-    if (mD2DDevice) {
+    if (mD3D10Device) {
         reporter.SetSuccessful();
-        mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
+        mozilla::gfx::Factory::SetDirect3D10Device(mD3D10Device);
     }
 
     ScopedGfxFeatureReporter reporter1_1("D2D1.1");
@@ -779,15 +729,9 @@ gfxWindowsPlatform::CreateOffscreenSurface(const IntSize& size,
     nsRefPtr<gfxASurface> surf = nullptr;
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
-    if (mRenderMode == RENDER_GDI)
+    if (mRenderMode == RENDER_GDI || mRenderMode == RENDER_DIRECT2D)
         surf = new gfxWindowsSurface(size,
                                      OptimalFormatForContent(contentType));
-#endif
-
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mRenderMode == RENDER_DIRECT2D)
-        surf = new gfxD2DSurface(size,
-                                 OptimalFormatForContent(contentType));
 #endif
 
     if (!surf || surf->CairoStatus()) {

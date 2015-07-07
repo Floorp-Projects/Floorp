@@ -82,7 +82,6 @@ enum class gfxSurfaceType {
   XML,
   Skia,
   Subsurface,
-  D2D,
   Max
 };
 

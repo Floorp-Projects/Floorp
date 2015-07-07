@@ -318,6 +318,8 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
                                  const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
+    Element::ClearContentUnbinder();
+
     nsCOMPtr<nsIObserverService> obs =
       mozilla::services::GetObserverService();
     if (!obs)
@@ -342,6 +344,9 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     !strcmp(aTopic, "cycle-collector-forget-skippable");
 
   bool prepareForCC = !strcmp(aTopic, "cycle-collector-begin");
+  if (prepareForCC) {
+    Element::ClearContentUnbinder();
+  }
 
   // Increase generation to effectively unmark all current objects
   if (!++sGeneration) {
