@@ -1,14 +1,16 @@
     <preferences id="searchPreferences" hidden="true" data-category="paneSearch">
 
-      <!-- Suggest -->
       <preference id="browser.search.suggest.enabled"
                   name="browser.search.suggest.enabled"
                   type="bool"/>
 
-      <!-- One off providers -->
       <preference id="browser.search.hiddenOneOffs"
                   name="browser.search.hiddenOneOffs"
                   type="unichar"/>
+
+      <preference id="browser.search.redirectWindowsSearch"
+                  name="browser.search.redirectWindowsSearch"
+                  type="bool"/>
 
     </preferences>
 
@@ -35,6 +37,10 @@
                 label="&provideSearchSuggestions.label;"
                 accesskey="&provideSearchSuggestions.accesskey;"
                 preference="browser.search.suggest.enabled"/>
+      <checkbox id="redirectSearchCheckbox"
+                label="&redirectWindowsSearch.label;"
+                accesskey="&redirectWindowsSearch.accesskey;"
+                preference="browser.search.redirectWindowsSearch"/>
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
