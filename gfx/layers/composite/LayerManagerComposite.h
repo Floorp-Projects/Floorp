@@ -109,12 +109,22 @@ public:
   {
     MOZ_CRASH("Use BeginTransactionWithDrawTarget");
   }
-  void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const gfx::IntRect& aRect);
+  void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
+                                      const gfx::IntRect& aRect);
 
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override
+  {
+    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+    return false;
+  }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) override;
+                              EndTransactionFlags aFlags = END_DEFAULT) override
+  {
+    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+  }
+  void EndTransaction(const TimeStamp& aTimeStamp,
+                      EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer) override { mRoot = aLayer; }
 
