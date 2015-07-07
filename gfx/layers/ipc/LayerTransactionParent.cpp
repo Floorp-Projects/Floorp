@@ -596,7 +596,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
-    layer_manager()->EndTransaction(nullptr, nullptr, LayerManager::END_NO_IMMEDIATE_REDRAW);
+    layer_manager()->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
   }
 
   if (reply) {
