@@ -825,27 +825,65 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
                                 &aEvent->mReply.mOffset, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsINode> anchorNode = mSelection->GetAnchorNode();
-  nsCOMPtr<nsINode> focusNode = mSelection->GetFocusNode();
-  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!focusNode)) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsINode> anchorNode, focusNode;
+  int32_t anchorOffset, focusOffset;
+  if (mSelection->RangeCount()) {
+    anchorNode = mSelection->GetAnchorNode();
+    focusNode = mSelection->GetFocusNode();
+    if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!focusNode)) {
+      return NS_ERROR_FAILURE;
+    }
+    anchorOffset = static_cast<int32_t>(mSelection->AnchorOffset());
+    focusOffset = static_cast<int32_t>(mSelection->FocusOffset());
+    if (NS_WARN_IF(anchorOffset < 0) || NS_WARN_IF(focusOffset < 0)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    int16_t compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
+                                                    focusNode, focusOffset);
+    aEvent->mReply.mReversed = compare > 0;
+
+    if (compare) {
+      nsRefPtr<nsRange> range;
+      if (mSelection->RangeCount() == 1) {
+        range = mFirstSelectedRange;
+      } else {
+        rv = nsRange::CreateRange(anchorNode, anchorOffset,
+                                  focusNode, focusOffset,
+                                  getter_AddRefs(range));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        if (NS_WARN_IF(!range)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      rv = GenerateFlatTextContent(range, aEvent->mReply.mString,
+                                   lineBreakType);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      aEvent->mReply.mString.Truncate();
+    }
+  } else {
+    NS_ASSERTION(mFirstSelectedRange->Collapsed(),
+      "When mSelection doesn't have selection, mFirstSelectedRange must be "
+      "collapsed");
+    anchorNode = focusNode = mFirstSelectedRange->GetStartParent();
+    if (NS_WARN_IF(!anchorNode)) {
+      return NS_ERROR_FAILURE;
+    }
+    anchorOffset = focusOffset =
+      static_cast<int32_t>(mFirstSelectedRange->StartOffset());
+    if (NS_WARN_IF(anchorOffset < 0)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    aEvent->mReply.mReversed = false;
+    aEvent->mReply.mString.Truncate();
   }
 
-  int32_t anchorOffset = static_cast<int32_t>(mSelection->AnchorOffset());
-  int32_t focusOffset = static_cast<int32_t>(mSelection->FocusOffset());
-  if (NS_WARN_IF(anchorOffset < 0) || NS_WARN_IF(focusOffset < 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int16_t compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                  focusNode, focusOffset);
-  aEvent->mReply.mReversed = compare > 0;
-
-  if (compare) {
-    rv = GenerateFlatTextContent(mFirstSelectedRange, aEvent->mReply.mString,
-                                 lineBreakType);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   nsIFrame* frame = nullptr;
   rv = GetFrameForTextRect(focusNode, focusOffset, true, &frame);
