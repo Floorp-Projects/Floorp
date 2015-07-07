@@ -5,6 +5,9 @@
 
 "use strict";
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+
 this.EXPORTED_SYMBOLS = ["AppConstants"];
 
 // Immutable for export.
@@ -129,6 +132,12 @@ this.AppConstants = Object.freeze({
 #else
   "other",
 #endif
+
+  isPlatformAndVersionAtLeast(platform, version) {
+    let platformVersion = Services.sysinfo.getProperty("version");
+    return platform == this.platform &&
+           Services.vc.compare(platformVersion, version) >= 0;
+  },
 
   MOZ_CRASHREPORTER:
 #ifdef MOZ_CRASHREPORTER
