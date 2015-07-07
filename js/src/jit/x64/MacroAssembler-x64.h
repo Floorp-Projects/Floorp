@@ -89,7 +89,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     MoveResolver moveResolver_;
 
   public:
-    using MacroAssemblerX86Shared::call;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
@@ -108,13 +107,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // X64 helpers.
     /////////////////////////////////////////////////////////////////
-    void call(ImmWord target) {
-        mov(target, rax);
-        call(rax);
-    }
-    void call(ImmPtr target) {
-        call(ImmWord(uintptr_t(target.value)));
-    }
     void writeDataRelocation(const Value& val) {
         if (val.isMarkable()) {
             gc::Cell* cell = reinterpret_cast<gc::Cell*>(val.toGCThing());

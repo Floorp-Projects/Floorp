@@ -40,48 +40,58 @@ using mozilla::dom::OscillatorType;
 
 namespace WebCore {
 
-PeriodicWave* PeriodicWave::create(float sampleRate,
-                                   const float* real,
-                                   const float* imag,
-                                   size_t numberOfComponents)
+already_AddRefed<PeriodicWave>
+PeriodicWave::create(float sampleRate,
+                     const float* real,
+                     const float* imag,
+                     size_t numberOfComponents)
 {
     bool isGood = real && imag && numberOfComponents > 0 &&
          numberOfComponents <= PeriodicWaveSize;
     MOZ_ASSERT(isGood);
     if (isGood) {
-        PeriodicWave* periodicWave = new PeriodicWave(sampleRate);
+        nsRefPtr<PeriodicWave> periodicWave =
+            new PeriodicWave(sampleRate);
         periodicWave->createBandLimitedTables(real, imag, numberOfComponents);
-        return periodicWave;
+        return periodicWave.forget();
     }
-    return 0;
+    return nullptr;
 }
 
-PeriodicWave* PeriodicWave::createSine(float sampleRate)
+already_AddRefed<PeriodicWave>
+PeriodicWave::createSine(float sampleRate)
 {
-      PeriodicWave* periodicWave = new PeriodicWave(sampleRate);
-          periodicWave->generateBasicWaveform(OscillatorType::Sine);
-              return periodicWave;
+    nsRefPtr<PeriodicWave> periodicWave =
+        new PeriodicWave(sampleRate);
+    periodicWave->generateBasicWaveform(OscillatorType::Sine);
+    return periodicWave.forget();
 }
 
-PeriodicWave* PeriodicWave::createSquare(float sampleRate)
+already_AddRefed<PeriodicWave>
+PeriodicWave::createSquare(float sampleRate)
 {
-      PeriodicWave* periodicWave = new PeriodicWave(sampleRate);
-          periodicWave->generateBasicWaveform(OscillatorType::Square);
-              return periodicWave;
+    nsRefPtr<PeriodicWave> periodicWave =
+        new PeriodicWave(sampleRate);
+    periodicWave->generateBasicWaveform(OscillatorType::Square);
+    return periodicWave.forget();
 }
 
-PeriodicWave* PeriodicWave::createSawtooth(float sampleRate)
+already_AddRefed<PeriodicWave>
+PeriodicWave::createSawtooth(float sampleRate)
 {
-      PeriodicWave* periodicWave = new PeriodicWave(sampleRate);
-          periodicWave->generateBasicWaveform(OscillatorType::Sawtooth);
-              return periodicWave;
+    nsRefPtr<PeriodicWave> periodicWave =
+        new PeriodicWave(sampleRate);
+    periodicWave->generateBasicWaveform(OscillatorType::Sawtooth);
+    return periodicWave.forget();
 }
 
-PeriodicWave* PeriodicWave::createTriangle(float sampleRate)
+already_AddRefed<PeriodicWave>
+PeriodicWave::createTriangle(float sampleRate)
 {
-      PeriodicWave* periodicWave = new PeriodicWave(sampleRate);
-          periodicWave->generateBasicWaveform(OscillatorType::Triangle);
-              return periodicWave;
+    nsRefPtr<PeriodicWave> periodicWave =
+        new PeriodicWave(sampleRate);
+    periodicWave->generateBasicWaveform(OscillatorType::Triangle);
+    return periodicWave.forget();
 }
 
 PeriodicWave::PeriodicWave(float sampleRate)

@@ -4122,7 +4122,7 @@ MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);
-    call(imm);
+    asMasm().call(imm);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -4135,7 +4135,7 @@ MacroAssemblerARMCompat::callWithABI(const Address& fun, MoveOp::Type result)
     ma_ldr(fun, r12);
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(r12);
+    asMasm().call(r12);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -4146,7 +4146,7 @@ MacroAssemblerARMCompat::callWithABI(Register fun, MoveOp::Type result)
     ma_mov(fun, r12);
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(r12);
+    asMasm().call(r12);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -5090,6 +5090,14 @@ MacroAssemblerARMCompat::profilerExitFrame()
     branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
 }
 
+void
+MacroAssemblerARMCompat::callAndPushReturnAddress(Label* label)
+{
+    AutoForbidPools afp(this, 2);
+    ma_push(pc);
+    asMasm().call(label);
+}
+
 MacroAssembler&
 MacroAssemblerARMCompat::asMasm()
 {
@@ -5239,4 +5247,56 @@ MacroAssembler::reserveStack(uint32_t amount)
     if (amount)
         ma_sub(Imm32(amount), sp);
     adjustFrame(amount);
+}
+
+// ===============================================================
+// Simple call functions.
+
+void
+MacroAssembler::call(Register reg)
+{
+    as_blx(reg);
+}
+
+void
+MacroAssembler::call(Label* label)
+{
+    // For now, assume that it'll be nearby?
+    as_bl(label, Always);
+}
+
+void
+MacroAssembler::call(ImmWord imm)
+{
+    call(ImmPtr((void*)imm.value));
+}
+
+void
+MacroAssembler::call(ImmPtr imm)
+{
+    BufferOffset bo = m_buffer.nextOffset();
+    addPendingJump(bo, imm, Relocation::HARDCODED);
+    ma_call(imm);
+}
+
+void
+MacroAssembler::call(AsmJSImmPtr imm)
+{
+    movePtr(imm, CallReg);
+    call(CallReg);
+}
+
+void
+MacroAssembler::call(JitCode* c)
+{
+    BufferOffset bo = m_buffer.nextOffset();
+    addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
+    RelocStyle rs;
+    if (HasMOVWT())
+        rs = L_MOVWT;
+    else
+        rs = L_LDR;
+
+    ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
+    ma_callJitHalfPush(ScratchRegister);
 }
