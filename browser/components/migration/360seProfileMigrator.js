@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
@@ -16,6 +17,45 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
+
+function copyToTempUTF8File(file, charset) {
+  let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
+                      .createInstance(Ci.nsIFileInputStream);
+  inputStream.init(file, -1, -1, 0);
+  let inputStr = NetUtil.readInputStreamToString(
+    inputStream, inputStream.available(), { charset });
+
+  // Use random to reduce the likelihood of a name collision in createUnique.
+  let rand = Math.floor(Math.random() * Math.pow(2, 15));
+  let leafName = "mozilla-temp-" + rand;
+  let tempUTF8File = FileUtils.getFile(
+    "TmpD", ["mozilla-temp-files", leafName], true);
+  tempUTF8File.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+  let out = FileUtils.openAtomicFileOutputStream(tempUTF8File);
+  try {
+    let bufferedOut = Cc["@mozilla.org/network/buffered-output-stream;1"]
+                        .createInstance(Ci.nsIBufferedOutputStream);
+    bufferedOut.init(out, 4096);
+    try {
+      let converterOut = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                           .createInstance(Ci.nsIConverterOutputStream);
+      converterOut.init(bufferedOut, "utf-8", 0, 0x0000);
+      try {
+        converterOut.writeString(inputStr || "");
+        bufferedOut.QueryInterface(Ci.nsISafeOutputStream).finish();
+      } finally {
+        converterOut.close();
+      }
+    } finally {
+      bufferedOut.close();
+    }
+  } finally {
+    out.close();
+  }
+
+  return tempUTF8File;
+}
 
 function parseINIStrings(file) {
   let factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
@@ -185,7 +225,13 @@ Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
       if (!loginIni.isReadable()) {
         throw new Error("360 Secure Browser's 'login.ini' file could not be read.");
       }
-      let loginIniObj = parseINIStrings(loginIni);
+
+      let loginIniInUtf8 = copyToTempUTF8File(loginIni, "gbk");
+      let loginIniObj = parseINIStrings(loginIniInUtf8);
+      try {
+        loginIniInUtf8.remove(false);
+      } catch(ex) {}
+
       let nowLoginEmail = loginIniObj.NowLogin && loginIniObj.NowLogin.email;
 
       /*
