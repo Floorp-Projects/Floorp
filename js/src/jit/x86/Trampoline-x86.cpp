@@ -274,7 +274,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         Call passed-in code, get return value and fill in the
         passed in return value pointer
     ***************************************************************/
-    masm.call(Operand(ebp, ARG_JITCODE));
+    masm.call(Address(ebp, ARG_JITCODE));
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.

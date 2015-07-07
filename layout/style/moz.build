@@ -126,6 +126,7 @@ UNIFIED_SOURCES += [
     'Declaration.cpp',
     'ErrorReporter.cpp',
     'FontFace.cpp',
+    'FontFaceSet.cpp',
     'FontFaceSetIterator.cpp',
     'ImageLoader.cpp',
     'IncrementalClearCOMRuleArray.cpp',
@@ -172,10 +173,8 @@ UNIFIED_SOURCES += [
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
-# FontFaceSet.cpp needs to be built separately because it redefines LOG.
 # nsCSSRuleProcessor.cpp needs to be built separately because it uses plarena.h.
 SOURCES += [
-    'FontFaceSet.cpp',
     'nsCSSRuleProcessor.cpp',
 ]
 

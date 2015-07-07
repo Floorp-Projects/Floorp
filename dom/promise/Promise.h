@@ -50,8 +50,9 @@ class Promise;
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
 class PromiseReportRejectFeature : public workers::WorkerFeature
 {
-  // The Promise that owns this feature.
-  Promise* mPromise;
+  // PromiseReportRejectFeature is held by an nsAutoPtr on the Promise which
+  // means that this object will be destroyed before the Promise is destroyed.
+  Promise* MOZ_NON_OWNING_REF mPromise;
 
 public:
   explicit PromiseReportRejectFeature(Promise* aPromise)

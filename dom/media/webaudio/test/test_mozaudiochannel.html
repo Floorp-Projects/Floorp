@@ -141,7 +141,8 @@ function runTest() {
   test();
 }
 
-SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelService", true ]]}, runTest);
+SpecialPowers.pushPrefEnv({"set": [["media.useAudioChannelAPI", true ],
+                                   ["media.useAudioChannelService", true ]]}, runTest);
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(5);
 

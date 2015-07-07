@@ -293,6 +293,11 @@ static bool UseAudioChannelService()
   return Preferences::GetBool("media.useAudioChannelService");
 }
 
+static bool UseAudioChannelAPI()
+{
+  return Preferences::GetBool("media.useAudioChannelAPI");
+}
+
 class EventProxyHandler final : public nsIDOMEventListener
 {
 public:
@@ -543,9 +548,11 @@ AudioDestinationNode::CanPlayChanged(int32_t aCanPlay)
   mAudioChannelAgentPlaying = playing;
   SetCanPlay(playing);
 
-  Context()->DispatchTrustedEvent(
-    playing ? NS_LITERAL_STRING("mozinterruptend")
-            : NS_LITERAL_STRING("mozinterruptbegin"));
+  if (UseAudioChannelAPI()) {
+    Context()->DispatchTrustedEvent(
+      playing ? NS_LITERAL_STRING("mozinterruptend")
+              : NS_LITERAL_STRING("mozinterruptbegin"));
+  }
 
   return NS_OK;
 }

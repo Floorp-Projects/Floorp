@@ -192,7 +192,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     uint64_t* data() const { return data_; }
     size_t nbytes() const { return nbytes_; }
 
-    void clear();
+    void clear(const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
 
     // Copy some memory. It will be automatically freed by the destructor.
     bool copy(const uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION);
