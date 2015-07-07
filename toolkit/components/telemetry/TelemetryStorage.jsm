@@ -1024,14 +1024,15 @@ let TelemetryStorageImpl = {
       return Promise.resolve(this._buildPingList());
     }
 
-    // Make sure to clear the task once done.
-    let clear = pings => {
+    // Since there's no pending pings scan task running, start it.
+    // Also make sure to clear the task once done.
+    this._scanPendingPingsTask = this._scanPendingPings().then(pings => {
       this._scanPendingPingsTask = null;
       return pings;
-    };
-
-    // Since there's no pending pings scan task running, start it.
-    this._scanPendingPingsTask = this._scanPendingPings().then(clear, clear);
+    }, ex => {
+      this._scanPendingPingsTask = null;
+      throw ex;
+    });
     return this._scanPendingPingsTask;
   },
 
@@ -1059,10 +1060,17 @@ let TelemetryStorageImpl = {
         return [];
       }
 
-      let info = yield OS.File.stat(file.path);
+      let info;
+      try {
+        info = yield OS.File.stat(file.path);
+      } catch (ex) {
+        this._log.error("_scanPendingPings - failed to stat file " + file.path, ex);
+        continue;
+      }
+
       let id = OS.Path.basename(file.path);
       if (!UUID_REGEX.test(id)) {
-        this._log.trace("_scanPendingPings - unknown filename is not a UUID: " + id);
+        this._log.trace("_scanPendingPings - filename is not a UUID: " + id);
         id = Utils.generateUUID();
       }
 

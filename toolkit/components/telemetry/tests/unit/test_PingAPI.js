@@ -9,6 +9,7 @@
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
@@ -440,4 +441,8 @@ add_task(function* test_currentPingData() {
     Assert.ok(id in ping.payload.keyedHistograms, "Payload should have keyed test histogram.");
     Assert.equal(ping.payload.keyedHistograms[id]["a"].sum, 1, "Keyed test value should match.");
   }
+});
+
+add_task(function* test_shutdown() {
+  yield TelemetrySend.shutdown();
 });
