@@ -99,7 +99,11 @@ let TrackingProtection = {
     // Remove the current host from the 'trackingprotection' consumer
     // of the permission manager. This effectively removes this host
     // from the tracking protection allowlist.
-    Services.perms.remove(gBrowser.selectedBrowser.currentURI,
+    let normalizedUrl = Services.io.newURI(
+      "https://" + gBrowser.selectedBrowser.currentURI.hostPort,
+      null, null);
+
+    Services.perms.remove(normalizedUrl,
       "trackingprotection");
 
     // Telemetry for enable protection.
