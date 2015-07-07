@@ -53,13 +53,12 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "prmjtime.h"
-
 #include "asmjs/AsmJSModule.h"
 #include "jit/AtomicOperations.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
 #include "vm/SharedTypedArrayObject.h"
+#include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jsobjinlines.h"
