@@ -23,6 +23,7 @@
 #include "nsClientAuthRemember.h"
 
 #include "nsNetUtil.h"
+#include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
 #include "SSLServerCertVerification.h"
 #include "nsNSSCertHelper.h"

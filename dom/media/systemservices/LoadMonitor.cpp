@@ -16,6 +16,8 @@
 #include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsIInputStream.h"
+#include "nsIFile.h"
 #include "nsILineInputStream.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"

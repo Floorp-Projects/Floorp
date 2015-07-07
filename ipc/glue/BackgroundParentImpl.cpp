@@ -23,6 +23,7 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "nsIAppsService.h"
 #include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsRefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"

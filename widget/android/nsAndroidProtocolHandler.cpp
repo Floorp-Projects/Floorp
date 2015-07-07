@@ -9,6 +9,8 @@
 #include "nsIChannel.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIStandardURL.h"
+#include "nsIURL.h"
 #include "android/log.h"
 #include "nsBaseChannel.h"
 #include "AndroidBridge.h"

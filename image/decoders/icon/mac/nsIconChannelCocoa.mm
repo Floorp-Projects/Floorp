@@ -16,6 +16,8 @@
 #include "nsIStringStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsIPipe.h"
+#include "nsIOutputStream.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsILocalFileMac.h"

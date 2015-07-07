@@ -28,6 +28,8 @@
 #include "nsDocShellCID.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
+#include "nsIPipe.h"
+#include "nsIOutputStream.h"
 #include "nsScriptLoader.h"
 #include "nsString.h"
 #include "nsStreamUtils.h"

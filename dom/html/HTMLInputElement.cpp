@@ -77,6 +77,7 @@
 // input type=file
 #include "mozilla/dom/File.h"
 #include "nsIFile.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIContentPrefService.h"

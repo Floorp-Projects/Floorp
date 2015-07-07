@@ -16,6 +16,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIUploadChannel2.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIPipe.h"
 
 #include "nsContentPolicyUtils.h"
 #include "nsCORSListenerProxy.h"

@@ -14,6 +14,7 @@
 #include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
 #include "nsHttpRequestHead.h"
+#include "nsServiceManagerUtils.h"
 
 extern PRThread *gSocketThread;
 
