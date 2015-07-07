@@ -25,12 +25,14 @@ set -x -e
 : MOZHARNESS_REF                ${MOZHARNESS_REF:=${MOZHARNESS_REV}}
 : MOZHARNESS_HEAD_REV           ${MOZHARNESS_HEAD_REV:=${MOZHARNESS_REV}}
 : MOZHARNESS_HEAD_REF           ${MOZHARNESS_HEAD_REF:=${MOZHARNESS_REF}}
+: MOZHARNESS_DISABLE            ${MOZHARNESS_DISABLE:=false}
 
 : TOOLS_REPOSITORY              ${TOOLS_REPOSITORY:=https://hg.mozilla.org/build/tools}
 : TOOLS_BASE_REPOSITORY         ${TOOLS_BASE_REPOSITORY:=${TOOLS_REPOSITORY}}
 : TOOLS_HEAD_REPOSITORY         ${TOOLS_HEAD_REPOSITORY:=${TOOLS_REPOSITORY}}
 : TOOLS_HEAD_REV                ${TOOLS_HEAD_REV:=default}
 : TOOLS_HEAD_REF                ${TOOLS_HEAD_REF:=${TOOLS_HEAD_REV}}
+: TOOLS_DISABLE                 ${TOOLS_DISABLE:=false}
 
 : MH_CUSTOM_BUILD_VARIANT_CFG   ${MH_CUSTOM_BUILD_VARIANT_CFG}
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
@@ -41,13 +43,20 @@ set -x -e
 set -v
 
 # check out mozharness
-tc-vcs checkout mozharness $MOZHARNESS_BASE_REPOSITORY $MOZHARNESS_HEAD_REPOSITORY $MOZHARNESS_HEAD_REV $MOZHARNESS_HEAD_REF
+if [ ! "$MOZHARNESS_DISABLE" = "true" ]
+then
+    tc-vcs checkout mozharness $MOZHARNESS_BASE_REPOSITORY $MOZHARNESS_HEAD_REPOSITORY $MOZHARNESS_HEAD_REV $MOZHARNESS_HEAD_REF
+fi
 
 # check out tools where mozharness expects it to be ($PWD/build/tools and $WORKSPACE/build/tools)
-tc-vcs checkout $WORKSPACE/build/tools $TOOLS_BASE_REPOSITORY $TOOLS_HEAD_REPOSITORY $TOOLS_HEAD_REV $TOOLS_HEAD_REF
-if [ ! -d build ]; then
-    mkdir -p build
-    ln -s $WORKSPACE/build/tools build/tools
+if [ ! "$TOOLS_DISABLE" = true ]
+then
+    tc-vcs checkout $WORKSPACE/build/tools $TOOLS_BASE_REPOSITORY $TOOLS_HEAD_REPOSITORY $TOOLS_HEAD_REV $TOOLS_HEAD_REF
+
+    if [ ! -d build ]; then
+        mkdir -p build
+        ln -s $WORKSPACE/build/tools build/tools
+    fi
 fi
 
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)

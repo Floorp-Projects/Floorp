@@ -48,12 +48,9 @@ SVGTransformListSMILType::Assign(nsSMILValue& aDest,
   const TransformArray* srcTransforms =
     static_cast<const TransformArray*>(aSrc.mU.mPtr);
   TransformArray* dstTransforms = static_cast<TransformArray*>(aDest.mU.mPtr);
-
-  // Before we assign, ensure we have sufficient memory
-  bool result = dstTransforms->SetCapacity(srcTransforms->Length(), fallible);
-  NS_ENSURE_TRUE(result,NS_ERROR_OUT_OF_MEMORY);
-
-  *dstTransforms = *srcTransforms;
+  if (!dstTransforms->Assign(*srcTransforms, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
