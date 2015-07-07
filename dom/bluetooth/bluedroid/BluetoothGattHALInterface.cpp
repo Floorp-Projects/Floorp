@@ -24,6 +24,15 @@ typedef
   BluetoothGattClientHALErrorRunnable;
 
 typedef
+  BluetoothHALInterfaceRunnable0<BluetoothGattServerResultHandler, void>
+  BluetoothGattServerHALResultRunnable;
+
+typedef
+  BluetoothHALInterfaceRunnable1<BluetoothGattServerResultHandler, void,
+                                 BluetoothStatus, BluetoothStatus>
+  BluetoothGattServerHALErrorRunnable;
+
+typedef
   BluetoothHALInterfaceRunnable0<BluetoothGattResultHandler, void>
   BluetoothGattHALResultRunnable;
 
@@ -76,6 +85,29 @@ DispatchBluetoothGattClientHALResult(
       &BluetoothGattClientResultHandler::OnError, STATUS_PARM_INVALID);
   } else {
     runnable = new ResultRunnable(aRes, aMethod, arg1);
+  }
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  if (NS_FAILED(rv)) {
+    BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+  }
+  return rv;
+}
+
+static nsresult
+DispatchBluetoothGattServerHALResult(
+  BluetoothGattServerResultHandler* aRes,
+  void (BluetoothGattServerResultHandler::*aMethod)(),
+  BluetoothStatus aStatus)
+{
+  MOZ_ASSERT(aRes);
+
+  nsRunnable* runnable;
+
+  if (aStatus == STATUS_SUCCESS) {
+    runnable = new BluetoothGattServerHALResultRunnable(aRes, aMethod);
+  } else {
+    runnable = new BluetoothGattServerHALErrorRunnable(aRes,
+      &BluetoothGattServerResultHandler::OnError, aStatus);
   }
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
@@ -416,73 +448,244 @@ struct BluetoothGattServerCallback
   };
 
   // Notifications
-  // TODO: Add Server Notifications
+  typedef BluetoothNotificationHALRunnable3<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, BluetoothUuid,
+    BluetoothGattStatus, int, const BluetoothUuid&>
+    RegisterServerNotification;
+
+  typedef BluetoothNotificationHALRunnable4<
+    GattServerNotificationHandlerWrapper, void,
+    int, int, bool, nsString,
+    int, int, bool, const nsAString&>
+    ConnectionNotification;
+
+  typedef BluetoothNotificationHALRunnable4<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, BluetoothGattServiceId, int,
+    BluetoothGattStatus, int, const BluetoothGattServiceId&, int>
+    ServiceAddedNotification;
+
+  typedef BluetoothNotificationHALRunnable4<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, int, int>
+    IncludedServiceAddedNotification;
+
+  typedef BluetoothNotificationHALRunnable5<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, BluetoothUuid, int, int,
+    BluetoothGattStatus, int, const BluetoothUuid&, int, int>
+    CharacteristicAddedNotification;
+
+  typedef BluetoothNotificationHALRunnable5<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, BluetoothUuid, int, int,
+    BluetoothGattStatus, int, const BluetoothUuid&, int, int>
+    DescriptorAddedNotification;
+
+  typedef BluetoothNotificationHALRunnable3<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, int>
+    ServiceStartedNotification;
+
+  typedef BluetoothNotificationHALRunnable3<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, int>
+    ServiceStoppedNotification;
+
+  typedef BluetoothNotificationHALRunnable3<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int, int>
+    ServiceDeletedNotification;
+
+  typedef BluetoothNotificationHALRunnable6<
+    GattServerNotificationHandlerWrapper, void,
+    int, int, nsString, int, int, bool,
+    int, int, const nsAString&, int, int, bool>
+    RequestReadNotification;
+
+  typedef BluetoothNotificationHALRunnable8<
+    GattServerNotificationHandlerWrapper, void,
+    int, int, nsString, int, int, nsTArray<uint8_t>, bool, bool,
+    int, int, const nsAString&, int, int, const nsTArray<uint8_t>&, bool, bool>
+    RequestWriteNotification;
+
+  typedef BluetoothNotificationHALRunnable4<
+    GattServerNotificationHandlerWrapper, void,
+    int, int, nsString, bool,
+    int, int, const nsAString&, bool>
+    RequestExecuteWriteNotification;
+
+  typedef BluetoothNotificationHALRunnable2<
+    GattServerNotificationHandlerWrapper, void,
+    BluetoothGattStatus, int>
+    ResponseConfirmationNotification;
+
+#if ANDROID_VERSION >= 21
+  typedef BluetoothNotificationHALRunnable2<
+    GattServerNotificationHandlerWrapper, void,
+    int, BluetoothGattStatus>
+    IndicationSentNotification;
+
+  typedef BluetoothNotificationHALRunnable2<
+    GattServerNotificationHandlerWrapper, void,
+    int, bool>
+    CongestionNotification;
+#endif // ANDROID_VERSION >= 21
+
+#if ANDROID_VERSION >=22
+  typedef BluetoothNotificationHALRunnable2<
+    GattServerNotificationHandlerWrapper, void,
+    int, int>
+    MtuChangedNotification;
+#endif // ANDROID_VERSION >=22
 
   // GATT Server callbacks
-  // TODO: Implement server callbacks
-
 #if ANDROID_VERSION >= 19
   static void
   RegisterServer(int aStatus, int aServerIf, bt_uuid_t* aAppUuid)
-  { }
+  {
+    RegisterServerNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::RegisterServerNotification,
+      aStatus, aServerIf, *aAppUuid);
+  }
 
   static void
   Connection(int aConnId, int aServerIf, int aIsConnected,
              bt_bdaddr_t* aBdAddr)
-  { }
+  {
+    ConnectionNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ConnectionNotification,
+      aConnId, aServerIf, aIsConnected != 0, aBdAddr);
+  }
 
   static void
   ServiceAdded(int aStatus, int aServerIf, btgatt_srvc_id_t* aServiceId,
                int aServiceHandle)
-  { }
+  {
+    ServiceAddedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ServiceAddedNotification,
+      aStatus, aServerIf, *aServiceId, aServiceHandle);
+  }
 
   static void
   IncludedServiceAdded(int aStatus, int aServerIf, int aServiceHandle,
                        int aIncludedServiceHandle)
-  { }
+  {
+    IncludedServiceAddedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::IncludedServiceAddedNotification,
+      aStatus, aServerIf, aServiceHandle, aIncludedServiceHandle);
+  }
 
   static void
   CharacteristicAdded(int aStatus, int aServerIf, bt_uuid_t* aUuid,
                       int aServiceHandle, int aCharHandle)
-  { }
+  {
+    CharacteristicAddedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::CharacteristicAddedNotification,
+      aStatus, aServerIf, *aUuid, aServiceHandle, aCharHandle);
+  }
 
   static void
   DescriptorAdded(int aStatus, int aServerIf, bt_uuid_t* aUuid,
                   int aServiceHandle, int aDescriptorHandle)
-  { }
+  {
+    DescriptorAddedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::DescriptorAddedNotification,
+      aStatus, aServerIf, *aUuid, aServiceHandle, aDescriptorHandle);
+  }
 
   static void
   ServiceStarted(int aStatus, int aServerIf, int aServiceHandle)
-  { }
+  {
+    ServiceStartedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ServiceStartedNotification,
+      aStatus, aServerIf, aServiceHandle);
+  }
 
   static void
   ServiceStopped(int aStatus, int aServerIf, int aServiceHandle)
-  { }
+  {
+    ServiceStoppedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ServiceStoppedNotification,
+      aStatus, aServerIf, aServiceHandle);
+  }
 
   static void
   ServiceDeleted(int aStatus, int aServerIf, int aServiceHandle)
-  { }
+  {
+    ServiceDeletedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ServiceDeletedNotification,
+      aStatus, aServerIf, aServiceHandle);
+  }
 
   static void
   RequestRead(int aConnId, int aTransId, bt_bdaddr_t* aBdAddr,
               int aAttrHandle, int aOffset, bool aIsLong)
-  { }
+  {
+    RequestReadNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::RequestReadNotification,
+      aConnId, aTransId, *aBdAddr, aAttrHandle, aOffset, aIsLong);
+  }
 
   static void
   RequestWrite(int aConnId, int aTransId, bt_bdaddr_t* aBdAddr,
                int aAttrHandle, int aOffset, int aLength,
                bool aNeedRsp, bool aIsPrep, uint8_t* aValue)
-  { }
+  {
+    nsTArray<uint8_t> value;
+    value.AppendElements(aValue, aLength);
+    RequestWriteNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::RequestWriteNotification,
+      aConnId, aTransId, *aBdAddr, aAttrHandle, aOffset, value, aNeedRsp,
+      aIsPrep);
+  }
 
   static void
-  RequestExecWrite(int aConnId, int aTransId, bt_bdaddr_t* aBdAddr,
-                   int aExecWrite)
-  { }
+  RequestExecuteWrite(int aConnId, int aTransId, bt_bdaddr_t* aBdAddr,
+                      int aExecWrite)
+  {
+    RequestExecuteWriteNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::RequestExecuteWriteNotification,
+      aConnId, aTransId, *aBdAddr, aExecWrite != 0);
+  }
 
   static void
   ResponseConfirmation(int aStatus, int aHandle)
-  { }
+  {
+    ResponseConfirmationNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::ResponseConfirmationNotification,
+      aStatus, aHandle);
+  }
 #endif // ANDROID_VERSION >= 19
+
+#if ANDROID_VERSION >= 21
+  static void
+  IndicationSent(int aConnId, int aStatus)
+  {
+    IndicationSentNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::IndicationSentNotification,
+      aConnId, aStatus);
+  }
+
+  static void
+  Congestion(int aConnId, bool aCongested)
+  {
+    CongestionNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::CongestionNotification,
+      aConnId, aCongested);
+  }
+#endif // ANDROID_VERSION >= 21
+
+#if ANDROID_VERSION >= 22
+  static void
+  MtuChanged(int aConnId, int aMtu)
+  {
+    MtuChangedNotification::Dispatch(
+      &BluetoothGattServerNotificationHandler::MtuChangedNotification,
+      aConnId, aMtu);
+  }
+#endif // ANDROID_VERSION >= 22
 };
 
 // GATT Client Interface
@@ -1119,7 +1322,341 @@ BluetoothGattClientHALInterface::TestCommand(
 
 }
 
-// TODO: Add GATT Server Interface
+// GATT Server Interface
+
+BluetoothGattServerHALInterface::BluetoothGattServerHALInterface(
+#if ANDROID_VERSION >= 19
+  const btgatt_server_interface_t* aInterface
+#endif
+  )
+#if ANDROID_VERSION >= 19
+  :mInterface(aInterface)
+#endif
+{
+#if ANDROID_VERSION >= 19
+  MOZ_ASSERT(mInterface);
+#endif
+}
+
+BluetoothGattServerHALInterface::~BluetoothGattServerHALInterface()
+{ }
+
+void
+BluetoothGattServerHALInterface::RegisterServer(
+  const BluetoothUuid& aUuid, BluetoothGattServerResultHandler* aRes)
+{
+  int status;
+#if ANDROID_VERSION >= 19
+  bt_uuid_t uuid;
+  if (NS_SUCCEEDED(Convert(aUuid, uuid))) {
+    status = mInterface->register_server(&uuid);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::RegisterServer,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::UnregisterServer(
+  int aServerIf, BluetoothGattServerResultHandler* aRes)
+{
+#if ANDROID_VERSION >= 19
+  int status = mInterface->unregister_server(aServerIf);
+#else
+  int status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::UnregisterServer,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::ConnectPeripheral(
+  int aServerIf, const nsAString& aBdAddr, bool aIsDirect, /* auto connect */
+  BluetoothTransport aTransport, BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 21
+  bt_bdaddr_t bdAddr;
+  btgatt_transport_t transport;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
+      NS_SUCCEEDED(Convert(aTransport, transport))) {
+    status = mInterface->connect(aServerIf, &bdAddr, aIsDirect, transport);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#elif ANDROID_VERSION >= 19
+  bt_bdaddr_t bdAddr;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->connect(aServerIf, &bdAddr, aIsDirect);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::ConnectPeripheral,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::DisconnectPeripheral(
+  int aServerIf, const nsAString& aBdAddr, int aConnId,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  bt_bdaddr_t bdAddr;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->disconnect(aServerIf, &bdAddr, aConnId);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::DisconnectPeripheral,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::AddService(
+  int aServerIf, const BluetoothGattServiceId& aServiceId, int aNumHandles,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  btgatt_srvc_id_t serviceId;
+
+  if (NS_SUCCEEDED(Convert(aServiceId, serviceId))) {
+    status = mInterface->add_service(aServerIf, &serviceId, aNumHandles);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::AddService,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::AddIncludedService(
+  int aServerIf, int aServiceHandle, int aIncludedServiceHandle,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  status = mInterface->add_included_service(aServerIf, aServiceHandle,
+                                            aIncludedServiceHandle);
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::AddIncludedService,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::AddCharacteristic(
+  int aServerIf, int aServiceHandle, const BluetoothUuid& aUuid,
+  BluetoothGattCharProp aProperties, BluetoothGattAttrPerm aPermissions,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  bt_uuid_t uuid;
+  int properties;
+  int permissions;
+
+  if (NS_SUCCEEDED(Convert(aUuid, uuid)) &&
+      NS_SUCCEEDED(Convert(aProperties, properties)) &&
+      NS_SUCCEEDED(Convert(aPermissions, permissions))) {
+    status = mInterface->add_characteristic(aServerIf, aServiceHandle, &uuid,
+                                            properties, permissions);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::AddCharacteristic,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::AddDescriptor(
+  int aServerIf, int aServiceHandle, const BluetoothUuid& aUuid,
+  BluetoothGattAttrPerm aPermissions, BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  bt_uuid_t uuid;
+  int permissions;
+
+  if (NS_SUCCEEDED(Convert(aUuid, uuid)) &&
+      NS_SUCCEEDED(Convert(aPermissions, permissions))) {
+    status = mInterface->add_descriptor(aServerIf, aServiceHandle, &uuid,
+                                        permissions);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::AddDescriptor,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::StartService(
+  int aServerIf, int aServiceHandle, BluetoothTransport aTransport,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  int transport;
+
+  if (NS_SUCCEEDED(Convert(aTransport, transport))) {
+    status = mInterface->start_service(aServerIf, aServiceHandle, transport);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::StartService,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::StopService(
+  int aServerIf, int aServiceHandle, BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  status = mInterface->stop_service(aServerIf, aServiceHandle);
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::StopService,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::DeleteService(
+  int aServerIf, int aServiceHandle, BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  status = mInterface->delete_service(aServerIf, aServiceHandle);
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::DeleteService,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::SendIndication(
+  int aServerIf, int aAttributeHandle, int aConnId,
+  const nsTArray<uint8_t>& aValue,
+  bool aConfirm, /* true: indication, false: notification */
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  char* value =
+    reinterpret_cast<char*>(const_cast<uint8_t*>(aValue.Elements()));
+  status = mInterface->send_indication(aServerIf, aAttributeHandle, aConnId,
+                                       aValue.Length(), aConfirm, value);
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::SendIndication,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
+
+void
+BluetoothGattServerHALInterface::SendResponse(
+  int aConnId, int aTransId, BluetoothGattStatus aStatus,
+  const BluetoothGattResponse& aResponse,
+  BluetoothGattServerResultHandler* aRes)
+{
+  bt_status_t status;
+#if ANDROID_VERSION >= 19
+  int response_status;
+  btgatt_response_t response;
+  if (NS_SUCCEEDED(Convert(aStatus, response_status)) &&
+      NS_SUCCEEDED(Convert(aResponse, response))) {
+    status = mInterface->send_response(aConnId, aTransId, response_status,
+                                       &response);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#else
+  status = BT_STATUS_UNSUPPORTED;
+#endif
+
+  if (aRes) {
+    DispatchBluetoothGattServerHALResult(
+      aRes, &BluetoothGattServerResultHandler::SendResponse,
+      ConvertDefault(status, STATUS_FAIL));
+  }
+}
 
 // GATT Interface
 
@@ -1179,8 +1716,15 @@ BluetoothGattHALInterface::Init(
     BluetoothGattServerCallback::ServiceDeleted,
     BluetoothGattServerCallback::RequestRead,
     BluetoothGattServerCallback::RequestWrite,
-    BluetoothGattServerCallback::RequestExecWrite,
-    BluetoothGattServerCallback::ResponseConfirmation
+    BluetoothGattServerCallback::RequestExecuteWrite,
+    BluetoothGattServerCallback::ResponseConfirmation,
+#if ANDROID_VERSION >= 21
+    BluetoothGattServerCallback::IndicationSent,
+    BluetoothGattServerCallback::Congestion,
+#endif // ANDROID_VERSION >= 21
+#if ANDROID_VERSION >= 22
+    BluetoothGattServerCallback::MtuChanged
+#endif // ANDROID_VERSION >= 22
   };
 
   static const btgatt_callbacks_t sCallbacks = {
@@ -1243,6 +1787,27 @@ BluetoothGattHALInterface::GetBluetoothGattClientInterface()
 #endif
 
   return sBluetoothGattClientHALInterface;
+}
+
+BluetoothGattServerInterface*
+BluetoothGattHALInterface::GetBluetoothGattServerInterface()
+{
+  static BluetoothGattServerHALInterface* sBluetoothGattServerHALInterface;
+
+  if (sBluetoothGattServerHALInterface) {
+    return sBluetoothGattServerHALInterface;
+  }
+
+#if ANDROID_VERSION >= 19
+  MOZ_ASSERT(mInterface->server);
+  sBluetoothGattServerHALInterface =
+    new BluetoothGattServerHALInterface(mInterface->server);
+#else
+  sBluetoothGattServerHALInterface =
+    new BluetoothGattServerHALInterface();
+#endif
+
+  return sBluetoothGattServerHALInterface;
 }
 
 END_BLUETOOTH_NAMESPACE
