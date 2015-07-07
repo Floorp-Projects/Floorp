@@ -510,7 +510,7 @@ gfxPlatform::Init()
 
     gPlatform->mScreenReferenceSurface =
         gPlatform->CreateOffscreenSurface(IntSize(1, 1),
-                                          gfxContentType::COLOR_ALPHA);
+                                          gfxImageFormat::ARGB32);
     if (!gPlatform->mScreenReferenceSurface) {
         NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
     }
@@ -1140,8 +1140,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
   if (aBackend == BackendType::CAIRO) {
-    nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize,
-                                                        ContentForFormat(aFormat));
+    nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize, SurfaceFormatToImageFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
       return nullptr;
     }
