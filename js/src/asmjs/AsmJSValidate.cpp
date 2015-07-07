@@ -28,7 +28,7 @@
 #include "jsmath.h"
 #include "jsprf.h"
 #include "jsutil.h"
-#include "prmjtime.h"
+
 
 #include "asmjs/AsmJSLink.h"
 #include "asmjs/AsmJSModule.h"
@@ -45,6 +45,7 @@
 #endif
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
+#include "vm/Time.h"
 
 #include "jsobjinlines.h"
 
