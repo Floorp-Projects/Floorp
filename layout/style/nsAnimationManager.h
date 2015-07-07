@@ -69,10 +69,6 @@ public:
 
   virtual CSSAnimation* AsCSSAnimation() override { return this; }
 
-  // CSSAnimation interface
-  void GetAnimationName(nsString& aRetVal) const { aRetVal = Name(); }
-
-  // Animation interface overrides
   virtual Promise* GetReady(ErrorResult& aRv) override;
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
   virtual void Pause(ErrorResult& aRv) override;
