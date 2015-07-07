@@ -15,6 +15,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 
 #include <setjmp.h>
 
@@ -1518,17 +1519,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         js::PerformanceGroupHolder performance;
 
         /**
-         * The number of times we have entered the event loop.
-         * Used to reset counters whenever we enter the loop,
-         * which may be caused either by having completed the
-         * previous run of the event loop, or by entering a
-         * nested loop.
-         *
-         * Always incremented by 1, may safely overflow.
-         */
-        uint64_t iteration;
-
-        /**
          * Callback used to ask the embedding to determine in which
          * Performance Group the current execution belongs. Typically, this is
          * used to regroup JSCompartments from several iframes from the same
@@ -1540,31 +1530,56 @@ struct JSRuntime : public JS::shadow::Runtime,
          */
         JSCurrentPerfGroupCallback currentPerfGroupCallback;
 
+        /**
+         * The number of the current iteration of the event loop.
+         */
+        uint64_t iteration() {
+            return iteration_;
+        }
+
         explicit Stopwatch(JSRuntime* runtime)
           : performance(runtime)
-          , iteration(0)
           , currentPerfGroupCallback(nullptr)
+          , totalCPOWTime(0)
           , isMonitoringJank_(false)
           , isMonitoringCPOW_(false)
           , isMonitoringPerCompartment_(false)
+          , iteration_(0)
+          , startedAtIteration_(0)
           , idCounter_(0)
         { }
 
         /**
          * Reset the stopwatch.
          *
-         * This method is meant to be called whenever we start processing
-         * an event, to ensure that stop any ongoing measurement that would
-         * otherwise provide irrelevant results.
+         * This method is meant to be called whenever we start
+         * processing an event, to ensure that we stop any ongoing
+         * measurement that would otherwise provide irrelevant
+         * results.
          */
-        void reset() {
-            ++iteration;
-        }
+        void reset();
+
+        /**
+         * Start the stopwatch.
+         *
+         * This method is meant to be called once we know that the
+         * current event contains JavaScript code to execute. Calling
+         * this several times during the same iteration is idempotent.
+         */
+        void start();
+
+        /**
+         * Commit the performance data collected since the last call
+         * to `start()`, unless `reset()` has been called since then.
+         */
+        void commit();
+
         /**
          * Activate/deactivate stopwatch measurement of jank.
          *
-         * Noop if `value` is `true` and the stopwatch is already active,
-         * or if `value` is `false` and the stopwatch is already inactive.
+         * Noop if `value` is `true` and the stopwatch is already
+         * measuring jank, or if `value` is `false` and the stopwatch
+         * is not measuring jank.
          *
          * Otherwise, any pending measurements are dropped, but previous
          * measurements remain stored.
@@ -1587,6 +1602,18 @@ struct JSRuntime : public JS::shadow::Runtime,
             return isMonitoringJank_;
         }
 
+        /**
+         * Activate/deactivate stopwatch measurement per compartment.
+         *
+         * Noop if `value` is `true` and the stopwatch is already
+         * measuring per compartment, or if `value` is `false` and the
+         * stopwatch is not measuring per compartment.
+         *
+         * Otherwise, any pending measurements are dropped, but previous
+         * measurements remain stored.
+         *
+         * May return `false` if the underlying hashtable cannot be allocated.
+         */
         bool setIsMonitoringPerCompartment(bool value) {
             if (isMonitoringPerCompartment_ != value)
                 reset();
@@ -1605,8 +1632,25 @@ struct JSRuntime : public JS::shadow::Runtime,
 
         /**
          * Activate/deactivate stopwatch measurement of CPOW.
+         *
+         * Noop if `value` is `true` and the stopwatch is already
+         * measuring CPOW, or if `value` is `false` and the stopwatch
+         * is not measuring CPOW.
+         *
+         * Otherwise, any pending measurements are dropped, but previous
+         * measurements remain stored.
+         *
+         * May return `false` if the underlying hashtable cannot be allocated.
          */
         bool setIsMonitoringCPOW(bool value) {
+            if (isMonitoringCPOW_ != value)
+                reset();
+
+            if (value && !groups_.initialized()) {
+                if (!groups_.init(128))
+                    return false;
+            }
+
             isMonitoringCPOW_ = value;
             return true;
         }
@@ -1622,46 +1666,92 @@ struct JSRuntime : public JS::shadow::Runtime,
             return idCounter_++;
         }
 
-        // Some systems have non-monotonic clocks. While we cannot
-        // improve the precision, we can make sure that our measures
-        // are monotonic nevertheless. We do this by storing the
-        // result of the latest call to the clock and making sure
-        // that the next timestamp is greater or equal.
-        struct MonotonicTimeStamp {
-            MonotonicTimeStamp()
-              : latestGood_(0)
-            {}
-            inline uint64_t monotonize(uint64_t stamp)
-            {
-                if (stamp <= latestGood_)
-                    return latestGood_;
-                latestGood_ = stamp;
-                return stamp;
-            }
-          private:
-            uint64_t latestGood_;
-        };
-        MonotonicTimeStamp systemTimeFix;
-        MonotonicTimeStamp userTimeFix;
+        /**
+         * Mark a group as changed during the current iteration.
+         *
+         * Recent data from this group will be post-processed and
+         * committed at the end of the iteration.
+         */
+        void addChangedGroup(js::PerformanceGroup* group) {
+            MOZ_ASSERT(group->recentTicks == 0);
+            touchedGroups.append(group);
+        }
 
+        // The total amount of time spent waiting on CPOWs since the
+        // start of the process, in microseconds.
+        uint64_t totalCPOWTime;
     private:
         Stopwatch(const Stopwatch&) = delete;
         Stopwatch& operator=(const Stopwatch&) = delete;
 
+        // Commit a piece of data to a single group.
+        // `totalUserTimeDelta`, `totalSystemTimeDelta`, `totalCyclesDelta`
+        // represent the outer measures, taken for the entire runtime.
+        void transferDeltas(uint64_t totalUserTimeDelta,
+                            uint64_t totalSystemTimeDelta,
+                            uint64_t totalCyclesDelta,
+                            js::PerformanceGroup* destination);
+
+        // Query the OS for the time spent in CPU/kernel since process
+        // launch.
+        bool getResources(uint64_t* userTime, uint64_t* systemTime) const;
+
+    private:
         Groups groups_;
         friend struct js::PerformanceGroupHolder;
 
         /**
-         * `true` if stopwatch monitoring is active, `false` otherwise.
+         * `true` if stopwatch monitoring is active for Jank, `false` otherwise.
          */
         bool isMonitoringJank_;
+        /**
+         * `true` if stopwatch monitoring is active for CPOW, `false` otherwise.
+         */
         bool isMonitoringCPOW_;
+        /**
+         * `true` if the stopwatch should udpdate data per-compartment, in
+         * addition to data per-group.
+         */
         bool isMonitoringPerCompartment_;
+
+        /**
+         * The number of times we have entered the event loop.
+         * Used to reset counters whenever we enter the loop,
+         * which may be caused either by having completed the
+         * previous run of the event loop, or by entering a
+         * nested loop.
+         *
+         * Always incremented by 1, may safely overflow.
+         */
+        uint64_t iteration_;
+
+        /**
+         * The iteration at which the stopwatch was last started.
+         *
+         * Used both to avoid starting the stopwatch several times
+         * during the same event loop and to avoid committing stale
+         * stopwatch results.
+         */
+        uint64_t startedAtIteration_;
 
         /**
          * A counter used to generate unique identifiers for groups.
          */
         uint64_t idCounter_;
+
+        /**
+         * The timestamps returned by `getResources()` during the call to
+         * `start()` in the current iteration of the event loop.
+         */
+        uint64_t userTimeStart_;
+        uint64_t systemTimeStart_;
+
+        /**
+         * Performance groups used during the current event.
+         *
+         * They are cleared by `commit()` and `reset()`.
+         */
+        mozilla::Vector<mozilla::RefPtr<js::PerformanceGroup>> touchedGroups;
     };
     Stopwatch stopwatch;
 };
