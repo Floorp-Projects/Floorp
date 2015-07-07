@@ -141,6 +141,15 @@ describe("loop.store.StandaloneMetricsStore", function() {
         "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.success,
         "Remote peer connected");
     });
+
+    it("should log an event on RetryAfterRoomFailure", function() {
+      store.retryAfterRoomFailure();
+
+      sinon.assert.calledOnce(window.ga);
+      sinon.assert.calledWithExactly(window.ga,
+        "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
+        "Retry failed room");
+    });
   });
 
   describe("Store Change Handlers", function() {
