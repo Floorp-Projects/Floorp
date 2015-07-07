@@ -34,7 +34,8 @@ public:
   bool operator==(const OriginAttributes& aOther) const
   {
     return mAppId == aOther.mAppId &&
-           mInBrowser == aOther.mInBrowser;
+           mInBrowser == aOther.mInBrowser &&
+           mAddonId == aOther.mAddonId;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
