@@ -15,7 +15,7 @@ import traceback
 try:
     # testlibdir is set on the GDB command line, via:
     # --eval-command python testlibdir=...
-    execfile(os.path.join(testlibdir, 'prologue.py'))
+    exec(open(os.path.join(testlibdir, 'prologue.py')).read())
 except Exception as err:
     sys.stderr.write('Error running GDB prologue:\n')
     traceback.print_exc()
