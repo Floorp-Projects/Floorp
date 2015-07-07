@@ -8,10 +8,9 @@
 #include "gfxPlatform.h"
 #include "ImageContainer.h"
 #include "MediaStreamGraph.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/dom/CanvasCaptureMediaStreamBinding.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/Mutex.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla::layers;
@@ -205,42 +204,15 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-    if (!data) {
+    RefPtr<SourceSurface> opt = gfxPlatform::GetPlatform()
+      ->ScreenReferenceDrawTarget()->OptimizeSourceSurface(snapshot);
+    if (!opt) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DataSourceSurface> copy;
-
-    {
-      DataSourceSurface::ScopedMap read(data, DataSourceSurface::READ);
-      if (!read.IsMapped()) {
-        return NS_ERROR_FAILURE;
-      }
-
-      copy = Factory::CreateDataSourceSurfaceWithStride(data->GetSize(),
-                                                        data->GetFormat(),
-                                                        read.GetStride());
-      if (!copy) {
-        return NS_ERROR_FAILURE;
-      }
-
-      DataSourceSurface::ScopedMap write(copy, DataSourceSurface::WRITE);
-      if (!write.IsMapped()) {
-        return NS_ERROR_FAILURE;
-      }
-
-      MOZ_ASSERT(read.GetStride() == write.GetStride());
-      MOZ_ASSERT(data->GetSize() == copy->GetSize());
-      MOZ_ASSERT(data->GetFormat() == copy->GetFormat());
-
-      memcpy(write.GetData(), read.GetData(),
-             write.GetStride() * copy->GetSize().height);
-    }
-
     CairoImage::Data imageData;
-    imageData.mSize = copy->GetSize();
-    imageData.mSourceSurface = copy;
+    imageData.mSize = opt->GetSize();
+    imageData.mSourceSurface = opt;
 
     RefPtr<CairoImage> image = new layers::CairoImage();
     image->SetData(imageData);
