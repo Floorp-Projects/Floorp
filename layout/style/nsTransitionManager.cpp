@@ -8,8 +8,6 @@
 
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
-#include "mozilla/dom/CSSTransitionBinding.h"
-
 #include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsCSSProps.h"
@@ -87,13 +85,7 @@ ElementPropertyTransition::CurrentValuePortion() const
  * CSSTransition                                                             *
  *****************************************************************************/
 
-JSObject*
-CSSTransition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return dom::CSSTransitionBinding::Wrap(aCx, this, aGivenProto);
-}
-
-AnimationPlayState
+mozilla::dom::AnimationPlayState
 CSSTransition::PlayStateFromJS() const
 {
   FlushStyle();
