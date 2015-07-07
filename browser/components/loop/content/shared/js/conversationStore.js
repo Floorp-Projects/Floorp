@@ -439,11 +439,14 @@ loop.store = loop.store || {};
         maxSize: loop.store.MAX_ROOM_CREATION_SIZE,
         expiresIn: loop.store.DEFAULT_EXPIRES_IN
       }, function(err, createdRoomData) {
+        var buckets = this.mozLoop.ROOM_CREATE;
         if (err) {
           this.trigger("error:emailLink");
+          this.mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
           return;
         }
         this.setStoreState({"emailLink": createdRoomData.roomUrl});
+        this.mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_SUCCESS);
       }.bind(this));
     },
 

@@ -338,7 +338,7 @@ describe("loop.shared.utils", function() {
   });
 
   describe("#composeCallUrlEmail", function() {
-    var composeEmail;
+    var composeEmail, telemetryAddValue;
 
     beforeEach(function() {
       // fake mozL10n
@@ -355,9 +355,15 @@ describe("loop.shared.utils", function() {
         }
       });
       composeEmail = sandbox.spy();
+      telemetryAddValue = sandbox.spy();
       navigator.mozLoop = {
+        SHARING_ROOM_URL: {
+          EMAIL_FROM_CALLFAILED: 2,
+          EMAIL_FROM_CONVERSATION: 3
+        },
         getLoopPref: sandbox.spy(),
-        composeEmail: composeEmail
+        composeEmail: composeEmail,
+        telemetryAddValue: telemetryAddValue
       };
     });
 
@@ -374,6 +380,13 @@ describe("loop.shared.utils", function() {
 
       sinon.assert.calledOnce(composeEmail);
       sinon.assert.calledWith(composeEmail, "subject_context", "body_context");
+    });
+
+    it("should record a telemetry event when an email is composed", function() {
+      sharedUtils.composeCallUrlEmail("http://invalid", null,
+        "Hello, is me you're looking for?", "callfailed");
+
+      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL",  2);
     });
   });
 
