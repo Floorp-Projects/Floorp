@@ -849,6 +849,12 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   get nodeName() {
     return this._form.nodeName;
   },
+  get doctypeString() {
+    return '<!DOCTYPE ' + this._form.name +
+     (this._form.publicId ? ' PUBLIC "' +  this._form.publicId + '"': '') +
+     (this._form.systemId ? ' "' + this._form.systemId + '"' : '') +
+     '>';
+  },
 
   get baseURI() {
     return this._form.baseURI;
@@ -2399,11 +2405,11 @@ var WalkerActor = protocol.ActorClass({
    * @param {NodeActor} node The node.
    */
   outerHTML: method(function(node) {
-    let html = "";
+    let outerHTML = "";
     if (!isNodeDead(node)) {
-      html = node.rawNode.outerHTML;
+      outerHTML = node.rawNode.outerHTML;
     }
-    return LongStringActor(this.conn, html);
+    return LongStringActor(this.conn, outerHTML);
   }, {
     request: {
       node: Arg(0, "domnode")
