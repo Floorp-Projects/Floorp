@@ -9,7 +9,6 @@
   locale/@AB_CD@/browser/about.dtd                (%chrome/about.dtd)
   locale/@AB_CD@/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
   locale/@AB_CD@/browser/aboutAddons.properties   (%chrome/aboutAddons.properties)
-  locale/@AB_CD@/browser/aboutApps.dtd            (%chrome/aboutApps.dtd)
 #ifdef MOZ_DEVICES
   locale/@AB_CD@/browser/aboutDevices.dtd         (%chrome/aboutDevices.dtd)
 #endif

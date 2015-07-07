@@ -107,10 +107,6 @@
             <item android:id="@+id/logins"
                   android:title="@string/logins"/>
 
-            <item android:id="@+id/apps"
-                  android:icon="@drawable/ic_menu_apps"
-                  android:title="@string/apps"/>
-
             <item android:id="@+id/new_guest_session"
                   android:icon="@drawable/ic_menu_guest"
                   android:visible="false"
