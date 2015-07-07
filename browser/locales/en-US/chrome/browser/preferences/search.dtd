@@ -9,6 +9,8 @@
 <!ENTITY provideSearchSuggestions.label        "Provide search suggestions">
 <!ENTITY provideSearchSuggestions.accesskey    "s">
 
+<!ENTITY redirectWindowsSearch.label "Use this search engine for searches from Windows">
+<!ENTITY redirectWindowsSearch.accesskey "W">
 
 <!ENTITY oneClickSearchEngines.label           "One-click search engines">
 
