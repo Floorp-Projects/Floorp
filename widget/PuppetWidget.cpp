@@ -217,14 +217,7 @@ PuppetWidget::Resize(double aWidth,
     InvalidateRegion(this, dirty);
   }
 
-  // call WindowResized() on both the current listener, and possibly
-  // also the previous one if we're in a state where we're drawing that one
-  // because the current one is paint suppressed
   if (!oldBounds.IsEqualEdges(mBounds) && mAttachedWidgetListener) {
-    if (GetCurrentWidgetListener() &&
-        GetCurrentWidgetListener() != mAttachedWidgetListener) {
-      GetCurrentWidgetListener()->WindowResized(this, mBounds.width, mBounds.height);
-    }
     mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
   }
 
@@ -320,8 +313,8 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 
   aStatus = nsEventStatus_eIgnore;
 
-  if (GetCurrentWidgetListener()) {
-    aStatus = GetCurrentWidgetListener()->HandleEvent(event, mUseAttachedEvents);
+  if (mAttachedWidgetListener) {
+    aStatus = mAttachedWidgetListener->HandleEvent(event, mUseAttachedEvents);
   }
 
   return NS_OK;
@@ -921,7 +914,7 @@ PuppetWidget::Paint()
 {
   MOZ_ASSERT(!mDirtyRegion.IsEmpty(), "paint event logic messed up");
 
-  if (!GetCurrentWidgetListener())
+  if (!mAttachedWidgetListener)
     return NS_OK;
 
   nsIntRegion region = mDirtyRegion;
@@ -930,9 +923,9 @@ PuppetWidget::Paint()
   mDirtyRegion.SetEmpty();
   mPaintTask.Revoke();
 
-  GetCurrentWidgetListener()->WillPaintWindow(this);
+  mAttachedWidgetListener->WillPaintWindow(this);
 
-  if (GetCurrentWidgetListener()) {
+  if (mAttachedWidgetListener) {
 #ifdef DEBUG
     debug_DumpPaintEvent(stderr, this, region,
                          nsAutoCString("PuppetWidget"), 0);
@@ -949,15 +942,15 @@ PuppetWidget::Paint()
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BufferMode::BUFFER_NONE);
-      GetCurrentWidgetListener()->PaintWindow(this, region);
+      mAttachedWidgetListener->PaintWindow(this, region);
       if (mTabChild) {
         mTabChild->NotifyPainted();
       }
     }
   }
 
-  if (GetCurrentWidgetListener()) {
-    GetCurrentWidgetListener()->DidPaintWindow();
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->DidPaintWindow();
   }
 
   return NS_OK;
@@ -1256,21 +1249,6 @@ PuppetScreenManager::GetSystemDefaultScale(float *aDefaultScale)
 {
   *aDefaultScale = 1.0f;
   return NS_OK;
-}
-
-nsIWidgetListener*
-PuppetWidget::GetCurrentWidgetListener()
-{
-  if (!mPreviouslyAttachedWidgetListener ||
-      !mAttachedWidgetListener) {
-    return mAttachedWidgetListener;
-  }
-
-  if (mAttachedWidgetListener->GetView()->IsPrimaryFramePaintSuppressed()) {
-    return mPreviouslyAttachedWidgetListener;
-  }
-
-  return mAttachedWidgetListener;
 }
 
 }  // namespace widget
