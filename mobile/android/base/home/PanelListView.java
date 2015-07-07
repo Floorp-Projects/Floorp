@@ -36,7 +36,7 @@ public class PanelListView extends HomeListView
         super(context);
 
         this.viewConfig = viewConfig;
-        itemHandler = new PanelViewItemHandler(viewConfig);
+        itemHandler = new PanelViewItemHandler();
 
         adapter = new PanelViewAdapter(context, viewConfig);
         setAdapter(adapter);

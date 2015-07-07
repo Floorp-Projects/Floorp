@@ -27,9 +27,6 @@
 #ifdef CAIRO_HAS_WIN32_SURFACE
 #include "gfxWindowsSurface.h"
 #endif
-#ifdef CAIRO_HAS_D2D_SURFACE
-#include "gfxD2DSurface.h"
-#endif
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
@@ -177,11 +174,6 @@ gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
     else if (stype == CAIRO_SURFACE_TYPE_WIN32 ||
              stype == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
         result = new gfxWindowsSurface(csurf);
-    }
-#endif
-#ifdef CAIRO_HAS_D2D_SURFACE
-    else if (stype == CAIRO_SURFACE_TYPE_D2D) {
-        result = new gfxD2DSurface(csurf);
     }
 #endif
 #ifdef MOZ_X11
@@ -568,15 +560,10 @@ static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
     {"gfx-surface-xml", nullptr},
     {"gfx-surface-skia", nullptr},
     {"gfx-surface-subsurface", nullptr},
-    {"gfx-surface-d2d", nullptr},
 };
 
 PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
                  size_t(gfxSurfaceType::Max));
-#ifdef CAIRO_HAS_D2D_SURFACE
-PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_D2D) ==
-                 uint32_t(gfxSurfaceType::D2D));
-#endif
 PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
                  uint32_t(gfxSurfaceType::Skia));
 

@@ -165,6 +165,24 @@ MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
     j(Overflow, label);
 }
 
+void
+MacroAssemblerX86Shared::callJit(Register callee)
+{
+    call(callee);
+}
+
+void
+MacroAssemblerX86Shared::callJitFromAsmJS(Register callee)
+{
+    call(callee);
+}
+
+void
+MacroAssemblerX86Shared::callAndPushReturnAddress(Label* label)
+{
+    call(label);
+}
+
 MacroAssembler&
 MacroAssemblerX86Shared::asMasm()
 {
@@ -349,4 +367,51 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
     framePushed_ -= sizeof(Value);
+}
+
+// ===============================================================
+// Simple call functions.
+
+void
+MacroAssembler::call(Register reg)
+{
+    Assembler::call(reg);
+}
+
+void
+MacroAssembler::call(Label* label)
+{
+    Assembler::call(label);
+}
+
+void
+MacroAssembler::call(const Address& addr)
+{
+    Assembler::call(Operand(addr.base, addr.offset));
+}
+
+void
+MacroAssembler::call(AsmJSImmPtr target)
+{
+    mov(target, eax);
+    Assembler::call(eax);
+}
+
+void
+MacroAssembler::call(ImmWord target)
+{
+    mov(target, eax);
+    Assembler::call(eax);
+}
+
+void
+MacroAssembler::call(ImmPtr target)
+{
+    call(ImmWord(uintptr_t(target.value)));
+}
+
+void
+MacroAssembler::call(JitCode* target)
+{
+    Assembler::call(target);
 }

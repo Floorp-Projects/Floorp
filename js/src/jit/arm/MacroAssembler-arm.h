@@ -538,7 +538,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     { }
 
   public:
-    using MacroAssemblerARM::call;
 
     // Jumps + other functions that should be called from non-arm specific
     // code. Basically, an x86 front end on top of the ARM code.
@@ -567,42 +566,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         MOZ_CRASH("NYI-IC");
     }
 
-    void call(const Register reg) {
-        as_blx(reg);
-    }
-    void call(Label* label) {
-        // For now, assume that it'll be nearby?
-        as_bl(label, Always);
-    }
-    void call(ImmWord imm) {
-        call(ImmPtr((void*)imm.value));
-    }
-    void call(ImmPtr imm) {
-        BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, imm, Relocation::HARDCODED);
-        ma_call(imm);
-    }
-    void call(AsmJSImmPtr imm) {
-        movePtr(imm, CallReg);
-        call(CallReg);
-    }
-    void call(JitCode* c) {
-        BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
-        RelocStyle rs;
-        if (HasMOVWT())
-            rs = L_MOVWT;
-        else
-            rs = L_LDR;
-
-        ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
-        ma_callJitHalfPush(ScratchRegister);
-    }
-    void callAndPushReturnAddress(Label* label) {
-        AutoForbidPools afp(this, 2);
-        ma_push(pc);
-        call(label);
-    }
+    void callAndPushReturnAddress(Label* label);
 
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();

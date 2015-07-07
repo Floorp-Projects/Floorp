@@ -2853,8 +2853,7 @@ PluginInstanceChild::CreateOptSurface(void)
 #endif
 
 #ifdef XP_WIN
-    if (mSurfaceType == gfxSurfaceType::Win32 ||
-        mSurfaceType == gfxSurfaceType::D2D) {
+    if (mSurfaceType == gfxSurfaceType::Win32) {
         bool willHaveTransparentPixels = mIsTransparent && !mBackground;
 
         SharedDIBSurface* s = new SharedDIBSurface();

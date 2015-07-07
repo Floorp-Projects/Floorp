@@ -178,15 +178,18 @@ loop.roomViews = (function(mozL10n) {
       this.props.dispatcher.dispatch(
         new sharedActions.EmailRoomUrl({
           roomUrl: roomData.roomUrl,
-          roomDescription: contextURL && contextURL.description
+          roomDescription: contextURL && contextURL.description,
+          from: "conversation"
         }));
     },
 
     handleCopyButtonClick: function(event) {
       event.preventDefault();
 
-      this.props.dispatcher.dispatch(
-        new sharedActions.CopyRoomUrl({roomUrl: this.props.roomData.roomUrl}));
+      this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
+        roomUrl: this.props.roomData.roomUrl,
+        from: "conversation"
+      }));
 
       this.setState({copiedUrl: true});
     },
@@ -395,7 +398,10 @@ loop.roomViews = (function(mozL10n) {
         return;
       }
 
-      this.props.mozLoop.openURL(url.location);
+      var mozLoop = this.props.mozLoop;
+      mozLoop.openURL(url.location);
+
+      mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
     },
 
     handleCheckboxChange: function(state) {
