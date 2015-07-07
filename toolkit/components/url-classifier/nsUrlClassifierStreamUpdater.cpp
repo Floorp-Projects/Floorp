@@ -10,6 +10,7 @@
 #include "nsIUploadChannel.h"
 #include "nsIURI.h"
 #include "nsIUrlClassifierDBService.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsToolkitCompsCID.h"

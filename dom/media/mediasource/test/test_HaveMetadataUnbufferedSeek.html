@@ -22,9 +22,9 @@ runWithMSE(function (ms, v) {
 
     var target = 2;
 
-    v.addEventListener("canplay", function oncanplay() {
-      v.removeEventListener("canplay", oncanplay);
-      ok(v.readyState >= v.HAVE_FUTURE_DATA, "readyState is >= FUTURE_DATA");
+    v.addEventListener("loadeddata", function onloadeddata() {
+      v.removeEventListener("loadeddata", onloadeddata);
+      ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
       v.currentTime = target;
     });
 

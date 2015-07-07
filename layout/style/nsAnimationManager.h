@@ -51,24 +51,43 @@ struct AnimationEventInfo {
 
 typedef InfallibleTArray<AnimationEventInfo> EventArray;
 
-class CSSAnimation final : public dom::Animation
+namespace dom {
+
+class CSSAnimation final : public Animation
 {
 public:
- explicit CSSAnimation(dom::DocumentTimeline* aTimeline)
-    : dom::Animation(aTimeline)
+ explicit CSSAnimation(DocumentTimeline* aTimeline,
+                       const nsSubstring& aAnimationName)
+    : Animation(aTimeline)
+    , mAnimationName(aAnimationName)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
     , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
   {
+    // We might need to drop this assertion once we add a script-accessible
+    // constructor but for animations generated from CSS markup the
+    // animation-name should never be empty.
+    MOZ_ASSERT(!mAnimationName.IsEmpty(), "animation-name should not be empty");
   }
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   virtual CSSAnimation* AsCSSAnimation() override { return this; }
 
-  virtual dom::Promise* GetReady(ErrorResult& aRv) override;
+  // CSSAnimation interface
+  void GetAnimationName(nsString& aRetVal) const { aRetVal = mAnimationName; }
+
+  // Alternative to GetAnimationName that returns a reference to the member
+  // for more efficient internal usage.
+  const nsString& AnimationName() const { return mAnimationName; }
+
+  // Animation interface overrides
+  virtual Promise* GetReady(ErrorResult& aRv) override;
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
   virtual void Pause(ErrorResult& aRv) override;
 
-  virtual dom::AnimationPlayState PlayStateFromJS() const override;
+  virtual AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;
 
   void PlayFromStyle();
@@ -90,6 +109,8 @@ protected:
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
+
+  nsString mAnimationName;
 
   // When combining animation-play-state with play() / pause() the following
   // behavior applies:
@@ -152,6 +173,7 @@ protected:
   uint64_t mPreviousPhaseOrIteration;
 };
 
+} /* namespace dom */
 } /* namespace mozilla */
 
 class nsAnimationManager final

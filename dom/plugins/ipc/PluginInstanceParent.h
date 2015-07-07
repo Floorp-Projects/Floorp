@@ -33,7 +33,6 @@ class nsPluginInstanceOwner;
 namespace mozilla {
 namespace layers {
 class ImageContainer;
-class CompositionNotifySink;
 }
 namespace plugins {
 
@@ -343,7 +342,6 @@ private:
     bool mIsWhitelistedForShumway;
     NPWindowType mWindowType;
     int16_t            mDrawingModel;
-    nsAutoPtr<mozilla::layers::CompositionNotifySink> mNotifySink;
 
     nsDataHashtable<nsPtrHashKey<NPObject>, PluginScriptableObjectParent*> mScriptableObjects;
 

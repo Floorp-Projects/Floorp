@@ -15,6 +15,9 @@
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
 #include "prnetdb.h"
+#include "nsIURI.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 

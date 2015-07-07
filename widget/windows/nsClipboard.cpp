@@ -31,6 +31,8 @@
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsIFileProtocolHandler.h"
+#include "nsIOutputStream.h"
 #include "nsEscape.h"
 #include "nsIObserverService.h"
 

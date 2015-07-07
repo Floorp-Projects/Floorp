@@ -12,6 +12,8 @@
 #include "nsICookiePromptService.h"
 #include "nsICookieManager2.h"
 #include "nsNetUtil.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -24,6 +26,7 @@
 #include "nsILoadContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetCID.h"
+#include "prtime.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************

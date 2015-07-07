@@ -12,6 +12,8 @@
 #include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "nsStandardURL.h"
+#include "LoadInfo.h"
+#include "nsIDOMNode.h"
 
 PRLogModuleInfo *webSocketLog = nullptr;
 

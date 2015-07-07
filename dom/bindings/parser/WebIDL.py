@@ -3377,7 +3377,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
 
         if self.getExtendedAttribute("NewObject"):
             if self.dependsOn == "Nothing" or self.dependsOn == "DOMState":
-                raise WebIDLError("A [NewObject] method is not idempotent, " 
+                raise WebIDLError("A [NewObject] method is not idempotent, "
                                   "so it has to depend on something other than DOM state.",
                                   [self.location])
 
@@ -4528,6 +4528,12 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               "legacycaller.",
                               [overloadWithPromiseReturnType.location])
 
+        if self.getExtendedAttribute("StaticClassOverride") and not \
+           (self.identifier.scope.isJSImplemented() and self.isStatic()):
+            raise WebIDLError("StaticClassOverride can be applied to static"
+                              " methods on JS-implemented classes only.",
+                              [self.location])
+
     def overloadsForArgCount(self, argc):
         return [overload for overload in self._overloads if
                 len(overload.arguments) == argc or
@@ -4645,7 +4651,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "AvailableIn" or
               identifier == "CheckPermissions" or
               identifier == "BinaryName" or
-              identifier == "MethodIdentityTestable"):
+              identifier == "MethodIdentityTestable" or
+              identifier == "StaticClassOverride"):
             # Known attributes that we don't need to do anything with here
             pass
         else:

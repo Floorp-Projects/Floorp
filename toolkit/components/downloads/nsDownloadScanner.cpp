@@ -12,6 +12,7 @@
 #include "nsXULAppAPI.h"
 #include "nsIPrefService.h"
 #include "nsNetUtil.h"
+#include "prtime.h"
 #include "nsDeque.h"
 #include "nsIFileURL.h"
 #include "nsIPrefBranch.h"

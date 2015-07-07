@@ -24,4 +24,5 @@ dictionary RTCConfiguration {
     sequence<RTCIceServer> iceServers;
     RTCBundlePolicy bundlePolicy = "balanced";
     DOMString? peerIdentity = null;
+    sequence<RTCCertificate> certificates;
 };

@@ -48,6 +48,8 @@ public:
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
+  void Disconnect();
+
   nsRefPtr<Layer> mLayer;
 };
 

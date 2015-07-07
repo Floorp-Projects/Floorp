@@ -148,7 +148,6 @@
 #include "nsDeque.h"
 
 #include "nsIScriptSecurityManager.h"
-#include "nsNetUtil.h"
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"

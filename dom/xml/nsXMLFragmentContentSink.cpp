@@ -19,7 +19,6 @@
 #include "nsError.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsNetUtil.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"

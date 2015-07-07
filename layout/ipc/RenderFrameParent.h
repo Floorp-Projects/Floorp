@@ -26,7 +26,6 @@ class InputEvent;
 namespace layers {
 class APZCTreeManager;
 class TargetConfig;
-class LayerTransactionParent;
 struct TextureFactoryIdentifier;
 struct ScrollableLayerGuid;
 }
@@ -42,7 +41,6 @@ class RenderFrameParent : public PRenderFrameParent
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::TargetConfig TargetConfig;
-  typedef mozilla::layers::LayerTransactionParent LayerTransactionParent;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;

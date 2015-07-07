@@ -25,6 +25,7 @@ namespace layers {
 class CompositableClient;
 class BufferTextureClient;
 class ImageBridgeChild;
+class ImageContainer;
 class CompositableForwarder;
 class CompositableChild;
 class PCompositableChild;
@@ -34,7 +35,8 @@ class PCompositableChild;
  */
 class RemoveTextureFromCompositableTracker : public AsyncTransactionTracker {
 public:
-  RemoveTextureFromCompositableTracker()
+  explicit RemoveTextureFromCompositableTracker(AsyncTransactionWaiter* aWaiter = nullptr)
+    : AsyncTransactionTracker(aWaiter)
   {
     MOZ_COUNT_CTOR(RemoveTextureFromCompositableTracker);
   }
@@ -145,7 +147,7 @@ public:
   /**
    * Establishes the connection with compositor side through IPDL
    */
-  virtual bool Connect();
+  virtual bool Connect(ImageContainer* aImageContainer = nullptr);
 
   void Destroy();
 
@@ -175,11 +177,6 @@ public:
    * Tells the Compositor to create a TextureHost for this TextureClient.
    */
   virtual bool AddTextureClient(TextureClient* aClient);
-
-  /**
-   * A hook for the Compositable to execute whatever it held off for next transaction.
-   */
-  virtual void OnTransaction();
 
   /**
    * A hook for the when the Compositable is detached from it's layer.

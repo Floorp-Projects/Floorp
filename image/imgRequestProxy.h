@@ -107,7 +107,6 @@ public:
 
   // Other, internal-only methods:
   virtual void SetHasImage() override;
-  virtual void OnStartDecode() override;
 
   // Whether we want notifications from ProgressTracker to be deferred until
   // an event it has scheduled has been fired.

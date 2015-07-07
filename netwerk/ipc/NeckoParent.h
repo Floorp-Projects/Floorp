@@ -8,7 +8,9 @@
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/OfflineObserver.h"
+#include "nsIAuthPrompt2.h"
 #include "nsINetworkPredictor.h"
+#include "nsNetUtil.h"
 
 #ifndef mozilla_net_NeckoParent_h
 #define mozilla_net_NeckoParent_h

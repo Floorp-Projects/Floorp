@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayerTreeInvalidation.h"
+
 #include <stdint.h>                     // for uint32_t
 #include "ImageContainer.h"             // for ImageContainer
 #include "ImageLayers.h"                // for ImageLayer, etc
@@ -23,6 +24,8 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for IntRect
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl
+#include "mozilla/layers/ImageHost.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 
 using namespace mozilla::gfx;
 
@@ -383,16 +386,27 @@ struct ColorLayerProperties : public LayerPropertiesBase
   IntRect mBounds;
 };
 
+static ImageHost* GetImageHost(ImageLayer* aLayer)
+{
+  LayerComposite* composite = aLayer->AsLayerComposite();
+  if (composite) {
+    return static_cast<ImageHost*>(composite->GetCompositableHost());
+  }
+  return nullptr;
+}
+
 struct ImageLayerProperties : public LayerPropertiesBase
 {
   explicit ImageLayerProperties(ImageLayer* aImage, bool aIsMask)
     : LayerPropertiesBase(aImage)
     , mContainer(aImage->GetContainer())
+    , mImageHost(GetImageHost(aImage))
     , mFilter(aImage->GetFilter())
     , mScaleToSize(aImage->GetScaleToSize())
     , mScaleMode(aImage->GetScaleMode())
     , mIsMask(aIsMask)
   {
+    mFrameID = mImageHost ? mImageHost->GetFrameID() : -1;
   }
 
   virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
@@ -408,30 +422,39 @@ struct ImageLayerProperties : public LayerPropertiesBase
     }
 
     ImageContainer* container = imageLayer->GetContainer();
+    ImageHost* host = GetImageHost(imageLayer);
     if (mContainer != container ||
         mFilter != imageLayer->GetFilter() ||
         mScaleToSize != imageLayer->GetScaleToSize() ||
-        mScaleMode != imageLayer->GetScaleMode()) {
+        mScaleMode != imageLayer->GetScaleMode() ||
+        host != mImageHost ||
+        (host && host->GetFrameID() != mFrameID)) {
       aGeometryChanged = true;
 
       if (mIsMask) {
         // Mask layers have an empty visible region, so we have to
         // use the image size instead.
-        IntSize size = container->GetCurrentSize();
+        IntSize size;
+        if (container) {
+          size = container->GetCurrentSize();
+        }
+        if (host) {
+          size = host->GetImageSize();
+        }
         IntRect rect(0, 0, size.width, size.height);
         return TransformRect(rect, mLayer->GetLocalTransform());
-
-      } else {
-        return NewTransformedBounds();
       }
+      return NewTransformedBounds();
     }
 
     return IntRect();
   }
 
   nsRefPtr<ImageContainer> mContainer;
+  nsRefPtr<ImageHost> mImageHost;
   GraphicsFilter mFilter;
   gfx::IntSize mScaleToSize;
+  int32_t mFrameID;
   ScaleMode mScaleMode;
   bool mIsMask;
 };

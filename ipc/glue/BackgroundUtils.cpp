@@ -12,6 +12,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "mozilla/LoadInfo.h"
 #include "nsNullPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

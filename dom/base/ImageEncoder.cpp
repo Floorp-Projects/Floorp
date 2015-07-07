@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "gfxUtils.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla::gfx;
 

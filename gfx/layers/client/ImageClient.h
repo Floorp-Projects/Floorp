@@ -23,6 +23,7 @@
 namespace mozilla {
 namespace layers {
 
+class ClientLayer;
 class CompositableForwarder;
 class AsyncTransactionTracker;
 class Image;
@@ -55,38 +56,29 @@ public:
    */
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) = 0;
 
-  /**
-   * The picture rect is the area of the texture which makes up the image. That
-   * is, the area that should be composited. In texture space.
-   */
-  virtual void UpdatePictureRect(gfx::IntRect aPictureRect);
-
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) = 0;
 
-  /**
-   * Create AsyncTransactionTracker that is used for FlushAllImagesAsync().
-   */
-  virtual already_AddRefed<AsyncTransactionTracker> PrepareFlushAllImages() { return nullptr; }
+  void SetLayer(ClientLayer* aLayer) { mLayer = aLayer; }
+  ClientLayer* GetLayer() const { return mLayer; }
 
   /**
    * asynchronously remove all the textures used by the image client.
    *
    */
-  virtual void FlushAllImages(bool aExceptFront,
-                              AsyncTransactionTracker* aAsyncTransactionTracker) {}
+  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) {}
 
   virtual void RemoveTexture(TextureClient* aTexture) override;
 
-  void RemoveTextureWithTracker(TextureClient* aTexture,
-                                AsyncTransactionTracker* aAsyncTransactionTracker = nullptr);
+  void RemoveTextureWithWaiter(TextureClient* aTexture,
+                               AsyncTransactionWaiter* aAsyncTransactionWaiter = nullptr);
 
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
 
+  ClientLayer* mLayer;
   CompositableType mType;
-  int32_t mLastPaintedImageSerial;
-  gfx::IntRect mPictureRect;
+  uint32_t mLastUpdateGenerationCounter;
 };
 
 /**
@@ -109,13 +101,14 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) override;
 
-  virtual already_AddRefed<AsyncTransactionTracker> PrepareFlushAllImages() override;
-
-  virtual void FlushAllImages(bool aExceptFront,
-                              AsyncTransactionTracker* aAsyncTransactionTracker) override;
+  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
 
 protected:
-  RefPtr<TextureClient> mFrontBuffer;
+  struct Buffer {
+    RefPtr<TextureClient> mTextureClient;
+    int32_t mImageSerial;
+  };
+  nsTArray<Buffer> mBuffers;
 };
 
 /**
@@ -130,12 +123,7 @@ public:
                     TextureFlags aFlags);
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) override;
-  virtual bool Connect() override { return false; }
-  virtual void Updated() {}
-  void SetLayer(ShadowableLayer* aLayer)
-  {
-    mLayer = aLayer;
-  }
+  virtual bool Connect(ImageContainer* aImageContainer) override { return false; }
 
   virtual TextureInfo GetTextureInfo() const override
   {
@@ -155,7 +143,6 @@ public:
 
 protected:
   uint64_t mAsyncContainerID;
-  ShadowableLayer* mLayer;
 };
 
 #ifdef MOZ_WIDGET_GONK

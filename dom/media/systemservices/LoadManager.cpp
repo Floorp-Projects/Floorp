@@ -14,7 +14,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
-#include "nsNetUtil.h"
 #include "nsIObserverService.h"
 
 // NSPR_LOG_MODULES=LoadManager:5

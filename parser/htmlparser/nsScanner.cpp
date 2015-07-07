@@ -13,7 +13,6 @@
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIFile.h"
-#include "nsNetUtil.h"
 #include "nsUTF8Utils.h" // for LossyConvertEncoding
 #include "nsCRT.h"
 #include "nsParser.h"

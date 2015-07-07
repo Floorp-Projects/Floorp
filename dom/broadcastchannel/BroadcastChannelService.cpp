@@ -83,7 +83,7 @@ struct MOZ_STACK_CLASS PostMessageData final
 {
   PostMessageData(BroadcastChannelParent* aParent,
                   const ClonedMessageData& aData,
-                  const nsAString& aOrigin,
+                  const nsACString& aOrigin,
                   uint64_t aAppId,
                   bool aIsInBrowserElement,
                   const nsAString& aChannel,
@@ -121,7 +121,7 @@ struct MOZ_STACK_CLASS PostMessageData final
   BroadcastChannelParent* mParent;
   const ClonedMessageData& mData;
   nsTArray<nsRefPtr<BlobImpl>> mBlobs;
-  const nsString mOrigin;
+  const nsCString mOrigin;
   const nsString mChannel;
   uint64_t mAppId;
   bool mIsInBrowserElement;
@@ -151,7 +151,7 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
 void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
                                      const ClonedMessageData& aData,
-                                     const nsAString& aOrigin,
+                                     const nsACString& aOrigin,
                                      uint64_t aAppId,
                                      bool aIsInBrowserElement,
                                      const nsAString& aChannel,

@@ -18,6 +18,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
 
 namespace IPC {
 

@@ -39,8 +39,9 @@ class Shmem;
 
 namespace layers {
 
-using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
+using namespace mozilla::ipc;
 
 class ClientTiledLayerBuffer;
 
@@ -349,34 +350,33 @@ ShadowLayerForwarder::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 void
-ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
-                                        const gfx::IntRect& aRect)
+ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
+                                  const nsTArray<TimedTextureClient>& aTextures)
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
-  mTxn->AddNoSwapPaint(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
-}
 
-void
-ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
-                                 TextureClient* aTexture)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
+  nsAutoTArray<TimedTexture,4> textures;
 
-  FenceHandle fence = aTexture->GetAcquireFenceHandle();
-  mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                             nullptr, aTexture->GetIPDLActor(),
-                             fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t())));
-  if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD
-      && aTexture->HasInternalBuffer()) {
-    // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
-    // race with updates on the main thread. In this case we want the transaction
-    // to be synchronous.
-    mTxn->MarkSyncTransaction();
+  for (auto& t : aTextures) {
+    MOZ_ASSERT(t.mTextureClient);
+    MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+    FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
+    textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
+                                        fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                        t.mTimeStamp, t.mPictureRect,
+                                        t.mFrameID, t.mProducerID));
+    if ((t.mTextureClient->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD)
+        && t.mTextureClient->HasInternalBuffer()) {
+
+      // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
+      // race with updates on the main thread. In this case we want the transaction
+      // to be synchronous.
+      mTxn->MarkSyncTransaction();
+    }
   }
+  mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
+                             textures));
 }
 
 void
@@ -399,10 +399,12 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
 #ifdef MOZ_WIDGET_GONK
 void
 ShadowLayerForwarder::UseOverlaySource(CompositableClient* aCompositable,
-                                       const OverlaySource& aOverlay)
+                                       const OverlaySource& aOverlay,
+                                       const nsIntRect& aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
-  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(), aOverlay));
+  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
+      aOverlay, aPictureRect));
 }
 #endif
 
@@ -766,7 +768,8 @@ ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
 void
-ShadowLayerForwarder::Connect(CompositableClient* aCompositable)
+ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
+                              ImageContainer* aImageContainer)
 {
 #ifdef GFX_COMPOSITOR_LOGGING
   printf("ShadowLayerForwarder::Connect(Compositable)\n");

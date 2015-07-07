@@ -2859,6 +2859,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       }
 #endif // XP_MACOSX
     }
+
+#ifndef XP_MACOSX
+    // A failure here is terminal since we can't fall back on the non-e10s code
+    // path below.
+    if (!mWidget && XRE_IsContentProcess()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+#endif // XP_MACOSX
+
     if (!mWidget) {
       // native (single process)
       mWidget = do_CreateInstance(kWidgetCID, &rv);

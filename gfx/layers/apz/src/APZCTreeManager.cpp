@@ -940,15 +940,9 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
 static bool
 WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
-  // Only support pixel units on OS X for now because it causes more test
-  // failures when APZ is turned on, and we want to do that on Windows very
-  // soon.
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
          (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
-#ifdef XP_MACOSX
-            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL
-#endif
-           ) &&
+            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
          !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
 }
 

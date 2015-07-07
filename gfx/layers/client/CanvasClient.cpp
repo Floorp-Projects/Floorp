@@ -103,7 +103,11 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   }
 
   if (updated) {
-    GetForwarder()->UseTexture(this, mBuffer);
+    nsAutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
+    CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
+    t->mTextureClient = mBuffer;
+    t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mBuffer->GetSize());
+    GetForwarder()->UseTextures(this, textures);
     mBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
   }
 }
@@ -380,7 +384,11 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   // Add the new TexClient.
   MOZ_ALWAYS_TRUE( AddTextureClient(mFront) );
 
-  forwarder->UseTexture(this, mFront);
+  nsAutoTArray<CompositableForwarder::TimedTextureClient,1> textures;
+  CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
+  t->mTextureClient = mFront;
+  t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mFront->GetSize());
+  forwarder->UseTextures(this, textures);
 }
 
 void

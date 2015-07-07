@@ -297,6 +297,7 @@ public:
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread();
   void SchedulePauseOnCompositorThread();
+  void InvalidateOnCompositorThread();
   /**
    * Returns true if a surface was obtained and the resume succeeded; false
    * otherwise.
@@ -451,6 +452,7 @@ protected:
   void ResumeCompositionAndResize(int width, int height);
   void ForceComposition();
   void CancelCurrentCompositeTask();
+  void Invalidate();
 
   /**
    * Add a compositor to the global compositor map.

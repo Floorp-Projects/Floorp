@@ -259,62 +259,65 @@ stun_getifaddrs(nr_local_addr addrs[], int maxaddrs, int *count)
   if_addr = if_addrs_head;
 
   while (if_addr && *count < maxaddrs) {
-    switch (if_addr->ifa_addr->sa_family) {
-      case AF_INET:
-      case AF_INET6:
-        if (r=nr_sockaddr_to_transport_addr(if_addr->ifa_addr, IPPROTO_UDP, 0, &(addrs[*count].addr))) {
-          r_log(NR_LOG_STUN, LOG_ERR, "nr_sockaddr_to_transport_addr error r = %d", r);
-        } else {
+    /* This can be null */
+    if (if_addr->ifa_addr) {
+      switch (if_addr->ifa_addr->sa_family) {
+        case AF_INET:
+        case AF_INET6:
+          if (r=nr_sockaddr_to_transport_addr(if_addr->ifa_addr, IPPROTO_UDP, 0, &(addrs[*count].addr))) {
+            r_log(NR_LOG_STUN, LOG_ERR, "nr_sockaddr_to_transport_addr error r = %d", r);
+          } else {
 #if defined(LINUX) && !defined(ANDROID)
-          struct ethtool_cmd ecmd;
-          struct ifreq ifr;
-          struct iwreq wrq;
-          int e;
-          int s = socket(AF_INET, SOCK_DGRAM, 0);
+            struct ethtool_cmd ecmd;
+            struct ifreq ifr;
+            struct iwreq wrq;
+            int e;
+            int s = socket(AF_INET, SOCK_DGRAM, 0);
 
-          strncpy(ifr.ifr_name, if_addr->ifa_name, sizeof(ifr.ifr_name));
-          /* TODO (Bug 896851): interface property for Android */
-          /* Getting ethtool for ethernet information. */
-          ecmd.cmd = ETHTOOL_GSET;
-          /* In/out param */
-          ifr.ifr_data = (void*)&ecmd;
+            strncpy(ifr.ifr_name, if_addr->ifa_name, sizeof(ifr.ifr_name));
+            /* TODO (Bug 896851): interface property for Android */
+            /* Getting ethtool for ethernet information. */
+            ecmd.cmd = ETHTOOL_GSET;
+            /* In/out param */
+            ifr.ifr_data = (void*)&ecmd;
 
-          e = ioctl(s, SIOCETHTOOL, &ifr);
-          if (e == 0)
-          {
-             /* For wireless network, we won't get ethtool, it's a wired
-              * connection */
-             addrs[*count].interface.type = NR_INTERFACE_TYPE_WIRED;
+            e = ioctl(s, SIOCETHTOOL, &ifr);
+            if (e == 0)
+            {
+               /* For wireless network, we won't get ethtool, it's a wired
+                * connection */
+               addrs[*count].interface.type = NR_INTERFACE_TYPE_WIRED;
 #ifdef DONT_HAVE_ETHTOOL_SPEED_HI
-             addrs[*count].interface.estimated_speed = ecmd.speed;
+               addrs[*count].interface.estimated_speed = ecmd.speed;
 #else
-             addrs[*count].interface.estimated_speed = ((ecmd.speed_hi << 16) | ecmd.speed) * 1000;
+               addrs[*count].interface.estimated_speed = ((ecmd.speed_hi << 16) | ecmd.speed) * 1000;
 #endif
-          }
+            }
 
-          strncpy(wrq.ifr_name, if_addr->ifa_name, sizeof(wrq.ifr_name));
-          e = ioctl(s, SIOCGIWRATE, &wrq);
-          if (e == 0)
-          {
-             addrs[*count].interface.type = NR_INTERFACE_TYPE_WIFI;
-             addrs[*count].interface.estimated_speed = wrq.u.bitrate.value / 1000;
-          }
+            strncpy(wrq.ifr_name, if_addr->ifa_name, sizeof(wrq.ifr_name));
+            e = ioctl(s, SIOCGIWRATE, &wrq);
+            if (e == 0)
+            {
+               addrs[*count].interface.type = NR_INTERFACE_TYPE_WIFI;
+               addrs[*count].interface.estimated_speed = wrq.u.bitrate.value / 1000;
+            }
 
-          if (if_addr->ifa_flags & IFF_POINTOPOINT)
-          {
-             addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN | NR_INTERFACE_TYPE_VPN;
-             /* TODO (Bug 896913): find backend network type of this VPN */
-          }
+            if (if_addr->ifa_flags & IFF_POINTOPOINT)
+            {
+               addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN | NR_INTERFACE_TYPE_VPN;
+               /* TODO (Bug 896913): find backend network type of this VPN */
+            }
 #else
-          addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN;
-          addrs[*count].interface.estimated_speed = 0;
+            addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN;
+            addrs[*count].interface.estimated_speed = 0;
 #endif
-          strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
-          ++(*count);
-        }
-        break;
-      default:
-        ;
+            strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
+            ++(*count);
+          }
+          break;
+        default:
+          ;
+      }
     }
 
     if_addr = if_addr->ifa_next;

@@ -38,8 +38,9 @@ public:
   void BlockUntilDecodedAndFinishObserving()
   {
     // Use GetFrame() to block until our image finishes decoding.
-    mImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                     imgIContainer::FLAG_SYNC_DECODE);
+    nsRefPtr<SourceSurface> surface =
+      mImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                       imgIContainer::FLAG_SYNC_DECODE);
 
     FinishObserving();
   }
@@ -76,7 +77,6 @@ public:
   virtual void BlockOnload() override { }
   virtual void UnblockOnload() override { }
   virtual void SetHasImage() override { }
-  virtual void OnStartDecode() override { }
   virtual bool NotificationsDeferred() const override { return false; }
   virtual void SetNotificationsDeferred(bool) override { }
 
@@ -313,12 +313,6 @@ void
 MultipartImage::SetHasImage()
 {
   mTracker->OnImageAvailable();
-}
-
-void
-MultipartImage::OnStartDecode()
-{
-  mTracker->SyncNotifyProgress(FLAG_DECODE_STARTED);
 }
 
 bool

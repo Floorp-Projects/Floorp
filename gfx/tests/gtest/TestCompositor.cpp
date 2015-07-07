@@ -181,7 +181,7 @@ static bool CompositeAndCompare(nsRefPtr<LayerManagerComposite> layerManager, Dr
   RefPtr<DrawTarget> drawTarget = CreateDT();
 
   layerManager->BeginTransactionWithDrawTarget(drawTarget, IntRect(0, 0, gCompWidth, gCompHeight));
-  layerManager->EndEmptyTransaction();
+  layerManager->EndTransaction(TimeStamp::Now());
 
   RefPtr<SourceSurface> ss = drawTarget->Snapshot();
   RefPtr<DataSourceSurface> dss = ss->GetDataSurface();

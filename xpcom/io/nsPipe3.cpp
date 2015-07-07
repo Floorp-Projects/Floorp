@@ -1377,10 +1377,12 @@ nsPipeInputStream::SetEOF()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#define COMPARE(s1, s2, i)                                               \
-  (aIgnoreCase                                                           \
-   ? nsCRT::strncasecmp((const char *)s1, (const char *)s2, (uint32_t)i) \
-   : nsCRT::strncmp((const char *)s1, (const char *)s2, (uint32_t)i))
+static bool strings_equal(bool aIgnoreCase,
+                          const char* aS1, const char* aS2, uint32_t aLen)
+{
+  return aIgnoreCase
+    ? !nsCRT::strncasecmp(aS1, aS2, aLen) : !nsCRT::strncmp(aS1, aS2, aLen);
+}
 
 NS_IMETHODIMP
 nsPipeInputStream::Search(const char* aForString,
@@ -1410,7 +1412,7 @@ nsPipeInputStream::Search(const char* aForString,
 
     // check if the string is in the buffer segment
     for (i = 0; i < len1 - strLen + 1; i++) {
-      if (COMPARE(&cursor1[i], aForString, strLen) == 0) {
+      if (strings_equal(aIgnoreCase, &cursor1[i], aForString, strLen)) {
         *aFound = true;
         *aOffsetSearchedTo = offset + i;
         LOG(("  result [aFound=%u offset=%u]\n", *aFound, *aOffsetSearchedTo));
@@ -1442,8 +1444,8 @@ nsPipeInputStream::Search(const char* aForString,
       uint32_t strPart2Len = strLen - strPart1Len;
       const char* strPart2 = &aForString[strLen - strPart2Len];
       uint32_t bufSeg1Offset = len1 - strPart1Len;
-      if (COMPARE(&cursor1[bufSeg1Offset], aForString, strPart1Len) == 0 &&
-          COMPARE(cursor2, strPart2, strPart2Len) == 0) {
+      if (strings_equal(aIgnoreCase, &cursor1[bufSeg1Offset], aForString, strPart1Len) &&
+          strings_equal(aIgnoreCase, cursor2, strPart2, strPart2Len)) {
         *aFound = true;
         *aOffsetSearchedTo = offset - strPart1Len;
         LOG(("  result [aFound=%u offset=%u]\n", *aFound, *aOffsetSearchedTo));

@@ -9,7 +9,6 @@
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"
-#include "nsNetUtil.h"
 
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"

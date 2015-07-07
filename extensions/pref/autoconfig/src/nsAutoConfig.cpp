@@ -17,6 +17,8 @@
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nspr.h"
 #include <algorithm>
 

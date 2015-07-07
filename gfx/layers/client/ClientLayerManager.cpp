@@ -20,6 +20,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
 #include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/ShadowLayerChild.h"
 #include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
@@ -601,21 +602,6 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
         break;
       }
-      case EditReply::TReturnReleaseFence: {
-        const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
-        FenceHandle fence = rep.fence();
-        PTextureChild* child = rep.textureChild();
-
-        if (!fence.IsValid() || !child) {
-          break;
-        }
-        RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
-        if (texture) {
-          texture->SetReleaseFenceHandle(fence);
-        }
-        break;
-      }
-
       default:
         NS_RUNTIMEABORT("not reached");
       }

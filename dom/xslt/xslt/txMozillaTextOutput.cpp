@@ -10,7 +10,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDocumentTransformer.h"
-#include "nsNetUtil.h"
 #include "nsCharsetSource.h"
 #include "nsIPrincipal.h"
 #include "txURIUtils.h"

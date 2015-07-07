@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/FileSystemTaskBase.h"
 
-#include "nsNetUtil.h" // Stream transport service.
+#include "nsNetCID.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemBase.h"

@@ -10,7 +10,6 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "plstr.h"
-#include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 

@@ -10,6 +10,7 @@
 #include "nsHttpResponseHead.h"
 #include "nsPrintfCString.h"
 #include "prtime.h"
+#include "plstr.h"
 #include "nsURLHelper.h"
 #include <algorithm>
 

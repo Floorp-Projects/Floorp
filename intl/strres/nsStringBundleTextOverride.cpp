@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
+#include "nsDirectoryServiceUtils.h"
 
 // first we need a simple class which wraps a nsIPropertyElement and
 // cuts out the leading URL from the key

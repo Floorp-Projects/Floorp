@@ -59,10 +59,14 @@ XPIDL_SOURCES += [
 UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
     'PeerIdentity.cpp',
+    'RTCCertificate.cpp',
 ]
 
 EXPORTS.mozilla += [
     'PeerIdentity.h',
+]
+EXPORTS.mozilla.dom += [
+    'RTCCertificate.h',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -19,7 +19,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -33,6 +32,8 @@
 #include "NSSBridge.h"
 #include "ElfLoader.h"
 #include "application.ini.h"
+
+#include "mozilla/TimeStamp.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
@@ -79,24 +80,6 @@ enum StartupEvent {
 };
 
 using namespace mozilla;
-
-/**
- * Local TimeStamp::Now()-compatible implementation used to record timestamps
- * which will be passed to XRE_StartupTimelineRecord().
- */
-
-static uint64_t TimeStamp_Now()
-{
-  struct timespec ts;
-  int rv = clock_gettime(CLOCK_MONOTONIC, &ts);
-
-  if (rv != 0) {
-    return 0;
-  }
-
-  uint64_t baseNs = (uint64_t)ts.tv_sec * 1000000000;
-  return baseNs + (uint64_t)ts.tv_nsec;
-}
 
 static struct mapping_info * lib_mapping = nullptr;
 
@@ -209,7 +192,7 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
 static mozglueresult
 loadGeckoLibs(const char *apkName)
 {
-  uint64_t t0 = TimeStamp_Now();
+  TimeStamp t0 = TimeStamp::Now();
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
   getrusage(RUSAGE_SELF, &usage1);
@@ -228,10 +211,10 @@ loadGeckoLibs(const char *apkName)
 #include "jni-stubs.inc"
 #undef JNI_BINDINGS
 
-  void (*XRE_StartupTimelineRecord)(int, uint64_t);
+  void (*XRE_StartupTimelineRecord)(int, TimeStamp);
   xul_dlsym("XRE_StartupTimelineRecord", &XRE_StartupTimelineRecord);
 
-  uint64_t t1 = TimeStamp_Now();
+  TimeStamp t1 = TimeStamp::Now();
   struct rusage usage2_thread, usage2;
   getrusage(RUSAGE_THREAD, &usage2_thread);
   getrusage(RUSAGE_SELF, &usage2);
@@ -240,8 +223,8 @@ loadGeckoLibs(const char *apkName)
   ((u2.ru_ ## field.tv_sec - u1.ru_ ## field.tv_sec) * 1000 + \
    (u2.ru_ ## field.tv_usec - u1.ru_ ## field.tv_usec) / 1000)
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %lldms total, %ldms(%ldms) user, %ldms(%ldms) system, %ld(%ld) faults",
-                      (t1 - t0) / 1000000,
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %fms total, %ldms(%ldms) user, %ldms(%ldms) system, %ld(%ld) faults",
+                      (t1 - t0).ToMilliseconds(),
                       RUSAGE_TIMEDIFF(usage1_thread, usage2_thread, utime),
                       RUSAGE_TIMEDIFF(usage1, usage2, utime),
                       RUSAGE_TIMEDIFF(usage1_thread, usage2_thread, stime),
