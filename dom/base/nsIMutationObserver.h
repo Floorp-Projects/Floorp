@@ -62,7 +62,7 @@ struct CharacterDataChangeInfo
    * mChangeStart + mReplaceLength.
    */
 
-  struct Details {
+  struct MOZ_STACK_CLASS Details {
     enum {
       eMerge,  // two text nodes are merged as a result of normalize()
       eSplit   // a text node is split as a result of splitText()
@@ -71,7 +71,7 @@ struct CharacterDataChangeInfo
      * For eMerge it's the text node that will be removed, for eSplit it's the
      * new text node.
      */
-    nsIContent* mNextSibling;
+    nsIContent* MOZ_NON_OWNING_REF mNextSibling;
   };
 
   /**

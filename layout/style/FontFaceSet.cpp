@@ -1785,3 +1785,6 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                         aFeatureSettings, aLanguageOverride, aUnicodeRanges);
   return entry.forget();
 }
+
+#undef LOG_ENABLED
+#undef LOG

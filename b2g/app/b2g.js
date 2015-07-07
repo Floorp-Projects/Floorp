@@ -928,6 +928,8 @@ pref("general.useragent.device_id", "");
 
 // Make <audio> and <video> talk to the AudioChannelService.
 pref("media.useAudioChannelService", true);
+// Add Mozilla AudioChannel APIs.
+pref("media.useAudioChannelAPI", true);
 
 pref("b2g.version", @MOZ_B2G_VERSION@);
 pref("b2g.osName", @MOZ_B2G_OS_NAME@);
