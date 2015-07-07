@@ -300,7 +300,8 @@ let OutputGenerator = {
     'definitionlist': INCLUDE_DESC | INCLUDE_NAME,
     'dialog': INCLUDE_DESC | INCLUDE_NAME,
     'chrome window': IGNORE_EXPLICIT_NAME,
-    'app root': IGNORE_EXPLICIT_NAME },
+    'app root': IGNORE_EXPLICIT_NAME,
+    'statusbar': NAME_FROM_SUBTREE_RULE },
 
   objectOutputFunctions: {
     _generateBaseOutput:

@@ -7,7 +7,6 @@
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsUrlClassifierUtils.h"
-#include "nsNetUtil.h"
 #include "stdlib.h"
 #include "TestHarness.h"
 

@@ -15,6 +15,9 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsNetUtil.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsMimeTypes.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"

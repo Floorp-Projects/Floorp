@@ -55,6 +55,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsStringAPI.h"
 #include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/Logging.h"
 
 using namespace mozilla;

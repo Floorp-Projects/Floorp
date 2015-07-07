@@ -87,27 +87,27 @@ for (var idx in gShorthandPropertiesLikeLonghand) {
  * longhand properties do not.
  */
 for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
-  if (info.pref && !SpecialPowers.getBoolPref(info.pref)) {
+  var entry = gCSSProperties[prop];
+  if (entry.pref && !SpecialPowers.getBoolPref(entry.pref)) {
     continue;
   }
-  if (info.type == CSS_TYPE_LONGHAND) {
-    ok(!("subproperties" in info),
+  if (entry.type == CSS_TYPE_LONGHAND) {
+    ok(!("subproperties" in entry),
        "longhand property '" + prop + "' must not have subproperty list");
-  } else if (info.type == CSS_TYPE_TRUE_SHORTHAND) {
-    ok("subproperties" in info,
+  } else if (entry.type == CSS_TYPE_TRUE_SHORTHAND) {
+    ok("subproperties" in entry,
        "shorthand property '" + prop + "' must have subproperty list");
   }
   /* optional for CSS_TYPE_SHORTHAND_AND_LONGHAND */
 
-  if ("subproperties" in info) {
+  if ("subproperties" in entry) {
     var good = true;
-    if (info.subproperties.length < 1) {
+    if (entry.subproperties.length < 1) {
       info("subproperty list for '" + prop + "' is empty");
       good = false;
     }
-    for (var idx in info.subproperties) {
-      var subprop = info.subproperties[idx];
+    for (var idx in entry.subproperties) {
+      var subprop = entry.subproperties[idx];
       if (!(subprop in gCSSProperties)) {
         info("subproperty list for '" + prop + "' lists nonexistent subproperty '" + subprop + "'");
         good = false;
@@ -116,9 +116,9 @@ for (var prop in gCSSProperties) {
     ok(good, "property '" + prop + "' has a good subproperty list");
   }
 
-  ok("initial_values" in info && info.initial_values.length >= 1,
+  ok("initial_values" in entry && entry.initial_values.length >= 1,
      "must have initial values for property '" + prop + "'");
-  ok("other_values" in info && info.other_values.length >= 1,
+  ok("other_values" in entry && entry.other_values.length >= 1,
      "must have non-initial values for property '" + prop + "'");
 }
 
@@ -126,9 +126,9 @@ for (var prop in gCSSProperties) {
  * Test that only longhand properties are listed as logical properties.
  */
 for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
-  if (info.logical) {
-    is(info.type, CSS_TYPE_LONGHAND,
+  var entry = gCSSProperties[prop];
+  if (entry.logical) {
+    is(entry.type, CSS_TYPE_LONGHAND,
        "property '" + prop + "' is listed as CSS_TYPE_LONGHAND due to its " +
        "being a logical property");
   }
@@ -138,9 +138,9 @@ for (var prop in gCSSProperties) {
  * Test that axis is only specified for logical properties.
  */
 for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
-  if (info.axis) {
-    ok(info.logical,
+  var entry = gCSSProperties[prop];
+  if (entry.axis) {
+    ok(entry.logical,
        "property '" + prop + "' is listed as an logical property due to its " +
        "being listed as an axis-related property");
   }
@@ -150,7 +150,7 @@ for (var prop in gCSSProperties) {
  * Test that DOM properties match the expected rules.
  */
 for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
+  var entry = gCSSProperties[prop];
   var expectedDOMProp = prop.replace(/-([a-z])/g,
                                      function(m, p1, offset, str) {
                                        return p1.toUpperCase();
@@ -158,7 +158,7 @@ for (var prop in gCSSProperties) {
   if (expectedDOMProp == "float") {
     expectedDOMProp = "cssFloat";
   }
-  is(info.domProp, expectedDOMProp, "DOM property for " + prop);
+  is(entry.domProp, expectedDOMProp, "DOM property for " + prop);
 }
 </script>
 </pre>

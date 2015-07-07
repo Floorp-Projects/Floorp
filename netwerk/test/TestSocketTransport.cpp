@@ -21,7 +21,6 @@
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
-#include "nsNetUtil.h"
 #include "nsAutoLock.h"
 #include "mozilla/Logging.h"
 

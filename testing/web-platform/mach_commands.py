@@ -20,9 +20,6 @@ from mach.decorators import (
     Command,
 )
 
-from wptrunner import wptcommandline
-from update import updatecommandline
-
 # This should probably be consolidated with similar classes in other test
 # runners.
 class InvalidTestPathError(Exception):
@@ -32,6 +29,8 @@ class WebPlatformTestsRunner(MozbuildObject):
     """Run web platform tests."""
 
     def setup_kwargs(self, kwargs):
+        from wptrunner import wptcommandline
+
         build_path = os.path.join(self.topobjdir, 'build')
         if build_path not in sys.path:
             sys.path.append(build_path)
@@ -85,6 +84,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
     """Update web platform tests."""
     def run_update(self, **kwargs):
         import update
+        from update import updatecommandline
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
@@ -116,12 +116,24 @@ class WebPlatformTestsReduce(WebPlatformTestsRunner):
         for item in tests:
             logger.info(item.id)
 
+def create_parser_wpt():
+    from wptrunner import wptcommandline
+    return wptcommandline.create_parser(["firefox"])
+
+def create_parser_update():
+    from update import updatecommandline
+    return updatecommandline.create_parser()
+
+def create_parser_reduce():
+    from wptrunner import wptcommandline
+    return wptcommandline.create_parser_reduce()
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command("web-platform-tests",
              category="testing",
              conditions=[conditions.is_firefox],
-             parser=wptcommandline.create_parser(["firefox"]))
+             parser=create_parser_wpt)
     def run_web_platform_tests(self, **params):
         self.setup()
 
@@ -139,7 +151,7 @@ class MachCommands(MachCommandBase):
 
     @Command("web-platform-tests-update",
              category="testing",
-             parser=updatecommandline.create_parser())
+             parser=create_parser_update)
     def update_web_platform_tests(self, **params):
         self.setup()
         self.virtualenv_manager.install_pip_package('html5lib==0.99')
@@ -153,7 +165,7 @@ class MachCommands(MachCommandBase):
     @Command("web-platform-tests-reduce",
              category="testing",
              conditions=[conditions.is_firefox],
-             parser=wptcommandline.create_parser_reduce(["firefox"]))
+             parser=create_parser_reduce)
     def unstable_web_platform_tests(self, **params):
         self.setup()
         wpt_reduce = self._spawn(WebPlatformTestsReduce)

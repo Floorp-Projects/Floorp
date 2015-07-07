@@ -86,6 +86,7 @@ function InterAppConnectionRequest() {
   if (DEBUG) debug("InterAppConnectionRequest()");
   this.keyword = null;
   this.port = null;
+  this.from = null;
 };
 
 InterAppConnectionRequest.prototype = {
@@ -97,10 +98,12 @@ InterAppConnectionRequest.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
-  __init: function(aKeyword, aPort) {
-    if (DEBUG) debug("__init: aKeyword: " + aKeyword + " aPort: " + aPort);
+  __init: function(aKeyword, aPort, aFrom) {
+    if (DEBUG) debug("__init: aKeyword: " + aKeyword + " aPort: " + aPort +
+                     " aFrom: " + aFrom);
     this.keyword = aKeyword;
     this.port = aPort;
+    this.from = aFrom;
   }
 };
 
@@ -124,7 +127,8 @@ InterAppConnectionRequestWrapper.prototype = {
 
     let port = new aWindow.MozInterAppMessagePort(aMessage.messagePortID);
     let connectionRequest =
-      new aWindow.MozInterAppConnectionRequest(aMessage.keyword, port);
+      new aWindow.MozInterAppConnectionRequest(aMessage.keyword, port,
+                                               aMessage.pubPageURL);
 
     return connectionRequest;
   },

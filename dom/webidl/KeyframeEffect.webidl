@@ -14,7 +14,6 @@
  Func="nsDocument::IsWebAnimationsEnabled"]
 interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   readonly attribute Element?  target;
-  readonly attribute DOMString name;
   // Not yet implemented:
   // readonly attribute IterationCompositeOperation iterationComposite;
   // readonly attribute CompositeOperation          composite;

@@ -14,7 +14,9 @@
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
+#include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/LayersMessages.h"
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
@@ -46,6 +48,8 @@ using namespace android;
 using namespace mozilla::gfx;
 
 Atomic<int32_t> Image::sSerialCounter(0);
+
+Atomic<uint32_t> ImageContainer::sGenerationCounter(0);
 
 already_AddRefed<Image>
 ImageFactory::CreateImage(ImageFormat aFormat,
@@ -137,27 +141,56 @@ BufferRecycleBin::GetBuffer(uint32_t aSize)
   return result;
 }
 
-ImageContainer::ImageContainer(ImageContainer::Mode flag)
+/**
+ * The child side of PImageContainer. It's best to avoid ImageContainer filling
+ * this role since IPDL objects should be associated with a single thread and
+ * ImageContainer definitely isn't. This object belongs to (and is always
+ * destroyed on) the ImageBridge thread, except when we need to destroy it
+ * during shutdown.
+ * An ImageContainer owns one of these; we have a weak reference to our
+ * ImageContainer.
+ */
+class ImageContainerChild : public PImageContainerChild {
+public:
+  explicit ImageContainerChild(ImageContainer* aImageContainer)
+    : mLock("ImageContainerChild"), mImageContainer(aImageContainer) {}
+  void ForgetImageContainer()
+  {
+    MutexAutoLock lock(mLock);
+    mImageContainer = nullptr;
+  }
+
+  // This protects mImageContainer. This is always taken before the
+  // mImageContainer's monitor (when both need to be held).
+  Mutex mLock;
+  ImageContainer* mImageContainer;
+};
+
+ImageContainer::ImageContainer(Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
+  mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
-  mPreviousImagePainted(false),
+  mDroppedImageCount(0),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
-  mCompositionNotifySink(nullptr),
-  mImageClient(nullptr)
+  mImageClient(nullptr),
+  mCurrentProducerID(-1),
+  mIPDLChild(nullptr)
 {
   if (ImageBridgeChild::IsCreated()) {
     // the refcount of this ImageClient is 1. we don't use a RefPtr here because the refcount
     // of this class must be done on the ImageBridge thread.
-    switch(flag) {
+    switch (flag) {
       case SYNCHRONOUS:
         break;
       case ASYNCHRONOUS:
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE).take();
+        mIPDLChild = new ImageContainerChild(this);
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE, this).take();
         MOZ_ASSERT(mImageClient);
         break;
       case ASYNCHRONOUS_OVERLAY:
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY).take();
+        mIPDLChild = new ImageContainerChild(this);
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY, this).take();
         MOZ_ASSERT(mImageClient);
         break;
       default:
@@ -170,7 +203,8 @@ ImageContainer::ImageContainer(ImageContainer::Mode flag)
 ImageContainer::~ImageContainer()
 {
   if (IsAsync()) {
-    ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
+    mIPDLChild->ForgetImageContainer();
+    ImageBridgeChild::DispatchReleaseImageClient(mImageClient, mIPDLChild);
   }
 }
 
@@ -185,7 +219,8 @@ ImageContainer::CreateImage(ImageFormat aFormat)
       // If this ImageContainer is async but the image type mismatch, fix it here
       if (ImageBridgeChild::IsCreated()) {
         ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY).take();
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(
+            CompositableType::IMAGE_OVERLAY, this).take();
       }
     }
   }
@@ -200,56 +235,97 @@ ImageContainer::CreateImage(ImageFormat aFormat)
 }
 
 void
-ImageContainer::SetCurrentImageInternal(Image *aImage)
+ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  mActiveImage = aImage;
-  CurrentImageChanged();
-}
+  mGenerationCounter = ++sGenerationCounter;
 
-void
-ImageContainer::ClearCurrentImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr);
-}
-
-void
-ImageContainer::SetCurrentImage(Image *aImage)
-{
-  if (!aImage) {
-    ClearAllImages();
-    return;
+  if (!aImages.IsEmpty()) {
+    NS_ASSERTION(mCurrentImages.IsEmpty() ||
+                 mCurrentImages[0].mProducerID != aImages[0].mProducerID ||
+                 mCurrentImages[0].mFrameID <= aImages[0].mFrameID,
+                 "frame IDs shouldn't go backwards");
+    if (aImages[0].mProducerID != mCurrentProducerID) {
+      mFrameIDsNotYetComposited.Clear();
+      mCurrentProducerID = aImages[0].mProducerID;
+    } else if (!aImages[0].mTimeStamp.IsNull()) {
+      // Check for expired frames
+      for (auto& img : mCurrentImages) {
+        if (img.mProducerID != aImages[0].mProducerID ||
+            img.mTimeStamp.IsNull() ||
+            img.mTimeStamp >= aImages[0].mTimeStamp) {
+          break;
+        }
+        if (!img.mComposited && !img.mTimeStamp.IsNull() &&
+            img.mFrameID != aImages[0].mFrameID) {
+          mFrameIDsNotYetComposited.AppendElement(img.mFrameID);
+        }
+      }
+    }
   }
 
+  nsTArray<OwningImage> newImages;
+
+  for (uint32_t i = 0; i < aImages.Length(); ++i) {
+    NS_ASSERTION(aImages[i].mImage, "image can't be null");
+    NS_ASSERTION(!aImages[i].mTimeStamp.IsNull() || aImages.Length() == 1,
+                 "Multiple images require timestamps");
+    if (i > 0) {
+      NS_ASSERTION(aImages[i].mTimeStamp >= aImages[i - 1].mTimeStamp,
+                   "Timestamps must not decrease");
+      NS_ASSERTION(aImages[i].mFrameID > aImages[i - 1].mFrameID,
+                   "FrameIDs must increase");
+      NS_ASSERTION(aImages[i].mProducerID == aImages[i - 1].mProducerID,
+                   "ProducerIDs must be the same");
+    }
+    OwningImage* img = newImages.AppendElement();
+    img->mImage = aImages[i].mImage;
+    img->mTimeStamp = aImages[i].mTimeStamp;
+    img->mFrameID = aImages[i].mFrameID;
+    img->mProducerID = aImages[i].mProducerID;
+    for (auto& oldImg : mCurrentImages) {
+      if (oldImg.mFrameID == img->mFrameID &&
+          oldImg.mProducerID == img->mProducerID) {
+        img->mComposited = oldImg.mComposited;
+        break;
+      }
+    }
+  }
+
+  mCurrentImages.SwapElements(newImages);
+}
+
+void
+ImageContainer::ClearImagesFromImageBridge()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  SetCurrentImageInternal(nsTArray<NonOwningImage>());
+}
+
+void
+ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
+{
+  MOZ_ASSERT(!aImages.IsEmpty());
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (IsAsync()) {
     ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
   }
-  SetCurrentImageInternal(aImage);
+  SetCurrentImageInternal(aImages);
 }
 
  void
 ImageContainer::ClearAllImages()
 {
   if (IsAsync()) {
-    // Let ImageClient release all TextureClients.
-    ImageBridgeChild::FlushAllImages(mImageClient, this, false);
+    // Let ImageClient release all TextureClients. This doesn't return
+    // until ImageBridge has called ClearCurrentImageFromImageBridge.
+    ImageBridgeChild::FlushAllImages(mImageClient, this);
     return;
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr);
-}
-
-void
-ImageContainer::ClearAllImagesExceptFront()
-{
-  if (IsAsync()) {
-    // Let ImageClient release all TextureClients except front one.
-    ImageBridgeChild::FlushAllImages(mImageClient, this, true);
-  }
+  SetCurrentImageInternal(nsTArray<NonOwningImage>());
 }
 
 void
@@ -258,10 +334,13 @@ ImageContainer::SetCurrentImageInTransaction(Image *aImage)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(!mImageClient, "Should use async image transfer with ImageBridge.");
 
-  SetCurrentImageInternal(aImage);
+  nsAutoTArray<NonOwningImage,1> images;
+  images.AppendElement(NonOwningImage(aImage));
+  SetCurrentImageInternal(images);
 }
 
-bool ImageContainer::IsAsync() const {
+bool ImageContainer::IsAsync() const
+{
   return mImageClient != nullptr;
 }
 
@@ -280,50 +359,19 @@ ImageContainer::HasCurrentImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  return !!mActiveImage.get();
-}
-
-already_AddRefed<Image>
-ImageContainer::LockCurrentImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  nsRefPtr<Image> retval = mActiveImage;
-  return retval.forget();
-}
-
-already_AddRefed<gfx::SourceSurface>
-ImageContainer::LockCurrentAsSourceSurface(gfx::IntSize *aSize, Image** aCurrentImage)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (aCurrentImage) {
-    nsRefPtr<Image> activeImage(mActiveImage);
-    activeImage.forget(aCurrentImage);
-  }
-
-  if (!mActiveImage) {
-    return nullptr;
-  }
-
-  *aSize = mActiveImage->GetSize();
-  return mActiveImage->GetAsSourceSurface();
+  return !mCurrentImages.IsEmpty();
 }
 
 void
-ImageContainer::UnlockCurrentImage()
-{
-}
-
-already_AddRefed<gfx::SourceSurface>
-ImageContainer::GetCurrentAsSourceSurface(gfx::IntSize *aSize)
+ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
+                                 uint32_t* aGenerationCounter)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (!mActiveImage)
-    return nullptr;
-  *aSize = mActiveImage->GetSize();
-  return mActiveImage->GetAsSourceSurface();
+  *aImages = mCurrentImages;
+  if (aGenerationCounter) {
+    *aGenerationCounter = mGenerationCounter;
+  }
 }
 
 gfx::IntSize
@@ -331,11 +379,45 @@ ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (!mActiveImage) {
+  if (mCurrentImages.IsEmpty()) {
     return gfx::IntSize(0, 0);
   }
 
-  return mActiveImage->GetSize();
+  return mCurrentImages[0].mImage->GetSize();
+}
+
+void
+ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotification)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  // An image composition notification is sent the first time a particular
+  // image is composited by an ImageHost. Thus, every time we receive such
+  // a notification, a new image has been painted.
+  ++mPaintCount;
+
+  if (aNotification.producerID() == mCurrentProducerID) {
+    while (!mFrameIDsNotYetComposited.IsEmpty()) {
+      if (mFrameIDsNotYetComposited[0] <= aNotification.frameID()) {
+        if (mFrameIDsNotYetComposited[0] < aNotification.frameID()) {
+          ++mDroppedImageCount;
+        }
+        mFrameIDsNotYetComposited.RemoveElementAt(0);
+      } else {
+        break;
+      }
+    }
+    for (auto& img : mCurrentImages) {
+      if (img.mFrameID == aNotification.frameID()) {
+        img.mComposited = true;
+      }
+    }
+  }
+
+  if (!aNotification.imageTimeStamp().IsNull()) {
+    mPaintDelay = aNotification.firstCompositeTimeStamp() -
+        aNotification.imageTimeStamp();
+  }
 }
 
 PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
@@ -574,6 +656,34 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 
   mTextureClients.Put(forwarder->GetSerial(), textureClient);
   return textureClient;
+}
+
+PImageContainerChild*
+ImageContainer::GetPImageContainerChild()
+{
+  return mIPDLChild;
+}
+
+/* static */ void
+ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
+{
+  ImageContainerChild* child =
+      static_cast<ImageContainerChild*>(aNotification.imageContainerChild());
+  if (child) {
+    MutexAutoLock lock(child->mLock);
+    if (child->mImageContainer) {
+      child->mImageContainer->NotifyCompositeInternal(aNotification);
+    }
+  }
+}
+
+static ImageContainer::ProducerID sProducerID = 0;
+
+ImageContainer::ProducerID
+ImageContainer::AllocateProducerID()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  return ++sProducerID;
 }
 
 } // namespace

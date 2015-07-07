@@ -4,6 +4,7 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsAppStartup.h"
+#include "nsNetCID.h"
 #include "nsUserInfo.h"
 #include "nsToolkitCompsCID.h"
 #include "nsFindService.h"

@@ -13,6 +13,8 @@
 #include "nsReadableUtils.h"
 #include "pratom.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
+#include "nsIURIWithPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"

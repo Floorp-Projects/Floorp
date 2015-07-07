@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PImageBridge;
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * PImageContainer represents an ImageContainer.
+ */
+
+async protocol PImageContainer {
+    manager PImageBridge;
+parent:
+    /**
+     * The child effectively owns the parent. When the child should be
+     * destroyed, it sends an AsyncDelete to the parent but does not die
+     * because we could still have messages in flight from the compositor
+     * mentioning the child. The parent handles AsyncDelete by destroying
+     * itself and sending __delete__ to the child to clean it up.
+     */
+    async AsyncDelete();
+child:
+    async __delete__();
+};
+
+} // layers
+} // mozilla

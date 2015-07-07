@@ -25,12 +25,25 @@ ShadowLayerParent::ShadowLayerParent() : mLayer(nullptr)
 
 ShadowLayerParent::~ShadowLayerParent()
 {
+  Disconnect();
+}
+
+void
+ShadowLayerParent::Disconnect()
+{
+  if (mLayer) {
+    mLayer->Disconnect();
+    mLayer = nullptr;
+  }
 }
 
 void
 ShadowLayerParent::Bind(Layer* layer)
 {
-  mLayer = layer;
+  if (mLayer != layer) {
+    Disconnect();
+    mLayer = layer;
+  }
 }
 
 void
@@ -40,9 +53,7 @@ ShadowLayerParent::Destroy()
   // created, but just before the transaction in which Bind() would
   // have been called.  In that case, we'll ignore shadow-layers
   // transactions from there on and never get a layer here.
-  if (mLayer) {
-    mLayer->Disconnect();
-  }
+  Disconnect();
 }
 
 ContainerLayerComposite*
@@ -103,15 +114,11 @@ ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
 
   case Deletion:
     // See comment near Destroy() above.
-    if (mLayer) {
-      mLayer->Disconnect();
-    }
+    Disconnect();
     break;
 
   case AbnormalShutdown:
-    if (mLayer) {
-      mLayer->Disconnect();
-    }
+    Disconnect();
     break;
 
   case NormalShutdown:

@@ -38,6 +38,9 @@
 #endif
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
+#include "nsIFileStreams.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIStringStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 #include "nsPluginLogging.h"

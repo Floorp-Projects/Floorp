@@ -41,7 +41,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
@@ -152,8 +151,7 @@ nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext):
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mRequestRegistered(false),
   mUseSrcAttr(false),
-  mSuppressStyleCheck(false),
-  mFireEventOnDecode(false)
+  mSuppressStyleCheck(false)
 {
   MarkIntrinsicISizesDirty();
 }
@@ -772,52 +770,23 @@ nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 nsresult
 nsImageBoxFrame::OnDecodeComplete(imgIRequest* aRequest)
 {
-  if (mFireEventOnDecode) {
-    mFireEventOnDecode = false;
-
-    uint32_t reqStatus;
-    aRequest->GetImageStatus(&reqStatus);
-    if (!(reqStatus & imgIRequest::STATUS_ERROR)) {
-      FireImageDOMEvent(mContent, NS_LOAD);
-    } else {
-      // Fire an onerror DOM event.
-      mIntrinsicSize.SizeTo(0, 0);
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-      FireImageDOMEvent(mContent, NS_LOAD_ERROR);
-    }
-  }
-
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
-
   return NS_OK;
 }
 
 nsresult
 nsImageBoxFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 {
-  uint32_t reqStatus;
-  aRequest->GetImageStatus(&reqStatus);
-
-  // We want to give the decoder a chance to find errors. If we haven't found
-  // an error yet and we've already started decoding, we must only fire these
-  // events after we finish decoding.
-  if (NS_SUCCEEDED(aStatus) && !(reqStatus & imgIRequest::STATUS_ERROR) &&
-      (reqStatus & imgIRequest::STATUS_DECODE_STARTED) &&
-      !(reqStatus & imgIRequest::STATUS_DECODE_COMPLETE)) {
-    mFireEventOnDecode = true;
+  if (NS_SUCCEEDED(aStatus)) {
+    // Fire an onload DOM event.
+    FireImageDOMEvent(mContent, NS_LOAD);
   } else {
-    if (NS_SUCCEEDED(aStatus)) {
-      // Fire an onload DOM event.
-      FireImageDOMEvent(mContent, NS_LOAD);
-    } else {
-      // Fire an onerror DOM event.
-      mIntrinsicSize.SizeTo(0, 0);
-      PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-      FireImageDOMEvent(mContent, NS_LOAD_ERROR);
-    }
+    // Fire an onerror DOM event.
+    mIntrinsicSize.SizeTo(0, 0);
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+    FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
 
   return NS_OK;

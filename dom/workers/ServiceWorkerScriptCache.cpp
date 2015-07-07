@@ -21,6 +21,7 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "Workers.h"
+#include "nsStringStream.h"
 
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;

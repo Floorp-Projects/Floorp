@@ -7,6 +7,8 @@
 #include "nsCacheService.h"
 #include "nsApplicationCacheService.h"
 #include "nsCRT.h"
+#include "mozIApplicationClearPrivateDataParams.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsILoadContextInfo.h"

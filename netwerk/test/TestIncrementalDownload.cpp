@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "TestCommon.h"
 #include "nsNetUtil.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIIncrementalDownload.h"
 #include "nsIRequestObserver.h"
 #include "nsIProgressEventSink.h"

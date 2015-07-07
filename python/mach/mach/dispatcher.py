@@ -230,7 +230,7 @@ class CommandAction(argparse.Action):
                 setattr(command_namespace, name, extra)
             else:
                 setattr(command_namespace, name, options.get('default', []))
-        elif extra:
+        elif extra and handler.cls.__name__ != 'DeprecatedCommands':
             raise UnrecognizedArgumentError(command, extra)
 
     def _handle_main_help(self, parser, verbose):

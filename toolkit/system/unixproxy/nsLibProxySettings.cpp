@@ -8,7 +8,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
 

@@ -8,7 +8,6 @@
 
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
-#include "nsNetUtil.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"
@@ -25,6 +24,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsISecureBrowserUI.h"
 #include "nsISecurityEventSink.h"
+#include "nsIURL.h"
 #include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"

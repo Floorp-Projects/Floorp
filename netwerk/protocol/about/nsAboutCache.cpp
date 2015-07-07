@@ -9,6 +9,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "nsIPipe.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsAboutProtocolUtils.h"

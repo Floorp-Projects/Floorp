@@ -30,9 +30,10 @@
 #include "nsISecurityInfoProvider.h"
 #include "imgIRequest.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsCRT.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIProtocolHandler.h"
 
 using namespace mozilla;
 

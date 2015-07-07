@@ -501,6 +501,13 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Starts the process for the user to join the room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    RetryAfterRoomFailure: Action.define("retryAfterRoomFailure", {
+    }),
+
+    /**
      * Signals the user has successfully joined the room on the loop-server.
      * XXX: should move to some roomActions module - refs bug 1079284
      *

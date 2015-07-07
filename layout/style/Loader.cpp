@@ -32,6 +32,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"

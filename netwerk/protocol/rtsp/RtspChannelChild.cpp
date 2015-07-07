@@ -6,6 +6,7 @@
 
 #include "RtspChannelChild.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::ipc;
 

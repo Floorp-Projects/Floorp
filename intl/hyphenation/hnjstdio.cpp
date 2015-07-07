@@ -11,6 +11,8 @@
 #include "hnjalloc.h"
 #undef FILE // Undo the damage done in hnjalloc.h
 #include "nsNetUtil.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
 #include "nsContentUtils.h"
 
 #define BUFSIZE 1024

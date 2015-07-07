@@ -488,7 +488,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   NS_WARN_IF_FALSE(!aTargetFrame ||
                    !aTargetFrame->GetContent() ||
                    aTargetFrame->GetContent() == aTargetContent ||
-                   aTargetFrame->GetContent()->GetParent() == aTargetContent,
+                   aTargetFrame->GetContent()->GetFlattenedTreeParent() == aTargetContent,
                    "aTargetFrame should be related with aTargetContent");
 
   mCurrentTarget = aTargetFrame;
@@ -1589,7 +1589,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   if (IsTrackingDragGesture()) {
     mCurrentTarget = mGestureDownFrameOwner->GetPrimaryFrame();
 
-    if (!mCurrentTarget) {
+    if (!mCurrentTarget || !mCurrentTarget->GetNearestWidget()) {
       StopTrackingDragGesture();
       return;
     }

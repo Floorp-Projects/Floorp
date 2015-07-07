@@ -6,7 +6,6 @@
 
 #include "nsFilePickerProxy.h"
 #include "nsComponentManagerUtils.h"
-#include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"

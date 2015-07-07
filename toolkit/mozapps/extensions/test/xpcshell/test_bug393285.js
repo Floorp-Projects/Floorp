@@ -37,12 +37,12 @@ let addonIDs = ["test_bug393285_1@tests.mozilla.org",
 
 // A window watcher to deal with the blocklist UI dialog.
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, arguments) {
+  openWindow: function(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
-    var list = arguments.wrappedJSObject.list;
+    var list = args.wrappedJSObject.list;
     list.forEach(function(aItem) {
       if (!aItem.blocked)
         aItem.disable = true;

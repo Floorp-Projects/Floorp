@@ -8,6 +8,7 @@
 #include "nsNetUtil.h"
 #include "netCore.h"
 #include "nsStringStream.h"
+#include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"

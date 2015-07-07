@@ -10,6 +10,7 @@ describe("loop.standaloneRoomViews", function() {
 
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
@@ -195,21 +196,36 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Failed room message", function() {
-        it("should display a failed room message on FAILED",
-          function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
+        beforeEach(function() {
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.FAILED });
+        });
 
-            expect(view.getDOMNode().querySelector(".failed-room-message"))
-              .not.eql(null);
+        it("should display a failed room message on FAILED", function() {
+          expect(view.getDOMNode().querySelector(".failed-room-message"))
+            .not.eql(null);
+        });
+
+        it("should display a retry button", function() {
+          expect(view.getDOMNode().querySelector(".btn-info")).not.eql(null);
+        });
+
+        it("should not display a retry button when the failure reason is expired or invalid", function() {
+          activeRoomStore.setStoreState({
+            failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID
           });
 
-        it("should display a retry button",
-          function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
+          expect(view.getDOMNode().querySelector(".btn-info")).eql(null);
+        });
 
-            expect(view.getDOMNode().querySelector(".btn-info"))
-              .not.eql(null);
-          });
+        it("should dispatch a RetryAfterRoomFailure action when the retry button is pressed", function() {
+          var button = view.getDOMNode().querySelector(".btn-info");
+
+          TestUtils.Simulate.click(button);
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.RetryAfterRoomFailure());
+        });
       });
 
       describe("Join button", function() {

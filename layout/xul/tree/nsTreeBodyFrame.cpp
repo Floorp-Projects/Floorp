@@ -47,7 +47,6 @@
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsBoxLayoutState.h"
 #include "nsTreeContentView.h"
 #include "nsTreeUtils.h"

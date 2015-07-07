@@ -26,6 +26,8 @@
 #if !defined(MOZILLA_XPCOMRT_API)
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsICancelable.h"
 #include "nsIDocument.h"
 #include "nsILoadInfo.h"

@@ -11,7 +11,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
-#include "nsNetUtil.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
 

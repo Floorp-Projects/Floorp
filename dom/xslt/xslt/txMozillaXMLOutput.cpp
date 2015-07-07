@@ -16,7 +16,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"
 #include "nsContentCID.h"
-#include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
 #include "txLog.h"

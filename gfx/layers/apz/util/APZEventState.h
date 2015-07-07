@@ -18,6 +18,7 @@
 #include "nsRefPtr.h"
 
 template <class> class nsCOMPtr;
+class nsIDocument;
 class nsIPresShell;
 class nsIWidget;
 
