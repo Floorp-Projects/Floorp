@@ -13,6 +13,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/HelpersCairo.h"
 #include "gfx2DGlue.h"
 
 #include "gfxASurface.h"
@@ -697,6 +698,15 @@ const IntSize
 gfxASurface::GetSize() const
 {
   return IntSize(-1, -1);
+}
+
+SurfaceFormat
+gfxASurface::GetSurfaceFormat() const
+{
+    if (!mSurfaceValid) {
+      return SurfaceFormat::UNKNOWN;
+    }
+    return GfxFormatForCairoSurface(mSurface);
 }
 
 already_AddRefed<gfxImageSurface>
