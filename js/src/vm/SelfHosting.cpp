@@ -1396,6 +1396,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GetTypedObjectModule",           js::GetTypedObjectModule, 0, 0),
     JS_FN("GetFloat32x4TypeDescr",          js::GetFloat32x4TypeDescr, 0, 0),
     JS_FN("GetFloat64x2TypeDescr",          js::GetFloat64x2TypeDescr, 0, 0),
+    JS_FN("GetInt8x16TypeDescr",            js::GetInt8x16TypeDescr, 0, 0),
+    JS_FN("GetInt16x8TypeDescr",            js::GetInt16x8TypeDescr, 0, 0),
     JS_FN("GetInt32x4TypeDescr",            js::GetInt32x4TypeDescr, 0, 0),
 
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)         \
