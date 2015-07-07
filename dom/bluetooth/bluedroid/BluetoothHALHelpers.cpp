@@ -387,6 +387,36 @@ Convert(const BluetoothGattTestParam& aIn, btgatt_test_params_t& aOut)
 
   return NS_OK;
 }
+
+nsresult
+Convert(const BluetoothGattResponse& aIn, btgatt_response_t& aOut)
+{
+  // Only the read response format is used in bluedroid.
+  nsresult rv = Convert(
+    ConvertArray<uint8_t>(aIn.mValue, sizeof(aIn.mValue)),
+    aOut.attr_value.value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = Convert(aIn.mHandle, aOut.attr_value.handle);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = Convert(aIn.mOffset, aOut.attr_value.offset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = Convert(aIn.mLength, aOut.attr_value.len);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = Convert(aIn.mAuthReq, aOut.attr_value.auth_req);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
 #endif // ANDROID_VERSION >= 19
 
 #if ANDROID_VERSION >= 21
