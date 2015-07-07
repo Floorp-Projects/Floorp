@@ -51,29 +51,24 @@ struct AnimationEventInfo {
 
 typedef InfallibleTArray<AnimationEventInfo> EventArray;
 
-namespace dom {
-
-class CSSAnimation final : public Animation
+class CSSAnimation final : public dom::Animation
 {
 public:
- explicit CSSAnimation(DocumentTimeline* aTimeline)
-    : Animation(aTimeline)
+ explicit CSSAnimation(dom::DocumentTimeline* aTimeline)
+    : dom::Animation(aTimeline)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
     , mPreviousPhaseOrIteration(PREVIOUS_PHASE_BEFORE)
   {
   }
 
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
-
   virtual CSSAnimation* AsCSSAnimation() override { return this; }
 
-  virtual Promise* GetReady(ErrorResult& aRv) override;
+  virtual dom::Promise* GetReady(ErrorResult& aRv) override;
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
   virtual void Pause(ErrorResult& aRv) override;
 
-  virtual AnimationPlayState PlayStateFromJS() const override;
+  virtual dom::AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;
 
   void PlayFromStyle();
@@ -157,7 +152,6 @@ protected:
   uint64_t mPreviousPhaseOrIteration;
 };
 
-} /* namespace dom */
 } /* namespace mozilla */
 
 class nsAnimationManager final
