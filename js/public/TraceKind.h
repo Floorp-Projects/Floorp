@@ -7,6 +7,18 @@
 #ifndef js_TraceKind_h
 #define js_TraceKind_h
 
+#include "js/TypeDecls.h"
+
+// Forward declarations of all the types a TraceKind can denote.
+namespace js {
+class BaseShape;
+class LazyScript;
+class ObjectGroup;
+namespace jit {
+class JitCode;
+} // namespace jit
+} // namespace js
+
 namespace JS {
 
 // When tracing a thing, the GC needs to know about the layout of the object it
@@ -46,6 +58,82 @@ const static uintptr_t OutOfLineTraceKindMask = 0x07;
 static_assert(uintptr_t(JS::TraceKind::BaseShape) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::JitCode) & OutOfLineTraceKindMask, "mask bits are set");
 static_assert(uintptr_t(JS::TraceKind::LazyScript) & OutOfLineTraceKindMask, "mask bits are set");
+
+#define JS_FOR_EACH_TRACEKIND(D) \
+ /* PrettyName       TypeName           AddToCCKind */ \
+    D(BaseShape,     js::BaseShape,     true) \
+    D(JitCode,       js::jit::JitCode,  true) \
+    D(LazyScript,    js::LazyScript,    true) \
+    D(Object,        JSObject,          true) \
+    D(ObjectGroup,   js::ObjectGroup,   true) \
+    D(Script,        JSScript,          true) \
+    D(Shape,         js::Shape,         true) \
+    D(String,        JSString,          false) \
+    D(Symbol,        JS::Symbol,        false)
+
+// Map from base trace type to the trace kind.
+template <typename T> struct MapTypeToTraceKind {};
+#define JS_EXPAND_DEF(name, type, _) \
+    template <> struct MapTypeToTraceKind<type> { \
+        static const JS::TraceKind kind = JS::TraceKind::name; \
+    };
+JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+
+// Fortunately, few places in the system need to deal with fully abstract
+// cells. In those places that do, we generally want to move to a layout
+// templated function as soon as possible. This template wraps the upcast
+// for that dispatch.
+//
+// Given a call:
+//
+//    DispatchTraceKindTyped(f, thing, traceKind, ... args)
+//
+// Downcast the |void *thing| to the specific type designated by |traceKind|,
+// and pass it to the functor |f| along with |... args|, forwarded. Pass the
+// type designated by |traceKind| as the functor's template argument. The
+// |thing| parameter is optional; without it, we simply pass through |... args|.
+
+// GCC and Clang require an explicit template declaration in front of the
+// specialization of operator() because it is a dependent template. MSVC, on
+// the other hand, gets very confused if we have a |template| token there.
+#ifdef _MSC_VER
+# define JS_DEPENDENT_TEMPLATE_HINT
+#else
+# define JS_DEPENDENT_TEMPLATE_HINT template
+#endif
+template <typename F, typename... Args>
+auto
+DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args)
+  -> decltype(f. JS_DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
+{
+    switch (traceKind) {
+#define JS_EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+        return f. JS_DEPENDENT_TEMPLATE_HINT operator()<type>(mozilla::Forward<Args>(args)...);
+      JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+      default:
+          MOZ_CRASH("Invalid trace kind in DispatchTraceKindTyped.");
+    }
+}
+#undef JS_DEPENDENT_TEMPLATE_HINT
+
+template <typename F, typename... Args>
+auto
+DispatchTraceKindTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
+  -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
+{
+    switch (traceKind) {
+#define JS_EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+          return f(static_cast<type*>(thing), mozilla::Forward<Args>(args)...);
+      JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+      default:
+          MOZ_CRASH("Invalid trace kind in DispatchTraceKindTyped.");
+    }
+}
 
 } // namespace JS
 
