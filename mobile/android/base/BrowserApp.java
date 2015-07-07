@@ -3269,7 +3269,6 @@ public class BrowserApp extends GeckoApp
         share.setVisible(shareVisible);
         final boolean shareEnabled = StringUtils.isShareableUrl(url) && shareVisible;
         share.setEnabled(shareEnabled);
-        MenuUtils.safeSetEnabled(aMenu, R.id.apps, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_APPS));
         MenuUtils.safeSetEnabled(aMenu, R.id.addons, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_EXTENSION));
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_DOWNLOADS));
 
@@ -3484,11 +3483,6 @@ public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.logins) {
             Tabs.getInstance().loadUrlInTab(AboutPages.LOGINS);
-            return true;
-        }
-
-        if (itemId == R.id.apps) {
-            Tabs.getInstance().loadUrlInTab(AboutPages.APPS);
             return true;
         }
 
