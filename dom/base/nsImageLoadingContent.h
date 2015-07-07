@@ -17,6 +17,7 @@
 #include "imgIOnloadBlocker.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRequest.h"
@@ -396,6 +397,8 @@ private:
    * return in ImageState().
    */
   mozilla::EventStates mForcedImageState;
+
+  mozilla::TimeStamp mMostRecentRequestChange;
 
   int16_t mImageBlockingStatus;
   bool mLoadingEnabled : 1;
