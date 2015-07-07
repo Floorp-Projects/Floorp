@@ -246,6 +246,13 @@ this.TelemetrySend = {
   testWaitOnOutgoingPings: function() {
     return TelemetrySendImpl.promisePendingPingActivity();
   },
+
+  /**
+   * Test-only - this allows overriding behavior to enable ping sending in debug builds.
+   */
+  setTestModeEnabled: function(testing) {
+    TelemetrySendImpl.setTestModeEnabled(testing);
+  },
 };
 
 let CancellableTimeout = {
@@ -310,21 +317,22 @@ let SendScheduler = {
   },
 
   shutdown: function() {
+    this._log.trace("shutdown");
     this._shutdown = true;
     CancellableTimeout.cancelTimeout();
-    return this._sendTask;
+    return Promise.resolve(this._sendTask);
   },
 
   /**
    * Only used for testing, resets the state to emulate a restart.
    */
   reset: function() {
-    CancellableTimeout.cancelTimeout();
-    this._sendsFailed = false;
-    this._backoffDelay = SEND_TICK_DELAY;
-    this._shutdown = false;
-
-    return this._sendTask;
+    this._log.trace("reset");
+    return this.shutdown().then(() => {
+      this._sendsFailed = false;
+      this._backoffDelay = SEND_TICK_DELAY;
+      this._shutdown = false;
+    });
   },
 
   /**
@@ -348,6 +356,10 @@ let SendScheduler = {
     const now = Policy.now();
     const nextPingSendTime = this._getNextPingSendTime(now);
     return (nextPingSendTime > now.getTime());
+  },
+
+  waitOnSendTask: function() {
+    return Promise.resolve(this._sendTask);
   },
 
   triggerSendingPings: function(immediately) {
@@ -528,6 +540,10 @@ let TelemetrySendImpl = {
     return TelemetryStorage.getPendingPingList().length + this._currentPings.size;
   },
 
+  setTestModeEnabled: function(testing) {
+    this._testMode = testing;
+  },
+
   setup: Task.async(function*(testing) {
     this._log.trace("setup");
 
@@ -620,15 +636,20 @@ let TelemetrySendImpl = {
     // Cancel any outgoing requests.
     yield this._cancelOutgoingRequests();
 
+    // Stop any active send tasks.
     yield SendScheduler.shutdown();
-    yield this._persistCurrentPings();
 
     // Wait for any outstanding async ping activity.
     yield this.promisePendingPingActivity();
+
+    // Save any outstanding pending pings to disk.
+    yield this._persistCurrentPings();
   }),
 
   reset: function() {
     this._log.trace("reset");
+
+    this._currentPings = new Map();
 
     this._overduePingCount = 0;
     this._discardedPingsCount = 0;
@@ -654,6 +675,8 @@ let TelemetrySendImpl = {
   },
 
   submitPing: function(ping) {
+    this._log.trace("submitPing - ping id: " + ping.id);
+
     if (!this.canSend(ping)) {
       this._log.trace("submitPing - Telemetry is not allowed to send pings.");
       return Promise.resolve();
@@ -671,7 +694,7 @@ let TelemetrySendImpl = {
     this._log.trace("submitPing - can send pings, trying to send now");
     this._currentPings.set(ping.id, ping);
     SendScheduler.triggerSendingPings(true);
-    return this.promisePendingPingActivity();
+    return Promise.resolve();
   },
 
   /**
@@ -700,13 +723,17 @@ let TelemetrySendImpl = {
 
     for (let current of currentPings) {
       let ping = current;
-      let p = this._doPing(ping, ping.id, false)
-        .then(() => this._currentPings.delete(ping.id))
-        .catch((ex) => {
+      let p = Task.spawn(function*() {
+        try {
+          yield this._doPing(ping, ping.id, false);
+        } catch (ex) {
           this._log.info("sendPings - ping " + ping.id + " not sent, saving to disk", ex);
-          this._currentPings.delete(ping.id)
-          return TelemetryStorage.savePendingPing(ping);
-        });
+          yield TelemetryStorage.savePendingPing(ping);
+        } finally {
+          this._currentPings.delete(ping.id);
+        }
+      }.bind(this));
+
       this._trackPendingPingTask(p);
       pingSends.push(p);
     }
@@ -962,9 +989,11 @@ let TelemetrySendImpl = {
    */
   promisePendingPingActivity: function () {
     this._log.trace("promisePendingPingActivity - Waiting for ping task");
-    return Promise.all([for (p of this._pendingPingActivity) p.catch(ex => {
+    let p = [for (p of this._pendingPingActivity) p.catch(ex => {
       this._log.error("promisePendingPingActivity - ping activity had an error", ex);
-    })]);
+    })];
+    p.push(SendScheduler.waitOnSendTask());
+    return Promise.all(p);
   },
 
   _persistCurrentPings: Task.async(function*() {
@@ -974,6 +1003,8 @@ let TelemetrySendImpl = {
         this._log.trace("_persistCurrentPings - saved ping " + id);
       } catch (ex) {
         this._log.error("_persistCurrentPings - failed to save ping " + id, ex);
+      } finally {
+        this._currentPings.delete(id);
       }
     }
   }),
