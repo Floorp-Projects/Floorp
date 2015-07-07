@@ -19,7 +19,6 @@
 #include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "prmjtime.h"
 
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
@@ -32,6 +31,7 @@
 #include "vm/HelperThreads.h"
 #include "vm/Opcodes.h"
 #include "vm/Shape.h"
+#include "vm/Time.h"
 #include "vm/UnboxedObject.h"
 
 #include "jsatominlines.h"
