@@ -34,11 +34,9 @@ static bool IsMoveto(uint16_t aSegType)
 nsresult
 SVGPathData::CopyFrom(const SVGPathData& rhs)
 {
-  if (!mData.SetCapacity(rhs.mData.Length(), fallible)) {
-    // Yes, we do want fallible alloc here
+  if (!mData.Assign(rhs.mData, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mData = rhs.mData;
   return NS_OK;
 }
 
