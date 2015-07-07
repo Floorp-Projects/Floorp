@@ -5,7 +5,6 @@
 
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
-#include "mozilla/dom/CSSAnimationBinding.h"
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
@@ -28,13 +27,7 @@ using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffectReadOnly;
-using mozilla::dom::CSSAnimation;
-
-JSObject*
-CSSAnimation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return dom::CSSAnimationBinding::Wrap(aCx, this, aGivenProto);
-}
+using mozilla::CSSAnimation;
 
 mozilla::dom::Promise*
 CSSAnimation::GetReady(ErrorResult& aRv)

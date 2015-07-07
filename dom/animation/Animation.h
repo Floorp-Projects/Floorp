@@ -40,10 +40,10 @@ class AnimValuesStyleRule;
 class CommonAnimationManager;
 } // namespace css
 
-namespace dom {
-
 class CSSAnimation;
 class CSSTransition;
+
+namespace dom {
 
 class Animation
   : public nsISupports

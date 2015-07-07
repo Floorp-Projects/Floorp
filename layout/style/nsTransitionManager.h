@@ -74,22 +74,17 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   double CurrentValuePortion() const;
 };
 
-namespace dom {
-
-class CSSTransition final : public Animation
+class CSSTransition final : public dom::Animation
 {
 public:
- explicit CSSTransition(DocumentTimeline* aTimeline)
-    : Animation(aTimeline)
+ explicit CSSTransition(dom::DocumentTimeline* aTimeline)
+    : dom::Animation(aTimeline)
   {
   }
 
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
-
   virtual CSSTransition* AsCSSTransition() override { return this; }
 
-  virtual AnimationPlayState PlayStateFromJS() const override;
+  virtual dom::AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;
 
   // A variant of Play() that avoids posting style updates since this method
@@ -108,7 +103,6 @@ protected:
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 };
 
-} // namespace dom
 } // namespace mozilla
 
 class nsTransitionManager final
