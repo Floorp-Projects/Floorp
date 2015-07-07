@@ -19,6 +19,7 @@ flags:
     - flame-kk-ota
     - flame-kk       # b2g flame kitkat
     - flame-kk-eng   # b2g flame eng build
+    - flame-kk-spark-eng
     - dolphin
     - dolphin-eng
     - dolphin-512
