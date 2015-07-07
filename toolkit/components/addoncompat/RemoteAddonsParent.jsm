@@ -960,6 +960,8 @@ let RemoteAddonsParent = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("Addons:RegisterGlobal", this);
 
+    Services.ppmm.initialProcessData.remoteAddonsParentInitted = true;
+
     this.globalToBrowser = new WeakMap();
     this.browserToGlobal = new WeakMap();
   },
