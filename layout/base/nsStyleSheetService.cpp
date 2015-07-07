@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsLayoutStatics.h"

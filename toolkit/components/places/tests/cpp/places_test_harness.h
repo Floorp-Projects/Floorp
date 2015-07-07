@@ -22,6 +22,7 @@
 #include "nsPIPlacesDatabase.h"
 #include "nsIObserver.h"
 #include "prinrval.h"
+#include "prtime.h"
 #include "mozilla/Attributes.h"
 
 #define WAITFORTOPIC_TIMEOUT_SECONDS 5

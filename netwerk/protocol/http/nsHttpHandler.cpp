@@ -49,6 +49,8 @@
 #include "nsIParentalControlsService.h"
 #include "nsINetworkLinkService.h"
 #include "nsHttpChannelAuthProvider.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/URIUtils.h"

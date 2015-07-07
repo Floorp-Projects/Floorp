@@ -16,6 +16,7 @@
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 
+#include "nsIStreamListener.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"

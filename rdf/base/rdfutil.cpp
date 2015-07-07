@@ -33,6 +33,7 @@
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
 #include "rdfutil.h"
+#include "prtime.h"
 
 ////////////////////////////////////////////////////////////////////////
 

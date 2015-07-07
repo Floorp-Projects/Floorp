@@ -20,15 +20,19 @@
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
+#include "nsIProtocolHandler.h"
 #include "nsMimeTypes.h"
 #include "nsStreamUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIFileURL.h"
+#include "nsIFile.h"
 #include "nsCRT.h"
 #include "nsINetworkPredictor.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -39,6 +43,7 @@
 #include "nsIMemoryReporter.h"
 #include "Image.h"
 #include "gfxPrefs.h"
+#include "prtime.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.

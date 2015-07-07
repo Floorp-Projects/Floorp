@@ -18,6 +18,8 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsMacShellService.h"
 #include "nsNetUtil.h"
+#include "nsIProperties.h"
+#include "nsServiceManagerUtils.h"
 #include "nsShellService.h"
 #include "nsStringAPI.h"
 #include "nsIDocShell.h"

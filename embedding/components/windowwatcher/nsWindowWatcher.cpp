@@ -11,6 +11,10 @@
 
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsJSUtils.h"
 #include "plstr.h"
 

@@ -10,6 +10,7 @@
 #include "ArchiveZipEvent.h"
 
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 
 #include "mozilla/dom/ArchiveReaderBinding.h"

@@ -11,6 +11,7 @@
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsNetUtil.h"
+#include "nsIStreamListener.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsWeakReference.h"

@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsIFile.h"
+#include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"

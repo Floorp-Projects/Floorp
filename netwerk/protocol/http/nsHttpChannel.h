@@ -22,6 +22,8 @@
 #include "nsWeakReference.h"
 #include "TimingStruct.h"
 #include "AutoClose.h"
+#include "nsIStreamListener.h"
+#include "nsISupportsPrimitives.h"
 
 class nsDNSPrefetch;
 class nsICancelable;

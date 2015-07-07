@@ -37,6 +37,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
+#include "nsIOutputStream.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
 #include "nsJSUtils.h"

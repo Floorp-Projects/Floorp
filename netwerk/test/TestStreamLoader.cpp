@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "TestCommon.h"
 #include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"

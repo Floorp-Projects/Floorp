@@ -14,11 +14,17 @@
 #include "nsIWeakReference.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsISafeOutputStream.h"
+#include "nsTArray.h"
 #include "nsStringEnumerator.h"
 #include "nsUnicharInputStream.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
+#include "prio.h"
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 

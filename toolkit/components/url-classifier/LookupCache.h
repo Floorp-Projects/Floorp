@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
+#include "nsRefPtr.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "mozilla/Logging.h"
 
