@@ -52,6 +52,7 @@ var tests = [
   // Preferences
   function() {
     SpecialPowers.pushPrefEnv({"set": [["dom.ipc.browser_frames.oop_by_default", true],
+                                       ["media.useAudioChannelAPI", true],
                                        ["media.useAudioChannelService", true],
                                        ["media.defaultAudioChannel", "telephony"],
                                        ["dom.mozBrowserFramesEnabled", true],

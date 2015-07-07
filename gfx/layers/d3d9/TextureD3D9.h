@@ -76,12 +76,6 @@ protected:
     const gfx::IntSize& aSize,
     _D3DFORMAT aFormat);
 
-  already_AddRefed<IDirect3DTexture9> SurfaceToTexture(
-    DeviceManagerD3D9* aDeviceManager,
-    gfxWindowsSurface* aSurface,
-    const gfx::IntSize& aSize,
-    _D3DFORMAT aFormat);
-
   gfx::IntSize mSize;
 
   // Linked list of all objects holding d3d9 textures.
@@ -162,10 +156,6 @@ public:
    */
   bool UpdateFromTexture(IDirect3DTexture9* aTexture, const nsIntRegion* aRegion);
 
-  // To use with DIBTextureHostD3D9
-
-  bool Update(gfxWindowsSurface* aSurface);
-
 protected:
   gfx::IntRect GetTileRect(uint32_t aTileIndex) const;
 
@@ -181,16 +171,16 @@ protected:
 };
 
 /**
- * Can only be drawn into through Cairo and need a D3D9 context on the client side.
+ * Needs a D3D9 context on the client side.
  * The corresponding TextureHost is TextureHostD3D9.
  */
-class CairoTextureClientD3D9 : public TextureClient
+class TextureClientD3D9 : public TextureClient
 {
 public:
-  CairoTextureClientD3D9(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
+  TextureClientD3D9(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
                          TextureFlags aFlags);
 
-  virtual ~CairoTextureClientD3D9();
+  virtual ~TextureClientD3D9();
 
   // TextureClient
 
@@ -225,7 +215,6 @@ private:
   RefPtr<IDirect3DTexture9> mTexture;
   nsRefPtr<IDirect3DSurface9> mD3D9Surface;
   RefPtr<gfx::DrawTarget> mDrawTarget;
-  nsRefPtr<gfxASurface> mSurface;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;

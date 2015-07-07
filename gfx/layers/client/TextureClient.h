@@ -502,7 +502,7 @@ protected:
    * deserialized.
    * Calling ToSurfaceDescriptor again after it has already returned true,
    * or never constructing a TextureHost with aDescriptor may result in a memory
-   * leak (see CairoTextureClientD3D9 for example).
+   * leak (see TextureClientD3D9 for example).
    */
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 

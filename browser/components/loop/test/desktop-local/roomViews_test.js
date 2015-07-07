@@ -29,6 +29,7 @@ describe("loop.roomViews", function () {
         previews: [],
         title: ""
       }),
+      openURL: sinon.stub(),
       rooms: {
         get: sinon.stub().callsArgWith(1, null, {
           roomToken: "fakeToken",
@@ -39,7 +40,8 @@ describe("loop.roomViews", function () {
           }
         }),
         update: sinon.stub().callsArgWith(2, null)
-      }
+      },
+      telemetryAddValue: sinon.stub()
     };
 
     fakeWindow = {
@@ -163,7 +165,8 @@ describe("loop.roomViews", function () {
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.EmailRoomUrl({
             roomUrl: "http://invalid",
-            roomDescription: undefined
+            roomDescription: undefined,
+            from: "conversation"
           }));
       });
 
@@ -186,7 +189,8 @@ describe("loop.roomViews", function () {
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.EmailRoomUrl({
             roomUrl: url,
-            roomDescription: description
+            roomDescription: description,
+            from: "conversation"
           }));
       });
 
@@ -204,8 +208,10 @@ describe("loop.roomViews", function () {
           React.addons.TestUtils.Simulate.click(copyBtn);
 
           sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWith(dispatcher.dispatch,
-            new sharedActions.CopyRoomUrl({roomUrl: "http://invalid"}));
+          sinon.assert.calledWith(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
+            roomUrl: "http://invalid",
+            from: "conversation"
+          }));
         });
 
       it("should change the text when the url has been copied", function() {
@@ -930,6 +936,55 @@ describe("loop.roomViews", function () {
         expect(node.querySelector(".room-context-name").value).to.eql("fakeName");
         expect(node.querySelector(".room-context-url").value).to.eql("");
         expect(node.querySelector(".room-context-comments").value).to.eql("");
+      });
+    });
+
+    describe("#handleContextClick", function() {
+      var fakeEvent;
+
+      beforeEach(function() {
+        fakeEvent = {
+          preventDefault: sinon.stub(),
+          stopPropagation: sinon.stub()
+        };
+      });
+
+      it("should not attempt to open a URL when none is attached", function() {
+        view = mountTestComponent({
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "fakeName"
+          }
+        });
+
+        view.handleContextClick(fakeEvent);
+
+        sinon.assert.calledOnce(fakeEvent.preventDefault);
+        sinon.assert.calledOnce(fakeEvent.stopPropagation);
+
+        sinon.assert.notCalled(fakeMozLoop.openURL);
+        sinon.assert.notCalled(fakeMozLoop.telemetryAddValue);
+      });
+
+      it("should open a URL", function() {
+        view = mountTestComponent({
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "fakeName",
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        view.handleContextClick(fakeEvent);
+
+        sinon.assert.calledOnce(fakeEvent.preventDefault);
+        sinon.assert.calledOnce(fakeEvent.stopPropagation);
+
+        sinon.assert.calledOnce(fakeMozLoop.openURL);
+        sinon.assert.calledWithExactly(fakeMozLoop.openURL, fakeContextURL.location);
+        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+          "LOOP_ROOM_CONTEXT_CLICK", 1);
       });
     });
   });

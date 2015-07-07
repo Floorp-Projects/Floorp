@@ -16,13 +16,8 @@ import android.database.Cursor;
 import java.util.EnumSet;
 
 class PanelViewItemHandler {
-    private final ViewConfig mViewConfig;
     private OnItemOpenListener mItemOpenListener;
     private FilterManager mFilterManager;
-
-    public PanelViewItemHandler(ViewConfig viewConfig) {
-        mViewConfig = viewConfig;
-    }
 
     public void setOnItemOpenListener(OnItemOpenListener listener) {
         mItemOpenListener = listener;

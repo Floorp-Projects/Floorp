@@ -415,6 +415,7 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     CopyRoomUrl: Action.define("copyRoomUrl", {
+      from: String,
       roomUrl: String
     }),
 
@@ -423,6 +424,7 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     EmailRoomUrl: Action.define("emailRoomUrl", {
+      from: String,
       roomUrl: String
       // roomDescription: String, Optional.
     }),

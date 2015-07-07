@@ -42,6 +42,49 @@ const SHARING_STATE_CHANGE = {
   BROWSER_DISABLED: 3
 };
 
+/**
+ * Values that we segment sharing a room URL action telemetry probes into.
+ *
+ * @type {{COPY_FROM_PANEL: Number, COPY_FROM_CONVERSATION: Number,
+ *   EMAIL_FROM_CALLFAILED: Number, EMAIL_FROM_CONVERSATION: Number}}
+ */
+const SHARING_ROOM_URL = {
+  COPY_FROM_PANEL: 0,
+  COPY_FROM_CONVERSATION: 1,
+  EMAIL_FROM_CALLFAILED: 2,
+  EMAIL_FROM_CONVERSATION: 3
+};
+
+/**
+ * Values that we segment room create action telemetry probes into.
+ *
+ * @type {{CREATE_SUCCESS: Number, CREATE_FAIL: Number}}
+ */
+const ROOM_CREATE = {
+  CREATE_SUCCESS: 0,
+  CREATE_FAIL: 1
+};
+
+/**
+ * Values that we segment room delete action telemetry probes into.
+ *
+ * @type {{DELETE_SUCCESS: Number, DELETE_FAIL: Number}}
+ */
+const ROOM_DELETE = {
+  DELETE_SUCCESS: 0,
+  DELETE_FAIL: 1
+};
+
+/**
+ * Values that we segment room context action telemetry probes into.
+ *
+ * @type {{ADD_FROM_PANEL: Number, ADD_FROM_CONVERSATION: Number}}
+ */
+const ROOM_CONTEXT_ADD = {
+  ADD_FROM_PANEL: 0,
+  ADD_FROM_CONVERSATION: 1
+};
+
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "loop.debug.loglevel";
 
@@ -56,7 +99,8 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE",
-  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE"];
+  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE", "SHARING_ROOM_URL",
+  "ROOM_CREATE", "ROOM_DELETE", "ROOM_CONTEXT_ADD"];
 
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");

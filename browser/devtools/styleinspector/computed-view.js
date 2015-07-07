@@ -151,6 +151,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this._onClick = this._onClick.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
+  this._onCopyUrl = this._onCopyUrl.bind(this);
   this._onCopyImageDataUrl = this._onCopyImageDataUrl.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
@@ -716,6 +717,13 @@ CssHtmlTree.prototype = {
       command: this._onCopyColor
     });
 
+    // Copy URL
+    this.menuitemCopyUrl = createMenuItem(this._contextmenu, {
+      label: "styleinspector.contextmenu.copyUrl",
+      accesskey: "styleinspector.contextmenu.copyUrl.accessKey",
+      command: this._onCopyUrl
+    });
+
     // Copy data URI
     this.menuitemCopyImageDataUrl = createMenuItem(this._contextmenu, {
       label: "styleinspector.contextmenu.copyImageDataUrl",
@@ -753,6 +761,7 @@ CssHtmlTree.prototype = {
     this.menuitemSources.setAttribute("checked", showOrig);
 
     this.menuitemCopyColor.hidden = !this._isColorPopup();
+    this.menuitemCopyUrl.hidden = !this._isImageUrlPopup();
     this.menuitemCopyImageDataUrl.hidden = !this._isImageUrlPopup();
   },
 
@@ -875,6 +884,13 @@ CssHtmlTree.prototype = {
   },
 
   /**
+   * Retrieve the url for the selected image and copy it to the clipboard
+   */
+  _onCopyUrl: function() {
+    clipboardHelper.copyString(this._imageUrlToCopy);
+  },
+
+  /**
    * Retrieve the image data for the selected image url and copy it to the clipboard
    */
   _onCopyImageDataUrl: Task.async(function*() {
@@ -979,6 +995,10 @@ CssHtmlTree.prototype = {
       this.menuitemCopyColor.removeEventListener("command", this._onCopyColor);
       this.menuitemCopyColor = null;
 
+      // Destroy Copy URL menuitem
+      this.menuitemCopyUrl.removeEventListener("command", this._onCopyUrl);
+      this.menuitemCopyUrl = null;
+
       // Destroy Copy Data URI menuitem.
       this.menuitemCopyImageDataUrl.removeEventListener("command", this._onCopyImageDataUrl);
       this.menuitemCopyImageDataUrl = null;
@@ -1047,7 +1067,9 @@ function createMenuItem(aMenu, aAttributes)
   let item = aMenu.ownerDocument.createElementNS(XUL_NS, "menuitem");
 
   item.setAttribute("label", CssHtmlTree.l10n(aAttributes.label));
-  item.setAttribute("accesskey", CssHtmlTree.l10n(aAttributes.accesskey));
+  if (aAttributes.accesskey) {
+    item.setAttribute("accesskey", CssHtmlTree.l10n(aAttributes.accesskey));
+  }
   item.addEventListener("command", aAttributes.command);
 
   if (aAttributes.type) {

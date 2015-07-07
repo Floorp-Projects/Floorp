@@ -561,6 +561,8 @@ let settingsToObserve = {
   },
   'dom.mozApps.use_reviewer_certs': false,
   'dom.mozApps.signed_apps_installable_from': 'https://marketplace.firefox.com',
+  'dom.serviceWorkers.interception.enabled': true,
+  'dom.serviceWorkers.testing.enabled': false,
   'gfx.layerscope.enabled': false,
   'layers.draw-borders': false,
   'layers.draw-tile-borders': false,
@@ -568,12 +570,12 @@ let settingsToObserve = {
   'layers.enable-tiles': true,
   'layers.effect.invert': false,
   'layers.effect.grayscale': false,
-  'layers.effect.contrast': "0.0",
+  'layers.effect.contrast': '0.0',
+  'mms.debugging.enabled': false,
   'network.debugging.enabled': false,
   'privacy.donottrackheader.enabled': false,
   'ril.debugging.enabled': false,
   'ril.radio.disabled': false,
-  'mms.debugging.enabled': false,
   'ril.mms.requestReadReport.enabled': {
     prefName: 'dom.mms.requestReadReport',
     defaultValue: true

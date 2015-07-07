@@ -68,15 +68,6 @@ TypedArrayLayout TypedArrayObject::layout_(false, // shared
                                            &TypedArrayObject::classes[0],
                                            &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]);
 
-TypedArrayLayout::TypedArrayLayout(bool isShared, bool isNeuterable, const Class* firstClass,
-                                   const Class* maxClass)
-    : isShared_(isShared)
-    , isNeuterable_(isNeuterable)
-    , firstClass_(firstClass)
-    , maxClass_(maxClass)
-{
-}
-
 /* static */ int
 TypedArrayLayout::lengthOffset()
 {
@@ -206,7 +197,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
   public:
     typedef NativeType ElementType;
 
-    static Scalar::Type ArrayTypeID() { return TypeIDOfType<NativeType>(); }
+    static MOZ_CONSTEXPR Scalar::Type ArrayTypeID() { return TypeIDOfType<NativeType>::id; }
     static bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
 

@@ -52,6 +52,10 @@ describe("loop.conversationViews", function () {
     };
 
     fakeMozLoop = navigator.mozLoop = {
+      SHARING_ROOM_URL: {
+        EMAIL_FROM_CALLFAILED: 2,
+        EMAIL_FROM_CONVERSATION: 3
+      },
       // Dummy function, stubbed below.
       getLoopPref: function() {},
       calls: {
@@ -255,7 +259,7 @@ describe("loop.conversationViews", function () {
   });
 
   describe("CallFailedView", function() {
-    var fakeAudio;
+    var fakeAudio, composeCallUrlEmail;
 
     var fakeContact = {email: [{value: "test@test.tld"}]};
 
@@ -275,6 +279,7 @@ describe("loop.conversationViews", function () {
         removeAttribute: sinon.spy()
       };
       sandbox.stub(window, "Audio").returns(fakeAudio);
+      composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
     });
 
     it("should dispatch a retryCall action when the retry button is pressed",
@@ -346,13 +351,12 @@ describe("loop.conversationViews", function () {
       });
 
     it("should compose an email once the email link is received", function() {
-      var composeCallUrlEmail = sandbox.stub(sharedUtils, "composeCallUrlEmail");
       view = mountTestComponent({contact: fakeContact});
       conversationStore.setStoreState({emailLink: "http://fake.invalid/"});
 
       sinon.assert.calledOnce(composeCallUrlEmail);
       sinon.assert.calledWithExactly(composeCallUrlEmail,
-        "http://fake.invalid/", "test@test.tld");
+        "http://fake.invalid/", "test@test.tld", null, "callfailed");
     });
 
     it("should close the conversation window once the email link is received",

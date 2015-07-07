@@ -65,7 +65,7 @@ public:
 private:
   ~nsNodeWeakReference();
 
-  nsINode* mNode;
+  nsINode* MOZ_NON_OWNING_REF mNode;
 };
 
 /**
@@ -215,6 +215,7 @@ public:
     mRefCnt.RemovePurple();
   }
 
+  static void ClearContentUnbinder();
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
   static bool CanSkipInCC(nsINode* aNode);
   static bool CanSkipThis(nsINode* aNode);
