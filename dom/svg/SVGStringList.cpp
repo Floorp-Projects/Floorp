@@ -16,11 +16,9 @@ namespace mozilla {
 nsresult
 SVGStringList::CopyFrom(const SVGStringList& rhs)
 {
-  if (!mStrings.SetCapacity(rhs.Length(), fallible)) {
-    // Yes, we do want fallible alloc here
+  if (!mStrings.Assign(rhs.mStrings, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mStrings = rhs.mStrings;
   mIsSet = true;
   return NS_OK;
 }
