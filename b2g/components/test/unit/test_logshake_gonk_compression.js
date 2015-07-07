@@ -28,6 +28,7 @@ function run_test() {
   Cu.import("resource://gre/modules/LogShake.jsm");
   Cu.import("resource://gre/modules/Promise.jsm");
   Cu.import("resource://gre/modules/osfile.jsm");
+  Cu.import("resource://gre/modules/FileUtils.jsm");
   do_get_profile();
   debug("Starting");
   run_next_test();
@@ -63,34 +64,47 @@ add_test(function test_ensure_sdcard() {
   run_next_test();
 });
 
-add_test(function test_logShake_captureLogs_writes() {
+add_test(function test_logShake_captureLogs_writes_zip() {
   // Enable LogShake
   LogShake.init();
 
   let expectedFiles = [];
 
+  LogShake.enableQAMode();
+
   LogShake.captureLogs().then(logResults => {
     LogShake.uninit();
 
-    ok(logResults.logFilenames.length > 0, "Should have filenames");
-    ok(logResults.logPaths.length > 0, "Should have paths");
-    ok(!logResults.compressed, "Should not be compressed");
+    ok(logResults.logPaths.length === 1, "Should have zip path");
+    ok(logResults.logFilenames.length >= 1, "Should have log filenames");
+    ok(logResults.compressed, "Log files should be compressed");
 
-    logResults.logPaths.forEach(f => {
-      let p = OS.Path.join(sdcard, f);
-      ok(p, "Should have a valid result path: " + p);
+    let zipPath = OS.Path.join(sdcard, logResults.logPaths[0]);
+    ok(zipPath, "Should have a valid archive path: " + zipPath);
 
-      let t = OS.File.exists(p).then(rv => {
-        ok(rv, "File exists: " + p);
-      });
+    let zipFile = new FileUtils.File(zipPath);
+    ok(zipFile, "Should have a valid archive file: " + zipFile);
 
-      expectedFiles.push(t);
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                      .createInstance(Ci.nsIZipReader);
+    zipReader.open(zipFile);
+
+    let logFilenamesSeen = {};
+
+    let zipEntries = zipReader.findEntries(null); // Find all entries
+    while (zipEntries.hasMore()) {
+      let entryName = zipEntries.getNext();
+      let entry = zipReader.getEntry(entryName);
+      logFilenamesSeen[entryName] = true;
+      ok(!entry.isDirectory, "Archive entry " + entryName + " should be a file");
+    }
+    zipReader.close();
+
+    // TODO: Verify archive contents
+    logResults.logFilenames.forEach(filename => {
+      ok(logFilenamesSeen[filename], "File " + filename + " should be present in archive");
     });
-
-    Promise.all(expectedFiles).then(() => {
-      ok(true, "Completed all files checks");
-      run_next_test();
-    });
+    run_next_test();
   },
   error => {
     LogShake.uninit();
@@ -100,3 +114,4 @@ add_test(function test_logShake_captureLogs_writes() {
     run_next_test();
   });
 });
+
