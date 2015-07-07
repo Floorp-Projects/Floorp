@@ -4757,6 +4757,35 @@ MArrayJoin::foldsTo(TempAllocator& alloc)
     return MStringReplace::New(alloc, string, pattern, replacement);
 }
 
+MConvertUnboxedObjectToNative*
+MConvertUnboxedObjectToNative::New(TempAllocator& alloc, MDefinition* obj, ObjectGroup* group)
+{
+    MConvertUnboxedObjectToNative* res = new(alloc) MConvertUnboxedObjectToNative(obj, group);
+
+    ObjectGroup* nativeGroup = group->unboxedLayout().nativeGroup();
+
+    // Make a new type set for the result of this instruction which replaces
+    // the input group with the native group we will convert it to.
+    TemporaryTypeSet* types = obj->resultTypeSet();
+    if (types && !types->unknownObject()) {
+        TemporaryTypeSet* newTypes = types->cloneWithoutObjects(alloc.lifoAlloc());
+        if (newTypes) {
+            for (size_t i = 0; i < types->getObjectCount(); i++) {
+                TypeSet::ObjectKey* key = types->getObject(i);
+                if (!key)
+                    continue;
+                if (key->unknownProperties() || !key->isGroup() || key->group() != group)
+                    newTypes->addType(TypeSet::ObjectType(key), alloc.lifoAlloc());
+                else
+                    newTypes->addType(TypeSet::ObjectType(nativeGroup), alloc.lifoAlloc());
+            }
+            res->setResultTypeSet(newTypes);
+        }
+    }
+
+    return res;
+}
+
 bool
 jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                 MDefinition* obj, MDefinition* id)

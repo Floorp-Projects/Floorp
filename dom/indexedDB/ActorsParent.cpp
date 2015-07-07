@@ -7639,6 +7639,9 @@ protected:
 
   virtual void
   Cleanup() override;
+
+  nsresult
+  PopulateResponseFromStatement(DatabaseConnection::CachedStatement& aStmt);
 };
 
 class Cursor::OpenOp final
@@ -13469,7 +13472,11 @@ TransactionBase::VerifyRequestParams(const CursorRequestParams& aParams) const
       break;
 
     case CursorRequestParams::TAdvanceParams:
-      break;
+        if (NS_WARN_IF(aParams.get_AdvanceParams().count() == 0)) {
+          ASSERT_UNLESS_FUZZING();
+          return false;
+        }
+        break;
 
     default:
       MOZ_CRASH("Should never get here!");
@@ -24435,6 +24442,91 @@ CursorOpBase::Cleanup()
   TransactionDatabaseOperationBase::Cleanup();
 }
 
+nsresult
+Cursor::
+CursorOpBase::PopulateResponseFromStatement(
+    DatabaseConnection::CachedStatement& aStmt)
+{
+  Transaction()->AssertIsOnConnectionThread();
+  MOZ_ASSERT(mResponse.type() == CursorResponse::T__None);
+  MOZ_ASSERT(mFiles.IsEmpty());
+
+  nsresult rv = mCursor->mKey.SetFromStatement(aStmt, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  switch (mCursor->mType) {
+    case OpenCursorParams::TObjectStoreOpenCursorParams: {
+      StructuredCloneReadInfo cloneInfo;
+      rv = GetStructuredCloneReadInfoFromStatement(aStmt,
+                                                   2,
+                                                   1,
+                                                   mCursor->mFileManager,
+                                                   &cloneInfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      mResponse = ObjectStoreCursorResponse();
+
+      auto& response = mResponse.get_ObjectStoreCursorResponse();
+      response.cloneInfo().data().SwapElements(cloneInfo.mData);
+      response.key() = mCursor->mKey;
+
+      mFiles.SwapElements(cloneInfo.mFiles);
+      break;
+    }
+
+    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
+      mResponse = ObjectStoreKeyCursorResponse(mCursor->mKey);
+      break;
+    }
+
+    case OpenCursorParams::TIndexOpenCursorParams: {
+      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      StructuredCloneReadInfo cloneInfo;
+      rv = GetStructuredCloneReadInfoFromStatement(aStmt,
+                                                   3,
+                                                   2,
+                                                   mCursor->mFileManager,
+                                                   &cloneInfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      mResponse = IndexCursorResponse();
+
+      auto& response = mResponse.get_IndexCursorResponse();
+      response.cloneInfo().data().SwapElements(cloneInfo.mData);
+      response.key() = mCursor->mKey;
+      response.objectKey() = mCursor->mObjectKey;
+
+      mFiles.SwapElements(cloneInfo.mFiles);
+      break;
+    }
+
+    case OpenCursorParams::TIndexOpenKeyCursorParams: {
+      rv = mCursor->mObjectKey.SetFromStatement(aStmt, 1);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      mResponse = IndexKeyCursorResponse(mCursor->mKey, mCursor->mObjectKey);
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return NS_OK;
+}
+
 void
 Cursor::
 OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen)
@@ -24512,6 +24604,8 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
       MOZ_CRASH("Should never get here!");
   }
 
+  // Note: Changing the number or order of SELECT columns in the query will
+  // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery =
     queryStart +
     keyRangeClause +
@@ -24549,17 +24643,7 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = mCursor->mKey.SetFromStatement(stmt, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  StructuredCloneReadInfo cloneInfo;
-  rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                               2,
-                                               1,
-                                               mCursor->mFileManager,
-                                               &cloneInfo);
+  rv = PopulateResponseFromStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24624,14 +24708,6 @@ OpenOp::DoObjectStoreDatabaseWork(DatabaseConnection* aConnection)
     directionClause +
     openLimit;
 
-  mResponse = ObjectStoreCursorResponse();
-
-  auto& response = mResponse.get_ObjectStoreCursorResponse();
-  response.cloneInfo().data().SwapElements(cloneInfo.mData);
-  response.key() = mCursor->mKey;
-
-  mFiles.SwapElements(cloneInfo.mFiles);
-
   return NS_OK;
 }
 
@@ -24687,6 +24763,8 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
       MOZ_CRASH("Should never get here!");
   }
 
+  // Note: Changing the number or order of SELECT columns in the query will
+  // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery =
     queryStart +
     keyRangeClause +
@@ -24724,7 +24802,7 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = mCursor->mKey.SetFromStatement(stmt, 0);
+  rv = PopulateResponseFromStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -24787,8 +24865,6 @@ OpenOp::DoObjectStoreKeyDatabaseWork(DatabaseConnection* aConnection)
     continueToKeyRangeClause +
     directionClause +
     openLimit;
-
-  mResponse = ObjectStoreKeyCursorResponse(mCursor->mKey);
 
   return NS_OK;
 }
@@ -24864,6 +24940,8 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
                        "WHERE index_table.index_id = :") +
     id;
 
+  // Note: Changing the number or order of SELECT columns in the query will
+  // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery =
     queryStart +
     keyRangeClause +
@@ -24901,22 +24979,7 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = mCursor->mKey.SetFromStatement(stmt, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mCursor->mObjectKey.SetFromStatement(stmt, 1);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  StructuredCloneReadInfo cloneInfo;
-  rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                               3,
-                                               2,
-                                               mCursor->mFileManager,
-                                               &cloneInfo);
+  rv = PopulateResponseFromStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25019,15 +25082,6 @@ OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection)
       MOZ_CRASH("Should never get here!");
   }
 
-  mResponse = IndexCursorResponse();
-
-  auto& response = mResponse.get_IndexCursorResponse();
-  response.cloneInfo().data().SwapElements(cloneInfo.mData);
-  response.key() = mCursor->mKey;
-  response.objectKey() = mCursor->mObjectKey;
-
-  mFiles.SwapElements(cloneInfo.mFiles);
-
   return NS_OK;
 }
 
@@ -25093,6 +25147,8 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     NS_LITERAL_CSTRING(" WHERE index_id = :") +
     id;
 
+  // Note: Changing the number or order of SELECT columns in the query will
+  // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString firstQuery =
     queryStart +
     keyRangeClause +
@@ -25130,12 +25186,7 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     return NS_OK;
   }
 
-  rv = mCursor->mKey.SetFromStatement(stmt, 0);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mCursor->mObjectKey.SetFromStatement(stmt, 1);
+  rv = PopulateResponseFromStatement(stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -25236,12 +25287,6 @@ OpenOp::DoIndexKeyDatabaseWork(DatabaseConnection* aConnection)
     default:
       MOZ_CRASH("Should never get here!");
   }
-
-  mResponse = IndexKeyCursorResponse();
-
-  auto& response = mResponse.get_IndexKeyCursorResponse();
-  response.key() = mCursor->mKey;
-  response.objectKey() = mCursor->mObjectKey;
 
   return NS_OK;
 }
@@ -25347,8 +25392,10 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
   // greater than (or less than, if we're running a PREV cursor) or equal to the
   // key that was specified.
 
-  nsAutoCString countString;
+  // Note: Changing the number or order of SELECT columns in the query will
+  // require changes to CursorOpBase::PopulateResponseFromStatement.
   nsCString query;
+  nsAutoCString countString;
 
   bool hasContinueKey = false;
   uint32_t advanceCount;
@@ -25367,6 +25414,7 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   } else {
     advanceCount = mParams.get_AdvanceParams().count();
+    MOZ_ASSERT(advanceCount > 0);
     countString.AppendInt(advanceCount);
 
     query = mCursor->mContinueQuery + countString;
@@ -25429,108 +25477,17 @@ ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
 
     if (!hasResult) {
-      break;
+      mCursor->mKey.Unset();
+      mCursor->mRangeKey.Unset();
+      mCursor->mObjectKey.Unset();
+      mResponse = void_t();
+      return NS_OK;
     }
   }
 
-  if (!hasResult) {
-    mCursor->mKey.Unset();
-    mCursor->mRangeKey.Unset();
-    mCursor->mObjectKey.Unset();
-    mResponse = void_t();
-    return NS_OK;
-  }
-
-  switch (mCursor->mType) {
-    case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      rv = mCursor->mKey.SetFromStatement(stmt, 0);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      StructuredCloneReadInfo cloneInfo;
-      rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                                   2,
-                                                   1,
-                                                   mCursor->mFileManager,
-                                                   &cloneInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      mResponse = ObjectStoreCursorResponse();
-
-      auto& response = mResponse.get_ObjectStoreCursorResponse();
-      response.cloneInfo().data().SwapElements(cloneInfo.mData);
-      response.key() = mCursor->mKey;
-
-      mFiles.SwapElements(cloneInfo.mFiles);
-
-      break;
-    }
-
-    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      rv = mCursor->mKey.SetFromStatement(stmt, 0);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      mResponse = ObjectStoreKeyCursorResponse(mCursor->mKey);
-
-      break;
-    }
-
-    case OpenCursorParams::TIndexOpenCursorParams: {
-      rv = mCursor->mKey.SetFromStatement(stmt, 0);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = mCursor->mObjectKey.SetFromStatement(stmt, 1);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      StructuredCloneReadInfo cloneInfo;
-      rv = GetStructuredCloneReadInfoFromStatement(stmt,
-                                                   3,
-                                                   2,
-                                                   mCursor->mFileManager,
-                                                   &cloneInfo);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      mResponse = IndexCursorResponse();
-
-      auto& response = mResponse.get_IndexCursorResponse();
-      response.cloneInfo().data().SwapElements(cloneInfo.mData);
-      response.key() = mCursor->mKey;
-      response.objectKey() = mCursor->mObjectKey;
-
-      mFiles.SwapElements(cloneInfo.mFiles);
-
-      break;
-    }
-
-    case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      rv = mCursor->mKey.SetFromStatement(stmt, 0);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = mCursor->mObjectKey.SetFromStatement(stmt, 1);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      mResponse = IndexKeyCursorResponse(mCursor->mKey, mCursor->mObjectKey);
-
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
+  rv = PopulateResponseFromStatement(stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   return NS_OK;
