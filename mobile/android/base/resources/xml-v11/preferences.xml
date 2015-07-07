@@ -55,7 +55,8 @@
 
     <PreferenceScreen android:title="@string/pref_category_devtools"
                       android:summary="@string/pref_developer_remotedebugging"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+                      android:key="android.not_a_preference.devtools.enabled" >
         <extra android:name="resource"
                android:value="preferences_devtools"/>
     </PreferenceScreen>
