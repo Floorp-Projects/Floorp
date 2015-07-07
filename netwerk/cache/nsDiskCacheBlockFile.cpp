@@ -13,6 +13,33 @@
 
 using namespace mozilla;
 
+/* to cope with short read.
+ * xxx not sure  if we want to repeat PR_Read() if no octet is ever read
+ * and is errno == EINTR
+ */
+static
+PRInt32
+busy_beaver_PR_Read(PRFileDesc *fd, void * start, PRInt32 len)
+{
+    int n;
+    PRInt32 remaining = len;
+
+    while (remaining > 0) {
+        n = PR_Read(fd, start, remaining);
+        if (n < 0) {
+            if( (len - remaining) == 0 ) // no octet is ever read
+                return -1;
+            break;
+        } else {
+            remaining -= n;
+            char *cp = (char *) start;
+            cp += n;
+            start = cp;
+        }
+    }
+    return len - remaining;
+}
+
 /******************************************************************************
  * nsDiskCacheBlockFile - 
  *****************************************************************************/
@@ -74,7 +101,7 @@ nsDiskCacheBlockFile::Open(nsIFile * blockFile,
         
     } else {
         // read the bit map
-        const int32_t bytesRead = PR_Read(mFD, mBitMap, bitMapBytes);
+        const int32_t bytesRead = busy_beaver_PR_Read(mFD, mBitMap, bitMapBytes);
         if ((bytesRead < 0) || ((uint32_t)bytesRead < bitMapBytes)) {
             *corruptInfo = nsDiskCache::kBlockFileBitMapReadError;
             rv = NS_ERROR_UNEXPECTED;
@@ -253,10 +280,14 @@ nsDiskCacheBlockFile::ReadBlocks( void *    buffer,
     if ((bytesToRead <= 0) || ((uint32_t)bytesToRead > mBlockSize * numBlocks)) {
         bytesToRead = mBlockSize * numBlocks;
     }
-    *bytesRead = PR_Read(mFD, buffer, bytesToRead);
-    
+    /* This has to tolerate short read, i.e., we need to repeat! */
+    *bytesRead = busy_beaver_PR_Read(mFD, buffer, bytesToRead);
+
     CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Read [this=%p] "
                      "returned %d / %d bytes", this, *bytesRead, bytesToRead));
+
+    if(*bytesRead == -1)
+        return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
 }
