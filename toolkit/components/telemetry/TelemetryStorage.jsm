@@ -55,8 +55,6 @@ const ARCHIVE_SIZE_PROBE_SPECIAL_VALUE = 300;
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-let isPingDirectoryCreated = false;
-
 /**
  * This is a policy object used to override behavior for testing.
  */
@@ -909,19 +907,18 @@ let TelemetryStorageImpl = {
    * compression will be used.
    * @returns {promise}
    */
-  savePingToFile: function(ping, filePath, overwrite, compress = false) {
-    return Task.spawn(function*() {
-      try {
-        let pingString = JSON.stringify(ping);
-        let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
-        if (compress) {
-          options.compression = "lz4";
-        }
-        yield OS.File.writeAtomic(filePath, pingString, options);
-      } catch(e if e.becauseExists) {
+  savePingToFile: Task.async(function*(ping, filePath, overwrite, compress = false) {
+    try {
+      this._log.trace("savePingToFile - path: " + filePath);
+      let pingString = JSON.stringify(ping);
+      let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
+      if (compress) {
+        options.compression = "lz4";
       }
-    })
-  },
+      yield OS.File.writeAtomic(filePath, pingString, options);
+    } catch(e if e.becauseExists) {
+    }
+  }),
 
   /**
    * Save a ping to its file.
@@ -986,6 +983,7 @@ let TelemetryStorageImpl = {
         path: path,
         lastModificationDate: Policy.now().getTime(),
       });
+      this._log.trace("savePendingPing - saved ping with id " + ping.id);
     });
   },
 
@@ -1076,7 +1074,7 @@ let TelemetryStorageImpl = {
 
       this._pendingPings.set(id, {
         path: file.path,
-        lastModificationDate: info.lastModificationDate,
+        lastModificationDate: info.lastModificationDate.getTime(),
       });
     }
 
@@ -1249,9 +1247,8 @@ function getPingDirectory() {
   return Task.spawn(function*() {
     let directory = TelemetryStorage.pingDirectoryPath;
 
-    if (!isPingDirectoryCreated) {
+    if (!(yield OS.File.exists(directory))) {
       yield OS.File.makeDir(directory, { unixMode: OS.Constants.S_IRWXU });
-      isPingDirectoryCreated = true;
     }
 
     return directory;
