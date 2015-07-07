@@ -592,7 +592,7 @@ pref("media.mediasource.enabled", true);
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
-pref("image.decode-only-on-draw.enabled", true);
+pref("image.decode-only-on-draw.enabled", false);
 
 #ifdef NIGHTLY_BUILD
 // Shumway component (SWF player) is disabled by default. Also see bug 904346.
