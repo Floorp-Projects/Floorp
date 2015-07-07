@@ -5,6 +5,8 @@
 <panel id="identity-popup"
        type="arrow"
        hidden="true"
+       onpopupshown="gIdentityHandler.onPopupShown(event);"
+       onpopuphidden="gIdentityHandler.onPopupHidden(event);"
        orient="vertical"
        level="top">
 
