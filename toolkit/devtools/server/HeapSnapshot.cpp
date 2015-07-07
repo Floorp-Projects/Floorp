@@ -27,6 +27,7 @@
 #include "nsIOutputStream.h"
 #include "nsISupportsImpl.h"
 #include "nsNetUtil.h"
+#include "nsIFile.h"
 #include "prerror.h"
 #include "prio.h"
 #include "prtypes.h"

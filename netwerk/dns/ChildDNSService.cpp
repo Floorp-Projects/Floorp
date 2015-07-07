@@ -4,7 +4,6 @@
 
 #include "mozilla/net/ChildDNSService.h"
 #include "nsIDNSListener.h"
-#include "nsNetUtil.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsIXPConnect.h"
@@ -12,6 +11,7 @@
 #include "nsIProtocolProxyService.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace net {

@@ -5,7 +5,7 @@ prio(normal upto urgent) sync protocol PTestHighestPrio
 {
 parent:
   prio(urgent) async Msg1();
-  sync Msg2();
+  prio(high) sync Msg2();
   prio(urgent) async Msg3();
   prio(urgent) sync Msg4();
 

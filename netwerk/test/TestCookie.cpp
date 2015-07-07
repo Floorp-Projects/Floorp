@@ -13,6 +13,8 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsNetUtil.h"
+#include "nsISimpleEnumerator.h"
+#include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsStringAPI.h"
 #include "nsIPrefBranch.h"

@@ -26,6 +26,7 @@
 #include "plbase64.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/Preferences.h"
 #include "nsILoadInfo.h"
 #include "nsIContentPolicy.h"

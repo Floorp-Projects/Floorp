@@ -15,7 +15,10 @@
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsTransportUtils.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
+#include "nsIPipe.h"
 #include "nsCRT.h"
 
 #include "nsISeekableStream.h"

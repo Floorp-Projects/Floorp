@@ -236,10 +236,10 @@ nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
     NSToCoordRound(StyleFont()->mFont.size *
                    nsLayoutUtils::FontSizeInflationFor(this)); // 1em
 
-  if (ResolvedOrientationIsVertical()) {
-    autoSize.Height(wm) *= 10; // 10em
+  if (ResolvedOrientationIsVertical() == wm.IsVertical()) {
+    autoSize.ISize(wm) *= 10; // 10em
   } else {
-    autoSize.Width(wm) *= 10; // 10em
+    autoSize.BSize(wm) *= 10; // 10em
   }
 
   return autoSize.ConvertTo(aWM, wm);

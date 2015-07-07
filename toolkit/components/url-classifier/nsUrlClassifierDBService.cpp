@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
-#include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"

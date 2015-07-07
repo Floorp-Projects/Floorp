@@ -36,10 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DataTransfer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DataTransfer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  if (tmp->mFiles) {
-    tmp->mFiles->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mFiles)
-  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFiles)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragImage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -139,11 +136,7 @@ DataTransfer::DataTransfer(nsISupports* aParent,
 }
 
 DataTransfer::~DataTransfer()
-{
-  if (mFiles) {
-    mFiles->Disconnect();
-  }
-}
+{}
 
 // static
 already_AddRefed<DataTransfer>

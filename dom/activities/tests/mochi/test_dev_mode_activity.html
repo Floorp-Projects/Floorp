@@ -9,6 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript"
+          src="http://test/chrome/dom/activities/tests/mochi/common.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -33,9 +35,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}
   * 4) Dev mode, system app and other app installed (success, only system app returned).
   */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
-var gRootUrl = "http://test/chrome/dom/activities/tests/mochi/";
 var gGenerator = runTest();
 
 function go() {
@@ -50,19 +49,6 @@ function go() {
                  ["dom.apps.developer_mode", false],
                  ["dom.activities.developer_mode_only", "import-app"]]},
         continueTest) });
-}
-
-function cbError(aEvent) {
-  ok(false, "Error callback invoked " +
-            aEvent.target.error.name + " " + aEvent.target.error.message);
-  finish();
-}
-
-function unexpectedSuccess(aMsg) {
-  return function() {
-    ok(false, "Should not have succeeded: " + aMsg);
-    finish();
-  }
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -90,28 +76,6 @@ function uninstall(aApp) {
   var request = navigator.mozApps.mgmt.uninstall(aApp);
   request.onerror = cbError;
   request.onsuccess = continueTest;
-}
-
-function registerComponent(aObject, aDescription, aContract) {
-  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                        .getService(Ci.nsIUUIDGenerator);
-  var cid = uuidGenerator.generateUUID();
-
-  info("Registering " + cid);
-
-  var componentManager =
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  componentManager.registerFactory(cid, aDescription, aContract, aObject);
-
-  // Keep the id on the object so we can unregister later.
-  aObject.cid = cid;
-}
-
-function unregisterComponent(aObject) {
-  info("Unregistering " + aObject.cid);
-  var componentManager =
-    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  componentManager.unregisterFactory(aObject.cid, aObject);
 }
 
 var ActivityGlue = {
@@ -157,22 +121,27 @@ var SystemMessageGlue = {
 
   // nsISystemMessageGlue implementation.
   openApp(pageURL, manifestURL, type, target, showApp, onlyShowApp, extra) {
-    // We should only try to open a page in the sytem app.
+    // We should only try to open a page in the system app.
     is(manifestURL, systemAppUrl, "Opening a page in the system app.");
   }
 };
 
 registerComponent(ActivityGlue,
                   "Activity Glue",
-                  "@mozilla.org/dom/activities/ui-glue;1");
+                  "@mozilla.org/dom/activities/ui-glue;1",
+                  ACTIVITY_GLUE_CID);
 
 registerComponent(SystemMessageGlue,
                   "System Message Glue",
-                  "@mozilla.org/dom/messages/system-message-glue;1");
+                  "@mozilla.org/dom/messages/system-message-glue;1",
+                  SYS_MSG_GLUE_CID);
 
 function finish() {
   unregisterComponent(ActivityGlue);
   unregisterComponent(SystemMessageGlue);
+  obsService.removeObserver(continueTest, "new-activity-registered-success");
+  obsService.removeObserver(continueTest, "new-activity-registered-failure");
+
   SimpleTest.finish();
 }
 

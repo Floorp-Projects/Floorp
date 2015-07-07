@@ -10,6 +10,8 @@
 #endif
 
 #include "nsIComponentRegistrar.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 

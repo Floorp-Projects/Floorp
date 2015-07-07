@@ -22,7 +22,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "nsIGlobalObject.h"
-#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace dom {

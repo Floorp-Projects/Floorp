@@ -1651,9 +1651,9 @@ AndroidBridge::GetScreenOrientation()
 }
 
 void
-AndroidBridge::ScheduleComposite()
+AndroidBridge::InvalidateAndScheduleComposite()
 {
-    nsWindow::ScheduleComposite();
+    nsWindow::InvalidateAndScheduleComposite();
 }
 
 nsresult

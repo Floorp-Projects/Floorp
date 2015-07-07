@@ -12,7 +12,6 @@
 #include "mozilla/Omnijar.h"
 #include "nsAutoPtr.h"
 #include "nsIInputStream.h"
-#include "nsNetUtil.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
 
 #include "nsXULAppAPI.h"

@@ -28,6 +28,9 @@
 #include "imgITools.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
+#include "nsIOutputStream.h"
+#include "nsNetCID.h"
+#include "prtime.h"
 #ifdef MOZ_PLACES
 #include "mozIAsyncFavicons.h"
 #endif

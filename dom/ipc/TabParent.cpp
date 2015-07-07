@@ -89,6 +89,7 @@
 #include "gfxPrefs.h"
 #include "nsILoginManagerPrompter.h"
 #include "nsPIWindowRoot.h"
+#include "nsIAuthPrompt2.h"
 #include "gfxDrawable.h"
 #include "ImageOps.h"
 #include "UnitTransforms.h"

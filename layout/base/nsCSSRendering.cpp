@@ -3702,29 +3702,13 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
   ColorPattern color(ToDeviceColor(aColor));
   DrawOptions drawOptions(1.f, CompositionOp::OP_OVER, AntialiasMode::NONE);
 
+  // We don't need to bevel single pixel borders
   if ((aRect.width == aTwipsPerPixel) || (aRect.height == aTwipsPerPixel) ||
       ((0 == aStartBevelOffset) && (0 == aEndBevelOffset))) {
-    // simple line or rectangle
-    if ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide)) {
-      if (1 == aRect.height)
-        StrokeLineWithSnapping(aRect.TopLeft(), aRect.BottomLeft(),
-                               aAppUnitsPerDevPixel, *drawTarget,
-                               color, StrokeOptions(), drawOptions);
-      else
-        drawTarget->FillRect(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel,
-                                                 *drawTarget),
-                             color, drawOptions);
-    }
-    else {
-      if (1 == aRect.width)
-        StrokeLineWithSnapping(aRect.TopLeft(), aRect.TopRight(),
-                               aAppUnitsPerDevPixel, *drawTarget,
-                               color, StrokeOptions(), drawOptions);
-      else
-        drawTarget->FillRect(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel,
-                                                 *drawTarget),
-                             color, drawOptions);
-    }
+    // simple rectangle
+    drawTarget->FillRect(NSRectToSnappedRect(aRect, aAppUnitsPerDevPixel,
+                                             *drawTarget),
+                         color, drawOptions);
   }
   else {
     // polygon with beveling

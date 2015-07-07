@@ -28,6 +28,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
 #include "nsIXPConnect.h"
 #include "mozilla/unused.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker

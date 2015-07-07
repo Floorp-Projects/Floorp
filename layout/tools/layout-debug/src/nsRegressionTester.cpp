@@ -20,7 +20,6 @@
 #include "nsStyleStruct.h"
 #include "nsIFrameUtil.h"
 #include "nsLayoutCID.h"
-#include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsViewManager.h"
 #include "nsView.h"

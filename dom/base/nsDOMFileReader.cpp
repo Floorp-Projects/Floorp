@@ -12,7 +12,6 @@
 #include "nsError.h"
 #include "nsIFile.h"
 #include "nsNetCID.h"
-#include "nsNetUtil.h"
 
 #include "nsXPCOM.h"
 #include "nsIDOMEventListener.h"

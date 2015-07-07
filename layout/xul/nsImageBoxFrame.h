@@ -127,7 +127,6 @@ private:
 
   bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;
-  bool mFireEventOnDecode;
 }; // class nsImageBoxFrame
 
 class nsDisplayXULImage : public nsDisplayImageContainer {

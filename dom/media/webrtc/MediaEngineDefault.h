@@ -18,6 +18,7 @@
 #include "AudioSegment.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
+#include "MediaTrackConstraints.h"
 
 namespace mozilla {
 

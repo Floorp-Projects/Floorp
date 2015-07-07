@@ -12,6 +12,8 @@
 #include "nsIEffectiveTLDService.h"
 
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
+#include "nsIURL.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"

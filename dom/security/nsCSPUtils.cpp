@@ -11,7 +11,7 @@
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-#include "nsNetUtil.h"
+#include "nsIURL.h"
 #include "nsReadableUtils.h"
 
 static PRLogModuleInfo*

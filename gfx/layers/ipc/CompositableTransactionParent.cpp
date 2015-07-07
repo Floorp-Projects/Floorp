@@ -68,6 +68,15 @@ bool ScheduleComposition(const T& op)
   return true;
 }
 
+#if defined(DEBUG) || defined(MOZ_WIDGET_GONK)
+static bool ValidatePictureRect(const mozilla::gfx::IntSize& aSize,
+                                const nsIntRect& aPictureRect)
+{
+  return nsIntRect(0, 0, aSize.width, aSize.height).Contains(aPictureRect) &&
+      !aPictureRect.IsEmpty();
+}
+#endif
+
 bool
 CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                                      EditReplyVector& replyv)
@@ -100,13 +109,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         OpContentBufferSwap(op.compositableParent(), nullptr, frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
-      break;
-    }
-    case CompositableOperation::TOpUpdatePictureRect: {
-      const OpUpdatePictureRect& op = aEdit.get_OpUpdatePictureRect();
-      CompositableHost* compositable = AsCompositable(op);
-      MOZ_ASSERT(compositable);
-      compositable->SetPictureRect(op.picture());
       break;
     }
     case CompositableOperation::TOpUseTiledLayerBuffer: {
@@ -169,24 +171,31 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpUseTexture: {
       const OpUseTexture& op = aEdit.get_OpUseTexture();
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
-      MOZ_ASSERT(tex.get());
-      compositable->UseTextureHost(tex);
+      nsAutoTArray<CompositableHost::TimedTexture,4> textures;
+      for (auto& timedTexture : op.textures()) {
+        CompositableHost::TimedTexture* t = textures.AppendElement();
+        t->mTexture =
+            TextureHost::AsTextureHost(timedTexture.textureParent());
+        MOZ_ASSERT(t->mTexture);
+        t->mTimeStamp = timedTexture.timeStamp();
+        t->mPictureRect = timedTexture.picture();
+        t->mFrameID = timedTexture.frameID();
+        t->mProducerID = timedTexture.producerID();
+        MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 
-      MaybeFence maybeFence = op.fence();
-      if (maybeFence.type() == MaybeFence::TFenceHandle) {
-        FenceHandle fence = maybeFence.get_FenceHandle();
-        if (fence.IsValid() && tex) {
-          tex->SetAcquireFenceHandle(fence);
+        MaybeFence maybeFence = timedTexture.fence();
+        if (maybeFence.type() == MaybeFence::TFenceHandle) {
+          FenceHandle fence = maybeFence.get_FenceHandle();
+          if (fence.IsValid()) {
+            t->mTexture->SetAcquireFenceHandle(fence);
+          }
         }
       }
+      compositable->UseTextureHost(textures);
 
       if (IsAsync() && compositable->GetLayer()) {
         ScheduleComposition(op);
-        // Async layer updates don't trigger invalidation, manually tell the layer
-        // that its content have changed.
-        compositable->GetLayer()->SetInvalidRectToVisibleRegion();
       }
       break;
     }
@@ -209,7 +218,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpUseOverlaySource& op = aEdit.get_OpUseOverlaySource();
       CompositableHost* compositable = AsCompositable(op);
       MOZ_ASSERT(compositable->GetType() == CompositableType::IMAGE_OVERLAY, "Invalid operation!");
-      compositable->UseOverlaySource(op.overlay());
+      if (!ValidatePictureRect(op.overlay().size(), op.picture())) {
+        return false;
+      }
+      compositable->UseOverlaySource(op.overlay(), op.picture());
       break;
     }
 #endif

@@ -16,7 +16,6 @@
 #include "nsHttpResponseHead.h"
 
 #include "nsIClassInfo.h"
-#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {

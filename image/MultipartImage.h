@@ -58,7 +58,6 @@ public:
                       const nsIntRect* aRect = nullptr) override;
   virtual void OnLoadComplete(bool aLastPart) override;
   virtual void SetHasImage() override;
-  virtual void OnStartDecode() override;
   virtual bool NotificationsDeferred() const override;
   virtual void SetNotificationsDeferred(bool aDeferNotifications) override;
 

@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"

@@ -3,7 +3,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/InterAppCommService.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 let UUIDGenerator = Cc["@mozilla.org/uuid-generator;1"]
                       .getService(Ci.nsIUUIDGenerator);
@@ -11,15 +13,25 @@ let UUIDGenerator = Cc["@mozilla.org/uuid-generator;1"]
 const MESSAGE_PORT_ID = UUIDGenerator.generateUUID().toString();
 const FAKE_MESSAGE_PORT_ID = UUIDGenerator.generateUUID().toString();
 const OUTER_WINDOW_ID = UUIDGenerator.generateUUID().toString();
+const TOP_WINDOW_ID = UUIDGenerator.generateUUID().toString();
 const REQUEST_ID = UUIDGenerator.generateUUID().toString();
 
-const PUB_APP_MANIFEST_URL = "app://pubApp.gaiamobile.org/manifest.webapp";
-const SUB_APP_MANIFEST_URL = "app://subApp.gaiamobile.org/manifest.webapp";
+const PUB_APP_MANIFEST_URL = "app://pubapp.gaiamobile.org/manifest.webapp";
+const PUB_APP_MANIFEST_URL_WRONG =
+                  "app://pubappnotaccepted.gaiamobile.org/manifest.webapp";
+const SUB_APP_MANIFEST_URL = "app://subapp.gaiamobile.org/manifest.webapp";
+const SUB_APP_MANIFEST_URL_WRONG =
+                  "app://subappnotaccepted.gaiamobile.org/manifest.webapp";
 
-const PUB_APP_PAGE_URL = "app://pubApp.gaiamobile.org/handler.html";
-const SUB_APP_PAGE_URL = "app://subApp.gaiamobile.org/handler.html";
+const PUB_APP_PAGE_URL = "app://pubapp.gaiamobile.org/handler.html";
+const PUB_APP_PAGE_URL_WRONG = "app://pubapp.gaiamobile.org/notAccepted.html";
+const SUB_APP_PAGE_URL = "app://subapp.gaiamobile.org/handler.html";
+const SUB_APP_PAGE_URL_WORNG = "app://subapp.gaiamobile.org/notAccepted.html";
+
+const PAGE_URL_REG_EXP = "^app://.*\\.gaiamobile\\.org/handler.html";
 
 const KEYWORD = "test";
+const CONNECT_KEYWORD = "connect-test";
 
 function create_message_port_pair(aMessagePortId,
                                   aKeyword,
@@ -340,7 +352,7 @@ add_test(function test_postMessage() {
                    SUB_APP_MANIFEST_URL,
                    { text: "sub app says world again" });
     } else {
-      do_throw("sub app receives an unexpected message")
+      do_throw("sub app receives an unexpected message");
     }
   };
 
@@ -386,7 +398,7 @@ add_test(function test_registerMessagePort_with_queued_messages() {
       clear_message_port_pairs();
       run_next_test();
     } else {
-      do_throw("sub app receives an unexpected message")
+      do_throw("sub app receives an unexpected message");
     }
   };
 
@@ -449,6 +461,629 @@ add_test(function test_cancelConnection() {
   clear_message_port_pairs();
   run_next_test();
 });
+
+
+function registerConnection(aKeyword, aSubAppPageURL, aSubAppManifestURL,
+                            aDescription, aRules) {
+  var subAppPageUrl = Services.io.newURI(aSubAppPageURL, null, null);
+  var subAppManifestUrl = Services.io.newURI(aSubAppManifestURL, null, null);
+  InterAppCommService.registerConnection(aKeyword, subAppPageUrl,
+                                         subAppManifestUrl, aDescription,
+                                         aRules);
+}
+
+add_test(function test_registerConnection() {
+  InterAppCommService._registeredConnections = {};
+  var description = "A test connection";
+
+  // Rules can have (ATM):
+  //  * minimumAccessLevel
+  //  * manifestURLs
+  //  * pageURLs
+  //  * installOrigins
+  var sampleRules = {
+    minimumAccessLevel: "certified",
+    pageURLs: ["http://a.server.com/a/page.html"]
+  };
+
+  registerConnection(CONNECT_KEYWORD, SUB_APP_PAGE_URL, SUB_APP_MANIFEST_URL,
+                     description, sampleRules);
+
+  var regConn = InterAppCommService._registeredConnections[CONNECT_KEYWORD];
+  do_check_true(regConn !== undefined);
+  var regEntry = regConn[SUB_APP_MANIFEST_URL];
+  do_check_true(regEntry !== undefined);
+  do_check_eq(regEntry.pageURL, SUB_APP_PAGE_URL);
+  do_check_eq(regEntry.description, description);
+  do_check_eq(regEntry.rules, sampleRules);
+  do_check_eq(regEntry.manifestURL, SUB_APP_MANIFEST_URL);
+
+  InterAppCommService._registeredConnections = {};
+
+  run_next_test();
+});
+
+
+// Simulates mozApps connect
+function connect(publisher, aTargetSendAsyncMessage) {
+  let message = {
+    name: "Webapps:Connect",
+    json: {
+      keyword: publisher.connectKw,
+      rules: publisher.rules,
+      manifestURL: publisher.manifestURL,
+      pubPageURL: publisher.pageURL,
+      outerWindowID: OUTER_WINDOW_ID,
+      topWindowID: TOP_WINDOW_ID,
+      requestID: REQUEST_ID
+    },
+    target: {
+      sendAsyncMessage: function(aName, aData) {
+        if (aTargetSendAsyncMessage) {
+          aTargetSendAsyncMessage(aName, aData);
+        }
+      },
+      assertContainApp: function(_manifestURL) {
+        return (publisher.manifestURL == _manifestURL);
+      }
+    }
+  };
+  InterAppCommService.receiveMessage(message);
+};
+
+function registerComponent(aObject, aDescription, aContract) {
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
+                        .getService(Ci.nsIUUIDGenerator);
+  var cid = uuidGenerator.generateUUID();
+
+  var componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.registerFactory(cid, aDescription, aContract, aObject);
+
+   // Keep the id on the object so we can unregister later.
+   aObject.cid = cid;
+}
+
+function unregisterComponent(aObject) {
+  var componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.unregisterFactory(aObject.cid, aObject);
+}
+
+// The fun thing about this mock is that it actually does the same than the
+// current actual implementation does.
+var mockUIGlue =  {
+   // nsISupports implementation.
+   QueryInterface: function(iid) {
+     if (iid.equals(Ci.nsISupports) ||
+         iid.equals(Ci.nsIFactory) ||
+         iid.equals(Ci.nsIInterAppCommUIGlue)) {
+       return this;
+     }
+
+     throw Cr.NS_ERROR_NO_INTERFACE;
+   },
+
+   // nsIFactory implementation.
+   createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+   },
+
+   // nsIActivityUIGlue implementation.
+   selectApps: function(aCallerID, aPubAppManifestURL, aKeyword,
+                        aAppsToSelect) {
+     return Promise.resolve({
+       callerID: aCallerID,
+       keyword: aKeyword,
+       manifestURL: aPubAppManifestURL,
+       selectedApps: aAppsToSelect
+     });
+   }
+ };
+
+// Used to keep a fake table of installed apps (needed by mockAppsService)
+var webappsTable = {
+};
+
+var mockAppsService = {
+  // We use the status and the installOrigin here only.
+  getAppByManifestURL: function (aPubAppManifestURL) {
+    return webappsTable[aPubAppManifestURL];
+  },
+
+  // And so far so well this should not be used by tests at all.
+  getManifestURLByLocalId: function(appId) {
+  }
+};
+
+
+// Template test for connect
+function simpleConnectTestTemplate(aTestCase) {
+  dump("TEST: " + aTestCase.subscriber.description + "\n");
+
+  // First, add some mocking....
+
+  // System Messenger
+  var resolveMessenger, rejectMessenger;
+  var messengerPromise = new Promise((resolve, reject) => {
+    resolveMessenger = resolve;
+    rejectMessenger = reject;
+  });
+  var mockMessenger = {
+    sendMessage: function(aName, aData, aDestURL, aDestManURL) {
+      do_check_eq(aName, "connection");
+      resolveMessenger(aData);
+    }
+  };
+  InterAppCommService.messenger = mockMessenger;
+
+  // AppsService
+  InterAppCommService.appsService = mockAppsService;
+
+  // Set the initial state:
+  // First, setup our fake webappsTable:
+  var subs = aTestCase.subscriber;
+  var pub = aTestCase.publisher;
+  webappsTable[subs.manifestURL] = subs.webappEntry;
+  webappsTable[pub.manifestURL] = pub.webappEntry;
+
+  InterAppCommService._registeredConnections = {};
+  clear_allowed_connections();
+  clear_message_port_pairs();
+
+  registerConnection(subs.connectKw, subs.pageURL, subs.manifestURL,
+                     subs.description, subs.rules);
+
+  // And now we can try connecting...
+  connect(pub, function(aName, aData) {
+
+    var expectedName = "Webapps:Connect:Return:OK";
+    var expectedLength = 1;
+    if (!aTestCase.expectedSuccess) {
+      expectedName = "Webapps:Connect:Return:KO";
+      expectedLength = 0;
+    }
+
+    do_check_eq(aName, expectedName);
+    var numPortIDs =
+      (aData.messagePortIDs && aData.messagePortIDs.length ) || 0;
+    do_check_eq(numPortIDs, expectedLength);
+    if (expectedLength) {
+      var portPair =
+        InterAppCommService._messagePortPairs[aData.messagePortIDs[0]];
+      do_check_eq(portPair.publisher.manifestURL,pub.manifestURL);
+      do_check_eq(portPair.subscriber.manifestURL, subs.manifestURL);
+    } else {
+      run_next_test();
+      return;
+    }
+
+    // We need to wait for the message to be "received" on the publisher also
+    messengerPromise.then(messageData => {
+      do_check_eq(messageData.keyword, subs.connectKw);
+      do_check_eq(messageData.pubPageURL, pub.pageURL);
+      do_check_eq(messageData.messagePortID, aData.messagePortIDs[0]);
+      // Cleanup
+      InterAppCommService.registeredConnections = {};
+      clear_allowed_connections();
+      clear_message_port_pairs();
+      run_next_test();
+    });
+
+  });
+}
+
+const CERTIFIED = Ci.nsIPrincipal.APP_STATUS_CERTIFIED;
+const PRIVILEGED = Ci.nsIPrincipal.APP_STATUS_PRIVILEGED;
+const INSTALLED = Ci.nsIPrincipal.APP_STATUS_INSTALLED;
+const NOT_INSTALLED = Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED;
+
+var connectTestCases = [
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "Trivial case [empty rules]. Successful test",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "not certified SUB status and not PUB rules",
+      rules: {},
+      webappEntry: {
+        appStatus: PRIVILEGED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "not certified PUB status and not SUB rules",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: INSTALLED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchMinimumAccessLvl --> Sub INSTALLED PubRul web",
+      rules: {},
+      webappEntry: {
+        appStatus: INSTALLED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        minimumAccessLevel:"web"
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchMinimumAccessLvl --> Sub NOT INSTALLED PubRul web",
+      rules: {},
+      webappEntry: {
+        appStatus: NOT_INSTALLED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        minimumAccessLevel:"web"
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchMinimumAccessLvl --> Pub CERTIFIED SubRul certified",
+      rules: {
+        minimumAccessLevel:"certified"
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchMinimumAccessLvl --> Pub PRIVILEGED SubRul certified",
+      rules: {
+        minimumAccessLevel:"certified"
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: PRIVILEGED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchManifest --> Pub manifest1 SubRules:{ manifest1 }",
+      rules: {
+        manifestURLs: [PUB_APP_MANIFEST_URL]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchManifest --> Pub manifest2 SubRules:{ manifest1 }",
+      rules: {
+        manifestURLs: [PUB_APP_MANIFEST_URL]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL_WRONG,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchManifest --> Sub manifest1 PubRules:{ manifest1 }",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        manifestURLs: [SUB_APP_MANIFEST_URL]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL_WRONG,
+      description: "matchManifest --> Sub manifest2 PubRules:{ manifest1 }",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        manifestURLs: [SUB_APP_MANIFEST_URL]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL_WRONG,
+      description: "matchPage --> Pub page1 SubRules:{ page1 }",
+      rules: {
+        pageURLs: [PAGE_URL_REG_EXP]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchPage --> Pub page2 SubRules:{ page1 }",
+      rules: {
+        pageURLs: [PAGE_URL_REG_EXP]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL_WRONG,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchPage --> Sub page1 PubRules:{ page1 }",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        pageURLs: [PAGE_URL_REG_EXP]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: true
+  },
+  {
+    subscriber: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: SUB_APP_PAGE_URL_WORNG,
+      manifestURL: SUB_APP_MANIFEST_URL,
+      description: "matchPage --> Sub page2 PubRules:{ page1 }",
+      rules: {},
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    publisher: {
+      connectKw: CONNECT_KEYWORD,
+      pageURL: PUB_APP_PAGE_URL,
+      manifestURL: PUB_APP_MANIFEST_URL,
+      rules: {
+        pageURLs: [PAGE_URL_REG_EXP]
+      },
+      webappEntry: {
+        appStatus: CERTIFIED,
+        installOrigin: "app://system.gaiamobile.org"
+      }
+    },
+    expectedSuccess: false
+  }
+];
+
+// Only run these test cases if we're on a nightly build. Otherwise they
+// don't make much sense.
+if (AppConstants.NIGHTLY_BUILD) {
+  registerComponent(mockUIGlue,
+                    "Mock InterApp UI Glue",
+                    "@mozilla.org/dom/apps/inter-app-comm-ui-glue;1");
+
+  do_register_cleanup(function () {
+    // Cleanup the mocks
+    InterAppCommService.messenger = undefined;
+    InterAppCommService.appsService = undefined;
+    unregisterComponent(mockUIGlue);
+  });
+  connectTestCases.forEach(
+    aTestCase =>
+      add_test(simpleConnectTestTemplate.bind(undefined, aTestCase))
+  );
+}
 
 function run_test() {
   do_get_profile();

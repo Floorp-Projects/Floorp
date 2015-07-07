@@ -581,7 +581,6 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!Attach(cast(op.layerParent()), host, true)) {
         return false;
       }
-
       host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
@@ -596,7 +595,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
-    layer_manager()->EndTransaction(nullptr, nullptr, LayerManager::END_NO_IMMEDIATE_REDRAW);
+    layer_manager()->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
   }
 
   if (reply) {

@@ -12,6 +12,7 @@
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
+#include "prtime.h"
 
 using namespace mozilla;
 

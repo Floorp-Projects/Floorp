@@ -8,6 +8,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/Attributes.h"
+#include "nsNetUtil.h"
 
 #include "mock_Link.h"
 using namespace mozilla;

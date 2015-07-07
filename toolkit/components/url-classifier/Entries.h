@@ -14,6 +14,7 @@
 #include "nsString.h"
 #include "nsICryptoHash.h"
 #include "nsNetUtil.h"
+#include "nsIOutputStream.h"
 
 #if DEBUG
 #include "plbase64.h"

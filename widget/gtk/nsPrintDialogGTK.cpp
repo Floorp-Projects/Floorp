@@ -17,7 +17,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIFile.h"
-#include "nsNetUtil.h"
 #include "nsIStringBundle.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIDOMWindow.h"

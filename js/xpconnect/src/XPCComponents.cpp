@@ -33,6 +33,7 @@
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
 #include "nsIAddonInterposition.h"
+#include "nsISimpleEnumerator.h"
 
 using namespace mozilla;
 using namespace JS;
