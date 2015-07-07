@@ -765,6 +765,13 @@ namespace places {
       do_CreateInstance("@mozilla.org/variant;1");
     NS_ENSURE_STATE(result);
 
+    if (StringBeginsWith(src, NS_LITERAL_STRING("http://")))
+      src.Cut(0, 7);
+    else if (StringBeginsWith(src, NS_LITERAL_STRING("https://")))
+      src.Cut(0, 8);
+    else if (StringBeginsWith(src, NS_LITERAL_STRING("ftp://")))
+      src.Cut(0, 6);
+
     // Remove common URL hostname prefixes
     if (StringBeginsWith(src, NS_LITERAL_STRING("www."))) {
       src.Cut(0, 4);
