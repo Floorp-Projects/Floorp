@@ -7069,6 +7069,28 @@ var gIdentityHandler = {
     this._identityPopup.openPopup(this._identityIcon, "bottomcenter topleft");
   },
 
+  onPopupShown(event) {
+    if (event.target == this._identityPopup) {
+      window.addEventListener("focus", this, true);
+    }
+  },
+
+  onPopupHidden(event) {
+    if (event.target == this._identityPopup) {
+      window.removeEventListener("focus", this, true);
+    }
+  },
+
+  handleEvent(event) {
+    let elem = document.activeElement;
+    let position = elem.compareDocumentPosition(this._identityPopup);
+
+    if (!(position & Node.DOCUMENT_POSITION_CONTAINS)) {
+      // Hide the panel when some element outside the panel received focus.
+      this._identityPopup.hidePopup();
+    }
+  },
+
   onDragStart: function (event) {
     if (gURLBar.getAttribute("pageproxystate") != "valid")
       return;
