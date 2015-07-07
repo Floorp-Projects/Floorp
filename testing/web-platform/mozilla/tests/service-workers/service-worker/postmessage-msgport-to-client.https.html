@@ -15,7 +15,7 @@ t.step(function() {
       .then(function() { return with_iframe(scope); })
       .then(function(frame) {
           var w = frame.contentWindow;
-          w.navigator.serviceWorker.onmessage = t.step_func(onMessage);
+          w.onmessage = t.step_func(onMessage);
           w.navigator.serviceWorker.controller.postMessage('ping');
         })
       .catch(unreached_rejection(t));

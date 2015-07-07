@@ -129,11 +129,10 @@ private:
     closure.mClonedObjects.SwapElements(mClosure.mClonedObjects);
     MOZ_ASSERT(mClosure.mMessagePorts.IsEmpty());
     closure.mMessagePortIdentifiers.SwapElements(mClosure.mMessagePortIdentifiers);
-    closure.mParentWindow = do_QueryInterface(aTargetContainer->GetParentObject());
 
     JS::Rooted<JS::Value> messageData(aCx);
     if (!mBuffer.read(aCx, &messageData,
-                      WorkerStructuredCloneCallbacks(true), &closure)) {
+                      WorkerStructuredCloneCallbacks(true))) {
       xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return NS_ERROR_FAILURE;
     }
