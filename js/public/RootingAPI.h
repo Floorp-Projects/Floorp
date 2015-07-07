@@ -642,7 +642,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     template <typename CX>
     void init(CX* cx) {
         js::ThingRootKind kind = js::RootKind<T>::rootKind();
-        this->stack = &cx->thingGCRooters[kind];
+        this->stack = &cx->roots.stackRoots_[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }

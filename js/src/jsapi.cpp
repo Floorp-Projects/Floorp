@@ -6126,18 +6126,18 @@ JS_CallOnce(JSCallOnceType* once, JSInitCallback func)
 }
 
 AutoGCRooter::AutoGCRooter(JSContext* cx, ptrdiff_t tag)
-  : down(ContextFriendFields::get(cx)->autoGCRooters),
+  : down(ContextFriendFields::get(cx)->roots.autoGCRooters_),
     tag_(tag),
-    stackTop(&ContextFriendFields::get(cx)->autoGCRooters)
+    stackTop(&ContextFriendFields::get(cx)->roots.autoGCRooters_)
 {
     MOZ_ASSERT(this != *stackTop);
     *stackTop = this;
 }
 
 AutoGCRooter::AutoGCRooter(ContextFriendFields* cx, ptrdiff_t tag)
-  : down(cx->autoGCRooters),
+  : down(cx->roots.autoGCRooters_),
     tag_(tag),
-    stackTop(&cx->autoGCRooters)
+    stackTop(&cx->roots.autoGCRooters_)
 {
     MOZ_ASSERT(this != *stackTop);
     *stackTop = this;
