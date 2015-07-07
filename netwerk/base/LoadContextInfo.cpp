@@ -4,7 +4,6 @@
 
 #include "LoadContextInfo.h"
 
-#include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsILoadContext.h"
 

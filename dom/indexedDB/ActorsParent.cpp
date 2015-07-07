@@ -62,6 +62,7 @@
 #include "nsEscape.h"
 #include "nsHashKeys.h"
 #include "nsNetUtil.h"
+#include "nsISimpleEnumerator.h"
 #include "nsIAppsService.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"

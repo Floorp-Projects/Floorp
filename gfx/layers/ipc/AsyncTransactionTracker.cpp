@@ -12,29 +12,15 @@
 namespace mozilla {
 namespace layers {
 
-uint64_t AsyncTransactionTracker::sSerialCounter(0);
-Mutex* AsyncTransactionTracker::sLock = nullptr;
-
-AsyncTransactionTracker::AsyncTransactionTracker()
-    : mSerial(GetNextSerial())
-    , mCompletedMonitor("AsyncTransactionTracker.mCompleted")
-    , mCompleted(false)
-{
-}
-
-AsyncTransactionTracker::~AsyncTransactionTracker()
-{
-}
-
 void
-AsyncTransactionTracker::WaitComplete()
+AsyncTransactionWaiter::WaitComplete()
 {
   MOZ_ASSERT(!InImageBridgeChildThread());
 
   MonitorAutoLock mon(mCompletedMonitor);
   int count = 0;
   const int maxCount = 5;
-  while (!mCompleted && (count < maxCount)) {
+  while (mWaitCount > 0 && (count < maxCount)) {
     if (!NS_SUCCEEDED(mCompletedMonitor.Wait(PR_MillisecondsToInterval(10000)))) {
       NS_WARNING("Failed to wait Monitor");
       return;
@@ -45,29 +31,48 @@ AsyncTransactionTracker::WaitComplete()
     count++;
   }
 
-  if (!mCompleted) {
+  if (mWaitCount > 0) {
     printf_stderr("Timeout of waiting transaction complete.");
   }
+}
+
+uint64_t AsyncTransactionTracker::sSerialCounter(0);
+Mutex* AsyncTransactionTracker::sLock = nullptr;
+
+AsyncTransactionTracker::AsyncTransactionTracker(AsyncTransactionWaiter* aWaiter)
+    : mSerial(GetNextSerial())
+    , mWaiter(aWaiter)
+    , mCompleted(false)
+{
+  if (mWaiter) {
+    mWaiter->IncrementWaitCount();
+  }
+}
+
+AsyncTransactionTracker::~AsyncTransactionTracker()
+{
 }
 
 void
 AsyncTransactionTracker::NotifyComplete()
 {
-  MonitorAutoLock mon(mCompletedMonitor);
   MOZ_ASSERT(!mCompleted);
   mCompleted = true;
   Complete();
-  mCompletedMonitor.Notify();
+  if (mWaiter) {
+    mWaiter->DecrementWaitCount();
+  }
 }
 
 void
 AsyncTransactionTracker::NotifyCancel()
 {
-  MonitorAutoLock mon(mCompletedMonitor);
   MOZ_ASSERT(!mCompleted);
   mCompleted = true;
   Cancel();
-  mCompletedMonitor.Notify();
+  if (mWaiter) {
+    mWaiter->DecrementWaitCount();
+  }
 }
 
 uint64_t AsyncTransactionTrackersHolder::sSerialCounter(0);
@@ -119,7 +124,7 @@ AsyncTransactionTrackersHolder::HoldUntilComplete(AsyncTransactionTracker* aTran
 
   if (aTransactionTracker) {
     MutexAutoLock lock(*sHolderLock);
-    mAsyncTransactionTrackeres[aTransactionTracker->GetId()] = aTransactionTracker;
+    mAsyncTransactionTrackers[aTransactionTracker->GetId()] = aTransactionTracker;
   }
 }
 
@@ -134,10 +139,10 @@ void
 AsyncTransactionTrackersHolder::TransactionCompletetedInternal(uint64_t aTransactionId)
 {
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
-    = mAsyncTransactionTrackeres.find(aTransactionId);
-  if (it != mAsyncTransactionTrackeres.end()) {
+    = mAsyncTransactionTrackers.find(aTransactionId);
+  if (it != mAsyncTransactionTrackers.end()) {
     it->second->NotifyComplete();
-    mAsyncTransactionTrackeres.erase(it);
+    mAsyncTransactionTrackers.erase(it);
   }
 }
 
@@ -146,8 +151,8 @@ AsyncTransactionTrackersHolder::SetReleaseFenceHandle(FenceHandle& aReleaseFence
                                                       uint64_t aTransactionId)
 {
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
-    = mAsyncTransactionTrackeres.find(aTransactionId);
-  if (it != mAsyncTransactionTrackeres.end()) {
+    = mAsyncTransactionTrackers.find(aTransactionId);
+  if (it != mAsyncTransactionTrackers.end()) {
     it->second->SetReleaseFenceHandle(aReleaseFenceHandle);
   }
 }
@@ -183,11 +188,11 @@ AsyncTransactionTrackersHolder::ClearAllAsyncTransactionTrackers()
     sHolderLock->Lock();
   }
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it;
-  for (it = mAsyncTransactionTrackeres.begin();
-       it != mAsyncTransactionTrackeres.end(); it++) {
+  for (it = mAsyncTransactionTrackers.begin();
+       it != mAsyncTransactionTrackers.end(); it++) {
     it->second->NotifyCancel();
   }
-  mAsyncTransactionTrackeres.clear();
+  mAsyncTransactionTrackers.clear();
   if (sHolderLock) {
     sHolderLock->Unlock();
   }

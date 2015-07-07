@@ -248,27 +248,13 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
   }
 }
 
-bool
-LayerManagerComposite::EndEmptyTransaction(EndTransactionFlags aFlags)
-{
-  NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
-  if (!mRoot) {
-    mInTransaction = false;
-    mIsCompositorReady = false;
-    return false;
-  }
-
-  EndTransaction(nullptr, nullptr);
-  return true;
-}
-
 void
-LayerManagerComposite::EndTransaction(DrawPaintedLayerCallback aCallback,
-                                      void* aCallbackData,
+LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
                                       EndTransactionFlags aFlags)
 {
   NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
-  NS_ASSERTION(!aCallback && !aCallbackData, "Not expecting callbacks here");
+  NS_ASSERTION(!(aFlags & END_NO_COMPOSITE),
+               "Shouldn't get END_NO_COMPOSITE here");
   mInTransaction = false;
 
   if (!mIsCompositorReady) {
@@ -297,13 +283,16 @@ LayerManagerComposite::EndTransaction(DrawPaintedLayerCallback aCallback,
     mInvalidRegion.Or(mInvalidRegion, mRenderBounds);
   }
 
-  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
-    if (aFlags & END_NO_COMPOSITE) {
-      // Apply pending tree updates before recomputing effective
-      // properties.
-      mRoot->ApplyPendingUpdatesToSubtree();
-    }
+  if (mInvalidRegion.IsEmpty() && !mTarget) {
+    // Composition requested, but nothing has changed. Don't do any work.
+    return;
+  }
 
+ if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+    MOZ_ASSERT(!aTimeStamp.IsNull());
+    // Set composition timestamp here because we need it in
+    // ComputeEffectiveTransforms (so the correct video frame size is picked)
+    mCompositor->SetCompositionTime(aTimeStamp);
     // The results of our drawing always go directly into a pixel buffer,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());

@@ -48,6 +48,7 @@
 #include "GeckoProfiler.h"
 #ifdef MOZ_ANDROID_HISTORY
 #include "nsNetUtil.h"
+#include "nsIURI.h"
 #include "IHistory.h"
 #endif
 

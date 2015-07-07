@@ -39,7 +39,7 @@ public:
   }
 
 private:
-  explicit BroadcastChannelChild(const nsAString& aOrigin);
+  explicit BroadcastChannelChild(const nsACString& aOrigin);
   ~BroadcastChannelChild();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

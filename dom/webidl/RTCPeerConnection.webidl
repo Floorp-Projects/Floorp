@@ -78,6 +78,9 @@ interface RTCDataChannel;
               optional object? constraints)]
 // moz-prefixed until sufficiently standardized.
 interface mozRTCPeerConnection : EventTarget  {
+  [Throws, StaticClassOverride="mozilla::dom::RTCCertificate"]
+  static Promise<RTCCertificate> generateCertificate (AlgorithmIdentifier keygenAlgorithm);
+
   [Pref="media.peerconnection.identity.enabled"]
   void setIdentityProvider (DOMString provider,
                             optional DOMString protocol,

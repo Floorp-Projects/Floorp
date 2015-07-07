@@ -7,6 +7,7 @@
 
 #include "mozilla/net/FTPChannelParent.h"
 #include "nsFTPChannel.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsFtpProtocolHandler.h"
 #include "nsIEncodedChannel.h"

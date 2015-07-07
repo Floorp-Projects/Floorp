@@ -4843,6 +4843,12 @@
     "keyed" : true,
     "description" : "Exceptions thrown by add-ons"
   },
+  "IPC_TRANSACTION_CANCEL": {
+    "alert_emails": ["billm@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "True when an IPC transaction is canceled"
+  },
   "MISBEHAVING_ADDONS_CPOW_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

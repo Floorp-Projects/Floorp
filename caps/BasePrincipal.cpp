@@ -12,6 +12,7 @@
 
 #include "nsPrincipal.h"
 #include "nsNetUtil.h"
+#include "nsIURIWithPrincipal.h"
 #include "nsNullPrincipal.h"
 #include "nsScriptSecurityManager.h"
 

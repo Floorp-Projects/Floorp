@@ -497,7 +497,7 @@ bool TransportLayerDtls::Setup() {
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
                                 identity_->privkey(),
-                                kt_rsa);
+                                identity_->auth_type());
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, "Couldn't set identity");
       return false;
@@ -648,10 +648,13 @@ bool TransportLayerDtls::SetupAlpn(PRFileDesc* ssl_fd) const {
 // Ciphers we need to enable.  These are on by default in standard firefox
 // builds, but can be disabled with prefs and they aren't on in our unit tests
 // since that uses NSS default configuration.
-// Only override prefs to comply with MUST statements in the security-arch.
+//
+// Only override prefs to comply with MUST statements in the security-arch doc.
+// Anything outside this list is governed by the usual combination of policy
+// and user preferences.
 static const uint32_t EnabledCiphers[] = {
-  TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-  TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+  TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+  TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
 };
 
 // Disable all NSS suites modes without PFS or with old and rusty ciphersuites.

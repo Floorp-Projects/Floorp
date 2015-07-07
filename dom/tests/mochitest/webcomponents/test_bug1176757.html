@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1176757
+-->
+<head>
+  <title>Test for Bug 1176757</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+	href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176757">Mozilla Bug 1176757</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1176757 **/
+var element = document.createElement("a");
+var shadowRoot = element.createShadowRoot();
+var thrownException = false;
+
+try {
+  shadowRoot.cloneNode();
+} catch(err) {
+  thrownException = err;
+}
+
+ok(thrownException !== false, "An exception should've been thrown");
+is(thrownException.name, "DataCloneError", "A DataCloneError exception should've been thrown");
+
+</script>
+</pre>
+</body>
+</html>
+

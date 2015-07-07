@@ -24,7 +24,6 @@
 #include "nsCRT.h"
 #include "nsSecCheckWrapChannel.h"
 #include "nsSimpleNestedURI.h"
-#include "nsNetUtil.h"
 #include "nsTArray.h"
 #include "nsIConsoleService.h"
 #include "nsIUploadChannel2.h"

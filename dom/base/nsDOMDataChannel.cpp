@@ -27,7 +27,6 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsNetUtil.h"
 
 #include "DataChannel.h"
 

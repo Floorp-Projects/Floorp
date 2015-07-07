@@ -24,6 +24,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIDNService.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPrincipal.h"
 #include "nsICryptoHash.h"

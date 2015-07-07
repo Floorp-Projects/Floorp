@@ -7,6 +7,8 @@
 
 #include "AboutRedirector.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsDOMString.h"

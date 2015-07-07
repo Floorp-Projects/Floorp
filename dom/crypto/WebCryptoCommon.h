@@ -161,13 +161,19 @@ ReadBuffer(JSStructuredCloneReader* aReader, CryptoBuffer& aBuffer)
 }
 
 inline bool
-WriteBuffer(JSStructuredCloneWriter* aWriter, const CryptoBuffer& aBuffer)
+WriteBuffer(JSStructuredCloneWriter* aWriter, const uint8_t* aBuffer, size_t aLength)
 {
-  bool ret = JS_WriteUint32Pair(aWriter, aBuffer.Length(), 0);
-  if (ret && aBuffer.Length() > 0) {
-    ret = JS_WriteBytes(aWriter, aBuffer.Elements(), aBuffer.Length());
+  bool ret = JS_WriteUint32Pair(aWriter, aLength, 0);
+  if (ret && aLength > 0) {
+    ret = JS_WriteBytes(aWriter, aBuffer, aLength);
   }
   return ret;
+}
+
+inline bool
+WriteBuffer(JSStructuredCloneWriter* aWriter, const CryptoBuffer& aBuffer)
+{
+  return WriteBuffer(aWriter, aBuffer.Elements(), aBuffer.Length());
 }
 
 inline CK_MECHANISM_TYPE

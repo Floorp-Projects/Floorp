@@ -13,6 +13,8 @@
 #include "nsCPrefetchService.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"

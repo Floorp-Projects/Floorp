@@ -27,6 +27,8 @@ test(function(t) {
 async_test(function(t) {
   var div = addDiv(t);
 
+  // FIXME: This test does too many things. It should be split up.
+
   // Add an animation
   div.style.animation = 'anim1 100s';
   var animations = div.getAnimations();
@@ -61,6 +63,12 @@ async_test(function(t) {
 }, 'getAnimations for CSS Animations');
 
 test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim1 100s' });
+  assert_class_string(div.getAnimations()[0], 'CSSAnimation',
+                      'Interface of returned animation is CSSAnimation');
+}, 'getAnimations returns CSSAnimation objects for CSS Animations');
+
+test(function(t) {
   var div = addDiv(t);
 
   // Add an animation that targets multiple properties
@@ -88,14 +96,13 @@ async_test(function(t) {
     assert_equals(animations.length, 2,
       'getAnimations returns Animations for both animations and'
       + ' transitions that run simultaneously');
-    return waitForAllAnimations(animations);
-  })).then(t.step_func(function() {
-    assert_true(animations[0].startTime > animations[1].startTime,
-      'Animations for transitions appear before animations even if they'
-      + ' start later');
+    assert_class_string(animations[0], 'CSSTransition',
+                        'First-returned animation is the CSS Transition');
+    assert_class_string(animations[1], 'CSSAnimation',
+                        'Second-returned animation is the CSS Animation');
     t.done();
   }));
-}, 'getAnimations for both CSS Animations and Transitions at once');
+}, 'getAnimations for both CSS Animations and CSS Transitions at once');
 
 async_test(function(t) {
   var div = addDiv(t);

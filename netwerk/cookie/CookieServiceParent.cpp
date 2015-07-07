@@ -9,7 +9,7 @@
 
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "SerializedLoadContext.h"
 

@@ -4,10 +4,13 @@
 
 [HeaderFile="mozilla/dom/InterAppComm.h",
  Func="mozilla::dom::InterAppComm::EnabledForScope",
- Constructor(DOMString keyword, MozInterAppMessagePort port),
+ Constructor(DOMString keyword, MozInterAppMessagePort port,
+             DOMString from),
  JSImplementation="@mozilla.org/dom/inter-app-connection-request;1"]
 interface MozInterAppConnectionRequest {
   readonly attribute DOMString keyword;
 
   readonly attribute MozInterAppMessagePort port;
+
+  readonly attribute DOMString from;
 };

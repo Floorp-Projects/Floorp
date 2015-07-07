@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+test(function(t) {
+  var div = addDiv(t);
+
+  // Add a transition
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'all 100s';
+  div.style.left = '100px';
+
+  assert_equals(div.getAnimations()[0].transitionProperty, 'left',
+                'The transitionProperty for the corresponds to the specific ' +
+                'property being transitioned');
+}, 'CSSTransition.transitionProperty');
+
+done();
+</script>
+</body>

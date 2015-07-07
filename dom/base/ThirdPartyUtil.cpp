@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ThirdPartyUtil.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
 #include "nsIServiceManager.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIDOMWindow.h"

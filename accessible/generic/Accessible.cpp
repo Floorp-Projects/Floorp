@@ -65,7 +65,6 @@
 #include "nsIServiceManager.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
-#include "nsNetUtil.h"
 
 #ifdef DEBUG
 #include "nsIDOMCharacterData.h"

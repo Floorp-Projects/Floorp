@@ -158,12 +158,12 @@ CompositableClient::GetIPDLActor() const
 }
 
 bool
-CompositableClient::Connect()
+CompositableClient::Connect(ImageContainer* aImageContainer)
 {
   if (!GetForwarder() || GetIPDLActor()) {
     return false;
   }
-  GetForwarder()->Connect(this);
+  GetForwarder()->Connect(this, aImageContainer);
   return true;
 }
 
@@ -225,11 +225,6 @@ CompositableClient::AddTextureClient(TextureClient* aClient)
   }
   aClient->SetAddedToCompositableClient();
   return aClient->InitIPDLActor(mForwarder);
-}
-
-void
-CompositableClient::OnTransaction()
-{
 }
 
 void

@@ -30,14 +30,11 @@ CheckProgressConsistency(Progress aProgress)
   if (aProgress & FLAG_SIZE_AVAILABLE) {
     // No preconditions.
   }
-  if (aProgress & FLAG_DECODE_STARTED) {
+  if (aProgress & FLAG_DECODE_COMPLETE) {
     // No preconditions.
   }
-  if (aProgress & FLAG_DECODE_COMPLETE) {
-    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
-  }
   if (aProgress & FLAG_FRAME_COMPLETE) {
-    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+    // No preconditions.
   }
   if (aProgress & FLAG_LOAD_COMPLETE) {
     // No preconditions.
@@ -50,7 +47,6 @@ CheckProgressConsistency(Progress aProgress)
     MOZ_ASSERT(aProgress & (FLAG_SIZE_AVAILABLE | FLAG_HAS_ERROR));
   }
   if (aProgress & FLAG_IS_ANIMATED) {
-    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
     MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
   }
   if (aProgress & FLAG_HAS_TRANSPARENCY) {
@@ -89,9 +85,6 @@ ProgressTracker::GetImageStatus() const
   // Translate our current state to a set of imgIRequest::STATE_* flags.
   if (mProgress & FLAG_SIZE_AVAILABLE) {
     status |= imgIRequest::STATUS_SIZE_AVAILABLE;
-  }
-  if (mProgress & FLAG_DECODE_STARTED) {
-    status |= imgIRequest::STATUS_DECODE_STARTED;
   }
   if (mProgress & FLAG_DECODE_COMPLETE) {
     status |= imgIRequest::STATUS_DECODE_COMPLETE;
@@ -273,10 +266,6 @@ ProgressTracker::SyncNotifyInternal(ObserverArray& aObservers,
 
   if (aProgress & FLAG_SIZE_AVAILABLE) {
     NOTIFY_IMAGE_OBSERVERS(aObservers, Notify(I::SIZE_AVAILABLE));
-  }
-
-  if (aProgress & FLAG_DECODE_STARTED) {
-    NOTIFY_IMAGE_OBSERVERS(aObservers, OnStartDecode());
   }
 
   if (aProgress & FLAG_ONLOAD_BLOCKED) {

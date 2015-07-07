@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = ["InterAppCommService"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 const DEBUG = false;
 function debug(aMsg) {
@@ -220,6 +219,24 @@ this.InterAppCommService = {
     this._messagePortPairs = {};
   },
 
+  /* These attributes main use is to allow testing this in an isolated way
+   * that doesn't depend on the app service, or the system messenger working on
+   * the test environment
+   */
+  get appsService() {
+    return this._appsService || appsService;
+  },
+  set appsService(aService) {
+    this._appsService = aService;
+  },
+  get messenger() {
+    return this._messenger || messenger;
+  },
+  set messenger(aMessenger) {
+    this._messenger = aMessenger;
+  },
+
+
   /**
    * Registration of a page that wants to be connected to other apps through
    * the Inter-App Communication API.
@@ -241,6 +258,7 @@ this.InterAppCommService = {
             " aDescription: " + aDescription +
             " aRules.minimumAccessLevel: " + aRules.minimumAccessLevel +
             " aRules.manifestURLs: " + aRules.manifestURLs +
+            " aRules.pageURLs: " + aRules.pageURLs +
             " aRules.installOrigins: " + aRules.installOrigins);
     }
 
@@ -316,6 +334,35 @@ this.InterAppCommService = {
     return false;
   },
 
+  _matchPageURLs: function(aRules, aPageURL) {
+
+    if (!aRules || !aRules.pageURLs) {
+      if (DEBUG) {
+        debug("rules.pageURLs is not available. No need to match.");
+      }
+      return true;
+    }
+
+    if (!Array.isArray(aRules.pageURLs)) {
+      aRules.pageURLs = [aRules.pageURLs];
+    }
+
+    let pageURLs = aRules.pageURLs;
+    let isAllowed = false;
+    for (let i = 0, li = pageURLs.length; i < li && !isAllowed ; i++) {
+      let regExpAllowedURL = new RegExp(pageURLs[i]);
+      isAllowed = regExpAllowedURL.test(aPageURL);
+    }
+
+    if (DEBUG) {
+      debug("rules.pageURLs is " + (isAllowed ? "" : "not") + " matched!" +
+            " pageURLs: " + pageURLs +
+            " aPageURL: " + aPageURL);
+    }
+
+    return isAllowed;
+  },
+
   _matchInstallOrigins: function(aRules, aInstallOrigin) {
     if (!aRules || !Array.isArray(aRules.installOrigins)) {
       if (DEBUG) {
@@ -337,10 +384,30 @@ this.InterAppCommService = {
     return false;
   },
 
+  // A connection is allowed if all the rules are matched.
+  // The publisher is matched against the rules defined by the subscriber on the
+  // manifest, and the subscriber is matched against the rules defined by the
+  // publisher on the call to connect.
+  // The possible rules for both subscribers and publishers are:
+  //  * minimumAccessLevel: "privileged"|"certified"|"web"|undefined
+  //     The default (non existant or undefined value) is "certified".
+  //     That means that if an explicit minimumAccessLevel rule does not
+  //     exist then the peer of the connection *must* be a certified app.
+  //  * pageURLs: Array of regExp of URLs. If the value exists, only the pages
+  //     whose URLs are explicitly declared on the array (matched) can connect.
+  //     Otherwise all pages can connect
+  //  * installOrigins: Array of origin URLs. If the value exist, only the apps
+  //    whose origins are on the array can connect. Otherwise, all origins are
+  //    allowed. This is only checked for non certified apps!
+  // The default value (empty or non existant rules) is:
+  //   * Only certified apps can connect
+  //   * Any originator/receiving page URLs are valid
+  //   * Any origin is valid.
   _matchRules: function(aPubAppManifestURL, aPubRules,
-                        aSubAppManifestURL, aSubRules) {
-    let pubApp = appsService.getAppByManifestURL(aPubAppManifestURL);
-    let subApp = appsService.getAppByManifestURL(aSubAppManifestURL);
+                        aSubAppManifestURL, aSubRules,
+                        aPubPageURL, aSubPageURL) {
+    let pubApp = this.appsService.getAppByManifestURL(aPubAppManifestURL);
+    let subApp = this.appsService.getAppByManifestURL(aSubAppManifestURL);
 
     let isPubAppCertified =
       (pubApp.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED);
@@ -348,16 +415,30 @@ this.InterAppCommService = {
     let isSubAppCertified =
       (subApp.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED);
 
-    // TODO Bug 907068 In the initiative step, we only expose this API to
-    // certified apps to meet the time line. Eventually, we need to make
-    // it available for the non-certified apps as well. For now, only the
-    // certified apps can match the rules.
+#ifndef NIGHTLY_BUILD
+
     if (!isPubAppCertified || !isSubAppCertified) {
       if (DEBUG) {
         debug("Only certified apps are allowed to do connections.");
       }
       return false;
     }
+
+#else
+
+    let numSubRules =  (aSubRules && Object.keys(aSubRules).length) || 0;
+    let numPubRules =  (aPubRules && Object.keys(aPubRules).length) || 0;
+
+    if ((!isSubAppCertified && !numPubRules) ||
+        (!isPubAppCertified && !numSubRules)) {
+      if (DEBUG) {
+        debug("If there aren't rules defined only certified apps are allowed " +
+              "to do connections.");
+      }
+      return false;
+    }
+
+#endif
 
     if (!aPubRules && !aSubRules) {
       if (DEBUG) {
@@ -378,6 +459,12 @@ this.InterAppCommService = {
       return false;
     }
 
+    // Check pageURLs.
+    if (!this._matchPageURLs(aPubRules, aSubPageURL) ||
+        !this._matchPageURLs(aSubRules, aPubPageURL)) {
+      return false;
+    }
+
     // Check installOrigins. Note that we only check the install origin for the
     // non-certified app, because the certified app doesn't have install origin.
     if ((!isSubAppCertified &&
@@ -393,11 +480,13 @@ this.InterAppCommService = {
 
   _dispatchMessagePorts: function(aKeyword, aPubAppManifestURL,
                                   aAllowedSubAppManifestURLs,
-                                  aTarget, aOuterWindowID, aRequestID) {
+                                  aTarget, aOuterWindowID, aRequestID,
+                                  aPubPageURL) {
     if (DEBUG) {
       debug("_dispatchMessagePorts: aKeyword: " + aKeyword +
             " aPubAppManifestURL: " + aPubAppManifestURL +
-            " aAllowedSubAppManifestURLs: " + aAllowedSubAppManifestURLs);
+            " aAllowedSubAppManifestURLs: " + aAllowedSubAppManifestURLs +
+            " aPubPageURL: " + aPubPageURL);
     }
 
     if (aAllowedSubAppManifestURLs.length == 0) {
@@ -442,9 +531,10 @@ this.InterAppCommService = {
       };
 
       // Fire system message to deliver the message port to the subscriber.
-      messenger.sendMessage("connection",
+      this.messenger.sendMessage("connection",
         { keyword: aKeyword,
-          messagePortID: messagePortID },
+          messagePortID: messagePortID,
+          pubPageURL: aPubPageURL},
         Services.io.newURI(subscribedInfo.pageURL, null, null),
         Services.io.newURI(subscribedInfo.manifestURL, null, null));
 
@@ -530,6 +620,7 @@ this.InterAppCommService = {
   _connect: function(aMessage, aTarget) {
     let keyword = aMessage.keyword;
     let pubRules = aMessage.rules;
+    let pubPageURL = aMessage.pubPageURL;
     let pubAppManifestURL = aMessage.manifestURL;
     let outerWindowID = aMessage.outerWindowID;
     let requestID = aMessage.requestID;
@@ -540,7 +631,7 @@ this.InterAppCommService = {
         debug("No apps are subscribed for this connection. Returning.");
       }
       this._dispatchMessagePorts(keyword, pubAppManifestURL, [],
-                                 aTarget, outerWindowID, requestID);
+                                 aTarget, outerWindowID, requestID, pubPageURL);
       return;
     }
 
@@ -566,7 +657,8 @@ this.InterAppCommService = {
 
       let matched =
         this._matchRules(pubAppManifestURL, pubRules,
-                         subAppManifestURL, subRules);
+                         subAppManifestURL, subRules,
+                         pubPageURL, subscribedInfo.pageURL);
       if (!matched) {
         if (DEBUG) {
           debug("Rules are not matched. Skipping: " + subAppManifestURL);
@@ -588,7 +680,7 @@ this.InterAppCommService = {
 
       this._dispatchMessagePorts(keyword, pubAppManifestURL,
                                  allowedSubAppManifestURLs,
-                                 aTarget, outerWindowID, requestID);
+                                 aTarget, outerWindowID, requestID, pubPageURL);
       return;
     }
 
@@ -602,33 +694,36 @@ this.InterAppCommService = {
     };
 
     let glue = Cc["@mozilla.org/dom/apps/inter-app-comm-ui-glue;1"]
-                 .createInstance(Ci.nsIInterAppCommUIGlue);
+        .createInstance(Ci.nsIInterAppCommUIGlue);
     if (glue) {
       glue.selectApps(callerID, pubAppManifestURL, keyword, appsToSelect).then(
         function(aData) {
+          aData.pubPageURL = pubPageURL;
           this._handleSelectedApps(aData);
         }.bind(this),
         function(aError) {
           if (DEBUG) {
-            debug("Error occurred in the UI glue component. " + aError)
+            debug("Error occurred in the UI glue component. " + aError);
           }
 
           // Resolve the caller as if there were no selected apps.
           this._handleSelectedApps({ callerID: callerID,
                                      keyword: keyword,
                                      manifestURL: pubAppManifestURL,
+                                     pubPageURL: pubPageURL,
                                      selectedApps: [] });
         }.bind(this)
       );
     } else {
       if (DEBUG) {
-        debug("Error! The UI glue component is not implemented.")
+        debug("Error! The UI glue component is not implemented.");
       }
 
       // Resolve the caller as if there were no selected apps.
       this._handleSelectedApps({ callerID: callerID,
                                  keyword: keyword,
                                  manifestURL: pubAppManifestURL,
+                                 pubPageURL: pubPageURL,
                                  selectedApps: [] });
     }
   },
@@ -865,6 +960,7 @@ this.InterAppCommService = {
     let target = caller.target;
 
     let pubAppManifestURL = aData.manifestURL;
+    let pubPageURL = aData.pubPageURL;
     let keyword = aData.keyword;
     let selectedApps = aData.selectedApps;
 
@@ -872,14 +968,14 @@ this.InterAppCommService = {
     if (selectedApps.length == 0) {
       // Only do the connections for the existing allowed subscribers because
       // no new apps are selected to connect.
-      if (DEBUG) debug("No new apps are selected to connect.")
+      if (DEBUG) debug("No new apps are selected to connect.");
 
       allowedSubAppManifestURLs =
         this._getAllowedSubAppManifestURLs(keyword, pubAppManifestURL);
     } else {
       // Do connections for for the existing allowed subscribers and the newly
       // selected subscribers.
-      if (DEBUG) debug("Some new apps are selected to connect.")
+      if (DEBUG) debug("Some new apps are selected to connect.");
 
       allowedSubAppManifestURLs =
         this._addSelectedApps(keyword, pubAppManifestURL, selectedApps);
@@ -889,7 +985,7 @@ this.InterAppCommService = {
     // including the old connections and the newly selected connection.
     this._dispatchMessagePorts(keyword, pubAppManifestURL,
                                allowedSubAppManifestURLs,
-                               target, outerWindowID, requestID);
+                               target, outerWindowID, requestID, pubPageURL);
   },
 
   receiveMessage: function(aMessage) {
@@ -965,7 +1061,8 @@ this.InterAppCommService = {
           return;
         }
 
-        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        let manifestURL =
+                     this.appsService.getManifestURLByLocalId(params.appId);
         if (!manifestURL) {
           if (DEBUG) {
             debug("Error updating registered/allowed connections for an " +

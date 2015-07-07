@@ -13,6 +13,7 @@
 #include "nsICryptoHash.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
+#include "nsISafeOutputStream.h"
 #include "nsIX509Cert.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -20,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "pkix/Input.h"
 #include "mozilla/Logging.h"
+#include "prtime.h"
 
 NS_IMPL_ISUPPORTS(CertBlocklist, nsICertBlocklist)
 

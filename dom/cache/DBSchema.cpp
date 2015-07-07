@@ -19,6 +19,7 @@
 #include "nsCRT.h"
 #include "nsHttp.h"
 #include "nsICryptoHash.h"
+#include "nsNetCID.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"

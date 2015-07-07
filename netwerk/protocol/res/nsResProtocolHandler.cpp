@@ -10,6 +10,7 @@
 #include "nsResProtocolHandler.h"
 #include "nsIIOService.h"
 #include "nsIFile.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsURLHelper.h"
 #include "nsEscape.h"

@@ -12,6 +12,7 @@
 #include "nsIconChannel.h"
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
+#include "nsComponentManagerUtils.h"
 #include "nsNullPrincipal.h"
 
 NS_IMPL_ISUPPORTS(nsIconChannel,
