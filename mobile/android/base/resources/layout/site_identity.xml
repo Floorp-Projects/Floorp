@@ -24,6 +24,12 @@
                      android:orientation="vertical"
                      android:layout_weight="1.0">
 
+            <TextView android:id="@+id/site_identity_title"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginBottom="@dimen/doorhanger_subsection_padding"
+                      android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"/>
+
             <include layout="@layout/site_identity_unknown" />
 
             <LinearLayout android:id="@+id/site_identity_known_container"
@@ -31,12 +37,6 @@
                           android:layout_height="wrap_content"
                           android:visibility="gone"
                           android:orientation="vertical">
-
-                <TextView android:id="@+id/site_identity_title"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:layout_marginBottom="@dimen/doorhanger_subsection_padding"
-                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"/>
 
                 <TextView android:id="@+id/site_identity_encrypted"
                           android:layout_width="match_parent"

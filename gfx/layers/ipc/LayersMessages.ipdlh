@@ -199,6 +199,7 @@ struct Animation {
   int32_t direction;
   nsCSSProperty property;
   AnimationData data;
+  float playbackRate;
 };
 
 // Change a layer's attributes

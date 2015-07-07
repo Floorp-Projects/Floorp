@@ -110,7 +110,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
 
-        mTitle = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_title);
+        mTitle = (TextView) mIdentity.findViewById(R.id.site_identity_title);
         mEncrypted = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_encrypted);
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
         mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
@@ -329,7 +329,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             config.setMessage(mContext.getString(R.string.loaded_mixed_content_message));
         }
 
-        config.setLink(mContext.getString(R.string.learn_more), MIXED_CONTENT_SUPPORT_URL, "\n\n");
+        config.setLink(mContext.getString(R.string.learn_more), MIXED_CONTENT_SUPPORT_URL);
         addNotificationButtons(config, blocked);
 
         mMixedContentNotification = DoorHanger.Get(mContext, config);
@@ -363,7 +363,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                       mContext.getString(R.string.loaded_tracking_content_message_bottom));
         }
 
-        config.setLink(mContext.getString(R.string.learn_more), TRACKING_CONTENT_SUPPORT_URL, "\n\n");
+        config.setLink(mContext.getString(R.string.learn_more), TRACKING_CONTENT_SUPPORT_URL);
         addNotificationButtons(config, blocked);
 
         mTrackingContentNotification = DoorHanger.Get(mContext, config);

@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -11,6 +13,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 
 document.addEventListener("Initialized", () => {
+  if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    document.getElementById("redirectSearchCheckbox").hidden = true;
+  }
+
   if (Services.prefs.getBoolPref("browser.search.showOneOffButtons"))
     return;
 

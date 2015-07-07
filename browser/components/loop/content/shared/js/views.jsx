@@ -4,7 +4,7 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.views = (function(_, l10n) {
+loop.shared.views = (function(_, mozL10n) {
   "use strict";
 
   var sharedActions = loop.shared.actions;
@@ -62,7 +62,7 @@ loop.shared.views = (function(_, l10n) {
       var prefix = this.props.enabled ? "mute" : "unmute";
       var suffix = "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
-      return l10n.get(msgId);
+      return mozL10n.get(msgId);
     },
 
     render: function() {
@@ -130,7 +130,7 @@ loop.shared.views = (function(_, l10n) {
       var prefix = this.props.state === SCREEN_SHARE_STATES.ACTIVE ?
         "active" : "inactive";
 
-      return l10n.get(prefix + "_screenshare_button_title");
+      return mozL10n.get(prefix + "_screenshare_button_title");
     },
 
     render: function() {
@@ -169,10 +169,10 @@ loop.shared.views = (function(_, l10n) {
           </button>
           <ul className={dropdownMenuClasses} ref="menu">
             <li onClick={this._handleShareTabs}>
-              {l10n.get("share_tabs_button_title2")}
+              {mozL10n.get("share_tabs_button_title2")}
             </li>
             <li className={windowSharingClasses} onClick={this._handleShareWindows}>
-              {l10n.get("share_windows_button_title")}
+              {mozL10n.get("share_windows_button_title")}
             </li>
           </ul>
         </div>
@@ -226,7 +226,7 @@ loop.shared.views = (function(_, l10n) {
     },
 
     _getHangupButtonLabel: function() {
-      return this.props.hangupButtonLabel || l10n.get("hangup_button_caption2");
+      return this.props.hangupButtonLabel || mozL10n.get("hangup_button_caption2");
     },
 
     render: function() {
@@ -236,7 +236,7 @@ loop.shared.views = (function(_, l10n) {
             <button className="btn btn-hangup"
                     disabled={!this.props.enableHangup}
                     onClick={this.handleClickHangup}
-                    title={l10n.get("hangup_button_title")}>
+                    title={mozL10n.get("hangup_button_title")}>
               {this._getHangupButtonLabel()}
             </button>
           </li>
@@ -261,7 +261,7 @@ loop.shared.views = (function(_, l10n) {
             <MediaControlButton action={this.handleToggleEdit}
                                 enabled={this.props.edit.enabled}
                                 scope="local"
-                                title={l10n.get(this.props.edit.enabled ?
+                                title={mozL10n.get(this.props.edit.enabled ?
                                   "context_edit_tooltip" : "context_hide_tooltip")}
                                 type="edit"
                                 visible={this.props.edit.visible} />
@@ -794,7 +794,7 @@ loop.shared.views = (function(_, l10n) {
         return null;
       }
 
-      return <p>{l10n.get("context_inroom_label")}</p>;
+      return <p>{mozL10n.get("context_inroom_label")}</p>;
     },
 
     render: function() {

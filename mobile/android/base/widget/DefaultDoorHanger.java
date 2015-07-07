@@ -6,11 +6,7 @@
 package org.mozilla.gecko.widget;
 
 import android.text.Html;
-import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.URLSpan;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
@@ -66,7 +62,7 @@ public class DefaultDoorHanger extends DoorHanger {
 
         final DoorhangerConfig.Link link = config.getLink();
         if (link != null) {
-            addLink(link.label, link.url, link.delimiter);
+            addLink(link.label, link.url);
         }
 
         addButtonsToLayout(config);
@@ -93,7 +89,7 @@ public class DefaultDoorHanger extends DoorHanger {
             try {
                 final String linkLabel = link.getString("label");
                 final String linkUrl = link.getString("url");
-                addLink(linkLabel, linkUrl, " ");
+                addLink(linkLabel, linkUrl);
             } catch (JSONException e) { }
         }
 
@@ -175,23 +171,15 @@ public class DefaultDoorHanger extends DoorHanger {
         mMessage.setText(markupMessage);
     }
 
-    private void addLink(String label, String url, String delimiter) {
-        String title = mMessage.getText().toString();
-        SpannableString titleWithLink = new SpannableString(title + delimiter + label);
-        URLSpan linkSpan = new URLSpan(url) {
+    private void addLink(String label, final String url) {
+        mLink.setText(label);
+        mLink.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                Tabs.getInstance().loadUrlInTab(getURL());
+                 Tabs.getInstance().loadUrlInTab(url);
             }
-        };
-
-        // Prevent text outside the link from flashing when clicked.
-        ForegroundColorSpan colorSpan = new ForegroundColorSpan(mMessage.getCurrentTextColor());
-        titleWithLink.setSpan(colorSpan, 0, title.length(), 0);
-
-        titleWithLink.setSpan(linkSpan, title.length() + 1, titleWithLink.length(), 0);
-        mMessage.setText(titleWithLink);
-        mMessage.setMovementMethod(LinkMovementMethod.getInstance());
+        });
+        mLink.setVisibility(VISIBLE);
     }
 
     private void styleInput(PromptInput input, View view) {
