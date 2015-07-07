@@ -107,10 +107,9 @@ var tests = [
     [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
     [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
     // The following test cases are all involving with one sending
-    // synthesizeKey(), the other without. They fail when the touch
-    // or selection caret is enabled. Test them with these preferences off.
+    // synthesizeKey(), the other without. They ought to be failed
+    // when touch caret preference on. Test them with preference off.
     function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false]]}, nextTest);} ,
-    function() {SpecialPowers.pushPrefEnv({'set': [['selectioncaret.enabled', false]]}, nextTest);} ,
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
@@ -155,9 +154,7 @@ var tests = [
     // [ 'bug1123067-1.html' , 'bug1123067-ref.html'  ] , TODO: bug 1129205
     [ 'bug1123067-2.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1123067-3.html' , 'bug1123067-ref.html'  ] ,
-    [ 'bug1132768-1.html' , 'bug1132768-1-ref.html'] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled']]}, nextTest);} ,
-    function() {SpecialPowers.pushPrefEnv({'clear': [['selectioncaret.enabled']]}, nextTest);} ,
 ];
 
 if (navigator.appVersion.indexOf("Android") == -1 &&
