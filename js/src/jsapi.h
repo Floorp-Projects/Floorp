@@ -5482,6 +5482,7 @@ class AutoStopwatch;
 
 // Container for performance data
 // All values are monotonic.
+// All values are updated after running to completion.
 struct PerformanceData {
     // Number of times we have spent at least 2^n consecutive
     // milliseconds executing code in this group.
@@ -5548,28 +5549,66 @@ struct PerformanceGroup {
     // An id unique to this runtime.
     const uint64_t uid;
 
+    // The number of cycles spent in this group during this iteration
+    // of the event loop. Note that cycles are not a reliable measure,
+    // especially over short intervals. See Runtime.cpp for a more
+    // complete discussion on the imprecision of cycle measurement.
+    uint64_t recentCycles;
+
+    // The number of times this group has been activated during this
+    // iteration of the event loop.
+    uint64_t recentTicks;
+
+    // The number of milliseconds spent doing CPOW during this
+    // iteration of the event loop.
+    uint64_t recentCPOW;
+
+    // The current iteration of the event loop.
+    uint64_t iteration() const {
+        return iteration_;
+    }
+
     // `true` if an instance of `AutoStopwatch` is already monitoring
     // the performance of this performance group for this iteration
     // of the event loop, `false` otherwise.
-    bool hasStopwatch(uint64_t iteration) const {
-        return stopwatch_ != nullptr && iteration_ == iteration;
+    bool hasStopwatch(uint64_t it) const {
+        return stopwatch_ != nullptr && iteration_ == it;
+    }
+
+    // `true` if a specific instance of `AutoStopwatch` is already monitoring
+    // the performance of this performance group for this iteration
+    // of the event loop, `false` otherwise.
+    bool hasStopwatch(uint64_t it, const AutoStopwatch* stopwatch) const {
+        return stopwatch_ == stopwatch && iteration_ == it;
     }
 
     // Mark that an instance of `AutoStopwatch` is monitoring
     // the performance of this group for a given iteration.
-    void acquireStopwatch(uint64_t iteration, const AutoStopwatch* stopwatch) {
-        iteration_ = iteration;
+    void acquireStopwatch(uint64_t it, const AutoStopwatch* stopwatch) {
+        if (iteration_ != it) {
+            // Any data that pretends to be recent is actually bound
+            // to an older iteration and therefore stale.
+            resetRecentData();
+        }
+        iteration_ = it;
         stopwatch_ = stopwatch;
     }
 
     // Mark that no `AutoStopwatch` is monitoring the
     // performance of this group for the iteration.
-    void releaseStopwatch(uint64_t iteration, const AutoStopwatch* stopwatch) {
-        if (iteration_ != iteration)
+    void releaseStopwatch(uint64_t it, const AutoStopwatch* stopwatch) {
+        if (iteration_ != it)
             return;
 
         MOZ_ASSERT(stopwatch == stopwatch_ || stopwatch_ == nullptr);
         stopwatch_ = nullptr;
+    }
+
+    // Get rid of any data that pretends to be recent.
+    void resetRecentData() {
+        recentCycles = 0;
+        recentTicks = 0;
+        recentCPOW = 0;
     }
 
     // Refcounting. For use with mozilla::RefPtr.
@@ -5599,9 +5638,8 @@ private:
     // The hash key for this PerformanceGroup.
     void* const key_;
 
-    // A reference counter.
+    // Refcounter.
     uint64_t refCount_;
-
 
     // `true` if this PerformanceGroup may be shared by several
     // compartments, `false` if it is dedicated to a single
@@ -5662,12 +5700,19 @@ struct PerformanceGroupHolder {
 };
 
 /**
- * Reset any stopwatch currently measuring.
+ * Commit any Performance Monitoring data.
  *
- * This function is designed to be called when we process a new event.
+ * Until `FlushMonitoring` has been called, all PerformanceMonitoring data is invisible
+ * to the outside world and can cancelled with a call to `ResetMonitoring`.
  */
 extern JS_PUBLIC_API(void)
-ResetStopwatches(JSRuntime*);
+FlushPerformanceMonitoring(JSRuntime*);
+
+/**
+ * Cancel any measurement that hasn't been committed.
+ */
+extern JS_PUBLIC_API(void)
+ResetPerformanceMonitoring(JSRuntime*);
 
 /**
  * Turn on/off stopwatch-based CPU monitoring.
@@ -5693,10 +5738,11 @@ extern JS_PUBLIC_API(bool)
 IsStopwatchActive(JSRuntime*);
 
 /**
- * Access the performance information stored in a compartment.
+ * Add a number of microseconds to the time spent waiting on CPOWs
+ * since process start.
  */
-extern JS_PUBLIC_API(PerformanceData*)
-GetPerformanceData(JSRuntime*);
+extern JS_PUBLIC_API(void)
+AddCPOWPerformanceDelta(JSRuntime*, uint64_t delta);
 
 typedef bool
 (PerformanceStatsWalker)(JSContext* cx,
