@@ -190,13 +190,14 @@ this.TelemetryController = Object.freeze({
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that resolves with the ping id once the ping is stored or sent.
+   * @returns {Promise} Test-only - a promise that resolves with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function(aType, aPayload, aOptions = {}) {
     aOptions.addClientId = aOptions.addClientId || false;
     aOptions.addEnvironment = aOptions.addEnvironment || false;
 
-    return Impl.submitExternalPing(aType, aPayload, aOptions);
+    const testOnly = Impl.submitExternalPing(aType, aPayload, aOptions);
+    return testOnly;
   },
 
   /**
@@ -456,7 +457,7 @@ let Impl = {
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that is resolved with the ping id once the ping is stored or sent.
+   * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function send(aType, aPayload, aOptions) {
     this._log.trace("submitExternalPing - type: " + aType + ", aOptions: " + JSON.stringify(aOptions));
