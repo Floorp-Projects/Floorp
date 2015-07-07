@@ -161,7 +161,7 @@ class Test(TaskPool.Task):
                 '--ex', 'file %s' % (os.path.join(OPTIONS.builddir, 'gdb-tests'),),
                 '--eval-command', 'python testlibdir=%r' % (testlibdir,),
                 '--eval-command', 'python testscript=%r' % (self.test_path,),
-                '--eval-command', 'python execfile(%r)' % os.path.join(testlibdir, 'catcher.py')]
+                '--eval-command', 'python exec(open(%r).read())' % os.path.join(testlibdir, 'catcher.py')]
 
     def start(self, pipe, deadline):
         super(Test, self).start(pipe, deadline)
