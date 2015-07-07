@@ -5666,6 +5666,31 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
     aTo += nsPrintfCString(" IBSplitPrevSibling=%p", IBprevsibling);
   }
   aTo += nsPrintfCString(" {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+
+  mozilla::WritingMode wm = GetWritingMode();
+  if (wm.IsVertical() || !wm.IsBidiLTR()) {
+    aTo += nsPrintfCString(" wm=%s-%s: logical size={%d,%d}",
+                           wm.IsVertical() ? wm.IsVerticalLR() ? "vlr" : "vrl"
+                                           : "htb",
+                           wm.IsBidiLTR() ? "ltr" : "rtl",
+                           ISize(), BSize());
+  }
+
+  nsIFrame* parent = GetParent();
+  if (parent) {
+    WritingMode pWM = parent->GetWritingMode();
+    if (pWM.IsVertical() || !pWM.IsBidiLTR()) {
+      nscoord cw = parent->mRect.width;
+      LogicalRect lr(pWM, mRect, cw);
+      aTo += nsPrintfCString(" parent wm=%s-%s,width=%d,logicalRect={%d,%d,%d,%d}",
+                             pWM.IsVertical() ? pWM.IsVerticalLR()
+                                                ? "vlr" : "vrl"
+                                              : "htb",
+                             wm.IsBidiLTR() ? "ltr" : "rtl",
+                             cw, lr.IStart(pWM), lr.BStart(pWM),
+                             lr.ISize(pWM), lr.BSize(pWM));
+    }
+  }
   nsIFrame* f = const_cast<nsIFrame*>(this);
   if (f->HasOverflowAreas()) {
     nsRect vo = f->GetVisualOverflowRect();
