@@ -9,7 +9,7 @@
   cursor: text;
 }
 
-*|*:-moz-read-write :-moz-read-only {
+*|*:focus:-moz-read-write :-moz-read-only {
   -moz-user-select: all;
 }
 
