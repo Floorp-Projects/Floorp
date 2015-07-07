@@ -360,6 +360,11 @@ class BaseMarionetteOptions(OptionParser):
                         dest='timeout',
                         type=int,
                         help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
+        self.add_option('--startup-timeout',
+                        dest='startup_timeout',
+                        type=int,
+                        default=60,
+                        help='the max number of seconds to wait for a Marionette connection after launching a binary')
         self.add_option('--shuffle',
                         action='store_true',
                         dest='shuffle',
@@ -506,7 +511,7 @@ class BaseMarionetteTestRunner(object):
                  server_root=None, gecko_log=None, result_callbacks=None,
                  adb_host=None, adb_port=None, prefs=None, test_tags=None,
                  socket_timeout=BaseMarionetteOptions.socket_timeout_default,
-                 **kwargs):
+                 startup_timeout=None, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulator_binary = emulator_binary
@@ -551,6 +556,7 @@ class BaseMarionetteTestRunner(object):
         self._adb_port = adb_port
         self.prefs = prefs or {}
         self.test_tags = test_tags
+        self.startup_timeout = startup_timeout
 
         def gather_debug(test, status):
             rv = {}
@@ -650,6 +656,7 @@ class BaseMarionetteTestRunner(object):
             'adb_host': self._adb_host,
             'adb_port': self._adb_port,
             'prefs': self.prefs,
+            'startup_timeout': self.startup_timeout,
         }
         if self.bin:
             kwargs.update({

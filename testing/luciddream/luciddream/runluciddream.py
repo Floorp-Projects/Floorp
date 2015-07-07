@@ -55,6 +55,9 @@ def parse_args(in_args):
                         help='path to Firefox binary')
     parser.add_argument('--gaia-profile', dest='gaia_profile', action='store',
                         help='path to Gaia profile')
+    parser.add_argument('--startup-timeout', dest='startup_timeout', action='store',
+                        default=60,  type=int,
+                        help='max time to wait for Marionette to be available after launching binary')
     parser.add_argument('manifest', metavar='MANIFEST', action='store',
                         help='path to manifest of tests to run')
     structured.commandline.add_logging_group(parser)
@@ -76,7 +79,7 @@ class LucidDreamTestRunner(BaseMarionetteTestRunner):
         self.test_handlers = [LucidDreamTestCase]
 
 
-def start_browser(browser_path, app_args):
+def start_browser(browser_path, app_args, startup_timeout):
     '''
     Start a Firefox browser and return a Marionette instance that
     can talk to it.
@@ -87,7 +90,8 @@ def start_browser(browser_path, app_args):
         # on each others' toes.
         port=2929,
         app_args=app_args,
-        gecko_log="firefox.log"
+        gecko_log="firefox.log",
+        startup_timeout=startup_timeout
     )
     runner = marionette.runner
     if runner:
@@ -100,14 +104,16 @@ def start_browser(browser_path, app_args):
 
 #TODO: make marionette/client/marionette/runtests.py importable so we can
 # just use cli from there. A lot of this is copy/paste from that function.
-def run(browser_path=None, b2g_desktop_path=None, emulator_path=None, emulator_arch=None, gaia_profile=None, manifest=None, browser_args=None, **kwargs):
+def run(browser_path=None, b2g_desktop_path=None, emulator_path=None,
+        emulator_arch=None, gaia_profile=None, manifest=None, browser_args=None,
+        **kwargs):
     # It's sort of debatable here whether the marionette instance managed
     # by the test runner should be the browser or the emulator. Right now
     # it's the emulator because it feels like there's more fiddly setup around
     # that, but longer-term if we want to run tests against different
     # (non-B2G) targets this won't match up very well, so maybe it ought to
     # be the browser?
-    browser = start_browser(browser_path, browser_args)
+    browser = start_browser(browser_path, browser_args, kwargs['startup_timeout'])
 
     kwargs["browser"] = browser
     if not "logger" in kwargs:
