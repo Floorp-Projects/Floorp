@@ -18,7 +18,9 @@
 #include "nsCategoryCache.h"
 #include "nsISpeculativeConnect.h"
 #include "nsDataHashtable.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "prtime.h"
 #include "nsICaptivePortalService.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
@@ -79,6 +81,9 @@ public:
                                     nsAsyncRedirectVerifyHelper *helper);
 
     bool IsOffline() { return mOffline; }
+    PRIntervalTime LastOfflineStateChange() { return mLastOfflineStateChange; }
+    PRIntervalTime LastConnectivityChange() { return mLastConnectivityChange; }
+    PRIntervalTime LastNetworkLinkChange() { return mLastNetworkLinkChange; }
     bool IsShutdown() { return mShutdown; }
     bool IsLinkUp();
 
@@ -171,6 +176,14 @@ private:
     nsDataHashtable<nsUint32HashKey, int32_t> mAppsOfflineStatus;
 
     static bool                          sTelemetryEnabled;
+
+    // These timestamps are needed for collecting telemetry on PR_Connect,
+    // PR_ConnectContinue and PR_Close blocking time.  If we spend very long
+    // time in any of these functions we want to know if and what network
+    // change has happened shortly before.
+    mozilla::Atomic<PRIntervalTime>  mLastOfflineStateChange;
+    mozilla::Atomic<PRIntervalTime>  mLastConnectivityChange;
+    mozilla::Atomic<PRIntervalTime>  mLastNetworkLinkChange;
 public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;
