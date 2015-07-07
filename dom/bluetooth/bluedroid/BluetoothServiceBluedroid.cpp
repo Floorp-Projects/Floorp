@@ -407,12 +407,8 @@ public:
 
     BT_LOGR("BluetoothInterface::Disable failed: %d", aStatus);
 
-#ifndef MOZ_B2G_BT_API_V1
-    BluetoothService::AcknowledgeToggleBt(true);
-#else
     // Always make progress; even on failures
     BluetoothService::AcknowledgeToggleBt(false);
-#endif
   }
 };
 
@@ -1813,6 +1809,13 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
 
   BT_LOGR("BT_STATE: %d", aState);
 
+  if (sIsRestart && aState) {
+    // daemon restarted, reset flag
+    BT_LOGR("daemon restarted, reset flag");
+    sIsRestart = false;
+    sIsFirstTimeToggleOffBt = false;
+  }
+
   sAdapterEnabled = aState;
 
   if (!sAdapterEnabled) {
@@ -1892,6 +1895,13 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     DispatchReplySuccess(sChangeAdapterStateRunnableArray[0]);
     sChangeAdapterStateRunnableArray.RemoveElementAt(0);
   }
+
+  // After ProfileManagers deinit and cleanup, now restarts bluetooth daemon
+  if (sIsRestart && !aState) {
+    BT_LOGR("sIsRestart and off, now restart");
+    StartBluetooth(false, nullptr);
+  }
+
 #else
   MOZ_ASSERT(NS_IsMainThread());
 
