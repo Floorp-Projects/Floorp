@@ -313,12 +313,14 @@ add_task(function* test_midnightPingSendFuzzing() {
   yield sendPing(true, true);
   let ping = yield PingServer.promiseNextPing();
   checkPingFormat(ping, TEST_PING_TYPE, true, true);
+  yield TelemetrySend.testWaitOnOutgoingPings();
 
   // Check that pings shortly before midnight are immediately sent.
   now = fakeNow(2030, 5, 3, 23, 59, 0);
   yield sendPing(true, true);
   ping = yield PingServer.promiseNextPing();
   checkPingFormat(ping, TEST_PING_TYPE, true, true);
+  yield TelemetrySend.testWaitOnOutgoingPings();
 
   // Clean-up.
   fakeMidnightPingFuzzingDelay(0);
