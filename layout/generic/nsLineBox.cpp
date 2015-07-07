@@ -246,11 +246,17 @@ nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
     str += nsPrintfCString("bm=%d ", GetCarriedOutBEndMargin().get());
   }
   nsRect bounds = GetPhysicalBounds();
-  str += nsPrintfCString("{%d,%d,%d,%d} {%d,%d,%d,%d;cw=%d} ",
-          bounds.x, bounds.y, bounds.width, bounds.height,
-          mBounds.IStart(mWritingMode), mBounds.BStart(mWritingMode),
-          mBounds.ISize(mWritingMode), mBounds.BSize(mWritingMode),
-          mContainerWidth);
+  str += nsPrintfCString("{%d,%d,%d,%d} ",
+          bounds.x, bounds.y, bounds.width, bounds.height);
+  if (mWritingMode.IsVertical() || !mWritingMode.IsBidiLTR()) {
+    str += nsPrintfCString("{%s-%s: %d,%d,%d,%d; cw=%d} ",
+                           mWritingMode.IsVertical()
+                             ? mWritingMode.IsVerticalLR() ? "vlr" : "vrl"
+                             : "htb",
+                           mWritingMode.IsBidiLTR() ? "ltr" : "rtl",
+                           IStart(), BStart(), ISize(), BSize(),
+                           mContainerWidth);
+  }
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
        !mData->mOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
