@@ -19,7 +19,6 @@
 #include "ScopedGLHelpers.h"
 
 #include "gfxPlatform.h"
-#include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 
 #define DEBUG_GRALLOC
@@ -64,12 +63,9 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     gfxContentType type = hasAlpha ? gfxContentType::COLOR_ALPHA
                                    : gfxContentType::COLOR;
 
-    auto platform = gfxPlatform::GetPlatform();
-    gfxImageFormat format = platform->OptimalFormatForContent(type);
-
     typedef GrallocTextureClientOGL ptrT;
     RefPtr<ptrT> grallocTC = new ptrT(allocator,
-                                      gfx::ImageFormatToSurfaceFormat(format),
+                                      gfxPlatform::GetPlatform()->Optimal2DFormatForContent(type),
                                       gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
                                       flags);
 
