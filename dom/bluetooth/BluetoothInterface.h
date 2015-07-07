@@ -611,12 +611,120 @@ protected:
 class BluetoothGattServerNotificationHandler
 {
 public:
-  virtual ~BluetoothGattServerNotificationHandler();
-  // TODO: Add server notifications
+  virtual void
+  RegisterServerNotification(BluetoothGattStatus aStatus,
+                             int aServerIf,
+                             const BluetoothUuid& aAppUuid)
+  { }
+
+  virtual void
+  ConnectionNotification(int aConnId,
+                         int aServerIf,
+                         bool aConnected,
+                         const nsAString& aBdAddr)
+  { }
+
+  virtual void
+  ServiceAddedNotification(BluetoothGattStatus aStatus,
+                           int aServerIf,
+                           const BluetoothGattServiceId& aServiceId,
+                           int aServiceHandle)
+  { }
+
+  virtual void
+  IncludedServiceAddedNotification(BluetoothGattStatus aStatus,
+                                   int aServerIf,
+                                   int aServiceHandle,
+                                   int aIncludedServiceHandle)
+  { }
+
+  virtual void
+  CharacteristicAddedNotification(BluetoothGattStatus aStatus,
+                                  int aServerIf,
+                                  const BluetoothUuid& aCharId,
+                                  int aServiceHandle,
+                                  int aCharacteristicHandle)
+  { }
+
+  virtual void
+  DescriptorAddedNotification(BluetoothGattStatus aStatus,
+                              int aServerIf,
+                              const BluetoothUuid& aCharId,
+                              int aServiceHandle,
+                              int aDescriptorHandle)
+  { }
+
+  virtual void
+  ServiceStartedNotification(BluetoothGattStatus aStatus,
+                             int aServerIf,
+                             int aServiceHandle)
+  { }
+
+  virtual void
+  ServiceStoppedNotification(BluetoothGattStatus aStatus,
+                             int aServerIf,
+                             int aServiceHandle)
+  { }
+
+  virtual void
+  ServiceDeletedNotification(BluetoothGattStatus aStatus,
+                             int aServerIf,
+                             int aServiceHandle)
+  { }
+
+  virtual void
+  RequestReadNotification(int aConnId,
+                          int aTransId,
+                          const nsAString& aBdAddr,
+                          int aAttributeHandle,
+                          int aOffset,
+                          bool aIsLong)
+  { }
+
+  virtual void
+  RequestWriteNotification(int aConnId,
+                           int aTransId,
+                           const nsAString& aBdAddr,
+                           int aAttributeHandle,
+                           int aOffset,
+                           const nsTArray<uint8_t>& aValue,
+                           bool aNeedResponse,
+                           bool aIsPrepareWrite)
+  { }
+
+  virtual void
+  RequestExecuteWriteNotification(int aConnId,
+                                  int aTransId,
+                                  const nsAString& aBdAddr,
+                                  bool aExecute) /* true: execute */
+                                                 /* false: cancel */
+  { }
+
+  virtual void
+  ResponseConfirmationNotification(BluetoothGattStatus aStatus,
+                                   int aHandle)
+  { }
+
+  virtual void
+  IndicationSentNotification(int aConnId,
+                             BluetoothGattStatus aStatus)
+  { }
+
+  virtual void
+  CongestionNotification(int aConnId,
+                         bool aCongested)
+  { }
+
+  virtual void
+  MtuChangedNotification(int aConnId,
+                         int aMtu)
+  { }
 
 protected:
   BluetoothGattServerNotificationHandler()
   { }
+
+  virtual ~BluetoothGattServerNotificationHandler();
 };
 
 class BluetoothGattNotificationHandler
@@ -688,7 +796,38 @@ protected:
   virtual ~BluetoothGattClientResultHandler() { }
 };
 
-// TODO: Add GattServerResultHandler
+class BluetoothGattServerResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattServerResultHandler)
+
+  virtual void OnError(BluetoothStatus aStatus)
+  {
+    BT_WARNING("Received error code %d", (int)aStatus);
+  }
+
+  virtual void RegisterServer() { }
+  virtual void UnregisterServer() { }
+
+  virtual void ConnectPeripheral() { }
+  virtual void DisconnectPeripheral() { }
+
+  virtual void AddService() { }
+  virtual void AddIncludedService() { }
+  virtual void AddCharacteristic() { }
+  virtual void AddDescriptor() { }
+
+  virtual void StartService() { }
+  virtual void StopService() { }
+  virtual void DeleteService() { }
+
+  virtual void SendIndication() { }
+
+  virtual void SendResponse() { }
+
+protected:
+  virtual ~BluetoothGattServerResultHandler() { }
+};
 
 class BluetoothGattClientInterface
 {
@@ -827,7 +966,79 @@ protected:
   virtual ~BluetoothGattClientInterface();
 };
 
-// TODO: Add GattServerInterface
+class BluetoothGattServerInterface
+{
+public:
+  /* Register / Unregister */
+  virtual void RegisterServer(const BluetoothUuid& aUuid,
+                              BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void UnregisterServer(int aServerIf,
+                                BluetoothGattServerResultHandler* aRes) = 0;
+
+  /* Connect / Disconnect */
+  virtual void ConnectPeripheral(int aServerIf,
+                                 const nsAString& aBdAddr,
+                                 bool aIsDirect, /* auto connect */
+                                 BluetoothTransport aTransport,
+                                 BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void DisconnectPeripheral(int aServerIf,
+                                    const nsAString& aBdAddr,
+                                    int aConnId,
+                                    BluetoothGattServerResultHandler* aRes) = 0;
+
+  /* Add a services / a characteristic / a descriptor */
+  virtual void AddService(int aServerIf,
+                          const BluetoothGattServiceId& aServiceId,
+                          int aNumHandles,
+                          BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void AddIncludedService(int aServerIf,
+                                  int aServiceHandle,
+                                  int aIncludedServiceHandle,
+                                  BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void AddCharacteristic(int aServerIf,
+                                 int aServiceHandle,
+                                 const BluetoothUuid& aUuid,
+                                 BluetoothGattCharProp aProperties,
+                                 BluetoothGattAttrPerm aPermissions,
+                                 BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void AddDescriptor(int aServerIf,
+                             int aServiceHandle,
+                             const BluetoothUuid& aUuid,
+                             BluetoothGattAttrPerm aPermissions,
+                             BluetoothGattServerResultHandler* aRes) = 0;
+
+  /* Start / Stop / Delete a service */
+  virtual void StartService(int aServerIf,
+                            int aServiceHandle,
+                            BluetoothTransport aTransport,
+                            BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void StopService(int aServerIf,
+                           int aServiceHandle,
+                           BluetoothGattServerResultHandler* aRes) = 0;
+  virtual void DeleteService(int aServerIf,
+                             int aServiceHandle,
+                             BluetoothGattServerResultHandler* aRes) = 0;
+
+  /* Send an indication or a notification */
+  virtual void SendIndication(int aServerIf,
+                              int aAttributeHandle,
+                              int aConnId,
+                              const nsTArray<uint8_t>& aValue,
+                              bool aConfirm, /* true: indication */
+                                             /* false: notification */
+                              BluetoothGattServerResultHandler* aRes) = 0;
+
+  /* Send a response for an incoming indication */
+  virtual void SendResponse(int aConnId,
+                            int aTransId,
+                            BluetoothGattStatus aStatus,
+                            const BluetoothGattResponse& aResponse,
+                            BluetoothGattServerResultHandler* aRes) = 0;
+
+protected:
+  BluetoothGattServerInterface();
+  virtual ~BluetoothGattServerInterface();
+};
 
 class BluetoothGattInterface
 {

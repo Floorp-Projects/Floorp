@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1175751
+-->
+<head>
+  <title>Test for Animation.playbackRate on compositor animations (Bug 1175751)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1175751">Mozilla Bug 1175751</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { "set": [[ "dom.animations-api.core.enabled", true]] },
+  function() {
+    window.open("file_animations_playbackrate.html");
+  });
+</script>
+</pre>
+</body>
+</html>
