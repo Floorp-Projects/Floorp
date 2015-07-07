@@ -53,10 +53,6 @@ let modules = {
     uri: "chrome://browser/content/aboutHome.xhtml",
     privileged: false
   },
-  apps: {
-    uri: "chrome://browser/content/aboutApps.xhtml",
-    privileged: true
-  },
   downloads: {
     uri: "chrome://browser/content/aboutDownloads.xhtml",
     privileged: true
