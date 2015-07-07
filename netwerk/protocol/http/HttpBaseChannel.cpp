@@ -12,6 +12,7 @@
 
 #include "nsHttpHandler.h"
 #include "nsMimeTypes.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 
 #include "nsICachingChannel.h"

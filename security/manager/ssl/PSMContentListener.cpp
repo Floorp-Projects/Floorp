@@ -22,6 +22,9 @@
 
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
 #include "nsNSSHelper.h"
 
 #include "mozilla/Logging.h"

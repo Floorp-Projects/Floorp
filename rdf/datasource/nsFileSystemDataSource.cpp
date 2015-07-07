@@ -25,11 +25,13 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
+#include "nsIInputStream.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsEscape.h"
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
+#include "prtime.h"
 
 #ifdef XP_WIN
 #include "windef.h"

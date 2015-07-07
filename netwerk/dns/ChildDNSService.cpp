@@ -12,6 +12,7 @@
 #include "nsIProtocolProxyService.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/DNSListenerProxy.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace net {

@@ -19,6 +19,8 @@
 #include "nsISupportsImpl.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsNetUtil.h"
+#include "nsIFileProtocolHandler.h"
+#include "nsIURI.h"
 #include "nsUnicharUtils.h"
 #include "nsTArray.h"
 #include "nsTextFormatter.h"

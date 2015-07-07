@@ -28,6 +28,7 @@
 #include "NullHttpTransaction.h"
 #include "nsIDNSRecord.h"
 #include "nsITransport.h"
+#include "nsInterfaceRequestorAgg.h"
 #include "nsISocketTransportService.h"
 #include <algorithm>
 #include "mozilla/ChaosMode.h"

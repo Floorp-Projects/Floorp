@@ -20,8 +20,13 @@
 #include "nsIMIMEService.h"
 
 #include "nsIStringBundle.h"
+#include "nsIStringStream.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsNetUtil.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIStringStream.h"
+#include "nsServiceManagerUtils.h"
 #include "nsNullPrincipal.h"
 #include "nsIURL.h"
 #include "prlink.h"

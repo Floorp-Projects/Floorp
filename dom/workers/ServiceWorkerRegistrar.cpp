@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
 #include "nsIObserverService.h"
+#include "nsISafeOutputStream.h"
 
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"

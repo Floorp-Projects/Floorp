@@ -11,6 +11,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/unused.h"
 #include "nsIScriptSecurityManager.h"
 

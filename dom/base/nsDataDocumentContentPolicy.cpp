@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIDocument.h"
 #include "nsINode.h"

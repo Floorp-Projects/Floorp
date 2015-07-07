@@ -50,6 +50,7 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
+#include "nsIURL.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsTArray.h"

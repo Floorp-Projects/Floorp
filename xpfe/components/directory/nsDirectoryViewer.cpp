@@ -50,6 +50,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsContentUtils.h"
+#include "nsIURI.h"
 
 using namespace mozilla;
 

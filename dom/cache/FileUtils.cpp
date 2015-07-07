@@ -12,6 +12,7 @@
 #include "nsIFile.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"

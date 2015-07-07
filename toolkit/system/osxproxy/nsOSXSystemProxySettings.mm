@@ -12,6 +12,7 @@
 #include "nsIServiceManager.h"
 #include "nsPrintfCString.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 #include "nsObjCExceptions.h"

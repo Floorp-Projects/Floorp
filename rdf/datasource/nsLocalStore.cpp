@@ -11,6 +11,7 @@
  */
 
 #include "nsNetUtil.h"
+#include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsIOutputStream.h"

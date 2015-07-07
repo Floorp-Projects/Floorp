@@ -17,6 +17,7 @@
 #include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

@@ -6,6 +6,7 @@
 #include "LookupCache.h"
 #include "HashStore.h"
 #include "nsISeekableStream.h"
+#include "nsISafeOutputStream.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 #include "prprf.h"

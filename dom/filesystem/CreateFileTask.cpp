@@ -18,6 +18,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
+#include "nsIOutputStream.h"
 #include "nsStringGlue.h"
 
 namespace mozilla {
