@@ -5254,6 +5254,12 @@
     "n_values": 700,
     "description": "The Shumway feature is used during movie execution"
   },
+  "SHUMWAY_LOAD_RESOURCE_RESULT": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "The Shumway external resource loading result"
+  },
   "SHUMWAY_FALLBACK": {
     "expires_in_version": "default",
     "kind": "boolean",

@@ -122,6 +122,7 @@ function configureLogging() {
  */
 let Policy = {
   now: () => new Date(),
+  generatePingId: () => Utils.generateUUID(),
 }
 
 this.EXPORTED_SYMBOLS = ["TelemetryController"];
@@ -143,12 +144,7 @@ this.TelemetryController = Object.freeze({
    * Used only for testing purposes.
    */
   reset: function() {
-    Impl._clientID = null;
-    Impl._detachObservers();
-    TelemetryStorage.reset();
-    TelemetrySend.reset();
-
-    return this.setup();
+    return Impl.reset();
   },
   /**
    * Used only for testing purposes.
@@ -190,13 +186,14 @@ this.TelemetryController = Object.freeze({
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that resolves with the ping id once the ping is stored or sent.
+   * @returns {Promise} Test-only - a promise that resolves with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function(aType, aPayload, aOptions = {}) {
     aOptions.addClientId = aOptions.addClientId || false;
     aOptions.addEnvironment = aOptions.addEnvironment || false;
 
-    return Impl.submitExternalPing(aType, aPayload, aOptions);
+    const testOnly = Impl.submitExternalPing(aType, aPayload, aOptions);
+    return testOnly;
   },
 
   /**
@@ -416,7 +413,7 @@ let Impl = {
     // Fill the common ping fields.
     let pingData = {
       type: aType,
-      id: Utils.generateUUID(),
+      id: Policy.generatePingId(),
       creationDate: (Policy.now()).toISOString(),
       version: PING_FORMAT_VERSION,
       application: this._getApplicationSection(),
@@ -456,7 +453,7 @@ let Impl = {
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that is resolved with the ping id once the ping is stored or sent.
+   * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function send(aType, aPayload, aOptions) {
     this._log.trace("submitExternalPing - type: " + aType + ", aOptions: " + JSON.stringify(aOptions));
@@ -860,4 +857,18 @@ let Impl = {
 
     return ping;
   },
+
+  reset: Task.async(function*() {
+    this._clientID = null;
+    this._detachObservers();
+
+    // We need to kick of the controller setup first for tests that check the
+    // cached client id.
+    let controllerSetup = this.setupTelemetry(true);
+
+    yield TelemetrySend.reset();
+    yield TelemetryStorage.reset();
+
+    yield controllerSetup;
+  }),
 };
