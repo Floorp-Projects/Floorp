@@ -1,0 +1,43 @@
+<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <style>
+    g {
+      stroke: ButtonText;
+      stroke-width: 0.9px;
+      fill: none;
+    }
+
+    g:not(#close) {
+      shape-rendering: crispEdges;
+    }
+
+    g:not(:target) {
+      display: none;
+    }
+
+    use:target > g {
+      display: initial;
+    }
+
+    .highlight > g {
+      stroke: HighlightText;
+    }
+  </style>
+  <g id="close">
+    <line x1="1" y1="1" x2="11" y2="11"/>
+    <line x1="11" y1="1" x2="1" y2="11"/>
+  </g>
+  <g id="maximize">
+    <rect x="1.5" y="1.5" width="9" height="9"/>
+  </g>
+  <g id="minimize">
+    <line x1="1" y1="5.5" x2="11" y2="5.5"/>
+  </g>
+  <g id="restore">
+    <rect x="1.5" y="3.5" width="7" height="7"/>
+    <polyline points="3.5,3.5 3.5,1.5 10.5,1.5 10.5,8.5 8.5,8.5"/>
+  </g>
+  <use id="close-highlight" class="highlight" xlink:href="#close"/>
+  <use id="maximize-highlight" class="highlight" xlink:href="#maximize"/>
+  <use id="minimize-highlight" class="highlight" xlink:href="#minimize"/>
+  <use id="restore-highlight" class="highlight" xlink:href="#restore"/>
+</svg>
