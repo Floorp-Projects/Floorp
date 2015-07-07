@@ -989,11 +989,6 @@ public:
     return mParent;
   }
 
-  void Disconnect()
-  {
-    mParent = nullptr;
-  }
-
   bool Append(File *aFile) { return mFiles.AppendElement(aFile); }
 
   bool Remove(uint32_t aIndex) {
@@ -1040,7 +1035,7 @@ public:
 
 private:
   nsTArray<nsRefPtr<File>> mFiles;
-  nsISupports *mParent;
+  nsCOMPtr<nsISupports> mParent;
 };
 
 } // dom namespace
