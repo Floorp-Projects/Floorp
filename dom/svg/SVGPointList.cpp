@@ -16,11 +16,9 @@ namespace mozilla {
 nsresult
 SVGPointList::CopyFrom(const SVGPointList& rhs)
 {
-  if (!SetCapacity(rhs.Length())) {
-    // Yes, we do want fallible alloc here
+  if (!mItems.Assign(rhs.mItems, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mItems = rhs.mItems;
   return NS_OK;
 }
 
