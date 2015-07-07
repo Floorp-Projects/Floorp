@@ -1450,10 +1450,20 @@ WebConsoleFrame.prototype = {
       errorMessage = errorMessage.initial;
     }
 
+    let displayOrigin = aScriptError.sourceName;
+
+    // TLS errors are related to the connection and not the resource; therefore
+    // it makes sense to only display the protcol, host and port (prePath).
+    // This also means messages are grouped for a single origin.
+    if (aScriptError.category && aScriptError.category == "SHA-1 Signature") {
+      let sourceURI = Services.io.newURI(aScriptError.sourceName, null, null).QueryInterface(Ci.nsIURL);
+      displayOrigin = sourceURI.prePath;
+    }
+
     // Create a new message
     let msg = new Messages.Simple(errorMessage, {
       location: {
-        url: aScriptError.sourceName,
+        url: displayOrigin,
         line: aScriptError.lineNumber,
         column: aScriptError.columnNumber
       },
