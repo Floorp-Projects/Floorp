@@ -39,6 +39,8 @@
 #include "nsJSUtils.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
 #include "nsILoadGroup.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"

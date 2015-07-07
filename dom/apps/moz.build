@@ -33,7 +33,6 @@ EXTRA_JS_MODULES += [
     'AppDownloadManager.jsm',
     'AppsServiceChild.jsm',
     'FreeSpaceWatcher.jsm',
-    'InterAppCommService.jsm',
     'Langpacks.jsm',
     'OfflineCacheInstaller.jsm',
     'PermissionsInstaller.jsm',
@@ -45,6 +44,7 @@ EXTRA_JS_MODULES += [
 EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
     'ImportExport.jsm',
+    'InterAppCommService.jsm',
     'OperatorApps.jsm',
     'ScriptPreloader.jsm',
     'TrustedHostedAppsUtils.jsm',

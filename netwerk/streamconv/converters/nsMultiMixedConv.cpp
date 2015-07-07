@@ -6,7 +6,7 @@
 #include "nsMultiMixedConv.h"
 #include "plstr.h"
 #include "nsIHttpChannel.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsMimeTypes.h"
 #include "nsIStringStream.h"
 #include "nsCRT.h"

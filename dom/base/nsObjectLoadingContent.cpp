@@ -20,6 +20,7 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIExternalProtocolHandler.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIObjectFrame.h"
 #include "nsIPermissionManager.h"

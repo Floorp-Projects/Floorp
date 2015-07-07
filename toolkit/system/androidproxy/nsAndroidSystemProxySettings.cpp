@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNetUtil.h"
 #include "nsIURI.h"
 
 #include "nsISystemProxySettings.h"
 #include "nsIServiceManager.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsPrintfCString.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURI.h"
 

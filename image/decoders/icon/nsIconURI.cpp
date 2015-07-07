@@ -10,7 +10,6 @@
 #include "mozilla/ipc/URIUtils.h"
 
 #include "nsIconURI.h"
-#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "prprf.h"

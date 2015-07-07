@@ -236,8 +236,8 @@ static bool test_pldhash_RemovingIterator()
   // elision, compilers might optimize away move constructor calls for normal
   // iterator use.
   {
-    PLDHashTable::Iterator iter1(&t);
-    PLDHashTable::Iterator iter2(mozilla::Move(iter1));
+    PLDHashTable::RemovingIterator iter1(&t);
+    PLDHashTable::RemovingIterator iter2(mozilla::Move(iter1));
   }
 
   // First, we insert 64 items, which results in a capacity of 128, and a load

@@ -83,10 +83,6 @@ Decoder::Init()
   // No re-initializing
   MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
 
-  if (!IsSizeDecode()) {
-      mProgress |= FLAG_DECODE_STARTED;
-  }
-
   // Implementation-specific initialization
   InitInternal();
 

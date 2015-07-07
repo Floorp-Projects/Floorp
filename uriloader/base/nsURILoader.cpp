@@ -34,7 +34,6 @@
 
 #include "nsXPIDLString.h"
 #include "nsString.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsError.h"

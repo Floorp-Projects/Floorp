@@ -38,6 +38,7 @@
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsNameSpaceManager.h"

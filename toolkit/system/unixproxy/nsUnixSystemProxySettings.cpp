@@ -13,6 +13,7 @@
 #include "prnetdb.h"
 #include "prenv.h"
 #include "nsPrintfCString.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIGSettingsService.h"

@@ -193,16 +193,21 @@ GetLocationProperty(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-GetLine(JSContext* cx, char* bufp, FILE* file, const char* prompt) {
-    {
-        char line[4096] = { '\0' };
-        fputs(prompt, gOutFile);
-        fflush(gOutFile);
-        if ((!fgets(line, sizeof line, file) && errno != EINTR) || feof(file))
+GetLine(JSContext* cx, char* bufp, FILE* file, const char* prompt)
+{
+    fputs(prompt, gOutFile);
+    fflush(gOutFile);
+
+    char line[4096] = { '\0' };
+    while (true) {
+        if (fgets(line, sizeof line, file)) {
+            strcpy(bufp, line);
+            return true;
+        }
+        if (errno != EINTR) {
             return false;
-        strcpy(bufp, line);
+        }
     }
-    return true;
 }
 
 static bool

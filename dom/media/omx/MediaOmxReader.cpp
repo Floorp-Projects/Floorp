@@ -307,9 +307,7 @@ void MediaOmxReader::HandleResourceAllocated()
     mInitialFrame = frameSize;
     VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
     if (container) {
-      container->SetCurrentFrame(gfxIntSize(displaySize.width, displaySize.height),
-                                 nullptr,
-                                 mozilla::TimeStamp::Now());
+      container->ClearCurrentFrame(gfxIntSize(displaySize.width, displaySize.height));
     }
   }
 
@@ -528,11 +526,6 @@ MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
   nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
-
-  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
-  if (container && container->GetImageContainer()) {
-    container->GetImageContainer()->ClearAllImagesExceptFront();
-  }
 
   if (mHasAudio && mHasVideo) {
     // The OMXDecoder seeks/demuxes audio and video streams separately. So if

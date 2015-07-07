@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
 #include "mozilla/Maybe.h"              // for Maybe
 #include "mozilla/RefPtr.h"
@@ -109,12 +110,22 @@ public:
   {
     MOZ_CRASH("Use BeginTransactionWithDrawTarget");
   }
-  void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const gfx::IntRect& aRect);
+  void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
+                                      const gfx::IntRect& aRect);
 
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override
+  {
+    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+    return false;
+  }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) override;
+                              EndTransactionFlags aFlags = END_DEFAULT) override
+  {
+    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+  }
+  void EndTransaction(const TimeStamp& aTimeStamp,
+                      EndTransactionFlags aFlags = END_DEFAULT);
 
   virtual void SetRoot(Layer* aLayer) override { mRoot = aLayer; }
 
@@ -251,6 +262,22 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
+  void AppendImageCompositeNotification(const ImageCompositeNotification& aNotification)
+  {
+    // Only send composite notifications when we're drawing to the screen,
+    // because that's what they mean.
+    // Also when we're not drawing to the screen, DidComposite will not be
+    // called to extract and send these notifications, so they might linger
+    // and contain stale ImageContainerParent pointers.
+    if (!mCompositor->GetTargetContext()) {
+      mImageCompositeNotifications.AppendElement(aNotification);
+    }
+  }
+  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotification>* aNotifications)
+  {
+    aNotifications->MoveElementsFrom(mImageCompositeNotifications);
+  }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -296,6 +323,8 @@ private:
   bool mUnusedApzTransformWarning;
   RefPtr<Compositor> mCompositor;
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
+
+  nsTArray<ImageCompositeNotification> mImageCompositeNotifications;
 
   /**
    * Context target, nullptr when drawing directly to our swap chain.
@@ -357,6 +386,8 @@ public:
   virtual Layer* GetLayer() = 0;
 
   virtual void SetLayerManager(LayerManagerComposite* aManager);
+
+  LayerManagerComposite* GetLayerManager() const { return mCompositeManager; }
 
   /**
    * Perform a first pass over the layer tree to render all of the intermediate

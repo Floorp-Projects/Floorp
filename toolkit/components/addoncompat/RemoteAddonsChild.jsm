@@ -83,6 +83,10 @@ let NotificationTracker = {
   },
 
   findPaths: function(prefix) {
+    if (!this._paths) {
+      return [];
+    }
+
     let tracked = this._paths;
     for (let component of prefix) {
       tracked = setDefault(tracked, component, {});
@@ -524,7 +528,12 @@ let RemoteAddonsChild = {
   },
 
   init: function(global) {
+
     if (!this._ready) {
+      if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted){
+        return null;
+      }
+
       this.makeReady();
       this._ready = true;
     }

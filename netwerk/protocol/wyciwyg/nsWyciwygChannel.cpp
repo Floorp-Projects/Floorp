@@ -8,6 +8,7 @@
 #include "nsWyciwygChannel.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "LoadContextInfo.h"
 #include "nsICacheService.h" // only to initialize
 #include "nsICacheStorageService.h"

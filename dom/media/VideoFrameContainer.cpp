@@ -10,7 +10,6 @@
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGEffects.h"
-#include "ImageContainer.h"
 
 using namespace mozilla::layers;
 
@@ -20,6 +19,7 @@ VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
                                          already_AddRefed<ImageContainer> aContainer)
   : mElement(aElement),
     mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
+    mFrameID(0),
     mIntrinsicSizeChanged(false), mImageSizeChanged(false)
 {
   NS_ASSERTION(aElement, "aElement must not be null");
@@ -31,9 +31,30 @@ VideoFrameContainer::~VideoFrameContainer()
 
 void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
                                           Image* aImage,
-                                          TimeStamp aTargetTime)
+                                          const TimeStamp& aTargetTime)
+{
+  if (aImage) {
+    MutexAutoLock lock(mMutex);
+    nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+    imageList.AppendElement(
+        ImageContainer::NonOwningImage(aImage, aTargetTime, ++mFrameID));
+    SetCurrentFramesLocked(aIntrinsicSize, imageList);
+  } else {
+    ClearCurrentFrame(aIntrinsicSize);
+  }
+}
+
+void VideoFrameContainer::SetCurrentFrames(const gfxIntSize& aIntrinsicSize,
+                                           const nsTArray<ImageContainer::NonOwningImage>& aImages)
 {
   MutexAutoLock lock(mMutex);
+  SetCurrentFramesLocked(aIntrinsicSize, aImages);
+}
+
+void VideoFrameContainer::SetCurrentFramesLocked(const gfxIntSize& aIntrinsicSize,
+                                                 const nsTArray<ImageContainer::NonOwningImage>& aImages)
+{
+  mMutex.AssertCurrentThreadOwns();
 
   if (aIntrinsicSize != mIntrinsicSize) {
     mIntrinsicSize = aIntrinsicSize;
@@ -41,10 +62,6 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   }
 
   gfx::IntSize oldFrameSize = mImageContainer->GetCurrentSize();
-  TimeStamp lastPaintTime = mImageContainer->GetPaintTime();
-  if (!lastPaintTime.IsNull() && !mPaintTarget.IsNull()) {
-    mPaintDelay = lastPaintTime - mPaintTarget;
-  }
 
   // When using the OMX decoder, destruction of the current image can indirectly
   //  block on main thread I/O. If we let this happen while holding onto
@@ -52,41 +69,31 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   //  composite it can then block on |mImageContainer|'s lock, causing a
   //  deadlock. We use this hack to defer the destruction of the current image
   //  until it is safe.
-  nsRefPtr<Image> kungFuDeathGrip;
-  kungFuDeathGrip = mImageContainer->LockCurrentImage();
-  mImageContainer->UnlockCurrentImage();
+  nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
+  mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
-  mImageContainer->SetCurrentImage(aImage);
+  if (aImages.IsEmpty()) {
+    mImageContainer->ClearAllImages();
+  } else {
+    mImageContainer->SetCurrentImages(aImages);
+  }
   gfx::IntSize newFrameSize = mImageContainer->GetCurrentSize();
   if (oldFrameSize != newFrameSize) {
     mImageSizeChanged = true;
   }
-
-  mPaintTarget = aTargetTime;
 }
 
-void VideoFrameContainer::Reset()
-{
-  ClearCurrentFrame(true);
-  Invalidate();
-  mIntrinsicSize = gfxIntSize(-1, -1);
-  mPaintDelay = mozilla::TimeDuration();
-  mPaintTarget = mozilla::TimeStamp();
-  mImageContainer->ResetPaintCount();
-}
-
-void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
+void VideoFrameContainer::ClearCurrentFrame()
 {
   MutexAutoLock lock(mMutex);
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
-  nsRefPtr<Image> kungFuDeathGrip;
-  kungFuDeathGrip = mImageContainer->LockCurrentImage();
-  mImageContainer->UnlockCurrentImage();
+  nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
+  mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
   mImageContainer->ClearAllImages();
-  mImageSizeChanged = aResetSize;
+  mImageSizeChanged = false;
 }
 
 ImageContainer* VideoFrameContainer::GetImageContainer() {
@@ -96,8 +103,7 @@ ImageContainer* VideoFrameContainer::GetImageContainer() {
 
 double VideoFrameContainer::GetFrameDelay()
 {
-  MutexAutoLock lock(mMutex);
-  return mPaintDelay.ToSeconds();
+  return mImageContainer->GetPaintDelay().ToSeconds();
 }
 
 void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)

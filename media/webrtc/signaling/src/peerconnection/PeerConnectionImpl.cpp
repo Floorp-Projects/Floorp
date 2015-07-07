@@ -70,10 +70,12 @@
 #include "nsPrintfCString.h"
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
+#include "nsIURLParser.h"
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMLocation.h"
 #include "nsNullPrincipal.h"
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
@@ -372,7 +374,11 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mIceGatheringState(PCImplIceGatheringState::New)
   , mDtlsConnected(false)
   , mWindow(nullptr)
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  , mCertificate(nullptr)
+#else
   , mIdentity(nullptr)
+#endif
   , mPrivacyRequested(false)
   , mSTSThread(nullptr)
   , mAllowIceLoopback(false)
@@ -423,17 +429,6 @@ PeerConnectionImpl::~PeerConnectionImpl()
              __FUNCTION__, mHandle.c_str());
 
   Close();
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  {
-    // Deregister as an NSS Shutdown Object
-    nsNSSShutDownPreventionLock locker;
-    if (!isAlreadyShutDown()) {
-      destructorSafeDestroyNSSReference();
-      shutdown(calledFromObject);
-    }
-  }
-#endif
 
   // Since this and Initialize() occur on MainThread, they can't both be
   // running at once
@@ -751,16 +746,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   PeerConnectionCtx::GetInstance()->mPeerConnections[mHandle] = this;
 
-  STAMP_TIMECARD(mTimeCard, "Generating DTLS Identity");
-  // Create the DTLS Identity
-  mIdentity = DtlsIdentity::Generate();
-  STAMP_TIMECARD(mTimeCard, "Done Generating DTLS Identity");
-
-  if (!mIdentity) {
-    CSFLogError(logTag, "%s: Generate returned NULL", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-
   mJsepSession = MakeUnique<JsepSessionImpl>(mName,
                                              MakeUnique<PCUuidGenerator>());
 
@@ -781,17 +766,23 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  const std::string& fpAlg = DtlsIdentity::DEFAULT_HASH_ALGORITHM;
-  std::vector<uint8_t> fingerprint;
-  res = CalculateFingerprint(fpAlg, fingerprint);
-  NS_ENSURE_SUCCESS(res, res);
-  res = mJsepSession->AddDtlsFingerprint(fpAlg, fingerprint);
-  if (NS_FAILED(res)) {
-    CSFLogError(logTag, "%s: Couldn't set DTLS credentials, res=%u",
-                        __FUNCTION__,
-                        static_cast<unsigned>(res));
-    return res;
+#if defined(MOZILLA_EXTERNAL_LINKAGE)
+  {
+    mIdentity = DtlsIdentity::Generate();
+    if (!mIdentity) {
+      return NS_ERROR_FAILURE;
+    }
+
+    std::vector<uint8_t> fingerprint;
+    res = CalculateFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM,
+                               &fingerprint);
+    NS_ENSURE_SUCCESS(res, res);
+
+    res = mJsepSession->AddDtlsFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM,
+                                           fingerprint);
+    NS_ENSURE_SUCCESS(res, res);
   }
+#endif
 
   res = mJsepSession->SetBundlePolicy(aConfiguration.getBundlePolicy());
   if (NS_FAILED(res)) {
@@ -832,6 +823,53 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   }
 }
 #endif
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+void
+PeerConnectionImpl::SetCertificate(mozilla::dom::RTCCertificate& aCertificate)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  MOZ_ASSERT(!mCertificate, "This can only be called once");
+  mCertificate = &aCertificate;
+
+  std::vector<uint8_t> fingerprint;
+  nsresult rv = CalculateFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM,
+                                     &fingerprint);
+  if (NS_FAILED(rv)) {
+    CSFLogError(logTag, "%s: Couldn't calculate fingerprint, rv=%u",
+                __FUNCTION__, static_cast<unsigned>(rv));
+    mCertificate = nullptr;
+    return;
+  }
+  rv = mJsepSession->AddDtlsFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM,
+                                        fingerprint);
+  if (NS_FAILED(rv)) {
+    CSFLogError(logTag, "%s: Couldn't set DTLS credentials, rv=%u",
+                __FUNCTION__, static_cast<unsigned>(rv));
+    mCertificate = nullptr;
+  }
+}
+
+const nsRefPtr<mozilla::dom::RTCCertificate>&
+PeerConnectionImpl::Certificate() const
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  return mCertificate;
+}
+#endif
+
+mozilla::RefPtr<DtlsIdentity>
+PeerConnectionImpl::Identity() const
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  MOZ_ASSERT(mCertificate);
+  return mCertificate->CreateDtlsIdentity();
+#else
+  mozilla::RefPtr<DtlsIdentity> id = mIdentity;
+  return id;
+#endif
+}
 
 class CompareCodecPriority {
   public:
@@ -1023,13 +1061,6 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
   std::stable_sort(codecs.begin(), codecs.end(), comparator);
 #endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_OK;
-}
-
-RefPtr<DtlsIdentity> const
-PeerConnectionImpl::GetIdentity() const
-{
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  return mIdentity;
 }
 
 // Data channels won't work without a window, so in order for the C++ unit
@@ -2206,18 +2237,27 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
 nsresult
 PeerConnectionImpl::CalculateFingerprint(
     const std::string& algorithm,
-    std::vector<uint8_t>& fingerprint) const {
+    std::vector<uint8_t>* fingerprint) const {
   uint8_t buf[DtlsIdentity::HASH_ALGORITHM_MAX_LENGTH];
   size_t len = 0;
-  nsresult rv = mIdentity->ComputeFingerprint(algorithm, &buf[0], sizeof(buf),
-                                              &len);
+  CERTCertificate* cert;
+
+  MOZ_ASSERT(fingerprint);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  cert = mCertificate->Certificate();
+#else
+  cert = mIdentity->cert();
+#endif
+  nsresult rv = DtlsIdentity::ComputeFingerprint(cert, algorithm,
+                                                 &buf[0], sizeof(buf),
+                                                 &len);
   if (NS_FAILED(rv)) {
     CSFLogError(logTag, "Unable to calculate certificate fingerprint, rv=%u",
                         static_cast<unsigned>(rv));
     return rv;
   }
   MOZ_ASSERT(len > 0 && len <= DtlsIdentity::HASH_ALGORITHM_MAX_LENGTH);
-  fingerprint.assign(buf, buf + len);
+  fingerprint->assign(buf, buf + len);
   return NS_OK;
 }
 
@@ -2225,9 +2265,11 @@ NS_IMETHODIMP
 PeerConnectionImpl::GetFingerprint(char** fingerprint)
 {
   MOZ_ASSERT(fingerprint);
-  MOZ_ASSERT(mIdentity);
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  MOZ_ASSERT(mCertificate);
+#endif
   std::vector<uint8_t> fp;
-  nsresult rv = CalculateFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM, fp);
+  nsresult rv = CalculateFingerprint(DtlsIdentity::DEFAULT_HASH_ALGORITHM, &fp);
   NS_ENSURE_SUCCESS(rv, rv);
   std::ostringstream os;
   os << DtlsIdentity::DEFAULT_HASH_ALGORITHM << ' '
@@ -2426,25 +2468,6 @@ PeerConnectionImpl::ShutdownMedia()
   // SelfDestruct().
   mMedia.forget().take()->SelfDestruct();
 }
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-// If NSS is shutting down, then we need to get rid of the DTLS
-// identity right now; otherwise, we'll cause wreckage when we do
-// finally deallocate it in our destructor.
-void
-PeerConnectionImpl::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-PeerConnectionImpl::destructorSafeDestroyNSSReference()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  CSFLogDebug(logTag, "%s: NSS shutting down; freeing our DtlsIdentity.", __FUNCTION__);
-  mIdentity = nullptr;
-}
-#endif
 
 void
 PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,

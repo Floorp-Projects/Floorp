@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
+#include "nsIURI.h"
 #include "pldhash.h"
 #include "plhash.h"
 #include "plstr.h"

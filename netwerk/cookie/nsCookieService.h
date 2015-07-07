@@ -25,6 +25,7 @@
 #include "mozIStorageRow.h"
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageStatementCallback.h"
+#include "nsIFile.h"
 
 #include "mozilla/MemoryReporting.h"
 

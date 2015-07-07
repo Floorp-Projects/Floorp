@@ -18,7 +18,7 @@ random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-1b.xhtml asp
 skip-if(Android||B2G||Mulet) HTTP(..) == offset-1.xhtml offset-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 random skip-if(Android||B2G||Mulet) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) skip-if(gtkWidget) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android||B2G||Mulet) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G||Mulet) == poster-1.html poster-ref-blue250x200.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G||Mulet) == poster-2.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G||Mulet) == poster-3.html poster-ref-black140x100.html # Initial mulet triage: parity with B2G/B2G Desktop

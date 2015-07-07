@@ -26,6 +26,8 @@
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
 
+#include <android/native_window.h>
+
 class nsRunnable;
 class nsWindow;
 

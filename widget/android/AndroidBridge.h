@@ -308,7 +308,7 @@ public:
     int GetAPIVersion() { return mAPIVersion; }
     bool IsHoneycomb() { return mAPIVersion >= 11 && mAPIVersion <= 13; }
 
-    void ScheduleComposite();
+    void InvalidateAndScheduleComposite();
 
     nsresult GetProxyForURI(const nsACString & aSpec,
                             const nsACString & aScheme,

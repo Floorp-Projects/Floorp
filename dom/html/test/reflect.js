@@ -502,8 +502,10 @@ function reflectInt(aParameters)
     if (result) {
       var resultInt = parseInt(result[1], 10);
       if ((nonNegative ? 0 : -0x80000000) <= resultInt && resultInt <= 0x7FFFFFFF) {
-        // If the value is within allowed value range for signed/unsigned integer, return value
-        return resultInt;
+        // If the value is within allowed value range for signed/unsigned
+        // integer, return it -- but add 0 to it to convert a possible -0 into
+        // +0, the only zero present in the signed integer range.
+        return resultInt + 0;
       }
     }
     return defaultValue;

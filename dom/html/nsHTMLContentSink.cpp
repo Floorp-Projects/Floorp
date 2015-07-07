@@ -21,7 +21,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsScriptLoader.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsIContentViewer.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsToken.h"

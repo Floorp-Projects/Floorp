@@ -4,3 +4,4 @@ fuzzy-if(winWidget,175,443) == 611498-1.html 611498-ref.html
 skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == 709477-1.html 709477-1-ref.html # bug 773482
 skip-if(!asyncPanZoom) == 1086723.html 1086723-ref.html
 == 853889-1.html 853889-1-ref.html
+== 1143303-1.svg pass.svg

@@ -16,7 +16,6 @@
 #include "mozilla/gfx/2D.h"
 #include "nsTextFrameUtils.h"
 #include "nsIPersistentProperties2.h"
-#include "nsNetUtil.h"
 #include "GreekCasing.h"
 #include "IrishCasing.h"
 

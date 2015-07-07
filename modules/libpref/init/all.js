@@ -490,6 +490,10 @@ pref("media.autoplay.enabled", true);
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 10);
 
+// The maximum number of queued frames to send to the compositor.
+// By default, send all of them.
+pref("media.video-queue.send-to-compositor-size", 9999);
+
 // Whether to disable the video stats to prevent fingerprinting
 pref("media.video_stats.enabled", true);
 

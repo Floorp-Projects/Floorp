@@ -59,6 +59,7 @@ public abstract class DoorHanger extends LinearLayout {
     protected final Type mType;
 
     protected final ImageView mIcon;
+    protected final TextView mLink;
     protected final TextView mDoorhangerTitle;
 
     protected final Context mContext;
@@ -84,6 +85,7 @@ public abstract class DoorHanger extends LinearLayout {
 
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
+        mLink = (TextView) findViewById(R.id.doorhanger_link);
         mDoorhangerTitle = (TextView) findViewById(R.id.doorhanger_title);
 
         mNegativeButton = (Button) findViewById(R.id.doorhanger_button_negative);

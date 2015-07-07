@@ -74,11 +74,6 @@ template <class T> class MediaQueue : private nsDeque {
     return static_cast<T*>(nsDeque::PeekFront());
   }
 
-  inline void Empty() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    nsDeque::Empty();
-  }
-
   void Reset() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     while (GetSize() > 0) {
@@ -139,6 +134,13 @@ template <class T> class MediaQueue : private nsDeque {
     for (; i < GetSize(); ++i) {
       nsRefPtr<T> elem = static_cast<T*>(ObjectAt(i));
       aResult->AppendElement(elem);
+    }
+  }
+
+  void GetFirstElements(uint32_t aMaxElements, nsTArray<nsRefPtr<T>>* aResult) {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    for (int32_t i = 0; i < (int32_t)aMaxElements && i < GetSize(); ++i) {
+      *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
     }
   }
 

@@ -172,18 +172,20 @@ CompositorOGL::CleanupResources()
     ctx = mGLContext;
   }
 
+  if (!ctx->MakeCurrent()) {
+    // Leak resources!
+    mQuadVBO = 0;
+    mGLContext = nullptr;
+    mPrograms.clear();
+    return;
+  }
+
   for (std::map<ShaderConfigOGL, ShaderProgramOGL *>::iterator iter = mPrograms.begin();
        iter != mPrograms.end();
        iter++) {
     delete iter->second;
   }
   mPrograms.clear();
-
-  if (!ctx->MakeCurrent()) {
-    mQuadVBO = 0;
-    mGLContext = nullptr;
-    return;
-  }
 
   ctx->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 

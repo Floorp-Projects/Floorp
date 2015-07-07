@@ -239,9 +239,7 @@ void OggReader::SetupTargetTheora(TheoraState* aTheoraState)
 
     VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
     if (container) {
-      container->SetCurrentFrame(gfxIntSize(displaySize.width, displaySize.height),
-                                 nullptr,
-                                 TimeStamp::Now());
+      container->ClearCurrentFrame(gfxIntSize(displaySize.width, displaySize.height));
     }
 
     // Copy Theora info data for time computations on other threads.
@@ -854,48 +852,40 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
     return NS_OK;
   }
 
-  if (ret == TH_DUPFRAME) {
-    nsRefPtr<VideoData> v = VideoData::CreateDuplicate(mDecoder->GetResource()->Tell(),
-                                                       time,
-                                                       endTime - time,
-                                                       aPacket->granulepos);
-    mVideoQueue.Push(v);
-  } else if (ret == 0) {
-    th_ycbcr_buffer buffer;
-    ret = th_decode_ycbcr_out(mTheoraState->mCtx, buffer);
-    NS_ASSERTION(ret == 0, "th_decode_ycbcr_out failed");
-    bool isKeyframe = th_packet_iskeyframe(aPacket) == 1;
-    VideoData::YCbCrBuffer b;
-    for (uint32_t i=0; i < 3; ++i) {
-      b.mPlanes[i].mData = buffer[i].data;
-      b.mPlanes[i].mHeight = buffer[i].height;
-      b.mPlanes[i].mWidth = buffer[i].width;
-      b.mPlanes[i].mStride = buffer[i].stride;
-      b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
-    }
-
-    nsRefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
-                                              mDecoder->GetImageContainer(),
-                                              mDecoder->GetResource()->Tell(),
-                                              time,
-                                              endTime - time,
-                                              b,
-                                              isKeyframe,
-                                              aPacket->granulepos,
-                                              mPicture);
-    if (!v) {
-      // There may be other reasons for this error, but for
-      // simplicity just assume the worst case: out of memory.
-      NS_WARNING("Failed to allocate memory for video frame");
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mVideoQueue.Push(v);
+  th_ycbcr_buffer buffer;
+  ret = th_decode_ycbcr_out(mTheoraState->mCtx, buffer);
+  NS_ASSERTION(ret == 0, "th_decode_ycbcr_out failed");
+  bool isKeyframe = th_packet_iskeyframe(aPacket) == 1;
+  VideoData::YCbCrBuffer b;
+  for (uint32_t i=0; i < 3; ++i) {
+    b.mPlanes[i].mData = buffer[i].data;
+    b.mPlanes[i].mHeight = buffer[i].height;
+    b.mPlanes[i].mWidth = buffer[i].width;
+    b.mPlanes[i].mStride = buffer[i].stride;
+    b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
   }
+
+  nsRefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
+                                            mDecoder->GetImageContainer(),
+                                            mDecoder->GetResource()->Tell(),
+                                            time,
+                                            endTime - time,
+                                            b,
+                                            isKeyframe,
+                                            aPacket->granulepos,
+                                            mPicture);
+  if (!v) {
+    // There may be other reasons for this error, but for
+    // simplicity just assume the worst case: out of memory.
+    NS_WARNING("Failed to allocate memory for video frame");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mVideoQueue.Push(v);
   return NS_OK;
 }
 
 bool OggReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                     int64_t aTimeThreshold)
+                                 int64_t aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
 

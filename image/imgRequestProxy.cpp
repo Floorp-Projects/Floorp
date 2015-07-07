@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsCRTGlue.h"
 #include "imgINotificationObserver.h"
-#include "nsNetUtil.h"
 
 using namespace mozilla::image;
 
@@ -802,21 +801,6 @@ imgRequestProxy::GetHasTransferredData(bool* hasData)
     *hasData = true;
   }
   return NS_OK;
-}
-
-void
-imgRequestProxy::OnStartDecode()
-{
-  // This notification is deliberately not propagated since there are no
-  // listeners who care about it.
-  if (GetOwner()) {
-    // In the case of streaming jpegs, it is possible to get multiple
-    // OnStartDecodes which indicates the beginning of a new decode.  The cache
-    // entry's size therefore needs to be reset to 0 here.  If we do not do
-    // this, the code in ProgressTrackerObserver::OnStopFrame will continue to
-    // increase the data size cumulatively.
-    GetOwner()->ResetCacheEntry();
-  }
 }
 
 static const char*

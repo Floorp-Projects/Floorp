@@ -17,6 +17,8 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsXPCOMStrings.h"
 #include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsCRTGlue.h"

@@ -50,7 +50,9 @@ function onTimeUpdate_Video(e) {
     return;
   }
   t.removeEventListener("timeupdate", onTimeUpdate_Video);
-  ok(t.mozPaintedFrames > 0, t.name + ": mozPaintedFrames should be positive, is " + t.mozPaintedFrames + ".");
+  // There's no guarantee that a video frame composite notification reaches
+  // us before timeupdate fires.
+  ok(t.mozPaintedFrames >= 0, t.name + ": mozPaintedFrames should be positive or zero, is " + t.mozPaintedFrames + ".");
   ok(t.mozFrameDelay >= 0, t.name + ": mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
 
   if (t._firstTime) {

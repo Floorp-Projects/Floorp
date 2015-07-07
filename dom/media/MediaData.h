@@ -269,18 +269,6 @@ public:
                                   const IntRect& aPicture,
                                   bool aCopyData);
 
-  // Constructs a duplicate VideoData object. This intrinsically tells the
-  // player that it does not need to update the displayed frame when this
-  // frame is played; this frame is identical to the previous.
-  static already_AddRefed<VideoData> CreateDuplicate(int64_t aOffset,
-                                                     int64_t aTime,
-                                                     int64_t aDuration,
-                                                     int64_t aTimecode)
-  {
-    nsRefPtr<VideoData> rv = new VideoData(aOffset, aTime, aDuration, aTimecode);
-    return rv.forget();
-  }
-
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // Dimensions at which to display the video frame. The picture region
@@ -291,21 +279,17 @@ public:
   // This frame's image.
   nsRefPtr<Image> mImage;
 
-  // When true, denotes that this frame is identical to the frame that
-  // came before; it's a duplicate. mBuffer will be empty.
-  const bool mDuplicate;
+  int32_t mFrameID;
 
-  VideoData(int64_t aOffset,
-            int64_t aTime,
-            int64_t aDuration,
-            int64_t aTimecode);
+  bool mSentToCompositor;
 
   VideoData(int64_t aOffset,
             int64_t aTime,
             int64_t aDuration,
             bool aKeyframe,
             int64_t aTimecode,
-            IntSize aDisplay);
+            IntSize aDisplay,
+            int32_t aFrameID);
 
 protected:
   ~VideoData();

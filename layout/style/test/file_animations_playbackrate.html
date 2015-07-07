@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish, opener.SpecialPowers);
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 10;
+
+  advance_clock(300);
+
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 30 }, RunningOn.Compositor,
+          "at 300ms");
+  done_div();
+});
+</script>
+</body>
+</html>

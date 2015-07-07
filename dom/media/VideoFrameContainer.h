@@ -12,16 +12,12 @@
 #include "gfxPoint.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 
 namespace dom {
 class HTMLMediaElement;
-}
-
-namespace layers {
-class Image;
-class ImageContainer;
 }
 
 /**
@@ -47,10 +43,15 @@ public:
 
   // Call on any thread
   B2G_ACL_EXPORT void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
-                       TimeStamp aTargetTime);
-  void ClearCurrentFrame(bool aResetSize = false);
-  // Reset the VideoFrameContainer
-  void Reset();
+                       const TimeStamp& aTargetTime);
+  void SetCurrentFrames(const gfxIntSize& aIntrinsicSize,
+                        const nsTArray<ImageContainer::NonOwningImage>& aImages);
+  void ClearCurrentFrame(const gfxIntSize& aIntrinsicSize)
+  {
+    SetCurrentFrames(aIntrinsicSize, nsTArray<ImageContainer::NonOwningImage>());
+  }
+
+  void ClearCurrentFrame();
   // Time in seconds by which the last painted video frame was late by.
   // E.g. if the last painted frame should have been painted at time t,
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
@@ -66,6 +67,9 @@ public:
   void ForgetElement() { mElement = nullptr; }
 
 protected:
+  void SetCurrentFramesLocked(const gfxIntSize& aIntrinsicSize,
+                              const nsTArray<ImageContainer::NonOwningImage>& aImages);
+
   // Non-addreffed pointer to the element. The element calls ForgetElement
   // to clear this reference when the element is destroyed.
   dom::HTMLMediaElement* mElement;
@@ -79,13 +83,9 @@ protected:
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
   gfxIntSize mIntrinsicSize;
-  // The time at which the current video frame should have been painted.
-  // Access protected by mVideoUpdateLock.
-  TimeStamp mPaintTarget;
-  // The delay between the last video frame being presented and it being
-  // painted. This is time elapsed after mPaintTarget until the most recently
-  // painted frame appeared on screen.
-  TimeDuration mPaintDelay;
+  // For SetCurrentFrame callers we maintain our own mFrameID which is auto-
+  // incremented at every SetCurrentFrame.
+  ImageContainer::FrameID mFrameID;
   // True when the intrinsic size has been changed by SetCurrentFrame() since
   // the last call to Invalidate().
   // The next call to Invalidate() will recalculate

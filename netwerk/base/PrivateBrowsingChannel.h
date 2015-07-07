@@ -13,6 +13,7 @@
 #include "nsILoadContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {

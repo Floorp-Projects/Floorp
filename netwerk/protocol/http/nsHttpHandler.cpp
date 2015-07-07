@@ -29,7 +29,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "prprf.h"
-#include "nsNetUtil.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
@@ -49,6 +48,8 @@
 #include "nsIParentalControlsService.h"
 #include "nsINetworkLinkService.h"
 #include "nsHttpChannelAuthProvider.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/URIUtils.h"

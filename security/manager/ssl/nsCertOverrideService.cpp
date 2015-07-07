@@ -20,6 +20,7 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
+#include "nsISafeOutputStream.h"
 #include "nsPromiseFlatString.h"
 #include "nsStreamUtils.h"
 #include "nsStringBuffer.h"

@@ -14,6 +14,7 @@
 #include "nsIParentChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "OfflineObserver.h"
+#include "nsIChannelEventSink.h"
 
 class nsILoadContext;
 

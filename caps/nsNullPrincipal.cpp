@@ -15,7 +15,7 @@
 #include "nsNullPrincipal.h"
 #include "nsNullPrincipalURI.h"
 #include "nsMemory.h"
-#include "nsNetUtil.h"
+#include "nsIURIWithPrincipal.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
 #include "nsError.h"

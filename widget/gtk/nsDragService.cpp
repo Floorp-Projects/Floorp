@@ -102,7 +102,12 @@ nsDragService::nsDragService()
     obsServ->AddObserver(this, "quit-application", false);
 
     // our hidden source widget
+#if (MOZ_WIDGET_GTK == 2)
     mHiddenWidget = gtk_window_new(GTK_WINDOW_POPUP);
+#else
+    // Using an offscreen window works around bug 983843.
+    mHiddenWidget = gtk_offscreen_window_new();
+#endif
     // make sure that the widget is realized so that
     // we can use it as a drag source.
     gtk_widget_realize(mHiddenWidget);

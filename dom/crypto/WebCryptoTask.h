@@ -205,6 +205,31 @@ protected:
   virtual void CallCallback(nsresult rv) override final;
 };
 
+// XXX This class is declared here (unlike others) to enable reuse by WebRTC.
+class GenerateAsymmetricKeyTask : public WebCryptoTask
+{
+public:
+  GenerateAsymmetricKeyTask(JSContext* aCx,
+                            const ObjectOrString& aAlgorithm, bool aExtractable,
+                            const Sequence<nsString>& aKeyUsages);
+protected:
+  ScopedPLArenaPool mArena;
+  CryptoKeyPair mKeyPair;
+  nsString mAlgName;
+  CK_MECHANISM_TYPE mMechanism;
+  PK11RSAGenParams mRsaParams;
+  SECKEYDHParams mDhParams;
+  nsString mNamedCurve;
+
+  virtual void ReleaseNSSResources() override;
+  virtual nsresult DoCrypto() override;
+  virtual void Resolve() override;
+
+private:
+  ScopedSECKEYPublicKey mPublicKey;
+  ScopedSECKEYPrivateKey mPrivateKey;
+};
+
 } // namespace dom
 } // namespace mozilla
 

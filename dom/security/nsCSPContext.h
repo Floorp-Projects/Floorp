@@ -16,7 +16,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISerializable.h"
 #include "nsIStreamListener.h"
-#include "nsWeakPtr.h"
+#include "nsWeakReference.h"
 #include "nsXPCOM.h"
 
 #define NS_CSPCONTEXT_CONTRACTID "@mozilla.org/cspcontext;1"

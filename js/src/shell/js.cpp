@@ -259,8 +259,6 @@ extern JS_EXPORT_API(void)   add_history(char* line);
 static char*
 GetLine(FILE* file, const char * prompt)
 {
-    size_t size;
-    char* buffer;
 #ifdef EDITLINE
     /*
      * Use readline only if file is stdin, because there's no way to specify
@@ -283,17 +281,29 @@ GetLine(FILE* file, const char * prompt)
         return linep;
     }
 #endif
+
     size_t len = 0;
     if (*prompt != '\0') {
         fprintf(gOutFile, "%s", prompt);
         fflush(gOutFile);
     }
-    size = 80;
-    buffer = (char*) malloc(size);
+
+    size_t size = 80;
+    char* buffer = static_cast<char*>(malloc(size));
     if (!buffer)
         return nullptr;
+
     char* current = buffer;
-    while (fgets(current, size - len, file)) {
+    while (true) {
+        while (true) {
+            if (fgets(current, size - len, file))
+                break;
+            if (errno != EINTR) {
+                free(buffer);
+                return nullptr;
+            }
+        }
+
         len += strlen(current);
         char* t = buffer + len - 1;
         if (*t == '\n') {
@@ -301,9 +311,10 @@ GetLine(FILE* file, const char * prompt)
             *t = '\0';
             return buffer;
         }
+
         if (len + 1 == size) {
             size = size * 2;
-            char* tmp = (char*) js_realloc(buffer, size);
+            char* tmp = static_cast<char*>(realloc(buffer, size));
             if (!tmp) {
                 free(buffer);
                 return nullptr;
@@ -312,6 +323,7 @@ GetLine(FILE* file, const char * prompt)
         }
         current = buffer + len;
     }
+
     if (len && !ferror(file))
         return buffer;
     free(buffer);

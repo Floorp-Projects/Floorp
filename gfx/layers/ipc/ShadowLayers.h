@@ -27,6 +27,7 @@ namespace mozilla {
 namespace layers {
 
 class EditReply;
+class ImageContainer;
 class Layer;
 class PLayerChild;
 class PLayerTransactionChild;
@@ -123,7 +124,8 @@ public:
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  void Connect(CompositableClient* aCompositable) override;
+  virtual void Connect(CompositableClient* aCompositable,
+                       ImageContainer* aImageContainer) override;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) override;
@@ -211,13 +213,6 @@ public:
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
-  /**
-   * Notify the compositor that a compositable will be updated asynchronously
-   * through ImageBridge, using an ID to connect the protocols on the
-   * compositor side.
-   */
-  void AttachAsyncCompositable(PLayerTransactionChild* aLayer, uint64_t aID);
-
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
 
@@ -236,22 +231,17 @@ public:
                                    const nsIntRegion& aUpdatedRegion) override;
 
   /**
-   * Communicate the picture rect of an image to the compositor
+   * See CompositableForwarder::UseTextures
    */
-  void UpdatePictureRect(CompositableClient* aCompositable,
-                         const gfx::IntRect& aRect) override;
-
-  /**
-   * See CompositableForwarder::UseTexture
-   */
-  virtual void UseTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) override;
+  virtual void UseTextures(CompositableClient* aCompositable,
+                           const nsTArray<TimedTextureClient>& aTextures) override;
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;
 #ifdef MOZ_WIDGET_GONK
   virtual void UseOverlaySource(CompositableClient* aCompositable,
-                                const OverlaySource& aOverlay) override;
+                                const OverlaySource& aOverlay,
+                                const nsIntRect& aPictureRect) override;
 #endif
 
   /**

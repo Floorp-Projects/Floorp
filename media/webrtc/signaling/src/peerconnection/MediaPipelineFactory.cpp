@@ -177,7 +177,7 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
                     ? TransportLayerDtls::CLIENT
                     : TransportLayerDtls::SERVER);
 
-  RefPtr<DtlsIdentity> pcid = mPC->GetIdentity();
+  RefPtr<DtlsIdentity> pcid = mPC->Identity();
   if (!pcid) {
     MOZ_MTLOG(ML_ERROR, "Failed to get DTLS identity.");
     return NS_ERROR_FAILURE;

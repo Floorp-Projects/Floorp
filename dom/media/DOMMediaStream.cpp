@@ -678,7 +678,9 @@ DOMHwMediaStream::DOMHwMediaStream()
   mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS_OVERLAY);
   nsRefPtr<Image> img = mImageContainer->CreateImage(ImageFormat::OVERLAY_IMAGE);
   mOverlayImage = static_cast<layers::OverlayImage*>(img.get());
-  mImageContainer->SetCurrentImage(mOverlayImage);
+  nsAutoTArray<ImageContainer::NonOwningImage,1> images;
+  images.AppendElement(ImageContainer::NonOwningImage(img));
+  mImageContainer->SetCurrentImages(images);
 #endif
 }
 
