@@ -252,10 +252,12 @@ let gFxAccounts = {
 
     // Make sure the button is disabled in customization mode.
     if (this._inCustomizationMode) {
+      this.panelUIStatus.setAttribute("disabled", "true");
       this.panelUILabel.setAttribute("disabled", "true");
       this.panelUIAvatar.setAttribute("disabled", "true");
       this.panelUIIcon.setAttribute("disabled", "true");
     } else {
+      this.panelUIStatus.removeAttribute("disabled");
       this.panelUILabel.removeAttribute("disabled");
       this.panelUIAvatar.removeAttribute("disabled");
       this.panelUIIcon.removeAttribute("disabled");
