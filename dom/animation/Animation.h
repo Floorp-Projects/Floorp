@@ -218,6 +218,11 @@ public:
    */
   Nullable<TimeDuration> GetCurrentOrPendingStartTime() const;
 
+  const nsString& Name() const
+  {
+    return mEffect ? mEffect->Name() : EmptyString();
+  }
+
   bool IsPausedOrPausing() const
   {
     return PlayState() == AnimationPlayState::Paused ||

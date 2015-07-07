@@ -173,7 +173,7 @@ CSSAnimation::QueueEvents(EventArray& aEventsToDispatch)
     StickyTimeDuration elapsedTime =
       std::min(StickyTimeDuration(mEffect->InitialAdvance()),
                computedTiming.mActiveDuration);
-    AnimationEventInfo ei(target, mAnimationName, NS_ANIMATION_START,
+    AnimationEventInfo ei(target, Name(), NS_ANIMATION_START,
                           elapsedTime,
                           PseudoTypeAsString(targetPseudoType));
     aEventsToDispatch.AppendElement(ei);
@@ -196,7 +196,7 @@ CSSAnimation::QueueEvents(EventArray& aEventsToDispatch)
     elapsedTime = computedTiming.mActiveDuration;
   }
 
-  AnimationEventInfo ei(target, mAnimationName, message, elapsedTime,
+  AnimationEventInfo ei(target, Name(), message, elapsedTime,
                         PseudoTypeAsString(targetPseudoType));
   aEventsToDispatch.AppendElement(ei);
 }
@@ -373,8 +373,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           CSSAnimation* a = collection->mAnimations[oldIdx]->AsCSSAnimation();
           MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
                         " be CSSAnimation objects");
-          if (a->AnimationName() ==
-              newAnim->AsCSSAnimation()->AnimationName()) {
+          if (a->Name() == newAnim->Name()) {
             oldAnim = a;
             break;
           }
@@ -551,7 +550,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    nsRefPtr<CSSAnimation> dest = new CSSAnimation(aTimeline, src.GetName());
+    nsRefPtr<CSSAnimation> dest = new CSSAnimation(aTimeline);
     aAnimations.AppendElement(dest);
 
     AnimationTiming timing;
@@ -564,7 +563,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
     nsRefPtr<KeyframeEffectReadOnly> destEffect =
       new KeyframeEffectReadOnly(mPresContext->Document(), aTarget,
-                                 aStyleContext->GetPseudoType(), timing);
+                                 aStyleContext->GetPseudoType(), timing,
+                                 src.GetName());
     dest->SetEffect(destEffect);
 
     if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
