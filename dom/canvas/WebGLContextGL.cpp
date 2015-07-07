@@ -1211,6 +1211,13 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
                     const TexInternalFormat effectiveInternalFormat =
                         fba.Texture()->ImageInfoBase().EffectiveInternalFormat();
+
+                    if (effectiveInternalFormat == LOCAL_GL_NONE) {
+                        ErrorInvalidOperation("getFramebufferAttachmentParameter: "
+                                              "texture contains no data");
+                        return JS::NullValue();
+                    }
+
                     TexInternalFormat unsizedinternalformat = LOCAL_GL_NONE;
                     TexType type = LOCAL_GL_NONE;
                     UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(
