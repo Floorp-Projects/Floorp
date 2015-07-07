@@ -246,7 +246,6 @@ public:
                                        bool aLastPart) override;
 
   void NotifyForLoadEvent(Progress aProgress);
-  void NotifyForDecodeOnlyOnDraw();
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
