@@ -81,7 +81,7 @@ template <class T, void MarkFunc(JSTracer* trc, T* ref, const char* name), class
 static inline void
 MarkExactStackRootList(JSTracer* trc, Source* s, const char* name)
 {
-    Rooted<T>* rooter = s->template gcRooters<T>();
+    Rooted<T>* rooter = s->roots.template gcRooters<T>();
     while (rooter) {
         T* addr = rooter->address();
         if (!IgnoreExactRoot(addr))
@@ -282,7 +282,7 @@ AutoGCRooter::traceAll(JSTracer* trc)
 AutoGCRooter::traceAllWrappers(JSTracer* trc)
 {
     for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
-        for (AutoGCRooter* gcr = cx->autoGCRooters; gcr; gcr = gcr->down) {
+        for (AutoGCRooter* gcr = cx->roots.autoGCRooters_; gcr; gcr = gcr->down) {
             if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
                 gcr->trace(trc);
         }
