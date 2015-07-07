@@ -7,6 +7,8 @@
 #ifndef vm_TypedArrayObject_h
 #define vm_TypedArrayObject_h
 
+#include "mozilla/Attributes.h"
+
 #include "jsobj.h"
 
 #include "gc/Barrier.h"
@@ -43,7 +45,13 @@ class TypedArrayLayout
     const Class* maxClass_;
 
   public:
-    TypedArrayLayout(bool isShared, bool isNeuterable, const Class* firstClass, const Class* maxClass);
+    MOZ_CONSTEXPR TypedArrayLayout(bool isShared, bool isNeuterable,
+                                   const Class* firstClass, const Class* maxClass)
+        : isShared_(isShared)
+        , isNeuterable_(isNeuterable)
+        , firstClass_(firstClass)
+        , maxClass_(maxClass)
+    {}
 
     // Underlying (Shared)ArrayBufferObject.
     static const size_t BUFFER_SLOT = 0;

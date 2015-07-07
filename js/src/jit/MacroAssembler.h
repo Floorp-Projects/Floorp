@@ -350,9 +350,17 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     // ===============================================================
-    // Call functions.
+    // Simple call functions.
 
-    using MacroAssemblerSpecific::call; // legacy
+    void call(Register reg) PER_ARCH;
+    void call(const Address& addr) PER_ARCH ONLY_X86_X64;
+    void call(Label* label) PER_ARCH;
+    void call(ImmWord imm) PER_ARCH;
+    // Call a target native function, which is neither traceable nor movable.
+    void call(ImmPtr imm) PER_ARCH;
+    void call(AsmJSImmPtr imm) PER_ARCH;
+    // Call a target JitCode, which must be traceable, and may be movable.
+    void call(JitCode* c) PER_ARCH;
 
     inline void call(const CallSiteDesc& desc, const Register reg);
     inline void call(const CallSiteDesc& desc, Label* label);

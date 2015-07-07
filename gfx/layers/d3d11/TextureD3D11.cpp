@@ -9,7 +9,6 @@
 #include "Effects.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
-#include "gfxD2DSurface.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"

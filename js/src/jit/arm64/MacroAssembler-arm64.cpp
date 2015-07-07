@@ -56,11 +56,28 @@ MacroAssemblerCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
 }
 
 void
+MacroAssemblerCompat::callWithExitFrame(Label* target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor)); // descriptor
+    asMasm().call(target);
+}
+
+void
 MacroAssemblerCompat::callWithExitFrame(JitCode* target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
-    call(target);
+    asMasm().call(target);
+}
+
+void
+MacroAssemblerCompat::callWithExitFrame(JitCode* target, Register dynStack)
+{
+    add32(Imm32(framePushed()), dynStack);
+    makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    Push(dynStack); // descriptor
+    asMasm().call(target);
 }
 
 void
@@ -441,7 +458,7 @@ MacroAssemblerCompat::callWithABI(void* fun, MoveOp::Type result)
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(ImmPtr(fun));
+    asMasm().call(ImmPtr(fun));
     callWithABIPost(stackAdjust, result);
 }
 
@@ -452,7 +469,7 @@ MacroAssemblerCompat::callWithABI(Register fun, MoveOp::Type result)
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(ip0);
+    asMasm().call(ip0);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -461,7 +478,7 @@ MacroAssemblerCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(imm);
+    asMasm().call(imm);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -472,7 +489,7 @@ MacroAssemblerCompat::callWithABI(Address fun, MoveOp::Type result)
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
-    call(ip0);
+    asMasm().call(ip0);
     callWithABIPost(stackAdjust, result);
 }
 
@@ -682,6 +699,58 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     pop(val);
     adjustFrame(-1 * int64_t(sizeof(int64_t)));
+}
+
+// ===============================================================
+// Simple call functions.
+
+void
+MacroAssembler::call(Register reg)
+{
+    syncStackPtr();
+    Blr(ARMRegister(reg, 64));
+}
+
+void
+MacroAssembler::call(Label* label)
+{
+    syncStackPtr();
+    Bl(label);
+}
+
+void
+MacroAssembler::call(ImmWord imm)
+{
+    call(ImmPtr((void*)imm.value));
+}
+
+void
+MacroAssembler::call(ImmPtr imm)
+{
+    syncStackPtr();
+    movePtr(imm, ip0);
+    Blr(vixl::ip0);
+}
+
+void
+MacroAssembler::call(AsmJSImmPtr imm)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    syncStackPtr();
+    movePtr(imm, scratch);
+    call(scratch);
+}
+
+void
+MacroAssembler::call(JitCode* c)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    syncStackPtr();
+    BufferOffset off = immPool64(scratch64, uint64_t(c->raw()));
+    addPendingJump(off, ImmPtr(c->raw()), Relocation::JITCODE);
+    blr(scratch64);
 }
 
 } // namespace jit
