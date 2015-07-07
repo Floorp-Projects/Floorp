@@ -14,7 +14,6 @@
 
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
@@ -45,7 +44,6 @@ const LRU_PINGS = TelemetrySend.MAX_LRU_PINGS;
 
 const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
-let gHttpServer = new HttpServer();
 let gCreatedPings = 0;
 let gSeenPings = 0;
 
@@ -147,20 +145,6 @@ function pingHandler(aRequest) {
 }
 
 /**
- * Returns a Promise that resolves when gHttpServer has been
- * successfully shut down.
- *
- * @returns Promise
- */
-function stopHttpServer() {
-  let deferred = Promise.defer();
-  gHttpServer.stop(function() {
-    deferred.resolve();
-  })
-  return deferred.promise;
-}
-
-/**
  * Clear out all pending pings.
  */
 let clearPendingPings = Task.async(function*() {
@@ -179,8 +163,8 @@ function startTelemetry() {
 }
 
 function run_test() {
-  gHttpServer.registerPrefixHandler("/submit/telemetry/", pingHandler);
-  gHttpServer.start(-1);
+  PingServer.start();
+  PingServer.registerPingHandler(pingHandler);
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -191,7 +175,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(TelemetryController.Constants.PREF_ENABLED, true);
   Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
-                             "http://localhost:" + gHttpServer.identity.primaryPort);
+                             "http://localhost:" + PingServer.port);
   run_next_test();
 }
 
@@ -388,7 +372,7 @@ add_task(function* test_overdue_old_format() {
 
   let receivedPings = 0;
   // Register a new prefix handler to validate the URL.
-  gHttpServer.registerPrefixHandler("/submit/telemetry/", request => {
+  PingServer.registerPingHandler(request => {
     // Check that we have a version query parameter in the URL.
     Assert.notEqual(request.queryString, "");
 
@@ -407,5 +391,5 @@ add_task(function* test_overdue_old_format() {
 });
 
 add_task(function* teardown() {
-  yield stopHttpServer();
+  yield PingServer.stop();
 });

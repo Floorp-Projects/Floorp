@@ -5,6 +5,9 @@ const { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://gre/modules/Task.jsm", this);
+Cu.import("resource://testing-common/httpd.js", this);
 
 const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Cc);
@@ -21,6 +24,78 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 let gOldAppInfo = null;
 let gGlobalScope = this;
+
+const PingServer = {
+  _httpServer: null,
+  _started: false,
+  _defers: [ PromiseUtils.defer() ],
+  _currentDeferred: 0,
+
+  get port() {
+    return this._httpServer.identity.primaryPort;
+  },
+
+  get started() {
+    return this._started;
+  },
+
+  registerPingHandler: function(handler) {
+    const wrapped = wrapWithExceptionHandler(handler);
+    this._httpServer.registerPrefixHandler("/submit/telemetry/", wrapped);
+  },
+
+  resetPingHandler: function() {
+    this.registerPingHandler((request, response) => {
+      let deferred = this._defers[this._defers.length - 1];
+      this._defers.push(PromiseUtils.defer());
+      deferred.resolve(request);
+    });
+  },
+
+  start: function() {
+    this._httpServer = new HttpServer();
+    this._httpServer.start(-1);
+    this._started = true;
+    this.clearRequests();
+    this.resetPingHandler();
+  },
+
+  stop: function() {
+    return new Promise(resolve => {
+      this._httpServer.stop(resolve);
+      this._started = false;
+    });
+  },
+
+  clearRequests: function() {
+    this._defers = [ PromiseUtils.defer() ];
+    this._currentDeferred = 0;
+  },
+
+  promiseNextRequest: function() {
+    const deferred = this._defers[this._currentDeferred++];
+    return deferred.promise;
+  },
+
+  promiseNextPing: function() {
+    return this.promiseNextRequest().then(request => decodeRequestPayload(request));
+  },
+
+  promiseNextRequests: Task.async(function*(count) {
+    let results = [];
+    for (let i=0; i<count; ++i) {
+      results.push(yield this.promiseNextRequest());
+    }
+
+    return results;
+  }),
+
+  promiseNextPings: function(count) {
+    return this.promiseNextRequests(count).then(requests => {
+      return [for (req of requests) decodeRequestPayload(req)];
+    });
+  },
+};
 
 /**
  * Decode the payload of an HTTP request into a ping.
@@ -61,6 +136,19 @@ function decodeRequestPayload(request) {
   }
 
   return payload;
+}
+
+function wrapWithExceptionHandler(f) {
+  function wrapper(...args) {
+    try {
+      f(...args);
+    } catch (ex if typeof(ex) == 'object') {
+      dump("Caught exception: " + ex.message + "\n");
+      dump(ex.stack);
+      do_test_finished();
+    }
+  }
+  return wrapper;
 }
 
 function loadAddonManager(id, name, version, platformVersion) {
