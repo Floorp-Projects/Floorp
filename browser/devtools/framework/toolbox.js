@@ -1541,6 +1541,7 @@ Toolbox.prototype = {
         }
         if (!item) {
           item = this.doc.createElement("menuitem");
+          item.setAttribute("type", "radio");
           item.setAttribute("data-window-id", win.id);
           if (win.parentID) {
             item.setAttribute("data-parent-id", win.parentID);

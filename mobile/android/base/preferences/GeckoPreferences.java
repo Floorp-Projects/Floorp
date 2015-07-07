@@ -127,8 +127,10 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
+    private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
+
 
     // This isn't a Gecko pref, even if it looks like one.
     private static final String PREFS_BROWSER_LOCALE = "locale";
@@ -692,6 +694,13 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 }
+                if (PREFS_DEVTOOLS.equals(key) &&
+                    RestrictedProfiles.isUserRestricted()) {
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
+                }
+
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
                 pref.setOnPreferenceChangeListener(this);
