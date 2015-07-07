@@ -109,6 +109,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   uuid \
   vim \
   wget \
+  x11-xserver-utils \
   xvfb \
   yasm \
   zip
