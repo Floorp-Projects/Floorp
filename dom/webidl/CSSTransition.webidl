@@ -13,5 +13,4 @@
 [Func="nsDocument::IsWebAnimationsEnabled",
  HeaderFile="nsTransitionManager.h"]
 interface CSSTransition : Animation {
-  [Constant] readonly attribute DOMString transitionProperty;
 };
