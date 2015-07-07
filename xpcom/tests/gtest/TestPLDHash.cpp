@@ -51,10 +51,6 @@ TEST(PLDHashTableTest, LazyStorage)
     ASSERT_TRUE(false); // shouldn't hit this on an empty table
   }
 
-  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
-    ASSERT_TRUE(false); // shouldn't hit this on an empty table
-  }
-
   // Using a null |mallocSizeOf| should be fine because it shouldn't be called
   // for an empty table.
   mozilla::MallocSizeOf mallocSizeOf = nullptr;
@@ -185,19 +181,8 @@ TEST(PLDHashTableIterator, Iterator)
     n++;
   }
   ASSERT_TRUE(saw77 && saw88 && saw99 && n == 3);
-}
 
-TEST(PLDHashTableTest, RemovingIterator)
-{
-  PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
-
-  // Explicitly test the move constructor. We do this because, due to copy
-  // elision, compilers might optimize away move constructor calls for normal
-  // iterator use.
-  {
-    PLDHashTable::RemovingIterator iter1(&t);
-    PLDHashTable::RemovingIterator iter2(mozilla::Move(iter1));
-  }
+  t.Clear();
 
   // First, we insert 64 items, which results in a capacity of 128, and a load
   // factor of 50%.
@@ -209,7 +194,7 @@ TEST(PLDHashTableTest, RemovingIterator)
 
   // The first removing iterator does no removing; capacity and entry count are
   // unchanged.
-  for (PLDHashTable::RemovingIterator iter(&t); !iter.Done(); iter.Next()) {
+  for (PLDHashTable::Iterator iter(&t); !iter.Done(); iter.Next()) {
     (void) iter.Get();
   }
   ASSERT_EQ(t.EntryCount(), 64u);
@@ -217,7 +202,7 @@ TEST(PLDHashTableTest, RemovingIterator)
 
   // The second removing iterator removes 16 items. This reduces the load
   // factor to 37.5% (48 / 128), which isn't low enough to shrink the table.
-  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = t.Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PLDHashEntryStub*>(iter.Get());
     if ((intptr_t)(entry->key) % 4 == 0) {
       iter.Remove();
@@ -228,7 +213,7 @@ TEST(PLDHashTableTest, RemovingIterator)
 
   // The third removing iterator removes another 16 items. This reduces
   // the load factor to 25% (32 / 128), so the table is shrunk.
-  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = t.Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PLDHashEntryStub*>(iter.Get());
     if ((intptr_t)(entry->key) % 2 == 0) {
       iter.Remove();
@@ -239,7 +224,7 @@ TEST(PLDHashTableTest, RemovingIterator)
 
   // The fourth removing iterator removes all remaining items. This reduces
   // the capacity to the minimum.
-  for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = t.Iter(); !iter.Done(); iter.Next()) {
     iter.Remove();
   }
   ASSERT_EQ(t.EntryCount(), 0u);

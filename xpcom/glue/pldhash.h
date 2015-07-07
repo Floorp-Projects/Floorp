@@ -348,15 +348,19 @@ public:
 
   void ClearEntryStub(PLDHashEntryHdr* aEntry);
 
-  // This is an iterator for PLDHashtable. It is not safe to modify the
-  // table while it is being iterated over; on debug builds, attempting to do
-  // so will result in an assertion failure.
+  // This is an iterator for PLDHashtable. Assertions will detect some, but not
+  // all, mid-iteration table modifications that might invalidate (e.g.
+  // reallocate) the entry storage.
+  //
+  // Any element can be removed during iteration using Remove(). If any
+  // elements are removed, the table may be resized once iteration ends.
   //
   // Example usage:
   //
   //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
   //     auto entry = static_cast<FooEntry*>(iter.Get());
   //     // ... do stuff with |entry| ...
+  //     // ... possibly call iter.Remove() once ...
   //   }
   //
   // or:
@@ -364,6 +368,7 @@ public:
   //   for (PLDHashTable::Iterator iter(&table); !iter.Done(); iter.Next()) {
   //     auto entry = static_cast<FooEntry*>(iter.Get());
   //     // ... do stuff with |entry| ...
+  //     // ... possibly call iter.Remove() once ...
   //   }
   //
   // The latter form is more verbose but is easier to work with when
@@ -372,19 +377,26 @@ public:
   class Iterator
   {
   public:
-    explicit Iterator(const PLDHashTable* aTable);
+    explicit Iterator(PLDHashTable* aTable);
     Iterator(Iterator&& aOther);
     ~Iterator();
+
     bool Done() const;                // Have we finished?
     PLDHashEntryHdr* Get() const;     // Get the current entry.
     void Next();                      // Advance to the next entry.
 
+    // Remove the current entry. Must only be called once per entry, and Get()
+    // must not be called on that entry afterwards.
+    void Remove();
+
   protected:
-    const PLDHashTable* mTable;       // Main table pointer.
+    PLDHashTable* mTable;             // Main table pointer.
 
   private:
     char* mCurrent;                   // Pointer to the current entry.
     char* mLimit;                     // One past the last entry.
+
+    bool mHaveRemoved;                // Have any elements been removed?
 
     bool IsOnNonLiveEntry() const;
 
@@ -394,35 +406,13 @@ public:
     Iterator& operator=(const Iterator&&) = delete;
   };
 
-  Iterator Iter() const { return Iterator(this); }
+  Iterator Iter() { return Iterator(this); }
 
-  // This is an iterator that allows elements to be removed during iteration.
-  // If any elements are removed, the table may be resized once iteration ends.
-  // Its usage is similar to that of Iterator, with the addition that Remove()
-  // can be called once per element.
-  class RemovingIterator : public Iterator
+  // Use this if you need to initialize an Iterator in a const method. If you
+  // use this case, you should not call Remove() on the iterator.
+  Iterator ConstIter() const
   {
-  public:
-    explicit RemovingIterator(PLDHashTable* aTable);
-    RemovingIterator(RemovingIterator&& aOther);
-    ~RemovingIterator();
-
-    // Remove the current entry. Must only be called once per entry, and Get()
-    // must not be called on that entry afterwards.
-    void Remove();
-
-  private:
-    bool mHaveRemoved;      // Have any elements been removed?
-
-    RemovingIterator() = delete;
-    RemovingIterator(const RemovingIterator&) = delete;
-    RemovingIterator& operator=(const RemovingIterator&) = delete;
-    RemovingIterator& operator=(const RemovingIterator&&) = delete;
-  };
-
-  RemovingIterator RemovingIter() const
-  {
-    return RemovingIterator(const_cast<PLDHashTable*>(this));
+    return Iterator(const_cast<PLDHashTable*>(this));
   }
 
 private:
