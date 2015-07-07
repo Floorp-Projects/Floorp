@@ -440,17 +440,8 @@ nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
       }
     }
     nsView* view = nsView::GetViewFor(aWidget);
-
     if (!view) {
       NS_ERROR("FlushDelayedResize destroyed the nsView?");
-      return;
-    }
-
-    nsIWidgetListener* previousListener = aWidget->GetPreviouslyAttachedWidgetListener();
-
-    if (previousListener &&
-        previousListener != view &&
-        view->IsPrimaryFramePaintSuppressed()) {
       return;
     }
 
@@ -1158,4 +1149,3 @@ nsViewManager::InvalidateHierarchy()
     }
   }
 }
-
