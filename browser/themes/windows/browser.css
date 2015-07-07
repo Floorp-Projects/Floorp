@@ -1519,7 +1519,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 /* page proxy icon */
 
-%include ../shared/identity-block.inc.css
+%include ../shared/identity-block/identity-block.inc.css
 
 #page-proxy-favicon {
   margin-top: 1px;
