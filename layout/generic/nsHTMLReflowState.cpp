@@ -1960,10 +1960,10 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(
     // Note: We don't emulate this quirk for percents in calc() or in
     // vertical writing modes.
     if (!wm.IsVertical() &&
-        NS_AUTOHEIGHT == cbSize.Height(wm)) {
+        NS_AUTOHEIGHT == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
           mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
-        cbSize.Height(wm) = CalcQuirkContainingBlockHeight(aContainingBlockRS);
+        cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(aContainingBlockRS);
       }
     }
   }
