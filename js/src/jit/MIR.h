@@ -9049,9 +9049,7 @@ class MConvertUnboxedObjectToNative
     INSTRUCTION_HEADER(ConvertUnboxedObjectToNative)
 
     static MConvertUnboxedObjectToNative* New(TempAllocator& alloc, MDefinition* obj,
-                                              ObjectGroup* group) {
-        return new(alloc) MConvertUnboxedObjectToNative(obj, group);
-    }
+                                              ObjectGroup* group);
 
     MDefinition* object() const {
         return getOperand(0);
