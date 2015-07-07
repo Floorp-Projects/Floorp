@@ -208,14 +208,15 @@ add_task(function* test_expired_pings_are_deleted() {
 });
 
 /**
- * Test that really recent pings are not sent on Telemetry initialization.
+ * Test that really recent pings are sent on Telemetry initialization.
  */
-add_task(function* test_recent_pings_not_sent() {
+add_task(function* test_recent_pings_sent() {
   let pingTypes = [{ num: RECENT_PINGS }];
   let recentPings = yield createSavedPings(pingTypes);
 
   yield TelemetryController.reset();
-  assertReceivedPings(0);
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  assertReceivedPings(RECENT_PINGS);
 
   yield clearPendingPings();
 });
@@ -232,6 +233,9 @@ add_task(function* test_most_recent_pings_kept() {
   let head = pings.slice(0, LRU_PINGS);
   let tail = pings.slice(-3);
 
+  const evictedHistogram = Services.telemetry.getHistogramById('TELEMETRY_FILES_EVICTED');
+  evictedHistogram.clear();
+
   yield TelemetryController.reset();
   const pending = yield TelemetryStorage.loadPendingPingList();
 
@@ -241,6 +245,9 @@ add_task(function* test_most_recent_pings_kept() {
   }
 
   assertNotSaved(tail);
+  Assert.equal(evictedHistogram.snapshot().sum, tail.length,
+               "Should have tracked the evicted ping count");
+  yield TelemetrySend.shutdown();
   yield clearPendingPings();
 });
 
@@ -302,6 +309,7 @@ add_task(function* test_overdue_old_format() {
     yield File.setDates(PING_FILES_PATHS[f], null, Date.now() - OVERDUE_PING_FILE_AGE);
   }
 
+  gSeenPings = 0;
   yield TelemetryController.reset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(OLD_FORMAT_PINGS);
@@ -336,6 +344,11 @@ add_task(function* test_overdue_pings_trigger_send() {
   yield assertNotSaved(recentPings);
   yield assertNotSaved(expiredPings);
   yield assertNotSaved(overduePings);
+
+  Assert.equal(TelemetrySend.overduePingsCount, overduePings.length,
+               "Should have tracked the correct amount of overdue pings");
+  Assert.equal(TelemetrySend.discardedPingsCount, expiredPings.length,
+               "Should have tracked the correct amount of expired pings");
 
   yield clearPendingPings();
 });

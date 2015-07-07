@@ -1034,6 +1034,7 @@ add_task(function* test_environmentChange() {
   let timerCallback = null;
   let timerDelay = null;
 
+  clearPendingPings();
   PingServer.clearRequests();
 
   fakeNow(now);
@@ -1125,12 +1126,11 @@ add_task(function* test_savedPingsOnShutdown() {
   yield OS.File.makeDir(dir);
   yield TelemetrySession.shutdown();
 
+  PingServer.clearRequests();
   yield TelemetryController.reset();
-  const pending = yield TelemetryStorage.loadPendingPingList();
-  Assert.equal(pending.length, expectedPings,
-               "Should have the correct number of pending pings.");
 
-  const pings = [for (p of pending) yield TelemetryStorage.loadPendingPing(p.id)];
+  const pings = yield PingServer.promiseNextPings(2);
+
   for (let ping of pings) {
     Assert.ok("type" in ping);
 
@@ -1340,24 +1340,10 @@ add_task(function* test_abortedSession() {
   Assert.ok(!(yield OS.File.exists(ABORTED_FILE)),
             "The aborted session ping must be removed from the aborted session ping directory.");
 
-  // TelemetryStorage requires all the pings to have their ID as filename. When appending
-  // the aborted-session ping to the pending pings, we must verify that it exists.
-  const PENDING_PING_FILE =
-    OS.Path.join(TelemetryStorage.pingDirectoryPath, abortedSessionPing.id);
-  Assert.ok((yield OS.File.exists(PENDING_PING_FILE)),
-            "The aborted session ping must exist in the saved pings directory.");
-
-  // Trigger sending the pending pings.
-  yield sendPing();
-
-  // We should receive two pings, one of them an aborted-session ping.
-  const pings = (yield PingServer.promiseNextPings(2)).filter((p) => {
-    return p.type == PING_TYPE_MAIN && p.payload.info.reason == REASON_ABORTED_SESSION;
-  });
-
-  Assert.equal(pings.length, 1, "Should have received one aborted-session ping.");
-  let receivedPing = pings[0];
-  Assert.equal(receivedPing.id, abortedSessionPing.id);
+  // We should have received an aborted-session ping.
+  const receivedPing = yield PingServer.promiseNextPing();
+  Assert.equal(receivedPing.type, PING_TYPE_MAIN, "Should have the correct type");
+  Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION, "Ping should have the correct reason");
 
   yield TelemetrySession.shutdown();
 });
