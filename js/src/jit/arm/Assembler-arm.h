@@ -1638,9 +1638,6 @@ class Assembler : public AssemblerShared
         return actualOffset(offset);
     }
 
-    void call(Label* label);
-    void call(void* target);
-
     void as_bkpt();
 
   public:

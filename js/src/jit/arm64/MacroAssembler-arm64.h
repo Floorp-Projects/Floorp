@@ -2706,14 +2706,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         orPtr(Imm32(type), frameSizeReg);
     }
 
-    void callWithExitFrame(JitCode* target, Register dynStack) {
-        add32(Imm32(framePushed()), dynStack);
-        makeFrameDescriptor(dynStack, JitFrame_IonJS);
-        Push(dynStack); // descriptor
-
-        call(target);
-    }
-
     // FIXME: See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
     void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t* code,
                                 uint8_t* globalData, unsigned globalDataOffset)
@@ -2737,14 +2729,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // non-function. Returns offset to be passed to markSafepointAt().
     void buildFakeExitFrame(Register scratch, uint32_t* offset);
 
-    void callWithExitFrame(Label* target) {
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-        Push(Imm32(descriptor)); // descriptor
-
-        call(target);
-    }
-
+    void callWithExitFrame(Label* target);
     void callWithExitFrame(JitCode* target);
+    void callWithExitFrame(JitCode* target, Register dynStack);
 
     void callJit(Register callee) {
         // AArch64 cannot read from the PC, so pushing must be handled callee-side.
@@ -2756,53 +2743,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         MOZ_CRASH("appendCallSite");
     }
 
-    void call(const CallSiteDesc& desc, Label* label) {
-        syncStackPtr();
-        call(label);
-        append(desc, currentOffset(), framePushed_);
-    }
-    void call(const CallSiteDesc& desc, Register reg) {
-        syncStackPtr();
-        call(reg);
-        append(desc, currentOffset(), framePushed_);
-    }
-    void call(const CallSiteDesc& desc, AsmJSImmPtr imm) {
-        syncStackPtr();
-        call(imm);
-        append(desc, currentOffset(), framePushed_);
-    }
-
-    void call(AsmJSImmPtr imm) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        syncStackPtr();
-        movePtr(imm, scratch);
-        call(scratch);
-    }
-
-    void call(Register target) {
-        syncStackPtr();
-        Blr(ARMRegister(target, 64));
-    }
-    // Call a target JitCode, which must be traceable, and may be movable.
-    void call(JitCode* target) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        syncStackPtr();
-        BufferOffset off = immPool64(scratch64, uint64_t(target->raw()));
-        addPendingJump(off, ImmPtr(target->raw()), Relocation::JITCODE);
-        blr(scratch64);
-    }
-    // Call a target native function, which is neither traceable nor movable.
-    void call(ImmPtr target) {
-        syncStackPtr();
-        movePtr(target, ip0);
-        Blr(vixl::ip0);
-    }
-    void call(Label* target) {
-        syncStackPtr();
-        Bl(target);
-    }
     void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
         MOZ_CRASH("callExit");
     }

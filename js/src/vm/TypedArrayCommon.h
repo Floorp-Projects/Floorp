@@ -56,16 +56,16 @@ ValueIsLength(const Value& v, uint32_t* len)
     return false;
 }
 
-template<typename NativeType> static inline Scalar::Type TypeIDOfType();
-template<> inline Scalar::Type TypeIDOfType<int8_t>() { return Scalar::Int8; }
-template<> inline Scalar::Type TypeIDOfType<uint8_t>() { return Scalar::Uint8; }
-template<> inline Scalar::Type TypeIDOfType<int16_t>() { return Scalar::Int16; }
-template<> inline Scalar::Type TypeIDOfType<uint16_t>() { return Scalar::Uint16; }
-template<> inline Scalar::Type TypeIDOfType<int32_t>() { return Scalar::Int32; }
-template<> inline Scalar::Type TypeIDOfType<uint32_t>() { return Scalar::Uint32; }
-template<> inline Scalar::Type TypeIDOfType<float>() { return Scalar::Float32; }
-template<> inline Scalar::Type TypeIDOfType<double>() { return Scalar::Float64; }
-template<> inline Scalar::Type TypeIDOfType<uint8_clamped>() { return Scalar::Uint8Clamped; }
+template<typename NativeType> struct TypeIDOfType;
+template<> struct TypeIDOfType<int8_t> { static const Scalar::Type id = Scalar::Int8; };
+template<> struct TypeIDOfType<uint8_t> { static const Scalar::Type id = Scalar::Uint8; };
+template<> struct TypeIDOfType<int16_t> { static const Scalar::Type id = Scalar::Int16; };
+template<> struct TypeIDOfType<uint16_t> { static const Scalar::Type id = Scalar::Uint16; };
+template<> struct TypeIDOfType<int32_t> { static const Scalar::Type id = Scalar::Int32; };
+template<> struct TypeIDOfType<uint32_t> { static const Scalar::Type id = Scalar::Uint32; };
+template<> struct TypeIDOfType<float> { static const Scalar::Type id = Scalar::Float32; };
+template<> struct TypeIDOfType<double> { static const Scalar::Type id = Scalar::Float64; };
+template<> struct TypeIDOfType<uint8_clamped> { static const Scalar::Type id = Scalar::Uint8Clamped; };
 
 inline bool
 IsAnyTypedArray(JSObject* obj)

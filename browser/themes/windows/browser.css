@@ -18,6 +18,9 @@
 %define conditionalForwardWithUrlbarWidth 30
 
 :root {
+  --toolbarbutton-vertical-inner-padding: 2px;
+  --toolbarbutton-vertical-outer-padding: 8px;
+
   --toolbarbutton-hover-background: hsla(210,4%,10%,.08);
   --toolbarbutton-hover-bordercolor: hsla(210,4%,10%,.1);
   --toolbarbutton-hover-boxshadow: none;
@@ -633,7 +636,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1:not([type=menu-button]),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding: 8px 2px;
+  padding: var(--toolbarbutton-vertical-outer-padding) 2px;
   -moz-box-pack: center;
 }
 
@@ -672,7 +675,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
-  padding: 2px 6px;
+  padding: var(--toolbarbutton-vertical-inner-padding) 6px;
   border: 1px solid;
   border-color: transparent;
   transition-property: background-color, border-color;
@@ -740,7 +743,7 @@ toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbut
 #nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-badge-container,
 #nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  padding: 3px 7px;
+  padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px) 7px;
 }
 
 /* Help SDK icons fit: */
@@ -1245,6 +1248,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   .searchbar-textbox {
     font-size: 1.15em;
     min-height: 28px;
+  }
+
+  :root {
+    /* let toolbar buttons match the location and search bar's minimum height */
+    --toolbarbutton-vertical-inner-padding: 4px;
+    --toolbarbutton-vertical-outer-padding: 5px;
   }
 }
 
@@ -1873,8 +1882,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #bookmarks-menu-button[cui-areatype="toolbar"]:not(.bookmark-item):not([overflowedItem=true]) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: var(--toolbarbutton-vertical-inner-padding);
+  padding-bottom: var(--toolbarbutton-vertical-inner-padding);
 }
 
 #BMB_bookmarksPopup[side="top"],
