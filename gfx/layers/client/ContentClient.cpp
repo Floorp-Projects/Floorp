@@ -35,7 +35,6 @@
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
 #endif
-#include "gfx2DGlue.h"
 #include "ReadbackLayer.h"
 
 #include <vector>
@@ -130,12 +129,10 @@ ContentClientBasic::CreateBuffer(ContentType aType,
                                  RefPtr<gfx::DrawTarget>* aWhiteDT)
 {
   MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA));
-  gfxImageFormat format =
-    gfxPlatform::GetPlatform()->OptimalFormatForContent(aType);
 
   *aBlackDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
     IntSize(aRect.width, aRect.height),
-    ImageFormatToSurfaceFormat(format));
+    gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aType));
 }
 
 void
