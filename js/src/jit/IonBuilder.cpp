@@ -1095,12 +1095,8 @@ IonBuilder::initParameters()
     // interpreter and didn't accumulate type information, try to use that OSR
     // frame to determine possible initial types for 'this' and parameters.
 
-    if (thisTypes->empty() && baselineFrame_) {
-        TypeSet::Type type = baselineFrame_->thisType;
-        if (type.isSingleton())
-            checkNurseryObject(type.singleton());
-        thisTypes->addType(type, alloc_->lifoAlloc());
-    }
+    if (thisTypes->empty() && baselineFrame_)
+        thisTypes->addType(baselineFrame_->thisType, alloc_->lifoAlloc());
 
     MParameter* param = MParameter::New(alloc(), MParameter::THIS_SLOT, thisTypes);
     current->add(param);
@@ -1111,10 +1107,7 @@ IonBuilder::initParameters()
         if (types->empty() && baselineFrame_ &&
             !script_->baselineScript()->modifiesArguments())
         {
-            TypeSet::Type type = baselineFrame_->argTypes[i];
-            if (type.isSingleton())
-                checkNurseryObject(type.singleton());
-            types->addType(type, alloc_->lifoAlloc());
+            types->addType(baselineFrame_->argTypes[i], alloc_->lifoAlloc());
         }
 
         param = MParameter::New(alloc(), i, types);
@@ -7001,9 +6994,6 @@ IonBuilder::newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc, bool 
                 existingType = baselineFrame_->argTypes[arg];
             else
                 existingType = baselineFrame_->varTypes[var];
-
-            if (existingType.isSingleton())
-                checkNurseryObject(existingType.singleton());
 
             // Extract typeset from value.
             LifoAlloc* lifoAlloc = alloc().lifoAlloc();
