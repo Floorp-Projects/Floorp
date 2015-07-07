@@ -478,9 +478,15 @@ public:
   ScreenRotation GetScreenRotation() const {
     return mScreenRotation;
   }
-
   void SetScreenRotation(ScreenRotation aRotation) {
     mScreenRotation = aRotation;
+  }
+
+  TimeStamp GetCompositionTime() const {
+    return mCompositionTime;
+  }
+  void SetCompositionTime(TimeStamp aTimeStamp) {
+    mCompositionTime = aTimeStamp;
   }
 
 protected:
@@ -496,6 +502,11 @@ protected:
    * Set the global Compositor backend, checking that one isn't already set.
    */
   static void SetBackend(LayersBackend backend);
+
+  /**
+   * Render time for the current composition.
+   */
+  TimeStamp mCompositionTime;
 
   uint32_t mCompositorID;
   DiagnosticTypes mDiagnosticTypes;
