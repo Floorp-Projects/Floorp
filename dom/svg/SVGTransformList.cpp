@@ -43,11 +43,9 @@ SVGTransformList::CopyFrom(const SVGTransformList& rhs)
 nsresult
 SVGTransformList::CopyFrom(const nsTArray<nsSVGTransform>& aTransformArray)
 {
-  if (!mItems.SetCapacity(aTransformArray.Length(), fallible)) {
-    // Yes, we do want fallible alloc here
+  if (!mItems.Assign(aTransformArray, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mItems = aTransformArray;
   return NS_OK;
 }
 
