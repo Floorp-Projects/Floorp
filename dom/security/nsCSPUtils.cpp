@@ -786,73 +786,73 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
   switch(mDirective) {
     case nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE:
       outCSP.mDefault_src.Construct();
-      outCSP.mDefault_src.Value() = srcs;
+      outCSP.mDefault_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE:
       outCSP.mScript_src.Construct();
-      outCSP.mScript_src.Value() = srcs;
+      outCSP.mScript_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE:
       outCSP.mObject_src.Construct();
-      outCSP.mObject_src.Value() = srcs;
+      outCSP.mObject_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE:
       outCSP.mStyle_src.Construct();
-      outCSP.mStyle_src.Value() = srcs;
+      outCSP.mStyle_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::IMG_SRC_DIRECTIVE:
       outCSP.mImg_src.Construct();
-      outCSP.mImg_src.Value() = srcs;
+      outCSP.mImg_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::MEDIA_SRC_DIRECTIVE:
       outCSP.mMedia_src.Construct();
-      outCSP.mMedia_src.Value() = srcs;
+      outCSP.mMedia_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE:
       outCSP.mFrame_src.Construct();
-      outCSP.mFrame_src.Value() = srcs;
+      outCSP.mFrame_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::FONT_SRC_DIRECTIVE:
       outCSP.mFont_src.Construct();
-      outCSP.mFont_src.Value() = srcs;
+      outCSP.mFont_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::CONNECT_SRC_DIRECTIVE:
       outCSP.mConnect_src.Construct();
-      outCSP.mConnect_src.Value() = srcs;
+      outCSP.mConnect_src.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE:
       outCSP.mReport_uri.Construct();
-      outCSP.mReport_uri.Value() = srcs;
+      outCSP.mReport_uri.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE:
       outCSP.mFrame_ancestors.Construct();
-      outCSP.mFrame_ancestors.Value() = srcs;
+      outCSP.mFrame_ancestors.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::WEB_MANIFEST_SRC_DIRECTIVE:
       outCSP.mManifest_src.Construct();
-      outCSP.mManifest_src.Value() = srcs;
+      outCSP.mManifest_src.Value() = mozilla::Move(srcs);
       return;
     // not supporting REFLECTED_XSS_DIRECTIVE
 
     case nsIContentSecurityPolicy::BASE_URI_DIRECTIVE:
       outCSP.mBase_uri.Construct();
-      outCSP.mBase_uri.Value() = srcs;
+      outCSP.mBase_uri.Value() = mozilla::Move(srcs);
       return;
 
     case nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE:
       outCSP.mForm_action.Construct();
-      outCSP.mForm_action.Value() = srcs;
+      outCSP.mForm_action.Value() = mozilla::Move(srcs);
       return;
 
     // REFERRER_DIRECTIVE is handled in nsCSPPolicy::toDomCSPStruct()
