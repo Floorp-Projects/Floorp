@@ -238,6 +238,7 @@
               onclick="gSyncPane.openChangeProfileImage();" hidden="true"
               tooltiptext="&profilePicture.tooltip;"/>
             <label id="fxaEmailAddress1"/>
+            <label id="fxaDisplayName" hidden="true"/>
           </hbox>
           <spacer flex="1"/>
           <button id="verifiedManage"
