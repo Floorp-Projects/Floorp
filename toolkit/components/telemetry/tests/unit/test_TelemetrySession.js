@@ -511,6 +511,8 @@ add_task(function* test_noServerPing() {
 
 // Checks that a sent ping is correctly received by a dummy http server.
 add_task(function* test_simplePing() {
+  yield clearPendingPings();
+  yield TelemetrySend.reset();
   PingServer.start();
   Preferences.set(PREF_SERVER, "http://localhost:" + PingServer.port);
 
@@ -838,6 +840,7 @@ add_task(function* test_dailyCollection() {
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
 
   // Init and check timer.
+  yield clearPendingPings();
   yield TelemetrySession.setup();
   TelemetrySend.setServer("http://localhost:" + PingServer.port);
 
@@ -1118,7 +1121,7 @@ add_task(function* test_pruneOldPingFile() {
 add_task(function* test_savedPingsOnShutdown() {
   // On desktop, we expect both "saved-session" and "shutdown" pings. We only expect
   // the former on Android.
-  const expectedPings = (gIsAndroid) ? 1 : 2;
+  const expectedPingCount = (gIsAndroid) ? 1 : 2;
   // Assure that we store the ping properly when saving sessions on shutdown.
   // We make the TelemetrySession shutdown to trigger a session save.
   const dir = TelemetryStorage.pingDirectoryPath;
@@ -1129,7 +1132,7 @@ add_task(function* test_savedPingsOnShutdown() {
   PingServer.clearRequests();
   yield TelemetryController.reset();
 
-  const pings = yield PingServer.promiseNextPings(2);
+  const pings = yield PingServer.promiseNextPings(expectedPingCount);
 
   for (let ping of pings) {
     Assert.ok("type" in ping);
