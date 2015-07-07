@@ -1344,6 +1344,12 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
       case SimdTypeDescr::Float64x2:
         MOZ_CRASH("NYI, RSimdBox of Float64x2");
         break;
+      case SimdTypeDescr::Int8x16:
+        MOZ_CRASH("NYI, RSimdBox of Int8x16");
+        break;
+      case SimdTypeDescr::Int16x8:
+        MOZ_CRASH("NYI, RSimdBox of Int16x8");
+        break;
     }
 
     if (!resultObject)
