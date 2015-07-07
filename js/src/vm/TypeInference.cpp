@@ -2884,9 +2884,6 @@ ObjectGroup::markUnknown(ExclusiveContext* cx)
     clearNewScript(cx);
     ObjectStateChange(cx, this, true);
 
-    if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup())
-        unboxedGroup->markUnknown(cx);
-
     /*
      * Existing constraints may have already been added to this object, which we need
      * to do the right thing for. We can't ensure that we will mark all unknown
@@ -2905,6 +2902,8 @@ ObjectGroup::markUnknown(ExclusiveContext* cx)
         }
     }
 
+    if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup())
+        MarkObjectGroupUnknownProperties(cx, unboxedGroup);
     if (maybeUnboxedLayout() && maybeUnboxedLayout()->nativeGroup())
         MarkObjectGroupUnknownProperties(cx, maybeUnboxedLayout()->nativeGroup());
     if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup())
