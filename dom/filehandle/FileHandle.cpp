@@ -21,6 +21,7 @@
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsNetUtil.h"
+#include "nsIAsyncStreamCopier.h"
 #include "nsString.h"
 #include "nsStringStream.h"
 #include "nsThreadUtils.h"

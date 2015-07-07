@@ -21,8 +21,9 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsIWebProgressListener.h"
 #include "nsClientAuthRemember.h"
+#include "nsServiceManagerUtils.h"
 
-#include "nsNetUtil.h"
+#include "nsISocketProvider.h"
 #include "nsPrintfCString.h"
 #include "SSLServerCertVerification.h"
 #include "nsNSSCertHelper.h"

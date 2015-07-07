@@ -40,10 +40,10 @@ class AnimValuesStyleRule;
 class CommonAnimationManager;
 } // namespace css
 
+namespace dom {
+
 class CSSAnimation;
 class CSSTransition;
-
-namespace dom {
 
 class Animation
   : public nsISupports
@@ -217,11 +217,6 @@ public:
    * of those are available, it returns null.
    */
   Nullable<TimeDuration> GetCurrentOrPendingStartTime() const;
-
-  const nsString& Name() const
-  {
-    return mEffect ? mEffect->Name() : EmptyString();
-  }
 
   bool IsPausedOrPausing() const
   {

@@ -83,6 +83,12 @@ ImageBridgeParent::~ImageBridgeParent()
                                      new DeleteTask<Transport>(mTransport));
   }
 
+  nsTArray<PImageContainerParent*> parents;
+  ManagedPImageContainerParent(parents);
+  for (PImageContainerParent* p : parents) {
+    delete p;
+  }
+
   sImageBridges.erase(OtherPid());
 }
 
@@ -236,11 +242,12 @@ static  uint64_t GenImageContainerID() {
 
 PCompositableParent*
 ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
+                                            PImageContainerParent* aImageContainer,
                                             uint64_t* aID)
 {
   uint64_t id = GenImageContainerID();
   *aID = id;
-  return CompositableHost::CreateIPDLActor(this, aInfo, id);
+  return CompositableHost::CreateIPDLActor(this, aInfo, id, aImageContainer);
 }
 
 bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
@@ -275,6 +282,19 @@ ImageBridgeParent::DeallocPMediaSystemResourceManagerParent(PMediaSystemResource
   return true;
 }
 
+PImageContainerParent*
+ImageBridgeParent::AllocPImageContainerParent()
+{
+  return new ImageContainerParent();
+}
+
+bool
+ImageBridgeParent::DeallocPImageContainerParent(PImageContainerParent* actor)
+{
+  delete actor;
+  return true;
+}
+
 void
 ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
@@ -285,6 +305,48 @@ bool
 ImageBridgeParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages)
 {
   return true;
+}
+
+class ProcessIdComparator
+{
+public:
+  bool Equals(const ImageCompositeNotification& aA,
+              const ImageCompositeNotification& aB) const
+  {
+    return aA.imageContainerParent()->OtherPid() == aB.imageContainerParent()->OtherPid();
+  }
+  bool LessThan(const ImageCompositeNotification& aA,
+                const ImageCompositeNotification& aB) const
+  {
+    return aA.imageContainerParent()->OtherPid() < aB.imageContainerParent()->OtherPid();
+  }
+};
+
+/* static */ bool
+ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& aNotifications)
+{
+  // Group the notifications by destination process ID and then send the
+  // notifications in one message per group.
+  aNotifications.Sort(ProcessIdComparator());
+  uint32_t i = 0;
+  bool ok = true;
+  while (i < aNotifications.Length()) {
+    nsAutoTArray<ImageCompositeNotification,1> notifications;
+    notifications.AppendElement(aNotifications[i]);
+    uint32_t end = i + 1;
+    MOZ_ASSERT(aNotifications[i].imageContainerParent());
+    ProcessId pid = aNotifications[i].imageContainerParent()->OtherPid();
+    while (end < aNotifications.Length() &&
+           aNotifications[end].imageContainerParent()->OtherPid() == pid) {
+      notifications.AppendElement(aNotifications[end]);
+      ++end;
+    }
+    if (!GetInstance(pid)->SendDidComposite(notifications)) {
+      ok = false;
+    }
+    i = end;
+  }
+  return ok;
 }
 
 MessageLoop * ImageBridgeParent::GetMessageLoop() const {

@@ -40,6 +40,7 @@
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
 #ifdef MOZ_PEERCONNECTION

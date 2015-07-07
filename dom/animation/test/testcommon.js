@@ -80,7 +80,7 @@ function flushComputedStyle(elem) {
 for (var funcName of ["async_test", "assert_not_equals", "assert_equals",
                       "assert_approx_equals", "assert_less_than_equal",
                       "assert_between_inclusive", "assert_true", "assert_false",
-                      "assert_throws", "test"]) {
+                      "assert_class_string", "assert_throws", "test"]) {
   window[funcName] = opener[funcName].bind(opener);
 }
 

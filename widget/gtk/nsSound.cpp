@@ -16,6 +16,7 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"

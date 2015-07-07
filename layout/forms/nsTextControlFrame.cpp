@@ -215,11 +215,12 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
     if (scrollableFrame) {
-      nsMargin scrollbarSizes =
-      scrollableFrame->GetDesiredScrollbarSizes(PresContext(), aRenderingContext);
+      LogicalMargin scrollbarSizes(aWM,
+        scrollableFrame->GetDesiredScrollbarSizes(PresContext(),
+                                                  aRenderingContext));
 
-      aIntrinsicSize.Width(aWM) += scrollbarSizes.LeftRight();
-      aIntrinsicSize.Height(aWM) += scrollbarSizes.TopBottom();
+      aIntrinsicSize.ISize(aWM) += scrollbarSizes.IStartEnd(aWM);
+      aIntrinsicSize.BSize(aWM) += scrollbarSizes.BStartEnd(aWM);
     }
   }
 

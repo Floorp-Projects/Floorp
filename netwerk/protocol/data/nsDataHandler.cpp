@@ -8,6 +8,7 @@
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "DataChannelChild.h"
+#include "plstr.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 

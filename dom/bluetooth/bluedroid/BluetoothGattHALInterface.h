@@ -160,7 +160,90 @@ private:
 #endif
 };
 
-// TODO: Add server interface
+class BluetoothGattServerHALInterface final
+  : public BluetoothGattServerInterface
+{
+public:
+  friend class BluetoothGattHALInterface;
+
+  /* Register / Unregister */
+  void RegisterServer(const BluetoothUuid& aUuid,
+                      BluetoothGattServerResultHandler* aRes);
+  void UnregisterServer(int aServerIf,
+                        BluetoothGattServerResultHandler* aRes);
+
+  /* Connect / Disconnect */
+  void ConnectPeripheral(int aServerIf,
+                         const nsAString& aBdAddr,
+                         bool aIsDirect, /* auto connect */
+                         BluetoothTransport aTransport,
+                         BluetoothGattServerResultHandler* aRes);
+  void DisconnectPeripheral(int aServerIf,
+                            const nsAString& aBdAddr,
+                            int aConnId,
+                            BluetoothGattServerResultHandler* aRes);
+
+  /* Add a services / a characteristic / a descriptor */
+  void AddService(int aServerIf,
+                  const BluetoothGattServiceId& aServiceId,
+                  int aNumHandles,
+                  BluetoothGattServerResultHandler* aRes);
+  void AddIncludedService(int aServerIf,
+                          int aServiceHandle,
+                          int aIncludedServiceHandle,
+                          BluetoothGattServerResultHandler* aRes);
+  void AddCharacteristic(int aServerIf,
+                         int aServiceHandle,
+                         const BluetoothUuid& aUuid,
+                         BluetoothGattCharProp aProperties,
+                         BluetoothGattAttrPerm aPermissions,
+                         BluetoothGattServerResultHandler* aRes);
+  void AddDescriptor(int aServerIf,
+                     int aServiceHandle,
+                     const BluetoothUuid& aUuid,
+                     BluetoothGattAttrPerm aPermissions,
+                     BluetoothGattServerResultHandler* aRes);
+
+  /* Start / Stop / Delete a service */
+  void StartService(int aServerIf,
+                    int aServiceHandle,
+                    BluetoothTransport aTransport,
+                    BluetoothGattServerResultHandler* aRes);
+  void StopService(int aServerIf,
+                   int aServiceHandle,
+                   BluetoothGattServerResultHandler* aRes);
+  void DeleteService(int aServerIf,
+                     int aServiceHandle,
+                     BluetoothGattServerResultHandler* aRes);
+
+  /* Send an indication or a notification */
+  void SendIndication(int aServerIf,
+                      int aAttributeHandle,
+                      int aConnId,
+                      const nsTArray<uint8_t>& aValue,
+                      bool aConfirm, /* true: indication, false: notification */
+                      BluetoothGattServerResultHandler* aRes);
+
+  /* Send a response for an incoming indication */
+  void SendResponse(int aConnId,
+                    int aTransId,
+                    BluetoothGattStatus aStatus,
+                    const BluetoothGattResponse& aResponse,
+                    BluetoothGattServerResultHandler* aRes);
+
+protected:
+  BluetoothGattServerHALInterface(
+#if ANDROID_VERSION >= 19
+    const btgatt_server_interface_t* aInterface
+#endif
+    );
+  ~BluetoothGattServerHALInterface();
+
+private:
+#if ANDROID_VERSION >= 19
+  const btgatt_server_interface_t* mInterface;
+#endif
+};
 
 class BluetoothGattHALInterface final
  : public BluetoothGattInterface
@@ -173,6 +256,7 @@ public:
   void Cleanup(BluetoothGattResultHandler* aRes);
 
   BluetoothGattClientInterface* GetBluetoothGattClientInterface();
+  BluetoothGattServerInterface* GetBluetoothGattServerInterface();
 
 protected:
   BluetoothGattHALInterface(

@@ -13,7 +13,7 @@
 #include "mozilla/TypedEnumBits.h"
 
 #ifdef MOZ_WIDGET_GONK
-#include <ui/GraphicBuffer.h>
+#include <utils/RefBase.h>
 #endif
 #include <stdio.h>            // FILE
 #include "mozilla/Logging.h"            // for PR_LOG
@@ -28,7 +28,7 @@
 #define INVALID_OVERLAY -1
 
 namespace android {
-class GraphicBuffer;
+class MOZ_EXPORT GraphicBuffer;
 }
 
 namespace mozilla {
@@ -85,28 +85,19 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayerRenderStateFlags)
 // The 'ifdef MOZ_WIDGET_GONK' sadness here is because we don't want to include
 // android::sp unless we have to.
 struct LayerRenderState {
-  LayerRenderState()
-#ifdef MOZ_WIDGET_GONK
-    : mFlags(LayerRenderStateFlags::LAYER_RENDER_STATE_DEFAULT)
-    , mHasOwnOffset(false)
-    , mSurface(nullptr)
-    , mOverlayId(INVALID_OVERLAY)
-    , mTexture(nullptr)
-#endif
-  {}
+  // Constructors and destructor are defined in LayersTypes.cpp so we don't
+  // have to pull in a definition for GraphicBuffer.h here. In KK at least,
+  // that results in nasty pollution such as libui's hardware.h #defining
+  // 'version_major' and 'version_minor' which conflict with Theora's codec.c...
+  LayerRenderState();
+  LayerRenderState(const LayerRenderState& aOther);
+  ~LayerRenderState();
 
 #ifdef MOZ_WIDGET_GONK
   LayerRenderState(android::GraphicBuffer* aSurface,
                    const gfx::IntSize& aSize,
                    LayerRenderStateFlags aFlags,
-                   TextureHost* aTexture)
-    : mFlags(aFlags)
-    , mHasOwnOffset(false)
-    , mSurface(aSurface)
-    , mOverlayId(INVALID_OVERLAY)
-    , mSize(aSize)
-    , mTexture(aTexture)
-  {}
+                   TextureHost* aTexture);
 
   bool OriginBottomLeft() const
   { return bool(mFlags & LayerRenderStateFlags::ORIGIN_BOTTOM_LEFT); }
@@ -133,6 +124,8 @@ struct LayerRenderState {
   bool mHasOwnOffset;
   // the location of the layer's origin on mSurface
   nsIntPoint mOffset;
+  // The 'ifdef MOZ_WIDGET_GONK' sadness here is because we don't want to include
+  // android::sp unless we have to.
 #ifdef MOZ_WIDGET_GONK
   // surface to render
   android::sp<android::GraphicBuffer> mSurface;

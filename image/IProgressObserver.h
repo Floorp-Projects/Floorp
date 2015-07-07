@@ -45,7 +45,6 @@ public:
 
   // Other, internal-only methods:
   virtual void SetHasImage() = 0;
-  virtual void OnStartDecode() = 0;
   virtual bool NotificationsDeferred() const = 0;
   virtual void SetNotificationsDeferred(bool aDeferNotifications) = 0;
 

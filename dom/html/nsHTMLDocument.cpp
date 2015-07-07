@@ -31,6 +31,7 @@
 #include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsDocShell.h"

@@ -218,7 +218,8 @@ public:
 
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) override
   {
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+    (MessageLoop::current() ? MessageLoop::current() : mUILoop)->
+       PostDelayedTask(FROM_HERE, aTask, aDelayMs);
   }
 
   virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override

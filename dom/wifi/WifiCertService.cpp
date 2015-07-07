@@ -22,6 +22,7 @@
 #include "nsIDOMBlob.h"
 #include "nsIWifiService.h"
 #include "nsNetUtil.h"
+#include "nsIInputStream.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "ScopedNSSTypes.h"

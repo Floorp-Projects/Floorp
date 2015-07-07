@@ -610,10 +610,12 @@ WebappsApplication.prototype = {
     this.addMessageListeners(["Webapps:Connect:Return:OK",
                               "Webapps:Connect:Return:KO"]);
     return this.createPromise(function (aResolve, aReject) {
+      let from = this._window.location.origin + this._window.location.pathname;
       cpmm.sendAsyncMessage("Webapps:Connect", {
         keyword: aKeyword,
         rules: aRules,
         manifestURL: this.manifestURL,
+        pubPageURL: from,
         outerWindowID: this._id,
         topWindowID: this._topId,
         requestID: this.getPromiseResolverId({

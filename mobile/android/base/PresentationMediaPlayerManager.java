@@ -100,13 +100,13 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
         public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                    int height) {
             // Surface changed so force a composite
-            GeckoAppShell.scheduleComposite();
+            GeckoAppShell.invalidateAndScheduleComposite();
         }
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
             GeckoAppShell.addPresentationSurface(holder.getSurface());
-            GeckoAppShell.scheduleComposite();
+            GeckoAppShell.invalidateAndScheduleComposite();
         }
 
         @Override

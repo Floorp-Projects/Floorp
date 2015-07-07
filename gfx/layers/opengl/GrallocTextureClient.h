@@ -60,7 +60,7 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void SetRemoveFromCompositableTracker(AsyncTransactionTracker* aTracker) override;
+  virtual void SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) override;
 
   virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
 
@@ -127,7 +127,7 @@ protected:
    */
   MaybeMagicGrallocBufferHandle mGrallocHandle;
 
-  RefPtr<AsyncTransactionTracker> mRemoveFromCompositableTracker;
+  RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
 

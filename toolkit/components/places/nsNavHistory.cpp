@@ -30,6 +30,7 @@
 #include "nsEscape.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIIDNService.h"
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsMathUtils.h"

@@ -2411,9 +2411,10 @@ nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
 }
 
 void
-nsWindow::ScheduleComposite()
+nsWindow::InvalidateAndScheduleComposite()
 {
     if (sCompositorParent) {
+        sCompositorParent->InvalidateOnCompositorThread();
         sCompositorParent->ScheduleRenderOnCompositorThread();
     }
 }

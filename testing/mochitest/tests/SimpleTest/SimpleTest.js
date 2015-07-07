@@ -86,8 +86,15 @@ if (typeof(repr) == 'undefined') {
             }
         } catch (e) {
         }
+        var ostring;
         try {
-            var ostring = (o + "");
+            if (o === 0) {
+                ostring = (1 / o > 0) ? "+0" : "-0";
+            } else if (typeof o === "string") {
+                ostring = JSON.stringify(o);
+            } else {
+                ostring = (o + "");
+            }
         } catch (e) {
             return "[" + typeof(o) + "]";
         }
@@ -271,10 +278,11 @@ SimpleTest.ok = function (condition, name, diag) {
 };
 
 /**
- * Roughly equivalent to ok(a===b, name)
+ * Roughly equivalent to ok(Object.is(a, b), name)
 **/
 SimpleTest.is = function (a, b, name) {
-    var pass = (a === b);
+    // Be lazy and use Object.is til we want to test a browser without it.
+    var pass = Object.is(a, b);
     var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b)
     SimpleTest.ok(pass, name, diag);
 };
@@ -286,7 +294,7 @@ SimpleTest.isfuzzy = function (a, b, epsilon, name) {
 };
 
 SimpleTest.isnot = function (a, b, name) {
-    var pass = (a !== b);
+    var pass = !Object.is(a, b);
     var diag = pass ? "" : "didn't expect " + repr(a) + ", but got it";
     SimpleTest.ok(pass, name, diag);
 };
@@ -404,14 +412,14 @@ SimpleTest.info = function(name, message) {
 **/
 
 SimpleTest.todo_is = function (a, b, name) {
-    var pass = (a === b);
+    var pass = Object.is(a, b);
     var diag = pass ? repr(a) + " should equal " + repr(b)
                     : "got " + repr(a) + ", expected " + repr(b);
     SimpleTest.todo(pass, name, diag);
 };
 
 SimpleTest.todo_isnot = function (a, b, name) {
-    var pass = (a !== b);
+    var pass = !Object.is(a, b);
     var diag = pass ? repr(a) + " should not equal " + repr(b)
                     : "didn't expect " + repr(a) + ", but got it";
     SimpleTest.todo(pass, name, diag);

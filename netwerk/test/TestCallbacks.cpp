@@ -23,6 +23,8 @@
 
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
 static bool gError = false;

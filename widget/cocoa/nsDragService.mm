@@ -20,7 +20,6 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsIIOService.h"
-#include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsView.h"

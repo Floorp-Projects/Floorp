@@ -22,8 +22,8 @@
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/CameraFacesDetectedEvent.h"
 #include "mozilla/dom/CameraStateChangeEvent.h"
-#include "DOMCameraDetectedFace.h"
 #include "nsNetUtil.h"
+#include "DOMCameraDetectedFace.h"
 #include "nsServiceManagerUtils.h"
 #include "nsICameraTestHardware.h"
 

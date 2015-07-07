@@ -7,12 +7,12 @@
 #include "TestHarness.h"
 #include "nsMemory.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
 #include "nsDocShellCID.h"
 
 #include "nsToolkitCompsCID.h"
 #include "nsINavHistoryService.h"
 #include "nsIObserverService.h"
+#include "nsIURI.h"
 #include "mozilla/IHistory.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
@@ -22,6 +22,7 @@
 #include "nsPIPlacesDatabase.h"
 #include "nsIObserver.h"
 #include "prinrval.h"
+#include "prtime.h"
 #include "mozilla/Attributes.h"
 
 #define WAITFORTOPIC_TIMEOUT_SECONDS 5

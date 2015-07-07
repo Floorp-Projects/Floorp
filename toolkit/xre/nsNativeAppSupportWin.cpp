@@ -30,6 +30,8 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "mozilla/Services.h"
+#include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIDOMLocation.h"

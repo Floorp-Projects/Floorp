@@ -1235,7 +1235,7 @@ BlobImplTemporaryBlob::GetInternalStream(nsIInputStream** aStream,
 ////////////////////////////////////////////////////////////////////////////
 // FileList implementation
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileList, mFiles, mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

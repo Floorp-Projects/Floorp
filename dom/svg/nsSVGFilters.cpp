@@ -25,7 +25,6 @@
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "imgIContainer.h"
-#include "nsNetUtil.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGString.h"
 #include "SVGContentUtils.h"

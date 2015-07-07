@@ -72,23 +72,25 @@ BasicImageLayer::Paint(DrawTarget* aDT,
   nsRefPtr<ImageFactory> originalIF = mContainer->GetImageFactory();
   mContainer->SetImageFactory(mManager->IsCompositingCheap() ? nullptr : BasicManager()->GetImageFactory());
 
-  RefPtr<gfx::SourceSurface> surface;
-  AutoLockImage autoLock(mContainer, &surface);
+  AutoLockImage autoLock(mContainer);
   Image *image = autoLock.GetImage();
-  gfx::IntSize size = mSize = autoLock.GetSize();
-
+  if (!image) {
+    mContainer->SetImageFactory(originalIF);
+    return;
+  }
+  RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
   if (!surface || !surface->IsValid()) {
     mContainer->SetImageFactory(originalIF);
     return;
   }
 
+  gfx::IntSize size = mSize = surface->GetSize();
   FillRectWithMask(aDT, aDeviceOffset, Rect(0, 0, size.width, size.height), 
                    surface, ToFilter(mFilter),
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 
   mContainer->SetImageFactory(originalIF);
-  GetContainer()->NotifyPaintedImage(image);
 }
 
 already_AddRefed<SourceSurface>
@@ -98,8 +100,12 @@ BasicImageLayer::GetAsSourceSurface()
     return nullptr;
   }
 
-  gfx::IntSize dontCare;
-  return mContainer->GetCurrentAsSourceSurface(&dontCare);
+  AutoLockImage lockImage(mContainer);
+  Image* image = lockImage.GetImage();
+  if (!image) {
+    return nullptr;
+  }
+  return image->GetAsSourceSurface();
 }
 
 already_AddRefed<ImageLayer>

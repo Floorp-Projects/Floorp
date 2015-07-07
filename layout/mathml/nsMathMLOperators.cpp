@@ -10,7 +10,7 @@
 #include "nsTArray.h"
 
 #include "nsIPersistentProperties2.h"
-#include "nsNetUtil.h"
+#include "nsISimpleEnumerator.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 

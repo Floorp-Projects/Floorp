@@ -413,37 +413,8 @@
     });
   }
 
-  Promise.all([
-    testFetch(),
-    testImage(),
-    testImageSrcSet(),
-    testPicture(),
-    testAudio(),
-    testVideo(),
-    testBeacon(),
-    testCSPReport(),
-    testEmbed(),
-    testObject(),
-    testFont(),
-    testIFrame(),
-    testFrame(),
-    testInternal(),
-    testPing(),
-    testPlugin(),
-    testScript(),
-    testStyle(),
-    testTrack(),
-    testXHR(),
-    testXSLT(),
-    testWorker(),
-    testNestedWorker(),
-    testSharedWorker(),
-    testNestedWorkerInSharedWorker(),
-
-    // Also, test to see if the type of the request can be persisted in the database.
-    testCache(),
-  ])
-  .then(function() {
+  var testName = location.search.substr(1);
+  window[testName]().then(function() {
     finish();
   }, function(e) {
     ok(false, "A promise was rejected: " + e);

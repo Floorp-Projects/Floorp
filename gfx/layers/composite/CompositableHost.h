@@ -37,7 +37,9 @@ class DataSourceSurface;
 namespace layers {
 
 class Layer;
+class LayerComposite;
 class Compositor;
+class ImageContainerParent;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
@@ -75,7 +77,8 @@ public:
   virtual void SetCompositor(Compositor* aCompositor);
 
   // composite the contents of this buffer host to the compositor's surface
-  virtual void Composite(EffectChain& aEffectChain,
+  virtual void Composite(LayerComposite* aLayer,
+                         EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
@@ -98,15 +101,14 @@ public:
 
   /**
    * Returns the front buffer.
+   * *aPictureRect (if non-null, and the returned TextureHost is non-null)
+   * is set to the picture rect.
    */
-  virtual TextureHost* GetAsTextureHost() { return nullptr; }
+  virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) {
+    return nullptr;
+  }
 
   virtual LayerRenderState GetRenderState() = 0;
-
-  virtual void SetPictureRect(const gfx::IntRect& aPictureRect)
-  {
-    MOZ_ASSERT(false, "Should have been overridden");
-  }
 
   virtual gfx::IntSize GetImageSize() const
   {
@@ -132,6 +134,8 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
+  virtual void SetImageContainer(ImageContainerParent* aImageContainer) {}
+
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
 
   typedef uint32_t AttachFlags;
@@ -151,12 +155,6 @@ public:
     SetLayer(aLayer);
     mAttached = true;
     mKeepAttached = aFlags & KEEP_ATTACHED;
-
-    // If we already have a textureHost before, use that in this moment.
-    RefPtr<TextureHost> frontBuffer = GetAsTextureHost();
-    if (frontBuffer) {
-      UseTextureHost(frontBuffer);
-    }
   }
   // Detach this compositable host from its layer.
   // If we are used for async video, then it is not safe to blindly detach since
@@ -187,10 +185,18 @@ public:
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
-  virtual void UseTextureHost(TextureHost* aTexture);
+  struct TimedTexture {
+    RefPtr<TextureHost> mTexture;
+    TimeStamp mTimeStamp;
+    gfx::IntRect mPictureRect;
+    int32_t mFrameID;
+    int32_t mProducerID;
+  };
+  virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                          TextureHost* aTextureOnWhite);
-  virtual void UseOverlaySource(OverlaySource aOverlay) { }
+  virtual void UseOverlaySource(OverlaySource aOverlay,
+                                const gfx::IntRect& aPictureRect) { }
 
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
@@ -203,7 +209,8 @@ public:
   static PCompositableParent*
   CreateIPDLActor(CompositableParentManager* mgr,
                   const TextureInfo& textureInfo,
-                  uint64_t asyncID);
+                  uint64_t asyncID,
+                  PImageContainerParent* aImageContainer = nullptr);
 
   static bool DestroyIPDLActor(PCompositableParent* actor);
 
@@ -271,7 +278,7 @@ private:
  * is async, we store references to the async compositables in a CompositableMap
  * that is accessed only on the compositor thread. During a layer transaction we
  * send the message OpAttachAsyncCompositable(ID, PLayer), and on the compositor
- * side we lookup the ID in the map and attach the correspondig compositable to
+ * side we lookup the ID in the map and attach the corresponding compositable to
  * the layer.
  *
  * CompositableMap must be global because the image bridge doesn't have any

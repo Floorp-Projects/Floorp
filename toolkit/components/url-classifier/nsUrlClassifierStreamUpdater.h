@@ -12,7 +12,7 @@
 #include "nsIObserver.h"
 #include "nsIUrlClassifierStreamUpdater.h"
 #include "nsIStreamListener.h"
-#include "nsNetUtil.h"
+#include "nsIChannel.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "mozilla/Attributes.h"

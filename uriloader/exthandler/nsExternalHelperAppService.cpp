@@ -51,6 +51,7 @@
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIContentDispatchChooser.h"
 #include "nsNetUtil.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 

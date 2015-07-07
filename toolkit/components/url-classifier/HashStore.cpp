@@ -35,6 +35,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
 #include "nsCheckSummedOutputStream.h"
+#include "prio.h"
 #include "mozilla/Logging.h"
 #include "zlib.h"
 

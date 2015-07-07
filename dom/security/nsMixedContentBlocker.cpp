@@ -14,7 +14,6 @@
 #include "nsISecurityEventSink.h"
 #include "nsIWebProgressListener.h"
 #include "nsContentUtils.h"
-#include "nsNetUtil.h"
 #include "nsIRequest.h"
 #include "nsIDocument.h"
 #include "nsIContentViewer.h"

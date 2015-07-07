@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
 #include "nsIResProtocolHandler.h"
 #include "nsIChromeRegistry.h"
 #include "nsIJARURI.h"

@@ -20,6 +20,8 @@
 #include "nsCPrefetchService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsIMIMEHeaderParam.h"
+#include "nsIProtocolHandler.h"
 #include "nsIHttpChannel.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"

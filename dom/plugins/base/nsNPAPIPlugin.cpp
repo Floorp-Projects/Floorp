@@ -72,6 +72,7 @@
 #include "nsIDocShell.h"
 
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 
 #include "mozilla/Mutex.h"
 #include "mozilla/PluginLibrary.h"

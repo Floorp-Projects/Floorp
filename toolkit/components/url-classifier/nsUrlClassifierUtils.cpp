@@ -5,7 +5,6 @@
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
