@@ -20,13 +20,13 @@
 #include "jsmath.h"
 #include "jsnum.h"
 #include "jsscript.h"
-#include "prmjtime.h"
 
 #include "gc/Marking.h"
 #include "gc/Rooting.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/StringBuffer.h"
+#include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
 #include "jscntxtinlines.h"
