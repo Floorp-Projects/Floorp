@@ -615,10 +615,24 @@ public:
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
 
+    // Called before we start processing the next event on the main
+    // thread.
+    void OnBeforeProcessNextEvent() {
+        // As we may be entering a nested event loop, we need to
+        // cancel any ongoing performance measurement.
+        js::ResetPerformanceMonitoring(Get()->Runtime());
+    }
+
+    // Called after we have finished processing the next event,
+    // including micro-tasks.
+    void OnAfterMicroTaskCheckPoint() {
+        // Now that we are certain that the event is complete,
+        // we can flush any ongoing performance measurement.
+        js::FlushPerformanceMonitoring(Get()->Runtime());
+    }
     void OnProcessNextEvent() {
         mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes();
         mSlowScriptSecondHalf = false;
-        js::ResetStopwatches(Get()->Runtime());
     }
     void OnAfterProcessNextEvent() {
         mSlowScriptCheckpoint = mozilla::TimeStamp();

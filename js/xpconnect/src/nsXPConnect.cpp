@@ -948,6 +948,8 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal* aThread, bool aMayWait,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
+    mRuntime->OnBeforeProcessNextEvent();
+
     // If ProcessNextEvent was called during a Promise "then" callback, we
     // must process any pending microtasks before blocking in the event loop,
     // otherwise we may deadlock until an event enters the queue later.
@@ -995,6 +997,8 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal* aThread,
     nsContentUtils::PerformMainThreadMicroTaskCheckpoint();
 
     Promise::PerformMicroTaskCheckpoint();
+
+    mRuntime->OnAfterMicroTaskCheckPoint();
 
     PopNullJSContext();
 
