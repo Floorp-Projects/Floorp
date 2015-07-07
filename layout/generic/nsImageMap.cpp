@@ -535,7 +535,8 @@ void PolyArea::Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
         p2.y = pc->CSSPixelsToDevPixels(mCoords[i+1]);
         p1snapped = p1;
         p2snapped = p2;
-        SnapLineToDevicePixelsForStroking(p1snapped, p2snapped, aDrawTarget);
+        SnapLineToDevicePixelsForStroking(p1snapped, p2snapped, aDrawTarget,
+                                          aStrokeOptions.mLineWidth);
         aDrawTarget.StrokeLine(p1snapped, p2snapped, aColor, aStrokeOptions);
         p1 = p2;
       }
@@ -543,7 +544,8 @@ void PolyArea::Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       p2.y = pc->CSSPixelsToDevPixels(mCoords[1]);
       p1snapped = p1;
       p2snapped = p2;
-      SnapLineToDevicePixelsForStroking(p1snapped, p2snapped, aDrawTarget);
+      SnapLineToDevicePixelsForStroking(p1snapped, p2snapped, aDrawTarget,
+                                        aStrokeOptions.mLineWidth);
       aDrawTarget.StrokeLine(p1snapped, p2snapped, aColor, aStrokeOptions);
     }
   }
