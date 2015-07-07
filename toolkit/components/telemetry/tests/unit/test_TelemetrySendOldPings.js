@@ -14,7 +14,6 @@
 
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
@@ -45,7 +44,6 @@ const LRU_PINGS = TelemetrySend.MAX_LRU_PINGS;
 
 const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
-let gHttpServer = new HttpServer();
 let gCreatedPings = 0;
 let gSeenPings = 0;
 
@@ -147,20 +145,6 @@ function pingHandler(aRequest) {
 }
 
 /**
- * Returns a Promise that resolves when gHttpServer has been
- * successfully shut down.
- *
- * @returns Promise
- */
-function stopHttpServer() {
-  let deferred = Promise.defer();
-  gHttpServer.stop(function() {
-    deferred.resolve();
-  })
-  return deferred.promise;
-}
-
-/**
  * Clear out all pending pings.
  */
 let clearPendingPings = Task.async(function*() {
@@ -179,8 +163,8 @@ function startTelemetry() {
 }
 
 function run_test() {
-  gHttpServer.registerPrefixHandler("/submit/telemetry/", pingHandler);
-  gHttpServer.start(-1);
+  PingServer.start();
+  PingServer.registerPingHandler(pingHandler);
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -191,7 +175,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(TelemetryController.Constants.PREF_ENABLED, true);
   Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
-                             "http://localhost:" + gHttpServer.identity.primaryPort);
+                             "http://localhost:" + PingServer.port);
   run_next_test();
 }
 
@@ -224,14 +208,15 @@ add_task(function* test_expired_pings_are_deleted() {
 });
 
 /**
- * Test that really recent pings are not sent on Telemetry initialization.
+ * Test that really recent pings are sent on Telemetry initialization.
  */
-add_task(function* test_recent_pings_not_sent() {
+add_task(function* test_recent_pings_sent() {
   let pingTypes = [{ num: RECENT_PINGS }];
   let recentPings = yield createSavedPings(pingTypes);
 
   yield TelemetryController.reset();
-  assertReceivedPings(0);
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  assertReceivedPings(RECENT_PINGS);
 
   yield clearPendingPings();
 });
@@ -248,6 +233,9 @@ add_task(function* test_most_recent_pings_kept() {
   let head = pings.slice(0, LRU_PINGS);
   let tail = pings.slice(-3);
 
+  const evictedHistogram = Services.telemetry.getHistogramById('TELEMETRY_FILES_EVICTED');
+  evictedHistogram.clear();
+
   yield TelemetryController.reset();
   const pending = yield TelemetryStorage.loadPendingPingList();
 
@@ -257,6 +245,9 @@ add_task(function* test_most_recent_pings_kept() {
   }
 
   assertNotSaved(tail);
+  Assert.equal(evictedHistogram.snapshot().sum, tail.length,
+               "Should have tracked the evicted ping count");
+  yield TelemetrySend.shutdown();
   yield clearPendingPings();
 });
 
@@ -318,6 +309,7 @@ add_task(function* test_overdue_old_format() {
     yield File.setDates(PING_FILES_PATHS[f], null, Date.now() - OVERDUE_PING_FILE_AGE);
   }
 
+  gSeenPings = 0;
   yield TelemetryController.reset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(OLD_FORMAT_PINGS);
@@ -352,6 +344,11 @@ add_task(function* test_overdue_pings_trigger_send() {
   yield assertNotSaved(recentPings);
   yield assertNotSaved(expiredPings);
   yield assertNotSaved(overduePings);
+
+  Assert.equal(TelemetrySend.overduePingsCount, overduePings.length,
+               "Should have tracked the correct amount of overdue pings");
+  Assert.equal(TelemetrySend.discardedPingsCount, expiredPings.length,
+               "Should have tracked the correct amount of expired pings");
 
   yield clearPendingPings();
 });
@@ -388,7 +385,7 @@ add_task(function* test_overdue_old_format() {
 
   let receivedPings = 0;
   // Register a new prefix handler to validate the URL.
-  gHttpServer.registerPrefixHandler("/submit/telemetry/", request => {
+  PingServer.registerPingHandler(request => {
     // Check that we have a version query parameter in the URL.
     Assert.notEqual(request.queryString, "");
 
@@ -407,5 +404,5 @@ add_task(function* test_overdue_old_format() {
 });
 
 add_task(function* teardown() {
-  yield stopHttpServer();
+  yield PingServer.stop();
 });
