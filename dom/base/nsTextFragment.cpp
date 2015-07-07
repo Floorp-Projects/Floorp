@@ -17,6 +17,7 @@
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUTF8Utils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SSE.h"
 #include "nsTextFragmentImpl.h"
@@ -29,6 +30,8 @@
 static char* sSpaceSharedString[TEXTFRAG_MAX_NEWLINES + 1];
 static char* sTabSharedString[TEXTFRAG_MAX_NEWLINES + 1];
 static char sSingleCharSharedString[256];
+
+using mozilla::CheckedUint32;
 
 // static
 nsresult
@@ -105,12 +108,15 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
       m1b = aOther.m1b; // This will work even if aOther is using m2b
     }
     else {
-      size_t m2bSize = aOther.mState.mLength *
-        (aOther.mState.mIs2b ? sizeof(char16_t) : sizeof(char));
+      CheckedUint32 m2bSize = aOther.mState.mLength;
+      m2bSize *= (aOther.mState.mIs2b ? sizeof(char16_t) : sizeof(char));
+      m2b = nullptr;
+      if (m2bSize.isValid()) {
+        m2b = static_cast<char16_t*>(malloc(m2bSize.value()));
+      }
 
-      m2b = static_cast<char16_t*>(malloc(m2bSize));
       if (m2b) {
-        memcpy(m2b, aOther.m2b, m2bSize);
+        memcpy(m2b, aOther.m2b, m2bSize.value());
       } else {
         // allocate a buffer for a single REPLACEMENT CHARACTER
         m2b = static_cast<char16_t*>(moz_xmalloc(sizeof(char16_t)));
@@ -255,12 +261,17 @@ nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // Use ucs2 storage because we have to
-    size_t m2bSize = aLength * sizeof(char16_t);
-    m2b = (char16_t *)malloc(m2bSize);
+    CheckedUint32 m2bSize = aLength;
+    m2bSize *= sizeof(char16_t);
+    if (!m2bSize.isValid()) {
+      return false;
+    }
+
+    m2b = static_cast<char16_t*>(malloc(m2bSize.value()));
     if (!m2b) {
       return false;
     }
-    memcpy(m2b, aBuffer, m2bSize);
+    memcpy(m2b, aBuffer, m2bSize.value());
 
     mState.mIs2b = true;
     if (aUpdateBidi) {
@@ -269,7 +280,7 @@ nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi
 
   } else {
     // Use 1 byte storage because we can
-    char* buff = (char *)malloc(aLength * sizeof(char));
+    char* buff = static_cast<char*>(malloc(aLength));
     if (!buff) {
       return false;
     }
@@ -325,9 +336,21 @@ nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength, bool aUpdateBi
 
   // Should we optimize for aData.Length() == 0?
 
+  CheckedUint32 length = mState.mLength;
+  length += aLength;
+
+  if (!length.isValid()) {
+    return false;
+  }
+
   if (mState.mIs2b) {
+    length *= sizeof(char16_t);
+    if (!length.isValid()) {
+      return false;
+    }
+
     // Already a 2-byte string so the result will be too
-    char16_t* buff = (char16_t*)realloc(m2b, (mState.mLength + aLength) * sizeof(char16_t));
+    char16_t* buff = static_cast<char16_t*>(realloc(m2b, length.value()));
     if (!buff) {
       return false;
     }
@@ -347,10 +370,14 @@ nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength, bool aUpdateBi
   int32_t first16bit = FirstNon8Bit(aBuffer, aBuffer + aLength);
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
+    length *= sizeof(char16_t);
+    if (!length.isValid()) {
+      return false;
+    }
+
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    char16_t* buff =
-      (char16_t*)malloc((mState.mLength + aLength) * sizeof(char16_t));
+    char16_t* buff = static_cast<char16_t*>(malloc(length.value()));
     if (!buff) {
       return false;
     }
@@ -380,14 +407,13 @@ nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength, bool aUpdateBi
   // The new and the old data is all 1-byte
   char* buff;
   if (mState.mInHeap) {
-    buff = (char*)realloc(const_cast<char*>(m1b),
-                          (mState.mLength + aLength) * sizeof(char));
+    buff = static_cast<char*>(realloc(const_cast<char*>(m1b), length.value()));
     if (!buff) {
       return false;
     }
   }
   else {
-    buff = (char*)malloc((mState.mLength + aLength) * sizeof(char));
+    buff = static_cast<char*>(malloc(length.value()));
     if (!buff) {
       return false;
     }
