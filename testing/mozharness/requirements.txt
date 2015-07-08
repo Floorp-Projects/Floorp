@@ -1,0 +1,25 @@
+# These packages are needed for mozharness unit tests.
+# Output from 'pip freeze'; we may be able to use other versions of the below packages.
+Cython==0.14.1
+Fabric==1.6.0
+coverage==3.6
+distribute==0.6.35
+dulwich==0.8.7
+hg-git==0.4.0
+logilab-astng==0.24.2
+logilab-common==0.59.0
+mercurial==2.6.3
+mock==1.0.1
+nose==1.2.1
+ordereddict==1.1
+paramiko==1.10.0
+pycrypto==2.6
+pyflakes==0.6.1
+pylint==0.27.0
+simplejson==2.1.1
+unittest2==0.5.1
+virtualenv==1.5.1
+wsgiref==0.1.2
+urllib3==1.9.1
+google-api-python-client==1.3.1
+oauth2client==1.4.2
