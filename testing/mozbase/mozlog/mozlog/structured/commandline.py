@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-import os
+import argparse
 import optparse
+import os
+import sys
 
 from collections import defaultdict
 from structuredlog import StructuredLogger, set_default_logger
@@ -18,6 +19,7 @@ log_formatters = {
     'html': (formatters.HTMLFormatter, "HTML report"),
     'mach': (formatters.MachFormatter, "Human-readable output"),
     'tbpl': (formatters.TbplFormatter, "TBPL style log format"),
+    'errorsummary': (formatters.ErrorSummaryFormatter, argparse.SUPPRESS),
 }
 
 TEXT_FORMATTERS = ('raw', 'mach')
