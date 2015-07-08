@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(e7bcc22c-e9fc-4e7d-88b9-7482399b322d)]
+[scriptable, uuid(406808a5-2838-4c29-9e39-5bfb885c89bf)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -28,11 +28,13 @@ interface nsIParentalControlsService : nsISupports
   const short MODIFY_ACCOUNTS = 9; // Modifying system accounts
   const short REMOTE_DEBUGGING = 10; // Remote debugging
   const short IMPORT_SETTINGS = 11; // Importing settings from other apps
+  const short TOOLS_MENU = 12; // Hide tools menu entry
+  const short REPORT_SITE_ISSUE = 13; // Hide "Report Site Issue" menu entry
 
   /**
    * @returns true if the current user account has parental controls
    * restrictions enabled.
-   */ 
+   */
   readonly attribute boolean parentalControlsEnabled;
 
   /**

@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.json.JSONException;
@@ -74,7 +75,9 @@ public class RestrictedProfiles {
         DISALLOW_SET_IMAGE(8, "no_set_image"),
         DISALLOW_MODIFY_ACCOUNTS(9, "no_modify_accounts"), // UserManager.DISALLOW_MODIFY_ACCOUNTS
         DISALLOW_REMOTE_DEBUGGING(10, "no_remote_debugging"),
-        DISALLOW_IMPORT_SETTINGS(11, "no_import_settings");
+        DISALLOW_IMPORT_SETTINGS(11, "no_import_settings"),
+        DISALLOW_TOOLS_MENU(12, "no_tools_menu"),
+        DISALLOW_REPORT_SITE_ISSUE(13, "no_report_site_issue");
 
         public final int id;
         public final String name;
@@ -84,6 +87,26 @@ public class RestrictedProfiles {
             this.name = name;
         }
     }
+
+    private static List<Restriction> restrictionsOfGuestProfile = Arrays.asList(
+        Restriction.DISALLOW_DOWNLOADS,
+        Restriction.DISALLOW_INSTALL_EXTENSION,
+        Restriction.DISALLOW_INSTALL_APPS,
+        Restriction.DISALLOW_BROWSE_FILES,
+        Restriction.DISALLOW_SHARE,
+        Restriction.DISALLOW_BOOKMARK,
+        Restriction.DISALLOW_ADD_CONTACTS,
+        Restriction.DISALLOW_SET_IMAGE,
+        Restriction.DISALLOW_MODIFY_ACCOUNTS,
+        Restriction.DISALLOW_REMOTE_DEBUGGING,
+        Restriction.DISALLOW_IMPORT_SETTINGS
+    );
+
+    // Restricted profiles will automatically have these restrictions by default
+    private static List<Restriction> defaultRestrictionsOfRestrictedProfiles = Arrays.asList(
+        Restriction.DISALLOW_TOOLS_MENU,
+        Restriction.DISALLOW_REPORT_SITE_ISSUE
+    );
 
     private static Restriction geckoActionToRestriction(int action) {
         for (Restriction rest : Restriction.values()) {
@@ -95,7 +118,7 @@ public class RestrictedProfiles {
         throw new IllegalArgumentException("Unknown action " + action);
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static Bundle getRestrictions(final Context context) {
         final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
         return mgr.getUserRestrictions();
@@ -115,6 +138,11 @@ public class RestrictedProfiles {
         // so no action can be restricted.
         if (Versions.preJBMR2) {
             return false;
+        }
+
+        // Hardcoded restrictions. Make restrictions configurable and read from UserManager (Bug 1180653)
+        if (isUserRestricted(context) && defaultRestrictionsOfRestrictedProfiles.contains(Restriction.DISALLOW_TOOLS_MENU)) {
+            return true;
         }
 
         return getRestrictions(context).getBoolean(name, false);
@@ -171,7 +199,7 @@ public class RestrictedProfiles {
     }
 
     public static boolean isAllowed(final Context context, final Restriction action) {
-        return isAllowed(context, action.id, null);
+        return isAllowed(context, action, null);
     }
 
     @WrapElementForJNI
@@ -190,13 +218,16 @@ public class RestrictedProfiles {
             return false;
         }
 
+        return isAllowed(context, restriction, url);
+    }
+
+    private static boolean isAllowed(final Context context, final Restriction restriction, String url) {
         if (getInGuest()) {
             if (Restriction.DISALLOW_BROWSE_FILES == restriction) {
                 return canLoadUrl(context, url);
             }
 
-            // Guest users can't do anything.
-            return false;
+            return !restrictionsOfGuestProfile.contains(restriction);
         }
 
         // NOTE: Restrictions hold the opposite intention, so we need to flip it.

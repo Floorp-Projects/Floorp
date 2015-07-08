@@ -7,6 +7,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ctypes.jsm");
+Cu.import("resource://gre/modules/JNI.jsm");
 
 var WebcompatReporter = {
   menuItem: null,
@@ -15,7 +17,14 @@ var WebcompatReporter = {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
     Services.obs.addObserver(this, "chrome-document-global-created", false);
     Services.obs.addObserver(this, "content-document-global-created", false);
-    this.addMenuItem();
+
+    let visible = true;
+    if ("@mozilla.org/parental-controls-service;1" in Cc) {
+      let pc = Cc["@mozilla.org/parental-controls-service;1"].createInstance(Ci.nsIParentalControlsService);
+      visible = pc.isAllowed(Ci.nsIParentalControlsService.REPORT_SITE_ISSUE);
+    }
+
+    this.addMenuItem(visible);
   },
 
   observe: function(subject, topic, data) {
@@ -45,7 +54,7 @@ var WebcompatReporter = {
     }
   },
 
-  addMenuItem: function() {
+  addMenuItem: function(visible) {
     this.menuItem = NativeWindow.menu.add({
       name: this.strings.GetStringFromName("webcompat.menu.name"),
       callback: () => {
@@ -53,6 +62,7 @@ var WebcompatReporter = {
         this.reportIssue(currentURI);
       },
       enabled: false,
+      visible: visible,
     });
   },
 

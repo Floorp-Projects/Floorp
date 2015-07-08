@@ -65,7 +65,8 @@ class FilePickerResultHandler implements ActivityResultHandler {
         }
 
         // Camera results won't return an Intent. Use the file name we passed to the original intent.
-        if (intent == null) {
+        // In Android M, camera results return an empty Intent rather than null.
+        if (intent == null || (intent.getAction() == null && intent.getData() == null)) {
             if (mImageName != null) {
                 File file = new File(Environment.getExternalStorageDirectory(), mImageName);
                 sendResult(file.getAbsolutePath());

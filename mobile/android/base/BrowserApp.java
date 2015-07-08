@@ -3329,6 +3329,10 @@ public class BrowserApp extends GeckoApp
             }
         }
 
+        // Hide tools menu if restriction is active
+        final boolean toolsVisible = RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_TOOLS_MENU);
+        MenuUtils.safeSetVisible(aMenu, R.id.tools, toolsVisible);
+
         // Disable save as PDF for about:home and xul pages.
         saveAsPDF.setEnabled(!(isAboutHome(tab) ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml") ||

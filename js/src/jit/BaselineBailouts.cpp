@@ -69,7 +69,7 @@ class BufferPointer
  * allocated portion being constructed or the existing stack).
  *
  * The abstraction handles transparent re-allocation of the heap memory when it
- * needs to be enlarged to accomodate new data.  Similarly to the C stack, the
+ * needs to be enlarged to accommodate new data.  Similarly to the C stack, the
  * data that's written to the reconstructed stack grows from high to low in memory.
  *
  * The lowest region of the allocated memory contains a BaselineBailoutInfo structure that
