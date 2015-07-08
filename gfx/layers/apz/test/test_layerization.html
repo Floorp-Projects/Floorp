@@ -154,7 +154,10 @@ SimpleTest.waitForExplicitFinish();
 // Disable smooth scrolling, because it results in long-running scroll
 // animations that can result in a 'scroll' event triggered by an earlier
 // wheel event as corresponding to a later wheel event.
-SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]},
+// Also enable APZ test logging, since we use that data to determine whether
+// a scroll frame was layerized.
+SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false],
+                                   ["apz.test.logging_enabled", true]]},
                           function() {
                             SimpleTest.waitForFocus(startTest, window);
                           });
