@@ -125,6 +125,11 @@ let listener = {
   win: null,
   utils: null,
   canvas: null,
+  mm: null,
+
+  messages: [
+    "gfxSanity:ContentLoaded",
+  ],
 
   scheduleTest: function(win) {
     this.win = win;
@@ -146,6 +151,36 @@ let listener = {
     this.endTest();
   },
 
+  receiveMessage(message) {
+    let data = message.data;
+    switch (message.name) {
+      case "gfxSanity:ContentLoaded":
+        this.runSanityTest();
+        break;
+    }
+  },
+
+  onWindowLoaded: function() {
+    let browser = this.win.document.createElementNS(XUL_NS, "browser");
+    browser.setAttribute("type", "content");
+
+    let remoteBrowser = Services.appinfo.browserTabsRemoteAutostart;
+    browser.setAttribute("remote", remoteBrowser);
+
+    browser.style.width = PAGE_WIDTH + "px";
+    browser.style.height = PAGE_HEIGHT + "px";
+
+    this.win.document.documentElement.appendChild(browser);
+    // Have to set the mm after we append the child
+    this.mm = browser.messageManager;
+
+    this.messages.forEach((msgName) => {
+      this.mm.addMessageListener(msgName, this);
+    });
+
+    this.mm.loadFrameScript(FRAME_SCRIPT_URL, false);
+  },
+
   endTest: function() {
     if (!this.win) {
       return;
@@ -156,6 +191,11 @@ let listener = {
     this.utils = null;
     this.canvas = null;
 
+    this.messages.forEach((msgName) => {
+      this.mm.removeMessageListener(msgName, this);
+    });
+
+    this.mm = null;
   }
 };
 
