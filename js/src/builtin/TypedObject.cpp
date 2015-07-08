@@ -2619,26 +2619,6 @@ js::GetFloat64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-js::GetInt8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    MOZ_ASSERT(global);
-    args.rval().setObject(global->int8x16TypeDescr());
-    return true;
-}
-
-bool
-js::GetInt16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    MOZ_ASSERT(global);
-    args.rval().setObject(global->int16x8TypeDescr());
-    return true;
-}
-
-bool
 js::GetInt32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
