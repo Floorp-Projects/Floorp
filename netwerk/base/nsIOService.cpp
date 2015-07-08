@@ -1385,9 +1385,6 @@ nsIOService::Observe(nsISupports *subject,
             // If we fail here, we will fail always on.
             mNetworkLinkServiceInitialized = true;
 
-            // The browser starts off as offline. We go into online mode after this.
-            SetOffline(false);
-
             // And now reflect the preference setting
             nsCOMPtr<nsIPrefBranch> prefBranch;
             GetPrefBranch(getter_AddRefs(prefBranch));
