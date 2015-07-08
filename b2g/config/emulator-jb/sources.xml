@@ -134,7 +134,7 @@
   <project name="libnfcemu" path="external/libnfcemu" remote="b2g" revision="125ccf9bd5986c7728ea44508b3e1d1185ac028b"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c5f8d282efe4a4e8b1e31a37300944e338e60e4f"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="94fa531c4995f8ed7161468c58082d3eedce5801"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
