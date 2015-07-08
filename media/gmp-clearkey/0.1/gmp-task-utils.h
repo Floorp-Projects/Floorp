@@ -19,7 +19,7 @@
 #ifndef gmp_task_utils_h_
 #define gmp_task_utils_h_
 
-#include "gmp-platform.h"
+#include "gmp-api/gmp-platform.h"
 
 class gmp_task_args_base : public GMPTask {
 public:

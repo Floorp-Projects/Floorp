@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 #include <assert.h>
-#include "gmp-decryption.h"
+#include "gmp-api/gmp-decryption.h"
 
 #define CLEARKEY_KEY_LEN ((size_t)16)
 
