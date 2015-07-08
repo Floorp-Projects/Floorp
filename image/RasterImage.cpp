@@ -1196,10 +1196,11 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
   // Let decoders know that there won't be any more data coming.
   mSourceBuffer->Complete(aStatus);
 
-  // Do a synchronous size decode if mSyncLoad was set, or if we're running on a
-  // single thread (in which case waiting for the async size decoder could delay
-  // this image's load event quite a bit).
-  bool canSyncSizeDecode = mSyncLoad || DecodePool::NumberOfCores() < 2;
+  // Allow a synchronous size decode if mSyncLoad was set, or if we're running
+  // on a single thread (in which case waiting for the async size decoder could
+  // delay this image's load event quite a bit), or if this image is transient.
+  bool canSyncSizeDecode = mSyncLoad || mTransient ||
+                           DecodePool::NumberOfCores() < 2;
 
   if (canSyncSizeDecode && !mHasSize) {
     // We're loading this image synchronously, so it needs to be usable after
