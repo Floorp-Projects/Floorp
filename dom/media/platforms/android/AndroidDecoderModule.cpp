@@ -105,7 +105,8 @@ public:
     return eglImage;
   }
 
-  virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat, Microseconds aDuration) override {
+  virtual nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat,
+                              const media::TimeUnit& aDuration) override {
     if (!EnsureGLContext()) {
       return NS_ERROR_FAILURE;
     }
@@ -168,7 +169,7 @@ public:
                                  mImageContainer,
                                  offset,
                                  presentationTimeUs,
-                                 aDuration,
+                                 aDuration.ToMicroseconds(),
                                  img,
                                  isSync,
                                  presentationTimeUs,
@@ -213,7 +214,9 @@ public:
     }
   }
 
-  nsresult Output(BufferInfo::Param aInfo, void* aBuffer, MediaFormat::Param aFormat, Microseconds aDuration) {
+  nsresult Output(BufferInfo::Param aInfo, void* aBuffer,
+                  MediaFormat::Param aFormat,
+                  const media::TimeUnit& aDuration) {
     // The output on Android is always 16-bit signed
 
     nsresult rv;
@@ -239,7 +242,7 @@ public:
     NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
 
     nsRefPtr<AudioData> data = new AudioData(offset, presentationTimeUs,
-                                             aDuration,
+                                             aDuration.ToMicroseconds(),
                                              numFrames,
                                              audio,
                                              numChannels,
@@ -485,7 +488,7 @@ void MediaCodecDataDecoder::DecoderLoop()
                                          sample->mTime, 0);
         HANDLE_DECODER_ERROR();
 
-        mDurations.push(sample->mDuration);
+        mDurations.push(media::TimeUnit::FromMicroseconds(sample->mDuration));
         sample = nullptr;
         outputDone = false;
       }
@@ -543,7 +546,7 @@ void MediaCodecDataDecoder::DecoderLoop()
 
         MOZ_ASSERT(!mDurations.empty(), "Should have had a duration queued");
 
-        Microseconds duration = 0;
+        media::TimeUnit duration;
         if (!mDurations.empty()) {
           duration = mDurations.front();
           mDurations.pop();

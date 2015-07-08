@@ -18,7 +18,7 @@
 #define __ClearKeyPersistence_h__
 
 #include <string>
-#include "gmp-decryption.h"
+#include "gmp-api/gmp-decryption.h"
 
 class ClearKeySessionManager;
 

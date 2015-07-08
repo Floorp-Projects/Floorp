@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-arm-sim'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+        SPIDERMONKEY_VARIANT: 'arm-sim'
+  metadata:
+    name: '[TC] Spidermonkey ARM sim'
+    description: 'Spidermonkey ARM sim'
+  extra:
+    treeherder:
+      symbol: arm

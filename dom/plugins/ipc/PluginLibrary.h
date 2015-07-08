@@ -28,6 +28,15 @@ class ImageContainer;
 }
 }
 
+class nsIClearSiteDataCallback;
+
+#define nsIGetSitesWithDataCallback_CID {0xd0028b83, 0xfdf9, 0x4c53, {0xb7, 0xbb, 0x47, 0x46, 0x0f, 0x6b, 0x83, 0x6c}}
+class nsIGetSitesWithDataCallback : public nsISupports {
+public:
+  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& result) = 0;
+  NS_DECLARE_STATIC_IID_ACCESSOR(nsIGetSitesWithDataCallback_CID)
+};
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGetSitesWithDataCallback, nsIGetSitesWithDataCallback_CID)
 
 namespace mozilla {
 
@@ -62,8 +71,8 @@ public:
                            NPError* error) = 0;
 
   virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
-                                     uint64_t maxAge) = 0;
-  virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) = 0;
+                                     uint64_t maxAge, nsCOMPtr<nsIClearSiteDataCallback> callback) = 0;
+  virtual nsresult NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> callback) = 0;
 
   virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window) = 0;
   virtual nsresult GetImageContainer(NPP instance, mozilla::layers::ImageContainer** aContainer) = 0;

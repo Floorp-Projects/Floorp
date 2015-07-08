@@ -4043,6 +4043,13 @@ pref("image.high_quality_downscaling.min_factor", 1000);
 // interpreted as number of decoded bytes.
 pref("image.high_quality_upscaling.max_size", 20971520);
 
+// The threshold for inferring that changes to an <img> element's |src|
+// attribute by JavaScript represent an animation, in milliseconds. If the |src|
+// attribute is changing more frequently than this value, then we enter a
+// special "animation mode" which is designed to eliminate flicker. Set to 0 to
+// disable.
+pref("image.infer-src-animation.threshold-ms", 2000);
+
 // Should we optimize away the surfaces of single-color images?
 pref("image.single-color-optimization.enabled", true);
 

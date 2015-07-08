@@ -34,9 +34,17 @@ function runTest() {
   event = ifr.contentDocument.createEvent("Events");
   event.initEvent("foo", true, true);
   xhr.dispatchEvent(event);
-  is(eventCount, 1,
-     "Shouldn't have handled an event because the context has changed");
-  SimpleTest.finish();
+  is(eventCount, 2,
+     "Should have handled the event because open()/close() keep the active document");
+  ifr.onload = function() {
+    event = ifr.contentDocument.createEvent("Events");
+    event.initEvent("foo", true, true);
+    xhr.dispatchEvent(event);
+    is(eventCount, 2,
+      "Shouldn't have handled an event because the context has changed");
+    SimpleTest.finish();
+  };
+  ifr.contentWindow.location = "about:blank";
 }
 
 SimpleTest.waitForExplicitFinish();
