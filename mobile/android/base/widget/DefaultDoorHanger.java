@@ -11,7 +11,6 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.prompts.PromptInput;
 
 import org.json.JSONArray;
@@ -23,7 +22,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,14 +82,6 @@ public class DefaultDoorHanger extends DoorHanger {
     @Override
     public void setOptions(final JSONObject options) {
         super.setOptions(options);
-        final JSONObject link = options.optJSONObject("link");
-        if (link != null) {
-            try {
-                final String linkLabel = link.getString("label");
-                final String linkUrl = link.getString("url");
-                addLink(linkLabel, linkUrl);
-            } catch (JSONException e) { }
-        }
 
         final JSONArray inputs = options.optJSONArray("inputs");
         if (inputs != null) {
@@ -105,7 +95,7 @@ public class DefaultDoorHanger extends DoorHanger {
                     PromptInput input = PromptInput.getInput(inputs.getJSONObject(i));
                     mInputs.add(input);
 
-                    final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_section_padding_small);
+                    final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_section_padding_medium);
                     View v = input.getView(getContext());
                     styleInput(input, v);
                     v.setPadding(0, 0, 0, padding);
@@ -129,33 +119,21 @@ public class DefaultDoorHanger extends DoorHanger {
             public void onClick(View v) {
                 final JSONObject response = new JSONObject();
                 try {
-                    // TODO: Bug 1149359 - Split this into each Doorhanger Type class.
-                    switch (mType) {
-                        case MIXED_CONTENT:
-                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
-                            response.put("contentType", ("mixed"));
-                            break;
-                        case TRACKING:
-                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
-                            response.put("contentType", ("tracking"));
-                            break;
-                        default:
-                            response.put("callback", id);
+                    response.put("callback", id);
 
-                            CheckBox checkBox = getCheckBox();
-                            // If the checkbox is being used, pass its value
-                            if (checkBox != null) {
-                                response.put("checked", checkBox.isChecked());
-                            }
+                    CheckBox checkBox = getCheckBox();
+                    // If the checkbox is being used, pass its value
+                    if (checkBox != null) {
+                        response.put("checked", checkBox.isChecked());
+                    }
 
-                            List<PromptInput> doorHangerInputs = getInputs();
-                            if (doorHangerInputs != null) {
-                                JSONObject inputs = new JSONObject();
-                                for (PromptInput input : doorHangerInputs) {
-                                    inputs.put(input.getId(), input.getValue());
-                                }
-                                response.put("inputs", inputs);
-                            }
+                    List<PromptInput> doorHangerInputs = getInputs();
+                    if (doorHangerInputs != null) {
+                        JSONObject inputs = new JSONObject();
+                        for (PromptInput input : doorHangerInputs) {
+                            inputs.put(input.getId(), input.getValue());
+                        }
+                        response.put("inputs", inputs);
                     }
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Error creating onClick response", e);
@@ -169,17 +147,6 @@ public class DefaultDoorHanger extends DoorHanger {
     private void setMessage(String message) {
         Spanned markupMessage = Html.fromHtml(message);
         mMessage.setText(markupMessage);
-    }
-
-    private void addLink(String label, final String url) {
-        mLink.setText(label);
-        mLink.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                 Tabs.getInstance().loadUrlInTab(url);
-            }
-        });
-        mLink.setVisibility(VISIBLE);
     }
 
     private void styleInput(PromptInput input, View view) {

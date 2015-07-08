@@ -352,24 +352,25 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
-        int icon;
-        if (blocked) {
-            icon = R.drawable.shield_enabled_doorhanger;
-            config.setMessage(mContext.getString(R.string.blocked_tracking_content_message_top) + "\n\n" +
-                      mContext.getString(R.string.blocked_tracking_content_message_bottom));
-        } else {
-            icon = R.drawable.shield_disabled_doorhanger;
-            config.setMessage(mContext.getString(R.string.loaded_tracking_content_message_top) + "\n\n" +
-                      mContext.getString(R.string.loaded_tracking_content_message_bottom));
+        final int icon = blocked ? R.drawable.shield_enabled_doorhanger : R.drawable.shield_disabled_doorhanger;
+
+        final JSONObject options = new JSONObject();
+        final JSONObject tracking = new JSONObject();
+        try {
+            tracking.put("enabled", blocked);
+            options.put("tracking_protection", tracking);
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error adding tracking protection options", e);
         }
+        config.setOptions(options);
 
         config.setLink(mContext.getString(R.string.learn_more), TRACKING_CONTENT_SUPPORT_URL);
+
         addNotificationButtons(config, blocked);
 
         mTrackingContentNotification = DoorHanger.Get(mContext, config);
 
         mTrackingContentNotification.setIcon(icon);
-
 
         mContent.addView(mTrackingContentNotification);
         mDivider.setVisibility(View.VISIBLE);
@@ -385,7 +386,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private void addNotificationButtons(DoorhangerConfig config, boolean blocked) {
         if (blocked) {
             config.setButton(mContext.getString(R.string.disable_protection), ButtonType.DISABLE.ordinal(), false);
-            config.setButton(mContext.getString(R.string.keep_blocking), ButtonType.KEEP_BLOCKING.ordinal(), true);
         } else {
             config.setButton(mContext.getString(R.string.enable_protection), ButtonType.ENABLE.ordinal(), true);
         }
