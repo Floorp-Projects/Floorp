@@ -1547,7 +1547,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // Callback from NPP_ClearSiteData, continue to iterate the matches and clear
-  NS_IMETHOD Callback(nsresult rv) {
+  NS_IMETHOD Callback(nsresult rv) override {
     if (NS_FAILED(rv)) {
       callback->Callback(rv);
       return NS_OK;
@@ -1569,7 +1569,7 @@ public:
   }
 
   // Callback from NPP_GetSitesWithData, kick the iteration off to clear the data
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites)
+  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) override
   {
     // Enumerate the sites and build a list of matches.
     nsresult rv = host->EnumerateSiteData(domain, sites, matches, false);
@@ -1655,7 +1655,7 @@ public:
   : domain(domain), host(host), keepWaiting(true)
   {
   }
-  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) {
+  NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) override {
     retVal = HandleGetSites(sites);
     keepWaiting = false;
     return NS_OK;
