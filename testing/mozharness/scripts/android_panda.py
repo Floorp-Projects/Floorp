@@ -432,7 +432,7 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
         c = self.config
         dirs = self.query_abs_dirs()
         options = []
-        run_file = c['run_file_names'][suite_category]
+        run_file = self.tree_config["suite_definitions"][suite_category]["run_filename"]
         base_cmd = ['python', '-u']
         base_cmd.append(os.path.join((dirs["abs_%s_dir" % suite_category]), run_file))
         self.device_ip = socket.gethostbyname(self.mozpool_device)
