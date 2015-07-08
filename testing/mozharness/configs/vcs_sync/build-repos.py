@@ -83,7 +83,7 @@ config = {
     ],
     "pip_index": False,
 
-    "default_notify_from": "developer-services@mozilla.org",
+    "default_notify_from": "developer-services+%s@mozilla.org" % hostname,
     "notify_config": [{
         "to": "releng-ops-trial@mozilla.com",
         "failure_only": False,
