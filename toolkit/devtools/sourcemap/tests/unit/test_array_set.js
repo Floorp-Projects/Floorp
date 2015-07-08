@@ -106,6 +106,44 @@ define("test/source-map/test-array-set", ["require", "exports", "module"], funct
     assert.strictEqual(set.toArray().length, 2);
   };
 
+  exports['test .size()'] = function (assert, util) {
+    var set = new ArraySet();
+    set.add('foo');
+    set.add('bar');
+    set.add('baz');
+    assert.strictEqual(set.size(), 3);
+  };
+
+  exports['test .size() with disallowed duplicates'] = function (assert, util) {
+    var set = new ArraySet();
+
+    set.add('foo');
+    set.add('foo');
+
+    set.add('bar');
+    set.add('bar');
+
+    set.add('baz');
+    set.add('baz');
+
+    assert.strictEqual(set.size(), 3);
+  };
+
+  exports['test .size() with allowed duplicates'] = function (assert, util) {
+    var set = new ArraySet();
+
+    set.add('foo');
+    set.add('foo', true);
+
+    set.add('bar');
+    set.add('bar', true);
+
+    set.add('baz');
+    set.add('baz', true);
+
+    assert.strictEqual(set.size(), 3);
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-array-set', do_throw);
