@@ -162,6 +162,7 @@ public:
 
   /**
    * enumerate entries in the hashtable, without allowing changes
+   * WARNING: this function is deprecated. Please use Iterator instead.
    * @param aEnumFunc enumeration callback
    * @param aUserArg passed unchanged to the EnumReadFunction
    */
@@ -196,8 +197,9 @@ public:
                                           void* aUserArg);
 
   /**
-   * enumerate entries in the hashtable, allowing changes. This
-   * functions write-locks the hashtable.
+   * enumerate entries in the hashtable, allowing changes.
+   * WARNING: this function is deprecated. Please use Iterator and/or
+   * MutatingIterator instead.
    * @param aEnumFunc enumeration callback
    * @param aUserArg passed unchanged to the EnumFunction
    */
@@ -216,6 +218,47 @@ public:
       }
     }
     return n;
+  }
+
+  // This is an iterator that also allows entry removal. Example usage:
+  //
+  //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+  //     const KeyType key = iter.GetKey();
+  //     const UserDataType data = iter.GetUserData();
+  //     // or
+  //     const DataType& data = iter.GetData();
+  //     // ... do stuff with |key| and/or |data| ...
+  //     // ... possibly call iter.Remove() once ...
+  //   }
+  //
+  class Iterator : public PLDHashTable::Iterator
+  {
+  public:
+    typedef PLDHashTable::Iterator Base;
+
+    explicit Iterator(nsBaseHashtable* aTable) : Base(&aTable->mTable) {}
+    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
+    ~Iterator() {}
+
+    KeyType GetKey() const { return static_cast<EntryType*>(Get())->GetKey(); }
+    UserDataType GetUserData() const
+    {
+      return static_cast<EntryType*>(Get())->mData;
+    }
+    DataType& GetData() const { return static_cast<EntryType*>(Get())->mData; }
+
+  private:
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+  };
+
+  Iterator Iter() { return Iterator(this); }
+
+  Iterator ConstIter() const
+  {
+    return Iterator(const_cast<nsBaseHashtable*>(this));
   }
 
   /**
