@@ -1631,6 +1631,13 @@
             let notificationbox = this.getNotificationBox(browser);
             this.mPanelContainer.appendChild(notificationbox);
 
+            if (remote) {
+              // For remote browsers, we need to make sure that the webProgress is
+              // instantiated, otherwise the parent won't get informed about the state
+              // of the preloaded browser until it gets attached to a tab.
+              browser.webProgress;
+            }
+
             browser.loadURI(BROWSER_NEW_TAB_URL);
             browser.docShellIsActive = false;
           ]]>
