@@ -439,12 +439,6 @@ CreateBoxShadow(DrawTarget& aDT, SourceSurface* aBlurMask, const gfxRGBA& aShado
     return nullptr;
   }
 
-  if (boxShadowDT->GetType() != aDT.GetType()) {
-    printf_stderr("Box shadow type: %d, dest draw target type: %d\n",
-      (int) boxShadowDT->GetType(), (int) aDT.GetType());
-    MOZ_ASSERT(false, "Box shadows are incorrect type\n");
-  }
-
   ColorPattern shadowColor(ToDeviceColor(aShadowColor));
   boxShadowDT->MaskSurface(shadowColor, aBlurMask, Point(0, 0));
   return boxShadowDT->Snapshot();
