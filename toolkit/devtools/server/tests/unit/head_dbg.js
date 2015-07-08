@@ -707,6 +707,18 @@ function unBlackBox(sourceClient) {
 }
 
 /**
+ * Perform a "source" RDP request with the given SourceClient to get the source
+ * content and content type.
+ *
+ * @param SourceClient sourceClient
+ * @returns Promise
+ */
+function getSourceContent(sourceClient) {
+  dumpn("Getting source content for " + sourceClient.actor);
+  return rdpRequest(sourceClient, sourceClient.source);
+}
+
+/**
  * Get a source at the specified url.
  *
  * @param ThreadClient threadClient
