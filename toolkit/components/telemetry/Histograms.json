@@ -4223,6 +4223,18 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_URLBAR_SELECTED_RESULT_INDEX": {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 17,
+    "description": "Firefox: The index of the selected result in the URL bar popup"
+  },
+  "FX_URLBAR_SELECTED_RESULT_TYPE": {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 14,
+    "description": "Firefox: The type of the selected result in the URL bar popup"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
