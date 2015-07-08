@@ -740,7 +740,7 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
 bool
 WebGLContext::CreateOffscreenGL(bool forceEnabled)
 {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
 
     layers::ISurfaceAllocator* surfAllocator = nullptr;
 #ifdef MOZ_WIDGET_GONK
@@ -914,7 +914,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     bool failIfMajorPerformanceCaveat =
                     !gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat() &&
                     !HasAcceleratedLayers(gfxInfo);
