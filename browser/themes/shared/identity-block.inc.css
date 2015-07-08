@@ -75,6 +75,10 @@
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
+.weakCipher > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display.png);
+}
+
 .mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
 }
@@ -122,6 +126,10 @@
 
   .verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
     list-style-image: url(chrome://browser/skin/identity-icons-https-ev@2x.png);
+  }
+
+  .weakCipher > #page-proxy-favicon[pageproxystate="valid"] {
+    list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display@2x.png);
   }
 
   .mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {

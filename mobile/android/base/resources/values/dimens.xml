@@ -126,6 +126,7 @@
     <dimen name="tab_thumbnail_height">90dp</dimen>
     <dimen name="tab_thumbnail_width">160dp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
+    <dimen name="tabs_panel_button_width">48dp</dimen>
     <dimen name="tabs_strip_height">40dp</dimen>
     <dimen name="tabs_strip_button_width">100dp</dimen>
     <dimen name="tabs_strip_button_padding">18dp</dimen>
