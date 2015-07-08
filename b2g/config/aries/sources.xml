@@ -122,7 +122,7 @@
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
   <!-- Platform common things -->
-  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="ac45522bb3a14aff9facd74e2cd03430e1e0793f"/>
+  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="e9ef670a15d56ea312e70d4b11c4aaeac404f9d2"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="5ada05ac150f643ef19e87015df7e106b88effe7"/>
