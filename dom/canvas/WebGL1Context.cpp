@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/Telemetry.h"
-#include "WebGLFormats.h"
 
 namespace mozilla {
 
@@ -20,7 +19,6 @@ WebGL1Context::Create()
 WebGL1Context::WebGL1Context()
     : WebGLContext()
 {
-    mFormatUsage = Move(webgl::FormatUsageAuthority::CreateForWebGL1());
 }
 
 WebGL1Context::~WebGL1Context()
