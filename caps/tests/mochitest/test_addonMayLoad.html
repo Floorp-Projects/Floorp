@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1180921</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8">
+
+  /** Test for Bug 1180921 **/
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cu = Components.utils;
+  Cu.import("resource://gre/modules/Services.jsm");
+  let ssm = Services.scriptSecurityManager;
+  let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService).wrappedJSObject;
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.registerCleanupFunction(function() {
+    aps.setAddonLoadURICallback('addonA', null);
+    aps.setAddonLoadURICallback('addonB', null);
+  });
+
+  function tryLoad(sb, uri) {
+    let p = new Promise(function(resolve, reject) {
+      Cu.exportFunction(resolve, sb, { defineAs: "finish" });
+      Cu.exportFunction(reject, sb, { defineAs: "error" });
+      sb.eval("try { (function () { " +
+              "  var xhr = new XMLHttpRequest();" +
+              "  xhr.onreadystatechange = function() { if (xhr.readyState == XMLHttpRequest.DONE) { finish(xhr.status == 200); } };" +
+              "  xhr.open('GET', '" + uri + "', true);" +
+              "  xhr.send();" +
+              "})() } catch (e) { error(e); }");
+    });
+    return p;
+  }
+
+  let exampleCom_addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com', null, null), {addonId: 'addonA'}),
+                                         {wantGlobalProperties: ['XMLHttpRequest']});
+  let nullPrin_addonA = new Cu.Sandbox(ssm.createNullPrincipal({addonId: 'addonA'}),
+                                       {wantGlobalProperties: ['XMLHttpRequest']});
+  let exampleCom_addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com', null, null), {addonId: 'addonB'}),
+                                         {wantGlobalProperties: ['XMLHttpRequest']});
+
+  function uriForDomain(d) { return d + '/tests/caps/tests/mochitest/file_data.txt' }
+
+  tryLoad(exampleCom_addonA, uriForDomain('http://example.com'))
+  .then(function(success) {
+    ok(success, "same-origin load should succeed for addon A");
+    return tryLoad(nullPrin_addonA, uriForDomain('http://example.com'));
+  }).then(function(success) {
+    ok(!success, "null-principal load should fail for addon A");
+    return tryLoad(exampleCom_addonB, uriForDomain('http://example.com'));
+  }).then(function(success) {
+    ok(success, "same-origin load should succeed for addon B");
+    return tryLoad(exampleCom_addonA, uriForDomain('http://test1.example.org'));
+  }).then(function(success) {
+    ok(!success, "cross-origin load should fail for addon A");
+    aps.setAddonLoadURICallback('addonA', function(uri) { return /test1/.test(uri.host); });
+    aps.setAddonLoadURICallback('addonB', function(uri) { return /test2/.test(uri.host); });
+    return tryLoad(exampleCom_addonA, uriForDomain('http://test1.example.org'));
+  }).then(function(success) {
+    ok(success, "whitelisted cross-origin load of test1 should succeed for addon A");
+    return tryLoad(nullPrin_addonA, uriForDomain('http://test1.example.org'));
+  }).then(function(success) {
+    ok(!success, "whitelisted null principal load of test1 should still fail for addon A");
+    return tryLoad(exampleCom_addonB, uriForDomain('http://test1.example.org'));
+  }).then(function(success) {
+    ok(!success, "non-whitelisted cross-origin load of test1 should fail for addon B");
+    return tryLoad(exampleCom_addonB, uriForDomain('http://test2.example.org'));
+  }).then(function(success) {
+    ok(success, "whitelisted cross-origin load of test2 should succeed for addon B");
+    return tryLoad(exampleCom_addonA, uriForDomain('http://test2.example.org'));
+  }).then(function(success) {
+    ok(!success, "non-whitelisted cross-origin load of test2 should fail for addon A");
+    SimpleTest.finish();
+  }, function(e) {
+    ok(false, "Rejected promise chain: " + e);
+    SimpleTest.finish();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1180921">Mozilla Bug 1180921</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
