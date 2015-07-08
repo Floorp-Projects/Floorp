@@ -57,8 +57,6 @@ private:
   MediaSystemResourceManager();
   virtual ~MediaSystemResourceManager();
 
-  static bool IsMediaSystemResourceManagerEnabled();
-
   void OpenIPC();
   void CloseIPC();
   bool IsIpcClosed();
