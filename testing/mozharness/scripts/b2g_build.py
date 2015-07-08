@@ -540,6 +540,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         dirs = self.query_abs_dirs()
         gecko_config = self.load_gecko_config()
         build_targets = gecko_config.get('build_targets', [])
+        build_targets.extend(self.config.get("build_targets", []))
         if not build_targets:
             cmds = [self.generate_build_command()]
         else:

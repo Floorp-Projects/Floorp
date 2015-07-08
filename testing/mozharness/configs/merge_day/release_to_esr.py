@@ -4,6 +4,15 @@ OLD_ESR_CHANGESET = "16351963d75c"
 
 config = {
     "log_name": "relese_to_esr",
+    "replacements": [
+        # File, from, to
+        ("browser/confvars.sh",
+         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release",
+         "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-esr"),
+        ("browser/confvars.sh",
+         "MAR_CHANNEL_ID=firefox-mozilla-release",
+         "MAR_CHANNEL_ID=firefox-mozilla-esr"),
+    ],
     # Disallow sharing, since we want pristine .hg directories.
     # "vcs_share_base": None,
     # "hg_share_base": None,
