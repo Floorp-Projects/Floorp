@@ -13,15 +13,41 @@
 #include "nsIMultiPartChannel.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsStreamUtils.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace net {
 
 static PackagedAppService *gPackagedAppService = nullptr;
 
+static PRLogModuleInfo *gPASLog = nullptr;
+#undef LOG
+#define LOG(args) MOZ_LOG(gPASLog, mozilla::LogLevel::Debug, args)
+
 NS_IMPL_ISUPPORTS(PackagedAppService, nsIPackagedAppService)
 
 NS_IMPL_ISUPPORTS(PackagedAppService::CacheEntryWriter, nsIStreamListener)
+
+static void
+LogURI(const char *aFunctionName, void *self, nsIURI *aURI, nsILoadContextInfo *aInfo = nullptr)
+{
+  if (MOZ_LOG_TEST(gPASLog, LogLevel::Debug)) {
+    nsAutoCString spec;
+    if (aURI) {
+      aURI->GetAsciiSpec(spec);
+    } else {
+      spec = "(null)";
+    }
+
+    nsAutoCString prefix;
+    if (aInfo) {
+      CacheFileUtils::AppendKeyPrefix(aInfo, prefix);
+      prefix += ":";
+    }
+
+    LOG(("[%p] %s > %s%s\n", self, aFunctionName, prefix.get(), spec.get()));
+  }
+}
 
 /* static */ nsresult
 PackagedAppService::CacheEntryWriter::Create(nsIURI *aURI,
@@ -209,6 +235,9 @@ PackagedAppService::PackagedAppDownloader::OnStartRequest(nsIRequest *aRequest,
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetSubresourceURI(aRequest, getter_AddRefs(uri));
+
+  LogURI("PackagedAppDownloader::OnStartRequest", this, uri);
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -290,6 +319,8 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIMultiPartChannel> multiChannel(do_QueryInterface(aRequest));
   nsresult rv;
 
+  LOG(("[%p] PackagedAppDownloader::OnStopRequest > status:%X multiChannel:%p\n",
+       this, aStatusCode, multiChannel.get()));
 
   // The request is normally a multiPartChannel. If it isn't, it generally means
   // an error has occurred in nsMultiMixedConv.
@@ -358,6 +389,9 @@ PackagedAppService::PackagedAppDownloader::AddCallback(nsIURI *aURI,
   nsAutoCString spec;
   aURI->GetAsciiSpec(spec);
 
+  LogURI("PackagedAppDownloader::AddCallback", this, aURI);
+  LOG(("[%p]    > callback: %p\n", this, aCallback));
+
   // Check if we already have a resource waiting for this resource
   nsCOMArray<nsICacheEntryOpenCallback>* array = mCallbacks.Get(spec);
   if (array) {
@@ -382,6 +416,9 @@ PackagedAppService::PackagedAppDownloader::CallCallbacks(nsIURI *aURI,
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mCallbacks hashtable is not thread safe");
   // Hold on to this entry while calling the callbacks
   nsCOMPtr<nsICacheEntry> handle(aEntry);
+
+  LogURI("PackagedAppService::PackagedAppDownloader::CallCallbacks", this, aURI);
+  LOG(("[%p]    > status:%X\n", this, aResult));
 
   nsAutoCString spec;
   aURI->GetSpec(spec);
@@ -422,6 +459,8 @@ nsresult
 PackagedAppService::PackagedAppDownloader::ClearCallbacks(nsresult aResult)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mCallbacks hashtable is not thread safe");
+  LOG(("[%p] PackagedAppService::PackagedAppDownloader::ClearCallbacks > packageKey:%s status:%X\n",
+       this, mPackageKey.get(), aResult));
   mCallbacks.Enumerate(ClearCallbacksEnumerator, &aResult);
   return NS_OK;
 }
@@ -433,7 +472,10 @@ PackagedAppService::CacheEntryChecker::OnCacheEntryCheck(nsICacheEntry *aEntry,
                                                          nsIApplicationCache *aApplicationCache,
                                                          uint32_t *_retval)
 {
-  return mCallback->OnCacheEntryCheck(aEntry, aApplicationCache, _retval);
+  nsresult rv = mCallback->OnCacheEntryCheck(aEntry, aApplicationCache, _retval);
+  LOG(("[%p] PackagedAppService::CacheEntryChecker::OnCacheEntryCheck > rv=%X retval=%X\n",
+       this, rv, _retval));
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -442,13 +484,17 @@ PackagedAppService::CacheEntryChecker::OnCacheEntryAvailable(nsICacheEntry *aEnt
                                                              nsIApplicationCache *aApplicationCache,
                                                              nsresult aResult)
 {
+  LogURI("PackagedAppService::CacheEntryChecker::OnCacheEntryAvailable",
+         this, mURI, mLoadContextInfo);
   if (aResult == NS_ERROR_CACHE_KEY_NOT_FOUND) {
     MOZ_ASSERT(!aEntry, "No entry");
+    LOG(("[%p]    > NOT FOUND\n", this));
     // trigger download
     // download checks if package download is already in progress
     gPackagedAppService->OpenNewPackageInternal(mURI, mCallback,
                                                 mLoadContextInfo);
   } else {
+    LOG(("[%p]    > FOUND ENTRY status:%X entry:%p\n", this, aResult, aEntry));
     // TODO: if aResult is another error code, should we pass it off to the
     // consumer, or should we try to download the package again?
     mCallback->OnCacheEntryAvailable(aEntry, aNew, aApplicationCache, aResult);
@@ -460,10 +506,13 @@ PackagedAppService::CacheEntryChecker::OnCacheEntryAvailable(nsICacheEntry *aEnt
 PackagedAppService::PackagedAppService()
 {
   gPackagedAppService = this;
+  gPASLog = PR_NewLogModule("PackagedAppService");
+  LOG(("[%p] Created PackagedAppService\n", this));
 }
 
 PackagedAppService::~PackagedAppService()
 {
+  LOG(("[%p] Destroying PackagedAppService\n", this));
   gPackagedAppService = nullptr;
 }
 
@@ -483,6 +532,8 @@ PackagedAppService::RequestURI(nsIURI *aURI,
   if (pos == kNotFound) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  LogURI("PackagedAppService::RequestURI", this, aURI, aInfo);
 
   nsresult rv;
   nsCOMPtr<nsICacheStorageService> cacheStorageService =
@@ -507,6 +558,7 @@ PackagedAppService::NotifyPackageDownloaded(nsCString aKey)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mDownloadingPackages hashtable is not thread safe");
   mDownloadingPackages.Remove(aKey);
+  LOG(("[%p] PackagedAppService::NotifyPackageDownloaded > %s\n", this, aKey.get()));
   return NS_OK;
 }
 
