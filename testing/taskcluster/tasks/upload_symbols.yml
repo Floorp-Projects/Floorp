@@ -1,20 +1,19 @@
 # This is a sample task for uploading debug symbols to the socorro api
 ---
-taskId: {{build_slugid}}
+taskId: {{taskId}}
 
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
     source: http://todo.com/soon
-    owner: mozilla-taskcluster-maintenance@mozilla.com
+    owner: amiyaguchi@mozilla.com
     name: '[TC] Upload Symbols'
     description: 'Upload Symbols'
-
   tags:
     createdForUser: {{owner}}
 
-  workerType: b2gbuild
+  workerType: b2gtest
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
@@ -34,12 +33,13 @@ task:
     command: ["/bin/bash", "bin/upload.sh"]
 
     env:
-      ARTIFACT_TASKID: '{{artifact_taskid}}'
+      ARTIFACT_TASKID: '{{build_slugid}}'
 
   extra:
-    index:
-      rank: {{pushlog_id}}
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupSymbol: tc
       groupName: Submitted by taskcluster
-      symbol: B
+      symbol: us
