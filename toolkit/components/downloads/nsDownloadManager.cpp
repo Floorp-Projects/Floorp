@@ -30,10 +30,12 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
 #include "nsCExternalHandlerService.h"
+#include "nsCRTGlue.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDownloadManager.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "prtime.h"
 
 #include "mozStorageCID.h"
 #include "nsDocShellCID.h"
