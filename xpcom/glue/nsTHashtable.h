@@ -205,6 +205,7 @@ public:
    * a PL_DHASH_REMOVE return value from |aEnumFunc|, the table may be shrunk
    * at the end. Use RawRemoveEntry() instead if you wish to remove an entry
    * without possibly shrinking the table.
+   * WARNING: this function is deprecated. Please use Iterator instead.
    * @param     enumFunc the <code>Enumerator</code> function to call
    * @param     userArg a pointer to pass to the
    *            <code>Enumerator</code> function
@@ -225,6 +226,39 @@ public:
       }
     }
     return n;
+  }
+
+  // This is an iterator that also allows entry removal. Example usage:
+  //
+  //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+  //     Entry* entry = iter.Get();
+  //     // ... do stuff with |entry| ...
+  //     // ... possibly call iter.Remove() once ...
+  //   }
+  //
+  class Iterator : public PLDHashTable::Iterator
+  {
+  public:
+    typedef PLDHashTable::Iterator Base;
+
+    explicit Iterator(nsTHashtable* aTable) : Base(&aTable->mTable) {}
+    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
+    ~Iterator() {}
+
+    EntryType* Get() const { return static_cast<EntryType*>(Base::Get()); }
+
+  private:
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+  };
+
+  Iterator Iter() { return Iterator(this); }
+
+  Iterator ConstIter() const
+  {
+    return Iterator(const_cast<nsTHashtable*>(this));
   }
 
   /**
