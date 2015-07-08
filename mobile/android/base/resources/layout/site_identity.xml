@@ -11,13 +11,13 @@
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
-                  android:padding="@dimen/doorhanger_section_padding_small">
+                  android:padding="@dimen/doorhanger_section_padding_medium">
 
         <ImageView android:id="@+id/larry"
                    android:layout_width="@dimen/doorhanger_icon_size"
                    android:layout_height="@dimen/doorhanger_icon_size"
                    android:src="@drawable/larry"
-                   android:paddingRight="@dimen/doorhanger_section_padding_small"/>
+                   android:paddingRight="@dimen/doorhanger_section_padding_medium"/>
 
         <LinearLayout android:layout_width="0dp"
                      android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
                 <TextView android:id="@+id/site_identity_encrypted"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
+                          android:layout_marginBottom="@dimen/doorhanger_section_padding_medium"
                           android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Bold"
                           android:textColor="@color/affirmative_green"
                           android:text="@string/identity_encrypted"/>
@@ -62,7 +62,7 @@
                           android:layout_height="wrap_content"
                           android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"
                           android:text="@string/identity_run_by"
-                          android:layout_marginTop="@dimen/doorhanger_section_padding_small"/>
+                          android:layout_marginTop="@dimen/doorhanger_section_padding_medium"/>
 
                 <TextView android:id="@+id/owner"
                           android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"
-                          android:layout_marginTop="@dimen/doorhanger_section_padding_small"/>
+                          android:layout_marginTop="@dimen/doorhanger_section_padding_medium"/>
 
             </LinearLayout>
             <TextView android:id="@+id/site_settings_link"
@@ -83,7 +83,7 @@
                       android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
                       android:textColor="@color/link_blue"
                       android:layout_marginTop="@dimen/doorhanger_section_padding_large"
-                      android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
+                      android:layout_marginBottom="@dimen/doorhanger_section_padding_medium"
                       android:text="@string/contextmenu_site_settings"
                       android:visibility="gone"/>
          </LinearLayout>
