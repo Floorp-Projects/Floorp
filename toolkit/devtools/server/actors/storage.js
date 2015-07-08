@@ -39,8 +39,8 @@ const UPDATE_INTERVAL = 500;
 // present in <profileDir>/storage/default/ location
 let illegalFileNameCharacters = [
   "[",
-  // Control characters \001 to \037
-  "\\x00-\\x25",
+  // Control characters \001 to \036
+  "\\x00-\\x24",
   // Special characters
   "/:*?\\\"<>|\\\\",
   "]"
@@ -528,6 +528,9 @@ StorageActors.createActor({
     if (cookie.host.startsWith(".")) {
       return host.endsWith(cookie.host);
     }
+    if (cookie.host === "") {
+      return host.startsWith("file://" + cookie.path);
+    }
     return cookie.host == host;
   },
 
@@ -691,6 +694,11 @@ StorageActors.createActor({
 
 let cookieHelpers = {
   getCookiesFromHost: function(host) {
+    // Local files have no host.
+    if (host.startsWith("file:///")) {
+      host = "";
+    }
+
     let cookies = Services.cookies.getCookiesFromHost(host);
     let store = [];
 
