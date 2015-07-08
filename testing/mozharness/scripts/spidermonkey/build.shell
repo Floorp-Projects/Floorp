@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+set -x
+
+[ -d $ANALYZED_OBJDIR ] || mkdir $ANALYZED_OBJDIR
+cd $ANALYZED_OBJDIR
+$SOURCE/js/src/configure --enable-debug --enable-optimize --enable-stdcxx-compat --enable-ctypes --enable-exact-rooting --enable-gcgenerational --enable-threadsafe --with-system-nspr
+make -j12 -s
