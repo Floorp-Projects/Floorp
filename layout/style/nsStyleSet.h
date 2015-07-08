@@ -394,8 +394,6 @@ class nsStyleSet final
 
   nsIStyleRule* InitialStyleRule();
 
-  bool HasRuleProcessorUsedByMultipleStyleSets(sheetType aSheetType);
-
  private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
