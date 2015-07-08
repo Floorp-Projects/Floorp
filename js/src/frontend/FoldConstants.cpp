@@ -1426,6 +1426,157 @@ FoldElement(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>&
     return true;
 }
 
+static bool
+FoldAdd(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+        bool inGenexpLambda)
+{
+    ParseNode* node = *nodePtr;
+
+    MOZ_ASSERT(node->isKind(PNK_ADD));
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    MOZ_ASSERT(node->pn_count >= 2);
+
+    // Generically fold all operands first.
+    if (!FoldList(cx, node, parser, inGenexpLambda))
+        return false;
+
+    // Fold leading numeric operands together:
+    //
+    //   (1 + 2 + x)  becomes  (3 + x)
+    //
+    // Don't go past the leading operands: additions after a string are
+    // string concatenations, not additions: ("1" + 2 + 3 === "123").
+    ParseNode* current = node->pn_head;
+    ParseNode* next = current->pn_next;
+    if (current->isKind(PNK_NUMBER)) {
+        do {
+            if (!next->isKind(PNK_NUMBER))
+                break;
+
+            current->pn_dval += next->pn_dval;
+            current->pn_next = next->pn_next;
+            parser.freeTree(next);
+            next = current->pn_next;
+
+            MOZ_ASSERT(node->pn_count > 1);
+            node->pn_count--;
+        } while (next);
+    }
+
+    // If any operands remain, attempt string concatenation folding.
+    do {
+        // If no operands remain, we're done.
+        if (!next)
+            break;
+
+        // (number + string) is string concatenation *only* at the start of
+        // the list: (x + 1 + "2" !== x + "12") when x is a number.
+        if (current->isKind(PNK_NUMBER) && next->isKind(PNK_STRING)) {
+            if (!FoldType(cx, current, PNK_STRING))
+                return false;
+            next = current->pn_next;
+        }
+
+        // The first string forces all subsequent additions to be
+        // string concatenations.
+        do {
+            if (current->isKind(PNK_STRING))
+                break;
+
+            current = next;
+            next = next->pn_next;
+        } while (next);
+
+        // If there's nothing left to fold, we're done.
+        if (!next)
+            break;
+
+        RootedString combination(cx);
+        RootedString tmp(cx);
+        do {
+            // Create a rope of the current string and all succeeding
+            // constants that we can convert to strings, then atomize it
+            // and replace them all with that fresh string.
+            MOZ_ASSERT(current->isKind(PNK_STRING));
+
+            combination = current->pn_atom;
+
+            do {
+                // Try folding the next operand to a string.
+                if (!FoldType(cx, next, PNK_STRING))
+                    return false;
+
+                // Stop glomming once folding doesn't produce a string.
+                if (!next->isKind(PNK_STRING))
+                    break;
+
+                // Add this string to the combination and remove the node.
+                tmp = next->pn_atom;
+                combination = ConcatStrings<CanGC>(cx, combination, tmp);
+                if (!combination)
+                    return false;
+
+                current->pn_next = next->pn_next;
+                parser.freeTree(next);
+                next = current->pn_next;
+
+                MOZ_ASSERT(node->pn_count > 1);
+                node->pn_count--;
+            } while (next);
+
+            // Replace |current|'s string with the entire combination.
+            MOZ_ASSERT(current->isKind(PNK_STRING));
+            combination = AtomizeString(cx, combination);
+            if (!combination)
+                return false;
+            current->pn_atom = &combination->asAtom();
+
+
+            // If we're out of nodes, we're done.
+            if (!next)
+                break;
+
+            current = next;
+            next = current->pn_next;
+
+            // If we're out of nodes *after* the non-foldable-to-string
+            // node, we're done.
+            if (!next)
+                break;
+
+            // Otherwise find the next node foldable to a string, and loop.
+            do {
+                current = next;
+                next = current->pn_next;
+
+                if (!FoldType(cx, current, PNK_STRING))
+                    return false;
+                next = current->pn_next;
+            } while (!current->isKind(PNK_STRING) && next);
+        } while (next);
+    } while (false);
+
+    MOZ_ASSERT(!next, "must have considered all nodes here");
+    MOZ_ASSERT(!current->pn_next, "current node must be the last node");
+
+    node->pn_tail = &current->pn_next;
+    node->checkListConsistency();
+
+    if (node->pn_count == 1) {
+        // We reduced the list to a constant.  Replace the PNK_ADD node
+        // with that constant.
+        ReplaceNode(nodePtr, current);
+
+        // Free the old node to aggressively verify nothing uses it.
+        node->setKind(PNK_TRUE);
+        node->setArity(PN_NULLARY);
+        node->setOp(JSOP_TRUE);
+        parser.freeTree(node);
+    }
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1433,8 +1584,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
     JS_CHECK_RECURSION(cx, return false);
 
     ParseNode* pn = *pnp;
-    ParseNode* pn1 = nullptr;
-    ParseNode* pn2 = nullptr;
 
     switch (pn->getKind()) {
       case PNK_NEWTARGET:
@@ -1606,6 +1755,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_ELEM:
         return FoldElement(cx, pnp, parser, inGenexpLambda);
 
+      case PNK_ADD:
+        return FoldAdd(cx, pnp, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1638,7 +1790,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FORIN:
       case PNK_FOROF:
       case PNK_FORHEAD:
-      case PNK_ADD:
       case PNK_NEW:
       case PNK_CALL:
       case PNK_GENEXP:
@@ -1676,10 +1827,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
 
         // If the last node in the list was replaced, pn_tail points into the wrong node.
         pn->pn_tail = listp;
-
-        // Save the list head in pn1 for later use.
-        pn1 = pn->pn_head;
-        pn2 = nullptr;
         break;
       }
 
@@ -1693,7 +1840,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
             if (!Fold(cx, &pn->pn_kid1, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
-        pn1 = pn->pn_kid1;
 
         if (pn->pn_kid2) {
             if (!Fold(cx, &pn->pn_kid2, parser, inGenexpLambda, condIf(pn, PNK_FORHEAD)))
@@ -1703,7 +1849,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
                 pn->pn_kid2 = nullptr;
             }
         }
-        pn2 = pn->pn_kid2;
 
         if (pn->pn_kid3) {
             if (!Fold(cx, &pn->pn_kid3, parser, inGenexpLambda, SyntacticContext::Other))
@@ -1723,8 +1868,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
             if (!Fold(cx, &pn->pn_right, parser, inGenexpLambda, condIf(pn, PNK_DOWHILE)))
                 return false;
         }
-        pn1 = pn->pn_left;
-        pn2 = pn->pn_right;
         break;
 
       case PN_UNARY:
@@ -1734,15 +1877,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
             if (!Fold(cx, &pn->pn_kid, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
-        pn1 = pn->pn_kid;
         break;
 
       case PN_NAME:
         /*
-         * Skip pn1 down along a chain of dotted member expressions to avoid
-         * excessive recursion.  Our only goal here is to fold constants (if
-         * any) in the primary expression operand to the left of the first
-         * dot in the chain.
+         * Our goal here is to fold constants (if any) in the primary
+         * expression operand to the left of the first dot in the chain.
          */
         if (!pn->isUsed()) {
             ParseNode** lhsp = &pn->pn_expr;
@@ -1750,7 +1890,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
                 lhsp = &(*lhsp)->pn_expr;
             if (*lhsp && !Fold(cx, lhsp, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
-            pn1 = *lhsp;
         }
         break;
 
@@ -1768,102 +1907,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return true;
 
     switch (pn->getKind()) {
-      case PNK_ADD: {
-        MOZ_ASSERT(pn->isArity(PN_LIST));
-
-        bool folded = false;
-
-        pn2 = pn1->pn_next;
-        if (pn1->isKind(PNK_NUMBER)) {
-            // Fold addition of numeric literals: (1 + 2 + x === 3 + x).
-            // Note that we can only do this the front of the list:
-            // (x + 1 + 2 !== x + 3) when x is a string.
-            while (pn2 && pn2->isKind(PNK_NUMBER)) {
-                pn1->pn_dval += pn2->pn_dval;
-                pn1->pn_next = pn2->pn_next;
-                parser.freeTree(pn2);
-                pn2 = pn1->pn_next;
-                pn->pn_count--;
-                folded = true;
-            }
-        }
-
-        // Now search for adjacent pairs of literals to fold for string
-        // concatenation.
-        //
-        // isStringConcat is true if we know the operation we're looking at
-        // will be string concatenation at runtime.  As soon as we see a
-        // string, we know that every addition to the right of it will be
-        // string concatenation, even if both operands are numbers:
-        // ("s" + x + 1 + 2 === "s" + x + "12").
-        //
-        bool isStringConcat = false;
-        RootedString foldedStr(cx);
-
-        // (number + string) is definitely concatenation, but only at the
-        // front of the list: (x + 1 + "2" !== x + "12") when x is a
-        // number.
-        if (pn1->isKind(PNK_NUMBER) && pn2 && pn2->isKind(PNK_STRING))
-            isStringConcat = true;
-
-        while (pn2) {
-            isStringConcat = isStringConcat || pn1->isKind(PNK_STRING);
-
-            if (isStringConcat &&
-                (pn1->isKind(PNK_STRING) || pn1->isKind(PNK_NUMBER)) &&
-                (pn2->isKind(PNK_STRING) || pn2->isKind(PNK_NUMBER)))
-            {
-                // Fold string concatenation of literals.
-                if (pn1->isKind(PNK_NUMBER) && !FoldType(cx, pn1, PNK_STRING))
-                    return false;
-                if (pn2->isKind(PNK_NUMBER) && !FoldType(cx, pn2, PNK_STRING))
-                    return false;
-                if (!foldedStr)
-                    foldedStr = pn1->pn_atom;
-                RootedString right(cx, pn2->pn_atom);
-                foldedStr = ConcatStrings<CanGC>(cx, foldedStr, right);
-                if (!foldedStr)
-                    return false;
-                pn1->pn_next = pn2->pn_next;
-                parser.freeTree(pn2);
-                pn2 = pn1->pn_next;
-                pn->pn_count--;
-                folded = true;
-            } else {
-                if (foldedStr) {
-                    // Convert the rope of folded strings into an Atom.
-                    pn1->pn_atom = AtomizeString(cx, foldedStr);
-                    if (!pn1->pn_atom)
-                        return false;
-                    foldedStr = nullptr;
-                }
-                pn1 = pn2;
-                pn2 = pn2->pn_next;
-            }
-        }
-
-        if (foldedStr) {
-            // Convert the rope of folded strings into an Atom.
-            pn1->pn_atom = AtomizeString(cx, foldedStr);
-            if (!pn1->pn_atom)
-                return false;
-        }
-
-        if (folded) {
-            if (pn->pn_count == 1) {
-                // We reduced the list to one constant. There is no
-                // addition anymore. Replace the PNK_ADD node with the
-                // single PNK_STRING or PNK_NUMBER node.
-                ReplaceNode(pnp, pn1);
-                pn = pn1;
-            } else if (!pn2) {
-                pn->pn_tail = &pn1->pn_next;
-            }
-        }
-
-        break;
-      }
-
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
@@ -1884,6 +1927,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_MOD:
       case PNK_POW:
       case PNK_ELEM:
+      case PNK_ADD:
         MOZ_CRASH("should have been fully handled above");
 
       default:;
