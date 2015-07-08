@@ -107,6 +107,12 @@ BluetoothGattClientInterface::BluetoothGattClientInterface()
 BluetoothGattClientInterface::~BluetoothGattClientInterface()
 { }
 
+BluetoothGattServerInterface::BluetoothGattServerInterface()
+{ }
+
+BluetoothGattServerInterface::~BluetoothGattServerInterface()
+{ }
+
 BluetoothGattInterface::BluetoothGattInterface()
 { }
 
