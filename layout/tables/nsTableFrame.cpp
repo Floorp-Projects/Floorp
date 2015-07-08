@@ -6992,16 +6992,40 @@ BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
                   nsPresContext::CSSPixelsToAppUnits(mBEndInlineSegBSize) : 0;
   LogicalSide bEndBevelSide =
     (aInlineSegBSize > 0) ? eLogicalSideIEnd : eLogicalSideIStart;
+
+  // Convert logical to physical sides/coordinates for DrawTableBorderSegment.
+
+  nsRect physicalRect = segRect.GetPhysicalRect(aIter.mTableWM,
+                                                aIter.mTable->GetSize().width);
+  // XXX For reversed vertical writing-modes (with direction:rtl), we need to
+  // invert physicalRect's y-position here, with respect to the table.
+  // However, it's not worth fixing the border positions here until the
+  // ordering of the table columns themselves is also fixed (bug 1180528).
+
+  uint8_t startBevelSide = aIter.mTableWM.PhysicalSide(mBStartBevelSide);
+  uint8_t endBevelSide = aIter.mTableWM.PhysicalSide(bEndBevelSide);
+  nscoord startBevelOffset = mBStartBevelOffset;
+  nscoord endBevelOffset = bEndBevelOffset;
+  // In vertical-rl mode, the 'start' and 'end' of the block-dir (horizontal)
+  // border segment need to be swapped because DrawTableBorderSegment will
+  // apply the 'start' bevel at the left edge, and 'end' at the right.
+  // (Note: In this case, startBevelSide/endBevelSide will usually both be
+  // "top" or "bottom". DrawTableBorderSegment works purely with physical
+  // coordinates, so it expects startBevelOffset to be the indentation-from-
+  // the-left for the "start" (left) end of the border-segment, and
+  // endBevelOffset is the indentation-from-the-right for the "end" (right)
+  // end of the border-segment. We've got them reversed, since our block dir
+  // is RTL, so we have to swap them here.)
+  if (aIter.mTableWM.IsVerticalRL()) {
+    Swap(startBevelSide, endBevelSide);
+    Swap(startBevelOffset, endBevelOffset);
+  }
   nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
-                                         aIter.mTableBgColor,
-                                         segRect.GetPhysicalRect(aIter.mTableWM,
-                                           aIter.mTable->GetSize().width),
+                                         aIter.mTableBgColor, physicalRect,
                                          appUnitsPerDevPixel,
                                          nsPresContext::AppUnitsPerCSSPixel(),
-                                         aIter.mTableWM.PhysicalSide(mBStartBevelSide),
-                                         mBStartBevelOffset,
-                                         aIter.mTableWM.PhysicalSide(bEndBevelSide),
-                                         bEndBevelOffset);
+                                         startBevelSide, startBevelOffset,
+                                         endBevelSide, endBevelOffset);
 }
 
 /**
