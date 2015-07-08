@@ -9,6 +9,7 @@
 #include "AndroidSurfaceTexture.h"
 
 #include "MediaCodec.h"
+#include "TimeUnits.h"
 #include "mozilla/Monitor.h"
 
 #include <queue>
@@ -81,12 +82,13 @@ protected:
   bool mStopping;
 
   SampleQueue mQueue;
-  std::queue<Microseconds> mDurations;
+  // Durations are stored in microseconds.
+  std::queue<media::TimeUnit> mDurations;
 
   virtual nsresult InitDecoder(widget::sdk::Surface::Param aSurface);
 
-  virtual nsresult Output(widget::sdk::BufferInfo::Param aInfo, void* aBuffer, widget::sdk::MediaFormat::Param aFormat, Microseconds aDuration) { return NS_OK; }
-  virtual nsresult PostOutput(widget::sdk::BufferInfo::Param aInfo, widget::sdk::MediaFormat::Param aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult Output(widget::sdk::BufferInfo::Param aInfo, void* aBuffer, widget::sdk::MediaFormat::Param aFormat, const media::TimeUnit& aDuration) { return NS_OK; }
+  virtual nsresult PostOutput(widget::sdk::BufferInfo::Param aInfo, widget::sdk::MediaFormat::Param aFormat, const media::TimeUnit& aDuration) { return NS_OK; }
   virtual void Cleanup() {};
 
   nsresult ResetInputBuffers();

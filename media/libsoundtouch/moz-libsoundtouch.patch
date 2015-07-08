@@ -56,7 +56,7 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
 diff -u /src/STTypes.h /src/STTypes.h
 --- /src/STTypes.h
 +++ /src/STTypes.h
-@@ -54,12 +54,17 @@
+@@ -54,12 +54,13 @@
  #define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
  
  
@@ -67,27 +67,14 @@ diff -u /src/STTypes.h /src/STTypes.h
 -#endif
 +#include "soundtouch_config.h"
  
-+#if defined(WIN32) && defined(GKMEDIAS_SHARED_LIBRARY)
-+#ifdef BUILDING_SOUNDTOUCH
++#if defined(WIN32)
 +#define EXPORT __declspec(dllexport)
-+#else
-+#define EXPORT __declspec(dllimport)
-+#endif
 +#else
 +#define EXPORT
 +#endif
  
  namespace soundtouch
  {
-@@ -164,7 +169,7 @@
- };
- 
- // define ST_NO_EXCEPTION_HANDLING switch to disable throwing std exceptions:
--// #define ST_NO_EXCEPTION_HANDLING    1
-+#define ST_NO_EXCEPTION_HANDLING    1
- #ifdef ST_NO_EXCEPTION_HANDLING
-     // Exceptions disabled. Throw asserts instead if enabled.
-     #include <assert.h>
 diff -u /src/SoundTouch.h /src/SoundTouch.h
 --- /src/SoundTouch.h
 +++ /src/SoundTouch.h
@@ -103,18 +90,6 @@ diff -u /src/SoundTouch.h /src/SoundTouch.h
 diff -u /src/FIRFilter.cpp /src/FIRFilter.cpp
 --- /src/FIRFilter.cpp
 +++ /src/FIRFilter.cpp
-@@ -46,6 +46,11 @@
- #include "FIRFilter.h"
- #include "cpu_detect.h"
- 
-+#ifdef _MSC_VER
-+#include <malloc.h>
-+#define alloca _alloca
-+#endif
-+
- using namespace soundtouch;
- 
- /*****************************************************************************
 @@ -291,9 +296,11 @@
  
  FIRFilter * FIRFilter::newInstance()
@@ -143,17 +118,3 @@ diff -u /src/TDStretch.cpp /src/TDStretch.cpp
      // Check if MMX/SSE instruction set extensions supported by CPU
  
 diff -u /src/SoundTouch.cpp /src/SoundTouch.cpp
---- /src/SoundTouch.cpp
-+++ /src/SoundTouch.cpp
-@@ -80,6 +80,11 @@
- #include "RateTransposer.h"
- #include "cpu_detect.h"
- 
-+#ifdef _MSC_VER
-+#include <malloc.h>
-+#define alloca _alloca
-+#endif
-+
- using namespace soundtouch;
-     
- /// test if two floating point numbers are equal

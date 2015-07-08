@@ -119,6 +119,14 @@ public:
     return TimeUnit(INT64_MAX);
   }
 
+  static TimeUnit Invalid() {
+    TimeUnit ret;
+    ret.mValue = CheckedInt64(INT64_MAX);
+    // Force an overflow to render the CheckedInt invalid.
+    ret.mValue += 1;
+    return ret;
+  }
+
   int64_t ToMicroseconds() const {
     return mValue.value();
   }

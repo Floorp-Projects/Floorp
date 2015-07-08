@@ -147,10 +147,13 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
     // for this test which fires a mouse event on a label, the document will
     // be focused first and then the label code will focus the related
     // control. This doesn't result in different focus events, but a command
-    // update will occur for the document and then a secon command update will
-    // occur when the control is focused.
-    if (testid == "mouse on html label with content inside")
+    // update will occur for the document and then a second command update will
+    // occur when the control is focused. However, this will only happen on
+    // platforms or controls where mouse clicks cause trigger focus.
+    if (testid == "mouse on html label with content inside" &&
+        mouseWillTriggerFocus(expectedElement)) {
       expectedEvents += " commandupdate: cu";
+    }
 
     if (expectedElement &&
         (!gNewExpectedWindow || gNewExpectedWindow.document.documentElement != expectedElement)) {
@@ -278,25 +281,36 @@ function getTopWindow(win)
              getInterface(Components.interfaces.nsIDOMWindow);
 }
 
+function mouseWillTriggerFocus(element)
+{
+  if (!element) {
+    return false;
+  }
+
+  if (navigator.platform.indexOf("Mac") != 0) {
+    return true;
+  }
+
+  if (element.namespaceURI == "http://www.w3.org/1999/xhtml") {
+    // links are special. They can be focused but show no focus ring
+    if (element.localName == "a" || element.localName == "div" ||
+        element.localName == "select" ||
+        element.localName == "input" && (element.type == "text" ||
+                                         element.type == "password")) {
+      return true;
+    }
+  } else if (element.localName == "listbox") {
+    return true;
+  }
+
+  return false;
+}
+
 function mouseOnElement(element, expectedElement, focusChanged, testid)
 {
   var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
   // on Mac, form elements are not focused when clicking, except for lists and textboxes.
-  var noFocusOnMouse = (navigator.platform.indexOf("Mac") == 0);
-  if (noFocusOnMouse) {
-    if (element.namespaceURI == "http://www.w3.org/1999/xhtml") {
-      // links are special. They can be focused but show no focus ring
-      if (element.localName == "a" || element.localName == "div" ||
-          element.localName == "select" ||
-          element.localName == "input" && (element.type == "text" ||
-                                           element.type == "password")) {
-        noFocusOnMouse = false;
-      }
-    }
-    else if (element.localName == "listbox") {
-      noFocusOnMouse = false;
-    }
-  }
+  var noFocusOnMouse = !mouseWillTriggerFocus(element)
 
   if (noFocusOnMouse) {
     // no focus so the last focus method will be 0
@@ -552,11 +566,9 @@ function startTest()
   }
 
   // clicking on the labels
-  gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
-  expectFocusShift(function () synthesizeMouse(getById("ad"), 2, 2, { }, gChildWindow),
-                   null, getById("t29"), true, "mouse on html label with content inside");
-  expectFocusShift(function () synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
-                   null, getById("n6"), true, "mouse on html label with for attribute");
+  gLastFocusMethod = fm.FLAG_BYMOVEFOCUS | fm.FLAG_BYMOUSE;
+  mouseOnElement(getById("ad"), getById("t29"), true, "mouse on html label with content inside");
+  mouseOnElement(getById("ag"), getById("n6"), true, "mouse on html label with for attribute");
   gLastFocusMethod = 0;
   expectFocusShift(function () synthesizeMouse(getById("aj"), 2, 2, { }),
                    null, getById("o9"), true, "mouse on xul label with content inside");

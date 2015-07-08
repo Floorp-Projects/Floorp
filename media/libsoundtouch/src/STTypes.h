@@ -8,10 +8,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2014-04-06 10:57:21 -0500 (Sun, 06 Apr 2014) $
+// Last changed  : $Date: 2015-05-18 15:25:07 +0000 (Mon, 18 May 2015) $
 // File revision : $Revision: 3 $
 //
-// $Id: STTypes.h 195 2014-04-06 15:57:21Z oparviai $
+// $Id: STTypes.h 215 2015-05-18 15:25:07Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,12 +56,8 @@ typedef unsigned long   ulong;
 
 #include "soundtouch_config.h"
 
-#if defined(WIN32) && defined(GKMEDIAS_SHARED_LIBRARY)
-#ifdef BUILDING_SOUNDTOUCH
+#if defined(WIN32)
 #define EXPORT __declspec(dllexport)
-#else
-#define EXPORT __declspec(dllimport)
-#endif
 #else
 #define EXPORT
 #endif
@@ -80,7 +76,7 @@ namespace soundtouch
     /// runtime performance so recommendation is to keep this off.
     // #define USE_MULTICH_ALWAYS
 
-    #if (defined(__SOFTFP__))
+    #if (defined(__SOFTFP__) && defined(ANDROID))
         // For Android compilation: Force use of Integer samples in case that
         // compilation uses soft-floating point emulation - soft-fp is way too slow
         #undef  SOUNDTOUCH_FLOAT_SAMPLES
@@ -169,7 +165,7 @@ namespace soundtouch
 };
 
 // define ST_NO_EXCEPTION_HANDLING switch to disable throwing std exceptions:
-#define ST_NO_EXCEPTION_HANDLING    1
+// #define ST_NO_EXCEPTION_HANDLING    1
 #ifdef ST_NO_EXCEPTION_HANDLING
     // Exceptions disabled. Throw asserts instead if enabled.
     #include <assert.h>
@@ -177,6 +173,7 @@ namespace soundtouch
 #else
     // use c++ standard exceptions
     #include <stdexcept>
+    #include <string>
     #define ST_THROW_RT_ERROR(x)    {throw std::runtime_error(x);}
 #endif
 

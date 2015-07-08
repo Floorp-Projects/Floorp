@@ -9375,7 +9375,7 @@ nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
   if (ChildrenAreHashed()) {
     PLDHashTable* children = ChildrenHash();
     uint32_t oldChildCount = children->EntryCount();
-    for (auto iter = children->RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = children->Iter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<ChildrenHashEntry*>(iter.Get());
       nsRuleNode* node = entry->mRuleNode;
       if (node->DestroyIfNotMarked()) {
