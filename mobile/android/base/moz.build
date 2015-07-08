@@ -326,6 +326,7 @@ gbjar.sources += [
     'home/PanelAuthCache.java',
     'home/PanelAuthLayout.java',
     'home/PanelBackItemView.java',
+    'home/PanelHeaderView.java',
     'home/PanelInfoManager.java',
     'home/PanelItemView.java',
     'home/PanelLayout.java',

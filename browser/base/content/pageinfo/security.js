@@ -262,13 +262,14 @@ function securityOnLoad() {
   if (info.isBroken) {
     if (info.isMixed) {
       hdr = pkiBundle.getString("pageInfo_MixedContent");
+      msg1 = pkiBundle.getString("pageInfo_MixedContent2");
     } else {
       hdr = pkiBundle.getFormattedString("pageInfo_BrokenEncryption",
                                          [info.encryptionAlgorithm,
                                           info.encryptionStrength + "",
                                           info.version]);
+      msg1 = pkiBundle.getString("pageInfo_WeakCipher");
     }
-    msg1 = pkiBundle.getString("pageInfo_Privacy_Broken2");
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   else if (info.encryptionStrength > 0) {
