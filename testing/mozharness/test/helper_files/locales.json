@@ -1,0 +1,18 @@
+{
+  "ar": {
+    "revision": "default",
+    "platforms": ["maemo"]
+  },
+  "be": {
+    "revision": "default",
+    "platforms": ["maemo"]
+  },
+  "de": {
+    "revision": "default",
+    "platforms": ["maemo", "maemo-multilocale", "android-multilocale"]
+  },
+  "es-ES": {
+    "revision": "default",
+    "platforms": ["maemo", "maemo-multilocale", "android-multilocale"]
+  }
+}
