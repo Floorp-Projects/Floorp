@@ -2,5 +2,3 @@ component {1363d5f0-d95e-11e3-9c1a-0800200c9a66} multiprocessShims.js
 contract @mozilla.org/addons/multiprocess-shims;1 {1363d5f0-d95e-11e3-9c1a-0800200c9a66}
 component {50bc93ce-602a-4bef-bf3a-61fc749c4caf} defaultShims.js
 contract @mozilla.org/addons/default-addon-shims;1 {50bc93ce-602a-4bef-bf3a-61fc749c4caf}
-component {dfd07380-6083-11e4-9803-0800200c9a66} remoteTagService.js
-contract @mozilla.org/addons/remote-tag-service;1 {dfd07380-6083-11e4-9803-0800200c9a66}
