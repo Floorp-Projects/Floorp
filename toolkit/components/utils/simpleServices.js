@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * Dumping ground for simple services for which the isolation of a full global
+ * is overkill. Be careful about namespace pollution, and be mindful about
+ * importing lots of JSMs in global scope, since this file will almost certainly
+ * be loaded from enough callsites that any such imports will always end up getting
+ * eagerly loaded at startup.
+ */
+
 "use strict";
 
 const Cu = Components.utils;

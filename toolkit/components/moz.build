@@ -50,6 +50,7 @@ DIRS += [
     'thumbnails',
     'timermanager',
     'typeaheadfind',
+    'utils',
     'urlformatter',
     'viewconfig',
     'workerloader',
