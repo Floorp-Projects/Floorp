@@ -213,10 +213,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
-          if (!this._formattingEnabled || this.focused)
+          if (!this._formattingEnabled)
             return;
 
+          // Always clear the strike-out selection first.
           let controller = this.editor.selectionController;
+          let strikeOut = controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
+          strikeOut.removeAllRanges();
+
+          if (this.focused)
+            return;
+
           let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
           selection.removeAllRanges();
 
@@ -230,6 +237,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
           if (!matchedURL)
             return;
+
+          // Strike out the "https" part if mixed active content is loaded.
+          if (this.getAttribute("pageproxystate") == "valid" &&
+              value.startsWith("https:") &&
+              gBrowser.securityUI.state &
+                Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+            let range = document.createRange();
+            range.setStart(textNode, 0);
+            range.setEnd(textNode, 5);
+            strikeOut.addRange(range);
+          }
 
           let [, preDomain, domain] = matchedURL;
           let baseDomain = domain;
@@ -933,9 +951,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         }
       ]]></handler>
 
+      <handler event="focus"><![CDATA[
+        if (event.originalTarget == this.inputField) {
+          this.formatValue();
+        }
+      ]]></handler>
+
       <handler event="blur"><![CDATA[
-        this._clearNoActions();
-        this.formatValue();
+        if (event.originalTarget == this.inputField) {
+          this._clearNoActions();
+          this.formatValue();
+        }
       ]]></handler>
 
       <handler event="dragstart" phase="capturing"><![CDATA[
