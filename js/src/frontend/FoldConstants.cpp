@@ -941,25 +941,127 @@ FoldConditional(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandl
     return true;
 }
 
+static bool
+FoldIf(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+       bool inGenexpLambda)
+{
+    ParseNode** nextNode = nodePtr;
+
+    do {
+        // |nextNode| on entry points to the initial |if| to be folded.  Reset
+        // it to exit the loop when the |else| arm isn't another |if|.
+        nodePtr = nextNode;
+        nextNode = nullptr;
+
+        ParseNode* node = *nodePtr;
+        MOZ_ASSERT(node->isKind(PNK_IF));
+        MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+        ParseNode*& expr = node->pn_kid1;
+        if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Condition))
+            return false;
+
+        ParseNode*& consequent = node->pn_kid2;
+        if (!Fold(cx, &consequent, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+
+        ParseNode*& alternative = node->pn_kid3;
+        if (alternative) {
+            // If in |if (C) T; else F;| we have |F| as another |if|,
+            // *iteratively* constant-fold |F| *after* folding |C| and |T| (and
+            // possibly completely replacing the whole thing with |T| or |F|);
+            // otherwise fold F normally.  Making |nextNode| non-null causes
+            // this loop to run again to fold F.
+            if (alternative->isKind(PNK_IF)) {
+                nextNode = &alternative;
+            } else {
+                if (!Fold(cx, &alternative, parser, inGenexpLambda,
+                          SyntacticContext::Other))
+                {
+                    return false;
+                }
+            }
+        }
+
+        // Eliminate the consequent or alternative if the condition has
+        // constant truthiness.  Don't eliminate if we have an |if (0)| in
+        // trailing position in a generator expression, as this is a special
+        // form we can't fold away.
+        Truthiness t = Boolish(expr);
+        if (t == Unknown || inGenexpLambda)
+            continue;
+
+        // Careful!  Either of these can be null: |replacement| in |if (0) T;|,
+        // and |discarded| in |if (true) T;|.
+        ParseNode* replacement;
+        ParseNode* discarded;
+        if (t == Truthy) {
+            replacement = consequent;
+            discarded = alternative;
+        } else {
+            replacement = alternative;
+            discarded = consequent;
+        }
+
+        bool performReplacement = true;
+        if (discarded) {
+            // A declaration that hoists outside the discarded arm prevents the
+            // |if| from being folded away.
+            bool containsHoistedDecls;
+            if (!ContainsHoistedDeclaration(cx, discarded, &containsHoistedDecls))
+                return false;
+
+            performReplacement = !containsHoistedDecls;
+        }
+
+        if (!performReplacement)
+            continue;
+
+        if (!replacement) {
+            // If there's no replacement node, we have a constantly-false |if|
+            // with no |else|.  Replace the entire thing with an empty
+            // statement list.
+            parser.prepareNodeForMutation(node);
+            node->setKind(PNK_STATEMENTLIST);
+            node->setArity(PN_LIST);
+            node->makeEmpty();
+        } else {
+            // As with PNK_CONDITIONAL, replace only if the replacement isn't a
+            // definition.  As there, the rationale for this restriction is
+            // unclear and undocumented: tolerated only because a failure to
+            // optimize *should* be safe.  The best guess is that this test was
+            // an incomplete, buggy version of the |ContainsHoistedDeclaration|
+            // test.
+            if (replacement->isDefn())
+                continue;
+
+            // Replacement invalidates |nextNode|, so reset it (if the
+            // replacement requires folding) or clear it (if |alternative|
+            // is dead code) as needed.
+            if (nextNode)
+                nextNode = (*nextNode == replacement) ? nodePtr : nullptr;
+            ReplaceNode(nodePtr, replacement);
+
+            // Morph the original node into a discardable node, then
+            // aggressively free it and the discarded arm (if any) to suss out
+            // any bugs in the preceding logic.
+            node->setKind(PNK_STATEMENTLIST);
+            node->setArity(PN_LIST);
+            node->makeEmpty();
+            if (discarded)
+                node->append(discarded);
+            parser.freeTree(node);
+        }
+    } while (nextNode);
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
 {
     JS_CHECK_RECURSION(cx, return false);
-
-    ParseNode** restartNode = nullptr;
-    SyntacticContext restartContext;
-
-    bool mightHaveHoistedDeclarations = true;
-
-    if (false) {
-      restart:
-        if (!restartNode)
-            return true;
-        pnp = restartNode;
-        sc = restartContext;
-        restartNode = nullptr;
-    }
 
     ParseNode* pn = *pnp;
     ParseNode* pn1 = nullptr;
@@ -1021,6 +1123,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CONDITIONAL:
         return FoldConditional(cx, pnp, parser, inGenexpLambda);
 
+      case PNK_IF:
+        return FoldIf(cx, pnp, parser, inGenexpLambda);
+
       case PNK_NOT:
         return FoldNot(cx, pn, parser, inGenexpLambda);
 
@@ -1079,7 +1184,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FOROF:
       case PNK_FORHEAD:
       case PNK_CLASS:
-      case PNK_IF:
       case PNK_TRY:
       case PNK_OR:
       case PNK_AND:
@@ -1183,9 +1287,13 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       }
 
       case PN_TERNARY:
+        MOZ_ASSERT(!pn->isKind(PNK_CONDITIONAL),
+                   "should be skipping this above");
+        MOZ_ASSERT(!pn->isKind(PNK_IF),
+                   "should be skipping this above");
         /* Any kid may be null (e.g. for (;;)). */
         if (pn->pn_kid1) {
-            if (!Fold(cx, &pn->pn_kid1, parser, inGenexpLambda, condIf(pn, PNK_IF)))
+            if (!Fold(cx, &pn->pn_kid1, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
         pn1 = pn->pn_kid1;
@@ -1201,15 +1309,8 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         pn2 = pn->pn_kid2;
 
         if (pn->pn_kid3) {
-            MOZ_ASSERT(!pn->isKind(PNK_CONDITIONAL),
-                       "should be skipping this above");
-            if (pn->isKind(PNK_IF)) {
-                restartNode = &pn->pn_kid3;
-                restartContext = SyntacticContext::Other;
-            } else {
-                if (!Fold(cx, &pn->pn_kid3, parser, inGenexpLambda, SyntacticContext::Other))
-                    return false;
-            }
+            if (!Fold(cx, &pn->pn_kid3, parser, inGenexpLambda, SyntacticContext::Other))
+                return false;
         }
         pn3 = pn->pn_kid3;
         break;
@@ -1279,80 +1380,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
     // pn is the immediate child in question. Its descendants were already
     // constant-folded above, so we're done.
     if (sc == SyntacticContext::Delete)
-        goto restart;
+        return true;
 
     switch (pn->getKind()) {
-      case PNK_IF:
-        if (mightHaveHoistedDeclarations) {
-            bool result;
-            if (ParseNode* consequent = pn2) {
-                if (!ContainsHoistedDeclaration(cx, consequent, &result))
-                    return false;
-                if (result)
-                    break;
-            }
-            if (ParseNode* alternative = pn3) {
-                if (!ContainsHoistedDeclaration(cx, alternative, &result))
-                    return false;
-                if (result)
-                    break;
-            }
-        }
-        mightHaveHoistedDeclarations = false;
-
-        /* Reduce 'if (C)  T; else F' into T for true C, F for false. */
-        switch (pn1->getKind()) {
-          case PNK_NUMBER:
-            if (pn1->pn_dval == 0 || IsNaN(pn1->pn_dval))
-                pn2 = pn3;
-            break;
-          case PNK_STRING:
-            if (pn1->pn_atom->length() == 0)
-                pn2 = pn3;
-            break;
-          case PNK_TRUE:
-            break;
-          case PNK_FALSE:
-          case PNK_NULL:
-            pn2 = pn3;
-            break;
-          default:
-            /* Early return to dodge common code that copies pn2 to pn. */
-            goto restart;
-        }
-
-#if JS_HAS_GENERATOR_EXPRS
-        /* Don't fold a trailing |if (0)| in a generator expression. */
-        if (!pn2 && inGenexpLambda)
-            break;
-#endif
-
-        if (pn2 && !pn2->isDefn()) {
-            if (restartNode && *restartNode == pn2)
-                restartNode = pnp;
-            ReplaceNode(pnp, pn2);
-            pn = pn2;
-        }
-        if (!pn2 || (pn->isKind(PNK_SEMI) && !pn->pn_kid)) {
-            /*
-             * False condition and no else, or an empty then-statement was
-             * moved up over pn.  Either way, make pn an empty block (not an
-             * empty statement, which does not decompile, even when labeled).
-             * NB: pn must be a PNK_IF as PNK_CONDITIONAL can never have a null
-             * kid or an empty statement for a child.
-             */
-            parser.prepareNodeForMutation(pn);
-            pn->setKind(PNK_STATEMENTLIST);
-            pn->setArity(PN_LIST);
-            pn->makeEmpty();
-        }
-        if (pn3 && pn3 != pn2) {
-            if (restartNode && *restartNode == pn3)
-                restartNode = nullptr;
-            parser.freeTree(pn3);
-        }
-        break;
-
       case PNK_OR:
       case PNK_AND:
         if (sc == SyntacticContext::Condition) {
@@ -1541,6 +1571,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_POS:
       case PNK_NEG:
       case PNK_CONDITIONAL:
+      case PNK_IF:
         MOZ_CRASH("should have been fully handled above");
 
       case PNK_ELEM: {
@@ -1625,7 +1656,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         }
     }
 
-    goto restart;
+    return true;
 }
 
 bool
