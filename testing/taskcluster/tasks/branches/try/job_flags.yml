@@ -179,7 +179,7 @@ builds:
 
 post-build:
   upload-symbols:
-    task: tasks/upload_symbols.yml
+    task: tasks/post-builds/upload_symbols.yml
 
 tests:
   cppunit:

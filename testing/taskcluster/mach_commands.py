@@ -112,6 +112,49 @@ def decorate_task_treeherder_routes(task, suffix):
     for env in treeheder_env:
         task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
 
+def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
+    """
+    Configure a build dependent task. This is shared between post-build and test tasks.
+
+    :param task_path: location to the task yaml
+    :param parameters: parameters to load the template
+    :param taskid: taskid of the dependent task
+    :param templates: reference to the template builder
+    :param build_treeherder_config: parent treeherder config
+    :return: the configured task
+    """
+    task = templates.load(task_path, parameters)
+    task['taskId'] = taskid
+
+    if 'requires' not in task:
+        task['requires'] = []
+
+    task['requires'].append(parameters['build_slugid'])
+
+    if 'treeherder' not in task['task']['extra']:
+        task['task']['extra']['treeherder'] = {}
+
+    # Copy over any treeherder configuration from the build so
+    # tests show up under the same platform...
+    treeherder_config = task['task']['extra']['treeherder']
+
+    treeherder_config['collection'] = \
+        build_treeherder_config.get('collection', {})
+
+    treeherder_config['build'] = \
+        build_treeherder_config.get('build', {})
+
+    treeherder_config['machine'] = \
+        build_treeherder_config.get('machine', {})
+
+    if 'routes' not in task['task']:
+        task['task']['routes'] = []
+
+    if 'scopes' not in task['task']:
+        task['task']['scopes'] = []
+
+    return task
+
 @CommandProvider
 class DecisionTask(object):
     @Command('taskcluster-decision', category="ci",
@@ -334,15 +377,11 @@ class Graph(object):
             if 'post-build' in build:
                 # copy over the old parameters to update the template
                 post_parameters = copy.copy(build_parameters)
-                post_parameters['taskId'] = slugid()
-
-                post_task = templates.load(build['post-build']['task'], post_parameters)
-
-                if 'requires' not in post_task:
-                    post_task['requires'] = []
-
-                post_task['requires'].append(build_parameters['build_slugid'])
-
+                post_task = configure_dependent_task(build['post-build']['task'],
+                                                     post_parameters,
+                                                     slugid(),
+                                                     templates,
+                                                     build_treeherder_config)
                 graph['tasks'].append(post_task)
 
             for test in build['dependents']:
@@ -369,35 +408,11 @@ class Graph(object):
                         continue
 
                     test_parameters['chunk'] = chunk
-                    test_task = templates.load(test['task'], test_parameters)
-                    test_task['taskId'] = slugid()
-
-                    if 'requires' not in test_task:
-                        test_task['requires'] = []
-
-                    test_task['requires'].append(test_parameters['build_slugid'])
-
-                    if 'treeherder' not in test_task['task']['extra']:
-                        test_task['task']['extra']['treeherder'] = {}
-
-                    # Copy over any treeherder configuration from the build so
-                    # tests show up under the same platform...
-                    test_treeherder_config = test_task['task']['extra']['treeherder']
-
-                    test_treeherder_config['collection'] = \
-                        build_treeherder_config.get('collection', {})
-
-                    test_treeherder_config['build'] = \
-                        build_treeherder_config.get('build', {})
-
-                    test_treeherder_config['machine'] = \
-                        build_treeherder_config.get('machine', {})
-
-                    if 'routes' not in test_task['task']:
-                        test_task['task']['routes'] = []
-
-                    if 'scopes' not in test_task['task']:
-                        test_task['task']['scopes'] = []
+                    test_task = configure_dependent_task(test['task'],
+                                                         test_parameters,
+                                                         slugid(),
+                                                         templates,
+                                                         build_treeherder_config)
 
                     if params['revision_hash']:
                         decorate_task_treeherder_routes(
