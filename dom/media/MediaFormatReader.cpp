@@ -1438,7 +1438,8 @@ void MediaFormatReader::ReleaseMediaResources()
 {
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
-  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
+  VideoFrameContainer* container =
+    mDecoder ? mDecoder->GetVideoFrameContainer() : nullptr;
   if (container) {
     container->ClearCurrentFrame();
   }
