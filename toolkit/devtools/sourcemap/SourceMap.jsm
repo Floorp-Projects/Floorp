@@ -17,6 +17,7 @@
 
 this.EXPORTED_SYMBOLS = [ "SourceMapConsumer", "SourceMapGenerator", "SourceNode" ];
 
+Components.utils.import("resource://gre/modules/devtools/Console.jsm");
 Components.utils.import('resource://gre/modules/devtools/Require.jsm');
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
@@ -24,12 +25,13 @@ Components.utils.import('resource://gre/modules/devtools/Require.jsm');
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'source-map/util', 'source-map/binary-search', 'source-map/array-set', 'source-map/base64-vlq'], function(require, exports, module) {
+define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'source-map/util', 'source-map/binary-search', 'source-map/array-set', 'source-map/base64-vlq', 'source-map/quick-sort'], function(require, exports, module) {
 
   var util = require('source-map/util');
   var binarySearch = require('source-map/binary-search');
   var ArraySet = require('source-map/array-set').ArraySet;
   var base64VLQ = require('source-map/base64-vlq');
+  var quickSort = require('source-map/quick-sort').quickSort;
 
   function SourceMapConsumer(aSourceMap) {
     var sourceMap = aSourceMap;
@@ -85,8 +87,6 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
   Object.defineProperty(SourceMapConsumer.prototype, '_generatedMappings', {
     get: function () {
       if (!this.__generatedMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
         this._parseMappings(this._mappings, this.sourceRoot);
       }
 
@@ -98,8 +98,6 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
   Object.defineProperty(SourceMapConsumer.prototype, '_originalMappings', {
     get: function () {
       if (!this.__originalMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
         this._parseMappings(this._mappings, this.sourceRoot);
       }
 
@@ -107,8 +105,8 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     }
   });
 
-  SourceMapConsumer.prototype._nextCharIsMappingSeparator =
-    function SourceMapConsumer_nextCharIsMappingSeparator(aStr, index) {
+  SourceMapConsumer.prototype._charIsMappingSeparator =
+    function SourceMapConsumer_charIsMappingSeparator(aStr, index) {
       var c = aStr.charAt(index);
       return c === ";" || c === ",";
     };
@@ -164,7 +162,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
 
       var sourceRoot = this.sourceRoot;
       mappings.map(function (mapping) {
-        var source = mapping.source;
+        var source = mapping.source === null ? null : this._sources.at(mapping.source);
         if (source != null && sourceRoot != null) {
           source = util.join(sourceRoot, source);
         }
@@ -174,9 +172,9 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
           generatedColumn: mapping.generatedColumn,
           originalLine: mapping.originalLine,
           originalColumn: mapping.originalColumn,
-          name: mapping.name
+          name: mapping.name === null ? null : this._names.at(mapping.name)
         };
-      }).forEach(aCallback, context);
+      }, this).forEach(aCallback, context);
     };
 
   /**
@@ -215,6 +213,10 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       if (this.sourceRoot != null) {
         needle.source = util.relative(this.sourceRoot, needle.source);
       }
+      if (!this._sources.has(needle.source)) {
+        return [];
+      }
+      needle.source = this._sources.indexOf(needle.source);
 
       var mappings = [];
 
@@ -361,9 +363,17 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       smc.file = aSourceMap._file;
 
       smc.__generatedMappings = aSourceMap._mappings.toArray().slice();
-      smc.__originalMappings = aSourceMap._mappings.toArray().slice()
-        .sort(util.compareByOriginalPositions);
+      smc.__originalMappings = aSourceMap._mappings.toArray().slice().sort();
 
+      smc.__generatedMappings.forEach(function (m) {
+        if (m.source !== null) {
+          m.source = smc._sources.indexOf(m.source);
+
+          if (m.name !== null) {
+            m.name = smc._names.indexOf(m.name);
+          }
+        }
+      });
       return smc;
     };
 
@@ -384,6 +394,18 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
   });
 
   /**
+   * Provide the JIT with a nice shape / hidden class.
+   */
+  function Mapping() {
+    this.generatedLine = 0;
+    this.generatedColumn = 0;
+    this.source = null;
+    this.originalLine = null;
+    this.originalColumn = null;
+    this.name = null;
+  }
+
+  /**
    * Parse the mappings in a string in to a data structure which we can easily
    * query (the ordered arrays in the `this.__generatedMappings` and
    * `this.__originalMappings` properties).
@@ -398,21 +420,23 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
       var previousName = 0;
       var length = aStr.length;
       var index = 0;
-      var cachedValues = {};
+      var cachedSegments = {};
       var temp = {};
-      var mapping, str, values, end, value;
+      var originalMappings = [];
+      var generatedMappings = [];
+      var mapping, str, segment, end, value;
 
       while (index < length) {
         if (aStr.charAt(index) === ';') {
           generatedLine++;
-          ++index;
+          index++;
           previousGeneratedColumn = 0;
         }
         else if (aStr.charAt(index) === ',') {
-          ++index;
+          index++;
         }
         else {
-          mapping = {};
+          mapping = new Mapping();
           mapping.generatedLine = generatedLine;
 
           // Because each offset is encoded relative to the previous one,
@@ -420,68 +444,74 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
           // fact by caching the parsed variable length fields of each segment,
           // allowing us to avoid a second parse if we encounter the same
           // segment again.
-          for (end = index; end < length; ++end) {
-            if (this._nextCharIsMappingSeparator(aStr, end)) {
+          for (end = index; end < length; end++) {
+            if (this._charIsMappingSeparator(aStr, end)) {
               break;
             }
           }
           str = aStr.slice(index, end);
 
-          values = cachedValues[str];
-          if (values) {
+          segment = cachedSegments[str];
+          if (segment) {
             index += str.length;
           } else {
-            values = [];
+            segment = [];
             while (index < end) {
               base64VLQ.decode(aStr, index, temp);
               value = temp.value;
               index = temp.rest;
-              values.push(value);
+              segment.push(value);
             }
-            cachedValues[str] = values;
-          }
 
-          // Generated column.
-          mapping.generatedColumn = previousGeneratedColumn + values[0];
-          previousGeneratedColumn = mapping.generatedColumn;
-
-          if (values.length > 1) {
-            // Original source.
-            mapping.source = this._sources.at(previousSource + values[1]);
-            previousSource += values[1];
-            if (values.length === 2) {
+            if (segment.length === 2) {
               throw new Error('Found a source, but no line and column');
             }
 
-            // Original line.
-            mapping.originalLine = previousOriginalLine + values[2];
-            previousOriginalLine = mapping.originalLine;
-            // Lines are stored 0-based
-            mapping.originalLine += 1;
-            if (values.length === 3) {
+            if (segment.length === 3) {
               throw new Error('Found a source and line, but no column');
             }
 
+            cachedSegments[str] = segment;
+          }
+
+          // Generated column.
+          mapping.generatedColumn = previousGeneratedColumn + segment[0];
+          previousGeneratedColumn = mapping.generatedColumn;
+
+          if (segment.length > 1) {
+            // Original source.
+            mapping.source = previousSource + segment[1];
+            previousSource += segment[1];
+
+            // Original line.
+            mapping.originalLine = previousOriginalLine + segment[2];
+            previousOriginalLine = mapping.originalLine;
+            // Lines are stored 0-based
+            mapping.originalLine += 1;
+
             // Original column.
-            mapping.originalColumn = previousOriginalColumn + values[3];
+            mapping.originalColumn = previousOriginalColumn + segment[3];
             previousOriginalColumn = mapping.originalColumn;
 
-            if (values.length > 4) {
+            if (segment.length > 4) {
               // Original name.
-              mapping.name = this._names.at(previousName + values[4]);
-              previousName += values[4];
+              mapping.name = previousName + segment[4];
+              previousName += segment[4];
             }
           }
 
-          this.__generatedMappings.push(mapping);
+          generatedMappings.push(mapping);
           if (typeof mapping.originalLine === 'number') {
-            this.__originalMappings.push(mapping);
+            originalMappings.push(mapping);
           }
         }
       }
 
-      this.__generatedMappings.sort(util.compareByGeneratedPositions);
-      this.__originalMappings.sort(util.compareByOriginalPositions);
+      quickSort(generatedMappings, util.compareByGeneratedPositions);
+      this.__generatedMappings = generatedMappings;
+
+      quickSort(originalMappings, util.compareByOriginalPositions);
+      this.__originalMappings = originalMappings;
     };
 
   /**
@@ -576,14 +606,21 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
 
         if (mapping.generatedLine === needle.generatedLine) {
           var source = util.getArg(mapping, 'source', null);
-          if (source != null && this.sourceRoot != null) {
-            source = util.join(this.sourceRoot, source);
+          if (source !== null) {
+            source = this._sources.at(source);
+            if (this.sourceRoot != null) {
+              source = util.join(this.sourceRoot, source);
+            }
+          }
+          var name = util.getArg(mapping, 'name', null);
+          if (name !== null) {
+            name = this._names.at(name);
           }
           return {
             source: source,
             line: util.getArg(mapping, 'originalLine', null),
             column: util.getArg(mapping, 'originalColumn', null),
-            name: util.getArg(mapping, 'name', null)
+            name: name
           };
         }
       }
@@ -594,6 +631,19 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         column: null,
         name: null
       };
+    };
+
+  /**
+   * Return true if we have the source content for every source in the source
+   * map, false otherwise.
+   */
+  BasicSourceMapConsumer.prototype.hasContentsOfAllSources =
+    function BasicSourceMapConsumer_hasContentsOfAllSources() {
+      if (!this.sourcesContent) {
+        return false;
+      }
+      return this.sourcesContent.length >= this._sources.size() &&
+        !this.sourcesContent.some(function (sc) { return sc == null; });
     };
 
   /**
@@ -667,15 +717,24 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
    */
   BasicSourceMapConsumer.prototype.generatedPositionFor =
     function SourceMapConsumer_generatedPositionFor(aArgs) {
+      var source = util.getArg(aArgs, 'source');
+      if (this.sourceRoot != null) {
+        source = util.relative(this.sourceRoot, source);
+      }
+      if (!this._sources.has(source)) {
+        return {
+          line: null,
+          column: null,
+          lastColumn: null
+        };
+      }
+      source = this._sources.indexOf(source);
+
       var needle = {
-        source: util.getArg(aArgs, 'source'),
+        source: source,
         originalLine: util.getArg(aArgs, 'line'),
         originalColumn: util.getArg(aArgs, 'column')
       };
-
-      if (this.sourceRoot != null) {
-        needle.source = util.relative(this.sourceRoot, needle.source);
-      }
 
       var index = this._findMapping(
         needle,
@@ -764,6 +823,9 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     if (version != this._version) {
       throw new Error('Unsupported version: ' + version);
     }
+
+    this._sources = new ArraySet();
+    this._names = new ArraySet();
 
     var lastOffset = {
       line: -1,
@@ -877,6 +939,17 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     };
 
   /**
+   * Return true if we have the source content for every source in the source
+   * map, false otherwise.
+   */
+  IndexedSourceMapConsumer.prototype.hasContentsOfAllSources =
+    function IndexedSourceMapConsumer_hasContentsOfAllSources() {
+      return this._sections.every(function (s) {
+        return s.consumer.hasContentsOfAllSources();
+      });
+    };
+
+  /**
    * Returns the original source content. The only argument is the url of the
    * original source file. Returns null if no original source content is
    * available.
@@ -958,12 +1031,16 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         for (var j = 0; j < sectionMappings.length; j++) {
           var mapping = sectionMappings[i];
 
-          var source = mapping.source;
-          var sourceRoot = section.consumer.sourceRoot;
-
-          if (source != null && sourceRoot != null) {
-            source = util.join(sourceRoot, source);
+          var source = section.consumer._sources.at(mapping.source);
+          if (section.consumer.sourceRoot !== null) {
+            source = util.join(section.consumer.sourceRoot, source);
           }
+          this._sources.add(source);
+          source = this._sources.indexOf(source);
+
+          var name = section.consumer._names.at(mapping.name);
+          this._names.add(name);
+          name = this._names.indexOf(name);
 
           // The mappings coming from the consumer for the section have
           // generated positions relative to the start of the section, so we
@@ -979,7 +1056,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
               : 0,
             originalLine: mapping.originalLine,
             originalColumn: mapping.originalColumn,
-            name: mapping.name
+            name: name
           };
 
           this.__generatedMappings.push(adjustedMapping);
@@ -989,9 +1066,9 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         };
       };
 
-    this.__generatedMappings.sort(util.compareByGeneratedPositions);
-    this.__originalMappings.sort(util.compareByOriginalPositions);
-  };
+      quickSort(this.__generatedMappings, util.compareByGeneratedPositions);
+      quickSort(this.__originalMappings, util.compareByOriginalPositions);
+    };
 
   exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
 
@@ -1208,7 +1285,7 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
       // file:///, etc.), one or more slashes (/), or simply nothing at all, we
       // have exhausted all components, so the path is not relative to the root.
       aRoot = aRoot.slice(0, index);
-      if (aRoot.match(/^([^\/]+:\/)\/*$/)) {
+      if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
         return aPath;
       }
 
@@ -1239,12 +1316,6 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
   }
   exports.fromSetString = fromSetString;
 
-  function strcmp(aStr1, aStr2) {
-    var s1 = aStr1 || "";
-    var s2 = aStr2 || "";
-    return (s1 > s2) - (s1 < s2);
-  }
-
   /**
    * Comparator between two mappings where the original positions are compared.
    *
@@ -1254,34 +1325,32 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
    * stubbed out mapping.
    */
   function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
-    var cmp;
-
-    cmp = strcmp(mappingA.source, mappingB.source);
-    if (cmp) {
+    var cmp = mappingA.source - mappingB.source;
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.originalLine - mappingB.originalLine;
-    if (cmp) {
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.originalColumn - mappingB.originalColumn;
-    if (cmp || onlyCompareOriginal) {
+    if (cmp !== 0 || onlyCompareOriginal) {
       return cmp;
     }
 
     cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-    if (cmp) {
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.generatedLine - mappingB.generatedLine;
-    if (cmp) {
+    if (cmp !== 0) {
       return cmp;
     }
 
-    return strcmp(mappingA.name, mappingB.name);
+    return mappingA.name - mappingB.name;
   };
   exports.compareByOriginalPositions = compareByOriginalPositions;
 
@@ -1295,34 +1364,32 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
    * mapping with a stubbed out mapping.
    */
   function compareByGeneratedPositions(mappingA, mappingB, onlyCompareGenerated) {
-    var cmp;
-
-    cmp = mappingA.generatedLine - mappingB.generatedLine;
-    if (cmp) {
+    var cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.generatedColumn - mappingB.generatedColumn;
-    if (cmp || onlyCompareGenerated) {
+    if (cmp !== 0 || onlyCompareGenerated) {
       return cmp;
     }
 
-    cmp = strcmp(mappingA.source, mappingB.source);
-    if (cmp) {
+    cmp = mappingA.source - mappingB.source;
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.originalLine - mappingB.originalLine;
-    if (cmp) {
+    if (cmp !== 0) {
       return cmp;
     }
 
     cmp = mappingA.originalColumn - mappingB.originalColumn;
-    if (cmp) {
+    if (cmp !== 0) {
       return cmp;
     }
 
-    return strcmp(mappingA.name, mappingB.name);
+    return mappingA.name - mappingB.name;
   };
   exports.compareByGeneratedPositions = compareByGeneratedPositions;
 
@@ -1471,6 +1538,16 @@ define('source-map/array-set', ['require', 'exports', 'module' ,  'source-map/ut
       set.add(aArray[i], aAllowDuplicates);
     }
     return set;
+  };
+
+  /**
+   * Return how many unique items are in this ArraySet. If duplicates have been
+   * added, than those do not count towards the size.
+   *
+   * @returns Number
+   */
+  ArraySet.prototype.size = function ArraySet_size() {
+    return Object.getOwnPropertyNames(this._set).length;
   };
 
   /**
@@ -1661,7 +1738,12 @@ define('source-map/base64-vlq', ['require', 'exports', 'module' ,  'source-map/b
       if (aIndex >= strLen) {
         throw new Error("Expected more digits in base 64 VLQ value.");
       }
-      digit = base64.decode(aStr.charAt(aIndex++));
+
+      digit = base64.decode(aStr.charCodeAt(aIndex++));
+      if (digit === -1) {
+        throw new Error("Invalid base64 digit: " + aStr.charAt(aIndex - 1));
+      }
+
       continuation = !!(digit & VLQ_CONTINUATION_BIT);
       digit &= VLQ_BASE_MASK;
       result = result + (digit << shift);
@@ -1681,34 +1763,182 @@ define('source-map/base64-vlq', ['require', 'exports', 'module' ,  'source-map/b
  */
 define('source-map/base64', ['require', 'exports', 'module' , ], function(require, exports, module) {
 
-  var charToIntMap = {};
-  var intToCharMap = {};
-
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    .split('')
-    .forEach(function (ch, index) {
-      charToIntMap[ch] = index;
-      intToCharMap[index] = ch;
-    });
+  var intToCharMap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
 
   /**
    * Encode an integer in the range of 0 to 63 to a single base 64 digit.
    */
-  exports.encode = function base64_encode(aNumber) {
-    if (aNumber in intToCharMap) {
-      return intToCharMap[aNumber];
+  exports.encode = function (number) {
+    if (0 <= number && number < intToCharMap.length) {
+      return intToCharMap[number];
     }
     throw new TypeError("Must be between 0 and 63: " + aNumber);
   };
 
   /**
-   * Decode a single base 64 digit to an integer.
+   * Decode a single base 64 character code digit to an integer. Returns -1 on
+   * failure.
    */
-  exports.decode = function base64_decode(aChar) {
-    if (aChar in charToIntMap) {
-      return charToIntMap[aChar];
+  exports.decode = function (charCode) {
+    var bigA = 65;     // 'A'
+    var bigZ = 90;     // 'Z'
+
+    var littleA = 97;  // 'a'
+    var littleZ = 122; // 'z'
+
+    var zero = 48;     // '0'
+    var nine = 57;     // '9'
+
+    var plus = 43;     // '+'
+    var slash = 47;    // '/'
+
+    var littleOffset = 26;
+    var numberOffset = 52;
+
+    // 0 - 25: ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    if (bigA <= charCode && charCode <= bigZ) {
+      return (charCode - bigA);
     }
-    throw new TypeError("Not a valid base 64 digit: " + aChar);
+
+    // 26 - 51: abcdefghijklmnopqrstuvwxyz
+    if (littleA <= charCode && charCode <= littleZ) {
+      return (charCode - littleA + littleOffset);
+    }
+
+    // 52 - 61: 0123456789
+    if (zero <= charCode && charCode <= nine) {
+      return (charCode - zero + numberOffset);
+    }
+
+    // 62: +
+    if (charCode == plus) {
+      return 62;
+    }
+
+    // 63: /
+    if (charCode == slash) {
+      return 63;
+    }
+
+    // Invalid base64 digit.
+    return -1;
+  };
+
+});
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+define('source-map/quick-sort', ['require', 'exports', 'module' , ], function(require, exports, module) {
+
+  // It turns out that some (most?) JavaScript engines don't self-host
+  // `Array.prototype.sort`. This makes sense because C++ will likely remain
+  // faster than JS when doing raw CPU-intensive sorting. However, when using a
+  // custom comparator function, calling back and forth between the VM's C++ and
+  // JIT'd JS is rather slow *and* loses JIT type information, resulting in
+  // worse generated code for the comparator function than would be optimal. In
+  // fact, when sorting with a comparator, these costs outweigh the benefits of
+  // sorting in C++. By using our own JS-implemented Quick Sort (below), we get
+  // a ~3500ms mean speed-up in `bench/bench.html`.
+
+  /**
+   * Swap the elements indexed by `x` and `y` in the array `ary`.
+   *
+   * @param {Array} ary
+   *        The array.
+   * @param {Number} x
+   *        The index of the first item.
+   * @param {Number} y
+   *        The index of the second item.
+   */
+  function swap(ary, x, y) {
+    var temp = ary[x];
+    ary[x] = ary[y];
+    ary[y] = temp;
+  }
+
+  /**
+   * Returns a random integer within the range `low .. high` inclusive.
+   *
+   * @param {Number} low
+   *        The lower bound on the range.
+   * @param {Number} high
+   *        The upper bound on the range.
+   */
+  function randomIntInRange(low, high) {
+    return Math.round(low + (Math.random() * (high - low)));
+  }
+
+  /**
+   * The Quick Sort algorithm.
+   *
+   * @param {Array} ary
+   *        An array to sort.
+   * @param {function} comparator
+   *        Function to use to compare two items.
+   * @param {Number} p
+   *        Start index of the array
+   * @param {Number} r
+   *        End index of the array
+   */
+  function doQuickSort(ary, comparator, p, r) {
+    // If our lower bound is less than our upper bound, we (1) partition the
+    // array into two pieces and (2) recurse on each half. If it is not, this is
+    // the empty array and our base case.
+
+    if (p < r) {
+      // (1) Partitioning.
+      //
+      // The partitioning chooses a pivot between `p` and `r` and moves all
+      // elements that are less than or equal to the pivot to the before it, and
+      // all the elements that are greater than it after it. The effect is that
+      // once partition is done, the pivot is in the exact place it will be when
+      // the array is put in sorted order, and it will not need to be moved
+      // again. This runs in O(n) time.
+
+      // Always choose a random pivot so that an input array which is reverse
+      // sorted does not cause O(n^2) running time.
+      var pivotIndex = randomIntInRange(p, r);
+      var i = p - 1;
+
+      swap(ary, pivotIndex, r);
+      var pivot = ary[r];
+
+      // Immediately after `j` is incremented in this loop, the following hold
+      // true:
+      //
+      //   * Every element in `ary[p .. i]` is less than or equal to the pivot.
+      //
+      //   * Every element in `ary[i+1 .. j-1]` is greater than the pivot.
+      for (var j = p; j < r; j++) {
+        if (comparator(ary[j], pivot) <= 0) {
+          i += 1;
+          swap(ary, i, j);
+        }
+      }
+
+      swap(ary, i + 1, j);
+      var q = i + 1;
+
+      // (2) Recurse on each half.
+
+      doQuickSort(ary, comparator, p, q - 1);
+      doQuickSort(ary, comparator, q + 1, r);
+    }
+  }
+
+  /**
+   * Sort the given array in-place with the given comparator function.
+   *
+   * @param {Array} ary
+   *        An array to sort.
+   * @param {function} comparator
+   *        Function to use to compare two items.
+   */
+  exports.quickSort = function (ary, comparator) {
+    doQuickSort(ary, comparator, 0, ary.length - 1);
   };
 
 });
