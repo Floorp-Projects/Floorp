@@ -384,6 +384,10 @@ description > html|a {
  * Sync
  */
 
+#fxaSyncEngines > vbox:first-child {
+  margin-right: 80px;
+}
+
 #fxaDeviceName {
   margin: 14px 0px;
 }

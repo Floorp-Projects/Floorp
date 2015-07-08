@@ -298,6 +298,8 @@
           <checkbox label="&engine.passwords.label;"
                     accesskey="&engine.passwords.accesskey;"
                     preference="engine.passwords"/>
+        </vbox>
+        <vbox align="start">
           <checkbox label="&engine.history.label;"
                     accesskey="&engine.history.accesskey;"
                     preference="engine.history"/>
