@@ -117,7 +117,7 @@
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5a48c04c4bb5f079bc757e29864a42427378e051"/>
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="9afc4e0e3e883f3a22a5eb94470d50f4b1cfe5c5"/>
   <project name="platform/system/extras" path="system/extras" revision="10e78a05252b3de785f88c2d0b9ea8a428009c50"/>
-  <project name="platform/system/media" path="system/media" revision="7ff72c2ea2496fa50b5e8a915e56e901c3ccd240"/>
+  <project name="platform/system/media" path="system/media" revision="188b3e51e0a2ce1e16dc8067edef7be3d2365ad9"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3c5405863d2002f665ef2b901abb3853c420129b"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
