@@ -4379,6 +4379,10 @@ var XULBrowserWindow = {
         gURLBar.removeAttribute("level");
     }
 
+    // Make sure the "https" part of the URL is striked out or not,
+    // depending on the current mixed active content blocking state.
+    gURLBar.formatValue();
+
     try {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
