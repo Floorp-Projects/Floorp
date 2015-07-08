@@ -10,7 +10,7 @@ import android.content.res.Resources;
 import org.mozilla.gecko.R;
 
 public class StringHelper {
-    private static StringHelper instance = null;
+    private static StringHelper instance;
 
     // This needs to be accessed statically, before an instance of StringHelper can be created.
     public static String STATIC_ABOUT_HOME_URL = "about:home";
