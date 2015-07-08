@@ -1,14 +1,24 @@
+/* Show the organization name only for EV certs. */
 #identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-content-owner,
+#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
+/* Show the "Verified by" label only for DV and EV certs. */
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-content-verifier,
+/* Show a longer explanation for non-secure sites, mixed content, and weak
+   connection security. Show the organization address for EV certs. */
 #identity-popup-securityView:not(.unknownIdentity):not(.verifiedIdentity):not(.mixedContent):not(.weakCipher) > #identity-popup-content-supplemental,
+/* Show the "Connection is secure" labels only for EV and DV certs. */
 #identity-popup-security-content:not(.verifiedIdentity):not(.verifiedDomain) > .identity-popup-connection-secure,
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-securityView-header > .identity-popup-connection-secure,
-#identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
-#identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
+/* Show the "Connection is not secure" labels only for non-secure sites. */
 #identity-popup-security-content:not(.unknownIdentity) > .identity-popup-connection-not-secure,
-#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
+#identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
+/* Show "This is a secure internal page" only for whitelisted pages. */
+#identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
 #identity-popup-security-content:not(.chromeUI) > .identity-popup-connection-internal,
-#identity-popup-security-content.chromeUI + .identity-popup-expander {
+/* Hide the subsection arrow for whitelisted chromeUI pages. */
+#identity-popup-security-content.chromeUI + .identity-popup-expander,
+/* Hide the tracking protection section for whitelisted chromeUI pages. */
+#identity-popup-mainView.chromeUI > #tracking-protection-container {
   display: none;
 }
 
