@@ -49,7 +49,22 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(TCPSocketChildBase, mSocket)
+NS_IMPL_CYCLE_COLLECTION_CLASS(TCPSocketChildBase)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TCPSocketChildBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSocket)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TCPSocketChildBase)
+  tmp->mWindowObj = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSocket)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(TCPSocketChildBase)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mWindowObj)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketChildBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketChildBase)
 
@@ -61,10 +76,12 @@ NS_INTERFACE_MAP_END
 TCPSocketChildBase::TCPSocketChildBase()
 : mIPCOpen(false)
 {
+  mozilla::HoldJSObjects(this);
 }
 
 TCPSocketChildBase::~TCPSocketChildBase()
 {
+  mozilla::DropJSObjects(this);
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
@@ -78,8 +95,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
 }
 
 TCPSocketChild::TCPSocketChild()
-: mWindowObj(nullptr)
-, mHost()
+: mHost()
 , mPort(0)
 {
 }
