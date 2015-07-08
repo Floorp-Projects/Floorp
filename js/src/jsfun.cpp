@@ -2223,8 +2223,7 @@ js::IdToFunctionName(JSContext* cx, HandleId id)
 
 JSFunction*
 js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
-                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */,
-                   NewObjectKind newKind /* = GenericObject */)
+                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */)
 {
     GetterOp gop;
     SetterOp sop;
@@ -2253,11 +2252,11 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
     if (!native)
         fun = NewScriptedFunction(cx, nargs,
                                   JSFunction::INTERPRETED_LAZY, atom,
-                                  allocKind, newKind, obj);
+                                  allocKind, GenericObject, obj);
     else if (flags & JSFUN_CONSTRUCTOR)
-        fun = NewNativeConstructor(cx, native, nargs, atom, allocKind, newKind);
+        fun = NewNativeConstructor(cx, native, nargs, atom, allocKind);
     else
-        fun = NewNativeFunction(cx, native, nargs, atom, allocKind, newKind);
+        fun = NewNativeFunction(cx, native, nargs, atom, allocKind);
 
     if (!fun)
         return nullptr;
