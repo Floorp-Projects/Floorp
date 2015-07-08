@@ -1164,6 +1164,118 @@ FoldFunction(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& pa
     return true;
 }
 
+static bool
+FoldBinaryArithmetic(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+                     bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_SUB) ||
+               node->isKind(PNK_STAR) ||
+               node->isKind(PNK_LSH) ||
+               node->isKind(PNK_RSH) ||
+               node->isKind(PNK_URSH) ||
+               node->isKind(PNK_DIV) ||
+               node->isKind(PNK_MOD));
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    MOZ_ASSERT(node->pn_count >= 2);
+
+    // Fold each operand, ideally into a number.
+    ParseNode** listp = &node->pn_head;
+    for (; *listp; listp = &(*listp)->pn_next) {
+        if (!Fold(cx, listp, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+
+        if (!FoldType(cx, *listp, PNK_NUMBER))
+            return false;
+    }
+
+    // Repoint the list's tail pointer.
+    node->pn_tail = listp;
+
+    // Now fold all leading numeric terms together into a single number.
+    // (Trailing terms for the non-shift operations can't be folded together
+    // due to floating point imprecision.  For example, if |x === -2**53|,
+    // |x - 1 - 1 === -2**53| but |x - 2 === -2**53 - 2|.  Shifts could be
+    // folded, but it doesn't seem worth the effort.)
+    JSOp op = node->getOp();
+    ParseNode* elem = node->pn_head;
+    ParseNode* next = elem->pn_next;
+    if (elem->isKind(PNK_NUMBER)) {
+        while (true) {
+            if (!next || !next->isKind(PNK_NUMBER))
+                break;
+
+            ParseNode* afterNext = next->pn_next;
+            if (!FoldBinaryNumeric(cx, op, elem, next, elem))
+                return false;
+
+            parser.freeTree(next);
+            next = afterNext;
+            elem->pn_next = next;
+
+            node->pn_count--;
+        }
+
+        if (node->pn_count == 1) {
+            MOZ_ASSERT(node->pn_head == elem);
+            MOZ_ASSERT(elem->isKind(PNK_NUMBER));
+
+            double d = elem->pn_dval;
+            node->setKind(PNK_NUMBER);
+            node->setArity(PN_NULLARY);
+            node->setOp(JSOP_DOUBLE);
+            node->pn_dval = d;
+
+            parser.freeTree(elem);
+        }
+    }
+
+    return true;
+}
+
+static bool
+FoldExponentiation(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+                   bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_POW));
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    MOZ_ASSERT(node->pn_count >= 2);
+
+    // Fold each operand, ideally into a number.
+    ParseNode** listp = &node->pn_head;
+    for (; *listp; listp = &(*listp)->pn_next) {
+        if (!Fold(cx, listp, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+
+        if (!FoldType(cx, *listp, PNK_NUMBER))
+            return false;
+    }
+
+    // Repoint the list's tail pointer.
+    node->pn_tail = listp;
+
+    // Unlike all other binary arithmetic operators, ** is right-associative:
+    // 2**3**5 is 2**(3**5), not (2**3)**5.  As list nodes singly-link their
+    // children, full constant-folding requires either linear space or dodgy
+    // in-place linked list reversal.  So we only fold one exponentiation: it's
+    // easy and addresses common cases like |2**32|.
+    if (node->pn_count > 2)
+        return true;
+
+    ParseNode* base = node->pn_head;
+    ParseNode* exponent = base->pn_next;
+    if (!base->isKind(PNK_NUMBER) || !exponent->isKind(PNK_NUMBER))
+        return true;
+
+    double d1 = base->pn_dval, d2 = exponent->pn_dval;
+
+    parser.prepareNodeForMutation(node);
+    node->setKind(PNK_NUMBER);
+    node->setArity(PN_NULLARY);
+    node->setOp(JSOP_DOUBLE);
+    node->pn_dval = ecmaPow(d1, d2);
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1269,6 +1381,18 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FUNCTION:
         return FoldFunction(cx, pn, parser, inGenexpLambda);
 
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_DIV:
+      case PNK_MOD:
+        return FoldBinaryArithmetic(cx, pn, parser, inGenexpLambda);
+
+      case PNK_POW:
+        return FoldExponentiation(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1320,15 +1444,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_GE:
       case PNK_INSTANCEOF:
       case PNK_IN:
-      case PNK_LSH:
-      case PNK_RSH:
-      case PNK_URSH:
       case PNK_ADD:
-      case PNK_SUB:
-      case PNK_STAR:
-      case PNK_DIV:
-      case PNK_MOD:
-      case PNK_POW:
       case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
@@ -1572,46 +1688,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         break;
       }
 
-      case PNK_SUB:
-      case PNK_STAR:
-      case PNK_LSH:
-      case PNK_RSH:
-      case PNK_URSH:
-      case PNK_DIV:
-      case PNK_MOD:
-      case PNK_POW:
-        MOZ_ASSERT(pn->getArity() == PN_LIST);
-        MOZ_ASSERT(pn->pn_count >= 2);
-        for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
-            if (!FoldType(cx, pn2, PNK_NUMBER))
-                return false;
-        }
-        for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
-            /* XXX fold only if all operands convert to number */
-            if (!pn2->isKind(PNK_NUMBER))
-                break;
-        }
-
-        // No constant-folding for (2**3**5), because (**) is right-
-        // associative. We would have to reverse the list. It's not worth it.
-        if (pn->getKind() == PNK_POW && pn->pn_count > 2)
-            break;
-
-        if (!pn2) {
-            JSOp op = pn->getOp();
-
-            pn2 = pn1->pn_next;
-            pn3 = pn2->pn_next;
-            if (!FoldBinaryNumeric(cx, op, pn1, pn2, pn))
-                return false;
-            while ((pn2 = pn3) != nullptr) {
-                pn3 = pn2->pn_next;
-                if (!FoldBinaryNumeric(cx, op, pn, pn2, pn))
-                    return false;
-            }
-        }
-        break;
-
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
@@ -1623,6 +1699,14 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_IF:
       case PNK_AND:
       case PNK_OR:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_DIV:
+      case PNK_MOD:
+      case PNK_POW:
         MOZ_CRASH("should have been fully handled above");
 
       case PNK_ELEM: {
