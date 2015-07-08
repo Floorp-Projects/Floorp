@@ -201,10 +201,10 @@ protected:
     virtual bool RecvProfile(const nsCString& aProfile) override { return true; }
 
     virtual bool RecvReturnClearSiteData(const NPError& aRv,
-                                         const uint64_t& aCallbackId);
+                                         const uint64_t& aCallbackId) override;
 
     virtual bool RecvReturnSitesWithData(nsTArray<nsCString>&& aSites,
-                                         const uint64_t& aCallbackId);
+                                         const uint64_t& aCallbackId) override;
 
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
