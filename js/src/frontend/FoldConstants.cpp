@@ -1350,6 +1350,82 @@ FoldClass(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parse
     return Fold(cx, &body, parser, inGenexpLambda, SyntacticContext::Other);
 }
 
+static bool
+FoldElement(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+            bool inGenexpLambda)
+{
+    ParseNode* node = *nodePtr;
+
+    MOZ_ASSERT(node->isKind(PNK_ELEM));
+    MOZ_ASSERT(node->isArity(PN_BINARY));
+
+    ParseNode*& expr = node->pn_left;
+    if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    ParseNode*& key = node->pn_right;
+    if (!Fold(cx, &key, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    PropertyName* name = nullptr;
+    if (key->isKind(PNK_STRING)) {
+        JSAtom* atom = key->pn_atom;
+        uint32_t index;
+
+        if (atom->isIndex(&index)) {
+            // Optimization 1: We have something like expr["100"]. This is
+            // equivalent to expr[100] which is faster.
+            key->setKind(PNK_NUMBER);
+            key->setOp(JSOP_DOUBLE);
+            key->pn_dval = index;
+        } else {
+            name = atom->asPropertyName();
+        }
+    } else if (key->isKind(PNK_NUMBER)) {
+        double number = key->pn_dval;
+        if (number != ToUint32(number)) {
+            // Optimization 2: We have something like expr[3.14]. The number
+            // isn't an array index, so it converts to a string ("3.14"),
+            // enabling optimization 3 below.
+            JSAtom* atom = ToAtom<NoGC>(cx, DoubleValue(number));
+            if (!atom)
+                return false;
+            name = atom->asPropertyName();
+        }
+    }
+
+    // If we don't have a name, we can't optimize to getprop.
+    if (!name)
+        return true;
+
+    // Also don't optimize if the name doesn't map directly to its id for TI's
+    // purposes.
+    if (NameToId(name) != IdToTypeId(NameToId(name)))
+        return true;
+
+    // Optimization 3: We have expr["foo"] where foo is not an index.  Convert
+    // to a property access (like expr.foo) that optimizes better downstream.
+    // Don't bother with this for names that TI considers to be indexes, to
+    // simplify downstream analysis.
+    ParseNode* dottedAccess = parser.handler.newPropertyAccess(expr, name, node->pn_pos.end);
+    if (!dottedAccess)
+        return false;
+    dottedAccess->setInParens(node->isInParens());
+    ReplaceNode(nodePtr, dottedAccess);
+
+    // If we've replaced |expr["prop"]| with |expr.prop|, we can now free the
+    // |"prop"| and |expr["prop"]| nodes -- but not the |expr| node that we're
+    // now using as a sub-node of |dottedAccess|.  Munge |expr["prop"]| into a
+    // node with |"prop"| as its only child, that'll pass AST sanity-checking
+    // assertions during freeing, then free it.
+    node->setKind(PNK_TYPEOFEXPR);
+    node->setArity(PN_UNARY);
+    node->pn_kid = key;
+    parser.freeTree(node);
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1527,6 +1603,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CLASS:
         return FoldClass(cx, pn, parser, inGenexpLambda);
 
+      case PNK_ELEM:
+        return FoldElement(cx, pnp, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1541,7 +1620,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
       case PNK_POWASSIGN:
-      case PNK_ELEM:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
@@ -1805,64 +1883,8 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_DIV:
       case PNK_MOD:
       case PNK_POW:
+      case PNK_ELEM:
         MOZ_CRASH("should have been fully handled above");
-
-      case PNK_ELEM: {
-        // An indexed expression, pn1[pn2]. A few cases can be improved.
-        PropertyName* name = nullptr;
-        if (pn2->isKind(PNK_STRING)) {
-            JSAtom* atom = pn2->pn_atom;
-            uint32_t index;
-
-            if (atom->isIndex(&index)) {
-                // Optimization 1: We have something like pn1["100"]. This is
-                // equivalent to pn1[100] which is faster.
-                pn2->setKind(PNK_NUMBER);
-                pn2->setOp(JSOP_DOUBLE);
-                pn2->pn_dval = index;
-            } else {
-                name = atom->asPropertyName();
-            }
-        } else if (pn2->isKind(PNK_NUMBER)) {
-            double number = pn2->pn_dval;
-            if (number != ToUint32(number)) {
-                // Optimization 2: We have something like pn1[3.14]. The number
-                // is not an array index. This is equivalent to pn1["3.14"]
-                // which enables optimization 3 below.
-                JSAtom* atom = ToAtom<NoGC>(cx, DoubleValue(number));
-                if (!atom)
-                    return false;
-                name = atom->asPropertyName();
-            }
-        }
-
-        if (name && NameToId(name) == IdToTypeId(NameToId(name))) {
-            // Optimization 3: We have pn1["foo"] where foo is not an index.
-            // Convert to a property access (like pn1.foo) which we optimize
-            // better downstream. Don't bother with this for names which TI
-            // considers to be indexes, to simplify downstream analysis.
-            ParseNode* expr = parser.handler.newPropertyAccess(pn->pn_left, name, pn->pn_pos.end);
-            if (!expr)
-                return false;
-            expr->setInParens(pn->isInParens());
-            ReplaceNode(pnp, expr);
-
-            // Supposing we're replacing |obj["prop"]| with |obj.prop|, we now
-            // can free the |"prop"| node and |obj["prop"]| nodes -- but not
-            // the |obj| node now a sub-node of |expr|.  Mutate |pn| into a
-            // node with |"prop"| as its child so that our |pn| doesn't have a
-            // necessarily-weird structure (say, by nulling out |pn->pn_left|
-            // only) that would fail AST sanity assertions performed by
-            // |parser.freeTree(pn)|.
-            pn->setKind(PNK_TYPEOFEXPR);
-            pn->setArity(PN_UNARY);
-            pn->pn_kid = pn2;
-            parser.freeTree(pn);
-
-            pn = expr;
-        }
-        break;
-      }
 
       default:;
     }
