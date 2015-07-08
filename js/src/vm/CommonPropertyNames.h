@@ -109,8 +109,6 @@
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
-    macro(int8x16, int8x16, "int8x16") \
-    macro(int16x8, int16x8, "int16x8") \
     macro(int32x4, int32x4, "int32x4") \
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \

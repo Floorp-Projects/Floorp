@@ -157,37 +157,6 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var y = Load_float64(typedObj, offset + 8);
     return GetFloat64x2TypeDescr()(x, y);
 
-  case JS_SIMDTYPEREPR_INT8:
-    var s0 = Load_int8(typedObj, offset + 0);
-    var s1 = Load_int8(typedObj, offset + 1);
-    var s2 = Load_int8(typedObj, offset + 2);
-    var s3 = Load_int8(typedObj, offset + 3);
-    var s4 = Load_int8(typedObj, offset + 4);
-    var s5 = Load_int8(typedObj, offset + 5);
-    var s6 = Load_int8(typedObj, offset + 6);
-    var s7 = Load_int8(typedObj, offset + 7);
-    var s8 = Load_int8(typedObj, offset + 8);
-    var s9 = Load_int8(typedObj, offset + 9);
-    var s10 = Load_int8(typedObj, offset + 10);
-    var s11 = Load_int8(typedObj, offset + 11);
-    var s12 = Load_int8(typedObj, offset + 12);
-    var s13 = Load_int8(typedObj, offset + 13);
-    var s14 = Load_int8(typedObj, offset + 14);
-    var s15 = Load_int8(typedObj, offset + 15);
-    return GetInt8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7,
-                                 s8, s9, s10, s11, s12, s13, s14, s15);
-
-  case JS_SIMDTYPEREPR_INT16:
-    var s0 = Load_int16(typedObj, offset + 0);
-    var s1 = Load_int16(typedObj, offset + 2);
-    var s2 = Load_int16(typedObj, offset + 4);
-    var s3 = Load_int16(typedObj, offset + 6);
-    var s4 = Load_int16(typedObj, offset + 8);
-    var s5 = Load_int16(typedObj, offset + 10);
-    var s6 = Load_int16(typedObj, offset + 12);
-    var s7 = Load_int16(typedObj, offset + 14);
-    return GetInt8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
-
   case JS_SIMDTYPEREPR_INT32:
     var x = Load_int32(typedObj, offset + 0);
     var y = Load_int32(typedObj, offset + 4);
@@ -362,34 +331,6 @@ function TypedObjectSetSimd(descr, typedObj, offset, fromValue) {
       Store_float64(typedObj, offset + 0, Load_float64(fromValue, 0));
       Store_float64(typedObj, offset + 8, Load_float64(fromValue, 8));
       break;
-    case JS_SIMDTYPEREPR_INT8:
-      Store_int8(typedObj, offset + 0, Load_int8(fromValue, 0));
-      Store_int8(typedObj, offset + 1, Load_int8(fromValue, 1));
-      Store_int8(typedObj, offset + 2, Load_int8(fromValue, 2));
-      Store_int8(typedObj, offset + 3, Load_int8(fromValue, 3));
-      Store_int8(typedObj, offset + 4, Load_int8(fromValue, 4));
-      Store_int8(typedObj, offset + 5, Load_int8(fromValue, 5));
-      Store_int8(typedObj, offset + 6, Load_int8(fromValue, 6));
-      Store_int8(typedObj, offset + 7, Load_int8(fromValue, 7));
-      Store_int8(typedObj, offset + 8, Load_int8(fromValue, 8));
-      Store_int8(typedObj, offset + 9, Load_int8(fromValue, 9));
-      Store_int8(typedObj, offset + 10, Load_int8(fromValue, 10));
-      Store_int8(typedObj, offset + 11, Load_int8(fromValue, 11));
-      Store_int8(typedObj, offset + 12, Load_int8(fromValue, 12));
-      Store_int8(typedObj, offset + 13, Load_int8(fromValue, 13));
-      Store_int8(typedObj, offset + 14, Load_int8(fromValue, 14));
-      Store_int8(typedObj, offset + 15, Load_int8(fromValue, 15));
-      break;
-    case JS_SIMDTYPEREPR_INT16:
-      Store_int16(typedObj, offset + 0, Load_int16(fromValue, 0));
-      Store_int16(typedObj, offset + 2, Load_int16(fromValue, 2));
-      Store_int16(typedObj, offset + 4, Load_int16(fromValue, 4));
-      Store_int16(typedObj, offset + 6, Load_int16(fromValue, 6));
-      Store_int16(typedObj, offset + 8, Load_int16(fromValue, 8));
-      Store_int16(typedObj, offset + 10, Load_int16(fromValue, 10));
-      Store_int16(typedObj, offset + 12, Load_int16(fromValue, 12));
-      Store_int16(typedObj, offset + 14, Load_int16(fromValue, 14));
-      break;
     case JS_SIMDTYPEREPR_INT32:
       Store_int32(typedObj, offset + 0, Load_int32(fromValue, 0));
       Store_int32(typedObj, offset + 4, Load_int32(fromValue, 4));
@@ -521,10 +462,6 @@ function TypedObjectArrayRedimension(newArrayType) {
 
 function SimdProtoString(type) {
   switch (type) {
-  case JS_SIMDTYPEREPR_INT8:
-    return "int8x16";
-  case JS_SIMDTYPEREPR_INT16:
-    return "int16x8";
   case JS_SIMDTYPEREPR_INT32:
     return "int32x4";
   case JS_SIMDTYPEREPR_FLOAT32:
@@ -539,10 +476,6 @@ function SimdProtoString(type) {
 
 function SimdTypeToLength(type) {
   switch (type) {
-  case JS_SIMDTYPEREPR_INT8:
-    return 16;
-  case JS_SIMDTYPEREPR_INT16:
-    return 8;
   case JS_SIMDTYPEREPR_INT32:
   case JS_SIMDTYPEREPR_FLOAT32:
     return 4;
@@ -566,14 +499,10 @@ function SimdToSource() {
   var type = DESCR_TYPE(descr);
   var protoString = SimdProtoString(type);
   var length = SimdTypeToLength(type);
-  if (length == 2)
-    return `${protoString}(${this.x}, ${this.y})`;
-  else if (length == 4)
-    return `${protoString}(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
-  else if (length == 8)
-    return `${protoString}(${this.s0}, ${this.s1}, ${this.s2}, ${this.s3}, ${this.s4}, ${this.s5}, ${this.s6}, ${this.s7})`;
-  else if (length == 16)
-    return `${protoString}(${this.s0}, ${this.s1}, ${this.s2}, ${this.s3}, ${this.s4}, ${this.s5}, ${this.s6}, ${this.s7}, ${this.s8}, ${this.s9}, ${this.s10}, ${this.s11}, ${this.s12}, ${this.s13}, ${this.s14}, ${this.s15})`;
+  if (length == 4)
+    return protoString+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
+  else if (length == 2)
+    return protoString+"("+this.x+", "+this.y+")";
 }
 
 ///////////////////////////////////////////////////////////////////////////

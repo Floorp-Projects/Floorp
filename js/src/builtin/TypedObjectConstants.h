@@ -105,10 +105,8 @@
 // prefer SimdTypeRepresentation::TYPE_INT32 etc, since that allows
 // you to write a switch which will receive a warning if you omit a
 // case.
-#define JS_SIMDTYPEREPR_INT8          0
-#define JS_SIMDTYPEREPR_INT16         1
-#define JS_SIMDTYPEREPR_INT32         2
-#define JS_SIMDTYPEREPR_FLOAT32       3
-#define JS_SIMDTYPEREPR_FLOAT64       4
+#define JS_SIMDTYPEREPR_INT32         0
+#define JS_SIMDTYPEREPR_FLOAT32       1
+#define JS_SIMDTYPEREPR_FLOAT64       2
 
 #endif
