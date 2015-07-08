@@ -687,7 +687,8 @@ public:
                            const nsAString& aBdAddr,
                            int aAttributeHandle,
                            int aOffset,
-                           const nsTArray<uint8_t>& aValue,
+                           int aLength,
+                           const uint8_t* aValue,
                            bool aNeedResponse,
                            bool aIsPrepareWrite)
   { }
@@ -796,15 +797,10 @@ protected:
   virtual ~BluetoothGattClientResultHandler() { }
 };
 
-class BluetoothGattServerResultHandler
+class BluetoothGattServerResultHandler : public BluetoothGattResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattServerResultHandler)
-
-  virtual void OnError(BluetoothStatus aStatus)
-  {
-    BT_WARNING("Received error code %d", (int)aStatus);
-  }
 
   virtual void RegisterServer() { }
   virtual void UnregisterServer() { }
@@ -1048,6 +1044,7 @@ public:
   virtual void Cleanup(BluetoothGattResultHandler* aRes) = 0;
 
   virtual BluetoothGattClientInterface* GetBluetoothGattClientInterface() = 0;
+  virtual BluetoothGattServerInterface* GetBluetoothGattServerInterface() = 0;
 
 protected:
   BluetoothGattInterface();
