@@ -51,53 +51,9 @@ function assertEqX4(v, arr) {
     }
 }
 
-function assertEqX8(v, arr) {
-    try {
-        assertEq(v.s0, arr[0]);
-        assertEq(v.s1, arr[1]);
-        assertEq(v.s2, arr[2]);
-        assertEq(v.s3, arr[3]);
-        assertEq(v.s4, arr[4]);
-        assertEq(v.s5, arr[5]);
-        assertEq(v.s6, arr[6]);
-        assertEq(v.s7, arr[7]);
-    } catch (e) {
-        print("stack trace:", e.stack);
-        throw e;
-    }
-}
-
-function assertEqX16(v, arr) {
-    try {
-        assertEq(v.s0, arr[0]);
-        assertEq(v.s1, arr[1]);
-        assertEq(v.s2, arr[2]);
-        assertEq(v.s3, arr[3]);
-        assertEq(v.s4, arr[4]);
-        assertEq(v.s5, arr[5]);
-        assertEq(v.s6, arr[6]);
-        assertEq(v.s7, arr[7]);
-        assertEq(v.s8, arr[8]);
-        assertEq(v.s9, arr[9]);
-        assertEq(v.s10, arr[10]);
-        assertEq(v.s11, arr[11]);
-        assertEq(v.s12, arr[12]);
-        assertEq(v.s13, arr[13]);
-        assertEq(v.s14, arr[14]);
-        assertEq(v.s15, arr[15]);
-    } catch (e) {
-        print("stack trace:", e.stack);
-        throw e;
-    }
-}
-
 function simdLength(v) {
     var pt = Object.getPrototypeOf(v);
-    if (pt == SIMD.int8x16.prototype) {
-        return 16;
-    } else if (pt == SIMD.int16x8.prototype) {
-        return 8;
-    } else if (pt === SIMD.int32x4.prototype || pt === SIMD.float32x4.prototype) {
+    if (pt === SIMD.int32x4.prototype || pt === SIMD.float32x4.prototype) {
         return 4;
     } else if (pt === SIMD.float64x2.prototype) {
         return 2;
@@ -106,36 +62,14 @@ function simdLength(v) {
     }
 }
 
-function simdLengthType(t) {
-    if (t == SIMD.int8x16)
-        return 16;
-    else if (t == SIMD.int16x8)
-        return 8;
-    else if (t == SIMD.int32x4 || t == SIMD.float32x4)
-        return 4;
-    else if (t == SIMD.float64x2)
-        return 2;
-    else
-        throw new TypeError("Unknown SIMD kind.");
-}
-
-function getAssertFuncFromLength(l) {
-    if (l == 2)
-        return assertEqX2;
-    else if (l == 4)
-        return assertEqX4;
-    else if (l == 8)
-        return assertEqX8;
-    else if (l == 16)
-        return assertEqX16;
-    else
-        throw new TypeError("Unknown SIMD kind.");
-}
-
 function assertEqVec(v, arr) {
     var lanes = simdLength(v);
-    var assertFunc = getAssertFuncFromLength(lanes);
-    assertFunc(v, arr);
+    if (lanes == 4)
+        assertEqX4(v, arr);
+    else if (lanes == 2)
+        assertEqX2(v, arr);
+    else
+        throw new TypeError("Unknown SIMD kind.");
 }
 
 function simdToArray(v) {
@@ -144,20 +78,10 @@ function simdToArray(v) {
         return [v.x, v.y, v.z, v.w];
     else if (lanes == 2)
         return [v.x, v.y];
-    else if (lanes == 8)
-        return [v.s0, v.s1, v.s2, v.s3, v.s4, v.s5, v.s6, v.s7]
-    else if (lanes == 16)
-        return [v.s0, v.s1, v.s2, v.s3, v.s4, v.s5, v.s6, v.s7, v.s8, v.s9, v.s10, v.s11, v.s12, v.s13, v.s14, v.s15];
     else
         throw new TypeError("Unknown SIMD kind.");
 }
 
-const INT8_MAX = Math.pow(2, 7) -1;
-const INT8_MIN = -Math.pow(2, 7);
-assertEq((INT8_MAX + 1) << 24 >> 24, INT8_MIN);
-const INT16_MAX = Math.pow(2, 15) - 1;
-const INT16_MIN = -Math.pow(2, 15);
-assertEq((INT16_MAX + 1) << 16 >> 16, INT16_MIN);
 const INT32_MAX = Math.pow(2, 31) - 1;
 const INT32_MIN = -Math.pow(2, 31);
 assertEq(INT32_MAX + 1 | 0, INT32_MIN);
@@ -183,16 +107,15 @@ function testBinaryFunc(v, w, simdFunc, func) {
         assertEq(observed[i], expected[i]);
 }
 
-function testBinaryCompare(v, w, simdFunc, func, outType) {
+function testBinaryCompare(v, w, simdFunc, func) {
     var varr = simdToArray(v);
     var warr = simdToArray(w);
 
     var inLanes = simdLength(v);
     var observed = simdToArray(simdFunc(v, w));
-    var outTypeLen = simdLengthType(outType);
-    assertEq(observed.length, outTypeLen);
-    for (var i = 0; i < outTypeLen; i++) {
-        var j = ((i * inLanes) / outTypeLen) | 0;
+    assertEq(observed.length, 4);
+    for (var i = 0; i < 4; i++) {
+        var j = ((i * inLanes) / 4) | 0;
         assertEq(observed[i], func(varr[j], warr[j]));
     }
 }
