@@ -62,8 +62,8 @@ enum UIStateChangeType
 };
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x0df7578f, 0x31d4, 0x4391, \
-  { 0x98, 0xd4, 0xf3, 0x7d, 0x51, 0x8e, 0xa4, 0x37 } }
+{ 0x2aebbbd7, 0x154b, 0x4341, \
+  { 0x8d, 0x02, 0x7f, 0x70, 0xf8, 0x3e, 0xf7, 0xa1 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -461,24 +461,31 @@ public:
     }
   }
 
+  enum FullscreenReason
+  {
+    // Toggling the fullscreen mode requires trusted context.
+    eForFullscreenMode,
+    // Fullscreen API is the API provided to untrusted content.
+    eForFullscreenAPI
+  };
+
   /**
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
-   * otherwise exits fullscreen. If aFullscreenMode is true, this method is
-   * called for fullscreen mode instead of DOM fullscreen, which means it can
-   * only change window state in a context trusted for write.
+   * otherwise exits fullscreen.
    *
    * If aHMD is not null, the window is made full screen on the given VR HMD
    * device instead of its currrent display.
    *
    * Outer windows only.
    */
-  virtual nsresult SetFullScreenInternal(bool aIsFullscreen, bool aFullscreenMode,
-                                         mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
+  virtual nsresult SetFullscreenInternal(
+    FullscreenReason aReason, bool aIsFullscreen,
+    mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
 
   /**
    * This function should be called when the fullscreen state is flipped.
    * If no widget is involved the fullscreen change, this method is called
-   * by SetFullScreenInternal, otherwise, it is called when the widget
+   * by SetFullscreenInternal, otherwise, it is called when the widget
    * finishes its change to or from fullscreen.
    *
    * @param aIsFullscreen indicates whether the widget is in fullscreen.
