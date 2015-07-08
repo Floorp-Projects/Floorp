@@ -380,11 +380,11 @@ config = {
         "remote_path": "/home/pmoore/upload/gecko-git-upload",
     }],
 
-    "default_notify_from": "developer-services@mozilla.org",
+    "default_notify_from": "developer-services+%s@mozilla.org" % hostname,
     "notify_config": [{
-        "to": "pmoore@mozilla.com",
+        "to": "releng-ops-trial@mozilla.com",
         "failure_only": False,
-        "skip_empty_messages": False,
+        "skip_empty_messages": True,
     }],
 
     # Disallow sharing, since we want pristine .hg and .git directories.
