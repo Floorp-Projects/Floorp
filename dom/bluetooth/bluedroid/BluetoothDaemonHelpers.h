@@ -151,6 +151,9 @@ nsresult
 Convert(bool aIn, uint8_t& aOut);
 
 nsresult
+Convert(bool aIn, int32_t& aOut);
+
+nsresult
 Convert(bool aIn, BluetoothScanMode& aOut);
 
 nsresult
@@ -701,6 +704,36 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
     return rv;
   }
   return PackPDU(aIn5, aPDU);
+}
+
+template <typename T1, typename T2, typename T3,
+          typename T4, typename T5, typename T6>
+inline nsresult
+PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+        const T4& aIn4, const T5& aIn5, const T6& aIn6,
+        DaemonSocketPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn1, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn2, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn3, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn4, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn5, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn6, aPDU);
 }
 
 template <typename T1, typename T2, typename T3,
