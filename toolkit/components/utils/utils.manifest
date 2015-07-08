@@ -1,0 +1,2 @@
+component {dfd07380-6083-11e4-9803-0800200c9a66} simpleServices.js
+contract @mozilla.org/addons/remote-tag-service;1 {dfd07380-6083-11e4-9803-0800200c9a66}
