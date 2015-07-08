@@ -32,6 +32,14 @@ ToBooleanSlow(JS::HandleValue v);
 extern JS_PUBLIC_API(bool)
 ToNumberSlow(JSContext* cx, JS::Value v, double* dp);
 
+/* DO NOT CALL THIS. Use JS::ToInt8. */
+extern JS_PUBLIC_API(bool)
+ToInt8Slow(JSContext *cx, JS::HandleValue v, int8_t *out);
+
+/* DO NOT CALL THIS. Use JS::ToInt16. */
+extern JS_PUBLIC_API(bool)
+ToInt16Slow(JSContext *cx, JS::HandleValue v, int16_t *out);
+
 /* DO NOT CALL THIS. Use JS::ToInt32. */
 extern JS_PUBLIC_API(bool)
 ToInt32Slow(JSContext* cx, JS::HandleValue v, int32_t* out);
@@ -168,6 +176,19 @@ ToUint32(JSContext* cx, HandleValue v, uint32_t* out)
     return js::ToUint32Slow(cx, v, out);
 }
 
+/* ES6 draft 20141224, 7.1.7. */
+MOZ_ALWAYS_INLINE bool
+ToInt16(JSContext *cx, JS::HandleValue v, int16_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = int16_t(v.toInt32());
+        return true;
+    }
+    return js::ToInt16Slow(cx, v, out);
+}
+
 /* ES6 draft 20141224, 7.1.8. */
 MOZ_ALWAYS_INLINE bool
 ToUint16(JSContext* cx, HandleValue v, uint16_t* out)
@@ -179,6 +200,19 @@ ToUint16(JSContext* cx, HandleValue v, uint16_t* out)
         return true;
     }
     return js::ToUint16Slow(cx, v, out);
+}
+
+/* ES6 draft 20141224, 7.1.9 */
+MOZ_ALWAYS_INLINE bool
+ToInt8(JSContext *cx, JS::HandleValue v, int8_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = int8_t(v.toInt32());
+        return true;
+    }
+    return js::ToInt8Slow(cx, v, out);
 }
 
 /*
@@ -482,6 +516,20 @@ inline uint32_t
 ToUint32(double d)
 {
     return detail::ToUintWidth<uint32_t>(d);
+}
+
+/* WEBIDL 4.2.4 */
+inline int8_t
+ToInt8(double d)
+{
+    return detail::ToIntWidth<int8_t>(d);
+}
+
+/* WEBIDL 4.2.6 */
+inline int16_t
+ToInt16(double d)
+{
+    return detail::ToIntWidth<int16_t>(d);
 }
 
 /* WEBIDL 4.2.10 */

@@ -19,7 +19,7 @@ interface nsITabParent;
  * internals of the browser area to tell the containing xul window to update
  * its ui. 
  */
-[scriptable, uuid(8974a499-d49b-43e1-8b32-c9b3ed81be3f)]
+[scriptable, uuid(a8675fa9-c8b4-4350-9803-c38f344a9e38)]
 interface nsIXULBrowserWindow : nsISupports
 {
   /**
@@ -62,9 +62,6 @@ interface nsIXULBrowserWindow : nsISupports
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
                      in nsIURI         aReferrer);
-
-  bool shouldAddToSessionHistory(in nsIDocShell aDocShell,
-                                 in nsIURI      aURI);
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).
    */

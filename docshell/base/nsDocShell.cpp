@@ -11751,19 +11751,9 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
       return false;
     }
 
-    if (buf.EqualsLiteral("blank")) {
+    if (buf.EqualsLiteral("blank") || buf.EqualsLiteral("newtab")) {
       return false;
     }
-  }
-
-  // Check if the webbrowser chrome wants us to proceed - by default it ensures
-  // aURI is not the newtab URI.
-  nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
-  if (browserChrome3) {
-    bool shouldAdd;
-    rv = browserChrome3->ShouldAddToSessionHistory(this, aURI, &shouldAdd);
-    NS_ENSURE_SUCCESS(rv, true);
-    return shouldAdd;
   }
 
   return true;

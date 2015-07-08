@@ -35,7 +35,6 @@ import zipfile
 import bisection
 
 from automationutils import (
-    processLeakLog,
     dumpScreen,
     printstatus,
     setAutomationLog,
@@ -59,6 +58,7 @@ from urllib import quote_plus as encodeURIComponent
 from mozlog.structured.formatters import TbplFormatter
 from mozlog.structured import commandline
 from mozrunner.utils import test_environment
+import mozleak
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -2286,7 +2286,12 @@ class Mochitest(MochitestUtilsMixin):
                 self.stopVMwareRecording()
             self.stopServers()
 
-        processLeakLog(self.leak_report_file, options)
+        mozleak.process_leak_log(
+            self.leak_report_file,
+            leak_thresholds=options.leakThresholds,
+            ignore_missing_leaks=options.ignoreMissingLeaks,
+            log=self.log,
+        )
 
         if self.nsprLogs:
             with zipfile.ZipFile("%s/nsprlog.zip" % self.browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:

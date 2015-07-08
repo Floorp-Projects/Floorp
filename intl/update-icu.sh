@@ -42,6 +42,8 @@ rm ${icu_dir}/source/data/rbnf/*
 rm ${icu_dir}/source/data/region/*.mk
 rm ${icu_dir}/source/data/region/*.txt
 rm ${icu_dir}/source/data/translit/*
+rm ${icu_dir}/source/data/unit/*.mk
+rm ${icu_dir}/source/data/unit/*.txt
 
 # Record `svn info`, eliding the line that changes every time the entire ICU
 # repository (not just the path within it we care about) receives a commit.

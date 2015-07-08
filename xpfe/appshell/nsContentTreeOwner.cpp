@@ -57,24 +57,24 @@ using namespace mozilla;
 
 class nsSiteWindow : public nsIEmbeddingSiteWindow
 {
+  // nsSiteWindow shares a lifetime with nsContentTreeOwner, and proxies it's
+  // AddRef and Release calls to said object.
+  // When nsContentTreeOwner is destroyed, nsSiteWindow will be destroyed as well.
+  // nsContentTreeOwner is a friend class of nsSiteWindow such that it can call
+  // nsSiteWindow's destructor, which is private, as public destructors
+  // on reference counted classes are generally unsafe.
+  friend class nsContentTreeOwner;
+
 public:
   explicit nsSiteWindow(nsContentTreeOwner *aAggregator);
-  virtual ~nsSiteWindow();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEMBEDDINGSITEWINDOW
 
 private:
+  virtual ~nsSiteWindow();
   nsContentTreeOwner *mAggregator;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsSiteWindow>
-{
-  static const bool value = true;
-};
-}
 
 //*****************************************************************************
 //***    nsContentTreeOwner: Object Management
@@ -457,24 +457,6 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
 
   if (xulBrowserWindow)
     return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrer, _retval);
-
-  *_retval = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentTreeOwner::ShouldAddToSessionHistory(nsIDocShell *aDocShell,
-                                              nsIURI *aURI,
-                                              bool *_retval)
-{
-  NS_ENSURE_STATE(mXULWindow);
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-
-  if (xulBrowserWindow) {
-    return xulBrowserWindow->ShouldAddToSessionHistory(aDocShell, aURI, _retval);
-  }
 
   *_retval = true;
   return NS_OK;
