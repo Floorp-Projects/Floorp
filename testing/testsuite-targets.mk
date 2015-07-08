@@ -428,6 +428,10 @@ TEST_PKGS := \
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest-tc:
+	@rm -f $(MOZ_TEST_PACKAGES_FILE_TC)
+ifndef UNIVERSAL_BINARY
+	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE_TC))
+endif
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
@@ -437,6 +441,9 @@ test-packages-manifest-tc:
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
+ifndef UNIVERSAL_BINARY
+	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE))
+endif
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE) \
