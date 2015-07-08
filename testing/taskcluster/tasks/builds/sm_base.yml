@@ -1,0 +1,43 @@
+$inherits:
+  from: 'tasks/build.yml'
+task:
+  workerType: spidermonkey
+
+  routes:
+    - 'index.ffledgling.test.spidermonkey'
+    - 'index.buildbot.branches.{{project}}.sm-plain'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.sm-plain'
+
+  scopes:
+    - 'docker-worker:cache:build-spidermonkey-workspace'
+
+  payload:
+    image: '{{#docker_image}}desktop-build{{/docker_image}}'
+    cache:
+      build-spidermonkey-workspace: '/home/worker/workspace'
+
+    env:
+      GECKO_REPOSITORY: '{{base_repository}}'
+      MOZHARNESS_DISABLE: 'true'
+      TOOLS_DISABLE: 'true'
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm.sh" ]
+
+  extra:
+    treeherderEnv:
+      - staging
+      - production
+    treeherder:
+      groupSymbol: SM-tc
+      groupName: Spider Monkey, submitted by taskcluster
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.spidermonkey.tar.bz2'
+      tests: 'public/build/target.spidermonkey.tar.bz2'

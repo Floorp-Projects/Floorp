@@ -168,7 +168,7 @@ public:
   uint32_t EnumerateRead(EnumReadFunction aEnumFunc, void* aUserArg) const
   {
     uint32_t n = 0;
-    for (auto iter = this->mTable.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = this->mTable.ConstIter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<EntryType*>(iter.Get());
       PLDHashOperator op = aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
       n++;
@@ -204,7 +204,7 @@ public:
   uint32_t Enumerate(EnumFunction aEnumFunc, void* aUserArg)
   {
     uint32_t n = 0;
-    for (auto iter = this->mTable.RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = this->mTable.Iter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<EntryType*>(iter.Get());
       PLDHashOperator op = aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
       n++;

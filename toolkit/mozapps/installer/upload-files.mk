@@ -287,6 +287,7 @@ DIST_FILES += \
   $(NULL)
 endif
 DIST_FILES += \
+  liblgpllibs.so \
   libxul.so \
   libnssckbi.so \
   libfreebl3.so \

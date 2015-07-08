@@ -20,10 +20,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2014-01-07 12:25:40 -0600 (Tue, 07 Jan 2014) $
+// Last changed  : $Date: 2015-02-22 15:10:38 +0000 (Sun, 22 Feb 2015) $
 // File revision : $Revision: 4 $
 //
-// $Id: mmx_optimized.cpp 184 2014-01-07 18:25:40Z oparviai $
+// $Id: mmx_optimized.cpp 206 2015-02-22 15:10:38Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -287,6 +287,7 @@ void TDStretchMMX::overlapStereo(short *output, const short *input) const
 
 FIRFilterMMX::FIRFilterMMX() : FIRFilter()
 {
+    filterCoeffsAlign = NULL;
     filterCoeffsUnalign = NULL;
 }
 

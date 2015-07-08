@@ -3,10 +3,12 @@
  *   Check that mixed content blocker works prevents fetches of
  *   mixed content manifests.
  */
+/*globals Cu, add_task, ok, gBrowser, BrowserTestUtils, ManifestObtainer*/
 'use strict';
 const {
   ManifestObtainer
-} = Components.utils.import('resource://gre/modules/WebManifest.jsm', {});
+} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', this); // jshint ignore:line
+const obtainer = new ManifestObtainer();
 const path = '/tests/dom/security/test/csp/';
 const mixedContent = `file=${path}file_web_manifest_mixed_content.html`;
 const server = 'file_testserver.sjs';
@@ -31,7 +33,7 @@ const tests = [
 ];
 
 //jscs:disable
-add_task(function*() {
+add_task(function* () {
   //jscs:enable
   for (let test of tests) {
     let tabOptions = {
@@ -45,11 +47,11 @@ add_task(function*() {
   }
 
   function* testObtainingManifest(aBrowser, aTest) {
-    const obtainer = new ManifestObtainer();
+    let manifest;
     try {
       yield obtainer.obtainManifest(aBrowser);
     } catch (e) {
-      aTest.run(e)
+      return aTest.run(e);
     }
   }
 });
