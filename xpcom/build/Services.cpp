@@ -28,6 +28,7 @@
 #include "nsIServiceWorkerManager.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIUUIDGenerator.h"
+#include "nsIGfxInfo.h"
 #endif // !defined(MOZILLA_XPCOMRT_API)
 
 using namespace mozilla;
