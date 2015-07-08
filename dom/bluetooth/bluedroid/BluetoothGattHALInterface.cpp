@@ -504,10 +504,10 @@ struct BluetoothGattServerCallback
     int, int, const nsAString&, int, int, bool>
     RequestReadNotification;
 
-  typedef BluetoothNotificationHALRunnable8<
+  typedef BluetoothNotificationHALRunnable9<
     GattServerNotificationHandlerWrapper, void,
-    int, int, nsString, int, int, nsTArray<uint8_t>, bool, bool,
-    int, int, const nsAString&, int, int, const nsTArray<uint8_t>&, bool, bool>
+    int, int, nsString, int, int, int, nsAutoArrayPtr<uint8_t>, bool, bool,
+    int, int, const nsAString&, int, int, int, const uint8_t*, bool, bool>
     RequestWriteNotification;
 
   typedef BluetoothNotificationHALRunnable4<
@@ -633,12 +633,10 @@ struct BluetoothGattServerCallback
                int aAttrHandle, int aOffset, int aLength,
                bool aNeedRsp, bool aIsPrep, uint8_t* aValue)
   {
-    nsTArray<uint8_t> value;
-    value.AppendElements(aValue, aLength);
     RequestWriteNotification::Dispatch(
       &BluetoothGattServerNotificationHandler::RequestWriteNotification,
-      aConnId, aTransId, *aBdAddr, aAttrHandle, aOffset, value, aNeedRsp,
-      aIsPrep);
+      aConnId, aTransId, *aBdAddr, aAttrHandle, aOffset, aLength,
+      ConvertArray<uint8_t>(aValue, aLength), aNeedRsp, aIsPrep);
   }
 
   static void
