@@ -44,4 +44,36 @@ RemoteTagServiceService.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteTagServiceService]);
+function AddonPolicyService()
+{
+  this.wrappedJSObject = this;
+  this.mayLoadURICallbacks = new Map();
+}
+
+AddonPolicyService.prototype = {
+  classID: Components.ID("{89560ed3-72e3-498d-a0e8-ffe50334d7c5}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonPolicyService]),
+
+  /*
+   * Invokes a callback (if any) associated with the addon to determine whether
+   * unprivileged code running within the addon is allowed to perform loads from
+   * the given URI.
+   *
+   * @see nsIAddonPolicyService.addonMayLoadURI
+   */
+  addonMayLoadURI(aAddonId, aURI) {
+    let cb = this.mayLoadURICallbacks[aAddonId];
+    return cb ? cb(aURI) : false;
+  },
+
+  /*
+   * Sets the callbacks used in addonMayLoadURI above. Not accessible over
+   * XPCOM - callers should use .wrappedJSObject on the service to call it
+   * directly.
+   */
+  setAddonLoadURICallback(aAddonId, aCallback) {
+    this.mayLoadURICallbacks[aAddonId] = aCallback;
+  },
+};
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteTagServiceService, AddonPolicyService]);
