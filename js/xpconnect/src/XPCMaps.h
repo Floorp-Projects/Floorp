@@ -150,8 +150,6 @@ public:
     inline uint32_t Count() { return mTable->EntryCount(); }
 
     PLDHashTable::Iterator Iter() const { return PLDHashTable::Iterator(mTable); }
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
     ~Native2WrappedNativeMap();
@@ -263,7 +261,7 @@ public:
 
     inline uint32_t Count() { return mTable->EntryCount(); }
 
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -319,7 +317,7 @@ public:
 
     inline uint32_t Count() { return mTable->EntryCount(); }
 
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
     // So we don't want to count those XPCNativeSets, because they are better
@@ -377,7 +375,7 @@ public:
     inline uint32_t Count() { return mTable->EntryCount(); }
 
     PLDHashTable::Iterator Iter() const { return PLDHashTable::Iterator(mTable); }
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -448,7 +446,7 @@ public:
     inline uint32_t Count() { return mTable->EntryCount(); }
 
     PLDHashTable::Iterator Iter() const { return PLDHashTable::Iterator(mTable); }
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -545,7 +543,7 @@ public:
 
     inline uint32_t Count() { return mTable->EntryCount(); }
 
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     ~XPCNativeScriptableSharedMap();
 private:
@@ -586,7 +584,7 @@ public:
     inline uint32_t Count() { return mTable->EntryCount(); }
 
     PLDHashTable::Iterator Iter() const { return PLDHashTable::Iterator(mTable); }
-    PLDHashTable::RemovingIterator RemovingIter() { return PLDHashTable::RemovingIterator(mTable); }
+    PLDHashTable::Iterator Iter() { return PLDHashTable::Iterator(mTable); }
 
     ~XPCWrappedNativeProtoMap();
 private:

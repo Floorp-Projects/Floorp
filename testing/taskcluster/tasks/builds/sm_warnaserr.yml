@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-warnaserr'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'warnaserr'
+  metadata:
+    name: '[TC] Spidermonkey Fail-On-Warnings Build'
+    description: 'Spidermonkey Fail-On-Warnings Build'
+  extra:
+    treeherder:
+      symbol: e

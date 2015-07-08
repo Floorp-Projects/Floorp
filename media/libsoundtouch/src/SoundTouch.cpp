@@ -41,10 +41,10 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Last changed  : $Date: 2014-04-06 10:57:21 -0500 (Sun, 06 Apr 2014) $
+// Last changed  : $Date: 2014-10-08 15:26:57 +0000 (Wed, 08 Oct 2014) $
 // File revision : $Revision: 4 $
 //
-// $Id: SoundTouch.cpp 195 2014-04-06 15:57:21Z oparviai $
+// $Id: SoundTouch.cpp 201 2014-10-08 15:26:57Z oparviai $
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -79,11 +79,6 @@
 #include "TDStretch.h"
 #include "RateTransposer.h"
 #include "cpu_detect.h"
-
-#ifdef _MSC_VER
-#include <malloc.h>
-#define alloca _alloca
-#endif
 
 using namespace soundtouch;
     
@@ -353,8 +348,8 @@ void SoundTouch::flush()
     int i;
     int nUnprocessed;
     int nOut;
-    SAMPLETYPE *buff=(SAMPLETYPE*)alloca(64*channels*sizeof(SAMPLETYPE));
-
+    SAMPLETYPE *buff = new SAMPLETYPE[64 * channels];
+    
     // check how many samples still await processing, and scale
     // that by tempo & rate to get expected output sample count
     nUnprocessed = numUnprocessedSamples();
@@ -382,6 +377,8 @@ void SoundTouch::flush()
             break;  
         }
     }
+
+    delete[] buff;
 
     // Clear working buffers
     pRateTransposer->clear();
