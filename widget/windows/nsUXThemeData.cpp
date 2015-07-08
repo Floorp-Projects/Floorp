@@ -173,8 +173,6 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
 
   // Query a temporary, visible window with command buttons to get
   // the right metrics. 
-  nsAutoString className;
-  className.AssignLiteral(kClassNameTemp);
   WNDCLASSW wc;
   wc.style         = 0;
   wc.lpfnWndProc   = ::DefWindowProcW;
@@ -185,7 +183,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   wc.hCursor       = nullptr;
   wc.hbrBackground = nullptr;
   wc.lpszMenuName  = nullptr;
-  wc.lpszClassName = className.get();
+  wc.lpszClassName = kClassNameTemp;
   ::RegisterClassW(&wc);
 
   // Create a transparent descendant of the window passed in. This
@@ -193,7 +191,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
   // Note the parent (browser) window is usually still hidden, we
   // don't want to display it, so we can't query it directly.
   HWND hWnd = CreateWindowExW(WS_EX_LAYERED,
-                              className.get(), L"",
+                              kClassNameTemp, L"",
                               WS_OVERLAPPEDWINDOW,
                               0, 0, 0, 0, aWnd, nullptr,
                               nsToolkit::mDllInstance, nullptr);
