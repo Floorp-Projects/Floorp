@@ -146,9 +146,11 @@ def is_read_allowed(path, config):
     if mozpath.basedir(path, [topsrcdir]):
         return True
 
-    if config.external_source_dir and \
-            mozpath.basedir(path, [config.external_source_dir]):
-        return True
+    if config.external_source_dir:
+        external_dir = os.path.normcase(config.external_source_dir)
+        norm_path = os.path.normcase(path)
+        if mozpath.basedir(norm_path, [external_dir]):
+            return True
 
     return False
 
