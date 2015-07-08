@@ -6185,12 +6185,12 @@ struct BCBlockDirSeg
 
   void Initialize(BCPaintBorderIterator& aIter);
   void GetBEndCorner(BCPaintBorderIterator& aIter,
-                       BCPixelSize            aInlineSegBSize);
+                     BCPixelSize            aInlineSegBSize);
 
 
-   void Paint(BCPaintBorderIterator& aIter,
-              nsRenderingContext&   aRenderingContext,
-              BCPixelSize            aInlineSegBSize);
+  void Paint(BCPaintBorderIterator& aIter,
+             nsRenderingContext&    aRenderingContext,
+             BCPixelSize            aInlineSegBSize);
   void AdvanceOffsetB();
   void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
 
@@ -6235,12 +6235,12 @@ struct BCInlineDirSeg
              BCBorderOwner          aBorderOwner,
              BCPixelSize            aBEndBlockSegISize,
              BCPixelSize            aInlineSegBSize);
-   void GetIEndCorner(BCPaintBorderIterator& aIter,
-                      BCPixelSize            aIStartSegISize);
-   void AdvanceOffsetI();
-   void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
-   void Paint(BCPaintBorderIterator& aIter,
-              nsRenderingContext&    aRenderingContext);
+  void GetIEndCorner(BCPaintBorderIterator& aIter,
+                     BCPixelSize            aIStartSegISize);
+  void AdvanceOffsetI();
+  void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
+  void Paint(BCPaintBorderIterator& aIter,
+             nsRenderingContext&    aRenderingContext);
 
   nscoord            mOffsetI;       // i-offset with respect to the table edge
   nscoord            mOffsetB;       // b-offset with respect to the table edge
@@ -6918,7 +6918,7 @@ BCBlockDirSeg::GetBEndCorner(BCPaintBorderIterator& aIter,
  */
 void
 BCBlockDirSeg::Paint(BCPaintBorderIterator& aIter,
-                     nsRenderingContext&   aRenderingContext,
+                     nsRenderingContext&    aRenderingContext,
                      BCPixelSize            aInlineSegBSize)
 {
   // get the border style, color and paint the segment
