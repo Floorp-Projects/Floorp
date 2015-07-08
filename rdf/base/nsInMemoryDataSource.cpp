@@ -1808,7 +1808,7 @@ void
 InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                                             SweepInfo* aInfo)
 {
-    for (auto iter = aTable->RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Entry*>(iter.Get());
 
         Assertion* as = entry->mAssertions;

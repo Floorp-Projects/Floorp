@@ -213,7 +213,7 @@ public:
   uint32_t EnumerateEntries(Enumerator aEnumFunc, void* aUserArg)
   {
     uint32_t n = 0;
-    for (auto iter = mTable.RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<EntryType*>(iter.Get());
       PLDHashOperator op = aEnumFunc(entry, aUserArg);
       n++;

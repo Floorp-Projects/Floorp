@@ -15,10 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "CubebUtils.h"
-
-namespace soundtouch {
-class SoundTouch;
-}
+#include "soundtouch/SoundTouchFactory.h"
 
 namespace mozilla {
 
@@ -332,7 +329,7 @@ private:
   // Number of frames written to the buffers.
   int64_t mWritten;
   AudioClock mAudioClock;
-  nsAutoPtr<soundtouch::SoundTouch> mTimeStretcher;
+  soundtouch::SoundTouch* mTimeStretcher;
   nsRefPtr<AsyncLatencyLogger> mLatencyLog;
 
   // copy of Latency logger's starting time for offset calculations

@@ -13,6 +13,7 @@
 #include "MP4Decoder.h"
 #include "nsIThread.h"
 #include "ReorderQueue.h"
+#include "TimeUnits.h"
 
 #include "VideoDecodeAcceleration/VDADecoder.h"
 
@@ -28,24 +29,24 @@ class AppleVDADecoder : public MediaDataDecoder {
 public:
   class AppleFrameRef {
   public:
-    Microseconds decode_timestamp;
-    Microseconds composition_timestamp;
-    Microseconds duration;
+    media::TimeUnit decode_timestamp;
+    media::TimeUnit composition_timestamp;
+    media::TimeUnit duration;
     int64_t byte_offset;
     bool is_sync_point;
 
     explicit AppleFrameRef(const MediaRawData& aSample)
-      : decode_timestamp(aSample.mTimecode)
-      , composition_timestamp(aSample.mTime)
-      , duration(aSample.mDuration)
+      : decode_timestamp(media::TimeUnit::FromMicroseconds(aSample.mTimecode))
+      , composition_timestamp(media::TimeUnit::FromMicroseconds(aSample.mTime))
+      , duration(media::TimeUnit::FromMicroseconds(aSample.mDuration))
       , byte_offset(aSample.mOffset)
       , is_sync_point(aSample.mKeyframe)
     {
     }
 
-    AppleFrameRef(Microseconds aDts,
-                  Microseconds aPts,
-                  Microseconds aDuration,
+    AppleFrameRef(const media::TimeUnit& aDts,
+                  const media::TimeUnit& aPts,
+                  const media::TimeUnit& aDuration,
                   int64_t aByte_offset,
                   bool aIs_sync_point)
       : decode_timestamp(aDts)

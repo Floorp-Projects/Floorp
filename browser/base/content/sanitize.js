@@ -94,6 +94,34 @@ Sanitizer.prototype = {
       return deferred.promise;
     }
 
+    let cookiesIndex = itemsToClear.indexOf("cookies");
+    if (cookiesIndex != -1) {
+      itemsToClear.splice(cookiesIndex, 1);
+      let item = this.items.cookies;
+      item.range = this.range;
+      let ok = item.clear(() => {
+        try {
+          if (!itemsToClear.length) {
+            // we're done
+            deferred.resolve();
+            return;
+          }
+          let clearedPromise = this.sanitize(itemsToClear);
+          clearedPromise.then(deferred.resolve, deferred.reject);
+        } catch(e) {
+          let error = "Sanitizer threw after clearing cookies: " + e;
+          Cu.reportError(error);
+          deferred.reject(error);
+        }
+      });
+      // When cancelled, reject immediately
+      if (!ok) {
+        deferred.reject("Sanitizer canceled clearing cookies");
+      }
+
+      return deferred.promise;
+    }
+
     TelemetryStopwatch.start("FX_SANITIZE_TOTAL");
 
     // Cache the range of times to clear
@@ -177,7 +205,7 @@ Sanitizer.prototype = {
     },
 
     cookies: {
-      clear: function ()
+      clear: function (aCallback)
       {
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES");
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2");
@@ -209,6 +237,16 @@ Sanitizer.prototype = {
 
         // Clear plugin data.
         TelemetryStopwatch.start("FX_SANITIZE_PLUGINS");
+        this.clearPluginCookies().then(
+          function() {
+            TelemetryStopwatch.finish("FX_SANITIZE_PLUGINS");
+            TelemetryStopwatch.finish("FX_SANITIZE_COOKIES");
+            aCallback();
+          });
+        return true;
+      },
+
+      clearPluginCookies: function() {
         const phInterface = Ci.nsIPluginHost;
         const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
         let ph = Cc["@mozilla.org/plugin/host;1"].getService(phInterface);
@@ -217,29 +255,35 @@ Sanitizer.prototype = {
         // that this.range[1] is actually now, so we compute age range based
         // on the lower bound. If this.range results in a negative age, do
         // nothing.
-        let age = this.range ? (Date.now() / 1000 - this.range[0] / 1000000)
-                             : -1;
+        let age = this.range ? (Date.now() / 1000 - this.range[0] / 1000000) : -1;
         if (!this.range || age >= 0) {
           let tags = ph.getPluginTags();
-          for (let i = 0; i < tags.length; i++) {
-            try {
-              ph.clearSiteData(tags[i], null, FLAG_CLEAR_ALL, age);
-            } catch (e) {
-              // If the plugin doesn't support clearing by age, clear everything.
-              if (e.result == Components.results.
-                    NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
-                try {
-                  ph.clearSiteData(tags[i], null, FLAG_CLEAR_ALL, -1);
-                } catch (e) {
-                  // Ignore errors from the plugin
-                }
+          function iterate(tag) {
+            let promise = new Promise(resolve => {
+              try {
+                let onClear = function(rv) {
+                  // If the plugin doesn't support clearing by age, clear everything.
+                  if (rv == Components.results. NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
+                    ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, function() {
+                      resolve();
+                    });
+                  } else {
+                    resolve();
+                  }
+                };
+                ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, onClear);
+              } catch (ex) {
+                resolve();
               }
-            }
+            });
+            return promise;
           }
+          let promises = [];
+          for (let tag of tags) {
+            promises.push(iterate(tag));
+          }
+          return Promise.all(promises);
         }
-
-        TelemetryStopwatch.finish("FX_SANITIZE_PLUGINS");
-        TelemetryStopwatch.finish("FX_SANITIZE_COOKIES");
       },
 
       get canClear()

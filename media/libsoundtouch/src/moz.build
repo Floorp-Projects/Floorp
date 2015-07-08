@@ -8,6 +8,7 @@ EXPORTS.soundtouch += [
     'FIFOSamplePipe.h',
     'SoundTouch.h',
     'soundtouch_config.h',
+    'SoundTouchFactory.h',
     'STTypes.h',
 ]
 
@@ -21,6 +22,7 @@ UNIFIED_SOURCES += [
     'InterpolateShannon.cpp',
     'RateTransposer.cpp',
     'SoundTouch.cpp',
+    'SoundTouchFactory.cpp',
     'TDStretch.cpp',
 ]
 
@@ -32,12 +34,15 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES += ['mmx_optimized.cpp']
         SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
+if CONFIG['OS_ARCH'] != 'WINNT':
+    # GCC/Clang require permissions to be explicitly set for the soundtouch
+    # header.
+    CXXFLAGS += ['-include', 'soundtouch_perms.h']
+else:
+    # Windows need alloca renamed to _alloca
+    DEFINES['alloca'] = '_alloca'
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'lgpllibs'
 
 # Use abort() instead of exception in SoundTouch.
 DEFINES['ST_NO_EXCEPTION_HANDLING'] = 1
-
-DEFINES['BUILDING_SOUNDTOUCH'] = True

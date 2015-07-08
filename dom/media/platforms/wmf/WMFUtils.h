@@ -10,6 +10,7 @@
 #include "WMF.h"
 #include "nsString.h"
 #include "nsRect.h"
+#include "TimeUnits.h"
 #include "VideoUtils.h"
 
 // Various utilities shared by WMF backend files.
@@ -46,14 +47,14 @@ MFOffsetToInt32(const MFOffset& aOffset);
 HRESULT
 GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion);
 
-// Returns the duration of a IMFSample in microseconds.
-// Returns -1 on failure.
-int64_t
+// Returns the duration of a IMFSample in TimeUnit.
+// Returns media::TimeUnit::Invalid() on failure.
+media::TimeUnit
 GetSampleDuration(IMFSample* aSample);
 
-// Returns the presentation time of a IMFSample in microseconds.
-// Returns -1 on failure.
-int64_t
+// Returns the presentation time of a IMFSample in TimeUnit.
+// Returns media::TimeUnit::Invalid() on failure.
+media::TimeUnit
 GetSampleTime(IMFSample* aSample);
 
 inline bool

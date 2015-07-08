@@ -22,4 +22,4 @@ $(FINAL_TARGET)/dependentlibs.list: $(topsrcdir)/toolkit/library/dependentlibs.p
 
 .PHONY: gtestxul
 gtestxul:
-	$(MAKE) -C gtest target LINK_GTEST=1
+	$(MAKE) -C $(DEPTH) toolkit/library/gtest/target LINK_GTEST=1

@@ -15,7 +15,6 @@
 #include "mozilla/Snprintf.h"
 #include <algorithm>
 #include "mozilla/Telemetry.h"
-#include "soundtouch/SoundTouch.h"
 #include "Latency.h"
 #include "CubebUtils.h"
 #include "nsPrintfCString.h"
@@ -130,6 +129,7 @@ AudioStream::AudioStream()
   , mOutChannels(0)
   , mWritten(0)
   , mAudioClock(this)
+  , mTimeStretcher(nullptr)
   , mLatencyRequest(HighLatency)
   , mReadPoint(0)
   , mDumpFile(nullptr)
@@ -151,6 +151,9 @@ AudioStream::~AudioStream()
              "Should've called Shutdown() before deleting an AudioStream");
   if (mDumpFile) {
     fclose(mDumpFile);
+  }
+  if (mTimeStretcher) {
+    soundtouch::destroySoundTouchObj(mTimeStretcher);
   }
 }
 
@@ -174,7 +177,7 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
   if (!mTimeStretcher) {
-    mTimeStretcher = new soundtouch::SoundTouch();
+    mTimeStretcher = soundtouch::createSoundTouchObj();
     mTimeStretcher->setSampleRate(mInRate);
     mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);

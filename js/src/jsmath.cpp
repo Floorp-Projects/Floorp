@@ -23,6 +23,10 @@
 # include <unistd.h>
 #endif
 
+#ifdef XP_WIN
+# include "jswin.h"
+#endif
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -740,7 +744,28 @@ random_generateSeed()
     seed.u64 = 0;
 
 #if defined(XP_WIN)
+    /*
+     * Temporary diagnostic for bug 1167248: Test whether the injected hooks
+     * react differently to LoadLibraryW / LoadLibraryExW.
+     */
+    HMODULE oldWay = LoadLibraryW(L"ADVAPI32.DLL");
+    HMODULE newWay = LoadLibraryExW(L"ADVAPI32.DLL",
+                                    nullptr,
+                                    LOAD_LIBRARY_SEARCH_SYSTEM32);
+    /* Fallback for older versions of Windows */
+    if (!newWay && GetLastError() == ERROR_INVALID_PARAMETER)
+        newWay = LoadLibraryExW(L"ADVAPI32.DLL", nullptr, 0);
+
+    if (oldWay && !newWay)
+        MOZ_CRASH();
+
     errno_t error = rand_s(&seed.u32[0]);
+
+    if (oldWay)
+        FreeLibrary(oldWay);
+    if (newWay)
+        FreeLibrary(newWay);
+
     MOZ_ASSERT(error == 0, "rand_s() error?!");
 
     error = rand_s(&seed.u32[1]);
