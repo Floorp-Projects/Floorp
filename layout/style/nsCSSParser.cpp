@@ -6964,15 +6964,15 @@ static const nsCSSProperty kBorderLeftIDs[] = {
   eCSSProperty_border_left_style,
   eCSSProperty_border_left_color
 };
-static const nsCSSProperty kBorderStartIDs[] = {
-  eCSSProperty_border_start_width,
-  eCSSProperty_border_start_style,
-  eCSSProperty_border_start_color
+static const nsCSSProperty kBorderInlineStartIDs[] = {
+  eCSSProperty_border_inline_start_width,
+  eCSSProperty_border_inline_start_style,
+  eCSSProperty_border_inline_start_color
 };
-static const nsCSSProperty kBorderEndIDs[] = {
-  eCSSProperty_border_end_width,
-  eCSSProperty_border_end_style,
-  eCSSProperty_border_end_color
+static const nsCSSProperty kBorderInlineEndIDs[] = {
+  eCSSProperty_border_inline_end_width,
+  eCSSProperty_border_inline_end_style,
+  eCSSProperty_border_inline_end_color
 };
 static const nsCSSProperty kBorderBlockStartIDs[] = {
   eCSSProperty_border_block_start_width,
@@ -10066,10 +10066,10 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseBorderSide(kBorderBlockStartIDs, false);
   case eCSSProperty_border_bottom:
     return ParseBorderSide(kBorderBottomIDs, false);
-  case eCSSProperty_border_end:
-    return ParseBorderSide(kBorderEndIDs, false);
-  case eCSSProperty_border_start:
-    return ParseBorderSide(kBorderStartIDs, false);
+  case eCSSProperty_border_inline_end:
+    return ParseBorderSide(kBorderInlineEndIDs, false);
+  case eCSSProperty_border_inline_start:
+    return ParseBorderSide(kBorderInlineStartIDs, false);
   case eCSSProperty_border_left:
     return ParseBorderSide(kBorderLeftIDs, false);
   case eCSSProperty_border_right:

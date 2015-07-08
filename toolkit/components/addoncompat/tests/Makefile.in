@@ -4,12 +4,12 @@
 
 include $(topsrcdir)/config/rules.mk
 
-# This is so hacky. Waiting on bug 988938.
-addondir = $(srcdir)/addon
 TESTROOT = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 testdir = $(TESTROOT)/browser
 
+# This is so hacky. Waiting on bug 988938.
 libs::
 	$(EXIT_ON_ERROR) \
 	$(NSINSTALL) -D $(testdir); \
-	(cd $(addondir) && zip -qr $(testdir)/addon.xpi *)
+	(cd $(srcdir)/addon && zip -qr $(testdir)/addon.xpi *); \
+	(cd $(srcdir)/compat-addon && zip -qr $(testdir)/compat-addon.xpi *)

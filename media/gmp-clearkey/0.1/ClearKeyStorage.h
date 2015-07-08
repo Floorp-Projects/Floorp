@@ -17,8 +17,8 @@
 #ifndef __ClearKeyStorage_h__
 #define __ClearKeyStorage_h__
 
-#include "gmp-errors.h"
-#include "gmp-platform.h"
+#include "gmp-api/gmp-errors.h"
+#include "gmp-api/gmp-platform.h"
 #include <string>
 #include <vector>
 #include <stdint.h>

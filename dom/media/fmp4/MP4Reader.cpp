@@ -423,7 +423,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
 
   // Get the duration, and report it to the decoder if we have it.
-  Microseconds duration;
+  mp4_demuxer::Microseconds duration;
   {
     MonitorAutoLock lock(mDemuxerMonitor);
     duration = mDemuxer->Duration();
@@ -561,7 +561,7 @@ MP4Reader::GetDecoderData(TrackType aTrack)
   return mVideo;
 }
 
-Microseconds
+mp4_demuxer::Microseconds
 MP4Reader::GetNextKeyframeTime()
 {
   MonitorAutoLock mon(mDemuxerMonitor);
@@ -596,7 +596,7 @@ MP4Reader::ShouldSkip(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
   // if the time threshold (the current playback position) is after the next
   // keyframe in the stream. This means we'll only skip frames that we have
   // no hope of ever playing.
-  Microseconds nextKeyframe = -1;
+  mp4_demuxer::Microseconds nextKeyframe = -1;
   if (!sDemuxSkipToNextKeyframe ||
       (nextKeyframe = GetNextKeyframeTime()) == -1) {
     return aSkipToNextKeyframe;
@@ -1090,7 +1090,7 @@ MP4Reader::GetBuffered()
   nsresult rv = resource->GetCachedRanges(ranges);
 
   if (NS_SUCCEEDED(rv)) {
-    nsTArray<Interval<Microseconds>> timeRanges;
+    nsTArray<Interval<mp4_demuxer::Microseconds>> timeRanges;
     mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
     for (size_t i = 0; i < timeRanges.Length(); i++) {
       buffered += media::TimeInterval(

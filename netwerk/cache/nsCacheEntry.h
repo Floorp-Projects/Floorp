@@ -274,8 +274,7 @@ public:
     nsresult      AddEntry( nsCacheEntry *entry);
     void          RemoveEntry( nsCacheEntry *entry);
 
-    PLDHashTable::Iterator Iter() const;
-    PLDHashTable::RemovingIterator RemovingIter();
+    PLDHashTable::Iterator Iter();
 
 private:
     // PLDHashTable operation callbacks

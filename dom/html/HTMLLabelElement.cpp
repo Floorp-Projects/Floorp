@@ -169,8 +169,14 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               // be selected only when focused via a key or when the navigation
               // flag is used and we want to select the text on label clicks as
               // well.
+              // If the label has been clicked by the user, we also want to
+              // pass FLAG_BYMOUSE so that we get correct focus ring behavior,
+              // but we don't want to pass FLAG_BYMOUSE if this click event was
+              // caused by the user pressing an accesskey.
               nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(content);
-              fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOVEFOCUS);
+              bool byMouse = (mouseEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD);
+              fm->SetFocus(elem, nsIFocusManager::FLAG_BYMOVEFOCUS |
+                                 (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0));
             }
           }
           // Dispatch a new click event to |content|

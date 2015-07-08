@@ -200,6 +200,12 @@ protected:
 
     virtual bool RecvProfile(const nsCString& aProfile) override { return true; }
 
+    virtual bool RecvReturnClearSiteData(const NPError& aRv,
+                                         const uint64_t& aCallbackId) override;
+
+    virtual bool RecvReturnSitesWithData(nsTArray<nsCString>&& aSites,
+                                         const uint64_t& aCallbackId) override;
+
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
     nsresult NPP_NewInternal(NPMIMEType pluginType, NPP instance, uint16_t mode,
@@ -264,9 +270,15 @@ protected:
                              uint16_t mode, int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
                              NPError* error) override;
-    virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags,
-                                       uint64_t maxAge) override;
-    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result) override;
+    virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge,
+                                       nsCOMPtr<nsIClearSiteDataCallback> callback) override;
+    virtual nsresult NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> callback) override;
+
+private:
+    std::map<uint64_t, nsCOMPtr<nsIClearSiteDataCallback>> mClearSiteDataCallbacks;
+    std::map<uint64_t, nsCOMPtr<nsIGetSitesWithDataCallback>> mSitesWithDataCallbacks;
+
+public:
 
 #if defined(XP_MACOSX)
     virtual nsresult IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing) override;

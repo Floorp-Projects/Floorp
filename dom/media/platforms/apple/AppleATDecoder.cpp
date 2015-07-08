@@ -261,8 +261,8 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
 
   size_t numFrames = outputData.Length() / channels;
   int rate = mOutputFormat.mSampleRate;
-  CheckedInt<Microseconds> duration = FramesToUsecs(numFrames, rate);
-  if (!duration.isValid()) {
+  media::TimeUnit duration = FramesToTimeUnit(numFrames, rate);
+  if (!duration.IsValid()) {
     NS_WARNING("Invalid count of accumulated audio samples");
     return NS_ERROR_FAILURE;
   }
@@ -270,14 +270,14 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
 #ifdef LOG_SAMPLE_DECODE
   LOG("pushed audio at time %lfs; duration %lfs\n",
       (double)aSample->mTime / USECS_PER_S,
-      (double)duration.value() / USECS_PER_S);
+      duration.ToSeconds());
 #endif
 
   nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outputData.Length()]);
   PodCopy(data.get(), &outputData[0], outputData.Length());
   nsRefPtr<AudioData> audio = new AudioData(aSample->mOffset,
                                             aSample->mTime,
-                                            duration.value(),
+                                            duration.ToMicroseconds(),
                                             numFrames,
                                             data.forget(),
                                             channels,

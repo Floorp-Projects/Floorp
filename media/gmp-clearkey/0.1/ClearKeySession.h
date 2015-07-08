@@ -18,7 +18,7 @@
 #define __ClearKeySession_h__
 
 #include "ClearKeyUtils.h"
-#include "gmp-decryption.h"
+#include "gmp-api/gmp-decryption.h"
 
 class GMPBuffer;
 class GMPDecryptorCallback;

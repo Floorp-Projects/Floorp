@@ -177,7 +177,7 @@ nsresult nsNSSShutDownList::evaporateAllNSSResources()
   // and the behaviour of changing the list while iterating is undefined.
   while (true) {
     MutexAutoLock lock(mListLock);
-    auto iter = mObjects.RemovingIter();
+    auto iter = mObjects.Iter();
     if (iter.Done()) {
       break;
     }
