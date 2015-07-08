@@ -10,8 +10,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/Preferences.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PAGE_WIDTH=72;
-const PAGE_HEIGHT=136;
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
+
+const PAGE_WIDTH=92;
+const PAGE_HEIGHT=166;
 const DRIVER_PREF="sanity-test.driver-version";
 const DEVICE_PREF="sanity-test.device-id";
 const VERSION_PREF="sanity-test.version";
@@ -68,12 +71,6 @@ function takeWindowSnapshot(win, ctx) {
   ctx.drawWindow(win.ownerGlobal, 0, 0, PAGE_WIDTH, PAGE_HEIGHT, "rgb(255,255,255)", flags);
 }
 
-function setTimeout(aMs, aCallback) {
-  var timer = Components.classes["@mozilla.org/timer;1"]
-              .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(aCallback, aMs, Ci.nsITimer.TYPE_ONE_SHOT);
-}
-
 // Verify that all the 4 coloured squares of the video
 // render as expected (with a tolerance of 64 to allow for
 // yuv->rgb differences between platforms).
@@ -102,20 +99,24 @@ function verifyLayersRendering(ctx) {
 
 function testCompositor(win, ctx) {
   takeWindowSnapshot(win, ctx);
+  var testPassed = true;
 
   if (!verifyVideoRendering(ctx)) {
     reportResult(TEST_FAILED_VIDEO);
     Preferences.set(DISABLE_VIDEO_PREF, true);
-    return false;
+    testPassed = false;
   }
 
   if (!verifyLayersRendering(ctx)) {
     reportResult(TEST_FAILED_RENDER);
-    return false;
+    testPassed = false;
   }
 
-  reportResult(TEST_PASSED);
-  return true;
+  if (testPassed) {
+    reportResult(TEST_PASSED);
+  }
+
+  return testPassed;
 }
 
 let listener = {
@@ -130,13 +131,9 @@ let listener = {
     this.win.onload = this.onWindowLoaded.bind(this);
     this.utils = this.win.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
-
-    let observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Components.interfaces.nsIObserverService);
-    observerService.addObserver(this, "widget-first-paint", false);
   },
 
-  onWindowLoaded: function() {
+  runSanityTest: function() {
     this.canvas = this.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     this.canvas.setAttribute("width", PAGE_WIDTH);
     this.canvas.setAttribute("height", PAGE_HEIGHT);
@@ -145,6 +142,7 @@ let listener = {
     // Perform the compositor backbuffer test, which currently we use for
     // actually deciding whether to enable hardware media decoding.
     testCompositor(this.win, this.ctx);
+
     this.endTest();
   },
 
@@ -158,9 +156,6 @@ let listener = {
     this.utils = null;
     this.canvas = null;
 
-    let observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Components.interfaces.nsIObserverService);
-    observerService.removeObserver(this, "widget-first-paint");
   }
 };
 
@@ -209,7 +204,7 @@ SanityTest.prototype = {
 
     // Open a tiny window to render our test page, and notify us when it's loaded
     var sanityTest = Services.ww.openWindow(null,
-        "chrome://gfxsanity/content/sanitytest.html",
+        "chrome://gfxsanity/content/sanityparent.html",
         "Test Page",
         "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0",
         null);
