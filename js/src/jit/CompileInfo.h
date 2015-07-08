@@ -526,7 +526,7 @@ class CompileInfo
     // definition can be optimized away as long as we can compute its values.
     bool isRecoverableOperand(uint32_t slot) const {
         // If this script is not a function, then none of the slots are
-        // obserbavle.  If it this |slot| is not observable, thus we can always
+        // observable.  If it this |slot| is not observable, thus we can always
         // recover it.
         if (!funMaybeLazy())
             return true;

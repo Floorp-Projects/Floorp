@@ -1681,7 +1681,7 @@ jit::BuildDominatorTree(MIRGraph& graph)
         MBasicBlock* child = *i;
         MBasicBlock* parent = child->immediateDominator();
 
-        // Domininace is defined such that blocks always dominate themselves.
+        // Dominance is defined such that blocks always dominate themselves.
         child->addNumDominated(1);
 
         // If the block only self-dominates, it has no definite parent.

@@ -158,7 +158,7 @@ IonSpewAliasInfo(const char* pre, MInstruction* ins, const char* post)
 // loop header if no instruction inside the loop body aliases it. To calculate
 // this efficiently, we maintain a list of maybe-invariant loads and the combined
 // alias set for all stores inside the loop. When we see the loop's backedge, this
-// information is used to mark every load we wrongly assumed to be loop invaraint as
+// information is used to mark every load we wrongly assumed to be loop invariant as
 // having an implicit dependency on the last instruction of the loop header, so that
 // it's never moved before the loop header.
 //
