@@ -10,17 +10,6 @@ config = {
         'python': '/tools/buildbot/bin/python',
         'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
     },
-    "run_file_names": {
-        "mochitest": "runtestsremote.py",
-        "reftest": "remotereftest.py",
-        "crashtest": "remotereftest.py",
-        "jsreftest": "remotereftest.py",
-        "robocop": "runtestsremote.py",
-        "instrumentation": "runinstrumentation.py",
-        "xpcshell": "remotexpcshelltests.py",
-        "jittest": "jit_test.py",
-        "cppunittest": "remotecppunittests.py"
-    },
     "hostutils_url":  "http://talos-remote.pvt.build.mozilla.org/tegra/tegra-host-utils.Linux.1109310.2.zip",
     "verify_path":  "/builds/sut_tools/verify.py",
     "install_app_path":  "/builds/sut_tools/installApp.py",

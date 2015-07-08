@@ -340,9 +340,6 @@ class FirefoxUIUpdates(FirefoxUITests):
                                   '--tools-tag %s --installer-url %s '
                                   '--cfg developer_config.py '
                                   % (self.firefox_ui_branch, self.updates_config_file, self.tools_tag, url))
-                        self.info('python scripts/firefox_ui_updates.py --cfg developer_config.py '
-                                  '--installer-url %s --update-channel %s --firefox-ui-branch %s'
-                                  % (url, self.channel, self.firefox_ui_branch))
 
 
 if __name__ == '__main__':
