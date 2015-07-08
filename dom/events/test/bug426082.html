@@ -111,7 +111,10 @@ function tests() {
   // Release.
   sendMouseEvent("mouseup", label);
   yield undefined;
-  compareSnapshots_(normalFocusedButtonCanvas, currentSnapshot, true, "Releasing the mouse over the label should have unpressed (and focused) the button.");
+  var focusOnMouse = (navigator.platform.indexOf("Mac") != 0);
+  compareSnapshots_(focusOnMouse ? normalFocusedButtonCanvas : normalButtonCanvas,
+                    currentSnapshot, true, "Releasing the mouse over the label should have unpressed" +
+                                            (focusOnMouse ? " (and focused)" : "") + " the button.");
   // Press the label and remove it.
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);

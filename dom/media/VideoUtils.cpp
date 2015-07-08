@@ -29,6 +29,10 @@ CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate) {
   return (CheckedInt64(aFrames) * USECS_PER_S) / aRate;
 }
 
+media::TimeUnit FramesToTimeUnit(int64_t aFrames, uint32_t aRate) {
+  return (media::TimeUnit::FromMicroseconds(aFrames) * USECS_PER_S) / aRate;
+}
+
 // Converts from microseconds to number of audio frames, given the specified
 // audio rate.
 CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {

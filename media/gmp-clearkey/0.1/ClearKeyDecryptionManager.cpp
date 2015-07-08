@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "ClearKeyDecryptionManager.h"
-#include "gmp-decryption.h"
+#include "gmp-api/gmp-decryption.h"
 #include <assert.h>
 
 class ClearKeyDecryptor : public RefCounted

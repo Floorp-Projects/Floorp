@@ -629,10 +629,36 @@ EXPAND_MKSHLIB_ARGS += --symbol-order $(SYMBOL_ORDER)
 endif
 EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) $(EXPAND_MKSHLIB_ARGS) -- $(MKSHLIB)
 
+# $(call CHECK_SYMBOLS,lib,PREFIX,dep_name,test)
+# Checks that the given `lib` doesn't contain dependency on symbols with a
+# version starting with `PREFIX`_ and matching the `test`. `dep_name` is only
+# used for the error message.
+# `test` is an awk expression using the information in the variable `v` which
+# contains a list of version items ([major, minor, ...]).
+define CHECK_SYMBOLS
+@$(TOOLCHAIN_PREFIX)readelf -sW $(1) | \
+awk '$$8 ~ /@$(2)_/ { \
+	split($$8,a,"@"); \
+	split(a[2],b,"_"); \
+	split(b[2],v,"."); \
+	if ($(4)) { \
+		if (!found) { \
+			print "TEST-UNEXPECTED-FAIL | check_stdcxx | We do not want these $(3) symbols to be used:" \
+		} \
+		print " ",$$8; \
+		found=1 \
+	} \
+} \
+END { \
+	if (found) { \
+		exit(1) \
+	} \
+}'
+endef
+
 ifneq (,$(MOZ_LIBSTDCXX_TARGET_VERSION)$(MOZ_LIBSTDCXX_HOST_VERSION))
-ifneq ($(OS_ARCH),Darwin)
-CHECK_STDCXX = @$(TOOLCHAIN_PREFIX)objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(1[1-9]\|[2-9][0-9]\)' > /dev/null && echo 'TEST-UNEXPECTED-FAIL | check_stdcxx | We do not want these libstdc++ symbols to be used:' && $(TOOLCHAIN_PREFIX)objdump -T $(1) | grep -e 'GLIBCXX_3\.4\.\(1[1-9]\|[2-9][0-9]\)' && exit 1 || true
-endif
+CHECK_STDCXX = $(call CHECK_SYMBOLS,$(1),GLIBCXX,libstdc++,v[1] > 3 || (v[1] == 3 && v[2] == 4 && v[3] > 10))
+CHECK_GLIBC = $(call CHECK_SYMBOLS,$(1),GLIBC,libc,v[1] > 2 || (v[1] == 2 && v[2] > 7))
 endif
 
 ifeq (,$(filter $(OS_TARGET),WINNT Darwin))
@@ -648,6 +674,7 @@ CHECK_MOZGLUE_ORDER = @$(TOOLCHAIN_PREFIX)readelf -d $(1) | grep NEEDED | awk '{
 endif
 
 define CHECK_BINARY
+$(call CHECK_GLIBC,$(1))
 $(call CHECK_STDCXX,$(1))
 $(call CHECK_TEXTREL,$(1))
 $(call LOCAL_CHECKS,$(1))

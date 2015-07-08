@@ -463,15 +463,9 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 }
 
 PLDHashTable::Iterator
-nsCacheEntryHashTable::Iter() const
+nsCacheEntryHashTable::Iter()
 {
     return PLDHashTable::Iterator(&table);
-}
-
-PLDHashTable::RemovingIterator
-nsCacheEntryHashTable::RemovingIter()
-{
-    return PLDHashTable::RemovingIterator(&table);
 }
 
 /**

@@ -808,7 +808,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             // At this point there may be JSObjects using them that have
             // been removed from the other maps.
             if (!nsXPConnect::XPConnect()->IsShuttingDown()) {
-                for (auto i = self->mNativeScriptableSharedMap->RemovingIter(); !i.Done(); i.Next()) {
+                for (auto i = self->mNativeScriptableSharedMap->Iter(); !i.Done(); i.Next()) {
                     auto entry = static_cast<XPCNativeScriptableSharedMap::Entry*>(i.Get());
                     XPCNativeScriptableShared* shared = entry->key;
                     if (shared->IsMarked()) {
@@ -821,14 +821,14 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             }
 
             if (!isCompartmentGC) {
-                for (auto i = self->mClassInfo2NativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+                for (auto i = self->mClassInfo2NativeSetMap->Iter(); !i.Done(); i.Next()) {
                     auto entry = static_cast<ClassInfo2NativeSetMap::Entry*>(i.Get());
                     if (!entry->value->IsMarked())
                         i.Remove();
                 }
             }
 
-            for (auto i = self->mNativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+            for (auto i = self->mNativeSetMap->Iter(); !i.Done(); i.Next()) {
                 auto entry = static_cast<NativeSetMap::Entry*>(i.Get());
                 XPCNativeSet* set = entry->key_value;
                 if (set->IsMarked()) {
@@ -839,7 +839,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                 }
             }
 
-            for (auto i = self->mIID2NativeInterfaceMap->RemovingIter(); !i.Done(); i.Next()) {
+            for (auto i = self->mIID2NativeInterfaceMap->Iter(); !i.Done(); i.Next()) {
                 auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(i.Get());
                 XPCNativeInterface* iface = entry->value;
                 if (iface->IsMarked()) {
@@ -904,7 +904,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
             // referencing the protos in the dying list are themselves dead.
             // So, we can safely delete all the protos in the list.
 
-            for (auto i = self->mDyingWrappedNativeProtoMap->RemovingIter(); !i.Done(); i.Next()) {
+            for (auto i = self->mDyingWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
                 auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
                 delete static_cast<const XPCWrappedNativeProto*>(entry->key);
                 i.Remove();
@@ -3658,7 +3658,7 @@ XPCJSRuntime::DebugDump(int16_t depth)
         // iterate sets...
         if (depth && mNativeSetMap->Count()) {
             XPC_LOG_INDENT();
-            for (auto i = mNativeSetMap->RemovingIter(); !i.Done(); i.Next()) {
+            for (auto i = mNativeSetMap->Iter(); !i.Done(); i.Next()) {
                 auto entry = static_cast<NativeSetMap::Entry*>(i.Get());
                 entry->key_value->DebugDump(depth);
             }

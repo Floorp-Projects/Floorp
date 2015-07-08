@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-plaindebug'
+    build_type: 'debug'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'plaindebug'
+  metadata:
+    name: '[TC] Spidermonkey Plain Debug'
+    description: 'Spidermonkey Plain Debug'
+  extra:
+    treeherder:
+      symbol: p
+      collection:
+        debug: true

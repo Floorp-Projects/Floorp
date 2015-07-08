@@ -2878,6 +2878,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
         BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
         BOOL isRolledOver = IsParentScrollbarRolledOver(aFrame);
+        nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+        bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
         if (isOverlay && (!nsCocoaFeatures::OnMountainLionOrLater() || !isRolledOver)) {
           if (isHorizontal) {
             macRect.origin.y += 4;
@@ -2896,7 +2898,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         RenderWithCoreUILegacy(macRect, cgContext,
                 [NSDictionary dictionaryWithObjectsAndKeys:
                   (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-                  @"regular", @"size",
+                  (isSmall ? @"small" : @"regular"), @"size",
                   (isRolledOver ? @"rollover" : @"normal"), @"state",
                   (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
                   (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
@@ -2926,6 +2928,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
         if (!isOverlay || IsParentScrollbarRolledOver(aFrame)) {
           BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+          nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+          bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
           if (isOverlay && !nsCocoaFeatures::OnMountainLionOrLater()) {
             // On OSX 10.7, scrollbars don't grow when hovered.
             // The adjustments below were obtained by trial and error.
@@ -2944,7 +2948,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
           RenderWithCoreUILegacy(macRect, cgContext,
                   [NSDictionary dictionaryWithObjectsAndKeys:
                     (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-                    @"regular", @"size",
+                    (isSmall ? @"small" : @"regular"), @"size",
                     (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
                     (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
                     [NSNumber numberWithBool:YES], @"noindicator",

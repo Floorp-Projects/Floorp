@@ -1257,6 +1257,7 @@ X11/Xos.h
 X11/Xutil.h
 zmouse.h
 soundtouch/SoundTouch.h
+soundtouch/SoundTouchFactory.h
 #if MOZ_NATIVE_PNG==1
 png.h
 #endif

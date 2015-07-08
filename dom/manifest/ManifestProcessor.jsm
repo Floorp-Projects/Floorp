@@ -19,12 +19,10 @@
  * TODO: The constructor should accept the UA's supported display modes.
  * TODO: hook up developer tools to console. (1086997).
  */
-/*globals Components*/
+/*globals Components, ValueExtractor, ImageObjectProcessor, ConsoleAPI*/
 'use strict';
 const {
-  utils: Cu,
-  interfaces: Ci,
-  classes: Cc
+  utils: Cu
 } = Components;
 Cu.importGlobalProperties(['URL']);
 const displayModes = new Set(['fullscreen', 'standalone', 'minimal-ui',
@@ -34,18 +32,12 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
   'portrait-primary', 'portrait-secondary', 'landscape-primary',
   'landscape-secondary'
 ]);
-const {
-  ConsoleAPI
-} = Cu.import('resource://gre/modules/devtools/Console.jsm', {});
+Cu.import('resource://gre/modules/devtools/Console.jsm');
 // ValueExtractor is used by the various processors to get values
 // from the manifest and to report errors.
-const {
-  ValueExtractor
-} = Cu.import('resource://gre/modules/ValueExtractor.js', {});
+Cu.import('resource://gre/modules/ValueExtractor.jsm');
 // ImageObjectProcessor is used to process things like icons and images
-const {
-  ImageObjectProcessor
-} = Cu.import('resource://gre/modules/ImageObjectProcessor.js', {});
+Cu.import('resource://gre/modules/ImageObjectProcessor.jsm');
 
 function ManifestProcessor() {}
 

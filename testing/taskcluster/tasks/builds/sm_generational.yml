@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-generational'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'generational'
+  metadata:
+    name: '[TC] Spidermonkey Generational'
+    description: 'Spidermonkey Generational'
+  extra:
+    treeherder:
+      symbol: ggc

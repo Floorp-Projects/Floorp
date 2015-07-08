@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for callback invocation for a callback that comes from a
+  no-longer-current window that still has an active document.</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<iframe srcdoc='<script>function f() { parent.callCount++; }</script>'></iframe>
+<script>
+  var callCount = 0;
+  var t = async_test("A test of callback invocation in a no-longer-current window with a still-active document");
+  window.addEventListener("load", t.step_func_done(function() {
+    var d = document.createElement("div");
+    d.addEventListener("xyz", frames[0].f);
+    frames[0].document.open();
+    frames[0].document.write("All gone");
+    frames[0].document.close();
+    d.dispatchEvent(new Event("xyz"));
+    assert_equals(callCount, 1, "Callback should have been called");
+  }));
+</script>

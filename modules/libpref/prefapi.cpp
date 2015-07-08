@@ -555,7 +555,7 @@ PREF_DeleteBranch(const char *branch_name)
     const char *to_delete = branch_dot.get();
     MOZ_ASSERT(to_delete);
     len = strlen(to_delete);
-    for (auto iter = gHashTable->RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<PrefHashEntry*>(iter.Get());
 
         /* note if we're deleting "ldap" then we want to delete "ldap.xxx"
@@ -604,7 +604,7 @@ PREF_ClearAllUserPrefs()
         return NS_ERROR_NOT_INITIALIZED;
 
     std::vector<std::string> prefStrings;
-    for (auto iter = gHashTable->RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
         auto pref = static_cast<PrefHashEntry*>(iter.Get());
 
         if (PREF_HAS_USER_VALUE(pref)) {
