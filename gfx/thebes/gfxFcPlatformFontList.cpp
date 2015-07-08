@@ -279,7 +279,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                bool aItalic,
                                                const uint8_t *aData,
                                                FT_Face aFace)
-    : gfxFontEntry(aFaceName), mFontPattern(FcPatternCreate()),
+    : gfxFontEntry(aFaceName),
       mFTFace(aFace), mFTFaceInitialized(true),
       mAspect(0.0), mFontData(aData)
 {
@@ -287,6 +287,24 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mItalic = aItalic;
     mStretch = aStretch;
     mIsDataUserFont = true;
+
+    // Use fontconfig to fill out the pattern from the FTFace.
+    // The "file" argument cannot be nullptr (in fontconfig-2.6.0 at
+    // least). The dummy file passed here is removed below.
+    //
+    // When fontconfig scans the system fonts, FcConfigGetBlanks(nullptr)
+    // is passed as the "blanks" argument, which provides that unexpectedly
+    // blank glyphs are elided.  Here, however, we pass nullptr for
+    // "blanks", effectively assuming that, if the font has a blank glyph,
+    // then the author intends any associated character to be rendered
+    // blank.
+    mFontPattern = FcFreeTypeQueryFace(mFTFace, ToFcChar8Ptr(""), 0, nullptr);
+    // given that we have a FT_Face, not really sure this is possible...
+    if (!mFontPattern) {
+        mFontPattern = FcPatternCreate();
+    }
+    FcPatternDel(mFontPattern, FC_FILE);
+    FcPatternDel(mFontPattern, FC_INDEX);
 
     // Make a new pattern and store the face in it so that cairo uses
     // that when creating a cairo font face.
