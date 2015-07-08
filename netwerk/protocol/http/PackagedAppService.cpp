@@ -60,6 +60,26 @@ PackagedAppService::CacheEntryWriter::CopySecurityInfo(nsIChannel *aChannel)
   return NS_OK;
 }
 
+/* static */ nsresult
+PackagedAppService::CacheEntryWriter::CopyHeadersFromChannel(nsIChannel *aChannel,
+                                                  nsHttpResponseHead *aHead)
+{
+  if (!aChannel || !aHead) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(aChannel);
+  if (!httpChan) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString value;
+  httpChan->GetResponseHeader(NS_LITERAL_CSTRING("Content-Security-Policy"), value);
+  aHead->SetHeader(nsHttp::ResolveAtom("Content-Security-Policy"), value);
+
+  return NS_OK;
+}
+
 NS_METHOD
 PackagedAppService::CacheEntryWriter::ConsumeData(nsIInputStream *aStream,
                                                   void *aClosure,
@@ -78,6 +98,7 @@ NS_IMETHODIMP
 PackagedAppService::CacheEntryWriter::OnStartRequest(nsIRequest *aRequest,
                                                      nsISupports *aContext)
 {
+  nsresult rv;
   nsCOMPtr<nsIResponseHeadProvider> provider(do_QueryInterface(aRequest));
   if (!provider) {
     return NS_ERROR_INVALID_ARG;
@@ -88,13 +109,6 @@ PackagedAppService::CacheEntryWriter::OnStartRequest(nsIRequest *aRequest,
   }
 
   mEntry->SetPredictedDataSize(responseHead->TotalEntitySize());
-
-  nsAutoCString head;
-  responseHead->Flatten(head, true);
-  nsresult rv = mEntry->SetMetaDataElement("response-head", head.get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
   rv = mEntry->SetMetaDataElement("request-method", "GET");
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -110,6 +124,18 @@ PackagedAppService::CacheEntryWriter::OnStartRequest(nsIRequest *aRequest,
 
   rv = CopySecurityInfo(baseChannel);
   if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = CopyHeadersFromChannel(baseChannel, responseHead);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString head;
+  responseHead->Flatten(head, true);
+  rv = mEntry->SetMetaDataElement("response-head", head.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 

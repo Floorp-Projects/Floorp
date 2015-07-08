@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace net {
 
+class nsHttpResponseHead;
+
 // This service is used to download packages from the web.
 // Individual resources in the package are saved in the browser cache. It also
 // provides an interface to asynchronously request resources from packages,
@@ -85,6 +87,10 @@ private:
     // Copy the security-info metadata from the channel to the cache entry
     // so packaged resources can be accessed over https.
     nsresult CopySecurityInfo(nsIChannel *aChannel);
+
+    // Copy headers that apply to all resources in the package
+    static nsresult CopyHeadersFromChannel(nsIChannel *aChannel,
+                                           nsHttpResponseHead *aHead);
 
     // Static method used to write data into the cache entry
     // Called from OnDataAvailable
