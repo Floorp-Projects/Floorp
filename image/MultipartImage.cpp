@@ -131,8 +131,8 @@ MultipartImage::~MultipartImage()
 }
 
 NS_IMPL_QUERY_INTERFACE_INHERITED0(MultipartImage, ImageWrapper)
-NS_IMPL_ADDREF(MultipartImage)
-NS_IMPL_RELEASE(MultipartImage)
+NS_IMPL_ADDREF_INHERITED(MultipartImage, ImageWrapper)
+NS_IMPL_RELEASE_INHERITED(MultipartImage, ImageWrapper)
 
 void
 MultipartImage::BeginTransitionToPart(Image* aNextPart)

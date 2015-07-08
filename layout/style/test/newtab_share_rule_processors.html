@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<style>
+p { color: blue; }
+</style>
+<p>Hello</p>
+<script>
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+
+var sss = Cc["@mozilla.org/content/style-sheet-service;1"]
+  .getService(Ci.nsIStyleSheetService);
+var io = Cc["@mozilla.org/network/io-service;1"]
+  .getService(Ci.nsIIOService);
+var winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+  .getInterface(Ci.nsIDOMWindowUtils);
+
+function addAgentSheet() {
+  var sheetURI = io.newURI("data:text/css,p{background-color:yellow}", null, null);
+  var sheet = sss.preloadSheet(sheetURI, Ci.nsIStyleSheetService.AGENT_SHEET);
+  winUtils.addSheet(sheet, Ci.nsIDOMWindowUtils.AGENT_SHEET);
+}
+</script>
