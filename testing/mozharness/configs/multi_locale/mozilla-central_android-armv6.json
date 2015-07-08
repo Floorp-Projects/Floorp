@@ -1,0 +1,30 @@
+{
+    "work_dir": ".",
+    "log_name": "multilocale",
+    "objdir": "obj-firefox",
+    "locales_file": "build/mobile/android/locales/maemo-locales",
+    "locales_dir": "mobile/android/locales",
+    "ignore_locales": ["en-US", "multi"],
+    "repos": [{
+        "repo": "https://hg.mozilla.org/mozilla-central",
+        "tag": "default",
+        "dest": "build"
+    },{
+        "repo": "https://hg.mozilla.org/build/buildbot-configs",
+        "tag": "default",
+        "dest": "build/configs"
+    },{
+        "repo": "https://hg.mozilla.org/build/tools",
+        "tag": "default",
+        "dest": "tools"
+    },{
+        "repo": "https://hg.mozilla.org/build/compare-locales",
+        "tag": "RELEASE_AUTOMATION"
+    }],
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
+    "hg_l10n_tag": "default",
+    "l10n_dir": "l10n-central",
+    "merge_locales": true,
+    "mozilla_dir": "build",
+    "mozconfig": "build/mobile/android/config/mozconfigs/android-armv6/nightly"
+}
