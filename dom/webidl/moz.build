@@ -374,16 +374,6 @@ WEBIDL_FILES = [
     'ResourceStatsManager.webidl',
     'Response.webidl',
     'RGBColor.webidl',
-    'RTCCertificate.webidl',
-    'RTCConfiguration.webidl',
-    'RTCIceCandidate.webidl',
-    'RTCIdentityAssertion.webidl',
-    'RTCIdentityProvider.webidl',
-    'RTCPeerConnection.webidl',
-    'RTCPeerConnectionStatic.webidl',
-    'RTCRtpReceiver.webidl',
-    'RTCRtpSender.webidl',
-    'RTCSessionDescription.webidl',
     'RTCStatsReport.webidl',
     'Screen.webidl',
     'ScriptProcessorNode.webidl',
@@ -602,6 +592,16 @@ if CONFIG['MOZ_WEBRTC']:
         'PeerConnectionImplEnums.webidl',
         'PeerConnectionObserver.webidl',
         'PeerConnectionObserverEnums.webidl',
+        'RTCCertificate.webidl',
+        'RTCConfiguration.webidl',
+        'RTCIceCandidate.webidl',
+        'RTCIdentityAssertion.webidl',
+        'RTCIdentityProvider.webidl',
+        'RTCPeerConnection.webidl',
+        'RTCPeerConnectionStatic.webidl',
+        'RTCRtpReceiver.webidl',
+        'RTCRtpSender.webidl',
+        'RTCSessionDescription.webidl',
         'WebrtcGlobalInformation.webidl',
     ]
 
@@ -754,7 +754,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'IccChangeEvent.webidl',
     'ImageCaptureErrorEvent.webidl',
     'MediaStreamEvent.webidl',
-    'MediaStreamTrackEvent.webidl',
     'MozApplicationEvent.webidl',
     'MozCellBroadcastEvent.webidl',
     'MozClirModeEvent.webidl',
@@ -775,8 +774,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'PopupBlockedEvent.webidl',
     'ProgressEvent.webidl',
     'RecordErrorEvent.webidl',
-    'RTCDataChannelEvent.webidl',
-    'RTCPeerConnectionIceEvent.webidl',
     'ScrollViewChangeEvent.webidl',
     'SelectionStateChangedEvent.webidl',
     'StyleRuleChangeEvent.webidl',
@@ -791,6 +788,13 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
 ]
+
+if CONFIG['MOZ_WEBRTC']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'MediaStreamTrackEvent.webidl',
+        'RTCDataChannelEvent.webidl',
+        'RTCPeerConnectionIceEvent.webidl',
+    ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     GENERATED_EVENTS_WEBIDL_FILES += [
