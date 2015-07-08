@@ -406,9 +406,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != segment.mToValue) {
         // stop the transition
         if (!anim->GetEffect()->IsFinishedTransition()) {
-          anim->CancelFromStyle();
           collection->UpdateAnimationGeneration(mPresContext);
         }
+        anim->CancelFromStyle();
         animations.RemoveElementAt(i);
       }
     } while (i != 0);
@@ -721,6 +721,7 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     if (!ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
                                            currentValue) ||
         currentValue != segment.mToValue) {
+      anim->CancelFromStyle();
       animations.RemoveElementAt(i);
     }
   } while (i != 0);
