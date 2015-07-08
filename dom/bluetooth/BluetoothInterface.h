@@ -1044,6 +1044,7 @@ public:
   virtual void Cleanup(BluetoothGattResultHandler* aRes) = 0;
 
   virtual BluetoothGattClientInterface* GetBluetoothGattClientInterface() = 0;
+  virtual BluetoothGattServerInterface* GetBluetoothGattServerInterface() = 0;
 
 protected:
   BluetoothGattInterface();

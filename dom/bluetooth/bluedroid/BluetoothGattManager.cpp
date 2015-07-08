@@ -33,6 +33,7 @@ namespace {
   StaticRefPtr<BluetoothGattManager> sBluetoothGattManager;
   static BluetoothGattInterface* sBluetoothGattInterface;
   static BluetoothGattClientInterface* sBluetoothGattClientInterface;
+  static BluetoothGattServerInterface* sBluetoothGattServerInterface;
 } // anonymous namespace
 
 bool BluetoothGattManager::mInShutdown = false;
@@ -306,6 +307,10 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
     sBluetoothGattInterface->GetBluetoothGattClientInterface();
   NS_ENSURE_TRUE_VOID(sBluetoothGattClientInterface);
 
+  sBluetoothGattServerInterface =
+    sBluetoothGattInterface->GetBluetoothGattServerInterface();
+  NS_ENSURE_TRUE_VOID(sBluetoothGattServerInterface);
+
   if (!sClients) {
     sClients = new nsTArray<nsRefPtr<BluetoothGattClient> >;
   }
@@ -335,6 +340,7 @@ public:
   void Cleanup() override
   {
     sBluetoothGattClientInterface = nullptr;
+    sBluetoothGattServerInterface = nullptr;
     sBluetoothGattInterface = nullptr;
     sClients = nullptr;
 
