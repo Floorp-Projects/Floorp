@@ -7200,29 +7200,37 @@ BCInlineDirSeg::Paint(BCPaintBorderIterator& aIter,
                       mOffsetB - nsPresContext::CSSPixelsToAppUnits(largeHalf),
                       mLength,
                       nsPresContext::CSSPixelsToAppUnits(mWidth));
-  if (aIter.mTableWM.IsBidiLTR()) {
-    nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
-                                           aIter.mTableBgColor,
-                                           segRect.GetPhysicalRect(aIter.mTableWM,
-                                             aIter.mTable->GetSize().width),
-                                           appUnitsPerDevPixel,
-                                           nsPresContext::AppUnitsPerCSSPixel(),
-                                           aIter.mTableWM.PhysicalSide(mIStartBevelSide),
-                                           nsPresContext::CSSPixelsToAppUnits(mIStartBevelOffset),
-                                           aIter.mTableWM.PhysicalSide(mIEndBevelSide),
-                                           mIEndBevelOffset);
-  } else {
-    nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
-                                           aIter.mTableBgColor,
-                                           segRect.GetPhysicalRect(aIter.mTableWM,
-                                             aIter.mTable->GetSize().width),
-                                           appUnitsPerDevPixel,
-                                           nsPresContext::AppUnitsPerCSSPixel(),
-                                           aIter.mTableWM.PhysicalSide(mIEndBevelSide),
-                                           mIEndBevelOffset,
-                                           aIter.mTableWM.PhysicalSide(mIStartBevelSide),
-                                           nsPresContext::CSSPixelsToAppUnits(mIStartBevelOffset));
+
+  // Convert logical to physical sides/coordinates for DrawTableBorderSegment.
+  nsRect physicalRect = segRect.GetPhysicalRect(aIter.mTableWM,
+                                                aIter.mTable->GetSize().width);
+  uint8_t startBevelSide = aIter.mTableWM.PhysicalSide(mIStartBevelSide);
+  uint8_t endBevelSide = aIter.mTableWM.PhysicalSide(mIEndBevelSide);
+  nscoord startBevelOffset =
+    nsPresContext::CSSPixelsToAppUnits(mIStartBevelOffset);
+  nscoord endBevelOffset = mIEndBevelOffset;
+  // With inline-RTL directionality, the 'start' and 'end' of the inline-dir
+  // border segment need to be swapped because DrawTableBorderSegment will
+  // apply the 'start' bevel physically at the left or top edge, and 'end' at
+  // the right or bottom.
+  // (Note: startBevelSide/endBevelSide will be "top" or "bottom" in horizontal
+  // writing mode, or "left" or "right" in vertical mode.
+  // DrawTableBorderSegment works purely with physical coordinates, so it
+  // expects startBevelOffset to be the indentation-from-the-left or top end
+  // of the border-segment, and endBevelOffset is the indentation-from-the-
+  // right or bottom end. If the writing mode is inline-RTL, our "start" and
+  // "end" will be reversed from this physical-coord view, so we have to swap
+  // them here.
+  if (!aIter.mTableWM.IsBidiLTR()) {
+    Swap(startBevelSide, endBevelSide);
+    Swap(startBevelOffset, endBevelOffset);
   }
+  nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
+                                         aIter.mTableBgColor, physicalRect,
+                                         appUnitsPerDevPixel,
+                                         nsPresContext::AppUnitsPerCSSPixel(),
+                                         startBevelSide, startBevelOffset,
+                                         endBevelSide, endBevelOffset);
 }
 
 /**
