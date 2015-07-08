@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(336a8683-5626-4512-a3d5-ec280c13e5c2)]
+[scriptable, uuid(bbcb87fb-ce2e-4e05-906b-9258687664e2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1857,6 +1857,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * Decrease the chaos mode activation level. See enterChaosMode().
    */
   void leaveChaosMode();
+
+  /**
+   * Returns whether the document's style set's rule processor for the
+   * specified level of the cascade is shared by multiple style sets.
+   * (Used by tests to ensure that certain optimizations do not regress.)
+   *
+   * @param aSheetType One of the nsIStyleSheetService.*_SHEET constants.
+   */
+  bool hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]
