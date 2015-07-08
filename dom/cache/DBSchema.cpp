@@ -1833,7 +1833,6 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   if (!serializedInfo.IsEmpty()) {
     nsAutoCString originNoSuffix;
     OriginAttributes attrs;
-    fprintf(stderr, "\n%s\n", serializedInfo.get());
     if (!attrs.PopulateFromOrigin(serializedInfo, originNoSuffix)) {
       NS_WARNING("Something went wrong parsing a serialized principal!");
       return NS_ERROR_FAILURE;
