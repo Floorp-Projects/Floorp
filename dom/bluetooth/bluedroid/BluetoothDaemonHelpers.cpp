@@ -31,6 +31,21 @@ Convert(bool aIn, uint8_t& aOut)
 }
 
 nsresult
+Convert(bool aIn, int32_t& aOut)
+{
+  static const bool sValue[] = {
+    CONVERT(false, 0x00),
+    CONVERT(true, 0x01)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sValue))) {
+    aOut = 0;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sValue[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(bool aIn, BluetoothScanMode& aOut)
 {
   static const BluetoothScanMode sScanMode[] = {
