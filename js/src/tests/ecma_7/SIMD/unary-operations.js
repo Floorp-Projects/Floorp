@@ -1,7 +1,5 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
 var float32x4 = SIMD.float32x4;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
 var int32x4 = SIMD.int32x4;
 
 
@@ -108,46 +106,6 @@ function testFloat32x4not() {
   }
 }
 
-function testInt8x16neg() {
-  var vals = [
-    [[1, 2, 3, 4, 5, 6, 7, 8, -1, -2, -3, -4, -5, INT8_MAX, INT8_MIN, 0],
-     [-1, -2, -3, -4, -5, -6, -7, -8, 1, 2, 3, 4, 5, -INT8_MAX, INT8_MIN, 0]]
-  ];
-  for (var [v,w] of vals) {
-    assertEqX16(int8x16.neg(int8x16(...v)), w);
-  }
-}
-
-function testInt8x16not() {
-  var vals = [
-    [[1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, 0, INT8_MIN, INT8_MAX],
-     [1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, 0, INT8_MIN, INT8_MAX].map((x) => ~x << 24 >> 24)]
-  ];
-  for (var [v,w] of vals) {
-    assertEqX16(int8x16.not(int8x16(...v)), w);
-  }
-}
-
-function testInt16x8neg() {
-  var vals = [
-    [[1, 2, 3, -1, -2, 0, INT16_MIN, INT16_MAX],
-     [-1, -2, -3, 1, 2, 0, INT16_MIN, -INT16_MAX]]
-  ];
-  for (var [v,w] of vals) {
-    assertEqX8(int16x8.neg(int16x8(...v)), w);
-  }
-}
-
-function testInt16x8not() {
-  var vals = [
-    [[1, 2, 3, -1, -2, 0, INT16_MIN, INT16_MAX],
-     [1, 2, 3, -1, -2, 0, INT16_MIN, INT16_MAX].map((x) => ~x << 16 >> 16)]
-  ];
-  for (var [v,w] of vals) {
-    assertEqX8(int16x8.not(int16x8(...v)), w);
-  }
-}
-
 function testInt32x4neg() {
   var valsExp = [
     [[1, 2, 3, 4], [-1, -2, -3, -4]],
@@ -175,12 +133,6 @@ function test() {
   testFloat32x4reciprocalApproximation();
   testFloat32x4reciprocalSqrtApproximation();
   testFloat32x4sqrt();
-
-  testInt8x16neg();
-  testInt8x16not();
-
-  testInt16x8neg();
-  testInt16x8not();
 
   testInt32x4neg();
   testInt32x4not();
