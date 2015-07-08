@@ -16,7 +16,6 @@
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLContextUnchecked.h"
-#include "WebGLFormats.h"
 #include "WebGLObjectModel.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
@@ -1609,9 +1608,6 @@ public:
     void GenerateWarning(const char* fmt, ...);
     void GenerateWarning(const char* fmt, va_list ap);
 
-    UniquePtr<webgl::FormatUsageAuthority> mFormatUsage;
-
-    // Friend list
     friend class WebGLTexture;
     friend class WebGLFramebuffer;
     friend class WebGLRenderbuffer;

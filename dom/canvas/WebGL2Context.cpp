@@ -6,13 +6,12 @@
 #include "WebGL2Context.h"
 
 #include "GLContext.h"
+#include "WebGLBuffer.h"
+#include "WebGLTransformFeedback.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "WebGLBuffer.h"
-#include "WebGLFormats.h"
-#include "WebGLTransformFeedback.h"
 
 namespace mozilla {
 
@@ -21,8 +20,6 @@ WebGL2Context::WebGL2Context()
 {
     MOZ_ASSERT(IsSupported(), "not supposed to create a WebGL2Context"
                               "context when not supported");
-
-    mFormatUsage = Move(webgl::FormatUsageAuthority::CreateForWebGL2());
 }
 
 WebGL2Context::~WebGL2Context()
