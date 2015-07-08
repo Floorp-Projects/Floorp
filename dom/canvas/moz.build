@@ -110,7 +110,6 @@ UNIFIED_SOURCES += [
     'WebGLExtensionTextureHalfFloat.cpp',
     'WebGLExtensionTextureHalfFloatLinear.cpp',
     'WebGLExtensionVertexArray.cpp',
-    'WebGLFormats.cpp',
     'WebGLFramebuffer.cpp',
     'WebGLFramebufferAttachable.cpp',
     'WebGLObjectModel.cpp',
