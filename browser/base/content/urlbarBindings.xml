@@ -213,7 +213,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
-          if (!this._formattingEnabled)
+          if (!this._formattingEnabled || !this.editor)
             return;
 
           // Always clear the strike-out selection first.
