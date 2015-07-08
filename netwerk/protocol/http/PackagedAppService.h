@@ -82,6 +82,10 @@ private:
     CacheEntryWriter() { }
     ~CacheEntryWriter() { }
 
+    // Copy the security-info metadata from the channel to the cache entry
+    // so packaged resources can be accessed over https.
+    nsresult CopySecurityInfo(nsIChannel *aChannel);
+
     // Static method used to write data into the cache entry
     // Called from OnDataAvailable
     static NS_METHOD ConsumeData(nsIInputStream *in, void *closure,

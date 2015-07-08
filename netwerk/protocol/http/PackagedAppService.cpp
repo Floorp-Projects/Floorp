@@ -44,6 +44,22 @@ PackagedAppService::CacheEntryWriter::Create(nsIURI *aURI,
   return NS_OK;
 }
 
+nsresult
+PackagedAppService::CacheEntryWriter::CopySecurityInfo(nsIChannel *aChannel)
+{
+  if (!aChannel) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsISupports> securityInfo;
+  aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (securityInfo) {
+    mEntry->SetSecurityInfo(securityInfo);
+  }
+
+  return NS_OK;
+}
+
 NS_METHOD
 PackagedAppService::CacheEntryWriter::ConsumeData(nsIInputStream *aStream,
                                                   void *aClosure,
@@ -82,6 +98,18 @@ PackagedAppService::CacheEntryWriter::OnStartRequest(nsIRequest *aRequest,
 
   rv = mEntry->SetMetaDataElement("request-method", "GET");
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
+  if (!multiPartChannel) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIChannel> baseChannel;
+  multiPartChannel->GetBaseChannel(getter_AddRefs(baseChannel));
+
+  rv = CopySecurityInfo(baseChannel);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
