@@ -30,11 +30,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 14;
+const int32_t kMaxWipeSchemaVersion = 15;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 14;
+const int32_t kLatestSchemaVersion = 15;
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
