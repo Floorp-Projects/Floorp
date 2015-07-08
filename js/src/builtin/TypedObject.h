@@ -328,14 +328,12 @@ class ComplexTypeDescr : public TypeDescr
 };
 
 /*
- * Type descriptors `int8x16`, `int16x8`, `int32x4`, `float32x4` and `float64x2`
+ * Type descriptors `float32x4`, `int32x4` and `float64x2`
  */
 class SimdTypeDescr : public ComplexTypeDescr
 {
   public:
     enum Type {
-        Int8x16 = JS_SIMDTYPEREPR_INT8,
-        Int16x8 = JS_SIMDTYPEREPR_INT16,
         Int32x4 = JS_SIMDTYPEREPR_INT32,
         Float32x4 = JS_SIMDTYPEREPR_FLOAT32,
         Float64x2 = JS_SIMDTYPEREPR_FLOAT64,
@@ -358,8 +356,6 @@ class SimdTypeDescr : public ComplexTypeDescr
 };
 
 #define JS_FOR_EACH_SIMD_TYPE_REPR(macro_)               \
-    macro_(SimdTypeDescr::Int8x16, int8_t, int8, 16)     \
-    macro_(SimdTypeDescr::Int16x8, int16_t, int16, 8)    \
     macro_(SimdTypeDescr::Int32x4, int32_t, int32, 4)    \
     macro_(SimdTypeDescr::Float32x4, float, float32, 4)  \
     macro_(SimdTypeDescr::Float64x2, double, float64, 2)
@@ -865,22 +861,6 @@ bool GetFloat32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
  * been initialized for this to be safe.
  */
 bool GetFloat64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetInt8x16TypeDescr()
- *
- * Returns the int8x16 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetInt8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Usage: GetInt16x8TypeDescr()
- *
- * Returns the int16x8 type object. SIMD pseudo-module must have
- * been initialized for this to be safe.
- */
-bool GetInt16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: GetInt32x4TypeDescr()

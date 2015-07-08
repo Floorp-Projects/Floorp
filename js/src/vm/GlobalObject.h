@@ -106,8 +106,6 @@ class GlobalObject : public NativeObject
         INTRINSICS,
         FLOAT32X4_TYPE_DESCR,
         FLOAT64X2_TYPE_DESCR,
-        INT8X16_TYPE_DESCR,
-        INT16X8_TYPE_DESCR,
         INT32X4_TYPE_DESCR,
         FOR_OF_PIC_CHAIN,
 
@@ -449,26 +447,6 @@ class GlobalObject : public NativeObject
     JSObject& float64x2TypeDescr() {
         MOZ_ASSERT(getSlotRef(FLOAT64X2_TYPE_DESCR).isObject());
         return getSlotRef(FLOAT64X2_TYPE_DESCR).toObject();
-    }
-
-    void setInt8x16TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(INT8X16_TYPE_DESCR).isUndefined());
-        setSlot(INT8X16_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& int8x16TypeDescr() {
-        MOZ_ASSERT(getSlotRef(INT8X16_TYPE_DESCR).isObject());
-        return getSlotRef(INT8X16_TYPE_DESCR).toObject();
-    }
-
-    void setInt16x8TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(INT16X8_TYPE_DESCR).isUndefined());
-        setSlot(INT16X8_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& int16x8TypeDescr() {
-        MOZ_ASSERT(getSlotRef(INT16X8_TYPE_DESCR).isObject());
-        return getSlotRef(INT16X8_TYPE_DESCR).toObject();
     }
 
     void setInt32x4TypeDescr(JSObject& obj) {
