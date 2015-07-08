@@ -2,12 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
-MIN_CPU_VERSION=7
-else
-MIN_CPU_VERSION=5
-endif
-
 MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
 
 # See Bug 1137586 for more details on version code computation.
