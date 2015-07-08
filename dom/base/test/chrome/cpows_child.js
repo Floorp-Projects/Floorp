@@ -90,6 +90,10 @@ function make_json()
 function parent_test(finish)
 {
   function f(check_func) {
+    // Make sure this doesn't crash.
+    let array = new Uint32Array(10);
+    content.crypto.getRandomValues(array);
+
     let result = check_func(10);
     ok(result == 20, "calling function in parent worked");
     return result;

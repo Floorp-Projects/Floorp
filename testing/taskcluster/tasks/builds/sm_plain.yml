@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-plain'
+    build_type: 'opt'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'plain'
+  metadata:
+    name: '[TC] Spidermonkey Plain'
+    description: 'Spidermonkey Plain'
+  extra:
+    treeherder:
+      symbol: p

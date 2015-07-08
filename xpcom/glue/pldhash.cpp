@@ -753,7 +753,7 @@ PLDHashTable::SizeOfExcludingThis(
 
   size_t n = aMallocSizeOf(mEntryStore);
   if (aSizeOfEntryExcludingThis) {
-    for (auto iter = Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
       n += aSizeOfEntryExcludingThis(iter.Get(), aMallocSizeOf, aArg);
     }
   }
@@ -794,17 +794,20 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
   : mTable(aOther.mTable)
   , mCurrent(aOther.mCurrent)
   , mLimit(aOther.mLimit)
+  , mHaveRemoved(aOther.mHaveRemoved)
 {
   // No need to change |mChecker| here.
   aOther.mTable = nullptr;
   aOther.mCurrent = nullptr;
   aOther.mLimit = nullptr;
+  aOther.mHaveRemoved = false;
 }
 
-PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
+PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   : mTable(aTable)
   , mCurrent(mTable->mEntryStore)
   , mLimit(mTable->mEntryStore + mTable->Capacity() * mTable->mEntrySize)
+  , mHaveRemoved(false)
 {
 #ifdef DEBUG
   mTable->mChecker.StartReadOp();
@@ -818,11 +821,14 @@ PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
 
 PLDHashTable::Iterator::~Iterator()
 {
-#ifdef DEBUG
   if (mTable) {
+    if (mHaveRemoved) {
+      mTable->ShrinkIfAppropriate();
+    }
+#ifdef DEBUG
     mTable->mChecker.EndReadOp();
-  }
 #endif
+  }
 }
 
 bool
@@ -857,41 +863,11 @@ PLDHashTable::Iterator::Next()
   } while (IsOnNonLiveEntry());
 }
 
-PLDHashTable::RemovingIterator::RemovingIterator(RemovingIterator&& aOther)
-  : Iterator(mozilla::Move(aOther))
-  , mHaveRemoved(aOther.mHaveRemoved)
-{
-  // Do nothing with mChecker here. We treat RemovingIterator like Iterator --
-  // i.e. as a read operation -- until the very end. Then, if any elements have
-  // been removed, we temporarily treat it as a write operation.
-}
-
-PLDHashTable::RemovingIterator::RemovingIterator(PLDHashTable* aTable)
-  : Iterator(aTable)
-  , mHaveRemoved(false)
-{
-}
-
-PLDHashTable::RemovingIterator::~RemovingIterator()
-{
-  if (mHaveRemoved) {
-#ifdef DEBUG
-    AutoIteratorRemovalOp op(mTable->mChecker);
-#endif
-
-    // Why is this cast needed? In Iterator, |mTable| is const. In
-    // RemovingIterator it should be non-const, but it inherits from Iterator
-    // so that's not possible. But it's ok because RemovingIterator's
-    // constructor takes a pointer to a non-const table in the first place.
-    const_cast<PLDHashTable*>(mTable)->ShrinkIfAppropriate();
-  }
-}
-
 void
-PLDHashTable::RemovingIterator::Remove()
+PLDHashTable::Iterator::Remove()
 {
   // This cast is needed for the same reason as the one in the destructor.
-  const_cast<PLDHashTable*>(mTable)->RawRemove(Get());
+  mTable->RawRemove(Get());
   mHaveRemoved = true;
 }
 

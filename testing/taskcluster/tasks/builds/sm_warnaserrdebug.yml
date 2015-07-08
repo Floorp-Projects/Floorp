@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-warnaserrdebug'
+    build_type: 'debug'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'warnaserrdebug'
+  metadata:
+    name: '[TC] Spidermonkey Fail-On-Warnings Build Debug'
+    description: 'Spidermonkey Fail-On-Warnings Build Debug'
+  extra:
+    treeherder:
+      symbol: e
+      collection:
+        debug: true

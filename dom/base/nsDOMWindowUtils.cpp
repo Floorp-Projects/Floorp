@@ -3196,7 +3196,10 @@ nsDOMWindowUtils::ExitFullscreen()
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
-  nsIDocument::ExitFullscreen(nullptr, /* async */ false);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_STATE(doc);
+
+  nsIDocument::ExitFullscreen(doc, /* async */ false);
   return NS_OK;
 }
 

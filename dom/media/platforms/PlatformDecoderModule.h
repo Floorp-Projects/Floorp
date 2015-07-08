@@ -27,7 +27,6 @@ class MediaDataDecoder;
 class MediaDataDecoderCallback;
 class FlushableMediaTaskQueue;
 class CDMProxy;
-typedef int64_t Microseconds;
 
 // The PlatformDecoderModule interface is used by the MP4Reader to abstract
 // access to the H264 and Audio (AAC/MP3) decoders provided by various platforms.

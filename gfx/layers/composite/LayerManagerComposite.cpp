@@ -272,6 +272,11 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     return;
   }
 
+  // Set composition timestamp here because we need it in
+  // ComputeEffectiveTransforms (so the correct video frame size is picked) and
+  // also to compute invalid regions properly.
+  mCompositor->SetCompositionTime(aTimeStamp);
+
   if (mRoot && mClonedLayerTreeProperties) {
     MOZ_ASSERT(!mTarget);
     nsIntRegion invalid =
@@ -290,9 +295,6 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
 
  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     MOZ_ASSERT(!aTimeStamp.IsNull());
-    // Set composition timestamp here because we need it in
-    // ComputeEffectiveTransforms (so the correct video frame size is picked)
-    mCompositor->SetCompositionTime(aTimeStamp);
     // The results of our drawing always go directly into a pixel buffer,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());

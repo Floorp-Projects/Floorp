@@ -106,6 +106,7 @@ static RedirEntry kRedirMap[] = {
   {
     "serviceworkers", "chrome://global/content/aboutServiceWorkers.xhtml",
     nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::ALLOW_SCRIPT
   },
   // about:srcdoc is unresolvable by specification.  It is included here

@@ -1,11 +1,11 @@
 /**
  * Common infrastructure for manifest tests.
  **/
-
+/*globals SpecialPowers, ManifestProcessor*/
 'use strict';
 const {
   ManifestProcessor
-} = SpecialPowers.Cu.import('resource://gre/modules/WebManifest.jsm');
+} = SpecialPowers.Cu.import('resource://gre/modules/ManifestProcessor.jsm');
 const processor = new ManifestProcessor();
 const manifestURL = new URL(document.location.origin + '/manifest.json');
 const docURL = document.location;

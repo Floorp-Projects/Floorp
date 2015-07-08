@@ -2919,7 +2919,7 @@ nsCacheService::DoomActiveEntries(DoomCheckFn check)
 {
     nsAutoTArray<nsCacheEntry*, 8> array;
 
-    for (auto iter = mActiveEntries.RemovingIter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mActiveEntries.Iter(); !iter.Done(); iter.Next()) {
         nsCacheEntry* entry =
             static_cast<nsCacheEntryHashTableEntry*>(iter.Get())->cacheEntry;
 
