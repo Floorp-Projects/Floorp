@@ -87,6 +87,12 @@ class MochitestOptions(optparse.OptionParser):
           "help": "which chunk to run",
           "default": None,
           }],
+        [["--chunk-by-runtime"],
+         {"action": "store_true",
+          "dest": "chunkByRuntime",
+          "help": "Group tests such that each chunk has roughly the same runtime.",
+          "default": False,
+          }],
         [["--chunk-by-dir"],
          {"type": "int",
           "dest": "chunkByDir",
@@ -506,6 +512,13 @@ class MochitestOptions(optparse.OptionParser):
         if options.totalChunks:
             if not 1 <= options.thisChunk <= options.totalChunks:
                 self.error("thisChunk must be between 1 and totalChunks")
+
+
+        if options.chunkByRuntime:
+            # --chunk-by-runtime not supported on this branch; revert
+            # to --chunk-by-dir
+            options.chunkByRuntime = False
+            options.chunkByDir = 5
 
         if options.xrePath is None:
             # default xrePath to the app path if not provided
