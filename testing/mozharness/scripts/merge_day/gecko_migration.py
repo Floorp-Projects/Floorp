@@ -367,8 +367,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             )
         next_ma_version = self.get_fx_major_version(dirs['abs_to_dir'])
         self.bump_version(dirs['abs_to_dir'], next_ma_version, next_ma_version, "a1", "a2")
-        for f, from_, to in self.config["replacements"]:
-            self.replace(os.path.join(dirs['abs_to_dir'], f), from_, to)
+        self.apply_replacements()
         # bump m-c version
         curr_mc_version = self.get_fx_major_version(dirs['abs_from_dir'])
         next_mc_version = str(int(curr_mc_version) + 1)
@@ -391,24 +390,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
         dirs = self.query_abs_dirs()
         mb_version = self.get_fx_major_version(dirs['abs_to_dir'])
         self.bump_version(dirs['abs_to_dir'], mb_version, mb_version, "a2", "")
-        self.replace(
-            os.path.join(dirs['abs_to_dir'], "browser/confvars.sh"),
-            "MOZ_BRANDING_DIRECTORY=browser/branding/aurora",
-            "MOZ_BRANDING_DIRECTORY=browser/branding/nightly")
-        self.replace(
-            os.path.join(dirs['abs_to_dir'], "browser/confvars.sh"),
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-aurora",
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release")
-        self.replace(
-            os.path.join(dirs['abs_to_dir'], "browser/confvars.sh"),
-            "MAR_CHANNEL_ID=firefox-mozilla-aurora",
-            "MAR_CHANNEL_ID=firefox-mozilla-beta")
-        for d in self.config['branding_dirs']:
-            for f in self.config['branding_files']:
-                self.replace(
-                    os.path.join(dirs['abs_to_dir'], d, f),
-                    "ac_add_options --with-branding=mobile/android/branding/aurora",
-                    "ac_add_options --with-branding=mobile/android/branding/beta")
+        self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
         # TODO mozconfig diffing
         # The build/tools version only checks the mozconfigs from hgweb, so
@@ -426,23 +408,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             staging beta user repo migrations.
             """
         dirs = self.query_abs_dirs()
-        self.replace(
-            os.path.join(dirs['abs_to_dir'], "browser/confvars.sh"),
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release",
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release"
-        )
-        self.replace(
-            os.path.join(
-                dirs['abs_to_dir'], "browser/confvars.sh"),
-            "MAR_CHANNEL_ID=firefox-mozilla-beta",
-            "MAR_CHANNEL_ID=firefox-mozilla-release"
-        )
-        for d in self.config['branding_dirs']:
-            for f in self.config['branding_files']:
-                self.replace(
-                    os.path.join(dirs['abs_to_dir'], d, f),
-                    "ac_add_options --with-branding=mobile/android/branding/beta",
-                    "ac_add_options --with-branding=mobile/android/branding/official")
+        self.apply_replacements()
         if self.config.get("remove_locales"):
             self.remove_locales(
                 os.path.join(dirs['abs_to_dir'], "browser/locales/shipped-locales"),
@@ -457,18 +423,13 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             self.transplant(repo=to_transplant["repo"],
                             changeset=to_transplant["changeset"],
                             cwd=dirs['abs_to_dir'])
-        self.replace(
-            os.path.join(dirs['abs_to_dir'], "browser/confvars.sh"),
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release",
-            "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-esr"
-        )
-        self.replace(
-            os.path.join(
-                dirs['abs_to_dir'], "browser/confvars.sh"),
-            "MAR_CHANNEL_ID=firefox-mozilla-release",
-            "MAR_CHANNEL_ID=firefox-mozilla-esr"
-        )
+        self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
+
+    def apply_replacements(self):
+        dirs = self.query_abs_dirs()
+        for f, from_, to in self.config["replacements"]:
+            self.replace(os.path.join(dirs['abs_to_dir'], f), from_, to)
 
     def transplant(self, repo, changeset, cwd):
         """Transplant a Mercurial changeset from a remote repository."""
