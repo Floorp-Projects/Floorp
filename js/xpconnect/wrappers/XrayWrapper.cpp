@@ -518,12 +518,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
     }
     if (fsMatch) {
         // Generate an Xrayed version of the method.
-        RootedFunction fun(cx);
-        if (fsMatch->selfHostedName) {
-            fun = JS::GetSelfHostedFunction(cx, fsMatch->selfHostedName, id, fsMatch->nargs);
-        } else {
-            fun = JS_NewFunctionById(cx, fsMatch->call.op, fsMatch->nargs, 0, id);
-        }
+        RootedFunction fun(cx, JS::NewFunctionFromSpec(cx, fsMatch, id));
         if (!fun)
             return false;
 
