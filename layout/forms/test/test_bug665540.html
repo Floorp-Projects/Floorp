@@ -32,6 +32,17 @@ var eventOffsetY = 2;
 
 function openFullscreenWindow() {
     win = open("bug665540_window.xul", "_blank", "resizable=yes,chrome");
+    win.addEventListener("sizemodechange",
+                         function() {
+                           info("sizemodechange. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
+                         }, false);
+    win.addEventListener("fullscreen",
+                         function() {
+                           info("fullscreen event. windowState = " + win.windowState + " fullScreen = " + win.fullScreen);
+                         }, false);
+    info("win.windowState = " + win.windowState);
+    info("win.fullScreen = " + win.fullScreen);
+
     // Close our window if the test times out so that it doesn't interfere
     // with later tests.
     timeoutID = setTimeout(function () {
