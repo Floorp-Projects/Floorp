@@ -746,7 +746,7 @@ class ICFallbackStub : public ICStub
     // A pointer to the location stub pointer that needs to be
     // changed to add a new "last" stub immediately before the fallback
     // stub.  This'll start out pointing to the icEntry's "firstStub_"
-    // field, and as new stubs are addd, it'll point to the current
+    // field, and as new stubs are added, it'll point to the current
     // last stub's "next_" field.
     ICStub** lastStubPtrAddr_;
 
