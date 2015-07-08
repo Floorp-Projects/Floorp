@@ -377,10 +377,12 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             'GENERATED_FILES += bar.c',
             'bar.c: %s/generate-bar.py' % env.topsrcdir,
+            '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-bar.py baz bar.c)' % env.topsrcdir,
             '',
             'GENERATED_FILES += foo.c',
             'foo.c: %s/generate-foo.py %s/foo-data' % (env.topsrcdir, env.topsrcdir),
+            '$(REPORT_BUILD)',
             '$(call py_action,file_generate,%s/generate-foo.py main foo.c %s/foo-data)' % (env.topsrcdir, env.topsrcdir),
             '',
             'GENERATED_FILES += quux.c',
