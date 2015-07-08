@@ -102,7 +102,7 @@ config = {
 
     "combined_mapfile": "combined_gecko_mapfile",
 
-    "default_notify_from": "developer-services@mozilla.org",
+    "default_notify_from": "developer-services+%s@mozilla.org" % hostname,
     "notify_config": [{
         "to": "releng-ops-trial@mozilla.com",
         "failure_only": False,
