@@ -1,0 +1,9 @@
+[extensions]
+mq =
+purge =
+rebase =
+share =
+transplant =
+
+[ui]
+username = tester <tester@example.com>
