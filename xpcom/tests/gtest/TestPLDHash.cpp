@@ -4,15 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>
 #include "pldhash.h"
+#include "gtest/gtest.h"
 
 // This test mostly focuses on edge cases. But more coverage of normal
 // operations wouldn't be a bad thing.
 
-namespace TestPLDHash {
-
-static bool test_pldhash_Init_capacity_ok()
+TEST(PLDHashTableTest, InitCapacityOk)
 {
   // Try the largest allowed capacity.  With PL_DHASH_MAX_CAPACITY==1<<26, this
   // would allocate (if we added an element) 0.5GB of entry store on 32-bit
@@ -29,11 +27,9 @@ static bool test_pldhash_Init_capacity_ok()
   //
   PLDHashTable t(PL_DHashGetStubOps(), sizeof(PLDHashEntryStub),
                  PL_DHASH_MAX_INITIAL_LENGTH);
-
-  return true;
 }
 
-static bool test_pldhash_lazy_storage()
+TEST(PLDHashTableTest, LazyStorage)
 {
   PLDHashTable t(PL_DHashGetStubOps(), sizeof(PLDHashEntryStub));
 
@@ -41,45 +37,28 @@ static bool test_pldhash_lazy_storage()
   // operations work appropriately when the table is empty and the storage
   // hasn't yet been allocated.
 
-  if (t.Capacity() != 0) {
-    return false;
-  }
+  ASSERT_EQ(t.Capacity(), 0u);
+  ASSERT_EQ(t.EntrySize(), sizeof(PLDHashEntryStub));
+  ASSERT_EQ(t.EntryCount(), 0u);
+  ASSERT_EQ(t.Generation(), 0u);
 
-  if (t.EntrySize() != sizeof(PLDHashEntryStub)) {
-    return false;
-  }
-
-  if (t.EntryCount() != 0) {
-    return false;
-  }
-
-  if (t.Generation() != 0) {
-    return false;
-  }
-
-  if (PL_DHashTableSearch(&t, (const void*)1)) {
-    return false;   // search succeeded?
-  }
+  ASSERT_TRUE(!PL_DHashTableSearch(&t, (const void*)1));
 
   // No result to check here, but call it to make sure it doesn't crash.
   PL_DHashTableRemove(&t, (const void*)2);
 
   for (auto iter = t.Iter(); !iter.Done(); iter.Next()) {
-    return false; // shouldn't hit this on an empty table
+    ASSERT_TRUE(false); // shouldn't hit this on an empty table
   }
 
   for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
-    return false; // shouldn't hit this on an empty table
+    ASSERT_TRUE(false); // shouldn't hit this on an empty table
   }
 
   // Using a null |mallocSizeOf| should be fine because it shouldn't be called
   // for an empty table.
   mozilla::MallocSizeOf mallocSizeOf = nullptr;
-  if (PL_DHashTableSizeOfExcludingThis(&t, nullptr, mallocSizeOf) != 0) {
-    return false;   // size is non-zero?
-  }
-
-  return true;
+  ASSERT_EQ(PL_DHashTableSizeOfExcludingThis(&t, nullptr, mallocSizeOf), 0u);
 }
 
 // A trivial hash function is good enough here. It's also super-fast for
@@ -106,7 +85,7 @@ static const PLDHashTableOps trivialOps = {
   TrivialInitEntry
 };
 
-static bool test_pldhash_move_semantics()
+TEST(PLDHashTableTest, MoveSemantics)
 {
   PLDHashTable t1(&trivialOps, sizeof(PLDHashEntryStub));
   PL_DHashTableAdd(&t1, (const void*)88);
@@ -135,54 +114,38 @@ static bool test_pldhash_move_semantics()
   PLDHashTable t9(&trivialOps, sizeof(PLDHashEntryStub));
   PL_DHashTableAdd(&t9, (const void*)88);
   PLDHashTable t10(mozilla::Move(t9));  // new table constructed with inited
-
-  return true;
 }
 
-static bool test_pldhash_Clear()
+TEST(PLDHashTableTest, Clear)
 {
   PLDHashTable t1(&trivialOps, sizeof(PLDHashEntryStub));
 
   t1.Clear();
-  if (t1.EntryCount() != 0) {
-    return false;
-  }
+  ASSERT_EQ(t1.EntryCount(), 0u);
 
   t1.ClearAndPrepareForLength(100);
-  if (t1.EntryCount() != 0) {
-    return false;
-  }
+  ASSERT_EQ(t1.EntryCount(), 0u);
 
   PL_DHashTableAdd(&t1, (const void*)77);
   PL_DHashTableAdd(&t1, (const void*)88);
   PL_DHashTableAdd(&t1, (const void*)99);
-  if (t1.EntryCount() != 3) {
-    return false;
-  }
+  ASSERT_EQ(t1.EntryCount(), 3u);
 
   t1.Clear();
-  if (t1.EntryCount() != 0) {
-    return false;
-  }
+  ASSERT_EQ(t1.EntryCount(), 0u);
 
   PL_DHashTableAdd(&t1, (const void*)55);
   PL_DHashTableAdd(&t1, (const void*)66);
   PL_DHashTableAdd(&t1, (const void*)77);
   PL_DHashTableAdd(&t1, (const void*)88);
   PL_DHashTableAdd(&t1, (const void*)99);
-  if (t1.EntryCount() != 5) {
-    return false;
-  }
+  ASSERT_EQ(t1.EntryCount(), 5u);
 
   t1.ClearAndPrepareForLength(8192);
-  if (t1.EntryCount() != 0) {
-    return false;
-  }
-
-  return true;
+  ASSERT_EQ(t1.EntryCount(), 0u);
 }
 
-static bool test_pldhash_Iterator()
+TEST(PLDHashTableIterator, Iterator)
 {
   PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
 
@@ -197,7 +160,7 @@ static bool test_pldhash_Iterator()
   // Iterate through the empty table.
   for (PLDHashTable::Iterator iter(&t); !iter.Done(); iter.Next()) {
     (void) iter.Get();
-    return false;   // shouldn't hit this
+    ASSERT_TRUE(false); // shouldn't hit this
   }
 
   // Add three entries.
@@ -221,14 +184,10 @@ static bool test_pldhash_Iterator()
     }
     n++;
   }
-  if (!saw77 || !saw88 || !saw99 || n != 3) {
-    return false;
-  }
-
-  return true;
+  ASSERT_TRUE(saw77 && saw88 && saw99 && n == 3);
 }
 
-static bool test_pldhash_RemovingIterator()
+TEST(PLDHashTableTest, RemovingIterator)
 {
   PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
 
@@ -245,18 +204,16 @@ static bool test_pldhash_RemovingIterator()
   for (intptr_t i = 0; i < 64; i++) {
     PL_DHashTableAdd(&t, (const void*)i);
   }
-  if (t.EntryCount() != 64 || t.Capacity() != 128) {
-    return false;
-  }
+  ASSERT_EQ(t.EntryCount(), 64u);
+  ASSERT_EQ(t.Capacity(), 128u);
 
   // The first removing iterator does no removing; capacity and entry count are
   // unchanged.
   for (PLDHashTable::RemovingIterator iter(&t); !iter.Done(); iter.Next()) {
     (void) iter.Get();
   }
-  if (t.EntryCount() != 64 || t.Capacity() != 128) {
-    return false;
-  }
+  ASSERT_EQ(t.EntryCount(), 64u);
+  ASSERT_EQ(t.Capacity(), 128u);
 
   // The second removing iterator removes 16 items. This reduces the load
   // factor to 37.5% (48 / 128), which isn't low enough to shrink the table.
@@ -266,9 +223,8 @@ static bool test_pldhash_RemovingIterator()
       iter.Remove();
     }
   }
-  if (t.EntryCount() != 48 || t.Capacity() != 128) {
-    return false;
-  }
+  ASSERT_EQ(t.EntryCount(), 48u);
+  ASSERT_EQ(t.Capacity(), 128u);
 
   // The third removing iterator removes another 16 items. This reduces
   // the load factor to 25% (32 / 128), so the table is shrunk.
@@ -278,25 +234,22 @@ static bool test_pldhash_RemovingIterator()
       iter.Remove();
     }
   }
-  if (t.EntryCount() != 32 || t.Capacity() != 64) {
-    return false;
-  }
+  ASSERT_EQ(t.EntryCount(), 32u);
+  ASSERT_EQ(t.Capacity(), 64u);
 
   // The fourth removing iterator removes all remaining items. This reduces
   // the capacity to the minimum.
   for (auto iter = t.RemovingIter(); !iter.Done(); iter.Next()) {
     iter.Remove();
   }
-  if (t.EntryCount() != 0 || t.Capacity() != PL_DHASH_MIN_CAPACITY) {
-    return false;
-  }
-
-  return true;
+  ASSERT_EQ(t.EntryCount(), 0u);
+  ASSERT_EQ(t.Capacity(), unsigned(PL_DHASH_MIN_CAPACITY));
 }
 
-// See bug 931062, we skip this test on Android due to OOM.
+// See bug 931062, we skip this test on Android due to OOM. Also, it's slow,
+// and so should always be last.
 #ifndef MOZ_WIDGET_ANDROID
-static bool test_pldhash_grow_to_max_capacity()
+TEST(PLDHashTableTest, GrowToMaxCapacity)
 {
   // This is infallible.
   PLDHashTable* t =
@@ -315,49 +268,10 @@ static bool test_pldhash_grow_to_max_capacity()
   // MaxLoadOnGrowthFailure()).
   if (numInserted != PL_DHASH_MAX_CAPACITY - (PL_DHASH_MAX_CAPACITY >> 5)) {
     delete t;
-    return false;
+    ASSERT_TRUE(false);
   }
 
   delete t;
-  return true;
 }
 #endif
 
-//----
-
-typedef bool (*TestFunc)();
-#define DECL_TEST(name) { #name, name }
-
-static const struct Test {
-  const char* name;
-  TestFunc    func;
-} tests[] = {
-  DECL_TEST(test_pldhash_Init_capacity_ok),
-  DECL_TEST(test_pldhash_lazy_storage),
-  DECL_TEST(test_pldhash_move_semantics),
-  DECL_TEST(test_pldhash_Clear),
-  DECL_TEST(test_pldhash_Iterator),
-  DECL_TEST(test_pldhash_RemovingIterator),
-// See bug 931062, we skip this test on Android due to OOM. Also, it's slow,
-// and so should always be last.
-#ifndef MOZ_WIDGET_ANDROID
-  DECL_TEST(test_pldhash_grow_to_max_capacity),
-#endif
-  { nullptr, nullptr }
-};
-
-} // namespace TestPLDHash
-
-using namespace TestPLDHash;
-
-int main(int argc, char *argv[])
-{
-  bool success = true;
-  for (const Test* t = tests; t->name != nullptr; ++t) {
-    bool test_result = t->func();
-    printf("%35s : %s\n", t->name, test_result ? "SUCCESS" : "FAILURE");
-    if (!test_result)
-      success = false;
-  }
-  return success ? 0 : -1;
-}
