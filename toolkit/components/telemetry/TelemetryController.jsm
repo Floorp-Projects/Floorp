@@ -807,6 +807,7 @@ let Impl = {
       haveDelayedInitTask: !!this._delayedInitTask,
       shutdownBarrier: this._shutdownBarrier.state,
       connectionsBarrier: this._connectionsBarrier.state,
+      sendModule: TelemetrySend.getShutdownState(),
     };
   },
 
