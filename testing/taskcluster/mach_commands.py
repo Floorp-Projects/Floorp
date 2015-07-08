@@ -332,10 +332,11 @@ class Graph(object):
                 raise ValueError(message.fomrat(build['task']))
 
             if 'post-build' in build:
+                # copy over the old parameters to update the template
                 post_parameters = copy.copy(build_parameters)
-                post_parameters['artifact_taskid'] = build_parameters['build_slugid']
+                post_parameters['taskId'] = slugid()
+
                 post_task = templates.load(build['post-build']['task'], post_parameters)
-                post_task['taskId'] = slugid()
 
                 if 'requires' not in post_task:
                     post_task['requires'] = []
