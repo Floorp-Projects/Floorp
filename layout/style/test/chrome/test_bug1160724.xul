@@ -33,7 +33,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1160724
     },
 
     observe(msg) {
-      errorLogged = true;
+      if (msg.toString().indexOf("transform") != -1) {
+        errorLogged = true;
+      }
     }
   };
   serv.registerListener(listener);
