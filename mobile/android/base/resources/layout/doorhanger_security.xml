@@ -5,26 +5,27 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:padding="@dimen/doorhanger_section_padding_medium"
+              android:layout_height="wrap_content"
               android:orientation="vertical">
 
-    <EditText android:id="@+id/username_edit"
+    <TextView android:id="@+id/security_title"
+              android:focusable="true"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:inputType="textNoSuggestions"
-              android:hint="@string/doorhanger_login_edit_username_hint"/>
+              android:paddingBottom="@dimen/doorhanger_subsection_padding"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
+              android:visibility="gone"/>
 
-    <EditText android:id="@+id/password_edit"
+    <TextView android:id="@+id/security_state"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:inputType="textPassword"
-              android:hint="@string/doorhanger_login_edit_password_hint"/>
+              android:paddingBottom="@dimen/doorhanger_section_padding_small"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Bold"
+              android:visibility="gone"/>
 
-    <CheckBox android:id="@+id/checkbox_toggle_password"
+    <TextView android:id="@+id/security_message"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:text="@string/doorhanger_login_edit_toggle"
-              android:layout_marginTop="@dimen/doorhanger_subsection_padding"/>
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
 
 </LinearLayout>

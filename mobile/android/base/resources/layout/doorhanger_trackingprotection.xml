@@ -8,26 +8,19 @@
               android:layout_height="wrap_content"
               android:orientation="vertical">
 
-    <TextView android:id="@+id/doorhanger_message"
+    <TextView android:id="@+id/trackingprotection_title"
               android:focusable="true"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
 
-    <LinearLayout android:id="@+id/doorhanger_inputs"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:orientation="vertical"
-              android:layout_marginTop="@dimen/doorhanger_section_padding_medium"
-              android:gravity="right"
-              android:visibility="gone"/>
-
-    <CheckBox android:id="@+id/doorhanger_checkbox"
+    <TextView android:id="@+id/trackingprotection_enabled"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:layout_marginTop="@dimen/doorhanger_section_padding_medium"
-              android:checked="true"
-              android:textColor="@color/placeholder_active_grey"
-              android:visibility="gone"/>
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Bold"/>
+
+    <TextView android:id="@+id/trackingprotection_message"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"/>
 
 </LinearLayout>

@@ -99,7 +99,8 @@
     <dimen name="doorhanger_GB_offsetY">7dp</dimen>
     <dimen name="doorhanger_drawable_padding">5dp</dimen>
     <dimen name="doorhanger_subsection_padding">8dp</dimen>
-    <dimen name="doorhanger_section_padding_small">20dp</dimen>
+    <dimen name="doorhanger_section_padding_small">10dp</dimen>
+    <dimen name="doorhanger_section_padding_medium">20dp</dimen>
     <dimen name="doorhanger_section_padding_large">30dp</dimen>
     <dimen name="doorhanger_icon_size">60dp</dimen>
 

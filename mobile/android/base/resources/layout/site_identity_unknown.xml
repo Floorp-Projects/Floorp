@@ -19,6 +19,6 @@
               android:layout_height="wrap_content"
               android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
               android:text="@string/identity_not_encrypted"
-              android:paddingTop="@dimen/doorhanger_section_padding_small"/>
+              android:paddingTop="@dimen/doorhanger_section_padding_medium"/>
 
 </LinearLayout>
