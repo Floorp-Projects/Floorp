@@ -22,12 +22,15 @@ EXPORTS += [
 if CONFIG['MOZ_WEBRTC']:
     EXPORTS += ['AudioOutputObserver.h',
                 'MediaEngineWebRTC.h']
+    EXPORTS.mozilla.dom += [ 'RTCIdentityProviderRegistrar.h' ]
     UNIFIED_SOURCES += [
         'MediaEngineCameraVideoSource.cpp',
         'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTCAudio.cpp',
         'MediaEngineWebRTCVideo.cpp',
         'MediaTrackConstraints.cpp',
+        'RTCCertificate.cpp',
+        'RTCIdentityProviderRegistrar.cpp',
     ]
     # MediaEngineWebRTC.cpp needs to be built separately.
     SOURCES += [
@@ -59,7 +62,6 @@ XPIDL_SOURCES += [
 UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
     'PeerIdentity.cpp',
-    'RTCCertificate.cpp',
 ]
 
 EXPORTS.mozilla += [
