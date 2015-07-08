@@ -17,6 +17,7 @@ python_modules = [
     'mozhttpd',
     'mozinfo',
     'mozinstall',
+    'mozleak',
     'mozlog',
     'moznetwork',
     'mozprocess',

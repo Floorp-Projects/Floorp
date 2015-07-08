@@ -14,7 +14,6 @@ import traceback
 here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, here)
 
-from automationutils import processLeakLog
 from runtests import Mochitest
 from runtests import MochitestUtilsMixin
 from mochitest_options import MochitestArgumentParser
@@ -22,6 +21,7 @@ from marionette import Marionette
 from mozprofile import Profile, Preferences
 from mozlog import structured
 import mozinfo
+import mozleak
 
 
 class B2GMochitest(MochitestUtilsMixin):
@@ -274,7 +274,12 @@ class B2GMochitest(MochitestUtilsMixin):
                 local_leak_file.name)
             self.app_ctx.dm.removeFile(self.leak_report_file)
 
-            processLeakLog(local_leak_file.name, options)
+            mozleak.process_leak_log(
+                local_leak_file.name,
+                leak_thresholds=options.leakThresholds,
+                ignore_missing_leaks=options.ignoreMissingLeaks,
+                log=self.log,
+            )
         except KeyboardInterrupt:
             self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1

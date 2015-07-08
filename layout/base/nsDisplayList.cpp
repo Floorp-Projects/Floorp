@@ -606,7 +606,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
       mCurrentAnimatedGeometryRoot(nullptr),
-      mWillChangeBudgetCalculated(false),
       mDirtyRect(-1,-1,-1,-1),
       mGlassDisplayItem(nullptr),
       mScrollInfoItemsForHoisting(nullptr),
@@ -1173,44 +1172,32 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
   }
 }
 
-void
-nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame, const nsSize& aRect) {
-  // Make sure that we don't query the budget before the display list is fully
-  // built and that the will change budget is locked in.
-  NS_ASSERTION(!mWillChangeBudgetCalculated,
-               "Can't modify the budget once it's been used.");
-
-  DocumentWillChangeBudget budget;
-
-  nsPresContext* key = aFrame->PresContext();
-  if (mWillChangeBudget.Contains(key)) {
-    mWillChangeBudget.Get(key, &budget);
-  }
-
+const uint32_t gWillChangeAreaMultiplier = 3;
+static uint32_t GetWillChangeCost(nsIFrame* aFrame,
+                                  const nsSize& aSize) {
   // There's significant overhead for each layer created from Gecko
   // (IPC+Shared Objects) and from the backend (like an OpenGL texture).
   // Therefore we set a minimum cost threshold of a 64x64 area.
   int minBudgetCost = 64 * 64;
 
-  budget.mBudget +=
+  uint32_t budgetCost =
     std::max(minBudgetCost,
-      nsPresContext::AppUnitsToIntCSSPixels(aRect.width) *
-      nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+      nsPresContext::AppUnitsToIntCSSPixels(aSize.width) *
+      nsPresContext::AppUnitsToIntCSSPixels(aSize.height));
 
-  mWillChangeBudget.Put(key, budget);
+  return budgetCost;
 }
 
 bool
-nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame) const {
-  uint32_t multiplier = 3;
-
-  mWillChangeBudgetCalculated = true;
+nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
+                                            const nsSize& aSize) {
+  if (mBudgetSet.Contains(aFrame)) {
+    return true; // Already accounted
+  }
 
   nsPresContext* key = aFrame->PresContext();
   if (!mWillChangeBudget.Contains(key)) {
-    NS_ASSERTION(false, "If we added nothing to our budget then this "
-                        "shouldn't be called.");
-    return false;
+    mWillChangeBudget.Put(key, DocumentWillChangeBudget());
   }
 
   DocumentWillChangeBudget budget;
@@ -1220,20 +1207,41 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame) const {
   uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
     nsPresContext::AppUnitsToIntCSSPixels(area.height);
 
-  bool onBudget = budget.mBudget / multiplier < budgetLimit;
-  if (!onBudget) {
+  uint32_t cost = GetWillChangeCost(aFrame, aSize);
+  bool onBudget = (budget.mBudget + cost) /
+                    gWillChangeAreaMultiplier < budgetLimit;
+
+  if (onBudget) {
+    budget.mBudget += cost;
+    mWillChangeBudget.Put(key, budget);
+    mBudgetSet.PutEntry(aFrame);
+  }
+
+  return onBudget;
+}
+
+bool
+nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
+                                           const nsSize& aSize) {
+  bool onBudget = AddToWillChangeBudget(aFrame, aSize);
+
+  if (onBudget) {
     nsString usageStr;
-    usageStr.AppendInt(budget.mBudget);
+    usageStr.AppendInt(GetWillChangeCost(aFrame, aSize));
 
     nsString multiplierStr;
-    multiplierStr.AppendInt(multiplier);
+    multiplierStr.AppendInt(gWillChangeAreaMultiplier);
 
     nsString limitStr;
+    nsRect area = aFrame->PresContext()->GetVisibleArea();
+    uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
+      nsPresContext::AppUnitsToIntCSSPixels(area.height);
     limitStr.AppendInt(budgetLimit);
 
     const char16_t* params[] = { usageStr.get(), multiplierStr.get(), limitStr.get() };
-    key->Document()->WarnOnceAbout(nsIDocument::eWillChangeBudget, false,
-                                   params, ArrayLength(params));
+    aFrame->PresContext()->Document()->WarnOnceAbout(
+      nsIDocument::eWillChangeBudget, false,
+      params, ArrayLength(params));
   }
   return onBudget;
 }
@@ -5052,7 +5060,7 @@ nsDisplayTransform::ShouldPrerender(nsDisplayListBuilder* aBuilder) {
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
   if ((disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) &&
-      aBuilder->IsInWillChangeBudget(mFrame)) {
+      aBuilder->IsInWillChangeBudget(mFrame, mFrame->GetSize())) {
     return true;
   }
 

@@ -23,8 +23,7 @@ sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automationutils import (
     dumpScreen,
-    printstatus,
-    processLeakLog
+    printstatus
 )
 import mozcrash
 import mozdebug
@@ -32,6 +31,7 @@ import mozinfo
 import mozprocess
 import mozprofile
 import mozrunner
+import mozleak
 from mozrunner.utils import test_environment
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -631,7 +631,11 @@ class RefTest(object):
                            symbolsPath=options.symbolsPath,
                            options=options,
                            debuggerInfo=debuggerInfo)
-      processLeakLog(self.leakLogFile, options)
+      mozleak.process_leak_log(
+        self.leakLogFile,
+        leak_thresholds=options.leakThresholds,
+        log=log,
+      )
       log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
     finally:
       self.cleanup(profileDir)
