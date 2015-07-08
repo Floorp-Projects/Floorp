@@ -6,6 +6,6 @@ the contents of this dir (testing/mozharness) represent two parts
     * hgmo/build/mozharness is still live and the defacto read/write repository
     * continuous integration jobs are based on this copy
     * As we transition to dropping support for hg.m.o/build/mozharness, this copy will continue to be synced
-    * this copy is currently based on: http://hg.mozilla.org/build/mozharness/rev/4d855a6835ed
+    * this copy is currently based on: http://hg.mozilla.org/build/mozharness/rev/43f7600b8c80
 
 

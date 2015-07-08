@@ -33,12 +33,18 @@ class TooltoolMixin(object):
         # set the default authentication file based on platform; this
         # corresponds to where puppet puts the token
         if 'tooltool_authentication_file' in self.config:
-            return self.config['tooltool_authentication_file']
-
-        if self._is_windows():
-            return r'c:\builds\relengapi.tok'
+            fn = self.config['tooltool_authentication_file']
+        elif self._is_windows():
+            fn = r'c:\builds\relengapi.tok'
         else:
-            return '/builds/relengapi.tok'
+            fn = '/builds/relengapi.tok'
+
+        # if the file doesn't exist, don't pass it to tooltool (it will just
+        # fail).  In taskcluster, this will work OK as the relengapi-proxy will
+        # take care of auth.  Everywhere else, we'll get auth failures if
+        # necessary.
+        if os.path.exists(fn):
+            return fn
 
     def tooltool_fetch(self, manifest, bootstrap_cmd=None,
                        output_dir=None, privileged=False, cache=None):

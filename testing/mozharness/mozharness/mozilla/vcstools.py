@@ -39,14 +39,20 @@ class VCSToolsScript(VCSScript):
                     )
                     self.chmod(file_path, 0755)
         else:
+            # We simply verify that everything is in order
+            # or if the user forgot to specify developer mode
             for vcs_tool in VCS_TOOLS:
                 file_path = self.which(vcs_tool)
+
+                # If the tool is specified and it is a list is
+                # because we're running on Windows and we won't check
+                if type(self.query_exe(vcs_tool)) is list:
+                    continue
+
+                if not self.is_exe(file_path):
+                    self.critical("%s is not executable." % file_path)
+
                 if file_path is None:
-                    file_path = self.query_exe(vcs_tool)
-
-                    if not self.is_exe(file_path):
-                        self.critical("%s is not executable." % file_path)
-
                     self.fatal("This machine is missing %s, if this is your "
                                "local machine you can use --cfg "
                                "developer_config.py" % vcs_tool)
