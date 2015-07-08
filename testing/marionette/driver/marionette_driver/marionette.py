@@ -550,7 +550,7 @@ class Marionette(object):
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
                  busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
                  device_serial=None, adb_path=None, process_args=None,
-                 adb_host=None, adb_port=None, prefs=None):
+                 adb_host=None, adb_port=None, prefs=None, startup_timeout=60):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -599,7 +599,7 @@ class Marionette(object):
                                            app_args=app_args, symbols_path=symbols_path,
                                            gecko_log=gecko_log, prefs=prefs)
             self.instance.start()
-            assert(self.wait_for_port()), "Timed out waiting for port!"
+            assert(self.wait_for_port(timeout=startup_timeout)), "Timed out waiting for port!"
 
         if emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,

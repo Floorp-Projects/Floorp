@@ -1969,7 +1969,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   }
 
   if (sNPObjWrappers) {
-    for (auto i = sNPObjWrappers->RemovingIter(); !i.Done(); i.Next()) {
+    for (auto i = sNPObjWrappers->Iter(); !i.Done(); i.Next()) {
       auto entry = static_cast<NPObjWrapperHashEntry*>(i.Get());
 
       if (entry->mNpp == npp) {

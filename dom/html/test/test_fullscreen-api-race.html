@@ -72,11 +72,29 @@ const ACTION_FUNCS = [
   }
 ];
 
+const DISABLE_LIST = [
+  // Bug 1180574
+  { openWinFunc: "openNewWindow",
+    actionFunc: "navigate",
+    platform: "Linux i686" }
+];
+
 function* testGenerator() {
   for (var openWinFunc of OPEN_WINDOW_FUNCS) {
     for (var actionFunc of ACTION_FUNCS) {
-      info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
-      yield { openWinFunc: openWinFunc, actionFunc: actionFunc };
+      var skipTest = false;
+      for (var disabledItem of DISABLE_LIST) {
+        if (openWinFunc.name == disabledItem.openWinFunc &&
+            actionFunc.name == disabledItem.actionFunc &&
+            navigator.platform == disabledItem.platform) {
+          skipTest = true;
+          break;
+        }
+      }
+      if (!skipTest) {
+        info(`Testing ${openWinFunc.name}, ${actionFunc.name}`);
+        yield { openWinFunc: openWinFunc, actionFunc: actionFunc };
+      }
     }
   }
 }
