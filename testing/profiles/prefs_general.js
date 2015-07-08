@@ -252,9 +252,6 @@ user_pref("identity.fxaccounts.remote.signin.uri", "https://%(server)s/fxa-signi
 user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings");
 user_pref('identity.fxaccounts.remote.webchannel.uri', 'https://%(server)s/');
 
-// Enable logging of APZ test data (see bug 961289).
-user_pref('apz.test.logging_enabled', true);
-
 // Make sure SSL Error reports don't hit the network
 user_pref("security.ssl.errorReporting.url", "https://example.com/browser/browser/base/content/test/general/pinning_reports.sjs?succeed");
 
