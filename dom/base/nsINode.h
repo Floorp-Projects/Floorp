@@ -22,6 +22,7 @@
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include <iosfwd>
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -581,6 +582,12 @@ public:
   {
     return mNodeInfo->NamespaceID() == aNamespace;
   }
+
+  /**
+   * Print a debugger friendly descriptor of this element. This will describe
+   * the position of this element in the document.
+   */
+  friend std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode);
 
 protected:
   // These 2 methods are useful for the recursive templates IsHTMLElement,
@@ -1722,7 +1729,7 @@ public:
     mNodeInfo->GetPrefix(aPrefix);
   }
 #endif
-  void GetLocalName(mozilla::dom::DOMString& aLocalName)
+  void GetLocalName(mozilla::dom::DOMString& aLocalName) const
   {
     const nsString& localName = LocalName();
     if (localName.IsVoid()) {
