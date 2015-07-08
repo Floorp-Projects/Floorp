@@ -1945,47 +1945,48 @@ private:
 template <typename ObjectWrapper, typename Res,
           typename Tin1, typename Tin2, typename Tin3,
           typename Tin4, typename Tin5, typename Tin6,
-          typename Tin7, typename Tin8,
+          typename Tin7, typename Tin8, typename Tin9,
           typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
           typename Arg4=Tin4, typename Arg5=Tin5, typename Arg6=Tin6,
-          typename Arg7=Tin7, typename Arg8=Tin8>
-class BluetoothNotificationHALRunnable8 : public nsRunnable
+          typename Arg7=Tin7, typename Arg8=Tin8, typename Arg9=Tin9>
+class BluetoothNotificationHALRunnable9 : public nsRunnable
 {
 public:
   typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothNotificationHALRunnable8<ObjectWrapper, Res,
-    Tin1, Tin2, Tin3, Tin4, Tin5, Tin6, Tin7, Tin8,
-    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8> SelfType;
+  typedef BluetoothNotificationHALRunnable9<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Tin5, Tin6, Tin7, Tin8, Tin9,
+    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9> SelfType;
 
   template <typename T1, typename T2, typename T3, typename T4, typename T5,
-            typename T6, typename T7, typename T8>
+            typename T6, typename T7, typename T8, typename T9>
   static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8),
+    Res (ObjectType::*aMethod)(
+      Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9),
     const T1& aIn1, const T2& aIn2, const T3& aIn3,
     const T4& aIn4, const T5& aIn5, const T6& aIn6,
-    const T7& aIn7, const T8& aIn8)
+    const T7& aIn7, const T8& aIn8, const T9& aIn9)
   {
     nsRefPtr<SelfType> runnable(new SelfType(aMethod));
 
     if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4, aIn5,
-                                          aIn6, aIn7, aIn8))) {
+                                          aIn6, aIn7, aIn8, aIn9))) {
       return nullptr;
     }
     return runnable.forget();
   }
 
   template <typename T1, typename T2, typename T3, typename T4, typename T5,
-            typename T6, typename T7, typename T8>
+            typename T6, typename T7, typename T8, typename T9>
   static void
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7,
-                                      Arg8),
+                                      Arg8, Arg9),
            const T1& aIn1, const T2& aIn2, const T3& aIn3,
            const T4& aIn4, const T5& aIn5, const T6& aIn6,
-           const T7& aIn7, const T8& aIn8)
+           const T7& aIn7, const T8& aIn8, const T9& aIn9)
   {
     nsRefPtr<SelfType> runnable = Create(aMethod,
                                          aIn1, aIn2, aIn3, aIn4, aIn5, aIn6,
-                                         aIn7, aIn8);
+                                         aIn7, aIn8, aIn9);
     if (!runnable) {
       BT_WARNING("BluetoothNotificationHALRunnable8::Create failed");
       return;
@@ -2006,25 +2007,27 @@ public:
     if (!obj) {
       BT_WARNING("Notification handler not initialized");
     } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5, mArg6, mArg7, mArg8);
+      ((*obj).*mMethod)(
+        mArg1, mArg2, mArg3, mArg4, mArg5, mArg6, mArg7, mArg8, mArg9);
     }
     return NS_OK;
   }
 
 private:
-  BluetoothNotificationHALRunnable8(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8))
+  BluetoothNotificationHALRunnable9(
+    Res (ObjectType::*aMethod)(
+      Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9))
   : mMethod(aMethod)
   {
     MOZ_ASSERT(mMethod);
   }
 
   template<typename T1, typename T2, typename T3, typename T4, typename T5,
-           typename T6, typename T7, typename T8>
+           typename T6, typename T7, typename T8, typename T9>
   nsresult
   ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3,
                 const T4& aIn4, const T5& aIn5, const T6& aIn6,
-                const T7& aIn7, const T8& aIn8)
+                const T7& aIn7, const T8& aIn8, const T9& aIn9)
   {
     nsresult rv = Convert(aIn1, mArg1);
     if (NS_FAILED(rv)) {
@@ -2058,10 +2061,15 @@ private:
     if (NS_FAILED(rv)) {
       return rv;
     }
+    rv = Convert(aIn9, mArg9);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
     return NS_OK;
   }
 
-  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8);
+  Res (ObjectType::*mMethod)(
+    Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9);
   Tin1 mArg1;
   Tin2 mArg2;
   Tin3 mArg3;
@@ -2070,6 +2078,7 @@ private:
   Tin6 mArg6;
   Tin7 mArg7;
   Tin8 mArg8;
+  Tin9 mArg9;
 };
 
 END_BLUETOOTH_NAMESPACE
