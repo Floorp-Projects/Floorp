@@ -315,6 +315,11 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
 #undef INLINE_SIMD_COMPARISON_
 
+    if (native == js::simd_int32x4_extractLane)
+        return inlineSimdExtractLane(callInfo, native, SimdTypeDescr::Int32x4);
+    if (native == js::simd_float32x4_extractLane)
+        return inlineSimdExtractLane(callInfo, native, SimdTypeDescr::Float32x4);
+
     if (native == js::simd_int32x4_replaceLane)
         return inlineSimdReplaceLane(callInfo, native, SimdTypeDescr::Int32x4);
     if (native == js::simd_float32x4_replaceLane)
@@ -3233,6 +3238,31 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdTypeDescr::
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition* arg = callInfo.getArg(1);
+    if (!arg->isConstantValue() || arg->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+    int32_t lane = callInfo.getArg(1)->constantValue().toInt32();
+    if (lane < 0 || lane >= 4)
+        return InliningStatus_NotInlined;
+
+    // See comment in inlineBinarySimd
+    MIRType vecType = SimdTypeDescrToMIRType(type);
+    MIRType scalarType = SimdTypeToScalarType(vecType);
+    MSimdExtractElement* ins = MSimdExtractElement::New(alloc(), callInfo.getArg(0),
+                                                        vecType, scalarType, SimdLane(lane));
+    current->add(ins);
+    current->push(ins);
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type)
 {
     InlineTypedObject* templateObj = nullptr;
@@ -3242,9 +3272,11 @@ IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, SimdTypeD
     MDefinition* arg = callInfo.getArg(1);
     if (!arg->isConstantValue() || arg->type() != MIRType_Int32)
         return InliningStatus_NotInlined;
+
     int32_t lane = arg->constantValue().toInt32();
     if (lane < 0 || lane >= 4)
         return InliningStatus_NotInlined;
+
     // See comment in inlineBinarySimd
     MIRType mirType = SimdTypeDescrToMIRType(type);
     MSimdInsertElement* ins = MSimdInsertElement::New(alloc(), callInfo.getArg(0),

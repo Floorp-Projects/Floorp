@@ -41,6 +41,7 @@
   V(and, (CoercedBinaryFunc<Float32x4, Int32x4, And, Float32x4>), 2)                  \
   V(div, (BinaryFunc<Float32x4, Div, Float32x4>), 2)                                  \
   V(equal, (CompareFunc<Float32x4, Equal, Int32x4>), 2)                               \
+  V(extractLane, (ExtractLane<Float32x4>), 2)                                         \
   V(greaterThan, (CompareFunc<Float32x4, GreaterThan, Int32x4>), 2)                   \
   V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual, Int32x4>), 2)     \
   V(lessThan, (CompareFunc<Float32x4, LessThan, Int32x4>), 2)                         \
@@ -98,6 +99,7 @@
   V(add, (BinaryFunc<Float64x2, Add, Float64x2>), 2)                                  \
   V(div, (BinaryFunc<Float64x2, Div, Float64x2>), 2)                                  \
   V(equal, (CompareFunc<Float64x2, Equal, Int32x4>), 2)                               \
+  V(extractLane, (ExtractLane<Float64x2>), 2)                                         \
   V(greaterThan, (CompareFunc<Float64x2, GreaterThan, Int32x4>), 2)                   \
   V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual, Int32x4>), 2)     \
   V(lessThan, (CompareFunc<Float64x2, LessThan, Int32x4>), 2)                         \
@@ -144,6 +146,7 @@
   V(add, (BinaryFunc<Int8x16, Add, Int8x16>), 2)                                      \
   V(and, (BinaryFunc<Int8x16, And, Int8x16>), 2)                                      \
   V(equal, (CompareFunc<Int8x16, Equal, Int8x16>), 2)                                 \
+  V(extractLane, (ExtractLane<Int8x16>), 2)                                           \
   V(greaterThan, (CompareFunc<Int8x16, GreaterThan, Int8x16>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int8x16, GreaterThanOrEqual, Int8x16>), 2)       \
   V(lessThan, (CompareFunc<Int8x16, LessThan, Int8x16>), 2)                           \
@@ -192,6 +195,7 @@
   V(add, (BinaryFunc<Int16x8, Add, Int16x8>), 2)                                      \
   V(and, (BinaryFunc<Int16x8, And, Int16x8>), 2)                                      \
   V(equal, (CompareFunc<Int16x8, Equal, Int16x8>), 2)                                 \
+  V(extractLane, (ExtractLane<Int16x8>), 2)                                           \
   V(greaterThan, (CompareFunc<Int16x8, GreaterThan, Int16x8>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int16x8, GreaterThanOrEqual, Int16x8>), 2)       \
   V(lessThan, (CompareFunc<Int16x8, LessThan, Int16x8>), 2)                           \
@@ -242,6 +246,7 @@
   V(add, (BinaryFunc<Int32x4, Add, Int32x4>), 2)                                      \
   V(and, (BinaryFunc<Int32x4, And, Int32x4>), 2)                                      \
   V(equal, (CompareFunc<Int32x4, Equal, Int32x4>), 2)                                 \
+  V(extractLane, (ExtractLane<Int32x4>), 2)                                           \
   V(greaterThan, (CompareFunc<Int32x4, GreaterThan, Int32x4>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual, Int32x4>), 2)       \
   V(lessThan, (CompareFunc<Int32x4, LessThan, Int32x4>), 2)                           \
@@ -325,6 +330,7 @@
 #define ION_COMMONX4_SIMD_OP(_)      \
     ARITH_COMMONX4_SIMD_OP(_)        \
     BITWISE_COMMONX4_SIMD_OP(_)      \
+    _(extractLane)                   \
     _(replaceLane)                   \
     _(bitselect)                     \
     _(select)                        \
