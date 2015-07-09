@@ -32,7 +32,7 @@ toolkit.jar:
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
         skin/classic/global/linkTree.css
-*       skin/classic/global/listbox.css
+        skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
         skin/classic/global/menulist.css
         skin/classic/global/netError.css
