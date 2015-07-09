@@ -186,7 +186,7 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var s5 = Load_int16(typedObj, offset + 10);
     var s6 = Load_int16(typedObj, offset + 12);
     var s7 = Load_int16(typedObj, offset + 14);
-    return GetInt8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
+    return GetInt16x8TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
 
   case JS_SIMDTYPEREPR_INT32:
     var x = Load_int32(typedObj, offset + 0);
@@ -283,11 +283,11 @@ function TypedObjectSetScalar(descr, typedObj, offset, fromValue) {
   switch (type) {
   case JS_SCALARTYPEREPR_INT8:
     return Store_int8(typedObj, offset,
-                     TO_INT32(fromValue) & 0xFF);
+                      TO_INT32(fromValue) & 0xFF);
 
   case JS_SCALARTYPEREPR_UINT8:
     return Store_uint8(typedObj, offset,
-                      TO_UINT32(fromValue) & 0xFF);
+                       TO_UINT32(fromValue) & 0xFF);
 
   case JS_SCALARTYPEREPR_UINT8_CLAMPED:
     var v = ClampToUint8(+fromValue);
@@ -295,19 +295,19 @@ function TypedObjectSetScalar(descr, typedObj, offset, fromValue) {
 
   case JS_SCALARTYPEREPR_INT16:
     return Store_int16(typedObj, offset,
-                      TO_INT32(fromValue) & 0xFFFF);
+                       TO_INT32(fromValue) & 0xFFFF);
 
   case JS_SCALARTYPEREPR_UINT16:
     return Store_uint16(typedObj, offset,
-                       TO_UINT32(fromValue) & 0xFFFF);
+                        TO_UINT32(fromValue) & 0xFFFF);
 
   case JS_SCALARTYPEREPR_INT32:
     return Store_int32(typedObj, offset,
-                      TO_INT32(fromValue));
+                       TO_INT32(fromValue));
 
   case JS_SCALARTYPEREPR_UINT32:
     return Store_uint32(typedObj, offset,
-                       TO_UINT32(fromValue));
+                        TO_UINT32(fromValue));
 
   case JS_SCALARTYPEREPR_FLOAT32:
     return Store_float32(typedObj, offset, +fromValue);
@@ -562,18 +562,61 @@ function SimdToSource() {
 
   if (DESCR_KIND(descr) != JS_TYPEREPR_SIMD_KIND)
     ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "SIMD", "toSource", typeof this);
-
-  var type = DESCR_TYPE(descr);
-  var protoString = SimdProtoString(type);
-  var length = SimdTypeToLength(type);
-  if (length == 2)
-    return `${protoString}(${this.x}, ${this.y})`;
-  else if (length == 4)
-    return `${protoString}(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
-  else if (length == 8)
-    return `${protoString}(${this.s0}, ${this.s1}, ${this.s2}, ${this.s3}, ${this.s4}, ${this.s5}, ${this.s6}, ${this.s7})`;
-  else if (length == 16)
-    return `${protoString}(${this.s0}, ${this.s1}, ${this.s2}, ${this.s3}, ${this.s4}, ${this.s5}, ${this.s6}, ${this.s7}, ${this.s8}, ${this.s9}, ${this.s10}, ${this.s11}, ${this.s12}, ${this.s13}, ${this.s14}, ${this.s15})`;
+  var typerepr = DESCR_TYPE(descr);
+  var protoString = SimdProtoString(typerepr);
+  switch (typerepr) {
+      case JS_SIMDTYPEREPR_INT8: {
+          var s1 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 0);
+          var s2 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 1);
+          var s3 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 2);
+          var s4 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 3);
+          var s5 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 4);
+          var s6 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 5);
+          var s7 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 6);
+          var s8 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 7);
+          var s9 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 0);
+          var s10 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 1);
+          var s11 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 2);
+          var s12 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 3);
+          var s13 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 4);
+          var s14 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 5);
+          var s15 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 6);
+          var s16 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 7);
+          return `${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8}, ${s9}, ${s10}, ${s11}, ${s12}, ${s13}, ${s14}, ${s15}, ${s16})`;
+      }
+      case JS_SIMDTYPEREPR_INT16: {
+          var s1 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 0);
+          var s2 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 1);
+          var s3 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 2);
+          var s4 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 3);
+          var s5 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 4);
+          var s6 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 5);
+          var s7 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 6);
+          var s8 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 7);
+          return `${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8})`;
+      }
+      case JS_SIMDTYPEREPR_INT32: {
+          var x = callFunction(std_SIMD_Int32x4_extractLane, null, this, 0);
+          var y = callFunction(std_SIMD_Int32x4_extractLane, null, this, 1);
+          var z = callFunction(std_SIMD_Int32x4_extractLane, null, this, 2);
+          var w = callFunction(std_SIMD_Int32x4_extractLane, null, this, 3);
+          return `${protoString}(${x}, ${y}, ${z}, ${w})`;
+      }
+      case JS_SIMDTYPEREPR_FLOAT32: {
+          var x = callFunction(std_SIMD_Float32x4_extractLane, null, this, 0);
+          var y = callFunction(std_SIMD_Float32x4_extractLane, null, this, 1);
+          var z = callFunction(std_SIMD_Float32x4_extractLane, null, this, 2);
+          var w = callFunction(std_SIMD_Float32x4_extractLane, null, this, 3);
+          return `${protoString}(${x}, ${y}, ${z}, ${w})`;
+      }
+      case JS_SIMDTYPEREPR_FLOAT64: {
+          var x = callFunction(std_SIMD_Float64x2_extractLane, null, this, 0);
+          var y = callFunction(std_SIMD_Float64x2_extractLane, null, this, 1);
+          return `${protoString}(${x}, ${y})`;
+      }
+  }
+  assert(false, "unexpected SIMD kind");
+  return '?';
 }
 
 ///////////////////////////////////////////////////////////////////////////

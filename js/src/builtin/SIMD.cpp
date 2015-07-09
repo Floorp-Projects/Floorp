@@ -13,6 +13,7 @@
 
 #include "builtin/SIMD.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
 
 #include "jsapi.h"
@@ -30,6 +31,7 @@ using mozilla::ArrayLength;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::FloorLog2;
+using mozilla::NumberIsInt32;
 
 ///////////////////////////////////////////////////////////////////////////
 // SIMD
@@ -834,6 +836,27 @@ static bool
 BinaryFunc(JSContext* cx, unsigned argc, Value* vp)
 {
     return CoercedBinaryFunc<In, Out, Op, Out>(cx, argc, vp);
+}
+
+template<typename V>
+static bool
+ExtractLane(JSContext* cx, unsigned argc, Value* vp)
+{
+    typedef typename V::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 2 || !IsVectorObject<V>(args[0]) || !args[1].isNumber())
+        return ErrorBadArgs(cx);
+
+    int32_t lane;
+    if (!NumberIsInt32(args[1].toNumber(), &lane))
+        return ErrorBadArgs(cx);
+    if (lane < 0 || uint32_t(lane) >= V::lanes)
+        return ErrorBadArgs(cx);
+
+    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    V::setReturn(args, vec[lane]);
+    return true;
 }
 
 template<typename V>

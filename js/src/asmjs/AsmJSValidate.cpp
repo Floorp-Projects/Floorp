@@ -2577,10 +2577,7 @@ enum class I32 : uint8_t {
     I32X4SignMask,
     F32X4SignMask,
 
-    I32X4ExtractX,
-    I32X4ExtractY,
-    I32X4ExtractZ,
-    I32X4ExtractW,
+    I32X4ExtractLane,
 
     // Specific to AsmJS
     Id,
@@ -2630,10 +2627,7 @@ enum class F32 : uint8_t {
     StoreF64,
 
     // SIMD opcodes
-    F32X4ExtractX,
-    F32X4ExtractY,
-    F32X4ExtractZ,
-    F32X4ExtractW,
+    F32X4ExtractLane,
 
     // asm.js specific
     Id,
@@ -5451,13 +5445,13 @@ CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
     }
 
     if (field == names.x)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractX, F32::F32X4ExtractX);
+        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
     else if (field == names.y)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractY, F32::F32X4ExtractY);
+        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
     else if (field == names.z)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractZ, F32::F32X4ExtractZ);
+        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
     else if (field == names.w)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractW, F32::F32X4ExtractW);
+        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
     else
         return f.fail(base, "dot access field must be a lane name (x, y, z, w) or signMask");
 
@@ -5476,29 +5470,6 @@ EmitSignMask(FunctionCompiler& f, AsmType type, MDefinition** def)
     if (!EmitExpr(f, type, &in))
         return false;
     *def = f.extractSignMask(in);
-    return true;
-}
-
-static MIRType
-ScalarMIRTypeFromSimdAsmType(AsmType type)
-{
-    switch (type) {
-      case AsmType::Int32:
-      case AsmType::Float32:
-      case AsmType::Float64:   break;
-      case AsmType::Int32x4:   return MIRType_Int32;
-      case AsmType::Float32x4: return MIRType_Float32;
-    }
-    MOZ_CRASH("unexpected simd type");
-}
-
-static bool
-EmitExtractLane(FunctionCompiler& f, AsmType type, SimdLane lane, MDefinition** def)
-{
-    MDefinition* in;
-    if (!EmitExpr(f, type, &in))
-        return false;
-    *def = f.extractSimdElement(lane, in, ScalarMIRTypeFromSimdAsmType(type));
     return true;
 }
 
@@ -6943,6 +6914,35 @@ class CheckSimdVectorScalarArgs
     }
 };
 
+class CheckSimdExtractLaneArgs
+{
+    AsmJSSimdType formalSimdType_;
+
+  public:
+    explicit CheckSimdExtractLaneArgs(AsmJSSimdType t) : formalSimdType_(t) {}
+
+    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType) const
+    {
+        MOZ_ASSERT(argIndex < 2);
+        if (argIndex == 0) {
+            // First argument is the vector
+            if (!(actualType <= Type(formalSimdType_))) {
+                return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
+                               Type(formalSimdType_).toChars());
+            }
+            return true;
+        }
+
+        uint32_t laneIndex;
+        // Second argument is the lane < vector length
+        if (!IsLiteralOrConstInt(f, arg, &laneIndex))
+            return f.failf(arg, "lane selector should be a constant integer literal");
+        if (laneIndex >= SimdTypeToLength(formalSimdType_))
+            return f.failf(arg, "lane selector should be in bounds");
+        return true;
+    }
+};
+
 class CheckSimdReplaceLaneArgs
 {
     AsmJSSimdType formalSimdType_;
@@ -7130,6 +7130,60 @@ EmitSimdBinaryShift(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
+CheckSimdExtractLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+{
+    switch (opType) {
+      case AsmJSSimdType_int32x4:
+        f.writeOp(I32::I32X4ExtractLane);
+        *type = Type::Signed;
+        break;
+      case AsmJSSimdType_float32x4:
+        f.writeOp(F32::F32X4ExtractLane);
+        *type = Type::Float;
+        break;
+    }
+    return CheckSimdCallArgs(f, call, 2, CheckSimdExtractLaneArgs(opType));
+}
+
+static MIRType
+ScalarMIRTypeFromSimdAsmType(AsmType type)
+{
+    switch (type) {
+      case AsmType::Int32:
+      case AsmType::Float32:
+      case AsmType::Float64:   break;
+      case AsmType::Int32x4:   return MIRType_Int32;
+      case AsmType::Float32x4: return MIRType_Float32;
+    }
+    MOZ_CRASH("unexpected simd type");
+}
+
+static bool
+EmitExtractLane(FunctionCompiler& f, AsmType type, MDefinition** def)
+{
+    MDefinition* vec;
+    if (!EmitExpr(f, type, &vec))
+        return false;
+
+    MDefinition* laneDef;
+    if (!EmitI32Expr(f, &laneDef))
+        return false;
+
+    if (!laneDef) {
+        *def = nullptr;
+        return true;
+    }
+
+    MOZ_ASSERT(laneDef->isConstant());
+    int32_t laneLit = laneDef->toConstant()->value().toInt32();
+    MOZ_ASSERT(laneLit < 4);
+    SimdLane lane = SimdLane(laneLit);
+
+    *def = f.extractSimdElement(lane, vec, ScalarMIRTypeFromSimdAsmType(type));
+    return true;
+}
+
+static bool
 CheckSimdReplaceLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::ReplaceLane, F32X4::ReplaceLane);
@@ -7162,10 +7216,16 @@ EmitSimdReplaceLane(FunctionCompiler& f, AsmType simdType, MDefinition** def)
     MDefinition* laneDef;
     if (!EmitI32Expr(f, &laneDef))
         return false;
-    MOZ_ASSERT(laneDef->isConstant());
-    int32_t laneLit = laneDef->toConstant()->value().toInt32();
-    MOZ_ASSERT(laneLit < 4);
-    SimdLane lane = SimdLane(laneLit);
+
+    SimdLane lane;
+    if (laneDef) {
+        MOZ_ASSERT(laneDef->isConstant());
+        int32_t laneLit = laneDef->toConstant()->value().toInt32();
+        MOZ_ASSERT(laneLit < 4);
+        lane = SimdLane(laneLit);
+    } else {
+        lane = SimdLane(-1);
+    }
 
     MDefinition* scalar;
     if (!EmitExpr(f, AsmSimdTypeToScalarType(simdType), &scalar))
@@ -7552,6 +7612,8 @@ CheckSimdOperationCall(FunctionBuilder& f, ParseNode* call, const ModuleCompiler
       case AsmJSSimdOperation_xor:
         return CheckSimdBinary(f, call, opType, MSimdBinaryBitwise::xor_, type);
 
+      case AsmJSSimdOperation_extractLane:
+        return CheckSimdExtractLane(f, call, opType, type);
       case AsmJSSimdOperation_replaceLane:
         return CheckSimdReplaceLane(f, call, opType, type);
 
@@ -7790,13 +7852,14 @@ CheckCoercedSimdCall(FunctionBuilder& f, ParseNode* call, const ModuleCompiler::
     if (global->isSimdCtor()) {
         if (!CheckSimdCtorCall(f, call, global, type))
             return false;
+        MOZ_ASSERT(type->isSimd());
     } else {
         MOZ_ASSERT(global->isSimdOperation());
         if (!CheckSimdOperationCall(f, call, global, type))
             return false;
+        MOZ_ASSERT_IF(global->simdOperation() != AsmJSSimdOperation_extractLane, type->isSimd());
     }
 
-    MOZ_ASSERT(type->isSimd());
     return CoerceResult(f, call, retType, *type, opcodeAt, type);
 }
 
@@ -9851,14 +9914,8 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitSignMask(f, AsmType::Int32x4, def);
       case I32::F32X4SignMask:
         return EmitSignMask(f, AsmType::Float32x4, def);
-      case I32::I32X4ExtractX:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneX, def);
-      case I32::I32X4ExtractY:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneY, def);
-      case I32::I32X4ExtractZ:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneZ, def);
-      case I32::I32X4ExtractW:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneW, def);
+      case I32::I32X4ExtractLane:
+        return EmitExtractLane(f, AsmType::Int32x4, def);
       case I32::Bad:
         break;
     }
@@ -9924,14 +9981,8 @@ bool EmitF32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitStore(f, Scalar::Float32, def);
       case F32::StoreF64:
         return EmitStoreWithCoercion(f, Scalar::Float32, Scalar::Float64, def);
-      case F32::F32X4ExtractX:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneX, def);
-      case F32::F32X4ExtractY:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneY, def);
-      case F32::F32X4ExtractZ:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneZ, def);
-      case F32::F32X4ExtractW:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneW, def);
+      case F32::F32X4ExtractLane:
+        return EmitExtractLane(f, AsmType::Float32x4, def);
       case F32::Bad:
         break;
     }
