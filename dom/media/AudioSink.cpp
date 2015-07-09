@@ -199,7 +199,8 @@ AudioSink::AudioLoop()
     CheckedInt64 sampleTime = UsecsToFrames(AudioQueue().PeekFront()->mTime, mInfo.mRate);
 
     // Calculate the number of frames that have been pushed onto the audio hardware.
-    CheckedInt64 playedFrames = UsecsToFrames(mStartTime, mInfo.mRate) + mWritten;
+    CheckedInt64 playedFrames = UsecsToFrames(mStartTime, mInfo.mRate) +
+                                static_cast<int64_t>(mWritten);
 
     CheckedInt64 missingFrames = sampleTime - playedFrames;
     if (!missingFrames.isValid() || !sampleTime.isValid()) {
