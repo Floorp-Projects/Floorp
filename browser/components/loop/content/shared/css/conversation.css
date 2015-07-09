@@ -31,6 +31,7 @@
 .standalone .conversation-toolbar {
   padding: 20px;
   height: 64px;
+  border: none;
 }
 
 .standalone .focus-stream {
@@ -1089,16 +1090,19 @@ html[dir="rtl"] .room-context-btn-close {
 }
 
 .media-layout {
-  /* 50px is the header, 3em is the footer. */
-  height: calc(100% - 50px - 3em);
+  height: 100%;
+}
+
+.standalone-room-wrapper > .media-layout {
+  /* 50px is the header, 64px for toolbar, 3em is the footer. */
+  height: calc(100% - 50px - 64px - 3em);
 }
 
 .media-layout > .media-wrapper {
   display: flex;
   flex-flow: column wrap;
-  /* 64px for .conversation-toolbar */
-  height: calc(100% - 64px);
   margin: 0 10px;
+  height: 100%;
 }
 
 .media-wrapper > .focus-stream {
@@ -1182,17 +1186,19 @@ html[dir="rtl"] .room-context-btn-close {
 }
 
 @media screen and (max-width:640px) {
-  .media-layout {
-    /* 50px is height of header, 25px is height of footer. */
-    height: calc(100% - 50px - 25px);
+  .media-layout-wrapper {
+    height: 100%;
+  }
+
+  .standalone-room-wrapper > .media-layout {
+    /* 50px is height of header, 38px is height of toolbar, 25px is height of footer. */
+    height: calc(100% - 50px - 38px - 25px);
   }
 
   .media-layout > .media-wrapper {
     flex-direction: row;
     margin: 0;
     width: 100%;
-    /* conversation toolbar is 38px in narrow mode */
-    height: calc(100% - 38px);
   }
 
   .media-wrapper > .focus-stream {
