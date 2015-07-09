@@ -83,6 +83,8 @@ app.use("/test", express.static(__dirname + "/../test"));
 // As we don't have hashes on the urls, the best way to serve the index files
 // appears to be to be to closely filter the url and match appropriately.
 function serveIndex(req, res) {
+  "use strict";
+
   return res.sendfile(__dirname + "/content/index.html");
 }
 

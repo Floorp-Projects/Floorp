@@ -330,7 +330,6 @@ size. -->
 <!ENTITY addons "Add-ons">
 <!ENTITY logins "Logins">
 <!ENTITY downloads "Downloads">
-<!ENTITY apps "Apps">
 <!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">

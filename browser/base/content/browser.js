@@ -2163,10 +2163,16 @@ function getShortcutOrURIAndPostData(url, callback = null) {
                mayInheritPrincipal };
     }
 
-    let entry = yield PlacesUtils.keywords.fetch(keyword);
-    if (entry) {
-      shortcutURL = entry.url.href;
-      postData = entry.postData;
+    // A corrupt Places database could make this throw, breaking navigation
+    // from the location bar.
+    try {
+      let entry = yield PlacesUtils.keywords.fetch(keyword);
+      if (entry) {
+        shortcutURL = entry.url.href;
+        postData = entry.postData;
+      }
+    } catch (ex) {
+      Components.utils.reportError(`Unable to fetch data for Places keyword "${keyword}": ${ex}`);
     }
 
     if (!shortcutURL) {

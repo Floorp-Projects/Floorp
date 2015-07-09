@@ -4,6 +4,7 @@
 
 var loop = loop || {};
 loop.OTSdkDriver = (function() {
+  "use strict";
 
   var sharedActions = loop.shared.actions;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
