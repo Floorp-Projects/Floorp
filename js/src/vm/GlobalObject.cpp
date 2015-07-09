@@ -602,44 +602,14 @@ GlobalObject::getAlreadyCreatedRegExpStatics() const
     return static_cast<RegExpStatics*>(val.toObject().as<RegExpStaticsObject>().getPrivate(/* nfixed = */ 1));
 }
 
-/* static */ NativeObject*
-GlobalObject::getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global)
-{
-    Value slot = global->getReservedSlot(INTRINSICS);
-    MOZ_ASSERT(slot.isUndefined() || slot.isObject());
-
-    if (slot.isObject())
-        return &slot.toObject().as<NativeObject>();
-
-    Rooted<NativeObject*> intrinsicsHolder(cx);
-    bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(global);
-    if (isSelfHostingGlobal) {
-        intrinsicsHolder = global;
-    } else {
-        intrinsicsHolder = NewObjectWithGivenProto<PlainObject>(cx, nullptr, TenuredObject);
-        if (!intrinsicsHolder)
-            return nullptr;
-    }
-
-    /* Define a property 'global' with the current global as its value. */
-    RootedValue globalValue(cx, ObjectValue(*global));
-    if (!DefineProperty(cx, intrinsicsHolder, cx->names().global, globalValue,
-                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
-    {
-        return nullptr;
-    }
-
-    // Install the intrinsics holder in the intrinsics.
-    global->setReservedSlot(INTRINSICS, ObjectValue(*intrinsicsHolder));
-    return intrinsicsHolder;
-}
-
-/* static */ bool
-GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
-                                    HandlePropertyName selfHostedName, HandleAtom name,
+bool
+GlobalObject::getSelfHostedFunction(JSContext* cx, HandleAtom selfHostedName, HandleAtom name,
                                     unsigned nargs, MutableHandleValue funVal)
 {
-    if (GlobalObject::maybeGetIntrinsicValue(cx, global, selfHostedName, funVal))
+    RootedId shId(cx, AtomToId(selfHostedName));
+    RootedObject holder(cx, cx->global()->intrinsicsHolder());
+
+    if (cx->global()->maybeGetIntrinsicValue(shId, funVal.address()))
         return true;
 
     JSFunction* fun =
@@ -651,22 +621,18 @@ GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
     fun->setExtendedSlot(0, StringValue(selfHostedName));
     funVal.setObject(*fun);
 
-    return GlobalObject::addIntrinsicValue(cx, global, selfHostedName, funVal);
+    return cx->global()->addIntrinsicValue(cx, shId, funVal);
 }
 
-/* static */ bool
-GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
-                                HandlePropertyName name, HandleValue value)
+bool
+GlobalObject::addIntrinsicValue(JSContext* cx, HandleId id, HandleValue value)
 {
-    RootedNativeObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder)
-        return false;
+    RootedNativeObject holder(cx, intrinsicsHolder());
 
     uint32_t slot = holder->slotSpan();
     RootedShape last(cx, holder->lastProperty());
     Rooted<UnownedBaseShape*> base(cx, last->base()->unowned());
 
-    RootedId id(cx, NameToId(name));
     StackShape child(base, id, slot, 0, 0);
     Shape* shape = cx->compartment()->propertyTree.getChild(cx, last, child);
     if (!shape)
