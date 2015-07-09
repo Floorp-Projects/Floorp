@@ -41,6 +41,8 @@
 // be obtained.
 
 let Cu = this.require ? require("chrome").Cu : Components.utils;
+let Cc = this.require ? require("chrome").Cc : Components.classes;
+let Ci = this.require ? require("chrome").Ci : Components.interfaces;
 
 // If Cu is defined, use it to lazily define the FinalizationWitnessService.
 if (Cu) {
