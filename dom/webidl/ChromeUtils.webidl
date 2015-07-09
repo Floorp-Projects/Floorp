@@ -11,15 +11,6 @@
 [ChromeOnly, Exposed=(Window,System)]
 interface ChromeUtils : ThreadSafeChromeUtils {
   /**
-   * A helper that converts OriginAttributesDictionary to cookie jar opaque
-   * identfier.
-   *
-   * @param originAttrs       The originAttributes from the caller.
-   */
-  static ByteString
-  originAttributesToCookieJar(optional OriginAttributesDictionary originAttrs);
-
-  /**
    * A helper that converts OriginAttributesDictionary to a opaque suffix string.
    *
    * @param originAttrs       The originAttributes from the caller.
