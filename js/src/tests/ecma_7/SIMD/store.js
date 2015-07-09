@@ -27,25 +27,27 @@ function assertChanged(ta, from, expected) {
 }
 
 function testStore(ta, kind, i, v) {
+    var asArr = simdToArray(v);
+
     reset(ta);
     SIMD[kind].store(ta, i, v);
-    assertChanged(ta, i, simdToArray(v));
+    assertChanged(ta, i, asArr);
 
-    var length = simdLength(v);
+    var length = asArr.length;
     if (length >= 8) // Int8x16 and Int16x8 only support store, and not store1/store2/etc.
         return;
 
     reset(ta);
     SIMD[kind].store1(ta, i, v);
-    assertChanged(ta, i, [v.x]);
+    assertChanged(ta, i, [asArr[0]]);
     if (length > 2) {
         reset(ta);
         SIMD[kind].store2(ta, i, v);
-        assertChanged(ta, i, [v.x, v.y]);
+        assertChanged(ta, i, [asArr[0], asArr[1]]);
 
         reset(ta);
         SIMD[kind].store3(ta, i, v);
-        assertChanged(ta, i, [v.x, v.y, v.z]);
+        assertChanged(ta, i, [asArr[0], asArr[1], asArr[2]]);
     }
 }
 

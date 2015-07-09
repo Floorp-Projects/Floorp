@@ -1,8 +1,8 @@
-if (typeof SIMD === "undefined")
-    quit();
+load(libdir + 'simd.js');
 
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 30);
+
 var max = 40, pivot = 35;
 
 var i32x4 = SIMD.Int32x4;

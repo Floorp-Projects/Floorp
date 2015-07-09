@@ -81,22 +81,8 @@ function testFloat32x4FromInt8x16Bits() {
   function expected(v) {
     var i8 = new Int8Array(16);
     var f32 = new Float32Array(i8.buffer);
-    i8[0] = v.s0;
-    i8[1] = v.s1;
-    i8[2] = v.s2;
-    i8[3] = v.s3;
-    i8[4] = v.s4;
-    i8[5] = v.s5;
-    i8[6] = v.s6;
-    i8[7] = v.s7;
-    i8[8] = v.s8;
-    i8[9] = v.s9;
-    i8[10] = v.s10;
-    i8[11] = v.s11;
-    i8[12] = v.s12;
-    i8[13] = v.s13;
-    i8[14] = v.s14;
-    i8[15] = v.s15;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 16; i++) i8[i] = asArr[i];
     return [f32[0], f32[1], f32[2], f32[3]];
   }
 
@@ -113,14 +99,8 @@ function testFloat32x4FromInt16x8Bits() {
   function expected(v) {
     var i16 = new Int16Array(8);
     var f32 = new Float32Array(i16.buffer);
-    i16[0] = v.s0;
-    i16[1] = v.s1;
-    i16[2] = v.s2;
-    i16[3] = v.s3;
-    i16[4] = v.s4;
-    i16[5] = v.s5;
-    i16[6] = v.s6;
-    i16[7] = v.s7;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 8; i++) i16[i] = asArr[i];
     return [f32[0], f32[1], f32[2], f32[3]];
   }
 
@@ -228,22 +208,8 @@ function testFloat64x2FromInt8x16Bits() {
   function expected(v) {
     var i8 = Int8Array(16);
     var f64 = Float64Array(i8.buffer);
-    i8[0] = v.s0;
-    i8[1] = v.s1;
-    i8[2] = v.s2;
-    i8[3] = v.s3;
-    i8[4] = v.s4;
-    i8[5] = v.s5;
-    i8[6] = v.s6;
-    i8[7] = v.s7;
-    i8[8] = v.s8;
-    i8[9] = v.s9;
-    i8[10] = v.s10;
-    i8[11] = v.s11;
-    i8[12] = v.s12;
-    i8[13] = v.s13;
-    i8[14] = v.s14;
-    i8[15] = v.s15;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 16; i++) i8[i] = asArr[i];
     return [f64[0], f64[1]];
   }
 
@@ -261,14 +227,8 @@ function testFloat64x2FromInt16x8Bits() {
   function expected(v) {
     var i16 = Int16Array(8);
     var f64 = Float64Array(i16.buffer);
-    i16[0] = v.s0;
-    i16[1] = v.s1;
-    i16[2] = v.s2;
-    i16[3] = v.s3;
-    i16[4] = v.s4;
-    i16[5] = v.s5;
-    i16[6] = v.s6;
-    i16[7] = v.s7;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 8; i++) i16[i] = asArr[i];
     return [f64[0], f64[1]];
   }
 
@@ -403,22 +363,8 @@ function testInt32x4FromInt8x16Bits() {
   function expected(v) {
     var i8 = Int8Array(16);
     var i32 = Int32Array(i8.buffer);
-    i8[0] = v.s0;
-    i8[1] = v.s1;
-    i8[2] = v.s2;
-    i8[3] = v.s3;
-    i8[4] = v.s4;
-    i8[5] = v.s5;
-    i8[6] = v.s6;
-    i8[7] = v.s7;
-    i8[8] = v.s8;
-    i8[9] = v.s9;
-    i8[10] = v.s10;
-    i8[11] = v.s11;
-    i8[12] = v.s12;
-    i8[13] = v.s13;
-    i8[14] = v.s14;
-    i8[15] = v.s15;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 16; i++) i8[i] = asArr[i];
     return [i32[0], i32[1], i32[2], i32[3]];
   }
 
@@ -436,14 +382,8 @@ function testInt32x4FromInt16x8Bits() {
   function expected(v) {
     var i16 = Int16Array(8);
     var i32 = Int32Array(i16.buffer);
-    i16[0] = v.s0;
-    i16[1] = v.s1;
-    i16[2] = v.s2;
-    i16[3] = v.s3;
-    i16[4] = v.s4;
-    i16[5] = v.s5;
-    i16[6] = v.s6;
-    i16[7] = v.s7;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 8; i++) i16[i] = asArr[i];
     return [i32[0], i32[1], i32[2], i32[3]];
   }
 
@@ -460,10 +400,8 @@ function testInt8x16FromFloat32x4Bits() {
   function expected(v) {
     var f32 = Float32Array(4);
     var i8 = Int8Array(f32.buffer);
-    f32[0] = v.x;
-    f32[1] = v.y;
-    f32[2] = v.z;
-    f32[3] = v.w;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 4; i++) f32[i] = asArr[i];
     return [i8[0], i8[1], i8[2], i8[3], i8[4], i8[5], i8[6], i8[7],
             i8[8], i8[9], i8[10], i8[11], i8[12], i8[13], i8[14], i8[15]];
   }
@@ -480,8 +418,8 @@ function testInt8x16FromFloat64x2Bits() {
   function expected(v) {
     var f64 = Float64Array(2);
     var i8 = Int8Array(f64.buffer);
-    f64[0] = v.x;
-    f64[1] = v.y;
+    f64[0] = Float64x2.extractLane(v, 0);
+    f64[1] = Float64x2.extractLane(v, 1);
     return [i8[0], i8[1], i8[2], i8[3], i8[4], i8[5], i8[6], i8[7],
             i8[8], i8[9], i8[10], i8[11], i8[12], i8[13], i8[14], i8[15]];
   }
@@ -497,14 +435,8 @@ function testInt8x16FromInt16x8Bits() {
   function expected(v) {
     var i16 = Int16Array(8);
     var i8 = Int8Array(i16.buffer);
-    i16[0] = v.s0;
-    i16[1] = v.s1;
-    i16[2] = v.s2;
-    i16[3] = v.s3;
-    i16[4] = v.s4;
-    i16[5] = v.s5;
-    i16[6] = v.s6;
-    i16[7] = v.s7;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 8; i++) i16[i] = asArr[i];
     return [i8[0], i8[1], i8[2], i8[3], i8[4], i8[5], i8[6], i8[7],
             i8[8], i8[9], i8[10], i8[11], i8[12], i8[13], i8[14], i8[15]];
   }
@@ -520,10 +452,8 @@ function testInt8x16FromInt32x4Bits() {
   function expected(v) {
     var i32 = Int32Array(4);
     var i8 = Int8Array(i32.buffer);
-    i32[0] = v.x;
-    i32[1] = v.y;
-    i32[2] = v.z;
-    i32[3] = v.w;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 4; i++) i32[i] = asArr[i];
     return [i8[0], i8[1], i8[2], i8[3], i8[4], i8[5], i8[6], i8[7],
             i8[8], i8[9], i8[10], i8[11], i8[12], i8[13], i8[14], i8[15]];
   }
@@ -539,10 +469,8 @@ function testInt16x8FromFloat32x4Bits() {
   function expected(v) {
     var f32 = Float32Array(4);
     var i16 = Int16Array(f32.buffer);
-    f32[0] = v.x;
-    f32[1] = v.y;
-    f32[2] = v.z;
-    f32[3] = v.w;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 4; i++) f32[i] = asArr[i];
     return [i16[0], i16[1], i16[2], i16[3], i16[4], i16[5], i16[6], i16[7]];
   }
 
@@ -558,8 +486,8 @@ function testInt16x8FromFloat64x2Bits() {
   function expected(v) {
     var f64 = Float64Array(2);
     var i16 = Int16Array(f64.buffer);
-    f64[0] = v.x;
-    f64[1] = v.y;
+    f64[0] = Float64x2.extractLane(v, 0);
+    f64[1] = Float64x2.extractLane(v, 1);
     return [i16[0], i16[1], i16[2], i16[3], i16[4], i16[5], i16[6], i16[7]];
   }
 
@@ -575,22 +503,8 @@ function testInt16x8FromInt8x16Bits() {
   function expected(v) {
     var i8 = Int8Array(16);
     var i16 = Int16Array(i8.buffer);
-    i8[0] = v.s0;
-    i8[1] = v.s1;
-    i8[2] = v.s2;
-    i8[3] = v.s3;
-    i8[4] = v.s4;
-    i8[5] = v.s5;
-    i8[6] = v.s6;
-    i8[7] = v.s7;
-    i8[8] = v.s8;
-    i8[9] = v.s9;
-    i8[10] = v.s10;
-    i8[11] = v.s11;
-    i8[12] = v.s12;
-    i8[13] = v.s13;
-    i8[14] = v.s14;
-    i8[15] = v.s15;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 16; i++) i8[i] = asArr[i];
     return [i16[0], i16[1], i16[2], i16[3], i16[4], i16[5], i16[6], i16[7]];
   }
 
@@ -606,10 +520,8 @@ function testInt16x8FromInt32x4Bits() {
   function expected(v) {
     var i32 = Int32Array(4);
     var i16 = Int16Array(i32.buffer);
-    i32[0] = v.x;
-    i32[1] = v.y;
-    i32[2] = v.z;
-    i32[3] = v.w;
+    var asArr = simdToArray(v);
+    for (var i = 0; i < 4; i++) i32[i] = asArr[i];
     return [i16[0], i16[1], i16[2], i16[3], i16[4], i16[5], i16[6], i16[7]];
   }
 
