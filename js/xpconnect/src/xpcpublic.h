@@ -510,6 +510,7 @@ class ErrorReport {
     void Init(JSErrorReport* aReport, const char* aFallbackMessage,
               bool aIsChrome, uint64_t aWindowID);
     void LogToConsole();
+    void LogToConsoleWithStack(JS::HandleObject aStack);
 
   public:
 
