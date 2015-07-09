@@ -11,6 +11,8 @@
 
 namespace js {
 
+class AutoSetNewObjectMetadata;
+
 class ArrayObject : public NativeObject
 {
   public:
@@ -45,7 +47,8 @@ class ArrayObject : public NativeObject
                 gc::InitialHeap heap,
                 HandleShape shape,
                 HandleObjectGroup group,
-                uint32_t length);
+                uint32_t length,
+                AutoSetNewObjectMetadata& metadata);
 
     // Make a copy-on-write array object which shares the elements of an
     // existing object.
@@ -61,10 +64,11 @@ class ArrayObject : public NativeObject
                         gc::AllocKind kind,
                         gc::InitialHeap heap,
                         HandleShape shape,
-                        HandleObjectGroup group);
+                        HandleObjectGroup group,
+                        AutoSetNewObjectMetadata&);
 
     static inline ArrayObject*
-    finishCreateArray(ArrayObject* obj, HandleShape shape);
+    finishCreateArray(ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata);
 };
 
 } // namespace js

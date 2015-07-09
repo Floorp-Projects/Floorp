@@ -278,7 +278,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
             : frame(frame),
               when(when),
               className(nullptr),
-              ctorName(nullptr)
+              ctorName(nullptr),
+              size(0)
         {
             MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
@@ -290,6 +291,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         double when;
         const char* className;
         RelocatablePtrAtom ctorName;
+        size_t size;
     };
     typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
 
