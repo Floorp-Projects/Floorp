@@ -6,6 +6,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
+#include "js/Class.h"
 #include "js/Proxy.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -14,6 +15,14 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+#ifdef DEBUG
+/* static */ bool
+nsWrapperCache::HasJSObjectMovedOp(JSObject* aWrapper)
+{
+    return js::HasObjectMovedOp(aWrapper);
+}
+#endif
 
 /* static */ void
 nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
