@@ -75,28 +75,21 @@ public:
       mObserver = new nsCategoryObserver(mCategoryName.get());
     }
 
-    mObserver->GetHash().EnumerateRead(EntriesToArray, &aResult);
+    for (auto iter = mObserver->GetHash().Iter(); !iter.Done(); iter.Next()) {
+      nsISupports* entry = iter.GetUserData();
+      nsCOMPtr<T> service = do_QueryInterface(entry);
+      if (service) {
+        aResult.AppendObject(service);
+      }
+    }
   }
 
 private:
   // Not to be implemented
   nsCategoryCache(const nsCategoryCache<T>&);
 
-  static PLDHashOperator EntriesToArray(const nsACString& aKey,
-                                        nsISupports* aEntry, void* aArg)
-  {
-    nsCOMArray<T>& entries = *static_cast<nsCOMArray<T>*>(aArg);
-
-    nsCOMPtr<T> service = do_QueryInterface(aEntry);
-    if (service) {
-      entries.AppendObject(service);
-    }
-    return PL_DHASH_NEXT;
-  }
-
   nsCString mCategoryName;
   nsRefPtr<nsCategoryObserver> mObserver;
-
 };
 
 #endif
