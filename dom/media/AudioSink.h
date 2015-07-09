@@ -113,7 +113,7 @@ private:
   // microseconds. We can add this to the audio stream position to determine
   // the current audio time. Accessed on audio and state machine thread.
   // Synchronized by decoder monitor.
-  int64_t mStartTime;
+  const int64_t mStartTime;
 
   // PCM frames written to the stream so far.
   int64_t mWritten;

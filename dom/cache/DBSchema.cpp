@@ -31,11 +31,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 14;
+const int32_t kMaxWipeSchemaVersion = 15;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 14;
+const int32_t kLatestSchemaVersion = 15;
 const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
@@ -1833,7 +1833,6 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   if (!serializedInfo.IsEmpty()) {
     nsAutoCString originNoSuffix;
     OriginAttributes attrs;
-    fprintf(stderr, "\n%s\n", serializedInfo.get());
     if (!attrs.PopulateFromOrigin(serializedInfo, originNoSuffix)) {
       NS_WARNING("Something went wrong parsing a serialized principal!");
       return NS_ERROR_FAILURE;

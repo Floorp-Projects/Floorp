@@ -212,7 +212,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mReader(aReader),
   mCurrentPosition(mTaskQueue, 0, "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
   mStreamStartTime(0),
-  mAudioStartTime(0),
   mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
@@ -1745,11 +1744,11 @@ MediaDecoderStateMachine::StartAudioThread()
   }
 
   if (HasAudio() && !mAudioSink) {
+    auto audioStartTime = GetMediaTime();
     // The audio end time should always be at least the audio start time.
-    mAudioEndTime = mAudioStartTime;
-    MOZ_ASSERT(mAudioStartTime == GetMediaTime());
+    mAudioEndTime = audioStartTime;
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(this, mAudioStartTime,
+    mAudioSink = new AudioSink(this, audioStartTime,
                                mInfo.mAudio, mDecoder->GetAudioChannel());
     // OnAudioSinkError() will be called before Init() returns if an error
     // occurs during initialization.
@@ -2129,7 +2128,7 @@ MediaDecoderStateMachine::SeekCompleted()
   // Setup timestamp state.
   nsRefPtr<VideoData> video = VideoQueue().PeekFront();
   if (seekTime == Duration().ToMicroseconds()) {
-    newCurrentTime = mAudioStartTime = seekTime;
+    newCurrentTime = seekTime;
   } else if (HasAudio()) {
     AudioData* audio = AudioQueue().PeekFront();
     // Though we adjust the newCurrentTime in audio-based, and supplemented
@@ -2140,7 +2139,7 @@ MediaDecoderStateMachine::SeekCompleted()
     // seekTime is bounded in suitable duration. See Bug 1112438.
     int64_t videoStart = video ? video->mTime : seekTime;
     int64_t audioStart = audio ? audio->mTime : seekTime;
-    newCurrentTime = mAudioStartTime = std::min(audioStart, videoStart);
+    newCurrentTime = std::min(audioStart, videoStart);
   } else {
     newCurrentTime = video ? video->mTime : seekTime;
   }
@@ -2464,7 +2463,6 @@ MediaDecoderStateMachine::Reset()
   mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
   mStreamStartTime = 0;
-  mAudioStartTime = 0;
   mAudioEndTime = -1;
   mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
@@ -2589,9 +2587,11 @@ MediaDecoderStateMachine::GetAudioClock() const
   // audio sink to ensure that it doesn't get destroyed on the audio sink
   // while we're using it.
   AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(HasAudio() && !mAudioCompleted);
-  return mAudioStartTime +
-         (mAudioSink ? mAudioSink->GetPosition() : 0);
+  MOZ_ASSERT(HasAudio() && !mAudioCompleted && IsPlaying());
+  // Since this function is called while we are playing and AudioSink is
+  // created once playback starts, mAudioSink is guaranteed to be non-null.
+  MOZ_ASSERT(mAudioSink);
+  return mAudioSink->GetPosition();
 }
 
 int64_t MediaDecoderStateMachine::GetStreamClock() const
@@ -2653,8 +2653,6 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  NS_ASSERTION(!HasAudio() || mAudioStartTime != -1,
-               "Should know audio start time if we have audio.");
 
   if (!IsPlaying() || mLogicallySeeking) {
     return;

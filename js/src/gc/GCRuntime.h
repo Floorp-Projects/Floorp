@@ -1085,6 +1085,9 @@ class GCRuntime
     /* The invocation kind of the current GC, taken from the first slice. */
     JSGCInvocationKind invocationKind;
 
+    /* The initial GC reason, taken from the first slice. */
+    JS::gcreason::Reason initialReason;
+
     /*
      * If this is 0, all cross-compartment proxies must be registered in the
      * wrapper map. This checking must be disabled temporarily while creating

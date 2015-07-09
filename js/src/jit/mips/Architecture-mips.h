@@ -121,14 +121,14 @@ class Registers
     };
 
     static const char* GetName(Code code) {
+        MOZ_ASSERT(code < Total);
         static const char * const Names[] = { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
                                               "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7",
                                               "s0",   "s1", "s2", "s3", "s4", "s5", "s6", "s7",
                                               "t8",   "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
         return Names[code];
     }
-    static const char* GetName(uint32_t i) {
-        MOZ_ASSERT(i < Total);
+    static const char* GetName(Encoding i) {
         return GetName(Code(i));
     }
 
