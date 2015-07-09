@@ -242,6 +242,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
     return wrapper.forget();
   }
 
+  MOZ_ASSERT(mPDM);
   nsRefPtr<MediaDataDecoder> decoder(
     mPDM->CreateDecoder(aConfig,
                         aVideoTaskQueue,
@@ -277,6 +278,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
     return wrapper.forget();
   }
 
+  MOZ_ASSERT(mPDM);
   nsRefPtr<MediaDataDecoder> decoder(
     mPDM->CreateDecoder(aConfig, aAudioTaskQueue, aCallback));
   if (!decoder) {
