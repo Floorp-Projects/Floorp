@@ -71,6 +71,7 @@ EXPORTS.mozilla = [
     'ReverseIterator.h',
     'RollingMean.h',
     'Scoped.h',
+    'ScopeExit.h',
     'SegmentedVector.h',
     'SHA1.h',
     'SizePrintfMacros.h',

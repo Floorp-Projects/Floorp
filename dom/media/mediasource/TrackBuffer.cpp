@@ -205,6 +205,8 @@ TrackBuffer::BufferAppend()
     decoders.AppendElement(mCurrentDecoder);
   }
 
+  mLastAppendRange = Interval<int64_t>();
+
   if (gotMedia) {
     if (mParser->IsMediaSegmentPresent(mInputBuffer) && mLastEndTimestamp &&
         (!mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value()) ||
@@ -225,6 +227,7 @@ TrackBuffer::BufferAppend()
         }
         MSE_DEBUG("Decoder marked as initialized.");
         AppendDataToCurrentResource(oldInit, 0);
+        mLastAppendRange = Interval<int64_t>(0, int64_t(oldInit->Length()));
       }
       mLastStartTimestamp = start;
     } else {
@@ -251,8 +254,10 @@ TrackBuffer::BufferAppend()
     return p;
   }
 
-  mLastAppendRange =
-    Interval<int64_t>(offset, offset + int64_t(mInputBuffer->Length()));
+  mLastAppendRange = mLastAppendRange.IsEmpty()
+    ? Interval<int64_t>(offset, offset + int64_t(mInputBuffer->Length()))
+    : mLastAppendRange.Span(
+        Interval<int64_t>(offset, offset + int64_t(mInputBuffer->Length())));
 
   if (decoders.Length()) {
     // We're going to have to wait for the decoder to initialize, the promise

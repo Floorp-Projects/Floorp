@@ -6,6 +6,8 @@ var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
 loop.shared.views.chat = (function(mozL10n) {
+  "use strict";
+
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;

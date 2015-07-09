@@ -276,7 +276,8 @@ inline already_AddRefed<Path> MakePathForEllipse(const DrawTarget& aDrawTarget,
  *   false.
  */
 GFX2D_API bool SnapLineToDevicePixelsForStroking(Point& aP1, Point& aP2,
-                                                 const DrawTarget& aDrawTarget);
+                                                 const DrawTarget& aDrawTarget,
+                                                 Float aLineWidth);
 
 /**
  * This function paints each edge of aRect separately, snapping the edges using
