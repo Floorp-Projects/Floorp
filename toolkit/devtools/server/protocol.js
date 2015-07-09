@@ -1118,9 +1118,11 @@ let Front = Class({
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
     while (this._requests && this._requests.length > 0) {
-      let { deferred, to, type } = this._requests.shift();
-      deferred.reject(new Error("Connection closed, pending request to " + to +
-                                ", type " + type + " failed"));
+      let { deferred, to, type, stack } = this._requests.shift();
+      let msg = "Connection closed, pending request to " + to +
+                ", type " + type + " failed" +
+                "\n\nRequest stack:\n" + stack.formattedStack;
+      deferred.reject(new Error(msg));
     }
     Pool.prototype.destroy.call(this);
     this.actorID = null;
