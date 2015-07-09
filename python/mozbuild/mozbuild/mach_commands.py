@@ -422,9 +422,16 @@ class Build(MachCommandBase):
                 self.log(logging.INFO, 'ccache',
                          {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
-        if monitor.elapsed > 300:
+        notify_minimum_time = 300
+        try:
+            notify_minimum_time = int(os.environ.get('MACH_NOTIFY_MINTIME', '300'))
+        except ValueError:
+            # Just stick with the default
+            pass
+
+        if monitor.elapsed > notify_minimum_time:
             # Display a notification when the build completes.
-            self.notify('Build complete')
+            self.notify('Build complete' if not status else 'Build failed')
 
         if status:
             return status
