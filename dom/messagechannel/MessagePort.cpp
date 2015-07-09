@@ -927,7 +927,9 @@ MessagePort::RemoveDocFromBFCache()
   }
 
   nsPIDOMWindow* window = GetOwner();
-  MOZ_ASSERT(window);
+  if (!window) {
+    return;
+  }
 
   nsIDocument* doc = window->GetExtantDoc();
   if (!doc) {
