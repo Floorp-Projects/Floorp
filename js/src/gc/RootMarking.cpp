@@ -110,6 +110,9 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
+    MarkExactStackRootList<JS::StaticTraceable,
+                           js::DispatchWrapper<JS::StaticTraceable>::TraceWrapped>(
+        trc, context, "StaticTraceable");
 }
 
 static void
