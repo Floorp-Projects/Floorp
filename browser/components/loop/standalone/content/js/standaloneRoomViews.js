@@ -476,7 +476,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       });
 
       return (
-        React.createElement("div", {className: "room-conversation-wrapper"}, 
+        React.createElement("div", {className: "room-conversation-wrapper standalone-room-wrapper"}, 
           React.createElement("div", {className: "beta-logo"}), 
           React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
           React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 
@@ -517,19 +517,19 @@ loop.standaloneRoomViews = (function(mozL10n) {
                   posterUrl: this.props.localPosterUrl, 
                   srcVideoObject: this.state.localSrcVideoObject})
               )
-            ), 
-            React.createElement(sharedViews.ConversationToolbar, {
-              audio: {enabled: !this.state.audioMuted,
-                      visible: this._roomIsActive()}, 
-              dispatcher: this.props.dispatcher, 
-              edit: { visible: false, enabled: false}, 
-              enableHangup: this._roomIsActive(), 
-              hangup: this.leaveRoom, 
-              hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
-              publishStream: this.publishStream, 
-              video: {enabled: !this.state.videoMuted,
-                      visible: this._roomIsActive()}})
+            )
           ), 
+          React.createElement(sharedViews.ConversationToolbar, {
+            audio: {enabled: !this.state.audioMuted,
+                    visible: this._roomIsActive()}, 
+            dispatcher: this.props.dispatcher, 
+            edit: { visible: false, enabled: false}, 
+            enableHangup: this._roomIsActive(), 
+            hangup: this.leaveRoom, 
+            hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
+            publishStream: this.publishStream, 
+            video: {enabled: !this.state.videoMuted,
+                    visible: this._roomIsActive()}}), 
           React.createElement(loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView, {
             marketplaceSrc: this.state.marketplaceSrc, 
             onMarketplaceMessage: this.state.onMarketplaceMessage}), 

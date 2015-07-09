@@ -114,52 +114,56 @@ var fakeContacts = [{
   updated: 1406798311748
 }];
 
-/**
- * Faking the mozLoop object which doesn't exist in regular web pages.
- * @type {Object}
- */
-navigator.mozLoop = {
-  ensureRegistered: function() {},
-  getAudioBlob: function(){},
-  getLoopPref: function(pref) {
-    switch(pref) {
-      // Ensure we skip FTE completely.
-      case "gettingStarted.seen":
-      case "contacts.gravatars.promo":
-      case "contextInConversations.enabled":
-        return true;
-      case "contacts.gravatars.show":
-        return false;
-    }
-  },
-  hasEncryptionKey: true,
-  setLoopPref: function(){},
-  releaseCallData: function() {},
-  copyString: function() {},
-  getUserAvatar: function(emailAddress) {
-    return "http://www.gravatar.com/avatar/" + (Math.ceil(Math.random() * 3) === 2 ?
-      "0a996f0fe2727ef1668bdb11897e4459" : "foo") + ".jpg?default=blank&s=40";
-  },
-  getSelectedTabMetadata: function(callback) {
-    callback({
-      previews: ["chrome://branding/content/about-logo.png"],
-      description: "sample webpage description",
-      url: "https://www.example.com"
-    });
-  },
-  contacts: {
-    getAll: function(callback) {
-      callback(null, [].concat(fakeContacts));
+(function() {
+  "use strict";
+
+  /**
+   * Faking the mozLoop object which doesn't exist in regular web pages.
+   * @type {Object}
+   */
+  navigator.mozLoop = {
+    ensureRegistered: function() {},
+    getAudioBlob: function(){},
+    getLoopPref: function(pref) {
+      switch(pref) {
+        // Ensure we skip FTE completely.
+        case "gettingStarted.seen":
+        case "contacts.gravatars.promo":
+        case "contextInConversations.enabled":
+          return true;
+        case "contacts.gravatars.show":
+          return false;
+      }
     },
-    on: function() {}
-  },
-  rooms: {
-    getAll: function(version, callback) {
-      callback(null, [].concat(fakeRooms));
+    hasEncryptionKey: true,
+    setLoopPref: function(){},
+    releaseCallData: function() {},
+    copyString: function() {},
+    getUserAvatar: function(emailAddress) {
+      return "http://www.gravatar.com/avatar/" + (Math.ceil(Math.random() * 3) === 2 ?
+        "0a996f0fe2727ef1668bdb11897e4459" : "foo") + ".jpg?default=blank&s=40";
     },
-    on: function() {}
-  },
-  fxAEnabled: true,
-  startAlerting: function() {},
-  stopAlerting: function() {}
-};
+    getSelectedTabMetadata: function(callback) {
+      callback({
+        previews: ["chrome://branding/content/about-logo.png"],
+        description: "sample webpage description",
+        url: "https://www.example.com"
+      });
+    },
+    contacts: {
+      getAll: function(callback) {
+        callback(null, [].concat(fakeContacts));
+      },
+      on: function() {}
+    },
+    rooms: {
+      getAll: function(version, callback) {
+        callback(null, [].concat(fakeRooms));
+      },
+      on: function() {}
+    },
+    fxAEnabled: true,
+    startAlerting: function() {},
+    stopAlerting: function() {}
+  };
+})();

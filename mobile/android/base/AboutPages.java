@@ -13,7 +13,6 @@ import org.mozilla.gecko.util.StringUtils;
 public class AboutPages {
     // All of our special pages.
     public static final String ADDONS          = "about:addons";
-    public static final String APPS            = "about:apps";
     public static final String CONFIG          = "about:config";
     public static final String DOWNLOADS       = "about:downloads";
     public static final String FIREFOX         = "about:firefox";

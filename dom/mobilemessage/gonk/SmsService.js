@@ -1307,19 +1307,19 @@ SmsSendingScheduler.prototype = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case kSmsDeletedObserverTopic:
+        let deletedInfo = aSubject.QueryInterface(Ci.nsIDeletedMessageInfo);
         if (DEBUG) {
           debug("Observe " + kSmsDeletedObserverTopic + ": " +
-            JSON.stringify(aSubject));
+            JSON.stringify(deletedInfo));
         }
 
-        if (aSubject && aSubject.deletedMessageIds) {
-          for (let id of aSubject.deletedMessageIds) {
-            for (let i = 0; i < this._queue.length; i++) {
-              if (this._queue[i].messageId === id) {
-                if (DEBUG) debug("Deleting message with id=" + id);
-                this._queue.splice(i, 1)[0].onCancel(
-                  Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
-              }
+        if (deletedInfo && deletedInfo.deletedMessageIds) {
+          for (let i = 0; i < this._queue.length; i++) {
+            let id = this._queue[i].messageId;
+            if (deletedInfo.deletedMessageIds.includes(id)) {
+              if (DEBUG) debug("Deleting message with id=" + id);
+              this._queue.splice(i, 1)[0].onCancel(
+                Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
             }
           }
         }

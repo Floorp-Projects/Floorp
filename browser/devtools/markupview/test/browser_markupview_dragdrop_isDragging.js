@@ -31,12 +31,16 @@ add_task(function*() {
   yield wait(GRAB_DELAY + 1);
   ok(el.isDragging, "isDragging true after GRAB_DELAY has passed");
 
+  let dropCompleted = once(inspector.markup, "drop-completed");
+
   info("Simulating mouseUp on #test");
   el._onMouseUp({
     target: el.tagLine,
     pageX: rect.x,
     pageY: rect.y
   });
+
+  yield dropCompleted;
 
   is(el.isDragging, false, "isDragging false after mouseUp");
 });

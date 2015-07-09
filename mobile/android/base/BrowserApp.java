@@ -1687,14 +1687,20 @@ public class BrowserApp extends GeckoApp
                 final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
                 final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
                 final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
+                final String authServerEndpoint =
+                    json.optString("authServerEndpoint", FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT);
+                final String tokenServerEndpoint =
+                    json.optString("tokenServerEndpoint", FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
+                final String profileServerEndpoint =
+                    json.optString("profileServerEndpoint", FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT);
                 // TODO: handle choose what to Sync.
                 State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
                 fxAccount = AndroidFxAccount.addAndroidAccount(this,
                         email,
                         getProfile().getName(),
-                        FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT,
-                        FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT,
-                        FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT,
+                        authServerEndpoint,
+                        tokenServerEndpoint,
+                        profileServerEndpoint,
                         state,
                         AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
             } catch (Exception e) {
@@ -3263,7 +3269,6 @@ public class BrowserApp extends GeckoApp
         share.setVisible(shareVisible);
         final boolean shareEnabled = StringUtils.isShareableUrl(url) && shareVisible;
         share.setEnabled(shareEnabled);
-        MenuUtils.safeSetEnabled(aMenu, R.id.apps, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_APPS));
         MenuUtils.safeSetEnabled(aMenu, R.id.addons, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_INSTALL_EXTENSION));
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_DOWNLOADS));
 
@@ -3478,11 +3483,6 @@ public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.logins) {
             Tabs.getInstance().loadUrlInTab(AboutPages.LOGINS);
-            return true;
-        }
-
-        if (itemId == R.id.apps) {
-            Tabs.getInstance().loadUrlInTab(AboutPages.APPS);
             return true;
         }
 
