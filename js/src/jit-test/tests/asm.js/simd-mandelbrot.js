@@ -28,9 +28,9 @@ var moduleCode = `
   "use asm"
   var b8 = new global.Uint8Array(buffer);
   var toF = global.Math.fround;
-  var i4 = global.SIMD.int32x4;
+  var i4 = global.SIMD.Int32x4;
   var ci4 = i4.check;
-  var f4 = global.SIMD.float32x4;
+  var f4 = global.SIMD.Float32x4;
   var i4add = i4.add;
   var i4and = i4.and;
   var f4add = f4.add;

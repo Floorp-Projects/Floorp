@@ -1,9 +1,9 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
-var float32x4 = SIMD.float32x4;
-var float64x2 = SIMD.float64x2;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
-var int32x4 = SIMD.int32x4;
+var Float32x4 = SIMD.Float32x4;
+var Float64x2 = SIMD.Float64x2;
+var Int8x16 = SIMD.Int8x16;
+var Int16x8 = SIMD.Int16x8;
+var Int32x4 = SIMD.Int32x4;
 
 function testFloat32x4FromFloat64x2() {
   function expected(v) {
@@ -19,7 +19,7 @@ function testFloat32x4FromFloat64x2() {
   ];
 
   for (var v of vals) {
-    assertEqX4(float32x4.fromFloat64x2(float64x2(...v)), expected(v));
+    assertEqX4(Float32x4.fromFloat64x2(Float64x2(...v)), expected(v));
   }
 
   // Test rounding to nearest, break tie with even
@@ -36,8 +36,8 @@ function testFloat32x4FromFloat64x2() {
   var nextMid = makeDouble(0, 1023, 0x0000010000001);
 
   // mid is halfway between f1 and f2 => tie to even, which is f1
-  var v = float64x2(mid, nextMid);
-  assertEqX4(float32x4.fromFloat64x2(v), [f1, f2, 0, 0]);
+  var v = Float64x2(mid, nextMid);
+  assertEqX4(Float32x4.fromFloat64x2(v), [f1, f2, 0, 0]);
 
   var f3 = makeFloat(0, 127, 2);
   var d = makeDouble(0, 1023, 0x0000040000000);
@@ -48,8 +48,8 @@ function testFloat32x4FromFloat64x2() {
 
   // same here. tie to even, which is f3 here
   nextMid = makeDouble(0, 1023, 0x0000030000001);
-  var v = float64x2(mid, nextMid);
-  assertEqX4(float32x4.fromFloat64x2(v), [f3, f3, 0, 0]);
+  var v = Float64x2(mid, nextMid);
+  assertEqX4(Float32x4.fromFloat64x2(v), [f3, f3, 0, 0]);
 
   // Test boundaries
   var biggestFloat = makeFloat(0, 127 + 127, 0x7fffff);
@@ -58,11 +58,11 @@ function testFloat32x4FromFloat64x2() {
   var lowestFloat = makeFloat(1, 127 + 127, 0x7fffff);
   assertEq(makeDouble(1, 1023 + 127, 0xfffffe0000000), lowestFloat);
 
-  var v = float64x2(lowestFloat, biggestFloat);
-  assertEqX4(float32x4.fromFloat64x2(v), [lowestFloat, biggestFloat, 0, 0]);
+  var v = Float64x2(lowestFloat, biggestFloat);
+  assertEqX4(Float32x4.fromFloat64x2(v), [lowestFloat, biggestFloat, 0, 0]);
 
-  var v = float64x2(makeDouble(0, 1023 + 127, 0xfffffe0000001), makeDouble(0, 1023 + 127, 0xffffff0000000));
-  assertEqX4(float32x4.fromFloat64x2(v), [biggestFloat, Infinity, 0, 0]);
+  var v = Float64x2(makeDouble(0, 1023 + 127, 0xfffffe0000001), makeDouble(0, 1023 + 127, 0xffffff0000000));
+  assertEqX4(Float32x4.fromFloat64x2(v), [biggestFloat, Infinity, 0, 0]);
 }
 
 function testFloat32x4FromFloat64x2Bits() {
@@ -73,7 +73,7 @@ function testFloat32x4FromFloat64x2Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX4(float32x4.fromFloat64x2Bits(float64x2(...v)), w);
+    assertEqX4(Float32x4.fromFloat64x2Bits(Float64x2(...v)), w);
   }
 }
 
@@ -104,8 +104,8 @@ function testFloat32x4FromInt8x16Bits() {
               [INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX,
                INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN]];
   for (var v of vals) {
-    var i = int8x16(...v);
-    assertEqX4(float32x4.fromInt8x16Bits(i), expected(i));
+    var i = Int8x16(...v);
+    assertEqX4(Float32x4.fromInt8x16Bits(i), expected(i));
   }
 }
 
@@ -127,8 +127,8 @@ function testFloat32x4FromInt16x8Bits() {
   var vals = [[1, 2, 3, 4, 5, 6, 7, 8],
               [INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX]];
   for (var v of vals) {
-    var i = int16x8(...v);
-    assertEqX4(float32x4.fromInt16x8Bits(i), expected(i));
+    var i = Int16x8(...v);
+    assertEqX4(Float32x4.fromInt16x8Bits(i), expected(i));
   }
 }
 
@@ -142,7 +142,7 @@ function testFloat32x4FromInt32x4() {
   ];
 
   for (var v of vals) {
-    assertEqX4(float32x4.fromInt32x4(int32x4(...v)), expected(v));
+    assertEqX4(Float32x4.fromInt32x4(Int32x4(...v)), expected(v));
   }
 
   // Check that rounding to nearest, even is applied.
@@ -151,7 +151,7 @@ function testFloat32x4FromInt32x4() {
       var next = makeFloat(0, 150 + 2, 1);
       assertEq(num + 4, next);
 
-      v = float32x4.fromInt32x4(int32x4(num, num + 1, num + 2, num + 3));
+      v = Float32x4.fromInt32x4(Int32x4(num, num + 1, num + 2, num + 3));
       assertEqX4(v, [num, num, /* even */ num, next]);
   }
 
@@ -160,7 +160,7 @@ function testFloat32x4FromInt32x4() {
       var next = makeFloat(0, 150 + 2, 2);
       assertEq(num + 4, next);
 
-      v = float32x4.fromInt32x4(int32x4(num, num + 1, num + 2, num + 3));
+      v = Float32x4.fromInt32x4(Int32x4(num, num + 1, num + 2, num + 3));
       assertEqX4(v, [num, num, /* even */ next, next]);
   }
 
@@ -172,7 +172,7 @@ function testFloat32x4FromInt32x4() {
       assertEq(last | 0, last, "it should be an integer, as exponent >= 150");
 
       var diff = (Math.pow(2, 31) - 1) - last;
-      v = float32x4.fromInt32x4(int32x4(Math.pow(2, 31) - 1,
+      v = Float32x4.fromInt32x4(Int32x4(Math.pow(2, 31) - 1,
                                         Math.pow(2, 30) + 1,
                                         last + (diff / 2) | 0,      // nearest is last
                                         last + (diff / 2) + 1 | 0   // nearest is Math.pow(2, 31)
@@ -192,7 +192,7 @@ function testFloat32x4FromInt32x4Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX4(float32x4.fromInt32x4Bits(int32x4(...v)), w);
+    assertEqX4(Float32x4.fromInt32x4Bits(Int32x4(...v)), w);
   }
 }
 
@@ -209,7 +209,7 @@ function testFloat64x2FromFloat32x4() {
   ];
 
   for (var v of vals) {
-    assertEqX2(float64x2.fromFloat32x4(float32x4(...v)), expected(v));
+    assertEqX2(Float64x2.fromFloat32x4(Float32x4(...v)), expected(v));
   }
 }
 
@@ -220,7 +220,7 @@ function testFloat64x2FromFloat32x4Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX2(float64x2.fromFloat32x4Bits(float32x4(...v)), w);
+    assertEqX2(Float64x2.fromFloat32x4Bits(Float32x4(...v)), w);
   }
 }
 
@@ -252,8 +252,8 @@ function testFloat64x2FromInt8x16Bits() {
                INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN]];
 
   for (var v of vals) {
-    var f = int8x16(...v);
-    assertEqX2(float64x2.fromInt8x16Bits(f), expected(f));
+    var f = Int8x16(...v);
+    assertEqX2(Float64x2.fromInt8x16Bits(f), expected(f));
   }
 }
 
@@ -276,8 +276,8 @@ function testFloat64x2FromInt16x8Bits() {
               [INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX]];
 
   for (var v of vals) {
-    var f = int16x8(...v);
-    assertEqX2(float64x2.fromInt16x8Bits(f), expected(f));
+    var f = Int16x8(...v);
+    assertEqX2(Float64x2.fromInt16x8Bits(f), expected(f));
   }
 }
 
@@ -292,7 +292,7 @@ function testFloat64x2FromInt32x4() {
   ];
 
   for (var v of vals) {
-    assertEqX2(float64x2.fromInt32x4(int32x4(...v)), expected(v));
+    assertEqX2(Float64x2.fromInt32x4(Int32x4(...v)), expected(v));
   }
 }
 
@@ -303,40 +303,40 @@ function testFloat64x2FromInt32x4Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX2(float64x2.fromInt32x4Bits(int32x4(...v)), w);
+    assertEqX2(Float64x2.fromInt32x4Bits(Int32x4(...v)), w);
   }
 }
 
 function testInt32x4FromFloat32x4() {
-  var d = float32x4(1.1, 2.2, 3.3, 4.6);
-  assertEqX4(int32x4.fromFloat32x4(d), [1, 2, 3, 4]);
+  var d = Float32x4(1.1, 2.2, 3.3, 4.6);
+  assertEqX4(Int32x4.fromFloat32x4(d), [1, 2, 3, 4]);
 
-  var d = float32x4(NaN, 0, 0, 0);
-  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+  var d = Float32x4(NaN, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.fromFloat32x4(d), RangeError);
 
-  var d = float32x4(Infinity, 0, 0, 0);
-  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+  var d = Float32x4(Infinity, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.fromFloat32x4(d), RangeError);
 
-  var d = float32x4(-Infinity, 0, 0, 0);
-  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+  var d = Float32x4(-Infinity, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.fromFloat32x4(d), RangeError);
 
   // Test high boundaries: float(0, 157, 0x7fffff) < INT32_MAX < float(0, 158, 0)
-  var d = float32x4(makeFloat(0, 127 + 31, 0), 0, 0, 0);
-  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+  var d = Float32x4(makeFloat(0, 127 + 31, 0), 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.fromFloat32x4(d), RangeError);
 
   var lastFloat = makeFloat(0, 127 + 30, 0x7FFFFF);
-  var d = float32x4(lastFloat, 0, 0, 0);
-  var e = SIMD.int32x4.fromFloat32x4(d);
+  var d = Float32x4(lastFloat, 0, 0, 0);
+  var e = SIMD.Int32x4.fromFloat32x4(d);
   assertEqX4(e, [lastFloat, 0, 0, 0]);
 
   // Test low boundaries
   assertEq(makeFloat(1, 127 + 31, 0), INT32_MIN);
-  var d = float32x4(makeFloat(1, 127 + 31, 0), 0, 0, 0);
-  var e = SIMD.int32x4.fromFloat32x4(d);
+  var d = Float32x4(makeFloat(1, 127 + 31, 0), 0, 0, 0);
+  var e = SIMD.Int32x4.fromFloat32x4(d);
   assertEqX4(e, [INT32_MIN, 0, 0, 0]);
 
-  var d = float32x4(makeFloat(1, 127 + 31, 1), 0, 0, 0);
-  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+  var d = Float32x4(makeFloat(1, 127 + 31, 1), 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.fromFloat32x4(d), RangeError);
 }
 
 function testInt32x4FromFloat32x4Bits() {
@@ -346,21 +346,21 @@ function testInt32x4FromFloat32x4Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX4(int32x4.fromFloat32x4Bits(float32x4(...v)), w);
+    assertEqX4(Int32x4.fromFloat32x4Bits(Float32x4(...v)), w);
   }
 }
 
 function testInt32x4FromFloat64x2() {
-  assertEqX4(int32x4.fromFloat64x2(float64x2(1, 2.2)), [1, 2, 0, 0]);
+  assertEqX4(Int32x4.fromFloat64x2(Float64x2(1, 2.2)), [1, 2, 0, 0]);
 
-  var g = float64x2(Infinity, 0);
-  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+  var g = Float64x2(Infinity, 0);
+  assertThrowsInstanceOf(() => Int32x4.fromFloat64x2(g), RangeError);
 
-  var g = float64x2(-Infinity, 0);
-  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+  var g = Float64x2(-Infinity, 0);
+  assertThrowsInstanceOf(() => Int32x4.fromFloat64x2(g), RangeError);
 
-  var g = float64x2(NaN, 0);
-  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+  var g = Float64x2(NaN, 0);
+  assertThrowsInstanceOf(() => Int32x4.fromFloat64x2(g), RangeError);
 
   // Testing high boundaries
   // double(0, 1023 + 30, 0) < INT32_MAX < double(0, 1023 + 31, 0), so the
@@ -369,20 +369,20 @@ function testInt32x4FromFloat64x2() {
   assertEq(makeDouble(0, 1023 + 30, 0) + Math.pow(2, -22), makeDouble(0, 1023 + 30, 1));
   assertEq(makeDouble(0, 1023 + 30, 0) + Math.pow(2, -23), makeDouble(0, 1023 + 30, 0));
 
-  var g = float64x2(INT32_MAX, 0);
-  assertEqX4(int32x4.fromFloat64x2(g), [INT32_MAX, 0, 0, 0]);
+  var g = Float64x2(INT32_MAX, 0);
+  assertEqX4(Int32x4.fromFloat64x2(g), [INT32_MAX, 0, 0, 0]);
 
-  var g = float64x2(INT32_MAX + Math.pow(2, -22), 0);
-  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+  var g = Float64x2(INT32_MAX + Math.pow(2, -22), 0);
+  assertThrowsInstanceOf(() => Int32x4.fromFloat64x2(g), RangeError);
 
   // Testing low boundaries
   assertEq(makeDouble(1, 1023 + 31, 0), INT32_MIN);
 
-  var g = float64x2(makeDouble(1, 1023 + 31, 0), 0);
-  assertEqX4(int32x4.fromFloat64x2(g), [INT32_MIN, 0, 0, 0]);
+  var g = Float64x2(makeDouble(1, 1023 + 31, 0), 0);
+  assertEqX4(Int32x4.fromFloat64x2(g), [INT32_MIN, 0, 0, 0]);
 
-  var g = float64x2(makeDouble(1, 1023 + 31, 1), 0);
-  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+  var g = Float64x2(makeDouble(1, 1023 + 31, 1), 0);
+  assertThrowsInstanceOf(() => Int32x4.fromFloat64x2(g), RangeError);
 
 }
 
@@ -395,7 +395,7 @@ function testInt32x4FromFloat64x2Bits() {
   ];
 
   for (var [v,w] of valsExp) {
-    assertEqX4(int32x4.fromFloat64x2Bits(float64x2(...v)), w);
+    assertEqX4(Int32x4.fromFloat64x2Bits(Float64x2(...v)), w);
   }
 }
 
@@ -427,8 +427,8 @@ function testInt32x4FromInt8x16Bits() {
                INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN, INT8_MAX, INT8_MIN]];
 
   for (var v of vals) {
-    var i = int8x16(...v);
-    assertEqX4(int32x4.fromInt8x16Bits(i), expected(i));
+    var i = Int8x16(...v);
+    assertEqX4(Int32x4.fromInt8x16Bits(i), expected(i));
   }
 }
 
@@ -451,8 +451,8 @@ function testInt32x4FromInt16x8Bits() {
               [INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX, INT16_MIN, INT16_MAX]];
 
   for (var v of vals) {
-    var i = int16x8(...v);
-    assertEqX4(int32x4.fromInt16x8Bits(i), expected(i));
+    var i = Int16x8(...v);
+    assertEqX4(Int32x4.fromInt16x8Bits(i), expected(i));
   }
 }
 
@@ -471,8 +471,8 @@ function testInt8x16FromFloat32x4Bits() {
   var vals = [[1, -2, 3, -4], [Infinity, -Infinity, NaN, -0]];
 
   for (var v of vals) {
-    var f = float32x4(...v);
-    assertEqX16(int8x16.fromFloat32x4Bits(f), expected(f));
+    var f = Float32x4(...v);
+    assertEqX16(Int8x16.fromFloat32x4Bits(f), expected(f));
   }
 }
 
@@ -488,8 +488,8 @@ function testInt8x16FromFloat64x2Bits() {
   var vals = [[1, -2], [-3, 4], [Infinity, -Infinity], [NaN, -0]];
 
   for (var v of vals) {
-    var f = float64x2(...v);
-    assertEqX16(int8x16.fromFloat64x2Bits(f), expected(f));
+    var f = Float64x2(...v);
+    assertEqX16(Int8x16.fromFloat64x2Bits(f), expected(f));
   }
 }
 
@@ -511,8 +511,8 @@ function testInt8x16FromInt16x8Bits() {
 
   var vals = [[0, 1, -2, 3, INT8_MIN, INT8_MAX, INT16_MIN, INT16_MAX]];
   for (var v of vals) {
-    var i = int16x8(...v);
-    assertEqX16(int8x16.fromInt16x8Bits(i), expected(i));
+    var i = Int16x8(...v);
+    assertEqX16(Int8x16.fromInt16x8Bits(i), expected(i));
   }
 }
 
@@ -530,8 +530,8 @@ function testInt8x16FromInt32x4Bits() {
 
   var vals = [[0, 1, -2, 3], [INT8_MIN, INT8_MAX, INT32_MIN, INT32_MAX]];
   for (var v of vals) {
-    var i = int32x4(...v);
-    assertEqX16(int8x16.fromInt32x4Bits(i), expected(i));
+    var i = Int32x4(...v);
+    assertEqX16(Int8x16.fromInt32x4Bits(i), expected(i));
   }
 }
 
@@ -549,8 +549,8 @@ function testInt16x8FromFloat32x4Bits() {
   var vals = [[1, -2, 3, -4], [Infinity, -Infinity, NaN, -0]];
 
   for (var v of vals) {
-    var f = float32x4(...v);
-    assertEqX8(int16x8.fromFloat32x4Bits(f), expected(f));
+    var f = Float32x4(...v);
+    assertEqX8(Int16x8.fromFloat32x4Bits(f), expected(f));
   }
 }
 
@@ -566,8 +566,8 @@ function testInt16x8FromFloat64x2Bits() {
   var vals = [[1, -2], [-3, 4], [Infinity, -Infinity], [NaN, -0]];
 
   for (var v of vals) {
-    var f = float64x2(...v);
-    assertEqX8(int16x8.fromFloat64x2Bits(f), expected(f));
+    var f = Float64x2(...v);
+    assertEqX8(Int16x8.fromFloat64x2Bits(f), expected(f));
   }
 }
 
@@ -597,8 +597,8 @@ function testInt16x8FromInt8x16Bits() {
   var vals = [[0, 1, -2, 3, -4, 5, INT8_MIN, INT8_MAX, -6, 7, -8, 9, -10, 11, -12, 13]];
 
   for (var v of vals) {
-    var i = int8x16(...v);
-    assertEqX8(int16x8.fromInt8x16Bits(i), expected(i));
+    var i = Int8x16(...v);
+    assertEqX8(Int16x8.fromInt8x16Bits(i), expected(i));
   }
 }
 
@@ -616,8 +616,8 @@ function testInt16x8FromInt32x4Bits() {
   var vals = [[1, -2, -3, 4], [INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN]];
 
   for (var v of vals) {
-    var i = int32x4(...v);
-    assertEqX8(int16x8.fromInt32x4Bits(i), expected(i));
+    var i = Int32x4(...v);
+    assertEqX8(Int16x8.fromInt32x4Bits(i), expected(i));
   }
 }
 
