@@ -41,6 +41,13 @@ char* DefaultServerNicknameForCert(CERTCertificate* cert);
 
 void SaveIntermediateCerts(const ScopedCERTCertList& certList);
 
+enum SignatureDigestOption {
+  AcceptAllAlgorithms,
+  DisableSHA1ForEE,
+  DisableSHA1ForCA,
+  DisableSHA1Everywhere,
+};
+
 class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain
 {
 
@@ -62,6 +69,7 @@ public:
                        CertVerifier::PinningMode pinningMode,
                        unsigned int minRSABits,
                        ValidityCheckingMode validityCheckingMode,
+                       SignatureDigestOption,
           /*optional*/ const char* hostname = nullptr,
       /*optional out*/ ScopedCERTCertList* builtChain = nullptr);
 
@@ -76,7 +84,8 @@ public:
                               override;
 
   virtual Result CheckSignatureDigestAlgorithm(
-                   mozilla::pkix::DigestAlgorithm digestAlg) override;
+                   mozilla::pkix::DigestAlgorithm digestAlg,
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA) override;
 
   virtual Result CheckRSAPublicKeyModulusSizeInBits(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
@@ -144,6 +153,7 @@ private:
   CertVerifier::PinningMode mPinningMode;
   const unsigned int mMinRSABits;
   ValidityCheckingMode mValidityCheckingMode;
+  SignatureDigestOption mSignatureDigestOption;
   const char* mHostname; // non-owning - only used for pinning checks
   ScopedCERTCertList* mBuiltChain; // non-owning
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;

@@ -15,6 +15,7 @@
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 
+class nsIGlobalObject;
 class nsStyleContext;
 class nsPresContext;
 class nsCSSPropertySet;
@@ -38,8 +39,11 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
   { }
 
-  virtual ElementPropertyTransition* AsTransition() override { return this; }
-  virtual const ElementPropertyTransition* AsTransition() const override { return this; }
+  ElementPropertyTransition* AsTransition() override { return this; }
+  const ElementPropertyTransition* AsTransition() const override
+  {
+    return this;
+  }
 
   nsCSSProperty TransitionProperty() const {
     MOZ_ASSERT(Properties().Length() == 1,
@@ -76,15 +80,16 @@ namespace dom {
 class CSSTransition final : public Animation
 {
 public:
- explicit CSSTransition(DocumentTimeline* aTimeline)
-    : Animation(aTimeline)
+ explicit CSSTransition(nsIGlobalObject* aGlobal)
+    : dom::Animation(aGlobal)
   {
   }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual CSSTransition* AsCSSTransition() override { return this; }
+  CSSTransition* AsCSSTransition() override { return this; }
+  const CSSTransition* AsCSSTransition() const override { return this; }
 
   // CSSTransition interface
   void GetTransitionProperty(nsString& aRetVal) const;
@@ -103,10 +108,65 @@ public:
     MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing transition");
   }
 
+  void CancelFromStyle() override
+  {
+    mOwningElement = OwningElementRef();
+    Animation::CancelFromStyle();
+    MOZ_ASSERT(mSequenceNum == kUnsequenced);
+  }
+
+  nsCSSProperty TransitionProperty() const;
+
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
+  bool IsUsingCustomCompositeOrder() const override
+  {
+    return mOwningElement.IsSet();
+  }
+
+  void SetCreationSequence(uint64_t aIndex)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder());
+    mSequenceNum = aIndex;
+  }
+
+  // Returns the element or pseudo-element whose transition-property property
+  // this CSSTransition corresponds to (if any). This is used for determining
+  // the relative composite order of transitions generated from CSS markup.
+  //
+  // Typically this will be the same as the target element of the keyframe
+  // effect associated with this transition. However, it can differ in the
+  // following circumstances:
+  //
+  // a) If script removes or replaces the effect of this transition,
+  // b) If this transition is cancelled (e.g. by updating the
+  //    transition-property or removing the owning element from the document),
+  // c) If this object is generated from script using the CSSTransition
+  //    constructor.
+  //
+  // For (b) and (c) the returned owning element will return !IsSet().
+  const OwningElementRef& OwningElement() const { return mOwningElement; }
+
+  // Sets the owning element which is used for determining the composite
+  // oder of CSSTransition objects generated from CSS markup.
+  //
+  // @see OwningElement()
+  void SetOwningElement(const OwningElementRef& aElement)
+  {
+    mOwningElement = aElement;
+  }
+
 protected:
-  virtual ~CSSTransition() { }
+  virtual ~CSSTransition()
+  {
+    MOZ_ASSERT(!mOwningElement.IsSet(), "Owning element should be cleared "
+                                        "before a CSS transition is destroyed");
+  }
 
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
+
+  // The (pseudo-)element whose computed transition-property refers to this
+  // transition (if any).
+  OwningElementRef mOwningElement;
 };
 
 } // namespace dom

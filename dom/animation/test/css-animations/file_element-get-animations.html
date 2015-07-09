@@ -274,6 +274,36 @@ test(function(t) {
 
 }, 'getAnimations for CSS Animations that are cancelled');
 
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim2 100s';
+
+  div.getAnimations()[0].ready.then(t.step_func(function() {
+    // Prepend to the list and test that even though anim1 was triggered
+    // *after* anim2, it should come first because it appears first
+    // in the animation-name property.
+    div.style.animation = 'anim1 100s, anim2 100s';
+    var anims = div.getAnimations();
+    assert_equals(anims[0].animationName, 'anim1',
+                  'animation order after prepending to list');
+    assert_equals(anims[1].animationName, 'anim2',
+                  'animation order after prepending to list');
+
+    // Normally calling cancel and play would this push anim1 to the top of
+    // the stack but it shouldn't for CSS animations that map an the
+    // animation-name property.
+    var anim1 = anims[0];
+    anim1.cancel();
+    anim1.play();
+    anims = div.getAnimations();
+    assert_equals(anims[0].animationName, 'anim1',
+                  'animation order after cancelling and restarting');
+    assert_equals(anims[1].animationName, 'anim2',
+                  'animation order after cancelling and restarting');
+    t.done();
+  }));
+}, 'getAnimations for CSS Animations follows animation-name order');
+
 done();
 </script>
 </body>

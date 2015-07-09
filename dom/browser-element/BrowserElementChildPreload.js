@@ -971,10 +971,9 @@ BrowserElementChild.prototype = {
   },
 
   _mozScrollAreaChanged: function(e) {
-    let dimensions = this._getContentDimensions();
     sendAsyncMsg('scrollareachanged', {
-      width: dimensions.width,
-      height: dimensions.height
+      width: e.width,
+      height: e.height
     });
   },
 

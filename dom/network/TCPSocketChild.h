@@ -23,7 +23,7 @@ namespace dom {
 
 class TCPSocketChildBase : public nsITCPSocketChild {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketChildBase)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TCPSocketChildBase)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   void AddIPDLReference();
@@ -34,6 +34,7 @@ protected:
   virtual ~TCPSocketChildBase();
 
   nsCOMPtr<nsITCPSocketInternal> mSocket;
+  JS::Heap<JSObject*> mWindowObj;
   bool mIPCOpen;
 };
 
@@ -56,7 +57,6 @@ public:
   virtual bool RecvUpdateBufferedAmount(const uint32_t& aBufferred,
                                         const uint32_t& aTrackingNumber) override;
 private:
-  JSObject* mWindowObj;
   nsString mHost;
   uint16_t mPort;
 };

@@ -1177,13 +1177,14 @@ AuthCertificate(CertVerifier& certVerifier,
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
     CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
+  SignatureDigestStatus sigDigestStatus = SignatureDigestStatus::NeverChecked;
 
   rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                         time, infoObject,
                                         infoObject->GetHostNameRaw(),
                                         saveIntermediates, 0, &certList,
                                         &evOidPolicy, &ocspStaplingStatus,
-                                        &keySizeStatus);
+                                        &keySizeStatus, &sigDigestStatus);
   PRErrorCode savedErrorCode;
   if (rv != SECSuccess) {
     savedErrorCode = PR_GetError();
@@ -1195,6 +1196,10 @@ AuthCertificate(CertVerifier& certVerifier,
   if (keySizeStatus != KeySizeStatus::NeverChecked) {
     Telemetry::Accumulate(Telemetry::CERT_CHAIN_KEY_SIZE_STATUS,
                           static_cast<uint32_t>(keySizeStatus));
+  }
+  if (sigDigestStatus != SignatureDigestStatus::NeverChecked) {
+    Telemetry::Accumulate(Telemetry::CERT_CHAIN_SIGNATURE_DIGEST_STATUS,
+                          static_cast<uint32_t>(sigDigestStatus));
   }
 
   // We want to remember the CA certs in the temp db, so that the application can find the
