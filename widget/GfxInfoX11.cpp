@@ -14,7 +14,6 @@
 #include "prenv.h"
 
 #include "GfxInfoX11.h"
-#include "mozilla/X11Util.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -533,34 +532,6 @@ NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
   return NS_ERROR_FAILURE;
-}
-
-nsresult
-GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray)
-{
-#if defined(MOZ_WIDGET_GTK)
-  // No display in xpcshell mode.
-  if (!gdk_display_get_default()) {
-    return NS_OK;
-  }
-#endif
-
-  // Note: this doesn't support Xinerama. Two physical displays will be
-  // reported as one monitor covering the entire virtual screen.
-  Display* display = DefaultXDisplay();
-  Screen* screen = DefaultScreenOfDisplay(display);
-
-  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-  JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(WidthOfScreen(screen)));
-  JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
-
-  JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(HeightOfScreen(screen)));
-  JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
-
-  JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
-  JS_SetElement(aCx, aOutArray, 0, element);
-  return NS_OK;
 }
 
 #ifdef DEBUG
