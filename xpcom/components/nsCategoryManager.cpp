@@ -321,34 +321,6 @@ CategoryNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
   return mTable.SizeOfExcludingThis(nullptr, aMallocSizeOf);
 }
 
-struct persistent_userstruct
-{
-  PRFileDesc* fd;
-  const char* categoryName;
-  bool        success;
-};
-
-PLDHashOperator
-enumfunc_pentries(CategoryLeaf* aLeaf, void* aUserArg)
-{
-  persistent_userstruct* args = static_cast<persistent_userstruct*>(aUserArg);
-
-  PLDHashOperator status = PL_DHASH_NEXT;
-
-  if (aLeaf->value) {
-    if (PR_fprintf(args->fd,
-                   "%s,%s,%s\n",
-                   args->categoryName,
-                   aLeaf->GetKey(),
-                   aLeaf->value) == (uint32_t)-1) {
-      args->success = false;
-      status = PL_DHASH_STOP;
-    }
-  }
-
-  return status;
-}
-
 //
 // CategoryEnumerator class
 //
@@ -359,12 +331,6 @@ class CategoryEnumerator
 public:
   static CategoryEnumerator* Create(nsClassHashtable<nsDepCharHashKey,
                                                      CategoryNode>& aTable);
-
-private:
-  static PLDHashOperator
-  enumfunc_createenumerator(const char* aStr,
-                            CategoryNode* aNode,
-                            void* aUserArg);
 };
 
 CategoryEnumerator*
@@ -382,24 +348,16 @@ CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>&
     return nullptr;
   }
 
-  aTable.EnumerateRead(enumfunc_createenumerator, enumObj);
-
-  return enumObj;
-}
-
-PLDHashOperator
-CategoryEnumerator::enumfunc_createenumerator(const char* aStr,
-                                              CategoryNode* aNode,
-                                              void* aUserArg)
-{
-  CategoryEnumerator* mythis = static_cast<CategoryEnumerator*>(aUserArg);
-
-  // if a category has no entries, we pretend it doesn't exist
-  if (aNode->Count()) {
-    mythis->mArray[mythis->mCount++] = aStr;
+  for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
+    // if a category has no entries, we pretend it doesn't exist
+    CategoryNode* aNode = iter.GetUserData();
+    if (aNode->Count()) {
+      const char* str = iter.GetKey();
+      enumObj->mArray[enumObj->mCount++] = str;
+    }
   }
 
-  return PL_DHASH_NEXT;
+  return enumObj;
 }
 
 
