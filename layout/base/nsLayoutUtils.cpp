@@ -8049,7 +8049,8 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
 {
   Point p1 = NSPointToPoint(aP1, aAppUnitsPerDevPixel);
   Point p2 = NSPointToPoint(aP2, aAppUnitsPerDevPixel);
-  SnapLineToDevicePixelsForStroking(p1, p2, aDrawTarget);
+  SnapLineToDevicePixelsForStroking(p1, p2, aDrawTarget,
+                                    aStrokeOptions.mLineWidth);
   aDrawTarget.StrokeLine(p1, p2, aPattern, aStrokeOptions, aDrawOptions);
 }
 

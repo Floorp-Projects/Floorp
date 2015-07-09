@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1180443 - Intrinsic ISize calculation of ruby with whitespace</title>
+  <style>
+    div {
+      display: inline-block;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <p>No line break should happen in any block, and the content should just fit in the block.</p>
+
+  <div>
+    <ruby><rb>ABC</rb> <rb>DEF</rb></ruby>
+  </div>
+  <div>
+    XYZ <ruby><rb>ABC</rb><rb>DEF</rb></ruby> XYZ
+  </div>
+
+  <div>
+    <ruby><rb>あい</rb> <rb>うえ</rb></ruby>
+  </div>
+  <div>
+    お <ruby><rb>あい</rb><rb>うえ</rb></ruby> お
+  </div>
+  <br>
+</body>
+</html>

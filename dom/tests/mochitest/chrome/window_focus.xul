@@ -464,8 +464,7 @@ function startTest()
     }
   }
 
-  is(t19.selectionStart, 0, "input focused from mouse selectionStart");
-  is(t19.selectionEnd, 0, "input focused from mouse selectionEnd");
+  ok(t19.selectionStart == t19.selectionEnd, "input focused from mouse selection");
 
   // mouse clicking on elements that are not tabbable 
   for (idx = 1; idx <= kFocusSteps; idx++) {

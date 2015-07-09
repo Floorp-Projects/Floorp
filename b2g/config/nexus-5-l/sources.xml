@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="61e82f99bb8bc78d52b5717e9a2481ec7267fa33">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="fc6643dd3da2ccdf2ab284479643836bb3698644"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="bdddfe1ebb796e2bc1c048d5c4e0f97f3d06f98b"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3477513bcd385571aa01c0d074849e35bd5e2376"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -141,7 +141,7 @@
   <default remote="caf" revision="refs/tags/android-5.1.0_r1" sync-j="4"/>
   <!-- Nexus 5 specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
-  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="74919c3e2742b3237b2f30a8cefe182d0caf1e31"/>
+  <project name="device-hammerhead" path="device/lge/hammerhead" remote="b2g" revision="1ad7478309fd43981973e297f5a68a480f3a3c07"/>
   <project name="device_lge_hammerhead-kernel" path="device/lge/hammerhead-kernel" remote="b2g" revision="1d42cfba2e91a07b1bea1d1591b8aed4db9cb9a5"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="5d0ae53d9588c3d70c005aec9be94af9a534de16"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="c15b6e266136cd0cdd9b94d0bbed1962d9dd6672"/>

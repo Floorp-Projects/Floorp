@@ -203,7 +203,7 @@ public:
   {
   }
 
-  Result CheckSignatureDigestAlgorithm(DigestAlgorithm) override
+  Result CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA) override
   {
     checkedDigestAlgorithm = true;
     return Success;

@@ -37,31 +37,22 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  // DocumentTimeline methods
+  // AnimationTimeline methods
   virtual Nullable<TimeDuration> GetCurrentTime() const override;
 
-  // Converts a TimeStamp to the equivalent value in timeline time.
-  // Note that when IsUnderTestControl() is true, there is no correspondence
-  // between timeline time and wallclock time. In such a case, passing a
-  // timestamp from TimeStamp::Now() to this method will not return a
-  // meaningful result.
-  Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const;
-  TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const;
-
-  nsRefreshDriver* GetRefreshDriver() const;
-  // Returns true if this timeline is driven by a refresh driver that is
-  // under test control. In such a case, there is no correspondence between
-  // TimeStamp values returned by the refresh driver and wallclock time.
-  // As a result, passing a value from TimeStamp::Now() to ToTimelineTime()
-  // would not return a meaningful result.
-  bool IsUnderTestControl() const
+  bool TracksWallclockTime() const override
   {
     nsRefreshDriver* refreshDriver = GetRefreshDriver();
-    return refreshDriver && refreshDriver->IsTestControllingRefreshesEnabled();
+    return !refreshDriver ||
+           !refreshDriver->IsTestControllingRefreshesEnabled();
   }
+  Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const
+                                                                     override;
+  TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const override;
 
 protected:
   TimeStamp GetCurrentTimeStamp() const;
+  nsRefreshDriver* GetRefreshDriver() const;
 
   nsCOMPtr<nsIDocument> mDocument;
 

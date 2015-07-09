@@ -75,9 +75,7 @@ public:
   // that we use on on aTaskQueue to decode the decrypted stream.
   // This is called on the decode task queue.
   static already_AddRefed<PlatformDecoderModule>
-  CreateCDMWrapper(CDMProxy* aProxy,
-                   bool aHasAudio,
-                   bool aHasVideo);
+  CreateCDMWrapper(CDMProxy* aProxy);
 #endif
 
   // Creates a decoder.

@@ -676,6 +676,16 @@ nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
 
     mReader = nullptr;
 
+    if (mForceRestart) {
+        // The forceRestart condition was dealt with on the stack, but it did not
+        // clear the flag because nsPipe in the readsegment stack clears out
+        // return codes, so we need to use the flag here as a cue to return ERETARGETED
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_BINDING_RETARGETED;
+        }
+        mForceRestart = false;
+    }
+
     // if read would block then we need to AsyncWait on the request stream.
     // have callback occur on socket thread so we stay synchronized.
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -765,6 +775,16 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 
     mWriter = nullptr;
 
+    if (mForceRestart) {
+        // The forceRestart condition was dealt with on the stack, but it did not
+        // clear the flag because nsPipe in the writesegment stack clears out
+        // return codes, so we need to use the flag here as a cue to return ERETARGETED
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_BINDING_RETARGETED;
+        }
+        mForceRestart = false;
+    }
+
     // if pipe would block then we need to AsyncWait on it.  have callback
     // occur on socket thread so we stay synchronized.
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -826,6 +846,10 @@ nsHttpTransaction::Close(nsresult reason)
     LOG(("nsHttpTransaction::Close [this=%p reason=%x]\n", this, reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    if (reason == NS_BINDING_RETARGETED) {
+        LOG(("  close %p skipped due to ERETARGETED\n", this));
+        return;
+    }
 
     if (mClosed) {
         LOG(("  already closed\n"));
@@ -884,6 +908,21 @@ nsHttpTransaction::Close(nsresult reason)
     if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
 
         if (mForceRestart && NS_SUCCEEDED(Restart())) {
+            if (mResponseHead) {
+                mResponseHead->Reset();
+            }
+            mContentRead = 0;
+            mContentLength = -1;
+            delete mChunkedDecoder;
+            mChunkedDecoder = nullptr;
+            mHaveStatusLine = false;
+            mHaveAllHeaders = false;
+            mHttpResponseMatched = false;
+            mResponseIsComplete = false;
+            mDidContentStart = false;
+            mNoContent = false;
+            mSentData = false;
+            mReceivedData = false;
             LOG(("transaction force restarted\n"));
             return;
         }
@@ -1180,7 +1219,6 @@ nsHttpTransaction::Restart()
             mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("0"));
         }
     }
-    mForceRestart = false;
 
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }
@@ -1505,8 +1543,11 @@ nsHttpTransaction::HandleContentStart()
             gHttpHandler->ConnMgr()->ClearHostMapping(mConnInfo);
 
             // retry on a new connection - just in case
-            mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
-            mForceRestart = true; // force restart has built in loop protection
+            if (!mRestartCount) {
+                mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+                mForceRestart = true; // force restart has built in loop protection
+                return NS_ERROR_NET_RESET;
+            }
             break;
         }
 

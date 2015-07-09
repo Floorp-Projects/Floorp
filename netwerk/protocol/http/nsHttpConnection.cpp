@@ -1465,8 +1465,9 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         mCallbacks = nullptr;
     }
 
-    if (NS_FAILED(reason))
+    if (NS_FAILED(reason) && (reason != NS_BINDING_RETARGETED)) {
         Close(reason);
+    }
 
     // flag the connection as reused here for convenience sake.  certainly
     // it might be going away instead ;-)

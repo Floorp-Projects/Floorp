@@ -466,9 +466,7 @@ MP4Reader::EnsureDecodersSetup()
       }
       MOZ_ASSERT(proxy);
 
-      mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy,
-                                                          HasAudio(),
-                                                          HasVideo());
+      mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy);
       NS_ENSURE_TRUE(mPlatform, false);
 #else
       // EME not supported.

@@ -2108,12 +2108,18 @@ ArenaList::relocateArenas(ArenaHeader* toRelocate, ArenaHeader* relocated, Slice
 // heap memory.
 static const double MIN_ZONE_RECLAIM_PERCENT = 2.0;
 
+static bool isOOMReason(JS::gcreason::Reason reason)
+{
+    return reason == JS::gcreason::LAST_DITCH ||
+           reason == JS::gcreason::MEM_PRESSURE;
+}
+
 static bool ShouldRelocateZone(size_t arenaCount, size_t relocCount, JS::gcreason::Reason reason)
 {
     if (relocCount == 0)
         return false;
 
-    if (reason == JS::gcreason::MEM_PRESSURE || reason == JS::gcreason::LAST_DITCH)
+    if (isOOMReason(reason))
         return true;
 
     return (relocCount * 100.0) / arenaCount >= MIN_ZONE_RECLAIM_PERCENT;
@@ -5501,10 +5507,7 @@ GCRuntime::finishCollection(JS::gcreason::Reason reason)
     // before returning to ensure that we free as much as possible. If this is
     // a zeal-triggered GC, we want to ensure that the mutator can continue
     // allocating on the same pages to reduce fragmentation.
-    if (reason == JS::gcreason::LAST_DITCH ||
-        reason == JS::gcreason::MEM_PRESSURE ||
-        reason == JS::gcreason::DEBUG_GC)
-    {
+    if (isOOMReason(reason) || reason == JS::gcreason::DEBUG_GC) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
         rt->gc.waitBackgroundSweepOrAllocEnd();
     }
@@ -5789,6 +5792,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
     switch (incrementalState) {
       case NO_INCREMENTAL:
+        initialReason = reason;
         cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
         isCompacting = shouldCompact();
         lastMarkSlice = false;
@@ -6237,6 +6241,19 @@ void
 GCRuntime::finishGC(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(isIncrementalGCInProgress());
+
+    // If we're not collecting because we're out of memory then skip the
+    // compacting phase if we need to finish an ongoing incremental GC
+    // non-incrementally to avoid janking the browser.
+    if (!isOOMReason(initialReason)) {
+        if (incrementalState == COMPACT) {
+            abortGC();
+            return;
+        }
+
+        isCompacting = false;
+    }
+
     collect(true, SliceBudget(), reason);
 }
 
