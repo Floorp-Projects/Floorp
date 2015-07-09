@@ -6,13 +6,18 @@
 
 interface nsIDOMWindow;
 
-[uuid(4f537c88-3722-4946-9a09-ce559fa0591d)]
+[uuid(5fe83b24-38b9-4901-a4a1-d1bd57d3fe18)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
    * Notified when the window volume/mute is changed
    */
   void windowVolumeChanged(in float aVolume, in bool aMuted);
+
+  /**
+   * Notified when the capture state is changed.
+   */
+  void windowAudioCaptureChanged();
 };
 
 /**
