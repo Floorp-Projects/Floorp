@@ -118,7 +118,9 @@ public class testSettingsMenuItems extends PixelTest {
 
         PATH_DEVELOPER = new String[] { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
         OPTIONS_DEVELOPER = new String[][] {
-                { mStringHelper.REMOTE_DEBUGGING_LABEL },
+                { mStringHelper.REMOTE_DEBUGGING_USB_LABEL },
+                { mStringHelper.LEARN_MORE_LABEL },
+                { mStringHelper.REMOTE_DEBUGGING_WIFI_LABEL },
                 { mStringHelper.LEARN_MORE_LABEL },
         };
 

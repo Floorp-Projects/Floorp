@@ -1407,6 +1407,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 #identity-box {
   padding: 2px;
   font-size: .9em;
+  -moz-margin-end: 4px;
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1455,12 +1456,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   padding-right: 5.01px;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  -moz-margin-end: 4px;
-}
-
-#identity-box.verifiedIdentity:not(:-moz-lwtheme) {
+#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover) {
   background-color: var(--verified-identity-box-backgroundcolor);
 }
 
@@ -1519,7 +1515,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 /* page proxy icon */
 
-%include ../shared/identity-block.inc.css
+%include ../shared/identity-block/identity-block.inc.css
 
 #page-proxy-favicon {
   margin-top: 1px;

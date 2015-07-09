@@ -1,0 +1,115 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+:root {
+  --identity-box-background-image: linear-gradient(hsla(0,0%,16%,0),
+                                   hsla(0,0%,16%,.2) 35%,
+                                   hsla(0,0%,16%,.2) 65%,
+                                   hsla(0,0%,16%,0));
+  --identity-box-verified-color: hsl(92,100%,30%);
+  --identity-box-verified-background-image: linear-gradient(hsla(92,81%,16%,0),
+                                            hsla(92,81%,16%,.2) 35%,
+                                            hsla(92,81%,16%,.2) 65%,
+                                            hsla(92,81%,16%,0));
+%ifdef MOZ_OFFICIAL_BRANDING
+  --identity-box-chrome-color: rgb(229,115,0);
+  --identity-box-chrome-background-image: linear-gradient(rgba(229,114,0,0),
+                                    rgba(229,114,0,.5) 35%,
+                                    rgba(229,114,0,.5) 65%,
+                                    rgba(229,114,0,0));
+%else
+%if MOZ_UPDATE_CHANNEL == aurora
+  --identity-box-chrome-color: rgb(51,30,84);
+  --identity-box-chrome-background-image: linear-gradient(rgba(51,30,84,0),
+                                    rgba(51,30,84,.5) 35%,
+                                    rgba(51,30,84,.5) 65%,
+                                    rgba(51,30,84,0));
+%else
+  --identity-box-chrome-color: rgb(0,33,71);
+  --identity-box-chrome-background-image: linear-gradient(rgba(0,33,71,0),
+                                    rgba(0,33,71,.5) 35%,
+                                    rgba(0,33,71,.5) 65%,
+                                    rgba(0,33,71,0));
+%endif
+%endif
+}
+
+#identity-box {
+  background-position: right;
+  background-size: 1px;
+  background-repeat: no-repeat;
+  background-image: var(--identity-box-background-image);
+}
+
+#identity-box:-moz-locale-dir(rtl) {
+  background-position: left;
+}
+
+#identity-box:hover,
+#identity-box[open=true] {
+  background-color: rgb(231,230,230);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+  color: var(--identity-box-verified-color);
+  background-image: var(--identity-box-verified-background-image);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+  color: var(--identity-box-chrome-color);
+  background-image: var(--identity-box-chrome-background-image);
+}
+
+/* page proxy icon */
+
+#page-proxy-favicon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
+}
+
+.chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://branding/content/identity-icons-brand.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.verifiedDomain > #page-proxy-favicon[pageproxystate="valid"],
+.verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-secure.svg);
+}
+
+.mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+}
+
+.weakCipher > #page-proxy-favicon[pageproxystate="valid"],
+.mixedDisplayContent > #page-proxy-favicon[pageproxystate="valid"],
+.mixedDisplayContentLoadedActiveBlocked > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+}
+
+.mixedActiveBlocked > #page-proxy-favicon[pageproxystate="valid"] {
+  list-style-image: url(chrome://browser/skin/identity-mixed-active-blocked.svg);
+}
+
+#page-proxy-favicon[pageproxystate="invalid"] {
+  opacity: 0.3;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
+    list-style-image: url(chrome://branding/content/identity-icons-brand@2x.png);
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+}
+
+#urlbar[actiontype="searchengine"] > #identity-box > #page-proxy-favicon {
+  -moz-image-region: inherit;
+  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+}

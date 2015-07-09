@@ -139,31 +139,28 @@
 }
 
 .requests-security-state-icon {
+  width: 16px;
+  height: 16px;
   -moz-margin-end: 4px;
-  -moz-image-region:rect(0px, 16px, 16px, 0px);
-}
-
-.requests-security-state-icon:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 .security-state-insecure {
-  list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
+  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
 }
 
 .security-state-secure {
   cursor: pointer;
-  list-style-image: url(chrome://browser/skin/identity-icons-https.png);
+  list-style-image: url(chrome://browser/skin/identity-secure.svg);
 }
 
 .security-state-weak {
   cursor: pointer;
-  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display.png);
+  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
 }
 
 .security-state-broken {
   cursor: pointer;
-  list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active.png);
+  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
 }
 
 .requests-menu-type {

@@ -699,20 +699,26 @@ let viewSourceChrome = new ViewSourceChrome();
  * PrintUtils uses this to make Print Preview work.
  */
 let PrintPreviewListener = {
-  getPrintPreviewBrowser() {
-    let browser = document.getElementById("ppBrowser");
-    if (!browser) {
-      browser = document.createElement("browser");
-      browser.setAttribute("id", "ppBrowser");
-      browser.setAttribute("flex", "1");
-      browser.setAttribute("type", "content");
+  _ppBrowser: null,
 
-      let findBar = document.getElementById("FindToolbar");
-      document.getElementById("appcontent")
-              .insertBefore(browser, findBar);
+  getPrintPreviewBrowser() {
+    if (!this._ppBrowser) {
+      this._ppBrowser = document.createElement("browser");
+      this._ppBrowser.setAttribute("flex", "1");
+      this._ppBrowser.setAttribute("type", "content");
     }
 
-    return browser;
+    if (gBrowser.isRemoteBrowser) {
+      this._ppBrowser.setAttribute("remote", "true");
+    } else {
+      this._ppBrowser.removeAttribute("remote");
+    }
+
+    let findBar = document.getElementById("FindToolbar");
+    document.getElementById("appcontent")
+            .insertBefore(this._ppBrowser, findBar);
+
+    return this._ppBrowser;
   },
 
   getSourceBrowser() {
@@ -730,7 +736,7 @@ let PrintPreviewListener = {
   },
 
   onExit() {
-    document.getElementById("ppBrowser").collapsed = true;
+    this._ppBrowser.remove();
     gBrowser.collapsed = false;
     document.getElementById("viewSource-toolbox").hidden = false;
   },

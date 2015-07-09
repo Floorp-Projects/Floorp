@@ -8,8 +8,16 @@
                   android:title="@string/pref_category_devtools"
                   android:enabled="false">
 
-       <CheckBoxPreference android:key="devtools.debugger.remote-enabled"
-                           android:title="@string/pref_developer_remotedebugging" />
+       <CheckBoxPreference android:key="devtools.remote.usb.enabled"
+                           android:title="@string/pref_developer_remotedebugging_usb" />
+
+       <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.remote_debugging.link"
+                                                               android:title="@string/pref_learn_more"
+                                                               android:persistent="false"
+                                                               url="https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE" />
+
+       <CheckBoxPreference android:key="devtools.remote.wifi.enabled"
+                           android:title="@string/pref_developer_remotedebugging_wifi" />
 
        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.remote_debugging.link"
                                                                android:title="@string/pref_learn_more"

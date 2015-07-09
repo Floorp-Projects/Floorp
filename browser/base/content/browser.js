@@ -4379,6 +4379,10 @@ var XULBrowserWindow = {
         gURLBar.removeAttribute("level");
     }
 
+    // Make sure the "https" part of the URL is striked out or not,
+    // depending on the current mixed active content blocking state.
+    gURLBar.formatValue();
+
     try {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
@@ -6585,6 +6589,8 @@ var gIdentityHandler = {
   IDENTITY_MODE_MIXED_DISPLAY_LOADED                   : "unknownIdentity mixedContent mixedDisplayContent",  // SSL with unauthenticated display content
   IDENTITY_MODE_MIXED_ACTIVE_LOADED                    : "unknownIdentity mixedContent mixedActiveContent",  // SSL with unauthenticated active (and perhaps also display) content
   IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED    : "unknownIdentity mixedContent mixedDisplayContentLoadedActiveBlocked",  // SSL with unauthenticated display content; unauthenticated active content is blocked.
+  IDENTITY_MODE_MIXED_ACTIVE_BLOCKED                   : "verifiedDomain mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
+  IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED        : "verifiedIdentity mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
   IDENTITY_MODE_CHROMEUI                               : "chromeUI",         // Part of the product's UI
 
   // Cache the most recent SSLStatus and Location seen in checkIdentity
@@ -6768,9 +6774,17 @@ var gIdentityHandler = {
     } else if (unknown) {
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
     } else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
-      this.setMode(this.IDENTITY_MODE_IDENTIFIED);
+      if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+        this.setMode(this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED);
+      } else {
+        this.setMode(this.IDENTITY_MODE_IDENTIFIED);
+      }
     } else if (state & nsIWebProgressListener.STATE_IS_SECURE) {
-      this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+      if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+        this.setMode(this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED);
+      } else {
+        this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+      }
     } else if (state & nsIWebProgressListener.STATE_IS_BROKEN) {
       if (state & nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
         this.setMode(this.IDENTITY_MODE_MIXED_ACTIVE_LOADED);
@@ -6899,7 +6913,8 @@ var gIdentityHandler = {
     let icon_labels_dir = "ltr";
 
     switch (newMode) {
-    case this.IDENTITY_MODE_DOMAIN_VERIFIED: {
+    case this.IDENTITY_MODE_DOMAIN_VERIFIED:
+    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED: {
       let iData = this.getIdentityData();
 
       // Verifier is either the CA Org, for a normal cert, or a special string
@@ -6919,7 +6934,8 @@ var gIdentityHandler = {
         tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
 
       break; }
-    case this.IDENTITY_MODE_IDENTIFIED: {
+    case this.IDENTITY_MODE_IDENTIFIED:
+    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED: {
       // If it's identified, then we can populate the dialog with credentials
       let iData = this.getIdentityData();
       tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
@@ -6988,9 +7004,11 @@ var gIdentityHandler = {
 
     switch (newMode) {
     case this.IDENTITY_MODE_DOMAIN_VERIFIED:
+    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED:
       verifier = this._identityBox.tooltipText;
       break;
-    case this.IDENTITY_MODE_IDENTIFIED: {
+    case this.IDENTITY_MODE_IDENTIFIED:
+    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED: {
       // If it's identified, then we can populate the dialog with credentials
       let iData = this.getIdentityData();
       host = owner = iData.subjectOrg;
