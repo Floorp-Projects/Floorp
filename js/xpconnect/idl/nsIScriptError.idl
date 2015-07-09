@@ -15,7 +15,7 @@
 #include "nsStringGlue.h" // for nsDependentCString
 %}
 
-[scriptable, uuid(248b2c94-2736-4d29-bfdf-bc64a2e60d35)]
+[scriptable, uuid(18bdefde-e57b-11e4-832a-000c29a57fff)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -65,6 +65,8 @@ interface nsIScriptError : nsIConsoleMessage
     readonly attribute unsigned long long innerWindowID;
 
     readonly attribute boolean isFromPrivateWindow;
+
+    attribute jsval stack;
 
     void init(in AString message,
               in AString sourceName,
