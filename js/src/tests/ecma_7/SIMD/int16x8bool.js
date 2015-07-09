@@ -1,5 +1,5 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
-var int16x8 = SIMD.int16x8;
+var Int16x8 = SIMD.Int16x8;
 
 /*
  * Any copyright is dedicated to the Public Domain.
@@ -7,7 +7,7 @@ var int16x8 = SIMD.int16x8;
  */
 
 function test() {
-  var a = int16x8.bool(true, false, true, false, true, true, false, false);
+  var a = Int16x8.bool(true, false, true, false, true, true, false, false);
   assertEq(a.s0, -1);
   assertEq(a.s1, 0);
   assertEq(a.s2, -1);

@@ -209,10 +209,10 @@ function testSimdX4(ctor, shift, scale, disp, simdName, simdCtor) {
 }
 
 function testFloat32x4(ctor, shift, scale, disp) {
-    testSimdX4(ctor, shift, scale, disp, 'float32x4', SIMD.float32x4);
+    testSimdX4(ctor, shift, scale, disp, 'Float32x4', SIMD.Float32x4);
 }
 function testInt32x4(ctor, shift, scale, disp) {
-    testSimdX4(ctor, shift, scale, disp, 'int32x4', SIMD.int32x4);
+    testSimdX4(ctor, shift, scale, disp, 'Int32x4', SIMD.Int32x4);
 }
 
 function test(tester, ctor, shift) {
