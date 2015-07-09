@@ -184,7 +184,7 @@ GetCurrentJSStack()
     cx = workers::GetCurrentThreadJSContext();
   }
 
-  if (!cx) {
+  if (!cx || !js::GetContextCompartment(cx)) {
     return nullptr;
   }
 
