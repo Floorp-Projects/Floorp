@@ -153,6 +153,14 @@ function runTests() {
                     iframe.contentWindow);
   is(pointerentercount, 11, "Unexpected pointerenter event count!");
 
+  Array.from(document.querySelectorAll('*'))
+    .concat([iframe.contentDocument.body.firstChild, iframe.contentDocument.body.lastChild])
+    .forEach((elt) => {
+      elt.onpointerenter = null;
+      elt.onpointerleave = null;
+      elt.onpointerenter = null;
+      elt.onpointerleave = null;
+    });
   SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
 
   SimpleTest.finish();
