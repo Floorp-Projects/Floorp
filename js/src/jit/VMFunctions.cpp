@@ -414,7 +414,7 @@ SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValu
 
     JSOp op = JSOp(*pc);
 
-    if (op == JSOP_SETALIASEDVAR) {
+    if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
         // Aliased var assigns ignore readonly attributes on the property, as
         // required for initializing 'const' closure variables.
         Shape* shape = obj->as<NativeObject>().lookup(cx, name);
