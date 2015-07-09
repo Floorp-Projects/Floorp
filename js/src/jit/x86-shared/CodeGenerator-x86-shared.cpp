@@ -1090,17 +1090,23 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI* ins) {
 
     // We will first divide by Abs(d), and negate the answer if d is negative.
     // If desired, this can be avoided by generalizing computeDivisionConstants.
-    ReciprocalMulConstants rmc = computeDivisionConstants(Abs(d));
+    ReciprocalMulConstants rmc = computeDivisionConstants(Abs(d), /* maxLog = */ 31);
 
-    // As explained in the comments of computeDivisionConstants, we first compute
-    // X >> (32 + shift), where X is either (rmc.multiplier * n) if the multiplier
-    // is non-negative or (rmc.multiplier * n) + (2^32 * n) otherwise. This is the
-    // desired division result if n is non-negative, and is one less than the result
-    // otherwise.
+    // We first compute (M * n) >> 32, where M = rmc.multiplier.
     masm.movl(Imm32(rmc.multiplier), eax);
     masm.imull(lhs);
-    if (rmc.multiplier < 0)
+    if (rmc.multiplier > INT32_MAX) {
+        MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 32));
+
+        // We actually computed edx = ((int32_t(M) * n) >> 32) instead. Since
+        // (M * n) >> 32 is the same as (edx + n), we can correct for the overflow.
+        // (edx + n) can't overflow, as n and edx have opposite signs because int32_t(M)
+        // is negative.
         masm.addl(lhs, edx);
+    }
+    // (M * n) >> (32 + shift) is the truncated division answer if n is non-negative,
+    // as proved in the comments of computeDivisionConstants. We must add 1 later if n is
+    // negative to get the right answer in all cases.
     masm.sarl(Imm32(rmc.shiftAmount), edx);
 
     // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
