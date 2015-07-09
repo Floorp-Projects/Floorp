@@ -10,6 +10,10 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 JAR_MANIFESTS += ['jar.mn']
 
+TESTING_JS_MODULES += [
+    'UrlClassifierTestUtils.jsm',
+]
+
 #DEFINES['MOZILLA_INTERNAL_API'] = True
 
 # XXX Get this to work in libxul builds.
