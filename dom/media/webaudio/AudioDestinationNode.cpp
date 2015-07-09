@@ -505,6 +505,21 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AudioDestinationNode::WindowAudioCaptureChanged()
+{
+  MOZ_ASSERT(mAudioChannelAgent);
+
+  if (!mStream) {
+    return NS_OK;
+  }
+
+  DebugOnly<bool> captured = GetOwner()->GetAudioCaptured();
+
+  // XXXtodopadenot actually capture
+  return NS_OK;
+}
+
 AudioChannel
 AudioDestinationNode::MozAudioChannelType() const
 {
@@ -591,6 +606,8 @@ AudioDestinationNode::CreateAudioChannelAgent()
   // The AudioChannelAgent must start playing immediately in order to avoid
   // race conditions with mozinterruptbegin/end events.
   InputMuted(false);
+
+  WindowAudioCaptureChanged();
 }
 
 void

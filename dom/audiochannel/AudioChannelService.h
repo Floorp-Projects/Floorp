@@ -102,6 +102,14 @@ public:
 
   void RefreshAgentsVolume(nsPIDOMWindow* aWindow);
 
+  // This method needs to know the inner window that wants to capture audio. We
+  // group agents per top outer window, but we can have multiple innerWindow per
+  // top outerWindow (subiframes, etc.) and we have to identify all the agents
+  // just for a particular innerWindow.
+  void RefreshAgentsCapture(nsPIDOMWindow* aWindow,
+                            uint64_t aInnerWindowID);
+
+
 #ifdef MOZ_WIDGET_GONK
   void RegisterSpeakerManager(SpeakerManagerService* aSpeakerManager)
   {
