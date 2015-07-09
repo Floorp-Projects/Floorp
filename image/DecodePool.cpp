@@ -129,6 +129,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 /* static */ StaticRefPtr<DecodePool> DecodePool::sSingleton;
+/* static */ uint32_t DecodePool::sNumCores = 0;
 
 NS_IMPL_ISUPPORTS(DecodePool, nsIObserver)
 
@@ -301,6 +302,7 @@ private:
 DecodePool::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  sNumCores = PR_GetNumberOfProcessors();
   DecodePool::Singleton();
 }
 
@@ -316,6 +318,12 @@ DecodePool::Singleton()
   return sSingleton;
 }
 
+/* static */ uint32_t
+DecodePool::NumberOfCores()
+{
+  return sNumCores;
+}
+
 DecodePool::DecodePool()
   : mImpl(new DecodePoolImpl)
   , mMutex("image::DecodePool")
@@ -324,7 +332,7 @@ DecodePool::DecodePool()
   int32_t prefLimit = gfxPrefs::ImageMTDecodingLimit();
   uint32_t limit;
   if (prefLimit <= 0) {
-    int32_t numCores = PR_GetNumberOfProcessors();
+    int32_t numCores = NumberOfCores();
     if (numCores <= 1) {
       limit = 1;
     } else if (numCores == 2) {

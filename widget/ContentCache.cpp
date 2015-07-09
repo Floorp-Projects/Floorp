@@ -510,7 +510,6 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   MOZ_ASSERT(aWidget);
 
   aEvent.mSucceeded = false;
-  aEvent.mWasAsync = false;
   aEvent.mReply.mFocusedWidget = aWidget;
 
   switch (aEvent.message) {

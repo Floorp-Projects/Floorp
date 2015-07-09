@@ -1895,7 +1895,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                                               this);
                 InitEvent(event, nullptr);
                 DispatchEvent(&event);
-                MOZ_ASSERT(event.mSucceeded && !event.mWasAsync);
+                MOZ_ASSERT(event.mSucceeded);
 
                 if (start < 0)
                     start = int32_t(event.GetSelectionStart());
@@ -1978,7 +1978,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                                                        this);
                     InitEvent(queryEvent, nullptr);
                     DispatchEvent(&queryEvent);
-                    MOZ_ASSERT(queryEvent.mSucceeded && !queryEvent.mWasAsync);
+                    MOZ_ASSERT(queryEvent.mSucceeded);
                     event.mData = queryEvent.mReply.mString;
                 }
 

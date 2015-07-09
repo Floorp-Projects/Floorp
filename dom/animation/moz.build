@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
+    'AnimationComparator.h',
     'AnimationUtils.h',
     'PendingAnimationTracker.h',
 ]

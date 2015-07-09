@@ -1479,6 +1479,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     return false;
   }
 
+  nsAutoMicroTask mt;
   dom::AutoEntryScript aes(win, "NPAPI NPN_evaluate");
   aes.TakeOwnershipOfErrorReporting();
   JSContext* cx = aes.cx();
