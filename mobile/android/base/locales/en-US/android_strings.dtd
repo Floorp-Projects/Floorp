@@ -678,3 +678,15 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      desktop Firefox via WebIDE), so you just need to aim this device at the QR
      code. -->
 <!ENTITY devtools_auth_scan_header "Scanning for the QR code displayed on your other device">
+
+<!-- Restrictions -->
+<!-- Localization note: These are restrictions the device owner (e.g. parent) can enable for
+     a restricted profile (e.g. child). Used inside the Android settings UI. -->
+<!ENTITY restriction_disallow_tools_menu_title "Disallow Tools menu">
+<!ENTITY restriction_disallow_tools_menu_description "Hide Tools menu from UI.">
+<!ENTITY restriction_disallow_report_site_issue_title "Disallow \'Report site issue\'">
+<!ENTITY restriction_disallow_report_site_issue_description "Hide \'Report site issue\' menu item.">
+<!ENTITY restriction_disallow_import_settings_title "Disallow importing settings">
+<!ENTITY restriction_disallow_import_settings_description "Do not allow to import settings from other system browsers.">
+
+
