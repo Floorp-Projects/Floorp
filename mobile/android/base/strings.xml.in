@@ -310,7 +310,6 @@
   <string name="addons">&addons;</string>
   <string name="logins">&logins;</string>
   <string name="downloads">&downloads;</string>
-  <string name="apps">&apps;</string>
   <string name="char_encoding">&char_encoding;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="new_private_tab">&new_private_tab;</string>

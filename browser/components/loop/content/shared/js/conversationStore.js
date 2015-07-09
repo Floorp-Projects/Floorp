@@ -6,6 +6,8 @@ var loop = loop || {};
 loop.store = loop.store || {};
 
 (function() {
+  "use strict";
+
   var sharedActions = loop.shared.actions;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;

@@ -33,7 +33,6 @@ public class StringHelper {
     public final String ABOUT_HOME_URL = "about:home";
     public final String ABOUT_ADDONS_URL = "about:addons";
     public static final String ABOUT_LOGINS_URL = "about:logins";
-    public final String ABOUT_APPS_URL = "about:apps";
     public final String ABOUT_ABOUT_URL = "about:about";
     public final String ABOUT_SCHEME = "about:";
 
@@ -191,7 +190,6 @@ public class StringHelper {
     public final String DOWNLOADS_LABEL;
     public final String ADDONS_LABEL;
     public final String LOGINS_LABEL;
-    public final String APPS_LABEL;
     public final String SETTINGS_LABEL;
     public final String GUEST_MODE_LABEL;
     public final String TAB_QUEUE_LABEL;
@@ -368,7 +366,6 @@ public class StringHelper {
         DOWNLOADS_LABEL = res.getString(R.string.downloads);
         ADDONS_LABEL = res.getString(R.string.addons);
         LOGINS_LABEL = res.getString(R.string.logins);
-        APPS_LABEL = res.getString(R.string.apps);
         SETTINGS_LABEL = res.getString(R.string.settings);
         GUEST_MODE_LABEL = res.getString(R.string.new_guest_session);
         TAB_QUEUE_LABEL = res.getString(R.string.pref_tab_queue_title);
