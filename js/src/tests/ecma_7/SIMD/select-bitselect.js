@@ -5,28 +5,28 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var float32x4 = SIMD.float32x4;
-var float64x2 = SIMD.float64x2;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
-var int32x4 = SIMD.int32x4;
+var Float32x4 = SIMD.Float32x4;
+var Float64x2 = SIMD.Float64x2;
+var Int8x16 = SIMD.Int8x16;
+var Int16x8 = SIMD.Int16x8;
+var Int32x4 = SIMD.Int32x4;
 
 function getMask(i, maskLength) {
     var args = [];
     for (var j = 0; j < maskLength; j++) args.push(!!((i >> j) & 1));
     if (maskLength == 4)
-        return int32x4.bool(...args);
+        return Int32x4.bool(...args);
     else if (maskLength == 8)
-        return int16x8.bool(...args);
+        return Int16x8.bool(...args);
     else if (maskLength == 16)
-        return int8x16.bool(...args);
+        return Int8x16.bool(...args);
     else
         throw new Error("Invalid mask length.");
 }
 
 function selectMaskType(type) {
-    if (type == int32x4 || type == float32x4 || type == float64x2)
-        return int32x4;
+    if (type == Int32x4 || type == Float32x4 || type == Float64x2)
+        return Int32x4;
     return type;
 }
 
@@ -41,9 +41,9 @@ function select(mask, ifTrue, ifFalse) {
 
 /**
  * Tests type.select on all input pairs, for all possible masks. As the mask
- * has 4 lanes (for int32x4) and 2 possible values (true or false), there are 16 possible
- * masks. For int8x16, the mask has 16 lanes and 2 possible values, so there are 256
- * possible masks. For int16x8, the mask has 8 lanes and 2 possible values, so there
+ * has 4 lanes (for Int32x4) and 2 possible values (true or false), there are 16 possible
+ * masks. For Int8x16, the mask has 16 lanes and 2 possible values, so there are 256
+ * possible masks. For Int16x8, the mask has 8 lanes and 2 possible values, so there
  * are 64 possible masks.
  */
 function testSelect(type, inputs) {
@@ -59,15 +59,15 @@ function testSelect(type, inputs) {
 
 function intFromTypeBits(type, vec) {
     switch (type) {
-      case float32x4:
-          return int32x4.fromFloat32x4Bits(vec);
-      case float64x2:
-          return int32x4.fromFloat64x2Bits(vec);
-      case int8x16:
+      case Float32x4:
+          return Int32x4.fromFloat32x4Bits(vec);
+      case Float64x2:
+          return Int32x4.fromFloat64x2Bits(vec);
+      case Int8x16:
           return vec;
-      case int16x8:
+      case Int16x8:
           return vec;
-      case int32x4:
+      case Int32x4:
           return vec;
       default:
           throw new TypeError("Unknown SIMD type.");
@@ -87,11 +87,11 @@ function bitselect(type, mask, ifTrue, ifFalse) {
 
 function findCorrespondingScalarTypedArray(type) {
     switch (type) {
-        case int8x16: return Int8Array;
-        case int16x8: return Int16Array;
-        case int32x4: return Int32Array;
-        case float32x4: return Float32Array;
-        case float64x2: return Float64Array;
+        case Int8x16: return Int8Array;
+        case Int16x8: return Int16Array;
+        case Int32x4: return Int32Array;
+        case Float32x4: return Float32Array;
+        case Float64x2: return Float64Array;
         default: throw new Error("undefined scalar typed array");
     }
 }
@@ -118,24 +118,24 @@ function testBitSelectSimple(type, inputs) {
  */
 function testBitSelectComplex(type, inputs) {
     var masks8 = [
-        int8x16(0x42, 42, INT8_MAX, INT8_MIN, INT8_MAX + 1, INT8_MIN - 1, 13, 37, -42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
+        Int8x16(0x42, 42, INT8_MAX, INT8_MIN, INT8_MAX + 1, INT8_MIN - 1, 13, 37, -42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
     ]
     var masks16 = [
-        int16x8(0x42, 42, INT16_MAX, INT16_MIN, INT16_MAX + 1, INT16_MIN - 1, 13, 37),
-        int16x8(-42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
+        Int16x8(0x42, 42, INT16_MAX, INT16_MIN, INT16_MAX + 1, INT16_MIN - 1, 13, 37),
+        Int16x8(-42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
     ]
     var masks32 = [
-        int32x4(1337, 0x1337, 0x42, 42),
-        int32x4(0x00FF1CE, 0xBAADF00D, 0xDEADBEEF, 0xCAFED00D),
-        int32x4(0xD15EA5E, 0xDEADC0DE, 0xFACEB00C, 0x4B1D4B1D)
+        Int32x4(1337, 0x1337, 0x42, 42),
+        Int32x4(0x00FF1CE, 0xBAADF00D, 0xDEADBEEF, 0xCAFED00D),
+        Int32x4(0xD15EA5E, 0xDEADC0DE, 0xFACEB00C, 0x4B1D4B1D)
     ];
     var masks = [];
     var maskType = selectMaskType(type);
-    if (maskType == SIMD.int8x16)
+    if (maskType == SIMD.Int8x16)
         masks = masks8;
-    else if (maskType == SIMD.int16x8)
+    else if (maskType == SIMD.Int16x8)
         masks = masks16;
-    else if (maskType == SIMD.int32x4)
+    else if (maskType == SIMD.Int32x4)
         masks = masks32;
     else
         throw new Error("Unknown mask type.");
@@ -150,56 +150,56 @@ function testBitSelectComplex(type, inputs) {
 
 function test() {
     var inputs = [
-        [int8x16(0,4,9,16,25,36,49,64,81,121,-4,-9,-16,-25,-36,-49), int8x16(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)],
-        [int8x16(-1, 2, INT8_MAX, INT8_MIN, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
-         int8x16(INT8_MAX, -4, INT8_MIN, 42, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)]
+        [Int8x16(0,4,9,16,25,36,49,64,81,121,-4,-9,-16,-25,-36,-49), Int8x16(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)],
+        [Int8x16(-1, 2, INT8_MAX, INT8_MIN, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+         Int8x16(INT8_MAX, -4, INT8_MIN, 42, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)]
     ];
 
-    testSelect(int8x16, inputs);
-    testBitSelectSimple(int8x16, inputs);
-    testBitSelectComplex(int8x16, inputs);
+    testSelect(Int8x16, inputs);
+    testBitSelectSimple(Int8x16, inputs);
+    testBitSelectComplex(Int8x16, inputs);
 
     inputs = [
-        [int16x8(0,4,9,16,25,36,49,64), int16x8(1,2,3,4,5,6,7,8)],
-        [int16x8(-1, 2, INT16_MAX, INT16_MIN, 5, 6, 7, 8),
-         int16x8(INT16_MAX, -4, INT16_MIN, 42, 5, 6, 7, 8)]
+        [Int16x8(0,4,9,16,25,36,49,64), Int16x8(1,2,3,4,5,6,7,8)],
+        [Int16x8(-1, 2, INT16_MAX, INT16_MIN, 5, 6, 7, 8),
+         Int16x8(INT16_MAX, -4, INT16_MIN, 42, 5, 6, 7, 8)]
     ];
 
-    testSelect(int16x8, inputs);
-    testBitSelectSimple(int16x8, inputs);
-    testBitSelectComplex(int16x8, inputs);
+    testSelect(Int16x8, inputs);
+    testBitSelectSimple(Int16x8, inputs);
+    testBitSelectComplex(Int16x8, inputs);
 
     inputs = [
-        [int32x4(0,4,9,16), int32x4(1,2,3,4)],
-        [int32x4(-1, 2, INT32_MAX, INT32_MIN), int32x4(INT32_MAX, -4, INT32_MIN, 42)]
+        [Int32x4(0,4,9,16), Int32x4(1,2,3,4)],
+        [Int32x4(-1, 2, INT32_MAX, INT32_MIN), Int32x4(INT32_MAX, -4, INT32_MIN, 42)]
     ];
 
-    testSelect(int32x4, inputs);
-    testBitSelectSimple(int32x4, inputs);
-    testBitSelectComplex(int32x4, inputs);
+    testSelect(Int32x4, inputs);
+    testBitSelectSimple(Int32x4, inputs);
+    testBitSelectComplex(Int32x4, inputs);
 
     inputs = [
-        [float32x4(0.125,4.25,9.75,16.125), float32x4(1.5,2.75,3.25,4.5)],
-        [float32x4(-1.5,-0,NaN,-Infinity), float32x4(1,-2,13.37,3.13)],
-        [float32x4(1.5,2.75,NaN,Infinity), float32x4(-NaN,-Infinity,9.75,16.125)]
+        [Float32x4(0.125,4.25,9.75,16.125), Float32x4(1.5,2.75,3.25,4.5)],
+        [Float32x4(-1.5,-0,NaN,-Infinity), Float32x4(1,-2,13.37,3.13)],
+        [Float32x4(1.5,2.75,NaN,Infinity), Float32x4(-NaN,-Infinity,9.75,16.125)]
     ];
 
-    testSelect(float32x4, inputs);
-    testBitSelectSimple(float32x4, inputs);
-    testBitSelectComplex(float32x4, inputs);
+    testSelect(Float32x4, inputs);
+    testBitSelectSimple(Float32x4, inputs);
+    testBitSelectComplex(Float32x4, inputs);
 
     inputs = [
-        [float64x2(0.125,4.25), float64x2(9.75,16.125)],
-        [float64x2(1.5,2.75), float64x2(3.25,4.5)],
-        [float64x2(-1.5,-0), float64x2(NaN,-Infinity)],
-        [float64x2(1,-2), float64x2(13.37,3.13)],
-        [float64x2(1.5,2.75), float64x2(NaN,Infinity)],
-        [float64x2(-NaN,-Infinity), float64x2(9.75,16.125)]
+        [Float64x2(0.125,4.25), Float64x2(9.75,16.125)],
+        [Float64x2(1.5,2.75), Float64x2(3.25,4.5)],
+        [Float64x2(-1.5,-0), Float64x2(NaN,-Infinity)],
+        [Float64x2(1,-2), Float64x2(13.37,3.13)],
+        [Float64x2(1.5,2.75), Float64x2(NaN,Infinity)],
+        [Float64x2(-NaN,-Infinity), Float64x2(9.75,16.125)]
     ];
 
-    testSelect(float64x2, inputs);
-    testBitSelectSimple(float64x2, inputs);
-    testBitSelectComplex(float64x2, inputs);
+    testSelect(Float64x2, inputs);
+    testBitSelectSimple(Float64x2, inputs);
+    testBitSelectComplex(Float64x2, inputs);
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);

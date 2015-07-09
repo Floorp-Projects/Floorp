@@ -6,8 +6,8 @@ if (typeof SIMD === "undefined")
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 30);
 
-var i4 = SIMD.int32x4;
-var i4sub = SIMD.int32x4.sub;
+var i4 = SIMD.Int32x4;
+var i4sub = SIMD.Int32x4.sub;
 
 function simdbox(i) {
   return i4(i, i, i, i);

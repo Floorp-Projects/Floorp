@@ -1,9 +1,8 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
-var float32x4 = SIMD.float32x4;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
-var int32x4 = SIMD.int32x4;
-
+var Float32x4 = SIMD.Float32x4;
+var Int8x16 = SIMD.Int8x16;
+var Int16x8 = SIMD.Int16x8;
+var Int32x4 = SIMD.Int32x4;
 
 function testFloat32x4add() {
   function addf(a, b) {
@@ -17,7 +16,7 @@ function testFloat32x4add() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.add, addf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.add, addf);
   }
 }
 
@@ -40,7 +39,7 @@ function testFloat32x4and() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.and, andf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.and, andf);
   }
 }
 
@@ -56,7 +55,7 @@ function testFloat32x4div() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.div, divf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.div, divf);
   }
 }
 
@@ -72,7 +71,7 @@ function testFloat32x4mul() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.mul, mulf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.mul, mulf);
   }
 }
 
@@ -95,7 +94,7 @@ function testFloat32x4or() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.or, orf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.or, orf);
   }
 }
 
@@ -111,7 +110,7 @@ function testFloat32x4sub() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.sub, subf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.sub, subf);
   }
 }
 
@@ -134,7 +133,7 @@ function testFloat32x4xor() {
   ];
 
   for (var [v,w] of vals) {
-    testBinaryFunc(float32x4(...v), float32x4(...w), float32x4.xor, xorf);
+    testBinaryFunc(Float32x4(...v), Float32x4(...w), Float32x4.xor, xorf);
   }
 }
 
@@ -151,7 +150,7 @@ function testInt8x16add() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.add, addi);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.add, addi);
   }
 }
 
@@ -161,7 +160,7 @@ function testInt8x16and() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.and, andi);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.and, andi);
   }
 }
 
@@ -171,7 +170,7 @@ function testInt8x16mul() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.mul, muli);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.mul, muli);
   }
 }
 
@@ -181,7 +180,7 @@ function testInt8x16or() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.or, ori);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.or, ori);
   }
 }
 
@@ -191,7 +190,7 @@ function testInt8x16sub() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.sub, subi);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.sub, subi);
   }
 }
 
@@ -201,7 +200,7 @@ function testInt8x16xor() {
   }
 
   for (var [v,w] of i8x16vals) {
-    testBinaryFunc(int8x16(...v), int8x16(...w), int8x16.xor, xori);
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.xor, xori);
   }
 }
 
@@ -218,7 +217,7 @@ function testInt16x8add() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.add, addi);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.add, addi);
   }
 }
 
@@ -228,7 +227,7 @@ function testInt16x8and() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.and, andi);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.and, andi);
   }
 }
 
@@ -238,7 +237,7 @@ function testInt16x8mul() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.mul, muli);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.mul, muli);
   }
 }
 
@@ -248,7 +247,7 @@ function testInt16x8or() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.or, ori);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.or, ori);
   }
 }
 
@@ -258,7 +257,7 @@ function testInt16x8sub() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.sub, subi);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.sub, subi);
   }
 }
 
@@ -268,7 +267,7 @@ function testInt16x8xor() {
   }
 
   for (var [v,w] of i16x8vals) {
-    testBinaryFunc(int16x8(...v), int16x8(...w), int16x8.xor, xori);
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.xor, xori);
   }
 }
 
@@ -283,7 +282,7 @@ function testInt32x4add() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.add, addi);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.add, addi);
   }
 }
 
@@ -298,7 +297,7 @@ function testInt32x4and() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.and, andi);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.and, andi);
   }
 }
 
@@ -313,7 +312,7 @@ function testInt32x4mul() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.mul, muli);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.mul, muli);
   }
 }
 
@@ -328,7 +327,7 @@ function testInt32x4or() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.or, ori);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.or, ori);
   }
 }
 
@@ -342,7 +341,7 @@ function testInt32x4sub() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.sub, subi);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.sub, subi);
   }
 }
 
@@ -357,7 +356,7 @@ function testInt32x4xor() {
   ];
 
   for (var [v,w] of valsExp) {
-    testBinaryFunc(int32x4(...v), int32x4(...w), int32x4.xor, xori);
+    testBinaryFunc(Int32x4(...v), Int32x4(...w), Int32x4.xor, xori);
   }
 }
 

@@ -3,10 +3,10 @@ load(libdir + 'simd.js');
 setJitCompilerOption("ion.warmup.trigger", 50);
 
 function f() {
-    var i4 = SIMD.int32x4(1, -2, 3, -4);
+    var i4 = SIMD.Int32x4(1, -2, 3, -4);
 
     var v = Math.fround(13.37);
-    var f4 = SIMD.float32x4(13.37, NaN, Infinity, -0);
+    var f4 = SIMD.Float32x4(13.37, NaN, Infinity, -0);
 
     for (var i = 0; i < 150; i++) {
         assertEq(i4.x, 1);

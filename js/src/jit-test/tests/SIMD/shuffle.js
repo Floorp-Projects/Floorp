@@ -6,12 +6,12 @@ load(libdir + 'simd.js');
 setJitCompilerOption("ion.warmup.trigger", 50);
 
 function f() {
-    var i1 = SIMD.int32x4(1, 2, 3, 4);
-    var i2 = SIMD.int32x4(5, 6, 7, 8);
+    var i1 = SIMD.Int32x4(1, 2, 3, 4);
+    var i2 = SIMD.Int32x4(5, 6, 7, 8);
 
     var leet = Math.fround(13.37);
-    var f1 = SIMD.float32x4(-.5, -0, Infinity, leet);
-    var f2 = SIMD.float32x4(42, .5, 23, -10);
+    var f1 = SIMD.Float32x4(-.5, -0, Infinity, leet);
+    var f2 = SIMD.Float32x4(42, .5, 23, -10);
 
     // computes all rotations of a given array
     function *gen(arr) {
@@ -35,31 +35,31 @@ function f() {
 
     for (var i = 0; i < 150; i++) {
         // Variable lanes
-        var r = SIMD.float32x4.shuffle(f1, f2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
+        var r = SIMD.Float32x4.shuffle(f1, f2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
         assertEqX4(r, compF[i % 8]);
 
         // Constant lanes
-        assertEqX4(SIMD.float32x4.shuffle(f1, f2, 3, 2, 4, 5), [leet, Infinity, 42, .5]);
+        assertEqX4(SIMD.Float32x4.shuffle(f1, f2, 3, 2, 4, 5), [leet, Infinity, 42, .5]);
 
         // Variable lanes
-        var r = SIMD.int32x4.shuffle(i1, i2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
+        var r = SIMD.Int32x4.shuffle(i1, i2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
         assertEqX4(r, compI[i % 8]);
 
         // Constant lanes
-        assertEqX4(SIMD.int32x4.shuffle(i1, i2, 3, 2, 4, 5), [4, 3, 5, 6]);
+        assertEqX4(SIMD.Int32x4.shuffle(i1, i2, 3, 2, 4, 5), [4, 3, 5, 6]);
     }
 }
 
 function testBailouts(uglyDuckling) {
-    var i1 = SIMD.int32x4(1, 2, 3, 4);
-    var i2 = SIMD.int32x4(5, 6, 7, 8);
+    var i1 = SIMD.Int32x4(1, 2, 3, 4);
+    var i2 = SIMD.Int32x4(5, 6, 7, 8);
 
     for (var i = 0; i < 150; i++) {
         // Test bailouts
         var value = i == 149 ? uglyDuckling : 3;
         var caught = false;
         try {
-            assertEqX4(SIMD.int32x4.shuffle(i1, i2, value, 2, 4, 5), [4, 3, 5, 6]);
+            assertEqX4(SIMD.Int32x4.shuffle(i1, i2, value, 2, 4, 5), [4, 3, 5, 6]);
         } catch(e) {
             print(e);
             caught = true;

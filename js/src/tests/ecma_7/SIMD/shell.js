@@ -93,13 +93,13 @@ function assertEqX16(v, arr) {
 
 function simdLength(v) {
     var pt = Object.getPrototypeOf(v);
-    if (pt == SIMD.int8x16.prototype) {
+    if (pt == SIMD.Int8x16.prototype) {
         return 16;
-    } else if (pt == SIMD.int16x8.prototype) {
+    } else if (pt == SIMD.Int16x8.prototype) {
         return 8;
-    } else if (pt === SIMD.int32x4.prototype || pt === SIMD.float32x4.prototype) {
+    } else if (pt === SIMD.Int32x4.prototype || pt === SIMD.Float32x4.prototype) {
         return 4;
-    } else if (pt === SIMD.float64x2.prototype) {
+    } else if (pt === SIMD.Float64x2.prototype) {
         return 2;
     } else {
         throw new TypeError("Unknown SIMD kind.");
@@ -107,13 +107,13 @@ function simdLength(v) {
 }
 
 function simdLengthType(t) {
-    if (t == SIMD.int8x16)
+    if (t == SIMD.Int8x16)
         return 16;
-    else if (t == SIMD.int16x8)
+    else if (t == SIMD.Int16x8)
         return 8;
-    else if (t == SIMD.int32x4 || t == SIMD.float32x4)
+    else if (t == SIMD.Int32x4 || t == SIMD.Float32x4)
         return 4;
-    else if (t == SIMD.float64x2)
+    else if (t == SIMD.Float64x2)
         return 2;
     else
         throw new TypeError("Unknown SIMD kind.");
