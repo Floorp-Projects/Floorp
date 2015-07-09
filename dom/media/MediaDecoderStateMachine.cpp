@@ -2589,9 +2589,11 @@ MediaDecoderStateMachine::GetAudioClock() const
   // audio sink to ensure that it doesn't get destroyed on the audio sink
   // while we're using it.
   AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(HasAudio() && !mAudioCompleted);
-  return mAudioStartTime +
-         (mAudioSink ? mAudioSink->GetPosition() : 0);
+  MOZ_ASSERT(HasAudio() && !mAudioCompleted && IsPlaying());
+  // Since this function is called while we are playing and AudioSink is
+  // created once playback starts, mAudioSink is guaranteed to be non-null.
+  MOZ_ASSERT(mAudioSink);
+  return mAudioStartTime + mAudioSink->GetPosition();
 }
 
 int64_t MediaDecoderStateMachine::GetStreamClock() const
