@@ -1070,12 +1070,6 @@ protected:
   // media stream.
   int64_t mStreamStartTime;
 
-  // The presentation time of the first audio frame that was played in
-  // microseconds. We can add this to the audio stream position to determine
-  // the current audio time. Accessed on audio and state machine thread.
-  // Synchronized by decoder monitor.
-  int64_t mAudioStartTime;
-
   // The end time of the last audio frame that's been pushed onto the audio
   // hardware in microseconds. This will approximately be the end time of the
   // audio stream, unless another frame is pushed to the hardware.
