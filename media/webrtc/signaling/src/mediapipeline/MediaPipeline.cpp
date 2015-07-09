@@ -1373,11 +1373,11 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
                 << ") to return data @ " << played_ticks_
                 << " (desired " << desired_time << " -> "
                 << source_->StreamTimeToSeconds(desired_time) << ")");
-      samples_length = (track_rate_/100)*sizeof(uint16_t); // if this is not enough we'll loop and provide more
-      memset(samples_data, '\0', samples_length);
+      samples_length = track_rate_/100; // if this is not enough we'll loop and provide more
+      memset(samples_data, '\0', samples_length * sizeof(uint16_t));
     }
 
-    MOZ_ASSERT(samples_length < AUDIO_SAMPLE_BUFFER_MAX);
+    MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX);
 
     MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
               << samples_length);

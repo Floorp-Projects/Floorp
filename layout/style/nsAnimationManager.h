@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 
+class nsIGlobalObject;
 class nsStyleContext;
 
 namespace mozilla {
@@ -56,9 +57,9 @@ namespace dom {
 class CSSAnimation final : public Animation
 {
 public:
- explicit CSSAnimation(DocumentTimeline* aTimeline,
+ explicit CSSAnimation(nsIGlobalObject* aGlobal,
                        const nsSubstring& aAnimationName)
-    : Animation(aTimeline)
+    : dom::Animation(aGlobal)
     , mAnimationName(aAnimationName)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
@@ -73,7 +74,8 @@ public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual CSSAnimation* AsCSSAnimation() override { return this; }
+  CSSAnimation* AsCSSAnimation() override { return this; }
+  const CSSAnimation* AsCSSAnimation() const override { return this; }
 
   // CSSAnimation interface
   void GetAnimationName(nsString& aRetVal) const { aRetVal = mAnimationName; }
@@ -92,10 +94,61 @@ public:
 
   void PlayFromStyle();
   void PauseFromStyle();
+  void CancelFromStyle() override
+  {
+    mOwningElement = OwningElementRef();
+    Animation::CancelFromStyle();
+    MOZ_ASSERT(mSequenceNum == kUnsequenced);
+  }
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
+  bool IsUsingCustomCompositeOrder() const override
+  {
+    return mOwningElement.IsSet();
+  }
+
+  void SetAnimationIndex(uint64_t aIndex)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder());
+    mSequenceNum = aIndex;
+  }
+  void CopyAnimationIndex(const CSSAnimation& aOther)
+  {
+    MOZ_ASSERT(IsUsingCustomCompositeOrder() &&
+               aOther.IsUsingCustomCompositeOrder());
+    mSequenceNum = aOther.mSequenceNum;
+  }
+
   void QueueEvents(EventArray& aEventsToDispatch);
+
+  // Returns the element or pseudo-element whose animation-name property
+  // this CSSAnimation corresponds to (if any). This is used for determining
+  // the relative composite order of animations generated from CSS markup.
+  //
+  // Typically this will be the same as the target element of the keyframe
+  // effect associated with this animation. However, it can differ in the
+  // following circumstances:
+  //
+  // a) If script removes or replaces the effect of this animation,
+  // b) If this animation is cancelled (e.g. by updating the
+  //    animation-name property or removing the owning element from the
+  //    document),
+  // c) If this object is generated from script using the CSSAnimation
+  //    constructor.
+  //
+  // For (b) and (c) the returned owning element will return !IsSet().
+  const OwningElementRef& OwningElement() const { return mOwningElement; }
+
+  // Sets the owning element which is used for determining the composite
+  // order of CSSAnimation objects generated from CSS markup.
+  //
+  // @see OwningElement()
+  void SetOwningElement(const OwningElementRef& aElement)
+  {
+    mOwningElement = aElement;
+  }
 
   // Is this animation currently in effect for the purposes of computing
   // mWinsInCascade.  (In general, this can be computed from the timing
@@ -105,12 +158,20 @@ public:
   bool mInEffectForCascadeResults;
 
 protected:
-  virtual ~CSSAnimation() { }
+  virtual ~CSSAnimation()
+  {
+    MOZ_ASSERT(!mOwningElement.IsSet(), "Owning element should be cleared "
+                                        "before a CSS animation is destroyed");
+  }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
   nsString mAnimationName;
+
+  // The (pseudo-)element whose computed animation-name refers to this
+  // animation (if any).
+  OwningElementRef mOwningElement;
 
   // When combining animation-play-state with play() / pause() the following
   // behavior applies:
@@ -249,7 +310,7 @@ protected:
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
-                       mozilla::dom::DocumentTimeline* aTimeline,
+                       mozilla::dom::AnimationTimeline* aTimeline,
                        mozilla::AnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,

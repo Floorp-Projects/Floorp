@@ -84,4 +84,6 @@ tabbrowser[pendingpaint] {
   background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
   background-repeat: no-repeat;
   background-position: center center;
+  background-color: #fff;
+  opacity: 0.3;
 }

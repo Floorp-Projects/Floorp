@@ -1484,7 +1484,7 @@ Predictor::SpaceCleaner::OnMetaDataElement(const char *key, const char *value)
 
   if (!ok || !mKeyToDelete || lastHit < mLRUStamp) {
     mKeyToDelete = key;
-    mLRUStamp = lastHit;
+    mLRUStamp = ok ? lastHit : 0;
   }
 
   return NS_OK;

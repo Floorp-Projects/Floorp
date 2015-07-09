@@ -57,12 +57,11 @@ void
 WebGLContextLossHandler::TimerCallback()
 {
     MOZ_ASSERT(NS_GetCurrentThread() == mThread);
+    MOZ_ASSERT(mIsTimerRunning);
+    mIsTimerRunning = false;
 
     if (mIsDisabled)
         return;
-
-    MOZ_ASSERT(mIsTimerRunning);
-    mIsTimerRunning = false;
 
     // If we need to run the timer again, restart it immediately.
     // Otherwise, the code we call into below might *also* try to
@@ -100,7 +99,7 @@ WebGLContextLossHandler::RunTimer()
 void
 WebGLContextLossHandler::DisableTimer()
 {
-    if (!mIsDisabled)
+    if (mIsDisabled)
         return;
 
     mIsDisabled = true;

@@ -30,6 +30,7 @@ const Heritage = require("sdk/core/heritage");
 const {setTimeout, clearTimeout, setInterval, clearInterval} = require("sdk/timers");
 const {parseAttribute} = require("devtools/shared/node-attribute-parser");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+const {Task} = require("resource://gre/modules/Task.jsm");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
@@ -1955,7 +1956,7 @@ MarkupContainer.prototype = {
   /**
    * On mouse up, stop dragging.
    */
-  _onMouseUp: function(event) {
+  _onMouseUp: Task.async(function*() {
     this._isMouseDown = false;
 
     if (!this.isDragging) {
@@ -1967,13 +1968,14 @@ MarkupContainer.prototype = {
 
     let dropTargetNodes = this.markup.dropTargetNodes;
 
-    if(!dropTargetNodes) {
+    if (!dropTargetNodes) {
       return;
     }
 
-    this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
-                                    dropTargetNodes.nextSibling);
-  },
+    yield this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
+                                          dropTargetNodes.nextSibling);
+    this.markup.emit("drop-completed");
+  }),
 
   /**
    * On mouse move, move the dragged element if any and indicate the drop target.

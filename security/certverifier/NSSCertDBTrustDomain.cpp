@@ -49,6 +49,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            CertVerifier::PinningMode pinningMode,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
+                                           SignatureDigestOption signatureDigestOption,
                               /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
@@ -60,6 +61,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mPinningMode(pinningMode)
   , mMinRSABits(minRSABits)
   , mValidityCheckingMode(validityCheckingMode)
+  , mSignatureDigestOption(signatureDigestOption)
   , mHostname(hostname)
   , mBuiltChain(builtChain)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
@@ -796,8 +798,28 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 }
 
 Result
-NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm)
+NSSCertDBTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm aAlg,
+                                                    EndEntityOrCA endEntityOrCA)
 {
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
+          ("NSSCertDBTrustDomain: CheckSignatureDigestAlgorithm"));
+  if (aAlg == DigestAlgorithm::sha1) {
+    if (mSignatureDigestOption == DisableSHA1Everywhere) {
+      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+    }
+
+    if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("CA cert is SHA1"));
+      return mSignatureDigestOption == DisableSHA1ForCA
+             ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
+             : Success;
+    } else {
+    MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("EE cert is SHA1"));
+      return mSignatureDigestOption == DisableSHA1ForEE
+             ? Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
+             : Success;
+    }
+  }
   return Success;
 }
 

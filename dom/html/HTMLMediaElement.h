@@ -1374,6 +1374,11 @@ protected:
   // playback.
   bool mDisableVideo;
 
+  // True if we blocked either a play() call or autoplay because the
+  // media's owner doc was not visible. Only enforced when the pref
+  // media.block-play-until-visible=true.
+  bool mPlayBlockedBecauseHidden;
+
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 

@@ -114,6 +114,9 @@ ConsoleAPIStorageService.prototype = {
    * @param string aId
    *        The ID of the inner window for which the event occurred or "jsm" for
    *        messages logged from JavaScript modules..
+   * @param string aOuterId
+   *        This ID is used as 3rd parameters for the console-api-log-event
+   *        notification.
    * @param object aEvent
    *        A JavaScript object you want to store.
    */

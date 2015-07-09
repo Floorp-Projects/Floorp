@@ -18,7 +18,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsole(["PageError"], onStartPageError);
+  attachConsole(["PageError"], onStartPageError, true);
 }
 
 function onStartPageError(aState, aResponse)
@@ -45,6 +45,7 @@ function onStartPageErrorAndConsoleAPI(aState, aResponse)
   is(startedListeners.indexOf("foo"), -1, "startedListeners: no foo");
   ok(!aResponse.nativeConsoleAPI, "!nativeConsoleAPI");
 
+  top.console = top.console_;
   aState.client.stopListeners(["ConsoleAPI", "foo"],
                               onStopConsoleAPI.bind(null, aState));
 }
@@ -55,7 +56,7 @@ function onStopConsoleAPI(aState, aResponse)
   is(aResponse.stoppedListeners[0], "ConsoleAPI", "stoppedListeners: ConsoleAPI");
 
   closeDebugger(aState, function() {
-    attachConsole(["ConsoleAPI"], onStartConsoleAPI);
+    attachConsole(["ConsoleAPI"], onStartConsoleAPI, true);
   });
 }
 

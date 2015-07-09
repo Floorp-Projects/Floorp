@@ -49,6 +49,10 @@ public:
   /// Returns the singleton instance.
   static DecodePool* Singleton();
 
+  /// @return the number of processor cores we have available. This is not the
+  /// same as the number of decoding threads we're actually using.
+  static uint32_t NumberOfCores();
+
   /// Ask the DecodePool to run @aDecoder asynchronously and return immediately.
   void AsyncDecode(Decoder* aDecoder);
 
@@ -86,6 +90,7 @@ private:
   void NotifyProgress(Decoder* aDecoder);
 
   static StaticRefPtr<DecodePool> sSingleton;
+  static uint32_t sNumCores;
 
   nsRefPtr<DecodePoolImpl>    mImpl;
 

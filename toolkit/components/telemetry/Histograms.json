@@ -4223,6 +4223,18 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_URLBAR_SELECTED_RESULT_INDEX": {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 17,
+    "description": "Firefox: The index of the selected result in the URL bar popup"
+  },
+  "FX_URLBAR_SELECTED_RESULT_TYPE": {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 14,
+    "description": "Firefox: The type of the selected result in the URL bar popup"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -4768,6 +4780,20 @@
     "expires_in_version": "default",
     "kind": "boolean",
     "description": "New tab page is enhanced (showing suggestions)."
+  },
+  "NEWTAB_PAGE_LIFE_SPAN": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "1200",
+    "n_buckets": 100,
+    "description": "Life-span of a new tab without suggested tile: time delta between first-visible and unload events (half-seconds)."
+  },
+  "NEWTAB_PAGE_LIFE_SPAN_SUGGESTED": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "1200",
+    "n_buckets": 100,
+    "description": "Life-span of a new tab with suggested tile: time delta between first-visible and unload events (half-seconds)."
   },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "expires_in_version": "default",
@@ -7501,6 +7527,12 @@
     "kind": "enumerated",
     "n_values": 4,
     "description": "Does enforcing a larger minimum RSA key size cause verification failures? 1 = no, 2 = yes, 3 = another error prevented finding a verified chain"
+  },
+  "CERT_CHAIN_SIGNATURE_DIGEST_STATUS": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": 6,
+    "description": "Information on weak signature digest algorithms in the chain: 1 = Only good algorithms, 2 = a weak algorithm was present in an end entity, 3 = a weak algorithm was present in a CA cert, 4 = a weak algorithm was present in both EE and CA certs, 5 = another error prevented signature algorithm from being determined"
   },
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",

@@ -55,9 +55,6 @@
     <item android:id="@+id/logins"
           android:title="@string/logins"/>
 
-    <item android:id="@+id/apps"
-          android:title="@string/apps"/>
-
     <item android:id="@+id/char_encoding"
           android:visible="false"
           android:title="@string/char_encoding"/>

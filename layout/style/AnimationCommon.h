@@ -22,6 +22,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
+#include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCSSPropertySet.h"
@@ -272,9 +273,6 @@ struct AnimationCollection : public PRCList
 
   void Destroy()
   {
-    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      mAnimations[animIdx]->CancelFromStyle();
-    }
     // This will call our destructor.
     mElement->DeleteProperty(mElementProperty);
   }
@@ -458,6 +456,61 @@ public:
 #endif
 };
 
-}
+/**
+ * Utility class for referencing the element that created a CSS animation or
+ * transition. It is non-owning (i.e. it uses a raw pointer) since it is only
+ * expected to be set by the owned animation while it actually being managed
+ * by the owning element.
+ *
+ * This class also abstracts the comparison of an element/pseudo-class pair
+ * for the sake of composite ordering since this logic is common to both CSS
+ * animations and transitions.
+ *
+ * (We call this OwningElementRef instead of just OwningElement so that we can
+ * call the getter on CSSAnimation/CSSTransition OwningElement() without
+ * clashing with this object's contructor.)
+ */
+class OwningElementRef final
+{
+public:
+  OwningElementRef()
+    : mElement(nullptr)
+    , mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
+  { }
+
+  OwningElementRef(dom::Element& aElement,
+                   nsCSSPseudoElements::Type aPseudoType)
+    : mElement(&aElement)
+    , mPseudoType(aPseudoType)
+  { }
+
+  bool Equals(const OwningElementRef& aOther) const
+  {
+    return mElement == aOther.mElement &&
+           mPseudoType == aOther.mPseudoType;
+  }
+
+  bool LessThan(const OwningElementRef& aOther) const
+  {
+    MOZ_ASSERT(mElement && aOther.mElement,
+               "Elements to compare should not be null");
+
+    if (mElement != aOther.mElement) {
+      return nsContentUtils::PositionIsBefore(mElement, aOther.mElement);
+    }
+
+    return mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+          (mPseudoType == nsCSSPseudoElements::ePseudo_before &&
+           aOther.mPseudoType == nsCSSPseudoElements::ePseudo_after);
+  }
+
+  bool IsSet() const { return !!mElement; }
+
+private:
+  dom::Element* MOZ_NON_OWNING_REF mElement;
+  nsCSSPseudoElements::Type        mPseudoType;
+};
+
+} // namespace mozilla
 
 #endif /* !defined(mozilla_css_AnimationCommon_h) */
