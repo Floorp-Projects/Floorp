@@ -4851,22 +4851,16 @@ this.DOMApplicationRegistry = {
       browserOnly: browserOnly,
       QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
     };
-    this._clearCookieJarData(appId, browserOnly);
+    this._clearOriginData(appId, browserOnly);
     this._notifyCategoryAndObservers(subject, "webapps-clear-data", null, msg);
   },
 
-  _clearCookieJarData: function(appId, browserOnly) {
-    let browserCookieJar =
-      ChromeUtils.originAttributesToCookieJar({appId: appId,
-                                               inBrowser: true});
-    this._notifyCategoryAndObservers(null, "clear-cookiejar-data", browserCookieJar);
-
-    if (!browserOnly) {
-      let appCookieJar =
-        ChromeUtils.originAttributesToCookieJar({appId: appId,
-                                                 inBrowser: false});
-      this._notifyCategoryAndObservers(null, "clear-cookiejar-data", appCookieJar);
+  _clearOriginData: function(appId, browserOnly) {
+    let attributes = {appId: appId};
+    if (browserOnly) {
+      attributes.inBrowser = true;
     }
+    this._notifyCategoryAndObservers(null, "clear-origin-data", JSON.stringify(attributes));
   }
 };
 
