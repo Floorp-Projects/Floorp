@@ -1647,12 +1647,29 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #identity-box {
+  margin: 0;
   -moz-margin-end: 3px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
+  padding: 1px 4px;
   font-size: .9em;
+}
+
+#urlbar:not([focused="true"]) > #identity-box {
+  margin: -1px 0;
+  -moz-margin-end: 3px;
+  padding: 2px 4px;
+}
+
+@media (-moz-mac-yosemite-theme) {
+  #urlbar:not([focused="true"]) > #identity-box {
+    margin: -2px 0;
+    -moz-margin-end: 3px;
+    padding: 3px 4px;
+  }
+
+  #urlbar > #identity-box:hover,
+  #urlbar > #identity-box[open=true] {
+    background-color: rgb(240,237,237);
+  }
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1697,11 +1714,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 10.01px;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  -moz-padding-end: 4px;
 }
 
 #identity-box:-moz-focusring {
