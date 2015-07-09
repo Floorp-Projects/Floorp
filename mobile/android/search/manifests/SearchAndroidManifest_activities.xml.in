@@ -5,11 +5,11 @@
             android:label="@string/search_app_name"
             android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.ASSIST"/>
+            <!-- <intent-filter> -->
+            <!--     <action android:name="android.intent.action.ASSIST"/> -->
 
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
+            <!--     <category android:name="android.intent.category.DEFAULT"/> -->
+            <!-- </intent-filter> -->
 
         </activity>
 
