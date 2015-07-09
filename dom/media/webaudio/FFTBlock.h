@@ -15,17 +15,7 @@
 
 #include "AlignedTArray.h"
 #include "AudioNodeEngine.h"
-#if defined(MOZ_LIBAV_FFT)
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include "libavcodec/avfft.h"
-#ifdef __cplusplus
-}
-#endif
-#else
 #include "kiss_fft/kiss_fftr.h"
-#endif
 
 namespace mozilla {
 
@@ -35,9 +25,7 @@ namespace mozilla {
 class FFTBlock final
 {
   union ComplexU {
-#if !defined(MOZ_LIBAV_FFT)
     kiss_fft_cpx c;
-#endif
     float f[2];
     struct {
       float r;
@@ -47,16 +35,11 @@ class FFTBlock final
 
 public:
   explicit FFTBlock(uint32_t aFFTSize)
-#if defined(MOZ_LIBAV_FFT)
-    : mAvRDFT(nullptr)
-    , mAvIRDFT(nullptr)
-#else
     : mKissFFT(nullptr)
     , mKissIFFT(nullptr)
 #ifdef BUILD_ARM_NEON
     , mOmxFFT(nullptr)
     , mOmxIFFT(nullptr)
-#endif
 #endif
   {
     MOZ_COUNT_CTOR(FFTBlock);
@@ -78,12 +61,6 @@ public:
   void PerformFFT(const float* aData)
   {
     EnsureFFT();
-#if defined(MOZ_LIBAV_FFT)
-    AlignedTArray<FFTSample> complex(mFFTSize);
-    PodCopy(complex.Elements(), aData, mFFTSize);
-    av_rdft_calc(mAvRDFT, complex.Elements());
-    PodCopy((FFTSample*)mOutputBuffer.Elements(), complex.Elements(), mFFTSize);
-#else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       omxSP_FFTFwd_RToCCS_F32_Sfs(aData, mOutputBuffer.Elements()->f, mOmxFFT);
@@ -92,7 +69,6 @@ public:
     {
       kiss_fftr(mKissFFT, aData, &(mOutputBuffer.Elements()->c));
     }
-#endif
   }
   // Inverse-transform internal data and store the resulting FFTSize()
   // points in aDataOut.
@@ -107,19 +83,6 @@ public:
   void GetInverseWithoutScaling(float* aDataOut)
   {
     EnsureIFFT();
-#if defined(MOZ_LIBAV_FFT)
-    {
-      PodCopy(aDataOut, (float*)mOutputBuffer.Elements(), mFFTSize);
-      av_rdft_calc(mAvIRDFT, aDataOut);
-      // TODO: Once bug 877662 lands, change this to use SSE.
-      // Even though this function doesn't scale, the libav forward transform
-      // gives a value that needs scaling by 2 in order for things to turn out
-      // similar to how we expect from kissfft/openmax.
-      for (uint32_t i = 0; i < mFFTSize; ++i) {
-        aDataOut[i] *= 2.0;
-      }
-    }
-#else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       omxSP_FFTInv_CCSToR_F32_Sfs(mOutputBuffer.Elements()->f, aDataOut, mOmxIFFT);
@@ -131,7 +94,6 @@ public:
     {
       kiss_fftri(mKissIFFT, &(mOutputBuffer.Elements()->c), aDataOut);
     }
-#endif
   }
   // Inverse-transform the FFTSize()/2+1 points of data in each
   // of aRealDataIn and aImagDataIn and store the resulting
@@ -142,25 +104,12 @@ public:
   {
     EnsureIFFT();
     const uint32_t inputSize = mFFTSize / 2 + 1;
-#if defined(MOZ_LIBAV_FFT)
-    AlignedTArray<FFTSample> inputBuffer(inputSize * 2);
-    for (uint32_t i = 0; i < inputSize; ++i) {
-      inputBuffer[2*i] = aRealDataIn[i];
-      inputBuffer[(2*i)+1] = aImagDataIn[i];
-    }
-    av_rdft_calc(mAvIRDFT, inputBuffer.Elements());
-    PodCopy(aRealDataOut, inputBuffer.Elements(), FFTSize());
-    // TODO: Once bug 877662 lands, change this to use SSE.
-    for (uint32_t i = 0; i < mFFTSize; ++i) {
-      aRealDataOut[i] /= mFFTSize;
-    }
-#else
     AlignedTArray<ComplexU> inputBuffer(inputSize);
     for (uint32_t i = 0; i < inputSize; ++i) {
       inputBuffer[i].r = aRealDataIn[i];
       inputBuffer[i].i = aImagDataIn[i];
     }
-#if defined(BUILD_ARM_NEON)
+#ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       omxSP_FFTInv_CCSToR_F32_Sfs(inputBuffer.Elements()->f,
                                   aRealDataOut, mOmxIFFT);
@@ -172,7 +121,6 @@ public:
         aRealDataOut[i] /= mFFTSize;
       }
     }
-#endif
   }
 
   void Multiply(const FFTBlock& aFrame)
@@ -225,13 +173,8 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
-#if defined(MOZ_LIBAV_FFT)
-    amount += aMallocSizeOf(mAvRDFT);
-    amount += aMallocSizeOf(mAvIRDFT);
-#else
     amount += aMallocSizeOf(mKissFFT);
     amount += aMallocSizeOf(mKissIFFT);
-#endif
     amount += mOutputBuffer.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
@@ -247,11 +190,6 @@ private:
 
   void EnsureFFT()
   {
-#if defined(MOZ_LIBAV_FFT)
-    if (!mAvRDFT) {
-      mAvRDFT = av_rdft_init(log((double)mFFTSize)/M_LN2, DFT_R2C);
-    }
-#else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       if (!mOmxFFT) {
@@ -264,15 +202,9 @@ private:
         mKissFFT = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
       }
     }
-#endif
   }
   void EnsureIFFT()
   {
-#if defined(MOZ_LIBAV_FFT)
-    if (!mAvIRDFT) {
-      mAvIRDFT = av_rdft_init(log((double)mFFTSize)/M_LN2, IDFT_C2R);
-    }
-#else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
       if (!mOmxIFFT) {
@@ -285,7 +217,6 @@ private:
         mKissIFFT = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
       }
     }
-#endif
   }
 
 #ifdef BUILD_ARM_NEON
@@ -309,11 +240,6 @@ private:
 
   void Clear()
   {
-#if defined(MOZ_LIBAV_FFT)
-    av_rdft_end(mAvRDFT);
-    av_rdft_end(mAvIRDFT);
-    mAvRDFT = mAvIRDFT = nullptr;
-#else
 #ifdef BUILD_ARM_NEON
     free(mOmxFFT);
     free(mOmxIFFT);
@@ -322,21 +248,16 @@ private:
     free(mKissFFT);
     free(mKissIFFT);
     mKissFFT = mKissIFFT = nullptr;
-#endif
   }
   void AddConstantGroupDelay(double sampleFrameDelay);
   void InterpolateFrequencyComponents(const FFTBlock& block0,
                                       const FFTBlock& block1, double interp);
-#if defined(MOZ_LIBAV_FFT)
-  RDFTContext *mAvRDFT;
-  RDFTContext *mAvIRDFT;
-#else
+
   kiss_fftr_cfg mKissFFT;
   kiss_fftr_cfg mKissIFFT;
 #ifdef BUILD_ARM_NEON
   OMXFFTSpec_R_F32* mOmxFFT;
   OMXFFTSpec_R_F32* mOmxIFFT;
-#endif
 #endif
   AlignedTArray<ComplexU> mOutputBuffer;
   uint32_t mFFTSize;
