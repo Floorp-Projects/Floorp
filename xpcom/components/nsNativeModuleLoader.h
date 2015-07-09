@@ -33,12 +33,6 @@ private:
     PRLibrary* mLibrary;
   };
 
-  static PLDHashOperator
-  ReleaserFunc(nsIHashable* aHashedFile, NativeLoadData& aLoadData, void*);
-
-  static PLDHashOperator
-  UnloaderFunc(nsIHashable* aHashedFile, NativeLoadData& aLoadData, void*);
-
   nsDataHashtable<nsHashableHashKey, NativeLoadData> mLibraries;
 };
 
