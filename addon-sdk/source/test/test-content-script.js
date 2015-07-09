@@ -714,8 +714,9 @@ exports["test requestAnimationFrame"] = createProxyTest("", function (helper) {
 
   helper.createWorker(
     'new ' + function ContentScriptScope() {
+      var self = (function() { return this; })();
       window.requestAnimationFrame(function callback() {
-        assert(callback == this, "callback is equal to `this`");
+        assert(self == this, "self is equal to `this`");
         done();
       });
     }
