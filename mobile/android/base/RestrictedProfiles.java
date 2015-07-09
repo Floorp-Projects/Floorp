@@ -65,30 +65,55 @@ public class RestrictedProfiles {
      * These constants should be in sync with the ones from toolkit/components/parentalcontrols/nsIParentalControlServices.idl
      */
     public enum Restriction {
-        DISALLOW_DOWNLOADS(1, "no_download_files"),
-        DISALLOW_INSTALL_EXTENSION(2, "no_install_extensions"),
-        DISALLOW_INSTALL_APPS(3, "no_install_apps"), // UserManager.DISALLOW_INSTALL_APPS
-        DISALLOW_BROWSE_FILES(4, "no_browse_files"),
-        DISALLOW_SHARE(5, "no_share"),
-        DISALLOW_BOOKMARK(6, "no_bookmark"),
-        DISALLOW_ADD_CONTACTS(7, "no_add_contacts"),
-        DISALLOW_SET_IMAGE(8, "no_set_image"),
-        DISALLOW_MODIFY_ACCOUNTS(9, "no_modify_accounts"), // UserManager.DISALLOW_MODIFY_ACCOUNTS
-        DISALLOW_REMOTE_DEBUGGING(10, "no_remote_debugging"),
-        DISALLOW_IMPORT_SETTINGS(11, "no_import_settings"),
-        DISALLOW_TOOLS_MENU(12, "no_tools_menu"),
-        DISALLOW_REPORT_SITE_ISSUE(13, "no_report_site_issue");
+        // These restrictions have no strings assigned because they are only used in guest mode and not shown in the
+        // restricted profiles settings UI
+        DISALLOW_DOWNLOADS(1, "no_download_files", 0, 0),
+        DISALLOW_INSTALL_EXTENSION(2, "no_install_extensions", 0, 0),
+        DISALLOW_INSTALL_APPS(3, "no_install_apps", 0, 0), // UserManager.DISALLOW_INSTALL_APPS
+        DISALLOW_BROWSE_FILES(4, "no_browse_files", 0, 0),
+        DISALLOW_SHARE(5, "no_share", 0, 0),
+        DISALLOW_BOOKMARK(6, "no_bookmark", 0, 0),
+        DISALLOW_ADD_CONTACTS(7, "no_add_contacts", 0, 0),
+        DISALLOW_SET_IMAGE(8, "no_set_image", 0, 0),
+        DISALLOW_MODIFY_ACCOUNTS(9, "no_modify_accounts", 0, 0), // UserManager.DISALLOW_MODIFY_ACCOUNTS
+        DISALLOW_REMOTE_DEBUGGING(10, "no_remote_debugging", 0, 0),
+
+        // These restrictions are used for restricted profiles and therefore need to have strings assigned for the profile
+        // settings UI.
+        DISALLOW_IMPORT_SETTINGS(11, "no_report_site_issue", R.string.restriction_disallow_import_settings_title, R.string.restriction_disallow_import_settings_description),
+        DISALLOW_TOOLS_MENU(12, "no_tools_menu", R.string.restriction_disallow_tools_menu_title, R.string.restriction_disallow_tools_menu_description),
+        DISALLOW_REPORT_SITE_ISSUE(13, "no_report_site_issue", R.string.restriction_disallow_report_site_issue_title, R.string.restriction_disallow_report_site_issue_description);
 
         public final int id;
         public final String name;
+        public final int titleResource;
+        public final int descriptionResource;
 
-        Restriction(final int id, final String name) {
+        Restriction(final int id, final String name, int titleResource, int descriptionResource) {
             this.id = id;
             this.name = name;
+            this.titleResource = titleResource;
+            this.descriptionResource = descriptionResource;
+        }
+
+        public String getTitle(Context context) {
+            if (titleResource == 0) {
+                return toString();
+            }
+
+            return context.getResources().getString(titleResource);
+        }
+
+        public String getDescription(Context context) {
+            if (descriptionResource == 0) {
+                return name;
+            }
+
+            return context.getResources().getString(descriptionResource);
         }
     }
 
-    private static List<Restriction> restrictionsOfGuestProfile = Arrays.asList(
+    static List<Restriction> GUEST_RESTRICTIONS = Arrays.asList(
         Restriction.DISALLOW_DOWNLOADS,
         Restriction.DISALLOW_INSTALL_EXTENSION,
         Restriction.DISALLOW_INSTALL_APPS,
@@ -103,7 +128,7 @@ public class RestrictedProfiles {
     );
 
     // Restricted profiles will automatically have these restrictions by default
-    private static List<Restriction> defaultRestrictionsOfRestrictedProfiles = Arrays.asList(
+    static List<Restriction> RESTRICTED_PROFILE_RESTRICTIONS = Arrays.asList(
         Restriction.DISALLOW_TOOLS_MENU,
         Restriction.DISALLOW_REPORT_SITE_ISSUE,
         Restriction.DISALLOW_IMPORT_SETTINGS
@@ -125,6 +150,12 @@ public class RestrictedProfiles {
         return mgr.getUserRestrictions();
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private static Bundle getAppRestrictions(final Context context) {
+        final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        return mgr.getApplicationRestrictions(context.getPackageName());
+    }
+
     /**
      * This method does the system version check for you.
      *
@@ -134,14 +165,18 @@ public class RestrictedProfiles {
      *
      * Returns true otherwise.
      */
-    private static boolean getRestriction(final Context context, final String name) {
+    private static boolean getRestriction(final Context context, final Restriction restriction) {
         // Early versions don't support restrictions at all,
         // so no action can be restricted.
         if (Versions.preJBMR2) {
             return false;
         }
 
-        return getRestrictions(context).getBoolean(name, false);
+        if (!isUserRestricted(context)) {
+            return false;
+        }
+
+        return getAppRestrictions(context).getBoolean(restriction.name, RESTRICTED_PROFILE_RESTRICTIONS.contains(restriction));
     }
 
     private static boolean canLoadUrl(final Context context, final String url) {
@@ -153,7 +188,7 @@ public class RestrictedProfiles {
         try {
             // If we're not in guest mode, and the system restriction isn't in place, everything is allowed.
             if (!getInGuest() &&
-                !getRestriction(context, Restriction.DISALLOW_BROWSE_FILES.name)) {
+                !getRestriction(context, Restriction.DISALLOW_BROWSE_FILES)) {
                 return true;
             }
         } catch (IllegalArgumentException ex) {
@@ -231,16 +266,11 @@ public class RestrictedProfiles {
                 return canLoadUrl(context, url);
             }
 
-            return !restrictionsOfGuestProfile.contains(restriction);
-        }
-
-        // Hardcoded restrictions. Make restrictions configurable and read from UserManager (Bug 1180653)
-        if (isUserRestricted(context) && defaultRestrictionsOfRestrictedProfiles.contains(restriction)) {
-            return false;
+            return !GUEST_RESTRICTIONS.contains(restriction);
         }
 
         // NOTE: Restrictions hold the opposite intention, so we need to flip it.
-        return !getRestriction(context, restriction.name);
+        return !getRestriction(context, restriction);
     }
 
     @WrapElementForJNI

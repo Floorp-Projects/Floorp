@@ -541,6 +541,14 @@
   <!-- Voice search from the Awesome Bar -->
   <string name="voicesearch_prompt">&voicesearch_prompt;</string>
 
+  <!-- Restrictions -->
+  <string name="restriction_disallow_tools_menu_title">&restriction_disallow_tools_menu_title;</string>
+  <string name="restriction_disallow_tools_menu_description">&restriction_disallow_tools_menu_description;</string>
+  <string name="restriction_disallow_report_site_issue_title">&restriction_disallow_report_site_issue_title;</string>
+  <string name="restriction_disallow_report_site_issue_description">&restriction_disallow_report_site_issue_description;</string>
+  <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title;</string>
+  <string name="restriction_disallow_import_settings_description">&restriction_disallow_import_settings_description;</string>
+
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
 
