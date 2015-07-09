@@ -758,9 +758,9 @@ add_task(function test_request_remote_data_deletion() {
     do_check_false(reporter.haveRemoteData());
     do_check_false(server.hasDocument(reporter.serverNamespace, id));
 
-     // Client ID should be updated.
+    // Client ID should stay the same.
     do_check_neq(reporter._state.clientID, null);
-    do_check_neq(reporter._state.clientID, clientID);
+    do_check_eq(reporter._state.clientID, clientID);
     do_check_eq(reporter._state.clientIDVersion, 1);
 
     // And it should be persisted to disk.
