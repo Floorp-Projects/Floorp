@@ -53,26 +53,3 @@ bool ICCompare_Double::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH()
 bool ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH(); }
 bool ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler&) { MOZ_CRASH(); }
 JitCode* JitRuntime::generateProfilerExitFrameTailStub(JSContext*) { MOZ_CRASH(); }
-
-void MacroAssembler::alignFrameForICArguments(AfterICSaveLive& aic) { MOZ_CRASH(); }
-void MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic) { MOZ_CRASH(); }
-
-void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) { MOZ_CRASH(); }
-
-// ===============================================================
-// Stack manipulation functions.
-
-void MacroAssembler::PushRegsInMask(LiveRegisterSet) { MOZ_CRASH(); }
-void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet, LiveRegisterSet) { MOZ_CRASH(); }
-
-void MacroAssembler::Push(Register reg) { MOZ_CRASH(); }
-void MacroAssembler::Push(const Imm32 imm) { MOZ_CRASH(); }
-void MacroAssembler::Push(const ImmWord imm) { MOZ_CRASH(); }
-void MacroAssembler::Push(const ImmPtr imm) { MOZ_CRASH(); }
-void MacroAssembler::Push(const ImmGCPtr ptr) { MOZ_CRASH(); }
-void MacroAssembler::Push(FloatRegister reg) { MOZ_CRASH(); }
-
-void MacroAssembler::Pop(Register reg) { MOZ_CRASH(); }
-void MacroAssembler::Pop(const ValueOperand& val) { MOZ_CRASH(); }
-
-void MacroAssembler::reserveStack(uint32_t amount) { MOZ_CRASH(); }
