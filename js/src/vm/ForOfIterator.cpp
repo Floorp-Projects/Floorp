@@ -170,9 +170,14 @@ ForOfIterator::materializeArrayIterator()
 {
     MOZ_ASSERT(index != NOT_ARRAY);
 
-    HandlePropertyName name = cx_->names().ArrayValuesAt;
+    const char* nameString = "ArrayValuesAt";
+
+    RootedAtom name(cx_, Atomize(cx_, nameString, strlen(nameString)));
+    if (!name)
+        return false;
+
     RootedValue val(cx_);
-    if (!GlobalObject::getSelfHostedFunction(cx_, cx_->global(), name, name, 1, &val))
+    if (!cx_->global()->getSelfHostedFunction(cx_, name, name, 1, &val))
         return false;
 
     InvokeArgs args(cx_);
