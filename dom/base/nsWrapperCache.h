@@ -9,7 +9,6 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
-#include "js/Class.h"
 #include "js/Id.h"          // must come before js/RootingAPI.h
 #include "js/Value.h"       // must come before js/RootingAPI.h
 #include "js/RootingAPI.h"
@@ -66,6 +65,7 @@ class nsWindowRoot;
  * have to include some JS headers that don't play nicely with the rest of the
  * codebase. Include nsWrapperCacheInlines.h if you need to call those methods.
  */
+
 class nsWrapperCache
 {
 public:
@@ -103,11 +103,18 @@ public:
     return GetWrapperJSObject();
   }
 
+#ifdef DEBUG
+private:
+  static bool HasJSObjectMovedOp(JSObject* aWrapper);
+
+public:
+#endif
+
   void SetWrapper(JSObject* aWrapper)
   {
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
     MOZ_ASSERT(aWrapper, "Use ClearWrapper!");
-    MOZ_ASSERT(js::HasObjectMovedOp(aWrapper),
+    MOZ_ASSERT(HasJSObjectMovedOp(aWrapper),
                "Object has not provided the hook to update the wrapper if it is moved");
 
     SetWrapperJSObject(aWrapper);
