@@ -191,50 +191,44 @@ nsNativeModuleLoader::LoadModule(FileLocation& aFile)
   return data.mModule;
 }
 
-PLDHashOperator
-nsNativeModuleLoader::ReleaserFunc(nsIHashable* aHashedFile,
-                                   NativeLoadData& aLoadData, void*)
-{
-  aLoadData.mModule = nullptr;
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
-                                   NativeLoadData& aLoadData, void*)
-{
-  if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), LogLevel::Debug)) {
-    nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
-
-    nsAutoCString filePath;
-    file->GetNativePath(filePath);
-
-    LOG(LogLevel::Debug,
-        ("nsNativeModuleLoader::UnloaderFunc(\"%s\")", filePath.get()));
-  }
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-  nsTraceRefcnt::SetActivityIsLegal(false);
-#endif
-
-#if 0
-  // XXXbsmedberg: do this as soon as the static-destructor crash(es)
-  // are fixed
-  PRStatus ret = PR_UnloadLibrary(aLoadData.mLibrary);
-  NS_ASSERTION(ret == PR_SUCCESS, "Failed to unload library");
-#endif
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-  nsTraceRefcnt::SetActivityIsLegal(true);
-#endif
-
-  return PL_DHASH_REMOVE;
-}
-
 void
 nsNativeModuleLoader::UnloadLibraries()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Shutdown not on main thread?");
-  mLibraries.Enumerate(ReleaserFunc, nullptr);
-  mLibraries.Enumerate(UnloaderFunc, nullptr);
+
+  for (auto iter = mLibraries.Iter(); !iter.Done(); iter.Next()) {
+    NativeLoadData& loadData = iter.GetData();
+    loadData.mModule = nullptr;
+  }
+
+  for (auto iter = mLibraries.Iter(); !iter.Done(); iter.Next()) {
+    if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), LogLevel::Debug)) {
+      nsIHashable* hashedFile = iter.GetKey();
+      nsCOMPtr<nsIFile> file(do_QueryInterface(hashedFile));
+
+      nsAutoCString filePath;
+      file->GetNativePath(filePath);
+
+      LOG(LogLevel::Debug,
+          ("nsNativeModuleLoader::UnloaderFunc(\"%s\")", filePath.get()));
+    }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcnt::SetActivityIsLegal(false);
+#endif
+
+#if 0
+    // XXXbsmedberg: do this as soon as the static-destructor crash(es)
+    // are fixed
+    NativeLoadData& loadData = iter.GetData();
+    PRStatus ret = PR_UnloadLibrary(loadData.mLibrary);
+    NS_ASSERTION(ret == PR_SUCCESS, "Failed to unload library");
+#endif
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcnt::SetActivityIsLegal(true);
+#endif
+
+    iter.Remove();
+  }
 }
