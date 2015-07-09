@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -260,53 +260,24 @@ XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
     return entry->GetName(_retval);
 }
 
-static PLDHashOperator
-xpti_ArrayAppender(const char* name, xptiInterfaceEntry* entry, void* arg)
-{
-    nsCOMArray<nsIInterfaceInfo>* array = static_cast<nsCOMArray<nsIInterfaceInfo>*>(arg);
-
-    if (entry->GetScriptableFlag()) {
-        nsCOMPtr<nsIInterfaceInfo> ii = entry->InterfaceInfo();
-        array->AppendElement(ii);
-    }
-    return PL_DHASH_NEXT;
-}
-
 /* nsIEnumerator enumerateInterfaces (); */
 void
 XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces)
 {
     // I didn't want to incur the size overhead of using nsHashtable just to
-    // make building an enumerator easier. So, this code makes a snapshot of 
+    // make building an enumerator easier. So, this code makes a snapshot of
     // the table using an nsISupportsArray and builds an enumerator for that.
     // We can afford this transient cost.
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
     aInterfaces.SetCapacity(mWorkingSet.mNameTable.Count());
-    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, &aInterfaces);
-}
-
-struct MOZ_STACK_CLASS ArrayAndPrefix
-{
-    // Outlives the ArrayAndPrefix on the stack
-    nsISupportsArray* MOZ_NON_OWNING_REF array;
-    const char*       prefix;
-    uint32_t          length;
-};
-
-static PLDHashOperator
-xpti_ArrayPrefixAppender(const char* keyname, xptiInterfaceEntry* entry, void* arg)
-{
-    ArrayAndPrefix* args = (ArrayAndPrefix*) arg;
-
-    const char* name = entry->GetTheName();
-    if (name != PL_strnstr(name, args->prefix, args->length))
-        return PL_DHASH_NEXT;
-
-    nsCOMPtr<nsIInterfaceInfo> ii;
-    if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii))))
-        args->array->AppendElement(ii);
-    return PL_DHASH_NEXT;
+    for (auto iter = mWorkingSet.mNameTable.Iter(); !iter.Done(); iter.Next()) {
+        xptiInterfaceEntry* entry = iter.GetUserData();
+        if (entry->GetScriptableFlag()) {
+            nsCOMPtr<nsIInterfaceInfo> ii = entry->InterfaceInfo();
+            aInterfaces.AppendElement(ii);
+        }
+    }
 }
 
 /* nsIEnumerator enumerateInterfacesWhoseNamesStartWith (in string prefix); */
@@ -319,9 +290,18 @@ XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *pref
         return NS_ERROR_UNEXPECTED;
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    ArrayAndPrefix args = {array, prefix, static_cast<uint32_t>(strlen(prefix))};
-    mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayPrefixAppender, &args);
-
+    uint32_t length = static_cast<uint32_t>(strlen(prefix));
+    for (auto iter = mWorkingSet.mNameTable.Iter(); !iter.Done(); iter.Next()) {
+        xptiInterfaceEntry* entry = iter.GetUserData();
+        const char* name = entry->GetTheName();
+        if (name != PL_strnstr(name, prefix, length)) {
+            continue;
+        }
+        nsCOMPtr<nsIInterfaceInfo> ii;
+        if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
+            array->AppendElement(ii);
+        }
+    }
     return array->Enumerate(_retval);
 }
 
