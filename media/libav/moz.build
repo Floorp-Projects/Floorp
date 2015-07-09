@@ -44,6 +44,12 @@ SOURCES += [
     'libavutil/x86/cpuid.asm'
 ]
 
+# Dummy functions are required for windows NoOpt/PGO builds.
+if CONFIG['_MSC_VER']:
+    SOURCES += [
+        'avfft_dummy_funcs.c'
+    ]
+
 # OS X requires a special header to make sure symbols are exported publicly in
 # the lgpl shared library, since it does not yet use system headers. This is
 # also used on linux for the time being, to avoid having to patch libav code.
