@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.215';
-PDFJS.build = 'c9a7498';
+PDFJS.version = '1.1.270';
+PDFJS.build = 'ccfafea';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -79,6 +79,14 @@ var AnnotationType = {
   WIDGET: 1,
   TEXT: 2,
   LINK: 3
+};
+
+var AnnotationBorderStyleType = {
+  SOLID: 1,
+  DASHED: 2,
+  BEVELED: 3,
+  INSET: 4,
+  UNDERLINE: 5
 };
 
 var StreamType = {
@@ -6083,19 +6091,64 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
     var width = item.rect[2] - item.rect[0];
     var height = item.rect[3] - item.rect[1];
 
-    var bWidth = item.borderWidth || 0;
-    if (bWidth) {
-      width = width - 2 * bWidth;
-      height = height - 2 * bWidth;
-      cstyle.borderWidth = bWidth + 'px';
-      var color = item.color;
-      if (drawBorder && color) {
-        cstyle.borderStyle = 'solid';
-        cstyle.borderColor = Util.makeCssRgb(Math.round(color[0] * 255),
-                                             Math.round(color[1] * 255),
-                                             Math.round(color[2] * 255));
+    // Border
+    if (item.borderStyle.width > 0) {
+      // Border width
+      container.style.borderWidth = item.borderStyle.width + 'px';
+      if (item.borderStyle.style !== AnnotationBorderStyleType.UNDERLINE) {
+        // Underline styles only have a bottom border, so we do not need
+        // to adjust for all borders. This yields a similar result as
+        // Adobe Acrobat/Reader.
+        width = width - 2 * item.borderStyle.width;
+        height = height - 2 * item.borderStyle.width;
+      }
+
+      // Horizontal and vertical border radius
+      var horizontalRadius = item.borderStyle.horizontalCornerRadius;
+      var verticalRadius = item.borderStyle.verticalCornerRadius;
+      if (horizontalRadius > 0 || verticalRadius > 0) {
+        var radius = horizontalRadius + 'px / ' + verticalRadius + 'px';
+        CustomStyle.setProp('borderRadius', container, radius);
+      }
+
+      // Border style
+      switch (item.borderStyle.style) {
+        case AnnotationBorderStyleType.SOLID:
+          container.style.borderStyle = 'solid';
+          break;
+
+        case AnnotationBorderStyleType.DASHED:
+          container.style.borderStyle = 'dashed';
+          break;
+
+        case AnnotationBorderStyleType.BEVELED:
+          warn('Unimplemented border style: beveled');
+          break;
+
+        case AnnotationBorderStyleType.INSET:
+          warn('Unimplemented border style: inset');
+          break;
+
+        case AnnotationBorderStyleType.UNDERLINE:
+          container.style.borderBottomStyle = 'solid';
+          break;
+
+        default:
+          break;
+      }
+
+      // Border color
+      if (item.color) {
+        container.style.borderColor =
+          Util.makeCssRgb(Math.round(item.color[0] * 255),
+                          Math.round(item.color[1] * 255),
+                          Math.round(item.color[2] * 255));
+      } else {
+        // Default color is black, but that's not obvious from the spec.
+        container.style.borderColor = 'rgb(0,0,0)';
       }
     }
+
     cstyle.width = width + 'px';
     cstyle.height = height + 'px';
     return container;

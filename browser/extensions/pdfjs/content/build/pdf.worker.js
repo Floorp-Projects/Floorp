@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.215';
-PDFJS.build = 'c9a7498';
+PDFJS.version = '1.1.270';
+PDFJS.build = 'ccfafea';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -79,6 +79,14 @@ var AnnotationType = {
   WIDGET: 1,
   TEXT: 2,
   LINK: 3
+};
+
+var AnnotationBorderStyleType = {
+  SOLID: 1,
+  DASHED: 2,
+  BEVELED: 3,
+  INSET: 4,
+  UNDERLINE: 5
 };
 
 var StreamType = {
@@ -4453,45 +4461,8 @@ var Annotation = (function AnnotationClosure() {
       }
     }
 
-    // Some types of annotations have border style dict which has more
-    // info than the border array
-    if (dict.has('BS')) {
-      var borderStyle = dict.get('BS');
-      data.borderWidth = borderStyle.has('W') ? borderStyle.get('W') : 1;
-    } else {
-      var borderArray = dict.get('Border') || [0, 0, 1];
-      data.borderWidth = borderArray[2] || 0;
-
-      // TODO: implement proper support for annotations with line dash patterns.
-      var dashArray = borderArray[3];
-      if (data.borderWidth > 0 && dashArray) {
-        if (!isArray(dashArray)) {
-          // Ignore the border if dashArray is not actually an array,
-          // this is consistent with the behaviour in Adobe Reader.
-          data.borderWidth = 0;
-        } else {
-          var dashArrayLength = dashArray.length;
-          if (dashArrayLength > 0) {
-            // According to the PDF specification: the elements in a dashArray
-            // shall be numbers that are nonnegative and not all equal to zero.
-            var isInvalid = false;
-            var numPositive = 0;
-            for (var i = 0; i < dashArrayLength; i++) {
-              var validNumber = (+dashArray[i] >= 0);
-              if (!validNumber) {
-                isInvalid = true;
-                break;
-              } else if (dashArray[i] > 0) {
-                numPositive++;
-              }
-            }
-            if (isInvalid || numPositive === 0) {
-              data.borderWidth = 0;
-            }
-          }
-        }
-      }
-    }
+    this.borderStyle = data.borderStyle = new AnnotationBorderStyle();
+    this.setBorderStyle(dict);
 
     this.appearance = getDefaultAppearance(dict);
     data.hasAppearance = !!this.appearance;
@@ -4499,6 +4470,48 @@ var Annotation = (function AnnotationClosure() {
   }
 
   Annotation.prototype = {
+    /**
+     * Set the border style (as AnnotationBorderStyle object).
+     *
+     * @public
+     * @memberof Annotation
+     * @param {Dict} borderStyle - The border style dictionary
+     */
+    setBorderStyle: function Annotation_setBorderStyle(borderStyle) {
+      if (!isDict(borderStyle)) {
+        return;
+      }
+      if (borderStyle.has('BS')) {
+        var dict = borderStyle.get('BS');
+        var dictType;
+
+        if (!dict.has('Type') || (isName(dictType = dict.get('Type')) &&
+                                  dictType.name === 'Border')) {
+          this.borderStyle.setWidth(dict.get('W'));
+          this.borderStyle.setStyle(dict.get('S'));
+          this.borderStyle.setDashArray(dict.get('D'));
+        }
+      } else if (borderStyle.has('Border')) {
+        var array = borderStyle.get('Border');
+        if (isArray(array) && array.length >= 3) {
+          this.borderStyle.setHorizontalCornerRadius(array[0]);
+          this.borderStyle.setVerticalCornerRadius(array[1]);
+          this.borderStyle.setWidth(array[2]);
+          this.borderStyle.setStyle('S');
+
+          if (array.length === 4) { // Dash array available
+            this.borderStyle.setDashArray(array[3]);
+          }
+        }
+      } else {
+        // There are no border entries in the dictionary. According to the
+        // specification, we should draw a solid border of width 1 in that
+        // case, but Adobe Reader did not implement that part of the
+        // specification and instead draws no border at all, so we do the same.
+        // See also https://github.com/mozilla/pdf.js/issues/6179.
+        this.borderStyle.setWidth(0);
+      }
+    },
 
     getData: function Annotation_getData() {
       return this.data;
@@ -4685,6 +4698,144 @@ var Annotation = (function AnnotationClosure() {
   return Annotation;
 })();
 
+/**
+ * Contains all data regarding an annotation's border style.
+ *
+ * @class
+ */
+var AnnotationBorderStyle = (function AnnotationBorderStyleClosure() {
+  /**
+   * @constructor
+   * @private
+   */
+  function AnnotationBorderStyle() {
+    this.width = 1;
+    this.style = AnnotationBorderStyleType.SOLID;
+    this.dashArray = [3];
+    this.horizontalCornerRadius = 0;
+    this.verticalCornerRadius = 0;
+  }
+
+  AnnotationBorderStyle.prototype = {
+    /**
+     * Set the width.
+     *
+     * @public
+     * @memberof AnnotationBorderStyle
+     * @param {integer} width - The width
+     */
+    setWidth: function AnnotationBorderStyle_setWidth(width) {
+      if (width === (width | 0)) {
+        this.width = width;
+      }
+    },
+
+    /**
+     * Set the style.
+     *
+     * @public
+     * @memberof AnnotationBorderStyle
+     * @param {Object} style - The style object
+     * @see {@link shared/util.js}
+     */
+    setStyle: function AnnotationBorderStyle_setStyle(style) {
+      if (!style) {
+        return;
+      }
+      switch (style.name) {
+        case 'S':
+          this.style = AnnotationBorderStyleType.SOLID;
+          break;
+
+        case 'D':
+          this.style = AnnotationBorderStyleType.DASHED;
+          break;
+
+        case 'B':
+          this.style = AnnotationBorderStyleType.BEVELED;
+          break;
+
+        case 'I':
+          this.style = AnnotationBorderStyleType.INSET;
+          break;
+
+        case 'U':
+          this.style = AnnotationBorderStyleType.UNDERLINE;
+          break;
+
+        default:
+          break;
+      }
+    },
+
+    /**
+     * Set the dash array.
+     *
+     * @public
+     * @memberof AnnotationBorderStyle
+     * @param {Array} dashArray - The dash array with at least one element
+     */
+    setDashArray: function AnnotationBorderStyle_setDashArray(dashArray) {
+      // We validate the dash array, but we do not use it because CSS does not
+      // allow us to change spacing of dashes. For more information, visit
+      // http://www.w3.org/TR/css3-background/#the-border-style.
+      if (isArray(dashArray) && dashArray.length > 0) {
+        // According to the PDF specification: the elements in a dashArray
+        // shall be numbers that are nonnegative and not all equal to zero.
+        var isValid = true;
+        var allZeros = true;
+        for (var i = 0, len = dashArray.length; i < len; i++) {
+          var element = dashArray[i];
+          var validNumber = (+element >= 0);
+          if (!validNumber) {
+            isValid = false;
+            break;
+          } else if (element > 0) {
+            allZeros = false;
+          }
+        }
+        if (isValid && !allZeros) {
+          this.dashArray = dashArray;
+        } else {
+          this.width = 0; // Adobe behavior when the array is invalid.
+        }
+      } else if (dashArray) {
+        this.width = 0; // Adobe behavior when the array is invalid.
+      }
+    },
+
+    /**
+     * Set the horizontal corner radius (from a Border dictionary).
+     *
+     * @public
+     * @memberof AnnotationBorderStyle
+     * @param {integer} radius - The horizontal corner radius
+     */
+    setHorizontalCornerRadius:
+        function AnnotationBorderStyle_setHorizontalCornerRadius(radius) {
+      if (radius === (radius | 0)) {
+        this.horizontalCornerRadius = radius;
+      }
+    },
+
+    /**
+     * Set the vertical corner radius (from a Border dictionary).
+     *
+     * @public
+     * @memberof AnnotationBorderStyle
+     * @param {integer} radius - The vertical corner radius
+     */
+    setVerticalCornerRadius:
+        function AnnotationBorderStyle_setVerticalCornerRadius(radius) {
+      if (radius === (radius | 0)) {
+        this.verticalCornerRadius = radius;
+      }
+    }
+  };
+
+  return AnnotationBorderStyle;
+})();
+
 var WidgetAnnotation = (function WidgetAnnotationClosure() {
 
   function WidgetAnnotation(params) {
@@ -4785,21 +4936,9 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
   return TextWidgetAnnotation;
 })();
 
-var InteractiveAnnotation = (function InteractiveAnnotationClosure() {
-  function InteractiveAnnotation(params) {
-    Annotation.call(this, params);
-
-    this.data.hasHtml = true;
-  }
-
-  Util.inherit(InteractiveAnnotation, Annotation, { });
-
-  return InteractiveAnnotation;
-})();
-
 var TextAnnotation = (function TextAnnotationClosure() {
   function TextAnnotation(params) {
-    InteractiveAnnotation.call(this, params);
+    Annotation.call(this, params);
 
     var dict = params.dict;
     var data = this.data;
@@ -4809,6 +4948,7 @@ var TextAnnotation = (function TextAnnotationClosure() {
     data.annotationType = AnnotationType.TEXT;
     data.content = stringToPDFString(content || '');
     data.title = stringToPDFString(title || '');
+    data.hasHtml = true;
 
     if (data.hasAppearance) {
       data.name = 'NoIcon';
@@ -4823,18 +4963,19 @@ var TextAnnotation = (function TextAnnotationClosure() {
     }
   }
 
-  Util.inherit(TextAnnotation, InteractiveAnnotation, { });
+  Util.inherit(TextAnnotation, Annotation, { });
 
   return TextAnnotation;
 })();
 
 var LinkAnnotation = (function LinkAnnotationClosure() {
   function LinkAnnotation(params) {
-    InteractiveAnnotation.call(this, params);
+    Annotation.call(this, params);
 
     var dict = params.dict;
     var data = this.data;
     data.annotationType = AnnotationType.LINK;
+    data.hasHtml = true;
 
     var action = dict.get('A');
     if (action && isDict(action)) {
@@ -4898,7 +5039,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
     return url;
   }
 
-  Util.inherit(LinkAnnotation, InteractiveAnnotation, { });
+  Util.inherit(LinkAnnotation, Annotation, { });
 
   return LinkAnnotation;
 })();
@@ -6305,7 +6446,7 @@ var ColorSpace = (function ColorSpaceClosure() {
           }
           break;
         case 'Pattern':
-          var basePatternCS = xref.fetchIfRef(cs[1]) || null;
+          var basePatternCS = cs[1] || null;
           if (basePatternCS) {
             basePatternCS = ColorSpace.parseToIR(basePatternCS, xref, res);
           }
@@ -6313,7 +6454,7 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'Indexed':
         case 'I':
           var baseIndexedCS = ColorSpace.parseToIR(cs[1], xref, res);
-          var hiVal = cs[2] + 1;
+          var hiVal = xref.fetchIfRef(cs[2]) + 1;
           var lookup = xref.fetchIfRef(cs[3]);
           if (isStream(lookup)) {
             lookup = lookup.getBytes();
@@ -6321,7 +6462,7 @@ var ColorSpace = (function ColorSpaceClosure() {
           return ['IndexedCS', baseIndexedCS, hiVal, lookup];
         case 'Separation':
         case 'DeviceN':
-          var name = cs[1];
+          var name = xref.fetchIfRef(cs[1]);
           numComps = 1;
           if (isName(name)) {
             numComps = 1;
@@ -10705,6 +10846,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               }
               // eagerly compile XForm objects
               var name = args[0].name;
+              if (!name) {
+                warn('XObject must be referred to by name.');
+                continue;
+              }
               if (imageCache[name] !== undefined) {
                 operatorList.addOp(imageCache[name].fn, imageCache[name].args);
                 args = null;
@@ -16082,6 +16227,32 @@ var OpenTypeFileBuilder = (function OpenTypeFileBuilderClosure() {
   return OpenTypeFileBuilder;
 })();
 
+// Problematic Unicode characters in the fonts that needs to be moved to avoid
+// issues when they are painted on the canvas, e.g. complex-script shaping or
+// control/whitespace characters. The ranges are listed in pairs: the first item
+// is a code of the first problematic code, the second one is the next
+// non-problematic code. The ranges must be in sorted order.
+var ProblematicCharRanges = new Int32Array([
+  // Control characters.
+  0x0000, 0x0020,
+  0x007F, 0x00A1,
+  0x00AD, 0x00AE,
+  // Chars that is used in complex-script shaping.
+  0x0600, 0x0780,
+  0x08A0, 0x10A0,
+  0x1780, 0x1800,
+  // General punctuation chars.
+  0x2000, 0x2010,
+  0x2011, 0x2012,
+  0x2028, 0x2030,
+  0x205F, 0x2070,
+  0x25CC, 0x25CD,
+  // Chars that is used in complex-script shaping.
+  0xAA60, 0xAA80,
+  // Specials Unicode block.
+  0xFFF0, 0x10000
+]);
+
 /**
  * 'Font' is the class the outside world should use, it encapsulate all the font
  * decoding logics whatever type it is (assuming the font type is supported).
@@ -16365,33 +16536,18 @@ var Font = (function FontClosure() {
    * @return {boolean}
    */
   function isProblematicUnicodeLocation(code) {
-    if (code <= 0x1F) { // Control chars
-      return true;
+    // Using binary search to find a range start.
+    var i = 0, j = ProblematicCharRanges.length - 1;
+    while (i < j) {
+      var c = (i + j + 1) >> 1;
+      if (code < ProblematicCharRanges[c]) {
+        j = c - 1;
+      } else {
+        i = c;
+      }
     }
-    if (code >= 0x80 && code <= 0x9F) { // Control chars
-      return true;
-    }
-    if ((code >= 0x2000 && code <= 0x200F) || // General punctuation chars
-        (code >= 0x2028 && code <= 0x202F) ||
-        (code >= 0x2060 && code <= 0x206F)) {
-      return true;
-    }
-    if (code >= 0xFFF0 && code <= 0xFFFF) { // Specials Unicode block
-      return true;
-    }
-    switch (code) {
-      case 0x7F: // Control char
-      case 0xA0: // Non breaking space
-      case 0xAD: // Soft hyphen
-      case 0x2011: // Non breaking hyphen
-      case 0x205F: // Medium mathematical space
-      case 0x25CC: // Dotted circle (combining mark)
-        return true;
-    }
-    if ((code & ~0xFF) === 0x0E00) { // Thai/Lao chars (with combining mark)
-      return true;
-    }
-    return false;
+    // Even index means code in problematic range.
+    return !(i & 1);
   }
 
   /**
@@ -17816,13 +17972,17 @@ var Font = (function FontClosure() {
 
       var charCodeToGlyphId = [], charCode;
       var toUnicode = properties.toUnicode, widths = properties.widths;
-      var isIdentityUnicode = toUnicode instanceof IdentityToUnicodeMap;
+      var skipToUnicode = (toUnicode instanceof IdentityToUnicodeMap ||
+                           toUnicode.length === 0x10000);
 
+      // Helper function to try to skip mapping of empty glyphs.
+      // Note: In some cases, just relying on the glyph data doesn't work,
+      //       hence we also use a few heuristics to fix various PDF files.
       function hasGlyph(glyphId, charCode, widthCode) {
         if (!missingGlyphs[glyphId]) {
           return true;
         }
-        if (!isIdentityUnicode && charCode >= 0 && toUnicode.has(charCode)) {
+        if (!skipToUnicode && charCode >= 0 && toUnicode.has(charCode)) {
           return true;
         }
         if (widths && widthCode >= 0 && isNum(widths[widthCode])) {
