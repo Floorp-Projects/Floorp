@@ -564,7 +564,7 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mMayHavePointerEnterLeaveEventListener(false),
   mIsModalContentWindow(false),
   mIsActive(false), mIsBackground(false),
-  mAudioMuted(false), mAudioVolume(1.0),
+  mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
   mDesktopModeViewport(false), mInnerWindow(nullptr),
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
@@ -3743,6 +3743,26 @@ nsPIDOMWindow::RefreshMediaElements()
 {
   nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   service->RefreshAgentsVolume(GetOuterWindow());
+}
+
+bool
+nsPIDOMWindow::GetAudioCaptured() const
+{
+  MOZ_ASSERT(IsInnerWindow());
+  return mAudioCaptured;
+}
+
+nsresult
+nsPIDOMWindow::SetAudioCapture(bool aCapture)
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  mAudioCaptured = aCapture;
+
+  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  service->RefreshAgentsCapture(GetOuterWindow(), mWindowID);
+
+  return NS_OK;
 }
 
 // nsISpeechSynthesisGetter
