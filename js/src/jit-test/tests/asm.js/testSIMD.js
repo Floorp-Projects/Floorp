@@ -138,7 +138,7 @@ assertEqX4(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + F32 + CF32 + FROU
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + CF32 + FROUND + "function f(i) {i=i|0; return cf4(f4(f32(1) + f32(2), f32(2), f32(3), f32(4)))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [3, 2, 3, 4]);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + CF32 + FROUND + "function f(i) {i=i|0; return cf4(f4(f32(1) + f32(2), 2.0, 3.0, 4.0))} return f"), this, {}, new ArrayBuffer(0x10000))(0x20000), [3, 2, 3, 4]);
 
-// 1.3.2 Reading values out of lanes
+// 1.3.2 Getters - Reading values out of lanes
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=1; return e(x,1) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=1; return e(x + x, 1) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=1.; return e(x, 1) | 0;} return f");
@@ -147,6 +147,13 @@ assertAsmTypeFail('glob', USE_ASM + F32 + EXTF4 + "var f32=glob.Math.fround;" + 
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return x.length|0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=e(i4(1,2,3,4),1); return x|0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return (e(x,0) > (1>>>0)) | 0;} return f");
+
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return e(x,-1) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return e(x,4) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return e(x,.5) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); return e(x,x) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTF4 + "function f() {var x=i4(1,2,3,4); return e(x,0) | 0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); var i=0; return e(x,i) | 0;} return f");
 
 // signMask
 function CheckSignMask(innerBody, type, expected) {
