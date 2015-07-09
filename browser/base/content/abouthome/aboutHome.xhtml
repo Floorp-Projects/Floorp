@@ -24,14 +24,14 @@
     <link rel="icon" type="image/png" id="favicon"
           href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" type="text/css" media="all"
-          href="chrome://browser/content/contentSearchUI.css"/>
+          href="chrome://browser/content/searchSuggestionUI.css"/>
     <link rel="stylesheet" type="text/css" media="all" defer="defer"
           href="chrome://browser/content/abouthome/aboutHome.css"/>
 
     <script type="text/javascript;version=1.8"
             src="chrome://browser/content/abouthome/aboutHome.js"/>
     <script type="text/javascript;version=1.8"
-            src="chrome://browser/content/contentSearchUI.js"/>
+            src="chrome://browser/content/searchSuggestionUI.js"/>
   </head>
 
   <body dir="&locale.dir;">
@@ -39,12 +39,14 @@
     <div id="topSection">
       <div id="brandLogo"></div>
 
-      <div id="searchIconAndTextContainer">
-        <div id="searchIcon"/>
-        <input type="text" name="q" value="" id="searchText" maxlength="256"
-               aria-label="&contentSearchInput.label;" autofocus="autofocus" dir="auto"/>
-        <input id="searchSubmit" type="button" value="" onclick="onSearchSubmit(event)"
-               aria-label="&contentSearchSubmit.label;"/>
+      <div id="searchContainer">
+        <form name="searchForm" id="searchForm" onsubmit="onSearchSubmit(event)">
+          <div id="searchLogoContainer" hidden="true"><img id="searchEngineLogo"/></div>
+          <button id="searchIcon" type="button" />
+          <input type="text" name="q" value="" id="searchText" maxlength="256"
+                 autofocus="autofocus" dir="auto"/>
+          <input id="searchSubmit" type="submit" value="&abouthome.searchEngineButton.label;"/>
+        </form>
       </div>
 
       <div id="snippetContainer">
