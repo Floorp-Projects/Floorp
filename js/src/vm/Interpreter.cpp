@@ -612,6 +612,12 @@ struct AutoStopwatch final
 
 }
 
+// MSVC with PGO inlines a lot of functions in RunScript, resulting in large
+// stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
+// avoid this.
+#ifdef _MSC_VER
+# pragma optimize("g", off)
+#endif
 bool
 js::RunScript(JSContext* cx, RunState& state)
 {
@@ -652,6 +658,9 @@ js::RunScript(JSContext* cx, RunState& state)
 
     return Interpret(cx, state);
 }
+#ifdef _MSC_VER
+# pragma optimize("", on)
+#endif
 
 struct AutoGCIfRequested
 {
@@ -717,10 +726,8 @@ js::Invoke(JSContext* cx, CallArgs args, MaybeConstruct construct)
 
     // Check to see if createSingleton flag should be set for this frame.
     if (construct) {
-        FrameIter iter(cx);
-        if (!iter.done() && iter.hasScript()) {
-            JSScript* script = iter.script();
-            jsbytecode* pc = iter.pc();
+        jsbytecode* pc;
+        if (JSScript* script = cx->currentScript(&pc)) {
             if (ObjectGroup::useSingletonForNewObject(cx, script, pc))
                 state.setCreateSingleton();
         }
