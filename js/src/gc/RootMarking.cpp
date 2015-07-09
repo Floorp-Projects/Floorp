@@ -40,16 +40,6 @@ typedef RootedValueMap::Range RootRange;
 typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
 
-// Note: the following two functions cannot be static as long as we are using
-// GCC 4.4, since it requires template function parameters to have external
-// linkage.
-
-void
-MarkPropertyDescriptorRoot(JSTracer* trc, JSPropertyDescriptor* pd, const char* name)
-{
-    pd->trace(trc);
-}
-
 // We cannot instantiate (even indirectly) the abstract JS::DynamicTraceable.
 // Instead we cast to a ConcreteTraceable, then upcast before calling trace so
 // that we get the implementation defined dynamically in the vtable.
@@ -95,8 +85,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<LazyScript*>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid>(trc, context, "exact-id");
     MarkExactStackRootList<Value>(trc, context, "exact-value");
-    MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
-        trc, context, "JSPropertyDescriptor");
     MarkExactStackRootList<JS::StaticTraceable,
                            js::DispatchWrapper<JS::StaticTraceable>::TraceWrapped>(
         trc, context, "StaticTraceable");
