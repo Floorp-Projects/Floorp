@@ -5,6 +5,10 @@
 %endif
 
 :root {
+  --identity-box-background-image: linear-gradient(hsla(0,0%,16%,0),
+                                   hsla(0,0%,16%,.2) 35%,
+                                   hsla(0,0%,16%,.2) 65%,
+                                   hsla(0,0%,16%,0));
   --identity-box-verified-color: hsl(92,100%,30%);
   --identity-box-verified-background-image: linear-gradient(hsla(92,81%,16%,0),
                                             hsla(92,81%,16%,.2) 35%,
@@ -33,16 +37,20 @@
 %endif
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+#identity-box {
   background-position: right;
   background-size: 1px;
   background-repeat: no-repeat;
+  background-image: var(--identity-box-background-image);
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI:-moz-locale-dir(rtl),
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity:-moz-locale-dir(rtl) {
+#identity-box:-moz-locale-dir(rtl) {
   background-position: left;
+}
+
+#identity-box:hover,
+#identity-box[open=true] {
+  background-color: rgb(231,230,230);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
