@@ -1219,6 +1219,8 @@
             ), 
 
             React.createElement(FramedExample, {
+              cssClass: "standalone", 
+              dashed: true, 
               height: 480, 
               onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
               summary: "Standalone room convo (has-participants, receivingScreenShare, 600x480)", 
