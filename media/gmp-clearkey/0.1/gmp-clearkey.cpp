@@ -62,7 +62,7 @@ GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
     *aPluginAPI = new ClearKeySessionManager();
   }
 #if defined(ENABLE_WMF)
-  if (!strcmp(aApiName, GMP_API_AUDIO_DECODER) &&
+  else if (!strcmp(aApiName, GMP_API_AUDIO_DECODER) &&
       wmf::EnsureLibs()) {
     *aPluginAPI = new AudioDecoder(static_cast<GMPAudioHost*>(aHostAPI));
   } else if (!strcmp(aApiName, GMP_API_VIDEO_DECODER) &&
