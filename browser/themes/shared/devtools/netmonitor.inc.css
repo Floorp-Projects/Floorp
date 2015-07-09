@@ -139,6 +139,8 @@
 }
 
 .requests-security-state-icon {
+  width: 16px;
+  height: 16px;
   -moz-margin-end: 4px;
 }
 
