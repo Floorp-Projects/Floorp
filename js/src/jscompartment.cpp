@@ -518,22 +518,25 @@ JSCompartment::trace(JSTracer* trc)
 void
 JSCompartment::markRoots(JSTracer* trc)
 {
-    MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
-
-    if (jitCompartment_)
-        jitCompartment_->mark(trc, this);
-
-    if (objectMetadataState.is<PendingMetadata>())
+    // The object pending metadata is the only compartment root which can be
+    // nursery allocated.
+    if (objectMetadataState.is<PendingMetadata>()) {
         TraceRoot(trc,
                   objectMetadataState.as<PendingMetadata>().unsafeGet(),
-                  "object pending metadata");
+                  "on-stack object pending metadata");
+    }
 
-    /*
-     * If a compartment is on-stack, we mark its global so that
-     * JSContext::global() remains valid.
-     */
-    if (enterCompartmentDepth && global_.unbarrieredGet())
-        TraceRoot(trc, global_.unsafeGet(), "on-stack compartment global");
+    if (!trc->runtime()->isHeapMinorCollecting()) {
+        if (jitCompartment_)
+            jitCompartment_->mark(trc, this);
+
+        /*
+         * If a compartment is on-stack, we mark its global so that
+         * JSContext::global() remains valid.
+         */
+        if (enterCompartmentDepth && global_.unbarrieredGet())
+            TraceRoot(trc, global_.unsafeGet(), "on-stack compartment global");
+    }
 }
 
 void
