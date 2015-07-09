@@ -374,10 +374,10 @@ class Graph(object):
                 message = '({}), extra.treeherder.collection must contain one type'
                 raise ValueError(message.fomrat(build['task']))
 
-            if 'post-build' in build:
+            for post_build in build['post-build']:
                 # copy over the old parameters to update the template
                 post_parameters = copy.copy(build_parameters)
-                post_task = configure_dependent_task(build['post-build']['task'],
+                post_task = configure_dependent_task(post_build['task'],
                                                      post_parameters,
                                                      slugid(),
                                                      templates,
