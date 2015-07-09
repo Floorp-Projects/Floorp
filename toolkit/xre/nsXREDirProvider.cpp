@@ -639,7 +639,7 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
 
       RegisterExtensionInterpositions(parser);
       LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
-                               NS_EXTENSION_LOCATION);
+                               NS_APP_LOCATION);
       LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
                                NS_SKIN_LOCATION);
 #ifdef MOZ_BUILD_APP_IS_BROWSER
