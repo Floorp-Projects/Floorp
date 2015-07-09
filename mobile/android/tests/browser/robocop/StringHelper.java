@@ -161,7 +161,8 @@ public class StringHelper {
     public final String MY_HEALTH_REPORT_LABEL;
 
     // Developer tools
-    public final String REMOTE_DEBUGGING_LABEL;
+    public final String REMOTE_DEBUGGING_USB_LABEL;
+    public final String REMOTE_DEBUGGING_WIFI_LABEL;
     public final String LEARN_MORE_LABEL;
 
     // Labels for the about:home tabs
@@ -339,7 +340,8 @@ public class StringHelper {
         MY_HEALTH_REPORT_LABEL = res.getString(R.string.datareporting_abouthr_title);
 
         // Developer tools
-        REMOTE_DEBUGGING_LABEL = res.getString(R.string.pref_developer_remotedebugging);
+        REMOTE_DEBUGGING_USB_LABEL = res.getString(R.string.pref_developer_remotedebugging_usb);
+        REMOTE_DEBUGGING_WIFI_LABEL = res.getString(R.string.pref_developer_remotedebugging_wifi);
         LEARN_MORE_LABEL = res.getString(R.string.pref_learn_more);
 
         // Labels for the about:home tabs

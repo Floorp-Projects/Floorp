@@ -590,6 +590,9 @@ public abstract class GeckoApp
                 Log.e(LOGTAG, "Received Contact:Add message with no email nor phone number");
             }
 
+        } else if ("DevToolsAuth:Scan".equals(event)) {
+            DevToolsAuthHelper.scan(this, callback);
+
         } else if ("DOMFullScreen:Start".equals(event)) {
             // Local ref to layerView for thread safety
             LayerView layerView = mLayerView;
@@ -1232,6 +1235,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Bookmark:Insert",
             "Contact:Add",
+            "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
             "Image:SetAs",
