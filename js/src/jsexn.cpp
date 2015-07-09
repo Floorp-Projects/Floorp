@@ -323,6 +323,20 @@ js::ErrorFromException(JSContext* cx, HandleObject objArg)
     return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
 }
 
+JS_PUBLIC_API(JSObject*)
+ExceptionStackOrNull(JSContext* cx, HandleObject objArg)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, objArg);
+    RootedObject obj(cx, CheckedUnwrap(objArg));
+    if (!obj || !obj->is<ErrorObject>()) {
+      return nullptr;
+    }
+
+    return obj->as<ErrorObject>().stack();
+}
+
 bool
 Error(JSContext* cx, unsigned argc, Value* vp)
 {
