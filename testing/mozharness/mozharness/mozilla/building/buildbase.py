@@ -1054,7 +1054,6 @@ or run without that action (ie: --no-{action})"
                           os.path.join(dirs['abs_src_dir'], '.mozconfig'))
             self.info("mozconfig content:")
             with open(abs_src_mozconfig) as mozconfig:
-                next(mozconfig)
                 for line in mozconfig:
                     self.info(line)
         else:
