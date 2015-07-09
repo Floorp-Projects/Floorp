@@ -91,8 +91,6 @@ browser.jar:
   skin/classic/browser/badge-add-engine.png                 (../shared/search/badge-add-engine.png)
   skin/classic/browser/search-indicator-badge-add.png       (../shared/search/search-indicator-badge-add.png)
   skin/classic/browser/search-history-icon.svg              (../shared/search/history-icon.svg)
-  skin/classic/browser/search-indicator-magnifying-glass.svg   (../shared/search/search-indicator-magnifying-glass.svg)
-  skin/classic/browser/search-arrow-go.svg                  (../shared/search/search-arrow-go.svg)
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
