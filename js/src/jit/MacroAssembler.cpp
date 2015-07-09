@@ -2554,6 +2554,7 @@ MacroAssembler::icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic)
     PopRegsInMask(liveRegs);
 }
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
 
@@ -2718,3 +2719,5 @@ MacroAssembler::freeStack(Register amount)
 {
     addToStackPtr(amount);
 }
+
+//}}} check_macroassembler_style
