@@ -167,23 +167,8 @@ class EntryEnumerator
 {
 public:
   static EntryEnumerator* Create(nsTHashtable<CategoryLeaf>& aTable);
-
-private:
-  static PLDHashOperator enumfunc_createenumerator(CategoryLeaf* aLeaf,
-                                                   void* aUserArg);
 };
 
-
-PLDHashOperator
-EntryEnumerator::enumfunc_createenumerator(CategoryLeaf* aLeaf, void* aUserArg)
-{
-  EntryEnumerator* mythis = static_cast<EntryEnumerator*>(aUserArg);
-  if (aLeaf->value) {
-    mythis->mArray[mythis->mCount++] = aLeaf->GetKey();
-  }
-
-  return PL_DHASH_NEXT;
-}
 
 EntryEnumerator*
 EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
@@ -199,7 +184,12 @@ EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
     return nullptr;
   }
 
-  aTable.EnumerateEntries(enumfunc_createenumerator, enumObj);
+  for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
+    CategoryLeaf* leaf = iter.Get();
+    if (leaf->value) {
+      enumObj->mArray[enumObj->mCount++] = leaf->GetKey();
+    }
+  }
 
   enumObj->Sort();
 
