@@ -224,7 +224,8 @@ Function Properties of the `Debugger.Memory.prototype` Object
       "timestamp": <i>timestamp</i>,
       "frame": <i>allocationSite</i>,
       "class": <i>className</i>,
-      "constructor": <i>constructorName</i>
+      "constructor": <i>constructorName</i>,
+      "size": <i>byteSize</i>,
     }
     </code></pre>
 
@@ -243,6 +244,8 @@ Function Properties of the `Debugger.Memory.prototype` Object
     * *constructorName* is the constructor function's display name for objects
       created by `new Ctor`. If that data is not available, or the object was
       not created with a `new` expression, this property is `null`.
+
+    * *byteSize* is the size of the object in bytes.
 
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.
