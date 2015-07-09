@@ -9,7 +9,6 @@ chrome.jar:
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
 * skin/aboutAddons.css                      (aboutAddons.css)
-  skin/aboutApps.css                        (aboutApps.css)
 * skin/aboutBase.css                        (aboutBase.css)
 #ifdef MOZ_DEVICES
   skin/aboutDevices.css                     (aboutDevices.css)
@@ -77,7 +76,6 @@ chrome.jar:
   skin/images/certerror-warning.png         (images/certerror-warning.png)
   skin/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
-  skin/images/marketplace-logo.png          (images/marketplace-logo.png)
   skin/images/throbber.png                  (images/throbber.png)
   skin/images/search-clear-30.png           (images/search-clear-30.png)
   skin/images/play-hdpi.png                 (images/play-hdpi.png)
@@ -120,7 +118,6 @@ chrome.jar:
   skin/images/reader-style-icon-xhdpi.png        (images/reader-style-icon-xhdpi.png)
   skin/images/reader-style-icon-xxhdpi.png       (images/reader-style-icon-xxhdpi.png)
   skin/images/privatebrowsing-mask.png           (images/privatebrowsing-mask.png)
-  skin/images/update.png                         (images/update.png)
   skin/images/icon_floaty_hdpi.png               (images/icon_floaty_hdpi.png)
   skin/images/icon_floaty_mdpi.png               (images/icon_floaty_mdpi.png)
   skin/images/icon_floaty_xhdpi.png              (images/icon_floaty_xhdpi.png)
