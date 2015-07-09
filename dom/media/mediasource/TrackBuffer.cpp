@@ -416,7 +416,7 @@ TrackBuffer::EvictData(TimeUnit aPlaybackTime,
   }
 
   // Get a list of initialized decoders.
-  nsTArray<nsRefPtr<SourceBufferDecoder>> decoders;
+  nsTArray<SourceBufferDecoder*> decoders;
   decoders.AppendElements(mInitializedDecoders);
   const TimeUnit evictThresholdTime{TimeUnit::FromSeconds(MSE_EVICT_THRESHOLD_TIME)};
 
@@ -566,31 +566,29 @@ TrackBuffer::EvictData(TimeUnit aPlaybackTime,
 }
 
 void
-TrackBuffer::RemoveEmptyDecoders(const nsTArray<nsRefPtr<mozilla::SourceBufferDecoder>>& aDecoders)
+TrackBuffer::RemoveEmptyDecoders(const nsTArray<mozilla::SourceBufferDecoder*>& aDecoders)
 {
-  nsRefPtr<TrackBuffer> self = this;
-  nsTArray<nsRefPtr<mozilla::SourceBufferDecoder>> decoders(aDecoders);
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self, decoders] () {
-      if (!self->mParentDecoder) {
-        return;
-      }
-      ReentrantMonitorAutoEnter mon(self->mParentDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread());
+  mParentDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
-      // Remove decoders that have decoders data in them
-      for (uint32_t i = 0; i < decoders.Length(); ++i) {
-        if (decoders[i] == self->mCurrentDecoder ||
-            self->mParentDecoder->IsActiveReader(decoders[i]->GetReader())) {
-          continue;
-        }
-        TimeIntervals buffered = self->GetBuffered(decoders[i]);
-        if (decoders[i]->GetResource()->GetSize() == 0 || !buffered.Length() ||
-            buffered[0].IsEmpty()) {
-          self->RemoveDecoder(decoders[i]);
-        }
-      }
-    });
-  AbstractThread::MainThread()->Dispatch(task.forget());
+  // Remove decoders that have no data in them.
+  for (uint32_t i = 0; i < aDecoders.Length(); ++i) {
+    TimeIntervals buffered = GetBuffered(aDecoders[i]);
+    MSE_DEBUG("maybe remove empty decoders=%d "
+              "size=%lld start=%f end=%f",
+              i, aDecoders[i]->GetResource()->GetSize(),
+              buffered.GetStart().ToSeconds(), buffered.GetEnd().ToSeconds());
+    if (aDecoders[i] == mCurrentDecoder ||
+        mParentDecoder->IsActiveReader(aDecoders[i]->GetReader())) {
+      continue;
+    }
+
+    if (aDecoders[i]->GetResource()->GetSize() == 0 || !buffered.Length() ||
+        buffered[0].IsEmpty()) {
+      MSE_DEBUG("remove empty decoders=%d", i);
+      RemoveDecoder(aDecoders[i]);
+    }
+  }
 }
 
 int64_t
@@ -1223,7 +1221,7 @@ TrackBuffer::RangeRemoval(TimeUnit aStart, TimeUnit aEnd)
     return RangeRemovalPromise::CreateAndResolve(false, __func__);
   }
 
-  nsTArray<nsRefPtr<SourceBufferDecoder>> decoders;
+  nsTArray<SourceBufferDecoder*> decoders;
   decoders.AppendElements(mInitializedDecoders);
 
   if (aStart <= bufferedStart && aEnd < bufferedEnd) {
