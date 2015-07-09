@@ -1599,6 +1599,8 @@ class KeepAliveHandler final : public PromiseNativeHandler
   {}
 
 public:
+  NS_DECL_ISUPPORTS
+
   explicit KeepAliveHandler(const nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
     : mServiceWorker(aServiceWorker)
   {}
@@ -1623,6 +1625,8 @@ public:
 #endif
   }
 };
+
+NS_IMPL_ISUPPORTS0(KeepAliveHandler)
 
 // Returns a Promise if the event was successfully dispatched and no exceptions
 // were raised, otherwise returns null.
@@ -1674,6 +1678,8 @@ class LifecycleEventPromiseHandler final : public PromiseNativeHandler
   { }
 
 public:
+  NS_DECL_ISUPPORTS
+
   LifecycleEventPromiseHandler(const nsMainThreadPtrHandle<ContinueLifecycleTask>& aTask,
                                const nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
                                bool aActivateImmediately)
@@ -1724,6 +1730,8 @@ public:
     NS_DispatchToMainThread(aer);
   }
 };
+
+NS_IMPL_ISUPPORTS0(LifecycleEventPromiseHandler)
 
 bool
 LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
