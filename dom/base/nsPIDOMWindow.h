@@ -185,6 +185,9 @@ public:
   float GetAudioVolume() const;
   nsresult SetAudioVolume(float aVolume);
 
+  bool GetAudioCaptured() const;
+  nsresult SetAudioCapture(bool aCapture);
+
   virtual void SetServiceWorkersTestingEnabled(bool aEnabled)
   {
     MOZ_ASSERT(IsOuterWindow());
@@ -821,6 +824,8 @@ protected:
 
   bool                   mAudioMuted;
   float                  mAudioVolume;
+
+  bool                   mAudioCaptured;
 
   // current desktop mode flag.
   bool                   mDesktopModeViewport;
