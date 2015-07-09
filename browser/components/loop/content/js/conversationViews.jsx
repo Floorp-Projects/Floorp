@@ -4,6 +4,7 @@
 
 var loop = loop || {};
 loop.conversationViews = (function(mozL10n) {
+  "use strict";
 
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;

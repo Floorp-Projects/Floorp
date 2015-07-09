@@ -145,6 +145,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
 
   // Create bound methods.
   this.focusWindow = this.focusWindow.bind(this);
+  this._onKeypress = this._onKeypress.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
@@ -166,6 +167,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.searchClearButton = doc.getElementById("computedview-searchinput-clear");
   this.includeBrowserStylesCheckbox = doc.getElementById("browser-style-checkbox");
 
+  this.styleDocument.addEventListener("keypress", this._onKeypress);
   this.styleDocument.addEventListener("mousedown", this.focusWindow);
   this.element.addEventListener("click", this._onClick);
   this.element.addEventListener("copy", this._onCopy);
@@ -519,6 +521,20 @@ CssHtmlTree.prototype = {
       this._refreshProcess.schedule();
       return deferred.promise;
     }).then(null, (err) => console.error(err));
+  },
+
+  /**
+   * Handle the keypress event in the computed view.
+   */
+  _onKeypress: function(event) {
+    let isOSX = Services.appinfo.OS == "Darwin";
+
+    if (((isOSX && event.metaKey && !event.ctrlKey && !event.altKey) ||
+        (!isOSX && event.ctrlKey && !event.metaKey && !event.altKey)) &&
+        event.code === "KeyF") {
+      this.searchField.focus();
+      event.preventDefault();
+    }
   },
 
   /**

@@ -253,6 +253,13 @@ this.TelemetrySend = {
   setTestModeEnabled: function(testing) {
     TelemetrySendImpl.setTestModeEnabled(testing);
   },
+
+  /**
+   * This returns state info for this module for AsyncShutdown timeout diagnostics.
+   */
+  getShutdownState: function() {
+    return TelemetrySendImpl.getShutdownState();
+  },
 };
 
 let CancellableTimeout = {
@@ -305,6 +312,8 @@ let SendScheduler = {
   _backoffDelay: SEND_TICK_DELAY,
   _shutdown: false,
   _sendTask: null,
+  // A string that tracks the last seen send task state, null if it never ran.
+  _sendTaskState: null,
 
   _logger: null,
 
@@ -377,6 +386,7 @@ let SendScheduler = {
   },
 
   _doSendTask: Task.async(function*() {
+    this._sendTaskState = "send task started";
     this._backoffDelay = SEND_TICK_DELAY;
     this._sendsFailed = false;
 
@@ -386,9 +396,11 @@ let SendScheduler = {
 
     for (;;) {
       this._log.trace("_doSendTask iteration");
+      this._sendTaskState = "start iteration";
 
       if (this._shutdown) {
         this._log.trace("_doSendTask - shutting down, bailing out");
+        this._sendTaskState = "bail out - shutdown check";
         return;
       }
 
@@ -405,6 +417,7 @@ let SendScheduler = {
       // Bail out if there is nothing to send.
       if ((pending.length == 0) && (current.length == 0)) {
         this._log.trace("_doSendTask - no pending pings, bailing out");
+        this._sendTaskState = "bail out - no pings to send";
         return;
       }
 
@@ -413,6 +426,8 @@ let SendScheduler = {
       if (this.isThrottled()) {
         const nextPingSendTime = this._getNextPingSendTime(now);
         this._log.trace("_doSendTask - throttled, delaying ping send to " + new Date(nextPingSendTime));
+        this._sendTaskState = "wait for throttling to pass";
+
         const delay = nextPingSendTime - now.getTime();
         const cancelled = yield CancellableTimeout.promiseWaitOnTimeout(delay);
         if (cancelled) {
@@ -430,10 +445,12 @@ let SendScheduler = {
 
       this._sendsFailed = false;
       const sendStartTime = Policy.now();
+      this._sendTaskState = "wait on ping sends";
       yield TelemetrySendImpl.sendPings(current, [for (p of sending) p.id]);
       if (this._shutdown || (TelemetrySend.pendingPingCount == 0)) {
         this._log.trace("_doSendTask - bailing out after sending, shutdown: " + this._shutdown +
                         ", pendingPingCount: " + TelemetrySend.pendingPingCount);
+        this._sendTaskState = "bail out - shutdown & pending check after send";
         return;
       }
 
@@ -458,6 +475,7 @@ let SendScheduler = {
       }
 
       this._log.trace("_doSendTask - waiting for next send opportunity, timeout is " + nextSendDelay)
+      this._sendTaskState = "wait on next send opportunity";
       const cancelled = yield CancellableTimeout.promiseWaitOnTimeout(nextSendDelay);
       if (cancelled) {
         this._log.trace("_doSendTask - batch send wait was cancelled, resetting backoff timer");
@@ -491,13 +509,21 @@ let SendScheduler = {
     // We spread those ping sends out between |midnight| and |midnight + midnightPingFuzzingDelay|.
     return midnight.getTime() + Policy.midnightPingFuzzingDelay();
   },
+
+  getShutdownState: function() {
+    return {
+      shutdown: this._shutdown,
+      hasSendTask: !!this._sendTask,
+      sendsFailed: this._sendsFailed,
+      sendTaskState: this._sendTaskState,
+      backoffDelay: this._backoffDelay,
+    };
+  },
  };
 
 let TelemetrySendImpl = {
   _sendingEnabled: false,
   _logger: null,
-  // Timer for scheduled ping sends.
-  _pingSendTimer: null,
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
   // This tracks all the pending async ping activity.
@@ -1016,5 +1042,16 @@ let TelemetrySendImpl = {
     let current = [...this._currentPings.values()];
     current.reverse();
     return current;
+  },
+
+  getShutdownState: function() {
+    return {
+      sendingEnabled: this._sendingEnabled,
+      pendingPingRequestCount: this._pendingPingRequests.size,
+      pendingPingActivityCount: this._pendingPingActivity.size,
+      unpersistedPingCount: this._currentPings.size,
+      persistedPingCount: TelemetryStorage.getPendingPingList().length,
+      schedulerState: SendScheduler.getShutdownState(),
+    };
   },
 };
