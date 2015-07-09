@@ -100,6 +100,7 @@ const Class ArrayBufferObject::protoClass = {
 const Class ArrayBufferObject::class_ = {
     "ArrayBuffer",
     JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_DELAY_METADATA_CALLBACK |
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
@@ -810,6 +811,7 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
     gc::AllocKind allocKind = GetGCObjectKind(nslots);
 
+    AutoSetNewObjectMetadata metadata(cx);
     Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx, allocKind, newKind));
     if (!obj) {
         if (allocated)
