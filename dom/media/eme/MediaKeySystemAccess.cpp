@@ -26,6 +26,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -100,6 +101,11 @@ static bool
 AdobePluginFileExists(const nsACString& aVersionStr,
                       const nsAString& aFilename)
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    NS_WARNING("AdobePluginFileExists() lying because it doesn't work with e10s");
+    return true;
+  }
+
   nsCOMPtr<nsIFile> path;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(path));
   if (NS_WARN_IF(NS_FAILED(rv))) {
