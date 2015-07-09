@@ -3414,8 +3414,7 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         switchToPrologue();
         if (!emit1(JSOP_ARGUMENTS))
             return false;
-        InternalBindingsHandle bindings(script, &script->bindings);
-        BindingIter bi = Bindings::argumentsBinding(cx, bindings);
+        BindingIter bi = Bindings::argumentsBinding(cx, script);
         if (script->bindingIsAliased(bi)) {
             ScopeCoordinate sc;
             sc.setHops(0);
