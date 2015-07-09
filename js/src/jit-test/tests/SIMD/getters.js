@@ -9,17 +9,17 @@ function f() {
     var f4 = SIMD.Float32x4(13.37, NaN, Infinity, -0);
 
     for (var i = 0; i < 150; i++) {
-        assertEq(i4.x, 1);
-        assertEq(i4.y, -2);
-        assertEq(i4.z, 3);
-        assertEq(i4.w, -4);
+        assertEq(SIMD.Int32x4.extractLane(i4, 0), 1);
+        assertEq(SIMD.Int32x4.extractLane(i4, 1), -2);
+        assertEq(SIMD.Int32x4.extractLane(i4, 2), 3);
+        assertEq(SIMD.Int32x4.extractLane(i4, 3), -4);
 
         assertEq(i4.signMask, 0b1010);
 
-        assertEq(f4.x, v);
-        assertEq(f4.y, NaN);
-        assertEq(f4.z, Infinity);
-        assertEq(f4.w, -0);
+        assertEq(SIMD.Float32x4.extractLane(f4, 0), v);
+        assertEq(SIMD.Float32x4.extractLane(f4, 1), NaN);
+        assertEq(SIMD.Float32x4.extractLane(f4, 2), Infinity);
+        assertEq(SIMD.Float32x4.extractLane(f4, 3), -0);
 
         assertEq(f4.signMask, 0b1000);
     }

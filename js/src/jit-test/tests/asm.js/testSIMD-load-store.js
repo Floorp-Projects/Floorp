@@ -1,5 +1,6 @@
 // |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
+load(libdir + "simd.js");
 load(libdir + "asserts.js");
 
 // Set to true to see more JS debugging spew
@@ -12,21 +13,6 @@ if (!isSimdAvailable() || typeof SIMD === 'undefined') {
 
 const INT32_MAX = Math.pow(2, 31) - 1;
 const INT32_MIN = INT32_MAX + 1 | 0;
-
-function assertEqX4(real, expected, assertFunc) {
-    if (typeof assertFunc === 'undefined')
-        assertFunc = assertEq;
-
-    try {
-        assertFunc(real.x, expected[0]);
-        assertFunc(real.y, expected[1]);
-        assertFunc(real.z, expected[2]);
-        assertFunc(real.w, expected[3]);
-    } catch (e) {
-        print("Stack: " + e.stack);
-        throw e;
-    }
-}
 
 try {
 

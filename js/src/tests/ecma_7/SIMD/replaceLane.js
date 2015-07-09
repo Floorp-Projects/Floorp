@@ -92,8 +92,8 @@ function test() {
   testType('Float64x2', Float64x2inputs);
 
   var v = Float64x2inputs[1][0];
-  assertEqX4(Float64x2.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
-  assertEqX4(Float64x2.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertEqX2(Float64x2.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
+  assertEqX2(Float64x2.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
   assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 0, bad), TestError);
   assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 2, good), TypeError);
   assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 1.1, good), TypeError);

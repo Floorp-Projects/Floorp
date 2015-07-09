@@ -53,7 +53,7 @@ function test() {
     assertThrowsInstanceOf(() => SIMD.Float32x4.splat(bad), TestError);
 
     TestSplatX2('Float64x2', [0, undefined, 3.5, 42, -13.37, Infinity, NaN, -0, good], (x) => +x);
-    assertEqX4(SIMD.Float64x2.splat(), [NaN, NaN]);
+    assertEqX2(SIMD.Float64x2.splat(), [NaN, NaN]);
     assertThrowsInstanceOf(() => SIMD.Float64x2.splat(bad), TestError);
 
     if (typeof reportCompare === "function")

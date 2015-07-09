@@ -1,6 +1,3 @@
-if (!this.hasOwnProperty("SIMD"))
-  quit();
-
 load(libdir + 'simd.js');
 
 setJitCompilerOption("ion.warmup.trigger", 50);
@@ -26,11 +23,17 @@ function f() {
     }
 
     var compI = [];
-    for (var k of gen([i1.x, i1.y, i1.z, i1.w, i2.x, i2.y, i2.z, i2.w]))
+    var baseI = [];
+    for (var i = 0; i < 8; i++)
+        baseI.push(SIMD.Int32x4.extractLane(i < 4 ? i1 : i2, i % 4));
+    for (var k of gen(baseI))
         compI.push(k);
 
     var compF = [];
-    for (var k of gen([f1.x, f1.y, f1.z, f1.w, f2.x, f2.y, f2.z, f2.w]))
+    var baseF = [];
+    for (var i = 0; i < 8; i++)
+        baseF.push(SIMD.Float32x4.extractLane(i < 4 ? f1 : f2, i % 4));
+    for (var k of gen(baseF))
         compF.push(k);
 
     for (var i = 0; i < 150; i++) {

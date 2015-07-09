@@ -21,6 +21,15 @@ function bitselect(type, mask, ifTrue, ifFalse) {
     return simdToArray(converted);
 }
 
+function select(type, mask, ifTrue, ifFalse) {
+    var arr = [];
+    for (var i = 0; i < 4; i++) {
+        var selector = SIMD.Int32x4.extractLane(mask, i);
+        arr.push(type.extractLane(selector === -1 ? ifTrue : ifFalse, i));
+    }
+    return arr;
+}
+
 function f() {
     var f1 = SIMD.Float32x4(1, 2, 3, 4);
     var f2 = SIMD.Float32x4(NaN, Infinity, 3.14, -0);
@@ -34,10 +43,10 @@ function f() {
     var mask = SIMD.Int32x4(0xdeadbeef, 0xbaadf00d, 0x00ff1ce, 0xdeadc0de);
 
     for (var i = 0; i < 150; i++) {
-        assertEqX4(SIMD.Float32x4.select(TTFT, f1, f2), [f1.x, f1.y, f2.z, f1.w]);
-        assertEqX4(SIMD.Float32x4.select(TFTF, f1, f2), [f1.x, f2.y, f1.z, f2.w]);
-        assertEqX4(SIMD.Int32x4.select(TFTF, i1, i2), [i1.x, i2.y, i1.z, i2.w]);
-        assertEqX4(SIMD.Int32x4.select(TTFT, i1, i2), [i1.x, i1.y, i2.z, i1.w]);
+        assertEqX4(SIMD.Float32x4.select(TTFT, f1, f2), select(SIMD.Float32x4, TTFT, f1, f2));
+        assertEqX4(SIMD.Float32x4.select(TFTF, f1, f2), select(SIMD.Float32x4, TFTF, f1, f2));
+        assertEqX4(SIMD.Int32x4.select(TFTF, i1, i2), select(SIMD.Int32x4, TFTF, i1, i2));
+        assertEqX4(SIMD.Int32x4.select(TTFT, i1, i2), select(SIMD.Int32x4, TTFT, i1, i2));
 
         assertEqX4(SIMD.Float32x4.bitselect(mask, f1, f2), bitselect(SIMD.Float32x4, mask, f1, f2));
         assertEqX4(SIMD.Int32x4.bitselect(mask, i1, i2), bitselect(SIMD.Int32x4, mask, i1, i2));
