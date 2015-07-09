@@ -1647,12 +1647,29 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #identity-box {
+  margin: 0;
   -moz-margin-end: 3px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
+  padding: 1px 4px;
   font-size: .9em;
+}
+
+#urlbar:not([focused="true"]) > #identity-box {
+  margin: -1px 0;
+  -moz-margin-end: 3px;
+  padding: 2px 4px;
+}
+
+@media (-moz-mac-yosemite-theme) {
+  #urlbar:not([focused="true"]) > #identity-box {
+    margin: -2px 0;
+    -moz-margin-end: 3px;
+    padding: 3px 4px;
+  }
+
+  #urlbar > #identity-box:hover,
+  #urlbar > #identity-box[open=true] {
+    background-color: rgb(240,237,237);
+  }
 }
 
 #identity-box:-moz-locale-dir(ltr) {
@@ -1697,11 +1714,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 10.01px;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  -moz-padding-end: 4px;
 }
 
 #identity-box:-moz-focusring {
@@ -1795,39 +1807,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   min-width: calc(54px + 11ch);
 }
 
-%include ../shared/identity-block.inc.css
+%include ../shared/identity-block/identity-block.inc.css
 
 #page-proxy-favicon {
   margin: 0px;
   padding: 0px;
-}
-
-@media not all and (min-resolution: 1.1dppx) {
-  #identity-box:hover:active > #page-proxy-favicon,
-  #identity-box[open=true] > #page-proxy-favicon {
-    -moz-image-region: rect(0, 32px, 16px, 16px);
-  }
-
-  /* The chromeUI identity-icon set includes three states,
-     but OS X only uses two of them. */
-  #identity-box.chromeUI:hover:active > #page-proxy-favicon,
-  #identity-box.chromeUI[open=true] > #page-proxy-favicon {
-    -moz-image-region: rect(0, 48px, 16px, 32px);
-  }
-}
-
-@media (min-resolution: 1.1dppx) {
-  #identity-box:hover:active > #page-proxy-favicon,
-  #identity-box[open=true] > #page-proxy-favicon {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-
-  /* The chromeUI identity-icon set includes three states,
-     but OS X only uses two of them. */
-  #identity-box.chromeUI:hover:active > #page-proxy-favicon,
-  #identity-box.chromeUI[open=true] > #page-proxy-favicon {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
-  }
 }
 
 #wrapper-urlbar-container[place="palette"] {

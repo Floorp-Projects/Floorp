@@ -200,6 +200,7 @@ gbjar.sources += [
     'db/TopSitesCursorWrapper.java',
     'db/URLMetadata.java',
     'db/URLMetadataTable.java',
+    'DevToolsAuthHelper.java',
     'distribution/Distribution.java',
     'distribution/ReferrerDescriptor.java',
     'distribution/ReferrerReceiver.java',

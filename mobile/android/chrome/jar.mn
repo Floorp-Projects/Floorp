@@ -50,6 +50,7 @@ chrome.jar:
   content/Linkify.js                   (content/Linkify.js)
   content/ZoomHelper.js                (content/ZoomHelper.js)
   content/CastingApps.js               (content/CastingApps.js)
+  content/RemoteDebugger.js            (content/RemoteDebugger.js)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   content/aboutHealthReport.xhtml      (content/aboutHealthReport.xhtml)
   content/aboutHealthReport.js         (content/aboutHealthReport.js)

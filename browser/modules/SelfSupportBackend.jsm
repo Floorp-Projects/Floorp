@@ -25,6 +25,8 @@ const PREF_ENABLED = "browser.selfsupport.enabled";
 const PREF_URL = "browser.selfsupport.url";
 // FHR status.
 const PREF_FHR_ENABLED = "datareporting.healthreport.service.enabled";
+// Unified Telemetry status.
+const PREF_TELEMETRY_UNIFIED = "toolkit.telemetry.unified";
 // UITour status.
 const PREF_UITOUR_ENABLED = "browser.uitour.enabled";
 
@@ -45,6 +47,10 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const UITOUR_FRAME_SCRIPT = "chrome://browser/content/content-UITour.js";
+
+// Whether the FHR/Telemetry unification features are enabled.
+// Changing this pref requires a restart.
+const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_TELEMETRY_UNIFIED, false);
 
 let gLogAppenderDump = null;
 
@@ -78,10 +84,10 @@ let SelfSupportBackendInternal = {
 
     Preferences.observe(PREF_BRANCH_LOG, this._configureLogging, this);
 
-    // Only allow to use SelfSupport if FHR is enabled.
-    let fhrEnabled = Preferences.get(PREF_FHR_ENABLED, false);
-    if (!fhrEnabled) {
-      this._log.config("init - Disabling SelfSupport because Health Report is disabled.");
+    // Only allow to use SelfSupport if either FHR or Unified Telemetry is enabled.
+    let reportingEnabled = Preferences.get(PREF_FHR_ENABLED, false) || IS_UNIFIED_TELEMETRY;
+    if (!reportingEnabled) {
+      this._log.config("init - Disabling SelfSupport because FHR and Unified Telemetry are disabled.");
       return;
     }
 
