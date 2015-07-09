@@ -318,22 +318,28 @@ struct PersistentRootedMarker
 } // namespace js
 
 void
+js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
+{
+    PersistentRootedMarker<JSFunction*>::markChain(trc, roots.functionPersistentRooteds,
+                                                   "PersistentRooted<JSFunction*>");
+    PersistentRootedMarker<JSObject*>::markChain(trc, roots.objectPersistentRooteds,
+                                                 "PersistentRooted<JSObject*>");
+    PersistentRootedMarker<JSScript*>::markChain(trc, roots.scriptPersistentRooteds,
+                                                 "PersistentRooted<JSScript*>");
+    PersistentRootedMarker<JSString*>::markChain(trc, roots.stringPersistentRooteds,
+                                                 "PersistentRooted<JSString*>");
+    PersistentRootedMarker<jsid>::markChain(trc, roots.idPersistentRooteds,
+                                            "PersistentRooted<jsid>");
+    PersistentRootedMarker<Value>::markChain(trc, roots.valuePersistentRooteds,
+                                             "PersistentRooted<Value>");
+}
+
+void
 js::gc::MarkPersistentRootedChains(JSTracer* trc)
 {
-    JSRuntime* rt = trc->runtime();
-
-    PersistentRootedMarker<JSFunction*>::markChain(trc, rt->functionPersistentRooteds,
-                                                   "PersistentRooted<JSFunction*>");
-    PersistentRootedMarker<JSObject*>::markChain(trc, rt->objectPersistentRooteds,
-                                                 "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChain(trc, rt->scriptPersistentRooteds,
-                                                 "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChain(trc, rt->stringPersistentRooteds,
-                                                 "PersistentRooted<JSString*>");
-    PersistentRootedMarker<jsid>::markChain(trc, rt->idPersistentRooteds,
-                                            "PersistentRooted<jsid>");
-    PersistentRootedMarker<Value>::markChain(trc, rt->valuePersistentRooteds,
-                                             "PersistentRooted<Value>");
+    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
+        MarkPersistentRootedChainsInLists(cx->roots, trc);
+    MarkPersistentRootedChainsInLists(trc->runtime()->mainThread.roots, trc);
 }
 
 void

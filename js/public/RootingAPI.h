@@ -989,12 +989,11 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     friend struct js::gc::PersistentRootedMarker<T>;
 
-    friend void js::gc::FinishPersistentRootedChains(JSRuntime* rt);
+    friend void js::gc::FinishPersistentRootedChains(js::RootLists&);
 
-    void registerWithRuntime(JSRuntime* rt) {
+    void registerWithRootLists(js::RootLists& roots) {
         MOZ_ASSERT(!initialized());
-        JS::shadow::Runtime* srt = JS::shadow::Runtime::asShadowRuntime(rt);
-        srt->getPersistentRootedList<T>().insertBack(this);
+        roots.getPersistentRootedList<T>().insertBack(this);
     }
 
   public:
@@ -1041,7 +1040,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void init(JSContext* cx, T initial) {
         ptr = initial;
-        registerWithRuntime(js::GetRuntime(cx));
+        registerWithRootLists(js::ContextFriendFields::get(cx)->roots);
     }
 
     void init(JSRuntime* rt) {
@@ -1050,7 +1049,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void init(JSRuntime* rt, T initial) {
         ptr = initial;
-        registerWithRuntime(rt);
+        registerWithRootLists(js::PerThreadDataFriendFields::getMainThread(rt)->roots);
     }
 
     void reset() {

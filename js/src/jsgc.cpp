@@ -1364,15 +1364,14 @@ FinishPersistentRootedChain(mozilla::LinkedList<PersistentRooted<T>>& list)
 }
 
 void
-js::gc::FinishPersistentRootedChains(JSRuntime* rt)
+js::gc::FinishPersistentRootedChains(RootLists& roots)
 {
-    /* The lists of persistent roots are stored on the shadow runtime. */
-    FinishPersistentRootedChain(rt->functionPersistentRooteds);
-    FinishPersistentRootedChain(rt->idPersistentRooteds);
-    FinishPersistentRootedChain(rt->objectPersistentRooteds);
-    FinishPersistentRootedChain(rt->scriptPersistentRooteds);
-    FinishPersistentRootedChain(rt->stringPersistentRooteds);
-    FinishPersistentRootedChain(rt->valuePersistentRooteds);
+    FinishPersistentRootedChain(roots.functionPersistentRooteds);
+    FinishPersistentRootedChain(roots.idPersistentRooteds);
+    FinishPersistentRootedChain(roots.objectPersistentRooteds);
+    FinishPersistentRootedChain(roots.scriptPersistentRooteds);
+    FinishPersistentRootedChain(roots.stringPersistentRooteds);
+    FinishPersistentRootedChain(roots.valuePersistentRooteds);
 }
 
 void
@@ -1381,7 +1380,7 @@ GCRuntime::finishRoots()
     if (rootsHash.initialized())
         rootsHash.clear();
 
-    FinishPersistentRootedChains(rt);
+    FinishPersistentRootedChains(rt->mainThread.roots);
 }
 
 void
