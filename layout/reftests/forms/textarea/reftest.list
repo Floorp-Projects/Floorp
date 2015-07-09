@@ -5,7 +5,7 @@ skip-if(B2G||Mulet) fails-if(Android) != ltr.html rtl.html # Initial mulet triag
 skip-if(B2G||Mulet) fails-if(Android) != ltr-scrollbar.html rtl-scrollbar.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) != ltr.html no-resize.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android) fails-if(gtkWidget) != rtl.html no-resize.html # bug 834724 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") != rtl.html no-resize.html # bug 834724 # Initial mulet triage: parity with B2G/B2G Desktop
 == rtl.html rtl-dynamic-attr.html
 == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
