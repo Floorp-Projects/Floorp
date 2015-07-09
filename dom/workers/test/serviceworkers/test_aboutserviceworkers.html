@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1178233
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1178233</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gServiceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gAppsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
+
+SimpleTest.waitForExplicitFinish();
+
+const gOrigin = 'http://test/chrome/dom/workers/test/serviceworkers/app2';
+const appManifestURL = gOrigin + '/manifest.webapp';
+let gApp;
+
+function uninstallApp() {
+  return new Promise((resolve, reject) => {
+    if (!gApp) {
+      return reject();
+    }
+    let req = navigator.mozApps.mgmt.uninstall(gApp);
+    req.onsuccess = resolve;
+    req.onerror = reject;
+  });
+}
+
+function update() {
+  return new Promise((resolve, reject) => {
+    let registrations = [];
+    registrations = gServiceWorkerManager.getAllRegistrations();
+
+    ok(registrations.length === 1, "The registration shows up in about:serviceworker page");
+
+    for (let i = 0; i < registrations.length; i++) {
+      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerInfo);
+      if (!registration) {
+        reject();
+        return;
+      }
+      gServiceWorkerManager.propagateSoftUpdate(
+        registration.principal.originAttributes,
+        registration.scope
+      );
+    }
+    resolve();
+  });
+}
+
+function testApp() {
+  if (!gApp) {
+    ok(false, 'No test application to launch');
+    return Promise.reject();
+  }
+  return new Promise((resolve, reject) => {
+    let iframe = document.createElement('iframe');
+    let domParent = document.getElementById('container');
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.setAttribute('mozapp', gApp.manifestURL);
+    iframe.addEventListener('mozbrowsershowmodalprompt', function listener(e) {
+      let message = e.detail.message;
+      if (/OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Message from app: " + message);
+        iframe.src = "about:blank";
+        domParent.removeChild(iframe);
+        iframe = null;
+        resolve();
+      }
+    }, false);
+    domParent.appendChild(iframe);
+    ok(true, "origin " +  gOrigin + gApp.manifest.launch_path);
+    SpecialPowers.wrap(iframe.contentWindow).location =
+      gOrigin + gApp.manifest.launch_path;
+  });
+}
+
+function installApp() {
+  return new Promise((resolve, reject) => {
+    let req = navigator.mozApps.install(appManifestURL);
+    req.onsuccess = function() {
+      gApp = req.result;
+      is(req.result.manifestURL, appManifestURL, 'app installed');
+      if (req.result.installState == 'installed') {
+        is(req.result.installState, 'installed', 'app downloaded');
+        resolve()
+      } else {
+        req.result.ondownloadapplied = function() {
+          is(req.result.installState, 'installed', 'app downloaded');
+          resolve();
+        }
+      }
+    }
+    req.onerror = reject;
+  });
+}
+
+function setup() {
+  info('Setting up');
+  return new Promise((resolve, reject) => {
+    SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.pushPrefEnv({'set': [
+      ['dom.mozBrowserFramesEnabled', true],
+      ['dom.serviceWorkers.exemptFromPerDomainMax', true],
+      ['dom.serviceWorkers.enabled', true],
+      ['dom.serviceWorkers.testing.enabled', true]
+    ]}, () => {
+      SpecialPowers.pushPermissions([
+        { 'type': 'webapps-manage', 'allow': 1, 'context': document },
+        { 'type': 'browser', 'allow': 1, 'context': document },
+        { 'type': 'embed-apps', 'allow': 1, 'context': document }
+      ], () => {
+        SpecialPowers.autoConfirmAppInstall(() => {
+          SpecialPowers.autoConfirmAppUninstall(resolve);
+        });
+      });
+    });
+  });
+}
+
+function go() {
+  setup()
+    .then(installApp)
+    .then(testApp)
+    .then(update)
+    .then(testApp)
+    .then(uninstallApp)
+    .then(SimpleTest.finish)
+    .catch(function(e) {
+      ok(false, 'Unexpected error ' + e);
+      SimpleTest.finish();
+    });
+}
+  </script>
+</head>
+<body onload="go()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1171917">Mozilla Bug 1178233</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<div id="container"></div>
+</body>
+</html>
