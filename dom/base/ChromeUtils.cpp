@@ -29,5 +29,15 @@ ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
   attrs.CreateSuffix(aSuffix);
 }
 
+/* static */ bool
+ChromeUtils::OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
+                                          const dom::OriginAttributesDictionary& aAttrs,
+                                          const dom::OriginAttributesPatternDictionary& aPattern)
+{
+  OriginAttributes attrs(aAttrs);
+  OriginAttributesPattern pattern(aPattern);
+  return pattern.Matches(attrs);
+}
+
 } // namespace dom
 } // namespace mozilla
