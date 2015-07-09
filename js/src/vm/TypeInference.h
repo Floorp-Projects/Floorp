@@ -352,8 +352,6 @@ class TypeSet
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
-
-        static ThingRootKind rootKind() { return THING_ROOT_TYPE; }
     };
 
     static inline Type UndefinedType() { return Type(JSVAL_TYPE_UNDEFINED); }

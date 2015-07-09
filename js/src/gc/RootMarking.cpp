@@ -106,7 +106,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<LazyScript*, TraceRoot>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid, TraceRoot>(trc, context, "exact-id");
     MarkExactStackRootList<Value, TraceRoot>(trc, context, "exact-value");
-    MarkExactStackRootList<TypeSet::Type, TypeSet::MarkTypeRoot>(trc, context, "TypeSet::Type");
     MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
