@@ -158,5 +158,3 @@ pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidV
 
 # Check that captureStream() displays in a local video element
 pref(canvas.capturestream.enabled,true) skip-if(winWidget&&layersGPUAccelerated&&d2d) == capturestream.html wrapper.html?green.png
-
-== 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
