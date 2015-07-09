@@ -45,12 +45,6 @@ typedef RootedValueMap::Enum RootEnum;
 // linkage.
 
 void
-MarkBindingsRoot(JSTracer* trc, Bindings* bindings, const char* name)
-{
-    bindings->trace(trc);
-}
-
-void
 MarkPropertyDescriptorRoot(JSTracer* trc, JSPropertyDescriptor* pd, const char* name)
 {
     pd->trace(trc);
@@ -106,7 +100,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<LazyScript*, TraceRoot>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid, TraceRoot>(trc, context, "exact-id");
     MarkExactStackRootList<Value, TraceRoot>(trc, context, "exact-value");
-    MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
     MarkExactStackRootList<JS::StaticTraceable,
