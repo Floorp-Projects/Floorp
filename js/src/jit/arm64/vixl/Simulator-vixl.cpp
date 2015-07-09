@@ -28,10 +28,15 @@
 
 #ifdef JS_SIMULATOR_ARM64
 
+#include "mozilla/FloatingPoint.h"
+
 #include "jit/arm64/vixl/Simulator-vixl.h"
 
 #include <math.h>
 #include <string.h>
+
+using mozilla::IsInfinite;
+using mozilla::IsNaN;
 
 namespace vixl {
 
@@ -364,7 +369,7 @@ void Simulator::FPCompare(double val0, double val1) {
 
   // TODO: This assumes that the C++ implementation handles comparisons in the
   // way that we expect (as per AssertSupportedFPCR()).
-  if ((isnan(val0) != 0) || (isnan(val1) != 0)) {
+  if (IsNaN(val0) || IsNaN(val1)) {
     nzcv().SetRawValue(FPUnorderedFlag);
   } else if (val0 < val1) {
     nzcv().SetRawValue(FPLessThanFlag);
@@ -1767,7 +1772,7 @@ int32_t Simulator::FPToInt32(double value, FPRounding rmode) {
   } else if (value < kWMinInt) {
     return kWMinInt;
   }
-  return isnan(value) ? 0 : static_cast<int32_t>(value);
+  return IsNaN(value) ? 0 : static_cast<int32_t>(value);
 }
 
 
@@ -1778,7 +1783,7 @@ int64_t Simulator::FPToInt64(double value, FPRounding rmode) {
   } else if (value < kXMinInt) {
     return kXMinInt;
   }
-  return isnan(value) ? 0 : static_cast<int64_t>(value);
+  return IsNaN(value) ? 0 : static_cast<int64_t>(value);
 }
 
 
@@ -1789,7 +1794,7 @@ uint32_t Simulator::FPToUInt32(double value, FPRounding rmode) {
   } else if (value < 0.0) {
     return 0;
   }
-  return isnan(value) ? 0 : static_cast<uint32_t>(value);
+  return IsNaN(value) ? 0 : static_cast<uint32_t>(value);
 }
 
 
@@ -1800,7 +1805,7 @@ uint64_t Simulator::FPToUInt64(double value, FPRounding rmode) {
   } else if (value < 0.0) {
     return 0;
   }
-  return isnan(value) ? 0 : static_cast<uint64_t>(value);
+  return IsNaN(value) ? 0 : static_cast<uint64_t>(value);
 }
 
 
@@ -1894,14 +1899,14 @@ void Simulator::VisitFPDataProcessing1Source(const Instruction* instr) {
       float input = sreg(fn);
       float rounded = FPRoundInt(input, fpcr_rounding);
       set_sreg(fd, rounded);
-      if (!isnan(input) && (input != rounded)) FPProcessException();
+      if (!IsNaN(input) && (input != rounded)) FPProcessException();
       break;
     }
     case FRINTX_d: {
       double input = dreg(fn);
       double rounded = FPRoundInt(input, fpcr_rounding);
       set_dreg(fd, rounded);
-      if (!isnan(input) && (input != rounded)) FPProcessException();
+      if (!IsNaN(input) && (input != rounded)) FPProcessException();
       break;
     }
     case FRINTZ_s: set_sreg(fd, FPRoundInt(sreg(fn), FPZero)); break;
@@ -2160,7 +2165,7 @@ double Simulator::FPRoundInt(double value, FPRounding round_mode) {
   if ((value == 0.0) || (value == kFP64PositiveInfinity) ||
       (value == kFP64NegativeInfinity)) {
     return value;
-  } else if (isnan(value)) {
+  } else if (IsNaN(value)) {
     return FPProcessNaN(value);
   }
 
@@ -2392,9 +2397,9 @@ void Simulator::VisitFPDataProcessing3Source(const Instruction* instr) {
 template <typename T>
 T Simulator::FPAdd(T op1, T op2) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(op1) && !isnan(op2));
+  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
 
-  if (isinf(op1) && isinf(op2) && (op1 != op2)) {
+  if (IsInfinite(op1) && IsInfinite(op2) && (op1 != op2)) {
     // inf + -inf returns the default NaN.
     FPProcessException();
     return FPDefaultNaN<T>();
@@ -2408,9 +2413,9 @@ T Simulator::FPAdd(T op1, T op2) {
 template <typename T>
 T Simulator::FPDiv(T op1, T op2) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(op1) && !isnan(op2));
+  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
 
-  if ((isinf(op1) && isinf(op2)) || ((op1 == 0.0) && (op2 == 0.0))) {
+  if ((IsInfinite(op1) && IsInfinite(op2)) || ((op1 == 0.0) && (op2 == 0.0))) {
     // inf / inf and 0.0 / 0.0 return the default NaN.
     FPProcessException();
     return FPDefaultNaN<T>();
@@ -2426,7 +2431,7 @@ T Simulator::FPDiv(T op1, T op2) {
 template <typename T>
 T Simulator::FPMax(T a, T b) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(a) && !isnan(b));
+  VIXL_ASSERT(!IsNaN(a) && !IsNaN(b));
 
   if ((a == 0.0) && (b == 0.0) &&
       (copysign(1.0, a) != copysign(1.0, b))) {
@@ -2447,14 +2452,14 @@ T Simulator::FPMaxNM(T a, T b) {
   }
 
   T result = FPProcessNaNs(a, b);
-  return isnan(result) ? result : FPMax(a, b);
+  return IsNaN(result) ? result : FPMax(a, b);
 }
 
 
 template <typename T>
 T Simulator::FPMin(T a, T b) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(a) && !isnan(b));
+  VIXL_ASSERT(!IsNaN(a) && !IsNaN(b));
 
   if ((a == 0.0) && (b == 0.0) &&
       (copysign(1.0, a) != copysign(1.0, b))) {
@@ -2475,16 +2480,16 @@ T Simulator::FPMinNM(T a, T b) {
   }
 
   T result = FPProcessNaNs(a, b);
-  return isnan(result) ? result : FPMin(a, b);
+  return IsNaN(result) ? result : FPMin(a, b);
 }
 
 
 template <typename T>
 T Simulator::FPMul(T op1, T op2) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(op1) && !isnan(op2));
+  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
 
-  if ((isinf(op1) && (op2 == 0.0)) || (isinf(op2) && (op1 == 0.0))) {
+  if ((IsInfinite(op1) && (op2 == 0.0)) || (IsInfinite(op2) && (op1 == 0.0))) {
     // inf * 0.0 returns the default NaN.
     FPProcessException();
     return FPDefaultNaN<T>();
@@ -2501,13 +2506,13 @@ T Simulator::FPMulAdd(T a, T op1, T op2) {
 
   T sign_a = copysign(1.0, a);
   T sign_prod = copysign(1.0, op1) * copysign(1.0, op2);
-  bool isinf_prod = isinf(op1) || isinf(op2);
+  bool isinf_prod = IsInfinite(op1) || IsInfinite(op2);
   bool operation_generates_nan =
-      (isinf(op1) && (op2 == 0.0)) ||                     // inf * 0.0
-      (isinf(op2) && (op1 == 0.0)) ||                     // 0.0 * inf
-      (isinf(a) && isinf_prod && (sign_a != sign_prod));  // inf - inf
+      (IsInfinite(op1) && (op2 == 0.0)) ||                     // inf * 0.0
+      (IsInfinite(op2) && (op1 == 0.0)) ||                     // 0.0 * inf
+      (IsInfinite(a) && isinf_prod && (sign_a != sign_prod));  // inf - inf
 
-  if (isnan(result)) {
+  if (IsNaN(result)) {
     // Generated NaNs override quiet NaNs propagated from a.
     if (operation_generates_nan && IsQuietNaN(a)) {
       FPProcessException();
@@ -2530,7 +2535,7 @@ T Simulator::FPMulAdd(T a, T op1, T op2) {
   }
 
   result = FusedMultiplyAdd(op1, op2, a);
-  VIXL_ASSERT(!isnan(result));
+  VIXL_ASSERT(!IsNaN(result));
 
   // Work around broken fma implementations for rounded zero results: If a is
   // 0.0, the sign of the result is the sign of op1 * op2 before rounding.
@@ -2545,9 +2550,9 @@ T Simulator::FPMulAdd(T a, T op1, T op2) {
 template <typename T>
 T Simulator::FPSub(T op1, T op2) {
   // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!isnan(op1) && !isnan(op2));
+  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
 
-  if (isinf(op1) && isinf(op2) && (op1 == op2)) {
+  if (IsInfinite(op1) && IsInfinite(op2) && (op1 == op2)) {
     // inf - inf returns the default NaN.
     FPProcessException();
     return FPDefaultNaN<T>();
@@ -2560,7 +2565,7 @@ T Simulator::FPSub(T op1, T op2) {
 
 template <typename T>
 T Simulator::FPSqrt(T op) {
-  if (isnan(op)) {
+  if (IsNaN(op)) {
     return FPProcessNaN(op);
   } else if (op < 0.0) {
     FPProcessException();
@@ -2573,7 +2578,7 @@ T Simulator::FPSqrt(T op) {
 
 template <typename T>
 T Simulator::FPProcessNaN(T op) {
-  VIXL_ASSERT(isnan(op));
+  VIXL_ASSERT(IsNaN(op));
   if (IsSignallingNaN(op)) {
     FPProcessException();
   }
@@ -2587,10 +2592,10 @@ T Simulator::FPProcessNaNs(T op1, T op2) {
     return FPProcessNaN(op1);
   } else if (IsSignallingNaN(op2)) {
     return FPProcessNaN(op2);
-  } else if (isnan(op1)) {
+  } else if (IsNaN(op1)) {
     VIXL_ASSERT(IsQuietNaN(op1));
     return FPProcessNaN(op1);
-  } else if (isnan(op2)) {
+  } else if (IsNaN(op2)) {
     VIXL_ASSERT(IsQuietNaN(op2));
     return FPProcessNaN(op2);
   } else {
@@ -2607,13 +2612,13 @@ T Simulator::FPProcessNaNs3(T op1, T op2, T op3) {
     return FPProcessNaN(op2);
   } else if (IsSignallingNaN(op3)) {
     return FPProcessNaN(op3);
-  } else if (isnan(op1)) {
+  } else if (IsNaN(op1)) {
     VIXL_ASSERT(IsQuietNaN(op1));
     return FPProcessNaN(op1);
-  } else if (isnan(op2)) {
+  } else if (IsNaN(op2)) {
     VIXL_ASSERT(IsQuietNaN(op2));
     return FPProcessNaN(op2);
-  } else if (isnan(op3)) {
+  } else if (IsNaN(op3)) {
     VIXL_ASSERT(IsQuietNaN(op3));
     return FPProcessNaN(op3);
   } else {
@@ -2630,13 +2635,13 @@ bool Simulator::FPProcessNaNs(const Instruction* instr) {
 
   if (instr->Mask(FP64) == FP64) {
     double result = FPProcessNaNs(dreg(fn), dreg(fm));
-    if (isnan(result)) {
+    if (IsNaN(result)) {
       set_dreg(fd, result);
       done = true;
     }
   } else {
     float result = FPProcessNaNs(sreg(fn), sreg(fm));
-    if (isnan(result)) {
+    if (IsNaN(result)) {
       set_sreg(fd, result);
       done = true;
     }
