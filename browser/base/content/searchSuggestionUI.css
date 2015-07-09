@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.searchSuggestionTable {
+  background-color: hsla(0,0%,100%,.99);
+  border: 1px solid;
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+  border-spacing: 0;
+  border-top: 0;
+  box-shadow: 0 1px 0 hsla(210,65%,9%,.02) inset,
+              0 0 2px hsla(210,65%,9%,.1) inset,
+              0 1px 0 hsla(0,0%,100%,.2);
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  text-align: start;
+  z-index: 1001;
+}
+
+.searchSuggestionRow {
+  cursor: default;
+  margin: 0;
+  max-width: inherit;
+  padding: 0;
+}
+
+.searchSuggestionRow.formHistory + .searchSuggestionRow.remote > td {
+  border-top: 1px solid GrayText;
+}
+
+.searchSuggestionRow.selected {
+  background-color: hsl(210,100%,40%);
+  color: hsl(0,0%,100%);
+}
+
+.searchSuggestionEntry {
+  margin: 0;
+  max-width: inherit;
+  overflow: hidden;
+  padding: 6px 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
