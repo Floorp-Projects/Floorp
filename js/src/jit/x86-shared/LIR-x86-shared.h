@@ -163,6 +163,37 @@ class LUDivOrMod : public LBinaryMath<1>
     }
 };
 
+class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
+{
+    const uint32_t denominator_;
+
+  public:
+    LIR_HEADER(UDivOrModConstant)
+
+    LUDivOrModConstant(const LAllocation &lhs, uint32_t denominator, const LDefinition& temp)
+    : denominator_(denominator)
+    {
+        setOperand(0, lhs);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *numerator() {
+        return getOperand(0);
+    }
+    uint32_t denominator() const {
+        return denominator_;
+    }
+    MBinaryArithInstruction *mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction *>(mir_);
+    }
+    bool canBeNegativeDividend() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeNegativeDividend();
+        return mir_->toDiv()->canBeNegativeDividend();
+    }
+};
+
 class LModPowTwoI : public LInstructionHelper<1,1,0>
 {
     const int32_t shift_;
