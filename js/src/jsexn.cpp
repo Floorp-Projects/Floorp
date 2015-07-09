@@ -634,8 +634,10 @@ js::ReportUncaughtException(JSContext* cx)
         return true;
 
     RootedValue exn(cx);
-    if (!cx->getPendingException(&exn))
+    if (!cx->getPendingException(&exn)) {
+        cx->clearPendingException();
         return false;
+    }
 
     cx->clearPendingException();
 
