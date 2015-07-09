@@ -60,9 +60,8 @@ RUN_MOCHITEST_REMOTE = \
 
 RUN_MOCHITEST_ROBOCOP = \
   rm -f ./$@.log && \
-  $(PYTHON) _tests/testing/mochitest/runtestsremote.py \
+  $(PYTHON) _tests/testing/mochitest/runrobocop.py \
     --robocop-apk=$(DEPTH)/build/mobile/robocop/robocop-debug.apk \
-    --robocop-ids=$(DEPTH)/mobile/android/base/fennec_ids.txt \
     --robocop-ini=_tests/testing/mochitest/robocop.ini \
     --log-tbpl=./$@.log $(DM_FLAGS) --dm_trans=$(DM_TRANS) \
     --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
