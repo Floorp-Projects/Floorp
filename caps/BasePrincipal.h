@@ -56,6 +56,39 @@ public:
                           nsACString& aOriginNoSuffix);
 };
 
+class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary
+{
+public:
+  // To convert a JSON string to an OriginAttributesPattern, do the following:
+  //
+  // OriginAttributesPattern pattern;
+  // if (!pattern.Init(aJSONString)) {
+  //   ... // handle failure.
+  // }
+  OriginAttributesPattern() {}
+
+  explicit OriginAttributesPattern(const OriginAttributesPatternDictionary& aOther)
+    : OriginAttributesPatternDictionary(aOther) {}
+
+  // Performs a match of |aAttrs| against this pattern.
+  bool Matches(const OriginAttributes& aAttrs) const
+  {
+    if (mAppId.WasPassed() && mAppId.Value() != aAttrs.mAppId) {
+      return false;
+    }
+
+    if (mInBrowser.WasPassed() && mInBrowser.Value() != aAttrs.mInBrowser) {
+      return false;
+    }
+
+    if (mAddonId.WasPassed() && mAddonId.Value() != aAttrs.mAddonId) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
  * default implementations and other commonalities between principal
