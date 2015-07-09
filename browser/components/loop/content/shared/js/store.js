@@ -113,6 +113,8 @@ loop.store.createStore = (function() {
  *     });
  */
 loop.store.StoreMixin = (function() {
+  "use strict";
+
   var _stores = {};
   function StoreMixin(id) {
     function _getStore() {
