@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(49c2faf0-b6de-4640-8d0f-e0217baa8627)]
+[scriptable, builtinclass, uuid(7a9aa074-7565-4567-af2f-9e3704c7af9e)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -203,30 +203,6 @@ interface nsIPrincipal : nsISerializable
      * eventually be removed.
      */
     readonly attribute AUTF8String originSuffix;
-
-    /**
-     * Opaque string token representing the "cookie jar" associated with this
-     * principal. Cookie jars are intended to be a tag associated with persistent
-     * data (like cookies, localStorage data, etc) such that all data associated
-     * with a given cookie jar can be quickly located and (for example) deleted.
-     * Code from many origins may share a given cookie jar, so callers still need
-     * to consult .origin (or equivalent) to compartmentalize data - the cookie
-     * jar should _only_ be used as a tag in the manner described above.
-     *
-     * If two principals are in different cookie jars, they must be cross-origin.
-     * As such, the information making up the cookie jar token must be contained
-     * in the originAttributes (i.e. cookieJar must be a function of / derivable
-     * from originAttributes). Long term, the intention is for the cookie jar
-     * identifier to simply be an origin attribute. But we don't have that
-     * attribute yet, and we also need to concatenate the appId and inBrowser
-     * attributes until those go away.
-     *
-     * This getter is designed to hide these details from consumers so that they
-     * don't need to be updated when we swap out the implementation. For that
-     * reason, callers should treat the string as opaque and not rely on the
-     * current format.
-     */
-    readonly attribute ACString cookieJar;
 
     /**
      * The base domain of the codebase URI to which this principal pertains
