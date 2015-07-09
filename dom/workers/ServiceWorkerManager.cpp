@@ -4710,12 +4710,6 @@ ServiceWorkerManager::PropagateSoftUpdate(const OriginAttributes& aOriginAttribu
     return;
   }
 
-  if (XRE_IsParentProcess()) {
-    // When e10s mode is off we just do the update. This is a quick fix to make
-    // updates via about:sw page work when e10s mode is off.
-    SoftUpdate(aOriginAttributes, NS_ConvertUTF16toUTF8(aScope));
-    return;
-  }
   mActor->SendPropagateSoftUpdate(aOriginAttributes, nsString(aScope));
 }
 
