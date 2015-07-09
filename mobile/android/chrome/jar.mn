@@ -24,8 +24,6 @@ chrome.jar:
   content/Reader.js                    (content/Reader.js)
   content/aboutHome.xhtml              (content/aboutHome.xhtml)
   content/aboutRights.xhtml            (content/aboutRights.xhtml)
-  content/aboutApps.xhtml              (content/aboutApps.xhtml)
-  content/aboutApps.js                 (content/aboutApps.js)
   content/blockedSite.xhtml            (content/blockedSite.xhtml)
   content/languages.properties         (content/languages.properties)
   content/browser.xul                  (content/browser.xul)

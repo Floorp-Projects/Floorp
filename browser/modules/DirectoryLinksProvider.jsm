@@ -679,10 +679,14 @@ let DirectoryLinksProvider = {
         }
       });
     }
-    // Use up all views if the user clicked on a frequency capped tile
-    else if (action == "click") {
-      let {targetedSite, url} = sites[triggeringSiteIndex].link;
-      if (targetedSite) {
+    // any click action on a suggested tile should stop that tile suggestion
+    // click/block - user either removed a tile or went to a landing page
+    // pin - tile turned into history tile, should no longer be suggested
+    // unpin - the tile was pinned before, should not matter
+    else {
+      // suggested tile has targetedSite, or frecent_sites if it was pinned
+      let {frecent_sites, targetedSite, url} = sites[triggeringSiteIndex].link;
+      if (frecent_sites || targetedSite) {
         this._setFrequencyCapClick(url);
       }
     }
