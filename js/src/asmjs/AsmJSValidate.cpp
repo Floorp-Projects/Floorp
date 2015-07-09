@@ -5405,17 +5405,6 @@ EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
     return true;
 }
 
-void
-SwitchPatchOp(FunctionBuilder& f, size_t at, AsmJSSimdType type,
-              I32 i32, F32 f32)
-{
-    switch (type) {
-      case AsmJSSimdType_int32x4:   f.patchOp(at, i32); return;
-      case AsmJSSimdType_float32x4: f.patchOp(at, f32); return;
-    }
-    MOZ_CRASH("unexpected simd type");
-}
-
 static bool
 CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
 {
@@ -5435,29 +5424,13 @@ CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
 
     JSAtomState& names = m.cx()->names();
 
-    if (field == names.signMask) {
-        *type = Type::Signed;
-        switch (baseType.simdType()) {
-          case AsmJSSimdType_int32x4:   f.patchOp(opcodeAt, I32::I32X4SignMask); break;
-          case AsmJSSimdType_float32x4: f.patchOp(opcodeAt, I32::F32X4SignMask); break;
-        }
-        return true;
-    }
+    if (field != names.signMask)
+        return f.fail(base, "dot access field must be signMask");
 
-    if (field == names.x)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
-    else if (field == names.y)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
-    else if (field == names.z)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
-    else if (field == names.w)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractLane, F32::F32X4ExtractLane);
-    else
-        return f.fail(base, "dot access field must be a lane name (x, y, z, w) or signMask");
-
+    *type = Type::Signed;
     switch (baseType.simdType()) {
-      case AsmJSSimdType_int32x4:   *type = Type::Signed; break;
-      case AsmJSSimdType_float32x4: *type = Type::Float;  break;
+      case AsmJSSimdType_int32x4:   f.patchOp(opcodeAt, I32::I32X4SignMask); break;
+      case AsmJSSimdType_float32x4: f.patchOp(opcodeAt, I32::F32X4SignMask); break;
     }
 
     return true;
