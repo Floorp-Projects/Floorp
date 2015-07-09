@@ -140,6 +140,13 @@ parent:
      */
     sync GetWidgetNativeData() returns (WindowsHandle value);
 
+    /**
+     * When content moves focus from a native plugin window that's a child
+     * of the native browser window we need to move native focus to the
+     * browser. Otherwise the plugin window will never relinquish focus.
+     */
+    sync DispatchFocusToTopLevelWindow();
+
 parent:
     /**
      * When child sends this message, parent should move focus to
