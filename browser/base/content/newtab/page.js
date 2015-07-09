@@ -165,6 +165,23 @@ let gPage = {
   },
 
   /**
+   * Handles unload event
+   */
+  _handleUnloadEvent: function Page_handleUnloadEvent() {
+    gAllPages.unregister(this);
+    // compute page life-span and send telemetry probe: using milli-seconds will leave
+    // many low buckets empty. Instead we use half-second precision to make low end
+    // of histogram linear and not loose the change in user attention
+    let delta = Math.round((Date.now() - this._firstVisibleTime) / 500);
+    if (this._suggestedTilePresent) {
+      Services.telemetry.getHistogramById("NEWTAB_PAGE_LIFE_SPAN_SUGGESTED").add(delta);
+    }
+    else {
+      Services.telemetry.getHistogramById("NEWTAB_PAGE_LIFE_SPAN").add(delta);
+    }
+  },
+
+  /**
    * Handles all page events.
    */
   handleEvent: function Page_handleEvent(aEvent) {
@@ -173,7 +190,7 @@ let gPage = {
         this.onPageVisibleAndLoaded();
         break;
       case "unload":
-        gAllPages.unregister(this);
+        this._handleUnloadEvent();
         break;
       case "click":
         let {button, target} = aEvent;
@@ -225,6 +242,9 @@ let gPage = {
       }
     }
 
+    // save timestamp to compute page life-span delta
+    this._firstVisibleTime = Date.now();
+
     if (document.readyState == "complete") {
       this.onPageVisibleAndLoaded();
     } else {
@@ -256,6 +276,10 @@ let gPage = {
       if (node.classList && node.classList.contains("newtab-cell")) {
         if (sites[++i]) {
           lastIndex = i;
+          if (sites[i].link.targetedSite) {
+            // record that suggested tile is shown to use suggested-tiles-histogram
+            this._suggestedTilePresent = true;
+          }
         }
       }
     }
