@@ -29,6 +29,8 @@ config = {
     ],
     "pip_index": False,
 
+    "in_tree_config": "config/mozharness/linux_config.py",
+
     "buildbot_json_path": "buildprops.json",
 
     "default_blob_upload_servers": [
