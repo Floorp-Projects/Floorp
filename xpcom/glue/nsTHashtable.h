@@ -523,35 +523,6 @@ nsTHashtable<EntryType>::s_SizeOfStub(PLDHashEntryHdr* aEntry,
 
 class nsCycleCollectionTraversalCallback;
 
-struct MOZ_STACK_CLASS nsTHashtableCCTraversalData
-{
-  nsTHashtableCCTraversalData(nsCycleCollectionTraversalCallback& aCallback,
-                              const char* aName,
-                              uint32_t aFlags)
-    : mCallback(aCallback)
-    , mName(aName)
-    , mFlags(aFlags)
-  {
-  }
-
-  nsCycleCollectionTraversalCallback& mCallback;
-  const char* mName;
-  uint32_t mFlags;
-};
-
-template<class EntryType>
-PLDHashOperator
-ImplCycleCollectionTraverse_EnumFunc(EntryType* aEntry, void* aUserData)
-{
-  auto userData = static_cast<nsTHashtableCCTraversalData*>(aUserData);
-
-  ImplCycleCollectionTraverse(userData->mCallback,
-                              *aEntry,
-                              userData->mName,
-                              userData->mFlags);
-  return PL_DHASH_NEXT;
-}
-
 template<class EntryType>
 inline void
 ImplCycleCollectionUnlink(nsTHashtable<EntryType>& aField)
@@ -566,10 +537,10 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  nsTHashtableCCTraversalData userData(aCallback, aName, aFlags);
-
-  aField.EnumerateEntries(ImplCycleCollectionTraverse_EnumFunc<EntryType>,
-                          &userData);
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    EntryType* entry = iter.Get();
+    ImplCycleCollectionTraverse(aCallback, *entry, aName, aFlags);
+  }
 }
 
 #endif // nsTHashtable_h__
