@@ -69,6 +69,7 @@ var NetworkManager = (function NetworkManagerClosure() {
     return array.buffer;
   }
 
+
   NetworkManager.prototype = {
     requestRange: function NetworkManager_requestRange(begin, end, listeners) {
       var args = {
@@ -109,17 +110,11 @@ var NetworkManager = (function NetworkManagerClosure() {
         pendingRequest.expectedStatus = 200;
       }
 
-      if (args.onProgressiveData) {
-        // Some legacy browsers might throw an exception.
-        try {
-          xhr.responseType = 'moz-chunked-arraybuffer';
-        } catch(e) {}
-        if (xhr.responseType === 'moz-chunked-arraybuffer') {
-          pendingRequest.onProgressiveData = args.onProgressiveData;
-          pendingRequest.mozChunked = true;
-        } else {
-          xhr.responseType = 'arraybuffer';
-        }
+      var useMozChunkedLoading = !!args.onProgressiveData;
+      if (useMozChunkedLoading) {
+        xhr.responseType = 'moz-chunked-arraybuffer';
+        pendingRequest.onProgressiveData = args.onProgressiveData;
+        pendingRequest.mozChunked = true;
       } else {
         xhr.responseType = 'arraybuffer';
       }
