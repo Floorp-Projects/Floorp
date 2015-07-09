@@ -34,6 +34,9 @@ runTest(() =>
       ok(d.label.length !== undefined, "Device label: " + d.label);
       is(d.groupId, "", "Don't support groupId yet");
     });
+    var jsoned = JSON.parse(JSON.stringify(devices));
+    is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
+    is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
   })
   // Check deviceId failure paths for video.
   .then(() => mustSucceed("unknown plain deviceId on video",
