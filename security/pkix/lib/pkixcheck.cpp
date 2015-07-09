@@ -91,7 +91,7 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
   // more generally it short-circuits any path building with them (which, of
   // course, is even slower).
 
-  rv = trustDomain.CheckSignatureDigestAlgorithm(digestAlg);
+  rv = trustDomain.CheckSignatureDigestAlgorithm(digestAlg, endEntityOrCA);
   if (rv != Success) {
     return rv;
   }
