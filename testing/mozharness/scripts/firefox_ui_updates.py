@@ -92,6 +92,7 @@ class FirefoxUIUpdates(FirefoxUITests):
         super(FirefoxUIUpdates, self).__init__(
             config_options=config_options,
             all_actions=[
+                'purge-builds',
                 'clobber',
                 'checkout',
                 'create-virtualenv',
