@@ -696,7 +696,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
 
     MacroAssembler masm(cx);
 
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet(Register::Codes::WrapperMask));
+    AllocatableGeneralRegisterSet regs(Register::Codes::WrapperMask);
 
     static_assert((Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0,
                   "Wrapper register set should be a superset of Volatile register set.");
