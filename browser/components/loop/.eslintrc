@@ -61,7 +61,7 @@
     "object-curly-spacing": 0,    // [2, "always"],
     "quotes": [2, "double", "avoid-escape"],
     "spaced-comment": [2, "always"],
-    "strict": 0,                  // [2, "function"],
+    "strict": [2, "function"],
     // eslint-plugin-react rules. These are documented at
     // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>
     "react/jsx-quotes": [2, "double", "avoid-escape"],
