@@ -246,7 +246,7 @@ inline bool
 SetIntrinsicOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleValue val)
 {
     RootedPropertyName name(cx, script->getName(pc));
-    return GlobalObject::setIntrinsicValue(cx, cx->global(), name, val);
+    return cx->global()->setIntrinsicValue(cx, name, val);
 }
 
 inline void

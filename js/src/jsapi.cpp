@@ -2482,38 +2482,30 @@ DefineSelfHostedProperty(JSContext* cx, HandleObject obj, HandleId id,
                          const char* getterName, const char* setterName,
                          unsigned attrs, unsigned flags)
 {
-    JSAtom* getterNameAtom = Atomize(cx, getterName, strlen(getterName));
+    RootedAtom getterNameAtom(cx, Atomize(cx, getterName, strlen(getterName)));
     if (!getterNameAtom)
         return false;
-    RootedPropertyName getterNameName(cx, getterNameAtom->asPropertyName());
 
     RootedAtom name(cx, IdToFunctionName(cx, id));
     if (!name)
         return false;
 
     RootedValue getterValue(cx);
-    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), getterNameName, name, 0,
-                                             &getterValue))
-    {
+    if (!cx->global()->getSelfHostedFunction(cx, getterNameAtom, name, 0, &getterValue))
         return false;
-    }
     MOZ_ASSERT(getterValue.isObject() && getterValue.toObject().is<JSFunction>());
     RootedFunction getterFunc(cx, &getterValue.toObject().as<JSFunction>());
     JSNative getterOp = JS_DATA_TO_FUNC_PTR(JSNative, getterFunc.get());
 
     RootedFunction setterFunc(cx);
     if (setterName) {
-        JSAtom* setterNameAtom = Atomize(cx, setterName, strlen(setterName));
+        RootedAtom setterNameAtom(cx, Atomize(cx, setterName, strlen(setterName)));
         if (!setterNameAtom)
             return false;
-        RootedPropertyName setterNameName(cx, setterNameAtom->asPropertyName());
 
         RootedValue setterValue(cx);
-        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), setterNameName, name, 0,
-                                                 &setterValue))
-        {
+        if (!cx->global()->getSelfHostedFunction(cx, setterNameAtom, name, 0, &setterValue))
             return false;
-        }
         MOZ_ASSERT(setterValue.isObject() && setterValue.toObject().is<JSFunction>());
         setterFunc = &getterValue.toObject().as<JSFunction>();
     }
@@ -3297,12 +3289,11 @@ JS::GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, HandleId id
     if (!name)
         return nullptr;
 
-    JSAtom* shAtom = Atomize(cx, selfHostedName, strlen(selfHostedName));
-    if (!shAtom)
+    RootedAtom shName(cx, Atomize(cx, selfHostedName, strlen(selfHostedName)));
+    if (!shName)
         return nullptr;
-    RootedPropertyName shName(cx, shAtom->asPropertyName());
     RootedValue funVal(cx);
-    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, nargs, &funVal))
+    if (!cx->global()->getSelfHostedFunction(cx, shName, name, nargs, &funVal))
         return nullptr;
     return &funVal.toObject().as<JSFunction>();
 }
@@ -3599,19 +3590,15 @@ JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
             MOZ_ASSERT(!fs->call.op);
             MOZ_ASSERT(!fs->call.info);
 
-            JSAtom* shAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
-            if (!shAtom)
+            RootedAtom shName(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
+            if (!shName)
                 return false;
-            RootedPropertyName shName(cx, shAtom->asPropertyName());
             RootedAtom name(cx, IdToFunctionName(cx, id));
             if (!name)
                 return false;
             RootedValue funVal(cx);
-            if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, fs->nargs,
-                                                     &funVal))
-            {
+            if (!cx->global()->getSelfHostedFunction(cx, shName, name, fs->nargs, &funVal))
                 return false;
-            }
             if (!DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags))
                 return false;
         } else {
