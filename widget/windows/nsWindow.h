@@ -499,7 +499,6 @@ protected:
   static bool           sJustGotActivate;
   static bool           sIsInMouseCapture;
   static int            sTrimOnMinimize;
-  static const char*    sDefaultMainWindowClass;
 
   // Always use the helper method to read this property.  See bug 603793.
   static TriStateBool   sHasBogusPopupsDropShadowOnMultiMonitor;

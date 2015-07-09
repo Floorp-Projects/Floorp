@@ -6,7 +6,7 @@
 
 #include "PendingAnimationTracker.h"
 
-#include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/dom/AnimationTimeline.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 
@@ -53,14 +53,21 @@ TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
                     void* aReadyTime)
 {
   dom::Animation* animation = aKey->GetKey();
-  dom::DocumentTimeline* timeline = animation->Timeline();
+  dom::AnimationTimeline* timeline = animation->GetTimeline();
+
+  // If the animation does not have a timeline, just drop it from the map.
+  // The animation will detect that it is not being tracked and will trigger
+  // itself on the next tick where it has a timeline.
+  if (!timeline) {
+    return PL_DHASH_REMOVE;
+  }
 
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
   // animation will be started/paused when the refresh driver is next
   // advanced since this will trigger a call to TriggerPendingAnimationsNow.
-  if (timeline->IsUnderTestControl()) {
+  if (!timeline->TracksWallclockTime()) {
     return PL_DHASH_NEXT;
   }
 

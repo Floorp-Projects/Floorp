@@ -464,7 +464,6 @@ public:
                           nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass)
     , mSucceeded(false)
-    , mWasAsync(false)
     , mUseNativeLineBreak(true)
     , mWithFontRanges(false)
   {
@@ -546,7 +545,6 @@ public:
   }
 
   bool mSucceeded;
-  bool mWasAsync;
   bool mUseNativeLineBreak;
   bool mWithFontRanges;
   struct

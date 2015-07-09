@@ -276,6 +276,10 @@ pref("media.wakelock_timeout", 2000);
 // opened as top-level documents, as opposed to inside a media element.
 pref("media.play-stand-alone", true);
 
+// Whether we should delay actioning a "play()" JS function call and autoplay
+// attribute until the media element's owner document is visible.
+pref("media.block-play-until-visible", false);
+
 pref("media.hardware-video-decoding.enabled", true);
 
 pref("media.decoder.heuristic.dormant.enabled", true);
@@ -896,6 +900,9 @@ pref("nglayout.debug.paint_flashing_chrome", false);
 // enable/disable widget update area flashing --- only supported with
 // BasicLayers (other layer managers always update the entire widget area)
 pref("nglayout.debug.widget_update_flashing", false);
+
+// Enable/disable display list invalidation logging --- useful for debugging.
+pref("nglayout.debug.invalidation", false);
 
 // Whether image visibility is enabled globally (ie we will try to unlock images
 // that are not visible).
@@ -4015,7 +4022,7 @@ pref("image.cache.timeweight", 500);
 
 // Prevents images from automatically being decoded on load, instead allowing
 // them to be decoded on demand when they are drawn.
-pref("image.decode-only-on-draw.enabled", true);
+pref("image.decode-only-on-draw.enabled", false);
 
 // Decode all images automatically on load, ignoring our normal heuristics.
 // Overrides image.decode-only-on-draw.enabled.

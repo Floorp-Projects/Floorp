@@ -255,7 +255,7 @@ AppTrustDomain::IsChainValid(const DERArray& certChain, Time time)
 }
 
 Result
-AppTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm)
+AppTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA)
 {
   // TODO: We should restrict signatures to SHA-256 or better.
   return Success;

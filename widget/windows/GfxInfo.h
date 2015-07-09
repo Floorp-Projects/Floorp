@@ -51,8 +51,6 @@ public:
 
   virtual uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
 
-  nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
-
   NS_DECL_ISUPPORTS_INHERITED
 #ifdef DEBUG
   NS_DECL_NSIGFXINFODEBUG

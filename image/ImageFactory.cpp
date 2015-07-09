@@ -51,9 +51,8 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
   // We use the platform APZ value here since we don't have a widget to test.
-  // It's safe since this is an optimization, and the only platform
-  // ImageDecodeOnlyOnDraw is disabled on is B2G (where APZ is enabled in all
-  // widgets anyway).
+  // It's safe since this is an optimization, and
+  // ImageDecodeOnlyOnDraw is disabled everywhere and will be removed soon.
   bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
                             gfxPlatform::AsyncPanZoomEnabled();
 
