@@ -71,13 +71,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         var gTestWindow = null;
         var gTestIndex = 0;
 
-        // TODO: if ever we remove these checks for XP and Lion, we should do the same
-        // in dom/html/test/test_fullscreen-api.html, which uses the same pattern.
-        const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
-        const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
-        const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
-        const isOSXYosemite = navigator.userAgent.indexOf("Mac OS X 10.10") != -1;
-
         function finish() {
           SpecialPowers.clearUserPref("full-screen-api.enabled");
           SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
@@ -86,16 +79,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
 
         function nextTest() {
-          if (isWinXP) {
-            todo(false, "Can't reliably run full-screen tests on Windows XP due to bug 704010");
-            finish();
-            return;
-          }
-          if (isOSXLion || isOSXMtnLion || isOSXYosemite) {
-            todo(false, "Can't reliably run full-screen tests on OS X Lion or Mountain Lion or Yosemite, see bug 744125");
-            finish();
-            return;
-          }
           if (gTestWindow) {
             gTestWindow.close();
           }

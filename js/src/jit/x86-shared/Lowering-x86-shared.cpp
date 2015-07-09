@@ -171,6 +171,11 @@ LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs)
 void
 LIRGeneratorX86Shared::lowerDivI(MDiv* div)
 {
+    if (div->isUnsigned()) {
+        lowerUDiv(div);
+        return;
+    }
+
     // Division instructions are slow. Division by constant denominators can be
     // rewritten to use other instructions.
     if (div->rhs()->isConstant()) {
@@ -205,11 +210,6 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
         }
     }
 
-    if (div->isUnsigned()) {
-        lowerUDiv(div);
-        return;
-    }
-
     LDivI* lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()),
                                     tempFixed(edx));
     if (div->fallible())
@@ -220,6 +220,11 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
 void
 LIRGeneratorX86Shared::lowerModI(MMod* mod)
 {
+    if (mod->isUnsigned()) {
+        lowerUMod(mod);
+        return;
+    }
+
     if (mod->rhs()->isConstant()) {
         int32_t rhs = mod->rhs()->toConstant()->value().toInt32();
         int32_t shift = FloorLog2(Abs(rhs));
@@ -238,11 +243,6 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
             defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
             return;
         }
-    }
-
-    if (mod->isUnsigned()) {
-        lowerUMod(mod);
-        return;
     }
 
     LModI* lir = new(alloc()) LModI(useRegister(mod->lhs()),

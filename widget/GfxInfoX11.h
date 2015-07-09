@@ -48,8 +48,6 @@ public:
   
   NS_IMETHOD_(void) GetData() override;
 
-  nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
-
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG

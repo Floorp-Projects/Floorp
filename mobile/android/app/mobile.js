@@ -467,7 +467,6 @@ pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 #endif
-pref("app.marketplaceURL", "https://marketplace.firefox.com/");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -592,7 +591,7 @@ pref("media.mediasource.enabled", true);
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
-pref("image.decode-only-on-draw.enabled", true);
+pref("image.decode-only-on-draw.enabled", false);
 
 #ifdef NIGHTLY_BUILD
 // Shumway component (SWF player) is disabled by default. Also see bug 904346.

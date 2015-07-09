@@ -710,12 +710,13 @@ exports["test Listeners"] = createProxyTest(html, function (helper) {
 
 });
 
-exports["test MozRequestAnimationFrame"] = createProxyTest("", function (helper) {
+exports["test requestAnimationFrame"] = createProxyTest("", function (helper) {
 
   helper.createWorker(
     'new ' + function ContentScriptScope() {
-      window.mozRequestAnimationFrame(function callback() {
-        assert(callback == this, "callback is equal to `this`");
+      var self = (function() { return this; })();
+      window.requestAnimationFrame(function callback() {
+        assert(self == this, "self is equal to `this`");
         done();
       });
     }

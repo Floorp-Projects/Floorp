@@ -1196,7 +1196,13 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
   // Let decoders know that there won't be any more data coming.
   mSourceBuffer->Complete(aStatus);
 
-  if (mSyncLoad && !mHasSize) {
+  // Allow a synchronous size decode if mSyncLoad was set, or if we're running
+  // on a single thread (in which case waiting for the async size decoder could
+  // delay this image's load event quite a bit), or if this image is transient.
+  bool canSyncSizeDecode = mSyncLoad || mTransient ||
+                           DecodePool::NumberOfCores() < 2;
+
+  if (canSyncSizeDecode && !mHasSize) {
     // We're loading this image synchronously, so it needs to be usable after
     // this call returns.  Since we haven't gotten our size yet, we need to do a
     // synchronous size decode here.
@@ -1219,7 +1225,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus,
 
   if (!mHasSize && !mError) {
     // We don't have our size yet, so we'll fire the load event in SetSize().
-    MOZ_ASSERT(!mSyncLoad, "Firing load asynchronously but mSyncLoad is set?");
+    MOZ_ASSERT(!canSyncSizeDecode, "Firing load async but canSyncSizeDecode?");
     NotifyProgress(FLAG_ONLOAD_BLOCKED);
     mLoadProgress = Some(loadProgress);
     return finalStatus;
