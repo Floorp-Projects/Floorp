@@ -379,33 +379,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
 
-nsresult
-GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray)
-{
-  // Getting the refresh rate is a little hard on OS X. We could use
-  // CVDisplayLinkGetNominalOutputVideoRefreshPeriod, but that's a little
-  // involved. Ideally we could query it from vsync. For now, we leave it out.
-  int32_t deviceCount = 0;
-  for (NSScreen* screen in [NSScreen screens]) {
-    NSRect rect = [screen frame];
-
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value((int)rect.size.width));
-    JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
-
-    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value((int)rect.size.height));
-    JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
-
-    JS::Rooted<JS::Value> scale(aCx, JS::NumberValue(nsCocoaUtils::GetBackingScaleFactor(screen)));
-    JS_SetProperty(aCx, obj, "scale", scale);
-
-    JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
-    JS_SetElement(aCx, aOutArray, deviceCount++, element);
-  }
-  return NS_OK;
-}
-
 #ifdef DEBUG
 
 // Implement nsIGfxInfoDebug

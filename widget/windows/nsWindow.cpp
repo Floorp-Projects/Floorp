@@ -245,9 +245,6 @@ BYTE            nsWindow::sLastMouseButton        = 0;
 // Trim heap on minimize. (initialized, but still true.)
 int             nsWindow::sTrimOnMinimize         = 2;
 
-// Default value for general window class (used when the pref is the empty string).
-const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
-
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 DWORD           nsWindow::sFirstEventTime = 0;
@@ -540,7 +537,7 @@ nsWindow::Create(nsIWidget *aParent,
     }
   }
 
-  nsAutoString className;
+  nsString className;
   if (aInitData->mDropShadow) {
     GetWindowPopupClass(className);
   } else {
@@ -2929,7 +2926,7 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
 // Return some native data according to aDataType
 void* nsWindow::GetNativeData(uint32_t aDataType)
 {
-  nsAutoString className;
+  nsString className;
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
       GetWindowClass(className);
@@ -7562,7 +7559,7 @@ void nsWindow::GetMainWindowClass(nsAString& aClass)
   NS_PRECONDITION(aClass.IsEmpty(), "aClass should be empty string");
   nsresult rv = Preferences::GetString("ui.window_class_override", &aClass);
   if (NS_FAILED(rv) || aClass.IsEmpty()) {
-    aClass.AssignASCII(sDefaultMainWindowClass);
+    aClass.AssignLiteral(kClassNameGeneral);
   }
 }
 

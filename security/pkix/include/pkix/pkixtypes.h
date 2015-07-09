@@ -277,7 +277,8 @@ public:
   // Return Success if the algorithm is acceptable,
   // Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED if the algorithm is not
   // acceptable, or another error code if another error occurred.
-  virtual Result CheckSignatureDigestAlgorithm(DigestAlgorithm digestAlg) = 0;
+  virtual Result CheckSignatureDigestAlgorithm(DigestAlgorithm digestAlg,
+                                               EndEntityOrCA endEntityOrCA) = 0;
 
   // Check that the RSA public key size is acceptable.
   //

@@ -89,9 +89,7 @@ PlatformDecoderModule::Init()
 #ifdef MOZ_EME
 /* static */
 already_AddRefed<PlatformDecoderModule>
-PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
-                                        bool aHasAudio,
-                                        bool aHasVideo)
+PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy)
 {
   bool cdmDecodesAudio;
   bool cdmDecodesVideo;
@@ -101,14 +99,11 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
     cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
   }
 
-  nsRefPtr<PlatformDecoderModule> pdm;
-  if ((!cdmDecodesAudio && aHasAudio) || (!cdmDecodesVideo && aHasVideo)) {
-    // The CDM itself can't decode. We need to wrap a PDM to decode the
-    // decrypted output of the CDM.
-    pdm = Create();
-    if (!pdm) {
-      return nullptr;
-    }
+  // We always create a default PDM in order to decode
+  // non-encrypted tracks.
+  nsRefPtr<PlatformDecoderModule> pdm = Create();
+  if (!pdm) {
+    return nullptr;
   }
 
   nsRefPtr<PlatformDecoderModule> emepdm(

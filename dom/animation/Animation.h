@@ -12,10 +12,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
-#include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
+#include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
+#include "nsIGlobalObject.h"
 
 // X11 has a #define for CurrentTime.
 #ifdef CurrentTime
@@ -53,10 +54,11 @@ protected:
   virtual ~Animation() {}
 
 public:
-  explicit Animation(DocumentTimeline* aTimeline)
-    : mTimeline(aTimeline)
+  explicit Animation(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
+    , mSequenceNum(kUnsequenced)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
     , mFinishedAtLastComposeStyle(false)
@@ -67,12 +69,14 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Animation)
 
-  DocumentTimeline* GetParentObject() const { return mTimeline; }
+  AnimationTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   virtual CSSAnimation* AsCSSAnimation() { return nullptr; }
+  virtual const CSSAnimation* AsCSSAnimation() const { return nullptr; }
   virtual CSSTransition* AsCSSTransition() { return nullptr; }
+  virtual const CSSTransition* AsCSSTransition() const { return nullptr; }
 
   /**
    * Flag to pass to Play to indicate whether or not it should automatically
@@ -89,7 +93,8 @@ public:
 
   KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
   void SetEffect(KeyframeEffectReadOnly* aEffect);
-  DocumentTimeline* Timeline() const { return mTimeline; }
+  AnimationTimeline* GetTimeline() const { return mTimeline; }
+  void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   Nullable<TimeDuration> GetCurrentTime() const;
@@ -127,11 +132,10 @@ public:
    * CSSAnimation::PauseFromJS so we leave it for now.
    */
   void PauseFromJS(ErrorResult& aRv) { Pause(aRv); }
+
   // Wrapper functions for Animation DOM methods when called from style.
-  //
-  // Typically these DOM methods also notify style of changes but when
-  // we are calling from style we don't need to do this.
-  void CancelFromStyle() { DoCancel(); }
+
+  virtual void CancelFromStyle() { DoCancel(); }
 
   void Tick();
 
@@ -254,6 +258,20 @@ public:
   }
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();
+
+  /**
+   * Returns true if this Animation has a lower composite order than aOther.
+   */
+  virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
+  /**
+   * Returns true if this Animation is involved in some sort of
+   * custom composite ordering (such as the ordering defined for CSS
+   * animations or CSS transitions).
+   *
+   * When this is true, this class will not update the sequence number.
+   */
+  virtual bool IsUsingCustomCompositeOrder() const { return false; }
+
   void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
   void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }
   /**
@@ -323,7 +341,8 @@ protected:
   virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
   AnimationCollection* GetCollection() const;
 
-  nsRefPtr<DocumentTimeline> mTimeline;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<KeyframeEffectReadOnly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
@@ -353,6 +372,14 @@ protected:
   // (see TriggerOnNextTick for details).
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
+
+  static uint64_t sNextSequenceNum;
+  static const uint64_t kUnsequenced = UINT64_MAX;
+
+  // The sequence number assigned to this animation. This is kUnsequenced
+  // while the animation is in the idle state and is updated each time
+  // the animation transitions out of the idle state.
+  uint64_t mSequenceNum;
 
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our

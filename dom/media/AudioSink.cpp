@@ -68,9 +68,8 @@ AudioSink::AudioSink(MediaDecoderStateMachine* aStateMachine,
   , mSetPlaybackRate(false)
   , mSetPreservesPitch(false)
   , mPlaying(true)
+  , mOnAudioEndTimeUpdateTask(new OnAudioEndTimeUpdateTask(aStateMachine))
 {
-  NS_ASSERTION(mStartTime != -1, "Should have audio start time by now");
-  mOnAudioEndTimeUpdateTask = new OnAudioEndTimeUpdateTask(aStateMachine);
 }
 
 nsresult
@@ -107,7 +106,7 @@ AudioSink::GetPosition()
     mLastGoodPosition = pos;
   }
 
-  return mLastGoodPosition;
+  return mStartTime + mLastGoodPosition;
 }
 
 bool

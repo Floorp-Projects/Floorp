@@ -211,15 +211,16 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   virtual ElementPropertyTransition* AsTransition() { return nullptr; }
-  virtual const ElementPropertyTransition* AsTransition() const {
+  virtual const ElementPropertyTransition* AsTransition() const
+  {
     return nullptr;
   }
 
   // KeyframeEffectReadOnly interface
   Element* GetTarget() const {
-    // Currently we only implement Element.getAnimations() which only
-    // returns animations targetting Elements so this should never
-    // be called for an animation that targets a pseudo-element.
+    // Currently we never return animations from the API whose effect
+    // targets a pseudo-element so this should never be called when
+    // mPseudoType is not 'none' (see bug 1174575).
     MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
                "Requesting the target of a KeyframeEffect that targets a"
                " pseudo-element is not yet supported.");
@@ -227,7 +228,7 @@ public:
   }
 
   // Temporary workaround to return both the target element and pseudo-type
-  // until we implement PseudoElement.
+  // until we implement PseudoElement (bug 1174575).
   void GetTarget(Element*& aTarget,
                  nsCSSPseudoElements::Type& aPseudoType) const {
     aTarget = mTarget;

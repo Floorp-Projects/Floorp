@@ -22,6 +22,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "Layers.h"
@@ -118,6 +119,61 @@ CSSTransition::GetAnimationManager() const
   }
 
   return context->TransitionManager();
+}
+
+nsCSSProperty
+CSSTransition::TransitionProperty() const
+{
+  // FIXME: Once we support replacing/removing the effect (bug 1049975)
+  // we'll need to store the original transition property so we keep
+  // returning the same value in that case.
+  dom::KeyframeEffectReadOnly* effect = GetEffect();
+  MOZ_ASSERT(effect && effect->AsTransition(),
+             "Transition should have a transition effect");
+  return effect->AsTransition()->TransitionProperty();
+}
+
+bool
+CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
+{
+  // 0. Object-equality case
+  if (&aOther == this) {
+    return false;
+  }
+
+  // 1. Transitions sort lowest
+  const CSSTransition* otherTransition = aOther.AsCSSTransition();
+  if (!otherTransition) {
+    return true;
+  }
+
+  // 2. CSS transitions that correspond to a transition-property property sort
+  // lower than CSS transitions owned by script.
+  if (!IsUsingCustomCompositeOrder()) {
+    return !aOther.IsUsingCustomCompositeOrder() ?
+           Animation::HasLowerCompositeOrderThan(aOther) :
+           false;
+  }
+  if (!aOther.IsUsingCustomCompositeOrder()) {
+    return true;
+  }
+
+  // 3. Sort by document order
+  MOZ_ASSERT(mOwningElement.IsSet() && otherTransition->OwningElement().IsSet(),
+             "Transitions using custom composite order should have an owning "
+             "element");
+  if (!mOwningElement.Equals(otherTransition->OwningElement())) {
+    return mOwningElement.LessThan(otherTransition->OwningElement());
+  }
+
+  // 4. (Same element and pseudo): Sort by transition generation
+  if (mSequenceNum != otherTransition->mSequenceNum) {
+    return mSequenceNum < otherTransition->mSequenceNum;
+  }
+
+  // 5. (Same transition generation): Sort by transition property
+  return nsCSSProps::GetStringValue(TransitionProperty()) <
+         nsCSSProps::GetStringValue(otherTransition->TransitionProperty());
 }
 
 /*****************************************************************************
@@ -351,9 +407,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != segment.mToValue) {
         // stop the transition
         if (!anim->GetEffect()->IsFinishedTransition()) {
-          anim->CancelFromStyle();
           collection->UpdateAnimationGeneration(mPresContext);
         }
+        anim->CancelFromStyle();
         animations.RemoveElementAt(i);
       }
     } while (i != 0);
@@ -576,7 +632,13 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  nsRefPtr<CSSTransition> animation = new CSSTransition(timeline);
+  nsRefPtr<CSSTransition> animation =
+    new CSSTransition(mPresContext->Document()->GetScopeObject());
+  animation->SetOwningElement(
+    OwningElementRef(*aElement, aNewStyleContext->GetPseudoType()));
+  animation->SetTimeline(timeline);
+  animation->SetCreationSequence(
+    mPresContext->RestyleManager()->GetAnimationGeneration());
   // The order of the following two calls is important since PlayFromStyle
   // will add the animation to the PendingAnimationTracker of its effect's
   // document. When we come to make effect writeable (bug 1049975) we should
@@ -662,6 +724,7 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     if (!ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
                                            currentValue) ||
         currentValue != segment.mToValue) {
+      anim->CancelFromStyle();
       animations.RemoveElementAt(i);
     }
   } while (i != 0);
