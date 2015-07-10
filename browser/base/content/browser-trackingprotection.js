@@ -3,7 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 let TrackingProtection = {
-  PREF_ENABLED: "privacy.trackingprotection.enabled",
+  PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
+  PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
+  enabledGlobally: false,
+  enabledInPrivateWindows: false,
 
   init() {
     let $ = selector => document.querySelector(selector);
@@ -11,21 +14,32 @@ let TrackingProtection = {
     this.content = $("#tracking-protection-content");
 
     this.updateEnabled();
-    Services.prefs.addObserver(this.PREF_ENABLED, this, false);
+    Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this, false);
+    Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this, false);
 
-    this.enabledHistogram.add(this.enabled);
+    this.enabledHistogram.add(this.enabledGlobally);
   },
 
   uninit() {
-    Services.prefs.removeObserver(this.PREF_ENABLED, this);
+    Services.prefs.removeObserver(this.PREF_ENABLED_GLOBALLY, this);
+    Services.prefs.removeObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
   },
 
   observe() {
     this.updateEnabled();
   },
 
+  get enabled() {
+    return this.enabledGlobally ||
+           (this.enabledInPrivateWindows &&
+            PrivateBrowsingUtils.isWindowPrivate(window));
+  },
+
   updateEnabled() {
-    this.enabled = Services.prefs.getBoolPref(this.PREF_ENABLED);
+    this.enabledGlobally =
+      Services.prefs.getBoolPref(this.PREF_ENABLED_GLOBALLY);
+    this.enabledInPrivateWindows =
+      Services.prefs.getBoolPref(this.PREF_ENABLED_IN_PRIVATE_WINDOWS);
     this.container.hidden = !this.enabled;
   },
 
