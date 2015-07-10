@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1139297 - Implement CSP upgrade-insecure-requests directive</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load a page that makes use of the CSP referrer directive as well
+ * as upgrade-insecure-requests. The page loads an image over http.
+ * The test makes sure the request gets upgraded to https and the
+ * correct referrer gets sent.
+ */
+
+const PRE_POLICY = "upgrade-insecure-requests; default-src https:; ";
+
+var tests = [
+  {
+    policy: "referrer origin",
+    description: "upgrade insecure request with referrer = origin",
+    result: "http://example.com"
+  },
+  {
+    policy: "referrer no-referrer",
+    description: "upgrade insecure request with referrer = no-referrer",
+    result: ""
+  }
+];
+
+var counter = 0;
+var curTest;
+
+function loadTestPage() {
+  curTest = tests[counter++];
+  var src = "http://example.com/tests/dom/security/test/csp/file_testserver.sjs?file=";
+  // append the file that should be served
+  src += escape("tests/dom/security/test/csp/file_upgrade_insecure_referrer.html")
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(PRE_POLICY + curTest.policy);
+  document.getElementById("testframe").src = src;
+}
+
+function runNextTest() {
+  // sends a request to the server which is processed async and returns
+  // once the server received the expected image request
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_upgrade_insecure_referrer_server.sjs?queryresult");
+  myXHR.onload = function(e) {
+    is(myXHR.responseText, curTest.result, curTest.description);
+    if (counter == tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+    // move on to the next test by setting off another query request.
+    runNextTest();
+  }
+  myXHR.onerror = function(e) {
+    ok(false, "could not query results from server (" + e.message + ")");
+    SimpleTest.finish();
+  }
+  myXHR.send();
+
+  // give it some time and load the testpage
+  SimpleTest.executeSoon(loadTestPage);
+}
+
+SimpleTest.waitForExplicitFinish();
+runNextTest();
+
+</script>
+</body>
+</html>
