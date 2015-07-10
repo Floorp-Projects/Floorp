@@ -61,7 +61,7 @@ private:
   mozilla::Atomic<bool> mInitInProgress;
   bool    mInitialized;
 
-  // These two internal helper methods must be called while mLock is held.
+  // These two internal helper methods must be called while mMonitor is held.
   // AddTimerInternal returns the position where the timer was added in the
   // list, or -1 if it failed.
   int32_t AddTimerInternal(nsTimerImpl* aTimer);
@@ -75,6 +75,7 @@ private:
   bool mWaiting;
   bool mNotified;
   bool mSleeping;
+  TimeStamp mLastTimerEventLoopRun;
 
   nsTArray<nsTimerImpl*> mTimers;
 };
