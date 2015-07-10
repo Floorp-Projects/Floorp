@@ -690,6 +690,7 @@ BuiltinToName(AsmJSExit::BuiltinKind builtin)
       case AsmJSExit::Builtin_IDivMod:   return "software idivmod (in asm.js)";
       case AsmJSExit::Builtin_UDivMod:   return "software uidivmod (in asm.js)";
       case AsmJSExit::Builtin_AtomicCmpXchg:  return "Atomics.compareExchange (in asm.js)";
+      case AsmJSExit::Builtin_AtomicXchg:     return "Atomics.exchange (in asm.js)";
       case AsmJSExit::Builtin_AtomicFetchAdd: return "Atomics.add (in asm.js)";
       case AsmJSExit::Builtin_AtomicFetchSub: return "Atomics.sub (in asm.js)";
       case AsmJSExit::Builtin_AtomicFetchAnd: return "Atomics.and (in asm.js)";

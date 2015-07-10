@@ -202,7 +202,7 @@ struct TileClient
     }
   }
 
-  void Release()
+  void DiscardBuffers()
   {
     DiscardFrontBuffer();
     DiscardBackBuffer();
@@ -423,8 +423,6 @@ public:
 
   void ReadLock();
 
-  void Release();
-
   void DiscardBuffers();
 
   const CSSToParentLayerScale2D& GetFrameResolution() { return mFrameResolution; }
@@ -460,22 +458,18 @@ public:
     mValidRegion.SetEmpty();
     mTiles.mSize.width = 0;
     mTiles.mSize.height = 0;
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (!mRetainedTiles[i].IsPlaceholderTile()) {
-        mRetainedTiles[i].Release();
-      }
-    }
+    DiscardBuffers();
     mRetainedTiles.Clear();
   }
 
 protected:
-  TileClient ValidateTile(TileClient aTile,
-                          const nsIntPoint& aTileRect,
-                          const nsIntRegion& dirtyRect);
+  bool ValidateTile(TileClient& aTile,
+                    const nsIntPoint& aTileRect,
+                    const nsIntRegion& dirtyRect);
 
   void PostValidate(const nsIntRegion& aPaintRegion);
 
-  void UnlockTile(TileClient aTile);
+  void UnlockTile(TileClient& aTile);
 
   TileClient GetPlaceholderTile() const { return TileClient(); }
 
@@ -552,8 +546,8 @@ protected:
     MOZ_COUNT_DTOR(TiledContentClient);
 
     mDestroyed = true;
-    mTiledBuffer.Release();
-    mLowPrecisionTiledBuffer.Release();
+    mTiledBuffer.DiscardBuffers();
+    mLowPrecisionTiledBuffer.DiscardBuffers();
   }
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);

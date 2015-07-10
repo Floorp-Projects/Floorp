@@ -74,6 +74,7 @@ enum OneByteOpcodeID {
     OP_TEST_EbGb                    = 0x84,
     OP_NOP_84                       = 0x84,
     OP_TEST_EvGv                    = 0x85,
+    OP_XCHG_GbEb                    = 0x86,
     OP_XCHG_GvEv                    = 0x87,
     OP_MOV_EbGv                     = 0x88,
     OP_MOV_EvGv                     = 0x89,

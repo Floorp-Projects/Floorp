@@ -109,19 +109,10 @@ private:
     nsAutoPtr<INIValue> next;
   };
 
-  struct GSClosureStruct
-  {
-    INISectionCallback usercb;
-    void* userclosure;
-  };
-
   nsClassHashtable<nsDepCharHashKey, INIValue> mSections;
   nsAutoArrayPtr<char> mFileContents;
 
   nsresult InitFromFILE(FILE* aFd);
-
-  static PLDHashOperator GetSectionsCB(const char* aKey,
-                                       INIValue* aData, void* aClosure);
 };
 
 #endif /* nsINIParser_h__ */

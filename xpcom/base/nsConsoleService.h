@@ -55,8 +55,7 @@ public:
 
   typedef nsInterfaceHashtable<nsISupportsHashKey,
                                nsIConsoleListener> ListenerHash;
-  void EnumerateListeners(ListenerHash::EnumReadFunction aFunction,
-                          void* aClosure);
+  void CollectCurrentListeners(nsCOMArray<nsIConsoleListener>& aListeners);
 
 private:
   ~nsConsoleService();
