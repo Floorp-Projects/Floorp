@@ -761,7 +761,7 @@ private:
 
     virtual bool RecvGetSystemMemory(const uint64_t& getterId) override;
 
-    virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
+    virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
     virtual bool RecvDataStoreGetStores(
                        const nsString& aName,
