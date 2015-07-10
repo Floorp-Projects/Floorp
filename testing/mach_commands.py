@@ -352,7 +352,11 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         check_style_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
         check_style_result = subprocess.call(check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
-        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result
+        print('running check-masm')
+        check_masm_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_macroassembler_style.py')]
+        check_masm_result = subprocess.call(check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
+
+        all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result and check_masm_result
 
         return all_passed
 

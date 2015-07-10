@@ -20,6 +20,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     const Class* clasp = options.clasp();
 
     MOZ_ASSERT(isValidProxyClass(clasp));
+    MOZ_ASSERT(clasp->shouldDelayMetadataCallback());
     MOZ_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
 
     /*
@@ -47,6 +48,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
         return nullptr;
     }
 
+    AutoSetNewObjectMetadata metadata(cx);
     // Note: this will initialize the object's |data| to strange values, but we
     // will immediately overwrite those below.
     RootedObject obj(cx, NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind,

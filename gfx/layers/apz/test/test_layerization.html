@@ -137,7 +137,7 @@ function driveTest() {
 
 function startTest() {
   // This test requires APZ - if it's not enabled, skip it.
-  var apzEnabled = SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled");
+  var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
   if (!apzEnabled) {
     ok(true, "APZ not enabled, skipping test");
     SimpleTest.finish();

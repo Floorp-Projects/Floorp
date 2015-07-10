@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1111834 - sendBeacon() should not follow 30x redirect after preflight</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+    <iframe style="width:100%;" id="testframe"></iframe>
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ *   We do perform a non simple sendBeacon request. After the preflight channel returns correctly
+ *   the actual channel is about to follow a 30x cross origin redirect, which is forbidden by the spec.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const BEACON_URL = "http://example.com/tests/dom/tests/mochitest/beacon/beacon-cors-redirect-handler.sjs?beacon";
+
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, runTest);
+
+var intervalID = null;
+
+function queryIfRedirectSucceeded() {
+  clearInterval(intervalID);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "beacon-cors-redirect-handler.sjs?verifyRedirectDidNotSucceed", true);
+  xhr.onload = function() {
+    is(xhr.responseText, "green", "SendBeacon does not follow cross origin redirects after preflight!");
+    SimpleTest.finish();
+  };
+  xhr.onerror = function() {
+    ok(false, "xhr request returned error");
+    SimpleTest.finish();
+  };
+  xhr.send();
+}
+
+function runTest() {
+  var data = new Uint8Array([0,1,2,3]);
+  navigator.sendBeacon(BEACON_URL, data);
+
+  // we have to make sure the channel did not follow the redirect hence
+  // we have to wait for 2 seconds before we can query the result.
+  intervalID = setInterval(queryIfRedirectSucceeded, 2000);
+}
+
+</script>
+</pre>
+</body>
+</html>

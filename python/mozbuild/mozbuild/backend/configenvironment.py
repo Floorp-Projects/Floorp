@@ -27,6 +27,8 @@ else:
 class BuildConfig(object):
     """Represents the output of configure."""
 
+    _CODE_CACHE = {}
+
     def __init__(self):
         self.topsrcdir = None
         self.topobjdir = None
@@ -35,26 +37,35 @@ class BuildConfig(object):
         self.substs = {}
         self.files = []
 
-    @staticmethod
-    def from_config_status(path):
+    @classmethod
+    def from_config_status(cls, path):
         """Create an instance from a config.status file."""
+        code_cache = cls._CODE_CACHE
+        mtime = os.path.getmtime(path)
 
-        with open(path, 'rt') as fh:
-            source = fh.read()
-            code = compile(source, path, 'exec', dont_inherit=1)
-            g = {
-                '__builtins__': __builtins__,
-                '__file__': path,
-            }
-            l = {}
-            exec(code, g, l)
+        # cache the compiled code as it can be reused
+        # we cache it the first time, or if the file changed
+        if not path in code_cache or code_cache[path][0] != mtime:
+            with open(path, 'rt') as fh:
+                source = fh.read()
+                code_cache[path] = (
+                    mtime,
+                    compile(source, path, 'exec', dont_inherit=1)
+                )
 
-            config = BuildConfig()
+        g = {
+            '__builtins__': __builtins__,
+            '__file__': path,
+        }
+        l = {}
+        exec(code_cache[path][1], g, l)
 
-            for name in l['__all__']:
-                setattr(config, name, l[name])
+        config = BuildConfig()
 
-            return config
+        for name in l['__all__']:
+            setattr(config, name, l[name])
+
+        return config
 
 
 class ConfigEnvironment(object):

@@ -1842,11 +1842,7 @@ void
 nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
                                          nsAString& aString)
 {
-  if (!aGradient->mLegacySyntax) {
-    aString.Truncate();
-  } else {
-    aString.AssignLiteral("-moz-");
-  }
+  aString.Truncate();
   if (aGradient->mRepeating) {
     aString.AppendLiteral("repeating-");
   }
@@ -1861,7 +1857,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   nsAutoString tokenString;
   nsRefPtr<nsROCSSPrimitiveValue> tmpVal = new nsROCSSPrimitiveValue;
 
-  if (isRadial && !aGradient->mLegacySyntax) {
+  if (isRadial) {
     if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE) {
       if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
         aString.AppendLiteral("circle");
@@ -1888,13 +1884,13 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   }
   if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
     MOZ_ASSERT(aGradient->mBgPosY.GetUnit() != eStyleUnit_None);
-    if (!isRadial && !aGradient->mLegacySyntax) {
+    if (!isRadial) {
       AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
     } else if (aGradient->mBgPosX.GetUnit() != eStyleUnit_Percent ||
                aGradient->mBgPosX.GetPercentValue() != 0.5f ||
                aGradient->mBgPosY.GetUnit() != eStyleUnit_Percent ||
                aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 1.0f)) {
-      if (isRadial && !aGradient->mLegacySyntax) {
+      if (isRadial) {
         if (needSep) {
           aString.Append(' ');
         }
@@ -1910,38 +1906,13 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     }
   }
   if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
-    MOZ_ASSERT(!isRadial || aGradient->mLegacySyntax);
+    MOZ_ASSERT(!isRadial);
     if (needSep) {
       aString.Append(' ');
     }
     nsStyleUtil::AppendAngleValue(aGradient->mAngle, aString);
     needSep = true;
   }
-
-  if (isRadial && aGradient->mLegacySyntax &&
-      (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR ||
-       aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)) {
-    MOZ_ASSERT(aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE);
-    if (needSep) {
-      aString.AppendLiteral(", ");
-      needSep = false;
-    }
-    if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_CIRCULAR) {
-      aString.AppendLiteral("circle");
-      needSep = true;
-    }
-    if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER) {
-      if (needSep) {
-        aString.Append(' ');
-      }
-      AppendASCIItoUTF16(nsCSSProps::
-                         ValueToKeyword(aGradient->mSize,
-                                        nsCSSProps::kRadialGradientSizeKTable),
-                         aString);
-    }
-    needSep = true;
-  }
-
 
   // color stops
   for (uint32_t i = 0; i < aGradient->mStops.Length(); ++i) {
