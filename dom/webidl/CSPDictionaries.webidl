@@ -25,6 +25,7 @@ dictionary CSP {
   sequence<DOMString> form-action;
   sequence<DOMString> referrer;
   sequence<DOMString> manifest-src;
+  sequence<DOMString> upgrade-insecure-requests;
 };
 
 dictionary CSPPolicies {
