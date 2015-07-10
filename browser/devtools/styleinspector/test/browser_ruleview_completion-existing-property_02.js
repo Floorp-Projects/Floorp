@@ -48,7 +48,7 @@ add_task(function*() {
 
   info("Focusing the css property editable value");
   let value = view.doc.querySelectorAll(".ruleview-propertyvalue")[0];
-  let editor = yield focusEditableField(value);
+  let editor = yield focusEditableField(view, value);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i ++) {

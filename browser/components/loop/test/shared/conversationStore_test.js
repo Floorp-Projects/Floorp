@@ -397,6 +397,8 @@ describe("loop.store.ConversationStore", function () {
             new sharedActions.ConnectCall({sessionData: fakeSessionData}));
 
           sandbox.stub(dispatcher, "dispatch");
+          // This is already covered by a test. Stub just prevents console msgs.
+          sandbox.stub(window.console, "error");
         });
 
         it("should dispatch a connection progress action on success", function(done) {
@@ -521,6 +523,7 @@ describe("loop.store.ConversationStore", function () {
       describe("server response handling", function() {
         beforeEach(function() {
           sandbox.stub(dispatcher, "dispatch");
+          sandbox.stub(window.console, "error");
         });
 
         it("should dispatch a connect call action on success", function() {
@@ -692,6 +695,7 @@ describe("loop.store.ConversationStore", function () {
 
     describe("WebSocket connection result", function() {
       beforeEach(function() {
+        sandbox.stub(window.console, "error");
         store.connectCall(
           new sharedActions.ConnectCall({sessionData: fakeSessionData}));
 
@@ -712,6 +716,18 @@ describe("loop.store.ConversationStore", function () {
           });
         }, function() {
           done(new Error("Promise should have been resolve, not rejected"));
+        });
+      });
+
+      it("should log an error when connection fails", function(done) {
+        rejectConnectPromise();
+
+        connectPromise.then(function() {
+          done(new Error("Promise not reject"));
+        }, function() {
+          checkFailures(done, function() {
+            sinon.assert.calledOnce(console.error);
+          });
         });
       });
 
@@ -993,6 +1009,17 @@ describe("loop.store.ConversationStore", function () {
   });
 
   describe("#setMute", function() {
+    beforeEach(function() {
+      dispatcher.dispatch(
+        // Setup store to prevent console warnings.
+        new sharedActions.SetupWindowData({
+          windowId: "123456",
+          type: "outgoing",
+          contact: contact,
+          callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO
+        }));
+    });
+
     it("should save the mute state for the audio stream", function() {
       store.setStoreState({"audioMuted": false});
 

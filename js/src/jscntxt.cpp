@@ -156,7 +156,7 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
     if (cx->outstandingRequests != 0)
         MOZ_CRASH();
 
-    cx->checkNoGCRooters();
+    cx->roots.checkNoGCRooters();
 
     if (mode != DCM_NEW_FAILED) {
         if (JSContextCallback cxCallback = rt->cxCallback) {
@@ -188,10 +188,10 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
 }
 
 void
-ContextFriendFields::checkNoGCRooters() {
+RootLists::checkNoGCRooters() {
 #ifdef DEBUG
     for (int i = 0; i < THING_ROOT_LIMIT; ++i)
-        MOZ_ASSERT(thingGCRooters[i] == nullptr);
+        MOZ_ASSERT(stackRoots_[i] == nullptr);
 #endif
 }
 

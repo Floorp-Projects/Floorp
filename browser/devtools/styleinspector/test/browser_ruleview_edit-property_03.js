@@ -35,26 +35,25 @@ add_task(function*() {
   let doc = ruleEditor.doc;
 
   let propEditor = ruleEditor.rule.textProps[1].editor;
-  let editor = yield focusEditableField(propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
 
   info("Deleting all the text out of a value field");
-  yield sendCharsAndWaitForFocus(ruleEditor.element, ["VK_DELETE", "VK_RETURN"]);
-  yield ruleEditor.rule._applyingModifications;
+  yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_DELETE", "VK_RETURN"]);
 
   info("Pressing enter a couple times to cycle through editors");
-  yield sendCharsAndWaitForFocus(ruleEditor.element, ["VK_RETURN"]);
-  yield sendCharsAndWaitForFocus(ruleEditor.element, ["VK_RETURN"]);
-
-  yield ruleEditor.rule._applyingModifications;
+  yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
+  yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
 
   isnot (ruleEditor.rule.textProps[1].editor.nameSpan.style.display, "none", "The name span is visible");
   is (ruleEditor.rule.textProps.length, 2, "Correct number of props");
 });
 
-function* sendCharsAndWaitForFocus(element, chars) {
+function* sendCharsAndWaitForFocus(view, element, chars) {
   let onFocus = once(element, "focus", true);
   for (let ch of chars) {
+    let onRuleViewChanged = view.once("ruleview-changed");
     EventUtils.sendChar(ch, element.ownerDocument.defaultView);
+    yield onRuleViewChanged;
   }
   yield onFocus;
 }

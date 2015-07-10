@@ -1,17 +1,14 @@
-if (!this.hasOwnProperty("SIMD"))
-  quit();
-
 load(libdir + 'simd.js');
 
 setJitCompilerOption("ion.warmup.trigger", 50);
 
 function f() {
-    var i1 = SIMD.int32x4(1, 2, 3, 4);
-    var i2 = SIMD.int32x4(5, 6, 7, 8);
+    var i1 = SIMD.Int32x4(1, 2, 3, 4);
+    var i2 = SIMD.Int32x4(5, 6, 7, 8);
 
     var leet = Math.fround(13.37);
-    var f1 = SIMD.float32x4(-.5, -0, Infinity, leet);
-    var f2 = SIMD.float32x4(42, .5, 23, -10);
+    var f1 = SIMD.Float32x4(-.5, -0, Infinity, leet);
+    var f2 = SIMD.Float32x4(42, .5, 23, -10);
 
     // computes all rotations of a given array
     function *gen(arr) {
@@ -26,40 +23,46 @@ function f() {
     }
 
     var compI = [];
-    for (var k of gen([i1.x, i1.y, i1.z, i1.w, i2.x, i2.y, i2.z, i2.w]))
+    var baseI = [];
+    for (var i = 0; i < 8; i++)
+        baseI.push(SIMD.Int32x4.extractLane(i < 4 ? i1 : i2, i % 4));
+    for (var k of gen(baseI))
         compI.push(k);
 
     var compF = [];
-    for (var k of gen([f1.x, f1.y, f1.z, f1.w, f2.x, f2.y, f2.z, f2.w]))
+    var baseF = [];
+    for (var i = 0; i < 8; i++)
+        baseF.push(SIMD.Float32x4.extractLane(i < 4 ? f1 : f2, i % 4));
+    for (var k of gen(baseF))
         compF.push(k);
 
     for (var i = 0; i < 150; i++) {
         // Variable lanes
-        var r = SIMD.float32x4.shuffle(f1, f2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
+        var r = SIMD.Float32x4.shuffle(f1, f2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
         assertEqX4(r, compF[i % 8]);
 
         // Constant lanes
-        assertEqX4(SIMD.float32x4.shuffle(f1, f2, 3, 2, 4, 5), [leet, Infinity, 42, .5]);
+        assertEqX4(SIMD.Float32x4.shuffle(f1, f2, 3, 2, 4, 5), [leet, Infinity, 42, .5]);
 
         // Variable lanes
-        var r = SIMD.int32x4.shuffle(i1, i2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
+        var r = SIMD.Int32x4.shuffle(i1, i2, i % 8, (i + 1) % 8, (i + 2) % 8, (i + 3) % 8);
         assertEqX4(r, compI[i % 8]);
 
         // Constant lanes
-        assertEqX4(SIMD.int32x4.shuffle(i1, i2, 3, 2, 4, 5), [4, 3, 5, 6]);
+        assertEqX4(SIMD.Int32x4.shuffle(i1, i2, 3, 2, 4, 5), [4, 3, 5, 6]);
     }
 }
 
 function testBailouts(uglyDuckling) {
-    var i1 = SIMD.int32x4(1, 2, 3, 4);
-    var i2 = SIMD.int32x4(5, 6, 7, 8);
+    var i1 = SIMD.Int32x4(1, 2, 3, 4);
+    var i2 = SIMD.Int32x4(5, 6, 7, 8);
 
     for (var i = 0; i < 150; i++) {
         // Test bailouts
         var value = i == 149 ? uglyDuckling : 3;
         var caught = false;
         try {
-            assertEqX4(SIMD.int32x4.shuffle(i1, i2, value, 2, 4, 5), [4, 3, 5, 6]);
+            assertEqX4(SIMD.Int32x4.shuffle(i1, i2, value, 2, 4, 5), [4, 3, 5, 6]);
         } catch(e) {
             print(e);
             caught = true;

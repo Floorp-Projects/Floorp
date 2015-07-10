@@ -1,13 +1,13 @@
-if (typeof SIMD === "undefined")
-    quit();
+load(libdir + 'simd.js');
 
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 30);
+
 var max = 40, pivot = 35;
 
-var i32x4 = SIMD.int32x4;
-var f32x4 = SIMD.float32x4;
-var i32x4Add = SIMD.int32x4.add;
+var i32x4 = SIMD.Int32x4;
+var f32x4 = SIMD.Float32x4;
+var i32x4Add = SIMD.Int32x4.add;
 
 var FakeSIMDType = function (o) { this.x = o.x; this.y = o.y; this.z = o.z; this.w = o.w; };
 if (this.hasOwnProperty("TypedObject")) {
@@ -111,16 +111,16 @@ for (i = 0; i < max; i++) {
 
     function add(i, v, w) {
         if (i % 2 == 0) {
-            SIMD.int32x4.add(v, w);
+            SIMD.Int32x4.add(v, w);
         } else {
-            SIMD.float32x4.add(v, w);
+            SIMD.Float32x4.add(v, w);
         }
     }
 
     var i = 0;
     var caught = false;
-    var f4 = SIMD.float32x4(1,2,3,4);
-    var i4 = SIMD.int32x4(1,2,3,4);
+    var f4 = SIMD.Float32x4(1,2,3,4);
+    var i4 = SIMD.Int32x4(1,2,3,4);
     try {
         for (; i < 200; i++) {
             if (i % 2 == 0) {

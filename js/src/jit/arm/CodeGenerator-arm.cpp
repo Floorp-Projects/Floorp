@@ -1973,6 +1973,58 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
 }
 
 void
+CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
+{
+    MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    Scalar::Type vt = mir->accessType();
+    const LAllocation* ptr = ins->ptr();
+    Register ptrReg = ToRegister(ptr);
+    BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
+    MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
+
+    Register value = ToRegister(ins->value());
+
+    Label rejoin;
+    uint32_t maybeCmpOffset = 0;
+    if (mir->needsBoundsCheck()) {
+        Label goahead;
+        BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
+        Register out = ToRegister(ins->output());
+        maybeCmpOffset = bo.getOffset();
+        masm.ma_b(&goahead, Assembler::Below);
+        memoryBarrier(MembarFull);
+        masm.as_eor(out, out, O2Reg(out));
+        masm.ma_b(&rejoin, Assembler::Always);
+        masm.bind(&goahead);
+    }
+    masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
+                                       srcAddr, value, InvalidReg, ToAnyRegister(ins->output()));
+    if (rejoin.used()) {
+        masm.bind(&rejoin);
+        masm.append(AsmJSHeapAccess(maybeCmpOffset));
+    }
+}
+
+void
+CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins)
+{
+    const MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    Scalar::Type viewType = mir->accessType();
+    Register ptr = ToRegister(ins->ptr());
+    Register value = ToRegister(ins->value());
+
+    MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
+
+    masm.setupAlignedABICall(3);
+    masm.ma_mov(Imm32(viewType), ScratchRegister);
+    masm.passABIArg(ScratchRegister);
+    masm.passABIArg(ptr);
+    masm.passABIArg(value);
+
+    masm.callWithABI(AsmJSImm_AtomicXchg);
+}
+
+void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MOZ_ASSERT(ins->mir()->hasUses());

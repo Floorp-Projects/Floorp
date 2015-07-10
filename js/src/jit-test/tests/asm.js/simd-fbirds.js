@@ -56,8 +56,8 @@ var code = `
     const getAccelDataSteps = imp.accelDataSteps | 0;
     var getActualBirds = imp.getActualBirds;
 
-    var i4 = global.SIMD.int32x4;
-    var f4 = global.SIMD.float32x4;
+    var i4 = global.SIMD.Int32x4;
+    var f4 = global.SIMD.Float32x4;
     var i4add = i4.add;
     var i4and = i4.and;
     var f4select = f4.select;
