@@ -356,16 +356,6 @@ public:
     mCreatedByFetchEvent = false;
   }
 
-  bool
-  IsNavigationRequest() const;
-
-  bool
-  IsWorkerRequest() const;
-
-  bool
-  IsClientRequest() const;
-
-
 private:
   // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
   explicit InternalRequest(const InternalRequest& aOther);
