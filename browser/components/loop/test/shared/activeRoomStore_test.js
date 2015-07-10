@@ -20,6 +20,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
+    sandbox.stub(window, "close");
 
     fakeMozLoop = {
       setLoopPref: sinon.stub(),
@@ -1252,6 +1253,15 @@ describe("loop.store.ActiveRoomStore", function () {
       store.setStoreState({
         screenSharingState: SCREEN_SHARE_STATES.ACTIVE
       });
+
+      // Stub to prevent errors surfacing in the console.
+      sandbox.stub(window.console, "error");
+    });
+
+    it("should log an error in the console", function() {
+      listener(new Error("foo"));
+
+      sinon.assert.calledOnce(console.error);
     });
 
     it("should update the SDK driver when a new window id is received", function() {
@@ -1580,6 +1590,24 @@ describe("loop.store.ActiveRoomStore", function () {
               fake: "url"
             }
           }));
+      });
+
+      it("should call close window", function() {
+        var fakeRoomData = {
+          decryptedContext: {
+            description: "fakeDescription",
+            roomName: "fakeName",
+            urls: {
+              fake: "url"
+            }
+          },
+          roomOwner: "you",
+          roomUrl: "original"
+        };
+
+        fakeMozLoop.rooms.on.callArgWith(1, "update", fakeRoomData);
+
+        sinon.assert.calledOnce(window.close);
       });
     });
 

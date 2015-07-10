@@ -79,8 +79,7 @@ function* addNewRule(inspector, view, method) {
     view.addRuleButton.click();
   }
   info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view, "ruleview-changed");
-  yield onRuleViewChanged;
+  yield view.once("ruleview-changed");
 }
 
 function* testNewRule(view, expected, index) {
@@ -96,7 +95,10 @@ function* testNewRule(view, expected, index) {
       "Selector text value is as expected: " + expected);
 
   info("Adding new properties to new rule: " + expected)
+  let onRuleViewChanged = view.once("ruleview-changed");
   idRuleEditor.addProperty("font-weight", "bold", "");
+  yield onRuleViewChanged;
+
   let textProps = idRuleEditor.rule.textProps;
   let lastRule = textProps[textProps.length - 1];
   is(lastRule.name, "font-weight", "Last rule name is font-weight");

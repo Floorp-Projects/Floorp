@@ -62,13 +62,18 @@ function* testPickingNewColor(view) {
   swatchEl.click();
   yield onShown;
 
-  yield simulateColorPickerChange(cPicker, [1, 1, 1, 1]);
+  let change = {
+    element: content.document.body,
+    name: "backgroundImage",
+    value: "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
+  };
+  yield simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
 
   is(swatchEl.style.backgroundColor, "rgb(1, 1, 1)",
     "The color swatch's background was updated");
   is(colorEl.textContent, "#010101", "The color text was updated");
   is(content.getComputedStyle(content.document.body).backgroundImage,
-    "linear-gradient(to left, rgb(255, 0, 102) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
+    "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)",
     "The gradient has been updated correctly");
 
   cPicker.hide();

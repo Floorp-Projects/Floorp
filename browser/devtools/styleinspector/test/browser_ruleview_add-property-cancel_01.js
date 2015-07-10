@@ -40,7 +40,7 @@ function* testCancelNew(view) {
   let elementRuleEditor = getRuleViewRuleEditor(view, 0);
 
   info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
+  let editor = yield focusEditableField(view, elementRuleEditor.closeBrace);
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused");
 
   info("Bluring the editor input");

@@ -148,6 +148,9 @@ for var in ('APP_VERSION', 'APP_ID'):
 if CONFIG['MOZILLA_OFFICIAL']:
     DEFINES['MOZILLA_OFFICIAL'] = True
 
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
+
 LOCAL_INCLUDES += [
     '../profile',
     '/config',
