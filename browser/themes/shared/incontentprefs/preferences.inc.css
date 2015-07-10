@@ -231,6 +231,10 @@ description > html|a {
   box-shadow: 0px 0px 0px 1px #0095DD;
 }
 
+#fxaProfileImage:active {
+  box-shadow: 0px 0px 0px 1px #ff9500;
+}
+
 #noFxaAccount {
   /* Overriding the margins from the base preferences.css theme file.
      These overrides can be simplified by fixing bug 1027174 */

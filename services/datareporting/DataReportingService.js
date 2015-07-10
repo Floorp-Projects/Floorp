@@ -286,15 +286,6 @@ DataReportingService.prototype = Object.freeze({
   getClientID: function() {
     return ClientID.getClientID();
   },
-
-  /**
-   * Reset the stable client id.
-   *
-   * @return Promise<string> The new client ID.
-   */
-  resetClientID: Task.async(function* () {
-    return ClientID.resetClientID();
-  }),
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);

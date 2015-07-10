@@ -143,7 +143,11 @@ describe("loop.shared.views.TextChatView", function () {
 
     it("should not render a timestamp", function() {
       view = mountTestComponent({
-        showTimestamp: false
+        showTimestamp: false,
+        timestamp: "2015-06-23T22:48:39.738Z",
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "foo"
       });
       var node = view.getDOMNode();
 
@@ -152,7 +156,11 @@ describe("loop.shared.views.TextChatView", function () {
 
     it("should render a timestamp", function() {
       view = mountTestComponent({
-        showTimestamp: true
+        showTimestamp: true,
+        timestamp: "2015-06-23T22:48:39.738Z",
+        type: CHAT_MESSAGE_TYPES.RECEIVED,
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "foo"
       });
       var node = view.getDOMNode();
 
@@ -248,7 +256,7 @@ describe("loop.shared.views.TextChatView", function () {
           type: CHAT_MESSAGE_TYPES.RECEIVED,
           contentType: CHAT_CONTENT_TYPES.TEXT,
           message: "Is it me you're looking for?",
-          sentTimestamp: "2015-06-25T17:53:55.357Z"
+          receivedTimestamp: "2015-06-25T17:53:55.357Z"
         }]
       });
       node = view.getDOMNode();
@@ -259,20 +267,27 @@ describe("loop.shared.views.TextChatView", function () {
   });
 
   describe("TextChatView", function() {
-    var view;
+    var view, fakeServer;
 
     function mountTestComponent(extraProps) {
       var props = _.extend({
         dispatcher: dispatcher,
         showRoomName: false,
-        useDesktopPaths: false
+        useDesktopPaths: false,
+        showAlways: true
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.shared.views.chat.TextChatView, props));
     }
 
     beforeEach(function() {
+      // Fake server to catch all XHR requests.
+      fakeServer = sinon.fakeServer.create();
       store.setStoreState({ textChatEnabled: true });
+    });
+
+    afterEach(function() {
+      fakeServer.restore();
     });
 
     it("should show timestamps from msgs sent more than 1 min apart", function() {
@@ -358,7 +373,7 @@ describe("loop.shared.views.TextChatView", function () {
       store.sendTextChatMessage({
         contentType: CHAT_CONTENT_TYPES.TEXT,
         message: "Foo",
-        timestamp: 0
+        sentTimestamp: "2015-06-25T17:53:55.357Z"
       });
 
       expect(node.querySelector(".sent")).to.not.eql(null);

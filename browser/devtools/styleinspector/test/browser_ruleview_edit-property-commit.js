@@ -60,10 +60,12 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the inplace editor field");
-  let editor = yield focusEditableField(propEditor.valueSpan);
+
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor, "Focused editor should be the value span.");
 
   info("Entering test data " + value);
+  let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString(value, view.doc.defaultView);
 
   info("Waiting for focus on the field");
@@ -72,11 +74,13 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   info("Entering the commit key " + commitKey + " " + modifiers);
   EventUtils.synthesizeKey(commitKey, modifiers);
   yield onBlur;
+  // No matter if we escape or commit the change, the preview throttle is going
+  // to update the property value
+  yield onRuleViewChanged;
 
   if (commitKey === "VK_ESCAPE") {
     is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
   } else {
-    yield once(view, "ruleview-changed");
     is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
   }
 }
