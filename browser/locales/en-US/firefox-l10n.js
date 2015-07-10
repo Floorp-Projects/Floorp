@@ -4,4 +4,8 @@
 
 #filter substitution
 
+# LOCALIZATION NOTE: this preference is set to true for en-US specifically,
+# locales without this line have the setting set to false by default.
+pref("browser.search.geoSpecificDefaults", true);
+
 pref("general.useragent.locale", "@AB_CD@");
