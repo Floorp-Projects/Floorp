@@ -1276,6 +1276,26 @@ FoldExponentiation(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandle
     return true;
 }
 
+static bool
+FoldList(ExclusiveContext* cx, ParseNode* list, Parser<FullParseHandler>& parser,
+         bool inGenexpLambda)
+{
+    MOZ_ASSERT(list->isArity(PN_LIST));
+
+    ParseNode** elem = &list->pn_head;
+    for (; *elem; elem = &(*elem)->pn_next) {
+        if (!Fold(cx, elem, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    // Repoint the list's tail pointer if the final element was replaced.
+    list->pn_tail = elem;
+
+    list->checkListConsistency();
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1392,6 +1412,39 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_POW:
         return FoldExponentiation(cx, pn, parser, inGenexpLambda);
 
+      // Various list nodes not requiring care to minimally fold.  Some of
+      // these could be further folded/optimized, but we don't make the effort.
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_STRICTEQ:
+      case PNK_EQ:
+      case PNK_STRICTNE:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_COMMA:
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+      case PNK_ARRAYCOMP:
+      case PNK_STATEMENTLIST:
+      case PNK_CLASSMETHODLIST:
+      case PNK_CATCHLIST:
+      case PNK_TEMPLATE_STRING_LIST:
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_GLOBALCONST:
+      case PNK_LET:
+      case PNK_ARGSBODY:
+      case PNK_CALLSITEOBJ:
+      case PNK_EXPORT_SPEC_LIST:
+      case PNK_IMPORT_SPEC_LIST:
+        return FoldList(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1430,39 +1483,11 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FORHEAD:
       case PNK_CLASS:
       case PNK_TRY:
-      case PNK_BITOR:
-      case PNK_BITXOR:
-      case PNK_BITAND:
-      case PNK_STRICTEQ:
-      case PNK_EQ:
-      case PNK_STRICTNE:
-      case PNK_NE:
-      case PNK_LT:
-      case PNK_LE:
-      case PNK_GT:
-      case PNK_GE:
-      case PNK_INSTANCEOF:
-      case PNK_IN:
       case PNK_ADD:
-      case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
       case PNK_GENEXP:
-      case PNK_ARRAY:
-      case PNK_STATEMENTLIST:
-      case PNK_ARGSBODY:
-      case PNK_ARRAYCOMP:
-      case PNK_VAR:
-      case PNK_CONST:
-      case PNK_LET:
-      case PNK_GLOBALCONST:
-      case PNK_OBJECT:
-      case PNK_CLASSMETHODLIST:
-      case PNK_TEMPLATE_STRING_LIST:
       case PNK_TAGGED_TEMPLATE:
-      case PNK_EXPORT_SPEC_LIST:
-      case PNK_IMPORT_SPEC_LIST:
-      case PNK_CATCHLIST:
       case PNK_LABEL:
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
@@ -1470,7 +1495,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CATCH:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
-      case PNK_CALLSITEOBJ:
         MOZ_ASSERT(!pn->isArity(PN_CODE), "only functions are code nodes");
         break; // for now
 
