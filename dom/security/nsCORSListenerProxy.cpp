@@ -820,6 +820,73 @@ nsCORSListenerProxy::OnRedirectVerifyCallback(nsresult result)
   return NS_OK;
 }
 
+// Please note that the CSP directive 'upgrade-insecure-requests' relies
+// on the promise that channels get updated from http: to https: before
+// the channel fetches any data from the netwerk. Such channels should
+// not be blocked by CORS and marked as cross origin requests. E.g.:
+// toplevel page: https://www.example.com loads
+//           xhr: http://www.example.com/foo which gets updated to
+//                https://www.example.com/foo
+// In such a case we should bail out of CORS and rely on the promise that
+// nsHttpChannel::Connect() upgrades the request from http to https.
+bool
+CheckUpgradeInsecureRequestsPreventsCORS(nsIPrincipal* aRequestingPrincipal,
+                                         nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+  NS_ENSURE_SUCCESS(rv, false);
+  bool isHttpScheme = false;
+  rv = channelURI->SchemeIs("http", &isHttpScheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // upgrade insecure requests is only applicable to http requests
+  if (!isHttpScheme) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> principalURI;
+  rv = aRequestingPrincipal->GetURI(getter_AddRefs(principalURI));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // if the requestingPrincipal does not have a uri, there is nothing to do
+  if (!principalURI) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI>originalURI;
+  rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsAutoCString principalHost, channelHost, origChannelHost;
+
+  // if we can not query a host from the uri, there is nothing to do
+  if (NS_FAILED(principalURI->GetAsciiHost(principalHost)) ||
+      NS_FAILED(channelURI->GetAsciiHost(channelHost)) ||
+      NS_FAILED(originalURI->GetAsciiHost(origChannelHost))) {
+    return false;
+  }
+
+  // if the hosts do not match, there is nothing to do
+  if (!principalHost.EqualsIgnoreCase(channelHost.get())) {
+    return false;
+  }
+
+  // also check that uri matches the one of the originalURI
+  if (!channelHost.EqualsIgnoreCase(origChannelHost.get())) {
+    return false;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  rv = aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // lets see if the loadInfo indicates that the request will
+  // be upgraded before fetching any data from the netwerk.
+  return loadInfo->GetUpgradeInsecureRequests();
+}
+
+
 nsresult
 nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
                                    DataURIHandling aAllowDataURI)
@@ -874,6 +941,17 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
       (originalURI == uri ||
        NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(originalURI,
                                                        false, false)))) {
+    return NS_OK;
+  }
+
+  // if the CSP directive 'upgrade-insecure-requests' is used then we should
+  // not incorrectly require CORS if the only difference of a subresource
+  // request and the main page is the scheme.
+  // e.g. toplevel page: https://www.example.com loads
+  //                xhr: http://www.example.com/somefoo,
+  // then the xhr request will be upgraded to https before it fetches any data
+  // from the netwerk, hence we shouldn't require CORS in that specific case.
+  if (CheckUpgradeInsecureRequestsPreventsCORS(mRequestingPrincipal, aChannel)) {
     return NS_OK;
   }
 
