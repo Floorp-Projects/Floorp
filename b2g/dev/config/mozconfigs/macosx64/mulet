@@ -27,3 +27,4 @@ export MOZ_PACKAGE_JSSHELL=1
 MOZTTDIR=$topsrcdir/moztt
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

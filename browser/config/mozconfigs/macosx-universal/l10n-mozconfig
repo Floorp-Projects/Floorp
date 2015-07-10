@@ -10,8 +10,7 @@ if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
 ac_add_options --with-macbundlename-prefix=Firefox
 fi
 
-. "$topsrcdir/build/mozconfig.cache"
-
 export MOZILLA_OFFICIAL=1
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

@@ -10,9 +10,6 @@ MOZ_AUTOMATION_L10N_CHECK=0
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-# Use ccache
-. "$topsrcdir/build/mozconfig.cache"
-
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
 
@@ -22,3 +19,4 @@ export MOZ_PACKAGE_JSSHELL=1
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

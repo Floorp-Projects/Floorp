@@ -24,7 +24,6 @@ ac_add_options --enable-warnings-as-errors
 
 # Use sccache
 no_sccache=
-. "$topsrcdir/build/mozconfig.cache"
 
 #B2G options
 ac_add_options --enable-application=b2g
