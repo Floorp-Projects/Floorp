@@ -6,6 +6,7 @@
 #include "gfxPrefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsExceptionHandler.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
@@ -70,6 +71,10 @@ DriverInitCrashDetection::~DriverInitCrashDetection()
     // If we attempted to initialize the driver, and got this far without
     // crashing, assume everything is okay.
     gfxPrefs::SetDriverInitStatus(int32_t(DriverInitStatus::Okay));
+
+    // Remove the crash report annotation.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
+                                       NS_LITERAL_CSTRING(""));
   }
 }
 
@@ -104,6 +109,9 @@ DriverInitCrashDetection::AllowDriverInitAttempt()
   // If we crash, we'll just lose this. Not a big deal, next startup we'll
   // record the failure.
   RecordTelemetry(TelemetryState::EnvironmentChanged);
+
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("GraphicsStartupTest"),
+                                     NS_LITERAL_CSTRING("1"));
 }
 
 bool
