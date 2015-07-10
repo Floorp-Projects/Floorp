@@ -578,6 +578,7 @@ MacroAssemblerX64::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
 
@@ -600,3 +601,5 @@ MacroAssembler::reserveStack(uint32_t amount)
     }
     framePushed_ += amount;
 }
+
+//}}} check_macroassembler_style

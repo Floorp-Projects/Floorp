@@ -34,7 +34,8 @@ ArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
 
 /* static */ inline ArrayObject*
 ArrayObject::createArrayInternal(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
-                                 HandleShape shape, HandleObjectGroup group)
+                                 HandleShape shape, HandleObjectGroup group,
+                                 AutoSetNewObjectMetadata&)
 {
     // Create a new array and initialize everything except for its elements.
     MOZ_ASSERT(shape && group);
@@ -43,6 +44,7 @@ ArrayObject::createArrayInternal(ExclusiveContext* cx, gc::AllocKind kind, gc::I
     MOZ_ASSERT_IF(group->clasp()->finalize, heap == gc::TenuredHeap);
     MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
                   heap == js::gc::TenuredHeap);
+    MOZ_ASSERT(group->clasp()->shouldDelayMetadataCallback());
 
     // Arrays can use their fixed slots to store elements, so can't have shapes
     // which allow named properties to be stored in the fixed slots.
@@ -56,13 +58,12 @@ ArrayObject::createArrayInternal(ExclusiveContext* cx, gc::AllocKind kind, gc::I
     static_cast<ArrayObject*>(obj)->shape_.init(shape);
     static_cast<ArrayObject*>(obj)->group_.init(group);
 
-    SetNewObjectMetadata(cx, obj);
-
+    cx->compartment()->setObjectPendingMetadata(cx, obj);
     return &obj->as<ArrayObject>();
 }
 
 /* static */ inline ArrayObject*
-ArrayObject::finishCreateArray(ArrayObject* obj, HandleShape shape)
+ArrayObject::finishCreateArray(ArrayObject* obj, HandleShape shape, AutoSetNewObjectMetadata& metadata)
 {
     size_t span = shape->slotSpan();
     if (span)
@@ -76,9 +77,9 @@ ArrayObject::finishCreateArray(ArrayObject* obj, HandleShape shape)
 /* static */ inline ArrayObject*
 ArrayObject::createArray(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
                          HandleShape shape, HandleObjectGroup group,
-                         uint32_t length)
+                         uint32_t length, AutoSetNewObjectMetadata& metadata)
 {
-    ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, group);
+    ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, group, metadata);
     if (!obj)
         return nullptr;
 
@@ -87,7 +88,7 @@ ArrayObject::createArray(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHe
     obj->setFixedElements();
     new (obj->getElementsHeader()) ObjectElements(capacity, length);
 
-    return finishCreateArray(obj, shape);
+    return finishCreateArray(obj, shape, metadata);
 }
 
 /* static */ inline ArrayObject*
@@ -102,15 +103,16 @@ ArrayObject::createCopyOnWriteArray(ExclusiveContext* cx, gc::InitialHeap heap,
     // its fixed elements.
     gc::AllocKind kind = gc::AllocKind::OBJECT0_BACKGROUND;
 
+    AutoSetNewObjectMetadata metadata(cx);
     RootedShape shape(cx, sharedElementsOwner->lastProperty());
     RootedObjectGroup group(cx, sharedElementsOwner->group());
-    ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, group);
+    ArrayObject* obj = createArrayInternal(cx, kind, heap, shape, group, metadata);
     if (!obj)
         return nullptr;
 
     obj->elements_ = sharedElementsOwner->getDenseElementsAllowCopyOnWrite();
 
-    return finishCreateArray(obj, shape);
+    return finishCreateArray(obj, shape, metadata);
 }
 
 } // namespace js

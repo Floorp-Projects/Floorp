@@ -182,7 +182,7 @@ function test() {
     },
     {
       name: "background",
-      value: "-moz-radial-gradient(center 45deg, circle closest-side, orange 0%, red 100%)",
+      value: "radial-gradient(circle closest-side at center, orange 0%, red 100%)",
       test: fragment => {
         is(countAll(fragment), 4);
         let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);

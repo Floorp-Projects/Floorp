@@ -12,6 +12,7 @@
 namespace js {
 namespace jit {
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Frame manipulation functions.
 
@@ -75,6 +76,7 @@ MacroAssembler::call(const CallSiteDesc& desc, Label* label)
     append(desc, currentOffset(), framePushed());
 }
 
+//}}} check_macroassembler_style
 // ===============================================================
 
 void

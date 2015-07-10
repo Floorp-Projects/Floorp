@@ -380,7 +380,6 @@ PropagatePropertyTypes(JSContext* cx, jsid id, ObjectGroup* oldGroup, ObjectGrou
         ReportOutOfMemory(cx);
         return false;
     }
-    MOZ_ASSERT(!types.empty());
     for (size_t j = 0; j < types.length(); j++)
         AddTypePropertyId(cx, newGroup, nullptr, id, types[j]);
     return true;
