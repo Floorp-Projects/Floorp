@@ -34,8 +34,7 @@ public:
   bool operator==(const OriginAttributes& aOther) const
   {
     return mAppId == aOther.mAppId &&
-           mInBrowser == aOther.mInBrowser &&
-           mAddonId == aOther.mAddonId;
+           mInBrowser == aOther.mInBrowser;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
@@ -106,10 +105,6 @@ protected:
 
   virtual nsresult GetOriginInternal(nsACString& aOrigin) = 0;
   virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
-
-  // Helper to check whether this principal is associated with an addon that
-  // allows unprivileged code to load aURI.
-  bool AddonAllowsLoad(nsIURI* aURI);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   OriginAttributes mOriginAttributes;
