@@ -19,20 +19,15 @@ task:
 
 
   payload:
-    image: 'quay.io/amiyaguchi/upload_symbols:0.0.2'
+    image: 'quay.io/amiyaguchi/upload_symbols:0.0.3'
 
     maxRunTime: 600
-
-    # All builds share a common artifact directory for ease of uploading.
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
     command: ["/bin/bash", "bin/upload.sh"]
 
     env:
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
       ARTIFACT_TASKID: '{{build_slugid}}'
 
   extra:
