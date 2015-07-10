@@ -4029,9 +4029,9 @@ ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 }
 
 bool
-ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
+ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache)
 {
-    aLookAndFeelIntCache = LookAndFeel::GetIntCache();
+    *aLookAndFeelIntCache = LookAndFeel::GetIntCache();
     return true;
 }
 
