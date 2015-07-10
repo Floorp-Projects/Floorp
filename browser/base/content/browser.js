@@ -5159,6 +5159,8 @@ var TabsInTitlebar = {
         titlebarContent.style.marginBottom = extraMargin + "px";
 #endif
         titlebarContentHeight += extraMargin;
+      } else {
+        titlebarContent.style.removeProperty("margin-bottom");
       }
 
       // Then we bring up the titlebar by the same amount, but we add any negative margin:
