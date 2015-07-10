@@ -1197,9 +1197,15 @@ public class GeckoAppShell
         final Intent intent = getOpenURIIntentInner(context, targetURI, mimeType, action, title);
 
         if (intent != null) {
-            // Setting category on file:// URIs breaks about:downloads (Bug 1176018)
-            if (!targetURI.startsWith("file:")) {
-                // Only handle applications which can accept arbitrary data from a browser.
+            // Ideally, we add Browsable on links from web content (bug 1182140) but we can't. Instead,
+            // we add Browsable to any Intent that has a scheme. This prevents us from sharing harmless
+            // content (e.g. plain text) and protects any potentially registered custom uri schemes.
+            //
+            // However, we also push file schemes through here and most applications that open files
+            // aren't expecting file schemes from web content so in order to be compatible, we drop
+            // Browsable from them (bug 1100100).
+            if (!TextUtils.isEmpty(intent.getScheme()) &&
+                    !targetURI.startsWith("file:")) {
                 intent.addCategory(Intent.CATEGORY_BROWSABLE);
             }
 
