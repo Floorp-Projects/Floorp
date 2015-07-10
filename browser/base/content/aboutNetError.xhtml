@@ -165,7 +165,7 @@
         if (err == "sslv3Used") {
           var learnMoreText = document.getElementById("learn_more_ssl3");
 
-          errTitle.setAttribute("sslv3", "true");
+          document.getElementById("errorTitle").setAttribute("sslv3", "true");
 
           var retryBtn = document.getElementById("errorTryAgain");
           retryBtn.textContent = learnMoreText.textContent;
