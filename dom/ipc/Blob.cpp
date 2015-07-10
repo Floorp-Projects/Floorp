@@ -2154,6 +2154,9 @@ public:
   virtual void
   LookupAndCacheIsDirectory() override;
 
+  virtual void
+  SetIsDirectory(bool aIsDir) override;
+
   virtual bool
   IsDirectory() const override;
 
@@ -2942,6 +2945,13 @@ BlobParent::
 RemoteBlobImpl::LookupAndCacheIsDirectory()
 {
   return mBlobImpl->LookupAndCacheIsDirectory();
+}
+
+void
+BlobParent::
+RemoteBlobImpl::SetIsDirectory(bool aIsDir)
+{
+  return mBlobImpl->SetIsDirectory(aIsDir);
 }
 
 bool
