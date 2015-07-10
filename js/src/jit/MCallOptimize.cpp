@@ -57,6 +57,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     // Atomic natives.
     if (native == atomics_compareExchange)
         return inlineAtomicsCompareExchange(callInfo);
+    if (native == atomics_exchange)
+        return inlineAtomicsExchange(callInfo);
     if (native == atomics_load)
         return inlineAtomicsLoad(callInfo);
     if (native == atomics_store)
@@ -2810,6 +2812,46 @@ IonBuilder::inlineAtomicsCompareExchange(CallInfo& callInfo)
     current->push(cas);
 
     if (!resumeAfter(cas))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineAtomicsExchange(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 3 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    Scalar::Type arrayType;
+    if (!atomicsMeetsPreconditions(callInfo, &arrayType))
+        return InliningStatus_NotInlined;
+
+    MDefinition* value = callInfo.getArg(2);
+    if (!(value->type() == MIRType_Int32 || value->type() == MIRType_Double))
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* elements;
+    MDefinition* index;
+    atomicsCheckBounds(callInfo, &elements, &index);
+
+    MDefinition* toWrite = value;
+    if (value->type() == MIRType_Double) {
+        toWrite = MTruncateToInt32::New(alloc(), value);
+        current->add(toWrite->toInstruction());
+    }
+
+    MInstruction* exchange =
+        MAtomicExchangeTypedArrayElement::New(alloc(), elements, index, toWrite, arrayType);
+    exchange->setResultType(getInlineReturnType());
+    current->add(exchange);
+    current->push(exchange);
+
+    if (!resumeAfter(exchange))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;

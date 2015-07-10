@@ -1380,6 +1380,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
                          Register newval, Register output);
 
     template<typename T>
+    void atomicExchangeARMv6(int nbytes, bool signExtend, const T& mem, Register value,
+                             Register output);
+
+    template<typename T>
+    void atomicExchangeARMv7(int nbytes, bool signExtend, const T& mem, Register value,
+                             Register output);
+
+    template<typename T>
+    void atomicExchange(int nbytes, bool signExtend, const T& address, Register value,
+                        Register output);
+
+    template<typename T>
     void atomicFetchOpARMv6(int nbytes, bool signExtend, AtomicOp op, const Register& value,
                             const T& mem, Register temp, Register output);
 
@@ -1434,6 +1446,31 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     template<typename T>
     void compareExchange32(const T& mem, Register oldval, Register newval, Register output)  {
         compareExchange(4, false, mem, oldval, newval, output);
+    }
+
+    template<typename T>
+    void atomicExchange8SignExtend(const T& mem, Register value, Register output)
+    {
+        atomicExchange(1, true, mem, value, output);
+    }
+    template<typename T>
+    void atomicExchange8ZeroExtend(const T& mem, Register value, Register output)
+    {
+        atomicExchange(1, false, mem, value, output);
+    }
+    template<typename T>
+    void atomicExchange16SignExtend(const T& mem, Register value, Register output)
+    {
+        atomicExchange(2, true, mem, value, output);
+    }
+    template<typename T>
+    void atomicExchange16ZeroExtend(const T& mem, Register value, Register output)
+    {
+        atomicExchange(2, false, mem, value, output);
+    }
+    template<typename T>
+    void atomicExchange32(const T& mem, Register value, Register output) {
+        atomicExchange(4, false, mem, value, output);
     }
 
     template<typename T, typename S>

@@ -49,6 +49,11 @@ function testMethod(a, ...indices) {
 	// val = 9
 	assertEq(Atomics.compareExchange(a, x, 5, 0), 9); // should also fail
 
+ 	// val = 9
+	assertEq(Atomics.exchange(a, x, 4), 9);
+	// val = 4
+	assertEq(Atomics.exchange(a, x, 9), 4);
+
 	// val = 9
 	assertEq(Atomics.load(a, x), 9);
 	// val = 9
@@ -114,6 +119,11 @@ function testFunction(a, ...indices) {
 	assertEq(gAtomics_compareExchange(a, x, 5, 9), 5);
 	// val = 9
 	assertEq(gAtomics_compareExchange(a, x, 5, 0), 9); // should also fail
+
+	// val = 9
+	assertEq(gAtomics_exchange(a, x, 4), 9);
+	// val = 4
+	assertEq(gAtomics_exchange(a, x, 9), 4);
 
 	// val = 9
 	assertEq(gAtomics_load(a, x), 9);
@@ -246,6 +256,9 @@ function testInt8Extremes(a) {
     assertEq(a[10], 0);
     assertEq(Atomics.load(a, 10), 0);
 
+    Atomics.store(a, 10, 255);
+    assertEq(Atomics.exchange(a, 10, 0), -1);
+
     assertEq(a[11], 0);
 }
 
@@ -278,6 +291,9 @@ function testUint8Extremes(a) {
     Atomics.and(a, 10, 256);	// Preserve none
     assertEq(a[10], 0);
     assertEq(Atomics.load(a, 10), 0);
+
+    Atomics.store(a, 10, 255);
+    assertEq(Atomics.exchange(a, 10, 0), 255);
 
     assertEq(a[11], 0);
 }
@@ -331,6 +347,25 @@ function testUint32(a) {
 	sum += Atomics.add(a, i, 1);
 
     assertEq(sum, k);
+}
+
+// This test is a reliable test of sign extension in the JIT where
+// testInt8Extremes is not (because there may not be enough type
+// information without a loop - see bug 1181062 for a description
+// of the general problem).
+
+function exchangeLoop(ta) {
+    var sum = 0;
+    for ( var i=0 ; i < 100000 ; i++ )
+	sum += Atomics.exchange(ta, i & 15, 255);
+    return sum;
+}
+
+function adHocExchange() {
+    var a = new SharedInt8Array(16)
+    for ( var i=0 ; i < a.length ; i++ )
+	a[i] = 255;
+    assertEq(exchangeLoop(a), -100000);
 }
 
 var sizes   = [    1,     2,     3,     4,     5,     6,     7,  8,
@@ -395,7 +430,7 @@ function runTests() {
 	assertEq(t2[0], 37 << 16);
     t1[0] = 0;
 
-    // Test that invoking as Atomics.whatever() works, on correct arguments
+    // Test that invoking as Atomics.whatever() works, on correct arguments.
     CLONE(testMethod)(new SharedInt8Array(sab), 0, 42, 4095);
     CLONE(testMethod)(new SharedUint8Array(sab), 0, 42, 4095);
     CLONE(testMethod)(new SharedUint8ClampedArray(sab), 0, 42, 4095);
@@ -404,8 +439,9 @@ function runTests() {
     CLONE(testMethod)(new SharedInt32Array(sab), 0, 42, 1023);
     CLONE(testMethod)(new SharedUint32Array(sab), 0, 42, 1023);
 
-    // Test that invoking as v = Atomics.whatever; v() works, on correct arguments
+    // Test that invoking as v = Atomics.whatever; v() works, on correct arguments.
     gAtomics_compareExchange = Atomics.compareExchange;
+    gAtomics_exchange = Atomics.exchange;
     gAtomics_load = Atomics.load;
     gAtomics_store = Atomics.store;
     gAtomics_fence = Atomics.fence;
@@ -451,6 +487,9 @@ function runTests() {
     testUint8Extremes(new SharedUint8Array(sab));
     testInt16Extremes(new SharedInt16Array(sab));
     testUint32(new SharedUint32Array(sab));
+
+    // Misc ad-hoc tests
+    adHocExchange();
 
     // Misc
     testIsLockFree();
