@@ -11,5 +11,12 @@
 "algorithm": "sha512",
 "filename": "moztt.tar.bz2",
 "unpack": "True"
+},
+{
+"size": 167175,
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2",
+"unpack": "True"
 }
 ]
