@@ -1319,6 +1319,12 @@ public:
     }
 #endif
 
+    void mull_r(RegisterID multiplier)
+    {
+        spew("mull       %s", GPReg32Name(multiplier));
+        m_formatter.oneByteOp(OP_GROUP3_Ev, multiplier, GROUP3_OP_MUL);
+    }
+
     void idivl_r(RegisterID divisor)
     {
         spew("idivl      %s", GPReg32Name(divisor));

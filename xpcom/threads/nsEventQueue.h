@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
+#include "nsCOMPtr.h"
+#include "mozilla/AlreadyAddRefed.h"
 
 // A threadsafe FIFO event queue...
 class nsEventQueue
@@ -24,6 +26,7 @@ public:
   // a strong reference to the event after this method returns.  This method
   // cannot fail.
   void PutEvent(nsIRunnable* aEvent);
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If

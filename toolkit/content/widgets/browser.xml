@@ -641,7 +641,7 @@
       <method name="updateBlockedPopups">
         <body>
           <![CDATA[
-            var event = document.createEvent("Events");
+            let event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
             this.dispatchEvent(event);
           ]]>
@@ -662,6 +662,51 @@
       <property name="pageReport"
          onget="return this.blockedPopups;"
          readonly="true"/>
+
+      <method name="mediaPlaybackStarted">
+        <body>
+          <![CDATA[
+            let event = document.createEvent("Events");
+            event.initEvent("DOMMediaPlaybackStarted", true, true);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="mediaPlaybackStopped">
+        <body>
+          <![CDATA[
+            let event = document.createEvent("Events");
+            event.initEvent("DOMMediaPlaybackStopped", true, true);
+            this.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <field name="_audioMuted">false</field>
+      <property name="audioMuted"
+                onget="return this._audioMuted;"
+                readonly="true"/>
+
+      <method name="mute">
+        <body>
+          <![CDATA[
+            this._audioMuted = true;
+            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+                                                 {type: "mute"});
+          ]]>
+        </body>
+      </method>
+
+      <method name="unmute">
+        <body>
+          <![CDATA[
+            this._audioMuted = false;
+            this.messageManager.sendAsyncMessage("MediaPlaybackMute",
+                                                 {type: "unmute"});
+          ]]>
+        </body>
+      </method>
 
       <property name="securityUI">
         <getter>
@@ -813,6 +858,8 @@
             this.messageManager.addMessageListener("PopupBlocking:UpdateBlockedPopups", this);
             this.messageManager.addMessageListener("Autoscroll:Start", this);
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
+            this.messageManager.addMessageListener("MediaPlayback:Start", this);
+            this.messageManager.addMessageListener("MediaPlayback:Stop", this);
           }
         ]]>
       </constructor>
@@ -898,6 +945,12 @@
             }
             case "Autoscroll:Cancel":
               this._autoScrollPopup.hidePopup();
+              break;
+            case "MediaPlayback:Start":
+              this.mediaPlaybackStarted();
+              break;
+            case "MediaPlayback:Stop":
+              this.mediaPlaybackStopped();
               break;
           }
         ]]></body>

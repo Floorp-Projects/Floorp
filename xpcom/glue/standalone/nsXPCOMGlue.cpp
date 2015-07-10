@@ -426,9 +426,55 @@ XPCOMGlueEnablePreload()
   do_preload = true;
 }
 
+#if defined(MOZ_WIDGET_GTK) && (defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__))
+#define MOZ_GSLICE_INIT
+#endif
+
+#ifdef MOZ_GSLICE_INIT
+#include <glib.h>
+
+class GSliceInit {
+public:
+  GSliceInit() {
+    mHadGSlice = bool(getenv("G_SLICE"));
+    if (!mHadGSlice) {
+      // Disable the slice allocator, since jemalloc already uses similar layout
+      // algorithms, and using a sub-allocator tends to increase fragmentation.
+      // This must be done before g_thread_init() is called.
+      // glib >= 2.36 initializes g_slice as a side effect of its various static
+      // initializers, so this needs to happen before glib is loaded, which is
+      // this is hooked in XPCOMGlueStartup before libxul is loaded. This
+      // relies on the main executable not depending on glib.
+      setenv("G_SLICE", "always-malloc", 1);
+    }
+  }
+
+  ~GSliceInit() {
+#if MOZ_WIDGET_GTK == 2
+    if (sTop) {
+      auto XRE_GlibInit = (void (*)(void)) GetSymbol(sTop->libHandle,
+        "XRE_GlibInit");
+      // Initialize glib enough for G_SLICE to have an effect before it is unset.
+      // unset.
+      XRE_GlibInit();
+    }
+#endif
+    if (!mHadGSlice) {
+      unsetenv("G_SLICE");
+    }
+  }
+
+private:
+  bool mHadGSlice;
+};
+#endif
+
 nsresult
 XPCOMGlueStartup(const char* aXPCOMFile)
 {
+#ifdef MOZ_GSLICE_INIT
+  GSliceInit gSliceInit;
+#endif
   xpcomFunctions.version = XPCOM_GLUE_VERSION;
   xpcomFunctions.size    = sizeof(XPCOMFunctions);
 
