@@ -112,8 +112,12 @@ public class DoorHangerPopup extends AnchoredPopup
         final String id = json.getString("value");
 
         final String typeString = json.optString("category");
-        final boolean isLogin = DoorHanger.Type.LOGIN.toString().equals(typeString);
-        final DoorHanger.Type doorhangerType = isLogin ? DoorHanger.Type.LOGIN : DoorHanger.Type.DEFAULT;
+        DoorHanger.Type doorhangerType = DoorHanger.Type.DEFAULT;
+        if (DoorHanger.Type.LOGIN.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.LOGIN;
+        } else if (DoorHanger.Type.GEOLOCATION.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.GEOLOCATION;
+        }
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
 
