@@ -47,16 +47,11 @@ browser.jar:
         skin/classic/browser/heartbeat-star-off.svg                  (../shared/heartbeat-star-off.svg)
         skin/classic/browser/Info.png
         skin/classic/browser/Info-XP.png
-        skin/classic/browser/identity-icons-generic.png
-        skin/classic/browser/identity-icons-generic@2x.png
-        skin/classic/browser/identity-icons-https.png
-        skin/classic/browser/identity-icons-https@2x.png
-        skin/classic/browser/identity-icons-https-ev.png
-        skin/classic/browser/identity-icons-https-ev@2x.png
-        skin/classic/browser/identity-icons-https-mixed-active.png
-        skin/classic/browser/identity-icons-https-mixed-active@2x.png
-        skin/classic/browser/identity-icons-https-mixed-display.png
-        skin/classic/browser/identity-icons-https-mixed-display@2x.png
+        skin/classic/browser/identity-not-secure.svg                 (../shared/identity-block/identity-not-secure.svg)
+        skin/classic/browser/identity-secure.svg                     (../shared/identity-block/identity-secure.svg)
+        skin/classic/browser/identity-mixed-active-blocked.svg       (../shared/identity-block/identity-mixed-active-blocked.svg)
+        skin/classic/browser/identity-mixed-passive-loaded.svg       (../shared/identity-block/identity-mixed-passive-loaded.svg)
+        skin/classic/browser/identity-mixed-active-loaded.svg        (../shared/identity-block/identity-mixed-active-loaded.svg)
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -194,8 +189,7 @@ browser.jar:
 *       skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
         skin/classic/browser/controlcenter/arrow-subview.svg  (../shared/controlcenter/arrow-subview.svg)
         skin/classic/browser/controlcenter/conn-not-secure.svg  (../shared/controlcenter/conn-not-secure.svg)
-        skin/classic/browser/controlcenter/conn-secure-dv.svg  (../shared/controlcenter/conn-secure-dv.svg)
-        skin/classic/browser/controlcenter/conn-secure-ev.svg  (../shared/controlcenter/conn-secure-ev.svg)
+        skin/classic/browser/controlcenter/conn-secure.svg  (../shared/controlcenter/conn-secure.svg)
         skin/classic/browser/controlcenter/mcb-disabled.svg  (../shared/controlcenter/mcb-disabled.svg)
         skin/classic/browser/controlcenter/permissions.svg  (../shared/controlcenter/permissions.svg)
         skin/classic/browser/controlcenter/tracking-protection.svg                 (../shared/controlcenter/tracking-protection.svg)
