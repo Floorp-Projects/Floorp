@@ -13,6 +13,8 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/net/WebSocketChannel.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -1466,6 +1468,67 @@ WebSocketImpl::Init(JSContext* aCx,
     }
   }
 
+  nsCOMPtr<nsIURI> uri;
+  {
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
+
+    // We crash here because we are sure that mURI is a valid URI, so either we
+    // are OOM'ing or something else bad is happening.
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      MOZ_CRASH();
+    }
+  }
+
+  // Check content policy.
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  nsCOMPtr<nsIDocument> originDoc = nsContentUtils::GetDocumentFromScriptContext(sc);
+  mOriginDocument = do_GetWeakReference(originDoc);
+  aRv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
+                                  uri,
+                                  aPrincipal,
+                                  originDoc,
+                                  EmptyCString(),
+                                  nullptr,
+                                  &shouldLoad,
+                                  nsContentUtils::GetContentPolicy(),
+                                  nsContentUtils::GetSecurityManager());
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy.
+    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+    return;
+  }
+
+  // Potentially the page uses the CSP directive 'upgrade-insecure-requests'.
+  // In such a case we have to upgrade ws: to wss: and also update mSecure
+  // to reflect that upgrade. Please note that we can not upgrade from ws:
+  // to wss: before performing content policy checks because CSP needs to
+  // send reports in case the scheme is about to be upgraded.
+  if (!mSecure && originDoc && originDoc->GetUpgradeInsecureRequests()) {
+    // let's use the old specification before the upgrade for logging
+    NS_ConvertUTF8toUTF16 reportSpec(mURI);
+
+    // upgrade the request from ws:// to wss:// and mark as secure
+    mURI.ReplaceSubstring("ws://", "wss://");
+    if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
+      return;
+    }
+    mSecure = true;
+
+    const char16_t* params[] = { reportSpec.get(), NS_LITERAL_STRING("wss").get() };
+    CSP_LogLocalizedStr(NS_LITERAL_STRING("upgradeInsecureRequest").get(),
+                        params, ArrayLength(params),
+                        EmptyString(), // aSourceFile
+                        EmptyString(), // aScriptSample
+                        0, // aLineNumber
+                        0, // aColumnNumber
+                        nsIScriptError::warningFlag, "CSP",
+                        mInnerWindowID);
+  }
+
   // Don't allow https:// to open ws://
   if (!mSecure &&
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
@@ -1510,40 +1573,6 @@ WebSocketImpl::Init(JSContext* aCx,
     }
 
     AppendUTF16toUTF8(aProtocolArray[index], mRequestedProtocolList);
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  {
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
-
-    // We crash here because we are sure that mURI is a valid URI, so either we
-    // are OOM'ing or something else bad is happening.
-    if (NS_FAILED(rv)) {
-      MOZ_CRASH();
-    }
-  }
-
-  // Check content policy.
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsCOMPtr<nsIDocument> originDoc = nsContentUtils::GetDocumentFromScriptContext(sc);
-  mOriginDocument = do_GetWeakReference(originDoc);
-  aRv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
-                                  uri,
-                                  aPrincipal,
-                                  originDoc,
-                                  EmptyCString(),
-                                  nullptr,
-                                  &shouldLoad,
-                                  nsContentUtils::GetContentPolicy(),
-                                  nsContentUtils::GetSecurityManager());
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (NS_CP_REJECTED(shouldLoad)) {
-    // Disallowed by content policy.
-    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
-    return;
   }
 
   // the constructor should throw a SYNTAX_ERROR only if it fails to parse the
