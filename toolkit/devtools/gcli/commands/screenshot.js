@@ -284,9 +284,11 @@ function createScreenshotData(document, args) {
   height -= scrollbarHeight.value;
 
   const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-  canvas.width = width;
-  canvas.height = height;
   const ctx = canvas.getContext("2d");
+  const ratio = window.devicePixelRatio;
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  ctx.scale(ratio, ratio);
   ctx.drawWindow(window, left, top, width, height, "#fff");
   const data = canvas.toDataURL("image/png", "");
 

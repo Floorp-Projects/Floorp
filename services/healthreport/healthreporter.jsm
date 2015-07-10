@@ -245,21 +245,6 @@ HealthReporterState.prototype = Object.freeze({
     return this.removeRemoteIDs(ids);
   },
 
-  /**
-   * Reset the client ID to something else.
-   * Returns a promise that is resolved when completed.
-   */
-  resetClientID: Task.async(function* () {
-    let drs = Cc["@mozilla.org/datareporting/service;1"]
-                .getService(Ci.nsISupports)
-                .wrappedJSObject;
-    yield drs.resetClientID();
-    this._s.clientID = yield drs.getClientID();
-    this._log.info("Reset client id to " + this._s.clientID + ".");
-
-    yield this.save();
-  }),
-
   _migratePrefs: function () {
     let prefs = this._reporter._prefs;
 
@@ -1533,13 +1518,6 @@ this.HealthReporter.prototype = Object.freeze({
       } catch (ex) {
         this._log.error("Error processing request to delete data: " +
                         CommonUtils.exceptionStr(error));
-      } finally {
-        // If we don't have any remote documents left, nuke the ID.
-        // This is done for privacy reasons. Why preserve the ID if we
-        // don't need to?
-        if (!this.haveRemoteData()) {
-          yield this._state.resetClientID();
-        }
       }
     }.bind(this));
   },
