@@ -13295,6 +13295,38 @@ class MAsmJSCompareExchangeHeap
     }
 };
 
+class MAsmJSAtomicExchangeHeap
+  : public MBinaryInstruction,
+    public MAsmJSHeapAccess,
+    public NoTypePolicy::Data
+{
+    MAsmJSAtomicExchangeHeap(Scalar::Type accessType, MDefinition* ptr, MDefinition* value,
+                             bool needsBoundsCheck)
+        : MBinaryInstruction(ptr, value),
+          MAsmJSHeapAccess(accessType, needsBoundsCheck)
+    {
+        setGuard();             // Not removable
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(AsmJSAtomicExchangeHeap)
+
+    static MAsmJSAtomicExchangeHeap* New(TempAllocator& alloc, Scalar::Type accessType,
+                                         MDefinition* ptr, MDefinition* value,
+                                         bool needsBoundsCheck)
+    {
+        return new(alloc) MAsmJSAtomicExchangeHeap(accessType, ptr, value, needsBoundsCheck);
+    }
+
+    MDefinition* ptr() const { return getOperand(0); }
+    MDefinition* value() const { return getOperand(1); }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::AsmJSHeap);
+    }
+};
+
 class MAsmJSAtomicBinopHeap
   : public MBinaryInstruction,
     public MAsmJSHeapAccess,
