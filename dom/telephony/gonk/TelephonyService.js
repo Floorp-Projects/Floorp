@@ -1005,6 +1005,11 @@ TelephonyService.prototype = {
 
     aCallback.notifyDialMMI(mmiServiceCode);
 
+    if (mmiServiceCode !== RIL.MMI_KS_SC_IMEI && !this._isRadioOn(aClientId)) {
+      aCallback.notifyDialMMIError(DIAL_ERROR_RADIO_NOT_AVAILABLE);
+      return;
+    }
+
     // We check if the MMI service code is supported and in that case we
     // trigger the appropriate RIL request if possible.
     switch (mmiServiceCode) {
@@ -1059,11 +1064,6 @@ TelephonyService.prototype = {
 
       // Handle unknown MMI code as USSD.
       default:
-        if (!this._isRadioOn(aClientId)) {
-          aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-          return;
-        }
-
         this._sendUSSDInternal(aClientId, aMmi.fullMMI, aResponse => {
           if (aResponse.errorMsg) {
             aCallback.notifyDialMMIError(aResponse.errorMsg);
@@ -1087,11 +1087,6 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _callForwardingMMI: function(aClientId, aMmi, aCallback) {
-    if (!this._isRadioOn(aClientId)) {
-      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
     let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
     let action = MMI_PROC_TO_CF_ACTION[aMmi.procedure];
     let reason = MMI_SC_TO_CF_REASON[aMmi.serviceCode];
@@ -1135,11 +1130,6 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _iccChangeLockMMI: function(aClientId, aMmi, aCallback) {
-    if (!this._isRadioOn(aClientId)) {
-      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
     let errorMsg = this._getIccLockMMIError(aMmi);
     if (errorMsg) {
       aCallback.notifyDialMMIError(errorMsg);
@@ -1181,11 +1171,6 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _iccUnlockMMI: function(aClientId, aMmi, aCallback) {
-    if (!this._isRadioOn(aClientId)) {
-      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
     let errorMsg = this._getIccLockMMIError(aMmi);
     if (errorMsg) {
       aCallback.notifyDialMMIError(errorMsg);
@@ -1405,11 +1390,6 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _callBarringPasswordMMI: function(aClientId, aMmi, aCallback) {
-    if (!this._isRadioOn(aClientId)) {
-      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
     if (aMmi.procedure !== MMI_PROCEDURE_REGISTRATION &&
         aMmi.procedure !== MMI_PROCEDURE_ACTIVATION) {
       aCallback.notifyDialMMIError(MMI_ERROR_KS_INVALID_ACTION);
@@ -1514,11 +1494,6 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _callWaitingMMI: function(aClientId, aMmi, aCallback) {
-    if (!this._isRadioOn(aClientId)) {
-      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
     let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
 
     switch (aMmi.procedure) {
