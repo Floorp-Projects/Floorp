@@ -49,7 +49,7 @@ ul {
   background-position: right 0;
 }
 
-#errorTitleText[sslv3=true] {
+#errorTitle[sslv3=true] {
   background-image: url("aboutNetError_alert.svg");
 }
 
