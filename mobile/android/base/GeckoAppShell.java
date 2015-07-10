@@ -1245,10 +1245,10 @@ public class GeckoAppShell
         }
 
         final String scheme = uri.getScheme();
-        if ("intent".equals(scheme)) {
+        if ("intent".equals(scheme) || "android-app".equals(scheme)) {
             final Intent intent;
             try {
-                intent = Intent.parseUri(targetURI, Intent.URI_INTENT_SCHEME);
+                intent = Intent.parseUri(targetURI, 0);
             } catch (final URISyntaxException e) {
                 Log.e(LOGTAG, "Unable to parse URI - " + e);
                 return null;
