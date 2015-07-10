@@ -12432,8 +12432,6 @@ Database::RegisterTransaction(TransactionBase* aTransaction)
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(!mTransactions.GetEntry(aTransaction));
   MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mInvalidated);
-  MOZ_ASSERT(!mClosed);
 
   if (NS_WARN_IF(!mTransactions.PutEntry(aTransaction, fallible))) {
     return false;
@@ -18843,10 +18841,6 @@ FactoryOp::Run()
       SendResults();
       return NS_OK;
 
-    // We raced, no need to crash.
-    case State_Completed:
-      return NS_OK;
-
     default:
       MOZ_CRASH("Bad state!");
   }
@@ -18904,16 +18898,6 @@ FactoryOp::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnBackgroundThread();
 
   NoteActorDestroyed();
-
-  if (mState != State_SendingResults) {
-    // Let's see if this is right ...
-    MOZ_RELEASE_ASSERT(mState == State_WaitingForTransactionsToComplete);
-    // We didn't get an opportunity to clean up.  Do that now.
-    mState = State_SendingResults;
-    IDB_REPORT_INTERNAL_ERR();
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    SendResults();
-  }
 }
 
 bool
@@ -19510,10 +19494,9 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(mState == State_WaitingForOtherDatabasesToClose ||
-             mState == State_WaitingForTransactionsToComplete ||
              mState == State_DatabaseWorkVersionChange);
 
-  if (mState != State_WaitingForOtherDatabasesToClose) {
+  if (mState == State_DatabaseWorkVersionChange) {
     MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
     MOZ_ASSERT(mRequestedVersion >
                  aDatabase->Metadata()->mCommonMetadata.version(),
@@ -19577,8 +19560,7 @@ OpenDatabaseOp::DispatchToWorkThread()
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
-      IsActorDestroyed() ||
-      mDatabase->IsInvalidated()) {
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }

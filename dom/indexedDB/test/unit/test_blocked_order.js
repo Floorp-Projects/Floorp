@@ -56,7 +56,7 @@ function testSteps()
     ok(false, "Should not receive a blocked event");
   };
 
-  let event = yield undefined;
+  event = yield undefined;
 
   is(event.type, "success", "Got success event");
   is(databases.length, 0, "All databases with version 1 were closed");
@@ -144,35 +144,6 @@ function testSteps()
   event = yield undefined;
 
   is(event.type, "success", "Got success event");
-
-  // Test 3: A blocked database left in that state should not hang shutdown.
-  info("Opening 1 database with version 1");
-
-  request = indexedDB.open(databaseName, 1);
-  request.onerror = errorHandler;
-  request.onblocked = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
-
-  event = yield undefined;
-
-  is(event.type, "success", "Got success event");
-
-  db = request.result;
-  is(db.version, 1, "Got version 1");
-
-  info("Opening database with version 2");
-
-  request = indexedDB.open(databaseName, 2);
-  request.onerror = function(e) {
-    e.preventDefault();
-  };
-  request.onsuccess = errorHandler;
-
-  request.onblocked = grabEventAndContinueHandler;
-
-  event = yield undefined;
-  ok(true, "Got blocked");
-  // Just allow this to remain blocked ...
 
   finishTest();
   yield undefined;
