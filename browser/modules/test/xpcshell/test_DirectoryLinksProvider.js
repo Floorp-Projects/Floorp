@@ -1924,3 +1924,109 @@ add_task(function test_inadjecentSites() {
   DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   yield promiseCleanDirectoryLinksProvider();
 });
+
+add_task(function test_reportPastImpressions() {
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = () => true;
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
+
+  let testUrl = "http://frequency.capped/link";
+  let targets = ["top.site.com"];
+  let data = {
+    suggested: [{
+      type: "affiliate",
+      frecent_sites: targets,
+      url: testUrl
+    }]
+  };
+  let dataURI = "data:application/json," + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // make DirectoryLinksProvider load json
+  let loadPromise = Promise.defer();
+  DirectoryLinksProvider.getLinks(_ => {loadPromise.resolve();});
+  yield loadPromise.promise;
+
+  // setup ping handler
+  let deferred, expectedPath, expectedAction, expectedImpressions;
+  let done = false;
+  server.registerPrefixHandler(kPingPath, (aRequest, aResponse) => {
+    if (done) {
+      return;
+    }
+
+    do_check_eq(aRequest.path, expectedPath);
+
+    let bodyStream = new BinaryInputStream(aRequest.bodyInputStream);
+    let bodyObject = JSON.parse(NetUtil.readInputStreamToString(bodyStream, bodyStream.available()));
+    let expectedActionIndex = bodyObject[expectedAction];
+    if (bodyObject.unpin) {
+      // unpin should not report past_impressions
+      do_check_false(bodyObject.tiles[expectedActionIndex].hasOwnProperty("past_impressions"));
+    }
+    else if (expectedImpressions) {
+      do_check_eq(bodyObject.tiles[expectedActionIndex].past_impressions.total, expectedImpressions);
+      do_check_eq(bodyObject.tiles[expectedActionIndex].past_impressions.daily, expectedImpressions);
+    }
+    else {
+      do_check_eq(expectedPath, "/ping/view");
+      do_check_false(bodyObject.tiles[expectedActionIndex].hasOwnProperty("past_impressions"));
+    }
+
+    deferred.resolve();
+  });
+
+  // setup ping sender
+  function sendPingAndTest(path, action, index) {
+    deferred = Promise.defer();
+    expectedPath = kPingPath + path;
+    expectedAction = action;
+    DirectoryLinksProvider.reportSitesAction(sites, action, index);
+    return deferred.promise;
+  }
+
+  // Start with a view ping first
+  let site = {
+    isPinned: _ => false,
+    link: {
+      directoryId: 1,
+      frecency: 30000,
+      frecent_sites: targets,
+      targetedSite: targets[0],
+      url: testUrl
+    }
+  };
+  let sites = [,
+    {
+      isPinned: _ => false,
+      link: {type: "history", url: "https://foo.com"}
+    },
+    site
+  ];
+
+  yield sendPingAndTest("view", "view", 2);
+  yield sendPingAndTest("view", "view", 2);
+  yield sendPingAndTest("view", "view", 2);
+
+  expectedImpressions = DirectoryLinksProvider._frequencyCaps[testUrl].totalViews;
+  do_check_eq(expectedImpressions, 3);
+
+  // now report pin, unpin, block and click
+  sites.isPinned = _ => true;
+  yield sendPingAndTest("click", "pin", 2);
+  sites.isPinned = _ => false;
+  yield sendPingAndTest("click", "unpin", 2);
+  sites.isPinned = _ => false;
+  yield sendPingAndTest("click", "click", 2);
+  sites.isPinned = _ => false;
+  yield sendPingAndTest("click", "block", 2);
+
+  // Cleanup.
+  done = true;
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
+});

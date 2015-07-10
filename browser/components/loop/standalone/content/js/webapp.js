@@ -580,6 +580,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       onAfterFeedbackReceived: React.PropTypes.func.isRequired,
       sdk: React.PropTypes.object.isRequired
     },
@@ -594,6 +595,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
             onAfterFeedbackReceived: this.props.onAfterFeedbackReceived}), 
           React.createElement(sharedViews.ConversationView, {
             audio: {enabled: false, visible: false}, 
+            dispatcher: this.props.dispatcher, 
             initiate: false, 
             model: this.props.conversation, 
             sdk: this.props.sdk, 
@@ -721,6 +723,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
                                         currentStatus: mozL10n.get("status_in_conversation")});
           return (
             React.createElement(sharedViews.ConversationView, {
+              dispatcher: this.props.dispatcher, 
               initiate: true, 
               model: this.props.conversation, 
               sdk: this.props.sdk, 
@@ -731,6 +734,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return (
             React.createElement(EndedConversationView, {
               conversation: this.props.conversation, 
+              dispatcher: this.props.dispatcher, 
               onAfterFeedbackReceived: this.resetCallStatus(), 
               sdk: this.props.sdk})
           );

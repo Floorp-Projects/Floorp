@@ -715,7 +715,11 @@ Rule.prototype = {
   previewPropertyValue: function(aProperty, aValue, aPriority) {
     let modifications = this.style.startModifyingProperties();
     modifications.setProperty(aProperty.name, aValue, aPriority);
-    modifications.apply();
+    modifications.apply().then(() => {
+      // Ensure dispatching a ruleview-changed event
+      // also for previews
+      this.elementStyle._changed();
+    });
   },
 
   /**

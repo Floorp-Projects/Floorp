@@ -27,7 +27,7 @@ function* testCreateNew(ruleView) {
   let elementRuleEditor = getRuleViewRuleEditor(ruleView, 0);
 
   info("Focusing a new property name in the rule-view");
-  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
+  let editor = yield focusEditableField(ruleView, elementRuleEditor.closeBrace);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "Next focused editor should be the new property editor.");

@@ -283,6 +283,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     propTypes: {
       audio: React.PropTypes.object,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       initiate: React.PropTypes.bool,
       isDesktop: React.PropTypes.bool,
       model: React.PropTypes.object.isRequired,
@@ -482,6 +483,7 @@ loop.shared.views = (function(_, mozL10n) {
             ), 
             React.createElement(ConversationToolbar, {
               audio: this.state.audio, 
+              dispatcher: this.props.dispatcher, 
               hangup: this.hangup, 
               publishStream: this.publishStream, 
               video: this.state.video})
@@ -498,7 +500,6 @@ loop.shared.views = (function(_, mozL10n) {
     mixins: [Backbone.Events],
 
     propTypes: {
-      key: React.PropTypes.number.isRequired,
       notification: React.PropTypes.object.isRequired
     },
 
@@ -506,8 +507,7 @@ loop.shared.views = (function(_, mozL10n) {
       var notification = this.props.notification;
       return (
         React.createElement("div", {className: "notificationContainer"}, 
-          React.createElement("div", {className: "alert alert-" + notification.get("level"), 
-            key: this.props.key}, 
+          React.createElement("div", {className: "alert alert-" + notification.get("level")}, 
             React.createElement("span", {className: "message"}, notification.get("message"))
           ), 
           React.createElement("div", {className: "detailsBar details-" + notification.get("level"), 
@@ -571,7 +571,6 @@ loop.shared.views = (function(_, mozL10n) {
           this.props.notifications.map(function(notification, key) {
             return React.createElement(NotificationView, {key: key, notification: notification});
           })
-        
         )
       );
     }
