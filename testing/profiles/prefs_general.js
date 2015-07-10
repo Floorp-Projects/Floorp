@@ -230,6 +230,9 @@ user_pref('browser.tiles.reportURL', 'http://%(server)s/tests/robocop/robocop_ti
 
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
+// Our current tests expect the unified Telemetry feature to be opt-out,
+// which is not true while we hold back shipping it.
+user_pref('toolkit.telemetry.unifiedIsOptIn', false);
 
 // A couple of preferences with default values to test that telemetry preference
 // watching is working.
