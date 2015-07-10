@@ -892,6 +892,11 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mForm_action.Value() = mozilla::Move(srcs);
       return;
 
+    case nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE:
+      outCSP.mUpgrade_insecure_requests.Construct();
+      // does not have any srcs
+      return;
+
     // REFERRER_DIRECTIVE is handled in nsCSPPolicy::toDomCSPStruct()
 
     default:
