@@ -2174,17 +2174,24 @@ void AsyncPanZoomController::AcceptFling(const ParentLayerPoint& aVelocity,
   }
   CSSPoint predictedDestination = mFrameMetrics.GetScrollOffset() + predictedDelta / mFrameMetrics.GetZoom();
 
-  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
-  if (controller) {
-    APZC_LOG("%p fling snapping.  friction: %f velocity: %f, %f "
-             "predictedDelta: %f, %f position: %f, %f "
-             "predictedDestination: %f, %f\n",
-             this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
-             (float)predictedDelta.y, (float)mFrameMetrics.GetScrollOffset().x,
-             (float)mFrameMetrics.GetScrollOffset().y,
-             (float)predictedDestination.x, (float)predictedDestination.y);
-    controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),
-                                 predictedDestination);
+  // If the fling will overscroll, don't request a fling snap, because the
+  // resulting content scrollTo() would unnecessarily cancel the overscroll
+  // animation.
+  bool flingWillOverscroll = IsOverscrolled() && ((velocity.x * mX.GetOverscroll() >= 0) ||
+                                                  (velocity.y * mY.GetOverscroll() >= 0));
+  if (!flingWillOverscroll) {
+    nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+    if (controller) {
+      APZC_LOG("%p fling snapping.  friction: %f velocity: %f, %f "
+               "predictedDelta: %f, %f position: %f, %f "
+               "predictedDestination: %f, %f\n",
+               this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
+               (float)predictedDelta.y, (float)mFrameMetrics.GetScrollOffset().x,
+               (float)mFrameMetrics.GetScrollOffset().y,
+               (float)predictedDestination.x, (float)predictedDestination.y);
+      controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),
+                                   predictedDestination);
+    }
   }
 
   StartAnimation(fling);
