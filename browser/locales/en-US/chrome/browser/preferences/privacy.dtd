@@ -10,7 +10,7 @@
 <!ENTITY trackingProtection.accesskey   "m">
 <!ENTITY trackingProtectionLearnMore.label "Learn more">
 <!ENTITY trackingProtectionPBM.label          "Prevent sites from tracking my online activity in Private Windows">
-<!ENTITY trackingProtectionPBM.accesskey      "m">
+<!ENTITY trackingProtectionPBM.accesskey      "y">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
 <!ENTITY doNotTrackInfo.label           "Learn More">
 
