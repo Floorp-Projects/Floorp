@@ -1197,9 +1197,6 @@ public class GeckoAppShell
         final Intent intent = getOpenURIIntentInner(context, targetURI, mimeType, action, title);
 
         if (intent != null) {
-            // Only handle applications which can accept arbitrary data from a browser.
-            intent.addCategory(Intent.CATEGORY_BROWSABLE);
-
             // Some applications use this field to return to the same browser after processing the
             // Intent. While there is some danger (e.g. denial of service), other major browsers already
             // use it and so it's the norm.
@@ -1238,6 +1235,9 @@ public class GeckoAppShell
                 Log.e(LOGTAG, "Unable to parse URI - " + e);
                 return null;
             }
+
+            // Only open applications which can accept arbitrary data from a browser.
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
 
             // Prevent site from explicitly opening our internal activities, which can leak data.
             intent.setComponent(null);
