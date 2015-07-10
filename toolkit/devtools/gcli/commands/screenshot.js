@@ -133,10 +133,13 @@ exports.items = [
       }
 
       // Click handler
-      if (imageSummary.filename) {
+      if (imageSummary.href || imageSummary.filename) {
         root.style.cursor = "pointer";
         root.addEventListener("click", () => {
-          if (imageSummary.filename) {
+          if (imageSummary.href) {
+            const gBrowser = context.environment.chromeWindow.gBrowser;
+            gBrowser.selectedTab = gBrowser.addTab(imageSummary.href);
+          } else if (imageSummary.filename) {
             const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
             file.initWithPath(imageSummary.filename);
             file.reveal();
@@ -406,16 +409,15 @@ function uploadToImgur(reply) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
           reply.href = xhr.response.data.link;
-          reply.destinations.push(l10n.lookupFormat("screenshotImgurError",
+          reply.destinations.push(l10n.lookupFormat("screenshotImgurUploaded",
                                                     [ reply.href ]));
-        }
-        else {
+        } else {
           reply.destinations.push(l10n.lookup("screenshotImgurError"));
         }
 
         resolve();
       }
-    }
+    };
   });
 }
 
