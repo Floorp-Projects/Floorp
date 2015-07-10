@@ -30,18 +30,14 @@
  * Messages sent:
  *
  *   Printing:Print
- *     This message is sent to kick off a print job for a particular content
- *     window (which is passed along with the message). We also pass print
- *     settings with this message - though bug 1088070 will have us gather
- *     those settings from the content process instead.
+ *     Kick off a print job for a nsIDOMWindow, passing the outer window ID as
+ *     windowID.
  *
  *   Printing:Preview:Enter
  *     This message is sent to put content into print preview mode. We pass
  *     the content window of the browser we're showing the preview of, and
  *     the target of the message is the browser that we'll be showing the
- *     preview in. We also pass print settings in this message, but
- *     bug 1088070 will have us gather those settings from the content process
- *     instead.
+ *     preview in.
  *
  *   Printing:Preview:Exit
  *     This message is sent to take content out of print preview mode.
@@ -95,59 +91,58 @@ var PrintUtils = {
   },
 
   /**
-   * Starts printing the contents of aWindow.
+   * Starts the process of printing the contents of a window.
    *
-   * @param aWindow
-   *        An nsIDOMWindow to initiate the printing of. If the chrome window
-   *        is not running with remote tabs, this defaults to window.content if
-   *        omitted. If running with remote tabs, the caller must pass in the
-   *        content window to be printed. This function throws if that invariant
-   *        is violated.
-   * @param aBrowser (optional for non-remote browsers)
-   *        The remote <xul:browser> that contains aWindow. This argument is
-   *        not necessary if aWindow came from a non-remote browser, but is
-   *        strictly required otherwise. This function will throw if aWindow
-   *        comes from a remote browser and aBrowser is not provided. This
-   *        browser must have its type attribute set to "content",
-   *        "content-targetable", or "content-primary".
+   * @param aWindowID
+   *        The outer window ID of the nsIDOMWindow to print.
+   * @param aBrowser
+   *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
    */
-  print: function (aWindow, aBrowser)
+  printWindow: function (aWindowID, aBrowser)
   {
-    if (!aWindow) {
-      // If we're using remote browsers, chances are that window.content will
-      // not be defined.
-      if (this.usingRemoteTabs) {
-        throw new Error("Windows running with remote tabs must explicitly pass " +
-                        "a content window to PrintUtils.print.");
-      }
-      // Otherwise, we should have access to window.content.
-      aWindow = window.content;
+    let mm = aBrowser.messageManager;
+    mm.sendAsyncMessage("Printing:Print", {
+      windowID: aWindowID,
+    });
+  },
+
+  /**
+   * Deprecated.
+   *
+   * Starts the process of printing the contents of window.content.
+   *
+   */
+  print: function ()
+  {
+    if (gBrowser) {
+      return this.printWindow(gBrowser.selectedBrowser.outerWindowID,
+                              gBrowser.selectedBrowser);
     }
 
-    if (Components.utils.isCrossProcessWrapper(aWindow)) {
-      if (!aBrowser) {
-        throw new Error("PrintUtils.print expects a remote browser passed as " +
-                        "an argument if the content window is a CPOW.");
-      }
-    } else {
-      // For content windows coming from non-remote browsers, the browser can
-      // be resolved as the chromeEventHandler.
-      aBrowser = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                        .getInterface(Components.interfaces.nsIWebNavigation)
-                        .QueryInterface(Components.interfaces.nsIDocShell)
-                        .chromeEventHandler;
+    if (this.usingRemoteTabs) {
+      throw new Error("PrintUtils.print cannot be run in windows running with " +
+                      "remote tabs. Use PrintUtils.printWindow instead.");
     }
 
-    if (!aBrowser) {
+    let domWindow = window.content;
+    let ifReq = domWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    let browser = ifReq.getInterface(Components.interfaces.nsIWebNavigation)
+                       .QueryInterface(Components.interfaces.nsIDocShell)
+                       .chromeEventHandler;
+    if (!browser) {
       throw new Error("PrintUtils.print could not resolve content window " +
                       "to a browser.");
     }
 
-    let mm = aBrowser.messageManager;
+    let windowID = ifReq.getInterface(Components.interfaces.nsIDOMWindowUtils)
+                        .outerWindowID;
 
-    mm.sendAsyncMessage("Printing:Print", null, {
-      contentWindow: aWindow,
-    });
+    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
+    let msg = "PrintUtils.print is now deprecated. Please use PrintUtils.printWindow.";
+    let url = "https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Printing";
+    Deprecated.warning(msg, url);
+
+    this.printWindow(windowID, browser);
   },
 
   /**
@@ -410,9 +405,8 @@ var PrintUtils = {
     // listener.
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
-    mm.sendAsyncMessage("Printing:Preview:Enter", null, {
-      contentWindow: this._sourceBrowser.contentWindowAsCPOW ||
-                     this._sourceBrowser.contentWindow,
+    mm.sendAsyncMessage("Printing:Preview:Enter", {
+      windowID: this._sourceBrowser.outerWindowID,
     });
 
     if (this._webProgressPP.value) {

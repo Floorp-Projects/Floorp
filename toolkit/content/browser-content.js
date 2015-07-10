@@ -392,7 +392,7 @@ let Printing = {
     let data = message.data;
     switch(message.name) {
       case "Printing:Preview:Enter": {
-        this.enterPrintPreview(objects.contentWindow);
+        this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID));
         break;
       }
 
@@ -412,7 +412,7 @@ let Printing = {
       }
 
       case "Printing:Print": {
-        this.print(objects.contentWindow);
+        this.print(Services.wm.getOuterWindowWithId(data.windowID));
         break;
       }
     }
