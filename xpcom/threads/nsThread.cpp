@@ -546,6 +546,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
   }
 
   if (gXPCOMThreadsShutDown && MAIN_THREAD != mIsMainThread && !aTarget) {
+    NS_ASSERTION(false, "Failed Dispatch after xpcom-shutdown-threads");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
@@ -811,7 +812,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
     static TimeStamp nextCheck = TimeStamp::NowLoRes()
       + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-    
+
     TimeStamp now = TimeStamp::NowLoRes();
     if (now >= nextCheck) {
       if (SaveMemoryReportNearOOM()) {
