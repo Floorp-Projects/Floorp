@@ -116,7 +116,7 @@ public:
     }
 
     already_AddRefed<nsILoadContext> GetLoadContext();
-
+    already_AddRefed<nsIWidget> GetTopLevelWidget();
     nsIXULBrowserWindow* GetXULBrowserWindow();
 
     void Destroy();
@@ -218,6 +218,7 @@ public:
     virtual bool RecvGetDefaultScale(double* aValue) override;
     virtual bool RecvGetMaxTouchPoints(uint32_t* aTouchPoints) override;
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) override;
+    virtual bool RecvDispatchFocusToTopLevelWindow() override;
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
                                 const CSSRect& aRect) override;

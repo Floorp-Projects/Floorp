@@ -139,11 +139,13 @@ WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
 
 nsresult
 WorkerThread::DispatchPrimaryRunnable(const WorkerThreadFriendKey& /* aKey */,
-                                      nsIRunnable* aRunnable)
+                                      already_AddRefed<nsIRunnable>&& aRunnable)
 {
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
 #ifdef DEBUG
   MOZ_ASSERT(PR_GetCurrentThread() != mThread);
-  MOZ_ASSERT(aRunnable);
+  MOZ_ASSERT(runnable);
   {
     MutexAutoLock lock(mLock);
 
@@ -152,7 +154,7 @@ WorkerThread::DispatchPrimaryRunnable(const WorkerThreadFriendKey& /* aKey */,
   }
 #endif
 
-  nsresult rv = nsThread::Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  nsresult rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -161,8 +163,8 @@ WorkerThread::DispatchPrimaryRunnable(const WorkerThreadFriendKey& /* aKey */,
 }
 
 nsresult
-WorkerThread::Dispatch(const WorkerThreadFriendKey& /* aKey */,
-                       WorkerRunnable* aWorkerRunnable)
+WorkerThread::DispatchAnyThread(const WorkerThreadFriendKey& /* aKey */,
+                       already_AddRefed<WorkerRunnable>&& aWorkerRunnable)
 {
   // May be called on any thread!
 
@@ -181,8 +183,9 @@ WorkerThread::Dispatch(const WorkerThreadFriendKey& /* aKey */,
     }
   }
 #endif
+  nsCOMPtr<nsIRunnable> runnable(aWorkerRunnable);
 
-  nsresult rv = nsThread::Dispatch(aWorkerRunnable, NS_DISPATCH_NORMAL);
+  nsresult rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -197,9 +200,17 @@ WorkerThread::Dispatch(const WorkerThreadFriendKey& /* aKey */,
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerThread, nsThread)
 
 NS_IMETHODIMP
-WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
+WorkerThread::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  return Dispatch(runnable.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+WorkerThread::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable, uint32_t aFlags)
 {
   // May be called on any thread!
+  nsCOMPtr<nsIRunnable> runnable(aRunnable); // in case we exit early
 
   // Workers only support asynchronous dispatch.
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
@@ -209,8 +220,8 @@ WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
   const bool onWorkerThread = PR_GetCurrentThread() == mThread;
 
 #ifdef DEBUG
-  if (aRunnable && !onWorkerThread) {
-    nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(aRunnable);
+  if (runnable && !onWorkerThread) {
+    nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(runnable);
 
     {
       MutexAutoLock lock(mLock);
@@ -245,17 +256,13 @@ WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
     }
   }
 
-  nsIRunnable* runnableToDispatch;
-  nsRefPtr<WorkerRunnable> workerRunnable;
-
-  if (aRunnable && onWorkerThread) {
-    workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(aRunnable);
-    runnableToDispatch = workerRunnable;
+  nsresult rv;
+  if (runnable && onWorkerThread) {
+    nsRefPtr<WorkerRunnable> workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
+    rv = nsThread::Dispatch(workerRunnable.forget(), NS_DISPATCH_NORMAL);
   } else {
-    runnableToDispatch = aRunnable;
+    rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   }
-
-  nsresult rv = nsThread::Dispatch(runnableToDispatch, NS_DISPATCH_NORMAL);
 
   if (!onWorkerThread && workerPrivate) {
     // We need to wake the worker thread if we're not already on the right

@@ -67,6 +67,13 @@ nsThreadPool::~nsThreadPool()
 nsresult
 nsThreadPool::PutEvent(nsIRunnable* aEvent)
 {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return PutEvent(event.forget());
+}
+
+nsresult
+nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>&& aEvent)
+{
   // Avoid spawning a new thread while holding the event queue lock...
 
   bool spawnThread = false;
@@ -89,7 +96,7 @@ nsThreadPool::PutEvent(nsIRunnable* aEvent)
       spawnThread = true;
     }
 
-    mEvents.PutEvent(aEvent);
+    mEvents.PutEvent(Move(aEvent));
     stackSize = mStackSize;
   }
 
@@ -235,9 +242,16 @@ nsThreadPool::Run()
 }
 
 NS_IMETHODIMP
-nsThreadPool::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
+nsThreadPool::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
-  LOG(("THRD-P(%p) dispatch [%p %x]\n", this, aEvent, aFlags));
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+{
+  LOG(("THRD-P(%p) dispatch [%p %x]\n", this, /* XXX aEvent*/ nullptr, aFlags));
 
   if (NS_WARN_IF(mShutdown)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -251,7 +265,7 @@ nsThreadPool::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
     }
 
     nsRefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(thread, aEvent);
+      new nsThreadSyncDispatch(thread, Move(aEvent));
     PutEvent(wrapper);
 
     while (wrapper->IsPending()) {
@@ -259,7 +273,7 @@ nsThreadPool::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
     }
   } else {
     NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
-    PutEvent(aEvent);
+    PutEvent(Move(aEvent));
   }
   return NS_OK;
 }

@@ -242,6 +242,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitGuardClass(LGuardClass* guard);
     virtual void visitEffectiveAddress(LEffectiveAddress* ins);
     virtual void visitUDivOrMod(LUDivOrMod* ins);
+    virtual void visitUDivOrModConstant(LUDivOrModConstant *ins);
     virtual void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     virtual void visitMemoryBarrier(LMemoryBarrier* ins);
 

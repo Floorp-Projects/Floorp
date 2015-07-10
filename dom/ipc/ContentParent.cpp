@@ -1047,7 +1047,7 @@ ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId)
         ContentParentId parentId;
         if (cpm->GetParentProcessId(cp->ChildID(), &parentId) &&
             parentId == this->ChildID()) {
-            return PContentBridge::Bridge(this, cp);
+            return NS_SUCCEEDED(PContentBridge::Bridge(this, cp));
         }
     }
 

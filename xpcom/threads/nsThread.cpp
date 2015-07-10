@@ -480,7 +480,7 @@ nsThread::Init()
   // that mThread is set properly.
   {
     MutexAutoLock lock(mLock);
-    mEventsRoot.PutEvent(startup);
+    mEventsRoot.PutEvent(startup); // retain a reference
   }
 
   // Wait for thread to call ThreadManager::SetupCurrentThread, which completes
@@ -502,6 +502,13 @@ nsThread::InitCurrentThread()
 nsresult
 nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
 {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return PutEvent(event.forget(), aTarget);
+}
+
+nsresult
+nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget)
+{
   nsCOMPtr<nsIThreadObserver> obs;
 
   {
@@ -509,9 +516,11 @@ nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
     nsChainedEventQueue* queue = aTarget ? aTarget->mQueue : &mEventsRoot;
     if (!queue || (queue == &mEventsRoot && mEventsAreDoomed)) {
       NS_WARNING("An event was posted to a thread that will never run it (rejected)");
-      return NS_ERROR_UNEXPECTED;
+      nsCOMPtr<nsIRunnable> temp(aEvent);
+      nsIRunnable* temp2 = temp.forget().take(); // can't use unused << aEvent here due to Windows (boo)
+      return temp2 ? NS_ERROR_UNEXPECTED : NS_ERROR_UNEXPECTED; // to make compiler not bletch on us
     }
-    queue->PutEvent(aEvent);
+    queue->PutEvent(Move(aEvent));
 
     // Make sure to grab the observer before dropping the lock, otherwise the
     // event that we just placed into the queue could run and eventually delete
@@ -528,21 +537,23 @@ nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
 }
 
 nsresult
-nsThread::DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
+nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags,
                            nsNestedEventTarget* aTarget)
 {
-  if (NS_WARN_IF(!aEvent)) {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  if (NS_WARN_IF(!event)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   if (gXPCOMThreadsShutDown && MAIN_THREAD != mIsMainThread && !aTarget) {
+    NS_ASSERTION(false, "Failed Dispatch after xpcom-shutdown-threads");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
 #ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(aEvent);
+  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event); // adds a ref
   (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
-  aEvent = tracedRunnable;
+  event = tracedRunnable.forget();
 #endif
 
   if (aFlags & DISPATCH_SYNC) {
@@ -556,8 +567,8 @@ nsThread::DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
     //     that to tell us when the event has been processed.
 
     nsRefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(thread, aEvent);
-    nsresult rv = PutEvent(wrapper, aTarget);
+      new nsThreadSyncDispatch(thread, event.forget());
+    nsresult rv = PutEvent(wrapper, aTarget); // hold a ref
     // Don't wait for the event to finish if we didn't dispatch it...
     if (NS_FAILED(rv)) {
       return rv;
@@ -571,18 +582,25 @@ nsThread::DispatchInternal(nsIRunnable* aEvent, uint32_t aFlags,
   }
 
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
-  return PutEvent(aEvent, aTarget);
+  return PutEvent(event.forget(), aTarget);
 }
 
 //-----------------------------------------------------------------------------
 // nsIEventTarget
 
 NS_IMETHODIMP
-nsThread::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
+nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
-  LOG(("THRD(%p) Dispatch [%p %x]\n", this, aEvent, aFlags));
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
 
-  return DispatchInternal(aEvent, aFlags, nullptr);
+NS_IMETHODIMP
+nsThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+{
+  LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
+
+  return DispatchInternal(Move(aEvent), aFlags, nullptr);
 }
 
 NS_IMETHODIMP
@@ -635,7 +653,7 @@ nsThread::Shutdown()
   // events to process.
   nsCOMPtr<nsIRunnable> event = new nsThreadShutdownEvent(this, &context);
   // XXXroc What if posting the event fails due to OOM?
-  PutEvent(event, nullptr);
+  PutEvent(event.forget(), nullptr);
 
   // We could still end up with other events being added after the shutdown
   // task, but that's okay because we process pending events in ThreadFunc
@@ -794,7 +812,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
     static TimeStamp nextCheck = TimeStamp::NowLoRes()
       + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-    
+
     TimeStamp now = TimeStamp::NowLoRes();
     if (now >= nextCheck) {
       if (SaveMemoryReportNearOOM()) {
@@ -1040,7 +1058,7 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
 
     nsCOMPtr<nsIRunnable> event;
     while (queue->GetEvent(false, getter_AddRefs(event))) {
-      mEvents->PutEvent(event);
+      mEvents->PutEvent(event.forget());
     }
 
     // Don't let the event target post any more events.
@@ -1085,12 +1103,19 @@ nsThreadSyncDispatch::Run()
 NS_IMPL_ISUPPORTS(nsThread::nsNestedEventTarget, nsIEventTarget)
 
 NS_IMETHODIMP
-nsThread::nsNestedEventTarget::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
+nsThread::nsNestedEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
-  LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get(), aEvent,
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+{
+  LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get(), /*XXX aEvent*/ nullptr,
        aFlags, this));
 
-  return mThread->DispatchInternal(aEvent, aFlags, this);
+  return mThread->DispatchInternal(Move(aEvent), aFlags, this);
 }
 
 NS_IMETHODIMP

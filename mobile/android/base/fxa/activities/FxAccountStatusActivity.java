@@ -202,6 +202,12 @@ public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
     boolean enabled = !AppConstants.MOZILLA_OFFICIAL || AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;
     if (!enabled) {
       menu.removeItem(R.id.enable_debug_mode);
+    } else {
+      final MenuItem debugModeItem = menu.findItem(R.id.enable_debug_mode);
+      if (debugModeItem != null) {
+        // Update checked state based on internal flag.
+        menu.findItem(R.id.enable_debug_mode).setChecked(FxAccountUtils.LOG_PERSONAL_INFORMATION);
+      }
     }
     return super.onCreateOptionsMenu(menu);
   };

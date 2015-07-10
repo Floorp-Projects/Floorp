@@ -27,7 +27,7 @@ interface nsIThreadPoolListener : nsISupports
  * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
  * will be run on the next available worker thread.
  */
-[scriptable, uuid(53675068-cb3a-40e5-a026-1be5a97c9b23)]
+[scriptable, uuid(cacd4a2e-2655-4ff8-894c-10c15883cd0a)]
 interface nsIThreadPool : nsIEventTarget
 {
   /**

@@ -109,7 +109,7 @@ LazyIdleThread::EnableIdleTimeout()
 
   if (mThread) {
     nsCOMPtr<nsIRunnable> runnable(new nsRunnable());
-    if (NS_FAILED(Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+    if (NS_FAILED(Dispatch(runnable.forget(), NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch!");
     }
   }
@@ -302,7 +302,7 @@ LazyIdleThread::ShutdownThread()
 
     PreDispatch();
 
-    rv = mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    rv = mThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -343,7 +343,7 @@ LazyIdleThread::ShutdownThread()
       runnable.swap(queuedRunnables[index]);
       MOZ_ASSERT(runnable, "Null runnable?!");
 
-      if (NS_FAILED(Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+      if (NS_FAILED(Dispatch(runnable.forget(), NS_DISPATCH_NORMAL))) {
         NS_ERROR("Failed to re-dispatch queued runnable!");
       }
     }
@@ -395,10 +395,18 @@ NS_IMPL_QUERY_INTERFACE(LazyIdleThread, nsIThread,
                         nsIObserver)
 
 NS_IMETHODIMP
-LazyIdleThread::Dispatch(nsIRunnable* aEvent,
+LazyIdleThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
                          uint32_t aFlags)
 {
   ASSERT_OWNING_THREAD();
+  nsCOMPtr<nsIRunnable> event(aEvent); // avoid leaks
 
   // LazyIdleThread can't always support synchronous dispatch currently.
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
@@ -412,7 +420,7 @@ LazyIdleThread::Dispatch(nsIRunnable* aEvent,
   // If our thread is shutting down then we can't actually dispatch right now.
   // Queue this runnable for later.
   if (UseRunnableQueue()) {
-    mQueuedRunnables->AppendElement(aEvent);
+    mQueuedRunnables->AppendElement(event);
     return NS_OK;
   }
 
@@ -423,7 +431,7 @@ LazyIdleThread::Dispatch(nsIRunnable* aEvent,
 
   PreDispatch();
 
-  return mThread->Dispatch(aEvent, aFlags);
+  return mThread->Dispatch(event.forget(), aFlags);
 }
 
 NS_IMETHODIMP
@@ -557,7 +565,7 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsresult rv = mOwningThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    nsresult rv = mOwningThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
