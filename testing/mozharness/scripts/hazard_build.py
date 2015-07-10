@@ -272,14 +272,14 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
 
     def get_blobs(self):
         dirs = self.query_abs_dirs()
-        self.tooltool_fetch(self.query_compiler_manifest(), "sh " + self.config['compiler_setup'],
-                            dirs['abs_work_dir'])
-        self.tooltool_fetch(self.query_sixgill_manifest(), "sh " + self.config['sixgill_setup'],
-                            dirs['abs_work_dir'])
+        self.tooltool_fetch(self.query_compiler_manifest(),
+                            output_dir=dirs['abs_work_dir'])
+        self.tooltool_fetch(self.query_sixgill_manifest(),
+                            output_dir=dirs['abs_work_dir'])
         if not os.path.exists(dirs['target_compiler_base']):
             self.mkdir_p(dirs['target_compiler_base'])
-        self.tooltool_fetch(self.query_b2g_compiler_manifest(), "sh " + self.config['compiler_setup'],
-                            dirs['target_compiler_base'])
+        self.tooltool_fetch(self.query_b2g_compiler_manifest(),
+                            output_dir=dirs['target_compiler_base'])
 
     def clobber_shell(self):
         dirs = self.query_abs_dirs()
