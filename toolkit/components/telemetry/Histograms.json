@@ -8475,13 +8475,5 @@
     "expires_in_version": "43",
     "kind": "boolean",
     "description": "Is the title shown in the url bar (as determined by the titlebar title or url preference)?"
-  },
-  "GRAPHICS_SANITY_TEST_REASON": {
-    "alert_emails": ["danderson@mozilla.com"],
-    "expires_in_version": "43",
-    "kind": "enumerated",
-    "n_values": 20,
-    "releaseChannelCollection": "opt-out",
-    "description": "Reports why a graphics sanity test was run. 0=First Run, 1=App Updated, 2=Device Change, 3=Driver Change."
   }
 }
