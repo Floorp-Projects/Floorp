@@ -185,8 +185,6 @@ public:
   float GetAudioVolume() const;
   nsresult SetAudioVolume(float aVolume);
 
-  float GetAudioGlobalVolume();
-
   virtual void SetServiceWorkersTestingEnabled(bool aEnabled)
   {
     MOZ_ASSERT(IsOuterWindow());
