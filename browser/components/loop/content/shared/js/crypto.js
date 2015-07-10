@@ -43,7 +43,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param {Object}
    */
   function setRootObject(obj) {
-    console.log("loop.crpyto.mixins: rootObject set to " + obj);
     rootObject = obj;
   }
 
