@@ -3,5 +3,5 @@
 "digest": "78648d2e769ef667377ea64d45e422f161e947303e25bec6933bca078ba57ea9118cfafa244ee844c6168bc396fa82e636455e48d57756c7c6ccce0b67efcb91",
 "algorithm": "sha512",
 "filename": "AVDs-armv7a-android-4.3.1_r1-build-2015-03-16.tar.gz",
-"unpack": "True"
+"unpack": true
 }]

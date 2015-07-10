@@ -7,12 +7,7 @@
       "algorithm" : "sha512",
       "digest" : "bb7fcbcaf8d160bba92fa66b2e3607f3335d68c8339996c880ea5757c6e611b74ced6c6d5c50d523fc8d688cc922ee6e1628f3fb514af8ebeb9c877ad580e5fd",
       "filename" : "sixgill.tar.xz",
-      "size" : 2159496
-   },
-   {
-      "algorithm" : "sha512",
-      "digest" : "9f4a123b8b037c4313c7065f872e07af38390f352f2498b41779c389fa1a0712e5f588d7b3d9a124875916f5257434da83553b560d7d146192f3f6c8da6f0412",
-      "filename" : "setup.sh.sixgill",
-      "size" : 48
+      "size" : 2159496,
+      "unpack": true
    }
 ]

@@ -3,28 +3,24 @@
 "clang_version": "r183744"
 },
 {
-"size": 88,
-"digest": "0d2ae9bcd7cea34ec0b768270725e98410dbb3bc150c7381e0dcf3eb5dbb3e69ac76dbb0f46b056151d6a6fa8681cab06da68173ae8598f3397b8f7628e67381",
-"algorithm": "sha512",
-"filename": "setup.sh"
-},
-{
 "size": 59602619,
 "digest": "86662ebc0ef650490559005948c4f0cb015dad72c7cac43732c2bf2995247081e30c139cf8008d19670a0009fc302c4eee2676981ee3f9ff4a15c01af22b783b",
 "algorithm": "sha512",
-"filename": "clang.tar.bz2"
+"filename": "clang.tar.bz2",
+"unpack": true
 },
 {
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2"
+"filename": "sccache.tar.bz2",
+"unpack": true
 },
 {
 "size": 31057326,
 "digest": "b844c3e52be493d2cacafa58c4a924b89c9be8d2dcc2a7c71aed58c253d8035fba4d51df309f73e3c4342a1f3c3898a9a25c4815e2112888d1280f43c41c8e51",
 "algorithm": "sha512",
 "filename": "moztt.tar.bz2",
-"unpack": "True"
+"unpack": true
 }
 ]

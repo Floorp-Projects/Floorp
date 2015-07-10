@@ -38,9 +38,7 @@ config = {
     'tools_dir': "/tools",
     'compiler_manifest': "build/gcc.manifest",
     'b2g_compiler_manifest': "build/gcc-b2g.manifest",
-    'compiler_setup': "setup.sh.gcc",
     'sixgill_manifest': "build/sixgill.manifest",
-    'sixgill_setup': "setup.sh.sixgill",
 
     # Mock.
     "mock_packages": [
