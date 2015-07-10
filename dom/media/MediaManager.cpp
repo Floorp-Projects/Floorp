@@ -647,19 +647,19 @@ void
 MediaOperationTask::ReturnCallbackError(nsresult rv, const char* errorLog)
 {
   MM_LOG(("%s , rv=%d", errorLog, rv));
-  NS_DispatchToMainThread(new ReleaseMediaOperationResource(mStream.forget(),
-      mOnTracksAvailableCallback.forget()));
+  NS_DispatchToMainThread(do_AddRef(new ReleaseMediaOperationResource(mStream.forget(),
+    mOnTracksAvailableCallback.forget())));
   nsString log;
 
   log.AssignASCII(errorLog);
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> onSuccess;
   nsRefPtr<MediaMgrError> error = new MediaMgrError(
     NS_LITERAL_STRING("InternalError"), log);
-  NS_DispatchToMainThread(
+  NS_DispatchToMainThread(do_AddRef(
     new ErrorCallbackRunnable<nsIDOMGetUserMediaSuccessCallback>(onSuccess,
                                                                  mOnFailure,
                                                                  *error,
-                                                                 mWindowID));
+                                                                 mWindowID)));
 }
 
 /**
@@ -1067,9 +1067,9 @@ public:
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
 
-    NS_DispatchToMainThread(runnable);
+    NS_DispatchToMainThread(runnable.forget());
     // Do after ErrorCallbackRunnable Run()s, as it checks active window list
-    NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, mListener));
+    NS_DispatchToMainThread(do_AddRef(new GetUserMediaListenerRemove(mWindowID, mListener)));
   }
 
   void
@@ -1111,12 +1111,12 @@ public:
       peerIdentity = new PeerIdentity(mConstraints.mPeerIdentity);
     }
 
-    NS_DispatchToMainThread(new GetUserMediaStreamRunnable(
+    NS_DispatchToMainThread(do_AddRef(new GetUserMediaStreamRunnable(
       mOnSuccess, mOnFailure, mWindowID, mListener,
       (mAudioDevice? mAudioDevice->GetSource() : nullptr),
       (mVideoDevice? mVideoDevice->GetSource() : nullptr),
       peerIdentity
-    ));
+    )));
 
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
@@ -1290,7 +1290,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId, MediaSourceEnum aVideoType
     }
 
     SourceSet* handoff = result.forget();
-    NS_DispatchToMainThread(NewRunnableFrom([id, handoff]() mutable {
+    NS_DispatchToMainThread(do_AddRef(NewRunnableFrom([id, handoff]() mutable {
       ScopedDeletePtr<SourceSet> result(handoff); // grab result
       nsRefPtr<MediaManager> mgr = MediaManager_GetInstance();
       if (!mgr) {
@@ -1301,7 +1301,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId, MediaSourceEnum aVideoType
         p->Resolve(result.forget());
       }
       return NS_OK;
-    }));
+          })));
   }));
   return p.forget();
 }
@@ -2253,7 +2253,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
         // must explicitly do this before dispatching the reply, since the reply may kill us with Stop()
         mBackend = nullptr; // last reference, will invoke Shutdown() again
 
-        if (NS_FAILED(NS_DispatchToMainThread(mReply))) {
+        if (NS_FAILED(NS_DispatchToMainThread(mReply.forget()))) {
           LOG(("Will leak thread: DispatchToMainthread of reply runnable failed in MediaManager shutdown"));
         }
       }
@@ -2727,7 +2727,7 @@ GetUserMediaCallbackMediaStreamListener::NotifyFinished(MediaStreamGraph* aGraph
 {
   mFinished = true;
   Invalidate(); // we know it's been activated
-  NS_DispatchToMainThread(new GetUserMediaListenerRemove(mWindowID, this));
+  NS_DispatchToMainThread(do_AddRef(new GetUserMediaListenerRemove(mWindowID, this)));
 }
 
 // Called from the MediaStreamGraph thread

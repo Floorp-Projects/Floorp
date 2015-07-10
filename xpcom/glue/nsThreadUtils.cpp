@@ -167,14 +167,25 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 // because it owns main thread only objects, so it is not safe to
 // release them here.
 NS_METHOD
-NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
+NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
 {
+  nsCOMPtr<nsIRunnable> event(aEvent);
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    // NOTE: if you stop leaking here, adjust Promise::MaybeReportRejected(),
+    // which assumes a leak here, or split into leaks and no-leaks versions
+    nsIRunnable* temp = event.forget().take(); // leak without using "unused <<" due to Windows (boo)
+    return temp ? rv : rv; // to make compiler not bletch on us
   }
-  return thread->Dispatch(aEvent, aDispatchFlags);
+  return thread->Dispatch(event.forget(), aDispatchFlags);
+}
+
+NS_METHOD
+NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return NS_DispatchToMainThread(event.forget(), aDispatchFlags);
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR

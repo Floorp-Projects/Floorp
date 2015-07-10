@@ -154,13 +154,21 @@ nsSocketTransportService::GetThreadSafely()
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::Dispatch(nsIRunnable *event, uint32_t flags)
+nsSocketTransportService::DispatchFromScript(nsIRunnable *event, uint32_t flags)
 {
-    SOCKET_LOG(("STS dispatch [%p]\n", event));
+  nsCOMPtr<nsIRunnable> event_ref(event);
+  return Dispatch(event_ref.forget(), flags);
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::Dispatch(already_AddRefed<nsIRunnable>&& event, uint32_t flags)
+{
+    nsCOMPtr<nsIRunnable> event_ref(event);
+    SOCKET_LOG(("STS dispatch [%p]\n", event_ref.get()));
 
     nsCOMPtr<nsIThread> thread = GetThreadSafely();
     nsresult rv;
-    rv = thread ? thread->Dispatch(event, flags) : NS_ERROR_NOT_INITIALIZED;
+    rv = thread ? thread->Dispatch(event_ref.forget(), flags) : NS_ERROR_NOT_INITIALIZED;
     if (rv == NS_ERROR_UNEXPECTED) {
         // Thread is no longer accepting events. We must have just shut it
         // down on the main thread. Pretend we never saw it.

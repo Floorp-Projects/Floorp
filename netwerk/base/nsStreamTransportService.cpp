@@ -504,8 +504,16 @@ NS_IMPL_ISUPPORTS(nsStreamTransportService,
                   nsIObserver)
 
 NS_IMETHODIMP
-nsStreamTransportService::Dispatch(nsIRunnable *task, uint32_t flags)
+nsStreamTransportService::DispatchFromScript(nsIRunnable *task, uint32_t flags)
 {
+  nsCOMPtr<nsIRunnable> event(task);
+  return Dispatch(event.forget(), flags);
+}
+
+NS_IMETHODIMP
+nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable>&& task, uint32_t flags)
+{
+    nsCOMPtr<nsIRunnable> event(task); // so it gets released on failure paths
     nsCOMPtr<nsIThreadPool> pool;
     {
         mozilla::MutexAutoLock lock(mShutdownLock);
@@ -515,7 +523,7 @@ nsStreamTransportService::Dispatch(nsIRunnable *task, uint32_t flags)
         pool = mPool;
     }
     NS_ENSURE_TRUE(pool, NS_ERROR_NOT_INITIALIZED);
-    return pool->Dispatch(task, flags);
+    return pool->Dispatch(event.forget(), flags);
 }
 
 NS_IMETHODIMP
