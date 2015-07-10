@@ -6658,6 +6658,37 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 1>
     }
 };
 
+class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(AsmJSAtomicExchangeHeap);
+
+    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+        setTemp(0, LDefinition::BogusTemp());
+    }
+
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LAllocation* value() {
+        return getOperand(1);
+    }
+    const LDefinition* addrTemp() {
+        return getTemp(0);
+    }
+
+    void setAddrTemp(const LDefinition& addrTemp) {
+        setTemp(0, addrTemp);
+    }
+
+    MAsmJSAtomicExchangeHeap* mir() const {
+        return mir_->toAsmJSAtomicExchangeHeap();
+    }
+};
+
 class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
 {
   public:
