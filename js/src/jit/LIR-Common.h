@@ -5158,6 +5158,38 @@ class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 1>
     }
 };
 
+class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 1>
+{
+  public:
+    LIR_HEADER(AtomicExchangeTypedArrayElement)
+
+    LAtomicExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
+                                     const LAllocation& value, const LDefinition& temp)
+    {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* elements() {
+        return getOperand(0);
+    }
+    const LAllocation* index() {
+        return getOperand(1);
+    }
+    const LAllocation* value() {
+        return getOperand(2);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+
+    const MAtomicExchangeTypedArrayElement* mir() const {
+        return mir_->toAtomicExchangeTypedArrayElement();
+    }
+};
+
 class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
 {
   public:

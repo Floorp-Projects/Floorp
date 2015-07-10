@@ -12846,9 +12846,9 @@ class MRecompileCheck : public MNullaryInstruction
 };
 
 // All barriered operations - MMemoryBarrier, MCompareExchangeTypedArrayElement,
-// and MAtomicTypedArrayElementBinop, as well as MLoadUnboxedScalar and
-// MStoreUnboxedSclaar when they are marked as requiring a memory barrer - have
-// the following attributes:
+// MExchangeTypedArrayElement, and MAtomicTypedArrayElementBinop, as well as
+// MLoadUnboxedScalar and MStoreUnboxedSclaar when they are marked as requiring
+// a memory barrer - have the following attributes:
 //
 // - Not movable
 // - Not removable
@@ -12970,6 +12970,55 @@ class MCompareExchangeTypedArrayElement
     }
     MDefinition* newval() {
         return getOperand(3);
+    }
+    Scalar::Type arrayType() const {
+        return arrayType_;
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::UnboxedElement);
+    }
+};
+
+class MAtomicExchangeTypedArrayElement
+  : public MAryInstruction<3>,
+    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>>::Data
+{
+    Scalar::Type arrayType_;
+
+    MAtomicExchangeTypedArrayElement(MDefinition* elements, MDefinition* index, MDefinition* value,
+                                     Scalar::Type arrayType)
+      : arrayType_(arrayType)
+    {
+        MOZ_ASSERT(arrayType <= Scalar::Uint32);
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
+        setGuard();             // Not removable
+    }
+
+  public:
+    INSTRUCTION_HEADER(AtomicExchangeTypedArrayElement)
+
+    static MAtomicExchangeTypedArrayElement* New(TempAllocator& alloc, MDefinition* elements,
+                                                 MDefinition* index, MDefinition* value,
+                                                 Scalar::Type arrayType)
+    {
+        return new(alloc) MAtomicExchangeTypedArrayElement(elements, index, value, arrayType);
+    }
+
+    bool isByteArray() const {
+        return (arrayType_ == Scalar::Int8 ||
+                arrayType_ == Scalar::Uint8 ||
+                arrayType_ == Scalar::Uint8Clamped);
+    }
+    MDefinition* elements() {
+        return getOperand(0);
+    }
+    MDefinition* index() {
+        return getOperand(1);
+    }
+    MDefinition* value() {
+        return getOperand(2);
     }
     Scalar::Type arrayType() const {
         return arrayType_;
