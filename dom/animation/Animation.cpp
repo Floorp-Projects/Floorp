@@ -281,6 +281,22 @@ Animation::Pause(ErrorResult& aRv)
   PostUpdate();
 }
 
+void
+Animation::Reverse(ErrorResult& aRv)
+{
+  if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (mPlaybackRate == 0.0) {
+    return;
+  }
+
+  SilentlySetPlaybackRate(-mPlaybackRate);
+  Play(aRv, LimitBehavior::AutoRewind);
+}
+
 // ---------------------------------------------------------------------------
 //
 // JS wrappers for Animation interface:

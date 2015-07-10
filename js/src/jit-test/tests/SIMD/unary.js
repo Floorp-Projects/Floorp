@@ -13,20 +13,20 @@ var notf = (function() {
 })();
 
 function f() {
-    var f4 = SIMD.float32x4(1, 2, 3, 4);
-    var i4 = SIMD.int32x4(1, 2, 3, 4);
+    var f4 = SIMD.Float32x4(1, 2, 3, 4);
+    var i4 = SIMD.Int32x4(1, 2, 3, 4);
     var BitOrZero = (x) => x | 0;
     for (var i = 0; i < 150; i++) {
-        assertEqX4(SIMD.float32x4.not(f4), unaryX4(notf, f4, Math.fround));
-        assertEqX4(SIMD.float32x4.neg(f4), unaryX4((x) => -x, f4, Math.fround));
-        assertEqX4(SIMD.float32x4.abs(f4), unaryX4(Math.abs, f4, Math.fround));
-        assertEqX4(SIMD.float32x4.sqrt(f4), unaryX4(Math.sqrt, f4, Math.fround));
+        assertEqX4(SIMD.Float32x4.not(f4), unaryX4(notf, f4, Math.fround));
+        assertEqX4(SIMD.Float32x4.neg(f4), unaryX4((x) => -x, f4, Math.fround));
+        assertEqX4(SIMD.Float32x4.abs(f4), unaryX4(Math.abs, f4, Math.fround));
+        assertEqX4(SIMD.Float32x4.sqrt(f4), unaryX4(Math.sqrt, f4, Math.fround));
 
-        assertEqX4(SIMD.float32x4.reciprocalApproximation(f4), unaryX4((x) => 1 / x, f4, Math.fround), assertNear);
-        assertEqX4(SIMD.float32x4.reciprocalSqrtApproximation(f4), unaryX4((x) => 1 / Math.sqrt(x), f4, Math.fround), assertNear);
+        assertEqX4(SIMD.Float32x4.reciprocalApproximation(f4), unaryX4((x) => 1 / x, f4, Math.fround), assertNear);
+        assertEqX4(SIMD.Float32x4.reciprocalSqrtApproximation(f4), unaryX4((x) => 1 / Math.sqrt(x), f4, Math.fround), assertNear);
 
-        assertEqX4(SIMD.int32x4.not(i4), unaryX4((x) => ~x, i4, BitOrZero));
-        assertEqX4(SIMD.int32x4.neg(i4), unaryX4((x) => -x, i4, BitOrZero));
+        assertEqX4(SIMD.Int32x4.not(i4), unaryX4((x) => ~x, i4, BitOrZero));
+        assertEqX4(SIMD.Int32x4.neg(i4), unaryX4((x) => -x, i4, BitOrZero));
     }
 }
 

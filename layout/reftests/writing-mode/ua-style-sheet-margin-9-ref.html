@@ -9,7 +9,7 @@ caption { border: 1px solid orange; display: block; width: 100px; height: 100px;
 caption { margin: 0; }
 .ltr caption { margin: 0 0 0 auto; }
 .rtl caption { margin: 0 0 0 auto; }
-.v-rl caption { margin: 0 0 auto 0; }
+.v-rl caption { margin: auto 0 0 0; }
 </style>
 <div class=ltr>
   <table align=center>
@@ -23,11 +23,9 @@ caption { margin: 0; }
     <caption align=left>Caption</caption>
   </table>
 </div>
-<!-- disabled because tables are not yet vertical-aware; bug 1077521
 <div class=v-rl>
   <table align=center>
     <td>Table that is bigger than its caption</td>
     <caption align=left>Caption</caption>
   </table>
 </div>
--->

@@ -35,3 +35,57 @@ BEGIN_TEST(testGCSuppressions)
     return true;
 }
 END_TEST(testGCSuppressions)
+
+struct MyContainer : public JS::StaticTraceable
+{
+    RelocatablePtrObject obj;
+    RelocatablePtrString str;
+
+    MyContainer() : obj(nullptr), str(nullptr) {}
+    static void trace(MyContainer* self, JSTracer* trc) {
+        if (self->obj)
+            js::TraceEdge(trc, &self->obj, "test container");
+        if (self->str)
+            js::TraceEdge(trc, &self->str, "test container");
+    }
+};
+
+namespace js {
+template <>
+struct RootedBase<MyContainer> {
+    RelocatablePtrObject& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
+    RelocatablePtrString& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
+};
+} // namespace js
+
+BEGIN_TEST(testGCGenericRootedInternalStackStorage)
+{
+    JS::Rooted<MyContainer> container(cx);
+    container.get().obj = JS_NewObject(cx, nullptr);
+    container.get().str = JS_NewStringCopyZ(cx, "Hello");
+
+    JS_GC(cx->runtime());
+    JS_GC(cx->runtime());
+
+    JS::RootedObject obj(cx, container.get().obj);
+    JS::RootedValue val(cx, StringValue(container.get().str));
+    CHECK(JS_SetProperty(cx, obj, "foo", val));
+    return true;
+}
+END_TEST(testGCGenericRootedInternalStackStorage)
+
+BEGIN_TEST(testGCGenericRootedInternalStackStorageAugmented)
+{
+    JS::Rooted<MyContainer> container(cx);
+    container.obj() = JS_NewObject(cx, nullptr);
+    container.str() = JS_NewStringCopyZ(cx, "Hello");
+
+    JS_GC(cx->runtime());
+    JS_GC(cx->runtime());
+
+    JS::RootedObject obj(cx, container.obj());
+    JS::RootedValue val(cx, StringValue(container.str()));
+    CHECK(JS_SetProperty(cx, obj, "foo", val));
+    return true;
+}
+END_TEST(testGCGenericRootedInternalStackStorageAugmented)

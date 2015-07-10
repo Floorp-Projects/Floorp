@@ -58,6 +58,8 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitSimdValueX4(MSimdValueX4* ins);
     void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins,
                                                bool useI386ByteRegisters);
+    void lowerAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins,
+                                              bool useI386ByteRegisters);
     void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
                                            bool useI386ByteRegisters);
 };

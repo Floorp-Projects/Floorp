@@ -148,11 +148,6 @@ class GlobalObject : public NativeObject
         setSlot(EVAL, ObjectValue(*evalobj));
     }
 
-    void setIntrinsicsHolder(JSObject* obj) {
-        MOZ_ASSERT(getSlotRef(INTRINSICS).isUndefined());
-        setSlot(INTRINSICS, ObjectValue(*obj));
-    }
-
     Value getConstructor(JSProtoKey key) const {
         MOZ_ASSERT(key <= JSProto_LIMIT);
         return getSlot(APPLICATION_SLOTS + key);
@@ -604,48 +599,61 @@ class GlobalObject : public NativeObject
         return &self->getPrototype(JSProto_DataView).toObject();
     }
 
-    NativeObject* intrinsicsHolder() {
-        MOZ_ASSERT(!getSlot(INTRINSICS).isUndefined());
-        return &getSlot(INTRINSICS).toObject().as<NativeObject>();
+    static NativeObject* getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global);
+
+    Value existingIntrinsicValue(PropertyName* name) {
+        Value slot = getReservedSlot(INTRINSICS);
+        MOZ_ASSERT(slot.isObject(), "intrinsics holder must already exist");
+
+        NativeObject* holder = &slot.toObject().as<NativeObject>();
+
+        Shape* shape = holder->lookupPure(name);
+        MOZ_ASSERT(shape, "intrinsic must already have been added to holder");
+
+        return holder->getSlot(shape->slot());
     }
 
-    bool maybeGetIntrinsicValue(jsid id, Value* vp) {
-        NativeObject* holder = intrinsicsHolder();
+    static bool
+    maybeGetIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global, Handle<PropertyName*> name,
+                           MutableHandleValue vp)
+    {
+        NativeObject* holder = getIntrinsicsHolder(cx, global);
+        if (!holder)
+            return false;
 
-        if (Shape* shape = holder->lookupPure(id)) {
-            *vp = holder->getSlot(shape->slot());
+        if (Shape* shape = holder->lookupPure(name)) {
+            vp.set(holder->getSlot(shape->slot()));
             return true;
         }
         return false;
-    }
-    bool maybeGetIntrinsicValue(PropertyName* name, Value* vp) {
-        return maybeGetIntrinsicValue(NameToId(name), vp);
     }
 
     static bool getIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                   HandlePropertyName name, MutableHandleValue value)
     {
-        if (global->maybeGetIntrinsicValue(name, value.address()))
+        if (GlobalObject::maybeGetIntrinsicValue(cx, global, name, value))
             return true;
         if (!cx->runtime()->cloneSelfHostedValue(cx, name, value))
             return false;
-        RootedId id(cx, NameToId(name));
-        return global->addIntrinsicValue(cx, id, value);
+        return GlobalObject::addIntrinsicValue(cx, global, name, value);
     }
 
-    bool addIntrinsicValue(JSContext* cx, HandleId id, HandleValue value);
+    static bool addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
+                                  HandlePropertyName name, HandleValue value);
 
-    bool setIntrinsicValue(JSContext* cx, PropertyName* name, HandleValue value) {
-#ifdef DEBUG
-        RootedObject self(cx, this);
-        MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(self));
-#endif
-        RootedObject holder(cx, intrinsicsHolder());
+    static bool setIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
+                                  HandlePropertyName name, HandleValue value)
+    {
+        MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
+        RootedObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
+        if (!holder)
+            return false;
         return SetProperty(cx, holder, name, value);
     }
 
-    bool getSelfHostedFunction(JSContext* cx, HandleAtom selfHostedName, HandleAtom name,
-                               unsigned nargs, MutableHandleValue funVal);
+    static bool getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
+                                      HandlePropertyName selfHostedName, HandleAtom name,
+                                      unsigned nargs, MutableHandleValue funVal);
 
     bool hasRegExpStatics() const;
     RegExpStatics* getRegExpStatics(ExclusiveContext* cx) const;

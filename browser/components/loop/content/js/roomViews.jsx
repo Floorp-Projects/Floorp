@@ -286,6 +286,7 @@ loop.roomViews = (function(mozL10n) {
 
   var DesktopRoomEditContextView = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
+    maxRoomNameLength: 124,
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -510,6 +511,7 @@ loop.roomViews = (function(mozL10n) {
             value={location} />
           <form onSubmit={this.handleFormSubmit}>
             <input className="room-context-name"
+              maxLength={this.maxRoomNameLength}
               onKeyDown={this.handleTextareaKeyDown}
               placeholder={mozL10n.get("context_edit_name_placeholder")}
               type="text"

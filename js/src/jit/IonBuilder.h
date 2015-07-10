@@ -778,6 +778,7 @@ class IonBuilder
 
     // Atomics natives.
     InliningStatus inlineAtomicsCompareExchange(CallInfo& callInfo);
+    InliningStatus inlineAtomicsExchange(CallInfo& callInfo);
     InliningStatus inlineAtomicsLoad(CallInfo& callInfo);
     InliningStatus inlineAtomicsStore(CallInfo& callInfo);
     InliningStatus inlineAtomicsFence(CallInfo& callInfo);
@@ -819,6 +820,8 @@ class IonBuilder
                                   MSimdBinaryComp::Operation op, SimdTypeDescr::Type compType);
     InliningStatus inlineUnarySimd(CallInfo& callInfo, JSNative native,
                                    MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
+    InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
+                                         SimdTypeDescr::Type type);
     InliningStatus inlineSimdReplaceLane(CallInfo& callInfo, JSNative native,
                                          SimdTypeDescr::Type type);
     InliningStatus inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type);
