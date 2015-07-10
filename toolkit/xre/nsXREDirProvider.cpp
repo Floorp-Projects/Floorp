@@ -644,7 +644,7 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
                                NS_EXTENSION_LOCATION);
       LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
                                NS_SKIN_LOCATION);
-#if MOZ_BUILD_APP == browser
+#ifdef MOZ_BUILD_APP_IS_BROWSER
     } else {
       // In safe mode, still load the default theme directory:
       nsCOMPtr<nsIFile> themeManifest;
