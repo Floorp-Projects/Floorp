@@ -30,7 +30,7 @@ interface BrowserElementAudioChannel : EventTarget {
 };
 
 partial interface BrowserElementPrivileged {
-  [Constant, Cached, Throws,
+  [Pure, Cached, Throws,
    Pref="dom.mozBrowserFramesEnabled",
    CheckPermissions="browser"]
   readonly attribute sequence<BrowserElementAudioChannel> allowedAudioChannels;
