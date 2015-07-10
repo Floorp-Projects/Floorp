@@ -178,6 +178,12 @@ LIRGeneratorX86::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 }
 
 void
+LIRGeneratorX86::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+{
+    lowerAtomicExchangeTypedArrayElement(ins, /*useI386ByteRegisters=*/ true);
+}
+
+void
 LIRGeneratorX86::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ true);

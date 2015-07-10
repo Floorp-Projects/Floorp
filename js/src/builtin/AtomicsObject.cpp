@@ -117,7 +117,7 @@ js::atomics_fullMemoryBarrier()
 }
 
 static bool
-atomics_fence_impl(JSContext* cx, MutableHandleValue r)
+AtomicsFence(JSContext* cx, MutableHandleValue r)
 {
     atomics_fullMemoryBarrier();
     r.setUndefined();
@@ -128,55 +128,55 @@ bool
 js::atomics_fence(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_fence_impl(cx, args.rval());
+    return AtomicsFence(cx, args.rval());
 }
 
 static int32_t
-do_cmpxchg(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidate, void* viewData,
-           uint32_t offset, bool* badArrayType)
+CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidate, void* viewData,
+                uint32_t offset, bool* badArrayType)
 {
     switch (viewType) {
       case Scalar::Int8: {
-          int8_t oldval = (int8_t)oldCandidate;
-          int8_t newval = (int8_t)newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((int8_t*)viewData + offset, oldval, newval);
-          return oldval;
+        int8_t oldval = (int8_t)oldCandidate;
+        int8_t newval = (int8_t)newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((int8_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Uint8: {
-          uint8_t oldval = (uint8_t)oldCandidate;
-          uint8_t newval = (uint8_t)newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
-          return oldval;
+        uint8_t oldval = (uint8_t)oldCandidate;
+        uint8_t newval = (uint8_t)newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Uint8Clamped: {
-          uint8_t oldval = ClampIntForUint8Array(oldCandidate);
-          uint8_t newval = ClampIntForUint8Array(newCandidate);
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
-          return oldval;
+        uint8_t oldval = ClampIntForUint8Array(oldCandidate);
+        uint8_t newval = ClampIntForUint8Array(newCandidate);
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Int16: {
-          int16_t oldval = (int16_t)oldCandidate;
-          int16_t newval = (int16_t)newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((int16_t*)viewData + offset, oldval, newval);
-          return oldval;
+        int16_t oldval = (int16_t)oldCandidate;
+        int16_t newval = (int16_t)newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((int16_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Uint16: {
-          uint16_t oldval = (uint16_t)oldCandidate;
-          uint16_t newval = (uint16_t)newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint16_t*)viewData + offset, oldval, newval);
-          return oldval;
+        uint16_t oldval = (uint16_t)oldCandidate;
+        uint16_t newval = (uint16_t)newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((uint16_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Int32: {
-          int32_t oldval = oldCandidate;
-          int32_t newval = newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((int32_t*)viewData + offset, oldval, newval);
-          return oldval;
+        int32_t oldval = oldCandidate;
+        int32_t newval = newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((int32_t*)viewData + offset, oldval, newval);
+        return oldval;
       }
       case Scalar::Uint32: {
-          uint32_t oldval = (uint32_t)oldCandidate;
-          uint32_t newval = (uint32_t)newCandidate;
-          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint32_t*)viewData + offset, oldval, newval);
-          return (int32_t)oldval;
+        uint32_t oldval = (uint32_t)oldCandidate;
+        uint32_t newval = (uint32_t)newCandidate;
+        oldval = jit::AtomicOperations::compareExchangeSeqCst((uint32_t*)viewData + offset, oldval, newval);
+        return (int32_t)oldval;
       }
       default:
         *badArrayType = true;
@@ -209,10 +209,10 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!inRange)
-        return atomics_fence_impl(cx, r);
+        return AtomicsFence(cx, r);
 
     bool badType = false;
-    int32_t result = do_cmpxchg(view->type(), oldCandidate, newCandidate, view->viewData(), offset, &badType);
+    int32_t result = CompareExchange(view->type(), oldCandidate, newCandidate, view->viewData(), offset, &badType);
 
     if (badType)
         return ReportBadArrayType(cx);
@@ -241,47 +241,109 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!inRange)
-        return atomics_fence_impl(cx, r);
+        return AtomicsFence(cx, r);
 
     switch (view->type()) {
       case Scalar::Uint8:
       case Scalar::Uint8Clamped: {
-          uint8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
-          r.setInt32(v);
-          return true;
+        uint8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
+        r.setInt32(v);
+        return true;
       }
       case Scalar::Int8: {
-          int8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
-          r.setInt32(v);
-          return true;
+        int8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
+        r.setInt32(v);
+        return true;
       }
       case Scalar::Int16: {
-          int16_t v = jit::AtomicOperations::loadSeqCst((int16_t*)view->viewData() + offset);
-          r.setInt32(v);
-          return true;
+        int16_t v = jit::AtomicOperations::loadSeqCst((int16_t*)view->viewData() + offset);
+        r.setInt32(v);
+        return true;
       }
       case Scalar::Uint16: {
-          uint16_t v = jit::AtomicOperations::loadSeqCst((uint16_t*)view->viewData() + offset);
-          r.setInt32(v);
-          return true;
+        uint16_t v = jit::AtomicOperations::loadSeqCst((uint16_t*)view->viewData() + offset);
+        r.setInt32(v);
+        return true;
       }
       case Scalar::Int32: {
-          int32_t v = jit::AtomicOperations::loadSeqCst((int32_t*)view->viewData() + offset);
-          r.setInt32(v);
-          return true;
+        int32_t v = jit::AtomicOperations::loadSeqCst((int32_t*)view->viewData() + offset);
+        r.setInt32(v);
+        return true;
       }
       case Scalar::Uint32: {
-          uint32_t v = jit::AtomicOperations::loadSeqCst((uint32_t*)view->viewData() + offset);
-          r.setNumber(v);
-          return true;
+        uint32_t v = jit::AtomicOperations::loadSeqCst((uint32_t*)view->viewData() + offset);
+        r.setNumber(v);
+        return true;
       }
       default:
-          return ReportBadArrayType(cx);
+        return ReportBadArrayType(cx);
     }
 }
 
-bool
-js::atomics_store(JSContext* cx, unsigned argc, Value* vp)
+enum XchgStoreOp {
+    DoExchange,
+    DoStore
+};
+
+template<XchgStoreOp op>
+static int32_t
+ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, void* viewData, uint32_t offset,
+                bool* badArrayType)
+{
+#define INT_OP(ptr, value)                                         \
+    JS_BEGIN_MACRO                                                 \
+    if (op == DoStore)                                             \
+        jit::AtomicOperations::storeSeqCst(ptr, value);            \
+    else                                                           \
+        value = jit::AtomicOperations::exchangeSeqCst(ptr, value); \
+    JS_END_MACRO
+
+    switch (viewType) {
+      case Scalar::Int8: {
+        int8_t value = (int8_t)numberValue;
+        INT_OP((int8_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Uint8: {
+        uint8_t value = (uint8_t)numberValue;
+        INT_OP((uint8_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Uint8Clamped: {
+        uint8_t value = ClampIntForUint8Array(numberValue);
+        INT_OP((uint8_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Int16: {
+        int16_t value = (int16_t)numberValue;
+        INT_OP((int16_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Uint16: {
+        uint16_t value = (uint16_t)numberValue;
+        INT_OP((uint16_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Int32: {
+        int32_t value = numberValue;
+        INT_OP((int32_t*)viewData + offset, value);
+        return value;
+      }
+      case Scalar::Uint32: {
+        uint32_t value = (uint32_t)numberValue;
+        INT_OP((uint32_t*)viewData + offset, value);
+        return (int32_t)value;
+      }
+      default:
+        *badArrayType = true;
+        return 0;
+    }
+#undef INT_OP
+}
+
+template<XchgStoreOp op>
+static bool
+ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     HandleValue objv = args.get(0);
@@ -306,58 +368,35 @@ js::atomics_store(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    switch (view->type()) {
-      case Scalar::Int8: {
-          int8_t value = (int8_t)numberValue;
-          jit::AtomicOperations::storeSeqCst((int8_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Uint8: {
-          uint8_t value = (uint8_t)numberValue;
-          jit::AtomicOperations::storeSeqCst((uint8_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Uint8Clamped: {
-          uint8_t value = ClampIntForUint8Array(numberValue);
-          jit::AtomicOperations::storeSeqCst((uint8_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Int16: {
-          int16_t value = (int16_t)numberValue;
-          jit::AtomicOperations::storeSeqCst((int16_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Uint16: {
-          uint16_t value = (uint16_t)numberValue;
-          jit::AtomicOperations::storeSeqCst((uint16_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Int32: {
-          int32_t value = numberValue;
-          jit::AtomicOperations::storeSeqCst((int32_t*)view->viewData() + offset, value);
-          r.setInt32(value);
-          return true;
-      }
-      case Scalar::Uint32: {
-          uint32_t value = (uint32_t)numberValue;
-          jit::AtomicOperations::storeSeqCst((uint32_t*)view->viewData() + offset, value);
-          r.setNumber((double)value);
-          return true;
-      }
-      default:
+    bool badType = false;
+    int32_t result = ExchangeOrStore<op>(view->type(), numberValue, view->viewData(), offset, &badType);
+
+    if (badType)
         return ReportBadArrayType(cx);
-    }
+
+    if (view->type() == Scalar::Uint32)
+        r.setNumber((double)(uint32_t)result);
+    else
+        r.setInt32(result);
+    return true;
+}
+
+bool
+js::atomics_store(JSContext* cx, unsigned argc, Value* vp)
+{
+    return ExchangeOrStore<DoStore>(cx, argc, vp);
+}
+
+bool
+js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp)
+{
+    return ExchangeOrStore<DoExchange>(cx, argc, vp);
 }
 
 template<typename T>
 static bool
-atomics_binop_impl(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv,
-                   MutableHandleValue r)
+AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv,
+             MutableHandleValue r)
 {
     Rooted<SharedTypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
@@ -371,58 +410,58 @@ atomics_binop_impl(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValu
         return false;
 
     if (!inRange)
-        return atomics_fence_impl(cx, r);
+        return AtomicsFence(cx, r);
 
     switch (view->type()) {
       case Scalar::Int8: {
-          int8_t v = (int8_t)numberValue;
-          r.setInt32(T::operate((int8_t*)view->viewData() + offset, v));
-          return true;
+        int8_t v = (int8_t)numberValue;
+        r.setInt32(T::operate((int8_t*)view->viewData() + offset, v));
+        return true;
       }
       case Scalar::Uint8: {
-          uint8_t v = (uint8_t)numberValue;
-          r.setInt32(T::operate((uint8_t*)view->viewData() + offset, v));
-          return true;
+        uint8_t v = (uint8_t)numberValue;
+        r.setInt32(T::operate((uint8_t*)view->viewData() + offset, v));
+        return true;
       }
       case Scalar::Uint8Clamped: {
-          // Spec says:
-          //  - clamp the input value
-          //  - perform the operation
-          //  - clamp the result
-          //  - store the result
-          // This requires a CAS loop.
-          int32_t value = ClampIntForUint8Array(numberValue);
-          uint8_t* loc = (uint8_t*)view->viewData() + offset;
-          for (;;) {
-              uint8_t old = *loc;
-              uint8_t result = (uint8_t)ClampIntForUint8Array(T::perform(old, value));
-              uint8_t tmp = jit::AtomicOperations::compareExchangeSeqCst(loc, old, result);
-              if (tmp == old) {
-                  r.setInt32(old);
-                  break;
-              }
-          }
-          return true;
+        // Spec says:
+        //  - clamp the input value
+        //  - perform the operation
+        //  - clamp the result
+        //  - store the result
+        // This requires a CAS loop.
+        int32_t value = ClampIntForUint8Array(numberValue);
+        uint8_t* loc = (uint8_t*)view->viewData() + offset;
+        for (;;) {
+            uint8_t old = *loc;
+            uint8_t result = (uint8_t)ClampIntForUint8Array(T::perform(old, value));
+            uint8_t tmp = jit::AtomicOperations::compareExchangeSeqCst(loc, old, result);
+            if (tmp == old) {
+                r.setInt32(old);
+                break;
+            }
+        }
+        return true;
       }
       case Scalar::Int16: {
-          int16_t v = (int16_t)numberValue;
-          r.setInt32(T::operate((int16_t*)view->viewData() + offset, v));
-          return true;
+        int16_t v = (int16_t)numberValue;
+        r.setInt32(T::operate((int16_t*)view->viewData() + offset, v));
+        return true;
       }
       case Scalar::Uint16: {
-          uint16_t v = (uint16_t)numberValue;
-          r.setInt32(T::operate((uint16_t*)view->viewData() + offset, v));
-          return true;
+        uint16_t v = (uint16_t)numberValue;
+        r.setInt32(T::operate((uint16_t*)view->viewData() + offset, v));
+        return true;
       }
       case Scalar::Int32: {
-          int32_t v = numberValue;
-          r.setInt32(T::operate((int32_t*)view->viewData() + offset, v));
-          return true;
+        int32_t v = numberValue;
+        r.setInt32(T::operate((int32_t*)view->viewData() + offset, v));
+        return true;
       }
       case Scalar::Uint32: {
-          uint32_t v = (uint32_t)numberValue;
-          r.setNumber((double)T::operate((uint32_t*)view->viewData() + offset, v));
-          return true;
+        uint32_t v = (uint32_t)numberValue;
+        r.setNumber((double)T::operate((uint32_t*)view->viewData() + offset, v));
+        return true;
       }
       default:
         return ReportBadArrayType(cx);
@@ -437,7 +476,7 @@ atomics_binop_impl(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValu
     static int32_t operate(int32_t* addr, int32_t v) { return NAME(addr, v); } \
     static uint32_t operate(uint32_t* addr, uint32_t v) { return NAME(addr, v); }
 
-class do_add
+class PerformAdd
 {
 public:
     INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAddSeqCst)
@@ -448,10 +487,10 @@ bool
 js::atomics_add(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_binop_impl<do_add>(cx, args.get(0), args.get(1), args.get(2), args.rval());
+    return AtomicsBinop<PerformAdd>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
-class do_sub
+class PerformSub
 {
 public:
     INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchSubSeqCst)
@@ -462,10 +501,10 @@ bool
 js::atomics_sub(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_binop_impl<do_sub>(cx, args.get(0), args.get(1), args.get(2), args.rval());
+    return AtomicsBinop<PerformSub>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
-class do_and
+class PerformAnd
 {
 public:
     INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAndSeqCst)
@@ -476,10 +515,10 @@ bool
 js::atomics_and(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_binop_impl<do_and>(cx, args.get(0), args.get(1), args.get(2), args.rval());
+    return AtomicsBinop<PerformAnd>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
-class do_or
+class PerformOr
 {
 public:
     INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchOrSeqCst)
@@ -490,10 +529,10 @@ bool
 js::atomics_or(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_binop_impl<do_or>(cx, args.get(0), args.get(1), args.get(2), args.rval());
+    return AtomicsBinop<PerformOr>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
-class do_xor
+class PerformXor
 {
 public:
     INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchXorSeqCst)
@@ -504,7 +543,7 @@ bool
 js::atomics_xor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return atomics_binop_impl<do_xor>(cx, args.get(0), args.get(1), args.get(2), args.rval());
+    return AtomicsBinop<PerformXor>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
 
 bool
@@ -548,13 +587,13 @@ js::atomics_add_asm_callout(int32_t vt, int32_t offset, int32_t value)
     if ((size_t)offset >= heapLength) return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_add::operate((int8_t*)heap + offset, value);
+        return PerformAdd::operate((int8_t*)heap + offset, value);
       case Scalar::Uint8:
-        return do_add::operate((uint8_t*)heap + offset, value);
+        return PerformAdd::operate((uint8_t*)heap + offset, value);
       case Scalar::Int16:
-        return do_add::operate((int16_t*)heap + (offset >> 1), value);
+        return PerformAdd::operate((int16_t*)heap + (offset >> 1), value);
       case Scalar::Uint16:
-        return do_add::operate((uint16_t*)heap + (offset >> 1), value);
+        return PerformAdd::operate((uint16_t*)heap + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -569,13 +608,13 @@ js::atomics_sub_asm_callout(int32_t vt, int32_t offset, int32_t value)
     if ((size_t)offset >= heapLength) return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_sub::operate((int8_t*)heap + offset, value);
+        return PerformSub::operate((int8_t*)heap + offset, value);
       case Scalar::Uint8:
-        return do_sub::operate((uint8_t*)heap + offset, value);
+        return PerformSub::operate((uint8_t*)heap + offset, value);
       case Scalar::Int16:
-        return do_sub::operate((int16_t*)heap + (offset >> 1), value);
+        return PerformSub::operate((int16_t*)heap + (offset >> 1), value);
       case Scalar::Uint16:
-        return do_sub::operate((uint16_t*)heap + (offset >> 1), value);
+        return PerformSub::operate((uint16_t*)heap + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -590,13 +629,13 @@ js::atomics_and_asm_callout(int32_t vt, int32_t offset, int32_t value)
     if ((size_t)offset >= heapLength) return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_and::operate((int8_t*)heap + offset, value);
+        return PerformAnd::operate((int8_t*)heap + offset, value);
       case Scalar::Uint8:
-        return do_and::operate((uint8_t*)heap + offset, value);
+        return PerformAnd::operate((uint8_t*)heap + offset, value);
       case Scalar::Int16:
-        return do_and::operate((int16_t*)heap + (offset >> 1), value);
+        return PerformAnd::operate((int16_t*)heap + (offset >> 1), value);
       case Scalar::Uint16:
-        return do_and::operate((uint16_t*)heap + (offset >> 1), value);
+        return PerformAnd::operate((uint16_t*)heap + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -611,13 +650,13 @@ js::atomics_or_asm_callout(int32_t vt, int32_t offset, int32_t value)
     if ((size_t)offset >= heapLength) return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_or::operate((int8_t*)heap + offset, value);
+        return PerformOr::operate((int8_t*)heap + offset, value);
       case Scalar::Uint8:
-        return do_or::operate((uint8_t*)heap + offset, value);
+        return PerformOr::operate((uint8_t*)heap + offset, value);
       case Scalar::Int16:
-        return do_or::operate((int16_t*)heap + (offset >> 1), value);
+        return PerformOr::operate((int16_t*)heap + (offset >> 1), value);
       case Scalar::Uint16:
-        return do_or::operate((uint16_t*)heap + (offset >> 1), value);
+        return PerformOr::operate((uint16_t*)heap + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -632,13 +671,13 @@ js::atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value)
     if ((size_t)offset >= heapLength) return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_xor::operate((int8_t*)heap + offset, value);
+        return PerformXor::operate((int8_t*)heap + offset, value);
       case Scalar::Uint8:
-        return do_xor::operate((uint8_t*)heap + offset, value);
+        return PerformXor::operate((uint8_t*)heap + offset, value);
       case Scalar::Int16:
-        return do_xor::operate((int16_t*)heap + (offset >> 1), value);
+        return PerformXor::operate((int16_t*)heap + (offset >> 1), value);
       case Scalar::Uint16:
-        return do_xor::operate((uint16_t*)heap + (offset >> 1), value);
+        return PerformXor::operate((uint16_t*)heap + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -654,13 +693,13 @@ js::atomics_cmpxchg_asm_callout(int32_t vt, int32_t offset, int32_t oldval, int3
     bool badType = false;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return do_cmpxchg(Scalar::Int8, oldval, newval, heap, offset, &badType);
+        return CompareExchange(Scalar::Int8, oldval, newval, heap, offset, &badType);
       case Scalar::Uint8:
-        return do_cmpxchg(Scalar::Uint8, oldval, newval, heap, offset, &badType);
+        return CompareExchange(Scalar::Uint8, oldval, newval, heap, offset, &badType);
       case Scalar::Int16:
-        return do_cmpxchg(Scalar::Int16, oldval, newval, heap, offset>>1, &badType);
+        return CompareExchange(Scalar::Int16, oldval, newval, heap, offset>>1, &badType);
       case Scalar::Uint16:
-        return do_cmpxchg(Scalar::Uint16, oldval, newval, heap, offset>>1, &badType);
+        return CompareExchange(Scalar::Uint16, oldval, newval, heap, offset>>1, &badType);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -1202,6 +1241,7 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_FN("compareExchange",    atomics_compareExchange,    4,0),
     JS_FN("load",               atomics_load,               2,0),
     JS_FN("store",              atomics_store,              3,0),
+    JS_FN("exchange",           atomics_exchange,           3,0),
     JS_FN("fence",              atomics_fence,              0,0),
     JS_FN("add",                atomics_add,                3,0),
     JS_FN("sub",                atomics_sub,                3,0),
