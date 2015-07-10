@@ -290,17 +290,6 @@ ErrorResult::StealJSException(JSContext* cx,
 }
 
 void
-ErrorResult::ReportNotEnoughArgsError(JSContext* cx,
-                                      const char* ifaceName,
-                                      const char* memberName)
-{
-  MOZ_ASSERT(ErrorCode() == NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-  nsPrintfCString errorMessage("%s.%s", ifaceName, memberName);
-  ThrowErrorMessage(cx, dom::MSG_MISSING_ARGUMENTS, errorMessage.get());
-}
-
-void
 ErrorResult::ReportGenericError(JSContext* cx)
 {
   MOZ_ASSERT(!IsErrorWithMessage());
