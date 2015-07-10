@@ -260,8 +260,11 @@ pref("browser.search.order.1", "chrome://browser/locale/region.properties");
 pref("browser.search.order.2", "chrome://browser/locale/region.properties");
 pref("browser.search.order.3", "chrome://browser/locale/region.properties");
 
-// Market-specific search defaults (US market only)
+// Market-specific search defaults
 pref("browser.search.geoSpecificDefaults", true);
+pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.com/1/%APP%/%VERSION%/%CHANNEL%/%LOCALE%/%REGION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%");
+
+// US specific default (used as a fallback if the geoSpecificDefaults request fails).
 pref("browser.search.defaultenginename.US", "chrome://browser/locale/region.properties");
 pref("browser.search.order.US.1", "chrome://browser/locale/region.properties");
 pref("browser.search.order.US.2", "chrome://browser/locale/region.properties");
