@@ -8,8 +8,6 @@ let gContentAPI;
 let gContentWindow;
 let notificationBox = document.getElementById("high-priority-global-notificationbox");
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   UITourTest();
 }
