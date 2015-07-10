@@ -4814,9 +4814,13 @@ pref("dom.beforeAfterKeyboardEvent.enabled", false);
 pref("dom.presentation.enabled", false);
 pref("dom.presentation.tcp_server.debug", false);
 
-// Use raw ICU instead of CoreServices API in Unicode collation
 #ifdef XP_MACOSX
+// Use raw ICU instead of CoreServices API in Unicode collation
 pref("intl.collation.mac.use_icu", true);
+
+// Enable NSTextInput protocol for use with IMEs that have not
+// been updated to use the NSTextInputClient protocol.
+pref("intl.ime.nstextinput.enable", false);
 #endif
 
 // Enable meta-viewport support in remote APZ-enabled frames.

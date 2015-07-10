@@ -866,7 +866,8 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // The button should occupy the same space as a scrollbar
   WritingMode wm = aReflowState.GetWritingMode();
-  nscoord containerWidth = aReflowState.ComputedWidth();
+  nscoord containerWidth = aReflowState.ComputedWidth() +
+    aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerWidth);
 
   buttonRect.IStart(wm) =

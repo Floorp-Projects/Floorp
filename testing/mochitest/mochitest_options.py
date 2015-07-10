@@ -1016,12 +1016,6 @@ class AndroidArguments(ArgumentContainer):
           "default": "",
           "help": "name of the Robocop APK to use for ADB test running",
           }],
-        [["--robocop-ids"],
-         {"dest": "robocopIds",
-          "default": "",
-          "help": "name of the file containing the view ID map \
-                   (fennec_ids.txt)",
-          }],
         [["--remoteTestRoot"],
          {"dest": "remoteTestRoot",
           "default": None,
@@ -1129,13 +1123,6 @@ class AndroidArguments(ArgumentContainer):
                     "Unable to find robocop APK '%s'" %
                     options.robocopApk)
             options.robocopApk = os.path.abspath(options.robocopApk)
-
-        if options.robocopIds != "":
-            if not os.path.exists(options.robocopIds):
-                parser.error(
-                    "Unable to find specified robocop IDs file '%s'" %
-                    options.robocopIds)
-            options.robocopIds = os.path.abspath(options.robocopIds)
 
         # allow us to keep original application around for cleanup while
         # running robocop via 'am'

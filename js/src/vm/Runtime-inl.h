@@ -67,7 +67,10 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
 
     copyCachedToObject(obj, templateObj, entry->kind);
 
-    SetNewObjectMetadata(cx, obj);
+    if (group->clasp()->shouldDelayMetadataCallback())
+        cx->compartment()->setObjectPendingMetadata(cx, obj);
+    else
+        SetNewObjectMetadata(cx, obj);
 
     probes::CreateObject(cx, obj);
     gc::TraceCreateObject(obj);

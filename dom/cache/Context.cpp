@@ -786,19 +786,21 @@ already_AddRefed<Context>
 Context::Create(Manager* aManager, nsIThread* aTarget,
                 Action* aInitAction, Context* aOldContext)
 {
-  nsRefPtr<Context> context = new Context(aManager, aTarget);
-  context->Init(aInitAction, aOldContext);
+  nsRefPtr<Context> context = new Context(aManager, aTarget, aInitAction);
+  context->Init(aOldContext);
   return context.forget();
 }
 
-Context::Context(Manager* aManager, nsIThread* aTarget)
+Context::Context(Manager* aManager, nsIThread* aTarget, Action* aInitAction)
   : mManager(aManager)
   , mTarget(aTarget)
   , mData(new Data(aTarget))
   , mState(STATE_CONTEXT_PREINIT)
   , mOrphanedData(false)
+  , mInitAction(aInitAction)
 {
   MOZ_ASSERT(mManager);
+  MOZ_ASSERT(mTarget);
 }
 
 void
@@ -826,10 +828,11 @@ Context::CancelAll()
 {
   NS_ASSERT_OWNINGTHREAD(Context);
 
-  // In PREINIT state we have not dispatch the init runnable yet.  Just
+  // In PREINIT state we have not dispatch the init action yet.  Just
   // forget it.
   if (mState == STATE_CONTEXT_PREINIT) {
-    mInitRunnable = nullptr;
+    MOZ_ASSERT(!mInitRunnable);
+    mInitAction = nullptr;
 
   // In INIT state we have dispatched the runnable, but not received the
   // async completion yet.  Cancel the runnable, but don't forget about it
@@ -918,14 +921,9 @@ Context::~Context()
 }
 
 void
-Context::Init(Action* aInitAction, Context* aOldContext)
+Context::Init(Context* aOldContext)
 {
   NS_ASSERT_OWNINGTHREAD(Context);
-  MOZ_ASSERT(!mInitRunnable);
-
-  // Do this here to avoid doing an AddRef() in the constructor
-  mInitRunnable = new QuotaInitRunnable(this, mManager, mData, mTarget,
-                                        aInitAction);
 
   if (aOldContext) {
     aOldContext->SetNextContext(this);
@@ -944,10 +942,17 @@ Context::Start()
   // In this case, just do nothing here.
   if (mState == STATE_CONTEXT_CANCELED) {
     MOZ_ASSERT(!mInitRunnable);
+    MOZ_ASSERT(!mInitAction);
     return;
   }
 
   MOZ_ASSERT(mState == STATE_CONTEXT_PREINIT);
+  MOZ_ASSERT(!mInitRunnable);
+
+  mInitRunnable = new QuotaInitRunnable(this, mManager, mData, mTarget,
+                                        mInitAction);
+  mInitAction = nullptr;
+
   mState = STATE_CONTEXT_INIT;
 
   nsresult rv = mInitRunnable->Dispatch();

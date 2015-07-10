@@ -3562,6 +3562,11 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassIn
         // - ( 2.8%, 95.3%): RegExp
         // - ( 1.0%, 96.4%): Proxy
 
+        // Note that any JSClass that is special cased below likely needs to
+        // specify the JSCLASS_DELAY_METADATA_CALLBACK flag, or else we will
+        // probably crash if the object metadata callback attempts to get the
+        // size of the new object (which Debugger code does) before private
+        // slots are initialized.
     } else if (is<ArgumentsObject>()) {
         info->objectsMallocHeapMisc += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<RegExpStaticsObject>()) {
