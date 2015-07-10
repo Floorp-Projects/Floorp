@@ -1791,6 +1791,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_TAGGED_TEMPLATE:
         return FoldCall(cx, pn, parser, inGenexpLambda);
 
+      case PNK_SWITCH:
       case PNK_CASE:
       case PNK_COLON:
       case PNK_ASSIGN:
@@ -1820,15 +1821,19 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Condition) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
 
+      case PNK_DEFAULT:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(!pn->pn_left);
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_STATEMENTLIST));
+        return Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_EXPORT:
       case PNK_SHORTHAND:
-      case PNK_SWITCH:
       case PNK_LETBLOCK:
       case PNK_FOR:
       case PNK_CLASSMETHOD:
       case PNK_WITH:
       case PNK_CLASSNAMES:
-      case PNK_DEFAULT:
       case PNK_IMPORT:
       case PNK_EXPORT_FROM:
       case PNK_EXPORT_DEFAULT:
