@@ -132,10 +132,15 @@ protected:
    */
   nsCOMPtr<nsIContent> mTextContent;
   /**
-   * The browse button input.
+   * The button to open a directory picker.
    * @see nsFileControlFrame::CreateAnonymousContent
    */
-  nsCOMPtr<nsIContent> mBrowse;
+  nsCOMPtr<nsIContent> mBrowseDirs;
+  /**
+   * The button to open a file picker.
+   * @see nsFileControlFrame::CreateAnonymousContent
+   */
+  nsCOMPtr<nsIContent> mBrowseFiles;
 
   /**
    * Drag and drop mouse listener.

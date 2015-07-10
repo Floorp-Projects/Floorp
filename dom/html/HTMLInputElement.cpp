@@ -4773,7 +4773,10 @@ HTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 {
   nsChangeHint retval =
     nsGenericHTMLFormElementWithState::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsGkAtoms::type) {
+  if (aAttribute == nsGkAtoms::type ||
+      // The presence or absence of the 'directory' attribute determines what
+      // buttons we show for type=file.
+      aAttribute == nsGkAtoms::directory) {
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   } else if (mType == NS_FORM_INPUT_IMAGE &&
              (aAttribute == nsGkAtoms::alt ||
