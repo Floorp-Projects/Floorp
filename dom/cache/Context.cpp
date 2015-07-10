@@ -83,9 +83,9 @@ private:
   {
     // We could proxy release our data here, but instead just assert.  The
     // Context code should guarantee that we are destroyed on the target
-    // thread.  If we're not, then QuotaManager might race and try to clear the
-    // origin out from under us.
-    MOZ_ASSERT(mTarget == NS_GetCurrentThread());
+    // thread once the connection is initialized.  If we're not, then
+    // QuotaManager might race and try to clear the origin out from under us.
+    MOZ_ASSERT_IF(mConnection, mTarget == NS_GetCurrentThread());
   }
 
   nsCOMPtr<nsIThread> mTarget;
