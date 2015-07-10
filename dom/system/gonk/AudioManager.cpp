@@ -356,7 +356,7 @@ AudioManager::HandleAudioChannelProcessChanged()
     return;
   }
 
-  AudioChannelService *service = AudioChannelService::GetOrCreateAudioChannelService();
+  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   MOZ_ASSERT(service);
 
   bool telephonyChannelIsActive = service->TelephonyChannelIsActive();
@@ -651,8 +651,13 @@ AudioManager::SetPhoneState(int32_t aState)
     }
 
     // Telephony can always play.
-    int32_t canPlay;
-    mPhoneAudioAgent->StartPlaying(&canPlay);
+    float volume = 0.0;
+    bool muted = true;
+
+    nsresult rv = mPhoneAudioAgent->StartPlaying(&volume, &muted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
