@@ -970,7 +970,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 /* identity box */
 
 #identity-box {
-  padding: 1px;
+  margin: -1px;
+  -moz-margin-end: 4px;
+  padding: 2px;
+  -moz-padding-end: 1px;
   font-size: .9em;
 }
 
@@ -1020,12 +1023,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   padding-right: 5.01px;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
-  -moz-margin-end: 4px;
-}
-
-#identity-box.verifiedIdentity:not(:-moz-lwtheme) {
+#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover) {
   background-color: var(--verified-identity-box-backgroundcolor);
 }
 
@@ -1039,7 +1037,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-padding-end: 5px;
 }
 
-%include ../shared/identity-block.inc.css
+%include ../shared/identity-block/identity-block.inc.css
 
 #page-proxy-favicon {
   margin-top: 1px;

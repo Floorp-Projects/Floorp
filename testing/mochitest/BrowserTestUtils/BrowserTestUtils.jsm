@@ -154,6 +154,41 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Waits for the next tab to open and load a given URL.
+   *
+   * The method doesn't wait for the tab contents to load.
+   *
+   * @param {tabbrowser} tabbrowser
+   *        The tabbrowser to look for the next new tab in.
+   * @param {string} url
+   *        A string URL to look for in the new tab.
+   *
+   * @return {Promise}
+   * @resolves With the {xul:tab} when a tab is opened and its location changes to the given URL.
+   */
+  waitForNewTab(tabbrowser, url) {
+    return new Promise((resolve, reject) => {
+      tabbrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(openEvent) {
+        tabbrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
+
+        let progressListener = {
+          onLocationChange(aBrowser) {
+            if (aBrowser != openEvent.target.linkedBrowser ||
+                aBrowser.currentURI.spec != url) {
+              return;
+            }
+
+            tabbrowser.removeTabsProgressListener(progressListener);
+            resolve(openEvent.target);
+          },
+        };
+        tabbrowser.addTabsProgressListener(progressListener);
+
+      });
+    });
+  },
+
+  /**
    * Loads a new URI in the given browser and waits until we really started
    * loading. In e10s browser.loadURI() can be an asynchronous operation due
    * to having to switch the browser's remoteness and keep its shistory data.

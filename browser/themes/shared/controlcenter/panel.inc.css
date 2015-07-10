@@ -103,6 +103,10 @@
   opacity: 0.5;
 }
 
+.identity-popup-button:-moz-focusring {
+  border-color: transparent;
+}
+
 /* EXPAND BUTTON */
 
 .identity-popup-expander {
@@ -203,13 +207,10 @@
 }
 
 #identity-popup-securityView.verifiedDomain,
-#identity-popup-security-content.verifiedDomain {
-  background-image: url(chrome://browser/skin/controlcenter/conn-secure-dv.svg);
-}
-
 #identity-popup-securityView.verifiedIdentity,
+#identity-popup-security-content.verifiedDomain,
 #identity-popup-security-content.verifiedIdentity {
-  background-image: url(chrome://browser/skin/controlcenter/conn-secure-ev.svg);
+  background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
 #identity-popup-securityView.mixedActiveContent,
