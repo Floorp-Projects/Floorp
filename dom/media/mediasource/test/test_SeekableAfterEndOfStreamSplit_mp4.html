@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: seekable attribute after end of stream with split appendBuffer</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/mp4");
+
+    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+      // 25819 is the offset of the first media segment's end
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25819));
+      var updateCount = 0;
+      sb.addEventListener("updateend", function () {
+        updateCount++;
+        if (updateCount == 1) {
+          // 25819 is the offset of the first media segment's end
+          sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
+        }
+        else if (updateCount == 2) {
+          ms.endOfStream();
+        }
+      });
+    });
+
+    var target = 1.3;
+
+    v.addEventListener("loadedmetadata", function () {
+      ok(v.seekable.length, "Resource is seekable");
+      ok(v.seekable.length &&
+          target >= v.seekable.start(0) &&
+          target < v.seekable.end(0), "Target is within seekable range");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

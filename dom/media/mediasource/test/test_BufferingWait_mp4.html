@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Don't get stuck buffering for too long when we have frames to show</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var receivedSourceOpen = false;
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    ok(true, "Receive a sourceopen event");
+    ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
+    receivedSourceOpen = true;
+    var sb = ms.addSourceBuffer("video/mp4");
+    ok(sb, "Create a SourceBuffer");
+
+    function waitUntilTime(targetTime) {
+      return new Promise(function(resolve, reject) {
+        v.addEventListener("waiting", function onwaiting() {
+          info("Got a waiting event at " + v.currentTime);
+          if (v.currentTime >= targetTime) {
+            ok(true, "Reached target time of: " + targetTime);
+            v.removeEventListener("waiting", onwaiting);
+            resolve();
+          }
+        });
+      });
+    }
+
+    sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+    fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
+    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['1'], '.m4s'))
+    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['2'], '.m4s'))
+    /* Note - Missing |bipbop3| segment here corresponding to (1.62, 2.41] */
+    /* Note - Missing |bipbop4| segment here corresponding to (2.41, 3.20]  */
+    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['5'], '.m4s'))
+    .then(function() {
+        var promise = waitUntilTime(1.4);
+        info("Playing video. It should play for a bit, then fire 'waiting'");
+        v.play();
+        return promise;
+      }).then(function() {
+        window.firstStop = Date.now();
+        fetchAndLoad(sb, 'bipbop/bipbop', ['3'], '.m4s');
+        return waitUntilTime(2.2);
+      }).then(function() {
+        var waitDuration = (Date.now() - window.firstStop) / 1000;
+        ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
+        once(v, 'ended', SimpleTest.finish.bind(SimpleTest));
+        return fetchAndLoad(sb, 'bipbop/bipbop', ['4'], '.m4s');
+      }).then(function() {
+        ms.endOfStream();
+      });;
+  });
+});
+</script>
+</pre>
+</body>
+</html>
