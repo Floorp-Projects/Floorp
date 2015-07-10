@@ -22,7 +22,6 @@ for platform in ['linux32', 'linux64', 'macosx-universal']:
 
 for platform in ['linux32', 'linux64', 'macosx-universal', 'win32', 'win64']:
     whitelist['nightly'][platform] += ['ac_add_options --enable-signmar']
-    whitelist['nightly'][platform] += ['ac_add_options --enable-js-diagnostics']
 
 whitelist['nightly']['linux32'] += [
     'CXX=$REAL_CXX',
