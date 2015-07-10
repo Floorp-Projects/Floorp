@@ -149,15 +149,13 @@ class RespondWithHandler final : public PromiseNativeHandler
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   RequestMode mRequestMode;
-  bool mIsClientRequest;
 public:
   RespondWithHandler(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                      nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
-                     RequestMode aRequestMode, bool aIsClientRequest)
+                     RequestMode aRequestMode)
     : mInterceptedChannel(aChannel)
     , mServiceWorker(aServiceWorker)
     , mRequestMode(aRequestMode)
-    , mIsClientRequest(aIsClientRequest)
   {
   }
 
@@ -258,26 +256,15 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  // Section 4.2, step 2.2:
-  //  If one of the following conditions is true, return a network error:
-  //    * response's type is "error".
-  //    * request's mode is not "no-cors" and response's type is "opaque".
-  //    * request is a client request and response's type is neither "basic"
-  //      nor "default".
-
-  if (response->Type() == ResponseType::Error) {
-    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_ERROR_RESPONSE);
-    return;
-  }
-
+  // Section 4.2, step 2.2 "If either response's type is "opaque" and request's
+  // mode is not "no-cors" or response's type is error, return a network error."
   if (response->Type() == ResponseType::Opaque && mRequestMode != RequestMode::No_cors) {
     autoCancel.SetCancelStatus(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE);
     return;
   }
 
-  if (mIsClientRequest && response->Type() != ResponseType::Basic &&
-      response->Type() != ResponseType::Default) {
-    autoCancel.SetCancelStatus(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION);
+  if (response->Type() == ResponseType::Error) {
+    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_ERROR_RESPONSE);
     return;
   }
 
@@ -364,11 +351,9 @@ FetchEvent::RespondWith(const ResponseOrPromise& aArg, ErrorResult& aRv)
   } else if (aArg.IsPromise()) {
     promise = &aArg.GetAsPromise();
   }
-  nsRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   mWaitToRespond = true;
   nsRefPtr<RespondWithHandler> handler =
-    new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode(),
-                           ir->IsClientRequest());
+    new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode());
   promise->AppendNativeHandler(handler);
 }
 
