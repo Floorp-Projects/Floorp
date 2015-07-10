@@ -403,7 +403,13 @@ private:
 
     AutoSafeJSContext cx;
 
-    JS::Rooted<JSObject*> global(cx, mConsole->GetOrCreateSandbox(cx, wp->GetPrincipal()));
+    nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox =
+      mConsole->GetOrCreateSandbox(cx, wp->GetPrincipal());
+    if (NS_WARN_IF(!sandbox)) {
+       return;
+    }
+
+    JS::Rooted<JSObject*> global(cx, sandbox->GetJSObject());
     if (NS_WARN_IF(!global)) {
       return;
     }
@@ -683,7 +689,7 @@ private:
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 
-// We don't need to traverse/unlink mStorage and mSandbox because they are not
+// We don't need to traverse/unlink mStorage and mSanbox because they are not
 // CCed objects and they are only used on the main thread, even when this
 // Console object is used on workers.
 
@@ -737,12 +743,19 @@ Console::Console(nsPIDOMWindow* aWindow)
 Console::~Console()
 {
   if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+
     if (mStorage) {
-      NS_ReleaseOnMainThread(mStorage);
+      nsIConsoleAPIStorage* storage;
+      mStorage.forget(&storage);
+      NS_ProxyRelease(mainThread, storage, false);
     }
 
     if (mSandbox) {
-      NS_ReleaseOnMainThread(mSandbox);
+      nsIXPConnectJSObjectHolder* sandbox;
+      mSandbox.forget(&sandbox);
+      NS_ProxyRelease(mainThread, sandbox, false);
     }
   }
 
@@ -1891,7 +1904,7 @@ Console::ShouldIncludeStackTrace(MethodName aMethodName)
   }
 }
 
-JSObject*
+nsIXPConnectJSObjectHolder*
 Console::GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1900,16 +1913,14 @@ Console::GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal)
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
     MOZ_ASSERT(xpc, "This should never be null!");
 
-    JS::Rooted<JSObject*> sandbox(aCx);
-    nsresult rv = xpc->CreateSandbox(aCx, aPrincipal, sandbox.address());
+    nsresult rv = xpc->CreateSandbox(aCx, aPrincipal,
+                                     getter_AddRefs(mSandbox));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
-
-    mSandbox = new JSObjectHolder(aCx, sandbox);
   }
 
-  return mSandbox->GetJSObject();
+  return mSandbox;
 }
 
 } // namespace dom
