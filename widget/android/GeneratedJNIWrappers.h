@@ -18,7 +18,7 @@ public:
     typedef mozilla::jni::Ref<DownloadsIntegration> Ref;
     typedef mozilla::jni::LocalRef<DownloadsIntegration> LocalRef;
     typedef mozilla::jni::GlobalRef<DownloadsIntegration> GlobalRef;
-    typedef const typename mozilla::jni::Param<DownloadsIntegration>::Type& Param;
+    typedef const mozilla::jni::Param<DownloadsIntegration>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/DownloadsIntegration";
@@ -49,7 +49,7 @@ public:
     typedef mozilla::jni::Ref<GeckoAppShell> Ref;
     typedef mozilla::jni::LocalRef<GeckoAppShell> LocalRef;
     typedef mozilla::jni::GlobalRef<GeckoAppShell> GlobalRef;
-    typedef const typename mozilla::jni::Param<GeckoAppShell>::Type& Param;
+    typedef const mozilla::jni::Param<GeckoAppShell>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/GeckoAppShell";
@@ -1295,7 +1295,7 @@ public:
     typedef mozilla::jni::Ref<GeckoJavaSampler> Ref;
     typedef mozilla::jni::LocalRef<GeckoJavaSampler> LocalRef;
     typedef mozilla::jni::GlobalRef<GeckoJavaSampler> GlobalRef;
-    typedef const typename mozilla::jni::Param<GeckoJavaSampler>::Type& Param;
+    typedef const mozilla::jni::Param<GeckoJavaSampler>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/GeckoJavaSampler";
@@ -1416,7 +1416,7 @@ public:
     typedef mozilla::jni::Ref<RestrictedProfiles> Ref;
     typedef mozilla::jni::LocalRef<RestrictedProfiles> LocalRef;
     typedef mozilla::jni::GlobalRef<RestrictedProfiles> GlobalRef;
-    typedef const typename mozilla::jni::Param<RestrictedProfiles>::Type& Param;
+    typedef const mozilla::jni::Param<RestrictedProfiles>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/RestrictedProfiles";
@@ -1477,7 +1477,7 @@ public:
     typedef mozilla::jni::Ref<SurfaceBits> Ref;
     typedef mozilla::jni::LocalRef<SurfaceBits> LocalRef;
     typedef mozilla::jni::GlobalRef<SurfaceBits> GlobalRef;
-    typedef const typename mozilla::jni::Param<SurfaceBits>::Type& Param;
+    typedef const mozilla::jni::Param<SurfaceBits>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/SurfaceBits";
@@ -1576,7 +1576,7 @@ public:
     typedef mozilla::jni::Ref<ThumbnailHelper> Ref;
     typedef mozilla::jni::LocalRef<ThumbnailHelper> LocalRef;
     typedef mozilla::jni::GlobalRef<ThumbnailHelper> GlobalRef;
-    typedef const typename mozilla::jni::Param<ThumbnailHelper>::Type& Param;
+    typedef const mozilla::jni::Param<ThumbnailHelper>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/ThumbnailHelper";
@@ -1607,7 +1607,7 @@ public:
     typedef mozilla::jni::Ref<DisplayPortMetrics> Ref;
     typedef mozilla::jni::LocalRef<DisplayPortMetrics> LocalRef;
     typedef mozilla::jni::GlobalRef<DisplayPortMetrics> GlobalRef;
-    typedef const typename mozilla::jni::Param<DisplayPortMetrics>::Type& Param;
+    typedef const mozilla::jni::Param<DisplayPortMetrics>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/DisplayPortMetrics";
@@ -1668,7 +1668,7 @@ public:
     typedef mozilla::jni::Ref<GLController> Ref;
     typedef mozilla::jni::LocalRef<GLController> LocalRef;
     typedef mozilla::jni::GlobalRef<GLController> GlobalRef;
-    typedef const typename mozilla::jni::Param<GLController>::Type& Param;
+    typedef const mozilla::jni::Param<GLController>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/GLController";
@@ -1699,7 +1699,7 @@ public:
     typedef mozilla::jni::Ref<GeckoLayerClient> Ref;
     typedef mozilla::jni::LocalRef<GeckoLayerClient> LocalRef;
     typedef mozilla::jni::GlobalRef<GeckoLayerClient> GlobalRef;
-    typedef const typename mozilla::jni::Param<GeckoLayerClient>::Type& Param;
+    typedef const mozilla::jni::Param<GeckoLayerClient>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/GeckoLayerClient";
@@ -1880,7 +1880,7 @@ public:
     typedef mozilla::jni::Ref<ImmutableViewportMetrics> Ref;
     typedef mozilla::jni::LocalRef<ImmutableViewportMetrics> LocalRef;
     typedef mozilla::jni::GlobalRef<ImmutableViewportMetrics> GlobalRef;
-    typedef const typename mozilla::jni::Param<ImmutableViewportMetrics>::Type& Param;
+    typedef const mozilla::jni::Param<ImmutableViewportMetrics>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/ImmutableViewportMetrics";
@@ -1911,7 +1911,7 @@ public:
     typedef mozilla::jni::Ref<LayerView> Ref;
     typedef mozilla::jni::LocalRef<LayerView> LocalRef;
     typedef mozilla::jni::GlobalRef<LayerView> GlobalRef;
-    typedef const typename mozilla::jni::Param<LayerView>::Type& Param;
+    typedef const mozilla::jni::Param<LayerView>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/LayerView";
@@ -1957,7 +1957,7 @@ public:
     typedef mozilla::jni::Ref<NativePanZoomController> Ref;
     typedef mozilla::jni::LocalRef<NativePanZoomController> LocalRef;
     typedef mozilla::jni::GlobalRef<NativePanZoomController> GlobalRef;
-    typedef const typename mozilla::jni::Param<NativePanZoomController>::Type& Param;
+    typedef const mozilla::jni::Param<NativePanZoomController>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/NativePanZoomController";
@@ -1988,7 +1988,7 @@ public:
     typedef mozilla::jni::Ref<ProgressiveUpdateData> Ref;
     typedef mozilla::jni::LocalRef<ProgressiveUpdateData> LocalRef;
     typedef mozilla::jni::GlobalRef<ProgressiveUpdateData> GlobalRef;
-    typedef const typename mozilla::jni::Param<ProgressiveUpdateData>::Type& Param;
+    typedef const mozilla::jni::Param<ProgressiveUpdateData>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/ProgressiveUpdateData";
@@ -2102,7 +2102,7 @@ public:
     typedef mozilla::jni::Ref<ViewTransform> Ref;
     typedef mozilla::jni::LocalRef<ViewTransform> LocalRef;
     typedef mozilla::jni::GlobalRef<ViewTransform> GlobalRef;
-    typedef const typename mozilla::jni::Param<ViewTransform>::Type& Param;
+    typedef const mozilla::jni::Param<ViewTransform>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/gfx/ViewTransform";
@@ -2286,7 +2286,7 @@ public:
     typedef mozilla::jni::Ref<NativeZip> Ref;
     typedef mozilla::jni::LocalRef<NativeZip> LocalRef;
     typedef mozilla::jni::GlobalRef<NativeZip> GlobalRef;
-    typedef const typename mozilla::jni::Param<NativeZip>::Type& Param;
+    typedef const mozilla::jni::Param<NativeZip>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/mozglue/NativeZip";
@@ -2317,7 +2317,7 @@ public:
     typedef mozilla::jni::Ref<MatrixBlobCursor> Ref;
     typedef mozilla::jni::LocalRef<MatrixBlobCursor> LocalRef;
     typedef mozilla::jni::GlobalRef<MatrixBlobCursor> GlobalRef;
-    typedef const typename mozilla::jni::Param<MatrixBlobCursor>::Type& Param;
+    typedef const mozilla::jni::Param<MatrixBlobCursor>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/sqlite/MatrixBlobCursor";
@@ -2408,7 +2408,7 @@ public:
     typedef mozilla::jni::Ref<SQLiteBridgeException> Ref;
     typedef mozilla::jni::LocalRef<SQLiteBridgeException> LocalRef;
     typedef mozilla::jni::GlobalRef<SQLiteBridgeException> GlobalRef;
-    typedef const typename mozilla::jni::Param<SQLiteBridgeException>::Type& Param;
+    typedef const mozilla::jni::Param<SQLiteBridgeException>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/sqlite/SQLiteBridgeException";
@@ -2469,7 +2469,7 @@ public:
     typedef mozilla::jni::Ref<Clipboard> Ref;
     typedef mozilla::jni::LocalRef<Clipboard> LocalRef;
     typedef mozilla::jni::GlobalRef<Clipboard> GlobalRef;
-    typedef const typename mozilla::jni::Param<Clipboard>::Type& Param;
+    typedef const mozilla::jni::Param<Clipboard>& Param;
 
     static constexpr char name[] =
             "org/mozilla/gecko/util/Clipboard";
