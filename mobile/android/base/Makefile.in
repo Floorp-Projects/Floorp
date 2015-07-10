@@ -46,6 +46,7 @@ GARBAGE += \
   .aapt.deps \
   javah.out \
   jni-stubs.inc \
+  GeneratedJNINatives.h \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
   $(NULL)
@@ -232,6 +233,8 @@ jni-stubs.inc: gecko-browser.jar gecko-mozglue.jar gecko-util.jar sync-thirdpart
 
 ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
 
+# This annotation processing step also generates
+# GeneratedJNIWrappers.h and GeneratedJNINatives.h
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
@@ -463,12 +466,9 @@ $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,geck
 include $(topsrcdir)/config/android-common.mk
 
 update-generated-wrappers:
-	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp.old
-	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h.old
-	@echo old GeneratedJNIWrappers.cpp/h moved to GeneratedJNIWrappers.cpp/h.old
 	@cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android
-	@cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android
-	@echo Updated GeneratedJNIWrappers
+	@cp $(CURDIR)/GeneratedJNIWrappers.cpp $(CURDIR)/GeneratedJNIWrappers.h $(CURDIR)/GeneratedJNINatives.h $(topsrcdir)/widget/android
+	@echo Updated generated JNI code
 
 .PHONY: update-generated-wrappers
 
@@ -500,9 +500,14 @@ libs:: geckoview_resources.zip
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
 endif
 
+# GeneratedJNIWrappers.cpp target also generates
+# GeneratedJNIWrappers.h and GeneratedJNINatives.h
 libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
-	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
+	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && \
+	  diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
+	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
+	  diff GeneratedJNINatives.h $(topsrcdir)/widget/android/GeneratedJNINatives.h >/dev/null) || \
 	 (echo '*****************************************************' && \
 	  echo '***   Error: The generated JNI code has changed   ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \
