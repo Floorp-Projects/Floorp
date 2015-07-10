@@ -66,6 +66,7 @@ private:
   // PuppetWidget does not implement parent apis, but we need
   // them for plugin widgets.
   nsCOMPtr<nsIWidget> mParent;
+  uintptr_t mCachedPluginPort;
 };
 
 }  // namespace widget
