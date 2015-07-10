@@ -128,6 +128,12 @@ LIRGeneratorX64::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 }
 
 void
+LIRGeneratorX64::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+{
+    lowerAtomicExchangeTypedArrayElement(ins, /* useI386ByteRegisters = */ false);
+}
+
+void
 LIRGeneratorX64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     lowerAtomicTypedArrayElementBinop(ins, /* useI386ByteRegisters = */ false);
@@ -217,6 +223,23 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
         new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
 
     defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+}
+
+void
+LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+{
+    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+
+    const LAllocation ptr = useRegister(ins->ptr());
+    const LAllocation value = useRegister(ins->value());
+
+    // The output may not be used but will be clobbered regardless,
+    // so ignore the case where we're not using the value and just
+    // use the output register as a temp.
+
+    LAsmJSAtomicExchangeHeap* lir =
+        new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value);
+    define(lir, ins);
 }
 
 void

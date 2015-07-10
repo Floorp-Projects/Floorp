@@ -5,11 +5,11 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var float32x4 = SIMD.float32x4;
-var float64x2 = SIMD.float64x2;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
-var int32x4 = SIMD.int32x4;
+var Float32x4 = SIMD.Float32x4;
+var Float64x2 = SIMD.Float64x2;
+var Int8x16 = SIMD.Int8x16;
+var Int16x8 = SIMD.Int16x8;
+var Int32x4 = SIMD.Int32x4;
 
 function swizzle2(arr, x, y) {
     return [arr[x], arr[y]];
@@ -31,14 +31,14 @@ function swizzle16(arr, s0, s1, s2, s3, s4, s5, s6, s7,
 
 function getNumberOfLanesFromType(type) {
     switch (type) {
-      case int8x16:
+      case Int8x16:
         return 16;
-      case int16x8:
+      case Int16x8:
         return 8;
-      case float32x4:
-      case int32x4:
+      case Float32x4:
+      case Int32x4:
         return 4;
-      case float64x2:
+      case Float64x2:
         return 2;
     }
     throw new TypeError("Unknown SIMD type.");
@@ -154,53 +154,53 @@ function testSwizzleForType(type) {
 }
 
 function testSwizzleInt8x16() {
-    var v = int16x8(1, 2, 3, 4, 5, 6, 7, 8);
+    var v = Int16x8(1, 2, 3, 4, 5, 6, 7, 8);
 
     assertThrowsInstanceOf(function() {
-        int8x16.swizzle(v, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        Int8x16.swizzle(v, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }, TypeError);
 
-    testSwizzleForType(int8x16);
+    testSwizzleForType(Int8x16);
 }
 
 function testSwizzleInt16x8() {
-    var v = int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    var v = Int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
     assertThrowsInstanceOf(function() {
-        int16x8.swizzle(v, 0, 0, 0, 0, 0, 0, 0, 0);
+        Int16x8.swizzle(v, 0, 0, 0, 0, 0, 0, 0, 0);
     }, TypeError);
 
-    testSwizzleForType(int16x8);
+    testSwizzleForType(Int16x8);
 }
 
 function testSwizzleInt32x4() {
-    var v = int32x4(1, 2, 3, 4);
+    var v = Int32x4(1, 2, 3, 4);
 
     assertThrowsInstanceOf(function() {
-        float32x4.swizzle(v, 0, 0, 0, 0);
+        Float32x4.swizzle(v, 0, 0, 0, 0);
     }, TypeError);
 
-    testSwizzleForType(int32x4);
+    testSwizzleForType(Int32x4);
 }
 
 function testSwizzleFloat32x4() {
-    var v = float32x4(1, 2, 3, 4);
+    var v = Float32x4(1, 2, 3, 4);
 
     assertThrowsInstanceOf(function() {
-        int32x4.swizzle(v, 0, 0, 0, 0);
+        Int32x4.swizzle(v, 0, 0, 0, 0);
     }, TypeError);
 
-    testSwizzleForType(float32x4);
+    testSwizzleForType(Float32x4);
 }
 
 function testSwizzleFloat64x2() {
-    var v = float64x2(1, 2);
+    var v = Float64x2(1, 2);
 
     assertThrowsInstanceOf(function() {
-        float32x4.swizzle(v, 0, 0, 0, 0);
+        Float32x4.swizzle(v, 0, 0, 0, 0);
     }, TypeError);
 
-    testSwizzleForType(float64x2);
+    testSwizzleForType(Float64x2);
 }
 
 function shuffle2(lhsa, rhsa, x, y) {
@@ -367,53 +367,53 @@ function testShuffleForType(type) {
 }
 
 function testShuffleInt8x16() {
-    var v = int16x8(1, 2, 3, 4, 5, 6, 7, 8);
+    var v = Int16x8(1, 2, 3, 4, 5, 6, 7, 8);
 
     assertThrowsInstanceOf(function() {
-        int8x16.shuffle(v, v, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        Int8x16.shuffle(v, v, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }, TypeError);
 
-    testShuffleForType(int8x16);
+    testShuffleForType(Int8x16);
 }
 
 function testShuffleInt16x8() {
-    var v = int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    var v = Int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
 
     assertThrowsInstanceOf(function() {
-        int16x8.shuffle(v, v, 0, 0, 0, 0, 0, 0, 0, 0);
+        Int16x8.shuffle(v, v, 0, 0, 0, 0, 0, 0, 0, 0);
     }, TypeError);
 
-    testShuffleForType(int16x8);
+    testShuffleForType(Int16x8);
 }
 
 function testShuffleInt32x4() {
-    var v = int32x4(1, 2, 3, 4);
+    var v = Int32x4(1, 2, 3, 4);
 
     assertThrowsInstanceOf(function() {
-        float32x4.shuffle(v, v, 0, 0, 0, 0);
+        Float32x4.shuffle(v, v, 0, 0, 0, 0);
     }, TypeError);
 
-    testShuffleForType(int32x4);
+    testShuffleForType(Int32x4);
 }
 
 function testShuffleFloat32x4() {
-    var v = float32x4(1, 2, 3, 4);
+    var v = Float32x4(1, 2, 3, 4);
 
     assertThrowsInstanceOf(function() {
-        int32x4.shuffle(v, v, 0, 0, 0, 0);
+        Int32x4.shuffle(v, v, 0, 0, 0, 0);
     }, TypeError);
 
-    testShuffleForType(float32x4);
+    testShuffleForType(Float32x4);
 }
 
 function testShuffleFloat64x2() {
-    var v = float64x2(1, 2);
+    var v = Float64x2(1, 2);
 
     assertThrowsInstanceOf(function() {
-        float32x4.shuffle(v, v, 0, 0, 0, 0);
+        Float32x4.shuffle(v, v, 0, 0, 0, 0);
     }, TypeError);
 
-    testShuffleForType(float64x2);
+    testShuffleForType(Float64x2);
 }
 
 testSwizzleInt8x16();

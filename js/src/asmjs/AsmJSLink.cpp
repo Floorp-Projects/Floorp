@@ -417,6 +417,7 @@ ValidateAtomicsBuiltinFunction(JSContext* cx, AsmJSModule::Global& global, Handl
     Native native = nullptr;
     switch (global.atomicsBuiltinFunction()) {
       case AsmJSAtomicsBuiltin_compareExchange: native = atomics_compareExchange; break;
+      case AsmJSAtomicsBuiltin_exchange: native = atomics_exchange; break;
       case AsmJSAtomicsBuiltin_load: native = atomics_load; break;
       case AsmJSAtomicsBuiltin_store: native = atomics_store; break;
       case AsmJSAtomicsBuiltin_fence: native = atomics_fence; break;

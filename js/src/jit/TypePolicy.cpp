@@ -468,6 +468,24 @@ template bool ConvertToInt32Policy<0>::staticAdjustInputs(TempAllocator& alloc, 
 
 template <unsigned Op>
 bool
+TruncateToInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
+{
+    MDefinition* in = def->getOperand(Op);
+    if (in->type() == MIRType_Int32)
+        return true;
+
+    MTruncateToInt32* replace = MTruncateToInt32::New(alloc, in);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(Op, replace);
+
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+}
+
+template bool TruncateToInt32Policy<2>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+template bool TruncateToInt32Policy<3>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+
+template <unsigned Op>
+bool
 DoublePolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
 {
     MDefinition* in = def->getOperand(Op);
@@ -1148,12 +1166,14 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2> >)      \
     _(Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, BoxPolicy<2> >)         \
     _(Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >)         \
+    _(Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2> >) \
     _(Mix3Policy<ObjectPolicy<0>, ObjectPolicy<1>, IntPolicy<2> >)      \
     _(Mix3Policy<StringPolicy<0>, IntPolicy<1>, IntPolicy<2>>)          \
     _(Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >)   \
     _(Mix3Policy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >)   \
     _(Mix4Policy<ObjectPolicy<0>, StringPolicy<1>, BoxPolicy<2>, BoxPolicy<3>>) \
     _(Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>) \
+    _(Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2>, TruncateToInt32Policy<3> >) \
     _(Mix4Policy<SimdScalarPolicy<0>, SimdScalarPolicy<1>, SimdScalarPolicy<2>, SimdScalarPolicy<3> >) \
     _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >)                        \
     _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1> >)   \

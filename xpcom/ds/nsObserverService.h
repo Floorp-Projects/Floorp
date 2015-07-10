@@ -46,8 +46,6 @@ private:
   void RegisterReporter();
 
   static const size_t kSuspectReferentCount = 100;
-  static PLDHashOperator CountReferents(nsObserverList* aObserverList,
-                                        void* aClosure);
   bool mShuttingDown;
   nsTHashtable<nsObserverList> mObserverTopicTable;
 };

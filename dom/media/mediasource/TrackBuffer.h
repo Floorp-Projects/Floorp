@@ -170,7 +170,7 @@ private:
   void RemoveDecoder(SourceBufferDecoder* aDecoder);
 
   // Remove all empty decoders from the provided list;
-  void RemoveEmptyDecoders(const nsTArray<nsRefPtr<SourceBufferDecoder>>& aDecoders);
+  void RemoveEmptyDecoders(const nsTArray<SourceBufferDecoder*>& aDecoders);
 
   void OnMetadataRead(MetadataHolder* aMetadata,
                       SourceBufferDecoder* aDecoder,

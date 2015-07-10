@@ -27,6 +27,7 @@
     _(SoftUDivOrMod)            \
     _(AsmJSLoadFuncPtr)         \
     _(AsmJSCompareExchangeCallout) \
+    _(AsmJSAtomicExchangeCallout) \
     _(AsmJSAtomicBinopCallout)
 
 #endif /* jit_arm_LOpcodes_arm_h */

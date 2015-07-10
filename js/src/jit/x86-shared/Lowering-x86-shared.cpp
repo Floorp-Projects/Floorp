@@ -452,6 +452,45 @@ LIRGeneratorX86Shared::lowerCompareExchangeTypedArrayElement(MCompareExchangeTyp
 }
 
 void
+LIRGeneratorX86Shared::lowerAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins,
+                                                            bool useI386ByteRegisters)
+{
+    MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
+
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation value = useRegister(ins->value());
+
+    // The underlying instruction is XCHG, which can operate on any
+    // register.
+    //
+    // If the target is a floating register (for Uint32) then we need
+    // a temp into which to exchange.
+    //
+    // If the source is a byte array then we need a register that has
+    // a byte size; in this case -- on x86 only -- pin the output to
+    // an appropriate register and use that as a temp in the back-end.
+
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->arrayType() == Scalar::Uint32) {
+        // This restriction is bug 1077305.
+        MOZ_ASSERT(ins->type() == MIRType_Double);
+        tempDef = temp();
+    }
+
+    LAtomicExchangeTypedArrayElement* lir =
+        new(alloc()) LAtomicExchangeTypedArrayElement(elements, index, value, tempDef);
+
+    if (useI386ByteRegisters && ins->isByteArray())
+        defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    else
+        define(lir, ins);
+}
+
+void
 LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
                                                          bool useI386ByteRegisters)
 {

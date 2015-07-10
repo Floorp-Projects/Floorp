@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: append segments with delay</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("untriaged");
+
+var updateCount = 0;
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/mp4");
+
+    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
+      sb.addEventListener("updateend", function () {
+        updateCount++;
+        if (updateCount == 1) {
+          window.setTimeout(function () {
+            sb.appendBuffer(new Uint8Array(arrayBuffer, 1395));
+          }, 1000);
+        }
+        else if (updateCount == 2) {
+          ms.endOfStream();
+        }
+      });
+      v.play();
+    });
+  });
+
+  v.addEventListener("ended", function () {
+    // The bipbop video doesn't start at 0. The old MSE code adjust the
+    // timestamps and ignore the audio track. The new one doesn't.
+    isfuzzy(v.duration, 1.696, 0.166, "Video has correct duration");
+    isfuzzy(v.currentTime, 1.696, 0.166, "Video has played to end");
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

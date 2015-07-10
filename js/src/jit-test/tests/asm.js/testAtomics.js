@@ -12,6 +12,7 @@ function loadModule_int32(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -54,6 +55,31 @@ function loadModule_int32(stdlib, foreign, heap) {
 	return v|0;
     }
 
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i32a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i32a, i>>2, 42)|0;
+	return v|0;
+    }
+
+    // Exchange 1+2 into element 200.  This is not called; all we're
+    // checking is that the compilation succeeds, since 1+2 has type
+    // "intish" (asm.js spec "AdditiveExpression") and this should be
+    // allowed.
+    function do_xchg_intish() {
+	var v = 0;
+	v = atomic_exchange(i32a, 200, 1+2)|0;
+	return v|0;
+    }
+
     // Add 37 to element 10
     function do_add() {
 	var v = 0;
@@ -66,6 +92,14 @@ function loadModule_int32(stdlib, foreign, heap) {
 	i = i|0;
 	var v = 0;
 	v = atomic_add(i32a, i>>2, 37)|0;
+	return v|0;
+    }
+
+    // As for do_xchg_intish, above.  Given the structure of the
+    // compiler, this covers all the binops.
+    function do_add_intish() {
+	var v = 0;
+	v = atomic_add(i32a, 10, 1+2)|0;
 	return v|0;
     }
 
@@ -136,6 +170,14 @@ function loadModule_int32(stdlib, foreign, heap) {
 	return v|0;
     }
 
+    // As for do_xchg_intish, above.  Will not be called, is here just
+    // to test that the compiler allows intish arguments.
+    function do_cas_intish() {
+	var v = 0;
+	v = atomic_cmpxchg(i32a, 100, 1+2, 2+3)|0;
+	return v|0;
+    }
+
     // CAS element 100: -1 -> 0x5A5A5A5A
     function do_cas2() {
 	var v = 0;
@@ -164,8 +206,12 @@ function loadModule_int32(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
+	     xchg_intish: do_xchg_intish,
 	     add: do_add,
 	     add_i: do_add_i,
+	     add_intish: do_add_intish,
 	     sub: do_sub,
 	     sub_i: do_sub_i,
 	     and: do_and,
@@ -176,12 +222,34 @@ function loadModule_int32(stdlib, foreign, heap) {
 	     xor_i: do_xor_i,
 	     cas1: do_cas1,
 	     cas2: do_cas2,
+	     cas_intish: do_cas_intish,
 	     cas1_i: do_cas1_i,
 	     cas2_i: do_cas2_i };
 }
 
 if (isAsmJSCompilationAvailable())
     assertEq(isAsmJSModule(loadModule_int32), true);
+
+// Test that compilation fails without a coercion on the return value.
+// The module is never created, we use it only for its effect.
+
+function loadModule_int32_return_xchg(stdlib, foreign, heap) {
+    "use asm";
+
+    var atomic_exchange = stdlib.Atomics.exchange;
+    var i32a = new stdlib.SharedInt32Array(heap);
+
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i32a, 200, 37); // Should not be allowed without |0 at the end
+	return v|0;
+    }
+
+    return { xchg: do_xchg }
+}
+
+if (isAsmJSCompilationAvailable())
+    assertEq(isAsmJSModule(loadModule_int32_return_xchg), false);
 
 function test_int32(heap) {
     var i32a = new SharedInt32Array(heap);
@@ -198,6 +266,12 @@ function test_int32(heap) {
     assertEq(i32m.store(), 37);
     assertEq(i32a[0], 37);
     assertEq(i32m.store_i(size*0), 37);
+
+    i32a[200] = 78;
+    assertEq(i32m.xchg(), 78);	// 37 into #200
+    assertEq(i32a[0], 37);
+    assertEq(i32m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i32a[200], 42);
 
     i32a[10] = 18;
     assertEq(i32m.add(), 18);
@@ -263,6 +337,7 @@ function loadModule_uint32(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -299,6 +374,21 @@ function loadModule_uint32(stdlib, foreign, heap) {
 	var v = 0;
 	v = atomic_store(i32a, i>>2, 37)|0;
 	return +(v>>>0);
+    }
+
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i32a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i32a, i>>2, 42)|0;
+	return v|0;
     }
 
     // Add 37 to element 10
@@ -410,6 +500,8 @@ function loadModule_uint32(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
 	     add: do_add,
 	     add_i: do_add_i,
 	     sub: do_sub,
@@ -442,6 +534,12 @@ function test_uint32(heap) {
     assertEq(i32m.store(), 37);
     assertEq(i32a[0], 37);
     assertEq(i32m.store_i(size*0), 37);
+
+    i32a[200] = 78;
+    assertEq(i32m.xchg(), 78);	// 37 into #200
+    assertEq(i32a[0], 37);
+    assertEq(i32m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i32a[200], 42);
 
     i32a[10] = 18;
     assertEq(i32m.add(), 18);
@@ -507,6 +605,7 @@ function loadModule_int16(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -546,6 +645,21 @@ function loadModule_int16(stdlib, foreign, heap) {
 	i = i|0;
 	var v = 0;
 	v = atomic_store(i16a, i>>1, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i16a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i16a, i>>1, 42)|0;
 	return v|0;
     }
 
@@ -659,6 +773,8 @@ function loadModule_int16(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
 	     add: do_add,
 	     add_i: do_add_i,
 	     sub: do_sub,
@@ -697,6 +813,12 @@ function test_int16(heap) {
     assertEq(i16m.store(), 37);
     assertEq(i16a[0], 37);
     assertEq(i16m.store_i(size*0), 37);
+
+    i16a[200] = 78;
+    assertEq(i16m.xchg(), 78);	// 37 into #200
+    assertEq(i16a[0], 37);
+    assertEq(i16m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i16a[200], 42);
 
     i16a[10] = 18;
     assertEq(i16m.add(), 18);
@@ -765,6 +887,7 @@ function loadModule_uint16(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -800,6 +923,21 @@ function loadModule_uint16(stdlib, foreign, heap) {
 	i = i|0;
 	var v = 0;
 	v = atomic_store(i16a, i>>1, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i16a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i16a, i>>1, 42)|0;
 	return v|0;
     }
 
@@ -912,6 +1050,8 @@ function loadModule_uint16(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
 	     add: do_add,
 	     add_i: do_add_i,
 	     sub: do_sub,
@@ -948,6 +1088,12 @@ function test_uint16(heap) {
     assertEq(i16m.store(), 37);
     assertEq(i16a[0], 37);
     assertEq(i16m.store_i(size*0), 37);
+
+    i16a[200] = 78;
+    assertEq(i16m.xchg(), 78);	// 37 into #200
+    assertEq(i16a[0], 37);
+    assertEq(i16m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i16a[200], 42);
 
     i16a[10] = 18;
     assertEq(i16m.add(), 18);
@@ -1016,6 +1162,7 @@ function loadModule_int8(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -1051,6 +1198,21 @@ function loadModule_int8(stdlib, foreign, heap) {
 	i = i|0;
 	var v = 0;
 	v = atomic_store(i8a, i, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i8a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i8a, i, 42)|0;
 	return v|0;
     }
 
@@ -1163,6 +1325,8 @@ function loadModule_int8(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
 	     add: do_add,
 	     add_i: do_add_i,
 	     sub: do_sub,
@@ -1198,6 +1362,12 @@ function test_int8(heap) {
     assertEq(i8m.store(), 37);
     assertEq(i8a[0], 37);
     assertEq(i8m.store_i(0), 37);
+
+    i8a[200] = 78;
+    assertEq(i8m.xchg(), 78);	// 37 into #200
+    assertEq(i8a[0], 37);
+    assertEq(i8m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i8a[200], 42);
 
     i8a[10] = 18;
     assertEq(i8m.add(), 18);
@@ -1260,6 +1430,7 @@ function loadModule_uint8(stdlib, foreign, heap) {
     var atomic_load = stdlib.Atomics.load;
     var atomic_store = stdlib.Atomics.store;
     var atomic_cmpxchg = stdlib.Atomics.compareExchange;
+    var atomic_exchange = stdlib.Atomics.exchange;
     var atomic_add = stdlib.Atomics.add;
     var atomic_sub = stdlib.Atomics.sub;
     var atomic_and = stdlib.Atomics.and;
@@ -1295,6 +1466,21 @@ function loadModule_uint8(stdlib, foreign, heap) {
 	i = i|0;
 	var v = 0;
 	v = atomic_store(i8a, i, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 37 into element 200
+    function do_xchg() {
+	var v = 0;
+	v = atomic_exchange(i8a, 200, 37)|0;
+	return v|0;
+    }
+
+    // Exchange 42 into element i
+    function do_xchg_i(i) {
+	i = i|0;
+	var v = 0;
+	v = atomic_exchange(i8a, i, 42)|0;
 	return v|0;
     }
 
@@ -1407,6 +1593,8 @@ function loadModule_uint8(stdlib, foreign, heap) {
 	     load_i: do_load_i,
 	     store: do_store,
 	     store_i: do_store_i,
+	     xchg: do_xchg,
+	     xchg_i: do_xchg_i,
 	     add: do_add,
 	     add_i: do_add_i,
 	     sub: do_sub,
@@ -1446,6 +1634,12 @@ function test_uint8(heap) {
     assertEq(i8m.store(), 37);
     assertEq(i8a[0], 37);
     assertEq(i8m.store_i(0), 37);
+
+    i8a[200] = 78;
+    assertEq(i8m.xchg(), 78);	// 37 into #200
+    assertEq(i8a[0], 37);
+    assertEq(i8m.xchg_i(size*200), 37); // 42 into #200
+    assertEq(i8a[200], 42);
 
     i8a[10] = 18;
     assertEq(i8m.add(), 18);

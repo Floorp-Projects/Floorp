@@ -205,6 +205,7 @@ public:
    * a PL_DHASH_REMOVE return value from |aEnumFunc|, the table may be shrunk
    * at the end. Use RawRemoveEntry() instead if you wish to remove an entry
    * without possibly shrinking the table.
+   * WARNING: this function is deprecated. Please use Iterator instead.
    * @param     enumFunc the <code>Enumerator</code> function to call
    * @param     userArg a pointer to pass to the
    *            <code>Enumerator</code> function
@@ -225,6 +226,39 @@ public:
       }
     }
     return n;
+  }
+
+  // This is an iterator that also allows entry removal. Example usage:
+  //
+  //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+  //     Entry* entry = iter.Get();
+  //     // ... do stuff with |entry| ...
+  //     // ... possibly call iter.Remove() once ...
+  //   }
+  //
+  class Iterator : public PLDHashTable::Iterator
+  {
+  public:
+    typedef PLDHashTable::Iterator Base;
+
+    explicit Iterator(nsTHashtable* aTable) : Base(&aTable->mTable) {}
+    Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
+    ~Iterator() {}
+
+    EntryType* Get() const { return static_cast<EntryType*>(Base::Get()); }
+
+  private:
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+  };
+
+  Iterator Iter() { return Iterator(this); }
+
+  Iterator ConstIter() const
+  {
+    return Iterator(const_cast<nsTHashtable*>(this));
   }
 
   /**
@@ -489,35 +523,6 @@ nsTHashtable<EntryType>::s_SizeOfStub(PLDHashEntryHdr* aEntry,
 
 class nsCycleCollectionTraversalCallback;
 
-struct MOZ_STACK_CLASS nsTHashtableCCTraversalData
-{
-  nsTHashtableCCTraversalData(nsCycleCollectionTraversalCallback& aCallback,
-                              const char* aName,
-                              uint32_t aFlags)
-    : mCallback(aCallback)
-    , mName(aName)
-    , mFlags(aFlags)
-  {
-  }
-
-  nsCycleCollectionTraversalCallback& mCallback;
-  const char* mName;
-  uint32_t mFlags;
-};
-
-template<class EntryType>
-PLDHashOperator
-ImplCycleCollectionTraverse_EnumFunc(EntryType* aEntry, void* aUserData)
-{
-  auto userData = static_cast<nsTHashtableCCTraversalData*>(aUserData);
-
-  ImplCycleCollectionTraverse(userData->mCallback,
-                              *aEntry,
-                              userData->mName,
-                              userData->mFlags);
-  return PL_DHASH_NEXT;
-}
-
 template<class EntryType>
 inline void
 ImplCycleCollectionUnlink(nsTHashtable<EntryType>& aField)
@@ -532,10 +537,10 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  nsTHashtableCCTraversalData userData(aCallback, aName, aFlags);
-
-  aField.EnumerateEntries(ImplCycleCollectionTraverse_EnumFunc<EntryType>,
-                          &userData);
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    EntryType* entry = iter.Get();
+    ImplCycleCollectionTraverse(aCallback, *entry, aName, aFlags);
+  }
 }
 
 #endif // nsTHashtable_h__
