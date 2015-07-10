@@ -12,9 +12,6 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-signmar
 
-# Nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
