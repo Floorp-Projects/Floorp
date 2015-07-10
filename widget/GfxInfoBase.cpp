@@ -1163,20 +1163,6 @@ GfxInfoBase::RemoveCollector(GfxInfoCollectorBase* collector)
   }
 }
 
-NS_IMETHODIMP
-GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult)
-{
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
-
-  nsresult rv = FindMonitors(aCx, array);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  aResult.setObject(*array);
-  return NS_OK;
-}
-
 GfxInfoCollectorBase::GfxInfoCollectorBase()
 {
   GfxInfoBase::AddCollector(this);
