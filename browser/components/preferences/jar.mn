@@ -9,6 +9,8 @@ browser.jar:
     content/browser/preferences/aboutPermissions.xml
     content/browser/preferences/applicationManager.xul
 *   content/browser/preferences/applicationManager.js
+    content/browser/preferences/blocklists.xul
+    content/browser/preferences/blocklists.js
 *   content/browser/preferences/colors.xul
 *   content/browser/preferences/cookies.xul
 *   content/browser/preferences/cookies.js
