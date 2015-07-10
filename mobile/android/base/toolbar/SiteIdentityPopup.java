@@ -68,6 +68,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private LinearLayout mIdentityKnownContainer;
     private LinearLayout mIdentityUnknownContainer;
 
+    private ImageView mIcon;
     private TextView mTitle;
     private TextView mEncrypted;
     private TextView mHost;
@@ -110,6 +111,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
 
+        mIcon = (ImageView) mIdentity.findViewById(R.id.site_identity_icon);
         mTitle = (TextView) mIdentity.findViewById(R.id.site_identity_title);
         mEncrypted = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_encrypted);
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
@@ -284,13 +286,19 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             mIdentityKnownContainer.setVisibility(View.VISIBLE);
             mIdentityUnknownContainer.setVisibility(View.GONE);
         } else {
+            mIcon.setImageResource(R.drawable.globe_light);
             mIdentityKnownContainer.setVisibility(View.GONE);
             mIdentityUnknownContainer.setVisibility(View.VISIBLE);
         }
     }
 
     private void updateIdentityInformation(final SiteIdentity siteIdentity) {
-        mEncrypted.setVisibility(siteIdentity.getEncrypted() ? View.VISIBLE : View.GONE);
+        if (siteIdentity.getEncrypted()) {
+            mEncrypted.setVisibility(View.VISIBLE);
+            mIcon.setImageResource(R.drawable.lock_identified);
+        } else {
+            mEncrypted.setVisibility(View.GONE);
+        }
 
         mHost.setText(siteIdentity.getHost());
 
@@ -321,11 +329,11 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mContentButtonClickListener);
         int icon;
         if (blocked) {
-            icon = R.drawable.shield_enabled_doorhanger;
+            icon = R.drawable.shield_enabled;
             config.setMessage(mContext.getString(R.string.blocked_mixed_content_message_top) + "\n\n" +
                       mContext.getString(R.string.blocked_mixed_content_message_bottom));
         } else {
-            icon = R.drawable.shield_disabled_doorhanger;
+            icon = R.drawable.shield_disabled;
             config.setMessage(mContext.getString(R.string.loaded_mixed_content_message));
         }
 
@@ -352,7 +360,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
-        final int icon = blocked ? R.drawable.shield_enabled_doorhanger : R.drawable.shield_disabled_doorhanger;
+        final int icon = blocked ? R.drawable.shield_enabled: R.drawable.shield_disabled;
 
         final JSONObject options = new JSONObject();
         final JSONObject tracking = new JSONObject();
