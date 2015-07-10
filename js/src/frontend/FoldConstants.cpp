@@ -519,12 +519,6 @@ enum class SyntacticContext : int {
     Other
 };
 
-static SyntacticContext
-condIf(const ParseNode* pn, ParseNodeKind kind)
-{
-    return pn->isKind(kind) ? SyntacticContext::Condition : SyntacticContext::Other;
-}
-
 static bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc);
@@ -1816,10 +1810,18 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
 
+      case PNK_DOWHILE:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
+               Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Condition);
+
+      case PNK_WHILE:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Condition) &&
+               Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_EXPORT:
       case PNK_SHORTHAND:
-      case PNK_DOWHILE:
-      case PNK_WHILE:
       case PNK_SWITCH:
       case PNK_LETBLOCK:
       case PNK_FOR:
@@ -1870,7 +1872,10 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         }
 
         if (pn->pn_kid2) {
-            if (!Fold(cx, &pn->pn_kid2, parser, inGenexpLambda, condIf(pn, PNK_FORHEAD)))
+            SyntacticContext kidsc = pn->isKind(PNK_FORHEAD)
+                                     ? SyntacticContext::Condition
+                                     : SyntacticContext::Other;
+            if (!Fold(cx, &pn->pn_kid2, parser, inGenexpLambda, kidsc))
                 return false;
             if (pn->isKind(PNK_FORHEAD) && pn->pn_kid2->isKind(PNK_TRUE)) {
                 parser.freeTree(pn->pn_kid2);
@@ -1888,12 +1893,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PN_BINARY_OBJ:
         /* First kid may be null (for default case in switch). */
         if (pn->pn_left) {
-            if (!Fold(cx, &pn->pn_left, parser, inGenexpLambda, condIf(pn, PNK_WHILE)))
+            if (!Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
         /* Second kid may be null (for return in non-generator). */
         if (pn->pn_right) {
-            if (!Fold(cx, &pn->pn_right, parser, inGenexpLambda, condIf(pn, PNK_DOWHILE)))
+            if (!Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
         break;
