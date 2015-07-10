@@ -105,7 +105,6 @@ function testVariablesAndPropertiesFiltering() {
   function firstFilter() {
     let expanded = once(gVariables, "fetched");
     typeText(gSearchBox, "\"Function\"");
-    gSearchBox.doCommand();
     return expanded.then(testFiltered);
   }
 
@@ -140,7 +139,6 @@ function testVariablesAndPropertiesFiltering() {
     backspaceText(gSearchBox, 10);
     let expanded = once(gVariables, "fetched");
     typeText(gSearchBox, "\"Function\"");
-    gSearchBox.doCommand();
     expanded.then(testFiltered);
   }
 
