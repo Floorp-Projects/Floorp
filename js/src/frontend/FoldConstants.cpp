@@ -1296,6 +1296,29 @@ FoldList(ExclusiveContext* cx, ParseNode* list, Parser<FullParseHandler>& parser
     return true;
 }
 
+static bool
+FoldReturn(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+           bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_RETURN));
+    MOZ_ASSERT(node->isArity(PN_BINARY));
+
+    if (ParseNode*& expr = node->pn_left) {
+        if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+#ifdef DEBUG
+    if (ParseNode* generatorSpecific = node->pn_right) {
+        MOZ_ASSERT(generatorSpecific->isKind(PNK_NAME));
+        MOZ_ASSERT(generatorSpecific->pn_atom->equals(".genrval"));
+        MOZ_ASSERT(generatorSpecific->isAssigned());
+    }
+#endif
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1445,6 +1468,25 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_IMPORT_SPEC_LIST:
         return FoldList(cx, pn, parser, inGenexpLambda);
 
+      case PNK_YIELD_STAR:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
+        MOZ_ASSERT(!pn->pn_right->isAssigned());
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_YIELD:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT((pn->pn_right->isKind(PNK_NAME) && !pn->pn_right->isAssigned()) ||
+                   (pn->pn_right->isKind(PNK_ASSIGN) &&
+                    pn->pn_right->pn_left->isKind(PNK_NAME) &&
+                    pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
+        if (!pn->pn_left)
+            return true;
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_RETURN:
+        return FoldReturn(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1472,9 +1514,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_WITH:
       case PNK_CLASSNAMES:
       case PNK_DEFAULT:
-      case PNK_YIELD_STAR:
-      case PNK_YIELD:
-      case PNK_RETURN:
       case PNK_IMPORT:
       case PNK_EXPORT_FROM:
       case PNK_EXPORT_DEFAULT:
