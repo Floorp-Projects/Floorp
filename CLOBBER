@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1171344 requires a clobber due to renaming of a test file.
+Bug 1164310 requires a clobber due to bug 1177844
