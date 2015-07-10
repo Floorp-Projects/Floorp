@@ -57,6 +57,7 @@ WEBIDL_FILES = [
     'BoxObject.webidl',
     'BroadcastChannel.webidl',
     'BrowserElement.webidl',
+    'BrowserElementAudioChannel.webidl',
     'BrowserElementDictionaries.webidl',
     'Cache.webidl',
     'CacheStorage.webidl',
