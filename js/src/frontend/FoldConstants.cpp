@@ -1577,6 +1577,40 @@ FoldAdd(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& par
     return true;
 }
 
+static bool
+FoldCall(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+         bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_CALL) || node->isKind(PNK_TAGGED_TEMPLATE));
+    MOZ_ASSERT(node->isArity(PN_LIST));
+
+    // Don't fold a parenthesized callable component in an invocation, as this
+    // might cause a different |this| value to be used, changing semantics:
+    //
+    //   var prop = "global";
+    //   var obj = { prop: "obj", f: function() { return this.prop; } };
+    //   assertEq((true ? obj.f : null)(), "global");
+    //   assertEq(obj.f(), "obj");
+    //   assertEq((true ? obj.f : null)``, "global");
+    //   assertEq(obj.f``, "obj");
+    //
+    // See bug 537673 and bug 1182373.
+    ParseNode** listp = &node->pn_head;
+    if ((*listp)->isInParens())
+        listp = &(*listp)->pn_next;
+
+    for (; *listp; listp = &(*listp)->pn_next) {
+        if (!Fold(cx, listp, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    // If the last node in the list was replaced, pn_tail points into the wrong node.
+    node->pn_tail = listp;
+
+    node->checkListConsistency();
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1707,6 +1741,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_INSTANCEOF:
       case PNK_IN:
       case PNK_COMMA:
+      case PNK_NEW:
       case PNK_ARRAY:
       case PNK_OBJECT:
       case PNK_ARRAYCOMP:
@@ -1758,6 +1793,10 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_ADD:
         return FoldAdd(cx, pnp, parser, inGenexpLambda);
 
+      case PNK_CALL:
+      case PNK_TAGGED_TEMPLATE:
+        return FoldCall(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1790,10 +1829,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FORIN:
       case PNK_FOROF:
       case PNK_FORHEAD:
-      case PNK_NEW:
-      case PNK_CALL:
       case PNK_GENEXP:
-      case PNK_TAGGED_TEMPLATE:
       case PNK_LABEL:
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
@@ -1814,21 +1850,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         MOZ_CRASH("should have been handled above");
 
       case PN_LIST:
-      {
-        // Don't fold a parenthesized call expression. See bug 537673.
-        ParseNode** listp = &pn->pn_head;
-        if ((pn->isKind(PNK_CALL) || pn->isKind(PNK_TAGGED_TEMPLATE)) && (*listp)->isInParens())
-            listp = &(*listp)->pn_next;
-
-        for (; *listp; listp = &(*listp)->pn_next) {
-            if (!Fold(cx, listp, parser, inGenexpLambda, SyntacticContext::Other))
-                return false;
-        }
-
-        // If the last node in the list was replaced, pn_tail points into the wrong node.
-        pn->pn_tail = listp;
+        if (!FoldList(cx, pn, parser, inGenexpLambda))
+            return false;
         break;
-      }
 
       case PN_TERNARY:
         MOZ_ASSERT(!pn->isKind(PNK_CONDITIONAL),
