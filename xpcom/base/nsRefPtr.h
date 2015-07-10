@@ -542,4 +542,12 @@ CallQueryInterface(nsRefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
 
 /*****************************************************************************/
 
+template <class T>
+inline already_AddRefed<T>
+do_AddRef(T*&& aObj)
+{
+  nsRefPtr<T> ref(aObj);
+  return ref.forget();
+}
+
 #endif // !defined(nsRefPtr_h)
