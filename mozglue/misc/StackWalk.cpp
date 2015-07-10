@@ -890,7 +890,7 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 
   int32_t skip = aSkipFrames;
   uint32_t numFrames = 0;
-  while (1) {
+  while (bp) {
     void** next = (void**)*bp;
     // bp may not be a frame pointer on i386 if code was compiled with
     // -fomit-frame-pointer, so do some sanity checks.
