@@ -40,10 +40,14 @@ const PREF_FHR_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_SESSIONS_BRANCH = "datareporting.sessions.";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
+const PREF_UNIFIED_OPTIN = PREF_BRANCH + "unifiedIsOptIn";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
 const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
+// This preference allows to leave unified Telemetry behavior on only for people that
+// opted into Telemetry. Changing this pref requires a restart.
+const IS_UNIFIED_OPTIN = Preferences.get(PREF_UNIFIED_OPTIN, false);
 
 const PING_FORMAT_VERSION = 4;
 
@@ -590,7 +594,7 @@ let Impl = {
     const enabled = Preferences.get(PREF_ENABLED, false);
 
     // Enable base Telemetry recording, if needed.
-    Telemetry.canRecordBase = enabled || IS_UNIFIED_TELEMETRY;
+    Telemetry.canRecordBase = enabled || (IS_UNIFIED_TELEMETRY && !IS_UNIFIED_OPTIN);
 
 #ifdef MOZILLA_OFFICIAL
     // Enable extended telemetry if:
