@@ -1839,10 +1839,44 @@ public:
         m_formatter.oneByteOp(OP_CDQ);
     }
 
+    void xchgb_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("xchgb      %s, " MEM_ob, GPReg8Name(src), ADDR_ob(offset, base));
+        m_formatter.oneByteOp8(OP_XCHG_GbEb, offset, base, src);
+    }
+    void xchgb_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xchgb      %s, " MEM_obs, GPReg8Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp8(OP_XCHG_GbEb, offset, base, index, scale, src);
+    }
+
+    void xchgw_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("xchgw      %s, " MEM_ob, GPReg16Name(src), ADDR_ob(offset, base));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_XCHG_GvEv, offset, base, src);
+    }
+    void xchgw_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xchgw      %s, " MEM_obs, GPReg16Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp(OP_XCHG_GvEv, offset, base, index, scale, src);
+    }
+
     void xchgl_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgl      %s, %s", GPReg32Name(src), GPReg32Name(dst));
         m_formatter.oneByteOp(OP_XCHG_GvEv, src, dst);
+    }
+    void xchgl_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("xchgl      %s, " MEM_ob, GPReg32Name(src), ADDR_ob(offset, base));
+        m_formatter.oneByteOp(OP_XCHG_GvEv, offset, base, src);
+    }
+    void xchgl_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xchgl      %s, " MEM_obs, GPReg32Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp(OP_XCHG_GvEv, offset, base, index, scale, src);
     }
 
 #ifdef JS_CODEGEN_X64
@@ -1850,6 +1884,16 @@ public:
     {
         spew("xchgq      %s, %s", GPReg64Name(src), GPReg64Name(dst));
         m_formatter.oneByteOp64(OP_XCHG_GvEv, src, dst);
+    }
+    void xchgq_rm(RegisterID src, int32_t offset, RegisterID base)
+    {
+        spew("xchgq      %s, " MEM_ob, GPReg64Name(src), ADDR_ob(offset, base));
+        m_formatter.oneByteOp64(OP_XCHG_GvEv, offset, base, src);
+    }
+    void xchgq_rm(RegisterID src, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xchgq      %s, " MEM_obs, GPReg64Name(src), ADDR_obs(offset, base, index, scale));
+        m_formatter.oneByteOp64(OP_XCHG_GvEv, offset, base, index, scale, src);
     }
 #endif
 

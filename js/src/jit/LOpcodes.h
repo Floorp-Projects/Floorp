@@ -248,6 +248,7 @@
     _(StoreTypedArrayElementStatic) \
     _(AtomicIsLockFree)             \
     _(CompareExchangeTypedArrayElement) \
+    _(AtomicExchangeTypedArrayElement) \
     _(AtomicTypedArrayElementBinop) \
     _(AtomicTypedArrayElementBinopForEffect) \
     _(EffectiveAddress)             \
@@ -338,6 +339,7 @@
     _(AsmJSPassStackArg)            \
     _(AsmJSCall)                    \
     _(AsmJSCompareExchangeHeap)     \
+    _(AsmJSAtomicExchangeHeap)      \
     _(AsmJSAtomicBinopHeap)         \
     _(AsmJSAtomicBinopHeapForEffect)\
     _(RecompileCheck)               \

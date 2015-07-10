@@ -28,11 +28,12 @@ var moduleCode = `
   "use asm"
   var b8 = new global.Uint8Array(buffer);
   var toF = global.Math.fround;
-  var i4 = global.SIMD.int32x4;
+  var i4 = global.SIMD.Int32x4;
   var ci4 = i4.check;
-  var f4 = global.SIMD.float32x4;
+  var f4 = global.SIMD.Float32x4;
   var i4add = i4.add;
   var i4and = i4.and;
+  var i4ext = i4.extractLane;
   var f4add = f4.add;
   var f4sub = f4.sub;
   var f4mul = f4.mul;
@@ -125,10 +126,10 @@ var moduleCode = `
     ydx4 = toF(yd * toF(4));
     for (y = 0; (y | 0) < (height | 0); y = (y + 4) | 0) {
       m4   = ci4(mandelPixelX4(toF(xf), toF(yf), toF(yd), max_iterations));
-      mapColorAndSetPixel(x | 0, y | 0,   width, m4.x, max_iterations);
-      mapColorAndSetPixel(x | 0, (y + 1) | 0, width, m4.y, max_iterations);
-      mapColorAndSetPixel(x | 0, (y + 2) | 0, width, m4.z, max_iterations);
-      mapColorAndSetPixel(x | 0, (y + 3) | 0, width, m4.w, max_iterations);
+      mapColorAndSetPixel(x | 0, y | 0,   width, i4ext(m4,0), max_iterations);
+      mapColorAndSetPixel(x | 0, (y + 1) | 0, width, i4ext(m4,1), max_iterations);
+      mapColorAndSetPixel(x | 0, (y + 2) | 0, width, i4ext(m4,2), max_iterations);
+      mapColorAndSetPixel(x | 0, (y + 3) | 0, width, i4ext(m4,3), max_iterations);
       yf = toF(yf + ydx4);
     }
   }

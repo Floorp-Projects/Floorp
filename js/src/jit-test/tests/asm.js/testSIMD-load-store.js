@@ -1,5 +1,6 @@
 // |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
+load(libdir + "simd.js");
 load(libdir + "asserts.js");
 
 // Set to true to see more JS debugging spew
@@ -13,25 +14,10 @@ if (!isSimdAvailable() || typeof SIMD === 'undefined') {
 const INT32_MAX = Math.pow(2, 31) - 1;
 const INT32_MIN = INT32_MAX + 1 | 0;
 
-function assertEqX4(real, expected, assertFunc) {
-    if (typeof assertFunc === 'undefined')
-        assertFunc = assertEq;
-
-    try {
-        assertFunc(real.x, expected[0]);
-        assertFunc(real.y, expected[1]);
-        assertFunc(real.z, expected[2]);
-        assertFunc(real.w, expected[3]);
-    } catch (e) {
-        print("Stack: " + e.stack);
-        throw e;
-    }
-}
-
 try {
 
 // Load / Store
-var IMPORTS = USE_ASM + 'var H=new glob.Uint8Array(heap); var i4=glob.SIMD.int32x4; var ci4=i4.check; var load=i4.load; var store=i4.store;';
+var IMPORTS = USE_ASM + 'var H=new glob.Uint8Array(heap); var i4=glob.SIMD.Int32x4; var ci4=i4.check; var load=i4.load; var store=i4.store;';
 
 //      Bad number of args
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){load();} return f");
@@ -45,7 +31,7 @@ assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){var i=0.;load(H
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "var H2=new glob.Int32Array(heap); function f(){var i=0;load(H2, i)} return f");
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "var H2=42; function f(){var i=0;load(H2, i)} return f");
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){var i=0;load(H2, i)} return f");
-assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "var f4=glob.SIMD.float32x4; function f(){var i=0;var vec=f4(1,2,3,4); store(H, i, vec)} return f");
+assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "var f4=glob.SIMD.Float32x4; function f(){var i=0;var vec=f4(1,2,3,4); store(H, i, vec)} return f");
 
 //      Bad coercions of returned values
 assertAsmTypeFail('glob', 'ffi', 'heap', IMPORTS + "function f(){var i=0;return load(H, i)|0;} return f");
@@ -77,12 +63,12 @@ var loadStoreCode = `
 
     var H = new glob.Uint8Array(heap);
 
-    var i4 = glob.SIMD.int32x4;
+    var i4 = glob.SIMD.Int32x4;
     var i4load = i4.load;
     var i4store = i4.store;
     var ci4 = i4.check;
 
-    var f4 = glob.SIMD.float32x4;
+    var f4 = glob.SIMD.Float32x4;
     var f4load = f4.load;
     var f4store = f4.store;
     var cf4 = f4.check;
@@ -159,7 +145,7 @@ assertThrowsInstanceOf(() => f32l(SIZE - 3), RangeError);
 
 var code = `
     "use asm";
-    var f4 = glob.SIMD.float32x4;
+    var f4 = glob.SIMD.Float32x4;
     var f4l = f4.load;
     var u8 = new glob.Uint8Array(heap);
 
@@ -183,8 +169,8 @@ assertThrowsInstanceOf(() => asmLink(asmCompile('glob', 'ffi', 'heap', code), th
 // Float32x4.store
 function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
 
-var vec  = SIMD.float32x4(5,6,7,8);
-var vec2 = SIMD.float32x4(0,1,2,3);
+var vec  = SIMD.Float32x4(5,6,7,8);
+var vec2 = SIMD.Float32x4(0,1,2,3);
 
 reset();
 f32s(0, vec);
@@ -242,8 +228,8 @@ assertThrowsInstanceOf(() => i32(SIZE - 3), RangeError);
 // Int32x4.store
 function i32s(n, v) { return m.i32s((n|0) << 2 | 0, v); };
 
-var vec  = SIMD.int32x4(5,6,7,8);
-var vec2 = SIMD.int32x4(0,1,2,3);
+var vec  = SIMD.Int32x4(5,6,7,8);
+var vec2 = SIMD.Int32x4(0,1,2,3);
 
 reset();
 i32s(0, vec);
@@ -488,26 +474,26 @@ function TestPartialStores(m, typedArray, typeName, x, y, z, w) {
 }
 
 var f32 = new Float32Array(SIZE);
-var mfloat32x4 = asmLink(asmCompile('glob', 'ffi', 'heap', MakeCodeFor('float32x4')), this, null, f32.buffer);
+var mFloat32x4 = asmLink(asmCompile('glob', 'ffi', 'heap', MakeCodeFor('Float32x4')), this, null, f32.buffer);
 
-TestPartialLoads(mfloat32x4, f32,
+TestPartialLoads(mFloat32x4, f32,
             (i) => i + 1,
             (i) => Math.fround(13.37),
             (i) => Math.fround(1/i),
             (i) => Math.fround(Math.sqrt(0x2000 - i)));
 
-TestPartialStores(mfloat32x4, f32, 'float32x4', 42, -0, NaN, 0.1337);
+TestPartialStores(mFloat32x4, f32, 'Float32x4', 42, -0, NaN, 0.1337);
 
 var i32 = new Int32Array(f32.buffer);
-var mint32x4 = asmLink(asmCompile('glob', 'ffi', 'heap', MakeCodeFor('int32x4')), this, null, i32.buffer);
+var mInt32x4 = asmLink(asmCompile('glob', 'ffi', 'heap', MakeCodeFor('Int32x4')), this, null, i32.buffer);
 
-TestPartialLoads(mint32x4, i32,
+TestPartialLoads(mInt32x4, i32,
             (i) => i + 1 | 0,
             (i) => -i | 0,
             (i) => i * 2 | 0,
             (i) => 42);
 
-TestPartialStores(mint32x4, i32, 'int32x4', 42, -3, 13, 37);
+TestPartialStores(mInt32x4, i32, 'Int32x4', 42, -3, 13, 37);
 
 })();
 

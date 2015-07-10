@@ -80,6 +80,7 @@ namespace AsmJSExit
         Builtin_IDivMod,
         Builtin_UDivMod,
         Builtin_AtomicCmpXchg,
+        Builtin_AtomicXchg,
         Builtin_AtomicFetchAdd,
         Builtin_AtomicFetchSub,
         Builtin_AtomicFetchAnd,

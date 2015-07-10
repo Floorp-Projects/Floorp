@@ -1237,16 +1237,6 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
   return rv;
 }
 
-static PLDHashOperator
-FreeFactoryEntries(const nsID& aCID,
-                   nsFactoryEntry* aEntry,
-                   void* aArg)
-{
-  aEntry->mFactory = nullptr;
-  aEntry->mServiceObject = nullptr;
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsComponentManagerImpl::FreeServices()
 {
@@ -1257,7 +1247,12 @@ nsComponentManagerImpl::FreeServices()
     return NS_ERROR_FAILURE;
   }
 
-  mFactories.EnumerateRead(FreeFactoryEntries, nullptr);
+  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
+    nsFactoryEntry* entry = iter.GetUserData();
+    entry->mFactory = nullptr;
+    entry->mServiceObject = nullptr;
+  }
+
   return NS_OK;
 }
 
@@ -1764,40 +1759,27 @@ nsComponentManagerImpl::IsContractIDRegistered(const char* aClass,
   return NS_OK;
 }
 
-static PLDHashOperator
-EnumerateCIDHelper(const nsID& aId, nsFactoryEntry* aEntry, void* aClosure)
-{
-  nsCOMArray<nsISupports>* array =
-    static_cast<nsCOMArray<nsISupports>*>(aClosure);
-  nsCOMPtr<nsISupportsID> wrapper = new nsSupportsIDImpl();
-  wrapper->SetData(&aId);
-  array->AppendObject(wrapper);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsCOMArray<nsISupports> array;
-  mFactories.EnumerateRead(EnumerateCIDHelper, &array);
-
+  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
+    const nsID& id = iter.GetKey();
+    nsCOMPtr<nsISupportsID> wrapper = new nsSupportsIDImpl();
+    wrapper->SetData(&id);
+    array.AppendObject(wrapper);
+  }
   return NS_NewArrayEnumerator(aEnumerator, array);
-}
-
-static PLDHashOperator
-EnumerateContractsHelper(const nsACString& aContract, nsFactoryEntry* aEntry,
-                         void* aClosure)
-{
-  nsTArray<nsCString>* array = static_cast<nsTArray<nsCString>*>(aClosure);
-  array->AppendElement(aContract);
-  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsTArray<nsCString>* array = new nsTArray<nsCString>;
-  mContractIDs.EnumerateRead(EnumerateContractsHelper, array);
+  for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
+    const nsACString& contract = iter.GetKey();
+    array->AppendElement(contract);
+  }
 
   nsCOMPtr<nsIUTF8StringEnumerator> e;
   nsresult rv = NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(e), array);
