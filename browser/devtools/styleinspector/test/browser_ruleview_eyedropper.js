@@ -72,7 +72,7 @@ add_task(function*() {
 
   ok(dropper, "dropper opened");
 
-  yield testSelect(swatch, dropper);
+  yield testSelect(view, swatch, dropper);
 
   checkTelemetry();
 });
@@ -92,27 +92,23 @@ function testESC(swatch, dropper) {
   return deferred.promise;
 }
 
-function testSelect(swatch, dropper) {
-  let deferred = promise.defer();
-
-  dropper.once("destroy", () => {
-    let color = swatch.style.backgroundColor;
-    is(color, EXPECTED_COLOR, "swatch changed colors");
-
-    // the change to the content is done async after rule view change
-    executeSoon(() => {
-      let element = content.document.querySelector("div");
-      is(content.window.getComputedStyle(element).backgroundColor,
-         EXPECTED_COLOR,
-         "div's color set to body color after dropper");
-
-      deferred.resolve();
-    });
-  });
+function* testSelect(view, swatch, dropper) {
+  let onDestroyed = dropper.once("destroy");
+  // the change to the content is done async after rule view change
+  let onRuleViewChanged = view.once("ruleview-changed");
 
   inspectPage(dropper);
 
-  return deferred.promise;
+  yield onDestroyed;
+  yield onRuleViewChanged;
+
+  let color = swatch.style.backgroundColor;
+  is(color, EXPECTED_COLOR, "swatch changed colors");
+
+  let element = content.document.querySelector("div");
+  is(content.window.getComputedStyle(element).backgroundColor,
+     EXPECTED_COLOR,
+     "div's color set to body color after dropper");
 }
 
 function clearTelemetry() {

@@ -32,7 +32,7 @@ function* testPressingEscapeRevertsChanges(swatch, ruleView) {
   swatch.click();
   yield onShown;
 
-  yield simulateColorPickerChange(cPicker, [0, 0, 0, 1], {
+  yield simulateColorPickerChange(ruleView, cPicker, [0, 0, 0, 1], {
     element: content.document.body,
     name: "backgroundColor",
     value: "rgb(0, 0, 0)"
