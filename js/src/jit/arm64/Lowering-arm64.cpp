@@ -249,6 +249,12 @@ LIRGeneratorARM64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 }
 
 void
+LIRGeneratorARM64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+{
+    MOZ_CRASH("visitAsmJSAtomicExchangeHeap");
+}
+
+void
 LIRGeneratorARM64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
     MOZ_CRASH("visitAsmJSAtomicBinopHeap");
@@ -304,6 +310,12 @@ LIRGeneratorARM64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBin
 
 void
 LIRGeneratorARM64::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorARM64::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
 {
     MOZ_CRASH("NYI");
 }

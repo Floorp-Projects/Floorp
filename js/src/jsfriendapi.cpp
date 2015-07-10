@@ -50,7 +50,6 @@ PerThreadDataFriendFields::PerThreadDataFriendFields()
     for (int i=0; i<StackKindCount; i++)
         nativeStackLimit[i] = UINTPTR_MAX;
 #endif
-    PodArrayZero(thingGCRooters);
 }
 
 JS_FRIEND_API(void)

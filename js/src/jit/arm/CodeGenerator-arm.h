@@ -203,6 +203,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
     void visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins);
+    void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
+    void visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
     void visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins);

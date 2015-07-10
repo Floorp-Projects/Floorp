@@ -721,6 +721,31 @@ CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, 
 }
 
 void
+CodeGeneratorX86::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
+{
+    MAsmJSAtomicExchangeHeap* mir = ins->mir();
+    Scalar::Type accessType = mir->accessType();
+    const LAllocation* ptr = ins->ptr();
+    Register ptrReg = ToRegister(ptr);
+    Register value = ToRegister(ins->value());
+    Register addrTemp = ToRegister(ins->addrTemp());
+    Label rejoin;
+
+    asmJSAtomicComputeAddress(addrTemp, ptrReg, mir->needsBoundsCheck(), mir->offset(),
+                              mir->endOffset(), ToRegister(ins->output()), rejoin);
+
+    Address memAddr(addrTemp, mir->offset());
+    masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
+                                       memAddr,
+                                       value,
+                                       InvalidReg,
+                                       ToAnyRegister(ins->output()));
+
+    if (rejoin.used())
+        masm.bind(&rejoin);
+}
+
+void
 CodeGeneratorX86::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MAsmJSAtomicBinopHeap* mir = ins->mir();

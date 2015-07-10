@@ -4756,11 +4756,11 @@ void
 MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const T& mem,
                                               Register oldval, Register newval, Register output)
 {
-    Label Lagain;
-    Label Ldone;
+    Label again;
+    Label done;
     ma_dmb(BarrierST);
     Register ptr = computePointer(mem, secondScratchReg_);
-    bind(&Lagain);
+    bind(&again);
     switch (nbytes) {
       case 1:
         as_ldrexb(output, ptr);
@@ -4789,7 +4789,7 @@ MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const
         as_cmp(output, O2Reg(ScratchRegister));
     else
         as_cmp(output, O2Reg(oldval));
-    as_b(&Ldone, NotEqual);
+    as_b(&done, NotEqual);
     switch (nbytes) {
       case 1:
         as_strexb(ScratchRegister, newval, ptr);
@@ -4802,8 +4802,8 @@ MacroAssemblerARMCompat::compareExchangeARMv7(int nbytes, bool signExtend, const
         break;
     }
     as_cmp(ScratchRegister, Imm8(1));
-    as_b(&Lagain, Equal);
-    bind(&Ldone);
+    as_b(&again, Equal);
+    bind(&done);
     ma_dmb();
 }
 
@@ -4825,6 +4825,78 @@ template void
 js::jit::MacroAssemblerARMCompat::compareExchange(int nbytes, bool signExtend,
                                                   const BaseIndex& address, Register oldval,
                                                   Register newval, Register output);
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicExchange(int nbytes, bool signExtend, const T& mem,
+                                        Register value, Register output)
+{
+    // If LDREXB/H and STREXB/H are not available we use the
+    // word-width operations with read-modify-add.  That does not
+    // abstract well, so fork.
+    //
+    // Bug 1077321: We may further optimize for ARMv8 (AArch32) here.
+    if (nbytes < 4 && !HasLDSTREXBHD())
+        atomicExchangeARMv6(nbytes, signExtend, mem, value, output);
+    else
+        atomicExchangeARMv7(nbytes, signExtend, mem, value, output);
+}
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicExchangeARMv7(int nbytes, bool signExtend, const T& mem,
+                                             Register value, Register output)
+{
+    Label again;
+    Label done;
+    ma_dmb(BarrierST);
+    Register ptr = computePointer(mem, secondScratchReg_);
+    bind(&again);
+    switch (nbytes) {
+      case 1:
+        as_ldrexb(output, ptr);
+        if (signExtend)
+            as_sxtb(output, output, 0);
+        as_strexb(ScratchRegister, value, ptr);
+        break;
+      case 2:
+        as_ldrexh(output, ptr);
+        if (signExtend)
+            as_sxth(output, output, 0);
+        as_strexh(ScratchRegister, value, ptr);
+        break;
+      case 4:
+        MOZ_ASSERT(!signExtend);
+        as_ldrex(output, ptr);
+        as_strex(ScratchRegister, value, ptr);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+    as_cmp(ScratchRegister, Imm8(1));
+    as_b(&again, Equal);
+    bind(&done);
+    ma_dmb();
+}
+
+template<typename T>
+void
+MacroAssemblerARMCompat::atomicExchangeARMv6(int nbytes, bool signExtend, const T& mem,
+                                             Register value, Register output)
+{
+    // Bug 1077318: Must use read-modify-write with LDREX / STREX.
+    MOZ_ASSERT(nbytes == 1 || nbytes == 2);
+    MOZ_CRASH("NYI");
+}
+
+template void
+js::jit::MacroAssemblerARMCompat::atomicExchange(int nbytes, bool signExtend,
+                                                 const Address& address, Register value,
+                                                 Register output);
+template void
+js::jit::MacroAssemblerARMCompat::atomicExchange(int nbytes, bool signExtend,
+                                                 const BaseIndex& address, Register value,
+                                                 Register output);
 
 template<typename T>
 void
@@ -4880,10 +4952,10 @@ void
 MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicOp op,
                                             const Register& value, const T& mem, Register output)
 {
-    Label Lagain;
+    Label again;
     Register ptr = computePointer(mem, secondScratchReg_);
     ma_dmb();
-    bind(&Lagain);
+    bind(&again);
     switch (nbytes) {
       case 1:
         as_ldrexb(output, ptr);
@@ -4929,7 +5001,7 @@ MacroAssemblerARMCompat::atomicFetchOpARMv7(int nbytes, bool signExtend, AtomicO
         break;
     }
     as_cmp(ScratchRegister, Imm8(1));
-    as_b(&Lagain, Equal);
+    as_b(&again, Equal);
     ma_dmb();
 }
 
@@ -4987,10 +5059,10 @@ void
 MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Register& value,
                                              const T& mem)
 {
-    Label Lagain;
+    Label again;
     Register ptr = computePointer(mem, secondScratchReg_);
     ma_dmb();
-    bind(&Lagain);
+    bind(&again);
     switch (nbytes) {
       case 1:
         as_ldrexb(ScratchRegister, ptr);
@@ -5031,7 +5103,7 @@ MacroAssemblerARMCompat::atomicEffectOpARMv7(int nbytes, AtomicOp op, const Regi
         break;
     }
     as_cmp(ScratchRegister, Imm8(1));
-    as_b(&Lagain, Equal);
+    as_b(&again, Equal);
     ma_dmb();
 }
 

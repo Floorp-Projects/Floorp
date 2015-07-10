@@ -32,6 +32,7 @@ class AtomicsObject : public JSObject
 void atomics_fullMemoryBarrier();
 
 bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
+bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_fence(JSContext* cx, unsigned argc, Value* vp);
@@ -52,6 +53,7 @@ int32_t atomics_and_asm_callout(int32_t vt, int32_t offset, int32_t value);
 int32_t atomics_or_asm_callout(int32_t vt, int32_t offset, int32_t value);
 int32_t atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value);
 int32_t atomics_cmpxchg_asm_callout(int32_t vt, int32_t offset, int32_t oldval, int32_t newval);
+int32_t atomics_xchg_asm_callout(int32_t vt, int32_t offset, int32_t value);
 
 class FutexRuntime
 {

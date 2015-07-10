@@ -37,9 +37,8 @@ interface Animation {
   void play ();
   [Throws, BinaryName="pauseFromJS"]
   void pause ();
-  /*
+  [Throws]
   void reverse ();
-  */
 };
 
 // Non-standard extensions

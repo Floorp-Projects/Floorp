@@ -61,6 +61,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
     void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
+    void visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins);
     void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
     void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
     void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins);

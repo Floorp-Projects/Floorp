@@ -574,6 +574,34 @@ LIRGeneratorARM::visitSimdValueX4(MSimdValueX4* ins)
 }
 
 void
+LIRGeneratorARM::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+{
+    MOZ_ASSERT(HasLDSTREXBHD());
+    MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
+
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    // If the target is a floating register then we need a temp at the
+    // CodeGenerator level for creating the result.
+
+    const LAllocation value = useRegister(ins->value());
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->arrayType() == Scalar::Uint32) {
+        MOZ_ASSERT(ins->type() == MIRType_Double);
+        tempDef = temp();
+    }
+
+    LAtomicExchangeTypedArrayElement* lir =
+        new(alloc()) LAtomicExchangeTypedArrayElement(elements, index, value, tempDef);
+
+    define(lir, ins);
+}
+
+void
 LIRGeneratorARM::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     MOZ_ASSERT(ins->arrayType() != Scalar::Uint8Clamped);
@@ -670,6 +698,26 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
                                                useRegister(ins->newValue()));
 
     define(lir, ins);
+}
+
+void
+LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
+{
+    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+
+    const LAllocation ptr = useRegister(ins->ptr());
+    const LAllocation value = useRegister(ins->value());
+
+    if (byteSize(ins->accessType()) < 4 && !HasLDSTREXBHD()) {
+        // Call out on ARMv6.
+        defineFixed(new(alloc()) LAsmJSAtomicExchangeCallout(ptr, value),
+                    ins,
+                    LAllocation(AnyRegister(ReturnReg)));
+        return;
+    }
+
+    define(new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value), ins);
 }
 
 void
