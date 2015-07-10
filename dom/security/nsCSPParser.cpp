@@ -804,10 +804,7 @@ nsCSPParser::sourceExpression()
   resetCurValue();
 
   // If mCurToken does not provide a scheme (scheme-less source), we apply the scheme
-  // from selfURI but we also need to remember if the protected resource is http, in
-  // which case we should allow https loads, see:
-  // http://www.w3.org/TR/CSP2/#match-source-expression
-  bool allowHttps = false;
+  // from selfURI
   if (parsedScheme.IsEmpty()) {
     // Resetting internal helpers, because we might already have parsed some of the host
     // when trying to parse a scheme.
@@ -815,14 +812,13 @@ nsCSPParser::sourceExpression()
     nsAutoCString selfScheme;
     mSelfURI->GetScheme(selfScheme);
     parsedScheme.AssignASCII(selfScheme.get());
-    allowHttps = selfScheme.EqualsASCII("http");
   }
 
   // At this point we are expecting a host to be parsed.
   // Trying to create a new nsCSPHost.
   if (nsCSPHostSrc *cspHost = hostSource()) {
     // Do not forget to set the parsed scheme.
-    cspHost->setScheme(parsedScheme, allowHttps);
+    cspHost->setScheme(parsedScheme);
     return cspHost;
   }
   // Error was reported in hostSource()
@@ -992,6 +988,12 @@ nsCSPParser::directiveName()
                              params, ArrayLength(params));
     return nullptr;
   }
+
+  // special case handling for upgrade-insecure-requests
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
+    return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
+  }
+
   return new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
 }
 
@@ -1020,6 +1022,20 @@ nsCSPParser::directive()
   nsCSPDirective* cspDir = directiveName();
   if (!cspDir) {
     // if we can not create a CSPDirective, we can skip parsing the srcs for that array
+    return;
+  }
+
+  // special case handling for upgrade-insecure-requests, which is only specified
+  // by a directive name but does not include any srcs.
+  if (cspDir->equals(nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
+    if (mCurDir.Length() > 1) {
+      const char16_t* params[] = { NS_LITERAL_STRING("upgrade-insecure-requests").get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag,
+                               "ignoreSrcForDirective",
+                               params, ArrayLength(params));
+    }
+    // add the directive and return
+    mPolicy->addUpgradeInsecDir(static_cast<nsUpgradeInsecureDirective*>(cspDir));
     return;
   }
 
