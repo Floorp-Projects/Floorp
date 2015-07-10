@@ -168,7 +168,7 @@ assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[((
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[((i32[i>>2]|0) + (g()|0)) >> 2] = 0 } function g() { return 0 } return f');
 assertAsmTypeFail('glob', 'ffis', 'b', SETUP + 'function f() { var i = 0; i32[i >> 2] = (i32[i>>2]|0) + (g()|0) } function g() { return 0 } return f');
 if (isSimdAvailable() && typeof SIMD !== 'undefined')
-    asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'var i4 = glob.SIMD.int32x4; var add = i4.add;' + CHANGE_FUN + 'function f(i) { i=i|0; i32[i4(i,1,2,i).x >> 2]; i32[add(i4(0,0,0,0),i4(1,1,1,1)).x >> 2]; } return f');
+    asmCompile('glob', 'ffis', 'b', USE_ASM + IMPORT2 + 'var i4 = glob.SIMD.Int32x4; var ext = i4.extractLane; var add = i4.add;' + CHANGE_FUN + 'function f(i) { i=i|0; i32[ext(i4(i,1,2,i),0) >> 2]; i32[ext(add(i4(0,0,0,0),i4(1,1,1,1)),0) >> 2]; } return f');
 
 // Tests for constant heap accesses when change-heap is used
 

@@ -36,14 +36,6 @@ this.ClientID = Object.freeze({
   },
 
   /**
-   * Generates a new client ID.
-   * @return {Promise<string>} A promise resolved with the new client id.
-   */
-  resetClientID: function() {
-    return ClientIDImpl.resetClientID();
-  },
-
-  /**
    * Only used for testing. Invalidates the client ID so that it gets read
    * again from file.
    */
@@ -137,22 +129,6 @@ let ClientIDImpl = {
 
     return Promise.resolve(this._clientID);
   },
-
-  /**
-   * Reset the stable client id.
-   *
-   * @return {Promise<string>} The new client ID.
-   */
-  resetClientID: Task.async(function* () {
-    yield this._loadClientIdTask;
-    yield this._saveClientIdTask;
-
-    this._clientID = CommonUtils.generateUUID();
-    this._saveClientIdTask = this._saveClientID();
-    yield this._saveClientIdTask;
-
-    return this._clientID;
-  }),
 
   /*
    * Resets the provider. This is for testing only.

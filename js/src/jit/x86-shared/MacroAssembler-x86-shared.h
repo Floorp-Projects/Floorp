@@ -770,6 +770,20 @@ class MacroAssemblerX86Shared : public Assembler
         lock_cmpxchgb(newval, Operand(mem));
         movsbl(output, output);
     }
+    template <typename T>
+    void atomicExchange8ZeroExtend(const T& mem, Register value, Register output) {
+        if (value != output)
+            movl(value, output);
+        xchgb(output, Operand(mem));
+        movzbl(output, output);
+    }
+    template <typename T>
+    void atomicExchange8SignExtend(const T& mem, Register value, Register output) {
+        if (value != output)
+            movl(value, output);
+        xchgb(output, Operand(mem));
+        movsbl(output, output);
+    }
     void load16ZeroExtend(const Address& src, Register dest) {
         movzwl(Operand(src), dest);
     }
@@ -794,6 +808,20 @@ class MacroAssemblerX86Shared : public Assembler
         if (oldval != output)
             movl(oldval, output);
         lock_cmpxchgw(newval, Operand(mem));
+        movswl(output, output);
+    }
+    template <typename T>
+    void atomicExchange16ZeroExtend(const T& mem, Register value, Register output) {
+        if (value != output)
+            movl(value, output);
+        xchgw(output, Operand(mem));
+        movzwl(output, output);
+    }
+    template <typename T>
+    void atomicExchange16SignExtend(const T& mem, Register value, Register output) {
+        if (value != output)
+            movl(value, output);
+        xchgw(output, Operand(mem));
         movswl(output, output);
     }
     void load16SignExtend(const Address& src, Register dest) {
@@ -821,6 +849,12 @@ class MacroAssemblerX86Shared : public Assembler
         if (oldval != output)
             movl(oldval, output);
         lock_cmpxchgl(newval, Operand(mem));
+    }
+    template <typename T>
+    void atomicExchange32(const T& mem, Register value, Register output) {
+        if (value != output)
+            movl(value, output);
+        xchgl(output, Operand(mem));
     }
     template <typename S, typename T>
     void store32_NoSecondScratch(const S& src, const T& dest) {

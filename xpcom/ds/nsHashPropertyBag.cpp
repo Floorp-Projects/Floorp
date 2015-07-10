@@ -114,18 +114,6 @@ nsSimpleProperty::GetValue(nsIVariant** aValue)
 
 // end nsSimpleProperty
 
-static PLDHashOperator
-PropertyHashToArrayFunc(const nsAString& aKey,
-                        nsIVariant* aData,
-                        void* aUserArg)
-{
-  nsIMutableArray* propertyArray = static_cast<nsIMutableArray*>(aUserArg);
-  nsSimpleProperty* sprop = new nsSimpleProperty(aKey, aData);
-  propertyArray->AppendElement(sprop, false);
-  return PL_DHASH_NEXT;
-}
-
-
 NS_IMETHODIMP
 nsHashPropertyBagBase::GetEnumerator(nsISimpleEnumerator** aResult)
 {
@@ -134,7 +122,12 @@ nsHashPropertyBagBase::GetEnumerator(nsISimpleEnumerator** aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mPropertyHash.EnumerateRead(PropertyHashToArrayFunc, propertyArray.get());
+  for (auto iter = mPropertyHash.Iter(); !iter.Done(); iter.Next()) {
+    const nsAString& key = iter.GetKey();
+    nsIVariant* data = iter.GetUserData();
+    nsSimpleProperty* sprop = new nsSimpleProperty(key, data);
+    propertyArray->AppendElement(sprop, false);
+  }
 
   return NS_NewArrayEnumerator(aResult, propertyArray);
 }

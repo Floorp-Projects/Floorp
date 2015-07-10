@@ -1547,6 +1547,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
         if (!standardLibraryAtomicsNames_.init() ||
             !addStandardLibraryAtomicsName("compareExchange", AsmJSAtomicsBuiltin_compareExchange) ||
+            !addStandardLibraryAtomicsName("exchange", AsmJSAtomicsBuiltin_exchange) ||
             !addStandardLibraryAtomicsName("load", AsmJSAtomicsBuiltin_load) ||
             !addStandardLibraryAtomicsName("store", AsmJSAtomicsBuiltin_store) ||
             !addStandardLibraryAtomicsName("fence", AsmJSAtomicsBuiltin_fence) ||
@@ -2569,6 +2570,7 @@ enum class I32 : uint8_t {
 
     // Atomics opcodes
     AtomicsCompareExchange,
+    AtomicsExchange,
     AtomicsLoad,
     AtomicsStore,
     AtomicsBinOp,
@@ -2577,10 +2579,7 @@ enum class I32 : uint8_t {
     I32X4SignMask,
     F32X4SignMask,
 
-    I32X4ExtractX,
-    I32X4ExtractY,
-    I32X4ExtractZ,
-    I32X4ExtractW,
+    I32X4ExtractLane,
 
     // Specific to AsmJS
     Id,
@@ -2630,10 +2629,7 @@ enum class F32 : uint8_t {
     StoreF64,
 
     // SIMD opcodes
-    F32X4ExtractX,
-    F32X4ExtractY,
-    F32X4ExtractZ,
-    F32X4ExtractW,
+    F32X4ExtractLane,
 
     // asm.js specific
     Id,
@@ -3599,6 +3595,19 @@ class FunctionCompiler
         bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK;
         MAsmJSCompareExchangeHeap* cas =
             MAsmJSCompareExchangeHeap::New(alloc(), accessType, ptr, oldv, newv, needsBoundsCheck);
+        curBlock_->add(cas);
+        return cas;
+    }
+
+    MDefinition* atomicExchangeHeap(Scalar::Type accessType, MDefinition* ptr, MDefinition* value,
+                                    NeedsBoundsCheck chk)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK;
+        MAsmJSAtomicExchangeHeap* cas =
+            MAsmJSAtomicExchangeHeap::New(alloc(), accessType, ptr, value, needsBoundsCheck);
         curBlock_->add(cas);
         return cas;
     }
@@ -5411,17 +5420,6 @@ EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
     return true;
 }
 
-void
-SwitchPatchOp(FunctionBuilder& f, size_t at, AsmJSSimdType type,
-              I32 i32, F32 f32)
-{
-    switch (type) {
-      case AsmJSSimdType_int32x4:   f.patchOp(at, i32); return;
-      case AsmJSSimdType_float32x4: f.patchOp(at, f32); return;
-    }
-    MOZ_CRASH("unexpected simd type");
-}
-
 static bool
 CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
 {
@@ -5441,29 +5439,13 @@ CheckDotAccess(FunctionBuilder& f, ParseNode* elem, Type* type)
 
     JSAtomState& names = m.cx()->names();
 
-    if (field == names.signMask) {
-        *type = Type::Signed;
-        switch (baseType.simdType()) {
-          case AsmJSSimdType_int32x4:   f.patchOp(opcodeAt, I32::I32X4SignMask); break;
-          case AsmJSSimdType_float32x4: f.patchOp(opcodeAt, I32::F32X4SignMask); break;
-        }
-        return true;
-    }
+    if (field != names.signMask)
+        return f.fail(base, "dot access field must be signMask");
 
-    if (field == names.x)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractX, F32::F32X4ExtractX);
-    else if (field == names.y)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractY, F32::F32X4ExtractY);
-    else if (field == names.z)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractZ, F32::F32X4ExtractZ);
-    else if (field == names.w)
-        SwitchPatchOp(f, opcodeAt, baseType.simdType(), I32::I32X4ExtractW, F32::F32X4ExtractW);
-    else
-        return f.fail(base, "dot access field must be a lane name (x, y, z, w) or signMask");
-
+    *type = Type::Signed;
     switch (baseType.simdType()) {
-      case AsmJSSimdType_int32x4:   *type = Type::Signed; break;
-      case AsmJSSimdType_float32x4: *type = Type::Float;  break;
+      case AsmJSSimdType_int32x4:   f.patchOp(opcodeAt, I32::I32X4SignMask); break;
+      case AsmJSSimdType_float32x4: f.patchOp(opcodeAt, I32::F32X4SignMask); break;
     }
 
     return true;
@@ -5476,29 +5458,6 @@ EmitSignMask(FunctionCompiler& f, AsmType type, MDefinition** def)
     if (!EmitExpr(f, type, &in))
         return false;
     *def = f.extractSignMask(in);
-    return true;
-}
-
-static MIRType
-ScalarMIRTypeFromSimdAsmType(AsmType type)
-{
-    switch (type) {
-      case AsmType::Int32:
-      case AsmType::Float32:
-      case AsmType::Float64:   break;
-      case AsmType::Int32x4:   return MIRType_Int32;
-      case AsmType::Float32x4: return MIRType_Float32;
-    }
-    MOZ_CRASH("unexpected simd type");
-}
-
-static bool
-EmitExtractLane(FunctionCompiler& f, AsmType type, SimdLane lane, MDefinition** def)
-{
-    MDefinition* in;
-    if (!EmitExpr(f, type, &in))
-        return false;
-    *def = f.extractSimdElement(lane, in, ScalarMIRTypeFromSimdAsmType(type));
     return true;
 }
 
@@ -6189,12 +6148,63 @@ EmitAtomicsCompareExchange(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
+CheckAtomicsExchange(FunctionBuilder& f, ParseNode* call, Type* type)
+{
+    if (CallArgListLength(call) != 3)
+        return f.fail(call, "Atomics.exchange must be passed 3 arguments");
+
+    ParseNode* arrayArg = CallArgList(call);
+    ParseNode* indexArg = NextNode(arrayArg);
+    ParseNode* valueArg = NextNode(indexArg);
+
+    f.writeOp(I32::AtomicsExchange);
+    size_t needsBoundsCheckAt = f.tempU8();
+    size_t viewTypeAt = f.tempU8();
+
+    Scalar::Type viewType;
+    NeedsBoundsCheck needsBoundsCheck;
+    int32_t mask;
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &needsBoundsCheck, &mask))
+        return false;
+
+    Type valueArgType;
+    if (!CheckExpr(f, valueArg, &valueArgType))
+        return false;
+
+    if (!valueArgType.isIntish())
+        return f.failf(arrayArg, "%s is not a subtype of intish", valueArgType.toChars());
+
+    f.patchU8(needsBoundsCheckAt, uint8_t(needsBoundsCheck));
+    f.patchU8(viewTypeAt, uint8_t(viewType));
+
+    *type = Type::Intish;
+    return true;
+}
+
+static bool
+EmitAtomicsExchange(FunctionCompiler& f, MDefinition** def)
+{
+    NeedsBoundsCheck needsBoundsCheck = NeedsBoundsCheck(f.readU8());
+    Scalar::Type viewType = Scalar::Type(f.readU8());
+    MDefinition* index;
+    if (!EmitI32Expr(f, &index))
+        return false;
+    MDefinition* value;
+    if (!EmitI32Expr(f, &value))
+        return false;
+    *def = f.atomicExchangeHeap(viewType, index, value, needsBoundsCheck);
+    return true;
+}
+
+static bool
 CheckAtomicsBuiltinCall(FunctionBuilder& f, ParseNode* callNode, AsmJSAtomicsBuiltinFunction func,
                         Type* resultType)
 {
     switch (func) {
       case AsmJSAtomicsBuiltin_compareExchange:
         return CheckAtomicsCompareExchange(f, callNode, resultType);
+      case AsmJSAtomicsBuiltin_exchange:
+        return CheckAtomicsExchange(f, callNode, resultType);
       case AsmJSAtomicsBuiltin_load:
         return CheckAtomicsLoad(f, callNode, resultType);
       case AsmJSAtomicsBuiltin_store:
@@ -6943,6 +6953,35 @@ class CheckSimdVectorScalarArgs
     }
 };
 
+class CheckSimdExtractLaneArgs
+{
+    AsmJSSimdType formalSimdType_;
+
+  public:
+    explicit CheckSimdExtractLaneArgs(AsmJSSimdType t) : formalSimdType_(t) {}
+
+    bool operator()(FunctionBuilder& f, ParseNode* arg, unsigned argIndex, Type actualType) const
+    {
+        MOZ_ASSERT(argIndex < 2);
+        if (argIndex == 0) {
+            // First argument is the vector
+            if (!(actualType <= Type(formalSimdType_))) {
+                return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
+                               Type(formalSimdType_).toChars());
+            }
+            return true;
+        }
+
+        uint32_t laneIndex;
+        // Second argument is the lane < vector length
+        if (!IsLiteralOrConstInt(f, arg, &laneIndex))
+            return f.failf(arg, "lane selector should be a constant integer literal");
+        if (laneIndex >= SimdTypeToLength(formalSimdType_))
+            return f.failf(arg, "lane selector should be in bounds");
+        return true;
+    }
+};
+
 class CheckSimdReplaceLaneArgs
 {
     AsmJSSimdType formalSimdType_;
@@ -7130,6 +7169,60 @@ EmitSimdBinaryShift(FunctionCompiler& f, MDefinition** def)
 }
 
 static bool
+CheckSimdExtractLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
+{
+    switch (opType) {
+      case AsmJSSimdType_int32x4:
+        f.writeOp(I32::I32X4ExtractLane);
+        *type = Type::Signed;
+        break;
+      case AsmJSSimdType_float32x4:
+        f.writeOp(F32::F32X4ExtractLane);
+        *type = Type::Float;
+        break;
+    }
+    return CheckSimdCallArgs(f, call, 2, CheckSimdExtractLaneArgs(opType));
+}
+
+static MIRType
+ScalarMIRTypeFromSimdAsmType(AsmType type)
+{
+    switch (type) {
+      case AsmType::Int32:
+      case AsmType::Float32:
+      case AsmType::Float64:   break;
+      case AsmType::Int32x4:   return MIRType_Int32;
+      case AsmType::Float32x4: return MIRType_Float32;
+    }
+    MOZ_CRASH("unexpected simd type");
+}
+
+static bool
+EmitExtractLane(FunctionCompiler& f, AsmType type, MDefinition** def)
+{
+    MDefinition* vec;
+    if (!EmitExpr(f, type, &vec))
+        return false;
+
+    MDefinition* laneDef;
+    if (!EmitI32Expr(f, &laneDef))
+        return false;
+
+    if (!laneDef) {
+        *def = nullptr;
+        return true;
+    }
+
+    MOZ_ASSERT(laneDef->isConstant());
+    int32_t laneLit = laneDef->toConstant()->value().toInt32();
+    MOZ_ASSERT(laneLit < 4);
+    SimdLane lane = SimdLane(laneLit);
+
+    *def = f.extractSimdElement(lane, vec, ScalarMIRTypeFromSimdAsmType(type));
+    return true;
+}
+
+static bool
 CheckSimdReplaceLane(FunctionBuilder& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
     SwitchPackOp(f, opType, I32X4::ReplaceLane, F32X4::ReplaceLane);
@@ -7162,10 +7255,16 @@ EmitSimdReplaceLane(FunctionCompiler& f, AsmType simdType, MDefinition** def)
     MDefinition* laneDef;
     if (!EmitI32Expr(f, &laneDef))
         return false;
-    MOZ_ASSERT(laneDef->isConstant());
-    int32_t laneLit = laneDef->toConstant()->value().toInt32();
-    MOZ_ASSERT(laneLit < 4);
-    SimdLane lane = SimdLane(laneLit);
+
+    SimdLane lane;
+    if (laneDef) {
+        MOZ_ASSERT(laneDef->isConstant());
+        int32_t laneLit = laneDef->toConstant()->value().toInt32();
+        MOZ_ASSERT(laneLit < 4);
+        lane = SimdLane(laneLit);
+    } else {
+        lane = SimdLane(-1);
+    }
 
     MDefinition* scalar;
     if (!EmitExpr(f, AsmSimdTypeToScalarType(simdType), &scalar))
@@ -7552,6 +7651,8 @@ CheckSimdOperationCall(FunctionBuilder& f, ParseNode* call, const ModuleCompiler
       case AsmJSSimdOperation_xor:
         return CheckSimdBinary(f, call, opType, MSimdBinaryBitwise::xor_, type);
 
+      case AsmJSSimdOperation_extractLane:
+        return CheckSimdExtractLane(f, call, opType, type);
       case AsmJSSimdOperation_replaceLane:
         return CheckSimdReplaceLane(f, call, opType, type);
 
@@ -7606,7 +7707,7 @@ CheckSimdOperationCall(FunctionBuilder& f, ParseNode* call, const ModuleCompiler
       case AsmJSSimdOperation_store3:
         return CheckSimdStore(f, call, opType, 3, type);
 
-      case AsmJSSimdOperation_bitselect:
+      case AsmJSSimdOperation_selectBits:
         return CheckSimdSelect(f, call, opType, /*isElementWise */ false, type);
       case AsmJSSimdOperation_select:
         return CheckSimdSelect(f, call, opType, /*isElementWise */ true, type);
@@ -7790,13 +7891,14 @@ CheckCoercedSimdCall(FunctionBuilder& f, ParseNode* call, const ModuleCompiler::
     if (global->isSimdCtor()) {
         if (!CheckSimdCtorCall(f, call, global, type))
             return false;
+        MOZ_ASSERT(type->isSimd());
     } else {
         MOZ_ASSERT(global->isSimdOperation());
         if (!CheckSimdOperationCall(f, call, global, type))
             return false;
+        MOZ_ASSERT_IF(global->simdOperation() != AsmJSSimdOperation_extractLane, type->isSimd());
     }
 
-    MOZ_ASSERT(type->isSimd());
     return CoerceResult(f, call, retType, *type, opcodeAt, type);
 }
 
@@ -9841,6 +9943,8 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitComparison(f, op, def);
       case I32::AtomicsCompareExchange:
         return EmitAtomicsCompareExchange(f, def);
+      case I32::AtomicsExchange:
+        return EmitAtomicsExchange(f, def);
       case I32::AtomicsLoad:
         return EmitAtomicsLoad(f, def);
       case I32::AtomicsStore:
@@ -9851,14 +9955,8 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitSignMask(f, AsmType::Int32x4, def);
       case I32::F32X4SignMask:
         return EmitSignMask(f, AsmType::Float32x4, def);
-      case I32::I32X4ExtractX:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneX, def);
-      case I32::I32X4ExtractY:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneY, def);
-      case I32::I32X4ExtractZ:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneZ, def);
-      case I32::I32X4ExtractW:
-        return EmitExtractLane(f, AsmType::Int32x4, LaneW, def);
+      case I32::I32X4ExtractLane:
+        return EmitExtractLane(f, AsmType::Int32x4, def);
       case I32::Bad:
         break;
     }
@@ -9924,14 +10022,8 @@ bool EmitF32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitStore(f, Scalar::Float32, def);
       case F32::StoreF64:
         return EmitStoreWithCoercion(f, Scalar::Float32, Scalar::Float64, def);
-      case F32::F32X4ExtractX:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneX, def);
-      case F32::F32X4ExtractY:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneY, def);
-      case F32::F32X4ExtractZ:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneZ, def);
-      case F32::F32X4ExtractW:
-        return EmitExtractLane(f, AsmType::Float32x4, LaneW, def);
+      case F32::F32X4ExtractLane:
+        return EmitExtractLane(f, AsmType::Float32x4, def);
       case F32::Bad:
         break;
     }
@@ -11488,6 +11580,7 @@ GenerateBuiltinThunk(ModuleCompiler& m, AsmJSExit::BuiltinKind builtin)
         argTypes.infallibleAppend(MIRType_Int32);
         argTypes.infallibleAppend(MIRType_Int32);
         break;
+      case AsmJSExit::Builtin_AtomicXchg:
       case AsmJSExit::Builtin_AtomicFetchAdd:
       case AsmJSExit::Builtin_AtomicFetchSub:
       case AsmJSExit::Builtin_AtomicFetchAnd:

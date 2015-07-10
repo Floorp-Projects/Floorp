@@ -8,7 +8,7 @@ setJitCompilerOption("ion.warmup.trigger", 90);
 var max = 100; // Make have the warm-up counter high enough to
                // consider inlining functions.
 
-var f4 = SIMD.int32x4; // :TODO: Support float32x4 arith.
+var f4 = SIMD.Int32x4; // :TODO: Support Float32x4 arith.
 var f4add = f4.add;
 var f4sub = f4.sub;
 var f4mul = f4.mul;

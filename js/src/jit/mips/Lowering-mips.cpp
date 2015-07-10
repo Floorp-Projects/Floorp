@@ -568,7 +568,19 @@ LIRGeneratorMIPS::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArr
 }
 
 void
+LIRGeneratorMIPS::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
 LIRGeneratorMIPS::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorMIPS::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
     MOZ_CRASH("NYI");
 }

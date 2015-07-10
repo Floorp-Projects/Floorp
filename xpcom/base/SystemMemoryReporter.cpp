@@ -221,38 +221,25 @@ private:
 
     void Report(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
-      EnumArgs env = { aHandleReport, aData };
-      mTagged.EnumerateRead(ReportSizes, &env);
+      for (auto iter = mTagged.Iter(); !iter.Done(); iter.Next()) {
+        nsCStringHashKey::KeyType key = iter.GetKey();
+        size_t amount = iter.GetUserData();
+
+        nsAutoCString path("processes/");
+        path.Append(key);
+
+        nsAutoCString desc("This is the sum of all processes' '");
+        desc.Append(key);
+        desc.AppendLiteral("' numbers.");
+
+        aHandleReport->Callback(NS_LITERAL_CSTRING("System"), path,
+                                KIND_NONHEAP, UNITS_BYTES, amount,
+                                desc, aData);
+      }
     }
 
   private:
     nsDataHashtable<nsCStringHashKey, size_t> mTagged;
-
-    struct EnumArgs
-    {
-      nsIHandleReportCallback* mHandleReport;
-      nsISupports* mData;
-    };
-
-    static PLDHashOperator ReportSizes(nsCStringHashKey::KeyType aKey,
-                                       size_t aAmount,
-                                       void* aUserArg)
-    {
-      const EnumArgs* envp = reinterpret_cast<const EnumArgs*>(aUserArg);
-
-      nsAutoCString path("processes/");
-      path.Append(aKey);
-
-      nsAutoCString desc("This is the sum of all processes' '");
-      desc.Append(aKey);
-      desc.AppendLiteral("' numbers.");
-
-      envp->mHandleReport->Callback(NS_LITERAL_CSTRING("System"), path,
-                                    KIND_NONHEAP, UNITS_BYTES, aAmount,
-                                    desc, envp->mData);
-
-      return PL_DHASH_NEXT;
-    }
   };
 
   nsresult ReadMemInfo(int64_t* aMemTotal, int64_t* aMemFree)

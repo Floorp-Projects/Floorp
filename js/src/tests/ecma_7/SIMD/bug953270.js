@@ -5,23 +5,20 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var BUGNUMBER = 953270;
-var summary = 'Handles';
-
 // Check that NaN normalization is applied when extracting the x lane
 // out, after bit conversion has occurred.
 
-var int32x4 = SIMD.int32x4;
-var a = int32x4((4294967295), 200, 300, 400);
-var c = SIMD.float32x4.fromInt32x4Bits(a);
+var Int32x4 = SIMD.Int32x4;
+var a = Int32x4((4294967295), 200, 300, 400);
+var c = SIMD.Float32x4.fromInt32x4Bits(a);
 
 // NaN canonicalization occurs when extracting out x lane:
-assertEq(c.x, NaN);
+assertEq(SIMD.Float32x4.extractLane(c, 0), NaN);
 
 // but underlying bits are faithfully transmitted
 // (though reinterpreted as a signed integer):
-var d = SIMD.int32x4.fromFloat32x4Bits(c);
-assertEq(d.x, -1);
+var d = SIMD.Int32x4.fromFloat32x4Bits(c);
+assertEq(SIMD.Int32x4.extractLane(d, 0), -1);
 
-reportCompare(true, true);
-print("Tests complete");
+if (typeof reportCompare === "function")
+    reportCompare(true, true);
