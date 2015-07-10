@@ -552,17 +552,9 @@ MacroAssemblerCompat::breakpoint()
     Brk((code++) & 0xffff);
 }
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
-
-void
-MacroAssembler::reserveStack(uint32_t amount)
-{
-    // TODO: This bumps |sp| every time we reserve using a second register.
-    // It would save some instructions if we had a fixed frame size.
-    vixl::MacroAssembler::Claim(Operand(amount));
-    adjustFrame(amount);
-}
 
 void
 MacroAssembler::PushRegsInMask(LiveRegisterSet set)
@@ -688,7 +680,7 @@ MacroAssembler::Push(FloatRegister f)
 }
 
 void
-MacroAssembler::Pop(const Register reg)
+MacroAssembler::Pop(Register reg)
 {
     pop(reg);
     adjustFrame(-1 * int64_t(sizeof(int64_t)));
@@ -699,6 +691,15 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     pop(val);
     adjustFrame(-1 * int64_t(sizeof(int64_t)));
+}
+
+void
+MacroAssembler::reserveStack(uint32_t amount)
+{
+    // TODO: This bumps |sp| every time we reserve using a second register.
+    // It would save some instructions if we had a fixed frame size.
+    vixl::MacroAssembler::Claim(Operand(amount));
+    adjustFrame(amount);
 }
 
 // ===============================================================
@@ -752,6 +753,8 @@ MacroAssembler::call(JitCode* c)
     addPendingJump(off, ImmPtr(c->raw()), Relocation::JITCODE);
     blr(scratch64);
 }
+
+//}}} check_macroassembler_style
 
 } // namespace jit
 } // namespace js

@@ -2440,6 +2440,18 @@ nsDOMWindowUtils::GetIsTestControllingRefreshes(bool *aResult)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetAsyncPanZoomEnabled(bool *aResult)
+{
+  nsIWidget* widget = GetWidget();
+  if (widget) {
+    *aResult = widget->AsyncPanZoomEnabled();
+  } else {
+    *aResult = gfxPlatform::AsyncPanZoomEnabled();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetAsyncScrollOffset(nsIDOMNode* aNode,
                                        int32_t aX, int32_t aY)
 {

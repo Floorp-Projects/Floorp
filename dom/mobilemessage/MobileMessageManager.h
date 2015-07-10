@@ -14,11 +14,11 @@
 class nsISmsService;
 class nsIDOMMozSmsMessage;
 class nsIDOMMozMmsMessage;
-class Promise;
 
 namespace mozilla {
 namespace dom {
 
+class Promise;
 class DOMRequest;
 class DOMCursor;
 struct MmsParameters;

@@ -1718,6 +1718,8 @@ Debugger::AllocationSite::create(JSContext* cx, HandleObject frame, double when,
 
     allocSite->className = obj->getClass()->name;
     allocSite->ctorName = ctorName.get();
+    allocSite->size = JS::ubi::Node(obj.get()).size(cx->runtime()->debuggerMallocSizeOf);
+
     return allocSite;
 }
 

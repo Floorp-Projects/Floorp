@@ -175,6 +175,7 @@ ArgumentsObject::createTemplateObject(JSContext* cx, bool strict)
     if (!shape)
         return nullptr;
 
+    AutoSetNewObjectMetadata metadata(cx);
     JSObject* base = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group);
     if (!base)
         return nullptr;
@@ -222,31 +223,39 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
                         numArgs * sizeof(Value);
 
     Rooted<ArgumentsObject*> obj(cx);
-    JSObject* base = JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group);
-    if (!base)
-        return nullptr;
-    obj = &base->as<ArgumentsObject>();
+    ArgumentsData* data = nullptr;
+    {
+        // The copyArgs call below can allocate objects, so add this block scope
+        // to make sure we set the metadata for this arguments object first.
+        AutoSetNewObjectMetadata metadata(cx);
 
-    ArgumentsData* data =
-        reinterpret_cast<ArgumentsData*>(AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
-    if (!data) {
-        // Make the object safe for GC.
-        obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
-        return nullptr;
+        JSObject* base = JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group);
+        if (!base)
+            return nullptr;
+        obj = &base->as<ArgumentsObject>();
+
+        data =
+            reinterpret_cast<ArgumentsData*>(AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+        if (!data) {
+            // Make the object safe for GC.
+            obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
+            return nullptr;
+        }
+
+        data->numArgs = numArgs;
+        data->dataBytes = numBytes;
+        data->callee.init(ObjectValue(*callee.get()));
+        data->script = callee->nonLazyScript();
+
+        // Zero the argument Values. This sets each value to DoubleValue(0), which
+        // is safe for GC tracing.
+        memset(data->args, 0, numArgs * sizeof(Value));
+        MOZ_ASSERT(DoubleValue(0).asRawBits() == 0x0);
+        MOZ_ASSERT_IF(numArgs > 0, data->args[0].asRawBits() == 0x0);
+
+        obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
     }
-
-    data->numArgs = numArgs;
-    data->dataBytes = numBytes;
-    data->callee.init(ObjectValue(*callee.get()));
-    data->script = callee->nonLazyScript();
-
-    // Zero the argument Values. This sets each value to DoubleValue(0), which
-    // is safe for GC tracing.
-    memset(data->args, 0, numArgs * sizeof(Value));
-    MOZ_ASSERT(DoubleValue(0).asRawBits() == 0x0);
-    MOZ_ASSERT_IF(numArgs > 0, data->args[0].asRawBits() == 0x0);
-
-    obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+    MOZ_ASSERT(data != nullptr);
 
     /* Copy [0, numArgs) into data->slots. */
     copy.copyArgs(cx, data->args, numArgs);
@@ -617,7 +626,7 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
  */
 const Class NormalArgumentsObject::class_ = {
     "Arguments",
-    JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_DELAY_METADATA_CALLBACK |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |
@@ -644,7 +653,7 @@ const Class NormalArgumentsObject::class_ = {
  */
 const Class StrictArgumentsObject::class_ = {
     "Arguments",
-    JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_DELAY_METADATA_CALLBACK |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |

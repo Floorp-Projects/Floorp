@@ -49,5 +49,13 @@
 "digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz"
+},
+{
+"size": 55391032,
+"visibility": "public",
+"digest": "a15fbba949fbb5039bef717f55370d40050a537a2b3a1ffe5e8b655ae90b54419020783c183bba72ce2610f35e3611e259df09b5844a72bd161b512fb54898fb",
+"algorithm": "sha512",
+"unpack": true,
+"filename": "java_home-7u79-2.5.5-0ubuntu0.14.04.2-amd64.tar.xz"
 }
 ]

@@ -5110,6 +5110,7 @@ MacroAssemblerARMCompat::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
 
@@ -5300,3 +5301,5 @@ MacroAssembler::call(JitCode* c)
     ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
     ma_callJitHalfPush(ScratchRegister);
 }
+
+//}}} check_macroassembler_style

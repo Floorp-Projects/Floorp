@@ -184,9 +184,9 @@ private:
     nsRefPtr<Action> mAction;
   };
 
-  Context(Manager* aManager, nsIThread* aTarget);
+  Context(Manager* aManager, nsIThread* aTarget, Action* aInitAction);
   ~Context();
-  void Init(Action* aInitAction, Context* aOldContext);
+  void Init(Context* aOldContext);
   void Start();
   void DispatchAction(Action* aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
@@ -208,6 +208,7 @@ private:
   bool mOrphanedData;
   QuotaInfo mQuotaInfo;
   nsRefPtr<QuotaInitRunnable> mInitRunnable;
+  nsRefPtr<Action> mInitAction;
   nsTArray<PendingAction> mPendingActions;
 
   // Weak refs since activites must remove themselves from this list before

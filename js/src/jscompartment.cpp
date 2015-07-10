@@ -60,6 +60,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     regExps(runtime_),
     globalWriteBarriered(false),
     neuteredTypedObjects(0),
+    objectMetadataState(ImmediateMetadata()),
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
@@ -517,17 +518,25 @@ JSCompartment::trace(JSTracer* trc)
 void
 JSCompartment::markRoots(JSTracer* trc)
 {
-    MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
+    // The object pending metadata is the only compartment root which can be
+    // nursery allocated.
+    if (objectMetadataState.is<PendingMetadata>()) {
+        TraceRoot(trc,
+                  objectMetadataState.as<PendingMetadata>().unsafeGet(),
+                  "on-stack object pending metadata");
+    }
 
-    if (jitCompartment_)
-        jitCompartment_->mark(trc, this);
+    if (!trc->runtime()->isHeapMinorCollecting()) {
+        if (jitCompartment_)
+            jitCompartment_->mark(trc, this);
 
-    /*
-     * If a compartment is on-stack, we mark its global so that
-     * JSContext::global() remains valid.
-     */
-    if (enterCompartmentDepth && global_.unbarrieredGet())
-        TraceRoot(trc, global_.unsafeGet(), "on-stack compartment global");
+        /*
+         * If a compartment is on-stack, we mark its global so that
+         * JSContext::global() remains valid.
+         */
+        if (enterCompartmentDepth && global_.unbarrieredGet())
+            TraceRoot(trc, global_.unsafeGet(), "on-stack compartment global");
+    }
 }
 
 void
@@ -549,6 +558,17 @@ JSCompartment::sweepGlobalObject(FreeOp* fop)
         if (isDebuggee())
             Debugger::detachAllDebuggersFromGlobal(fop, global_);
         global_.set(nullptr);
+    }
+}
+
+void
+JSCompartment::sweepObjectPendingMetadata()
+{
+    if (objectMetadataState.is<PendingMetadata>()) {
+        // We should never finalize an object before it gets its metadata! That
+        // would mean we aren't calling the object metadata callback for every
+        // object!
+        MOZ_ALWAYS_TRUE(!IsAboutToBeFinalized(&objectMetadataState.as<PendingMetadata>()));
     }
 }
 
@@ -944,3 +964,35 @@ JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
 
     sawDeprecatedLanguageExtension[e] = true;
 }
+
+AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(ExclusiveContext* ecx
+                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : CustomAutoRooter(ecx)
+    , cx_(ecx->maybeJSContext())
+    , prevState_(ecx->compartment()->objectMetadataState)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (cx_)
+        cx_->compartment()->objectMetadataState = NewObjectMetadataState(DelayMetadata());
+}
+
+AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
+{
+    // If we don't have a cx, we didn't change the metadata state, so no need to
+    // reset it here.
+    if (!cx_)
+        return;
+
+    if (!cx_->isExceptionPending() && cx_->compartment()->hasObjectPendingMetadata()) {
+        JSObject* obj = cx_->compartment()->objectMetadataState.as<PendingMetadata>();
+        // Make sure to restore the previous state before setting the object's
+        // metadata. SetNewObjectMetadata asserts that the state is not
+        // PendingMetadata in order to ensure that metadata callbacks are called
+        // in order.
+        cx_->compartment()->objectMetadataState = prevState_;
+        SetNewObjectMetadata(cx_, obj);
+    } else {
+        cx_->compartment()->objectMetadataState = prevState_;
+    }
+}
+

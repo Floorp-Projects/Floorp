@@ -19,13 +19,9 @@ const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out",
 
 // Functions that accept a color argument.
 const COLOR_TAKING_FUNCTIONS = ["linear-gradient",
-                                "-moz-linear-gradient",
                                 "repeating-linear-gradient",
-                                "-moz-repeating-linear-gradient",
                                 "radial-gradient",
-                                "-moz-radial-gradient",
                                 "repeating-radial-gradient",
-                                "-moz-repeating-radial-gradient",
                                 "drop-shadow"];
 
 loader.lazyGetter(this, "DOMUtils", function() {

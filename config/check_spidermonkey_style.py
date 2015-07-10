@@ -43,6 +43,7 @@ import re
 import subprocess
 import sys
 import traceback
+from check_utils import get_all_toplevel_filenames
 
 # We don't bother checking files in these directories, because they're (a) auxiliary or (b)
 # imported code that doesn't follow our coding style.
@@ -217,20 +218,6 @@ class FileKind(object):
         error(filename, None, 'unknown file kind')
 
 
-def get_all_filenames():
-    '''Get a list of all the files in the (Mercurial or Git) repository.'''
-    cmds = [['hg', 'manifest', '-q'], ['git', 'ls-files', '--full-name', '../..']]
-    for cmd in cmds:
-        try:
-            all_filenames = subprocess.check_output(cmd, universal_newlines=True,
-                                                    stderr=subprocess.PIPE).split('\n')
-            return all_filenames
-        except:
-            continue
-    else:
-        raise Exception('failed to run any of the repo manifest commands', cmds)
-
-
 def check_style():
     # We deal with two kinds of name.
     # - A "filename" is a full path to a file from the repository root.
@@ -247,7 +234,7 @@ def check_style():
     js_names = dict()           # type: dict(filename, inclname)
 
     # Select the appropriate files.
-    for filename in get_all_filenames():
+    for filename in get_all_toplevel_filenames():
         if filename.startswith('mfbt/') and filename.endswith('.h'):
             inclname = 'mozilla/' + filename.split('/')[-1]
             mfbt_inclnames.add(inclname)
