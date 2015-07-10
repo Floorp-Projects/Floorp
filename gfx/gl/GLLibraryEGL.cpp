@@ -35,7 +35,9 @@ static const char *sEGLExtensionNames[] = {
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
     "EGL_KHR_fence_sync",
-    "EGL_ANDROID_native_fence_sync"
+    "EGL_ANDROID_native_fence_sync",
+    "ANGLE_platform_angle",
+    "ANGLE_platform_angle_d3d"
 };
 
 #if defined(ANDROID)
@@ -249,6 +251,32 @@ GLLibraryEGL::EnsureInitialized()
                        "Couldn't find eglQueryStringImplementationANDROID");
 #endif
 
+    //Initialize client extensions
+    InitExtensionsFromDisplay(EGL_NO_DISPLAY);
+
+    GLLibraryLoader::PlatformLookupFunction lookupFunction =
+        (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+
+#ifdef XP_WIN
+    if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
+        GLLibraryLoader::SymLoadStruct d3dSymbols[] = {
+            { (PRFuncPtr*)&mSymbols.fGetPlatformDisplayEXT, { "eglGetPlatformDisplayEXT", nullptr } },
+            { nullptr, { nullptr } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &d3dSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports ANGLE_platform_angle_d3d without exposing its functions!");
+
+            MarkExtensionUnsupported(ANGLE_platform_angle_d3d);
+
+            mSymbols.fGetPlatformDisplayEXT = nullptr;
+        }
+    }
+#endif
+
     mEGLDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
 
     const char* vendor = (char*)fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
@@ -286,10 +314,7 @@ GLLibraryEGL::EnsureInitialized()
         }
     }
 
-    InitExtensions();
-
-    GLLibraryLoader::PlatformLookupFunction lookupFunction =
-            (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+    InitExtensionsFromDisplay(mEGLDisplay);
 
     if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
@@ -420,11 +445,11 @@ GLLibraryEGL::EnsureInitialized()
 }
 
 void
-GLLibraryEGL::InitExtensions()
+GLLibraryEGL::InitExtensionsFromDisplay(EGLDisplay eglDisplay)
 {
     std::vector<nsCString> driverExtensionList;
 
-    const char* rawExts = (const char*)fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+    const char* rawExts = (const char*)fQueryString(eglDisplay, LOCAL_EGL_EXTENSIONS);
     if (rawExts) {
         nsDependentCString exts(rawExts);
         SplitByChar(exts, ' ', &driverExtensionList);
