@@ -1797,22 +1797,26 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_TAGGED_TEMPLATE:
         return FoldCall(cx, pn, parser, inGenexpLambda);
 
-      case PNK_EXPORT:
+      case PNK_CASE:
+      case PNK_COLON:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
       case PNK_SUBASSIGN:
       case PNK_BITORASSIGN:
-      case PNK_BITXORASSIGN:
       case PNK_BITANDASSIGN:
+      case PNK_BITXORASSIGN:
       case PNK_LSHASSIGN:
       case PNK_RSHASSIGN:
       case PNK_URSHASSIGN:
-      case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+      case PNK_MULASSIGN:
       case PNK_POWASSIGN:
-      case PNK_COLON:
-      case PNK_CASE:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
+               Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_EXPORT:
       case PNK_SHORTHAND:
       case PNK_DOWHILE:
       case PNK_WHILE:
