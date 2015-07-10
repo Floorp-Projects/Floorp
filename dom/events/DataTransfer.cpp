@@ -26,8 +26,10 @@
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransferBinding.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/OSFileSystem.h"
 
 namespace mozilla {
 namespace dom {
@@ -295,6 +297,13 @@ DataTransfer::GetFiles(ErrorResult& aRv)
 
       nsRefPtr<File> domFile;
       if (file) {
+#ifdef DEBUG
+        if (XRE_GetProcessType() == GeckoProcessType_Default) {
+          bool isDir;
+          file->IsDirectory(&isDir);
+          MOZ_ASSERT(!isDir, "How did we get here?");
+        }
+#endif
         domFile = File::CreateFromFile(GetParentObject(), file);
       } else {
         nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports);
@@ -812,6 +821,92 @@ DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
     SetDragImage(*image, aX, aY, rv);
   }
   return rv.StealNSResult();
+}
+
+static already_AddRefed<OSFileSystem>
+MakeOrReuseFileSystem(const nsAString& aNewLocalRootPath,
+                      OSFileSystem* aFS,
+                      nsPIDOMWindow* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsRefPtr<OSFileSystem> fs;
+  if (aFS) {
+    const nsAString& prevLocalRootPath = aFS->GetLocalRootPath();
+    if (aNewLocalRootPath == prevLocalRootPath) {
+      fs = aFS;
+    }
+  }
+  if (!fs) {
+    fs = new OSFileSystem(aNewLocalRootPath);
+    fs->Init(aWindow);
+  }
+  return fs.forget();
+}
+
+already_AddRefed<Promise>
+DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(mParent);
+  if (!parentNode) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = parentNode->OwnerDoc()->GetScopeObject();
+  MOZ_ASSERT(global);
+  if (!global) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> p = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (!mFiles) {
+    ErrorResult dummy;
+    GetFiles(dummy);
+    if (!mFiles) {
+      return nullptr;
+    }
+  }
+
+  Sequence<OwningFileOrDirectory> filesAndDirsSeq;
+
+  if (!filesAndDirsSeq.SetLength(mFiles->Length(), mozilla::fallible_t())) {
+    p->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+    return p.forget();
+  }
+
+  nsPIDOMWindow* window = parentNode->OwnerDoc()->GetInnerWindow();
+
+  nsRefPtr<OSFileSystem> fs;
+  for (uint32_t i = 0; i < mFiles->Length(); ++i) {
+    if (mFiles->Item(i)->Impl()->IsDirectory()) {
+#if defined(ANDROID) || defined(MOZ_B2G)
+      MOZ_ASSERT(false,
+                 "Directory picking should have been redirected to normal "
+                 "file picking for platforms that don't have a directory "
+                 "picker");
+#endif
+      nsAutoString path;
+      mFiles->Item(i)->GetMozFullPathInternal(path, aRv);
+      if (aRv.Failed()) {
+        return nullptr;
+      }
+      int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
+      nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
+      nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
+      fs = MakeOrReuseFileSystem(dirname, fs, window);
+      filesAndDirsSeq[i].SetAsDirectory() = new Directory(fs, basename);
+    } else {
+      filesAndDirsSeq[i].SetAsFile() = mFiles->Item(i);
+    }
+  }
+
+  p->MaybeResolve(filesAndDirsSeq);
+
+  return p.forget();
 }
 
 void
