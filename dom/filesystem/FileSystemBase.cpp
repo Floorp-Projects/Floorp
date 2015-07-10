@@ -42,7 +42,7 @@ FileSystemBase::FromString(const nsAString& aString)
 
 FileSystemBase::FileSystemBase()
   : mShutdown(false)
-  , mIsTesting(false)
+  , mRequiresPermissionChecks(true)
 {
 }
 
