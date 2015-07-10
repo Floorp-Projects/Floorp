@@ -9,18 +9,14 @@
 
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "AudioNode.h"
-#include "nsIDOMEventListener.h"
 #include "nsIAudioChannelAgent.h"
-#include "AudioChannelCommon.h"
 
 namespace mozilla {
 namespace dom {
 
 class AudioContext;
-class EventProxyHandler;
 
 class AudioDestinationNode final : public AudioNode
-                                 , public nsIDOMEventListener
                                  , public nsIAudioChannelAgentCallback
                                  , public MainThreadMediaStreamListener
 {
@@ -61,9 +57,6 @@ public:
 
   void OfflineShutdown();
 
-  // nsIDOMEventListener - by proxy
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
-
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
@@ -97,7 +90,7 @@ protected:
 private:
   bool CheckAudioChannelPermissions(AudioChannel aValue);
 
-  void SetCanPlay(bool aCanPlay);
+  void SetCanPlay(float aVolume, bool aMuted);
 
   void NotifyStableState();
   void ScheduleStableStateNotification();
@@ -107,7 +100,6 @@ private:
 
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
-  nsRefPtr<EventProxyHandler> mEventProxyHelper;
   nsRefPtr<Promise> mOfflineRenderingPromise;
 
   // Audio Channel Type.

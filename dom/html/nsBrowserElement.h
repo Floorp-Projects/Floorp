@@ -8,6 +8,7 @@
 #define nsBrowserElement_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/BrowserElementAudioChannel.h"
 
 #include "nsCOMPtr.h"
 #include "nsIBrowserElementAPI.h"
@@ -70,6 +71,10 @@ public:
 
   already_AddRefed<dom::DOMRequest> PurgeHistory(ErrorResult& aRv);
 
+  void GetAllowedAudioChannels(
+            nsTArray<nsRefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
+            ErrorResult& aRv);
+
   already_AddRefed<dom::DOMRequest>
   GetScreenshot(uint32_t aWidth,
                 uint32_t aHeight,
@@ -102,6 +107,7 @@ protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
   void InitBrowserElementAPI();
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
+  nsTArray<nsRefPtr<dom::BrowserElementAudioChannel>> mBrowserElementAudioChannels;
 
 private:
   bool IsBrowserElementOrThrow(ErrorResult& aRv);
