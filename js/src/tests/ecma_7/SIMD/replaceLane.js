@@ -1,9 +1,9 @@
 // |reftest| skip-if(!this.hasOwnProperty("SIMD"))
-var float32x4 = SIMD.float32x4;
-var int8x16 = SIMD.int8x16;
-var int16x8 = SIMD.int16x8;
-var int32x4 = SIMD.int32x4;
-var float64x2 = SIMD.float64x2;
+var Float32x4 = SIMD.Float32x4;
+var Int8x16 = SIMD.Int8x16;
+var Int16x8 = SIMD.Int16x8;
+var Int32x4 = SIMD.Int32x4;
+var Float64x2 = SIMD.Float64x2;
 
 function replaceLaneN(laneIndex, arr, value) {
     var copy = arr.slice();
@@ -70,66 +70,66 @@ function test() {
   var good = {valueOf: () => 42};
   var bad = {valueOf: () => {throw new TestError(); }};
 
-  var float32x4inputs = [
-      [float32x4(1, 2, 3, 4), 5],
-      [float32x4(1.87, 2.08, 3.84, 4.17), Math.fround(13.37)],
-      [float32x4(NaN, -0, Infinity, -Infinity), 0]
+  var Float32x4inputs = [
+      [Float32x4(1, 2, 3, 4), 5],
+      [Float32x4(1.87, 2.08, 3.84, 4.17), Math.fround(13.37)],
+      [Float32x4(NaN, -0, Infinity, -Infinity), 0]
   ];
-  testType('float32x4', float32x4inputs);
+  testType('Float32x4', Float32x4inputs);
 
-  var v = float32x4inputs[1][0];
-  assertEqX4(float32x4.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
-  assertEqX4(float32x4.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
-  assertThrowsInstanceOf(() => float32x4.replaceLane(v, 0, bad), TestError);
-  assertThrowsInstanceOf(() => float32x4.replaceLane(v, 4, good), TypeError);
-  assertThrowsInstanceOf(() => float32x4.replaceLane(v, 1.1, good), TypeError);
+  var v = Float32x4inputs[1][0];
+  assertEqX4(Float32x4.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
+  assertEqX4(Float32x4.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertThrowsInstanceOf(() => Float32x4.replaceLane(v, 0, bad), TestError);
+  assertThrowsInstanceOf(() => Float32x4.replaceLane(v, 4, good), TypeError);
+  assertThrowsInstanceOf(() => Float32x4.replaceLane(v, 1.1, good), TypeError);
 
-  var float64x2inputs = [
-      [float64x2(1, 2), 5],
-      [float64x2(1.87, 2.08), Math.fround(13.37)],
-      [float64x2(NaN, -0), 0]
+  var Float64x2inputs = [
+      [Float64x2(1, 2), 5],
+      [Float64x2(1.87, 2.08), Math.fround(13.37)],
+      [Float64x2(NaN, -0), 0]
   ];
-  testType('float64x2', float64x2inputs);
+  testType('Float64x2', Float64x2inputs);
 
-  var v = float64x2inputs[1][0];
-  assertEqX4(float64x2.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
-  assertEqX4(float64x2.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
-  assertThrowsInstanceOf(() => float64x2.replaceLane(v, 0, bad), TestError);
-  assertThrowsInstanceOf(() => float64x2.replaceLane(v, 2, good), TypeError);
-  assertThrowsInstanceOf(() => float64x2.replaceLane(v, 1.1, good), TypeError);
+  var v = Float64x2inputs[1][0];
+  assertEqX2(Float64x2.replaceLane(v, 0), replaceLane0(simdToArray(v), NaN));
+  assertEqX2(Float64x2.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 0, bad), TestError);
+  assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 2, good), TypeError);
+  assertThrowsInstanceOf(() => Float64x2.replaceLane(v, 1.1, good), TypeError);
 
-  var int8x16inputs = [[int8x16(0, 1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, INT8_MIN, INT8_MAX), 17]];
-  testType('int8x16', int8x16inputs);
+  var Int8x16inputs = [[Int8x16(0, 1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, INT8_MIN, INT8_MAX), 17]];
+  testType('Int8x16', Int8x16inputs);
 
-  var v = int8x16inputs[0][0];
-  assertEqX16(int8x16.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
-  assertEqX16(int8x16.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
-  assertThrowsInstanceOf(() => int8x16.replaceLane(v, 0, bad), TestError);
-  assertThrowsInstanceOf(() => int8x16.replaceLane(v, 16, good), TypeError);
-  assertThrowsInstanceOf(() => int8x16.replaceLane(v, 1.1, good), TypeError);
+  var v = Int8x16inputs[0][0];
+  assertEqX16(Int8x16.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
+  assertEqX16(Int8x16.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertThrowsInstanceOf(() => Int8x16.replaceLane(v, 0, bad), TestError);
+  assertThrowsInstanceOf(() => Int8x16.replaceLane(v, 16, good), TypeError);
+  assertThrowsInstanceOf(() => Int8x16.replaceLane(v, 1.1, good), TypeError);
 
-  var int16x8inputs = [[int16x8(0, 1, 2, 3, -1, -2, INT16_MIN, INT16_MAX), 9]];
-  testType('int16x8', int16x8inputs);
+  var Int16x8inputs = [[Int16x8(0, 1, 2, 3, -1, -2, INT16_MIN, INT16_MAX), 9]];
+  testType('Int16x8', Int16x8inputs);
 
-  var v = int16x8inputs[0][0];
-  assertEqX8(int16x8.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
-  assertEqX8(int16x8.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
-  assertThrowsInstanceOf(() => int16x8.replaceLane(v, 0, bad), TestError);
-  assertThrowsInstanceOf(() => int16x8.replaceLane(v, 8, good), TypeError);
-  assertThrowsInstanceOf(() => int16x8.replaceLane(v, 1.1, good), TypeError);
+  var v = Int16x8inputs[0][0];
+  assertEqX8(Int16x8.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
+  assertEqX8(Int16x8.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertThrowsInstanceOf(() => Int16x8.replaceLane(v, 0, bad), TestError);
+  assertThrowsInstanceOf(() => Int16x8.replaceLane(v, 8, good), TypeError);
+  assertThrowsInstanceOf(() => Int16x8.replaceLane(v, 1.1, good), TypeError);
 
-  var int32x4inputs = [
-      [int32x4(1, 2, 3, 4), 5],
-      [int32x4(INT32_MIN, INT32_MAX, 3, 4), INT32_MIN],
+  var Int32x4inputs = [
+      [Int32x4(1, 2, 3, 4), 5],
+      [Int32x4(INT32_MIN, INT32_MAX, 3, 4), INT32_MIN],
   ];
-  testType('int32x4', int32x4inputs);
+  testType('Int32x4', Int32x4inputs);
 
-  var v = int32x4inputs[1][0];
-  assertEqX4(int32x4.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
-  assertEqX4(int32x4.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
-  assertThrowsInstanceOf(() => int32x4.replaceLane(v, 0, bad), TestError);
-  assertThrowsInstanceOf(() => int32x4.replaceLane(v, 4, good), TypeError);
-  assertThrowsInstanceOf(() => int32x4.replaceLane(v, 1.1, good), TypeError);
+  var v = Int32x4inputs[1][0];
+  assertEqX4(Int32x4.replaceLane(v, 0), replaceLane0(simdToArray(v), 0));
+  assertEqX4(Int32x4.replaceLane(v, 0, good), replaceLane0(simdToArray(v), good | 0));
+  assertThrowsInstanceOf(() => Int32x4.replaceLane(v, 0, bad), TestError);
+  assertThrowsInstanceOf(() => Int32x4.replaceLane(v, 4, good), TypeError);
+  assertThrowsInstanceOf(() => Int32x4.replaceLane(v, 1.1, good), TypeError);
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

@@ -280,6 +280,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir);
     void visitAtomicIsLockFree(LAtomicIsLockFree* lir);
     void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
+    void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
     void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
     void visitClampIToUint8(LClampIToUint8* lir);

@@ -299,24 +299,14 @@ nsINIParser::GetString(const char* aSection, const char* aKey,
   return NS_ERROR_FAILURE;
 }
 
-PLDHashOperator
-nsINIParser::GetSectionsCB(const char* aKey, INIValue* aData,
-                           void* aClosure)
-{
-  GSClosureStruct* cs = reinterpret_cast<GSClosureStruct*>(aClosure);
-
-  return cs->usercb(aKey, cs->userclosure) ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
 nsresult
 nsINIParser::GetSections(INISectionCallback aCB, void* aClosure)
 {
-  GSClosureStruct gs = {
-    aCB,
-    aClosure
-  };
-
-  mSections.EnumerateRead(GetSectionsCB, &gs);
+  for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
+    if (!aCB(iter.GetKey(), aClosure)) {
+      break;
+    }
+  }
   return NS_OK;
 }
 
