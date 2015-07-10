@@ -108,7 +108,10 @@ void Finalize(JSFreeOp *fop, JSObject *objSelf)
 
   // Notify observers. Since we are executed during garbage-collection,
   // we need to dispatch the notification to the main thread.
-  (void)NS_DispatchToMainThread(event);
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  if (mainThread) {
+    mainThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+  }
   // We may fail at dispatching to the main thread if we arrive too late
   // during shutdown. In that case, there is not much we can do.
 }

@@ -494,6 +494,7 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('GENERATED_FILES += %s\n' % obj.output)
             if obj.script:
                 backend_file.write("""{output}: {script}{inputs}
+\t$(REPORT_BUILD)
 \t$(call py_action,file_generate,{script} {method} {output}{inputs})
 
 """.format(output=obj.output,

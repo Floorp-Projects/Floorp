@@ -246,13 +246,15 @@ public:
    * still running but we only consider it playing when it is in its active
    * interval. This definition is used for fetching the animations that are
    * candidates for running on the compositor (since we don't ship animations
-   * to the compositor when they are in their delay phase or paused).
+   * to the compositor when they are in their delay phase or paused including
+   * being effectively paused due to having a zero playback rate).
    */
   bool IsPlaying() const
   {
     // We need to have an effect in its active interval, and
-    // be either running or waiting to run.
+    // be either running or waiting to run with a non-zero playback rate.
     return HasInPlayEffect() &&
+           mPlaybackRate != 0.0 &&
            (PlayState() == AnimationPlayState::Running ||
             mPendingState == PendingState::PlayPending);
   }
