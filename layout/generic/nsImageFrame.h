@@ -145,7 +145,6 @@ public:
   
   DrawResult DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
-                                imgIRequest* aRequest,
                                 nsPoint aPt,
                                 uint32_t aFlags);
 
@@ -364,6 +363,7 @@ private:
     nsRefPtr<imgRequestProxy> mBrokenImage;
     bool             mPrefForceInlineAltText;
     bool             mPrefShowPlaceholders;
+    bool             mPrefShowLoadingPlaceholder;
   };
   
 public:

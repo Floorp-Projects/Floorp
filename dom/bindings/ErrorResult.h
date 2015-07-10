@@ -110,12 +110,6 @@ public:
   void ReportJSException(JSContext* cx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
 
-  void ThrowNotEnoughArgsError() { mResult = NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
-  void ReportNotEnoughArgsError(JSContext* cx,
-                                const char* ifaceName,
-                                const char* memberName);
-  bool IsNotEnoughArgsError() const { return ErrorCode() == NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
-
   // Report a generic error.  This should only be used if we're not
   // some more specific exception type.
   void ReportGenericError(JSContext* cx);
@@ -189,8 +183,7 @@ private:
     MOZ_ASSERT(!IsErrorWithMessage(), "Don't overwrite errors with message");
     MOZ_ASSERT(aRv != NS_ERROR_DOM_JS_EXCEPTION, "Use ThrowJSException()");
     MOZ_ASSERT(!IsJSException(), "Don't overwrite JS exceptions");
-    MOZ_ASSERT(aRv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "Use ThrowNotEnoughArgsError()");
-    MOZ_ASSERT(!IsNotEnoughArgsError(), "Don't overwrite not enough args error");
+    MOZ_ASSERT(aRv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "May need to bring back ThrowNotEnoughArgsError");
     mResult = aRv;
   }
 
