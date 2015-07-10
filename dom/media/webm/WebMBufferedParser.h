@@ -221,7 +221,7 @@ private:
 
 class WebMBufferedState final
 {
-  NS_INLINE_DECL_REFCOUNTING(WebMBufferedState)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebMBufferedState)
 
 public:
   WebMBufferedState() : mReentrantMonitor("WebMBufferedState") {
