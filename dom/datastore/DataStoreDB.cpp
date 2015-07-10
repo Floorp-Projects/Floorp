@@ -113,10 +113,16 @@ DataStoreDB::CreateFactoryIfNeeded()
     MOZ_ASSERT(xpc);
 
     AutoSafeJSContext cx;
-    JS::Rooted<JSObject*> global(cx);
-    rv = xpc->CreateSandbox(cx, principal, global.address());
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> globalHolder;
+    rv = xpc->CreateSandbox(cx, principal, getter_AddRefs(globalHolder));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    JS::Rooted<JSObject*> global(cx, globalHolder->GetJSObject());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_UNEXPECTED;
     }
 
     // The CreateSandbox call returns a proxy to the actual sandbox object. We
