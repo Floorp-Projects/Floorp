@@ -622,6 +622,13 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
 
+  // The content process should never be in charge of computing whether or
+  // not a window should be private or remote - the parent will do that.
+  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW));
+  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW));
+  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME));
+  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
+
   if (NS_WARN_IF(IsBrowserOrApp()))
     return false;
 
@@ -735,9 +742,11 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
 
   AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
+  const char* features = aFeatures.Length() ? aFeatures.get() : nullptr;
+
   *aResult = pwwatch->OpenWindow2(parent, finalURIString.get(),
                                   NS_ConvertUTF16toUTF8(aName).get(),
-                                  aFeatures.get(), aCalledFromJS,
+                                  features, aCalledFromJS,
                                   false, false, this, nullptr, getter_AddRefs(window));
 
   if (NS_WARN_IF(NS_FAILED(*aResult)))

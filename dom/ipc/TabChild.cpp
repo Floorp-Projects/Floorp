@@ -1597,10 +1597,6 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
     nsAutoCString baseURIString;
     baseURI->GetSpec(baseURIString);
 
-    // We can assume that if content is requesting to open a window from a remote
-    // tab, then we want to enforce that the new window is also a remote tab.
-    features.AppendLiteral(",remote");
-
     nsresult rv;
 
     if (!SendCreateWindow(newChild,
