@@ -7,7 +7,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Components.utils.import("resource:///modules/UITour.jsm");
 Components.utils.import("resource://gre/modules/UITelemetry.jsm");
 Components.utils.import("resource:///modules/BrowserUITelemetry.jsm");
 
