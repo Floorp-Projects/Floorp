@@ -13,7 +13,6 @@ export GONK_PRODUCT=generic
 ac_add_options --with-gonk-toolchain-prefix="$topsrcdir/gonk-toolchain/prebuilt/$TOOLCHAIN_HOST/toolchain/arm-linux-androideabi-4.4.x/bin/arm-linux-androideabi-"
 ac_add_options --enable-debug-symbols
 # ac_add_options --enable-profiling
-#. "$topsrcdir/build/mozconfig.cache"
 ENABLE_MARIONETTE=1
 
 # Enable dump() from JS.

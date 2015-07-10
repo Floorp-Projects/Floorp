@@ -3,3 +3,4 @@
 ac_add_options --enable-official-branding
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
