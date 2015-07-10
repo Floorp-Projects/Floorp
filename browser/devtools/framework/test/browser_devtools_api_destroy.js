@@ -3,8 +3,6 @@
 
 // Tests devtools API
 
-const Cu = Components.utils;
-
 function test() {
   addTab("about:blank").then(runTests);
 }

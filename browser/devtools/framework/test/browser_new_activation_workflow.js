@@ -3,8 +3,6 @@
 
 // Tests devtools API
 
-const Cu = Components.utils;
-
 let toolbox, target;
 
 let tempScope = {};
