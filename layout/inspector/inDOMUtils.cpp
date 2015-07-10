@@ -608,10 +608,6 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("radial-gradient"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("repeating-linear-gradient"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("repeating-radial-gradient"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-linear-gradient"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-radial-gradient"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-linear-gradient"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-radial-gradient"));
   }
 }
 

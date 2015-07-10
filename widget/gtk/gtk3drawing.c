@@ -1909,14 +1909,25 @@ moz_gtk_resizer_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
 
     ensure_frame_widget();
-    gtk_widget_set_direction(gStatusbarWidget, direction);
+    gtk_widget_set_direction(gStatusbarWidget, GTK_TEXT_DIR_LTR);
 
     style = gtk_widget_get_style_context(gStatusbarWidget);
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
     gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
 
+    // Workaround unico not respecting the text direction for resizers.
+    // See bug 1174248.
+    cairo_save(cr);
+    if (direction == GTK_TEXT_DIR_RTL) {
+      cairo_matrix_t mat;
+      cairo_matrix_init_translate(&mat, 2 * rect->x + rect->width, 0);
+      cairo_matrix_scale(&mat, -1, 1);
+      cairo_transform(cr, &mat);
+    }
+
     gtk_render_handle(style, cr, rect->x, rect->y, rect->width, rect->height);
+    cairo_restore(cr);
     gtk_style_context_restore(style);
 
     return MOZ_GTK_SUCCESS;

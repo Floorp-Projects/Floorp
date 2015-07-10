@@ -195,6 +195,7 @@ MacroAssemblerX86Shared::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+//{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
 
@@ -415,3 +416,5 @@ MacroAssembler::call(JitCode* target)
 {
     Assembler::call(target);
 }
+
+//}}} check_macroassembler_style

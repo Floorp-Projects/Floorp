@@ -163,7 +163,7 @@ proguard_config_dir=$(topsrcdir)/mobile/android/config/proguard
 # time.  The idea is to set a high-water mark that is not to be crossed.
 classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 .geckoview.deps: geckoview.ddf $(classycle_jar) $(ALL_JARS)
-	java -cp $(classycle_jar) \
+	$(JAVA) -cp $(classycle_jar) \
 		classycle.dependency.DependencyChecker \
 		-mergeInnerClasses \
 		-dependencies=@$< \
@@ -184,7 +184,7 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 .bundled.proguard.deps: gecko-R.jar $(proguard_config_dir)/strip-libs.cfg
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
-	java \
+	$(JAVA) \
 		-Xmx512m -Xms128m \
 		-jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
 		@$(proguard_config_dir)/strip-libs.cfg \
@@ -199,7 +199,7 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 .proguard.deps: .geckoview.deps .bundled.proguard.deps $(ALL_JARS) $(proguard_config_dir)/proguard.cfg
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
-	java \
+	$(JAVA) \
 		-Xmx512m -Xms128m \
 		-jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
 		@$(proguard_config_dir)/proguard.cfg \

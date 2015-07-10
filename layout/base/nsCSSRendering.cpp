@@ -2045,43 +2045,21 @@ ComputeLinearGradientLine(nsPresContext* aPresContext,
                           gfxPoint* aLineStart,
                           gfxPoint* aLineEnd)
 {
+  double angle;
   if (aGradient->mBgPosX.GetUnit() == eStyleUnit_None) {
-    double angle;
     if (aGradient->mAngle.IsAngleValue()) {
-      angle = aGradient->mAngle.GetAngleValueInRadians();
-      if (!aGradient->mLegacySyntax) {
-        angle = M_PI_2 - angle;
-      }
+      angle = M_PI_2 - aGradient->mAngle.GetAngleValueInRadians();
     } else {
       angle = -M_PI_2; // defaults to vertical gradient starting from top
     }
-    gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
-    *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
-    *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
-  } else if (!aGradient->mLegacySyntax) {
+  } else {
     float xSign = aGradient->mBgPosX.GetPercentValue() * 2 - 1;
     float ySign = 1 - aGradient->mBgPosY.GetPercentValue() * 2;
-    double angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
-    gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
-    *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
-    *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
-  } else {
-    int32_t appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-    *aLineStart = gfxPoint(
-      ConvertGradientValueToPixels(aGradient->mBgPosX, aBoxSize.width,
-                                   appUnitsPerPixel),
-      ConvertGradientValueToPixels(aGradient->mBgPosY, aBoxSize.height,
-                                   appUnitsPerPixel));
-    if (aGradient->mAngle.IsAngleValue()) {
-      MOZ_ASSERT(aGradient->mLegacySyntax);
-      double angle = aGradient->mAngle.GetAngleValueInRadians();
-      *aLineEnd = ComputeGradientLineEndFromAngle(*aLineStart, angle, aBoxSize);
-    } else {
-      // No angle, the line end is just the reflection of the start point
-      // through the center of the box
-      *aLineEnd = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineStart;
-    }
+    angle = atan2(ySign * aBoxSize.width, xSign * aBoxSize.height);
   }
+  gfxPoint center(aBoxSize.width/2, aBoxSize.height/2);
+  *aLineEnd = ComputeGradientLineEndFromAngle(center, angle, aBoxSize);
+  *aLineStart = gfxPoint(aBoxSize.width, aBoxSize.height) - *aLineEnd;
 }
 
 // Compute the start and end points of the gradient line for a radial gradient.

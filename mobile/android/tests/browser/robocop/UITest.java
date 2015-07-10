@@ -65,7 +65,7 @@ abstract class UITest extends BaseRobocopTest
         } catch (Throwable t) {
             // save screenshot -- written to /mnt/sdcard/Robotium-Screenshots
             // as <filename>.jpg
-            mSolo.takeScreenshot("robocop-screenshot");
+            mSolo.takeScreenshot("robocop-screenshot-"+getClass().getName());
             if (mAsserter != null) {
                 mAsserter.dumpLog("Exception caught during test!", t);
                 mAsserter.ok(false, "Exception caught", t.toString());

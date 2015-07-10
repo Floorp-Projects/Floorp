@@ -100,6 +100,8 @@ class nsCookie : public nsICookie2
     // Create(). Use with caution!
     inline void SetCreationTime(int64_t aTime)    { mCreationTime = aTime; }
 
+    bool IsStale() const;
+
   protected:
     virtual ~nsCookie() {}
 
