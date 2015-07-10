@@ -857,9 +857,14 @@ public:
                              tracksAvailableCallback,
                              mAudioSource, mVideoSource, false, mWindowID,
                              mOnFailure.forget()));
-
     // We won't need mOnFailure now.
     mOnFailure = nullptr;
+
+    if (!MediaManager::IsPrivateBrowsing(window)) {
+      // Call GetOriginKey again, this time w/persist = true, to promote
+      // deviceIds to persistent, in case they're not already. Fire'n'forget.
+      nsRefPtr<Pledge<nsCString>> p = media::GetOriginKey(mOrigin, false, true);
+    }
     return NS_OK;
   }
 
@@ -1936,13 +1941,15 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId, MediaSourceEnum aVideoTyp
   nsCString origin;
   nsPrincipal::GetOriginForURI(window->GetDocumentURI(), origin);
 
+  bool persist = IsActivelyCapturingOrHasAPermission(aWindowId);
+
   // GetOriginKey is an async API that returns a pledge (a promise-like
   // pattern). We use .Then() to pass in a lambda to run back on this same
   // thread later once GetOriginKey resolves. Needed variables are "captured"
   // (passed by value) safely into the lambda.
 
   nsRefPtr<Pledge<nsCString>> p = media::GetOriginKey(origin, privateBrowsing,
-                                                      true);
+                                                      persist);
   p->Then([id, aWindowId, aVideoType,
            aFake, aFakeTracks](const nsCString& aOriginKey) mutable {
     MOZ_ASSERT(NS_IsMainThread());

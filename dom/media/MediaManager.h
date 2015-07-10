@@ -584,12 +584,12 @@ public:
   MediaEnginePrefs mPrefs;
 
   typedef nsTArray<nsRefPtr<MediaDevice>> SourceSet;
+  static bool IsPrivateBrowsing(nsPIDOMWindow *window);
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError> PledgeSourceSet;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
-  static bool IsPrivateBrowsing(nsPIDOMWindow *window);
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
