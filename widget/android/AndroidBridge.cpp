@@ -740,7 +740,8 @@ AndroidBridge::CreateEGLSurfaceForCompositor()
     }
 
     JNIEnv* const env = GetJNIForThread(); // called on the compositor thread
-    return reinterpret_cast<EGLSurface>(
+    return reinterpret_cast<EGLSurface>(mAPIVersion >= 20 ?
+            env->GetLongField(eglSurface.Get(), jEGLSurfacePointerField) :
             env->GetIntField(eglSurface.Get(), jEGLSurfacePointerField));
 }
 
