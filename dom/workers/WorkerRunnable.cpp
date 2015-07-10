@@ -136,25 +136,27 @@ WorkerRunnable::Dispatch(JSContext* aCx)
 bool
 WorkerRunnable::DispatchInternal()
 {
+  nsRefPtr<WorkerRunnable> runnable(this);
+
   if (mBehavior == WorkerThreadModifyBusyCount ||
       mBehavior == WorkerThreadUnchangedBusyCount) {
     if (IsDebuggerRunnable()) {
-      return NS_SUCCEEDED(mWorkerPrivate->DispatchDebuggerRunnable(this));
+      return NS_SUCCEEDED(mWorkerPrivate->DispatchDebuggerRunnable(runnable.forget()));
     } else {
-      return NS_SUCCEEDED(mWorkerPrivate->Dispatch(this));
+      return NS_SUCCEEDED(mWorkerPrivate->Dispatch(runnable.forget()));
     }
   }
 
   MOZ_ASSERT(mBehavior == ParentThreadUnchangedBusyCount);
 
   if (WorkerPrivate* parent = mWorkerPrivate->GetParent()) {
-    return NS_SUCCEEDED(parent->Dispatch(this));
+    return NS_SUCCEEDED(parent->Dispatch(runnable.forget()));
   }
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   MOZ_ASSERT(mainThread);
 
-  return NS_SUCCEEDED(mainThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  return NS_SUCCEEDED(mainThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 }
 
 void
@@ -422,7 +424,8 @@ bool
 WorkerSyncRunnable::DispatchInternal()
 {
   if (mSyncLoopTarget) {
-    return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+    nsRefPtr<WorkerSyncRunnable> runnable(this);
+    return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
   }
 
   return WorkerRunnable::DispatchInternal();
@@ -482,7 +485,8 @@ StopSyncLoopRunnable::DispatchInternal()
 {
   MOZ_ASSERT(mSyncLoopTarget);
 
-  return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  nsRefPtr<StopSyncLoopRunnable> runnable(this);
+  return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 }
 
 void
@@ -518,18 +522,20 @@ WorkerControlRunnable::Cancel()
 bool
 WorkerControlRunnable::DispatchInternal()
 {
+  nsRefPtr<WorkerControlRunnable> runnable(this);
+
   if (mBehavior == WorkerThreadUnchangedBusyCount) {
-    return NS_SUCCEEDED(mWorkerPrivate->DispatchControlRunnable(this));
+    return NS_SUCCEEDED(mWorkerPrivate->DispatchControlRunnable(runnable.forget()));
   }
 
   if (WorkerPrivate* parent = mWorkerPrivate->GetParent()) {
-    return NS_SUCCEEDED(parent->DispatchControlRunnable(this));
+    return NS_SUCCEEDED(parent->DispatchControlRunnable(runnable.forget()));
   }
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   MOZ_ASSERT(mainThread);
 
-  return NS_SUCCEEDED(mainThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  return NS_SUCCEEDED(mainThread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 }
 
 void
@@ -560,8 +566,9 @@ WorkerMainThreadRunnable::Dispatch(JSContext* aCx)
   AutoSyncLoopHolder syncLoop(mWorkerPrivate);
 
   mSyncLoopTarget = syncLoop.EventTarget();
+  nsRefPtr<WorkerMainThreadRunnable> runnable(this);
 
-  if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(NS_DispatchToMainThread(runnable.forget(), NS_DISPATCH_NORMAL))) {
     JS_ReportError(aCx, "Failed to dispatch to main thread!");
     return false;
   }
