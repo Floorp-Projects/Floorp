@@ -53,8 +53,10 @@ function test() {
       ok(data.days.hasDay(now), "Have data for today.");
       let day = data.days.getDay(now);
 
-      // Will need to be changed if Yahoo isn't the default search engine.
-      let defaultProviderID = "yahoo";
+      // Will need to be changed if Google isn't the default search engine.
+      // Note: geoSpecificDefaults are disabled for mochitests, so this is the
+      // non-US en-US default.
+      let defaultProviderID = "google";
       let field = defaultProviderID + ".contextmenu";
       ok(day.has(field), "Have search recorded for context menu.");
 
@@ -66,4 +68,3 @@ function test() {
     });
   });
 }
-
