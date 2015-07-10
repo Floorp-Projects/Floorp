@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: append initialization only</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/mp4");
+
+    v.addEventListener("loadedmetadata", function () {
+      ok(true, "Got loadedmetadata event");
+      is(v.videoWidth, 400, "videoWidth has correct initial value");
+      is(v.videoHeight, 300, "videoHeight has correct initial value");
+      SimpleTest.finish();
+    });
+
+    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
+      v.play();
+    });
+  });
+
+});
+
+</script>
+</pre>
+</body>
+</html>
