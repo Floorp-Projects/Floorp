@@ -5,7 +5,7 @@ random-if(Android||B2G) fails-if(winWidget) skip-if((B2G&&browserIsRemote)||Mule
 skip-if((B2G&&browserIsRemote)||Mulet) == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658 # Initial mulet triage: parity with B2G/B2G Desktop
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == accesskey.xul accesskey-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 
