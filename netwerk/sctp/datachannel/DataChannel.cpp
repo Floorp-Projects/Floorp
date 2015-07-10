@@ -475,9 +475,10 @@ DataChannelConnection::StartDefer()
 {
   nsresult rv;
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(new DataChannelOnMessageAvailable(
-                            DataChannelOnMessageAvailable::START_DEFER,
-                            this, (DataChannel *) nullptr));
+    nsCOMPtr<nsIRunnable> msg = new DataChannelOnMessageAvailable(
+      DataChannelOnMessageAvailable::START_DEFER,
+      this, (DataChannel *) nullptr);
+    NS_DispatchToMainThread(msg.forget());
     return;
   }
 

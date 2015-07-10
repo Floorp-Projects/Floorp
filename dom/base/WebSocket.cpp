@@ -77,6 +77,10 @@ public:
   NS_DECL_NSIREQUEST
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
+  // missing from NS_DECL_NSIEVENTTARGET because MSVC
+  nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
+    return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
+  }
 
   explicit WebSocketImpl(WebSocket* aWebSocket)
   : mWebSocket(aWebSocket)
@@ -2582,7 +2586,7 @@ class WorkerRunnableDispatcher final : public WorkerRunnable
 
 public:
   WorkerRunnableDispatcher(WebSocketImpl* aImpl, WorkerPrivate* aWorkerPrivate,
-                           nsIRunnable* aEvent)
+                           already_AddRefed<nsIRunnable>&& aEvent)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mWebSocketImpl(aImpl)
     , mEvent(aEvent)
@@ -2627,11 +2631,19 @@ private:
 } // anonymous namespace
 
 NS_IMETHODIMP
-WebSocketImpl::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
+WebSocketImpl::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 {
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+{
+  nsCOMPtr<nsIRunnable> event_ref(aEvent);
   // If the target is the main-thread we can just dispatch the runnable.
   if (mIsMainThread) {
-    return NS_DispatchToMainThread(aEvent);
+    return NS_DispatchToMainThread(event_ref.forget());
   }
 
   MutexAutoLock lock(mMutex);
@@ -2648,7 +2660,7 @@ WebSocketImpl::Dispatch(nsIRunnable* aEvent, uint32_t aFlags)
   // If the target is a worker, we have to use a custom WorkerRunnableDispatcher
   // runnable.
   nsRefPtr<WorkerRunnableDispatcher> event =
-    new WorkerRunnableDispatcher(this, mWorkerPrivate, aEvent);
+    new WorkerRunnableDispatcher(this, mWorkerPrivate, event_ref.forget());
 
   if (!event->Dispatch(nullptr)) {
     return NS_ERROR_FAILURE;

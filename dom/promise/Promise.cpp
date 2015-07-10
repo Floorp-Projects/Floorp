@@ -1218,7 +1218,11 @@ Promise::MaybeReportRejected()
   // will leak. See Bug 958684.
   nsRefPtr<AsyncErrorReporter> r =
     new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
-  NS_DispatchToMainThread(r);
+  nsRefPtr<AsyncErrorReporter> sacrifice = r;
+  // If this fails, we know NS_DispatchToMainThread leaked on purpose, and we don't want that
+  if (NS_FAILED(NS_DispatchToMainThread(sacrifice.forget()))) {
+    r->Release();
+  }
 }
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
@@ -1635,7 +1639,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
   if (!runnable->Dispatch(aCx)) {
     nsRefPtr<WorkerControlRunnable> runnable =
       new PromiseWorkerProxyControlRunnable(mWorkerPrivate, this);
-    mWorkerPrivate->DispatchControlRunnable(runnable);
+    mWorkerPrivate->DispatchControlRunnable(runnable.forget());
   }
 }
 
