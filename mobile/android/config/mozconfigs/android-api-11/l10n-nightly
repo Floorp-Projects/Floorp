@@ -6,9 +6,6 @@ ac_add_options --with-l10n-base=../../l10n-central
 # Global options
 ac_add_options --disable-tests
 
-# Mozilla-Central nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 # Android
 ac_add_options --with-android-min-sdk=11
 ac_add_options --target=arm-linux-androideabi
