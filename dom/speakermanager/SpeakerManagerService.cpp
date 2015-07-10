@@ -194,18 +194,15 @@ SpeakerManagerService::SpeakerManagerService()
       obs->AddObserver(this, "ipc:content-shutdown", false);
     }
   }
-  AudioChannelService* audioChannelService =
-    AudioChannelService::GetOrCreateAudioChannelService();
-  if (audioChannelService) {
-    audioChannelService->RegisterSpeakerManager(this);
-  }
+  nsRefPtr<AudioChannelService> audioChannelService =
+    AudioChannelService::GetOrCreate();
+  audioChannelService->RegisterSpeakerManager(this);
 }
 
 SpeakerManagerService::~SpeakerManagerService()
 {
   MOZ_COUNT_DTOR(SpeakerManagerService);
-  AudioChannelService* audioChannelService =
-    AudioChannelService::GetOrCreateAudioChannelService();
-  if (audioChannelService)
-    audioChannelService->UnregisterSpeakerManager(this);
+  nsRefPtr<AudioChannelService> audioChannelService =
+    AudioChannelService::GetOrCreate();
+  audioChannelService->UnregisterSpeakerManager(this);
 }
