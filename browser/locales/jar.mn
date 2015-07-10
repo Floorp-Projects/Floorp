@@ -122,6 +122,7 @@
     locale/browser/preferences/advanced.dtd           (%chrome/browser/preferences/advanced.dtd)
     locale/browser/preferences/applicationManager.dtd        (%chrome/browser/preferences/applicationManager.dtd)
     locale/browser/preferences/applicationManager.properties (%chrome/browser/preferences/applicationManager.properties)
+    locale/browser/preferences/blocklists.dtd         (%chrome/browser/preferences/blocklists.dtd)
     locale/browser/preferences/colors.dtd             (%chrome/browser/preferences/colors.dtd)
     locale/browser/preferences/cookies.dtd            (%chrome/browser/preferences/cookies.dtd)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
