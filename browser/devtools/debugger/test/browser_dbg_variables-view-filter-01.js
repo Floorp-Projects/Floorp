@@ -98,7 +98,6 @@ function testVariablesAndPropertiesFiltering() {
   function firstFilter() {
     let expanded = once(gVariables, "fetched");
     typeText(gSearchBox, "constructor");
-    gSearchBox.doCommand();
     return expanded.then(testFiltered);
   }
 
