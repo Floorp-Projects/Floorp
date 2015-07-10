@@ -1,9 +1,30 @@
 [
 {
-"size": 1378816, 
-"visibility": "public", 
-"digest": "97d4848b7fecfb8a7990ca9aba1dc83aa17f84e653a4a6c6cb7c08ac7b7da317c98cfacea3dd1b9392de5869a215577324bb74d2eecf93c50693439856aec2f7", 
-"algorithm": "sha512", 
+"size": 5032443,
+"digest":
+"8228d0a47b4ec952759703503d74b456f592ec12c7be593b524c7065661bdb3d72c62d230536bce941e86aca2b74c389b24a26b21965510c4185a1e075a146b7", 
+"algorithm": "sha512",
 "filename": "win32-minidump_stackwalk.exe"
+},
+{
+"size": 80910,
+"digest":
+"f4ded2e1638ffa626afb1726e12033f605f309419483b325b1a081c2f168484f472663372052d5af5148271f5b71f2c8eb6aa98c92ce382dc2a1a40d61c70d66",
+"algorithm": "sha512",
+"filename": "cyggcc_s-1.dll"
+},
+{
+"size": 798734,
+"digest":
+"8769662c6b768d261293a833894657aed402276b44b46abf7bbd8c3a6306be701b4a21a907e1ed834edcf51d80f2c423f6884a4ddef6d31f2e535c3ab4840fa7",
+"algorithm": "sha512",
+"filename": "cygstdc++-6.dll"
+},
+{
+"size": 2855706,
+"digest":
+"ceb359907ea02d1943f4b527e45d4080a330bd3522db19ab40bf5fd68762366c8330830457ba7784687a98c9df18c147de54d667eccac63d6c56a50d791a5ff4",
+"algorithm": "sha512",
+"filename": "cygwin1.dll"
 }
 ]
