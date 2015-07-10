@@ -266,7 +266,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(0e415848-65b6-4235-b5b1-ec90509d1133)]
+[noscript, uuid(b91f1eeb-2fe4-44cc-9983-abcc06d69a94)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -474,7 +474,8 @@ interface nsIXPConnect : nsISupports
      * @param principal The principal (or NULL to use the null principal)
      *                  to use when evaluating code in this sandbox.
      */
-    [noscript] JSObjectPtr createSandbox(in JSContextPtr cx, in nsIPrincipal principal);
+    [noscript] nsIXPConnectJSObjectHolder createSandbox(in JSContextPtr cx,
+                                                        in nsIPrincipal principal);
 
     /**
      * Evaluate script in a sandbox, completely isolated from all
