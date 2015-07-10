@@ -42,38 +42,6 @@ private:
 
 class MediaDevices::EnumDevResolver : public nsIGetUserMediaDevicesSuccessCallback
 {
-  static bool HasAPersistentPermission(uint64_t aWindowId)
-  {
-    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-        (nsGlobalWindow::GetInnerWindowWithId(aWindowId));
-    if (NS_WARN_IF(!window)) {
-      return false;
-    }
-    // Check if this site has persistent permissions.
-    nsresult rv;
-    nsCOMPtr<nsIPermissionManager> mgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false; // no permission manager no permissions!
-    }
-
-    uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
-    uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
-    {
-      auto* principal = window->GetExtantDoc()->NodePrincipal();
-      rv = mgr->TestExactPermissionFromPrincipal(principal, "microphone", &audio);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-      rv = mgr->TestExactPermissionFromPrincipal(principal, "camera", &video);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-    }
-    return audio == nsIPermissionManager::ALLOW_ACTION ||
-           video == nsIPermissionManager::ALLOW_ACTION;
-  }
-
 public:
   NS_DECL_ISUPPORTS
 
@@ -124,8 +92,7 @@ public:
         device->GetId(id);
         // Include name only if page currently has a gUM stream active or
         // persistent permissions (audio or video) have been granted
-        if (MediaManager::Get()->IsWindowActivelyCapturing(mWindowId) ||
-            HasAPersistentPermission(mWindowId) ||
+        if (MediaManager::Get()->IsActivelyCapturingOrHasAPermission(mWindowId) ||
             Preferences::GetBool("media.navigator.permission.disabled", false)) {
           device->GetName(name);
         }
