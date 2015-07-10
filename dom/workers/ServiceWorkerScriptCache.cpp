@@ -34,7 +34,7 @@ namespace {
 
 already_AddRefed<CacheStorage>
 CreateCacheStorage(nsIPrincipal* aPrincipal, ErrorResult& aRv,
-                   nsIXPConnectJSObjectHolder** aHolder = nullptr)
+                   JS::MutableHandle<JSObject*>* aSandbox = nullptr)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
@@ -44,21 +44,20 @@ CreateCacheStorage(nsIPrincipal* aPrincipal, ErrorResult& aRv,
 
   AutoJSAPI jsapi;
   jsapi.Init();
-  nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
-  aRv = xpc->CreateSandbox(jsapi.cx(), aPrincipal, getter_AddRefs(sandbox));
+  JS::Rooted<JSObject*> sandbox(jsapi.cx());
+  aRv = xpc->CreateSandbox(jsapi.cx(), aPrincipal, sandbox.address());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> sandboxGlobalObject =
-    xpc::NativeGlobal(sandbox->GetJSObject());
+  nsCOMPtr<nsIGlobalObject> sandboxGlobalObject = xpc::NativeGlobal(sandbox);
   if (!sandboxGlobalObject) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  if (aHolder) {
-    sandbox.forget(aHolder);
+  if (aSandbox) {
+    aSandbox->set(sandbox);
   }
 
   // We assume private browsing is not enabled here.  The ScriptLoader
@@ -320,7 +319,8 @@ public:
     // Always create a CacheStorage since we want to write the network entry to
     // the cache even if there isn't an existing one.
     ErrorResult result;
-    mCacheStorage = CreateCacheStorage(aPrincipal, result, getter_AddRefs(mSandbox));
+    JS::MutableHandle<JSObject*> sandboxHandle(&mSandbox);
+    mCacheStorage = CreateCacheStorage(aPrincipal, result, &sandboxHandle);
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       return result.StealNSResult();
@@ -621,7 +621,7 @@ private:
   }
 
   nsRefPtr<CompareCallback> mCallback;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mSandbox;
+  JS::PersistentRooted<JSObject*> mSandbox;
   nsRefPtr<CacheStorage> mCacheStorage;
 
   nsRefPtr<CompareNetwork> mCN;

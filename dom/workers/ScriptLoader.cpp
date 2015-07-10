@@ -1257,13 +1257,13 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
   MOZ_ASSERT(xpc, "This should never be null!");
 
   mozilla::AutoSafeJSContext cx;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
-  nsresult rv = xpc->CreateSandbox(cx, aPrincipal, getter_AddRefs(sandbox));
+  JS::Rooted<JSObject*> sandbox(cx);
+  nsresult rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  mSandboxGlobalObject = xpc::NativeGlobal(sandbox->GetJSObject());
+  mSandboxGlobalObject = xpc::NativeGlobal(sandbox);
   if (NS_WARN_IF(!mSandboxGlobalObject)) {
     return NS_ERROR_FAILURE;
   }
