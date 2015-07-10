@@ -29,7 +29,7 @@ function* editAndCheck(view) {
   let newPaddingValue = "20px";
 
   info("Focusing the inplace editor field");
-  let editor = yield focusEditableField(propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor, "Focused editor should be the value span.");
 
   let onPropertyChange = waitForComputedStyleProperty("#testid", null, "padding-top", newPaddingValue);
