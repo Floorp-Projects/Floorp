@@ -49,6 +49,8 @@ namespace JS {
     _(SetElem_Arguments)                                \
     _(SetElem_InlineCache)                              \
                                                         \
+    _(InlineCache_OptimizedStub)                        \
+                                                        \
     _(Call_Inline)
 
 
@@ -101,6 +103,43 @@ namespace JS {
     _(NoSimdJitSupport)                                                 \
     _(SimdTypeNotOptimized)                                             \
     _(UnknownSimdProperty)                                              \
+                                                                        \
+    _(ICOptStub_GenericSuccess)                                         \
+                                                                        \
+    _(ICGetPropStub_ReadSlot)                                           \
+    _(ICGetPropStub_CallGetter)                                         \
+    _(ICGetPropStub_ArrayLength)                                        \
+    _(ICGetPropStub_UnboxedRead)                                        \
+    _(ICGetPropStub_UnboxedReadExpando)                                 \
+    _(ICGetPropStub_UnboxedArrayLength)                                 \
+    _(ICGetPropStub_TypedArrayLength)                                   \
+    _(ICGetPropStub_DOMProxyShadowed)                                   \
+    _(ICGetPropStub_DOMProxyUnshadowed)                                 \
+    _(ICGetPropStub_GenericProxy)                                       \
+    _(ICGetPropStub_ArgumentsLength)                                    \
+                                                                        \
+    _(ICSetPropStub_Slot)                                               \
+    _(ICSetPropStub_GenericProxy)                                       \
+    _(ICSetPropStub_DOMProxyShadowed)                                   \
+    _(ICSetPropStub_DOMProxyUnshadowed)                                 \
+    _(ICSetPropStub_CallSetter)                                         \
+    _(ICSetPropStub_AddSlot)                                            \
+    _(ICSetPropStub_SetUnboxed)                                         \
+                                                                        \
+    _(ICGetElemStub_ReadSlot)                                           \
+    _(ICGetElemStub_CallGetter)                                         \
+    _(ICGetElemStub_ReadUnboxed)                                        \
+    _(ICGetElemStub_Dense)                                              \
+    _(ICGetElemStub_DenseHole)                                          \
+    _(ICGetElemStub_TypedArray)                                         \
+    _(ICGetElemStub_ArgsElement)                                        \
+    _(ICGetElemStub_ArgsElementStrict)                                  \
+                                                                        \
+    _(ICSetElemStub_Dense)                                              \
+    _(ICSetElemStub_TypedArray)                                         \
+                                                                        \
+    _(ICNameStub_ReadSlot)                                              \
+    _(ICNameStub_CallGetter)                                            \
                                                                         \
     _(CantInlineGeneric)                                                \
     _(CantInlineNoTarget)                                               \
