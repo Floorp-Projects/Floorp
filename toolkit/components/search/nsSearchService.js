@@ -210,6 +210,11 @@ var OS_UNSUPPORTED_PARAMS = [
 // specifies an updateURL, but not an updateInterval.
 const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 
+// The default interval before checking again for the name of the
+// default engine for the region, in seconds. Only used if the response
+// from the server doesn't specify an interval.
+const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
+
 // Returns false for whitespace-only or commented out lines in a
 // Sherlock file, true otherwise.
 function isUsefulLine(aLine) {
@@ -408,20 +413,21 @@ loadListener.prototype = {
   onStatus: function (aRequest, aContext, aStatus, aStatusArg) {}
 }
 
-// Method to determine if we should be using geo-specific defaults
-function geoSpecificDefaultsEnabled() {
-  // check to see if this is a partner build.  Partner builds should not use geo-specific defaults.
-  let distroID;
+function isPartnerBuild() {
   try {
-    distroID = Services.prefs.getCharPref("distribution.id");
+    let distroID = Services.prefs.getCharPref("distribution.id");
 
     // Mozilla-provided builds (i.e. funnelcake) are not partner builds
     if (distroID && !distroID.startsWith("mozilla")) {
-      return false;
+      return true;
     }
   } catch (e) {}
 
-  // if we make it here, the pref should dictate behaviour
+  return false;
+}
+
+// Method to determine if we should be using geo-specific defaults
+function geoSpecificDefaultsEnabled() {
   let geoSpecificDefaults = false;
   try {
     geoSpecificDefaults = Services.prefs.getBoolPref("browser.search.geoSpecificDefaults");
@@ -500,7 +506,7 @@ function getIsUS() {
 
 // Helper method to modify preference keys with geo-specific modifiers, if needed.
 function getGeoSpecificPrefName(basepref) {
-  if (!geoSpecificDefaultsEnabled())
+  if (!geoSpecificDefaultsEnabled() || isPartnerBuild())
     return basepref;
   if (getIsUS())
     return basepref + ".US";
@@ -532,16 +538,53 @@ function isUSTimezone() {
 // If it fails we don't touch that pref so isUS() does its normal thing.
 let ensureKnownCountryCode = Task.async(function* () {
   // If we have a country-code already stored in our prefs we trust it.
+  let countryCode;
   try {
-    Services.prefs.getCharPref("browser.search.countryCode");
-    return; // pref exists, so we've done this before.
+    countryCode = Services.prefs.getCharPref("browser.search.countryCode");
   } catch(e) {}
-  // We don't have it cached, so fetch it. fetchCountryCode() will call
-  // storeCountryCode if it gets a result (even if that happens after the
-  // promise resolves)
-  yield fetchCountryCode();
+
+  if (!countryCode) {
+    // We don't have it cached, so fetch it. fetchCountryCode() will call
+    // storeCountryCode if it gets a result (even if that happens after the
+    // promise resolves) and fetchRegionDefault.
+    yield fetchCountryCode();
+  } else {
+    // if nothing to do, return early.
+    if (!geoSpecificDefaultsEnabled())
+      return;
+
+    let expir = engineMetadataService.getGlobalAttr("searchDefaultExpir") || 0;
+    if (expir > Date.now()) {
+      // The territory default we have already fetched hasn't expired yet.
+      // If we have an engine saved, the hash should be valid, verify it now.
+      let defaultEngine = engineMetadataService.getGlobalAttr("searchDefault");
+      if (!defaultEngine ||
+          engineMetadataService.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) {
+        // No geo default, or valid hash; nothing to do.
+        return;
+      }
+    }
+
+    yield new Promise(resolve => {
+      let timeoutMS = Services.prefs.getIntPref("browser.search.geoip.timeout");
+      let timerId = setTimeout(() => {
+        timerId = null;
+        resolve();
+      }, timeoutMS);
+
+      let callback = () => {
+        clearTimeout(timerId);
+        resolve();
+      };
+      fetchRegionDefault().then(callback).catch(err => {
+        Components.utils.reportError(err);
+        callback();
+      });
+    });
+  }
+
   // If gInitialized is true then the search service was forced to perform
-  // a sync initialization during our XHR - capture this via telemetry.
+  // a sync initialization during our XHRs - capture this via telemetry.
   Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT").add(gInitialized);
 });
 
@@ -628,9 +671,11 @@ function fetchCountryCode() {
     // large value just incase the request never completes - we don't want the
     // XHR object to live forever)
     let timeoutMS = Services.prefs.getIntPref("browser.search.geoip.timeout");
+    let geoipTimeoutPossible = true;
     let timerId = setTimeout(() => {
       LOG("_fetchCountryCode: timeout fetching country information");
-      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(1);
+      if (geoipTimeoutPossible)
+        Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(1);
       timerId = null;
       resolve();
     }, timeoutMS);
@@ -646,14 +691,29 @@ function fetchCountryCode() {
       // This notification is just for tests...
       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "geoip-lookup-xhr-complete");
 
-      // If we've already timed out then we've already resolved the promise,
-      // so there's nothing else to do.
-      if (timerId == null) {
-        return;
+      if (timerId) {
+        Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(0);
+        geoipTimeoutPossible = false;
       }
-      Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(0);
-      clearTimeout(timerId);
-      resolve();
+
+      let callback = () => {
+        // If we've already timed out then we've already resolved the promise,
+        // so there's nothing else to do.
+        if (timerId == null) {
+          return;
+        }
+        clearTimeout(timerId);
+        resolve();
+      };
+
+      if (result && geoSpecificDefaultsEnabled()) {
+        fetchRegionDefault().then(callback).catch(err => {
+          Components.utils.reportError(err);
+          callback();
+        });
+      } else {
+        callback();
+      }
     };
 
     let request = new XMLHttpRequest();
@@ -682,6 +742,123 @@ function fetchCountryCode() {
     request.send("{}");
   });
 }
+
+// This will make an HTTP request to a Mozilla server that will return
+// JSON data telling us what engine should be set as the default for
+// the current region, and how soon we should check again.
+//
+// The optional cohort value returned by the server is to be kept locally
+// and sent to the server the next time we ping it. It lets the server
+// identify profiles that have been part of a specific experiment.
+//
+// This promise may take up to 100s to resolve, it's the caller's
+// responsibility to ensure with a timer that we are not going to
+// block the async init for too long.
+let fetchRegionDefault = () => new Promise(resolve => {
+  let urlTemplate = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
+                            .getCharPref("geoSpecificDefaults.url");
+  let endpoint = Services.urlFormatter.formatURL(urlTemplate);
+
+  // As an escape hatch, no endpoint means no region specific defaults.
+  if (!endpoint) {
+    resolve();
+    return;
+  }
+
+  // Append the optional cohort value.
+  const cohortPref = "browser.search.cohort";
+  let cohort;
+  try {
+    cohort = Services.prefs.getCharPref(cohortPref);
+  } catch(e) {}
+  if (cohort)
+    endpoint += "/" + cohort;
+
+  LOG("fetchRegionDefault starting with endpoint " + endpoint);
+
+  let startTime = Date.now();
+  let request = new XMLHttpRequest();
+  request.timeout = 100000; // 100 seconds as the last-chance fallback
+  request.onload = function(event) {
+    let took = Date.now() - startTime;
+
+    let status = event.target.status;
+    if (status != 200) {
+      LOG("fetchRegionDefault failed with HTTP code " + status);
+      let retryAfter = request.getResponseHeader("retry-after");
+      if (retryAfter) {
+        engineMetadataService.setGlobalAttr("searchDefaultExpir",
+                                            Date.now() + retryAfter * 1000);
+      }
+      resolve();
+      return;
+    }
+
+    let response = event.target.response || {};
+    LOG("received " + response.toSource());
+
+    if (response.cohort) {
+      Services.prefs.setCharPref(cohortPref, response.cohort);
+    } else {
+      Services.prefs.clearUserPref(cohortPref);
+    }
+
+    if (response.settings && response.settings.searchDefault) {
+      let defaultEngine = response.settings.searchDefault;
+      engineMetadataService.setGlobalAttr("searchDefault", defaultEngine);
+      let hash = getVerificationHash(defaultEngine);
+      LOG("fetchRegionDefault saved searchDefault: " + defaultEngine +
+          " with verification hash: " + hash);
+      engineMetadataService.setGlobalAttr("searchDefaultHash", hash);
+    }
+
+    let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
+    let milliseconds = interval * 1000; // |interval| is in seconds.
+    engineMetadataService.setGlobalAttr("searchDefaultExpir",
+                                        Date.now() + milliseconds);
+
+    LOG("fetchRegionDefault got success response in " + took + "ms");
+    resolve();
+  };
+  request.ontimeout = function(event) {
+    LOG("fetchRegionDefault: XHR finally timed-out");
+    resolve();
+  };
+  request.onerror = function(event) {
+    LOG("fetchRegionDefault: failed to retrieve territory default information");
+    resolve();
+  };
+  request.open("GET", endpoint, true);
+  request.setRequestHeader("Content-Type", "application/json");
+  request.responseType = "json";
+  request.send();
+});
+
+function getVerificationHash(aName) {
+  let disclaimer = "By modifying this file, I agree that I am doing so " +
+    "only within $appName itself, using official, user-driven search " +
+    "engine selection processes, and in a way which does not circumvent " +
+    "user consent. I acknowledge that any attempt to change this file " +
+    "from outside of $appName is a malicious act, and will be responded " +
+    "to accordingly."
+
+  let salt = OS.Path.basename(OS.Constants.Path.profileDir) + aName +
+             disclaimer.replace(/\$appName/g, Services.appinfo.name);
+
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+
+  // Data is an array of bytes.
+  let data = converter.convertToByteArray(salt, {});
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(true);
+}
+
 
 /**
  * Used to verify a given DOM node's localName and namespaceURI.
@@ -3368,25 +3545,34 @@ SearchService.prototype = {
     return this.__sortedEngines;
   },
 
-  // Get the original Engine object that belongs to the defaultenginename pref
-  // of the default branch.
+  // Get the original Engine object that is the default for this region,
+  // ignoring changes the user may have subsequently made.
   get _originalDefaultEngine() {
-    let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
-    let nsIPLS = Ci.nsIPrefLocalizedString;
-    let defaultEngine;
-
-    let defPref = getGeoSpecificPrefName("defaultenginename");
-    try {
-      defaultEngine = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
-    } catch (ex) {
-      // If the default pref is invalid (e.g. an add-on set it to a bogus value)
-      // getEngineByName will just return null, which is the best we can do.
+    let defaultEngine = engineMetadataService.getGlobalAttr("searchDefault");
+    if (defaultEngine &&
+        engineMetadataService.getGlobalAttr("searchDefaultHash") != getVerificationHash(defaultEngine)) {
+      LOG("get _originalDefaultEngine, invalid searchDefaultHash for: " + defaultEngine);
+      defaultEngine = "";
     }
+
+    if (!defaultEngine) {
+      let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+      let nsIPLS = Ci.nsIPrefLocalizedString;
+
+      let defPref = getGeoSpecificPrefName("defaultenginename");
+      try {
+        defaultEngine = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
+      } catch (ex) {
+        // If the default pref is invalid (e.g. an add-on set it to a bogus value)
+        // getEngineByName will just return null, which is the best we can do.
+      }
+    }
+
     return this.getEngineByName(defaultEngine);
   },
 
   resetToOriginalDefaultEngine: function SRCH_SVC__resetToOriginalDefaultEngine() {
-    this.defaultEngine = this._originalDefaultEngine;
+    this.currentEngine = this._originalDefaultEngine;
   },
 
   _buildCache: function SRCH_SVC__buildCache() {
@@ -3714,6 +3900,7 @@ SearchService.prototype = {
   },
 
   _asyncReInit: function () {
+    LOG("_asyncReInit");
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
 
@@ -3729,8 +3916,14 @@ SearchService.prototype = {
 
     Task.spawn(function* () {
       try {
+        LOG("Restarting engineMetadataService");
         yield engineMetadataService.init();
-        yield this._asyncLoadEngines();
+        yield ensureKnownCountryCode();
+
+        // Due to the HTTP requests done by ensureKnownCountryCode, it's possible that
+        // at this point a synchronous init has been forced by other code.
+        if (!gInitialized)
+          yield this._asyncLoadEngines();
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
@@ -4295,31 +4488,6 @@ SearchService.prototype = {
                                       });
   },
 
-  _getVerificationHash: function SRCH_SVC__getVerificationHash(aName) {
-    let disclaimer = "By modifying this file, I agree that I am doing so " +
-      "only within $appName itself, using official, user-driven search " +
-      "engine selection processes, and in a way which does not circumvent " +
-      "user consent. I acknowledge that any attempt to change this file " +
-      "from outside of $appName is a malicious act, and will be responded " +
-      "to accordingly."
-
-    let salt = OS.Path.basename(OS.Constants.Path.profileDir) + aName +
-               disclaimer.replace(/\$appName/g, Services.appinfo.name);
-
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                      .createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    // Data is an array of bytes.
-    let data = converter.convertToByteArray(salt, {});
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                   .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    hasher.update(data, data.length);
-
-    return hasher.finish(true);
-  },
-
   // nsIBrowserSearchService
   init: function SRCH_SVC_init(observer) {
     LOG("SearchService.init");
@@ -4673,7 +4841,7 @@ SearchService.prototype = {
     this._ensureInitialized();
     if (!this._currentEngine) {
       let name = engineMetadataService.getGlobalAttr("current");
-      if (engineMetadataService.getGlobalAttr("hash") == this._getVerificationHash(name)) {
+      if (engineMetadataService.getGlobalAttr("hash") == getVerificationHash(name)) {
         this._currentEngine = this.getEngineByName(name);
       }
     }
@@ -4713,7 +4881,7 @@ SearchService.prototype = {
     }
 
     engineMetadataService.setGlobalAttr("current", newName);
-    engineMetadataService.setGlobalAttr("hash", this._getVerificationHash(newName));
+    engineMetadataService.setGlobalAttr("hash", getVerificationHash(newName));
 
     notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
   },
