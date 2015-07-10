@@ -103,11 +103,6 @@ class IncrementalFinalizeRunnable : public nsRunnable
 
   static const PRTime SliceMillis = 5; /* ms */
 
-  static PLDHashOperator
-  DeferredFinalizerEnumerator(DeferredFinalizeFunction& aFunction,
-                              void*& aData,
-                              void* aClosure);
-
 public:
   IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
                               DeferredFinalizerTable& aFinalizerTable);
@@ -297,29 +292,6 @@ CheckParticipatesInCycleCollection(JS::GCCellPtr aThing, const char* aName,
   }
 }
 
-static PLDHashOperator
-NoteJSHolder(void* aHolder, nsScriptObjectTracer*& aTracer, void* aArg)
-{
-  Closure* closure = static_cast<Closure*>(aArg);
-
-  bool noteRoot;
-  if (MOZ_UNLIKELY(closure->mCb->WantAllTraces())) {
-    noteRoot = true;
-  } else {
-    closure->mCycleCollectionEnabled = false;
-    aTracer->Trace(aHolder,
-                   TraceCallbackFunc(CheckParticipatesInCycleCollection),
-                   closure);
-    noteRoot = closure->mCycleCollectionEnabled;
-  }
-
-  if (noteRoot) {
-    closure->mCb->NoteNativeRoot(aHolder, aTracer);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 JSGCThingParticipant::Traverse(void* aPtr,
                                nsCycleCollectionTraversalCallback& aCb)
@@ -501,17 +473,14 @@ CycleCollectedJSRuntime::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-static PLDHashOperator
-UnmarkJSHolder(void* aHolder, nsScriptObjectTracer*& aTracer, void* aArg)
-{
-  aTracer->CanSkip(aHolder, true);
-  return PL_DHASH_NEXT;
-}
-
 void
 CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
 {
-  mJSHolders.Enumerate(UnmarkJSHolder, nullptr);
+  for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
+    void* holder = iter.GetKey();
+    nsScriptObjectTracer*& tracer = iter.GetData();
+    tracer->CanSkip(holder, true);
+  }
 }
 
 void
@@ -690,7 +659,25 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
   TraverseAdditionalNativeRoots(aCb);
 
   Closure closure(&aCb);
-  mJSHolders.Enumerate(NoteJSHolder, &closure);
+  for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
+    void* holder = iter.GetKey();
+    nsScriptObjectTracer*& tracer = iter.GetData();
+
+    bool noteRoot;
+    if (MOZ_UNLIKELY(closure.mCb->WantAllTraces())) {
+      noteRoot = true;
+    } else {
+      closure.mCycleCollectionEnabled = false;
+      tracer->Trace(holder,
+                    TraceCallbackFunc(CheckParticipatesInCycleCollection),
+                    &closure);
+      noteRoot = closure.mCycleCollectionEnabled;
+    }
+
+    if (noteRoot) {
+      closure.mCb->NoteNativeRoot(holder, tracer);
+    }
+  }
 }
 
 /* static */ void
@@ -813,14 +800,6 @@ struct JsGcTracer : public TraceCallbacks
   }
 };
 
-static PLDHashOperator
-TraceJSHolder(void* aHolder, nsScriptObjectTracer*& aTracer, void* aArg)
-{
-  aTracer->Trace(aHolder, JsGcTracer(), aArg);
-
-  return PL_DHASH_NEXT;
-}
-
 void
 mozilla::TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer)
 {
@@ -836,7 +815,11 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
   // would hurt to do this after the JS holders.
   TraceAdditionalNativeGrayRoots(aTracer);
 
-  mJSHolders.Enumerate(TraceJSHolder, aTracer);
+  for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
+    void* holder = iter.GetKey();
+    nsScriptObjectTracer*& tracer = iter.GetData();
+    tracer->Trace(holder, JsGcTracer(), aTracer);
+  }
 }
 
 void
@@ -1047,27 +1030,23 @@ CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
 }
 
 
-/* static */ PLDHashOperator
-IncrementalFinalizeRunnable::DeferredFinalizerEnumerator(DeferredFinalizeFunction& aFunction,
-                                                         void*& aData,
-                                                         void* aClosure)
-{
-  DeferredFinalizeArray* array = static_cast<DeferredFinalizeArray*>(aClosure);
-
-  DeferredFinalizeFunctionHolder* function = array->AppendElement();
-  function->run = aFunction;
-  function->data = aData;
-
-  return PL_DHASH_REMOVE;
-}
-
 IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
                                                          DeferredFinalizerTable& aFinalizers)
   : mRuntime(aRt)
   , mFinalizeFunctionToRun(0)
   , mReleasing(false)
 {
-  aFinalizers.Enumerate(DeferredFinalizerEnumerator, &mDeferredFinalizeFunctions);
+  for (auto iter = aFinalizers.Iter(); !iter.Done(); iter.Next()) {
+    DeferredFinalizeFunction& function = iter.GetKey();
+    void*& data = iter.GetData();
+
+    DeferredFinalizeFunctionHolder* holder =
+      mDeferredFinalizeFunctions.AppendElement();
+    holder->run = function;
+    holder->data = data;
+
+    iter.Remove();
+  }
 }
 
 IncrementalFinalizeRunnable::~IncrementalFinalizeRunnable()

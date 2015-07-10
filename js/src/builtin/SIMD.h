@@ -41,6 +41,7 @@
   V(and, (CoercedBinaryFunc<Float32x4, Int32x4, And, Float32x4>), 2)                  \
   V(div, (BinaryFunc<Float32x4, Div, Float32x4>), 2)                                  \
   V(equal, (CompareFunc<Float32x4, Equal, Int32x4>), 2)                               \
+  V(extractLane, (ExtractLane<Float32x4>), 2)                                         \
   V(greaterThan, (CompareFunc<Float32x4, GreaterThan, Int32x4>), 2)                   \
   V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual, Int32x4>), 2)     \
   V(lessThan, (CompareFunc<Float32x4, LessThan, Int32x4>), 2)                         \
@@ -60,7 +61,6 @@
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
-  V(bitselect, (BitSelect<Float32x4, Int32x4>), 3)                                    \
   V(clamp, Clamp<Float32x4>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
   V(select, (Select<Float32x4, Int32x4>), 3)                                          \
@@ -98,6 +98,7 @@
   V(add, (BinaryFunc<Float64x2, Add, Float64x2>), 2)                                  \
   V(div, (BinaryFunc<Float64x2, Div, Float64x2>), 2)                                  \
   V(equal, (CompareFunc<Float64x2, Equal, Int32x4>), 2)                               \
+  V(extractLane, (ExtractLane<Float64x2>), 2)                                         \
   V(greaterThan, (CompareFunc<Float64x2, GreaterThan, Int32x4>), 2)                   \
   V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual, Int32x4>), 2)     \
   V(lessThan, (CompareFunc<Float64x2, LessThan, Int32x4>), 2)                         \
@@ -113,7 +114,6 @@
   V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)
 
 #define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                            \
-  V(bitselect, (BitSelect<Float64x2, Int32x4>), 3)                                    \
   V(clamp, Clamp<Float64x2>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
   V(select, (Select<Float64x2, Int32x4>), 3)                                          \
@@ -144,6 +144,7 @@
   V(add, (BinaryFunc<Int8x16, Add, Int8x16>), 2)                                      \
   V(and, (BinaryFunc<Int8x16, And, Int8x16>), 2)                                      \
   V(equal, (CompareFunc<Int8x16, Equal, Int8x16>), 2)                                 \
+  V(extractLane, (ExtractLane<Int8x16>), 2)                                           \
   V(greaterThan, (CompareFunc<Int8x16, GreaterThan, Int8x16>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int8x16, GreaterThanOrEqual, Int8x16>), 2)       \
   V(lessThan, (CompareFunc<Int8x16, LessThan, Int8x16>), 2)                           \
@@ -159,9 +160,9 @@
   V(xor, (BinaryFunc<Int8x16, Xor, Int8x16>), 2)
 
 #define INT8X16_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int8x16, Int8x16>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int8x16>), 3)                                           \
   V(select, (Select<Int8x16, Int8x16>), 3)                                            \
+  V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                            \
   V(store, (Store<Int8x16, 16>), 3)
 
 #define INT8X16_BOOL_FUNCTION_LIST(V)                                                 \
@@ -192,6 +193,7 @@
   V(add, (BinaryFunc<Int16x8, Add, Int16x8>), 2)                                      \
   V(and, (BinaryFunc<Int16x8, And, Int16x8>), 2)                                      \
   V(equal, (CompareFunc<Int16x8, Equal, Int16x8>), 2)                                 \
+  V(extractLane, (ExtractLane<Int16x8>), 2)                                           \
   V(greaterThan, (CompareFunc<Int16x8, GreaterThan, Int16x8>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int16x8, GreaterThanOrEqual, Int16x8>), 2)       \
   V(lessThan, (CompareFunc<Int16x8, LessThan, Int16x8>), 2)                           \
@@ -207,9 +209,9 @@
   V(xor, (BinaryFunc<Int16x8, Xor, Int16x8>), 2)
 
 #define INT16X8_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int16x8, Int16x8>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int16x8>), 3)                                           \
   V(select, (Select<Int16x8, Int16x8>), 3)                                            \
+  V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                            \
   V(store, (Store<Int16x8, 8>), 3)
 
 #define INT16X8_BOOL_FUNCTION_LIST(V)                                                 \
@@ -242,6 +244,7 @@
   V(add, (BinaryFunc<Int32x4, Add, Int32x4>), 2)                                      \
   V(and, (BinaryFunc<Int32x4, And, Int32x4>), 2)                                      \
   V(equal, (CompareFunc<Int32x4, Equal, Int32x4>), 2)                                 \
+  V(extractLane, (ExtractLane<Int32x4>), 2)                                           \
   V(greaterThan, (CompareFunc<Int32x4, GreaterThan, Int32x4>), 2)                     \
   V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual, Int32x4>), 2)       \
   V(lessThan, (CompareFunc<Int32x4, LessThan, Int32x4>), 2)                           \
@@ -260,9 +263,9 @@
   V(xor, (BinaryFunc<Int32x4, Xor, Int32x4>), 2)
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                              \
-  V(bitselect, (BitSelect<Int32x4, Int32x4>), 3)                                      \
   V(replaceLane, (ReplaceLane<Int32x4>), 3)                                           \
   V(select, (Select<Int32x4, Int32x4>), 3)                                            \
+  V(selectBits, (SelectBits<Int32x4, Int32x4>), 3)                                            \
   V(store,  (Store<Int32x4, 4>), 3)                                                   \
   V(store3, (Store<Int32x4, 3>), 3)                                                   \
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
@@ -287,6 +290,7 @@
     _(fromFloat32x4Bits)
 #define FOREACH_INT32X4_SIMD_OP(_)   \
     CONVERSION_INT32X4_SIMD_OP(_)    \
+    _(selectBits)                    \
     _(shiftLeftByScalar)             \
     _(shiftRightArithmeticByScalar)  \
     _(shiftRightLogicalByScalar)
@@ -325,8 +329,8 @@
 #define ION_COMMONX4_SIMD_OP(_)      \
     ARITH_COMMONX4_SIMD_OP(_)        \
     BITWISE_COMMONX4_SIMD_OP(_)      \
+    _(extractLane)                   \
     _(replaceLane)                   \
-    _(bitselect)                     \
     _(select)                        \
     _(splat)                         \
     _(not)                           \

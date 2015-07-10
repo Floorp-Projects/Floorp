@@ -819,6 +819,7 @@ enum AsmJSImmKind
     AsmJSImm_aeabi_idivmod   = AsmJSExit::Builtin_IDivMod,
     AsmJSImm_aeabi_uidivmod  = AsmJSExit::Builtin_UDivMod,
     AsmJSImm_AtomicCmpXchg   = AsmJSExit::Builtin_AtomicCmpXchg,
+    AsmJSImm_AtomicXchg      = AsmJSExit::Builtin_AtomicXchg,
     AsmJSImm_AtomicFetchAdd  = AsmJSExit::Builtin_AtomicFetchAdd,
     AsmJSImm_AtomicFetchSub  = AsmJSExit::Builtin_AtomicFetchSub,
     AsmJSImm_AtomicFetchAnd  = AsmJSExit::Builtin_AtomicFetchAnd,

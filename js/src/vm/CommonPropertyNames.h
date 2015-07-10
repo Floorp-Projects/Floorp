@@ -21,6 +21,7 @@
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
+    macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(Async, Async, "Async") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
@@ -83,9 +84,9 @@
     macro(fix, fix, "fix") \
     macro(flags, flags, "flags") \
     macro(float32, float32, "float32") \
-    macro(float32x4, float32x4, "float32x4") \
+    macro(float32x4, float32x4, "Float32x4") \
     macro(float64, float64, "float64") \
-    macro(float64x2, float64x2, "float64x2") \
+    macro(float64x2, float64x2, "Float64x2") \
     macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
     macro(forEach, forEach, "forEach") \
     macro(format, format, "format") \
@@ -109,9 +110,9 @@
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
-    macro(int8x16, int8x16, "int8x16") \
-    macro(int16x8, int16x8, "int16x8") \
-    macro(int32x4, int32x4, "int32x4") \
+    macro(int8x16, int8x16, "Int8x16") \
+    macro(int16x8, int16x8, "Int16x8") \
+    macro(int32x4, int32x4, "Int32x4") \
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \

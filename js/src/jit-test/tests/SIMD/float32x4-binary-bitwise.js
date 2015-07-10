@@ -28,12 +28,12 @@ var helpers = (function() {
 })();
 
 function f() {
-    var f1 = SIMD.float32x4(1, 2, 3, 4);
-    var f2 = SIMD.float32x4(4, 3, 2, 1);
+    var f1 = SIMD.Float32x4(1, 2, 3, 4);
+    var f2 = SIMD.Float32x4(4, 3, 2, 1);
     for (var i = 0; i < 150; i++) {
-        assertEqX4(SIMD.float32x4.and(f1, f2), binaryX4(helpers.and, f1, f2));
-        assertEqX4(SIMD.float32x4.or(f1, f2),  binaryX4(helpers.or, f1, f2));
-        assertEqX4(SIMD.float32x4.xor(f1, f2), binaryX4(helpers.xor, f1, f2));
+        assertEqX4(SIMD.Float32x4.and(f1, f2), binaryX4(helpers.and, f1, f2));
+        assertEqX4(SIMD.Float32x4.or(f1, f2),  binaryX4(helpers.or, f1, f2));
+        assertEqX4(SIMD.Float32x4.xor(f1, f2), binaryX4(helpers.xor, f1, f2));
     }
 }
 

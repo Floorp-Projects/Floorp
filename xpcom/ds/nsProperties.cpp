@@ -65,28 +65,6 @@ nsProperties::Has(const char* prop, bool* result)
   return NS_OK;
 }
 
-struct GetKeysEnumData
-{
-  char** keys;
-  uint32_t next;
-  nsresult res;
-};
-
-PLDHashOperator
-GetKeysEnumerate(const char* aKey, nsISupports* aData, void* aArg)
-{
-  GetKeysEnumData* gkedp = (GetKeysEnumData*)aArg;
-  gkedp->keys[gkedp->next] = strdup(aKey);
-
-  if (!gkedp->keys[gkedp->next]) {
-    gkedp->res = NS_ERROR_OUT_OF_MEMORY;
-    return PL_DHASH_STOP;
-  }
-
-  gkedp->next++;
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
 {
@@ -94,28 +72,27 @@ nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
     return NS_ERROR_INVALID_ARG;
   }
 
-  uint32_t n = Count();
-  char** k = (char**)moz_xmalloc(n * sizeof(char*));
+  uint32_t count = Count();
+  char** keys = (char**)moz_xmalloc(count * sizeof(char*));
+  uint32_t j = 0;
 
-  GetKeysEnumData gked;
-  gked.keys = k;
-  gked.next = 0;
-  gked.res = NS_OK;
+  for (auto iter = this->Iter(); !iter.Done(); iter.Next()) {
+    const char* key = iter.GetKey();
+    keys[j] = strdup(key);
 
-  EnumerateRead(GetKeysEnumerate, &gked);
-
-  nsresult rv = gked.res;
-  if (NS_FAILED(rv)) {
-    // Free 'em all
-    for (uint32_t i = 0; i < gked.next; i++) {
-      free(k[i]);
+    if (!keys[j]) {
+      // Free 'em all
+      for (uint32_t i = 0; i < j; i++) {
+        free(keys[i]);
+      }
+      free(keys);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    free(k);
-    return rv;
+    j++;
   }
 
-  *aCount = n;
-  *aKeys = k;
+  *aCount = count;
+  *aKeys = keys;
   return NS_OK;
 }
 

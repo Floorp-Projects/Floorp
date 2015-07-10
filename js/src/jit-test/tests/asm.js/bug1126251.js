@@ -21,13 +21,14 @@ if (!isSimdAvailable() || typeof SIMD === 'undefined') {
 var v = asmLink(asmCompile('global', `
     "use asm";
     var frd = global.Math.fround;
-    var float32x4 = global.SIMD.float32x4;
-    var splat = float32x4.splat;
+    var Float32x4 = global.SIMD.Float32x4;
+    var splat = Float32x4.splat;
+    var ext = Float32x4.extractLane;
     function e() {
-        var v = float32x4(0,0,0,0);
+        var v = Float32x4(0,0,0,0);
         var x = frd(0.);
         v = splat(.1e+71);
-        x = v.x;
+        x = ext(v,0);
         x = frd(x / x);
         return +x;
     }
@@ -40,10 +41,11 @@ assertEq(v, NaN);
 setJitCompilerOption("ion.gvn.enable", 0);
 var v = asmLink(asmCompile('global', `
     "use asm";
-    var float32x4 = global.SIMD.float32x4;
-    var splat = float32x4.splat;
+    var Float32x4 = global.SIMD.Float32x4;
+    var splat = Float32x4.splat;
+    var ext = Float32x4.extractLane;
     function e() {
-        return +splat(.1e+71).x;
+        return +ext(splat(.1e+71),0);
     }
     return e;
 `), this)();
