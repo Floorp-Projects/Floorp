@@ -5,29 +5,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIRunnable.idl"
+%{C++
+#include "nsCOMPtr.h"
+#include "mozilla/AlreadyAddRefed.h"
+%}
 
-interface nsIRunnable;
+native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>&&);
 
-[scriptable, uuid(4e8febe4-6631-49dc-8ac9-308c1cb9b09c)]
+[scriptable, uuid(f9d60700-e6dc-4a72-9537-689058655472)]
 interface nsIEventTarget : nsISupports
 {
+  /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */
   /**
-   * Dispatch an event to this event target.  This function may be called from
-   * any thread, and it may be called re-entrantly.
-   *
-   * @param event
-   *   The event to dispatch.
-   * @param flags
-   *   The flags modifying event dispatch.  The flags are described in detail
-   *   below.
-   * 
-   * @throws NS_ERROR_INVALID_ARG
-   *   Indicates that event is null.
-   * @throws NS_ERROR_UNEXPECTED
-   *   Indicates that the thread is shutting down and has finished processing
-   * events, so this event would never run and has not been dispatched. 
+   * This must be non-virtual due to issues with MSVC 2013's ordering of
+   * vtbls for overloads.  With other platforms we can leave this virtual
+   * and avoid adding lots of Dispatch() methods to classes inheriting this.
    */
-  void dispatch(in nsIRunnable event, in unsigned long flags);
+%{C++
+    nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
+      return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
+    }
+%}
 
   /**
    * This flag specifies the default mode of event dispatch, whereby the event
@@ -45,7 +44,7 @@ interface nsIEventTarget : nsISupports
    * given event to be processed.
    */
   const unsigned long DISPATCH_SYNC = 1;
-   
+
   /**
    * Check to see if this event target is associated with the current thread.
    *
@@ -55,6 +54,41 @@ interface nsIEventTarget : nsISupports
    *   this method).
    */
   boolean isOnCurrentThread();
+
+  /**
+   * Dispatch an event to this event target.  This function may be called from
+   * any thread, and it may be called re-entrantly.
+   *
+   * @param event
+   *   The alreadyAddRefed<> event to dispatch
+   * @param flags
+   *   The flags modifying event dispatch.  The flags are described in detail
+   *   below.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched.
+   */
+  [noscript, binaryname(Dispatch)] void dispatchFromC(in alreadyAddRefed_nsIRunnable event, in unsigned long flags);
+  /**
+   * Version of Dispatch to expose to JS, which doesn't require an alreadyAddRefed<>
+   * (it will be converted to that internally)
+   *
+   * @param event
+   *   The (raw) event to dispatch.
+   * @param flags
+   *   The flags modifying event dispatch.  The flags are described in detail
+   *   below.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched.
+   */
+  [binaryname(DispatchFromScript)] void dispatch(in nsIRunnable event, in unsigned long flags);
 };
 
 %{C++

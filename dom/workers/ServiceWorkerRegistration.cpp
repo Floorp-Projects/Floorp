@@ -322,7 +322,10 @@ public:
       return false;
     }
 
-    NS_SUCCEEDED(NS_DispatchToMainThread(this));
+    nsCOMPtr<nsIRunnable> that(this);
+    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+      NS_ASSERTION(false, "Failed to dispatch update back to MainThread in ServiceWorker");
+    }
     return true;
   }
 
@@ -812,6 +815,8 @@ ServiceWorkerRegistrationWorkerThread::Update()
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
 
+  // XXX: this pattern guarantees we won't know which thread UpdateRunnable
+  // will die on (here or MainThread)
   nsRefPtr<UpdateRunnable> r = new UpdateRunnable(worker, mScope);
   r->Dispatch();
 }

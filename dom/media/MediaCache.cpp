@@ -1409,8 +1409,14 @@ MediaCache::QueueUpdate()
   if (mUpdateQueued)
     return;
   mUpdateQueued = true;
-  nsCOMPtr<nsIRunnable> event = new UpdateEvent();
-  NS_DispatchToMainThread(event);
+  // XXX MediaCache does updates when decoders are still running at
+  // shutdown and get freed in the final cycle-collector cleanup.  So
+  // don't leak a runnable in that case.
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  if (mainThread) {
+    nsCOMPtr<nsIRunnable> event = new UpdateEvent();
+    mainThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+  }
 }
 
 void

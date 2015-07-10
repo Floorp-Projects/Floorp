@@ -1006,6 +1006,82 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
+    Register lhs = ToRegister(ins->numerator());
+    Register output = ToRegister(ins->output());
+    uint32_t d = ins->denominator();
+
+    // This emits the division answer into edx or the modulus answer into eax.
+    MOZ_ASSERT(output == eax || output == edx);
+    MOZ_ASSERT(lhs != eax && lhs != edx);
+    bool isDiv = (output == edx);
+
+    if (d == 0) {
+        if (ins->mir()->isTruncated())
+            masm.xorl(output, output);
+        else
+            bailout(ins->snapshot());
+
+        return;
+    }
+
+    // The denominator isn't a power of 2 (see LDivPowTwoI and LModPowTwoI).
+    MOZ_ASSERT((d & (d - 1)) != 0);
+
+    ReciprocalMulConstants rmc = computeDivisionConstants(d, /* maxLog = */ 32);
+
+    // We first compute (M * n) >> 32, where M = rmc.multiplier.
+    masm.movl(Imm32(rmc.multiplier), eax);
+    masm.umull(lhs);
+    if (rmc.multiplier > UINT32_MAX) {
+        // M >= 2^32 and shift == 0 is impossible, as d >= 2 implies that
+        // ((M * n) >> (32 + shift)) >= n > floor(n/d) whenever n >= d, contradicting
+        // the proof of correctness in computeDivisionConstants.
+        MOZ_ASSERT(rmc.shiftAmount > 0);
+        MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 33));
+
+        // We actually computed edx = ((uint32_t(M) * n) >> 32) instead. Since
+        // (M * n) >> (32 + shift) is the same as (edx + n) >> shift, we can
+        // correct for the overflow. This case is a bit trickier than the signed
+        // case, though, as the (edx + n) addition itself can overflow; however,
+        // note that (edx + n) >> shift == (((n - edx) >> 1) + edx) >> (shift - 1),
+        // which is overflow-free. See Hacker's Delight, section 10-8 for details.
+
+        // Compute (n - edx) >> 1 into eax.
+        masm.movl(lhs, eax);
+        masm.subl(edx, eax);
+        masm.shrl(Imm32(1), eax);
+
+        // Finish the computation.
+        masm.addl(eax, edx);
+        masm.shrl(Imm32(rmc.shiftAmount - 1), edx);
+    } else {
+        masm.shrl(Imm32(rmc.shiftAmount), edx);
+    }
+
+    // We now have the truncated division value in edx. If we're
+    // computing a modulus or checking whether the division resulted
+    // in an integer, we need to multiply the obtained value by d and
+    // finish the computation/check.
+    if (!isDiv) {
+        masm.imull(Imm32(d), edx, edx);
+        masm.movl(lhs, eax);
+        masm.subl(edx, eax);
+
+        // The final result of the modulus op, just computed above by the
+        // sub instruction, can be a number in the range [2^31, 2^32). If
+        // this is the case and the modulus is not truncated, we must bail
+        // out.
+        if (!ins->mir()->isTruncated())
+            bailoutIf(Assembler::Signed, ins->snapshot());
+    } else if (!ins->mir()->isTruncated()) {
+        masm.imull(Imm32(d), edx, eax);
+        masm.cmpl(lhs, eax);
+        bailoutIf(Assembler::NotEqual, ins->snapshot());
+    }
+}
+
+void
 CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck* ool)
 {
     LMulI* ins = ool->ins();
@@ -1050,21 +1126,26 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
             bailoutIf(Assembler::NonZero, ins->snapshot());
         }
 
-        // Adjust the value so that shifting produces a correctly rounded result
-        // when the numerator is negative. See 10-1 "Signed Division by a Known
-        // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
-        if (mir->canBeNegativeDividend()) {
-            Register lhsCopy = ToRegister(ins->numeratorCopy());
-            MOZ_ASSERT(lhsCopy != lhs);
-            if (shift > 1)
-                masm.sarl(Imm32(31), lhs);
-            masm.shrl(Imm32(32 - shift), lhs);
-            masm.addl(lhsCopy, lhs);
-        }
+        if (mir->isUnsigned()) {
+            masm.shrl(Imm32(shift), lhs);
+        } else {
+            // Adjust the value so that shifting produces a correctly
+            // rounded result when the numerator is negative. See 10-1
+            // "Signed Division by a Known Power of 2" in Henry
+            // S. Warren, Jr.'s Hacker's Delight.
+            if (mir->canBeNegativeDividend()) {
+                Register lhsCopy = ToRegister(ins->numeratorCopy());
+                MOZ_ASSERT(lhsCopy != lhs);
+                if (shift > 1)
+                    masm.sarl(Imm32(31), lhs);
+                masm.shrl(Imm32(32 - shift), lhs);
+                masm.addl(lhsCopy, lhs);
+            }
+            masm.sarl(Imm32(shift), lhs);
 
-        masm.sarl(Imm32(shift), lhs);
-        if (negativeDivisor)
-            masm.negl(lhs);
+            if (negativeDivisor)
+                masm.negl(lhs);
+        }
     } else if (shift == 0 && negativeDivisor) {
         // INT32_MIN / -1 overflows.
         masm.negl(lhs);
@@ -1090,17 +1171,23 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI* ins) {
 
     // We will first divide by Abs(d), and negate the answer if d is negative.
     // If desired, this can be avoided by generalizing computeDivisionConstants.
-    ReciprocalMulConstants rmc = computeDivisionConstants(Abs(d));
+    ReciprocalMulConstants rmc = computeDivisionConstants(Abs(d), /* maxLog = */ 31);
 
-    // As explained in the comments of computeDivisionConstants, we first compute
-    // X >> (32 + shift), where X is either (rmc.multiplier * n) if the multiplier
-    // is non-negative or (rmc.multiplier * n) + (2^32 * n) otherwise. This is the
-    // desired division result if n is non-negative, and is one less than the result
-    // otherwise.
+    // We first compute (M * n) >> 32, where M = rmc.multiplier.
     masm.movl(Imm32(rmc.multiplier), eax);
     masm.imull(lhs);
-    if (rmc.multiplier < 0)
+    if (rmc.multiplier > INT32_MAX) {
+        MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 32));
+
+        // We actually computed edx = ((int32_t(M) * n) >> 32) instead. Since
+        // (M * n) >> 32 is the same as (edx + n), we can correct for the overflow.
+        // (edx + n) can't overflow, as n and edx have opposite signs because int32_t(M)
+        // is negative.
         masm.addl(lhs, edx);
+    }
+    // (M * n) >> (32 + shift) is the truncated division answer if n is non-negative,
+    // as proved in the comments of computeDivisionConstants. We must add 1 later if n is
+    // negative to get the right answer in all cases.
     masm.sarl(Imm32(rmc.shiftAmount), edx);
 
     // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
@@ -1242,7 +1329,7 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI* ins)
 
     Label negative;
 
-    if (ins->mir()->canBeNegativeDividend()) {
+    if (!ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend()) {
         // Switch based on sign of the lhs.
         // Positive numbers are just a bitmask
         masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
@@ -1250,7 +1337,7 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI* ins)
 
     masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
 
-    if (ins->mir()->canBeNegativeDividend()) {
+    if (!ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend()) {
         Label done;
         masm.jump(&done);
 

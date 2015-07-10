@@ -1202,13 +1202,9 @@ public:
     uint32_t flags = imgIContainer::FLAG_SYNC_DECODE;
 
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    EventStates state = f->GetContent()->AsElement()->State();
     DrawResult result =
       f->DisplayAltFeedback(*aCtx,
                             mVisibleRect,
-                            IMAGE_OK(state, true)
-                               ? nsImageFrame::gIconLoad->mLoadingImage
-                               : nsImageFrame::gIconLoad->mBrokenImage,
                             ToReferenceFrame(),
                             flags);
 
@@ -1221,12 +1217,14 @@ public:
 DrawResult
 nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
-                                 imgIRequest* aRequest,
                                  nsPoint aPt,
                                  uint32_t aFlags)
 {
   // We should definitely have a gIconLoad here.
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
+
+  // Whether we draw the broken or loading icon.
+  bool isLoading = IMAGE_OK(GetContent()->AsElement()->State(), true);
 
   // Calculate the inner area
   nsRect  inner = GetInnerArea() + aPt;
@@ -1247,10 +1245,12 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
   }
 
   // Paint the border
-  nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
-  nsCSSRendering::PaintBorderWithStyleBorder(PresContext(), aRenderingContext,
-                                             this, inner, inner,
-                                             recessedBorder, mStyleContext);
+  if (!isLoading || gIconLoad->mPrefShowLoadingPlaceholder) {
+    nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
+    nsCSSRendering::PaintBorderWithStyleBorder(PresContext(), aRenderingContext,
+                                               this, inner, inner,
+                                               recessedBorder, mStyleContext);
+  }
 
   // Adjust the inner rect to account for the one pixel recessed border,
   // and a six pixel padding on each edge
@@ -1271,15 +1271,20 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
   DrawResult result = DrawResult::NOT_READY;
 
   // Check if we should display image placeholders
-  if (!gIconLoad->mPrefShowPlaceholders) {
+  if (!gIconLoad->mPrefShowPlaceholders ||
+      (isLoading && !gIconLoad->mPrefShowLoadingPlaceholder)) {
     result = DrawResult::SUCCESS;
   } else {
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
 
+    imgIRequest* request = isLoading
+                              ? nsImageFrame::gIconLoad->mLoadingImage
+                              : nsImageFrame::gIconLoad->mBrokenImage;
+
     // If we weren't previously displaying an icon, register ourselves
     // as an observer for load and animation updates and flag that we're
     // doing so now.
-    if (aRequest && !mDisplayingIcon) {
+    if (request && !mDisplayingIcon) {
       gIconLoad->AddIconObserver(this);
       mDisplayingIcon = true;
     }
@@ -1290,11 +1295,11 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
 
     // If the icon in question is loaded, draw it.
     uint32_t imageStatus = 0;
-    if (aRequest)
-      aRequest->GetImageStatus(&imageStatus);
+    if (request)
+      request->GetImageStatus(&imageStatus);
     if (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) {
       nsCOMPtr<imgIContainer> imgCon;
-      aRequest->GetImage(getter_AddRefs(imgCon));
+      request->GetImage(getter_AddRefs(imgCon));
       MOZ_ASSERT(imgCon, "Load complete, but no image container?");
       nsRect dest(flushRight ? inner.XMost() - size : inner.x,
                   inner.y, size, size);
@@ -2192,6 +2197,7 @@ NS_IMPL_ISUPPORTS(nsImageFrame::IconLoad, nsIObserver,
 static const char* kIconLoadPrefs[] = {
   "browser.display.force_inline_alttext",
   "browser.display.show_image_placeholders",
+  "browser.display.show_loading_image_placeholder",
   nullptr
 };
 
@@ -2244,6 +2250,9 @@ void nsImageFrame::IconLoad::GetPrefs()
 
   mPrefShowPlaceholders =
     Preferences::GetBool("browser.display.show_image_placeholders", true);
+
+  mPrefShowLoadingPlaceholder =
+    Preferences::GetBool("browser.display.show_loading_image_placeholder", true);
 }
 
 NS_IMETHODIMP

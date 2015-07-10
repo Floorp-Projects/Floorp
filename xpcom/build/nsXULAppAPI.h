@@ -477,4 +477,9 @@ XRE_API(void,
 XRE_API(int,
         XRE_XPCShellMain, (int argc, char** argv, char** envp))
 
+#if MOZ_WIDGET_GTK == 2
+XRE_API(void,
+        XRE_GlibInit, ())
+#endif
+
 #endif // _nsXULAppAPI_h__

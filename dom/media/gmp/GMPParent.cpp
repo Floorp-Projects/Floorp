@@ -1052,7 +1052,7 @@ GMPParent::EnsureProcessLoaded(base::ProcessId* aID)
 bool
 GMPParent::Bridge(GMPServiceParent* aGMPServiceParent)
 {
-  if (!PGMPContent::Bridge(aGMPServiceParent, this)) {
+  if (NS_FAILED(PGMPContent::Bridge(aGMPServiceParent, this))) {
     return false;
   }
   ++mGMPContentChildCount;

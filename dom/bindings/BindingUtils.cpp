@@ -109,6 +109,28 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
 }
 
 bool
+ThrowMethodFailed(JSContext* cx, ErrorResult& rv)
+{
+  if (rv.IsUncatchableException()) {
+    // Nuke any existing exception on aCx, to make sure we're uncatchable.
+    JS_ClearPendingException(cx);
+    // Don't do any reporting.  Just return false, to create an
+    // uncatchable exception.
+    return false;
+  }
+  if (rv.IsErrorWithMessage()) {
+    rv.ReportErrorWithMessage(cx);
+    return false;
+  }
+  if (rv.IsJSException()) {
+    rv.ReportJSException(cx);
+    return false;
+  }
+  rv.ReportGenericError(cx);
+  return false;
+}
+
+bool
 ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
 {
   nsPrintfCString errorMessage("%s attribute setter",
@@ -287,17 +309,6 @@ ErrorResult::StealJSException(JSContext* cx,
   value.set(mJSException);
   js::RemoveRawValueRoot(cx, &mJSException);
   mResult = NS_OK;
-}
-
-void
-ErrorResult::ReportNotEnoughArgsError(JSContext* cx,
-                                      const char* ifaceName,
-                                      const char* memberName)
-{
-  MOZ_ASSERT(ErrorCode() == NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-  nsPrintfCString errorMessage("%s.%s", ifaceName, memberName);
-  ThrowErrorMessage(cx, dom::MSG_MISSING_ARGUMENTS, errorMessage.get());
 }
 
 void
@@ -2657,7 +2668,7 @@ ConvertExceptionToPromise(JSContext* cx,
   if (rv.Failed()) {
     // We just give up.  Make sure to not leak memory on the
     // ErrorResult, but then just put the original exception back.
-    ThrowMethodFailedWithDetails(cx, rv, "", "");
+    ThrowMethodFailed(cx, rv);
     JS_SetPendingException(cx, exn);
     return false;
   }
