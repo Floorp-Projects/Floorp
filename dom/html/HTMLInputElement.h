@@ -19,6 +19,7 @@
 #include "nsIConstraintValidation.h"
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"
 #include "mozilla/Decimal.h"
@@ -684,6 +685,22 @@ public:
                     uint32_t aEnd, const SelectionMode& aSelectMode,
                     ErrorResult& aRv, int32_t aSelectionStart = -1,
                     int32_t aSelectionEnd = -1);
+
+  bool DirectoryAttr() const
+  {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
+  }
+
+  void SetDirectoryAttr(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::directory, aValue, aRv);
+  }
+
+  bool IsFilesAndDirectoriesSupported() const;
+
+  already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
+
+  void ChooseDirectory(ErrorResult& aRv);
 
   // XPCOM GetAlign() is OK
   void SetAlign(const nsAString& aValue, ErrorResult& aRv)
