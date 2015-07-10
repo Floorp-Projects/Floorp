@@ -133,7 +133,7 @@ js::atomics_fence(JSContext* cx, unsigned argc, Value* vp)
 
 static int32_t
 CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidate, void* viewData,
-                uint32_t offset, bool* badArrayType)
+                uint32_t offset, bool* badArrayType=nullptr)
 {
     switch (viewType) {
       case Scalar::Int8: {
@@ -179,7 +179,8 @@ CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidat
         return (int32_t)oldval;
       }
       default:
-        *badArrayType = true;
+        if (badArrayType)
+            *badArrayType = true;
         return 0;
     }
 }
@@ -288,7 +289,7 @@ enum XchgStoreOp {
 template<XchgStoreOp op>
 static int32_t
 ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, void* viewData, uint32_t offset,
-                bool* badArrayType)
+                bool* badArrayType=nullptr)
 {
 #define INT_OP(ptr, value)                                         \
     JS_BEGIN_MACRO                                                 \
@@ -335,7 +336,8 @@ ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, void* viewData, uint
         return (int32_t)value;
       }
       default:
-        *badArrayType = true;
+        if (badArrayType)
+            *badArrayType = true;
         return 0;
     }
 #undef INT_OP
@@ -562,12 +564,9 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
 // asm.js callouts for platforms that do not have non-word-sized
 // atomics where we don't want to inline the logic for the atomics.
 //
-// size is currently -1 (signed byte), 1 (unsigned byte), -2 (signed halfword),
-// or 2 (halfword).
-// ptr is the byte offset within the heap array.  This will have low bit zero
-// for halfword accesses.
-// value (for binops) and oldval/newval (for cmpxchg) are the values
-// to be operated upon.
+// To test this, either run on eg Raspberry Pi Model 1, or invoke the ARM
+// simulator build with ARMHWCAP=vfp set.  Do not set any other flags; other
+// vfp/neon flags force ARMv7 to be set.
 
 static void
 GetCurrentAsmJSHeap(void** heap, size_t* length)
@@ -584,7 +583,8 @@ js::atomics_add_asm_callout(int32_t vt, int32_t offset, int32_t value)
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformAdd::operate((int8_t*)heap + offset, value);
@@ -605,7 +605,8 @@ js::atomics_sub_asm_callout(int32_t vt, int32_t offset, int32_t value)
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformSub::operate((int8_t*)heap + offset, value);
@@ -626,7 +627,8 @@ js::atomics_and_asm_callout(int32_t vt, int32_t offset, int32_t value)
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformAnd::operate((int8_t*)heap + offset, value);
@@ -647,7 +649,8 @@ js::atomics_or_asm_callout(int32_t vt, int32_t offset, int32_t value)
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformOr::operate((int8_t*)heap + offset, value);
@@ -668,7 +671,8 @@ js::atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value)
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
         return PerformXor::operate((int8_t*)heap + offset, value);
@@ -684,22 +688,44 @@ js::atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value)
 }
 
 int32_t
+js::atomics_xchg_asm_callout(int32_t vt, int32_t offset, int32_t value)
+{
+    void* heap;
+    size_t heapLength;
+    GetCurrentAsmJSHeap(&heap, &heapLength);
+    if (size_t(offset) >= heapLength)
+        return 0;
+    switch (Scalar::Type(vt)) {
+      case Scalar::Int8:
+        return ExchangeOrStore<DoExchange>(Scalar::Int8, value, heap, offset);
+      case Scalar::Uint8:
+        return ExchangeOrStore<DoExchange>(Scalar::Uint8, value, heap, offset);
+      case Scalar::Int16:
+        return ExchangeOrStore<DoExchange>(Scalar::Int16, value, heap, offset>>1);
+      case Scalar::Uint16:
+        return ExchangeOrStore<DoExchange>(Scalar::Uint16, value, heap, offset>>1);
+      default:
+        MOZ_CRASH("Invalid size");
+    }
+}
+
+int32_t
 js::atomics_cmpxchg_asm_callout(int32_t vt, int32_t offset, int32_t oldval, int32_t newval)
 {
     void* heap;
     size_t heapLength;
     GetCurrentAsmJSHeap(&heap, &heapLength);
-    if ((size_t)offset >= heapLength) return 0;
-    bool badType = false;
+    if (size_t(offset) >= heapLength)
+        return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return CompareExchange(Scalar::Int8, oldval, newval, heap, offset, &badType);
+        return CompareExchange(Scalar::Int8, oldval, newval, heap, offset);
       case Scalar::Uint8:
-        return CompareExchange(Scalar::Uint8, oldval, newval, heap, offset, &badType);
+        return CompareExchange(Scalar::Uint8, oldval, newval, heap, offset);
       case Scalar::Int16:
-        return CompareExchange(Scalar::Int16, oldval, newval, heap, offset>>1, &badType);
+        return CompareExchange(Scalar::Int16, oldval, newval, heap, offset>>1);
       case Scalar::Uint16:
-        return CompareExchange(Scalar::Uint16, oldval, newval, heap, offset>>1, &badType);
+        return CompareExchange(Scalar::Uint16, oldval, newval, heap, offset>>1);
       default:
         MOZ_CRASH("Invalid size");
     }
