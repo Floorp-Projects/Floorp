@@ -653,7 +653,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
 
         // Don't fold a parenthesized call expression. See bug 537673.
         ParseNode** listp = &pn->pn_head;
-        if ((pn->isKind(PNK_CALL) || pn->isKind(PNK_NEW)) && (*listp)->isInParens())
+        if ((pn->isKind(PNK_CALL) || pn->isKind(PNK_TAGGED_TEMPLATE)) && (*listp)->isInParens())
             listp = &(*listp)->pn_next;
 
         for (; *listp; listp = &(*listp)->pn_next) {
