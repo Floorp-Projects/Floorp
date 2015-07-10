@@ -1032,14 +1032,6 @@ protected:
   // Recomputes ready state and fires events as necessary based on current state.
   void UpdateReadyStateInternal();
 
-  // Notifies the audio channel agent when the element starts or stops playing.
-  void NotifyAudioChannelAgent(bool aPlaying);
-
-  // This method does the work necessary for the
-  // NotifyOwnerDocumentActivityChanged() notification.  It returns true if the
-  // media element was paused as a result.
-  bool NotifyOwnerDocumentActivityChangedInternal();
-
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
