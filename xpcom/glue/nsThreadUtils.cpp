@@ -161,6 +161,22 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
   return thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
 }
 
+NS_METHOD
+NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    NS_ASSERTION(false, "Failed NS_DispatchToMainThread() in shutdown; leaking");
+    // NOTE: if you stop leaking here, adjust Promise::MaybeReportRejected(),
+    // which assumes a leak here, or split into leaks and no-leaks versions
+    nsIRunnable* temp = event.forget().take(); // leak without using "unused <<" due to Windows (boo)
+    return temp ? rv : rv; // to make compiler not bletch on us
+  }
+  return thread->Dispatch(event.forget(), aDispatchFlags);
+}
+
 // In the case of failure with a newly allocated runnable with a
 // refcount of zero, we intentionally leak the runnable, because it is
 // likely that the runnable is being dispatched to the main thread
@@ -169,12 +185,8 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 NS_METHOD
 NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags)
 {
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return thread->Dispatch(aEvent, aDispatchFlags);
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return NS_DispatchToMainThread(event.forget(), aDispatchFlags);
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
@@ -374,4 +386,3 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO()
   }
 #endif
 }
-

@@ -623,10 +623,13 @@ PluginContent.prototype = {
     let plugin = document.getBindingParent(event.target);
     let contentWindow = plugin.ownerDocument.defaultView.top;
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin
     if (!(event.originalTarget instanceof contentWindow.HTMLAnchorElement) &&
         (event.originalTarget.getAttribute('anonid') != 'closeIcon') &&
-          event.button == 0 && event.isTrusted) {
+        overlay.classList.contains('visible') &&
+        event.button == 0 &&
+        event.isTrusted) {
       this._showClickToPlayNotification(plugin, true);
     event.stopPropagation();
     event.preventDefault();
