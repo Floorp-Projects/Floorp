@@ -230,17 +230,15 @@ InterceptedChannelChrome::FinishSynthesizedResponse()
 }
 
 NS_IMETHODIMP
-InterceptedChannelChrome::Cancel(nsresult aStatus)
+InterceptedChannelChrome::Cancel()
 {
-  MOZ_ASSERT(NS_FAILED(aStatus));
-
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
   // we need to use AsyncAbort instead of Cancel since there's no active pump
   // to cancel which will provide OnStart/OnStopRequest to the channel.
-  nsresult rv = mChannel->AsyncAbort(aStatus);
+  nsresult rv = mChannel->AsyncAbort(NS_BINDING_ABORTED);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -337,17 +335,15 @@ InterceptedChannelContent::FinishSynthesizedResponse()
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::Cancel(nsresult aStatus)
+InterceptedChannelContent::Cancel()
 {
-  MOZ_ASSERT(NS_FAILED(aStatus));
-
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
   // we need to use AsyncAbort instead of Cancel since there's no active pump
   // to cancel which will provide OnStart/OnStopRequest to the channel.
-  nsresult rv = mChannel->AsyncAbort(aStatus);
+  nsresult rv = mChannel->AsyncAbort(NS_BINDING_ABORTED);
   NS_ENSURE_SUCCESS(rv, rv);
   mChannel = nullptr;
   mStreamListener = nullptr;
