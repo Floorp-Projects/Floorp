@@ -648,8 +648,10 @@ ObjectActor.prototype.requestTypes = {
  *          If true, the iterator will sort the properties by name
  *          before dispatching them.
  *        - query String
- *          If non-empty, will filter the properties by names containing
- *          this query string. The match is not case-sensitive.
+ *          If non-empty, will filter the properties by names and values
+ *          containing this query string. The match is not case-sensitive.
+ *          Regarding value filtering it just compare to the stringification
+ *          of the property value.
  */
 function PropertyIteratorActor(objectActor, options){
   this.objectActor = objectActor;
@@ -708,7 +710,20 @@ function PropertyIteratorActor(objectActor, options){
     let { query } = options;
     query = query.toLowerCase();
     names = names.filter(name => {
-      return name.toLowerCase().includes(query);
+      // Filter on attribute names
+      if (name.toLowerCase().includes(query)) {
+        return true;
+      }
+      // and then on attribute values
+      let desc;
+      try {
+        desc = this.obj.getOwnPropertyDescriptor(name);
+      } catch(e) {}
+      if (desc && desc.value &&
+          String(desc.value).includes(query)) {
+        return true;
+      }
+      return false;
     });
   }
 
