@@ -1,0 +1,64 @@
+<html>
+  <head>
+     <title>Bug 1165981 Test</title>
+
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+
+  <body onload="run()">
+    <script class="testbody" type="application/javascript">
+      "use strict";
+
+      SimpleTest.waitForExplicitFinish();
+      ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Flash Test Plug-in"), "Should find allowed test flash plugin");
+      ok(!SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
+
+      function findPlugin(pluginName) {
+          for (var i = 0; i < navigator.plugins.length; i++) {
+            var plugin = navigator.plugins[i];
+            if (plugin.name === pluginName) {
+              return plugin;
+            }
+          }
+          return null;
+      }
+
+      function findMimeType(mimeTypeType) {
+          for (var i = 0; i < navigator.mimeTypes.length; i++) {
+            var mimeType = navigator.mimeTypes[i];
+            if (mimeType.type === mimeTypeType) {
+              return mimeType;
+            }
+          }
+          return null;
+      }
+
+      function run() {
+        var pluginElement = document.getElementById("plugin");
+        is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
+
+        pluginElement = document.getElementById("disallowedPlugin");
+        is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a disallowed plugin");
+
+        ok(navigator.plugins["Flash Test Plug-in"], "Should have queried a plugin named 'Test Plug-in'");
+        ok(!navigator.plugins["Third Test Plug-in"], "Should NOT have queried a disallowed plugin named 'Third Test Plug-in'");
+
+        ok(findPlugin("Flash Test Plug-in"), "Should have found a plugin named 'Test Plug-in'");
+        ok(!findPlugin("Third Test Plug-in"), "Should NOT found a disallowed plugin named 'Third Test Plug-in'");
+
+        ok(navigator.mimeTypes["application/x-shockwave-flash-test"], "Should have queried a MIME type named 'application/x-shockwave-flash-test'");
+        ok(!navigator.mimeTypes["application/x-third-test"], "Should NOT have queried a disallowed type named 'application/x-third-test'");
+
+        ok(findMimeType("application/x-shockwave-flash-test"), "Should have found a MIME type named 'application/x-shockwave-flash-test'");
+        ok(!findMimeType("application/x-third-test"), "Should NOT have found a disallowed MIME type named 'application/x-third-test'");
+
+        SimpleTest.finish();
+      }
+    </script>
+
+    <object id="plugin" type="application/x-shockwave-flash-test" width=200 height=200></object>
+    <object id="disallowedPlugin" type="application/x-third-test" width=200 height=200></object>
+  </body>
+</html>

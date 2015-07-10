@@ -169,6 +169,28 @@ add_task(function test_collect() {
         "application/x-java-test"
       ],
     },
+    "Third Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Third plug-in for testing purposes.",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-third-test"
+      ],
+    },
+    "Flash Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Flash plug-in for testing purposes.",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-shockwave-flash-test"
+      ],
+    },
   };
 
   let pluginTags = Cc["@mozilla.org/plugin/host;1"]
@@ -250,6 +272,13 @@ add_task(function test_collect() {
   do_check_eq(typeof(serialized), "object");
   do_check_eq(Object.keys(serialized).length, pluginTags.length+1); // Our entries, plus _v.
   for (let name in testPlugins) {
+    // Special case for bug 1165981. There is a test plugin that
+    // exists to make sure we don't load it on certain platforms.
+    // We skip the check for that plugin here, as it will work on some
+    // platforms but not others.
+    if (name == "Third Test Plug-in") {
+      continue;
+    }
     do_check_true(testPlugins[name].id in serialized);
   }
   do_check_eq(serialized._v, 1);
