@@ -387,6 +387,7 @@ public:
    * calling IsDirectory will MOZ_ASSERT.
    */
   virtual void LookupAndCacheIsDirectory() = 0;
+  virtual void SetIsDirectory(bool aIsDir) = 0;
   virtual bool IsDirectory() const = 0;
 
   /**
@@ -565,6 +566,14 @@ public:
     MOZ_ASSERT(false, "Why is this being called on a non-BlobImplFile?");
   }
 
+  virtual void SetIsDirectory(bool aIsDir) override
+  {
+    MOZ_ASSERT(mIsFile,
+               "This should only be called when this object has been created "
+               "from an nsIFile to note that the nsIFile is a directory");
+    mDirState = aIsDir ? BlobDirState::eIsDir : BlobDirState::eIsNotDir;
+  }
+
   /**
    * Returns true if the nsIFile that this object wraps is a directory.
    */
@@ -572,7 +581,8 @@ public:
   {
     MOZ_ASSERT(mDirState != BlobDirState::eUnknownIfDir,
                "Must only be used by callers for whom the code paths are "
-               "know to call LookupAndCacheIsDirectory()");
+               "know to call LookupAndCacheIsDirectory() or "
+               "SetIsDirectory()");
     return mDirState == BlobDirState::eIsDir;
   }
 
