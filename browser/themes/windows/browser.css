@@ -2866,7 +2866,13 @@ chatbox {
 %include ../shared/UITour.inc.css
 
 #UITourTooltipButtons {
-  margin: 24px -4px -4px;
+  /**
+   * Override the --panel-arrowcontent-padding so the background extends
+   * to the sides and bottom of the panel.
+   */
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-bottom: -10px;
 }
 
 %include ../shared/contextmenu.inc.css
