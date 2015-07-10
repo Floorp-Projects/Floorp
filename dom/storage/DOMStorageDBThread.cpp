@@ -423,8 +423,7 @@ nsReverseStringSQLFunction::OnFunctionCall(
   rv = outVar->SetAsAUTF8String(result);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult = outVar.get();
-  outVar.forget();
+  outVar.forget(aResult);
   return NS_OK;
 }
 
