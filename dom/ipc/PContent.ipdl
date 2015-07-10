@@ -733,7 +733,8 @@ parent:
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
 
-    sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
+    sync GetLookAndFeelCache()
+        returns (LookAndFeelInt[] lookAndFeelIntCache);
 
     prio(urgent) async PHal();
 
