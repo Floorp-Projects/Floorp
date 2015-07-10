@@ -1357,6 +1357,9 @@ class AssemblerX86Shared : public AssemblerShared
     void imull(Register multiplier) {
         masm.imull_r(multiplier.encoding());
     }
+    void umull(Register multiplier) {
+        masm.mull_r(multiplier.encoding());
+    }
     void imull(Imm32 imm, Register dest) {
         masm.imull_ir(imm.value, dest.encoding(), dest.encoding());
     }

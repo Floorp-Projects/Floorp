@@ -89,33 +89,8 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
                  prototypes::ID aProtoId);
 
-inline bool
-ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
-                             const char* ifaceName,
-                             const char* memberName)
-{
-  if (rv.IsUncatchableException()) {
-    // Nuke any existing exception on aCx, to make sure we're uncatchable.
-    JS_ClearPendingException(cx);
-    // Don't do any reporting.  Just return false, to create an
-    // uncatchable exception.
-    return false;
-  }
-  if (rv.IsErrorWithMessage()) {
-    rv.ReportErrorWithMessage(cx);
-    return false;
-  }
-  if (rv.IsJSException()) {
-    rv.ReportJSException(cx);
-    return false;
-  }
-  if (rv.IsNotEnoughArgsError()) {
-    rv.ReportNotEnoughArgsError(cx, ifaceName, memberName);
-    return false;
-  }
-  rv.ReportGenericError(cx);
-  return false;
-}
+bool
+ThrowMethodFailed(JSContext* cx, ErrorResult& rv);
 
 // Returns true if the JSClass is used for DOM objects.
 inline bool

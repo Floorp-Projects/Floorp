@@ -1215,10 +1215,17 @@ Promise::MaybeReportRejected()
   // Now post an event to do the real reporting async
   // Since Promises preserve their wrapper, it is essential to nsRefPtr<> the
   // AsyncErrorReporter, otherwise if the call to DispatchToMainThread fails, it
-  // will leak. See Bug 958684.
-  nsRefPtr<AsyncErrorReporter> r =
-    new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
-  NS_DispatchToMainThread(r);
+  // will leak. See Bug 958684.  So... don't use DispatchToMainThread()
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  if (NS_WARN_IF(!mainThread)) {
+    // Would prefer NS_ASSERTION, but that causes failure in xpcshell tests
+    NS_WARNING("!!! Trying to report rejected Promise after MainThread shutdown");
+  }
+  if (mainThread) {
+    nsRefPtr<AsyncErrorReporter> r =
+      new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
+    mainThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  }
 }
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
@@ -1635,7 +1642,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
   if (!runnable->Dispatch(aCx)) {
     nsRefPtr<WorkerControlRunnable> runnable =
       new PromiseWorkerProxyControlRunnable(mWorkerPrivate, this);
-    mWorkerPrivate->DispatchControlRunnable(runnable);
+    mWorkerPrivate->DispatchControlRunnable(runnable.forget());
   }
 }
 

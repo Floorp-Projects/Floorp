@@ -289,6 +289,7 @@ enum GroupOpcodeID {
     GROUP3_OP_TEST = 0,
     GROUP3_OP_NOT  = 2,
     GROUP3_OP_NEG  = 3,
+    GROUP3_OP_MUL  = 4,
     GROUP3_OP_IMUL = 5,
     GROUP3_OP_DIV  = 6,
     GROUP3_OP_IDIV = 7,

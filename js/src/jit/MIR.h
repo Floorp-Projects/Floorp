@@ -6386,6 +6386,16 @@ class MDiv : public MBinaryArithInstruction
     }
 
     bool canBeNegativeDividend() const {
+        // "Dividend" is an ambiguous concept for unsigned truncated
+        // division, because of the truncation procedure:
+        // ((x>>>0)/2)|0, for example, gets transformed in
+        // MDiv::truncate into a node with lhs representing x (not
+        // x>>>0) and rhs representing the constant 2; in other words,
+        // the MIR node corresponds to "cast operands to unsigned and
+        // divide" operation. In this case, is the dividend x or is it
+        // x>>>0? In order to resolve such ambiguities, we disallow
+        // the usage of this method for unsigned division.
+        MOZ_ASSERT(!unsigned_);
         return canBeNegativeDividend_;
     }
 
@@ -6469,6 +6479,7 @@ class MMod : public MBinaryArithInstruction
 
     bool canBeNegativeDividend() const {
         MOZ_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(!unsigned_);
         return canBeNegativeDividend_;
     }
 

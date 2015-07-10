@@ -295,7 +295,11 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
   }
 
   if (r) {
-    NS_DispatchToMainThread(r);
+    // avoid failing in XPCShell tests
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    if (mainThread) {
+      NS_DispatchToMainThread(r.forget());
+    }
   }
 
   return NS_OK;

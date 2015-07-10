@@ -50,6 +50,23 @@ addAsyncAnimTest(function *() {
           "at 300ms");
   done_div();
 });
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s 1 linear forwards");
+  var animation = div.getAnimations()[0];
+  advance_clock(300);
+  yield waitForPaints();
+
+  animation.playbackRate = 0;
+
+  yield waitForPaintsFlushed();
+
+  omta_is(div, "transform", { tx: 3 }, RunningOn.MainThread,
+          "animation with zero playback rate should stay in the " +
+          "same position and be running on the main thread");
+
+  done_div();
+});
 </script>
 </body>
 </html>

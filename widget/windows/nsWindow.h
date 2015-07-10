@@ -330,7 +330,7 @@ protected:
   void                    ResetLayout();
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
-  static void             GetMainWindowClass(nsAString& aClass);
+  static const wchar_t*   GetMainWindowClass();
   bool                    HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
@@ -397,14 +397,15 @@ protected:
   void                    UserActivity();
 
   int32_t                 GetHeight(int32_t aProposedHeight);
-  void                    GetWindowClass(nsString& aWindowClass);
-  void                    GetWindowPopupClass(nsString& aWindowClass);
+  const wchar_t*          GetWindowClass() const;
+  const wchar_t*          GetWindowPopupClass() const;
   virtual DWORD           WindowStyle();
   DWORD                   WindowExStyle();
 
-  void                    RegisterWindowClass(const nsString& aClassName,
+  // This method registers the given window class, and returns the class name.
+  const wchar_t*          RegisterWindowClass(const wchar_t* aClassName,
                                               UINT aExtraStyle,
-                                              LPWSTR aIconID);
+                                              LPWSTR aIconID) const;
 
   /**
    * XP and Vista theming support for windows with rounded edges

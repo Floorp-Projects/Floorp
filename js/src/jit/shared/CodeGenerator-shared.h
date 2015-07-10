@@ -45,7 +45,7 @@ struct PatchableBackedgeInfo
 };
 
 struct ReciprocalMulConstants {
-    int32_t multiplier;
+    int64_t multiplier;
     int32_t shiftAmount;
 };
 
@@ -447,7 +447,7 @@ class CodeGeneratorShared : public LElementVisitor
 
     void addCache(LInstruction* lir, size_t cacheIndex);
     size_t addCacheLocations(const CacheLocationList& locs, size_t* numLocs);
-    ReciprocalMulConstants computeDivisionConstants(int d);
+    ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
 
   protected:
     void addOutOfLineCode(OutOfLineCode* code, const MInstruction* mir);
