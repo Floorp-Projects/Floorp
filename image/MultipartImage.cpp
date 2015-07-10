@@ -42,7 +42,12 @@ public:
       mImage->GetFrame(imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
 
-    FinishObserving();
+    // GetFrame() should've sent synchronous notifications that would have
+    // caused us to call FinishObserving() (and null out mImage) already. If for
+    // some reason it didn't, we should do so here.
+    if (mImage) {
+      FinishObserving();
+    }
   }
 
   virtual void Notify(int32_t aType,

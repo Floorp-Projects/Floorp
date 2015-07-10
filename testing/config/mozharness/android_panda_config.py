@@ -115,7 +115,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--robocop-ini=mochitest/robocop.ini"
             ],
-            "run_filename": "runtestsremote.py",
+            "run_filename": "runrobocop.py",
             "testsdir": "mochitest"
         },
         "xpcshell": {

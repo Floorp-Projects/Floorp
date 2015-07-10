@@ -374,6 +374,26 @@ class MochitestRunner(MozbuildObject):
 
         return runtestsremote.run_test_harness(options)
 
+    def run_robocop_test(self, context, tests, suite=None, **kwargs):
+        host_ret = verify_host_bin()
+        if host_ret != 0:
+            return host_ret
+
+        import imp
+        path = os.path.join(self.mochitest_dir, 'runrobocop.py')
+        with open(path, 'r') as fh:
+            imp.load_module('runrobocop', fh, path,
+                            ('.py', 'r', imp.PY_SOURCE))
+        import runrobocop
+
+        options = Namespace(**kwargs)
+
+        from manifestparser import TestManifest
+        manifest = TestManifest()
+        manifest.tests.extend(tests)
+        options.manifestFile = manifest
+
+        return runrobocop.run_test_harness(options)
 
 # parser
 
@@ -604,7 +624,7 @@ class RobocopCommands(MachCommandBase):
             flavor='instrumentation', subsuite='robocop'))
 
         mochitest = self._spawn(MochitestRunner)
-        return mochitest.run_android_test(self._mach_context, tests, 'robocop', **kwargs)
+        return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)
 
 
 def REMOVED(cls):

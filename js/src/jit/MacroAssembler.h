@@ -7,6 +7,7 @@
 #ifndef jit_MacroAssembler_h
 #define jit_MacroAssembler_h
 
+#include "mozilla/MacroForEach.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jscompartment.h"
@@ -34,27 +35,133 @@
 #include "vm/Shape.h"
 #include "vm/UnboxedObject.h"
 
-// This Macro is only a hint for code readers that the function is defined in a
-// specific macro assembler, and not in the generic macro assembler.  Thus, when
-// looking for the implementation one might find if the function is implemented
-// and where it is supposed to be implemented.
-# define PER_ARCH
+// * How to read/write MacroAssembler method declarations:
+//
+// The following macros are made to avoid #ifdef around each method declarations
+// of the Macro Assembler, and they are also used as an hint on the location of
+// the implementations of each method.  For example, the following declaration
+//
+//   void Pop(FloatRegister t) DEFINED_ON(x86_shared, arm);
+//
+// suggests the MacroAssembler::Pop(FloatRegister) method is implemented in
+// x86-shared/MacroAssembler-x86-shared.h, and also in arm/MacroAssembler-arm.h.
+//
+// - If there is no annotation, then there is only one generic definition in
+//   MacroAssembler.cpp.
+//
+// - If the declaration is "inline", then the method definition(s) would be in
+//   the "-inl.h" variant of the same file(s).
+//
+// The script check_macroassembler_style.py (check-masm target of the Makefile)
+// is used to verify that method definitions are matching the annotation added
+// to the method declarations.  If there is any difference, then you either
+// forgot to define the method in one of the macro assembler, or you forgot to
+// update the annotation of the macro assembler declaration.
+//
+// Some convenient short-cuts are used to avoid repeating the same list of
+// architectures on each method declaration, such as PER_ARCH and
+// PER_SHARED_ARCH.
 
+# define ALL_ARCH mips, arm, arm64, x86, x64
+# define ALL_SHARED_ARCH mips, arm, arm64, x86_shared
+
+// * How this macro works:
+//
+// DEFINED_ON is a macro which check if, for the current architecture, the
+// method is defined on the macro assembler or not.
+//
+// For each architecutre, we have a macro named DEFINED_ON_arch.  This macro is
+// empty if this is not the current architecture.  Otherwise it must be either
+// set to "define" or "crash" (only use for the none target so-far).
+//
+// The DEFINED_ON macro maps the list of architecture names given as argument to
+// a list of macro names.  For example,
+//
+//   DEFINED_ON(arm, x86_shared)
+//
+// is expanded to
+//
+//   DEFINED_ON_none DEFINED_ON_arm DEFINED_ON_x86_shared
+//
+// which are later expanded on ARM, x86, x64 by DEFINED_ON_EXPAND_ARCH_RESULTS
+// to
+//
+//   define
+//
+// or if the JIT is disabled or set to no architecture to
+//
+//   crash
+//
+// or to nothing, if the current architecture is not lsited in the list of
+// arguments of DEFINED_ON.  Note, only one of the DEFINED_ON_arch macro
+// contributes to the non-empty result, which is the macro of the current
+// architecture if it is listed in the arguments of DEFINED_ON.
+//
+// This result is appended to DEFINED_ON_RESULT_ before expanding the macro,
+// which result is either no annotation, a MOZ_CRASH(), or a "= delete"
+// annotation on the method declaration.
+
+# define DEFINED_ON_x86
+# define DEFINED_ON_x64
+# define DEFINED_ON_x86_shared
+# define DEFINED_ON_arm
+# define DEFINED_ON_arm64
+# define DEFINED_ON_mips
+# define DEFINED_ON_none
+
+// Specialize for each architecture.
 #if defined(JS_CODEGEN_X86)
-# define ONLY_X86_X64
+# undef DEFINED_ON_x86
+# define DEFINED_ON_x86 define
+# undef DEFINED_ON_x86_shared
+# define DEFINED_ON_x86_shared define
 #elif defined(JS_CODEGEN_X64)
-# define ONLY_X86_X64
+# undef DEFINED_ON_x64
+# define DEFINED_ON_x64 define
+# undef DEFINED_ON_x86_shared
+# define DEFINED_ON_x86_shared define
 #elif defined(JS_CODEGEN_ARM)
-# define ONLY_X86_X64 = delete
+# undef DEFINED_ON_arm
+# define DEFINED_ON_arm define
 #elif defined(JS_CODEGEN_ARM64)
-# define ONLY_X86_X64 = delete
+# undef DEFINED_ON_arm64
+# define DEFINED_ON_arm64 define
 #elif defined(JS_CODEGEN_MIPS)
-# define ONLY_X86_X64 = delete
+# undef DEFINED_ON_mips
+# define DEFINED_ON_mips define
 #elif defined(JS_CODEGEN_NONE)
-# define ONLY_X86_X64 = delete
+# undef DEFINED_ON_none
+# define DEFINED_ON_none crash
 #else
 # error "Unknown architecture!"
 #endif
+
+# define DEFINED_ON_RESULT_crash   { MOZ_CRASH(); }
+# define DEFINED_ON_RESULT_define
+# define DEFINED_ON_RESULT_        = delete
+
+# define DEFINED_ON_DISPATCH_RESULT(Result)     \
+    DEFINED_ON_RESULT_ ## Result
+
+// We need to let the evaluation of MOZ_FOR_EACH terminates.
+# define DEFINED_ON_EXPAND_ARCH_RESULTS_3(ParenResult)  \
+    DEFINED_ON_DISPATCH_RESULT ParenResult
+# define DEFINED_ON_EXPAND_ARCH_RESULTS_2(ParenResult)  \
+    DEFINED_ON_EXPAND_ARCH_RESULTS_3 (ParenResult)
+# define DEFINED_ON_EXPAND_ARCH_RESULTS(ParenResult)    \
+    DEFINED_ON_EXPAND_ARCH_RESULTS_2 (ParenResult)
+
+# define DEFINED_ON_FWDARCH(Arch) DEFINED_ON_ ## Arch
+# define DEFINED_ON_MAP_ON_ARCHS(ArchList)              \
+    DEFINED_ON_EXPAND_ARCH_RESULTS(                     \
+      (MOZ_FOR_EACH(DEFINED_ON_FWDARCH, (), ArchList)))
+
+# define DEFINED_ON(...)                                \
+    DEFINED_ON_MAP_ON_ARCHS((none, __VA_ARGS__))
+
+# define PER_ARCH DEFINED_ON(ALL_ARCH)
+# define PER_SHARED_ARCH DEFINED_ON(ALL_SHARED_ARCH)
+
 
 #ifdef IS_LITTLE_ENDIAN
 #define IMM32_16ADJ(X) X << 16
@@ -285,6 +392,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         return size();
     }
 
+    //{{{ check_macroassembler_style
   public:
     // ===============================================================
     // Frame manipulation functions.
@@ -309,20 +417,20 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Stack manipulation functions.
 
-    void PushRegsInMask(LiveRegisterSet set) PER_ARCH;
+    void PushRegsInMask(LiveRegisterSet set) PER_SHARED_ARCH;
     void PushRegsInMask(LiveGeneralRegisterSet set);
 
     void PopRegsInMask(LiveRegisterSet set);
     void PopRegsInMask(LiveGeneralRegisterSet set);
-    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore) PER_ARCH;
+    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore) PER_SHARED_ARCH;
 
-    void Push(const Operand op) PER_ARCH ONLY_X86_X64;
-    void Push(Register reg) PER_ARCH;
-    void Push(const Imm32 imm) PER_ARCH;
-    void Push(const ImmWord imm) PER_ARCH;
-    void Push(const ImmPtr imm) PER_ARCH;
-    void Push(const ImmGCPtr ptr) PER_ARCH;
-    void Push(FloatRegister reg) PER_ARCH;
+    void Push(const Operand op) DEFINED_ON(x86_shared);
+    void Push(Register reg) PER_SHARED_ARCH;
+    void Push(const Imm32 imm) PER_SHARED_ARCH;
+    void Push(const ImmWord imm) PER_SHARED_ARCH;
+    void Push(const ImmPtr imm) PER_SHARED_ARCH;
+    void Push(const ImmGCPtr ptr) PER_SHARED_ARCH;
+    void Push(FloatRegister reg) PER_SHARED_ARCH;
     void Push(jsid id, Register scratchReg);
     void Push(TypedOrValueRegister v);
     void Push(ConstantOrRegister v);
@@ -334,10 +442,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline CodeOffsetLabel PushWithPatch(ImmWord word);
     inline CodeOffsetLabel PushWithPatch(ImmPtr imm);
 
-    void Pop(const Operand op) PER_ARCH ONLY_X86_X64;
-    void Pop(Register reg) PER_ARCH;
-    void Pop(FloatRegister t) PER_ARCH ONLY_X86_X64;
-    void Pop(const ValueOperand& val) PER_ARCH;
+    void Pop(const Operand op) DEFINED_ON(x86_shared);
+    void Pop(Register reg) PER_SHARED_ARCH;
+    void Pop(FloatRegister t) DEFINED_ON(x86_shared);
+    void Pop(const ValueOperand& val) PER_SHARED_ARCH;
     void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand& valueReg);
 
     // Move the stack pointer based on the requested amount.
@@ -352,19 +460,20 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Simple call functions.
 
-    void call(Register reg) PER_ARCH;
-    void call(const Address& addr) PER_ARCH ONLY_X86_X64;
-    void call(Label* label) PER_ARCH;
-    void call(ImmWord imm) PER_ARCH;
+    void call(Register reg) PER_SHARED_ARCH;
+    void call(const Address& addr) DEFINED_ON(x86_shared);
+    void call(Label* label) PER_SHARED_ARCH;
+    void call(ImmWord imm) PER_SHARED_ARCH;
     // Call a target native function, which is neither traceable nor movable.
-    void call(ImmPtr imm) PER_ARCH;
-    void call(AsmJSImmPtr imm) PER_ARCH;
+    void call(ImmPtr imm) PER_SHARED_ARCH;
+    void call(AsmJSImmPtr imm) PER_SHARED_ARCH;
     // Call a target JitCode, which must be traceable, and may be movable.
-    void call(JitCode* c) PER_ARCH;
+    void call(JitCode* c) PER_SHARED_ARCH;
 
     inline void call(const CallSiteDesc& desc, const Register reg);
     inline void call(const CallSiteDesc& desc, Label* label);
 
+    //}}} check_macroassembler_style
   public:
 
     // Emits a test of a value against all types in a TypeSet. A scratch

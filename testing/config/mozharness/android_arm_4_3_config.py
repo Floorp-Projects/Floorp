@@ -28,7 +28,7 @@ config = {
             ],
         },
         "robocop": {
-            "run_filename": "runtestsremote.py",
+            "run_filename": "runrobocop.py",
             "testsdir": "mochitest",
             "options": ["--dm_trans=adb", "--app=%(app)s", "--remote-webserver=%(remote_webserver)s",
                 "--xre-path=%(xre_path)s", "--utility-path=%(utility_path)s",
@@ -37,7 +37,6 @@ config = {
                 "--quiet", "--log-raw=%(raw_log_file)s",
                 "--total-chunks=4",
                 "--robocop-apk=../../robocop.apk",
-                "--robocop-ids=fennec_ids.txt",
                 "--robocop-ini=robocop.ini",
             ],
         },

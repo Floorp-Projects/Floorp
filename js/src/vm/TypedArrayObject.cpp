@@ -343,6 +343,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                   ? GetGCObjectKind(instanceClass())
                                   : AllocKindForLazyBuffer(len * sizeof(NativeType));
 
+        AutoSetNewObjectMetadata metadata(cx);
         Rooted<TypedArrayObject*> obj(cx);
         if (proto)
             obj = makeProtoInstance(cx, proto, allocKind);
@@ -1789,7 +1790,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     #_typedArray,                                                              \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |             \
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
-    JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
+    JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
+    JSCLASS_DELAY_METADATA_CALLBACK,                                           \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \
     nullptr,                 /* getProperty */                                 \

@@ -940,18 +940,18 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
 
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
   if (result.mContentType.IsEmpty()) {
-    nsresult rv = NS_ERROR_FAILURE;
-    if (chan) {
-      rv = chan->GetContentType(result.mContentType);
-      chan->GetContentDispositionHeader(result.mContentDisposition);
-    }
-
+    nsresult rv = chan ? chan->GetContentType(result.mContentType)
+                       : NS_ERROR_FAILURE;
     if (NS_FAILED(rv)) {
       MOZ_LOG(GetImgLog(),
-             LogLevel::Error, ("imgRequest::PrepareForNewPart "
-                            "-- Content type unavailable from the channel\n"));
+              LogLevel::Error, ("imgRequest::PrepareForNewPart -- "
+                                "Content type unavailable from the channel\n"));
       return result;
     }
+  }
+
+  if (chan) {
+    chan->GetContentDispositionHeader(result.mContentDisposition);
   }
 
   MOZ_LOG(GetImgLog(), LogLevel::Debug,

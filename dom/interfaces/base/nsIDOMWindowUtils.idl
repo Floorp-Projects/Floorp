@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(bbcb87fb-ce2e-4e05-906b-9258687664e2)]
+[scriptable, uuid(7a37e173-ea6e-495e-8702-013f8063352a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1429,6 +1429,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * (see advanceTimeAndRefresh and restoreNormalRefresh above).
    */
   readonly attribute bool isTestControllingRefreshes;
+
+  /**
+   * Reports whether APZ is enabled on the widget that this window is attached
+   * to. If there is no widget it will report the default platform value of
+   * whether or not APZ is enabled.
+   */
+  readonly attribute bool asyncPanZoomEnabled;
 
   /**
    * Set async scroll offset on an element. The next composite will render
