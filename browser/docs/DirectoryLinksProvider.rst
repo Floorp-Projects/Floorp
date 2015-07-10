@@ -246,6 +246,7 @@ blocked::
           {
               "id": 702,
               "pin": 1,
+              "past_impressions": {"total": 5, "daily": 1},
           },
           {},
           {
@@ -264,6 +265,12 @@ none of the following optional values:
 - ``id`` - id that was provided as part of the downloaded link object (for all
   types of links: directory, suggested, enhanced); not present if the tile was
   created from user behavior, e.g., visiting pages
+- ``past_impressions`` - number of impressions (new tab "views") a suggested
+  tile was shown before it was clicked, pinned or blocked. Where the "total"
+  counter is the overall number of impressions accumulated prior to a click action,
+  and "daily" counter is the number impressions occurred on same calendar day of
+  a click. This infomration is submitted once per a suggested tile upon click,
+  pin or block
 - ``pinned`` - 1 if the tile is pinned; not present otherwise
 - ``pos`` - integer position if the tile is not in the natural order, e.g., a
   pinned tile after an empty slot; not present otherwise

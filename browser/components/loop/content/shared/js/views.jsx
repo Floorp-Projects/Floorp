@@ -283,6 +283,7 @@ loop.shared.views = (function(_, mozL10n) {
 
     propTypes: {
       audio: React.PropTypes.object,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       initiate: React.PropTypes.bool,
       isDesktop: React.PropTypes.bool,
       model: React.PropTypes.object.isRequired,
@@ -482,6 +483,7 @@ loop.shared.views = (function(_, mozL10n) {
             </div>
             <ConversationToolbar
               audio={this.state.audio}
+              dispatcher={this.props.dispatcher}
               hangup={this.hangup}
               publishStream={this.publishStream}
               video={this.state.video} />
@@ -498,7 +500,6 @@ loop.shared.views = (function(_, mozL10n) {
     mixins: [Backbone.Events],
 
     propTypes: {
-      key: React.PropTypes.number.isRequired,
       notification: React.PropTypes.object.isRequired
     },
 
@@ -506,8 +507,7 @@ loop.shared.views = (function(_, mozL10n) {
       var notification = this.props.notification;
       return (
         <div className="notificationContainer">
-          <div className={"alert alert-" + notification.get("level")}
-            key={this.props.key}>
+          <div className={"alert alert-" + notification.get("level")}>
             <span className="message">{notification.get("message")}</span>
           </div>
           <div className={"detailsBar details-" + notification.get("level")}
@@ -567,11 +567,10 @@ loop.shared.views = (function(_, mozL10n) {
 
     render: function() {
       return (
-        <div className="messages">{
-          this.props.notifications.map(function(notification, key) {
-            return <NotificationView key={key} notification={notification}/>;
-          })
-        }
+        <div className="messages">
+          {this.props.notifications.map(function(notification, key) {
+            return <NotificationView key={key} notification={notification} />;
+          })}
         </div>
       );
     }

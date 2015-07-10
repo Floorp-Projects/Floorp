@@ -39,7 +39,7 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;
-  yield simulateColorPickerChange(picker, [0, 0, 0, 1], {
+  yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     element: content.document.body,
     name: "backgroundImage",
     value: 'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)'

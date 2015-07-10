@@ -620,29 +620,41 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
   if (!mozilla::Preferences::GetBool("extensions.defaultProviders.enabled", true))
     return;
 
-  if (mProfileDir && !gSafeMode) {
-    nsCOMPtr<nsIFile> extensionsINI;
-    mProfileDir->Clone(getter_AddRefs(extensionsINI));
-    if (!extensionsINI)
-      return;
+  if (mProfileDir) {
+    if (!gSafeMode) {
+      nsCOMPtr<nsIFile> extensionsINI;
+      mProfileDir->Clone(getter_AddRefs(extensionsINI));
+      if (!extensionsINI)
+        return;
 
-    extensionsINI->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+      extensionsINI->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
 
-    nsCOMPtr<nsIFile> extensionsINILF =
-      do_QueryInterface(extensionsINI);
-    if (!extensionsINILF)
-      return;
+      nsCOMPtr<nsIFile> extensionsINILF =
+        do_QueryInterface(extensionsINI);
+      if (!extensionsINILF)
+        return;
 
-    nsINIParser parser;
-    nsresult rv = parser.Init(extensionsINILF);
-    if (NS_FAILED(rv))
-      return;
+      nsINIParser parser;
+      nsresult rv = parser.Init(extensionsINILF);
+      if (NS_FAILED(rv))
+        return;
 
-    RegisterExtensionInterpositions(parser);
-    LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
-                             NS_EXTENSION_LOCATION);
-    LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
-                             NS_SKIN_LOCATION);
+      RegisterExtensionInterpositions(parser);
+      LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
+                               NS_EXTENSION_LOCATION);
+      LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
+                               NS_SKIN_LOCATION);
+#ifdef MOZ_BUILD_APP_IS_BROWSER
+    } else {
+      // In safe mode, still load the default theme directory:
+      nsCOMPtr<nsIFile> themeManifest;
+      mXULAppDir->Clone(getter_AddRefs(themeManifest));
+      themeManifest->AppendNative(NS_LITERAL_CSTRING("extensions"));
+      themeManifest->AppendNative(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
+      themeManifest->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
+      XRE_AddManifestLocation(NS_SKIN_LOCATION, themeManifest);
+#endif
+    }
   }
 }
 

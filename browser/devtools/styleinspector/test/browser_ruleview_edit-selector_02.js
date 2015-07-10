@@ -58,7 +58,7 @@ function* testEditSelector(view, name) {
     getRuleViewRuleEditor(view, 1, 0);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = yield focusEditableField(idRuleEditor.selectorText);
+  let editor = yield focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
