@@ -1629,14 +1629,24 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
       nsIFrame* contentFrame = content->GetPrimaryFrame();
       nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
       if (aAdjustWidgets && objectFrame && !sTestMode) {
-        // note that the presshell's widget is being retrieved here, not the one
-        // for the object frame.
-        nsViewManager* vm = presShell->GetViewManager();
-        if (vm) {
-          nsCOMPtr<nsIWidget> widget;
-          vm->GetRootWidget(getter_AddRefs(widget));
-          if (widget)
-            widget->SetFocus(false);
+        if (XRE_IsContentProcess()) {
+          // set focus to the top level window via the chrome process.
+          nsCOMPtr<nsITabChild> tabChild = do_GetInterface(docShell);
+          if (tabChild) {
+            static_cast<TabChild*>(tabChild.get())->SendDispatchFocusToTopLevelWindow();
+          }
+        } else {
+          // note that the presshell's widget is being retrieved here, not the one
+          // for the object frame.
+          nsViewManager* vm = presShell->GetViewManager();
+          if (vm) {
+            nsCOMPtr<nsIWidget> widget;
+            vm->GetRootWidget(getter_AddRefs(widget));
+            if (widget) {
+              // set focus to the top level window but don't raise it.
+              widget->SetFocus(false);
+            }
+          }
         }
       }
     }

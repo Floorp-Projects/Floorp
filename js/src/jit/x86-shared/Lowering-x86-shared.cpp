@@ -274,6 +274,26 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg* ins)
 void
 LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
 {
+    if (div->rhs()->isConstant()) {
+        uint32_t rhs = div->rhs()->toConstant()->value().toInt32();
+        int32_t shift = FloorLog2(rhs);
+
+        LAllocation lhs = useRegisterAtStart(div->lhs());
+        if (rhs != 0 && uint32_t(1) << shift == rhs) {
+            LDivPowTwoI* lir = new(alloc()) LDivPowTwoI(lhs, lhs, shift, false);
+            if (div->fallible())
+                assignSnapshot(lir, Bailout_DoubleOutput);
+            defineReuseInput(lir, div, 0);
+        } else {
+            LUDivOrModConstant* lir = new(alloc()) LUDivOrModConstant(useRegister(div->lhs()),
+                                                                      rhs, tempFixed(eax));
+            if (div->fallible())
+                assignSnapshot(lir, Bailout_DoubleOutput);
+            defineFixed(lir, div, LAllocation(AnyRegister(edx)));
+        }
+        return;
+    }
+
     LUDivOrMod* lir = new(alloc()) LUDivOrMod(useRegister(div->lhs()),
                                               useRegister(div->rhs()),
                                               tempFixed(edx));
@@ -285,6 +305,25 @@ LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
 void
 LIRGeneratorX86Shared::lowerUMod(MMod* mod)
 {
+    if (mod->rhs()->isConstant()) {
+        uint32_t rhs = mod->rhs()->toConstant()->value().toInt32();
+        int32_t shift = FloorLog2(rhs);
+
+        if (rhs != 0 && uint32_t(1) << shift == rhs) {
+            LModPowTwoI* lir = new(alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
+            if (mod->fallible())
+                assignSnapshot(lir, Bailout_DoubleOutput);
+            defineReuseInput(lir, mod, 0);
+        } else {
+            LUDivOrModConstant* lir = new(alloc()) LUDivOrModConstant(useRegister(mod->lhs()),
+                                                                      rhs, tempFixed(edx));
+            if (mod->fallible())
+                assignSnapshot(lir, Bailout_DoubleOutput);
+            defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
+        }
+        return;
+    }
+
     LUDivOrMod* lir = new(alloc()) LUDivOrMod(useRegister(mod->lhs()),
                                               useRegister(mod->rhs()),
                                               tempFixed(eax));

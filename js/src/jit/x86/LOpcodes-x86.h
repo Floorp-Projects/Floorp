@@ -23,6 +23,7 @@
     _(AsmJSLoadFuncPtr)         \
     _(SimdValueInt32x4)         \
     _(SimdValueFloat32x4)       \
-    _(UDivOrMod)
+    _(UDivOrMod)                \
+    _(UDivOrModConstant)
 
 #endif /* jit_x86_LOpcodes_x86_h */

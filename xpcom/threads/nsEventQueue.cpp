@@ -85,6 +85,13 @@ nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult)
 void
 nsEventQueue::PutEvent(nsIRunnable* aRunnable)
 {
+  nsCOMPtr<nsIRunnable> event(aRunnable);
+  PutEvent(event.forget());
+}
+
+void
+nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
+{
   // Avoid calling AddRef+Release while holding our monitor.
   nsCOMPtr<nsIRunnable> event(aRunnable);
 

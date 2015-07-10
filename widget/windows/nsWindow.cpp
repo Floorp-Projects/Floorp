@@ -537,11 +537,11 @@ nsWindow::Create(nsIWidget *aParent,
     }
   }
 
-  nsString className;
+  const wchar_t* className;
   if (aInitData->mDropShadow) {
-    GetWindowPopupClass(className);
+    className = GetWindowPopupClass();
   } else {
-    GetWindowClass(className);
+    className = GetWindowClass();
   }
   // Plugins are created in the disabled state so that they can't
   // steal focus away from our main window.  This is especially
@@ -552,7 +552,7 @@ nsWindow::Create(nsIWidget *aParent,
     style |= WS_DISABLED;
   }
   mWnd = ::CreateWindowExW(extendedStyle,
-                           className.get(),
+                           className,
                            L"",
                            style,
                            aRect.x,
@@ -598,11 +598,11 @@ nsWindow::Create(nsIWidget *aParent,
     // The FAKETRACKPOINTSCROLLABLE needs to have the specific window styles it
     // is given below so that it catches the Trackpoint driver's heuristics.
     HWND scrollContainerWnd = ::CreateWindowW
-      (className.get(), L"FAKETRACKPOINTSCROLLCONTAINER",
+      (className, L"FAKETRACKPOINTSCROLLCONTAINER",
        WS_CHILD | WS_VISIBLE,
        0, 0, 0, 0, mWnd, nullptr, nsToolkit::mDllInstance, nullptr);
     HWND scrollableWnd = ::CreateWindowW
-      (className.get(), L"FAKETRACKPOINTSCROLLABLE",
+      (className, L"FAKETRACKPOINTSCROLLABLE",
        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | 0x30,
        0, 0, 0, 0, scrollContainerWnd, nullptr, nsToolkit::mDllInstance,
        nullptr);
@@ -719,13 +719,14 @@ NS_METHOD nsWindow::Destroy()
  *
  **************************************************************/
 
-void nsWindow::RegisterWindowClass(const nsString& aClassName, UINT aExtraStyle,
-                                   LPWSTR aIconID)
+const wchar_t*
+nsWindow::RegisterWindowClass(const wchar_t* aClassName,
+                              UINT aExtraStyle, LPWSTR aIconID) const
 {
   WNDCLASSW wc;
-  if (::GetClassInfoW(nsToolkit::mDllInstance, aClassName.get(), &wc)) {
+  if (::GetClassInfoW(nsToolkit::mDllInstance, aClassName, &wc)) {
     // already registered
-    return;
+    return aClassName;
   }
 
   wc.style         = CS_DBLCLKS | aExtraStyle;
@@ -737,7 +738,7 @@ void nsWindow::RegisterWindowClass(const nsString& aClassName, UINT aExtraStyle,
   wc.hCursor       = nullptr;
   wc.hbrBackground = mBrush;
   wc.lpszMenuName  = nullptr;
-  wc.lpszClassName = aClassName.get();
+  wc.lpszClassName = aClassName;
 
   if (!::RegisterClassW(&wc)) {
     // For older versions of Win32 (i.e., not XP), the registration may
@@ -745,34 +746,31 @@ void nsWindow::RegisterWindowClass(const nsString& aClassName, UINT aExtraStyle,
     wc.style = CS_DBLCLKS;
     ::RegisterClassW(&wc);
   }
+  return aClassName;
 }
 
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 
 // Return the proper window class for everything except popups.
-void nsWindow::GetWindowClass(nsString& aWindowClass)
+const wchar_t*
+nsWindow::GetWindowClass() const
 {
   switch (mWindowType) {
   case eWindowType_invisible:
-    aWindowClass.AssignLiteral(kClassNameHidden);
-    RegisterWindowClass(aWindowClass, 0, gStockApplicationIcon);
-    break;
+    return RegisterWindowClass(kClassNameHidden, 0, gStockApplicationIcon);
   case eWindowType_dialog:
-    aWindowClass.AssignLiteral(kClassNameDialog);
-    RegisterWindowClass(aWindowClass, 0, 0);
-    break;
+    return RegisterWindowClass(kClassNameDialog, 0, 0);
   default:
-    GetMainWindowClass(aWindowClass);
-    RegisterWindowClass(aWindowClass, 0, gStockApplicationIcon);
-    break;
+    return RegisterWindowClass(GetMainWindowClass(), 0, gStockApplicationIcon);
   }
 }
 
 // Return the proper popup window class
-void nsWindow::GetWindowPopupClass(nsString& aWindowClass)
+const wchar_t*
+nsWindow::GetWindowPopupClass() const
 {
-  aWindowClass.AssignLiteral(kClassNameDropShadow);
-  RegisterWindowClass(aWindowClass, CS_XP_DROPSHADOW, gStockApplicationIcon);
+  return RegisterWindowClass(kClassNameDropShadow,
+                             CS_XP_DROPSHADOW, gStockApplicationIcon);
 }
 
 /**************************************************************
@@ -2926,12 +2924,10 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
 // Return some native data according to aDataType
 void* nsWindow::GetNativeData(uint32_t aDataType)
 {
-  nsString className;
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
-      GetWindowClass(className);
       return (void*)::CreateWindowExW(mIsRTL ? WS_EX_LAYOUTRTL : 0,
-                                      className.get(),
+                                      GetWindowClass(),
                                       L"",
                                       WS_CHILD,
                                       CW_USEDEFAULT,
@@ -7554,13 +7550,20 @@ bool nsWindow::CanTakeFocus()
   return false;
 }
 
-void nsWindow::GetMainWindowClass(nsAString& aClass)
+/* static */ const wchar_t*
+nsWindow::GetMainWindowClass()
 {
-  NS_PRECONDITION(aClass.IsEmpty(), "aClass should be empty string");
-  nsresult rv = Preferences::GetString("ui.window_class_override", &aClass);
-  if (NS_FAILED(rv) || aClass.IsEmpty()) {
-    aClass.AssignLiteral(kClassNameGeneral);
+  static const wchar_t* sMainWindowClass = nullptr;
+  if (!sMainWindowClass) {
+    nsAdoptingString className =
+      Preferences::GetString("ui.window_class_override");
+    if (!className.IsEmpty()) {
+      sMainWindowClass = wcsdup(className.get());
+    } else {
+      sMainWindowClass = kClassNameGeneral;
+    }
   }
+  return sMainWindowClass;
 }
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)
