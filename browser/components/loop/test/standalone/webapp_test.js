@@ -1068,6 +1068,7 @@ describe("loop.webapp", function() {
         React.createElement(
           loop.webapp.EndedConversationView, {
             conversation: conversation,
+            dispatcher: dispatcher,
             sdk: {},
             onAfterFeedbackReceived: function(){}
           }));
