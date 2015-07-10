@@ -11,13 +11,17 @@
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
-                  android:padding="@dimen/doorhanger_section_padding_medium">
+                  android:paddingLeft="@dimen/doorhanger_section_padding_small"
+                  android:paddingRight="@dimen/doorhanger_section_padding_small"
+                  android:paddingBottom="@dimen/doorhanger_section_padding_medium"
+                  android:paddingTop="@dimen/doorhanger_section_padding_medium">
 
-        <ImageView android:id="@+id/larry"
+        <ImageView android:id="@+id/site_identity_icon"
                    android:layout_width="@dimen/doorhanger_icon_size"
                    android:layout_height="@dimen/doorhanger_icon_size"
-                   android:src="@drawable/larry"
-                   android:paddingRight="@dimen/doorhanger_section_padding_medium"/>
+                   android:gravity="center_horizontal"
+                   android:padding="@dimen/doorhanger_section_padding_small"
+                   android:layout_marginRight="@dimen/doorhanger_section_padding_small"/>
 
         <LinearLayout android:layout_width="0dp"
                      android:layout_height="wrap_content"

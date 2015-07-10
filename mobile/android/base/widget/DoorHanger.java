@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
@@ -35,7 +34,7 @@ public abstract class DoorHanger extends LinearLayout {
         return new DefaultDoorHanger(context, config, type);
     }
 
-    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT}
+    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT, GEOLOCATION }
 
     public interface OnButtonClickListener {
         public void onButtonClick(JSONObject response, DoorHanger doorhanger);

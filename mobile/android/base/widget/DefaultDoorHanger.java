@@ -43,6 +43,13 @@ public class DefaultDoorHanger extends DoorHanger {
         if (sSpinnerTextColor == -1) {
             sSpinnerTextColor = mResources.getColor(R.color.text_color_primary_disable_only);
         }
+
+        switch (mType) {
+            case GEOLOCATION:
+                mIcon.setImageResource(R.drawable.location);
+                mIcon.setVisibility(VISIBLE);
+        }
+
         loadConfig(config);
     }
 
