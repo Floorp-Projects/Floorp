@@ -4,31 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DeviceStorageFileSystem_h
-#define mozilla_dom_DeviceStorageFileSystem_h
+#ifndef mozilla_dom_OSFileSystem_h
+#define mozilla_dom_OSFileSystem_h
 
 #include "mozilla/dom/FileSystemBase.h"
-#include "nsString.h"
-
-class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
 
-class DeviceStorageFileSystem
-  : public FileSystemBase
+class OSFileSystem : public FileSystemBase
 {
 public:
-  DeviceStorageFileSystem(const nsAString& aStorageType,
-                          const nsAString& aStorageName);
+  explicit OSFileSystem(const nsAString& aRootDir);
 
   void
-  Init(nsDOMDeviceStorage* aDeviceStorage);
+  Init(nsPIDOMWindow* aWindow);
 
   // Overrides FileSystemBase
-
-  virtual void
-  Shutdown() override;
 
   virtual nsPIDOMWindow*
   GetWindow() const override;
@@ -41,17 +33,14 @@ public:
 
   virtual bool
   IsSafeDirectory(Directory* aDir) const override;
+
 private:
-  virtual
-  ~DeviceStorageFileSystem();
+  virtual ~OSFileSystem() {}
 
-  nsString mStorageType;
-  nsString mStorageName;
-
-  nsDOMDeviceStorage* mDeviceStorage;
+   nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_DeviceStorageFileSystem_h
+#endif // mozilla_dom_OSFileSystem_h

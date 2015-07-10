@@ -11,6 +11,7 @@ EXPORTS.mozilla.dom += [
     'FileSystemRequestParent.h',
     'FileSystemTaskBase.h',
     'FileSystemUtils.h',
+    'OSFileSystem.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,6 +26,7 @@ UNIFIED_SOURCES += [
     'FileSystemUtils.cpp',
     'GetDirectoryListingTask.cpp',
     'GetFileOrDirectoryTask.cpp',
+    'OSFileSystem.cpp',
     'RemoveTask.cpp',
 ]
 

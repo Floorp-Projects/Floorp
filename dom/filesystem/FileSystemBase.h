@@ -42,18 +42,18 @@ public:
   virtual nsPIDOMWindow*
   GetWindow() const;
 
-  /*
-   * Create nsIFile object with the given real path (absolute DOM path).
+  /**
+   * Create nsIFile object from the given real path (absolute DOM path).
    */
-  virtual already_AddRefed<nsIFile>
-  GetLocalFile(const nsAString& aRealPath) const = 0;
+  already_AddRefed<nsIFile>
+  GetLocalFile(const nsAString& aRealPath) const;
 
   /*
    * Get the virtual name of the root directory. This name will be exposed to
    * the content page.
    */
-  virtual const nsAString&
-  GetRootName() const = 0;
+  virtual void
+  GetRootName(nsAString& aRetval) const = 0;
 
   bool
   IsShutdown() const
@@ -72,8 +72,8 @@ public:
    * If succeeded, returns true. Otherwise, returns false and set aRealPath to
    * empty string.
    */
-  virtual bool
-  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const = 0;
+  bool
+  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const;
 
   /*
    * Get the permission name required to access this file system.
@@ -91,6 +91,18 @@ public:
   }
 protected:
   virtual ~FileSystemBase();
+
+  bool
+  LocalPathToRealPath(const nsAString& aLocalPath, nsAString& aRealPath) const;
+
+  // The local path of the root (i.e. the OS path, with OS path separators, of
+  // the OS directory that acts as the root of this OSFileSystem).
+  // Only available in the parent process.
+  // In the child process, we don't use it and its value should be empty.
+  nsString mLocalRootPath;
+
+  // The same, but with path separators normalized to "/".
+  nsString mNormalizedLocalRootPath;
 
   // The string representation of the file system.
   nsString mString;
