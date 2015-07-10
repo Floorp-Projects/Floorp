@@ -1375,6 +1375,7 @@ PropertyView.prototype = {
       promises.push(selector.ready);
     }
 
+    this.matchedSelectorsContainer.innerHTML = "";
     this.matchedSelectorsContainer.appendChild(frag);
     return promise.all(promises);
   },
