@@ -601,6 +601,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     if (CurrentDriver()->AsAudioCallbackDriver()->IsStarted()) {
       if (mLifecycleState == LIFECYCLE_RUNNING) {
         SystemClockDriver* driver = new SystemClockDriver(this);
+        mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
     }
@@ -3456,6 +3457,7 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
         EnqueueStreamAndPromiseForOperation(aStream, aPromise, aOperation);
 
       SystemClockDriver* driver = new SystemClockDriver(this);
+      mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
       CurrentDriver()->SwitchAtNextIteration(driver);
     } else {
       // We are closing or suspending an AudioContext, but something else is

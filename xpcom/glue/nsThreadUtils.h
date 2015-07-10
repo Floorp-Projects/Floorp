@@ -121,6 +121,9 @@ extern NS_METHOD NS_DispatchToCurrentThread(nsIRunnable* aEvent);
 extern NS_METHOD
 NS_DispatchToMainThread(nsIRunnable* aEvent,
                         uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
+extern NS_METHOD
+NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
+                        uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
