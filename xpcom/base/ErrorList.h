@@ -770,6 +770,20 @@
 
 
   /* ======================================================================= */
+  /* 28: NS_ERROR_MODULE_IPC */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_IPC
+  // Initial creation of a Transport object failed internally for unknown reasons.
+  ERROR(NS_ERROR_TRANSPORT_INIT,          FAILURE(1)),
+  // Generic error related to duplicating handle failures.
+  ERROR(NS_ERROR_DUPLICATE_HANDLE,        FAILURE(2)),
+  // Bridging: failure trying to open the connection to the parent
+  ERROR(NS_ERROR_BRIDGE_OPEN_PARENT,      FAILURE(3)),
+  // Bridging: failure trying to open the connection to the child
+  ERROR(NS_ERROR_BRIDGE_OPEN_CHILD,       FAILURE(4)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 29: NS_ERROR_MODULE_SVG */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_SVG
