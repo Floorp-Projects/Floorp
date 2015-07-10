@@ -380,6 +380,10 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("On connection complete", function() {
+      beforeEach(function() {
+        sandbox.stub(window.console, "error");
+      });
+
       it("should publish the stream if the publisher is ready", function() {
         driver._publisherReady = true;
         session.connect.callsArg(2);
@@ -406,6 +410,21 @@ describe("loop.OTSdkDriver", function () {
             sendStreams: 0,
             recvStreams: 0
           }));
+      });
+
+      it("should log an error message and error object", function() {
+        session.connect.callsArgWith(2, {
+          title: "Fake",
+          code: OT.ExceptionCodes.CONNECT_FAILED
+        });
+
+        driver.connectSession(sessionData);
+
+        sinon.assert.calledOnce(console.error);
+        sinon.assert.calledWithExactly(console.error, sinon.match.string, {
+          title: "Fake",
+          code: OT.ExceptionCodes.CONNECT_FAILED
+        });
       });
 
       it("should dispatch connectionFailure if connecting failed", function() {
