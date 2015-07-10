@@ -4,11 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['secondplugin', 'javaplugin', 'thirdplugin', 'flashplugin']
+SharedLibrary('npthirdtest')
 
-SharedLibrary('nptest')
-
-FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
-
-relative_path = '.'
-include('testplugin.mozbuild')
+relative_path = 'thirdplugin'
+include('../testplugin.mozbuild')

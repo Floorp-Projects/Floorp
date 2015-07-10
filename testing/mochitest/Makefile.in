@@ -71,12 +71,16 @@ ifeq (Darwin,$(OS_TARGET))
 TEST_HARNESS_PLUGINS := \
   Test.plugin/ \
   SecondTest.plugin/ \
+  ThirdTest.plugin/ \
+  npswftest.plugin/ \
   JavaTest.plugin/
 else
 TEST_HARNESS_PLUGINS := \
   $(DLL_PREFIX)nptest$(DLL_SUFFIX) \
   $(DLL_PREFIX)npsecondtest$(DLL_SUFFIX) \
-  $(DLL_PREFIX)nptestjava$(DLL_SUFFIX)
+  $(DLL_PREFIX)npthirdtest$(DLL_SUFFIX) \
+  $(DLL_PREFIX)nptestjava$(DLL_SUFFIX) \
+  $(DLL_PREFIX)npswftest$(DLL_SUFFIX)
 endif
 
 # Rules for staging the necessary harness bits for a test package
