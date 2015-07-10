@@ -30,7 +30,8 @@ TimerThread::TimerThread() :
   mShutdown(false),
   mWaiting(false),
   mNotified(false),
-  mSleeping(false)
+  mSleeping(false),
+  mLastTimerEventLoopRun(TimeStamp::Now())
 {
 }
 
@@ -242,6 +243,7 @@ TimerThread::Run()
     } else {
       waitFor = PR_INTERVAL_NO_TIMEOUT;
       TimeStamp now = TimeStamp::Now();
+      mLastTimerEventLoopRun = now;
       nsTimerImpl* timer = nullptr;
 
       if (!mTimers.IsEmpty()) {
@@ -435,6 +437,7 @@ TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 int32_t
 TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
 {
+  mMonitor.AssertCurrentThreadOwns();
   if (mShutdown) {
     return -1;
   }
@@ -463,6 +466,7 @@ TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
 bool
 TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer)
 {
+  mMonitor.AssertCurrentThreadOwns();
   if (!mTimers.RemoveElement(aTimer)) {
     return false;
   }
@@ -474,6 +478,10 @@ TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer)
 void
 TimerThread::ReleaseTimerInternal(nsTimerImpl* aTimer)
 {
+  if (!mShutdown) {
+    // copied to a local array before releasing in shutdown
+    mMonitor.AssertCurrentThreadOwns();
+  }
   // Order is crucial here -- see nsTimerImpl::Release.
   aTimer->mArmed = false;
   NS_RELEASE(aTimer);
@@ -482,22 +490,40 @@ TimerThread::ReleaseTimerInternal(nsTimerImpl* aTimer)
 void
 TimerThread::DoBeforeSleep()
 {
+  // Mainthread
+  MonitorAutoLock lock(mMonitor);
+  mLastTimerEventLoopRun = TimeStamp::Now();
   mSleeping = true;
 }
 
+// Note: wake may be notified without preceding sleep notification
 void
 TimerThread::DoAfterSleep()
 {
-  mSleeping = true; // wake may be notified without preceding sleep notification
+  // Mainthread
+  TimeStamp now = TimeStamp::Now();
+
+  MonitorAutoLock lock(mMonitor);
+
+  // an over-estimate of time slept, usually small
+  TimeDuration slept = now - mLastTimerEventLoopRun;
+
+  // Adjust all old timers to expire roughly similar times in the future
+  // compared to when we went to sleep, by adding the time we slept to the
+  // target time. It's slightly possible a few will end up slightly in the
+  // past and fire immediately, but ordering should be preserved.  All
+  // timers retain the exact same order (and relative times) as before
+  // going to sleep.
   for (uint32_t i = 0; i < mTimers.Length(); i ++) {
     nsTimerImpl* timer = mTimers[i];
-    // get and set the delay to cause its timeout to be recomputed
-    uint32_t delay;
-    timer->GetDelay(&delay);
-    timer->SetDelay(delay);
+    timer->mTimeout += slept;
   }
-
   mSleeping = false;
+  mLastTimerEventLoopRun = now;
+
+  // Wake up the timer thread to process the updated array
+  mNotified = true;
+  mMonitor.Notify();
 }
 
 
