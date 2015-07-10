@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that creating, collapsing and expanding variables in the
+ * Tests that creating, collpasing and expanding variables in the
  * variables view works as expected.
  */
 
@@ -22,7 +22,7 @@ function test() {
 
     ok(testScope,
       "Should have created a scope.");
-    is(duplVar, testVar,
+    is(duplVar, null,
       "Shouldn't be able to duplicate variables in the same scope.");
 
     ok(testVar,
