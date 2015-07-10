@@ -12926,7 +12926,7 @@ class MAtomicIsLockFree
 
 class MCompareExchangeTypedArrayElement
   : public MAryInstruction<4>,
-    public Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>::Data
+    public Mix4Policy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2>, TruncateToInt32Policy<3>>::Data
 {
     Scalar::Type arrayType_;
 
@@ -12981,7 +12981,7 @@ class MCompareExchangeTypedArrayElement
 
 class MAtomicExchangeTypedArrayElement
   : public MAryInstruction<3>,
-    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>>::Data
+    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2>>::Data
 {
     Scalar::Type arrayType_;
 
@@ -13030,7 +13030,7 @@ class MAtomicExchangeTypedArrayElement
 
 class MAtomicTypedArrayElementBinop
     : public MAryInstruction<3>,
-      public Mix3Policy< ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >::Data
+      public Mix3Policy< ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2> >::Data
 {
   private:
     AtomicOp op_;
