@@ -189,6 +189,20 @@ partial interface HTMLInputElement {
   void setUserInput(DOMString input);
 };
 
+partial interface HTMLInputElement {
+  [Pref="dom.input.dirpicker", BinaryName="DirectoryAttr", SetterThrows]
+  attribute boolean directory;
+
+  [Pref="dom.input.dirpicker"]
+  readonly attribute boolean isFilesAndDirectoriesSupported;
+
+  [Throws, Pref="dom.input.dirpicker"]
+  Promise<sequence<(File or Directory)>> getFilesAndDirectories();
+
+  [Throws, Pref="dom.input.dirpicker"]
+  void chooseDirectory();
+};
+
 [NoInterfaceObject]
 interface MozPhonetic {
   [Pure, ChromeOnly]

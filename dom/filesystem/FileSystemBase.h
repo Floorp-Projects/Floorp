@@ -55,6 +55,12 @@ public:
   virtual void
   GetRootName(nsAString& aRetval) const = 0;
 
+  const nsAString&
+  GetLocalRootPath() const
+  {
+    return mLocalRootPath;
+  }
+
   bool
   IsShutdown() const
   {
