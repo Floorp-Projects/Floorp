@@ -231,12 +231,12 @@ pub fn start<T: 'static+WebDriverHandler>(address: SocketAddr, handler: T) {
 
     let api = WebDriverHttpApi::new();
     let http_handler = HttpHandler::new(api, msg_send);
-    let server = Server::http(http_handler);
+    let server = Server::http(address).unwrap();
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     builder.spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     }).unwrap();
-    server.listen(&address).unwrap();
+    server.handle(http_handler).unwrap();
 }
