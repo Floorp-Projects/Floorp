@@ -89,13 +89,15 @@ InterceptedJARChannel::FinishSynthesizedResponse()
 }
 
 NS_IMETHODIMP
-InterceptedJARChannel::Cancel()
+InterceptedJARChannel::Cancel(nsresult aStatus)
 {
+  MOZ_ASSERT(NS_FAILED(aStatus));
+
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mChannel->Cancel(NS_BINDING_ABORTED);
+  nsresult rv = mChannel->Cancel(aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
   mResponseBody = nullptr;
   mChannel = nullptr;
