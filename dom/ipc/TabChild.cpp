@@ -3504,6 +3504,10 @@ TabChildGlobal::MarkForCC()
   if (mTabChild) {
     mTabChild->MarkScopesForCC();
   }
+  EventListenerManager* elm = GetExistingListenerManager();
+  if (elm) {
+    elm->MarkForCC();
+  }
   return mMessageManager ? mMessageManager->MarkForCC() : false;
 }
 
