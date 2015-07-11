@@ -1266,11 +1266,9 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-/* virtual */ bool
-nsCocoaWindow::PrepareForFullscreenTransition(nsISupports** aData)
+void nsCocoaWindow::PrepareForDOMFullscreenTransition()
 {
   mInDOMFullscreenTransition = true;
-  return false;
 }
 
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)

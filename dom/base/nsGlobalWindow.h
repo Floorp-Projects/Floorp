@@ -484,9 +484,6 @@ public:
   // Inner windows only.
   virtual void RefreshCompartmentPrincipal() override;
 
-  // For accessing protected field mFullScreen
-  friend class FullscreenTransitionTask;
-
   // Outer windows only.
   virtual nsresult SetFullscreenInternal(
     FullscreenReason aReason, bool aIsFullscreen,
