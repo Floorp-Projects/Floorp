@@ -17,7 +17,7 @@
 #define NS_AUDIOCHANNELAGENT_CID {0xf27688e2, 0x3dd7, 0x11e2, \
       {0x90, 0x4e, 0x10, 0xbf, 0x48, 0xd6, 0x4b, 0xd4}}
 
-class nsPIDOMWindow;
+class nsIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -32,15 +32,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(AudioChannelAgent)
 
   AudioChannelAgent();
+  virtual void NotifyAudioChannelStateChanged();
 
   void WindowVolumeChanged();
 
-  nsPIDOMWindow* Window() const
+  nsIDOMWindow* Window() const
   {
     return mWindow;
   }
-
-  uint64_t WindowID() const;
 
 private:
   virtual ~AudioChannelAgent();
@@ -51,18 +50,18 @@ private:
 
   nsresult InitInternal(nsIDOMWindow* aWindow, int32_t aAudioAgentType,
                         nsIAudioChannelAgentCallback* aCallback,
-                        bool aUseWeakRef);
+                        bool aUseWeakRef, bool aWithVideo=false);
 
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsIDOMWindow> mWindow;
   nsCOMPtr<nsIAudioChannelAgentCallback> mCallback;
-
   nsWeakPtr mWeakCallback;
-
   int32_t mAudioChannelType;
   bool mIsRegToService;
+  bool mVisible;
+  bool mWithVideo;
 };
 
 } // namespace dom
 } // namespace mozilla
-
 #endif
+
