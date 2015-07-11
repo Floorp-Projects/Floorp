@@ -183,8 +183,8 @@ protected:
         }
         IMEChange(const IMENotification& aIMENotification)
             : mStart(aIMENotification.mTextChangeData.mStartOffset)
-            , mOldEnd(aIMENotification.mTextChangeData.mOldEndOffset)
-            , mNewEnd(aIMENotification.mTextChangeData.mNewEndOffset)
+            , mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset)
+            , mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset)
         {
             MOZ_ASSERT(aIMENotification.mMessage ==
                            mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,

@@ -167,8 +167,8 @@ public:
                                       override;
     virtual bool RecvNotifyIMETextChange(const ContentCache& aContentCache,
                                          const uint32_t& aStart,
-                                         const uint32_t& aEnd,
-                                         const uint32_t& aNewEnd,
+                                         const uint32_t& aRemovedEnd,
+                                         const uint32_t& aAddedEnd,
                                          const bool& aCausedByComposition) override;
     virtual bool RecvNotifyIMESelectedCompositionRect(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMESelection(const ContentCache& aContentCache,

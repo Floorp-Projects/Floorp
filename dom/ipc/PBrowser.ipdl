@@ -197,16 +197,16 @@ parent:
      *
      *  contentCache Cache of content
      *  offset       Starting offset of the change
-     *  end          Ending offset of the range deleted
-     *  newEnd       New ending offset after insertion
+     *  removedEnd   Ending offset of the range deleted
+     *  addedEnd     New ending offset after insertion
      *  causedByComposition true if the change is caused by composition
      *
      *  for insertion, offset == end
      *  for deletion, offset == newEnd
      */
     prio(urgent) async NotifyIMETextChange(ContentCache contentCache,
-                                           uint32_t offset, uint32_t end,
-                                           uint32_t newEnd,
+                                           uint32_t offset, uint32_t removedEnd,
+                                           uint32_t addedEnd,
                                            bool causedByComposition);
 
     /**
