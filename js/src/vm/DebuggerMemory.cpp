@@ -363,10 +363,10 @@ DebuggerMemory::drainTenurePromotionsLog(JSContext* cx, unsigned argc, Value* vp
         if (!obj)
             return false;
 
-        // Don't pop the TenurePromotionsEntry yet. The queue's links are followed by
-        // the GC to find the TenurePromotionsEntry, but are not barriered, so we must
-        // edit them with great care. Use the queue entry in place, and then
-        // pop and delete together.
+        // Don't pop the TenurePromotionsEntry yet. The queue's links are
+        // followed by the GC to find the TenurePromotionsEntry, but are not
+        // barriered, so we must edit them with great care. Use the queue entry
+        // in place, and then pop and delete together.
         auto* entry = dbg->tenurePromotionsLog.getFirst();
 
         RootedValue frame(cx, ObjectOrNullValue(entry->frame));

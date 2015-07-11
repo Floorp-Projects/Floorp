@@ -2344,6 +2344,24 @@ Debugger::markCrossCompartmentEdges(JSTracer* trc)
     environments.markCrossCompartmentEdges<DebuggerEnv_trace>(trc);
     scripts.markCrossCompartmentEdges<DebuggerScript_trace>(trc);
     sources.markCrossCompartmentEdges<DebuggerSource_trace>(trc);
+
+    // Because we don't have access to a `cx` inside
+    // `Debugger::logTenurePromotion`, we can't hold onto CCWs inside the log,
+    // and instead have unwrapped cross-compartment edges. We need to be sure to
+    // mark those here.
+    traceTenurePromotionsLog(trc);
+}
+
+/*
+ * Trace every entry in the promoted to tenured heap log.
+ */
+void
+Debugger::traceTenurePromotionsLog(JSTracer* trc)
+{
+    for (TenurePromotionsEntry* e = tenurePromotionsLog.getFirst(); e; e = e->getNext()) {
+        if (e->frame)
+            TraceEdge(trc, &e->frame, "Debugger::tenurePromotionsLog SavedFrame");
+    }
 }
 
 /*
@@ -2534,13 +2552,7 @@ Debugger::trace(JSTracer* trc)
             TraceEdge(trc, &s->ctorName, "allocation log constructor name");
     }
 
-    /*
-     * Mark every entry in the promoted to tenured heap log.
-     */
-    for (TenurePromotionsEntry* e = tenurePromotionsLog.getFirst(); e; e = e->getNext()) {
-        if (e->frame)
-            TraceEdge(trc, &e->frame, "tenure promotions log SavedFrame");
-    }
+    traceTenurePromotionsLog(trc);
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
     scripts.trace(trc);
@@ -2583,7 +2595,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global)
 }
 
 /* static */ void
-Debugger::findCompartmentEdges(Zone* zone, js::gc::ComponentFinder<Zone>& finder)
+Debugger::findZoneEdges(Zone* zone, js::gc::ComponentFinder<Zone>& finder)
 {
     /*
      * For debugger cross compartment wrappers, add edges in the opposite
@@ -2598,7 +2610,8 @@ Debugger::findCompartmentEdges(Zone* zone, js::gc::ComponentFinder<Zone>& finder
         Zone* w = dbg->object->zone();
         if (w == zone || !w->isGCMarking())
             continue;
-        if (dbg->scripts.hasKeyInZone(zone) ||
+        if (dbg->debuggeeZones.has(zone) ||
+            dbg->scripts.hasKeyInZone(zone) ||
             dbg->sources.hasKeyInZone(zone) ||
             dbg->objects.hasKeyInZone(zone) ||
             dbg->environments.hasKeyInZone(zone))
@@ -6996,9 +7009,9 @@ Debugger::getObjectAllocationSite(JSObject& obj)
         return nullptr;
 
     MOZ_ASSERT(!metadata->is<WrapperObject>());
-    if (!SavedFrame::isSavedFrameAndNotProto(*metadata))
-        return nullptr;
-    return metadata;
+    return SavedFrame::isSavedFrameAndNotProto(*metadata)
+        ? metadata
+        : nullptr;
 }
 
 static bool
