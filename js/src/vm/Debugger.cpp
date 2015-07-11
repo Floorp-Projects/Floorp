@@ -3257,39 +3257,100 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
 
     /*
      * For global to become this js::Debugger's debuggee:
-     * - global must be in this->debuggees,
-     * - this js::Debugger must be in global->getDebuggers(), and
-     * - JSCompartment::isDebuggee()'s bit must be set.
-     * - If we are tracking allocations, the SavedStacksMetadataCallback must be
-     *   installed for this compartment.
-     * All four indications must be kept consistent.
+     *
+     * 1. global must be in this->debuggees,
+     * 2. this js::Debugger must be in global->getDebuggers(),
+     * 3. it must be in zone->getDebuggers(),
+     * 4. JSCompartment::isDebuggee()'s bit must be set, and
+     * 5. if we are tracking allocations, the SavedStacksMetadataCallback must be
+     *    installed for this compartment.
+     *
+     * All five indications must be kept consistent.
      */
+
+    bool inDebuggees = false;
+    bool inGlobalDebuggers = false;
+    bool inZoneDebuggers = false;
+    bool inDebuggeeZones = false;
+
     AutoCompartment ac(cx, global);
-    GlobalObject::DebuggerVector* v = GlobalObject::getOrCreateDebuggers(cx, global);
-    if (!v || !v->append(this)) {
-        ReportOutOfMemory(cx);
-    } else {
-        if (!debuggees.put(global)) {
-            ReportOutOfMemory(cx);
-        } else {
-            if (!trackingAllocationSites || Debugger::addAllocationsTracking(cx, *global)) {
-                debuggeeCompartment->setIsDebuggee();
-                debuggeeCompartment->updateDebuggerObservesAsmJS();
-                if (!observesAllExecution())
-                    return true;
-                if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
-                    return true;
-            }
+    Zone* zone = global->zone();
 
-            /* Maintain consistency on error. */
-            debuggees.remove(global);
-        }
+    auto* globalDebuggers = GlobalObject::getOrCreateDebuggers(cx, global);
+    if (!globalDebuggers)
+        goto error;
+    if (!globalDebuggers->append(this))
+        goto oom;
+    inGlobalDebuggers = true;
 
-        MOZ_ASSERT(v->back() == this);
-        v->popBack();
+    if (!debuggees.put(global))
+        goto oom;
+    inDebuggees = true;
+
+    Zone::DebuggerVector* zoneDebuggers;
+    if (!debuggeeZones.has(zone)) {
+        zoneDebuggers = zone->getOrCreateDebuggers(cx);
+        if (!zoneDebuggers)
+            goto error;
+        if (!zoneDebuggers->append(this))
+            goto oom;
+        inZoneDebuggers = true;
+
+        if (!debuggeeZones.put(zone))
+            goto oom;
+        inDebuggeeZones = true;
     }
 
+    if (trackingAllocationSites && !Debugger::addAllocationsTracking(cx, *global))
+        goto error;
+
+    debuggeeCompartment->setIsDebuggee();
+    debuggeeCompartment->updateDebuggerObservesAsmJS();
+
+    if (observesAllExecution() && !ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
+        goto error;
+
+    return true;
+
+  oom:
+    ReportOutOfMemory(cx);
+    // Fall through...
+
+  error:
+    // Maintain consistency on error.
+    if (inGlobalDebuggers)
+        globalDebuggers->popBack();
+    if (inDebuggees)
+        debuggees.remove(global);
+    if (inZoneDebuggers)
+        zoneDebuggers->popBack();
+    if (inDebuggeeZones)
+        debuggeeZones.remove(zone);
     return false;
+}
+
+bool
+Debugger::recomputeDebuggeeZoneSet()
+{
+    debuggeeZones.clear();
+    for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
+        if (!debuggeeZones.put(range.front()->zone()))
+            return false;
+    }
+    return true;
+}
+
+template<typename V>
+static Debugger**
+findDebuggerInVector(Debugger* dbg, V* vec)
+{
+    Debugger** p;
+    for (p = vec->begin(); p != vec->end(); p++) {
+        if (*p == dbg)
+            break;
+    }
+    MOZ_ASSERT(p != vec->end());
+    return p;
 }
 
 void
@@ -3302,6 +3363,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
      * to avoid invalidating the live enumerator.
      */
     MOZ_ASSERT(debuggees.has(global));
+    MOZ_ASSERT(debuggeeZones.has(global->zone()));
     MOZ_ASSERT_IF(debugEnum, debugEnum->front() == global);
 
     /*
@@ -3323,23 +3385,31 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
         }
     }
 
-    GlobalObject::DebuggerVector* v = global->getDebuggers();
-    Debugger** p;
-    for (p = v->begin(); p != v->end(); p++) {
-        if (*p == this)
-            break;
-    }
-    MOZ_ASSERT(p != v->end());
+    auto *globalDebuggersVector = global->getDebuggers();
+    auto *zoneDebuggersVector = global->zone()->getDebuggers();
 
     /*
-     * The relation must be removed from up to three places: *v and debuggees
-     * for sure, and possibly the compartment's debuggee set.
+     * The relation must be removed from up to three places:
+     * globalDebuggersVector and debuggees for sure, and possibly the
+     * compartment's debuggee set.
+     *
+     * The debuggee zone set is recomputed on demand. This avoids refcounting
+     * and in practice we have relatively few debuggees that tend to all be in
+     * the same zone. If after recomputing the debuggee zone set, this global's
+     * zone is not in the set, then we must remove ourselves from the zone's
+     * vector of observing debuggers.
      */
-    v->erase(p);
+    globalDebuggersVector->erase(findDebuggerInVector(this, globalDebuggersVector));
+
     if (debugEnum)
         debugEnum->removeFront();
     else
         debuggees.remove(global);
+
+    if (!recomputeDebuggeeZoneSet())
+        CrashAtUnhandlableOOM("Debugger::removeDebuggeeGlobal");
+    if (!debuggeeZones.has(global->zone()))
+        zoneDebuggersVector->erase(findDebuggerInVector(this, zoneDebuggersVector));
 
     /* Remove all breakpoints for the debuggee. */
     Breakpoint* nextbp;

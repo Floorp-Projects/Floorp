@@ -231,7 +231,11 @@ struct Zone : public JS::shadow::Zone,
     unsigned lastZoneGroupIndex() { return gcLastZoneGroupIndex; }
 #endif
 
+    using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
+
   private:
+    DebuggerVector* debuggers;
+
     void sweepBreakpoints(js::FreeOp* fop);
     void sweepCompartments(js::FreeOp* fop, bool keepAtleastOne, bool lastGC);
 
@@ -242,6 +246,10 @@ struct Zone : public JS::shadow::Zone,
     }
 
   public:
+    bool hasDebuggers() const { return debuggers && debuggers->length(); }
+    DebuggerVector* getDebuggers() const { return debuggers; }
+    DebuggerVector* getOrCreateDebuggers(JSContext* cx);
+
     js::gc::ArenaLists arenas;
 
     js::TypeZone types;
