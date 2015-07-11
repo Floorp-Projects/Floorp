@@ -285,7 +285,7 @@ public:
                                         nsIWidget *aWidget, bool aActivate) override;
     NS_IMETHOD              SetSizeMode(int32_t aMode) override;
     NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
-    virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
+    virtual void            PrepareForDOMFullscreenTransition() override;
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
     inline bool ShouldToggleNativeFullscreen(bool aFullScreen);
     NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;
