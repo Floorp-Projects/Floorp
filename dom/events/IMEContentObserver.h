@@ -155,7 +155,6 @@ private:
    *  UnregisterObservers() unregisters all listeners and observers.
    */
   void UnregisterObservers();
-  void StoreTextChangeData(const TextChangeDataBase& aTextChangeData);
   void FlushMergeableNotifications();
   void ClearPendingNotifications()
   {
@@ -164,10 +163,6 @@ private:
     mIsPositionChangeEventPending = false;
     mTextChangeData.Clear();
   }
-
-#ifdef DEBUG
-  void TestMergingTextChangeData();
-#endif
 
   nsCOMPtr<nsIWidget> mWidget;
   nsCOMPtr<nsISelection> mSelection;
