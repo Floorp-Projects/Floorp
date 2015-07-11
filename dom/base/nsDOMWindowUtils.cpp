@@ -3619,7 +3619,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
           forwarder->GetShadowManager()->SendGetAnimationTransform(
             layer->AsShadowableLayer()->GetShadow(), &transform);
           if (transform.type() == MaybeTransform::TMatrix4x4) {
-            gfx3DMatrix matrix = To3DMatrix(transform.get_Matrix4x4());
+            Matrix4x4 matrix = transform.get_Matrix4x4();
             cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
           }
         }
