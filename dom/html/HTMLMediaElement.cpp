@@ -4538,10 +4538,10 @@ HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
   if (aPlaying) {
     float volume = 0.0;
     bool muted = true;
-    mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+    mAudioChannelAgent->StartPlaying(&volume, &muted);
     WindowVolumeChanged(volume, muted);
   } else {
-    mAudioChannelAgent->NotifyStoppedPlaying();
+    mAudioChannelAgent->StopPlaying();
     mAudioChannelAgent = nullptr;
   }
 }
