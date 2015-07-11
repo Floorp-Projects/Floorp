@@ -219,27 +219,9 @@ if (typeof(computedStyle) == 'undefined') {
 **/
 SimpleTest.testPluginIsOOP = function () {
     var testPluginIsOOP = false;
-    if (navigator.platform.indexOf("Mac") == 0) {
-        if (SpecialPowers.XPCOMABI.match(/x86-/)) {
-            try {
-                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386.test.plugin");
-            } catch (e) {
-                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.i386");
-            }
-        }
-        else if (SpecialPowers.XPCOMABI.match(/x86_64-/)) {
-            try {
-                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.x86_64.test.plugin");
-            } catch (e) {
-                testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled.x86_64");
-            }
-        }
-    }
-    else {
-        testPluginIsOOP = SpecialPowers.getBoolPref("dom.ipc.plugins.enabled");
-    }
-
-    return testPluginIsOOP;
+    var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                          .getService(SpecialPowers.Ci.nsIPluginHost);
+    return ph.isPluginOOP("application/x-test");
 };
 
 SimpleTest._tests = [];
