@@ -2608,7 +2608,7 @@ int64_t MediaDecoderStateMachine::GetStreamClock() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
-  return mStreamStartTime + mDecodedStream->GetPosition();
+  return mDecodedStream->GetPosition();
 }
 
 int64_t MediaDecoderStateMachine::GetVideoStreamPosition(TimeStamp aTimeStamp) const
