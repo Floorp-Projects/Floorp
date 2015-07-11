@@ -1,4 +1,4 @@
-/* vim:set tw=80 expandtab softtabstop=4 ts=4 sw=4: */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,13 +80,35 @@ nsICODecoder::FinishInternal()
   // We shouldn't be called in error cases
   MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
 
-  // Finish the internally used decoder as well
-  if (mContainedDecoder) {
-    mContainedDecoder->FinishSharedDecoder();
-    mDecodeDone = mContainedDecoder->GetDecodeDone();
-    mProgress |= mContainedDecoder->TakeProgress();
-    mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
+  // Finish the internally used decoder as well.
+  if (mContainedDecoder && !mContainedDecoder->HasError()) {
+    mContainedDecoder->FinishInternal();
   }
+
+  GetFinalStateFromContainedDecoder();
+}
+
+void
+nsICODecoder::FinishWithErrorInternal()
+{
+  GetFinalStateFromContainedDecoder();
+}
+
+void
+nsICODecoder::GetFinalStateFromContainedDecoder()
+{
+  if (!mContainedDecoder) {
+    return;
+  }
+
+  mDecodeDone = mContainedDecoder->GetDecodeDone();
+  mDataError = mDataError || mContainedDecoder->HasDataError();
+  mFailCode = NS_SUCCEEDED(mFailCode) ? mContainedDecoder->GetDecoderError()
+                                      : mFailCode;
+  mDecodeAborted = mContainedDecoder->WasAborted();
+  mProgress |= mContainedDecoder->TakeProgress();
+  mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
+  mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
 }
 
 // Returns a buffer filled with the bitmap file header in little endian:
@@ -217,13 +239,8 @@ void
 nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
-
-  if (!aCount) {
-    if (mContainedDecoder) {
-      WriteToContainedDecoder(aBuffer, aCount);
-    }
-    return;
-  }
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
 
   while (aCount && (mPos < ICONCOUNTOFFSET)) { // Skip to the # of icons.
     if (mPos == 2) { // if the third byte is 1: This is an icon, 2: a cursor
@@ -343,9 +360,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       mContainedDecoder = new nsPNGDecoder(mImage);
       mContainedDecoder->SetSizeDecode(IsSizeDecode());
       mContainedDecoder->SetSendPartialInvalidations(mSendPartialInvalidations);
-      mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
-                                           mColormap, mColormapSize,
-                                           Move(mRefForContainedDecoder));
+      mContainedDecoder->Init();
       if (!WriteToContainedDecoder(mSignature, PNGSIGNATURESIZE)) {
         return;
       }
@@ -422,9 +437,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     bmpDecoder->SetUseAlphaData(true);
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
     mContainedDecoder->SetSendPartialInvalidations(mSendPartialInvalidations);
-    mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
-                                         mColormap, mColormapSize,
-                                         Move(mRefForContainedDecoder));
+    mContainedDecoder->Init();
 
     // The ICO format when containing a BMP does not include the 14 byte
     // bitmap file header. To use the code of the BMP decoder we need to
@@ -625,36 +638,6 @@ nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
   memcpy(&aTarget.mImageOffset, mDirEntryArray + 12,
          sizeof(aTarget.mImageOffset));
   aTarget.mImageOffset = LittleEndian::readUint32(&aTarget.mImageOffset);
-}
-
-bool
-nsICODecoder::NeedsNewFrame() const
-{
-  if (mContainedDecoder) {
-    return mContainedDecoder->NeedsNewFrame();
-  }
-
-  return Decoder::NeedsNewFrame();
-}
-
-nsresult
-nsICODecoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
-{
-  nsresult rv;
-
-  if (mContainedDecoder) {
-    rv = mContainedDecoder->AllocateFrame(aTargetSize);
-    mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
-    mProgress |= mContainedDecoder->TakeProgress();
-    mInvalidRect.UnionRect(mInvalidRect, mContainedDecoder->TakeInvalidRect());
-    return rv;
-  }
-
-  // Grab a strong ref that we'll later hand over to the contained decoder. This
-  // lets us avoid creating a RawAccessFrameRef off-main-thread.
-  rv = Decoder::AllocateFrame(aTargetSize);
-  mRefForContainedDecoder = GetCurrentFrameRef();
-  return rv;
 }
 
 } // namespace image

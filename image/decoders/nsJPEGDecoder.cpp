@@ -396,13 +396,19 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     mInfo.buffered_image = mDecodeStyle == PROGRESSIVE &&
                            jpeg_has_multiple_scans(&mInfo);
 
-    if (!mImageData) {
+    MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+    nsIntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
+    nsresult rv = AllocateFrame(0, targetSize,
+                                nsIntRect(nsIntPoint(), targetSize),
+                                gfx::SurfaceFormat::B8G8R8A8);
+    if (NS_FAILED(rv)) {
       mState = JPEG_ERROR;
-      PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
       MOZ_LOG(GetJPEGDecoderAccountingLog(), LogLevel::Debug,
              ("} (could not initialize image frame)"));
       return;
     }
+
+    MOZ_ASSERT(mImageData, "Should have a buffer now");
 
     if (mDownscaler) {
       nsresult rv = mDownscaler->BeginFrame(GetSize(),

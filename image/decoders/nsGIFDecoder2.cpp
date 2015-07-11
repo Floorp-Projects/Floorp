@@ -162,7 +162,7 @@ nsGIFDecoder2::BeginGIF()
 }
 
 //******************************************************************************
-void
+nsresult
 nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 {
   MOZ_ASSERT(HasSize());
@@ -175,35 +175,31 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
     format = gfx::SurfaceFormat::B8G8R8X8;
   }
 
+  nsIntRect frameRect(mGIFStruct.x_offset, mGIFStruct.y_offset,
+                      mGIFStruct.width, mGIFStruct.height);
+
   // Use correct format, RGB for first frame, PAL for following frames
   // and include transparency to allow for optimization of opaque images
+  nsresult rv = NS_OK;
   if (mGIFStruct.images_decoded) {
-    // Image data is stored with original depth and palette
-    NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
-                 mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,
-                 format, aDepth);
+    // Image data is stored with original depth and palette.
+    rv = AllocateFrame(mGIFStruct.images_decoded, GetSize(),
+                       frameRect, format, aDepth);
   } else {
-    nsRefPtr<imgFrame> currentFrame = GetCurrentFrame();
-
-    // Our first full frame is automatically created by the image decoding
-    // infrastructure. Just use it as long as it matches up.
-    if (!currentFrame->GetRect().IsEqualEdges(nsIntRect(mGIFStruct.x_offset,
-                                                        mGIFStruct.y_offset,
-                                                        mGIFStruct.width,
-                                                        mGIFStruct.height))) {
-
+    if (!nsIntRect(nsIntPoint(), GetSize()).IsEqualEdges(frameRect)) {
       // We need padding on the first frame, which means that we don't draw into
       // part of the image at all. Report that as transparency.
       PostHasTransparency();
-
-      // Regardless of depth of input, image is decoded into 24bit RGB
-      NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
-                   mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,
-                   format);
     }
+
+    // Regardless of depth of input, the first frame is decoded into 24bit RGB.
+    rv = AllocateFrame(mGIFStruct.images_decoded, GetSize(),
+                       frameRect, format);
   }
 
   mCurrentFrameIndex = mGIFStruct.images_decoded;
+
+  return rv;
 }
 
 
@@ -967,27 +963,13 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
       }
       // Mask to limit the color values within the colormap
       mColorMask = 0xFF >> (8 - realDepth);
-      BeginImageFrame(realDepth);
 
-      if (NeedsNewFrame()) {
-        // We now need a new frame from the decoder framework. We leave all our
-        // data in the buffer as if it wasn't consumed, copy to our hold and
-        // return to the decoder framework.
-        uint32_t size =
-          len + mGIFStruct.bytes_to_consume + mGIFStruct.bytes_in_hold;
-        if (size) {
-          if (SetHold(q,
-                      mGIFStruct.bytes_to_consume + mGIFStruct.bytes_in_hold,
-                      buf, len)) {
-            // Back into the decoder infrastructure so we can get called again.
-            GETN(9, gif_image_header_continue);
-            return;
-          }
-        }
-        break;
-      } else {
-        // FALL THROUGH
+      if (NS_FAILED(BeginImageFrame(realDepth))) {
+        mGIFStruct.state = gif_error;
+        return;
       }
+
+      // FALL THROUGH
     }
 
     case gif_image_header_continue: {
