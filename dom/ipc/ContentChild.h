@@ -201,6 +201,9 @@ public:
                                          const FileDescriptor& aCCLog) override;
 
     virtual bool
+    RecvAudioChannelNotify() override;
+
+    virtual bool
     RecvDataStoreNotify(const uint32_t& aAppId, const nsString& aName,
                         const nsString& aManifestURL) override;
 
