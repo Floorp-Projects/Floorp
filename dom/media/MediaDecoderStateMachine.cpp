@@ -371,12 +371,10 @@ void MediaDecoderStateMachine::SendStreamData()
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(!mAudioSink, "Should've been stopped in RunStateMachine()");
 
-  bool finished = mDecodedStream->SendData(
-      mStreamStartTime, mInfo, mVolume, mDecoder->IsSameOriginMedia());
+  bool finished = mDecodedStream->SendData(mVolume, mDecoder->IsSameOriginMedia());
 
   if (mInfo.HasAudio()) {
-    CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime(
-        mStreamStartTime, mInfo.mAudio.mRate);
+    CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime();
     if (playedUsecs.isValid()) {
       OnAudioEndTimeUpdate(playedUsecs.value());
     }
@@ -1093,6 +1091,12 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
 
   nsresult rv = StartAudioThread();
   NS_ENSURE_SUCCESS_VOID(rv);
+
+  // Tell DecodedStream to start playback with specified start time and media
+  // info. This is consistent with how we create AudioSink in StartAudioThread().
+  if (mAudioCaptured) {
+    mDecodedStream->StartPlayback(GetMediaTime(), mInfo);
+  }
 
   mDecoder->GetReentrantMonitor().NotifyAll();
   DispatchDecodeTasksIfNeeded();
@@ -2421,6 +2425,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       }
 
       StopAudioThread();
+      mDecodedStream->StopPlayback();
 
       if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
           !mSentPlaybackEndedEvent)
@@ -2462,6 +2467,7 @@ MediaDecoderStateMachine::Reset()
   // outside of the decoder monitor while we are clearing the queue and causes
   // crash for no samples to be popped.
   StopAudioThread();
+  mDecodedStream->StopPlayback();
 
   mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
@@ -3141,6 +3147,11 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
       // stream. Otherwise it will remain -1 if we don't have audio.
       self->mAudioEndTime = -1;
       self->mAudioCaptured = true;
+      // Start DecodedStream if we are already playing. Otherwise it will be
+      // handled in MaybeStartPlayback().
+      if (self->IsPlaying()) {
+        self->mDecodedStream->StartPlayback(self->GetMediaTime(), self->mInfo);
+      }
       self->ScheduleStateMachine();
     }
   });
