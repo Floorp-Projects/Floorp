@@ -496,12 +496,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     sweep();
     TIME_END(sweep);
 
-    TIME_START(logPromotionsToTenured);
-    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        zone->logPromotionsToTenured();
-    }
-    TIME_END(logPromotionsToTenured);
-
     TIME_START(clearStoreBuffer);
     rt->gc.storeBuffer.clear();
     TIME_END(clearStoreBuffer);
@@ -537,6 +531,12 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     }
     TIME_END(pretenure);
 
+    TIME_START(logPromotionsToTenured);
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+        zone->logPromotionsToTenured();
+    }
+    TIME_END(logPromotionsToTenured);
+
     // We ignore gcMaxBytes when allocating for minor collection. However, if we
     // overflowed, we disable the nursery. The next time we allocate, we'll fail
     // because gcBytes >= gcMaxBytes.
@@ -555,7 +555,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep logPtT resize pretnr\n");
+                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr logPtT\n");
             printedHeader = true;
         }
 
@@ -582,9 +582,9 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
                 TIME_TOTAL(freeMallocedBuffers),
                 TIME_TOTAL(clearStoreBuffer),
                 TIME_TOTAL(sweep),
-                TIME_TOTAL(logPromotionsToTenured),
                 TIME_TOTAL(resize),
-                TIME_TOTAL(pretenure));
+                TIME_TOTAL(pretenure),
+                TIME_TOTAL(logPromotionsToTenured));
 #undef FMT
     }
 }

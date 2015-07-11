@@ -495,6 +495,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     void trace(JSTracer* trc);
     static void finalize(FreeOp* fop, JSObject* obj);
     void markCrossCompartmentEdges(JSTracer* tracer);
+    void traceTenurePromotionsLog(JSTracer* trc);
 
     static const Class jsclass;
 
@@ -688,7 +689,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void markAll(JSTracer* trc);
     static void sweepAll(FreeOp* fop);
     static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
-    static void findCompartmentEdges(JS::Zone* v, gc::ComponentFinder<JS::Zone>& finder);
+    static void findZoneEdges(JS::Zone* v, gc::ComponentFinder<JS::Zone>& finder);
 
     /*
      * JSTrapStatus Overview
