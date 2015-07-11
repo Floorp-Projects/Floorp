@@ -189,6 +189,8 @@ var ignoreFunctions = {
     // static and dynamic checks for no GC in the non-test code, and in the test
     // code we fall back to only the dynamic checks.
     "void test::RingbufferDumper::OnTestPartResult(testing::TestPartResult*)" : true,
+
+    "float64 JS_GetCurrentEmbedderTime()" : true,
 };
 
 function isProtobuf(name)
