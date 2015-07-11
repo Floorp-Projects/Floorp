@@ -113,6 +113,10 @@ def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
 
 
+def svn_update(directory, revision):
+    run_in(directory, ["svn", "update", "-r", revision])
+
+
 def build_one_stage(env, src_dir, stage_dir, build_libcxx):
     with updated_env(env):
         build_one_stage_aux(src_dir, stage_dir, build_libcxx)
@@ -212,6 +216,11 @@ if __name__ == "__main__":
                    llvm_source_dir + "/projects/libcxx")
         for p in config.get("patches", {}).get(get_platform(), []):
             patch(p, source_dir)
+    else:
+        svn_update(llvm_source_dir, llvm_revision)
+        svn_update(clang_source_dir, llvm_revision)
+        svn_update(compiler_rt_source_dir, llvm_revision)
+        svn_update(libcxx_source_dir, llvm_revision)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
