@@ -30,6 +30,7 @@
 #include "nsFrameLoader.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ProcessGlobal.h"
 #include "xpcpublic.h"
 #include "nsObserverService.h"
 #include "nsFocusManager.h"
@@ -140,6 +141,14 @@ MarkChildMessageManagers(nsIMessageBroadcaster* aMM)
 static void
 MarkMessageManagers()
 {
+  if (nsFrameMessageManager::GetChildProcessManager()) {
+    // ProcessGlobal's MarkForCC marks also ChildProcessManager.
+    ProcessGlobal* pg = ProcessGlobal::Get();
+    if (pg) {
+      pg->MarkForCC();
+    }
+  }
+
   // The global message manager only exists in the root process.
   if (!XRE_IsParentProcess()) {
     return;
@@ -171,9 +180,6 @@ MarkMessageManagers()
   }
   if (nsFrameMessageManager::sSameProcessParentManager) {
     nsFrameMessageManager::sSameProcessParentManager->MarkForCC();
-  }
-  if (nsFrameMessageManager::GetChildProcessManager()) {
-    nsFrameMessageManager::GetChildProcessManager()->MarkForCC();
   }
 }
 
