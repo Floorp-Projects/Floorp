@@ -20,8 +20,6 @@
 namespace mozilla {
 namespace dom {
 
-class Animation;
-
 class AnimationTimeline
   : public nsISupports
   , public nsWrapperCache
