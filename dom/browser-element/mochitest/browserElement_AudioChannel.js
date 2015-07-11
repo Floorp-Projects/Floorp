@@ -9,6 +9,7 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
+SpecialPowers.setBoolPref("dom.testing.browserElementAudioChannel.noapp", true);
 SpecialPowers.setBoolPref("media.useAudioChannelService", true);
 
 function noaudio() {
