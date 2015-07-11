@@ -264,6 +264,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
   private:
     HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
     WeakGlobalObjectSet debuggees;      /* Debuggee globals. Cross-compartment weak references. */
+    JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
     js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
     JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */
@@ -308,6 +309,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                               double when);
     void emptyAllocationsLog();
+
+    /*
+     * Recompute the set of debuggee zones based on the set of debuggee globals.
+     */
+    bool recomputeDebuggeeZoneSet();
 
     /*
      * Return true if there is an existing object metadata callback for the
