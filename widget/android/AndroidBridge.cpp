@@ -79,7 +79,7 @@ jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
         classRef = ClassObject::LocalRef::Adopt(env,
                 env->CallObjectMethod(sBridge->mClassLoader.Get(),
                                       sBridge->mClassLoaderLoadClass,
-                                      Param<String>::Type(className, env).Get()));
+                                      Param<String>(className, env).Get()));
     }
 
     if (!classRef) {

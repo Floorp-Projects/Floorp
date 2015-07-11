@@ -65,7 +65,7 @@ template<class Cls> constexpr void
 
 
 // jstring has its own Param type.
-template<> struct TypeAdapter<class Param<String>::Type>
+template<> struct TypeAdapter<Param<String>>
         : public TypeAdapter<String::Ref>
 {};
 
