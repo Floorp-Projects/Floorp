@@ -616,10 +616,7 @@ struct IMENotification
         mSelectionChangeData.mCausedByComposition = false;
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
-        mTextChangeData.mStartOffset = 0;
-        mTextChangeData.mRemovedEndOffset = 0;
-        mTextChangeData.mAddedEndOffset = 0;
-        mTextChangeData.mCausedByComposition = false;
+        mTextChangeData.Clear();
         break;
       case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
         mMouseButtonEventData.mEventMessage = 0;
@@ -734,14 +731,35 @@ struct IMENotification
 
     bool mCausedByComposition;
 
-    uint32_t OldLength() const { return mRemovedEndOffset - mStartOffset; }
-    uint32_t NewLength() const { return mAddedEndOffset - mStartOffset; }
+    uint32_t OldLength() const
+    {
+      MOZ_ASSERT(IsValid());
+      return mRemovedEndOffset - mStartOffset;
+    }
+    uint32_t NewLength() const
+    {
+      MOZ_ASSERT(IsValid());
+      return mAddedEndOffset - mStartOffset;
+    }
 
     bool IsInInt32Range() const
     {
+      MOZ_ASSERT(IsValid());
       return mStartOffset <= INT32_MAX &&
              mRemovedEndOffset <= INT32_MAX &&
              mAddedEndOffset <= INT32_MAX;
+    }
+
+    bool IsValid() const
+    {
+      return !(mStartOffset == UINT32_MAX &&
+               !mRemovedEndOffset && !mAddedEndOffset);
+    }
+
+    void Clear()
+    {
+      mStartOffset = UINT32_MAX;
+      mRemovedEndOffset = mAddedEndOffset = 0;
     }
   };
 
