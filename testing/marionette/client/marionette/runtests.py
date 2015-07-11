@@ -4,9 +4,9 @@
 
 import sys
 
-from marionette_test import MarionetteTestCase, MarionetteJSTestCase
+from marionette.marionette_test import MarionetteTestCase, MarionetteJSTestCase
 from mozlog import structured
-from runner import (
+from marionette.runner import (
     BaseMarionetteTestRunner,
     BaseMarionetteOptions,
     BrowserMobProxyOptionsMixin
