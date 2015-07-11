@@ -74,6 +74,16 @@ function reportTestReason(val) {
   histogram.add(val);
 }
 
+function annotateCrashReport(value) {
+  try {
+    // "1" if we're annotating the crash report, "" to remove the annotation.
+    var crashReporter = Cc['@mozilla.org/toolkit/crash-reporter;1'].
+                          getService(Ci.nsICrashReporter);
+    crashReporter.annotateCrashReport("GraphicsSanityTest", value ? "1" : "");
+  } catch (e) {
+  }
+}
+
 function takeWindowSnapshot(win, ctx) {
   // TODO: drawWindow reads back from the gpu's backbuffer, which won't catch issues with presenting
   // the front buffer via the window manager. Ideally we'd use an OS level API for reading back
@@ -207,6 +217,10 @@ let listener = {
     });
 
     this.mm = null;
+  
+    // Remove the annotation after we've cleaned everything up, to catch any
+    // incidental crashes from having performed the sanity test.
+    annotateCrashReport(false);
   }
 };
 
@@ -266,6 +280,8 @@ SanityTest.prototype = {
   observe: function(subject, topic, data) {
     if (topic != "profile-after-change") return;
     if (!this.shouldRunTest()) return;
+
+    annotateCrashReport(true);
 
     // Open a tiny window to render our test page, and notify us when it's loaded
     var sanityTest = Services.ww.openWindow(null,
