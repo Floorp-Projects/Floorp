@@ -742,6 +742,12 @@ struct IMENotification
       return mAddedEndOffset - mStartOffset;
     }
 
+    // Positive if text is added. Negative if text is removed.
+    int64_t Difference() const 
+    {
+      return mAddedEndOffset - mRemovedEndOffset;
+    }
+
     bool IsInInt32Range() const
     {
       MOZ_ASSERT(IsValid());
@@ -760,6 +766,29 @@ struct IMENotification
     {
       mStartOffset = UINT32_MAX;
       mRemovedEndOffset = mAddedEndOffset = 0;
+    }
+  };
+
+  // TextChangeDataBase cannot have constructors because they are used in union.
+  // Therefore, TextChangeData should only implement constructor.  In other
+  // words, add other members to TextChangeDataBase.
+  struct TextChangeData : public TextChangeDataBase
+  {
+    TextChangeData() { Clear(); }
+
+    TextChangeData(uint32_t aStartOffset,
+                   uint32_t aRemovedEndOffset,
+                   uint32_t aAddedEndOffset,
+                   bool aCausedByComposition)
+    {
+      MOZ_ASSERT(aRemovedEndOffset >= aStartOffset,
+                 "removed end offset must not be smaller than start offset");
+      MOZ_ASSERT(aAddedEndOffset >= aStartOffset,
+                 "added end offset must not be smaller than start offset");
+      mStartOffset = aStartOffset;
+      mRemovedEndOffset = aRemovedEndOffset;
+      mAddedEndOffset = aAddedEndOffset;
+      mCausedByComposition = aCausedByComposition;
     }
   };
 
