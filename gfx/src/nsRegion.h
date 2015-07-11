@@ -21,7 +21,11 @@
 #include "mozilla/Move.h"               // for mozilla::Move
 
 class nsIntRegion;
-class gfx3DMatrix;
+namespace mozilla {
+namespace gfx {
+class Matrix4x4;
+} // namespace gfx
+} // namespace mozilla
 
 #include "pixman.h"
 
@@ -299,7 +303,7 @@ public:
     ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsRegion& ScaleInverseRoundOut(float aXScale, float aYScale);
-  nsRegion& Transform (const gfx3DMatrix &aTransform);
+  nsRegion& Transform (const mozilla::gfx::Matrix4x4 &aTransform);
   nsIntRegion ScaleToOutsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   nsIntRegion ScaleToInsidePixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
   nsIntRegion ScaleToNearestPixels (float aXScale, float aYScale, nscoord aAppUnitsPerPixel) const;
@@ -721,7 +725,7 @@ public:
     return This();
   }
 
-  Derived& Transform (const gfx3DMatrix &aTransform)
+  Derived& Transform (const mozilla::gfx::Matrix4x4 &aTransform)
   {
     mImpl.Transform(aTransform);
     return This();

@@ -16,7 +16,6 @@
 #include "RenderTrace.h"                // for RenderTraceLayers, etc
 #include "basic/BasicImplData.h"        // for BasicImplData
 #include "basic/BasicLayers.h"          // for BasicLayerManager, etc
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext, etc
@@ -613,7 +612,7 @@ BasicLayerManager::SetRoot(Layer* aLayer)
 
 #ifdef MOZ_ENABLE_SKIA
 static SkMatrix
-BasicLayerManager_Matrix3DToSkia(const gfx3DMatrix& aMatrix)
+BasicLayerManager_Matrix3DToSkia(const Matrix4x4& aMatrix)
 {
   SkMatrix transform;
   transform.setAll(aMatrix._11,
@@ -632,7 +631,7 @@ BasicLayerManager_Matrix3DToSkia(const gfx3DMatrix& aMatrix)
 static void
 Transform(const gfxImageSurface* aDest,
           RefPtr<DataSourceSurface> aSrc,
-          const gfx3DMatrix& aTransform,
+          const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
   if (aTransform.IsSingular()) {
@@ -658,8 +657,8 @@ Transform(const gfxImageSurface* aDest,
   src.setInfo(srcInfo, aSrc->Stride());
   src.setPixels((uint32_t*)aSrc->GetData());
 
-  gfx3DMatrix transform = aTransform;
-  transform.TranslatePost(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
+  Matrix4x4 transform = aTransform;
+  transform.PostTranslate(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
   destCanvas.setMatrix(BasicLayerManager_Matrix3DToSkia(transform));
 
   SkPaint paint;
@@ -671,7 +670,7 @@ Transform(const gfxImageSurface* aDest,
 }
 #else
 static pixman_transform
-BasicLayerManager_Matrix3DToPixman(const gfx3DMatrix& aMatrix)
+BasicLayerManager_Matrix3DToPixman(const Matrix4x4& aMatrix)
 {
   pixman_f_transform transform;
 
@@ -694,7 +693,7 @@ BasicLayerManager_Matrix3DToPixman(const gfx3DMatrix& aMatrix)
 static void
 Transform(const gfxImageSurface* aDest,
           RefPtr<DataSourceSurface> aSrc,
-          const gfx3DMatrix& aTransform,
+          const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
   IntSize destSize = aDest->GetSize();
@@ -743,7 +742,7 @@ Transform(const gfxImageSurface* aDest,
 #endif
 
 /**
- * Transform a surface using a gfx3DMatrix and blit to the destination if
+ * Transform a surface using a Matrix4x4 and blit to the destination if
  * it is efficient to do so.
  *
  * @param aSource       Source surface.
@@ -759,11 +758,12 @@ static already_AddRefed<gfxASurface>
 Transform3D(RefPtr<SourceSurface> aSource,
             gfxContext* aDest,
             const gfxRect& aBounds,
-            const gfx3DMatrix& aTransform,
+            const Matrix4x4& aTransform,
             gfxRect& aDestRect)
 {
   // Find the transformed rectangle of our layer.
-  gfxRect offsetRect = aTransform.TransformBounds(aBounds);
+  gfxRect offsetRect = aBounds;
+  offsetRect.TransformBounds(aTransform);
 
   // Intersect the transformed layer with the destination rectangle.
   // This is in device space since we have an identity transform set on aTarget.
@@ -779,7 +779,7 @@ Transform3D(RefPtr<SourceSurface> aSource,
   gfxPoint offset = aDestRect.TopLeft();
 
   // Include a translation to the correct origin.
-  gfx3DMatrix translation = gfx3DMatrix::Translation(aBounds.x, aBounds.y, 0);
+  Matrix4x4 translation = Matrix4x4::Translation(aBounds.x, aBounds.y, 0);
 
   // Transform the content and offset it such that the content begins at the origin.
   Transform(destImage, aSource->GetDataSurface(), translation * aTransform, offset);
@@ -961,8 +961,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       temp->Paint();
     }
 #endif
-    gfx3DMatrix effectiveTransform;
-    effectiveTransform = gfx::To3DMatrix(aLayer->GetEffectiveTransform());
+    Matrix4x4 effectiveTransform = aLayer->GetEffectiveTransform();
     nsRefPtr<gfxASurface> result =
       Transform3D(untransformedDT->Snapshot(), aTarget, bounds,
                   effectiveTransform, destRect);
