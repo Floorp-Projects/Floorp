@@ -192,12 +192,11 @@ HTMLVideoElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLVideoElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-HTMLVideoElement::NotifyOwnerDocumentActivityChangedInternal()
+void
+HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
 {
-  bool pauseElement = HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal();
+  HTMLMediaElement::NotifyOwnerDocumentActivityChanged();
   UpdateScreenWakeLock();
-  return pauseElement;
 }
 
 already_AddRefed<VideoPlaybackQuality>

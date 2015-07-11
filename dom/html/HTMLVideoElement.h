@@ -105,7 +105,7 @@ public:
 
   bool MozHasAudio() const;
 
-  bool NotifyOwnerDocumentActivityChangedInternal() override;
+  void NotifyOwnerDocumentActivityChanged() override;
 
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
