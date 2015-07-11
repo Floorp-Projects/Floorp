@@ -573,8 +573,11 @@ struct SizeConstraints {
 typedef int8_t IMEMessageType;
 enum IMEMessage : IMEMessageType
 {
+  // This is used by IMENotification internally.  This means that the instance
+  // hasn't been initialized yet.
+  NOTIFY_IME_OF_NOTHING,
   // An editable content is getting focus
-  NOTIFY_IME_OF_FOCUS = 1,
+  NOTIFY_IME_OF_FOCUS,
   // An editable content is losing focus
   NOTIFY_IME_OF_BLUR,
   // Selection in the focused editable content is changed
@@ -598,7 +601,7 @@ enum IMEMessage : IMEMessageType
 struct IMENotification
 {
   IMENotification()
-    : mMessage(static_cast<IMEMessage>(-1))
+    : mMessage(NOTIFY_IME_OF_NOTHING)
   {}
 
   MOZ_IMPLICIT IMENotification(IMEMessage aMessage)
@@ -627,6 +630,59 @@ struct IMENotification
         mMouseButtonEventData.mButtons = 0;
         mMouseButtonEventData.mModifiers = 0;
       default:
+        break;
+    }
+  }
+
+  void Clear()
+  {
+    mMessage = NOTIFY_IME_OF_NOTHING;
+  }
+
+  bool HasNotification() const
+  {
+    return mMessage != NOTIFY_IME_OF_NOTHING;
+  }
+
+  void MergeWith(const IMENotification& aNotification)
+  {
+    switch (mMessage) {
+      case NOTIFY_IME_OF_NOTHING:
+        MOZ_ASSERT(aNotification.mMessage != NOTIFY_IME_OF_NOTHING);
+        *this = aNotification;
+        break;
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
+        mSelectionChangeData.mOffset =
+          aNotification.mSelectionChangeData.mOffset;
+        mSelectionChangeData.mLength =
+          aNotification.mSelectionChangeData.mLength;
+        mSelectionChangeData.mWritingMode =
+          aNotification.mSelectionChangeData.mWritingMode;
+        mSelectionChangeData.mReversed =
+          aNotification.mSelectionChangeData.mReversed;
+        mSelectionChangeData.mCausedByComposition =
+          mSelectionChangeData.mCausedByComposition &&
+            aNotification.mSelectionChangeData.mCausedByComposition;
+        break;
+      case NOTIFY_IME_OF_TEXT_CHANGE:
+        MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
+        // TODO: Needs to merge the ranges rather than overwriting.
+        mTextChangeData.mStartOffset =
+          aNotification.mTextChangeData.mStartOffset;
+        mTextChangeData.mOldEndOffset =
+          aNotification.mTextChangeData.mOldEndOffset;
+        mTextChangeData.mNewEndOffset =
+          aNotification.mTextChangeData.mNewEndOffset;
+        mTextChangeData.mCausedByComposition =
+          mTextChangeData.mCausedByComposition &&
+            aNotification.mTextChangeData.mCausedByComposition;
+        break;
+      case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+        MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_COMPOSITION_UPDATE);
+        break;
+      default:
+        MOZ_CRASH("Merging notification isn't supported");
         break;
     }
   }
