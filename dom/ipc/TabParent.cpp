@@ -2088,6 +2088,14 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache)
 }
 
 bool
+TabParent::RecvOnEventNeedingAckReceived()
+{
+  // This is called when the child process receives WidgetCompositionEvent or
+  // WidgetSelectionEvent.
+  return true;
+}
+
+bool
 TabParent::RecvRequestFocus(const bool& aCanRaise)
 {
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
