@@ -91,10 +91,6 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     MOZ_ASSERT(topWindow);
 
     mWindow = do_QueryInterface(topWindow);
-    if (!mWindow) {
-      return NS_ERROR_FAILURE;
-    }
-
     mWindow = mWindow->GetOuterWindow();
   }
 
