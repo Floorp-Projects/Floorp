@@ -39,6 +39,8 @@ GetEventMessageName(uint32_t aMessage)
       return "NS_COMPOSITION_COMMIT_AS_IS";
     case NS_COMPOSITION_COMMIT:
       return "NS_COMPOSITION_COMMIT";
+    case NS_SELECTION_SET:
+      return "NS_SELECTION_SET";
     default:
       return "unacceptable event message";
   }
@@ -471,6 +473,7 @@ ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
   , mCompositionStart(UINT32_MAX)
   , mCompositionEventsDuringRequest(0)
+  , mPendingEventsNeedingAck(0)
   , mIsComposing(false)
   , mRequestedToCommitOrCancelComposition(false)
 {
@@ -844,10 +847,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p OnCompositionEvent(aEvent={ "
      "message=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
-     "mIsComposing=%s, mRequestedToCommitOrCancelComposition=%s",
+     "mPendingEventsNeedingAck=%u, mIsComposing=%s, "
+     "mRequestedToCommitOrCancelComposition=%s",
      this, GetEventMessageName(aEvent.message),
      NS_ConvertUTF16toUTF8(aEvent.mData).get(), aEvent.mData.Length(),
-     aEvent.mRanges ? aEvent.mRanges->Length() : 0, GetBoolName(mIsComposing),
+     aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
+     GetBoolName(mIsComposing),
      GetBoolName(mRequestedToCommitOrCancelComposition)));
 
   if (!aEvent.CausesDOMTextEvent()) {
@@ -860,6 +865,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
       mCompositionEventsDuringRequest++;
       return false;
     }
+    mPendingEventsNeedingAck++;
     return true;
   }
 
@@ -884,7 +890,39 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     mCompositionStart = mSelection.StartOffset();
   }
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
+  mPendingEventsNeedingAck++;
   return true;
+}
+
+void
+ContentCacheInParent::OnSelectionEvent(
+                        const WidgetSelectionEvent& aSelectionEvent)
+{
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+    ("ContentCacheInParent: 0x%p OnSelectionEvent(aEvent={ "
+     "message=%s, mOffset=%u, mLength=%u, mReversed=%s, "
+     "mExpandToClusterBoundary=%s, mUseNativeLineBreak=%s }), "
+     "mPendingEventsNeedingAck=%u, mIsComposing=%s",
+     this, GetEventMessageName(aSelectionEvent.message),
+     aSelectionEvent.mOffset, aSelectionEvent.mLength,
+     GetBoolName(aSelectionEvent.mReversed),
+     GetBoolName(aSelectionEvent.mExpandToClusterBoundary),
+     GetBoolName(aSelectionEvent.mUseNativeLineBreak), mPendingEventsNeedingAck,
+     GetBoolName(mIsComposing)));
+
+  mPendingEventsNeedingAck++;
+}
+
+void
+ContentCacheInParent::OnEventNeedingAckReceived()
+{
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+    ("ContentCacheInParent: 0x%p OnEventNeedingAckReceived(), "
+     "mPendingEventsNeedingAck=%u",
+     this, mPendingEventsNeedingAck));
+
+  MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
+  mPendingEventsNeedingAck--;
 }
 
 uint32_t
