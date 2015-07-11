@@ -48,8 +48,6 @@ public:
    */
   static void Shutdown();
 
-  static bool IsAudioChannelMutedByDefault();
-
   /**
    * Any audio channel agent that starts playing should register itself to
    * this service, sharing the AudioChannel.
@@ -148,7 +146,7 @@ private:
   {
     AudioChannelConfig()
       : mVolume(1.0)
-      , mMuted(IsAudioChannelMutedByDefault())
+      , mMuted(false)
       , mNumberOfAgents(0)
     {}
 
