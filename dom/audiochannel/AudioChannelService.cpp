@@ -43,59 +43,34 @@ namespace {
 // If true, any new AudioChannelAgent will be muted when created.
 bool sAudioChannelMutedByDefault = false;
 
-class NotifyChannelActiveRunnable final : public nsRunnable
-{
-public:
-  NotifyChannelActiveRunnable(uint64_t aWindowID, AudioChannel aAudioChannel,
-                              bool aActive)
-    : mWindowID(aWindowID)
-    , mAudioChannel(aAudioChannel)
-    , mActive(aActive)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-    if (NS_WARN_IF(!observerService)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsISupportsPRUint64> wrapper =
-      do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
-    if (NS_WARN_IF(!wrapper)) {
-       return NS_ERROR_FAILURE;
-    }
-
-    wrapper->SetData(mWindowID);
-
-    nsAutoString name;
-    AudioChannelService::GetAudioChannelString(mAudioChannel, name);
-
-    nsAutoCString topic;
-    topic.Assign("audiochannel-activity-");
-    topic.Append(NS_ConvertUTF16toUTF8(name));
-
-    observerService->NotifyObservers(wrapper, topic.get(),
-                                     mActive
-                                       ? MOZ_UTF16("active")
-                                       : MOZ_UTF16("inactive"));
-    return NS_OK;
-  }
-
-private:
-  const uint64_t mWindowID;
-  const AudioChannel mAudioChannel;
-  const bool mActive;
-};
-
 void
 NotifyChannelActive(uint64_t aWindowID, AudioChannel aAudioChannel,
                     bool aActive)
 {
-  nsRefPtr<nsRunnable> runnable =
-    new NotifyChannelActiveRunnable(aWindowID, aAudioChannel, aActive);
-  NS_DispatchToCurrentThread(runnable);
+  nsCOMPtr<nsIObserverService> observerService =
+    services::GetObserverService();
+  if (NS_WARN_IF(!observerService)) {
+    return;
+  }
+
+  nsCOMPtr<nsISupportsPRUint64> wrapper =
+    do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+  if (!wrapper) {
+     return;
+  }
+
+  wrapper->SetData(aWindowID);
+
+  nsAutoString name;
+  AudioChannelService::GetAudioChannelString(aAudioChannel, name);
+
+  nsAutoCString topic;
+  topic.Assign("audiochannel-activity-");
+  topic.Append(NS_ConvertUTF16toUTF8(name));
+
+  observerService->NotifyObservers(wrapper, topic.get(),
+                                   aActive
+                                     ? MOZ_UTF16("active") : MOZ_UTF16("inactive"));
 }
 
 already_AddRefed<nsPIDOMWindow>
@@ -118,34 +93,6 @@ IsParentProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;
 }
-
-class MediaPlaybackRunnable : public nsRunnable
-{
-public:
-  MediaPlaybackRunnable(nsIDOMWindow* aWindow, bool aActive)
-    : mWindow(aWindow)
-    , mActive(aActive)
-  {}
-
- NS_IMETHOD Run()
- {
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-    if (observerService) {
-      observerService->NotifyObservers(
-        ToSupports(mWindow),
-        "media-playback",
-        mActive ? NS_LITERAL_STRING("active").get()
-                : NS_LITERAL_STRING("inactive").get());
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIDOMWindow> mWindow;
-  bool mActive;
-};
 
 } // anonymous namespace
 
@@ -261,9 +208,13 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
 
   // If this is the first agent for this window, we must notify the observers.
   if (winData->mAgents.Length() == 1) {
-    nsRefPtr<MediaPlaybackRunnable> runnable =
-      new MediaPlaybackRunnable(aAgent->Window(), true /* active */);
-    NS_DispatchToCurrentThread(runnable);
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(ToSupports(aAgent->Window()),
+                                       "media-playback",
+                                       NS_LITERAL_STRING("active").get());
+    }
   }
 
   MaybeSendStatusUpdate();
@@ -307,9 +258,13 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 
   // If this is the last agent for this window, we must notify the observers.
   if (winData->mAgents.IsEmpty()) {
-    nsRefPtr<MediaPlaybackRunnable> runnable =
-      new MediaPlaybackRunnable(aAgent->Window(), false /* active */);
-    NS_DispatchToCurrentThread(runnable);
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(ToSupports(aAgent->Window()),
+                                       "media-playback",
+                                       NS_LITERAL_STRING("inactive").get());
+    }
   }
 
   MaybeSendStatusUpdate();
