@@ -127,16 +127,9 @@ public:
 
   void Notify(uint64_t aWindowID);
 
-  void ChildStatusReceived(uint64_t aChildID, bool aTelephonyChannel,
-                           bool aContentOrNormalChannel, bool aAnyChannel);
-
 private:
   AudioChannelService();
   ~AudioChannelService();
-
-  void MaybeSendStatusUpdate();
-
-  bool ContentOrNormalChannelIsActive();
 
   /* Send the default-volume-channel-changed notification */
   void SetDefaultVolumeControlChannelInternal(int32_t aChannel,
@@ -171,12 +164,6 @@ private:
                                      void *aPtr);
 
   static PLDHashOperator
-  ContentOrNormalChannelIsActiveEnumerator(
-                                        const uint64_t& aWindowID,
-                                        nsAutoPtr<AudioChannelWindow>& aWinData,
-                                        void *aPtr);
-
-  static PLDHashOperator
   AnyAudioChannelIsActiveEnumerator(const uint64_t& aWindowID,
                                     nsAutoPtr<AudioChannelWindow>& aWinData,
                                     void *aPtr);
@@ -193,24 +180,6 @@ private:
 
   nsClassHashtable<nsUint64HashKey, AudioChannelWindow> mWindows;
 
-  struct AudioChannelChildStatus final {
-    AudioChannelChildStatus()
-      : mActiveTelephonyChannel(false)
-      , mActiveContentOrNormalChannel(false)
-    {}
-
-    bool mActiveTelephonyChannel;
-    bool mActiveContentOrNormalChannel;
-  };
-
-  static PLDHashOperator
-  TelephonyChannelIsActiveInChildrenEnumerator(
-                                      const uint64_t& aChildID,
-                                      nsAutoPtr<AudioChannelChildStatus>& aData,
-                                      void *aPtr);
-
-  nsClassHashtable<nsUint64HashKey, AudioChannelChildStatus> mPlayingChildren;
-
 #ifdef MOZ_WIDGET_GONK
   nsTArray<SpeakerManagerService*>  mSpeakerManager;
 #endif
@@ -220,12 +189,6 @@ private:
   nsCOMPtr<nsIRunnable> mRunnable;
 
   uint64_t mDefChannelChildID;
-
-  // These boolean are used to know if we have to send an status update to the
-  // service running in the main process.
-  bool mTelephonyChannel;
-  bool mContentOrNormalChannel;
-  bool mAnyChannel;
 
   // This is needed for IPC comunication between
   // AudioChannelServiceChild and this class.
