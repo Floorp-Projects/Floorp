@@ -177,7 +177,7 @@ public:
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) override;
     virtual bool RecvNotifyIMEPositionChange(const ContentCache& aContentCache) override;
-    virtual bool RecvOnEventNeedingAckReceived() override;
+    virtual bool RecvOnEventNeedingAckReceived(const uint32_t& aMessage) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
                                        nsString* aComposition) override;
