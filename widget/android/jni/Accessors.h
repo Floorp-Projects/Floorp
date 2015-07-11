@@ -33,16 +33,18 @@ struct Value
 
 // Base class for Method<>, Field<>, and Constructor<>.
 class Accessor {
-private:
+public:
     template<class Cls>
-    static void EnsureClassRef(JNIEnv* env)
+    static jclass EnsureClassRef(JNIEnv* env)
     {
         if (!Cls::sClassRef) {
             MOZ_ALWAYS_TRUE(Cls::sClassRef =
                 AndroidBridge::GetClassGlobalRef(env, Cls::name));
         }
+        return Cls::sClassRef;
     }
 
+private:
     static void GetNsresult(JNIEnv* env, nsresult* rv)
     {
         if (env->ExceptionCheck()) {
