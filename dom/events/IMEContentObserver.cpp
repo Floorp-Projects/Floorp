@@ -1727,8 +1727,8 @@ IMEContentObserver::TextChangeEvent::Run()
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.mTextChangeData.mStartOffset = mData.mStartOffset;
-  notification.mTextChangeData.mOldEndOffset = mData.mRemovedEndOffset;
-  notification.mTextChangeData.mNewEndOffset = mData.mAddedEndOffset;
+  notification.mTextChangeData.mRemovedEndOffset = mData.mRemovedEndOffset;
+  notification.mTextChangeData.mAddedEndOffset = mData.mAddedEndOffset;
   notification.mTextChangeData.mCausedByComposition =
     mData.mCausedOnlyByComposition;
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);

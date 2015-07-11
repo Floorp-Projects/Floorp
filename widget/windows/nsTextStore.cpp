@@ -4315,12 +4315,12 @@ nsTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(aIMENotification={ "
           "mMessage=0x%08X, mTextChangeData={ mStartOffset=%lu, "
-          "mOldEndOffset=%lu, mNewEndOffset=%lu}), mSink=0x%p, mSinkMask=%s, "
-          "mComposition.IsComposing()=%s",
+          "mRemovedEndOffset=%lu, mAddedEndOffset=%lu}), mSink=0x%p, "
+          "mSinkMask=%s, mComposition.IsComposing()=%s",
           this, aIMENotification.mMessage,
           aIMENotification.mTextChangeData.mStartOffset,
-          aIMENotification.mTextChangeData.mOldEndOffset,
-          aIMENotification.mTextChangeData.mNewEndOffset, mSink.get(),
+          aIMENotification.mTextChangeData.mRemovedEndOffset,
+          aIMENotification.mTextChangeData.mAddedEndOffset, mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mComposition.IsComposing())));
 
@@ -4344,9 +4344,9 @@ nsTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
     textChange.acpStart =
       static_cast<LONG>(aIMENotification.mTextChangeData.mStartOffset);
     textChange.acpOldEnd =
-      static_cast<LONG>(aIMENotification.mTextChangeData.mOldEndOffset);
+      static_cast<LONG>(aIMENotification.mTextChangeData.mRemovedEndOffset);
     textChange.acpNewEnd =
-      static_cast<LONG>(aIMENotification.mTextChangeData.mNewEndOffset);
+      static_cast<LONG>(aIMENotification.mTextChangeData.mAddedEndOffset);
     NotifyTSFOfTextChange(textChange);
   } else {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
