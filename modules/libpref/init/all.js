@@ -4342,6 +4342,9 @@ pref("alerts.disableSlidingEffect", false);
 pref("full-screen-api.enabled", false);
 pref("full-screen-api.allow-trusted-requests-only", true);
 pref("full-screen-api.pointer-lock.enabled", true);
+// transition duration of fade-to-black and fade-from-black, unit: ms
+pref("full-screen-api.transition-duration.enter", "400 400");
+pref("full-screen-api.transition-duration.leave", "400 400");
 
 // DOM idle observers API
 pref("dom.idle-observers-api.enabled", true);
