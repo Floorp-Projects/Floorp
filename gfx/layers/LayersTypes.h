@@ -214,7 +214,7 @@ struct EventRegions {
     mVerticalPanRegion.MoveBy(aXTrans, aYTrans);
   }
 
-  void Transform(const gfx3DMatrix& aTransform)
+  void Transform(const gfx::Matrix4x4& aTransform)
   {
     mHitRegion.Transform(aTransform);
     mDispatchToContentHitRegion.Transform(aTransform);
