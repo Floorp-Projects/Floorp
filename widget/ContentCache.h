@@ -315,6 +315,17 @@ public:
   bool OnCompositionEvent(const WidgetCompositionEvent& aCompositionEvent);
 
   /**
+   * OnSelectionEvent() should be called before sending selection event.
+   */
+  void OnSelectionEvent(const WidgetSelectionEvent& aSelectionEvent);
+
+  /**
+   * OnEventNeedingAckReceived() should be called when the child process
+   * receives a sent event which needs acknowledging.
+   */
+  void OnEventNeedingAckReceived();
+
+  /**
    * RequestToCommitComposition() requests to commit or cancel composition to
    * the widget.  If it's handled synchronously, this returns the number of
    * composition events after that.
@@ -347,6 +358,10 @@ private:
   // Count of composition events during requesting commit or cancel the
   // composition.
   uint32_t mCompositionEventsDuringRequest;
+  // mPendingEventsNeedingAck is increased before sending a composition event or
+  // a selection event and decreased after they are received in the child
+  // process.
+  uint32_t mPendingEventsNeedingAck;
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
