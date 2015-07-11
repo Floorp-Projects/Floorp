@@ -261,6 +261,17 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         return observedGCs.put(majorGCNumber);
     }
 
+    bool isTrackingTenurePromotions() const {
+        return trackingTenurePromotions;
+    }
+
+    bool isEnabled() const {
+        return enabled;
+    }
+
+    void logTenurePromotion(JSObject& obj, double when);
+    static JSObject* getObjectAllocationSite(JSObject& obj);
+
   private:
     HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
     WeakGlobalObjectSet debuggees;      /* Debuggee globals. Cross-compartment weak references. */
@@ -272,6 +283,26 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     // The set of GC numbers for which one or more of this Debugger's observed
     // debuggees participated in.
     js::HashSet<uint64_t> observedGCs;
+
+    struct TenurePromotionsEntry : public mozilla::LinkedListElement<TenurePromotionsEntry>
+    {
+        TenurePromotionsEntry(JSObject& obj, double when)
+            : className(obj.getClass()->name),
+              when(when),
+              frame(getObjectAllocationSite(obj))
+        { }
+
+        const char* className;
+        double when;
+        RelocatablePtrObject frame;
+    };
+
+    using TenurePromotionsLog = mozilla::LinkedList<TenurePromotionsEntry>;
+    TenurePromotionsLog tenurePromotionsLog;
+    bool trackingTenurePromotions;
+    size_t tenurePromotionsLogLength;
+    size_t maxTenurePromotionsLogLength;
+    bool tenurePromotionsLogOverflowed;
 
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
@@ -304,11 +335,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     size_t maxAllocationsLogLength;
     bool allocationsLogOverflowed;
 
-    static const size_t DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH = 5000;
+    static const size_t DEFAULT_MAX_LOG_LENGTH = 5000;
 
     bool appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                               double when);
     void emptyAllocationsLog();
+    void emptyTenurePromotionsLog();
 
     /*
      * Recompute the set of debuggee zones based on the set of debuggee globals.

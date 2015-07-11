@@ -133,6 +133,29 @@ Zone::getOrCreateDebuggers(JSContext* cx)
 }
 
 void
+Zone::logPromotionsToTenured()
+{
+    auto* dbgs = getDebuggers();
+    if (MOZ_LIKELY(!dbgs))
+        return;
+
+    auto now = JS_GetCurrentEmbedderTime();
+
+    for (auto** dbgp = dbgs->begin(); dbgp != dbgs->end(); dbgp++) {
+        if (!(*dbgp)->isEnabled() || !(*dbgp)->isTrackingTenurePromotions())
+            continue;
+
+        for (auto range = awaitingTenureLogging.all(); !range.empty(); range.popFront()) {
+            if ((*dbgp)->isDebuggee(range.front()->compartment()))
+                (*dbgp)->logTenurePromotion(*range.front(), now);
+        }
+    }
+
+    awaitingTenureLogging.clear();
+}
+
+
+void
 Zone::sweepBreakpoints(FreeOp* fop)
 {
     if (fop->runtime()->debuggerList.isEmpty())
