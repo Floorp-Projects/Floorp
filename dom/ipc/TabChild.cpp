@@ -2659,7 +2659,7 @@ TabChild::RecvKeyEvent(const nsString& aType,
 bool
 TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
 {
-  unused << SendOnEventNeedingAckReceived();
+  unused << SendOnEventNeedingAckReceived(event.message);
   WidgetCompositionEvent localEvent(event);
   localEvent.widget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
@@ -2669,7 +2669,7 @@ TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
 bool
 TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 {
-  unused << SendOnEventNeedingAckReceived();
+  unused << SendOnEventNeedingAckReceived(event.message);
   WidgetSelectionEvent localEvent(event);
   localEvent.widget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
