@@ -524,16 +524,20 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 }
 
 void
-IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
+IMEContentObserver::StoreTextChangeData(
+                      const TextChangeDataBase& aTextChangeData)
 {
   MOZ_ASSERT(aTextChangeData.mStartOffset <= aTextChangeData.mRemovedEndOffset,
              "end of removed text must be same or larger than start");
   MOZ_ASSERT(aTextChangeData.mStartOffset <= aTextChangeData.mAddedEndOffset,
              "end of added text must be same or larger than start");
 
-  if (!mTextChangeData.mStored) {
-    mTextChangeData = aTextChangeData;
-    MOZ_ASSERT(mTextChangeData.mStored, "Why mStored is false?");
+  if (!mTextChangeData.IsValid()) {
+    // XXX This becomes safe in next patch.
+    static_assert(sizeof(TextChangeData) == sizeof(TextChangeDataBase),
+                  "TextChangeData shouldn't have specific members");
+    static_cast<TextChangeDataBase>(mTextChangeData) = aTextChangeData;
+    MOZ_ASSERT(mTextChangeData.IsValid(), "Why mStored is false?");
     return;
   }
 
@@ -567,11 +571,11 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
   // offset of inserted text in the new text but |oldData.mAddedEndOffset|
   // doesn't include any changes of the text before |newData.mAddedEndOffset|.
 
-  const TextChangeData& newData = aTextChangeData;
-  const TextChangeData oldData = mTextChangeData;
+  const TextChangeDataBase& newData = aTextChangeData;
+  const TextChangeDataBase oldData = mTextChangeData;
 
-  mTextChangeData.mCausedOnlyByComposition =
-    newData.mCausedOnlyByComposition && oldData.mCausedOnlyByComposition;
+  mTextChangeData.mCausedByComposition =
+    newData.mCausedByComposition && oldData.mCausedByComposition;
 
   if (newData.mStartOffset >= oldData.mAddedEndOffset) {
     // Case 1:
@@ -723,7 +727,7 @@ IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
   mStartOfRemovingTextRangeCache.Clear();
 
   bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.mStored && causedByComposition &&
+  if (!mTextChangeData.IsValid() && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
     return;
   }
@@ -751,7 +755,7 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   mPreCharacterDataChangeLength = -1;
 
   bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.mStored && causedByComposition &&
+  if (!mTextChangeData.IsValid() && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
     return;
   }
@@ -789,7 +793,7 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   mStartOfRemovingTextRangeCache.Clear();
 
   bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.mStored && causedByComposition &&
+  if (!mTextChangeData.IsValid() && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
     return;
   }
@@ -864,7 +868,7 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   mEndOfAddedTextCache.Clear();
 
   bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.mStored && causedByComposition &&
+  if (!mTextChangeData.IsValid() && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
     return;
   }
@@ -944,7 +948,7 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   mStartOfRemovingTextRangeCache.Clear();
 
   bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.mStored && causedByComposition &&
+  if (!mTextChangeData.IsValid() && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
     return;
   }
@@ -1004,10 +1008,11 @@ IMEContentObserver::PostFocusSetNotification()
 }
 
 void
-IMEContentObserver::PostTextChangeNotification(const TextChangeData& aData)
+IMEContentObserver::PostTextChangeNotification(
+                      const TextChangeDataBase& aTextChangeData)
 {
-  StoreTextChangeData(aData);
-  MOZ_ASSERT(mTextChangeData.mStored,
+  StoreTextChangeData(aTextChangeData);
+  MOZ_ASSERT(mTextChangeData.IsValid(),
              "mTextChangeData must have text change data");
 }
 
@@ -1113,7 +1118,7 @@ IMEContentObserver::FlushMergeableNotifications()
     return;
   }
 
-  if (mTextChangeData.mStored) {
+  if (mTextChangeData.IsValid()) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
   }
 
@@ -1132,7 +1137,7 @@ IMEContentObserver::FlushMergeableNotifications()
   }
 
   // If notifications may cause new change, we should notify them now.
-  if (mTextChangeData.mStored ||
+  if (mTextChangeData.IsValid() ||
       mIsSelectionChangeEventPending ||
       mIsPositionChangeEventPending) {
     nsRefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
@@ -1167,7 +1172,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "Test 1-1-2: mRemovedEndOffset should be the first end of removed text");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 35,
     "Test 1-1-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text (longer line -> shorter line)
   StoreTextChangeData(TextChangeData(10, 20, 10, false));
@@ -1179,7 +1184,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "with already removed length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 10,
     "Test 1-2-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text (shorter line -> longer line)
   StoreTextChangeData(TextChangeData(10, 20, 10, false));
@@ -1191,7 +1196,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "with already removed length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 10,
     "Test 1-3-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Appending text at different point (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(10, 10, 20, false));
@@ -1203,7 +1208,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "text without already added length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 60,
     "Test 1-4-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text at different point (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(10, 20, 10, false));
@@ -1215,7 +1220,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "text with already removed length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 55,
     "Test 1-5-3: mAddedEndOffset should be the largest end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text and append text (becomes longer)
   StoreTextChangeData(TextChangeData(30, 35, 32, false));
@@ -1227,7 +1232,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "text");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 40,
     "Test 1-6-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text and append text (becomes shorter)
   StoreTextChangeData(TextChangeData(30, 35, 32, false));
@@ -1239,7 +1244,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "text");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 33,
     "Test 1-7-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text and replacing text after first range (not sure if actually
   // occurs)
@@ -1252,7 +1257,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already removed text");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 48,
     "Test 1-8-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text and replacing text after first range (not sure if actually
   // occurs)
@@ -1265,7 +1270,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already removed text");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 36,
     "Test 1-9-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   /****************************************************************************
    * Case 2
@@ -1282,7 +1287,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already added text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 54,
     "Test 2-1-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around end of added text (becomes longer) (not sure
   // if actually occurs)
@@ -1295,7 +1300,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already added text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 68,
     "Test 2-2-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around end of replaced text (became shorter) (not sure if
   // actually occurs)
@@ -1308,7 +1313,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already removed text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 49,
     "Test 2-3-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around end of replaced text (became longer) (not sure if
   // actually occurs)
@@ -1321,7 +1326,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already added text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 61,
     "Test 2-4-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   /****************************************************************************
    * Case 3
@@ -1337,7 +1342,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 35, // 20 + (30 - 15)
     "Test 3-1-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text in added text (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(50, 50, 55, false));
@@ -1349,7 +1354,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 58, // 55 + (56 - 53)
     "Test 3-2-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text in replaced text (became shorter) (not sure if actually
   // occurs)
@@ -1362,7 +1367,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 57, // 45 + (50 - 38)
     "Test 3-3-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text in replaced text (became longer) (not sure if actually
   // occurs)
@@ -1376,7 +1381,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 55, // 53 + (52 - 50)
     "Test 3-4-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text in replaced text (became shorter) (not sure if actually
   // occurs)
@@ -1390,7 +1395,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 48, // 50 + (47 - 49)
     "Test 3-5-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text in replaced text (became longer) (not sure if actually
   // occurs)
@@ -1404,7 +1409,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 50, // 53 + (47 - 50)
     "Test 3-6-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   /****************************************************************************
    * Case 4
@@ -1420,7 +1425,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already added text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 68,
     "Test 4-1-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around a point in which text was removed (not sure if
   // actually occurs)
@@ -1433,7 +1438,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already removed text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 68,
     "Test 4-2-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text all replaced text (became shorter) (not sure if actually
   // occurs)
@@ -1446,7 +1451,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "without already removed text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 130,
     "Test 4-3-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text all replaced text (became longer) (not sure if actually
   // occurs)
@@ -1459,7 +1464,7 @@ IMEContentObserver::TestMergingTextChangeData()
     "with already added text length");
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 50,
     "Test 4-4-3: mAddedEndOffset should be the last end of added text");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   /****************************************************************************
    * Case 5
@@ -1476,7 +1481,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 52, // 55 + (52 - 49)
     "Test 5-1-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around start of replaced text (became shorter) (not sure if
   // actually occurs)
@@ -1490,7 +1495,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 56, // 58 + (48 - 50)
     "Test 5-2-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around start of replaced text (became longer) (not sure if
   // actually occurs)
@@ -1504,7 +1509,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 66, // 68 + (53 - 55)
     "Test 5-3-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around start of replaced text (became shorter) (not sure if
   // actually occurs)
@@ -1518,7 +1523,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 136, // 58 + (128 - 50)
     "Test 5-4-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text around start of replaced text (became longer) (not sure if
   // actually occurs)
@@ -1532,7 +1537,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 78, // 68 + (65 - 55)
     "Test 5-5-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   /****************************************************************************
    * Case 6
@@ -1549,7 +1554,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 55, // 45 + (20 - 10)
     "Test 6-1-3: mAddedEndOffset should be the first end of added text with "
     "added text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Removing text before already removed text (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(30, 35, 30, false));
@@ -1562,7 +1567,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 15, // 30 - (25 - 10)
     "Test 6-2-3: mAddedEndOffset should be the first end of added text with "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text before already replaced text (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(50, 65, 70, false));
@@ -1575,7 +1580,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 61, // 70 + (15 - 24)
     "Test 6-3-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 
   // Replacing text before already replaced text (not sure if actually occurs)
   StoreTextChangeData(TextChangeData(50, 65, 70, false));
@@ -1588,7 +1593,7 @@ IMEContentObserver::TestMergingTextChangeData()
   MOZ_ASSERT(mTextChangeData.mAddedEndOffset == 82, // 70 + (36 - 24)
     "Test 6-4-3: mAddedEndOffset should be the first end of added text without "
     "removed text length by the new change");
-  mTextChangeData.mStored = false;
+  mTextChangeData.Clear();
 }
 #endif // #ifdef DEBUG
 
@@ -1721,16 +1726,12 @@ IMEContentObserver::TextChangeEvent::Run()
   }
 
   if (!IsSafeToNotifyIME()) {
-    mIMEContentObserver->PostTextChangeNotification(mData);
+    mIMEContentObserver->PostTextChangeNotification(mTextChangeData);
     return NS_OK;
   }
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-  notification.mTextChangeData.mStartOffset = mData.mStartOffset;
-  notification.mTextChangeData.mRemovedEndOffset = mData.mRemovedEndOffset;
-  notification.mTextChangeData.mAddedEndOffset = mData.mAddedEndOffset;
-  notification.mTextChangeData.mCausedByComposition =
-    mData.mCausedOnlyByComposition;
+  notification.mTextChangeData = mTextChangeData;
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }
