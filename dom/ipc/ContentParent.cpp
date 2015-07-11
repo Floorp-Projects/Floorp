@@ -2803,20 +2803,6 @@ ContentParent::RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
 }
 
 bool
-ContentParent::RecvAudioChannelServiceStatus(
-                                           const bool& aTelephonyChannel,
-                                           const bool& aContentOrNormalChannel,
-                                           const bool& aAnyChannel)
-{
-    nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-    MOZ_ASSERT(service);
-
-    service->ChildStatusReceived(mChildID, aTelephonyChannel,
-                                 aContentOrNormalChannel, aAnyChannel);
-    return true;
-}
-
-bool
 ContentParent::RecvDataStoreGetStores(
                                     const nsString& aName,
                                     const nsString& aOwner,
