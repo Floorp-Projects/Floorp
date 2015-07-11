@@ -496,6 +496,12 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     sweep();
     TIME_END(sweep);
 
+    TIME_START(logPromotionsToTenured);
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+        zone->logPromotionsToTenured();
+    }
+    TIME_END(logPromotionsToTenured);
+
     TIME_START(clearStoreBuffer);
     rt->gc.storeBuffer.clear();
     TIME_END(clearStoreBuffer);
@@ -549,13 +555,13 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr\n");
+                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep logPtT resize pretnr\n");
             printedHeader = true;
         }
 
 #define FMT " %6" PRIu64
         fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
                 js::gcstats::ExplainReason(reason),
                 promotionRate * 100,
                 numActiveChunks_,
@@ -576,6 +582,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
                 TIME_TOTAL(freeMallocedBuffers),
                 TIME_TOTAL(clearStoreBuffer),
                 TIME_TOTAL(sweep),
+                TIME_TOTAL(logPromotionsToTenured),
                 TIME_TOTAL(resize),
                 TIME_TOTAL(pretenure));
 #undef FMT
