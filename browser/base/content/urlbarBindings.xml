@@ -216,16 +216,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (!this._formattingEnabled || !this.editor)
             return;
 
-          // Always clear the strike-out selection first.
           let controller = this.editor.selectionController;
           let strikeOut = controller.getSelection(controller.SELECTION_URLSTRIKEOUT);
           strikeOut.removeAllRanges();
 
-          if (this.focused)
-            return;
-
           let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
           selection.removeAllRanges();
+
+          if (this.focused)
+            return;
 
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
@@ -283,17 +282,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             range.setEnd(textNode, value.length);
             selection.addRange(range);
           }
-        ]]></body>
-      </method>
-
-      <method name="_clearFormatting">
-        <body><![CDATA[
-          if (!this._formattingEnabled)
-            return;
-
-          let controller = this.editor.selectionController;
-          let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
-          selection.removeAllRanges();
         ]]></body>
       </method>
 
@@ -953,6 +941,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <handler event="focus"><![CDATA[
         if (event.originalTarget == this.inputField) {
+          this._hideURLTooltip();
           this.formatValue();
         }
       ]]></handler>
@@ -989,11 +978,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
         dt.effectAllowed = "copyLink";
         event.stopPropagation();
-      ]]></handler>
-
-      <handler event="focus" phase="capturing"><![CDATA[
-        this._hideURLTooltip();
-        this._clearFormatting();
       ]]></handler>
 
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>
