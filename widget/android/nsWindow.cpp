@@ -1737,6 +1737,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             // combine with this text change, and overflow might occur if
             // we just use INT32_MAX
             IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
+            notification.mTextChangeData.mStartOffset = 0;
             notification.mTextChangeData.mRemovedEndOffset =
                 notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
             NotifyIMEOfTextChange(notification);
