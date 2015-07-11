@@ -1065,6 +1065,18 @@ nsPluginHost::GetBlocklistStateForType(const nsACString &aMimeType,
 }
 
 NS_IMETHODIMP
+nsPluginHost::IsPluginOOP(const nsACString& aMimeType,
+                          bool* aResult)
+{
+  nsPluginTag* tag = FindNativePluginForType(aMimeType, true);
+  if (!tag) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aResult = nsNPAPIPlugin::RunPluginOOP(tag);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType,
                                          uint32_t aExcludeFlags,
                                          nsACString &aPermissionString)
