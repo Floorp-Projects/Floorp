@@ -325,6 +325,7 @@ nsWindow::nsWindow() : nsWindowBase()
   mIconSmall            = nullptr;
   mIconBig              = nullptr;
   mWnd                  = nullptr;
+  mTransitionWnd        = nullptr;
   mPaintDC              = nullptr;
   mCompositeDC          = nullptr;
   mPrevWndProc          = nullptr;
@@ -1521,6 +1522,15 @@ NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, 
     ClearThemeRegion();
     VERIFY(::SetWindowPos(mWnd, nullptr, x, y,
                           width, GetHeight(height), flags));
+    if (mTransitionWnd) {
+      // If we have a fullscreen transition window, we need to make
+      // it topmost again, otherwise the taskbar may be raised by
+      // the system unexpectedly when we leave fullscreen state.
+      ::SetWindowPos(mTransitionWnd, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+      // Every transition window is only used once.
+      mTransitionWnd = nullptr;
+    }
     SetThemeRegion();
   }
 
@@ -2846,6 +2856,173 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect)
     VERIFY(::InvalidateRect(mWnd, &rect, FALSE));
   }
   return NS_OK;
+}
+
+static LRESULT CALLBACK
+FullscreenTransitionWindowProc(HWND hWnd, UINT uMsg,
+                               WPARAM wParam, LPARAM lParam)
+{
+  switch (uMsg) {
+    case WM_FULLSCREEN_TRANSITION_BEFORE:
+    case WM_FULLSCREEN_TRANSITION_AFTER: {
+      // The message sender should have added ref for us.
+      nsCOMPtr<nsIRunnable> callback =
+        already_AddRefed<nsIRunnable>((nsIRunnable*)wParam);
+      DWORD duration = (DWORD)lParam;
+      DWORD flags = AW_BLEND;
+      if (uMsg == WM_FULLSCREEN_TRANSITION_AFTER) {
+        flags |= AW_HIDE;
+      }
+      ::AnimateWindow(hWnd, duration, flags);
+      NS_DispatchToMainThread(callback);
+      break;
+    }
+    case WM_DESTROY:
+      ::PostQuitMessage(0);
+      break;
+    default:
+      return ::DefWindowProcW(hWnd, uMsg, wParam, lParam);
+  }
+  return 0;
+}
+
+struct FullscreenTransitionInitData
+{
+  nsIntRect mBounds;
+  HANDLE mSemaphore;
+  HANDLE mThread;
+  HWND mWnd;
+
+  FullscreenTransitionInitData()
+    : mSemaphore(nullptr)
+    , mThread(nullptr)
+    , mWnd(nullptr) { }
+
+  ~FullscreenTransitionInitData()
+  {
+    if (mSemaphore) {
+      ::CloseHandle(mSemaphore);
+    }
+    if (mThread) {
+      ::CloseHandle(mThread);
+    }
+  }
+};
+
+static DWORD WINAPI
+FullscreenTransitionThreadProc(LPVOID lpParam)
+{
+  // Initialize window class
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    WNDCLASSW wc = {};
+    wc.lpfnWndProc = ::FullscreenTransitionWindowProc;
+    wc.hInstance = nsToolkit::mDllInstance;
+    wc.hbrBackground = ::CreateSolidBrush(RGB(0, 0, 0));
+    wc.lpszClassName = kClassNameTransition;
+    ::RegisterClassW(&wc);
+    sInitialized = true;
+  }
+
+  auto data = static_cast<FullscreenTransitionInitData*>(lpParam);
+  HWND wnd = ::CreateWindowW(
+    kClassNameTransition, L"", 0, 0, 0, 0, 0,
+    nullptr, nullptr, nsToolkit::mDllInstance, nullptr);
+  if (!wnd) {
+    ::ReleaseSemaphore(data->mSemaphore, 1, nullptr);
+    return 0;
+  }
+
+  // Since AnimateWindow blocks the thread of the transition window,
+  // we need to hide the cursor for that window, otherwise the system
+  // would show the busy pointer to the user.
+  ::ShowCursor(false);
+  ::SetWindowLongW(wnd, GWL_STYLE, 0);
+  ::SetWindowLongW(wnd, GWL_EXSTYLE, WS_EX_LAYERED |
+                   WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE);
+  ::SetWindowPos(wnd, HWND_TOPMOST, data->mBounds.x, data->mBounds.y,
+                 data->mBounds.width, data->mBounds.height, 0);
+  data->mWnd = wnd;
+  ::ReleaseSemaphore(data->mSemaphore, 1, nullptr);
+  // The initialization data may no longer be valid
+  // after we release the semaphore.
+  data = nullptr;
+
+  MSG msg;
+  while (::GetMessageW(&msg, nullptr, 0, 0)) {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
+  }
+  ::ShowCursor(true);
+  ::DestroyWindow(wnd);
+  return 0;
+}
+
+class FullscreenTransitionData final : public nsISupports
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit FullscreenTransitionData(HWND aWnd)
+    : mWnd(aWnd)
+  {
+    MOZ_ASSERT(NS_IsMainThread(), "FullscreenTransitionData "
+               "should be constructed in the main thread");
+  }
+
+  const HWND mWnd;
+
+private:
+  ~FullscreenTransitionData()
+  {
+    MOZ_ASSERT(NS_IsMainThread(), "FullscreenTransitionData "
+               "should be deconstructed in the main thread");
+    ::PostMessageW(mWnd, WM_DESTROY, 0, 0);
+  }
+};
+
+NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
+
+/* virtual */ bool
+nsWindow::PrepareForFullscreenTransition(nsISupports** aData)
+{
+  FullscreenTransitionInitData initData;
+  nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+  screen->GetRectDisplayPix(&initData.mBounds.x, &initData.mBounds.y,
+                            &initData.mBounds.width, &initData.mBounds.height);
+  // Create a semaphore for synchronizing the window handle which will
+  // be created by the transition thread and used by the main thread for
+  // posting the transition messages.
+  initData.mSemaphore = ::CreateSemaphore(nullptr, 0, 1, nullptr);
+  if (initData.mSemaphore) {
+    initData.mThread = ::CreateThread(
+      nullptr, 0, FullscreenTransitionThreadProc, &initData, 0, nullptr);
+    if (initData.mThread) {
+      ::WaitForSingleObject(initData.mSemaphore, INFINITE);
+    }
+  }
+  if (!initData.mWnd) {
+    return false;
+  }
+
+  mTransitionWnd = initData.mWnd;
+  auto data = new FullscreenTransitionData(initData.mWnd);
+  *aData = data;
+  NS_ADDREF(data);
+  return true;
+}
+
+/* virtual */ void
+nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                      uint16_t aDuration, nsISupports* aData,
+                                      nsIRunnable* aCallback)
+{
+  auto data = static_cast<FullscreenTransitionData*>(aData);
+  nsCOMPtr<nsIRunnable> callback = aCallback;
+  UINT msg = aStage == eBeforeFullscreenToggle ?
+    WM_FULLSCREEN_TRANSITION_BEFORE : WM_FULLSCREEN_TRANSITION_AFTER;
+  WPARAM wparam = (WPARAM)callback.forget().take();
+  ::PostMessage(data->mWnd, msg, wparam, (LPARAM)aDuration);
 }
 
 NS_IMETHODIMP
