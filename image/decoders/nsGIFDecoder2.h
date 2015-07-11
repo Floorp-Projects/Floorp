@@ -35,7 +35,7 @@ private:
   // frame size information, etc.
 
   void      BeginGIF();
-  void      BeginImageFrame(uint16_t aDepth);
+  nsresult  BeginImageFrame(uint16_t aDepth);
   void      EndImageFrame();
   void      FlushImageData();
   void      FlushImageData(uint32_t fromRow, uint32_t rows);
