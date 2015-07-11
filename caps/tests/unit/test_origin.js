@@ -47,7 +47,7 @@ function run_test() {
   var nullPrin = Cu.getObjectPrincipal(new Cu.Sandbox(null));
   do_check_true(/^moz-nullprincipal:\{([0-9]|[a-z]|\-){36}\}$/.test(nullPrin.origin));
   checkOriginAttributes(nullPrin);
-  var ep = Cu.getObjectPrincipal(new Cu.Sandbox([exampleCom, nullPrin, exampleOrg]));
+  var ep = ssm.createExpandedPrincipal([exampleCom, nullPrin, exampleOrg]);
   checkOriginAttributes(ep);
   checkCrossOrigin(exampleCom, exampleOrg);
   checkCrossOrigin(exampleOrg, nullPrin);
