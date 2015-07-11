@@ -434,6 +434,10 @@ exports.defineLazyGetter(this, "TextDecoder", () => {
   return Cu.import("resource://gre/modules/osfile.jsm", {}).TextDecoder;
 });
 
+exports.defineLazyGetter(this, "NetworkHelper", () => {
+  return require("devtools/toolkit/webconsole/network-helper");
+});
+
 /**
  * Performs a request to load the desired URL and returns a promise.
  *
@@ -491,15 +495,27 @@ function mainThreadFetch(aURL, aOptions={ loadFromCache: true,
     }
 
     try {
-      let charset = channel.contentCharset || aOptions.charset || "UTF-8";
+      // We cannot use NetUtil to do the charset conversion as if charset
+      // information is not available and our default guess is wrong the method
+      // might fail and we lose the stream data. This means we can't fall back
+      // to using the locale default encoding (bug 1181345).
 
-      // NetUtil handles charset conversion.
+      // Read and decode the data according to the locale default encoding.
       let available = stream.available();
-      let source = NetUtil.readInputStreamToString(stream, available, {charset});
+      let source = NetUtil.readInputStreamToString(stream, available);
       stream.close();
 
+      // If the channel or the caller has correct charset information, the
+      // content will be decoded correctly. If we have to fall back to UTF-8 and
+      // the guess is wrong, the conversion fails and convertToUnicode returns
+      // the input unmodified. Essentially we try to decode the data as UTF-8
+      // and if that fails, we use the locale specific default encoding. This is
+      // the best we can do if the source does not provide charset info.
+      let charset = channel.contentCharset || aOptions.charset || "UTF-8";
+      let unicodeSource = NetworkHelper.convertToUnicode(source, charset);
+
       deferred.resolve({
-        content: source,
+        content: unicodeSource,
         contentType: request.contentType
       });
     } catch (ex) {
