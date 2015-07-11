@@ -762,8 +762,8 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
     mTabChild->SendNotifyIMETextChange(
       mContentCache,
       aIMENotification.mTextChangeData.mStartOffset,
-      aIMENotification.mTextChangeData.mOldEndOffset,
-      aIMENotification.mTextChangeData.mNewEndOffset,
+      aIMENotification.mTextChangeData.mRemovedEndOffset,
+      aIMENotification.mTextChangeData.mAddedEndOffset,
       aIMENotification.mTextChangeData.mCausedByComposition);
   } else {
     mTabChild->SendUpdateContentCache(mContentCache);

@@ -1972,8 +1972,8 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 bool
 TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
                                    const uint32_t& aStart,
-                                   const uint32_t& aEnd,
-                                   const uint32_t& aNewEnd,
+                                   const uint32_t& aRemovedEnd,
+                                   const uint32_t& aAddedEnd,
                                    const bool& aCausedByComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1991,8 +1991,8 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.mTextChangeData.mStartOffset = aStart;
-  notification.mTextChangeData.mOldEndOffset = aEnd;
-  notification.mTextChangeData.mNewEndOffset = aNewEnd;
+  notification.mTextChangeData.mRemovedEndOffset = aRemovedEnd;
+  notification.mTextChangeData.mAddedEndOffset = aAddedEnd;
   notification.mTextChangeData.mCausedByComposition = aCausedByComposition;
 
   mContentCache.AssignContent(aContentCache, &notification);
