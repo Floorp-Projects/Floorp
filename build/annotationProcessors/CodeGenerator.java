@@ -39,7 +39,7 @@ public class CodeGenerator {
                 "    typedef mozilla::jni::Ref<" + clsName + "> Ref;\n" +
                 "    typedef mozilla::jni::LocalRef<" + clsName + "> LocalRef;\n" +
                 "    typedef mozilla::jni::GlobalRef<" + clsName + "> GlobalRef;\n" +
-                "    typedef const typename mozilla::jni::Param<" + clsName + ">::Type& Param;\n" +
+                "    typedef const mozilla::jni::Param<" + clsName + ">& Param;\n" +
                 "\n" +
                 "    static constexpr char name[] =\n" +
                 "            \"" + cls.getName().replace('.', '/') + "\";\n" +
