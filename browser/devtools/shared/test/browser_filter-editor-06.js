@@ -22,7 +22,7 @@ add_task(function*() {
   let widget = new CSSFilterEditorWidget(container, "none");
 
   const select = widget.el.querySelector("select"),
-        add = widget.el.querySelector("button");
+        add = widget.el.querySelector("#add-filter");
 
   const TEST_DATA = [
     {
@@ -62,7 +62,8 @@ add_task(function*() {
       is(widget.getValueAt(index), `0${filter.unit}`,
          `Should add ${filter.unit} to ${filter.type} filters`);
     } else if (filter.placeholder) {
-      const input = widget.el.querySelector(`.filter:nth-child(${index + 1}) input`);
+      let i = index + 1;
+      const input = widget.el.querySelector(`.filter:nth-child(${i}) input`);
       is(input.placeholder, filter.placeholder,
          "Should set the appropriate placeholder for string-type filters");
     }
