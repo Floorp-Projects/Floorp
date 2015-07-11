@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1113086 requires clobber for a cpp test that is somehow in the cache of the existing builds.
+Bug 1178850 requires clobber for Android JNI header changes
