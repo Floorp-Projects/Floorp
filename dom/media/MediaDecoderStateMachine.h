@@ -1066,10 +1066,6 @@ protected:
 public:
   AbstractCanonical<int64_t>* CanonicalCurrentPosition() { return &mCurrentPosition; }
 protected:
-  // The presentation time of the first audio/video frame that is sent to the
-  // media stream.
-  int64_t mStreamStartTime;
-
   // The end time of the last audio frame that's been pushed onto the audio
   // hardware in microseconds. This will approximately be the end time of the
   // audio stream, unless another frame is pushed to the hardware.
