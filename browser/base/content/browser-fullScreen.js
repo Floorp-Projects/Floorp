@@ -8,6 +8,7 @@ var FullScreen = {
     "DOMFullscreen:Request",
     "DOMFullscreen:NewOrigin",
     "DOMFullscreen:Exit",
+    "DOMFullscreen:Painted",
   ],
 
   init: function() {
@@ -164,6 +165,10 @@ var FullScreen = {
       }
       case "DOMFullscreen:Exit": {
         this._windowUtils.remoteFrameFullscreenReverted();
+        break;
+      }
+      case "DOMFullscreen:Painted": {
+        Services.obs.notifyObservers(window, "fullscreen-painted", "");
         break;
       }
     }
