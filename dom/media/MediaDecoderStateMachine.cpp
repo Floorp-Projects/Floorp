@@ -212,7 +212,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentPosition(mTaskQueue, 0, "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
-  mStreamStartTime(0),
   mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
@@ -2150,7 +2149,6 @@ MediaDecoderStateMachine::SeekCompleted()
   } else {
     newCurrentTime = video ? video->mTime : seekTime;
   }
-  mStreamStartTime = newCurrentTime;
   mPlayDuration = newCurrentTime;
 
   mDecoder->StartProgressUpdates();
@@ -2471,7 +2469,6 @@ MediaDecoderStateMachine::Reset()
 
   mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
-  mStreamStartTime = 0;
   mAudioEndTime = -1;
   mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
@@ -3142,7 +3139,6 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
     if (!self->mAudioCaptured) {
       // Stop the audio sink if it's running.
       self->StopAudioThread();
-      self->mStreamStartTime = self->GetMediaTime();
       // Reset mAudioEndTime which will be updated as we send audio data to
       // stream. Otherwise it will remain -1 if we don't have audio.
       self->mAudioEndTime = -1;
