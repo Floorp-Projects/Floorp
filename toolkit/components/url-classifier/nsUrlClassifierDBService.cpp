@@ -1229,22 +1229,6 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::ClassifyLocal(nsIPrincipal* aPrincipal,
-                                        bool aTrackingProtectionEnabled,
-                                        nsresult* aResponse)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocal must be on main thread");
-  *aResponse = NS_OK;
-  nsAutoCString tables;
-  BuildTables(aTrackingProtectionEnabled, tables);
-  nsAutoCString results;
-  nsresult rv = ClassifyLocalWithTables(aPrincipal, tables, results);
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aResponse = TablesToResponse(results);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsUrlClassifierDBService::ClassifyLocalWithTables(nsIPrincipal *aPrincipal,
                                                   const nsACString & aTables,
                                                   nsACString & aTableResults)
