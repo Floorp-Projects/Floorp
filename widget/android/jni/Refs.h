@@ -44,6 +44,13 @@ enum class ExceptionMode
 };
 
 
+// Class to hold the native types of a method's arguments.
+// For example, if a method has signature (ILjava/lang/String;)V,
+// its arguments class would be jni::Args<int32_t, jni::String::Param>
+template<typename...>
+struct Args {};
+
+
 // Base class for all JNI binding classes.
 // Templated so that we have one sClassRef for each class.
 template<class Cls>

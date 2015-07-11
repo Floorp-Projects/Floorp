@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.jni += [
     'Accessors.h',
+    'Natives.h',
     'Refs.h',
     'Types.h',
     'Utils.h',
