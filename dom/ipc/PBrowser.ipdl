@@ -266,6 +266,13 @@ parent:
                         returns (bool noCompositionEvent, nsString composition);
 
     /**
+     * OnEventNeedingAckReceived() is called when a child process dispatches a
+     * composition event or a selection event which is sent from the parent
+     * process.
+     */
+    prio(urgent) async OnEventNeedingAckReceived();
+
+    /**
      * Tells chrome to start plugin IME.  If this results in a string getting
      * committed, the result is in aCommitted (otherwise aCommitted is empty).
      *
