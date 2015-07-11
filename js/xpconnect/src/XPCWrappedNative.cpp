@@ -1297,7 +1297,7 @@ class MOZ_STACK_CLASS CallMethodHelper
     const uint32_t mArgc;
 
     MOZ_ALWAYS_INLINE bool
-    GetArraySizeFromParam(uint8_t paramIndex, uint32_t* result) const;
+    GetArraySizeFromParam(uint8_t paramIndex, HandleValue maybeArray, uint32_t* result);
 
     MOZ_ALWAYS_INLINE bool
     GetInterfaceTypeFromParam(uint8_t paramIndex,
@@ -1446,7 +1446,7 @@ CallMethodHelper::~CallMethodHelper()
                     // We need some basic information to properly destroy the array.
                     uint32_t array_count = 0;
                     nsXPTType datum_type;
-                    if (!GetArraySizeFromParam(i, &array_count) ||
+                    if (!GetArraySizeFromParam(i, UndefinedHandleValue, &array_count) ||
                         !NS_SUCCEEDED(mIFaceInfo->GetTypeForParam(mVTableIndex,
                                                                   &paramInfo,
                                                                   1, &datum_type))) {
@@ -1480,7 +1480,8 @@ CallMethodHelper::~CallMethodHelper()
 
 bool
 CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
-                                        uint32_t* result) const
+                                        HandleValue maybeArray,
+                                        uint32_t* result)
 {
     nsresult rv;
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
@@ -1490,6 +1491,22 @@ CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
     rv = mIFaceInfo->GetSizeIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
     if (NS_FAILED(rv))
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
+
+    // If the array length wasn't passed, it might have been listed as optional.
+    // When converting arguments from JS to C++, we pass the array as |maybeArray|,
+    // and give ourselves the chance to infer the length. Once we have it, we stick
+    // it in the right slot so that we can find it again when cleaning up the params.
+    // from the array.
+    if (paramIndex >= mArgc && maybeArray.isObject()) {
+        MOZ_ASSERT(mMethodInfo->GetParam(paramIndex).IsOptional());
+        RootedObject arrayOrNull(mCallContext, maybeArray.isObject() ? &maybeArray.toObject()
+                                                                     : nullptr);
+        if (!JS_IsArrayObject(mCallContext, maybeArray) ||
+            !JS_GetArrayLength(mCallContext, arrayOrNull, &GetDispatchParam(paramIndex)->val.u32))
+        {
+            return Throw(NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY, mCallContext);
+        }
+    }
 
     *result = GetDispatchParam(paramIndex)->val.u32;
 
@@ -1586,7 +1603,7 @@ CallMethodHelper::GatherAndConvertResults()
             datum_type = type;
 
         if (isArray || isSizedString) {
-            if (!GetArraySizeFromParam(i, &array_count))
+            if (!GetArraySizeFromParam(i, UndefinedHandleValue, &array_count))
                 return false;
         }
 
@@ -1968,7 +1985,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     nsresult err;
 
     if (isArray || isSizedString) {
-        if (!GetArraySizeFromParam(i, &array_count))
+        if (!GetArraySizeFromParam(i, src, &array_count))
             return false;
 
         if (isArray) {
