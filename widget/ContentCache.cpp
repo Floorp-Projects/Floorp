@@ -914,15 +914,22 @@ ContentCacheInParent::OnSelectionEvent(
 }
 
 void
-ContentCacheInParent::OnEventNeedingAckReceived()
+ContentCacheInParent::OnEventNeedingAckReceived(nsIWidget* aWidget)
 {
+  // This is called when the child process receives WidgetCompositionEvent or
+  // WidgetSelectionEvent.
+
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
-    ("ContentCacheInParent: 0x%p OnEventNeedingAckReceived(), "
+    ("ContentCacheInParent: 0x%p OnEventNeedingAckReceived(aWidget=0x%p), "
      "mPendingEventsNeedingAck=%u",
-     this, mPendingEventsNeedingAck));
+     this, aWidget, mPendingEventsNeedingAck));
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
-  mPendingEventsNeedingAck--;
+  if (--mPendingEventsNeedingAck) {
+    return;
+  }
+
+  FlushPendingNotifications(aWidget);
 }
 
 uint32_t
@@ -951,15 +958,83 @@ ContentCacheInParent::RequestToCommitComposition(nsIWidget* aWidget,
 }
 
 void
-ContentCacheInParent::InitNotification(IMENotification& aNotification) const
+ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
+                                     IMENotification& aNotification)
 {
-  if (NS_WARN_IF(aNotification.mMessage != NOTIFY_IME_OF_SELECTION_CHANGE)) {
+  if (aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE) {
+    aNotification.mSelectionChangeData.mOffset = mSelection.StartOffset();
+    aNotification.mSelectionChangeData.mLength = mSelection.Length();
+    aNotification.mSelectionChangeData.mReversed = mSelection.Reversed();
+    aNotification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
+  }
+
+  if (!mPendingEventsNeedingAck) {
+    IMEStateManager::NotifyIME(aNotification, aWidget, true);
     return;
   }
-  aNotification.mSelectionChangeData.mOffset = mSelection.StartOffset();
-  aNotification.mSelectionChangeData.mLength = mSelection.Length();
-  aNotification.mSelectionChangeData.mReversed = mSelection.Reversed();
-  aNotification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
+
+  switch (aNotification.mMessage) {
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      mPendingSelectionChange.MergeWith(aNotification);
+      break;
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      mPendingTextChange.MergeWith(aNotification);
+      break;
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      mPendingCompositionUpdate.MergeWith(aNotification);
+      break;
+    default:
+      MOZ_CRASH("Unsupported notification");
+      break;
+  }
+}
+
+void
+ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
+{
+  MOZ_ASSERT(!mPendingEventsNeedingAck);
+
+  // New notifications which are notified during flushing pending notifications
+  // should be merged again.
+  mPendingEventsNeedingAck++;
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(aWidget);
+
+  // First, text change notification should be sent because selection change
+  // notification notifies IME of current selection range in the latest content.
+  // So, IME may need the latest content before that.
+  if (mPendingTextChange.HasNotification()) {
+    IMENotification notification(mPendingTextChange);
+    if (!aWidget->Destroyed()) {
+      mPendingTextChange.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  if (mPendingSelectionChange.HasNotification()) {
+    IMENotification notification(mPendingSelectionChange);
+    if (!aWidget->Destroyed()) {
+      mPendingSelectionChange.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  // Finally, send composition update notification because it notifies IME of
+  // finishing handling whole sending events.
+  if (mPendingCompositionUpdate.HasNotification()) {
+    IMENotification notification(mPendingCompositionUpdate);
+    if (!aWidget->Destroyed()) {
+      mPendingCompositionUpdate.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  if (!--mPendingEventsNeedingAck && !aWidget->Destroyed() &&
+      (mPendingTextChange.HasNotification() ||
+       mPendingSelectionChange.HasNotification() ||
+       mPendingCompositionUpdate.HasNotification())) {
+    FlushPendingNotifications(aWidget);
+  }
 }
 
 /*****************************************************************************

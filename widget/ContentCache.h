@@ -14,17 +14,12 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/WritingModes.h"
+#include "nsIWidget.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "Units.h"
 
-class nsIWidget;
-
 namespace mozilla {
-
-namespace widget {
-struct IMENotification;
-}
 
 class ContentCacheInParent;
 
@@ -322,8 +317,12 @@ public:
   /**
    * OnEventNeedingAckReceived() should be called when the child process
    * receives a sent event which needs acknowledging.
+   *
+   * WARNING: This may send notifications to IME.  That might cause destroying
+   *          TabParent or aWidget.  Therefore, the caller must not destroy
+   *          this instance during a call of this method.
    */
-  void OnEventNeedingAckReceived();
+  void OnEventNeedingAckReceived(nsIWidget* aWidget);
 
   /**
    * RequestToCommitComposition() requests to commit or cancel composition to
@@ -344,13 +343,18 @@ public:
                                       nsAString& aLastString);
 
   /**
-   * InitNotification() initializes aNotification with stored data.
-   *
-   * @param aNotification       Must be NOTIFY_IME_OF_SELECTION_CHANGE.
+   * MaybeNotifyIME() may notify IME of the notification.  If child process
+   * hasn't been handled all sending events yet, this stores the notification
+   * and flush it later.
    */
-  void InitNotification(IMENotification& aNotification) const;
+  void MaybeNotifyIME(nsIWidget* aWidget,
+                      IMENotification& aNotification);
 
 private:
+  IMENotification mPendingSelectionChange;
+  IMENotification mPendingTextChange;
+  IMENotification mPendingCompositionUpdate;
+
   // This is commit string which is caused by our request.
   nsString mCommitStringByRequest;
   // Start offset of the composition string.
@@ -373,6 +377,7 @@ private:
                          uint32_t aLength,
                          LayoutDeviceIntRect& aUnionTextRect) const;
 
+  void FlushPendingNotifications(nsIWidget* aWidget);
 };
 
 } // namespace mozilla
