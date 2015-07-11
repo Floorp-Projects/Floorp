@@ -269,8 +269,10 @@ parent:
      * OnEventNeedingAckReceived() is called when a child process dispatches a
      * composition event or a selection event which is sent from the parent
      * process.
+     *
+     * message      The message value of the received event.
      */
-    prio(urgent) async OnEventNeedingAckReceived();
+    prio(urgent) async OnEventNeedingAckReceived(uint32_t message);
 
     /**
      * Tells chrome to start plugin IME.  If this results in a string getting
