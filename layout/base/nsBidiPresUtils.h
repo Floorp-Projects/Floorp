@@ -159,14 +159,16 @@ public:
   /**
    * Reorder this line using Bidi engine.
    * Update frame array, following the new visual sequence.
+   *
+   * @return total inline size
    * 
    * @lina 05/02/2000
    */
-  static void ReorderFrames(nsIFrame* aFirstFrameOnLine,
-                            int32_t aNumFramesOnLine,
-                            mozilla::WritingMode aLineWM,
-                            const nsSize& aContainerSize,
-                            nscoord aStart);
+  static nscoord ReorderFrames(nsIFrame* aFirstFrameOnLine,
+                               int32_t aNumFramesOnLine,
+                               mozilla::WritingMode aLineWM,
+                               const nsSize& aContainerSize,
+                               nscoord aStart);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -397,6 +399,14 @@ private:
                              nsIFrame*                  aCurrentFrame,
                              BidiParagraphData*         aBpd);
 
+  /**
+   * Position ruby content frames (ruby base/text frame).
+   * Called from RepositionRubyFrame.
+   */
+  static void RepositionRubyContentFrame(
+    nsIFrame* aFrame, mozilla::WritingMode aFrameWM,
+    const mozilla::LogicalMargin& aBorderPadding);
+
   /*
    * Position ruby frames. Called from RepositionFrame.
    */
@@ -475,14 +485,15 @@ private:
    *  Adjust frame positions following their visual order
    *
    *  @param aFirstChild the first kid
+   *  @return total inline size
    *
    *  @lina 04/11/2000
    */
-  static void RepositionInlineFrames(BidiLineData* aBld,
-                                     nsIFrame* aFirstChild,
-                                     mozilla::WritingMode aLineWM,
-                                     const nsSize& aContainerSize,
-                                     nscoord aStart);
+  static nscoord RepositionInlineFrames(BidiLineData* aBld,
+                                        nsIFrame* aFirstChild,
+                                        mozilla::WritingMode aLineWM,
+                                        const nsSize& aContainerSize,
+                                        nscoord aStart);
   
   /**
    * Helper method for Resolve()
