@@ -1230,6 +1230,7 @@ nsTextStore::nsTextStore()
   , mPendingOnSelectionChange(false)
   , mPendingOnLayoutChange(false)
   , mPendingDestroy(false)
+  , mPendingClearLockedContent(false)
   , mNativeCaretIsCreated(false)
   , mDeferNotifyingTSF(false)
 {
@@ -1604,7 +1605,10 @@ nsTextStore::FlushPendingActions()
     return;
   }
 
-  mLockedContent.Clear();
+  // If dispatching event causes NOTIFY_IME_OF_COMPOSITION_UPDATE, we should
+  // wait to abandon mLockedContent until it's notified because the dispatched
+  // event may be handled asynchronously in e10s mode.
+  mPendingClearLockedContent = !mPendingActions.Length();
 
   nsRefPtr<nsWindowBase> kungFuDeathGrip(mWidget);
   for (uint32_t i = 0; i < mPendingActions.Length(); i++) {
@@ -1638,6 +1642,8 @@ nsTextStore::FlushPendingActions()
         WidgetCompositionEvent compositionStart(true, NS_COMPOSITION_START,
                                                 mWidget);
         mWidget->InitEvent(compositionStart);
+        // NS_COMPOSITION_START always causes NOTIFY_IME_OF_COMPOSITION_UPDATE.
+        mPendingClearLockedContent = true;
         DispatchEvent(compositionStart);
         if (!mWidget || mWidget->Destroyed()) {
           break;
@@ -1701,6 +1707,11 @@ nsTextStore::FlushPendingActions()
           action.mRanges->AppendElement(wholeRange);
         }
         compositionChange.mRanges = action.mRanges;
+        // When the NS_COMPOSITION_CHANGE causes a DOM text event,
+        // NOTIFY_IME_OF_COMPOSITION_UPDATE will be notified.
+        if (compositionChange.CausesDOMTextEvent()) {
+          mPendingClearLockedContent = true;
+        }
         DispatchEvent(compositionChange);
         // Be aware, the mWidget might already have been destroyed.
         break;
@@ -1721,6 +1732,11 @@ nsTextStore::FlushPendingActions()
                                                  mWidget);
         mWidget->InitEvent(compositionCommit);
         compositionCommit.mData = action.mData;
+        // When the NS_COMPOSITION_COMMIT causes a DOM text event,
+        // NOTIFY_IME_OF_COMPOSITION_UPDATE will be notified.
+        if (compositionCommit.CausesDOMTextEvent()) {
+          mPendingClearLockedContent = true;
+        }
         DispatchEvent(compositionCommit);
         if (!mWidget || mWidget->Destroyed()) {
           break;
@@ -1781,6 +1797,11 @@ nsTextStore::MaybeFlushPendingNotifications()
   if (mPendingDestroy) {
     Destroy();
     return;
+  }
+
+  if (mPendingClearLockedContent) {
+    mPendingClearLockedContent = false;
+    mLockedContent.Clear();
   }
 
   if (mPendingOnLayoutChange) {
@@ -1904,9 +1925,9 @@ nsTextStore::GetSelection(ULONG ulIndex,
 nsTextStore::Content&
 nsTextStore::LockedContent()
 {
-  MOZ_ASSERT(IsReadLocked(),
-             "LockedContent must be called only during the document is locked");
-  if (!IsReadLocked()) {
+  // This should be called when the document is locked or the content hasn't
+  // been abandoned yet.
+  if (NS_WARN_IF(!IsReadLocked() && !mLockedContent.IsInitialized())) {
     mLockedContent.Clear();
     return mLockedContent;
   }
@@ -4364,6 +4385,8 @@ nsTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 void
 nsTextStore::NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange)
 {
+  // XXX We need to cache the text change ranges and notify TSF of that
+  //     the document is unlocked.
   if (NS_WARN_IF(IsReadLocked())) {
     return;
   }
@@ -4531,9 +4554,7 @@ nsTextStore::OnUpdateCompositionInternal()
      "mDeferNotifyingTSF=%s",
      this, GetBoolName(mDeferNotifyingTSF)));
 
-  if (!mDeferNotifyingTSF) {
-    return NS_OK;
-  }
+  mPendingClearLockedContent = true;
   mDeferNotifyingTSF = false;
   MaybeFlushPendingNotifications();
   return NS_OK;
