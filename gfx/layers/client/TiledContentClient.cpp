@@ -1049,33 +1049,6 @@ void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &regi
 }
 
 void
-ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion,
-                                     const nsIntRegion& aDirtyRegion)
-{
-  if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
-    gfx::TileSet tileset;
-    for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
-      mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
-    }
-    tileset.mTiles = &mMoz2DTiles[0];
-    tileset.mTileCount = mMoz2DTiles.size();
-    RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
-    drawTarget->SetTransform(Matrix());
-
-    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
-    ctx->SetMatrix(
-      ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
-
-    mCallback(mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
-              DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
-    mMoz2DTiles.clear();
-    // Reset:
-    mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
-                             std::numeric_limits<int32_t>::max());
-  }
-}
-
-void
 ClientTiledLayerBuffer::UnlockTile(TileClient& aTile)
 {
   // We locked the back buffer, and flipped so we now need to unlock the front
@@ -1150,9 +1123,61 @@ void ClientTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     }
   }
 
-  PostValidate(aPaintRegion, aDirtyRegion);
+  if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
+    gfx::TileSet tileset;
+    for (size_t i = 0; i < mMoz2DTiles.size(); ++i) {
+      mMoz2DTiles[i].mTileOrigin -= mTilingOrigin;
+    }
+    tileset.mTiles = &mMoz2DTiles[0];
+    tileset.mTileCount = mMoz2DTiles.size();
+    RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
+    drawTarget->SetTransform(Matrix());
 
-  for (TileClient& tile : mRetainedTiles) {
+    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    ctx->SetMatrix(
+      ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
+
+    mCallback(mPaintedLayer, ctx, aPaintRegion, aDirtyRegion,
+              DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+    mMoz2DTiles.clear();
+    // Reset:
+    mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
+                             std::numeric_limits<int32_t>::max());
+  }
+
+  bool edgePaddingEnabled = gfxPrefs::TileEdgePaddingEnabled();
+
+  for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
+    TileClient& tile = mRetainedTiles[i];
+
+    // Only worry about padding when not doing low-res because it simplifies
+    // the math and the artifacts won't be noticable
+    // Edge padding prevents sampling artifacts when compositing.
+    if (edgePaddingEnabled && mResolution == 1 &&
+        tile.mFrontBuffer && tile.mFrontBuffer->IsLocked()) {
+
+      const TileIntPoint tilePosition = newTiles.TilePosition(i);
+      IntPoint tileOffset = GetTileOffset(tilePosition);
+      // Strictly speakig we want the unscaled rect here, but it doesn't matter
+      // because we only run this code when the resolution is equal to 1.
+      IntRect tileRect = IntRect(tileOffset.x, tileOffset.y,
+                                 GetTileSize().width, GetTileSize().height);
+
+      nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
+      tileDrawRegion.AndWith(aPaintRegion);
+
+      nsIntRegion tileValidRegion = mValidRegion;
+      tileValidRegion.OrWith(tileDrawRegion);
+
+      // We only need to pad out if the tile has area that's not valid
+      if (!tileValidRegion.Contains(tileRect)) {
+        tileValidRegion = tileValidRegion.Intersect(tileRect);
+        // translate the region into tile space and pad
+        tileValidRegion.MoveBy(-IntPoint(tileOffset.x, tileOffset.y));
+        RefPtr<DrawTarget> drawTarget = tile.mFrontBuffer->BorrowDrawTarget();
+        PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
+      }
+    }
     UnlockTile(tile);
   }
 
@@ -1240,7 +1265,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
       }
     }
 
-    // prepare an array of Moz2D tiles that will be painted into in PostValidate
     gfx::Tile moz2DTile;
     RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
     RefPtr<DrawTarget> dtOnWhite;
@@ -1326,26 +1350,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
     aTile.mInvalidFront.Or(aTile.mInvalidFront, IntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
   }
 
-  // only worry about padding when not doing low-res
-  // because it simplifies the math and the artifacts
-  // won't be noticable
-  if (mResolution == 1) {
-    IntRect unscaledTile = IntRect(aTileOrigin.x,
-                                       aTileOrigin.y,
-                                       GetTileSize().width,
-                                       GetTileSize().height);
-
-    nsIntRegion tileValidRegion = GetValidRegion();
-    tileValidRegion.Or(tileValidRegion, aDirtyRegion);
-    // We only need to pad out if the tile has area that's not valid
-    if (!tileValidRegion.Contains(unscaledTile)) {
-      tileValidRegion = tileValidRegion.Intersect(unscaledTile);
-      // translate the region into tile space and pad
-      tileValidRegion.MoveBy(-nsIntPoint(unscaledTile.x, unscaledTile.y));
-      PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
-    }
-  }
-
   // The new buffer is now validated, remove the dirty region from it.
   aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
 
@@ -1364,7 +1368,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient& aTile,
   tileRegion.SubOut(GetValidRegion());
   tileRegion.SubOut(aDirtyRegion); // Has now been validated
 
-  backBuffer->Unlock();
   backBuffer->SetWaste(tileRegion.Area() * mResolution * mResolution);
 
   if (createdTextureClient) {
