@@ -47,7 +47,7 @@ add_task(function*() {
 });
 
 function checkRuleViewContent(view, expectedSelectors) {
-  let selectors = view.doc.querySelectorAll(".ruleview-selectorcontainer");
+  let selectors = view.styleDocument.querySelectorAll(".ruleview-selectorcontainer");
 
   is(selectors.length, expectedSelectors.length,
     expectedSelectors.length + " selectors are displayed");

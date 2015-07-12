@@ -29,7 +29,7 @@ add_task(function*() {
   ok(true, "Changes previewed on the element");
 
   info("Pressing ESCAPE to close the tooltip");
-  EventUtils.sendKey("ESCAPE", widget.doc.defaultView);
+  EventUtils.sendKey("ESCAPE", widget.styleWindow);
 
   yield waitForSuccess(() => {
     const computed = content.getComputedStyle(content.document.body);

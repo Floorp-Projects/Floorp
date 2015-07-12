@@ -43,12 +43,12 @@ add_task(function*() {
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(elementRuleEditor.element, "focus", true);
   let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onValueFocus;
   yield onRuleViewChanged;
 
   // Getting the new value editor after focus
-  editor = inplaceEditor(view.doc.activeElement);
+  editor = inplaceEditor(view.styleDocument.activeElement);
   let textProp = elementRuleEditor.rule.textProps[1];
 
   is(elementRuleEditor.rule.textProps.length,  2, "Created a new text property.");
@@ -60,7 +60,7 @@ add_task(function*() {
 
   info("Escaping out of the field");
   onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   yield onRuleViewChanged;
 
   info("Checking that the previous field is focused");
@@ -68,7 +68,7 @@ add_task(function*() {
   is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
 
   onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   yield onRuleViewChanged;
 
   is(elementRuleEditor.rule.textProps.length,  1, "Removed the new text property.");

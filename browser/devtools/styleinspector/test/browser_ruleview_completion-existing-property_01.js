@@ -65,7 +65,7 @@ add_task(function*() {
   yield selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
-  let propertyName = view.doc.querySelectorAll(".ruleview-propertyname")[0];
+  let propertyName = view.styleDocument.querySelectorAll(".ruleview-propertyname")[0];
   let editor = yield focusEditableField(view, propertyName);
 
   info("Starting to test for css property completion");
@@ -89,7 +89,7 @@ function* testCompletion([key, completion, index, total], editor, view) {
   }
 
   info("Synthesizing key " + key);
-  EventUtils.synthesizeKey(key, {}, view.doc.defaultView);
+  EventUtils.synthesizeKey(key, {}, view.styleWindow);
 
   yield onSuggest;
   yield wait(1); // Equivalent of executeSoon

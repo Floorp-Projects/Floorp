@@ -8,7 +8,7 @@ const Cu = Components.utils;
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
-let {CssHtmlTree} = devtools.require("devtools/styleinspector/computed-view");
+let {CssComputedView} = devtools.require("devtools/styleinspector/computed-view");
 let {CssRuleView, _ElementStyle} = devtools.require("devtools/styleinspector/rule-view");
 let {CssLogic, CssSelector} = devtools.require("devtools/styleinspector/css-logic");
 let DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils");
@@ -644,7 +644,7 @@ function synthesizeKeys(input, win) {
  */
 function getRuleViewRule(view, selectorText) {
   let rule;
-  for (let r of view.doc.querySelectorAll(".ruleview-rule")) {
+  for (let r of view.styleDocument.querySelectorAll(".ruleview-rule")) {
     let selector = r.querySelector(".ruleview-selectorcontainer, " +
                                    ".ruleview-selector-matched");
     if (selector && selector.textContent === selectorText) {
@@ -763,7 +763,7 @@ let simulateColorPickerChange = Task.async(function*(ruleView, colorPicker, newR
  * @return {DOMNode} The link if any at this index
  */
 function getRuleViewLinkByIndex(view, index) {
-  let links = view.doc.querySelectorAll(".ruleview-rule-source");
+  let links = view.styleDocument.querySelectorAll(".ruleview-rule-source");
   return links[index];
 }
 
@@ -775,7 +775,7 @@ function getRuleViewLinkByIndex(view, index) {
  */
 function getRuleViewLinkTextByIndex(view, index) {
   let link = getRuleViewLinkByIndex(view, index);
-  return link.querySelector(".source-link-label").value;
+  return link.querySelector(".ruleview-rule-source-label").value;
 }
 
 /**
@@ -846,7 +846,7 @@ let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
 /**
  * Get references to the name and value span nodes corresponding to a given
  * property name in the computed-view
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {String} name The name of the property to retrieve
  * @return an object {nameSpan, valueSpan}
  */
@@ -866,7 +866,7 @@ function getComputedViewProperty(view, name) {
 
 /**
  * Get an instance of PropertyView from the computed-view.
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {String} name The name of the property to retrieve
  * @return {PropertyView}
  */
@@ -888,7 +888,7 @@ function getComputedViewPropertyView(view, name) {
  * and is only shown when the twisty icon is expanded on the property.
  * A property-content element contains matched rules, with selectors, properties,
  * values and stylesheet links
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {String} name The name of the property to retrieve
  * @return {Promise} A promise that resolves to the property matched rules
  * container
@@ -918,7 +918,7 @@ let getComputedViewMatchedRules = Task.async(function*(view, name) {
 /**
  * Get the text value of the property corresponding to a given name in the
  * computed-view
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {String} name The name of the property to retrieve
  * @return {String} The property value
  */
@@ -930,7 +930,7 @@ function getComputedViewPropertyValue(view, name, propertyName) {
 /**
  * Expand a given property, given its index in the current property list of
  * the computed view
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {Number} index The index of the property to be expanded
  * @return a promise that resolves when the property has been expanded, or
  * rejects if the property was not found
@@ -949,7 +949,7 @@ function expandComputedViewPropertyByIndex(view, index) {
 
 /**
  * Get a rule-link from the computed-view given its index
- * @param {CssHtmlTree} view The instance of the computed view panel
+ * @param {CssComputedView} view The instance of the computed view panel
  * @param {Number} index The index of the link to be retrieved
  * @return {DOMNode} The link at the given index, if one exists, null otherwise
  */

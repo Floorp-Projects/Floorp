@@ -61,18 +61,18 @@ function* runTestData(inspector, view, data, method) {
 function* addNewRule(inspector, view, method) {
   if (method == "context-menu") {
     info("Waiting for context menu to be shown");
-    let onPopup = once(view._contextmenu, "popupshown");
-    let win = view.doc.defaultView;
+    let onPopup = once(view._contextmenu._menupopup, "popupshown");
+    let win = view.styleWindow;
 
     EventUtils.synthesizeMouseAtCenter(view.element,
       {button: 2, type: "contextmenu"}, win);
     yield onPopup;
 
-    ok(!view.menuitemAddRule.hidden, "Add rule is visible");
+    ok(!view._contextmenu.menuitemAddRule.hidden, "Add rule is visible");
 
     info("Adding the new rule");
-    view.menuitemAddRule.click();
-    view._contextmenu.hidePopup();
+    view._contextmenu.menuitemAddRule.click();
+    view._contextmenu._menupopup.hidePopup();
   }
   else {
     info("Adding the new rule using the button");
