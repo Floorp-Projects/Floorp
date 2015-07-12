@@ -38,7 +38,7 @@ let snapshotFormatters = {
     $("application-box").textContent = data.name;
     $("useragent-box").textContent = data.userAgent;
     $("supportLink").href = data.supportURL;
-    let version = AppConstants.MOZ_APP_VERSION_ABOUT;
+    let version = AppConstants.MOZ_APP_VERSION_DISPLAY;
     if (data.vendor)
       version += " (" + data.vendor + ")";
     $("version-box").textContent = version;
