@@ -101,7 +101,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_APP_NAME',
             'MOZ_APP_VERSION',
-            'MOZ_APP_VERSION_ABOUT',
+            'MOZ_APP_VERSION_DISPLAY',
             'MOZ_WIDGET_TOOLKIT',
             'DLL_PREFIX',
             'DLL_SUFFIX'):
