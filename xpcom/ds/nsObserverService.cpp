@@ -57,9 +57,9 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
     size_t mReferentCount;
   };
 
-  size_t numStrong = 0;
-  size_t numWeakAlive = 0;
-  size_t numWeakDead = 0;
+  size_t totalNumStrong = 0;
+  size_t totalNumWeakAlive = 0;
+  size_t totalNumWeakDead = 0;
   nsTArray<SuspectObserver> suspectObservers;
 
   for (auto iter = mObserverTopicTable.Iter(); !iter.Done(); iter.Next()) {
@@ -68,26 +68,34 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
       continue;
     }
 
+    size_t topicNumStrong = 0;
+    size_t topicNumWeakAlive = 0;
+    size_t topicNumWeakDead = 0;
+
     nsTArray<ObserverRef>& observers = observerList->mObservers;
     for (uint32_t i = 0; i < observers.Length(); i++) {
       if (observers[i].isWeakRef) {
         nsCOMPtr<nsIObserver> observerRef(
           do_QueryReferent(observers[i].asWeak()));
         if (observerRef) {
-          numWeakAlive++;
+          topicNumWeakAlive++;
         } else {
-          numWeakDead++;
+          topicNumWeakDead++;
         }
       } else {
-        numStrong++;
+        topicNumStrong++;
       }
     }
 
+    totalNumStrong += topicNumStrong;
+    totalNumWeakAlive += topicNumWeakAlive;
+    totalNumWeakDead += topicNumWeakDead;
+
     // Keep track of topics that have a suspiciously large number
     // of referents (symptom of leaks).
-    size_t total = numStrong + numWeakAlive + numWeakDead;
-    if (total > kSuspectReferentCount) {
-      SuspectObserver suspect(observerList->GetKey(), total);
+    size_t topicTotal = topicNumStrong + topicNumWeakAlive + topicNumWeakDead;
+    if (topicTotal > kSuspectReferentCount) {
+      SuspectObserver suspect(observerList->GetKey(), topicTotal);
       suspectObservers.AppendElement(suspect);
     }
   }
@@ -115,7 +123,7 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
   rv = aHandleReport->Callback(
          /* process */ EmptyCString(),
          NS_LITERAL_CSTRING("observer-service/referent/strong"),
-         KIND_OTHER, UNITS_COUNT, numStrong,
+         KIND_OTHER, UNITS_COUNT, totalNumStrong,
          NS_LITERAL_CSTRING("The number of strong references held by the "
                             "observer service."),
          aData);
@@ -127,7 +135,7 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
   rv = aHandleReport->Callback(
          /* process */ EmptyCString(),
          NS_LITERAL_CSTRING("observer-service/referent/weak/alive"),
-         KIND_OTHER, UNITS_COUNT, numWeakAlive,
+         KIND_OTHER, UNITS_COUNT, totalNumWeakAlive,
          NS_LITERAL_CSTRING("The number of weak references held by the "
                             "observer service that are still alive."),
          aData);
@@ -139,7 +147,7 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
   rv = aHandleReport->Callback(
          /* process */ EmptyCString(),
          NS_LITERAL_CSTRING("observer-service/referent/weak/dead"),
-         KIND_OTHER, UNITS_COUNT, numWeakDead,
+         KIND_OTHER, UNITS_COUNT, totalNumWeakDead,
          NS_LITERAL_CSTRING("The number of weak references held by the "
                             "observer service that are dead."),
          aData);
