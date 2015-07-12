@@ -6,13 +6,17 @@
  * markers, as they should ignore any sort of collapsing.
  */
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   const WaterfallUtils = devtools.require("devtools/performance/waterfall-utils");
 
-  let rootMarkerNode = WaterfallUtils.makeParentMarkerNode({ name: "(root)" });
+  let rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
 
   WaterfallUtils.collapseMarkersIntoNode({
-    markerNode: rootMarkerNode,
+    rootNode: rootMarkerNode,
     markersList: gTestMarkers
   });
 
@@ -23,14 +27,13 @@ function test() {
           compare(marker.submarkers[i], expected.submarkers[i]);
         }
       } else if (prop !== "uid") {
-        is(marker[prop], expected[prop], `${expected.name} matches ${prop}`);
+        equal(marker[prop], expected[prop], `${expected.name} matches ${prop}`);
       }
     }
   }
 
   compare(rootMarkerNode, gExpectedOutput);
-  finish();
-}
+});
 
 const gTestMarkers = [
   { start: 2, end: 9, name: "Javascript" },
