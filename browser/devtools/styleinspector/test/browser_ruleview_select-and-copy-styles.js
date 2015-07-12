@@ -45,15 +45,15 @@ add_task(function*() {
 function* checkCopySelection(view) {
   info("Testing selection copy");
 
-  let contentDoc = view.doc;
-  let win = contentDoc.defaultView;
+  let contentDoc = view.styleDocument;
+  let win = view.styleWindow;
   let prop = contentDoc.querySelector(".ruleview-property");
   let values = contentDoc.querySelectorAll(".ruleview-propertyvaluecontainer");
 
   let range = contentDoc.createRange();
   range.setStart(prop, 0);
   range.setEnd(values[4], 2);
-  view.doc.defaultView.getSelection().addRange(range);
+  win.getSelection().addRange(range);
 
   info("Checking that _Copy() returns the correct clipboard value");
 
@@ -65,32 +65,32 @@ function* checkCopySelection(view) {
                         "html {[\\r\\n]+" +
                         "    color: #000;[\\r\\n]*";
 
-  let onPopup = once(view._contextmenu, "popupshown");
+  let onPopup = once(view._contextmenu._menupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(prop,
     {button: 2, type: "contextmenu"}, win);
   yield onPopup;
 
-  ok(!view.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
+  ok(!view._contextmenu.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
 
   try {
-    yield waitForClipboard(() => view.menuitemCopy.click(),
+    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch(e) {
     failedClipboard(expectedPattern);
   }
 
-  view._contextmenu.hidePopup();
+  view._contextmenu._menupopup.hidePopup();
 }
 
 function* checkSelectAll(view) {
   info("Testing select-all copy");
 
-  let contentDoc = view.doc;
-  let win = contentDoc.defaultView;
+  let contentDoc = view.styleDocument;
+  let win = view.styleWindow;
   let prop = contentDoc.querySelector(".ruleview-property");
 
   info("Checking that _SelectAll() then copy returns the correct clipboard value");
-  view._onSelectAll();
+  view._contextmenu._onSelectAll();
   let expectedPattern = "[\\r\\n]+" +
                         "element {[\\r\\n]+" +
                         "    margin: 10em;[\\r\\n]+" +
@@ -102,21 +102,21 @@ function* checkSelectAll(view) {
                         "    color: #000;[\\r\\n]+" +
                         "}[\\r\\n]*";
 
-  let onPopup = once(view._contextmenu, "popupshown");
+  let onPopup = once(view._contextmenu._menupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(prop,
     {button: 2, type: "contextmenu"}, win);
   yield onPopup;
 
-  ok(!view.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
+  ok(!view._contextmenu.menuitemCopy.hidden, "Copy menu item is not hidden as expected");
 
   try {
-    yield waitForClipboard(() => view.menuitemCopy.click(),
+    yield waitForClipboard(() => view._contextmenu.menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch(e) {
     failedClipboard(expectedPattern);
   }
 
-  view._contextmenu.hidePopup();
+  view._contextmenu._menupopup.hidePopup();
 }
 
 function checkClipboardData(expectedPattern) {

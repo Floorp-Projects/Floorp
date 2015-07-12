@@ -30,7 +30,6 @@ add_task(function*() {
 });
 
 function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
-  let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
@@ -42,7 +41,7 @@ function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
 
   info("Setting filter text to \"" + SEARCH + "\"");
   searchField.focus();
-  synthesizeKeys(SEARCH, win);
+  synthesizeKeys(SEARCH, ruleView.styleWindow);
   yield onRuleViewFiltered;
 
   info("Check that the correct rules are visible");
@@ -72,20 +71,18 @@ function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
 function* testClearSearchFilter(inspector, ruleView) {
   info("Clearing the search filter");
 
-  let doc = ruleView.doc;
-  let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let searchClearButton = ruleView.searchClearButton;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
-  EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);
+  EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, ruleView.styleWindow);
 
   yield onRuleViewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
   is(ruleView.element.children.length, 3, "Should have 3 rules.");
   ok(!searchField.value, "Search filter is cleared");
-  ok(!doc.querySelectorAll(".ruleview-highlight").length,
+  ok(!ruleView.styleDocument.querySelectorAll(".ruleview-highlight").length,
     "No rules are higlighted");
 
   let ruleEditor = getRuleViewRuleEditor(ruleView, 1).rule.textProps[0].editor;

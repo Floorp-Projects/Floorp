@@ -17,7 +17,7 @@ add_task(function*() {
   info("Selecting the test node");
   yield selectNode("h1", inspector);
 
-  let win = view.doc.defaultView;
+  let win = view.styleWindow;
   let searchField = view.searchField;
   let searchContextMenu = toolbox.textboxContextMenuPopup;
   ok(searchContextMenu,

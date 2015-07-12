@@ -173,7 +173,7 @@ function* testIncrement(editor, options, view, {ruleEditor}) {
   key = options.down ? "VK_DOWN" : "VK_UP";
   key = options.pageDown ? "VK_PAGE_DOWN" : options.pageUp ? "VK_PAGE_UP" : key;
   EventUtils.synthesizeKey(key, {altKey: options.alt, shiftKey: options.shift},
-    view.doc.defaultView);
+    view.styleWindow);
   yield onKeyUp;
   // Only expect a change if the value actually changed!
   if (options.start !== options.end) {

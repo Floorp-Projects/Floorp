@@ -41,17 +41,17 @@ function* testEditProperty(inspector, ruleView) {
   ok(input.selectionStart === 0 && input.selectionEnd === input.value.length, "Editor contents are selected.");
 
   // Try clicking on the editor's input again, shouldn't cause trouble (see bug 761665).
-  EventUtils.synthesizeMouse(input, 1, 1, {}, ruleView.doc.defaultView);
+  EventUtils.synthesizeMouse(input, 1, 1, {}, ruleView.styleWindow);
   input.select();
 
   info("Entering property name \"border-color\" followed by a colon to focus the value");
   let onFocus = once(idRuleEditor.element, "focus", true);
-  EventUtils.sendString("border-color:", ruleView.doc.defaultView);
+  EventUtils.sendString("border-color:", ruleView.styleWindow);
   yield onFocus;
   yield idRuleEditor.rule._applyingModifications;
 
   info("Verifying that the focused field is the valueSpan");
-  editor = inplaceEditor(ruleView.doc.activeElement);
+  editor = inplaceEditor(ruleView.styleDocument.activeElement);
   input = editor.input;
   is(inplaceEditor(propEditor.valueSpan), editor, "Focus should have moved to the value.");
   ok(input.selectionStart === 0 && input.selectionEnd === input.value.length, "Editor contents are selected.");
@@ -60,7 +60,7 @@ function* testEditProperty(inspector, ruleView) {
   let onBlur = once(editor.input, "blur");
   // Use sendChar() to pass each character as a string so that we can test propEditor.warning.hidden after each character.
   for (let ch of "red;") {
-    EventUtils.sendChar(ch, ruleView.doc.defaultView);
+    EventUtils.sendChar(ch, ruleView.styleWindow);
     is(propEditor.warning.hidden, true,
       "warning triangle is hidden or shown as appropriate");
   }
@@ -76,15 +76,15 @@ function* testEditProperty(inspector, ruleView) {
 
   info("Entering property name \"color\" followed by a colon to focus the value");
   onFocus = once(idRuleEditor.element, "focus", true);
-  EventUtils.sendString("color:", ruleView.doc.defaultView);
+  EventUtils.sendString("color:", ruleView.styleWindow);
   yield onFocus;
 
   info("Verifying that the focused field is the valueSpan");
-  editor = inplaceEditor(ruleView.doc.activeElement);
+  editor = inplaceEditor(ruleView.styleDocument.activeElement);
 
   info("Entering a value following by a semi-colon to commit it");
   onBlur = once(editor.input, "blur");
-  EventUtils.sendString("red;", ruleView.doc.defaultView);
+  EventUtils.sendString("red;", ruleView.styleWindow);
   yield onBlur;
   yield idRuleEditor.rule._applyingModifications;
 

@@ -50,7 +50,7 @@ function* testCancelNewOnEscape(inspector, ruleView) {
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "Next focused editor should be the new property editor.");
 
-  EventUtils.sendString("background", ruleView.doc.defaultView)
+  EventUtils.sendString("background", ruleView.styleWindow)
 
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey("VK_ESCAPE", {});

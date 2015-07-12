@@ -62,15 +62,15 @@ function* testMdnContextMenuItemVisibility(view) {
   let root = rootElement(view);
   for (let node of iterateNodes(root)) {
     info("Setting " + node + " as popupNode");
-    view.doc.popupNode = node;
+    view.styleDocument.popupNode = node;
 
     info("Updating context menu state");
-    view._contextMenuUpdate();
-    let isVisible = !view.menuitemShowMdnDocs.hidden;
+    view._contextmenu._updateMenuItems();
+    let isVisible = !view._contextmenu.menuitemShowMdnDocs.hidden;
     let shouldBeVisible = isPropertyNameNode(node);
     let message = shouldBeVisible? "shown": "hidden";
     is(isVisible, shouldBeVisible,
-       "The MDN context menu item is " + message);
+       "The MDN context menu item is " + message + " ; content : " + node.textContent + " ; type : " + node.nodeType);
   }
 }
 
@@ -78,8 +78,7 @@ function* testMdnContextMenuItemVisibility(view) {
  * Check if a node is a property name.
  */
 function isPropertyNameNode(node) {
-  return ((node.nodeType === node.TEXT_NODE) &&
-          (node.textContent === "font-family"));
+  return node.textContent === "font-family";
 }
 
 /**

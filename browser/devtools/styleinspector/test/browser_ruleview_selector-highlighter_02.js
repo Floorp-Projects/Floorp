@@ -80,6 +80,6 @@ add_task(function*() {
 
 function* clickSelectorIcon(icon, view) {
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
   yield onToggled;
 }
