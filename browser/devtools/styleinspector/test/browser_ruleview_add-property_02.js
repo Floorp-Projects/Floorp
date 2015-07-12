@@ -40,7 +40,7 @@ function* testCreateNew(inspector, ruleView) {
     "Editor contents are selected.");
 
   // Try clicking on the editor's input again, shouldn't cause trouble (see bug 761665).
-  EventUtils.synthesizeMouse(input, 1, 1, {}, ruleView.doc.defaultView);
+  EventUtils.synthesizeMouse(input, 1, 1, {}, ruleView.styleWindow);
   input.select();
 
   info("Entering the property name");
@@ -48,11 +48,11 @@ function* testCreateNew(inspector, ruleView) {
 
   info("Pressing RETURN and waiting for the value field focus");
   let onFocus = once(elementRuleEditor.element, "focus", true);
-  EventUtils.sendKey("return", ruleView.doc.defaultView);
+  EventUtils.sendKey("return", ruleView.styleWindow);
   yield onFocus;
   yield elementRuleEditor.rule._applyingModifications;
 
-  editor = inplaceEditor(ruleView.doc.activeElement);
+  editor = inplaceEditor(ruleView.styleDocument.activeElement);
 
   is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
   is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
@@ -62,7 +62,7 @@ function* testCreateNew(inspector, ruleView) {
   let onMutated = inspector.once("markupmutation");
   editor.input.value = "purple";
   let onBlur = once(editor.input, "blur");
-  EventUtils.sendKey("return", ruleView.doc.defaultView);
+  EventUtils.sendKey("return", ruleView.styleWindow);
   yield onBlur;
   yield onMutated;
 

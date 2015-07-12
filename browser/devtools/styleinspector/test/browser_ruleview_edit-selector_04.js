@@ -35,7 +35,7 @@ function* testSelectorHighlight(view, name) {
   let icon = getRuleViewSelectorHighlighterIcon(view, name);
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
   let isVisible = yield onToggled;
 
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");

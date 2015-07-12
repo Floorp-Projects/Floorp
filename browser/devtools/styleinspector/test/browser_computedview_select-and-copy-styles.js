@@ -75,8 +75,8 @@ function checkSelectAll(view) {
   let contentDoc = view.styleDocument;
   let prop = contentDoc.querySelector(".property-view");
 
-  info("Checking that _SelectAll() then copy returns the correct clipboard value");
-  view._onSelectAll();
+  info("Checking that _onSelectAll() then copy returns the correct clipboard value");
+  view._contextmenu._onSelectAll();
   let expectedPattern = "color: #FF0;[\\r\\n]+" +
                         "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +

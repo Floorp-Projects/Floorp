@@ -32,18 +32,18 @@ function* testCopyToClipboard(inspector, view) {
 
   yield selectNode("div", inspector);
 
-  let win = view.doc.defaultView;
+  let win = view.styleWindow;
   let element = getRuleViewProperty(view, "div", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
 
-  let popup = once(view._contextmenu, "popupshown");
+  let popup = once(view._contextmenu._menupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(element, {button: 2, type: "contextmenu"}, win);
   yield popup;
 
-  ok(!view.menuitemCopyColor.hidden, "Copy color is visible");
+  ok(!view._contextmenu.menuitemCopyColor.hidden, "Copy color is visible");
 
-  yield waitForClipboard(() => view.menuitemCopyColor.click(), TEST_COLOR);
-  view._contextmenu.hidePopup();
+  yield waitForClipboard(() => view._contextmenu.menuitemCopyColor.click(), TEST_COLOR);
+  view._contextmenu._menupopup.hidePopup();
 }
 
 function* testManualEdit(inspector, view) {
@@ -58,39 +58,41 @@ function* testManualEdit(inspector, view) {
   info("Typing new value");
   let input = editor.input;
   let onBlur = once(input, "blur");
-  EventUtils.sendString(newColor + ";", view.doc.defaultView);
+  EventUtils.sendString(newColor + ";", view.styleWindow);
   yield onBlur;
   yield wait(1);
 
-  let colorValue = getRuleViewProperty(view, "div", "color").valueSpan.firstChild;
-  is(colorValue.dataset.color, newColor, "data-color was updated");
+  let colorValueElement = getRuleViewProperty(view, "div", "color").valueSpan.firstChild;
+  is(colorValueElement.dataset.color, newColor, "data-color was updated");
 
-  view.doc.popupNode = colorValue;
-  view._isColorPopup();
+  view.styleDocument.popupNode = colorValueElement;
 
-  is(view._colorToCopy, newColor, "_colorToCopy has the new value");
+  let contextMenu = view._contextmenu;
+  contextMenu._isColorPopup();
+  is(contextMenu._colorToCopy, newColor, "_colorToCopy has the new value");
 }
 
 function* testColorPickerEdit(inspector, view) {
   info("Testing colors edited via color picker");
   yield selectNode("div", inspector);
 
-  let swatch = getRuleViewProperty(view, "div", "color").valueSpan
+  let swatchElement = getRuleViewProperty(view, "div", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
   let picker = view.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
-  swatch.click();
+  swatchElement.click();
   yield onShown;
 
   let rgbaColor = [83, 183, 89, 1];
   let rgbaColorText = "rgba(83, 183, 89, 1)";
   yield simulateColorPickerChange(view, picker, rgbaColor);
 
-  is(swatch.parentNode.dataset.color, rgbaColorText, "data-color was updated");
-  view.doc.popupNode = swatch;
-  view._isColorPopup();
+  is(swatchElement.parentNode.dataset.color, rgbaColorText, "data-color was updated");
+  view.styleDocument.popupNode = swatchElement;
 
-  is(view._colorToCopy, rgbaColorText, "_colorToCopy has the new value");
+  let contextMenu = view._contextmenu;
+  contextMenu._isColorPopup();
+  is(contextMenu._colorToCopy, rgbaColorText, "_colorToCopy has the new value");
 }
