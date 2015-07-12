@@ -172,7 +172,7 @@ let dataProviders = {
   application: function application(done) {
     let data = {
       name: Services.appinfo.name,
-      version: Services.appinfo.version,
+      version: AppConstants.MOZ_APP_VERSION_ABOUT,
       buildID: Services.appinfo.appBuildID,
       userAgent: Cc["@mozilla.org/network/protocol;1?name=http"].
                  getService(Ci.nsIHttpProtocolHandler).
