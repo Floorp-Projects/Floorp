@@ -7,17 +7,32 @@
  * Utility functions for collapsing markers into a waterfall.
  */
 
+loader.lazyRequireGetter(this, "extend",
+  "sdk/util/object", true);
 loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/performance/marker-utils");
 
 /**
+ * Creates a parent marker, which functions like a regular marker,
+ * but is able to hold additional child markers.
+ *
+ * The marker is seeded with values from `marker`.
+ * @param object marker
+ * @return object
+ */
+function createParentNode (marker) {
+  return extend(marker, { submarkers: [] });
+}
+
+
+/**
  * Collapses markers into a tree-like structure.
- * @param object markerNode
+ * @param object rootNode
  * @param array markersList
  * @param array filter
  */
-function collapseMarkersIntoNode({ markerNode, markersList, filter }) {
-  let { getCurrentParentNode, collapseMarker, addParentNode, popParentNode } = createParentNodeFactory(markerNode);
+function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
+  let { getCurrentParentNode, pushNode, popParentNode } = createParentNodeFactory(rootNode);
 
   for (let i = 0, len = markersList.length; i < len; i++) {
     let curr = markersList[i];
@@ -29,48 +44,52 @@ function collapseMarkersIntoNode({ markerNode, markersList, filter }) {
 
     let parentNode = getCurrentParentNode();
     let blueprint = MarkerUtils.getBlueprintFor(curr);
-    let collapse = blueprint.collapseFunc || (() => null);
-    let peek = distance => markersList[i + distance];
 
-    let collapseInfo = collapse(parentNode, curr, peek);
-    if (collapseInfo) {
-      let { collapse, toParent, finalize } = collapseInfo;
+    let nestable = "nestable" in blueprint ? blueprint.nestable : true;
+    let collapsible = "collapsible" in blueprint ? blueprint.collapsible : true;
 
-      // If `toParent` is an object, use it as the next parent marker
-      if (typeof toParent === "object") {
-        addParentNode(toParent);
+    let finalized = null;
+
+    // If this marker is collapsible, turn it into a parent marker.
+    // If there are no children within it later, it will be turned
+    // back into a normal node.
+    if (collapsible) {
+      curr = createParentNode(curr);
+    }
+
+    // If not nestible, just push it inside the root node,
+    // like console.time/timeEnd.
+    if (!nestable) {
+      pushNode(rootNode, curr);
+      continue;
+    }
+
+    // First off, if any parent nodes exist, finish them off
+    // recursively upwards if this marker is outside their ranges and nestable.
+    while (!finalized && parentNode) {
+      // If this marker is eclipsed by the current parent marker,
+      // make it a child of the current parent and stop
+      // going upwards.
+      if (nestable && curr.end <= parentNode.end) {
+        pushNode(parentNode, curr);
+        finalized = true;
+        break;
       }
 
-      if (collapse) {
-        collapseMarker(curr);
-      }
-
-      // If the marker specifies this parent marker is full,
-      // pop it from the stack.
-      if (finalize) {
+      // If this marker is still nestable, but outside of the range
+      // of the current parent, iterate upwards on the next parent
+      // and finalize the current parent.
+      if (nestable) {
         popParentNode();
+        parentNode = getCurrentParentNode();
+        continue;
       }
-    } else {
-      markerNode.submarkers.push(curr);
+    }
+
+    if (!finalized) {
+      pushNode(rootNode, curr);
     }
   }
-}
-
-/**
- * Creates a parent marker, which functions like a regular marker,
- * but is able to hold additional child markers.
- *
- * The marker is seeded with values from `marker`.
- * @param object marker
- * @return object
- */
-function makeParentMarkerNode (marker) {
-  let node = Object.create(null);
-  for (let prop in marker) {
-    node[prop] = marker[prop];
-  }
-  node.submarkers = [];
-  return node;
 }
 
 /**
@@ -98,6 +117,14 @@ function createParentNodeFactory (root) {
       if (lastParent.end == void 0) {
         lastParent.end = lastParent.submarkers[lastParent.submarkers.length - 1].end;
       }
+
+      // If no children were ever pushed into this parent node,
+      // remove it's submarkers so it behaves like a non collapsible
+      // node.
+      if (!lastParent.submarkers.length) {
+        delete lastParent.submarkers;
+      }
+
       return lastParent;
     },
 
@@ -107,28 +134,21 @@ function createParentNodeFactory (root) {
     getCurrentParentNode: () => parentMarkers.length ? parentMarkers[parentMarkers.length - 1] : null,
 
     /**
-     * Push a new parent node onto the stack and nest it with the
-     * next most recent parent node, or root if no other parent nodes.
-     */
-    addParentNode: (marker) => {
-      let parentMarker = makeParentMarkerNode(marker);
-      (factory.getCurrentParentNode() || root).submarkers.push(parentMarker);
-      parentMarkers.push(parentMarker);
-    },
-
-    /**
      * Push this marker into the most recent parent node.
      */
-    collapseMarker: (marker) => {
-      if (parentMarkers.length === 0) {
-        throw new Error("Cannot collapse marker with no parents.");
+    pushNode: (parent, marker) => {
+      parent.submarkers.push(marker);
+
+      // If pushing a parent marker, track it as the top of
+      // the parent stack.
+      if (marker.submarkers) {
+        parentMarkers.push(marker);
       }
-      factory.getCurrentParentNode().submarkers.push(marker);
     }
   };
 
   return factory;
 }
 
-exports.makeParentMarkerNode = makeParentMarkerNode;
+exports.createParentNode = createParentNode;
 exports.collapseMarkersIntoNode = collapseMarkersIntoNode;
