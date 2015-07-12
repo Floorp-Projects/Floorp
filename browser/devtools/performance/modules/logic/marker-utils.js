@@ -27,6 +27,10 @@ const GECKO_SYMBOL = "(Gecko)";
  * determines if this marker should be filtered or not.
  */
 function isMarkerValid (marker, filter) {
+  if (!filter || filter.length === 0) {
+    return true;
+  }
+
   let isUnknown = !(marker.name in TIMELINE_BLUEPRINT);
   if (isUnknown) {
     return filter.indexOf("UNKNOWN") === -1;
@@ -293,80 +297,6 @@ const DOM = {
 };
 
 /**
- * A series of collapsers used by the blueprint. These functions are
- * invoked on a moving window of two markers.
- *
- * A function determining how markers are collapsed together.
- * Invoked with 3 arguments: the current parent marker, the
- * current marker and a method for peeking i markers ahead. If
- * nothing is returned, the marker is added as a standalone entry
- * in the waterfall. Otherwise, an object needs to be returned
- * with the following properties:
- * - toParent: The marker to be made a new parent. Can use the current
- *             marker, becoming a parent itself, or make a new marker-esque
- *             object.
- * - collapse: Whether or not this current marker should be nested within
- *             the current parent.
- * - finalize: Whether or not the current parent should be finalized and popped
- *        off the stack.
- */
-const CollapseFunctions = {
-  /**
-   * Combines similar markers that are consecutive into a meta marker.
-   */
-  identical: function (parent, curr, peek) {
-    let next = peek(1);
-    // If there is a parent marker currently being filled and the current marker
-    // should go into the parent marker, make it so.
-    if (parent && parent.name == curr.name) {
-      let finalize = next && next.name !== curr.name;
-      return { collapse: true, finalize };
-    }
-    // Otherwise if the current marker is the same type as the next marker type,
-    // create a new parent marker containing the current marker.
-    if (next && curr.name == next.name) {
-      return { toParent: { name: curr.name, start: curr.start }, collapse: true };
-    }
-  },
-
-  /**
-   * Combines similar markers that are close to each other in time into a meta marker.
-   */
-  adjacent: function (parent, curr, peek) {
-    let next = peek(1);
-    if (next && (next.start < curr.end || next.start - curr.end <= 10 /* ms */)) {
-      return CollapseFunctions.identical(parent, curr, peek);
-    }
-  },
-
-  /**
-   * Folds this marker in parent marker if parent marker fully eclipses
-   * the current markers' time.
-   */
-  child: function (parent, curr, peek) {
-    let next = peek(1);
-    // If this marker is consumed by current parent, collapse
-    if (parent && curr.end <= parent.end) {
-      let finalize = next && next.end > parent.end;
-      return { collapse: true, finalize };
-    }
-  },
-
-  /**
-   * Turns this marker into a parent marker if the next marker
-   * is fully eclipsed by the current marker.
-   */
-  parent: function (parent, curr, peek) {
-    let next = peek(1);
-    // If the next marker is fully consumed by this marker, make
-    // it a parent (do not collapse, the marker becomes a parent).
-    if (next && curr.end >= next.end) {
-      return { toParent: curr };
-    }
-  },
-};
-
-/**
  * Mapping of JS marker causes to a friendlier form. Only
  * markers that are considered "from content" should be labeled here.
  */
@@ -480,6 +410,5 @@ exports.getMarkerLabel = getMarkerLabel;
 exports.getMarkerClassName = getMarkerClassName;
 exports.getMarkerFields = getMarkerFields;
 exports.DOM = DOM;
-exports.CollapseFunctions = CollapseFunctions;
 exports.Formatters = Formatters;
 exports.getBlueprintFor = getBlueprintFor;
