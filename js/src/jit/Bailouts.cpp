@@ -221,18 +221,19 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
         rfe->target = cx->runtime()->jitRuntime()->getBailoutTail()->raw();
         rfe->bailoutInfo = bailoutInfo;
     } else {
-        // Bailout failed. If the overrecursion check failed, clear the
-        // exception to turn this into an uncatchable error, continue popping
-        // all inline frames and have the caller report the error.
+        // Bailout failed. If there was a fatal error, clear the
+        // exception to turn this into an uncatchable error. If the
+        // overrecursion check failed, continue popping all inline
+        // frames and have the caller report an overrecursion error.
         MOZ_ASSERT(!bailoutInfo);
 
-        if (retval == BAILOUT_RETURN_OVERRECURSED) {
+        if (!excInfo.propagatingIonExceptionForDebugMode())
+            cx->clearPendingException();
+
+        if (retval == BAILOUT_RETURN_OVERRECURSED)
             *overrecursed = true;
-            if (!excInfo.propagatingIonExceptionForDebugMode())
-                cx->clearPendingException();
-        } else {
+        else
             MOZ_ASSERT(retval == BAILOUT_RETURN_FATAL_ERROR);
-        }
     }
 
     // Make the frame being bailed out the top profiled frame.
