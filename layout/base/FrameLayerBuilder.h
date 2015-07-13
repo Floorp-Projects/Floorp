@@ -479,7 +479,7 @@ public:
      * longer than the transaction.
      *
      * Updates the geometry, frame list and clip.
-     * For items within a PaintedLayer, a geometry object must be specifed to retain
+     * For items within a PaintedLayer, a geometry object must be specified to retain
      * until the next transaction.
      *
      */
