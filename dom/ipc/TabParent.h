@@ -125,7 +125,8 @@ public:
     void AddWindowListeners();
     void DidRefresh() override;
 
-    virtual bool RecvMoveFocus(const bool& aForward) override;
+    virtual bool RecvMoveFocus(const bool& aForward,
+                               const bool& aForDocumentNavigation) override;
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
     virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
     virtual bool RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;
