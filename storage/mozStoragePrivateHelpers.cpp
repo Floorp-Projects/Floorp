@@ -255,7 +255,7 @@ public:
 private:
   nsCOMPtr<mozIStorageCompletionCallback> mCallback;
 };
-} // anonymous namespace
+} // namespace
 already_AddRefed<nsIRunnable>
 newCompletionEvent(mozIStorageCompletionCallback *aCallback)
 {

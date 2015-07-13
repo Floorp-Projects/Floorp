@@ -273,4 +273,4 @@ AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
   return sum;
 }
 
-}
+} // namespace mozilla

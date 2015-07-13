@@ -59,5 +59,5 @@ UnlockScreenOrientation()
 {
 }
 
-} // hal_impl
-} // mozilla
+} // namespace hal_impl
+} // namespace mozilla

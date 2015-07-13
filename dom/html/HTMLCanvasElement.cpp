@@ -50,7 +50,7 @@ namespace {
 typedef mozilla::dom::HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
 HTMLImageOrCanvasOrVideoElement;
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace dom {

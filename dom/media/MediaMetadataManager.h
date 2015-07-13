@@ -63,6 +63,6 @@ namespace mozilla {
     protected:
       LinkedList<TimedMetadata> mMetadataQueue;
   };
-}
+} // namespace mozilla
 
 #endif

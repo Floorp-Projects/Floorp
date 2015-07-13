@@ -140,7 +140,7 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
          hostname.EqualsLiteral("::1");
 }
 
-} // anonymous namespace
+} // namespace
 
 // static
 already_AddRefed<CacheStorage>

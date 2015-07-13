@@ -14,7 +14,7 @@
 namespace JS {
 class CallArgs;
 class Value;
-}
+} // namespace JS
 
 namespace js {
 

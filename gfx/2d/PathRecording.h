@@ -130,7 +130,7 @@ private:
   std::vector<DrawEventRecorderPrivate*> mStoredRecorders;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATHRECORDING_H_ */

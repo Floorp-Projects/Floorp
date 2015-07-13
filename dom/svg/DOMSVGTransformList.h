@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 class SVGMatrix;
 class SVGTransform;
-}
+} // namespace dom
 
 /**
  * Class DOMSVGTransformList

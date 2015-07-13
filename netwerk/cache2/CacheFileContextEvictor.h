@@ -88,7 +88,7 @@ private:
   nsCOMPtr<nsIFile> mEntriesDir;
 };
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

@@ -201,7 +201,7 @@ MainThreadIOLoggerImpl::Observe(Observation& aObservation)
   lock.Notify();
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

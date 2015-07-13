@@ -134,7 +134,7 @@ AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
   }
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

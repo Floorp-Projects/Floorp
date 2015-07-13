@@ -145,5 +145,5 @@ DisableSensorNotifications(SensorType aSensor)
     NS_RELEASE(sUpdateTimer);
   }
 }
-} // hal_impl
-} // mozilla
+} // namespace hal_impl
+} // namespace mozilla

@@ -581,8 +581,7 @@ protected:
   }
 };
 
-
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_OGLSHADERPROGRAM_H */

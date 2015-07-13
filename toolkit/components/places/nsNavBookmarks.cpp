@@ -110,7 +110,7 @@ private:
   DataType mData;
 };
 
-} // Anonymous namespace.
+} // namespace
 
 
 nsNavBookmarks::nsNavBookmarks()

@@ -50,9 +50,9 @@ inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
   return module && module->level >= static_cast<int>(level);
 }
 
-}
+} // namespace detail
 
-}
+} // namespace mozilla
 
 #define MOZ_LOG_TEST(_module,_level) mozilla::detail::log_test(_module, _level)
 

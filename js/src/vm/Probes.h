@@ -91,7 +91,8 @@ bool FinalizeObject(JSObject* obj);
 void DTraceEnterJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 void DTraceExitJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 
-} /* namespace Probes */
+} // namespace probes
+
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char* ObjectClassname(JSObject* obj) {

@@ -26,10 +26,10 @@
 namespace mozilla {
 namespace gl {
   class BindableTexture;
-}
+} // namespace gl
 namespace gfx {
   class DataSourceSurface;
-}
+} // namespace gfx
 
 namespace layers {
 
@@ -172,7 +172,7 @@ private:
   GLuint mFBO;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SURFACEOGL_H */

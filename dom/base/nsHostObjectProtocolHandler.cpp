@@ -309,7 +309,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS(BlobURLsReporter, nsIMemoryReporter)
 
-}
+} // namespace mozilla
 
 void
 nsHostObjectProtocolHandler::Init(void)

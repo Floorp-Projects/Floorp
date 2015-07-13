@@ -28,6 +28,7 @@ public:
   virtual void RenderLayer() {}
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_READBACKLAYERD3D9_H */

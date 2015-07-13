@@ -88,7 +88,7 @@ GetFileFor(FileInfo* aFileInfo)
   return file.forget();
 }
 
-} // anonymous namespace
+} // namespace
 
 IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
                                const nsAString& aName,

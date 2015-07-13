@@ -28,7 +28,7 @@ class nsStyleContext;
 namespace mozilla {
 class WritingMode;
 class LogicalMargin;
-}
+} // namespace mozilla
 
 struct nsTableReflowState;
 struct BCPropertyData;

@@ -53,4 +53,5 @@ class RtspControllerParent : public PRtspControllerParent
 
 } // namespace net
 } // namespace mozilla
+
 #endif // RtspControllerParent_h

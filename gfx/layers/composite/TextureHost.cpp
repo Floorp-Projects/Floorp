@@ -870,5 +870,5 @@ TextureParent::RecvRecycleTexture(const TextureFlags& aTextureFlags)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

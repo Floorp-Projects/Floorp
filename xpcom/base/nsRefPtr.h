@@ -496,7 +496,7 @@ operator!=(U* aLhs, const nsRefPtr<T>& aRhs)
 
 namespace detail {
 class nsRefPtrZero;
-}
+} // namespace detail
 
 // Comparing an |nsRefPtr| to |0|
 

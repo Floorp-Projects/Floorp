@@ -103,7 +103,7 @@ private:
   FillRule mFillRule;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

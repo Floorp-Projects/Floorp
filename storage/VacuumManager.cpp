@@ -298,7 +298,7 @@ Vacuumer::notifyCompletion(bool aSucceeded)
   return NS_OK;
 }
 
-} // Anonymous namespace.
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// VacuumManager

@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace detail {
 extern MFBT_DATA Atomic<uint32_t> gChaosModeCounter;
-}
+} // namespace detail
 
 /**
  * When "chaos mode" is activated, code that makes implicitly nondeterministic

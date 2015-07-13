@@ -272,5 +272,5 @@ D3D9SurfaceImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

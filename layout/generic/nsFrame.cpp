@@ -109,8 +109,8 @@ using namespace mozilla::layout;
 namespace mozilla {
 namespace gfx {
 class VRHMDInfo;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics

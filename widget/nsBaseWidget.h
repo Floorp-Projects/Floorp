@@ -40,14 +40,14 @@ class GeckoContentController;
 class APZEventState;
 struct ScrollableLayerGuid;
 struct SetAllowedTouchBehaviorCallback;
-}
+} // namespace layers
 
 class CompositorVsyncDispatcher;
-}
+} // namespace mozilla
 
 namespace base {
 class Thread;
-}
+} // namespace base
 
 // Windows specific constant indicating the maximum number of touch points the
 // inject api will allow. This also sets the maximum numerical value for touch

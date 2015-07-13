@@ -3637,7 +3637,7 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return n;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 void

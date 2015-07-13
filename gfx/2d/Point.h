@@ -27,7 +27,7 @@ namespace gfx {
 // This should only be used by the typedefs below.
 struct UnknownUnits {};
 
-}  // close namespace 'gfx' because IsPixel specialization must be in 'mozilla'
+} // namespace gfx
 
 template<> struct IsPixel<gfx::UnknownUnits> : TrueType {};
 
@@ -218,7 +218,7 @@ IntSizeTyped<units> RoundedToInt(const SizeTyped<units>& aSize) {
                              int32_t(floorf(aSize.height + 0.5f)));
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_POINT_H_ */

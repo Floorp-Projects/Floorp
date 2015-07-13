@@ -334,4 +334,4 @@ ActiveLayerTracker::Shutdown()
   gLayerActivityTracker = nullptr;
 }
 
-}
+} // namespace mozilla

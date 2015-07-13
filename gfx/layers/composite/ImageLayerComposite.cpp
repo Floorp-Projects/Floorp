@@ -188,5 +188,5 @@ ImageLayerComposite::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

@@ -42,7 +42,7 @@ class GeckoSampler;
 
 namespace mozilla {
 class TimeStamp;
-}
+} // namespace mozilla
 
 extern mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 extern mozilla::ThreadLocal<GeckoSampler *> tlsTicker;
@@ -449,7 +449,7 @@ private:
   void* mHandle;
 };
 
-} //mozilla
+} // namespace mozilla
 
 inline PseudoStack* mozilla_get_pseudo_stack(void)
 {

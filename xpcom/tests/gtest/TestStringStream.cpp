@@ -49,7 +49,7 @@ static void TestStringStreamClone(uint32_t aNumBytes)
   testing::ConsumeAndValidateStream(clone, inputString);
 }
 
-} // anonymous namespace
+} // namespace
 
 TEST(StringStream, Simple_4k)
 {

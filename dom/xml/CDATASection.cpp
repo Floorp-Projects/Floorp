@@ -65,5 +65,5 @@ CDATASection::DumpContent(FILE* out, int32_t aIndent,
 }
 #endif
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla

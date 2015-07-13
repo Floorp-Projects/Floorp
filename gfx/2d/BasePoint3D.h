@@ -111,7 +111,7 @@ struct BasePoint3D {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_BASEPOINT3D_H_ */

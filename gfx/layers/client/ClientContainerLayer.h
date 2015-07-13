@@ -182,7 +182,7 @@ private:
   }
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

@@ -14,7 +14,7 @@
 // without also including PHttpChannelParams.h
 namespace IPC {
     template <typename> struct ParamTraits;
-}
+} // namespace IPC
 
 namespace mozilla { namespace net {
 
@@ -158,6 +158,8 @@ private:
 
     friend struct IPC::ParamTraits<nsHttpResponseHead>;
 };
-}} // namespace mozilla::net
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpResponseHead_h__

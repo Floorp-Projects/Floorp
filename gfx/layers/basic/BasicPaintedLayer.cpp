@@ -226,5 +226,5 @@ BasicLayerManager::CreatePaintedLayer()
   return layer.forget();
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

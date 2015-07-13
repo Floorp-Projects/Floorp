@@ -196,7 +196,7 @@ private:
 };
 #endif
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_BORROWED_CONTEXT_H

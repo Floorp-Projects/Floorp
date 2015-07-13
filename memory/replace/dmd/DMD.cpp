@@ -1191,8 +1191,8 @@ FreeCallback(void* aPtr, Thread* aT, DeadBlock* aDeadBlock)
 
 static void Init(const malloc_table_t* aMallocTable);
 
-}   // namespace dmd
-}   // namespace mozilla
+} // namespace dmd
+} // namespace mozilla
 
 void
 replace_init(const malloc_table_t* aMallocTable)
@@ -2041,5 +2041,5 @@ DMDFuncs::ResetEverything(const char* aOptions)
   gSmallBlockActualSizeCounter = 0;
 }
 
-}   // namespace dmd
-}   // namespace mozilla
+} // namespace dmd
+} // namespace mozilla

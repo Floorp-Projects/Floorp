@@ -126,7 +126,7 @@ protected:
   RefPtr<ContentClientBasic> mContentClient;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

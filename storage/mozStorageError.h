@@ -29,7 +29,7 @@ private:
   nsCString mMessage;
 };
 
-} // namespace stoarge
+} // namespace storage
 } // namespace mozilla
 
 #endif // mozStorageError_h

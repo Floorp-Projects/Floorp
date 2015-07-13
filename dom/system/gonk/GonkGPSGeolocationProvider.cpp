@@ -539,7 +539,7 @@ ConvertToGpsRefLocationType(const nsAString& aConnectionType)
   }
   return AGPS_REF_LOCATION_TYPE_GSM_CELLID;
 }
-} // anonymous namespace
+} // namespace
 
 void
 GonkGPSGeolocationProvider::SetReferenceLocation()
@@ -1026,7 +1026,7 @@ ConvertToGpsNetworkType(int aNetworkInterfaceType)
       return -1;
   }
 }
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,

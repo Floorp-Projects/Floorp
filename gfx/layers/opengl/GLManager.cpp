@@ -70,5 +70,5 @@ GLManager::CreateGLManager(LayerManagerComposite* aManager)
   return nullptr;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

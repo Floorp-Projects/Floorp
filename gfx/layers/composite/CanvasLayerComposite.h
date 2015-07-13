@@ -75,6 +75,7 @@ private:
   RefPtr<CompositableHost> mCompositableHost;
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_CanvasLayerComposite_H */

@@ -133,5 +133,5 @@ BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

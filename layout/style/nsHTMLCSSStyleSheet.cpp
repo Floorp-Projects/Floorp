@@ -37,7 +37,7 @@ ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
   return PL_DHASH_REMOVE;
 }
 
-} // anonymous namespace
+} // namespace
 
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
 {

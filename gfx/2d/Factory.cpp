@@ -901,5 +901,5 @@ CriticalLogger::OutputMessage(const std::string &aString,
   BasicLogger::OutputMessage(aString, aLevel, aNoNewline);
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

@@ -26,8 +26,8 @@ namespace mozilla {
 class RestyleTracker;
 namespace dom {
 class SVGAnimationElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 //----------------------------------------------------------------------
 // nsSMILAnimationController

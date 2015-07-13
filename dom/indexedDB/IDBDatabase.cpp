@@ -179,7 +179,7 @@ private:
   }
 };
 
-} // anonymous namespace
+} // namespace
 
 class IDBDatabase::LogWarningRunnable final
   : public nsRunnable

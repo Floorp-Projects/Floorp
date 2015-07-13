@@ -48,6 +48,7 @@ class SimpleTokenBucket {
 
     DISALLOW_COPY_ASSIGN(SimpleTokenBucket);
 };
+
 } // namespace mozilla
 
 #endif // simpletokenbucket_h__

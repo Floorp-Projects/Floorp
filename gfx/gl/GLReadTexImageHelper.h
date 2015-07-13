@@ -18,7 +18,7 @@ namespace mozilla {
 
 namespace gfx {
 class DataSourceSurface;
-}
+} // namespace gfx
 
 namespace gl {
 
@@ -73,7 +73,7 @@ public:
 
 };
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif

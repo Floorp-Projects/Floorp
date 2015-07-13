@@ -341,7 +341,8 @@ private:
   AlignedTArray<ComplexU> mOutputBuffer;
   uint32_t mFFTSize;
 };
-}
+
+} // namespace mozilla
 
 #endif
 

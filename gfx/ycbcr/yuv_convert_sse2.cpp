@@ -43,5 +43,5 @@ void FilterRows_SSE2(uint8* ybuf, const uint8* y0_ptr, const uint8* y1_ptr,
   } while (dest128 < end128);
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

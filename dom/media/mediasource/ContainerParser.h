@@ -75,4 +75,5 @@ protected:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_CONTAINERPARSER_H_ */

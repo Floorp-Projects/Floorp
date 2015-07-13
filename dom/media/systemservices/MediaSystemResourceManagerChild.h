@@ -15,7 +15,7 @@ class MediaSystemResourceManager;
 
 namespace ipc {
 class BackgroundChildImpl;
-}
+} // namespace ipc
 
 namespace media {
 
@@ -60,7 +60,7 @@ private:
   friend class mozilla::ipc::BackgroundChildImpl;
 };
 
-} // namespatce media
-} // namespatce mozilla
+} // namespace media
+} // namespace mozilla
 
 #endif

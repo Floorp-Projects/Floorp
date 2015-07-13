@@ -276,5 +276,5 @@ DynamicsCompressorNode::SendReleaseToStream(AudioNode* aNode)
   SendTimelineParameterToStream(This, DynamicsCompressorNodeEngine::RELEASE, *This->mRelease);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

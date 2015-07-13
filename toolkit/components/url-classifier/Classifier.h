@@ -104,7 +104,7 @@ private:
   nsDataHashtable<nsCStringHashKey, int64_t> mTableFreshness;
 };
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla
 
 #endif

@@ -48,8 +48,8 @@ void
 FreeStructuredClone(nsTArray<uint8_t>& aData,
                     StructuredCloneClosure& aClosure);
 
-} // messageport namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace messageport
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_MessagePortUtils_h

@@ -19,8 +19,8 @@
 namespace mozilla {
 namespace dom {
   struct CSP;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /* =============== Logging =================== */
 

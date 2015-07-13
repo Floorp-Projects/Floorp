@@ -15,7 +15,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGSVGElement;
-}
+} // namespace dom
 
 /**
  * Implements support for parsing SVG fragment identifiers

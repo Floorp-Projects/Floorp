@@ -692,5 +692,5 @@ LookupCache::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
 }
 
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla

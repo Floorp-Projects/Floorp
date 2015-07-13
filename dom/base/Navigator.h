@@ -41,8 +41,8 @@ class WakeLock;
 class ArrayBufferViewOrBlobOrStringOrFormData;
 struct MobileIdOptions;
 class ServiceWorkerContainer;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 //*****************************************************************************
 // Navigator: Script "navigator" object
@@ -75,7 +75,7 @@ class MozGetUserMediaDevicesSuccessCallback;
 
 namespace network {
 class Connection;
-} // namespace Connection;
+} // namespace network
 
 #ifdef MOZ_B2G_BT
 namespace bluetooth {

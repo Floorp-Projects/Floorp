@@ -60,7 +60,7 @@ private:
   nsClassHashtable<nsIDHashKey, MessagePortServiceData> mPorts;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_MessagePortService_h

@@ -462,13 +462,13 @@ namespace CType {
   JSObject* GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot);
   JSObject* GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot);
   const JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);
-}
+} // namespace CType
 
 namespace PointerType {
   JSObject* CreateInternal(JSContext* cx, HandleObject baseType);
 
   JSObject* GetBaseType(JSObject* obj);
-}
+} // namespace PointerType
 
 typedef mozilla::UniquePtr<ffi_type, JS::DeletePolicy<ffi_type>> UniquePtrFFIType;
 
@@ -480,7 +480,7 @@ namespace ArrayType {
   size_t GetLength(JSObject* obj);
   bool GetSafeLength(JSObject* obj, size_t* result);
   UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
-}
+} // namespace ArrayType
 
 namespace StructType {
   bool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
@@ -489,7 +489,7 @@ namespace StructType {
   const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString* name);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
   UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
-}
+} // namespace StructType
 
 namespace FunctionType {
   JSObject* CreateInternal(JSContext* cx, HandleValue abi, HandleValue rtype,
@@ -501,12 +501,12 @@ namespace FunctionType {
   FunctionInfo* GetFunctionInfo(JSObject* obj);
   void BuildSymbolName(JSString* name, JSObject* typeObj,
     AutoCString& result);
-}
+} // namespace FunctionType
 
 namespace CClosure {
   JSObject* Create(JSContext* cx, HandleObject typeObj, HandleObject fnObj,
     HandleObject thisObj, jsval errVal, PRFuncPtr* fnptr);
-}
+} // namespace CClosure
 
 namespace CData {
   JSObject* Create(JSContext* cx, HandleObject typeObj, HandleObject refObj,
@@ -522,17 +522,17 @@ namespace CData {
   bool Cast(JSContext* cx, unsigned argc, jsval* vp);
   // Attached by JSAPI as the function 'ctypes.getRuntime'
   bool GetRuntime(JSContext* cx, unsigned argc, jsval* vp);
-}
+} // namespace CData
 
 namespace Int64 {
   bool IsInt64(JSObject* obj);
-}
+} // namespace Int64
 
 namespace UInt64 {
   bool IsUInt64(JSObject* obj);
-}
+} // namespace UInt64
 
-}
-}
+} // namespace ctypes
+} // namespace js
 
 #endif /* ctypes_CTypes_h */

@@ -164,7 +164,7 @@ public:
     static void NotifyFlushComplete();
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* mozilla_layers_APZCCallbackHelper_h */

@@ -266,9 +266,9 @@ namespace plugins {
 namespace PluginUtilsOSX {
   static void *sApplicationASN = NULL;
   static void *sApplicationInfoItem = NULL;
-}
-}
-}
+} // namespace PluginUtilsOSX
+} // namespace plugins
+} // namespace mozilla
 
 bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -511,7 +511,7 @@ void nsDoubleBufferCARenderer::ClearBackSurface() {
   }
 }
 
-} //PluginUtilsOSX
-} //plugins
-} //mozilla
+} // namespace PluginUtilsOSX
+} // namespace plugins
+} // namespace mozilla
 

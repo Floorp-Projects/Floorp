@@ -33,7 +33,7 @@ cpu_type_t cpu_i386_types[2] = {
 cpu_type_t cpu_x64_86_types[2] = {
                                  CPU_TYPE_X86_64,
                                  CPU_TYPE_ANY };
-}
+} // namespace
 
 void LaunchChildMac(int aArgc, char** aArgv,
                     uint32_t aRestartType, pid_t *pid)

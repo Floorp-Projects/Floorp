@@ -22,7 +22,7 @@
 
 namespace mozilla {
 class TimeStamp;
-}
+} // namespace mozilla
 
 class TimerThread final
   : public nsIRunnable

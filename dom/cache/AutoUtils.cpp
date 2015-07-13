@@ -133,7 +133,7 @@ CleanupParentFds(CacheReadStreamOrVoid& aReadStreamOrVoid, CleanupAction aAction
   CleanupParentFds(aReadStreamOrVoid.get_CacheReadStream(), aAction);
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace dom {
@@ -363,7 +363,7 @@ MatchInPutList(InternalRequest* aRequest,
   return false;
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,

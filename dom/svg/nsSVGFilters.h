@@ -236,7 +236,7 @@ public:
     ComputeLightAttributes(nsSVGFilterInstance* aInstance) = 0;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

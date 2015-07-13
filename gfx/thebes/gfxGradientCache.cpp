@@ -230,5 +230,5 @@ gfxGradientCache::Shutdown()
   gGradientCache = nullptr;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

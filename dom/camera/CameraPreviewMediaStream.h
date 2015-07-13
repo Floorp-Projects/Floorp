@@ -73,6 +73,6 @@ protected:
   nsRefPtr<FakeMediaStreamGraph> mFakeMediaStreamGraph;
 };
 
-}
+} // namespace mozilla
 
 #endif // DOM_CAMERA_CAMERAPREVIEWMEDIASTREAM_H

@@ -33,8 +33,8 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
     virtual JSObject* scopeForTargetObjects() override;
 };
 
-} // jsipc
-} // mozilla
+} // namespace jsipc
+} // namespace mozilla
 
 #endif // mozilla_jsipc_JavaScriptWrapper_h__
 

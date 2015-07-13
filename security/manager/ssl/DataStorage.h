@@ -180,6 +180,6 @@ private:
   const nsString mFilename;
 };
 
-}; // namespace mozilla
+} // namespace mozilla
 
 #endif // mozilla_DataStorage_h

@@ -122,5 +122,5 @@ CacheIndexIterator::ReplaceRecord(CacheIndexRecord *aOldRecord,
   return false;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

@@ -30,8 +30,8 @@ namespace mozilla {
 namespace dom {
 class AutoJSAPI;
 class EventTarget;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #define NS_HANDLER_TYPE_XBL_JS              (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND         (1 << 1)

@@ -216,7 +216,7 @@ private:
   NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, override)
 };
 
-} // anonymous namespace;
+} // namespace
 
 namespace mozilla {
 namespace dom {

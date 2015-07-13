@@ -135,6 +135,7 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattCharAttribute>
     return true;
   }
 };
+
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_bluetoothmessageutils_h__

@@ -85,7 +85,7 @@ struct BaseSize {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BASESIZE_H_ */

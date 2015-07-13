@@ -15,6 +15,7 @@ class Layer;
 
 void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers);
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_LAYERSORTER_H */

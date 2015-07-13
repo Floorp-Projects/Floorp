@@ -426,7 +426,7 @@ static const int SYNC1 = 0;
 static const int SYNC2_VERSION_LAYER_PROTECTION = 1;
 static const int BITRATE_SAMPLERATE_PADDING_PRIVATE = 2;
 static const int CHANNELMODE_MODEEXT_COPY_ORIG_EMPH = 3;
-}
+} // namespace frame_header
 
 FrameParser::FrameParser()
 {
@@ -825,7 +825,7 @@ static const int FLAGS_END = VERSION_END + FLAGS_LEN;
 static const int SIZE_END = FLAGS_END + SIZE_LEN;
 
 static const uint8_t ID[ID_LEN] = {'I', 'D', '3'};
-}
+} // namespace id3_header
 
 const uint8_t*
 ID3Parser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
@@ -937,5 +937,5 @@ ID3Parser::ID3Header::Update(uint8_t c) {
   return IsValid(mPos++);
 }
 
-}  // namespace mp3
-}  // namespace mozilla
+} // namespace mp3
+} // namespace mozilla

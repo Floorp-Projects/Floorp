@@ -36,12 +36,12 @@ struct ParamTraits<mozilla::OriginAttributes>
   }
 };
 
-} // IPC namespace
+} // namespace IPC
 
 namespace mozilla {
 namespace net {
 class LoadInfoArgs;
-}
+} // namespace net
 
 namespace ipc {
 

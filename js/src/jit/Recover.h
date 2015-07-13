@@ -807,7 +807,7 @@ RInstruction::toResumePoint() const
     return static_cast<const RResumePoint*>(this);
 }
 
-}
-}
+} // namespace jit
+} // namespace js
 
 #endif /* jit_Recover_h */

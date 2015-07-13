@@ -75,4 +75,4 @@ void SignalTracerThread()
   }
 }
 
-}  // namespace mozilla
+} // namespace mozilla

@@ -135,7 +135,7 @@ private:
   BasicTiledLayerPaintData mPaintData;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif

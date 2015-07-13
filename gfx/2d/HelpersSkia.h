@@ -355,7 +355,7 @@ private:
 
 // End of code imported from Skia.
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_HELPERSSKIA_H_ */

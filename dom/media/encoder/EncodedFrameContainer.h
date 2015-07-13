@@ -103,5 +103,6 @@ private:
   FrameType mFrameType;
 };
 
-}
+} // namespace mozilla
+
 #endif

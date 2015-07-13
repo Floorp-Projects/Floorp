@@ -233,5 +233,6 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
     return Move(ret);
 }
 
-} /* namespace gfx */
+} // namespace gl
+
 } /* namespace mozilla */

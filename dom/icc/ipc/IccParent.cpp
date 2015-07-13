@@ -43,7 +43,7 @@ GetIccInfoDataFromIccInfo(nsIIccInfo* aInInfo, IccInfoData& aOutData) {
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 /**
  * PIccParent Implementation.

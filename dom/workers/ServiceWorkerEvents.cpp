@@ -312,7 +312,7 @@ RespondWithHandler::CancelRequest()
   NS_DispatchToMainThread(runnable);
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 FetchEvent::RespondWith(const ResponseOrPromise& aArg, ErrorResult& aRv)

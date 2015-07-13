@@ -73,5 +73,5 @@ SharedDIB::ShareToProcess(base::ProcessId aTargetPid, Handle *aNewHandle)
   return NS_OK;
 }
 
-} // gfx
-} // mozilla
+} // namespace gfx
+} // namespace mozilla

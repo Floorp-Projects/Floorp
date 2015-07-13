@@ -42,7 +42,7 @@ void AppendMemoryStorageID(nsAutoCString &key)
   key.Append('M');
 }
 
-}
+} // namespace
 
 // Not defining as static or class member of CacheStorageService since
 // it would otherwise need to include CacheEntry.h and that then would
@@ -168,7 +168,7 @@ void CacheStorageService::ShutdownBackground()
 
 // Internal management methods
 
-namespace { // anon
+namespace {
 
 // WalkCacheRunnable
 // Base class for particular storage entries visiting
@@ -523,7 +523,7 @@ PLDHashOperator CollectContexts(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
-} // anon
+} // namespace
 
 void CacheStorageService::DropPrivateBrowsingEntries()
 {
@@ -539,7 +539,7 @@ void CacheStorageService::DropPrivateBrowsingEntries()
     DoomStorageEntries(keys[i], nullptr, true, nullptr);
 }
 
-namespace { // anon
+namespace {
 
 class CleaupCacheDirectoriesRunnable : public nsRunnable
 {
@@ -626,7 +626,7 @@ NS_IMETHODIMP CleaupCacheDirectoriesRunnable::Run()
   return NS_OK;
 }
 
-} // anon
+} // namespace
 
 // static
 void CacheStorageService::CleaupCacheDirectories(uint32_t aVersion, uint32_t aActive)
@@ -837,7 +837,7 @@ NS_IMETHODIMP CacheStorageService::GetIoTarget(nsIEventTarget** aEventTarget)
 
 // Methods used by CacheEntry for management of in-memory structures.
 
-namespace { // anon
+namespace {
 
 class FrecencyComparator
 {
@@ -861,7 +861,7 @@ public:
   }
 };
 
-} // anon
+} // namespace
 
 void
 CacheStorageService::RegisterEntry(CacheEntry* aEntry)
@@ -1082,7 +1082,7 @@ void CacheStorageService::ForceEntryValidFor(nsACString &aCacheEntryKey,
   mForcedValidEntries.Put(aCacheEntryKey, validUntil);
 }
 
-namespace { // anon
+namespace {
 
 PLDHashOperator PruneForcedValidEntries(
   const nsACString& aKey, TimeStamp& aTimeStamp, void* aClosure)
@@ -1095,7 +1095,7 @@ PLDHashOperator PruneForcedValidEntries(
   return PL_DHASH_NEXT;
 }
 
-} // anon
+} // namespace
 
 // Cleans out the old entries in mForcedValidEntries
 void CacheStorageService::ForcedValidEntriesPrune(TimeStamp &now)
@@ -1487,7 +1487,7 @@ CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
   return NS_OK;
 }
 
-namespace { // anon
+namespace {
 
 class CacheEntryDoomByKeyCallback : public CacheFileIOListener
                                   , public nsIRunnable
@@ -1543,7 +1543,7 @@ NS_IMETHODIMP CacheEntryDoomByKeyCallback::Run()
 
 NS_IMPL_ISUPPORTS(CacheEntryDoomByKeyCallback, CacheFileIOListener, nsIRunnable);
 
-} // anon
+} // namespace
 
 nsresult
 CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
@@ -1856,7 +1856,7 @@ CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
 
 // Telementry collection
 
-namespace { // anon
+namespace {
 
 bool TelemetryEntryKey(CacheEntry const* entry, nsAutoCString& key)
 {
@@ -1892,7 +1892,7 @@ PLDHashOperator PrunePurgeTimeStamps(
   return PL_DHASH_NEXT;
 }
 
-} // anon
+} // namespace
 
 void
 CacheStorageService::TelemetryPrune(TimeStamp &now)
@@ -1988,7 +1988,7 @@ CacheStorageService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) con
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace { // anon
+namespace {
 
 class ReportStorageMemoryData
 {
@@ -2045,7 +2045,7 @@ PLDHashOperator ReportStorageMemory(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
-} // anon
+} // namespace
 
 NS_IMETHODIMP
 CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
@@ -2098,5 +2098,5 @@ CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
   return NS_OK;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

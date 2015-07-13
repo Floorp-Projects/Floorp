@@ -227,7 +227,7 @@ EvictContentViewerForTransaction(nsISHTransaction* aTrans)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 nsSHistory::nsSHistory()
   : mIndex(-1)
@@ -1046,7 +1046,7 @@ public:
   int32_t mDistance;
 };
 
-} // anonymous namespace
+} // namespace
 
 // static
 void

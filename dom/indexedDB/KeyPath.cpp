@@ -221,7 +221,7 @@ GetJSValFromKeyPathString(JSContext* aCx,
   return rv;
 }
 
-} // anonymous namespace
+} // namespace
 
 // static
 nsresult

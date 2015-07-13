@@ -59,4 +59,5 @@ GetStackAndModules(const std::vector<uintptr_t> &aPCs);
 
 } // namespace Telemetry
 } // namespace mozilla
+
 #endif // ProcessedStack_h__

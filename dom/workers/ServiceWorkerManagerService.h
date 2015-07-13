@@ -17,7 +17,7 @@ class OriginAttributes;
 
 namespace ipc {
 class PrincipalInfo;
-}
+} // namespace ipc
 
 namespace dom {
 
@@ -60,8 +60,8 @@ private:
   nsTHashtable<nsPtrHashKey<ServiceWorkerManagerParent>> mAgents;
 };
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_ServiceWorkerManagerService_h

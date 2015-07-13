@@ -25,6 +25,7 @@ private:
     bool  mUseNative;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // !nsHttpNTLMAuth_h__

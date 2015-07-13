@@ -75,7 +75,7 @@ private:
   std::ofstream mOutputFile;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWEVENTRECORDER_H_ */

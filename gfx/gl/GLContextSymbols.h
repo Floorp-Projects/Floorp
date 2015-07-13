@@ -680,7 +680,7 @@ struct GLContextSymbols
     PFNGLGETSTRINGIPROC fGetStringi;
 };
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif /* GLCONTEXTSYMBOLS_H_ */

@@ -21,7 +21,7 @@ namespace mozilla {
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
 class SVGAnimationElement;
-}
+} // namespace dom
 
 class SVGAnimatedPreserveAspectRatio final
 {

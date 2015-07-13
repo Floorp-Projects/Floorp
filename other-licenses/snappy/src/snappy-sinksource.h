@@ -131,6 +131,6 @@ class UncheckedByteArraySink : public Sink {
 };
 
 
-}
+} // namespace snappy
 
 #endif  // UTIL_SNAPPY_SNAPPY_SINKSOURCE_H_

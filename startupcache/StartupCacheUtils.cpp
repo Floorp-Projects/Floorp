@@ -247,5 +247,5 @@ PathifyURI(nsIURI *in, nsACString &out)
     return NS_OK;
 }
 
-}
-}
+} // namespace scache
+} // namespace mozilla

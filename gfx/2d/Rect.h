@@ -211,7 +211,7 @@ IntRectTyped<units> RoundedOut(const RectTyped<units>& aRect)
                              int32_t(copy.height));
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_RECT_H_ */

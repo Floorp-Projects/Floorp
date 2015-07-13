@@ -609,5 +609,5 @@ nsHttpAuthNode::ClearAuthEntry(const char *realm)
     }
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

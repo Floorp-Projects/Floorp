@@ -51,8 +51,8 @@ protected:
   nsRefPtr<nsCookieService> mCookieService;
 };
 
-}
-}
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_CookieServiceParent_h
 

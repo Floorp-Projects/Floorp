@@ -106,6 +106,6 @@ protected:
                             const nsString& aDeviceId);
 };
 
-}
+} // namespace mozilla
 
 #endif /* MEDIATRACKCONSTRAINTS_H_ */

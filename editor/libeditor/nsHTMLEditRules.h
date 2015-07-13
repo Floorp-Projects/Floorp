@@ -34,8 +34,8 @@ namespace mozilla {
 namespace dom {
 class Element;
 class Selection;
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
 struct DOMPoint;
 
 struct StyleCache : public PropItem

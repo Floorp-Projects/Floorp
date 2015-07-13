@@ -992,7 +992,7 @@ ProtoGetter(JSContext* cx, unsigned argc, Value* vp)
 
 namespace js {
 size_t sSetProtoCalled = 0;
-}
+} // namespace js
 
 static bool
 ProtoSetter(JSContext* cx, unsigned argc, Value* vp)

@@ -21,8 +21,8 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 class File;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
   This class creates a proxy file picker to be used in content processes.

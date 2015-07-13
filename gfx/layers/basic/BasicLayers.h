@@ -195,7 +195,7 @@ protected:
   bool mCompositorMightResample;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_BASICLAYERS_H */

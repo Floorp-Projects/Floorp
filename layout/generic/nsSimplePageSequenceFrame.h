@@ -18,8 +18,8 @@ namespace dom {
 
 class HTMLCanvasElement;
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 //-----------------------------------------------
 // This class maintains all the data that 

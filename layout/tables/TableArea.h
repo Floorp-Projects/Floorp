@@ -36,6 +36,6 @@ private:
   nsIntRect mRect;
 };
 
-}
+} // namespace mozilla
 
 #endif // mozilla_TableArea_h_

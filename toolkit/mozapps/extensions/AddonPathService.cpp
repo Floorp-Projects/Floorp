@@ -221,4 +221,4 @@ MapURIToAddonID(nsIURI* aURI)
   return AddonPathService::FindAddonId(filePath);
 }
 
-}
+} // namespace mozilla

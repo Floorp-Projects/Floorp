@@ -52,8 +52,8 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
   return NS_OK;
 }
 
-}
-}
+} // namespace reflect
+} // namespace mozilla
 
 NS_DEFINE_NAMED_CID(JSREFLECT_CID);
 

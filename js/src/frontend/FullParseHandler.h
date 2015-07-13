@@ -1026,7 +1026,7 @@ FullParseHandler::makeAssignment(ParseNode* pn, ParseNode* rhs)
     return lhs;
 }
 
-} // frontend
-} // js
+} // namespace frontend
+} // namespace js
 
 #endif /* frontend_FullParseHandler_h */

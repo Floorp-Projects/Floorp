@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace widget {
 class PluginWidgetProxy;
-}
+} // namespace widget
 namespace plugins {
 
 class PluginWidgetChild : public PPluginWidgetChild

@@ -28,5 +28,6 @@ ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
   OriginAttributes attrs(aAttrs);
   attrs.CreateSuffix(aSuffix);
 }
+
 } // namespace dom
 } // namespace mozilla

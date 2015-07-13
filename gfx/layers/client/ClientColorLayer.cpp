@@ -76,5 +76,5 @@ ClientLayerManager::CreateColorLayer()
   return layer.forget();
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

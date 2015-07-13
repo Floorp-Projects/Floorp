@@ -979,4 +979,4 @@ TEST(Strings, todouble)
   test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
 }
 
-}
+} // namespace TestStrings

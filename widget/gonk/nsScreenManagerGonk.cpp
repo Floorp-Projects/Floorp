@@ -91,7 +91,7 @@ displayEnabledCallback(bool enabled)
     screenManager->DisplayEnabled(enabled);
 }
 
-} // anonymous namespace
+} // namespace
 
 static uint32_t
 SurfaceFormatToColorDepth(int32_t aSurfaceFormat)

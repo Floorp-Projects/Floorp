@@ -22,7 +22,7 @@ class AudioContext;
 class DecodeErrorCallback;
 class DecodeSuccessCallback;
 class Promise;
-}
+} // namespace dom
 
 struct WebAudioDecodeJob final
 {
@@ -72,7 +72,7 @@ private:
 void AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                          uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
-}
+} // namespace mozilla
 
 #endif
 

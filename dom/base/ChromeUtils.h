@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace devtools {
 class HeapSnapshot;
-}
+} // namespace devtools
 
 namespace dom {
 

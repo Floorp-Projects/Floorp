@@ -21,7 +21,7 @@ namespace {
 
 ServiceWorkerManagerService* sInstance = nullptr;
 
-} // anonymous namespace
+} // namespace
 
 ServiceWorkerManagerService::ServiceWorkerManagerService()
 {
@@ -314,7 +314,7 @@ RemoveEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
   return PL_DHASH_NEXT;
 }
 
-} // anonymous namespce
+} // namespace
 
 void
 ServiceWorkerManagerService::PropagateRegistration(
@@ -405,6 +405,6 @@ ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID)
 #endif
 }
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla

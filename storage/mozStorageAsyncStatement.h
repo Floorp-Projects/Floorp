@@ -101,7 +101,7 @@ private:
   friend class AsyncStatementJSHelper;
 };
 
-} // storage
-} // mozilla
+} // namespace storage
+} // namespace mozilla
 
 #endif // mozilla_storage_mozStorageAsyncStatement_h_

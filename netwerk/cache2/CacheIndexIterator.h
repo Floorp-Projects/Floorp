@@ -54,7 +54,7 @@ protected:
   bool                         mAddNew;
 };
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

@@ -289,4 +289,4 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       outputTrack->GetSegment()->AppendFrom(segment);
     }
   }
-}
+} // namespace mozilla

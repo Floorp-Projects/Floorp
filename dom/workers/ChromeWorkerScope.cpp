@@ -44,7 +44,7 @@ UnicodeToNative(JSContext* aCx, const char16_t* aSource, size_t aSourceLen)
 
 #endif // BUILD_CTYPES
 
-} // anonymous namespace
+} // namespace
 
 BEGIN_WORKERS_NAMESPACE
 

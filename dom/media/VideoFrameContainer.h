@@ -18,7 +18,7 @@ namespace mozilla {
 
 namespace dom {
 class HTMLMediaElement;
-}
+} // namespace dom
 
 /**
  * This object is used in the decoder backend threads and the main thread
@@ -99,6 +99,6 @@ protected:
   bool mImageSizeChanged;
 };
 
-}
+} // namespace mozilla
 
 #endif /* VIDEOFRAMECONTAINER_H_ */

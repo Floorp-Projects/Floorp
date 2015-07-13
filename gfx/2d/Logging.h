@@ -630,7 +630,7 @@ private:
   TreeLog& mTreeLog;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_LOGGING_H_ */

@@ -26,8 +26,8 @@ class gfxTextContextPaint;
 namespace mozilla {
 namespace dom {
 class Element;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * Wraps an SVG document contained in the SVG table of an OpenType font.

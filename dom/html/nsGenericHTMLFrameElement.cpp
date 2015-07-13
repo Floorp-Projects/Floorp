@@ -505,7 +505,7 @@ bool NestedEnabled()
   return sMozNestedEnabled;
 }
 
-} // anonymous namespace
+} // namespace
 
 /* [infallible] */ NS_IMETHODIMP
 nsGenericHTMLFrameElement::GetReallyIsWidget(bool *aOut)

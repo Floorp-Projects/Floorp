@@ -36,7 +36,7 @@ class ErrorResult;
 
 namespace dom {
 class Blob;
-}
+} // namespace dom
 } // namespace mozilla
 
 #define POST_ERROR_EVENT_FILE_EXISTS                 "NoModificationAllowedError"

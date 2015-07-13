@@ -19,7 +19,7 @@ enum class WhichServiceWorker {
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WhichServiceWorker)
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_ServiceWorkerCommon_h

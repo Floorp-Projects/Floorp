@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace dom {
 class HTMLCanvasElement;
-}
+} // namespace dom
 
 namespace CanvasUtils {
 
@@ -154,7 +154,7 @@ DashArrayToJSVal(nsTArray<T>& dashes,
     }
 }
 
-}
-}
+} // namespace CanvasUtils
+} // namespace mozilla
 
 #endif /* _CANVASUTILS_H_ */

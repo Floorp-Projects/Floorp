@@ -24,7 +24,7 @@ class WorkerListener;
 namespace workers {
 class ServiceWorker;
 class WorkerPrivate;
-}
+} // namespace workers
 
 bool
 ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj);

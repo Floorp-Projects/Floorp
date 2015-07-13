@@ -34,7 +34,7 @@ class nsIThread;
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace layers {
 class ISurfaceAllocator;
@@ -42,7 +42,7 @@ class SharedSurfaceTextureClient;
 enum class TextureFlags : uint32_t;
 class SurfaceDescriptor;
 class TextureClient;
-}
+} // namespace layers
 
 namespace gl {
 

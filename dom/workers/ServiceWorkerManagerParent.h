@@ -15,7 +15,7 @@ class OriginAttributes;
 
 namespace ipc {
 class BackgroundParentImpl;
-}
+} // namespace ipc
 
 namespace dom {
 namespace workers {
@@ -63,8 +63,8 @@ private:
   uint64_t mID;
 };
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_ServiceWorkerManagerParent_h

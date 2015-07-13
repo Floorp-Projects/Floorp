@@ -29,6 +29,7 @@ protected:
     Mutex mLock;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpActivityDistributor_h__

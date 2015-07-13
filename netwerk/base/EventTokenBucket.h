@@ -141,7 +141,7 @@ private:
 #endif
 };
 
-} // ::mozilla::net
-} // ::mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

@@ -109,4 +109,5 @@ MockMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
   aRanges.AppendElements(mRanges);
   return NS_OK;
 }
-}
+
+} // namespace mozilla

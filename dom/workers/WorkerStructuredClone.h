@@ -46,8 +46,8 @@ public:
   nsTArray<nsRefPtr<MessagePortBase>> mTransferredPorts;
 };
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_workers_WorkerStructuredClone_h

@@ -22,7 +22,7 @@
 namespace IPC {
 class Message;
 template <typename> struct ParamTraits;
-}
+} // namespace IPC
 
 namespace mozilla {
 

@@ -8420,7 +8420,8 @@ private:
     mRestorePresentationEvent;
   nsRefPtr<nsDocShell::RestorePresentationEvent> mEvent;
 };
-}
+
+} // namespace
 
 nsresult
 nsDocShell::RestoreFromHistory()
@@ -9448,7 +9449,7 @@ private:
 NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
 #endif
 
-} // anonymous namespace
+} // namespace
 
 void
 nsDocShell::CopyFavicon(nsIURI* aOldURI,

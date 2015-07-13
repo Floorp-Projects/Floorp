@@ -185,5 +185,5 @@ ReadbackProcessor::~ReadbackProcessor()
   }
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

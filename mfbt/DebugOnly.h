@@ -82,6 +82,6 @@ public:
   ~DebugOnly() {}
 };
 
-}
+} // namespace mozilla
 
 #endif /* mozilla_DebugOnly_h */

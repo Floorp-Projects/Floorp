@@ -364,7 +364,7 @@ private:
   static Predictor *sSelf;
 };
 
-} // ::mozilla::net
-} // ::mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_Predictor_h

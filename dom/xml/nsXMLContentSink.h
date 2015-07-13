@@ -27,8 +27,8 @@ class nsIParser;
 namespace mozilla {
 namespace dom {
 class NodeInfo;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 typedef enum {
   eXMLContentSinkState_InProlog,

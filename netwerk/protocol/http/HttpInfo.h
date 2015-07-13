@@ -19,6 +19,7 @@ public:
     static void GetHttpConnectionData(nsTArray<HttpRetParams> *);
 };
 
-} } // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpInfo__

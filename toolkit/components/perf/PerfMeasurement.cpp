@@ -95,8 +95,8 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
   return NS_OK;
 }
 
-}
-}
+} // namespace jsperf
+} // namespace mozilla
 
 NS_DEFINE_NAMED_CID(JSPERF_CID);
 

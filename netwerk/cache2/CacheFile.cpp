@@ -1983,7 +1983,7 @@ CacheFile::InitIndexEntry()
 
 // Memory reporting
 
-namespace { // anon
+namespace {
 
 size_t
 CollectChunkSize(uint32_t const & aIdx,
@@ -1993,7 +1993,7 @@ CollectChunkSize(uint32_t const & aIdx,
   return aChunk->SizeOfIncludingThis(mallocSizeOf);
 }
 
-} // anon
+} // namespace
 
 size_t
 CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
@@ -2034,5 +2034,5 @@ CacheFile::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

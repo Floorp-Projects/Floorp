@@ -54,7 +54,7 @@ TileGenFuncCGL(GLContext *gl,
                TextureImage::Flags aFlags,
                TextureImage::ImageFormat aImageFormat);
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif

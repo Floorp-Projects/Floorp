@@ -84,5 +84,5 @@ TestInterfaceMaplikeObject::HasInternal(const nsAString& aKey)
   return TestInterfaceMaplikeObjectBinding::MaplikeHelpers::Has(this, aKey, rv);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

@@ -1743,5 +1743,5 @@ LayerScopeAutoFrame::EndFrame()
     gLayerScopeManager.GetSocketManager()->DispatchDebugData();
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

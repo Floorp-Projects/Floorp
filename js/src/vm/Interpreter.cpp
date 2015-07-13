@@ -612,7 +612,7 @@ struct AutoStopwatch final
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-}
+} // namespace js
 
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to

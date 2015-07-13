@@ -72,4 +72,5 @@ GonkDecoderModule::SupportsMimeType(const nsACString& aMimeType)
     aMimeType.EqualsLiteral("video/avc") ||
     aMimeType.EqualsLiteral("video/3gpp");
 }
+
 } // namespace mozilla

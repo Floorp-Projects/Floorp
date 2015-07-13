@@ -57,6 +57,7 @@ struct HttpRetParams
     bool      ssl;
 };
 
-} }
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_DashboardTypes_h_

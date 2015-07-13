@@ -729,5 +729,5 @@ CreateBasicTextureImage(GLContext* aGL,
     return texImage.forget();
 }
 
-} // namespace
-} // namespace
+} // namespace gl
+} // namespace mozilla

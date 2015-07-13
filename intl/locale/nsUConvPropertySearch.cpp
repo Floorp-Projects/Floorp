@@ -18,7 +18,7 @@ struct PropertyComparator
   }
 };
 
-}
+} // namespace
 
 // static
 nsresult
