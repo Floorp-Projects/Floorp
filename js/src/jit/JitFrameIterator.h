@@ -550,8 +550,6 @@ class SnapshotIterator
     // Connect all informations about the current script in order to recover the
     // content of baseline frames.
 
-    SnapshotIterator(IonScript* ionScript, SnapshotOffset snapshotOffset,
-                     JitFrameLayout* fp, const MachineState& machine);
     explicit SnapshotIterator(const JitFrameIterator& iter);
     SnapshotIterator();
 
