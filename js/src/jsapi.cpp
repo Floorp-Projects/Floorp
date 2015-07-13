@@ -2764,6 +2764,103 @@ JS_GetElement(JSContext* cx, HandleObject objArg, uint32_t index, MutableHandleV
     return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
 }
 
+JS_PUBLIC_API(bool)
+JS_ForwardSetPropertyTo(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
+                        HandleValue receiver, ObjectOpResult& result)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id, receiver);
+
+    return SetProperty(cx, obj, id, v, receiver, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetPropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id);
+
+    RootedValue receiver(cx, ObjectValue(*obj));
+    ObjectOpResult ignored;
+    return SetProperty(cx, obj, id, v, receiver, ignored);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetProperty(JSContext* cx, HandleObject obj, const char* name, HandleValue v)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_SetPropertyById(cx, obj, id, v);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                 HandleValue v)
+{
+    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_SetPropertyById(cx, obj, id, v);
+}
+
+static bool
+SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue v)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, v);
+
+    RootedValue receiver(cx, ObjectValue(*obj));
+    ObjectOpResult ignored;
+    return SetElement(cx, obj, index, v, receiver, ignored);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue v)
+{
+    return SetElement(cx, obj, index, v);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleObject v)
+{
+    RootedValue value(cx, ObjectOrNullValue(v));
+    return SetElement(cx, obj, index, value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleString v)
+{
+    RootedValue value(cx, StringValue(v));
+    return SetElement(cx, obj, index, value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, int32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, uint32_t v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, value);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, double v)
+{
+    RootedValue value(cx, NumberValue(v));
+    return SetElement(cx, obj, index, value);
+}
+
 
 /* * */
 
@@ -3042,103 +3139,6 @@ JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
     CompletePropertyDescriptor(desc);
     desc.object().set(obj);
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetPropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    RootedValue receiver(cx, ObjectValue(*obj));
-    ObjectOpResult ignored;
-    return SetProperty(cx, obj, id, v, receiver, ignored);
-}
-
-JS_PUBLIC_API(bool)
-JS_ForwardSetPropertyTo(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
-                        HandleValue receiver, ObjectOpResult& result)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id, receiver);
-
-    return SetProperty(cx, obj, id, v, receiver, result);
-}
-
-static bool
-SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue v)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, v);
-
-    RootedValue receiver(cx, ObjectValue(*obj));
-    ObjectOpResult ignored;
-    return SetElement(cx, obj, index, v, receiver, ignored);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue v)
-{
-    return SetElement(cx, obj, index, v);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleObject v)
-{
-    RootedValue value(cx, ObjectOrNullValue(v));
-    return SetElement(cx, obj, index, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, HandleString v)
-{
-    RootedValue value(cx, StringValue(v));
-    return SetElement(cx, obj, index, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, int32_t v)
-{
-    RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, uint32_t v)
-{
-    RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, double v)
-{
-    RootedValue value(cx, NumberValue(v));
-    return SetElement(cx, obj, index, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetProperty(JSContext* cx, HandleObject obj, const char* name, HandleValue v)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_SetPropertyById(cx, obj, id, v);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                 HandleValue v)
-{
-    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_SetPropertyById(cx, obj, id, v);
 }
 
 JS_PUBLIC_API(bool)
