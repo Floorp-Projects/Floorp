@@ -2175,6 +2175,56 @@ JS_SetImmutablePrototype(JSContext *cx, JS::HandleObject obj, bool *succeeded)
     return SetImmutablePrototype(cx, obj, succeeded);
 }
 
+JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
+                                MutableHandle<JSPropertyDescriptor> desc)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return GetOwnPropertyDescriptor(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
+                            MutableHandle<JSPropertyDescriptor> desc)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name,
+                              MutableHandle<JSPropertyDescriptor> desc)
+{
+    JSAtom* atom = AtomizeChars(cx, name, js_strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
+                             MutableHandle<JSPropertyDescriptor> desc)
+{
+    return GetPropertyDescriptor(cx, obj, id, desc);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
+                         MutableHandle<JSPropertyDescriptor> desc)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_GetPropertyDescriptorById(cx, obj, id, desc);
+}
+
 
 /* * */
 
@@ -2925,38 +2975,6 @@ JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    return GetOwnPropertyDescriptor(cx, obj, id, desc);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
-                            MutableHandle<JSPropertyDescriptor> desc)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetOwnUCPropertyDescriptor(JSContext* cx, HandleObject obj, const char16_t* name,
-                              MutableHandle<JSPropertyDescriptor> desc)
-{
-    JSAtom* atom = AtomizeChars(cx, name, js_strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_GetOwnPropertyDescriptorById(cx, obj, id, desc);
-}
-
-JS_PUBLIC_API(bool)
 JS_HasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
 {
     AssertHeapIsIdle(cx);
@@ -2974,24 +2992,6 @@ JS_HasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* found
         return false;
     RootedId id(cx, AtomToId(atom));
     return JS_HasOwnPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptorById(JSContext* cx, HandleObject obj, HandleId id,
-                             MutableHandle<JSPropertyDescriptor> desc)
-{
-    return GetPropertyDescriptor(cx, obj, id, desc);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
-                         MutableHandle<JSPropertyDescriptor> desc)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return atom && JS_GetPropertyDescriptorById(cx, obj, id, desc);
 }
 
 JS_PUBLIC_API(bool)
