@@ -2875,26 +2875,16 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
   // If we are going fullscreen, the window size continues to change
   // and the window will be reflow again then.
   UpdateNonClientMargins(mSizeMode, /* Reflow */ !aFullScreen);
-
-  bool visible = mIsVisible;
-  if (mOldSizeMode == nsSizeMode_Normal)
-    Show(false);
   
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen, aTargetScreen);
 
-  if (visible) {
-    Show(true);
-    Invalidate();
-
-    if (!aFullScreen && mOldSizeMode == nsSizeMode_Normal) {
-      // Ensure the window exiting fullscreen get activated. Window
-      // activation was bypassed by SetSizeMode, and hiding window for
-      // transition could also blur the current window.
-      DispatchFocusToTopLevelWindow(true);
-    }
+  if (mIsVisible && !aFullScreen && mOldSizeMode == nsSizeMode_Normal) {
+    // Ensure the window exiting fullscreen get activated. Window
+    // activation might be bypassed in SetSizeMode.
+    DispatchFocusToTopLevelWindow(true);
   }
 
   // Notify the taskbar that we have exited full screen mode.
