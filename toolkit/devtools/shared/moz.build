@@ -10,6 +10,7 @@ EXTRA_JS_MODULES.devtools.shared += [
   'async-storage.js',
   'framerate.js',
   'memory.js',
+  'profiler.js',
   'system.js',
   'timeline.js',
   'worker-helper.js',
