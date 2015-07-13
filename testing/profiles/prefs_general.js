@@ -290,6 +290,8 @@ user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
 // side-effect of preventing our geoip lookup.
 user_pref("browser.search.isUS", true);
 user_pref("browser.search.countryCode", "US");
+// This will prevent HTTP requests for region defaults.
+user_pref("browser.search.geoSpecificDefaults", false);
 
 // Make sure the self support tab doesn't hit the network.
 user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
@@ -319,7 +321,6 @@ user_pref("network.proxy.pac_generator", false);
 // Make tests run consistently on DevEdition (which has a lightweight theme
 // selected by default).
 user_pref("lightweightThemes.selectedThemeID", "");
-user_pref("browser.devedition.theme.enabled", false);
 
 // Disable periodic updates of service workers.
 user_pref("dom.serviceWorkers.periodic-updates.enabled", false);

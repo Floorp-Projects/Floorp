@@ -2,6 +2,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#000" width="16" height="16">
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#0A0805" width="16" height="16">
   <path d="M 416.00,480.00L 512.00,224.00L 96.00,224.00L0.00,480.00 zM 64.00,192.00 L 0.00,480.00 L 0.00,64.00 L 144.00,64.00 L 208.00,128.00 L 416.00,128.00 L 416.00,192.00 Z"/>
 </svg>

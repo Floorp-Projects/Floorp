@@ -28,6 +28,7 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 var contentPage = "chrome://mochitests/content/chrome/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html"
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
@@ -59,13 +60,6 @@ function testOnWindow(aPrivate, aCallback) {
     });
   }, true);
 }
-
-// Add some URLs to the tracking database
-var testData = "tracking.example.com/";
-var testUpdate =
-  "n:1000\ni:test-track-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
-  testData;
 
 var badids = [
   "badscript",
@@ -117,62 +111,37 @@ function checkLoads(aWindow, aBlocked) {
   is(allNodeMatch, aBlocked, "All tracking nodes are expected to be annotated as such");
 }
 
-var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                .getService(Ci.nsIUrlClassifierDBService);
-
-function doUpdate(update) {
-  var listener = {
-    QueryInterface: function(iid)
-    {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) {
-      ok(false, "Couldn't update classifier.");
-      // Abort test.
-      SimpleTest.finish();
-    },
-    updateSuccess: function(requestedTimeout) {
-      // Normal mode, with the pref (trackers should be loaded)
-      testOnWindow(false, function(aWindow) {
-        checkLoads(aWindow, false);
-        aWindow.close();
-
-        // Private Browsing, with the pref (trackers should be blocked)
-        testOnWindow(true, function(aWindow) {
-          checkLoads(aWindow, true);
-          aWindow.close();
-
-          // Private Browsing, without the pref (trackers should be loaded)
-          SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
-          testOnWindow(true, function(aWindow) {
-             checkLoads(aWindow, false);
-             aWindow.close();
-             SimpleTest.finish();
-          });
-        });
-      });
-    }
-  };
-
-  dbService.beginUpdate(listener, "test-track-simple", "");
-  dbService.beginStream("", "");
-  dbService.updateStream(update);
-  dbService.finishStream();
-  dbService.finishUpdate();
-}
-
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.enabled", false],
             ["privacy.trackingprotection.pbmode.enabled", true],
             ["channelclassifier.allowlist_example", true]]},
-  function() { doUpdate(testUpdate); });
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    // Normal mode, with the pref (trackers should be loaded)
+    testOnWindow(false, function(aWindow) {
+      checkLoads(aWindow, false);
+      aWindow.close();
+
+      // Private Browsing, with the pref (trackers should be blocked)
+      testOnWindow(true, function(aWindow) {
+        checkLoads(aWindow, true);
+        aWindow.close();
+
+        // Private Browsing, without the pref (trackers should be loaded)
+        SpecialPowers.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
+        testOnWindow(true, function(aWindow) {
+          checkLoads(aWindow, false);
+          aWindow.close();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
 
 SimpleTest.waitForExplicitFinish();
 
