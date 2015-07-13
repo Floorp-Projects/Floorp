@@ -720,6 +720,7 @@ MediaFormatReader::NotifyError(TrackType aTrack)
   LOGV("%s Decoding error", TrackTypeToStr(aTrack));
   auto& decoder = GetDecoderData(aTrack);
   decoder.mError = true;
+  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -729,6 +730,7 @@ MediaFormatReader::NotifyWaitingForData(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
   decoder.mWaitingForData = true;
+  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -738,6 +740,7 @@ MediaFormatReader::NotifyEndOfStream(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
   decoder.mDemuxEOS = true;
+  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -798,7 +801,6 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
       (!hasLastEnd || decoder.mTimeRanges.GetEnd() > lastEnd)) {
     // New data was added after our previous end, we can clear the EOS flag.
     decoder.mDemuxEOS = false;
-    decoder.mDemuxEOSServiced = false;
   }
 
   if (decoder.mError) {
@@ -946,6 +948,21 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
 }
 
 void
+MediaFormatReader::DrainDecoder(TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+
+  auto& decoder = GetDecoderData(aTrack);
+  if (!decoder.mNeedDraining) {
+    return;
+  }
+  decoder.mOutputRequested = true;
+  decoder.mDecoder->Drain();
+  decoder.mNeedDraining = false;
+  LOG("Requesting %s decoder to drain", TrackTypeToStr(aTrack));
+}
+
+void
 MediaFormatReader::Update(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -966,23 +983,6 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
-  if (decoder.HasPromise()) {
-    // Handle pending requests from the MediaDecoderStateMachine.
-    if (decoder.mError) {
-      LOG("Decoding Error");
-      decoder.RejectPromise(DECODE_ERROR, __func__);
-      return;
-    }
-    if (decoder.mWaitingForData) {
-      LOG("Waiting For Data");
-      decoder.RejectPromise(WAITING_FOR_DATA, __func__);
-    }
-  } else if (decoder.mWaitingForData) {
-    // Nothing more we can do at present.
-    LOGV("Still waiting for data.");
-    return;
-  }
-
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
   AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
@@ -993,6 +993,7 @@ MediaFormatReader::Update(TrackType aTrack)
     a.mDecoded = static_cast<uint32_t>(delta);
     mLastReportedNumDecodedFrames = decoder.mNumSamplesOutput;
   }
+
   if (decoder.HasPromise()) {
     needOutput = true;
     if (!decoder.mOutput.IsEmpty()) {
@@ -1011,16 +1012,22 @@ MediaFormatReader::Update(TrackType aTrack)
              output->mKeyframe);
       }
     } else if (decoder.mDrainComplete) {
-      decoder.RejectPromise(END_OF_STREAM, __func__);
       decoder.mDrainComplete = false;
+      if (decoder.mError) {
+        LOG("Decoding Error");
+        decoder.RejectPromise(DECODE_ERROR, __func__);
+        return;
+      } else if (decoder.mDemuxEOS) {
+        decoder.RejectPromise(END_OF_STREAM, __func__);
+      } else if (decoder.mWaitingForData) {
+        LOG("Waiting For Data");
+        decoder.RejectPromise(WAITING_FOR_DATA, __func__);
+      }
     }
   }
 
-  if (decoder.mDemuxEOS && !decoder.mDemuxEOSServiced) {
-    decoder.mOutputRequested = true;
-    decoder.mDecoder->Drain();
-    decoder.mDemuxEOSServiced = true;
-    LOGV("Requesting decoder to drain");
+  if (decoder.mError || decoder.mDemuxEOS || decoder.mWaitingForData) {
+    DrainDecoder(aTrack);
     return;
   }
 
