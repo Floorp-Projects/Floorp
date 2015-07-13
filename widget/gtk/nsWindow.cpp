@@ -1206,9 +1206,19 @@ nsWindow::Move(double aX, double aY)
     if (!mCreated)
         return NS_OK;
 
+    NativeMove();
+
+    NotifyRollupGeometryChange();
+    return NS_OK;
+}
+
+
+void
+nsWindow::NativeMove()
+{
     mNeedsMove = false;
 
-    GdkPoint point = DevicePixelsToGdkPointRoundDown(nsIntPoint(x, y));
+    GdkPoint point = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
     if (mIsTopLevel) {
         gtk_window_move(GTK_WINDOW(mShell), point.x, point.y);
@@ -1216,9 +1226,6 @@ nsWindow::Move(double aX, double aY)
     else if (mGdkWindow) {
         gdk_window_move(mGdkWindow, point.x, point.y);
     }
-
-    NotifyRollupGeometryChange();
-    return NS_OK;
 }
 
 NS_IMETHODIMP
