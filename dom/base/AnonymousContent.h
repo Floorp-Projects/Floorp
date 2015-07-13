@@ -58,7 +58,7 @@ private:
   nsCOMPtr<Element> mContentNode;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_AnonymousContent_h

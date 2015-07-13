@@ -384,4 +384,4 @@ ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
   return result.forget();
 }
 
-}
+} // namespace mozilla

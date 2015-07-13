@@ -19,7 +19,7 @@ public:
   TestMock() {}
   MOCK_METHOD0(MockedCall, void());
 };
-}
+} // namespace
 TEST(MozillaGMockSanity, Runs) {
   TestMock mockedClass;
   EXPECT_CALL(mockedClass, MockedCall())

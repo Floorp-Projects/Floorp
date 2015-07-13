@@ -24,8 +24,8 @@ namespace mozilla {
 class CSSStyleSheet;
 namespace css {
 class DocumentRule;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 namespace mozilla {
 

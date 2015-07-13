@@ -28,7 +28,7 @@ namespace {
     AnimationTimeline* mTimeline;
 #endif
   };
-}
+} // namespace
 
 static PLDHashOperator
 AppendAnimationToSequence(nsRefPtrHashKey<dom::Animation>* aKey,

@@ -49,6 +49,6 @@ namespace IPC {
                                     mozilla::dom::cache::DEFAULT_NAMESPACE,
                                     mozilla::dom::cache::NUMBER_OF_NAMESPACES>
   {};
-}
+} // namespace IPC
 
 #endif // mozilla_dom_cache_IPCUtils_h

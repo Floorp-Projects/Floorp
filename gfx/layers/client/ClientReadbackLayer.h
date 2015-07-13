@@ -28,7 +28,7 @@ public:
   virtual void RenderLayer() override {}
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_CLIENTREADBACKLAYER_H */

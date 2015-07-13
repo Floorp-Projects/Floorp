@@ -780,5 +780,5 @@ mozilla::Atomic<uint32_t>& CacheFileChunk::ChunksMemoryUsage()
   return mIsPriority ? prioChunksMemoryUsage : chunksMemoryUsage;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

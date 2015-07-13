@@ -232,6 +232,6 @@ private:
   T mCurrent;
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_TIMEVARYING_H_ */

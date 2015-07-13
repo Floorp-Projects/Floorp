@@ -26,7 +26,7 @@
 namespace mozilla {
 namespace layers {
 class SharedSurfaceTextureClient;
-}
+} // namespace layers
 
 namespace gl {
 
@@ -274,7 +274,7 @@ public:
     bool IsReadFramebufferDefault() const;
 };
 
-}   // namespace gl
-}   // namespace mozilla
+} // namespace gl
+} // namespace mozilla
 
 #endif  // SCREEN_BUFFER_H_

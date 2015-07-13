@@ -55,6 +55,6 @@ private:
   nsRefPtr<CDMProxy> mProxy;
 };
 
-}
+} // namespace mozilla
 
 #endif // EMEVideoDecoder_h_

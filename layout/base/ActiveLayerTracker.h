@@ -101,6 +101,6 @@ public:
   static bool IsContentActive(nsIFrame* aFrame);
 };
 
-}
+} // namespace mozilla
 
 #endif /* ACTIVELAYERTRACKER_H_ */

@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
-}
+} // namespace gfx
 
 namespace layers {
 
@@ -180,7 +180,7 @@ public:
   already_AddRefed<gfx::DataSourceSurface> ToDataSourceSurface();
 };
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 #endif

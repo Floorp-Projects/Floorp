@@ -30,7 +30,7 @@ class nsIFrame;
 namespace mozilla {
 namespace dom {
 class SVGSVGElement;
-}
+} // namespace dom
 
 namespace image {
 

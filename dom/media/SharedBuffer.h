@@ -72,6 +72,6 @@ private:
   SharedBuffer() {}
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_SHAREDBUFFER_H_ */

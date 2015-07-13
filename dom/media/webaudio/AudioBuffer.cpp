@@ -267,5 +267,5 @@ AudioBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return amount;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

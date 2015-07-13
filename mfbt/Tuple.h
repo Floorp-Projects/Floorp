@@ -161,7 +161,7 @@ private:
   HeadT mHead;  // The element stored at this index in the tuple.
 };
 
-}  // namespace detail
+} // namespace detail
 
 /**
  * Tuple is a class that stores zero or more objects, whose types are specified
@@ -242,7 +242,7 @@ auto TupleGetHelper(const TupleImpl<Index, Elements...>& aTuple)
   return TupleImpl<Index, Elements...>::Head(aTuple);
 }
 
-}  // namespace detail
+} // namespace detail
 
 /**
  * Index-based access to an element of a tuple.

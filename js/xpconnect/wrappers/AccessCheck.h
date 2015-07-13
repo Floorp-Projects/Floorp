@@ -101,6 +101,6 @@ struct ExposedPropertiesOnly : public Policy {
     }
 };
 
-}
+} // namespace xpc
 
 #endif /* __AccessCheck_h__ */

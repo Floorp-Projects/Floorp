@@ -16,7 +16,7 @@ struct nsID;
 namespace mozilla {
 namespace ipc {
  class FileDescriptor;
-}
+} // namespace ipc
 namespace dom {
 namespace cache {
 

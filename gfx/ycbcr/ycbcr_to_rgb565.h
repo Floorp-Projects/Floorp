@@ -65,8 +65,8 @@ NS_GFX_(bool) IsScaleYCbCrToRGB565Fast(int source_x0,
                                        ScaleFilter filter);
 #endif // HAVE_YCBCR_TO_RGB565
 
-}  // namespace gfx
+} // namespace gfx
 
-}  // namespace mozilla
+} // namespace mozilla
 
 #endif // MEDIA_BASE_YCBCR_TO_RGB565_H_

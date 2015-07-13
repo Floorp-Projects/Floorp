@@ -132,5 +132,5 @@ SurfaceTextureClient::Unlock()
 
 #endif // MOZ_WIDGET_ANDROID
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

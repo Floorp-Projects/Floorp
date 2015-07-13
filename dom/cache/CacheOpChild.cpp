@@ -54,7 +54,7 @@ AddFeatureToStreamChild(const CacheRequest& aRequest, Feature* aFeature)
   AddFeatureToStreamChild(aRequest.body().get_CacheReadStream(), aFeature);
 }
 
-} // anonymous namespace
+} // namespace
 
 CacheOpChild::CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
                            nsISupports* aParent, Promise* aPromise)

@@ -153,7 +153,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                    ReturnStatus* rs, bool* instanceof) = 0;
 };
 
-} // jsipc
-} // mozilla
+} // namespace jsipc
+} // namespace mozilla
 
 #endif // mozilla_jsipc_WrapperOwner_h__

@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 class Blob;
 class ImageCapture;
-}
+} // namespace dom
 
 /**
  * CaptureTask retrieves image from MediaStream and encodes the image to jpeg in

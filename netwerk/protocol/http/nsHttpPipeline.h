@@ -99,6 +99,7 @@ private:
     bool     mSuppressSendEvents;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpPipeline_h__

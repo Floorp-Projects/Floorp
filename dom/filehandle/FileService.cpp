@@ -29,7 +29,7 @@ const uint32_t kIdleThreadTimeoutMs = 30000;
 StaticAutoPtr<FileService> gInstance;
 bool gShutdown = false;
 
-} // anonymous namespace
+} // namespace
 
 FileService::FileService()
 {

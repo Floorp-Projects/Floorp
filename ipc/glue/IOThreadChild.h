@@ -43,7 +43,7 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(IOThreadChild);
 };
 
-}  // namespace plugins
-}  // namespace mozilla
+} // namespace ipc
+} // namespace mozilla
 
 #endif  // ifndef dom_plugins_IOThreadChild_h

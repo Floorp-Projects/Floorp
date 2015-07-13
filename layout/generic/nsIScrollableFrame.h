@@ -35,7 +35,7 @@ struct ContainerLayerParameters;
 class DisplayItemClip;
 namespace layers {
 class Layer;
-}
+} // namespace layers
 
 struct FrameMetricsAndClip
 {

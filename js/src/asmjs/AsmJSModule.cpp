@@ -964,7 +964,7 @@ class MOZ_STACK_CLASS AutoMutateCode
     }
 };
 
-}; // anonymous namespace
+} // namespace
 
 bool
 AsmJSModule::detachHeap(JSContext* cx)

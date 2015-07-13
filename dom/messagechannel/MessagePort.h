@@ -29,7 +29,7 @@ class SharedMessagePortMessage;
 
 namespace workers {
 class WorkerFeature;
-}
+} // namespace workers
 
 class MessagePortBase : public DOMEventTargetHelper
 {

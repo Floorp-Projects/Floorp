@@ -239,5 +239,5 @@ PathSkia::StreamToSink(PathSink *aSink) const
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

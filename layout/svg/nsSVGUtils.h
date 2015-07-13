@@ -56,7 +56,7 @@ class UserSpaceMetrics;
 namespace gfx {
 class DrawTarget;
 class GeneralPattern;
-}
+} // namespace gfx
 } // namespace mozilla
 
 // maximum dimension of an offscreen surface - choose so that

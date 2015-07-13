@@ -248,7 +248,7 @@ private:
   void Ensure3DMatrix();
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /*MOZILLA_DOM_DOMMATRIX_H_*/

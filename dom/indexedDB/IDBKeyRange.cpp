@@ -37,7 +37,7 @@ GetKeyFromJSVal(JSContext* aCx,
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 IDBKeyRange::IDBKeyRange(nsISupports* aGlobal,
                          bool aLowerOpen,

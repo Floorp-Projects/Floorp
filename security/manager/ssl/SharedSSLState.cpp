@@ -57,7 +57,7 @@ public:
   bool mShouldClearSessionCache;
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 
@@ -102,7 +102,7 @@ private:
 
 SharedSSLState* gPublicState;
 SharedSSLState* gPrivateState;
-} // anonymous namespace
+} // namespace
 
 NS_IMPL_ISUPPORTS(PrivateBrowsingObserver, nsIObserver)
 

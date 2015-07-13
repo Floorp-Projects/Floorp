@@ -78,7 +78,7 @@ private:
     char **mValues;
 };
 
-namespace { // anon
+namespace {
 
 nsresult
 DropReferenceFromURL(nsIURI * aURI)
@@ -107,7 +107,7 @@ LogToConsole(const char * message, nsOfflineCacheUpdateItem * item = nullptr)
     }
 }
 
-} // anon namespace
+} // namespace
 
 //-----------------------------------------------------------------------------
 // nsManifestCheck

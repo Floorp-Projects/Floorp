@@ -57,7 +57,7 @@
 namespace mozilla {
 namespace layers {
 class ShadowLayerForwarder;
-}
+} // namespace layers
 
 namespace ipc {
 

@@ -13,8 +13,8 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class VsyncSource;
-} // gfx
-} // mozilla
+} // namespace gfx
+} // namespace mozilla
 
 class gfxPlatformMac : public gfxPlatform {
 public:
@@ -26,8 +26,8 @@ public:
     }
 
     virtual already_AddRefed<gfxASurface>
-      CreateOffscreenSurface(const IntSize& size,
-                             gfxContentType contentType) override;
+      CreateOffscreenSurface(const IntSize& aSize,
+                             gfxImageFormat aFormat) override;
 
     already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont) override;

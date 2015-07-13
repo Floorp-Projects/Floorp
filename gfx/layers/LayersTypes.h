@@ -29,7 +29,7 @@
 
 namespace android {
 class MOZ_EXPORT GraphicBuffer;
-}
+} // namespace android
 
 namespace mozilla {
 namespace layers {
@@ -263,7 +263,7 @@ operator|=(EventRegionsOverride& a, EventRegionsOverride b)
   return a;
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_LAYERSTYPES_H */

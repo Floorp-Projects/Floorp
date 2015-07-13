@@ -17,7 +17,7 @@
 
 namespace js {
     struct PerformanceGroup;
-}
+} // namespace js
 
 struct JSPrincipals {
     /* Don't call "destroy"; use reference counting macros below. */

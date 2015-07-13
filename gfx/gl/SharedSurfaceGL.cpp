@@ -105,5 +105,6 @@ SurfaceFactory_Basic::SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& cap
     : SurfaceFactory(SharedSurfaceType::Basic, gl, caps, nullptr, flags)
 { }
 
-} /* namespace gfx */
+} // namespace gl
+
 } /* namespace mozilla */

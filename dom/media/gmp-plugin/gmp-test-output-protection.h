@@ -126,5 +126,5 @@ TestOuputProtectionAPIs()
   return;
 }
 
-} // gmptest
-} // mozilla
+} // namespace gmptest
+} // namespace mozilla

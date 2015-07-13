@@ -127,8 +127,8 @@ private:
   nsTArray<WeakPtr<PannerNode> > mPanners;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

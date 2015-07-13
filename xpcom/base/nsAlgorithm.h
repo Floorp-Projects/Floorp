@@ -45,7 +45,7 @@ clamped(const T& aA, const T& aMin, const T& aMax)
   return XPCOM_MIN(XPCOM_MAX(aA, aMin), aMax);
 }
 
-}
+} // namespace mozilla
 
 template <class InputIterator, class T>
 inline uint32_t

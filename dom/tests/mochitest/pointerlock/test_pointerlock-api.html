@@ -28,15 +28,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         SimpleTest.waitForExplicitFinish();
 
-        // Ensure the full-screen api is enabled, and will be disabled on test exit.
-        SpecialPowers.setBoolPref("full-screen-api.enabled", true);
-
-        // Disable the requirement for trusted contexts only, so the tests are easier to write.
-        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
-
         // Grant "fullscreen" permission on the test domain. This means fullscreen will be
         // automatically approved, so pointer lock in the tests will be too.
         SpecialPowers.setFullscreenAllowed(document);
+
+        SpecialPowers.pushPrefEnv({"set": [
+          ["full-screen-api.enabled", true],
+          ["full-screen-api.allow-trusted-requests-only", false],
+          ["full-screen-api.transition-duration.enter", "0 0"],
+          ["full-screen-api.transition-duration.leave", "0 0"]
+        ]}, nextTest);
 
         // Run the tests which go full-screen in new window, as Mochitests
         // normally run in an iframe, which by default will not have the
@@ -72,8 +73,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         var gTestIndex = 0;
 
         function finish() {
-          SpecialPowers.clearUserPref("full-screen-api.enabled");
-          SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
           SpecialPowers.removeFullscreenAllowed(document)
           SimpleTest.finish();
         }
@@ -107,8 +106,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             finish();
           }
         }
-
-        addLoadEvent(nextTest);
       </script>
     </pre>
   </body>

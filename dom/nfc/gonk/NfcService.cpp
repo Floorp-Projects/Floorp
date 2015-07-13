@@ -55,7 +55,7 @@ private:
   nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

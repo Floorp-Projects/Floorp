@@ -347,7 +347,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
 
   
 
-} // storage
-} // mozilla
+} // namespace storage
+} // namespace mozilla
 
 #endif // mozilla_storage_StorageBaseStatementInternal_h_

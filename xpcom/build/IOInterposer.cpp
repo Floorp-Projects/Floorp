@@ -359,7 +359,7 @@ public:
 // List of observers registered
 static StaticAutoPtr<MasterList> sMasterList;
 static ThreadLocal<PerThreadData*> sThreadLocalData;
-} // anonymous namespace
+} // namespace
 
 IOInterposeObserver::Observation::Observation(Operation aOperation,
                                               const char* aReference,

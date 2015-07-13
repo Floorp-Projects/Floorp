@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGAnimationElement;
-}
+} // namespace dom
 
 /**
  * Class SVGAnimatedPathSegList

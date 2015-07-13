@@ -215,7 +215,7 @@ TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
   }
 }
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // GFX_TILEDLAYERBUFFER_H

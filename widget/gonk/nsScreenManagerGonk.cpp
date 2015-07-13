@@ -15,6 +15,7 @@
 
 #include "android/log.h"
 #include "GLContext.h"
+#include "gfxPrefs.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Hal.h"
@@ -91,7 +92,7 @@ displayEnabledCallback(bool enabled)
     screenManager->DisplayEnabled(enabled);
 }
 
-} // anonymous namespace
+} // namespace
 
 static uint32_t
 SurfaceFormatToColorDepth(int32_t aSurfaceFormat)

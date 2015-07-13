@@ -225,8 +225,8 @@ ListBoxObject::ClearCachedValues()
   mListBoxBody = nullptr;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

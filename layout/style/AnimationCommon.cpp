@@ -529,7 +529,7 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-} /* end sub-namespace css */
+} // namespace css
 
 bool
 AnimationCollection::CanAnimatePropertyOnCompositor(
@@ -972,4 +972,4 @@ AnimationCollection::HasCurrentAnimationsForProperties(
   return false;
 }
 
-}
+} // namespace mozilla

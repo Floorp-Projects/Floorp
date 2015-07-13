@@ -356,7 +356,7 @@ DOMFileToLocalFile(File* aDomFile)
   return localFile.forget();
 }
 
-} // anonymous namespace
+} // namespace
 
 
 NS_IMETHODIMP

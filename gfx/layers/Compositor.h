@@ -113,7 +113,7 @@ namespace gfx {
 class Matrix;
 class Matrix4x4;
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace layers {
 

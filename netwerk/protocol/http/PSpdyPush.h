@@ -62,7 +62,7 @@ private:
   nsDataHashtable<nsCStringHashKey, Http2PushedStream *> mHashHttp2;
 };
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_SpdyPush_Public_h

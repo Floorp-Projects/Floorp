@@ -12,6 +12,7 @@
 #include "nsStyleConsts.h"
 
 namespace mozilla {
+
 class WritingMode;
 
 // Logical axis, edge and side constants for use in various places.
@@ -29,7 +30,8 @@ enum LogicalSide {
   eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
   eLogicalSideIEnd   = (eLogicalAxisInline << 1) | eLogicalEdgeEnd     // 0x3
 };
-};
+
+} // namespace mozilla
 
 enum nsStyleUnit : uint8_t {
   eStyleUnit_Null         = 0,      // (no value) value is not specified

@@ -27,14 +27,14 @@
 
 namespace JS {
 struct ScriptSourceInfo;
-}
+} // namespace JS
 
 namespace js {
 
 namespace jit {
     struct BaselineScript;
     struct IonScriptCounts;
-}
+} // namespace jit
 
 # define ION_DISABLED_SCRIPT ((js::jit::IonScript*)0x1)
 # define ION_COMPILING_SCRIPT ((js::jit::IonScript*)0x2)
@@ -53,7 +53,7 @@ class NestedScopeObject;
 namespace frontend {
     struct BytecodeEmitter;
     class UpvarCookie;
-}
+} // namespace frontend
 
 namespace detail {
 
@@ -64,7 +64,7 @@ CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, Hand
 
 } // namespace detail
 
-}
+} // namespace js
 
 /*
  * Type of try note associated with each catch or finally block, and also with
@@ -1764,14 +1764,7 @@ class JSScript : public js::gc::TenuredCell
 
       private:
         void holdScript(JS::HandleFunction fun);
-
-        void dropScript()
-        {
-            if (script_) {
-                script_->setDoNotRelazify(oldDoNotRelazify_);
-                script_ = nullptr;
-            }
-        }
+        void dropScript();
     };
 };
 
@@ -2310,7 +2303,7 @@ CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScri
 namespace JS {
 namespace ubi {
 template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
-}
-}
+} // namespace ubi
+} // namespace JS
 
 #endif /* jsscript_h */

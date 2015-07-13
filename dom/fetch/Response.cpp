@@ -234,5 +234,6 @@ Response::Headers_()
 
   return mHeaders;
 }
+
 } // namespace dom
 } // namespace mozilla

@@ -67,7 +67,7 @@ uint32_t MaskChecksum(uint32_t aValue)
   return ((aValue >> 15) | (aValue << 17)) + 0xa282ead8;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace detail {

@@ -111,7 +111,7 @@ const JSStructuredCloneCallbacks gCallbacks = {
   nullptr
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace dom {

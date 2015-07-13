@@ -772,6 +772,6 @@ private:
   uint32_t mAudioChannel;
 };
 
-}
+} // namespace mozilla
 
 #endif /* MEDIASTREAMGRAPHIMPL_H_ */

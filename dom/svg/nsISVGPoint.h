@@ -23,7 +23,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGMatrix;
-}
+} // namespace dom
 
 /**
  * Class nsISVGPoint

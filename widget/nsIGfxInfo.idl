@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(b0cd9d34-8dba-4b1d-8126-ca21826dbf35)]
+[scriptable, uuid(47eedfa0-f7cb-445b-b5cf-a2ca83600560)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -53,6 +53,17 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString adapterDriverDate2;
 
   readonly attribute boolean isGPU2Active;
+
+  /**
+   * Returns an array of objects describing each monitor. Guaranteed properties
+   * are "screenWidth" and "screenHeight". This is only implemented on Desktop.
+   *
+   * Windows additionally supplies "refreshRate" and "pseudoDisplay".
+   *
+   * OS X additionally supplies "scale".
+   */
+  [implicit_jscontext]
+  jsval getMonitors();
 
   void getFailures(
                out unsigned long failureCount,

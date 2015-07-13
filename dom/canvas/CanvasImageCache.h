@@ -53,6 +53,6 @@ public:
   static SourceSurface* SimpleLookup(dom::Element* aImage);
 };
 
-}
+} // namespace mozilla
 
 #endif /* CANVASIMAGECACHE_H_ */

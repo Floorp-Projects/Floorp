@@ -92,5 +92,5 @@ TEST(Cairo, Bug1063486) {
   cairo_destroy(cairo);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

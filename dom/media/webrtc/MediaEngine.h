@@ -15,7 +15,7 @@ namespace mozilla {
 
 namespace dom {
 class Blob;
-}
+} // namespace dom
 
 enum {
   kVideoTrack = 1,
@@ -256,6 +256,6 @@ protected:
 
 };
 
-}
+} // namespace mozilla
 
 #endif /* MEDIAENGINE_H_ */

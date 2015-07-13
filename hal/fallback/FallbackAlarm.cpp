@@ -75,5 +75,5 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
   return true;
 }
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

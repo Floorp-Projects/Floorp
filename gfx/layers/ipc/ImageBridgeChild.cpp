@@ -44,7 +44,7 @@
 namespace mozilla {
 namespace ipc {
 class Shmem;
-}
+} // namespace ipc
 
 namespace layers {
 
@@ -999,5 +999,5 @@ void ImageBridgeChild::SendPendingAsyncMessges()
 {
 }
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla

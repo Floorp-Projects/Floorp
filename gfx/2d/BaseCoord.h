@@ -104,7 +104,7 @@ struct BaseCoord {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BASECOORD_H_ */

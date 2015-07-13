@@ -44,7 +44,7 @@ GenerateRequest(IDBIndex* aIndex)
   return request.forget();
 }
 
-} // anonymous namespace
+} // namespace
 
 IDBIndex::IDBIndex(IDBObjectStore* aObjectStore, const IndexMetadata* aMetadata)
   : mObjectStore(aObjectStore)

@@ -263,6 +263,7 @@ private:
   int64_t mSize;
 };
 
-}}
+} // namespace net
+} // namespace mozilla
 
 #endif

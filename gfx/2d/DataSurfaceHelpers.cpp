@@ -289,5 +289,5 @@ CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource)
   return copy.forget();
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

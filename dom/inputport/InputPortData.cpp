@@ -30,7 +30,7 @@ ToInputPortType(const nsAString& aStr)
   return InputPortType::EndGuard_;
 }
 
-} // namespace anonymous
+} // namespace
 
 NS_IMPL_ISUPPORTS(InputPortData, nsIInputPortData)
 

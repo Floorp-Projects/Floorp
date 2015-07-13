@@ -132,7 +132,7 @@ enum AppId {
  * Quota manager class declarations
  ******************************************************************************/
 
-} // anonymous namespace
+} // namespace
 
 class DirectoryLockImpl final
   : public DirectoryLock
@@ -275,7 +275,7 @@ namespace {
  * Local class declarations
  ******************************************************************************/
 
-} // anonymous namespace
+} // namespace
 
 class OriginInfo final
 {
@@ -838,7 +838,7 @@ AssertNoUnderflow(T aDest, U aArg)
   MOZ_ASSERT(uint64_t(aDest) >= uint64_t(aArg));
 }
 
-} // anonymous namespace
+} // namespace
 
 bool
 IsOnIOThread()
@@ -1602,7 +1602,7 @@ GetTemporaryStorageLimit(nsIFile* aDirectory, uint64_t aCurrentUsage,
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 /*******************************************************************************
  * Directory lock
@@ -2843,7 +2843,7 @@ MaybeRemoveCorruptDirectory(const nsAString& aLeafName, nsIFile* aDir)
 #endif // NIGHTLY_BUILD
 }
 
-} // anonymous namespace
+} // namespace
 
 nsresult
 QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,

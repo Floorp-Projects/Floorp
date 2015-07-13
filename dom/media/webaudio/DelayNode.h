@@ -49,8 +49,8 @@ private:
   nsRefPtr<AudioParam> mDelay;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

@@ -119,7 +119,7 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 /*static*/ already_AddRefed<Request>
 Request::Constructor(const GlobalObject& aGlobal,

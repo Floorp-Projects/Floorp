@@ -102,7 +102,7 @@ struct BasePoint {
 
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BASEPOINT_H_ */

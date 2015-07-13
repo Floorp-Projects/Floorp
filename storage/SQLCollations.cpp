@@ -101,7 +101,7 @@ struct Collations {
   int(*xCompare)(void*, int, const void*, int, const void*);
 };
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Exposed Functions

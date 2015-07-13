@@ -255,7 +255,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
                                                &context->builtChain));
 }
 
-} // unnamed namespcae
+} // namespace
 
 NS_IMETHODIMP
 nsDataSignatureVerifier::VerifySignature(const char* aRSABuf,

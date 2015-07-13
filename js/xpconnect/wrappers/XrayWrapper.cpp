@@ -1090,7 +1090,7 @@ bool CloneExpandoChain(JSContext* cx, JSObject* dstArg, JSObject* srcArg)
     RootedObject src(cx, srcArg);
     return GetXrayTraits(src)->cloneExpandoChain(cx, dst, src);
 }
-}
+} // namespace XrayUtils
 
 static JSObject*
 GetHolder(JSObject* obj)
@@ -1126,7 +1126,7 @@ IsXPCWNHolderClass(const JSClass* clasp)
   return clasp == &XPCWrappedNativeXrayTraits::HolderClass;
 }
 
-}
+} // namespace XrayUtils
 
 static nsGlobalWindow*
 AsWindow(JSContext* cx, JSObject* wrapper)
@@ -2320,4 +2320,4 @@ template<>
 const SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
 
-}
+} // namespace xpc

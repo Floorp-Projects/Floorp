@@ -53,13 +53,13 @@
 
 namespace android {
     class GraphicBuffer;
-}
+} // namespace android
 
 namespace mozilla {
     namespace gfx {
         class DataSourceSurface;
         class SourceSurface;
-    }
+    } // namespace gfx
 
     namespace gl {
         class GLContext;
@@ -70,12 +70,12 @@ namespace mozilla {
         class GLBlitTextureImageHelper;
         class GLReadTexImageHelper;
         struct SurfaceCaps;
-    }
+    } // namespace gl
 
     namespace layers {
         class ColorTextureLayerProgram;
-    }
-}
+    } // namespace layers
+} // namespace mozilla
 
 namespace mozilla {
 namespace gl {

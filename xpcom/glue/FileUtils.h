@@ -210,4 +210,5 @@ bool ReadSysFile(const char* aFilename, bool* aVal);
 #endif /* (MOZ_WIDGET_GONK || DEBUG) && XP_UNIX */
 
 } // namespace mozilla
+
 #endif

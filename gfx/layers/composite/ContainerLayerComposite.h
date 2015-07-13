@@ -179,7 +179,7 @@ public:
   RefPtr<CompositingRenderTarget> mLastIntermediateSurface;
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_ContainerLayerComposite_H */

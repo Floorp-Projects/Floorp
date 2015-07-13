@@ -64,8 +64,8 @@ private:
   nsRefPtr<AudioParam> mPan;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

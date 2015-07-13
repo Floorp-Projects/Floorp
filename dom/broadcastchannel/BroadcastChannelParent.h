@@ -14,7 +14,7 @@ namespace mozilla {
 namespace ipc {
 class BackgroundParentImpl;
 class PrincipalInfo;
-}
+} // namespace ipc
 
 namespace dom {
 
@@ -56,7 +56,7 @@ private:
   bool mPrivateBrowsing;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_BroadcastChannelParent_h

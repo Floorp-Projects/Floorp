@@ -12,8 +12,8 @@ namespace mozilla {
 
   namespace layers {
     class GraphicBufferLocked;
-  }
-}
+  } // namespace layers
+} // namespace mozilla
 
 /**
  * Fallback camera control subclass. Can be used as a template for the

@@ -40,25 +40,25 @@ namespace mozilla {
 
 namespace jsipc {
 class CpowHolder;
-}
+} // namespace jsipc
 
 namespace layers {
 struct FrameMetrics;
 struct TextureFactoryIdentifier;
-}
+} // namespace layers
 
 namespace layout {
 class RenderFrameParent;
-}
+} // namespace layout
 
 namespace widget {
 struct IMENotification;
-}
+} // namespace widget
 
 namespace gfx {
 class SourceSurface;
 class DataSourceSurface;
-}
+} // namespace gfx
 
 namespace dom {
 
@@ -125,7 +125,8 @@ public:
     void AddWindowListeners();
     void DidRefresh() override;
 
-    virtual bool RecvMoveFocus(const bool& aForward) override;
+    virtual bool RecvMoveFocus(const bool& aForward,
+                               const bool& aForDocumentNavigation) override;
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
     virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
     virtual bool RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;

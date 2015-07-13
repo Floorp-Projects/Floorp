@@ -118,6 +118,7 @@ private:
   RefPtr<ISurfaceAllocator> mSurfaceAllocator;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif /* MOZILLA_GFX_TEXTURECLIENTPOOL_H */

@@ -103,4 +103,5 @@ MP4Stream::Length(int64_t* aSize)
   *aSize = mResource->GetLength();
   return true;
 }
-}
+
+} // namespace mozilla

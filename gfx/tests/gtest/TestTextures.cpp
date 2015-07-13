@@ -257,8 +257,8 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   }
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 TEST(Layers, TextureSerialization) {
   // the test is run on all the following image formats

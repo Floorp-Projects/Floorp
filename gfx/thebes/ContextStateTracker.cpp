@@ -133,5 +133,5 @@ ContextStateTrackerOGL::DestroyOGL(GLContext* aGL)
   }
 }
 
-}
+} // namespace mozilla
 

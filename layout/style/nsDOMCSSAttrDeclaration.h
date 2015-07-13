@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace dom {
 class Element;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration
 {

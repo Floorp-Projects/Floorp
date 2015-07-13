@@ -61,4 +61,4 @@ status_t MediaStreamSource::getSize(off64_t *size)
   return OK;
 }
 
-}  // namespace android
+} // namespace android

@@ -267,4 +267,5 @@ HttpChannelParentListener::DivertTo(nsIStreamListener* aListener)
   return ResumeForDiversion();
 }
 
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla

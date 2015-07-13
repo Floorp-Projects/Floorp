@@ -262,4 +262,4 @@ CSSVariableResolver::Put(const nsAString& aVariableName,
   }
 }
 
-}
+} // namespace mozilla

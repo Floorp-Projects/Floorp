@@ -17,7 +17,7 @@
 
 namespace {
   const double kRadPerDegree = 2.0 * M_PI / 360.0;
-}
+} // namespace
 
 namespace mozilla {
 namespace dom {

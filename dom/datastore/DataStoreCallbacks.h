@@ -48,7 +48,7 @@ protected:
   }
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_DataStoreCallbacks_h

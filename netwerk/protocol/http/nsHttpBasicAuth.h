@@ -26,6 +26,7 @@ private:
 	virtual ~nsHttpBasicAuth();
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // !nsHttpBasicAuth_h__

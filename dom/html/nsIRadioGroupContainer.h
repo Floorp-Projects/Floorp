@@ -14,8 +14,8 @@ class nsIFormControl;
 namespace mozilla {
 namespace dom {
 class HTMLInputElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #define NS_IRADIOGROUPCONTAINER_IID   \
 { 0x800320a0, 0x733f, 0x11e4, \

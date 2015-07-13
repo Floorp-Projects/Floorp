@@ -113,6 +113,7 @@ private:
     bool              mHTTPS;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpRequestHead_h__

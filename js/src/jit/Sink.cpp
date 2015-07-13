@@ -228,5 +228,5 @@ Sink(MIRGenerator* mir, MIRGraph& graph)
     return true;
 }
 
-}
-}
+} // namespace jit
+} // namespace js

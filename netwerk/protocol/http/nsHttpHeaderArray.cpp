@@ -235,5 +235,5 @@ nsHttpHeaderArray::Clear()
     mHeaders.Clear();
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

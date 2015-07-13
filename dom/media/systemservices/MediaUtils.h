@@ -413,7 +413,7 @@ private:
   nsAutoTArray<Element, 3> mElements;
 };
 
-}
-}
+} // namespace media
+} // namespace mozilla
 
 #endif // mozilla_MediaUtils_h

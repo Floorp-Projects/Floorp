@@ -92,7 +92,8 @@ protected:
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
 };
 
-} /* namespace gfx */
+} // namespace gl
+
 } /* namespace mozilla */
 
 #endif /* SHARED_SURFACEIO_H_ */

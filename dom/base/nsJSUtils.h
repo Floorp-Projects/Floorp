@@ -28,8 +28,8 @@ namespace mozilla {
 namespace dom {
 class AutoJSAPI;
 class Element;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsJSUtils
 {

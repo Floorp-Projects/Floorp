@@ -70,7 +70,7 @@ protected:
   nsRangeUpdater* mRangeUpdater;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

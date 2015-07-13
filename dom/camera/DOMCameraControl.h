@@ -36,7 +36,7 @@ namespace dom {
   struct CameraRegion;
   struct CameraSize;
   template<typename T> class Optional;
-}
+} // namespace dom
 class ErrorResult;
 class StartRecordingHelper;
 class RecorderPosterHelper;

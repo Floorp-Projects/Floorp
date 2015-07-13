@@ -201,7 +201,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
   nsIRequestObserver
 )
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsAnnoProtocolHandler

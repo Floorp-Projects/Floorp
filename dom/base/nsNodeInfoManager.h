@@ -30,8 +30,8 @@ template<class T> struct already_AddRefed;
 namespace mozilla {
 namespace dom {
 class NodeInfo;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsNodeInfoManager final
 {

@@ -24,8 +24,8 @@
 namespace mozilla {
 namespace dom {
 class Element;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 struct nsComputedStyleMap;
 class nsIFrame;

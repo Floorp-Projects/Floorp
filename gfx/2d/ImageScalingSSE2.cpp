@@ -326,5 +326,5 @@ ImageHalfScaler::HalfImageHorizontal_SSE2(uint8_t *aSource, int32_t aSourceStrid
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

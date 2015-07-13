@@ -22,7 +22,7 @@ namespace gl {
 class GLContext;
 class SharedSurface;
 class SurfaceFactory;
-}
+} // namespace gl
 
 namespace layers {
 

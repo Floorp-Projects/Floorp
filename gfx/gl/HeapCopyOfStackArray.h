@@ -42,6 +42,6 @@ private:
   ScopedDeletePtr<ElemType> const mArrayData;
 };
 
-}
+} // namespace mozilla
 
 #endif // HEAPCOPYOFSTACKARRAY_H_

@@ -74,5 +74,5 @@ TaskThrottler::TimeSinceLastRequest(const TimeStamp& aTimeStamp)
   return aTimeStamp - mStartTime;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

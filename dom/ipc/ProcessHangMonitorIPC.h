@@ -18,7 +18,7 @@ namespace mozilla {
 
 namespace dom {
 class ContentParent;
-}
+} // namespace dom
 
 PProcessHangMonitorParent*
 CreateHangMonitorParent(mozilla::dom::ContentParent* aContentParent,

@@ -263,5 +263,5 @@ HTMLHRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLHRElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla

@@ -157,8 +157,8 @@ namespace SSE2 {
 
 void Convert_ascii_run(const char *&src, char16_t *&dst, int32_t len);
 
-}
-}
+} // namespace SSE2
+} // namespace mozilla
 #endif
 
 static inline void

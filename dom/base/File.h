@@ -42,7 +42,7 @@ namespace dom {
 
 namespace indexedDB {
 class FileInfo;
-};
+} // namespace indexedDB
 
 struct BlobPropertyBag;
 struct ChromeFilePropertyBag;
@@ -1038,7 +1038,7 @@ private:
   nsCOMPtr<nsISupports> mParent;
 };
 
-} // dom namespace
-} // file namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_File_h

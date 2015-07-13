@@ -27,6 +27,6 @@ operator<<(const unused_t& /*unused*/, const T& /*unused*/)
 {
 }
 
-}
+} // namespace mozilla
 
 #endif // mozilla_unused_h

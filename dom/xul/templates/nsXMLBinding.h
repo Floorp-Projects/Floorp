@@ -17,8 +17,8 @@ class nsXMLBindingValues;
 namespace mozilla {
 namespace dom {
 class XPathResult;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * Classes related to storing bindings for XML handling.

@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace scache {
 class StartupCache;
-}
-}
+} // namespace scache
+} // namespace mozilla
 
 nsresult
 ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,

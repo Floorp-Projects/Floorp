@@ -69,6 +69,7 @@ private:
   RefPtr<gfx::DrawTarget> mDrawTarget;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif

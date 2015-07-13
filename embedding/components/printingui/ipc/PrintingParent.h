@@ -64,6 +64,7 @@ private:
                     const PrintData& data,
                     PrintData* result);
 };
+
 } // namespace embedding
 } // namespace mozilla
 

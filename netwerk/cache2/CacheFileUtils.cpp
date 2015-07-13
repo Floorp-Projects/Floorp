@@ -15,7 +15,7 @@ namespace mozilla {
 namespace net {
 namespace CacheFileUtils {
 
-namespace { // anon
+namespace {
 
 /**
  * A simple recursive descent parser for the mapping key.
@@ -196,7 +196,7 @@ public:
   }
 };
 
-} // anon
+} // namespace
 
 already_AddRefed<nsILoadContextInfo>
 ParseKey(const nsCSubstring &aKey,
@@ -534,6 +534,6 @@ DetailedCacheHitTelemetry::AddRecord(ERecType aType, TimeStamp aLoadStart)
   }
 }
 
-} // CacheFileUtils
-} // net
-} // mozilla
+} // namespace CacheFileUtils
+} // namespace net
+} // namespace mozilla

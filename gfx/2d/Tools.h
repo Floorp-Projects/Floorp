@@ -215,7 +215,7 @@ int32_t GetAlignedStride(int32_t aStride)
   return (aStride + mask) & ~mask;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_TOOLS_H_ */

@@ -217,5 +217,5 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(nsIApplicationCache *aApplicat
     return NS_OK;
 }
 
-}
-}
+} // namespace docshell
+} // namespace mozilla

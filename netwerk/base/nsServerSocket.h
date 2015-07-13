@@ -16,7 +16,8 @@
 class nsIEventTarget;
 namespace mozilla { namespace net {
 union NetAddr;
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 class nsServerSocket : public nsASocketHandler
                      , public nsIServerSocket

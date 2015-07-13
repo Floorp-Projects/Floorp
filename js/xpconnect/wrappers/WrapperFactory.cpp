@@ -630,4 +630,4 @@ NativeGlobal(JSObject* obj)
     return global;
 }
 
-}
+} // namespace xpc

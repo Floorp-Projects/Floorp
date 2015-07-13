@@ -354,8 +354,8 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
   }
 }
 
-}
+} // namespace css
 
-}
+} // namespace mozilla
 
 #endif /* !defined(CSSCalc_h_) */

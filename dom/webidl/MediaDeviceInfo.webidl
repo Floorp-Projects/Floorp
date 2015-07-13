@@ -19,4 +19,6 @@ interface MediaDeviceInfo {
   readonly attribute MediaDeviceKind kind;
   readonly attribute DOMString       label;
   readonly attribute DOMString       groupId;
+
+  jsonifier;
 };

@@ -27,7 +27,6 @@
 #include "gfxReusableSharedImageSurfaceWrapper.h"
 #include "nsExpirationTracker.h"        // for nsExpirationTracker
 #include "nsMathUtils.h"               // for NS_lroundf
-#include "gfx2DGlue.h"
 #include "LayersLogging.h"
 #include "UnitTransforms.h"             // for TransformTo
 #include "mozilla/UniquePtr.h"
@@ -902,15 +901,12 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
       PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferAlloc",
         js::ProfileEntry::Category::GRAPHICS);
 
-      gfxImageFormat format =
-        gfxPlatform::GetPlatform()->OptimalFormatForContent(
-          GetContentType());
-
       mSinglePaintDrawTarget =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
           gfx::IntSize(ceilf(bounds.width * mResolution),
                        ceilf(bounds.height * mResolution)),
-          gfx::ImageFormatToSurfaceFormat(format));
+          gfxPlatform::GetPlatform()->Optimal2DFormatForContent(
+            GetContentType()));
 
       if (!mSinglePaintDrawTarget) {
         return;

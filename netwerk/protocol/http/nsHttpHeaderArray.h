@@ -17,7 +17,7 @@ class nsIHttpHeaderVisitor;
 // without also including PHttpChannelParams.h
 namespace IPC {
     template <typename> struct ParamTraits;
-}
+} // namespace IPC
 
 namespace mozilla { namespace net {
 
@@ -198,6 +198,7 @@ nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header)
     return retval;
 }
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif

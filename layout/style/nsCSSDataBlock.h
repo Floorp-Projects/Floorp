@@ -23,8 +23,8 @@ class nsCSSExpandedDataBlock;
 namespace mozilla {
 namespace css {
 class Declaration;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 /**
  * An |nsCSSCompressedDataBlock| holds a usually-immutable chunk of

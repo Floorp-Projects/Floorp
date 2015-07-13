@@ -634,8 +634,8 @@ namespace google {
 namespace protobuf {
 
 
-}  // namespace google
-}  // namespace protobuf
+} // namespace protobuf
+} // namespace google
 #endif  // SWIG
 
 // @@protoc_insertion_point(global_scope)

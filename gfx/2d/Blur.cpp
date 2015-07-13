@@ -764,5 +764,5 @@ AlphaBoxBlur::CalculateBlurRadius(const Point& aStd)
     return size;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

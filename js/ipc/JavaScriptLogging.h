@@ -225,7 +225,7 @@ class Logging
     JSContext* cx;
 };
 
-}
-}
+} // namespace jsipc
+} // namespace mozilla
 
 #endif

@@ -79,7 +79,7 @@ struct ScaleFactor {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEFACTOR_H_ */

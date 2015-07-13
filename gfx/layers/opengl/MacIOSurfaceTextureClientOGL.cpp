@@ -82,5 +82,6 @@ MacIOSurfaceTextureClientOGL::GetAsSurface()
   RefPtr<gfx::SourceSurface> surf = mSurface->GetAsSurface();
   return surf->GetDataSurface();
 }
-}
-}
+
+} // namespace layers
+} // namespace mozilla

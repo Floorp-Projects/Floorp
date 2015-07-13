@@ -17,5 +17,5 @@ DataSourceSurface::GetDataSurface()
   return surface.forget();
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

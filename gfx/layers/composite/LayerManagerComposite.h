@@ -43,7 +43,7 @@ class gfxContext;
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace layers {
 
@@ -619,7 +619,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
   }
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_LayerManagerComposite_H */

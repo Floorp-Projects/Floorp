@@ -2911,5 +2911,6 @@ ForEachHandler(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   // Now actually call the user specified callback
   return JS::Call(aCx, args.thisv(), callbackFn, newArgs, &rval);
 }
+
 } // namespace dom
 } // namespace mozilla

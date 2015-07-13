@@ -13,8 +13,11 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIPresShell;
 class nsIWidget;
 template<class T> struct already_AddRefed;
+template<class T> class nsCOMPtr;
+template<class T> class nsRefPtr;
 
 namespace mozilla {
 namespace layers {
@@ -161,7 +164,7 @@ public:
     static void NotifyFlushComplete();
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* mozilla_layers_APZCCallbackHelper_h */

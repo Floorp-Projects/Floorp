@@ -48,8 +48,8 @@ private:
   nsRefPtr<AudioParam> mGain;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

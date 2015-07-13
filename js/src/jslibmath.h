@@ -71,6 +71,6 @@ NumberMod(double a, double b) {
     return js_fmod(a, b);
 }
 
-}
+} // namespace js
 
 #endif /* jslibmath_h */

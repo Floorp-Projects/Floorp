@@ -173,5 +173,5 @@ MessagePortParent::ForceClose(const nsID& aUUID,
   return service->ForceClose(aUUID, aDestinationUUID, aSequenceID);
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

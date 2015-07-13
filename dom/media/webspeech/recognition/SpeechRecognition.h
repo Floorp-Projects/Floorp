@@ -295,6 +295,7 @@ ToSupports(dom::SpeechRecognition* aRec)
 {
   return ToSupports(static_cast<DOMEventTargetHelper*>(aRec));
 }
+
 } // namespace mozilla
 
 #endif

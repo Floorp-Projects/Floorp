@@ -555,7 +555,7 @@ class RecoverReader
     }
 };
 
-}
-}
+} // namespace jit
+} // namespace js
 
 #endif /* jit_Snapshot_h */

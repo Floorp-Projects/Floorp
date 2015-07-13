@@ -664,7 +664,7 @@ void OnPopCursor()
   [NSCursor pop];
 }
 
-} // parent
+} // namespace parent
 } // namespace mac_plugin_interposing
 
 namespace mac_plugin_interposing {
@@ -819,7 +819,7 @@ static BOOL OnPopCursor()
   return NO;
 }
 
-} // child
+} // namespace child
 } // namespace mac_plugin_interposing
 
 using namespace mac_plugin_interposing::child;

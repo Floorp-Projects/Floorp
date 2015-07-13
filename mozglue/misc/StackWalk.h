@@ -153,7 +153,7 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                       uint32_t aMaxFrames, void* aClosure, void** aBp,
                       void* aStackEnd);
 
-}
+} // namespace mozilla
 
 /**
  * Initialize the critical sections for this platform so that we can

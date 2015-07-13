@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace layers {
 class Layer;
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 class SpliceableJSONWriter;
 class UniqueStacks;

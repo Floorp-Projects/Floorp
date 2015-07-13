@@ -50,7 +50,7 @@ CreateNewFileInstance(Blob& aBlob, const Optional<nsAString>& aFilename)
   return aBlob.ToFile(filename);
 }
 
-} // anonymous namespace
+} // namespace
 
 // -------------------------------------------------------------------------
 // nsISupports

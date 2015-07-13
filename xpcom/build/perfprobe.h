@@ -198,7 +198,7 @@ protected:
                                       PVOID aBuffer);  // Sets |mSessionHandle|
 };
 
-}  // namespace probes
-}  // namespace mozilla
+} // namespace probes
+} // namespace mozilla
 
 #endif //mozilla_perfprobe_h

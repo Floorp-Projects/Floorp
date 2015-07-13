@@ -233,5 +233,5 @@ DelayNode::SendDelayToStream(AudioNode* aNode)
   SendTimelineParameterToStream(This, DelayNodeEngine::DELAY, *This->mDelay);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

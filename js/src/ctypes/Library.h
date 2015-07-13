@@ -29,9 +29,9 @@ namespace Library
   PRLibrary* GetLibrary(JSObject* obj);
 
   bool Open(JSContext* cx, unsigned argc, JS::Value* vp);
-}
+} // namespace Library
 
-}
-}
+} // namespace ctypes
+} // namespace js
 
 #endif /* ctypes_Library_h */

@@ -2804,16 +2804,16 @@ nsDocShell::GetBusyFlags(uint32_t* aBusyFlags)
 }
 
 NS_IMETHODIMP
-nsDocShell::TabToTreeOwner(bool aForward, bool* aTookFocus)
+nsDocShell::TabToTreeOwner(bool aForward, bool aForDocumentNavigation, bool* aTookFocus)
 {
   NS_ENSURE_ARG_POINTER(aTookFocus);
 
   nsCOMPtr<nsIWebBrowserChromeFocus> chromeFocus = do_GetInterface(mTreeOwner);
   if (chromeFocus) {
     if (aForward) {
-      *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusNextElement());
+      *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusNextElement(aForDocumentNavigation));
     } else {
-      *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusPrevElement());
+      *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusPrevElement(aForDocumentNavigation));
     }
   } else {
     *aTookFocus = false;
@@ -8420,7 +8420,8 @@ private:
     mRestorePresentationEvent;
   nsRefPtr<nsDocShell::RestorePresentationEvent> mEvent;
 };
-}
+
+} // namespace
 
 nsresult
 nsDocShell::RestoreFromHistory()
@@ -9448,7 +9449,7 @@ private:
 NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
 #endif
 
-} // anonymous namespace
+} // namespace
 
 void
 nsDocShell::CopyFavicon(nsIURI* aOldURI,

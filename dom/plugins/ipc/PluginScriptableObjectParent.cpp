@@ -118,7 +118,7 @@ ReleaseVariant(NPVariant& aVariant,
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 // static
 NPObject*

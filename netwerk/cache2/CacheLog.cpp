@@ -24,5 +24,5 @@ PRLogModuleInfo* GetCache2Log()
   return sLog;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

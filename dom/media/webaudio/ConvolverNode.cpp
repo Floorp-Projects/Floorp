@@ -278,6 +278,6 @@ ConvolverNode::SetNormalize(bool aNormalize)
   SendInt32ParameterToStream(ConvolverNodeEngine::NORMALIZE, aNormalize);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

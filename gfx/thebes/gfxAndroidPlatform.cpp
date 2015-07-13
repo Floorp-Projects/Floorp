@@ -128,11 +128,11 @@ gfxAndroidPlatform::~gfxAndroidPlatform()
 }
 
 already_AddRefed<gfxASurface>
-gfxAndroidPlatform::CreateOffscreenSurface(const IntSize& size,
-                                           gfxContentType contentType)
+gfxAndroidPlatform::CreateOffscreenSurface(const IntSize& aSize,
+                                           gfxImageFormat aFormat)
 {
     nsRefPtr<gfxASurface> newSurface;
-    newSurface = new gfxImageSurface(size, OptimalFormatForContent(contentType));
+    newSurface = new gfxImageSurface(aSize, aFormat);
 
     return newSurface.forget();
 }

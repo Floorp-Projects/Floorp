@@ -631,5 +631,5 @@ EGLImageTextureHost::GetFormat() const
   return mTextureSource->GetFormat();
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

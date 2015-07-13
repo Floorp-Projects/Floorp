@@ -10,6 +10,7 @@ SOURCES += [
     'TestExplicitOperatorBool.cpp',
     'TestGlobalClass.cpp',
     'TestMustOverride.cpp',
+    'TestMustUse.cpp',
     'TestNANTestingExpr.cpp',
     'TestNANTestingExprC.c',
     'TestNoAddRefReleaseOnReturn.cpp',

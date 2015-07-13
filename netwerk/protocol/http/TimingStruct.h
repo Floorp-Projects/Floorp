@@ -26,6 +26,7 @@ struct ResourceTimingStruct : TimingStruct {
   TimeStamp redirectEnd;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif

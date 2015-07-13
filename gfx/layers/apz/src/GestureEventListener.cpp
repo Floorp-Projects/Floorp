@@ -505,5 +505,5 @@ void GestureEventListener::CreateMaxTapTimeoutTask()
     MAX_TAP_TIME);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

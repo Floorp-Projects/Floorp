@@ -16,13 +16,13 @@ class MessageLoop;
 
 namespace base {
 class Thread;
-};
+} // namespace base
 
 namespace mozilla {
 
 namespace dom {
 class ContentParent;
-}
+} // namespace dom
 
 class PProcessHangMonitorParent;
 

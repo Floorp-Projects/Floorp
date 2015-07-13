@@ -18,6 +18,6 @@ bool InitEventTracing(bool aLog);
 // Must be called from the same thread that called InitEventTracing.
 void ShutdownEventTracing();
 
-}  // namespace mozilla
+} // namespace mozilla
 
 #endif /* XRE_EVENTTRACER_H_ */

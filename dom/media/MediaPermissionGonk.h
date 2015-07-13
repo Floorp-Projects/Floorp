@@ -34,5 +34,6 @@ private:
 };
 
 } // namespace mozilla
+
 #endif // DOM_MEDIA_MEDIAPERMISSIONGONK_H
 

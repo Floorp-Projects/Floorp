@@ -298,7 +298,7 @@ private:
     bool mBlocked;
 };
 
-} /* namespace {} */
+} // namespace
 
 MessageChannel::MessageChannel(MessageListener *aListener)
   : mListener(aListener),
@@ -2043,5 +2043,5 @@ CancelCPOWs()
     }
 }
 
-} // ipc
-} // mozilla
+} // namespace ipc
+} // namespace mozilla

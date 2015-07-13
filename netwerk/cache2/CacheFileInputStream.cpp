@@ -631,5 +631,5 @@ CacheFileInputStream::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) co
   return mallocSizeOf(this);
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

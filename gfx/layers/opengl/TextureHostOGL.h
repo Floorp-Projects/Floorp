@@ -36,11 +36,11 @@ class nsIntRegion;
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
-}
+} // namespace gfx
 
 namespace gl {
 class AndroidSurfaceTexture;
-}
+} // namespace gl
 
 namespace layers {
 
@@ -467,7 +467,7 @@ protected:
   RefPtr<EGLImageTextureSource> mTextureSource;
 };
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_TEXTUREOGL_H */

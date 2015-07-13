@@ -941,6 +941,7 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 
   return JS_WrapValue(cx, rval);
 }
+
 } // namespace binding_detail
 
 // Create a JSObject wrapping "value", if there isn't one already, and store it

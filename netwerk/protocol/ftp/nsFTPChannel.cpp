@@ -183,7 +183,7 @@ FTPEventSinkProxy::OnFTPControlLogRunnable::Run()
     return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 nsFtpChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)

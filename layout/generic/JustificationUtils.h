@@ -139,6 +139,6 @@ public:
   }
 };
 
-}
+} // namespace mozilla
 
 #endif /* !defined(mozilla_JustificationUtils_h_) */

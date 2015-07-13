@@ -562,6 +562,6 @@ PannerNode::SendDopplerToSourcesIfNeeded()
 }
 
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

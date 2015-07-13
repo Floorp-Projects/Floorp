@@ -20,13 +20,13 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-}
+} // namespace ipc
 
 namespace dom {
 
 namespace workers {
 class WorkerFeature;
-}
+} // namespace workers
 
 class BroadcastChannelChild;
 class BroadcastChannelMessage;

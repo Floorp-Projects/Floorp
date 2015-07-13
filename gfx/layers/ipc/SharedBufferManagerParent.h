@@ -22,7 +22,7 @@ class GraphicBuffer;
 
 namespace base {
 class Thread;
-}
+} // namespace base
 
 namespace mozilla {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC

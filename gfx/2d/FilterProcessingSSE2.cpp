@@ -108,5 +108,5 @@ FilterProcessing::ApplyArithmeticCombine_SSE2(DataSourceSurface* aInput1, DataSo
   return ApplyArithmeticCombine_SIMD<__m128i,__m128i,__m128i>(aInput1, aInput2, aK1, aK2, aK3, aK4);
 }
 
-} // namespace mozilla
 } // namespace gfx
+} // namespace mozilla

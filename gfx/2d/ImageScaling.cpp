@@ -247,5 +247,5 @@ ImageHalfScaler::HalfImageHorizontal_C(uint8_t *aSource, int32_t aSourceStride,
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

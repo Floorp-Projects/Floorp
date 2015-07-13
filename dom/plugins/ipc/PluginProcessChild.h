@@ -40,7 +40,7 @@ private:
     DISALLOW_EVIL_CONSTRUCTORS(PluginProcessChild);
 };
 
-}  // namespace plugins
-}  // namespace mozilla
+} // namespace plugins
+} // namespace mozilla
 
 #endif  // ifndef dom_plugins_PluginProcessChild_h

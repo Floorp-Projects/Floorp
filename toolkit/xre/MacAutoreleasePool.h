@@ -26,6 +26,6 @@ private:
   void operator=(const MacAutoreleasePool&);
 };
 
-}
+} // namespace mozilla
 
 #endif // MacAutoreleasePool_h_

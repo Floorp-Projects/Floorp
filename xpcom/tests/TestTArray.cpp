@@ -1199,7 +1199,7 @@ static const struct Test {
   { nullptr, nullptr }
 };
 
-}
+} // namespace TestTArray
 
 using namespace TestTArray;
 

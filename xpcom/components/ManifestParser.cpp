@@ -171,7 +171,7 @@ struct AutoPR_smprintf_free
   char* mBuf;
 };
 
-} // anonymous namespace
+} // namespace
 
 /**
  * If we are pre-loading XPTs, this method may do nothing because the
@@ -465,7 +465,7 @@ struct CachedDirective
   char* argv[4];
 };
 
-} // anonymous namespace
+} // namespace
 
 
 /**

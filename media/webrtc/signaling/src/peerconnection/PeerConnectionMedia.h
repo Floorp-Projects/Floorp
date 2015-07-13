@@ -524,5 +524,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };
 
-}  // namespace mozilla
+} // namespace mozilla
+
 #endif

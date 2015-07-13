@@ -728,6 +728,7 @@ private:
     nsCString mLogData;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // !nsHttpConnectionMgr_h__

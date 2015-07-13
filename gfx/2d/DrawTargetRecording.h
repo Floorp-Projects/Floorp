@@ -281,7 +281,7 @@ private:
   RefPtr<DrawTarget> mFinalDT;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_DRAWTARGETRECORDING_H_ */

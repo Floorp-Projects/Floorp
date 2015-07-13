@@ -263,5 +263,5 @@ OfflineCacheUpdateParent::GetAppId(uint32_t *aAppId)
     return NS_OK;
 }
 
-} // docshell
-} // mozilla
+} // namespace docshell
+} // namespace mozilla

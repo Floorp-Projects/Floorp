@@ -21,7 +21,7 @@ class ErrorResult;
 
 namespace ipc {
 class PBackgroundParent;
-}
+} // namespace ipc
 
 namespace dom {
 

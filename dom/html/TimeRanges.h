@@ -19,7 +19,7 @@ namespace dom {
 
 class TimeRanges;
 
-}
+} // namespace dom
 
 namespace dom {
 

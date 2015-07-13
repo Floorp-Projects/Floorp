@@ -6,6 +6,7 @@
 
 #include "ScrollVelocityQueue.h"
 
+#include "gfxPrefs.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 

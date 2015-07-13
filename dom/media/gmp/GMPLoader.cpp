@@ -56,7 +56,7 @@ struct ScopedActCtxHandleTraits
 };
 typedef mozilla::Scoped<ScopedActCtxHandleTraits> ScopedActCtxHandle;
 
-} // anonymous namespace
+} // namespace
 #endif
 
 namespace mozilla {

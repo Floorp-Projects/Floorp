@@ -42,7 +42,7 @@ protected:
   base::SharedMemory *mShMem;
 };
 
-} // gfx
-} // mozilla
+} // namespace gfx
+} // namespace mozilla
 
 #endif

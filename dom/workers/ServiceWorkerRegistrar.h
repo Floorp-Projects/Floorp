@@ -27,7 +27,7 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
-}
+} // namespace ipc
 
 namespace dom {
 
@@ -91,7 +91,7 @@ protected:
   nsCOMPtr<nsIFile> mProfileDir;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_workers_ServiceWorkerRegistrar_h

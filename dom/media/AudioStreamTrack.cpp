@@ -16,5 +16,5 @@ AudioStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return AudioStreamTrackBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

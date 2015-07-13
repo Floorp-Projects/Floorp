@@ -81,7 +81,7 @@ SECStatus ConstructCERTCertListFromReversedDERArray(
             const mozilla::pkix::DERArray& certArray,
             /*out*/ mozilla::ScopedCERTCertList& certList);
 
-} // namespcae mozilla
+} // namespace mozilla
 
 class nsNSSCertList: public nsIX509CertList,
                      public nsISerializable,

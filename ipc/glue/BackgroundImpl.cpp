@@ -784,7 +784,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace ipc {

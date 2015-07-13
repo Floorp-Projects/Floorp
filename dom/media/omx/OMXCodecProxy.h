@@ -117,6 +117,6 @@ private:
     wp<CodecResourceListener> mListener;
 };
 
-}  // namespace android
+} // namespace android
 
 #endif  // OMX_CODEC_PROXY_DECODER_H_

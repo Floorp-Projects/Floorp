@@ -21,8 +21,8 @@ namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
 class DrawTarget;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 namespace mozilla {
 namespace gl {

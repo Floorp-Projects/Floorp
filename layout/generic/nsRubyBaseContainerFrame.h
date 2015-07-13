@@ -20,7 +20,7 @@ nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
 
 namespace mozilla {
 struct RubyColumn;
-}
+} // namespace mozilla
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {

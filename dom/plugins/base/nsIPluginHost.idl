@@ -36,7 +36,7 @@ interface nsIClearSiteDataCallback : nsISupports
     void callback(in nsresult rv);
 };
 
-[scriptable, uuid(a884e736-5396-4400-bc82-9a23d871d12c)]
+[scriptable, uuid(2bed7533-50e3-45dd-9e47-102e2c6f5ea8)]
 interface nsIPluginHost : nsISupports
 {
   /**
@@ -154,5 +154,10 @@ interface nsIPluginHost : nsISupports
    */
   uint32_t getBlocklistStateForType(in AUTF8String aMimeType,
                                     [optional] in uint32_t excludeFlags);
+
+  /**
+   * Returns true if plugins with the given mimetype will run out of process.
+   */
+  boolean isPluginOOP(in AUTF8String aMimeType);
 };
 

@@ -26,8 +26,8 @@ class DOMMediaStream;
 namespace dom {
 class BlobImpl;
 class MediaSource;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsHostObjectProtocolHandler : public nsIProtocolHandler
 {

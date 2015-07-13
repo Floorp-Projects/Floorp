@@ -39,7 +39,7 @@
              oncommand="goDoCommand('downloadsCmd_clearList')"/>
   </commandset>
 
-  <popupset>
+  <popupset id="mainPopupSet">
     <!-- The panel has level="top" to ensure that it is never hidden by the
          taskbar on Windows.  See bug 672365.  For accessibility to screen
          readers, we use a label on the panel instead of the anchor because the

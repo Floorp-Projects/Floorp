@@ -81,8 +81,8 @@ private:
   void EnsurePathBuilder() const;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* CanvasPath_h */
 

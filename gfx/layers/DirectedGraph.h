@@ -110,7 +110,7 @@ private:
   nsTArray<Edge> mEdges;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // GFX_DIRECTEDGRAPH_H

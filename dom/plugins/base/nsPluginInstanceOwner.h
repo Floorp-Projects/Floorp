@@ -31,11 +31,11 @@ class nsDisplayListBuilder;
 namespace mozilla {
 namespace dom {
 struct MozPluginParameter;
-}
+} // namespace dom
 namespace widget {
 class PuppetWidget;
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 using mozilla::widget::PuppetWidget;
 

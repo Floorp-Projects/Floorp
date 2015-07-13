@@ -19,7 +19,7 @@ struct MutexData {
   mozilla::Atomic<int32_t> mCount;
 };
 
-}
+} // namespace
 
 namespace mozilla {
 
@@ -149,4 +149,4 @@ CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
   return result;
 }
 
-}
+} // namespace mozilla

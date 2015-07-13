@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace dom {
 class HTMLCanvasElement;
-}
+} // namespace dom
 
 namespace CanvasUtils {
 
@@ -86,18 +86,8 @@ inline bool FloatValidate (double f1, double f2, double f3, double f4, double f5
 
 template<typename T>
 nsresult
-JSValToDashArray(JSContext* cx, const JS::Value& val,
-                 FallibleTArray<T>& dashArray);
-
-template<typename T>
-JS::Value
-DashArrayToJSVal(FallibleTArray<T>& dashArray,
-                 JSContext* cx, mozilla::ErrorResult& rv);
-
-template<typename T>
-nsresult
 JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
-                 FallibleTArray<T>& dashes)
+                 nsTArray<T>& dashes)
 {
     // The cap is pretty arbitrary.  16k should be enough for
     // anybody...
@@ -149,7 +139,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
 
 template<typename T>
 void
-DashArrayToJSVal(FallibleTArray<T>& dashes,
+DashArrayToJSVal(nsTArray<T>& dashes,
                  JSContext* cx,
                  JS::MutableHandle<JS::Value> retval,
                  mozilla::ErrorResult& rv)
@@ -164,7 +154,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
     }
 }
 
-}
-}
+} // namespace CanvasUtils
+} // namespace mozilla
 
 #endif /* _CANVASUTILS_H_ */

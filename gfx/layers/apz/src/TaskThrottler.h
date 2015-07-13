@@ -17,7 +17,7 @@
 
 namespace tracked_objects {
 class Location;
-}
+} // namespace tracked_objects
 
 namespace mozilla {
 namespace layers {
@@ -109,7 +109,7 @@ private:
   RollingMean<TimeDuration, TimeDuration> mMean;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_dom_TaskThrottler_h

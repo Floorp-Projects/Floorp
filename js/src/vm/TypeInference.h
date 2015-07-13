@@ -30,7 +30,7 @@ namespace jit {
     struct IonScript;
     class JitAllocPolicy;
     class TempAllocator;
-}
+} // namespace jit
 
 class TaggedProto;
 struct TypeZone;
@@ -1303,7 +1303,7 @@ PrintTypes(JSContext* cx, JSCompartment* comp, bool force);
 namespace JS {
 namespace ubi {
 template<> struct Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> { };
-}
-}
+} // namespace ubi
+} // namespace JS
 
 #endif /* vm_TypeInference_h */

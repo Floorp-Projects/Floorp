@@ -173,7 +173,7 @@ class JSLinearString;
 
 namespace JS {
 class Symbol;
-}
+} // namespace JS
 
 namespace js {
 
@@ -202,7 +202,7 @@ class ObjectGroup;
 
 namespace jit {
 class JitCode;
-}
+} // namespace jit
 
 #ifdef DEBUG
 // Barriers can't be triggered during backend Ion compilation, which may run on
@@ -645,7 +645,7 @@ class BaseShape;
 class UnownedBaseShape;
 namespace jit {
 class JitCode;
-}
+} // namespace jit
 
 typedef PreBarriered<JSObject*> PreBarrieredObject;
 typedef PreBarriered<JSScript*> PreBarrieredScript;

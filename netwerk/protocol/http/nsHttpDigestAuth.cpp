@@ -695,7 +695,7 @@ nsHttpDigestAuth::AppendQuotedString(const nsACString & value,
   return NS_OK;
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 // vim: ts=2 sw=2

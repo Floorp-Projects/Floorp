@@ -69,6 +69,6 @@ protected:
   nsTArray<TrackID> mUsedTracks;
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_MEDIASTREAMGRAPH_H_ */

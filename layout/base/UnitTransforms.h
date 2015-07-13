@@ -184,6 +184,6 @@ static Maybe<gfx::PointTyped<TargetUnits>> UntransformVector(const gfx::Matrix4x
   return Some(ViewAs<TargetUnits>(point.As2DPoint()));
 }
 
-}
+} // namespace mozilla
 
 #endif

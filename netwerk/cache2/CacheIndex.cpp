@@ -21,6 +21,7 @@
 #include "mozilla/AutoRestore.h"
 #include <algorithm>
 #include "mozilla/Telemetry.h"
+#include "mozilla/unused.h"
 
 
 #define kMinUnwrittenChanges   300
@@ -1609,7 +1610,7 @@ CacheIndex::WriteIndexToDisk()
   mSkipEntries = 0;
 }
 
-namespace { // anon
+namespace {
 
 struct WriteRecordsHelper
 {
@@ -1622,7 +1623,7 @@ struct WriteRecordsHelper
 #endif
 };
 
-} // anon
+} // namespace
 
 void
 CacheIndex::WriteRecords()
@@ -3045,7 +3046,7 @@ CacheIndex::FinishUpdate(bool aSucceeded)
       NS_WARNING(("CacheIndex::FinishUpdate() - Leaking mDirEnumerator!"));
       // This can happen only in case dispatching event to IO thread failed in
       // CacheIndex::PreShutdown().
-      mDirEnumerator.forget(); // Leak it since dir enumerator is not threadsafe
+      unused << mDirEnumerator.forget(); // Leak it since dir enumerator is not threadsafe
     } else {
       mDirEnumerator->Close();
       mDirEnumerator = nullptr;
@@ -3195,7 +3196,7 @@ CacheIndex::ReleaseBuffer()
   mRWBufPos = 0;
 }
 
-namespace { // anon
+namespace {
 
 class FrecencyComparator
 {
@@ -3215,7 +3216,7 @@ public:
   }
 };
 
-} // anon
+} // namespace
 
 void
 CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
@@ -3633,7 +3634,7 @@ CacheIndex::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
   return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace { // anon
+namespace {
 
 class HashComparator
 {
@@ -3679,7 +3680,7 @@ ReportHashSizeMatch(const SHA1Sum::Hash *aHash1, const SHA1Sum::Hash *aHash2)
   MOZ_ASSERT(false, "Found a collision in the index!");
 }
 
-} // anon
+} // namespace
 
 void
 CacheIndex::ReportHashStats()
@@ -3701,5 +3702,5 @@ CacheIndex::ReportHashStats()
   CacheObserver::SetHashStatsReported();
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

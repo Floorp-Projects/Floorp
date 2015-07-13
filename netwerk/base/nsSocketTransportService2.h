@@ -59,8 +59,8 @@ static const int32_t kDefaultTCPKeepCount =
 #else
                                               4;  // Specifiable in Linux.
 #endif
-}
-}
+} // namespace net
+} // namespace mozilla
 
 //-----------------------------------------------------------------------------
 

@@ -209,6 +209,6 @@ PrincipalVerifier::DispatchToInitiatingThread(nsresult aRv)
   }
 }
 
-} // namesapce cache
+} // namespace cache
 } // namespace dom
 } // namespace mozilla

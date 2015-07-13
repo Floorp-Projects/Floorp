@@ -142,5 +142,5 @@ GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
   return NS_OK;
 }
 
-} // namespace mozilla
 } // namespace downloads
+} // namespace mozilla

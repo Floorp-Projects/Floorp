@@ -105,7 +105,7 @@ public:
     }
 };
 
-} // anon namespace
+} // namespace
 
 nsFontMetrics::nsFontMetrics()
     : mDeviceContext(nullptr), mP2A(0), mTextRunRTL(false)
