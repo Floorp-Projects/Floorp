@@ -3392,7 +3392,7 @@ bool
 GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
                             HandleObject obj, const Value& idval, HandlePropertyName name)
 {
-    MOZ_ASSERT(index().reg().hasValue());
+    MOZ_ASSERT(index().hasValue());
 
     RootedNativeObject baseHolder(cx);
     RootedShape shape(cx);
@@ -3438,7 +3438,7 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
 
     // Ensure the index is a string.
-    ValueOperand val = index().reg().valueReg();
+    ValueOperand val = index().valueReg();
     masm.branchTestString(Assembler::NotEqual, val, &failures);
 
     Register scratch = output().valueReg().scratchReg();
@@ -3520,7 +3520,7 @@ GetElementIC::canAttachDenseElement(JSObject* obj, const Value& idval)
 static bool
 GenerateDenseElement(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                      JSObject* obj, const Value& idval, Register object,
-                     ConstantOrRegister index, TypedOrValueRegister output)
+                     TypedOrValueRegister index, TypedOrValueRegister output)
 {
     MOZ_ASSERT(GetElementIC::canAttachDenseElement(obj, idval));
 
@@ -3535,18 +3535,18 @@ GenerateDenseElement(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher
     // Ensure the index is an int32 value.
     Register indexReg = InvalidReg;
 
-    if (index.reg().hasValue()) {
+    if (index.hasValue()) {
         indexReg = output.scratchReg().gpr();
         MOZ_ASSERT(indexReg != InvalidReg);
-        ValueOperand val = index.reg().valueReg();
+        ValueOperand val = index.valueReg();
 
         masm.branchTestInt32(Assembler::NotEqual, val, &failures);
 
         // Unbox the index.
         masm.unboxInt32(val, indexReg);
     } else {
-        MOZ_ASSERT(!index.reg().typedReg().isFloat());
-        indexReg = index.reg().typedReg().gpr();
+        MOZ_ASSERT(!index.typedReg().isFloat());
+        indexReg = index.typedReg().gpr();
     }
 
     // Load elements vector.
@@ -3633,7 +3633,7 @@ GetElementIC::canAttachDenseElementHole(JSObject* obj, const Value& idval, Typed
 static bool
 GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                          IonScript* ion, JSObject* obj, const Value& idval,
-                         Register object, ConstantOrRegister index, TypedOrValueRegister output)
+                         Register object, TypedOrValueRegister index, TypedOrValueRegister output)
 {
     MOZ_ASSERT(GetElementIC::canAttachDenseElementHole(obj, idval, output));
 
@@ -3681,8 +3681,8 @@ GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
     // Ensure the index is an int32 value.
     Register indexReg = scratchReg;
 
-    MOZ_ASSERT(index.reg().hasValue());
-    ValueOperand val = index.reg().valueReg();
+    MOZ_ASSERT(index.hasValue());
+    ValueOperand val = index.valueReg();
 
     masm.branchTestInt32(Assembler::NotEqual, val, &failures);
 
@@ -3788,7 +3788,7 @@ static void
 GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
                                       IonCache::StubAttacher& attacher,
                                       HandleObject array, const Value& idval, Register object,
-                                      ConstantOrRegister index, TypedOrValueRegister output,
+                                      TypedOrValueRegister index, TypedOrValueRegister output,
                                       bool allowDoubleResult)
 {
     MOZ_ASSERT(GetElementIC::canAttachTypedOrUnboxedArrayElement(array, idval, output));
@@ -3801,20 +3801,19 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
     Register tmpReg = output.scratchReg().gpr();
     MOZ_ASSERT(tmpReg != InvalidReg);
     Register indexReg = tmpReg;
-    MOZ_ASSERT(!index.constant());
     if (idval.isString()) {
         MOZ_ASSERT(GetIndexFromString(idval.toString()) != UINT32_MAX);
 
         // Part 1: Get the string into a register
         Register str;
-        if (index.reg().hasValue()) {
-            ValueOperand val = index.reg().valueReg();
+        if (index.hasValue()) {
+            ValueOperand val = index.valueReg();
             masm.branchTestString(Assembler::NotEqual, val, &failures);
 
             str = masm.extractString(val, indexReg);
         } else {
-            MOZ_ASSERT(!index.reg().typedReg().isFloat());
-            str = index.reg().typedReg().gpr();
+            MOZ_ASSERT(!index.typedReg().isFloat());
+            str = index.typedReg().gpr();
         }
 
         // Part 2: Call to translate the str into index
@@ -3839,15 +3838,15 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
     } else {
         MOZ_ASSERT(idval.isInt32());
 
-        if (index.reg().hasValue()) {
-            ValueOperand val = index.reg().valueReg();
+        if (index.hasValue()) {
+            ValueOperand val = index.valueReg();
             masm.branchTestInt32(Assembler::NotEqual, val, &failures);
 
             // Unbox the index.
             masm.unboxInt32(val, indexReg);
         } else {
-            MOZ_ASSERT(!index.reg().typedReg().isFloat());
-            indexReg = index.reg().typedReg().gpr();
+            MOZ_ASSERT(!index.typedReg().isFloat());
+            indexReg = index.typedReg().gpr();
         }
     }
 
@@ -3945,20 +3944,19 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
 
     // Decide to what type index the stub should be optimized
     Register indexReg;
-    MOZ_ASSERT(!index().constant());
 
     // Check index against length.
     Label failureRestoreIndex;
-    if (index().reg().hasValue()) {
-        ValueOperand val = index().reg().valueReg();
+    if (index().hasValue()) {
+        ValueOperand val = index().valueReg();
         masm.branchTestInt32(Assembler::NotEqual, val, &failures);
         indexReg = val.scratchReg();
 
         masm.unboxInt32(val, indexReg);
         masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failureRestoreIndex);
     } else {
-        MOZ_ASSERT(index().reg().type() == MIRType_Int32);
-        indexReg = index().reg().typedReg().gpr();
+        MOZ_ASSERT(index().type() == MIRType_Int32);
+        indexReg = index().typedReg().gpr();
         masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failures);
     }
     // Save indexReg because it needs to be clobbered to check deleted bit.
@@ -3991,20 +3989,20 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
 
     if (output().hasTyped()) {
         MOZ_ASSERT(!output().typedReg().isFloat());
-        MOZ_ASSERT(index().reg().type() == MIRType_Boolean ||
-                   index().reg().type() == MIRType_Int32 ||
-                   index().reg().type() == MIRType_String ||
-                   index().reg().type() == MIRType_Symbol ||
-                   index().reg().type() == MIRType_Object);
-        masm.branchTestMIRType(Assembler::NotEqual, elemIdx, index().reg().type(),
+        MOZ_ASSERT(index().type() == MIRType_Boolean ||
+                   index().type() == MIRType_Int32 ||
+                   index().type() == MIRType_String ||
+                   index().type() == MIRType_Symbol ||
+                   index().type() == MIRType_Object);
+        masm.branchTestMIRType(Assembler::NotEqual, elemIdx, index().type(),
                                &failureRestoreIndex);
     }
 
     masm.loadTypedOrValue(elemIdx, output());
 
     // indexReg may need to be reconstructed if it was originally a value.
-    if (index().reg().hasValue())
-        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().reg().valueReg());
+    if (index().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().valueReg());
 
     // Success.
     attacher.jumpRejoin(masm);
@@ -4013,8 +4011,8 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
     masm.bind(&failurePopIndex);
     masm.pop(indexReg);
     masm.bind(&failureRestoreIndex);
-    if (index().reg().hasValue())
-        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().reg().valueReg());
+    if (index().hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().valueReg());
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
 
@@ -4061,9 +4059,8 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
     if (cache.canAttachStub()) {
         if (IsOptimizableArgumentsObjectForGetElem(obj, idval) &&
             !cache.hasArgumentsStub(obj->is<StrictArgumentsObject>()) &&
-            !cache.index().constant() &&
-            (cache.index().reg().hasValue() ||
-             cache.index().reg().type() == MIRType_Int32) &&
+            (cache.index().hasValue() ||
+             cache.index().type() == MIRType_Int32) &&
             (cache.output().hasValue() || !cache.output().typedReg().isFloat()))
         {
             if (!cache.attachArgumentsElement(cx, outerScript, ion, obj))
