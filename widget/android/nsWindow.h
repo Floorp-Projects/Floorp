@@ -183,12 +183,14 @@ protected:
         }
         IMEChange(const IMENotification& aIMENotification)
             : mStart(aIMENotification.mTextChangeData.mStartOffset)
-            , mOldEnd(aIMENotification.mTextChangeData.mOldEndOffset)
-            , mNewEnd(aIMENotification.mTextChangeData.mNewEndOffset)
+            , mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset)
+            , mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset)
         {
             MOZ_ASSERT(aIMENotification.mMessage ==
                            mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
                        "IMEChange initialized with wrong notification");
+            MOZ_ASSERT(aIMENotification.mTextChangeData.IsValid(),
+                       "The text change notification isn't initialized");
             MOZ_ASSERT(aIMENotification.mTextChangeData.IsInInt32Range(),
                        "The text change notification is out of range");
         }

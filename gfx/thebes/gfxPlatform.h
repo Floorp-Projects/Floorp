@@ -69,41 +69,12 @@ BackendTypeBit(BackendType b)
 extern cairo_user_data_key_t kDrawTarget;
 
 // pref lang id's for font prefs
-// !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
-// !!! don't use as bit mask, this may grow larger !!!
-
 enum eFontPrefLang {
-    eFontPrefLang_Western     =  0,
-    eFontPrefLang_Japanese    =  1,
-    eFontPrefLang_ChineseTW   =  2,
-    eFontPrefLang_ChineseCN   =  3,
-    eFontPrefLang_ChineseHK   =  4,
-    eFontPrefLang_Korean      =  5,
-    eFontPrefLang_Cyrillic    =  6,
-    eFontPrefLang_Greek       =  7,
-    eFontPrefLang_Thai        =  8,
-    eFontPrefLang_Hebrew      =  9,
-    eFontPrefLang_Arabic      = 10,
-    eFontPrefLang_Devanagari  = 11,
-    eFontPrefLang_Tamil       = 12,
-    eFontPrefLang_Armenian    = 13,
-    eFontPrefLang_Bengali     = 14,
-    eFontPrefLang_Canadian    = 15,
-    eFontPrefLang_Ethiopic    = 16,
-    eFontPrefLang_Georgian    = 17,
-    eFontPrefLang_Gujarati    = 18,
-    eFontPrefLang_Gurmukhi    = 19,
-    eFontPrefLang_Khmer       = 20,
-    eFontPrefLang_Malayalam   = 21,
-    eFontPrefLang_Oriya       = 22,
-    eFontPrefLang_Telugu      = 23,
-    eFontPrefLang_Kannada     = 24,
-    eFontPrefLang_Sinhala     = 25,
-    eFontPrefLang_Tibetan     = 26,
+    #define FONT_PREF_LANG(enum_id_, str_, atom_id_) eFontPrefLang_ ## enum_id_
+    #include "gfxFontPrefLangList.h"
+    #undef FONT_PREF_LANG
 
-    eFontPrefLang_Others      = 27, // x-unicode
-
-    eFontPrefLang_CJKSet      = 28  // special code for CJK set
+    , eFontPrefLang_CJKSet  // special code for CJK set
 };
 
 enum eCMSMode {

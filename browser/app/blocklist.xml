@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1435698725000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1436560690000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -162,7 +162,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i926" id="{B1FC07E1-E05B-4567-8891-E63FBE545BA8}">
-                        <versionRange  minVersion="0" maxVersion="1.2.0" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -293,7 +293,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i914" id="{0153E448-190B-4987-BDE1-F256CADA672F}">
-                        <versionRange  minVersion="0" maxVersion="15.0.6" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -484,7 +484,7 @@
       <emItem  blockID="i916" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
-                                <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -776,7 +776,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i924" id="{DAC3F861-B30D-40dd-9166-F4E75327FAC7}">
-                        <versionRange  minVersion="0" maxVersion="1.3.1" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -821,7 +821,7 @@
       <emItem  blockID="i918" os="WINNT" id="{C3949AC2-4B17-43ee-B4F1-D26B9D42404D}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
-                                <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -995,7 +995,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i922" id="{34712C68-7391-4c47-94F3-8F88D49AD632}">
-                        <versionRange  minVersion="0" maxVersion="1.3.0" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -1723,7 +1723,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i920" id="{FCE04E1F-9378-4f39-96F6-5689A9159E45}">
-                        <versionRange  minVersion="0" maxVersion="1.3.2" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -3059,6 +3059,18 @@
           </pluginItem>
       <pluginItem  os="Linux" blockID="p932">
                   <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.442" maxVersion="11.2.202.467" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p936">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.468" maxVersion="11.2.202.480" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p938">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.194" maxVersion="18.0.0.202" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p940">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="13.0.0.296" maxVersion="13.0.0.301" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
     </pluginItems>

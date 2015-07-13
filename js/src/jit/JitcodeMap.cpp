@@ -229,9 +229,7 @@ RejoinEntry(JSRuntime* rt, const JitcodeGlobalEntry::IonCacheEntry& cache,
 void*
 JitcodeGlobalEntry::IonCacheEntry::canonicalNativeAddrFor(JSRuntime* rt, void* ptr) const
 {
-    JitcodeGlobalEntry entry;
-    RejoinEntry(rt, *this, ptr, &entry);
-    return entry.canonicalNativeAddrFor(rt, rejoinAddr());
+    return nativeStartAddr_;
 }
 
 bool
@@ -261,7 +259,7 @@ JitcodeGlobalEntry::IonCacheEntry::youngestFrameLocationAtAddr(JSRuntime* rt, vo
 {
     JitcodeGlobalEntry entry;
     RejoinEntry(rt, *this, ptr, &entry);
-    return entry.youngestFrameLocationAtAddr(rt, ptr, script, pc);
+    return entry.youngestFrameLocationAtAddr(rt, rejoinAddr(), script, pc);
 }
 
 
@@ -983,6 +981,57 @@ JitcodeGlobalEntry::IonCacheEntry::isMarkedFromAnyThread(JSRuntime* rt)
     return entry.isMarkedFromAnyThread(rt);
 }
 
+Maybe<uint8_t>
+JitcodeGlobalEntry::IonCacheEntry::trackedOptimizationIndexAtAddr(
+        JSRuntime *rt,
+        void* ptr,
+        uint32_t* entryOffsetOut)
+{
+    MOZ_ASSERT(hasTrackedOptimizations());
+    MOZ_ASSERT(containsPointer(ptr));
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, ptr, &entry);
+
+    if (!entry.hasTrackedOptimizations())
+        return mozilla::Nothing();
+
+    uint32_t mainEntryOffsetOut;
+    Maybe<uint8_t> maybeIndex =
+        entry.trackedOptimizationIndexAtAddr(rt, rejoinAddr(), &mainEntryOffsetOut);
+    if (maybeIndex.isNothing())
+        return mozilla::Nothing();
+
+    // For IonCache, the canonical address is just the start of the addr.
+    *entryOffsetOut = 0;
+    return maybeIndex;
+}
+
+void
+JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationAttempt(
+        JSRuntime *rt, uint8_t index, JS::ForEachTrackedOptimizationAttemptOp& op)
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, nativeStartAddr(), &entry);
+    if (!entry.hasTrackedOptimizations())
+        return;
+    entry.forEachOptimizationAttempt(rt, index, op);
+
+    // Record the outcome associated with the stub.
+    op(TrackedStrategy::InlineCache_OptimizedStub, trackedOutcome_);
+}
+
+void
+JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationTypeInfo(
+        JSRuntime *rt, uint8_t index,
+        IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op)
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, nativeStartAddr(), &entry);
+    if (!entry.hasTrackedOptimizations())
+        return;
+    entry.forEachOptimizationTypeInfo(rt, index, op);
+}
+
 /* static */ void
 JitcodeRegionEntry::WriteHead(CompactBufferWriter& writer,
                               uint32_t nativeOffset, uint8_t scriptDepth)
@@ -1564,7 +1613,8 @@ JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, js::jit::Jit
     addr_(addr),
     canonicalAddr_(nullptr),
     label_(label),
-    depth_(depth)
+    depth_(depth),
+    optsIndex_()
 {
     updateHasTrackedOptimizations();
 

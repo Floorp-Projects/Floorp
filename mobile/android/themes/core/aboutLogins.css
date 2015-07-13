@@ -5,6 +5,14 @@
 %filter substitution
 %include defines.inc
 
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+}
+
 .hidden {
   display: none;
 }
@@ -73,6 +81,70 @@
   height: 32px;
   width: 32px;
   margin: 0 5px;
+}
+
+.edit-login-icon {
+  background-image: url("resource://android/res/drawable-hdpi-v4/favicon_globe.png");
+  background-position: center;
+  background-size: 32px 32px;
+  background-repeat: no-repeat;
+  height: 32px;
+  width: 32px;
+  padding: 5px;
+}
+
+#edit-login-page {
+  background-color: #FFFFFF;
+  height: 100%;
+}
+
+
+#save-btn {
+  flex: 1;
+  height: 60px;
+  background-color: #E66000; /*matched to action_orange in java codebase*/
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 4px;
+  border-width: 0px;
+  margin-top: 10px;
+}
+
+.password-btn-hide {
+  background-color: #777777;
+  color: white;
+}
+
+.edit-login-input {
+  flex: 1;
+  height: 36px;
+  font-size: 15px;
+  color: #222222;
+  border-radius: 4px;
+  border: solid 1px #AFB1B3;
+  padding-left: 10px;
+}
+
+.edit-login-div {
+  margin: 20px 30px;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+}
+
+#password-btn {
+  border-radius: 4px;
+  border-top-left-radius: 0em 0em;
+  border-bottom-left-radius: 0em  0em;
+  font-size: 15px;
+  height: 40px;
+}
+
+#password {
+  margin: none;
+  border-top-right-radius: 0em 0em;
+  border-bottom-right-radius: 0em  0em;
 }
 
 .icon {

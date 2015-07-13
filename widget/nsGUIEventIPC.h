@@ -679,8 +679,8 @@ struct ParamTraits<mozilla::widget::IMENotification>
         return;
       case mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE:
         WriteParam(aMsg, aParam.mTextChangeData.mStartOffset);
-        WriteParam(aMsg, aParam.mTextChangeData.mOldEndOffset);
-        WriteParam(aMsg, aParam.mTextChangeData.mNewEndOffset);
+        WriteParam(aMsg, aParam.mTextChangeData.mRemovedEndOffset);
+        WriteParam(aMsg, aParam.mTextChangeData.mAddedEndOffset);
         WriteParam(aMsg, aParam.mTextChangeData.mCausedByComposition);
         return;
       case mozilla::widget::NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
@@ -724,9 +724,9 @@ struct ParamTraits<mozilla::widget::IMENotification>
         return ReadParam(aMsg, aIter,
                          &aResult->mTextChangeData.mStartOffset) &&
                ReadParam(aMsg, aIter,
-                         &aResult->mTextChangeData.mOldEndOffset) &&
+                         &aResult->mTextChangeData.mRemovedEndOffset) &&
                ReadParam(aMsg, aIter,
-                         &aResult->mTextChangeData.mNewEndOffset) &&
+                         &aResult->mTextChangeData.mAddedEndOffset) &&
                ReadParam(aMsg, aIter,
                          &aResult->mTextChangeData.mCausedByComposition);
       case mozilla::widget::NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:

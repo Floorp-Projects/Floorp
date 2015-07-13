@@ -9,6 +9,7 @@
 //   * A page with tracking elements is loaded and they are not blocked.
 // See also Bugs 1175327, 1043801, 1178985
 
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const PREF = "privacy.trackingprotection.enabled";
 const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
@@ -16,8 +17,11 @@ const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/
 let TrackingProtection = null;
 let browser = null;
 
+let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+
 registerCleanupFunction(function() {
   TrackingProtection = browser = null;
+  UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(PREF);
   Services.prefs.clearUserPref(PB_PREF);
   while (gBrowser.tabs.length > 1) {
@@ -108,7 +112,7 @@ function* testTrackingProtectionForTab(tab) {
 }
 
 add_task(function* testNormalBrowsing() {
-  yield updateTrackingProtectionDatabase();
+  yield UrlClassifierTestUtils.addTestTrackers();
 
   browser = gBrowser;
   let tab = browser.selectedTab = browser.addTab();

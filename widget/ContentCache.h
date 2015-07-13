@@ -14,17 +14,12 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/WritingModes.h"
+#include "nsIWidget.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "Units.h"
 
-class nsIWidget;
-
 namespace mozilla {
-
-namespace widget {
-struct IMENotification;
-}
 
 class ContentCacheInParent;
 
@@ -315,6 +310,21 @@ public:
   bool OnCompositionEvent(const WidgetCompositionEvent& aCompositionEvent);
 
   /**
+   * OnSelectionEvent() should be called before sending selection event.
+   */
+  void OnSelectionEvent(const WidgetSelectionEvent& aSelectionEvent);
+
+  /**
+   * OnEventNeedingAckReceived() should be called when the child process
+   * receives a sent event which needs acknowledging.
+   *
+   * WARNING: This may send notifications to IME.  That might cause destroying
+   *          TabParent or aWidget.  Therefore, the caller must not destroy
+   *          this instance during a call of this method.
+   */
+  void OnEventNeedingAckReceived(nsIWidget* aWidget, uint32_t aMessage);
+
+  /**
    * RequestToCommitComposition() requests to commit or cancel composition to
    * the widget.  If it's handled synchronously, this returns the number of
    * composition events after that.
@@ -333,13 +343,18 @@ public:
                                       nsAString& aLastString);
 
   /**
-   * InitNotification() initializes aNotification with stored data.
-   *
-   * @param aNotification       Must be NOTIFY_IME_OF_SELECTION_CHANGE.
+   * MaybeNotifyIME() may notify IME of the notification.  If child process
+   * hasn't been handled all sending events yet, this stores the notification
+   * and flush it later.
    */
-  void InitNotification(IMENotification& aNotification) const;
+  void MaybeNotifyIME(nsIWidget* aWidget,
+                      IMENotification& aNotification);
 
 private:
+  IMENotification mPendingSelectionChange;
+  IMENotification mPendingTextChange;
+  IMENotification mPendingCompositionUpdate;
+
   // This is commit string which is caused by our request.
   nsString mCommitStringByRequest;
   // Start offset of the composition string.
@@ -347,6 +362,10 @@ private:
   // Count of composition events during requesting commit or cancel the
   // composition.
   uint32_t mCompositionEventsDuringRequest;
+  // mPendingEventsNeedingAck is increased before sending a composition event or
+  // a selection event and decreased after they are received in the child
+  // process.
+  uint32_t mPendingEventsNeedingAck;
 
   bool mIsComposing;
   bool mRequestedToCommitOrCancelComposition;
@@ -358,6 +377,7 @@ private:
                          uint32_t aLength,
                          LayoutDeviceIntRect& aUnionTextRect) const;
 
+  void FlushPendingNotifications(nsIWidget* aWidget);
 };
 
 } // namespace mozilla

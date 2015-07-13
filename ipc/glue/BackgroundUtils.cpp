@@ -233,6 +233,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
     aLoadInfoArgs->securityFlags() = aLoadInfo->GetSecurityFlags();
     aLoadInfoArgs->contentPolicyType() = aLoadInfo->GetContentPolicyType();
+    aLoadInfoArgs->upgradeInsecureRequests() = aLoadInfo->GetUpgradeInsecureRequests();
     aLoadInfoArgs->innerWindowID() = aLoadInfo->GetInnerWindowID();
     aLoadInfoArgs->outerWindowID() = aLoadInfo->GetOuterWindowID();
     aLoadInfoArgs->parentOuterWindowID() = aLoadInfo->GetParentOuterWindowID();
@@ -248,6 +249,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
   aLoadInfoArgs->securityFlags() = nsILoadInfo::SEC_NORMAL;
   aLoadInfoArgs->contentPolicyType() = nsIContentPolicy::TYPE_OTHER;
+  aLoadInfoArgs->upgradeInsecureRequests() = false;
   aLoadInfoArgs->innerWindowID() = 0;
   aLoadInfoArgs->outerWindowID() = 0;
   aLoadInfoArgs->parentOuterWindowID() = 0;
@@ -271,6 +273,7 @@ LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                           triggeringPrincipal,
                           aLoadInfoArgs.securityFlags(),
                           aLoadInfoArgs.contentPolicyType(),
+                          aLoadInfoArgs.upgradeInsecureRequests(),
                           aLoadInfoArgs.innerWindowID(),
                           aLoadInfoArgs.outerWindowID(),
                           aLoadInfoArgs.parentOuterWindowID());

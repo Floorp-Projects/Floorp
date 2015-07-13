@@ -963,9 +963,7 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
     return;
   }
 
-  MOZ_ASSERT((mFrameCount == 1 && aNewFrameCount == 1) ||
-             mFrameCount < aNewFrameCount,
-             "Frame count running backwards");
+  MOZ_ASSERT(aNewFrameCount <= mFrameCount + 1, "Skipped a frame?");
 
   if (mError) {
     return;  // We're in an error state, possibly due to OOM. Bail.
@@ -1034,7 +1032,7 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
 }
 
 void
-RasterImage::OnDecodingComplete()
+RasterImage::OnDecodingComplete(bool aIsAnimated)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1045,10 +1043,28 @@ RasterImage::OnDecodingComplete()
   // Flag that we've been decoded before.
   mHasBeenDecoded = true;
 
-  // Let our FrameAnimator know not to expect any more frames.
-  if (mAnim) {
-    mAnim->SetDoneDecoding(true);
+  if (aIsAnimated) {
+    if (mAnim) {
+      mAnim->SetDoneDecoding(true);
+    } else {
+      // The OnAddedFrame event that will create mAnim is still in the event
+      // queue. Wait for it.
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethod(this, &RasterImage::MarkAnimationDecoded);
+      NS_DispatchToMainThread(runnable);
+    }
   }
+}
+
+void
+RasterImage::MarkAnimationDecoded()
+{
+  MOZ_ASSERT(mAnim, "Should have an animation now");
+  if (!mAnim) {
+    return;
+  }
+
+  mAnim->SetDoneDecoding(true);
 }
 
 NS_IMETHODIMP
@@ -1450,18 +1466,6 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
     // The corresponding unlock happens in FinalizeDecoder.
     LockImage();
     decoder->SetImageIsLocked();
-  }
-
-  if (aSize) {
-    // We already have the size; tell the decoder so it can preallocate a
-    // frame.  By default, we create an ARGB frame with no offset. If decoders
-    // need a different type, they need to ask for it themselves.
-    // XXX(seth): Note that we call SetSize() and NeedNewFrame() with the
-    // image's intrinsic size, but AllocateFrame with our target size.
-    decoder->SetSize(mSize, mOrientation);
-    decoder->NeedNewFrame(0, 0, 0, aSize->width, aSize->height,
-                          SurfaceFormat::B8G8R8A8);
-    decoder->AllocateFrame(*aSize);
   }
 
   if (aSize && decoder->HasError()) {

@@ -332,6 +332,8 @@ class CacheScriptLoader;
 class CacheCreator final : public PromiseNativeHandler
 {
 public:
+  NS_DECL_ISUPPORTS
+
   explicit CacheCreator(WorkerPrivate* aWorkerPrivate)
     : mCacheName(aWorkerPrivate->ServiceWorkerCacheName())
     , mPrivateBrowsing(aWorkerPrivate->IsInPrivateBrowsing())
@@ -398,11 +400,13 @@ private:
   bool mPrivateBrowsing;
 };
 
+NS_IMPL_ISUPPORTS0(CacheCreator)
+
 class CacheScriptLoader final : public PromiseNativeHandler
                                   , public nsIStreamLoaderObserver
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
 
   CacheScriptLoader(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo& aLoadInfo,
@@ -453,6 +457,8 @@ NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
 class CachePromiseHandler final : public PromiseNativeHandler
 {
 public:
+  NS_DECL_ISUPPORTS
+
   CachePromiseHandler(ScriptLoaderRunnable* aRunnable,
                       ScriptLoadInfo& aLoadInfo,
                       uint32_t aIndex)
@@ -480,6 +486,8 @@ private:
   ScriptLoadInfo& mLoadInfo;
   uint32_t mIndex;
 };
+
+NS_IMPL_ISUPPORTS0(CachePromiseHandler)
 
 class ScriptLoaderRunnable final : public WorkerFeature,
                                    public nsIRunnable,

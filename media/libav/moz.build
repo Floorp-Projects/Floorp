@@ -1,0 +1,61 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Due to duplicate file names, we compile libavutil/x86/cpu.c in its own
+# moz.build file.
+DIRS += ['libavutil/x86']
+
+EXPORTS.libavcodec += [
+    'libavcodec/avfft.h',
+    'libavcodec/fft.h'
+]
+
+EXPORTS.libavutil += [
+    'libavutil/mem.h'
+]
+
+SOURCES += [
+    'libavcodec/avfft.c',
+    'libavcodec/fft_fixed.c',
+    'libavcodec/fft_float.c',
+    'libavcodec/rdft.c',
+    'libavcodec/x86/fft.asm',
+    'libavcodec/x86/fft_init.c',
+    'libavutil/avstring.c',
+    'libavutil/cpu.c',
+    'libavutil/dict.c',
+    'libavutil/error.c',
+    'libavutil/eval.c',
+    'libavutil/file.c',
+    'libavutil/file_open.c',
+    'libavutil/intmath.c',
+    'libavutil/log.c',
+    'libavutil/log2_tab.c',
+    'libavutil/mathematics.c',
+    'libavutil/mem.c',
+    'libavutil/opt.c',
+    'libavutil/parseutils.c',
+    'libavutil/random_seed.c',
+    'libavutil/rational.c',
+    'libavutil/sha.c',
+    'libavutil/x86/cpuid.asm'
+]
+
+# Dummy functions are required for windows NoOpt/PGO builds.
+if CONFIG['_MSC_VER']:
+    SOURCES += [
+        'avfft_dummy_funcs.c'
+    ]
+
+# OS X requires a special header to make sure symbols are exported publicly in
+# the lgpl shared library, since it does not yet use system headers. This is
+# also used on linux for the time being, to avoid having to patch libav code.
+#
+# TODO: Remove header and patch libav once OS X supports system headers
+if CONFIG['OS_ARCH'] != 'WINNT':
+    SOURCES['libavcodec/avfft.c'].flags += ['-include', 'avfft_perms.h']
+
+include("libavcommon.mozbuild")

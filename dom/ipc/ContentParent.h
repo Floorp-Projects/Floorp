@@ -752,24 +752,16 @@ private:
 
     virtual bool RecvFirstIdle() override;
 
-    virtual bool RecvAudioChannelGetState(const AudioChannel& aChannel,
-                                          const bool& aElementHidden,
-                                          const bool& aElementWasHidden,
-                                          AudioChannelState* aValue) override;
-
-    virtual bool RecvAudioChannelRegisterType(const AudioChannel& aChannel,
-                                              const bool& aWithVideo) override;
-    virtual bool RecvAudioChannelUnregisterType(const AudioChannel& aChannel,
-                                                const bool& aElementHidden,
-                                                const bool& aWithVideo) override;
-
-    virtual bool RecvAudioChannelChangedNotification() override;
-
     virtual bool RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                      const bool& aHidden) override;
+
+    virtual bool RecvAudioChannelServiceStatus(const bool& aTelephonyChannel,
+                                               const bool& aContentOrNormalChannel,
+                                               const bool& aAnyChannel) override;
+
     virtual bool RecvGetSystemMemory(const uint64_t& getterId) override;
 
-    virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
+    virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
     virtual bool RecvDataStoreGetStores(
                        const nsString& aName,

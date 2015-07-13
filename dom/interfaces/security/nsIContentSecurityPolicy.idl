@@ -20,7 +20,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(059b94e3-45c2-4794-ac2a-5b66a66b5967)]
+[scriptable, uuid(b622b0f8-ee51-4f7a-8c23-b3bce20e752e)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -32,23 +32,24 @@ interface nsIContentSecurityPolicy : nsISerializable
    * NOTE: When implementing a new directive, you will need to add it here but also
    * add it to the CSPStrDirectives array in nsCSPUtils.h.
    */
-  const unsigned short NO_DIRECTIVE               = 0;
-  const unsigned short DEFAULT_SRC_DIRECTIVE      = 1;
-  const unsigned short SCRIPT_SRC_DIRECTIVE       = 2;
-  const unsigned short OBJECT_SRC_DIRECTIVE       = 3;
-  const unsigned short STYLE_SRC_DIRECTIVE        = 4;
-  const unsigned short IMG_SRC_DIRECTIVE          = 5;
-  const unsigned short MEDIA_SRC_DIRECTIVE        = 6;
-  const unsigned short FRAME_SRC_DIRECTIVE        = 7;
-  const unsigned short FONT_SRC_DIRECTIVE         = 8;
-  const unsigned short CONNECT_SRC_DIRECTIVE      = 9;
-  const unsigned short REPORT_URI_DIRECTIVE       = 10;
-  const unsigned short FRAME_ANCESTORS_DIRECTIVE  = 11;
-  const unsigned short REFLECTED_XSS_DIRECTIVE    = 12;
-  const unsigned short BASE_URI_DIRECTIVE         = 13;
-  const unsigned short FORM_ACTION_DIRECTIVE      = 14;
-  const unsigned short REFERRER_DIRECTIVE         = 15;
-  const unsigned short WEB_MANIFEST_SRC_DIRECTIVE = 16;
+  const unsigned short NO_DIRECTIVE                   = 0;
+  const unsigned short DEFAULT_SRC_DIRECTIVE          = 1;
+  const unsigned short SCRIPT_SRC_DIRECTIVE           = 2;
+  const unsigned short OBJECT_SRC_DIRECTIVE           = 3;
+  const unsigned short STYLE_SRC_DIRECTIVE            = 4;
+  const unsigned short IMG_SRC_DIRECTIVE              = 5;
+  const unsigned short MEDIA_SRC_DIRECTIVE            = 6;
+  const unsigned short FRAME_SRC_DIRECTIVE            = 7;
+  const unsigned short FONT_SRC_DIRECTIVE             = 8;
+  const unsigned short CONNECT_SRC_DIRECTIVE          = 9;
+  const unsigned short REPORT_URI_DIRECTIVE           = 10;
+  const unsigned short FRAME_ANCESTORS_DIRECTIVE      = 11;
+  const unsigned short REFLECTED_XSS_DIRECTIVE        = 12;
+  const unsigned short BASE_URI_DIRECTIVE             = 13;
+  const unsigned short FORM_ACTION_DIRECTIVE          = 14;
+  const unsigned short REFERRER_DIRECTIVE             = 15;
+  const unsigned short WEB_MANIFEST_SRC_DIRECTIVE     = 16;
+  const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 17;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -61,6 +62,13 @@ interface nsIContentSecurityPolicy : nsISerializable
    * getPolicy().
    */
   readonly attribute unsigned long policyCount;
+
+  /**
+   * Returns whether this policy uses the directive upgrade-insecure-requests.
+   * Please note that upgrade-insecure-reqeusts also applies if the parent or
+   * including document (context) makes use of the directive.
+   */
+  readonly attribute bool upgradeInsecureRequests;
 
   /**
    * Obtains the referrer policy (as integer) for this browsing context as

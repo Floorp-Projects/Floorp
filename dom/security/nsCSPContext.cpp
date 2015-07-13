@@ -305,6 +305,19 @@ nsCSPContext::GetPolicyCount(uint32_t *outPolicyCount)
 }
 
 NS_IMETHODIMP
+nsCSPContext::GetUpgradeInsecureRequests(bool *outUpgradeRequest)
+{
+  *outUpgradeRequest = false;
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (mPolicies[i]->hasDirective(nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
+      *outUpgradeRequest = true;
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 {
   *outIsSet = false;

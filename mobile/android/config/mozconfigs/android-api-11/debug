@@ -16,4 +16,3 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 ac_add_options --enable-warnings-as-errors
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
-

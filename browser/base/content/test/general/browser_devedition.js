@@ -1,8 +1,8 @@
 /*
  * Testing changes for Developer Edition theme.
  * A special stylesheet should be added to the browser.xul document
- * when browser.devedition.theme.enabled is set to true and no themes
- * are applied.
+ * when the firefox-devedition@mozilla.org lightweight theme
+ * is applied.
  */
 
 const PREF_LWTHEME_USED_THEMES = "lightweightThemes.usedThemes";

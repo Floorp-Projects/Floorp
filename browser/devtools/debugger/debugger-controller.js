@@ -1886,6 +1886,12 @@ EventListeners.prototype = {
           definitionSite = fetchedDefinitions.get(listener.function.actor);
         } else if (listener.function.class == "Function") {
           definitionSite = yield this._getDefinitionSite(listener.function);
+          if (!definitionSite) {
+            // We don't know where this listener comes from so don't show it in
+            // the UI as breaking on it doesn't work (bug 942899).
+            continue;
+          }
+
           fetchedDefinitions.set(listener.function.actor, definitionSite);
         }
         listener.function.url = definitionSite;
@@ -1926,8 +1932,10 @@ EventListeners.prototype = {
         // Don't make this error fatal, because it would break the entire events pane.
         const msg = "Error getting function definition site: " + aResponse.message;
         DevToolsUtils.reportException("_getDefinitionSite", msg);
+        deferred.resolve(null);
+      } else {
+        deferred.resolve(aResponse.source.url);
       }
-      deferred.resolve(aResponse.source.url);
     });
 
     return deferred.promise;
