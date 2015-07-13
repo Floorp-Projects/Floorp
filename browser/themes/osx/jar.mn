@@ -55,6 +55,8 @@ browser.jar:
   skin/classic/browser/identity-mixed-active-blocked.svg    (../shared/identity-block/identity-mixed-active-blocked.svg)
   skin/classic/browser/identity-mixed-passive-loaded.svg    (../shared/identity-block/identity-mixed-passive-loaded.svg)
   skin/classic/browser/identity-mixed-active-loaded.svg     (../shared/identity-block/identity-mixed-active-loaded.svg)
+  skin/classic/browser/tracking-protection-16.svg           (../shared/identity-block/tracking-protection-16.svg)
+  skin/classic/browser/tracking-protection-disabled-16.svg  (../shared/identity-block/tracking-protection-disabled-16.svg)
   skin/classic/browser/Info.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/keyhole-circle@2x.png

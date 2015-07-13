@@ -762,6 +762,7 @@
                    onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
                    ondragstart="gIdentityHandler.onDragStart(event);">
+                <image id="tracking-protection-icon"/>
                 <image id="page-proxy-favicon"
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"
