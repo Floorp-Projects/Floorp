@@ -36,7 +36,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "gfxReusableSurfaceWrapper.h"
 #include "pratom.h"                     // For PR_ATOMIC_INCREMENT/DECREMENT
-#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace layers {

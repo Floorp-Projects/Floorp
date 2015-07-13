@@ -14,7 +14,6 @@
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
 #include "gfxColor.h"
-#include "gfxPrefs.h"                   // for LayoutUseContainersForRootFrames
 #include "nsString.h"
 
 namespace IPC {
@@ -540,10 +539,9 @@ public:
     return mIsLayersIdRoot;
   }
 
-  void SetUsesContainerScrolling(bool aValue) {
-    MOZ_ASSERT_IF(aValue, gfxPrefs::LayoutUseContainersForRootFrames());
-    mUsesContainerScrolling = aValue;
-  }
+  // Implemented out of line because the implementation needs gfxPrefs.h
+  // and we don't want to include that from FrameMetrics.h.
+  void SetUsesContainerScrolling(bool aValue);
   bool UsesContainerScrolling() const {
     return mUsesContainerScrolling;
   }
