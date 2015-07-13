@@ -27,8 +27,10 @@ add_task(function* test_healthreport_search_recording() {
   let now = new Date();
   let oldCount = 0;
 
-  // This will to be need changed if default search engine is not Yahoo.
-  let defaultEngineID = "yahoo";
+  // This will to be need changed if default search engine is not Google.
+  // Note: geoSpecificDefaults are disabled for mochitests, so this is the
+  // non-US en-US default.
+  let defaultEngineID = "google";
 
   let field = defaultEngineID + ".urlbar";
 

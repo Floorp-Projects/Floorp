@@ -13,8 +13,6 @@ let gContentWindow;
 let highlight = document.getElementById("UITourHighlightContainer");
 let tooltip = document.getElementById("UITourTooltip");
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   UITourTest();
 }

@@ -13,8 +13,6 @@ let gContentWindow;
 let highlight = document.getElementById("UITourHighlight");
 let tooltip = document.getElementById("UITourTooltip");
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   registerCleanupFunction(() => {
     // Close the find bar in case it's open in the remaining tab

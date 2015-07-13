@@ -1538,15 +1538,18 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/bookmark.png");
-  -moz-image-region: rect(0px 32px 16px 16px);
+  list-style-image: url("chrome://browser/skin/places/autocomplete-star.png");
+  -moz-image-region: rect(0 16px 16px 0);
   width: 16px;
   height: 16px;
 }
 
-richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
-.autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
-  -moz-image-region: rect(0px 48px 16px 32px);
+@media (min-resolution: 1.1dppx) {
+  .ac-result-type-bookmark,
+  .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
+    list-style-image: url("chrome://browser/skin/places/autocomplete-star@2x.png");
+    -moz-image-region: rect(0 32px 32px 0);
+  }
 }
 
 .ac-result-type-keyword,
@@ -1559,6 +1562,18 @@ richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-si
 
 @media not all and (-moz-os-version: windows-vista) and (-moz-windows-default-theme) {
   @media not all and (-moz-os-version: windows-win7) and (-moz-windows-default-theme) {
+    richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
+    .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
+      -moz-image-region: rect(0 32px 16px 16px);
+    }
+
+    @media (min-resolution: 1.1dppx) {
+      richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
+      .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
+        -moz-image-region: rect(0 64px 32px 32px);
+      }
+    }
+
     .ac-result-type-keyword[selected="true"],
     .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected),
     richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
@@ -1863,15 +1878,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* bookmarks menu-button */
-
-#bookmarks-menu-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/places/bookmark.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-#bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
 
 #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   -moz-margin-start: 5px;
@@ -2860,7 +2866,13 @@ chatbox {
 %include ../shared/UITour.inc.css
 
 #UITourTooltipButtons {
-  margin: 24px -4px -4px;
+  /**
+   * Override the --panel-arrowcontent-padding so the background extends
+   * to the sides and bottom of the panel.
+   */
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-bottom: -10px;
 }
 
 %include ../shared/contextmenu.inc.css
