@@ -119,8 +119,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x53376F57, 0xF081, 0x4949, \
-  { 0xB5, 0x5E, 0x87, 0xEF, 0x6A, 0xE9, 0xE3, 0x5A } };
+{ 0xb81e1264, 0x9f79, 0x4962, \
+  { 0x8d, 0x9a, 0x64, 0xdd, 0x21, 0x5d, 0x6a, 0x01 } }
 
 /*
  * Window shadow styles
@@ -1697,19 +1697,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
 
     /**
-     * Ask the widget to start the transition for entering or exiting
-     * DOM Fullscreen.
-     *
-     * XXX This method is currently not actually implemented by any
-     * widget. The only function of this method is to notify cocoa
-     * window that it should not use the native fullscreen mode. This
-     * method is reserved for bug 1160014 where a transition will be
-     * added for DOM fullscreen. Hence, this function is likely to
-     * be further changed then.
-     */
-    virtual void PrepareForDOMFullscreenTransition() = 0;
-
-    /**
      * Put the toplevel window into or out of fullscreen mode.
      * If aTargetScreen is given, attempt to go fullscreen on that screen,
      * if possible.  (If not, it behaves as if aTargetScreen is null.)
@@ -1717,6 +1704,18 @@ class nsIWidget : public nsISupports {
      * aTargetScreen support is currently only implemented on Windows.
      */
     NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) = 0;
+
+    /**
+     * Same as MakeFullScreen, except that, on systems which natively
+     * support fullscreen transition, calling this method explicitly
+     * requests that behavior.
+     * It is currently only supported on OS X 10.7+.
+     */
+    NS_IMETHOD MakeFullScreenWithNativeTransition(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr)
+    {
+      return MakeFullScreen(aFullScreen, aTargetScreen);
+    }
 
     /**
      * Invalidate a specified rect for a widget so that it will be repainted
