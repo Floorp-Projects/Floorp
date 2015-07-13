@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(775edbf5-b4a9-400c-b0ad-ea3c3a027097)]
+interface nsISystemUpdateListener : nsISupports
+{
+  /**
+   * callback for notifying an update package is available for download.
+   */
+  void onUpdateAvailable(in DOMString type,
+                         in DOMString version,
+                         in DOMString description,
+                         in unsigned long long buildDate,
+                         in unsigned long long size);
+
+  /**
+   * callback for notifying the download progress.
+   */
+  void onProgress(in unsigned long long loaded, in unsigned long long total);
+
+  /**
+   * callback for notifying an update package is ready to apply.
+   */
+  void onUpdateReady();
+
+  /**
+   * callback for notifying any error while
+   * checking/downloading/applying an update package.
+   */
+  void onError(in DOMString errMsg);
+};
+
+[scriptable, uuid(c9b7c166-b9cf-4396-a6de-39275e1c0a36)]
+interface nsISystemUpdateProvider : nsISupports
+{
+  void checkForUpdate();
+  void startDownload();
+  void stopDownload();
+  void applyUpdate();
+
+  /**
+   * Set the available parameter to the update provider.
+   * The available parameter is implementation-dependent.
+   * e.g. "update-url", "last-update-date", "update-status", "update-interval"
+   *
+   * @param  name      The number of languages.
+   * @param  languages An array of languages.
+   * @return true when setting an available parameter,
+   *         false when setting an unavailable parameter.
+   */
+  bool setParameter(in DOMString name, in DOMString value);
+  /**
+   * Get the available parameter from the update provider.
+   * The available parameter is implementation-dependent.
+   *
+   * @param  name The available parameter.
+   * @return The corresponding value to the name.
+   *         Return null if try to get unavailable parameter.
+   */
+  DOMString getParameter(in DOMString name);
+
+  /**
+   * NOTE TO IMPLEMENTORS:
+   *   Need to consider if it is necessary to fire the pending event when 
+   *   registering the listener.
+   *   (E.g. UpdateAvailable or UpdateReady event.)
+   */
+  void setListener(in nsISystemUpdateListener listener);
+  void unsetListener();
+};
