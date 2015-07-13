@@ -2812,6 +2812,38 @@ JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& re
 extern JS_PUBLIC_API(bool)
 JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
 
+/**
+ * Get a description of one of obj's own properties. If no such property exists
+ * on obj, return true with desc.object() set to null.
+ *
+ * Implements: ES6 [[GetOwnProperty]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                                JS::MutableHandle<JSPropertyDescriptor> desc);
+
+extern JS_PUBLIC_API(bool)
+JS_GetOwnPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char* name,
+                            JS::MutableHandle<JSPropertyDescriptor> desc);
+
+extern JS_PUBLIC_API(bool)
+JS_GetOwnUCPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char16_t* name,
+                              JS::MutableHandle<JSPropertyDescriptor> desc);
+
+/**
+ * Like JS_GetOwnPropertyDescriptorById, but also searches the prototype chain
+ * if no own property is found directly on obj. The object on which the
+ * property is found is returned in desc.object(). If the property is not found
+ * on the prototype chain, this returns true with desc.object() set to null.
+ */
+extern JS_PUBLIC_API(bool)
+JS_GetPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                             JS::MutableHandle<JSPropertyDescriptor> desc);
+
+extern JS_PUBLIC_API(bool)
+JS_GetPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char* name,
+                         JS::MutableHandle<JSPropertyDescriptor> desc);
+
 
 /*** [[DefineOwnProperty]] and variations ********************************************************/
 
@@ -2916,35 +2948,10 @@ JS_HasPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* f
 
 
 extern JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc);
-
-extern JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char* name,
-                            JS::MutableHandle<JSPropertyDescriptor> desc);
-
-extern JS_PUBLIC_API(bool)
-JS_GetOwnUCPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char16_t* name,
-                              JS::MutableHandle<JSPropertyDescriptor> desc);
-
-extern JS_PUBLIC_API(bool)
 JS_HasOwnPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
 
 extern JS_PUBLIC_API(bool)
 JS_HasOwnProperty(JSContext* cx, JS::HandleObject obj, const char* name, bool* foundp);
-
-/*
- * Like JS_GetOwnPropertyDescriptorById but will return a property on
- * an object on the prototype chain (returned in desc->obj). If desc->obj is null,
- * then this property was not found on the prototype chain.
- */
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                             JS::MutableHandle<JSPropertyDescriptor> desc);
-
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char* name,
-                         JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
 JS_GetProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::MutableHandleValue vp);
