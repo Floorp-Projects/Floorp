@@ -391,7 +391,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              PropertyName* name, TypedOrValueRegister output,
                              bool monitoredResult, jsbytecode* profilerLeavePc);
-    void addGetElementCache(LInstruction* ins, Register obj, ConstantOrRegister index,
+    void addGetElementCache(LInstruction* ins, Register obj, TypedOrValueRegister index,
                             TypedOrValueRegister output, bool monitoredResult,
                             bool allowDoubleResult, jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
