@@ -140,8 +140,8 @@ SigSysHandler(int nr, siginfo_t *info, void *void_context)
 
   // TODO, someday when this is enabled on MIPS: include the two extra
   // args in the error message.
-  SANDBOX_LOG_ERROR("seccomp sandbox violation: pid %d, syscall %lu,"
-                    " args %lu %lu %lu %lu %lu %lu.  Killing process.",
+  SANDBOX_LOG_ERROR("seccomp sandbox violation: pid %d, syscall %d,"
+                    " args %d %d %d %d %d %d.  Killing process.",
                     pid, syscall_nr,
                     args[0], args[1], args[2], args[3], args[4], args[5]);
 
