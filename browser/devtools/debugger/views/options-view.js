@@ -17,8 +17,6 @@ function OptionsView(DebuggerController, DebuggerView) {
   this.DebuggerView = DebuggerView;
 
   this._toggleAutoPrettyPrint = this._toggleAutoPrettyPrint.bind(this);
-  this._togglePauseOnExceptions = this._togglePauseOnExceptions.bind(this);
-  this._toggleIgnoreCaughtExceptions = this._toggleIgnoreCaughtExceptions.bind(this);
   this._toggleShowPanesOnStartup = this._toggleShowPanesOnStartup.bind(this);
   this._toggleShowVariablesOnlyEnum = this._toggleShowVariablesOnlyEnum.bind(this);
   this._toggleShowVariablesFilterBox = this._toggleShowVariablesFilterBox.bind(this);
@@ -35,8 +33,6 @@ OptionsView.prototype = {
 
     this._button = document.getElementById("debugger-options");
     this._autoPrettyPrint = document.getElementById("auto-pretty-print");
-    this._pauseOnExceptionsItem = document.getElementById("pause-on-exceptions");
-    this._ignoreCaughtExceptionsItem = document.getElementById("ignore-caught-exceptions");
     this._showPanesOnStartupItem = document.getElementById("show-panes-on-startup");
     this._showVariablesOnlyEnumItem = document.getElementById("show-vars-only-enum");
     this._showVariablesFilterBoxItem = document.getElementById("show-vars-filter-box");
@@ -44,8 +40,6 @@ OptionsView.prototype = {
     this._autoBlackBoxItem = document.getElementById("auto-black-box");
 
     this._autoPrettyPrint.setAttribute("checked", Prefs.autoPrettyPrint);
-    this._pauseOnExceptionsItem.setAttribute("checked", Prefs.pauseOnExceptions);
-    this._ignoreCaughtExceptionsItem.setAttribute("checked", Prefs.ignoreCaughtExceptions);
     this._showPanesOnStartupItem.setAttribute("checked", Prefs.panesVisibleOnStartup);
     this._showVariablesOnlyEnumItem.setAttribute("checked", Prefs.variablesOnlyEnumVisible);
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
@@ -69,8 +63,6 @@ OptionsView.prototype = {
   _addCommands: function() {
     XULUtils.addCommands(document.getElementById('debuggerCommands'), {
       toggleAutoPrettyPrint: () => this._toggleAutoPrettyPrint(),
-      togglePauseOnExceptions: () => this._togglePauseOnExceptions(),
-      toggleIgnoreCaughtExceptions: () => this._toggleIgnoreCaughtExceptions(),
       toggleShowPanesOnStartup: () => this._toggleShowPanesOnStartup(),
       toggleShowOnlyEnum: () => this._toggleShowVariablesOnlyEnum(),
       toggleShowVariablesFilterBox: () => this._toggleShowVariablesFilterBox(),
@@ -107,27 +99,6 @@ OptionsView.prototype = {
   _toggleAutoPrettyPrint: function(){
     Prefs.autoPrettyPrint =
       this._autoPrettyPrint.getAttribute("checked") == "true";
-  },
-
-  /**
-   * Listener handling the 'pause on exceptions' menuitem command.
-   */
-  _togglePauseOnExceptions: function() {
-    Prefs.pauseOnExceptions =
-      this._pauseOnExceptionsItem.getAttribute("checked") == "true";
-
-    this.DebuggerController.activeThread.pauseOnExceptions(
-      Prefs.pauseOnExceptions,
-      Prefs.ignoreCaughtExceptions);
-  },
-
-  _toggleIgnoreCaughtExceptions: function() {
-    Prefs.ignoreCaughtExceptions =
-      this._ignoreCaughtExceptionsItem.getAttribute("checked") == "true";
-
-    this.DebuggerController.activeThread.pauseOnExceptions(
-      Prefs.pauseOnExceptions,
-      Prefs.ignoreCaughtExceptions);
   },
 
   /**
@@ -198,7 +169,6 @@ OptionsView.prototype = {
   },
 
   _button: null,
-  _pauseOnExceptionsItem: null,
   _showPanesOnStartupItem: null,
   _showVariablesOnlyEnumItem: null,
   _showVariablesFilterBoxItem: null,
