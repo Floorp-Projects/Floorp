@@ -158,6 +158,24 @@
   color: inherit;
 }
 
+/* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
+@media not all and (-moz-windows-compositor),
+       not all and (-moz-windows-default-theme) {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar {
+    color: CaptionText;
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:-moz-window-inactive,
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:-moz-window-inactive {
+    color: InactiveCaptionText;
+  }
+
+  #main-window[tabsintitlebar] #main-menubar > menu {
+    color: inherit;
+  }
+}
+
 /* Use less opacity than normal since this is very dark, and on top of the default toolbar color */
 .tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
