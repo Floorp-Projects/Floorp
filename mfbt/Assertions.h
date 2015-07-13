@@ -21,6 +21,16 @@
 #include "nsTraceRefcnt.h"
 #endif
 
+// In libraries where the user wants to enable crash reporting when MOZ_CRASH is enabled,
+// MOZ_CRASH_CRASHREPORT must be defined, and the MOZ_ReportMozCrashToCrashReporter method
+// must be provided by the library. This ifdef defines the macro within libXUL, when
+// MOZ_CRASHREPORTER is enabled. The implementation of MOZ_ReportMozCrashToCrashReporter
+// for libXUL is defined in /toolkit/xre/nsAppRunner.cpp
+#if defined(MOZ_CRASHREPORTER) && defined(MOZILLA_INTERNAL_API) && \
+    !defined(MOZILLA_EXTERNAL_LINKAGE)
+#  define MOZ_CRASH_CRASHREPORT
+#endif
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -122,6 +132,15 @@ __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef MOZ_CRASH_CRASHREPORT
+/*
+ * Associates the given string with a crash report. This function must be
+ * provided by the library which mfbt is being used in if MOZ_CRASH_CRASHREPORT
+ * is defined (by default, MOZ_CRASH_CRASHREPORT is only defined in libXUL).
+ */
+void MOZ_ReportMozCrashToCrashReporter(const char* aStr);
+#endif // MOZ_CRASH_CRASHREPORT
 
 /*
  * Prints |aStr| as an assertion failure (using aFilename and aLine as the
@@ -249,7 +268,15 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  * corrupted.
  */
 #ifndef DEBUG
-#  define MOZ_CRASH(...) MOZ_REALLY_CRASH()
+#  ifdef MOZ_CRASH_CRASHREPORT
+#    define MOZ_CRASH(...) \
+       do { \
+         MOZ_ReportMozCrashToCrashReporter("" __VA_ARGS__); \
+         MOZ_REALLY_CRASH(); \
+       } while (0)
+#  else
+#    define MOZ_CRASH(...) MOZ_REALLY_CRASH()
+#  endif
 #else
 #  define MOZ_CRASH(...) \
      do { \
@@ -509,5 +536,6 @@ struct AssertionConditionType
 #endif
 
 #undef MOZ_DUMP_ASSERTION_STACK
+#undef MOZ_CRASH_CRASHREPORT
 
 #endif /* mozilla_Assertions_h */
