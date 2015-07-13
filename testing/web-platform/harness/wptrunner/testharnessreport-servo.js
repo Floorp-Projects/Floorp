@@ -16,5 +16,5 @@ add_completion_callback(function (tests, harness_status) {
         tests.map(function(t) {
             return [t.name, t.status, t.message, t.stack]
         }),
-    }));
+    ]));
 });
