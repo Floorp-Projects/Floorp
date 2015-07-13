@@ -102,7 +102,8 @@ var gSimpleTraversalRoles =
    Roles.COLUMNHEADER,
    Roles.ROWHEADER,
    Roles.STATUSBAR,
-   Roles.SWITCH];
+   Roles.SWITCH,
+   Roles.MATHML_MATH];
 
 var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   // An object is simple, if it either has a single child lineage,
