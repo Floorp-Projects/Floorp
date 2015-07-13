@@ -2944,6 +2944,149 @@ JS_Enumerate(JSContext* cx, HandleObject obj, JS::MutableHandle<IdVector> props)
     return props.append(ids.begin(), ids.end());
 }
 
+JS_PUBLIC_API(bool)
+JS::IsCallable(JSObject* obj)
+{
+    return obj->isCallable();
+}
+
+JS_PUBLIC_API(bool)
+JS::IsConstructor(JSObject* obj)
+{
+    return obj->isConstructor();
+}
+
+struct AutoLastFrameCheck
+{
+    explicit AutoLastFrameCheck(JSContext* cx
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx)
+    {
+        MOZ_ASSERT(cx);
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~AutoLastFrameCheck() {
+        if (cx->isExceptionPending() &&
+            !JS_IsRunning(cx) &&
+            (!cx->options().dontReportUncaught() && !cx->options().autoJSAPIOwnsErrorReporting())) {
+            ReportUncaughtException(cx);
+        }
+    }
+
+  private:
+    JSContext* cx;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+JS_PUBLIC_API(bool)
+JS_CallFunctionValue(JSContext* cx, HandleObject obj, HandleValue fval, const HandleValueArray& args,
+                     MutableHandleValue rval)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, fval, args);
+    AutoLastFrameCheck lfc(cx);
+
+    return Invoke(cx, ObjectOrNullValue(obj), fval, args.length(), args.begin(), rval);
+}
+
+JS_PUBLIC_API(bool)
+JS_CallFunction(JSContext* cx, HandleObject obj, HandleFunction fun, const HandleValueArray& args,
+                MutableHandleValue rval)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, fun, args);
+    AutoLastFrameCheck lfc(cx);
+
+    return Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), args.length(), args.begin(), rval);
+}
+
+JS_PUBLIC_API(bool)
+JS_CallFunctionName(JSContext* cx, HandleObject obj, const char* name, const HandleValueArray& args,
+                    MutableHandleValue rval)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, args);
+    AutoLastFrameCheck lfc(cx);
+
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+
+    RootedValue v(cx);
+    RootedId id(cx, AtomToId(atom));
+    if (!GetProperty(cx, obj, obj, id, &v))
+        return false;
+
+    return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
+}
+
+JS_PUBLIC_API(bool)
+JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleValueArray& args,
+         MutableHandleValue rval)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, thisv, fval, args);
+    AutoLastFrameCheck lfc(cx);
+
+    return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
+}
+
+JS_PUBLIC_API(bool)
+JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS::HandleValueArray& args,
+              MutableHandleValue rval)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, fval, newTarget, args);
+    AutoLastFrameCheck lfc(cx);
+
+    if (!IsConstructor(fval)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
+        return false;
+    }
+
+    RootedValue newTargetVal(cx, ObjectValue(*newTarget));
+    if (!IsConstructor(newTargetVal)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, newTargetVal, nullptr);
+        return false;
+    }
+
+    ConstructArgs cargs(cx);
+    if (!FillArgumentsFromArraylike(cx, cargs, args))
+        return false;
+
+    return js::Construct(cx, fval, cargs, newTargetVal, rval);
+}
+
+JS_PUBLIC_API(bool)
+JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
+              MutableHandleValue rval)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, fval, args);
+    AutoLastFrameCheck lfc(cx);
+
+    if (!IsConstructor(fval)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
+        return false;
+    }
+
+    ConstructArgs cargs(cx);
+    if (!FillArgumentsFromArraylike(cx, cargs, args))
+        return false;
+
+    return js::Construct(cx, fval, cargs, fval, rval);
+}
+
 
 /* * */
 
@@ -3643,22 +3786,6 @@ JS_GetFunctionArity(JSFunction* fun)
     return fun->nargs();
 }
 
-namespace JS {
-
-JS_PUBLIC_API(bool)
-IsCallable(JSObject* obj)
-{
-    return obj->isCallable();
-}
-
-JS_PUBLIC_API(bool)
-IsConstructor(JSObject* obj)
-{
-    return obj->isConstructor();
-}
-
-} /* namespace JS */
-
 JS_PUBLIC_API(bool)
 JS_ObjectIsFunction(JSContext* cx, JSObject* obj)
 {
@@ -3832,29 +3959,6 @@ JS_DefineFunctionById(JSContext* cx, HandleObject obj, HandleId id, JSNative cal
     assertSameCompartment(cx, obj);
     return DefineFunction(cx, obj, id, call, nargs, attrs);
 }
-
-struct AutoLastFrameCheck
-{
-    explicit AutoLastFrameCheck(JSContext* cx
-                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx)
-    {
-        MOZ_ASSERT(cx);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    ~AutoLastFrameCheck() {
-        if (cx->isExceptionPending() &&
-            !JS_IsRunning(cx) &&
-            (!cx->options().dontReportUncaught() && !cx->options().autoJSAPIOwnsErrorReporting())) {
-            ReportUncaughtException(cx);
-        }
-    }
-
-  private:
-    JSContext* cx;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 /* Use the fastest available getc. */
 #if defined(HAVE_GETC_UNLOCKED)
@@ -4706,114 +4810,6 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
              const char* filename, MutableHandleValue rval)
 {
     return ::Evaluate(cx, optionsArg, filename, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_CallFunction(JSContext* cx, HandleObject obj, HandleFunction fun, const HandleValueArray& args,
-                MutableHandleValue rval)
-{
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, fun, args);
-    AutoLastFrameCheck lfc(cx);
-
-    return Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), args.length(), args.begin(), rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_CallFunctionName(JSContext* cx, HandleObject obj, const char* name, const HandleValueArray& args,
-                    MutableHandleValue rval)
-{
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, args);
-    AutoLastFrameCheck lfc(cx);
-
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-
-    RootedValue v(cx);
-    RootedId id(cx, AtomToId(atom));
-    if (!GetProperty(cx, obj, obj, id, &v))
-        return false;
-
-    return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_CallFunctionValue(JSContext* cx, HandleObject obj, HandleValue fval, const HandleValueArray& args,
-                     MutableHandleValue rval)
-{
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, fval, args);
-    AutoLastFrameCheck lfc(cx);
-
-    return Invoke(cx, ObjectOrNullValue(obj), fval, args.length(), args.begin(), rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleValueArray& args,
-         MutableHandleValue rval)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, thisv, fval, args);
-    AutoLastFrameCheck lfc(cx);
-
-    return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
-              MutableHandleValue rval)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fval, args);
-    AutoLastFrameCheck lfc(cx);
-
-    if (!IsConstructor(fval)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
-        return false;
-    }
-
-    ConstructArgs cargs(cx);
-    if (!FillArgumentsFromArraylike(cx, cargs, args))
-        return false;
-
-    return js::Construct(cx, fval, cargs, fval, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::Construct(JSContext* cx, HandleValue fval, HandleObject newTarget, const JS::HandleValueArray& args,
-              MutableHandleValue rval)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fval, newTarget, args);
-    AutoLastFrameCheck lfc(cx);
-
-    if (!IsConstructor(fval)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
-        return false;
-    }
-
-    RootedValue newTargetVal(cx, ObjectValue(*newTarget));
-    if (!IsConstructor(newTargetVal)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, newTargetVal, nullptr);
-        return false;
-    }
-
-    ConstructArgs cargs(cx);
-    if (!FillArgumentsFromArraylike(cx, cargs, args))
-        return false;
-
-    return js::Construct(cx, fval, cargs, newTargetVal, rval);
 }
 
 static JSObject*
