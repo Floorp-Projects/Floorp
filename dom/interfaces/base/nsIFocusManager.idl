@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(c0716002-5602-4002-a0de-cc69b924b2c6)]
+[scriptable, uuid(2487F9CA-D05F-4BD1-8F43-5964E746C482)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -97,7 +97,8 @@ interface nsIFocusManager : nsISupports
    * MOVEFOCUS_CARET, then the focus is cleared. If aType is any other value,
    * the focus is not changed.
    *
-   * Returns the element that was focused.
+   * Returns the element that was focused. The return value may be null if focus
+   * was moved into a child process.
    */
   nsIDOMElement moveFocus(in nsIDOMWindow aWindow, in nsIDOMElement aStartElement,
                           in unsigned long aType, in unsigned long aFlags);
@@ -214,6 +215,11 @@ interface nsIFocusManager : nsISupports
    *  focus links as the caret moves over them in caret browsing mode.
    */
   const unsigned long MOVEFOCUS_CARET = 8;
+
+  /** move focus to the first focusable document */
+  const unsigned long MOVEFOCUS_FIRSTDOC = 9;
+  /** move focus to the last focusable document */
+  const unsigned long MOVEFOCUS_LASTDOC = 10;
 
   /**
    * Called when a window has been raised.
