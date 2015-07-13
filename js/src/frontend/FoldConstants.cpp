@@ -487,6 +487,7 @@ Boolish(ParseNode* pn)
         return (pn->pn_dval != 0 && !IsNaN(pn->pn_dval)) ? Truthy : Falsy;
 
       case PNK_STRING:
+      case PNK_TEMPLATE_STRING:
         return (pn->pn_atom->length() > 0) ? Truthy : Falsy;
 
       case PNK_TRUE:
@@ -497,6 +498,32 @@ Boolish(ParseNode* pn)
       case PNK_FALSE:
       case PNK_NULL:
         return Falsy;
+
+      case PNK_VOID: {
+        // |void <foo>| evaluates to |undefined| which isn't truthy.  But the
+        // sense of this method requires that the expression be literally
+        // replaceable with true/false: not the case if the nested expression
+        // is effectful, might throw, &c.  Walk past the |void| (and nested
+        // |void| expressions, for good measure) and check that the nested
+        // expression doesn't break this requirement before indicating falsity.
+        do {
+            pn = pn->pn_kid;
+        } while (pn->isKind(PNK_VOID));
+
+        if (pn->isKind(PNK_TRUE) ||
+            pn->isKind(PNK_FALSE) ||
+            pn->isKind(PNK_STRING) ||
+            pn->isKind(PNK_TEMPLATE_STRING) ||
+            pn->isKind(PNK_NUMBER) ||
+            pn->isKind(PNK_NULL) ||
+            pn->isKind(PNK_FUNCTION) ||
+            pn->isKind(PNK_GENEXP))
+        {
+            return Falsy;
+        }
+
+        return Unknown;
+      }
 
       default:
         return Unknown;
@@ -582,36 +609,6 @@ FoldTypeOfExpr(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& 
         node->setArity(PN_NULLARY);
         node->setOp(JSOP_NOP);
         node->pn_atom = result;
-    }
-
-    return true;
-}
-
-static bool
-FoldVoid(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
-         bool inGenexpLambda, SyntacticContext sc)
-{
-    MOZ_ASSERT(node->isKind(PNK_VOID));
-    MOZ_ASSERT(node->isArity(PN_UNARY));
-
-    ParseNode*& expr = node->pn_kid;
-    if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Other))
-        return false;
-
-    if (sc == SyntacticContext::Condition) {
-        if (expr->isKind(PNK_TRUE) ||
-            expr->isKind(PNK_FALSE) ||
-            expr->isKind(PNK_STRING) ||
-            expr->isKind(PNK_TEMPLATE_STRING) ||
-            expr->isKind(PNK_NUMBER) ||
-            expr->isKind(PNK_NULL) ||
-            expr->isKind(PNK_FUNCTION))
-        {
-            parser.prepareNodeForMutation(node);
-            node->setKind(PNK_FALSE);
-            node->setArity(PN_NULLARY);
-            node->setOp(JSOP_FALSE);
-        }
     }
 
     return true;
@@ -1756,9 +1753,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_TYPEOFEXPR:
         return FoldTypeOfExpr(cx, pn, parser, inGenexpLambda);
 
-      case PNK_VOID:
-        return FoldVoid(cx, pn, parser, inGenexpLambda, sc);
-
       case PNK_DELETENAME: {
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
@@ -1804,6 +1798,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_SUPERELEM:
       case PNK_EXPORT:
       case PNK_EXPORT_DEFAULT:
+      case PNK_VOID:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         return Fold(cx, &pn->pn_kid, parser, inGenexpLambda, SyntacticContext::Other);
 
