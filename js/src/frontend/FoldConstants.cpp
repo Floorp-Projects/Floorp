@@ -1319,6 +1319,54 @@ FoldReturn(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& pars
     return true;
 }
 
+static bool
+FoldTry(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+        bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_TRY));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    ParseNode*& statements = node->pn_kid1;
+    if (!Fold(cx, &statements, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (ParseNode*& catchList = node->pn_kid2) {
+        if (!Fold(cx, &catchList, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    if (ParseNode*& finally = node->pn_kid3) {
+        if (!Fold(cx, &finally, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+FoldCatch(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+          bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_CATCH));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    ParseNode*& declPattern = node->pn_kid1;
+    if (!Fold(cx, &declPattern, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (ParseNode*& cond = node->pn_kid2) {
+        if (!Fold(cx, &cond, parser, inGenexpLambda, SyntacticContext::Condition))
+            return false;
+    }
+
+    if (ParseNode*& statements = node->pn_kid3) {
+        if (!Fold(cx, &statements, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1487,6 +1535,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_RETURN:
         return FoldReturn(cx, pn, parser, inGenexpLambda);
 
+      case PNK_TRY:
+        return FoldTry(cx, pn, parser, inGenexpLambda);
+
+      case PNK_CATCH:
+        return FoldCatch(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1521,7 +1575,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FOROF:
       case PNK_FORHEAD:
       case PNK_CLASS:
-      case PNK_TRY:
       case PNK_ADD:
       case PNK_NEW:
       case PNK_CALL:
@@ -1531,7 +1584,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
-      case PNK_CATCH:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
         MOZ_ASSERT(!pn->isArity(PN_CODE), "only functions are code nodes");
