@@ -9,9 +9,6 @@ ac_add_options --enable-update-packaging
 ac_add_options --enable-signmar
 ac_add_options --enable-debug
 
-# Nightlies only since this has a cost in performance
-#ac_add_options --enable-js-diagnostics
-
 # This will overwrite the default of stripping everything and keep the symbol table.
 # This is useful for profiling and debugging and only increases the package size
 # by 2 MBs.
@@ -27,7 +24,6 @@ ac_add_options --enable-warnings-as-errors
 
 # Use sccache
 no_sccache=
-. "$topsrcdir/build/mozconfig.cache"
 
 #B2G options
 ac_add_options --enable-application=b2g

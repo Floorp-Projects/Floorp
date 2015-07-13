@@ -135,13 +135,6 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
     RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE_VOID(target);
-  target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
-                                 /* useCapture = */ true,
-                                 /* wantsUntrusted = */ false);
-
-
   // All of the codes below are for AudioChannel. We can directly return here
   // if preferences doesn't enable AudioChannelService.
   NS_ENSURE_TRUE_VOID(Preferences::GetBool("media.useAudioChannelService"));
@@ -154,13 +147,6 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
     GetOwner(),
     nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_CONTENT,
     this);
-
-  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
-  NS_ENSURE_TRUE_VOID(docshell);
-
-  bool isActive = false;
-  docshell->GetIsActive(&isActive);
-  audioChannelAgent->SetVisibilityState(isActive);
 
   // Once all necessary resources are got successfully, we just enabled
   // mAudioChannelAgent.
@@ -175,11 +161,6 @@ FMRadio::Shutdown()
   if (!mHasInternalAntenna) {
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
-
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE_VOID(target);
-  target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
-                                    /* useCapture = */ true);
 
   mIsShutdown = true;
 }
@@ -214,7 +195,7 @@ FMRadio::Notify(const FMRadioEventType& aType)
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
         if (mAudioChannelAgentEnabled) {
-          mAudioChannelAgent->StopPlaying();
+          mAudioChannelAgent->NotifyStoppedPlaying();
           mAudioChannelAgentEnabled = false;
         }
 
@@ -469,61 +450,30 @@ FMRadio::DisableRDS()
   return r.forget();
 }
 
-NS_IMETHODIMP
-FMRadio::HandleEvent(nsIDOMEvent* aEvent)
-{
-  nsAutoString type;
-  aEvent->GetType(type);
-
-  if (!type.EqualsLiteral("visibilitychange")) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
-  NS_ENSURE_TRUE(docshell, NS_ERROR_FAILURE);
-
-  bool isActive = false;
-  docshell->GetIsActive(&isActive);
-
-  mAudioChannelAgent->SetVisibilityState(isActive);
-  return NS_OK;
-}
-
 void
 FMRadio::EnableAudioChannelAgent()
 {
   NS_ENSURE_TRUE_VOID(mAudioChannelAgent);
 
-  int32_t playingState = 0;
-  mAudioChannelAgent->StartPlaying(&playingState);
-  SetCanPlay(playingState == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  float volume = 0.0;
+  bool muted = true;
+  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+  WindowVolumeChanged(volume, muted);
 
   mAudioChannelAgentEnabled = true;
 }
 
 NS_IMETHODIMP
-FMRadio::CanPlayChanged(int32_t aCanPlay)
+FMRadio::WindowVolumeChanged(float aVolume, bool aMuted)
 {
-  SetCanPlay(!(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_MUTED));
+  IFMRadioService::Singleton()->EnableAudio(!aMuted);
+  // TODO: what about the volume?
   return NS_OK;
-}
-
-NS_IMETHODIMP
-FMRadio::WindowVolumeChanged()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-FMRadio::SetCanPlay(bool aCanPlay)
-{
-  IFMRadioService::Singleton()->EnableAudio(aCanPlay);
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FMRadio)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(FMRadio, DOMEventTargetHelper)

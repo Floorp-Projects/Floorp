@@ -652,31 +652,6 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   if (destSize.width == 0 || destSize.height == 0)
     return NS_ERROR_FAILURE;
 
-  // if the image is larger than half the screen size, scale it down. This
-  // scaling algorithm is the same as is used in nsPresShell::PaintRangePaintInfo
-  nsDeviceContext* deviceContext = aPresContext->DeviceContext();
-  nsRect maxSize;
-  deviceContext->GetClientRect(maxSize);
-  nscoord maxWidth = aPresContext->AppUnitsToDevPixels(maxSize.width >> 1);
-  nscoord maxHeight = aPresContext->AppUnitsToDevPixels(maxSize.height >> 1);
-  if (destSize.width > maxWidth || destSize.height > maxHeight) {
-    float scale = 1.0;
-    if (destSize.width > maxWidth)
-      scale = std::min(scale, float(maxWidth) / destSize.width);
-    if (destSize.height > maxHeight)
-      scale = std::min(scale, float(maxHeight) / destSize.height);
-
-    destSize.width = NSToIntFloor(float(destSize.width) * scale);
-    destSize.height = NSToIntFloor(float(destSize.height) * scale);
-    if (destSize.width == 0 || destSize.height == 0)
-      return NS_ERROR_FAILURE;
-
-    aScreenDragRect->x = NSToIntFloor(aScreenX - float(mImageX) * scale);
-    aScreenDragRect->y = NSToIntFloor(aScreenY - float(mImageY) * scale);
-    aScreenDragRect->width = destSize.width;
-    aScreenDragRect->height = destSize.height;
-  }
-
   nsresult result = NS_OK;
   if (aImageLoader) {
     RefPtr<DrawTarget> dt =

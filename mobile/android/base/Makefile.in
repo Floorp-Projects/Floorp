@@ -2,29 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
-MIN_CPU_VERSION=7
-else
-MIN_CPU_VERSION=5
-endif
-
 MOZ_APP_BUILDID=$(shell cat $(DEPTH)/config/buildid)
 
-# See Bug 1137586 for more details on version code computation.
-ifeq (,$(ANDROID_VERSION_CODE))
-ifeq ($(CPU_ARCH),arm)
-# Increment by MIN_SDK_VERSION -- this adds 9 to every build ID as a minimum.
-# Our split APK starts at 11.
-ANDROID_VERSION_CODE=$(shell echo $$((`cat $(DEPTH)/config/buildid | cut -c1-10` + $(MOZ_ANDROID_MIN_SDK_VERSION) + 0)))
-else # not ARM, so x86.
-# Increment the version code by 3 for x86 builds so they are offered to x86 phones that have ARM emulators,
-# beating the 2-point advantage that the v11+ ARMv7 APK has.
-# If we change our splits in the future, we'll need to do this further still.
-ANDROID_VERSION_CODE=$(shell echo $$((`cat $(DEPTH)/config/buildid | cut -c1-10` + $(MOZ_ANDROID_MIN_SDK_VERSION) + 3)))
-endif
-endif
-
-UA_BUILDID=$(shell echo $(ANDROID_VERSION_CODE) | cut -c1-8)
+ANDROID_VERSION_CODE:=$(shell $(PYTHON) \
+  $(topsrcdir)/python/mozbuild/mozbuild/android_version_code.py \
+    --verbose \
+    --with-android-cpu-arch=$(ANDROID_CPU_ARCH) \
+    $(if $(MOZ_ANDROID_MIN_SDK_VERSION),--with-android-min-sdk=$(MOZ_ANDROID_MIN_SDK_VERSION)) \
+    $(if $(MOZ_ANDROID_MAX_SDK_VERSION),--with-android-max-sdk=$(MOZ_ANDROID_MAX_SDK_VERSION)) \
+    $(MOZ_APP_BUILDID))
 
 DEFINES += \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
@@ -32,7 +18,6 @@ DEFINES += \
   -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
   -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
   -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
-  -DUA_BUILDID=$(UA_BUILDID) \
   $(NULL)
 
 GARBAGE += \
@@ -46,6 +31,7 @@ GARBAGE += \
   .aapt.deps \
   javah.out \
   jni-stubs.inc \
+  GeneratedJNINatives.h \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
   $(NULL)
@@ -232,6 +218,8 @@ jni-stubs.inc: gecko-browser.jar gecko-mozglue.jar gecko-util.jar sync-thirdpart
 
 ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
 
+# This annotation processing step also generates
+# GeneratedJNIWrappers.h and GeneratedJNINatives.h
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
@@ -463,12 +451,9 @@ $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,geck
 include $(topsrcdir)/config/android-common.mk
 
 update-generated-wrappers:
-	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp.old
-	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h.old
-	@echo old GeneratedJNIWrappers.cpp/h moved to GeneratedJNIWrappers.cpp/h.old
 	@cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android
-	@cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android
-	@echo Updated GeneratedJNIWrappers
+	@cp $(CURDIR)/GeneratedJNIWrappers.cpp $(CURDIR)/GeneratedJNIWrappers.h $(CURDIR)/GeneratedJNINatives.h $(topsrcdir)/widget/android
+	@echo Updated generated JNI code
 
 .PHONY: update-generated-wrappers
 
@@ -500,9 +485,14 @@ libs:: geckoview_resources.zip
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
 endif
 
+# GeneratedJNIWrappers.cpp target also generates
+# GeneratedJNIWrappers.h and GeneratedJNINatives.h
 libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp $(CURDIR)/fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
-	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
+	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && \
+	  diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
+	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
+	  diff GeneratedJNINatives.h $(topsrcdir)/widget/android/GeneratedJNINatives.h >/dev/null) || \
 	 (echo '*****************************************************' && \
 	  echo '***   Error: The generated JNI code has changed   ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \

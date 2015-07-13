@@ -18,8 +18,6 @@ MOCHITEST_MANIFESTS += [
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
 EXPORTS += [
     'AlignedTArray.h',
     'AudioContext.h',

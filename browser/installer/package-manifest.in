@@ -436,7 +436,8 @@
 @RESPATH@/components/addoncompat.manifest
 @RESPATH@/components/multiprocessShims.js
 @RESPATH@/components/defaultShims.js
-@RESPATH@/components/remoteTagService.js
+@RESPATH@/components/utils.manifest
+@RESPATH@/components/simpleServices.js
 @RESPATH@/components/pluginGlue.manifest
 @RESPATH@/components/ProcessSingleton.manifest
 @RESPATH@/components/MainProcessSingleton.js
@@ -887,6 +888,8 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/DataStore.manifest
 @RESPATH@/components/DataStoreImpl.js
 @RESPATH@/components/dom_datastore.xpt
+
+@RESPATH@/components/dom_audiochannel.xpt
 
 ; Shutdown Terminator
 @RESPATH@/components/nsTerminatorTelemetry.js

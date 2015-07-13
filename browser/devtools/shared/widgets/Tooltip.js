@@ -863,8 +863,9 @@ Tooltip.prototype = {
    * that resolves to the instance of the widget when ready.
    */
   setFilterContent: function(filter) {
-    let dimensions = {width: "350", height: "350"};
+    let dimensions = {width: "500", height: "200"};
     let panel = this.panel;
+
     return this.setIFrameContent(dimensions, FILTER_FRAME).then(onLoaded);
 
     function onLoaded(iframe) {
@@ -874,14 +875,8 @@ Tooltip.prototype = {
       let container = win.document.getElementById("container");
       let widget = new CSSFilterEditorWidget(container, filter);
 
-      iframe.height = doc.offsetHeight;
-
-      widget.on("render", () => {
-        iframe.height = doc.offsetHeight;
-      });
-
       // Resolve to the widget instance whenever the popup becomes visible
-      if (panel.state == "open") {
+      if (panel.state === "open") {
         def.resolve(widget);
       } else {
         panel.addEventListener("popupshown", function shown() {

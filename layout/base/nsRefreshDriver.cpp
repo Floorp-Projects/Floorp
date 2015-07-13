@@ -1710,54 +1710,58 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         if (tracingStyleFlush) {
           profiler_tracing("Paint", "Styles", TRACING_INTERVAL_END);
         }
-      }
 
-      if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-        mPresContext->TickLastStyleUpdateForAllAnimations();
+        if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+          mPresContext->TickLastStyleUpdateForAllAnimations();
+        }
       }
     } else if  (i == 1) {
       // This is the Flush_Layout case.
-      if (mPresContext && mPresContext->GetPresShell()) {
-        bool tracingLayoutFlush = false;
-        nsAutoTArray<nsIPresShell*, 16> observers;
-        observers.AppendElements(mLayoutFlushObservers);
-        for (uint32_t j = observers.Length();
-             j && mPresContext && mPresContext->GetPresShell(); --j) {
-          // Make sure to not process observers which might have been removed
-          // during previous iterations.
-          nsIPresShell* shell = observers[j - 1];
-          if (!mLayoutFlushObservers.Contains(shell))
-            continue;
+      bool tracingLayoutFlush = false;
+      nsAutoTArray<nsIPresShell*, 16> observers;
+      observers.AppendElements(mLayoutFlushObservers);
+      for (uint32_t j = observers.Length();
+           j && mPresContext && mPresContext->GetPresShell(); --j) {
+        // Make sure to not process observers which might have been removed
+        // during previous iterations.
+        nsIPresShell* shell = observers[j - 1];
+        if (!mLayoutFlushObservers.Contains(shell))
+          continue;
 
-          if (!tracingLayoutFlush) {
-            tracingLayoutFlush = true;
-            profiler_tracing("Paint", "Reflow", mReflowCause, TRACING_INTERVAL_START);
-            mReflowCause = nullptr;
-          }
-
-          NS_ADDREF(shell);
-          mLayoutFlushObservers.RemoveElement(shell);
-          shell->mReflowScheduled = false;
-          shell->mSuppressInterruptibleReflows = false;
-          mozFlushType flushType = HasPendingAnimations(shell)
-                                 ? Flush_Layout
-                                 : Flush_InterruptibleLayout;
-          shell->FlushPendingNotifications(ChangesToFlush(flushType, false));
-          // Inform the FontFaceSet that we ticked, so that it can resolve its
-          // ready promise if it needs to.
-          nsPresContext* presContext = shell->GetPresContext();
-          if (presContext) {
-            presContext->NotifyFontFaceSetOnRefresh();
-          }
-          NS_RELEASE(shell);
+        if (!tracingLayoutFlush) {
+          tracingLayoutFlush = true;
+          profiler_tracing("Paint", "Reflow", mReflowCause, TRACING_INTERVAL_START);
+          mReflowCause = nullptr;
         }
 
-        mNeedToRecomputeVisibility = true;
-
-        if (tracingLayoutFlush) {
-          profiler_tracing("Paint", "Reflow", TRACING_INTERVAL_END);
+        NS_ADDREF(shell);
+        mLayoutFlushObservers.RemoveElement(shell);
+        shell->mReflowScheduled = false;
+        shell->mSuppressInterruptibleReflows = false;
+        mozFlushType flushType = HasPendingAnimations(shell)
+                               ? Flush_Layout
+                               : Flush_InterruptibleLayout;
+        shell->FlushPendingNotifications(ChangesToFlush(flushType, false));
+        // Inform the FontFaceSet that we ticked, so that it can resolve its
+        // ready promise if it needs to.
+        nsPresContext* presContext = shell->GetPresContext();
+        if (presContext) {
+          presContext->NotifyFontFaceSetOnRefresh();
         }
+        NS_RELEASE(shell);
       }
+
+      mNeedToRecomputeVisibility = true;
+
+      if (tracingLayoutFlush) {
+        profiler_tracing("Paint", "Reflow", TRACING_INTERVAL_END);
+      }
+    }
+
+    // The pres context may be destroyed during we do the flushing.
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      StopTimer();
+      return;
     }
   }
 

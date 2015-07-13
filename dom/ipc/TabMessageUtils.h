@@ -7,7 +7,6 @@
 #ifndef TABMESSAGE_UTILS_H
 #define TABMESSAGE_UTILS_H
 
-#include "AudioChannelCommon.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "nsIDOMEvent.h"
@@ -88,14 +87,6 @@ struct ParamTraits<mozilla::dom::AudioChannel>
   {
   }
 };
-
-template <>
-struct ParamTraits<mozilla::dom::AudioChannelState>
-  : public ContiguousEnumSerializer<mozilla::dom::AudioChannelState,
-                                    mozilla::dom::AUDIO_CHANNEL_STATE_NORMAL,
-                                    mozilla::dom::AUDIO_CHANNEL_STATE_LAST>
-{ };
-
 
 template <>
 struct ParamTraits<nsEventStatus>

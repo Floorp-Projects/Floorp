@@ -9,8 +9,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Cu.import("resource:///modules/UITour.jsm");
-
 function test() {
   UITourTest();
 }

@@ -3,72 +3,10 @@
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
 
-const kDefaultenginenamePref = "browser.search.defaultenginename";
 const kSelectedEnginePref = "browser.search.selectedEngine";
-
-const kTestEngineName = "Test search engine";
-
-// These two functions (getLocale and getIsUS) are copied from nsSearchService.js
-function getLocale() {
-  let LOCALE_PREF = "general.useragent.locale";
-  return Services.prefs.getCharPref(LOCALE_PREF);
-}
-
-function getIsUS() {
-  if (getLocale() != "en-US") {
-    return false;
-  }
-
-  // Timezone assumptions! We assume that if the system clock's timezone is
-  // between Newfoundland and Hawaii, that the user is in North America.
-
-  // This includes all of South America as well, but we have relatively few
-  // en-US users there, so that's OK.
-
-  // 150 minutes = 2.5 hours (UTC-2.5), which is
-  // Newfoundland Daylight Time (http://www.timeanddate.com/time/zones/ndt)
-
-  // 600 minutes = 10 hours (UTC-10), which is
-  // Hawaii-Aleutian Standard Time (http://www.timeanddate.com/time/zones/hast)
-
-  let UTCOffset = (new Date()).getTimezoneOffset();
-  let isNA = UTCOffset >= 150 && UTCOffset <= 600;
-
-  return isNA;
-}
-
-function getDefaultEngineName() {
-  const nsIPLS = Ci.nsIPrefLocalizedString;
-  // Copy the logic from nsSearchService
-  let pref = kDefaultenginenamePref;
-  if (getIsUS()) {
-    pref += ".US";
-  }
-  return Services.prefs.getComplexValue(pref, nsIPLS).data;
-}
 
 // waitForSearchNotification is in head_search.js
 let waitForNotification = waitForSearchNotification;
-
-function asyncInit() {
-  let deferred = Promise.defer();
-
-  Services.search.init(function() {
-    do_check_true(Services.search.isInitialized);
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-function asyncReInit() {
-  let promise = waitForNotification("reinit-complete");
-
-  Services.search.QueryInterface(Ci.nsIObserver)
-          .observe(null, "nsPref:changed", "general.useragent.locale");
-
-  return promise;
-}
 
 // Check that the default engine matches the defaultenginename pref
 add_task(function* test_defaultEngine() {
@@ -138,7 +76,7 @@ add_task(function* test_ignoreInvalidHash() {
   json["[global]"].hash = "invalid";
 
   let data = new TextEncoder().encode(JSON.stringify(json));
-  let promise = OS.File.writeAtomic(path, data);//, { tmpPath: path + ".tmp" });
+  yield OS.File.writeAtomic(path, data);//, { tmpPath: path + ".tmp" });
 
   // Re-init the search service, and check that the json file is ignored.
   yield asyncReInit();

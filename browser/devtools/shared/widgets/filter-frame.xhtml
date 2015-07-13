@@ -16,14 +16,26 @@
   <body>
 
     <div id="container">
-      <div class="filters">
+      <div class="filters-list">
+        <div id="filters"></div>
+        <div class="footer">
+          <select value="">
+            <option value="">&filterListSelectPlaceholder;</option>
+          </select>
+          <button id="add-filter" class="add">&addNewFilterButton;</button>
+          <button id="toggle-presets">&presetsToggleButton;</button>
+        </div>
       </div>
-      <div id="editor-footer">
-        <select value="">
-          <option value="">&filterListSelectPlaceholder;</option>
-        </select>
-        <button id="add-filter">&addNewFilterButton;</button>
+
+      <div class="presets-list">
+        <div id="presets"></div>
+        <div class="footer">
+          <input value="" class="devtools-textinput"
+                 placeholder="&newPresetPlaceholder;"></input>
+          <button class="add">&savePresetButton;</button>
+        </div>
       </div>
     </div>
+
   </body>
 </html>

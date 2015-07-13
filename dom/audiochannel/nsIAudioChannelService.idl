@@ -1,0 +1,29 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+[scriptable, builtinclass, uuid(323e5472-b8f4-4288-b1b9-53c7c54bbbe8)]
+interface nsIAudioChannelService : nsISupports
+{
+  float getAudioChannelVolume(in nsIDOMWindow window,
+                              in unsigned short audioChannel);
+
+  void setAudioChannelVolume(in nsIDOMWindow window,
+                             in unsigned short audioChannel,
+                             in float volume);
+
+  boolean getAudioChannelMuted(in nsIDOMWindow window,
+                               in unsigned short audioChannel);
+
+  void setAudioChannelMuted(in nsIDOMWindow window,
+                            in unsigned short audioChannel,
+                            in boolean muted);
+
+  boolean isAudioChannelActive(in nsIDOMWindow window,
+                               in unsigned short audioChannel);
+};

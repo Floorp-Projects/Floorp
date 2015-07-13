@@ -298,6 +298,8 @@ NS_IMPL_ISUPPORTS(CompareCache, nsIStreamLoaderObserver)
 class CompareManager final : public PromiseNativeHandler
 {
 public:
+  NS_DECL_ISUPPORTS
+
   explicit CompareManager(CompareCallback* aCallback)
     : mCallback(aCallback)
     , mState(WaitingForOpen)
@@ -646,6 +648,8 @@ private:
   bool mCacheFinished;
   bool mInCache;
 };
+
+NS_IMPL_ISUPPORTS0(CompareManager)
 
 NS_IMETHODIMP
 CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)

@@ -6,9 +6,6 @@ ac_add_options --enable-profiling
 ac_add_options --enable-instruments
 ac_add_options --enable-dtrace
 
-# Nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
 ac_add_options --with-macbundlename-prefix=Firefox
 fi
@@ -16,3 +13,4 @@ fi
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

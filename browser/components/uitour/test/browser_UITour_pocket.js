@@ -8,8 +8,6 @@ let gContentAPI;
 let gContentWindow;
 let button;
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   UITourTest();
 }

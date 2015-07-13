@@ -7,6 +7,7 @@
 #include "nsMixedContentBlocker.h"
 
 #include "nsContentPolicyUtils.h"
+#include "nsCSPContext.h"
 #include "nsThreadUtils.h"
 #include "nsINode.h"
 #include "nsCOMPtr.h"
@@ -590,6 +591,26 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Determine if the rootDoc is https and if the user decided to allow Mixed Content
   nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aRequestingContext);
   NS_ENSURE_TRUE(docShell, NS_OK);
+
+  // The page might have set the CSP directive 'upgrade-insecure-requests'. In such
+  // a case allow the http: load to succeed with the promise that the channel will
+  // get upgraded to https before fetching any data from the netwerk.
+  // Please see: nsHttpChannel::Connect()
+  //
+  // Please note that the CSP directive 'upgrade-insecure-requests' only applies to
+  // http: and ws: (for websockets). Websockets are not subject to mixed content
+  // blocking since insecure websockets are not allowed within secure pages. Hence,
+  // we only have to check against http: here. Skip mixed content blocking if the
+  // subresource load uses http: and the CSP directive 'upgrade-insecure-requests'
+  // is present on the page.
+  bool isHttpScheme = false;
+  rv = aContentLocation->SchemeIs("http", &isHttpScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isHttpScheme && docShell->GetDocument()->GetUpgradeInsecureRequests()) {
+    *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
   bool rootHasSecureConnection = false;
   bool allowMixedContent = false;
   bool isRootDocShell = false;
@@ -598,7 +619,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     *aDecision = REJECT_REQUEST;
     return rv;
   }
-
 
   // Get the sameTypeRoot tree item from the docshell
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;

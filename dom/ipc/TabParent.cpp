@@ -8,6 +8,7 @@
 
 #include "TabParent.h"
 
+#include "AudioChannelService.h"
 #include "AppProcessChecker.h"
 #include "mozIApplication.h"
 #ifdef ACCESSIBILITY
@@ -1971,8 +1972,8 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 bool
 TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
                                    const uint32_t& aStart,
-                                   const uint32_t& aEnd,
-                                   const uint32_t& aNewEnd,
+                                   const uint32_t& aRemovedEnd,
+                                   const uint32_t& aAddedEnd,
                                    const bool& aCausedByComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1990,12 +1991,12 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.mTextChangeData.mStartOffset = aStart;
-  notification.mTextChangeData.mOldEndOffset = aEnd;
-  notification.mTextChangeData.mNewEndOffset = aNewEnd;
+  notification.mTextChangeData.mRemovedEndOffset = aRemovedEnd;
+  notification.mTextChangeData.mAddedEndOffset = aAddedEnd;
   notification.mTextChangeData.mCausedByComposition = aCausedByComposition;
 
   mContentCache.AssignContent(aContentCache, &notification);
-  IMEStateManager::NotifyIME(notification, widget, true);
+  mContentCache.MaybeNotifyIME(widget, notification);
   return true;
 }
 
@@ -2010,8 +2011,7 @@ TabParent::RecvNotifyIMESelectedCompositionRect(
 
   IMENotification notification(NOTIFY_IME_OF_COMPOSITION_UPDATE);
   mContentCache.AssignContent(aContentCache, &notification);
-
-  IMEStateManager::NotifyIME(notification, widget, true);
+  mContentCache.MaybeNotifyIME(widget, notification);
   return true;
 }
 
@@ -2031,10 +2031,9 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
   if (updatePreference.WantSelectionChange() &&
       (updatePreference.WantChangesCausedByComposition() ||
        !aCausedByComposition)) {
-    mContentCache.InitNotification(notification);
     notification.mSelectionChangeData.mCausedByComposition =
       aCausedByComposition;
-    IMEStateManager::NotifyIME(notification, widget, true);
+    mContentCache.MaybeNotifyIME(widget, notification);
   }
   return true;
 }
@@ -2083,6 +2082,23 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache)
   if (updatePreference.WantPositionChanged()) {
     IMEStateManager::NotifyIME(notification, widget, true);
   }
+  return true;
+}
+
+bool
+TabParent::RecvOnEventNeedingAckReceived(const uint32_t& aMessage)
+{
+  // This is called when the child process receives WidgetCompositionEvent or
+  // WidgetSelectionEvent.
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  // While calling OnEventNeedingAckReceived(), TabParent *might* be destroyed
+  // since it may send notifications to IME.
+  nsRefPtr<TabParent> kungFuDeathGrip(this);
+  mContentCache.OnEventNeedingAckReceived(widget, aMessage);
   return true;
 }
 
@@ -2277,6 +2293,7 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   if (!widget) {
     return true;
   }
+  mContentCache.OnSelectionEvent(event);
   return PBrowserParent::SendSelectionEvent(event);
 }
 
@@ -2625,6 +2642,29 @@ TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
   if (mNeedLayerTreeReadyNotification) {
     RequestNotifyLayerTreeReady();
     mNeedLayerTreeReadyNotification = false;
+  }
+
+  return true;
+}
+
+bool
+TabParent::RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
+                                                const bool& aActive)
+{
+  if (aAudioChannel >= NUMBER_OF_AUDIO_CHANNELS) {
+    return false;
+  }
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+    nsAutoCString topic;
+    topic.Assign("audiochannel-activity-");
+    topic.Append(AudioChannelService::GetAudioChannelTable()[aAudioChannel].tag);
+
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this),
+                        topic.get(),
+                        aActive ? MOZ_UTF16("active") : MOZ_UTF16("inactive"));
   }
 
   return true;

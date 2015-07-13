@@ -4,35 +4,32 @@
 "visibility": "internal",
 "digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
 "algorithm": "sha512",
-"filename": "android-ndk.tar.bz2"
+"filename": "android-ndk.tar.bz2",
+"unpack": true
 },
 {
 "size": 329217868,
 "visibility": "internal",
 "digest": "1cf54f12c271a2eea8f03caafa458207768ba12400cf53d742e3c4654a32b18fb75d8e0dece95e27691695751a6f6514ccb724b1a74958948c5f111c5c00da4f",
 "algorithm": "sha512",
-"filename": "android-sdk.tar.xz"
-},
-{
-"size": 336,
-"visibility": "public",
-"digest": "3336af2e7106654be09ae10b19f981162584ede0888abe295c45fe6e10f52d460a0a94b8bef0518f1419fcd82939b723123e122897599edce9cc240757424890",
-"algorithm": "sha512",
-"filename": "setup.sh"
+"filename": "android-sdk-linux.tar.xz",
+"unpack": true
 },
 {
 "size": 167175,
 "visibility": "public",
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2"
+"filename": "sccache.tar.bz2",
+"unpack": true
 },
 {
 "size": 7920445,
 "visibility": "public",
 "digest": "e28b7a12fbbef02ad742958df8dd356ea2adb8ef79e95cd8eb8dbc953eb4cc11888969dac7d636187fd3ace9c63d9a6bc3d7795021c1d811a843e413fe5e52c9",
 "algorithm": "sha512",
-"filename": "apache-ant-bin.tar.bz2"
+"filename": "apache-ant.tar.bz2",
+"unpack": true
 },
 {
 "size": 4906080,

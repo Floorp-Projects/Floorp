@@ -6,15 +6,10 @@
 "filename": "mozmake.exe"
 },
 {
-"size": 176,
-"digest": "2809058907ac5eefdc394113d2e4fe76ba559ac61c2eca2f88e7a12a74bdf44a15d9039fa8aa229f7362a14b67d67395063f68147ae098beac5dfcc78aff98da",
-"algorithm": "sha512",
-"filename": "setup.sh"
-},
-{
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2"
+"filename": "sccache.tar.bz2",
+"unpack": true
 }
 ]

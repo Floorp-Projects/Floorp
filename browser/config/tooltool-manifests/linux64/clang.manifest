@@ -3,15 +3,10 @@
 "clang_version": "r183744"
 }, 
 {
-"size": 47, 
-"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa", 
-"algorithm": "sha512", 
-"filename": "setup.sh"
-}, 
-{
 "size": 70350828, 
 "digest": "6cd04e8ec44c6fef159349c22bd0476891e4a2d46479f9586283eaf3305e42f79c720d40dfec0e78d8899c1651189b12e285de60862ffd0612b0dac7a0c336c6", 
 "algorithm": "sha512", 
-"filename": "clang.tar.bz2"
+"filename": "clang.tar.bz2",
+"unpack": true
 }
 ]

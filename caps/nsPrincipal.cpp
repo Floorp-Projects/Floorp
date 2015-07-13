@@ -236,6 +236,12 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrinc
       return NS_OK;
   }
 
+  // If this principal is associated with an addon, check whether that addon
+  // has been given permission to load from this domain.
+  if (AddonAllowsLoad(aURI)) {
+    return NS_OK;
+  }
+
   if (nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
     return NS_OK;
   }
