@@ -243,7 +243,7 @@
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
-#tracking-protection-content[block-disabled]  {
+#tracking-protection-content[state="loaded-tracking-content"]  {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
 }
 
@@ -252,13 +252,12 @@
   margin: 1em 0 0;
 }
 
-#tracking-protection-content[block-active] > #tracking-not-detected,
-#tracking-protection-content[block-disabled] > #tracking-not-detected,
-#tracking-protection-content:not([block-active]) > #tracking-blocked,
-#tracking-protection-content:not([block-active]) #tracking-action-unblock,
-#tracking-protection-content:not([block-disabled]) > #tracking-loaded,
-#tracking-protection-content:not([block-disabled]) #tracking-action-block,
-#tracking-protection-content:not([block-active]):not([block-disabled]) > #tracking-actions {
+#tracking-protection-content[state] > #tracking-not-detected,
+#tracking-protection-content:not([state="blocked-tracking-content"]) > #tracking-blocked,
+#tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock,
+#tracking-protection-content:not([state="loaded-tracking-content"]) > #tracking-loaded,
+#tracking-protection-content:not([state="loaded-tracking-content"]) #tracking-action-block,
+#tracking-protection-content:not([state]) > #tracking-actions {
   display: none;
 }
 
