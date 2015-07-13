@@ -137,8 +137,8 @@ class BailoutFrameInfo
     SnapshotOffset snapshotOffset() const {
         return snapshotOffset_;
     }
-    const MachineState machineState() const {
-        return machine_;
+    const MachineState* machineState() const {
+        return &machine_;
     }
     size_t topFrameSize() const {
         return topFrameSize_;

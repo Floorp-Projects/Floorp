@@ -412,7 +412,7 @@ class SnapshotIteratorForBailout : public SnapshotIterator
 
   public:
     SnapshotIteratorForBailout(JitActivation* activation, JitFrameIterator& iter)
-      : SnapshotIterator(iter),
+      : SnapshotIterator(iter, activation->bailoutData()->machineState()),
         activation_(activation),
         iter_(iter)
     {
