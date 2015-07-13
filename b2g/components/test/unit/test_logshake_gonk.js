@@ -73,9 +73,10 @@ add_test(function test_logShake_captureLogs_writes() {
     LogShake.uninit();
 
     ok(logResults.logFilenames.length > 0, "Should have filenames");
-    ok(logResults.logPrefix.length > 0, "Should have prefix");
+    ok(logResults.logPaths.length > 0, "Should have paths");
+    ok(!logResults.compressed, "Should not be compressed");
 
-    logResults.logFilenames.forEach(f => {
+    logResults.logPaths.forEach(f => {
       let p = OS.Path.join(sdcard, f);
       ok(p, "Should have a valid result path: " + p);
 

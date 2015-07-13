@@ -10,10 +10,14 @@
 %define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
 %define smw_itemLightTopBorder rgba(128,128,128,0.15)
 %define smw_itemLightBottomBorder transparent
-%define table_itemDarkStartBorder rgba(0,0,0,0.2)
-%define table_itemDarkEndBorder rgba(128,128,128,0.15)
-%define table_itemLightStartBorder rgba(128,128,128,0.25)
-%define table_itemLightEndBorder transparent
+.theme-dark {
+  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-zebra-background: rgba(255,255,255,0.05);
+}
+.theme-light {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+}
 
 /* Generic pane helpers */
 
@@ -1206,43 +1210,16 @@
   overflow: auto;
 }
 
-.theme-light .table-widget-body {
-  background: var(--theme-sidebar-background);
-}
-
-.theme-dark .table-widget-body,
-.theme-dark .table-widget-empty-text {
-  background-color: var(--theme-toolbar-background);
-}
-
-.theme-dark .table-widget-body:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 @smw_marginDark@;
-}
-
-.theme-dark .table-widget-body:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 @smw_marginDark@;
-}
-
-.table-widget-body:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 @smw_marginLight@;
-}
-
-.table-widget-body:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 @smw_marginLight@;
+.table-widget-body,
+.table-widget-empty-text {
+  background-color: var(--theme-body-background);
 }
 
 /* Column Headers */
 
-.theme-dark .table-widget-column-header,
-.theme-dark .table-widget-cell {
-  -moz-border-end: 1px solid @table_itemDarkStartBorder@;
-  box-shadow: inset 1px 0 0 @table_itemDarkEndBorder@;
-}
-
-.theme-light .table-widget-column-header,
-.theme-light .table-widget-cell {
-  -moz-border-end: 1px solid @table_itemLightStartBorder@;
-  box-shadow: inset 1px 0 0 @table_itemLightEndBorder@;
+.table-widget-column-header,
+.table-widget-cell {
+  -moz-border-end: 1px solid var(--table-splitter-color) !important;
 }
 
 /* Table widget column header colors are taken from netmonitor.inc.css to match
@@ -1253,10 +1230,8 @@
   background: rgba(0,0,0,0);
   position: sticky;
   top: 0;
-  min-height: 32px;
   width: 100%;
-  border: none;
-  padding: 8px 0 0 !important;
+  padding: 5px 0 0 !important;
   color: inherit;
   text-align: center;
   font-weight: inherit !important;
@@ -1264,27 +1239,29 @@
 }
 
 .table-widget-column-header:hover {
-  background: rgba(0,0,0,0.10);
+  background-image: linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10));
 }
 
 .table-widget-column-header:hover:active {
-  background: rgba(0,0,0,0.25);
+  background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25));
 }
 
 .table-widget-column-header:not(:active)[sorted] {
-  background: rgba(0,0,0,0.15);
+  background-image: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
 }
 
 .table-widget-column-header:not(:active)[sorted=ascending] {
-  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
+  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3)),
+                    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
+  background-size: 100% 1px, auto;
+  background-repeat: no-repeat, repeat;
 }
 
 .table-widget-column-header:not(:active)[sorted=descending] {
-  background-image: radial-gradient(farthest-side at center bottom, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
+  background-image: radial-gradient(farthest-side at center bottom, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3)),
+                    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
+  background-size: 100% 1px, auto;
+  background-repeat: no-repeat, repeat;
   background-position: bottom;
 }
 
@@ -1292,44 +1269,22 @@
 
 .table-widget-cell {
   width: 100%;
-  margin: -1px 0 !important;
   padding: 3px 4px;
   background-clip: padding-box;
   min-width: 100px;
   -moz-user-focus: normal;
-}
-
-.theme-dark .table-widget-cell {
-  border-top: 1px solid @smw_itemDarkTopBorder@;
-  border-bottom: 1px solid @smw_itemDarkBottomBorder@;
-  color: var(--theme-selection-color);
-}
-
-.theme-dark:not(.filtering) .table-widget-cell:nth-child(odd):not(.theme-selected),
-.theme-dark .table-widget-cell:not(.theme-selected)[odd] {
-  background: rgba(255,255,255,0.05);
-}
-
-.theme-dark .table-widget-cell:last-of-type {
-  box-shadow: inset 0 -1px 0 @smw_itemDarkTopBorder@;
-}
-
-.theme-light .table-widget-cell {
-  border-top: 1px solid @smw_itemLightTopBorder@;
-  border-bottom: 1px solid @smw_itemLightBottomBorder@;
-}
-
-.theme-light .table-widget-cell:not(.theme-selected) {
+  margin-bottom: -1px !important;
+  border-bottom: 1px solid transparent;
   color: var(--theme-body-color);
 }
 
-.theme-light:not(.filtering) .table-widget-cell:nth-child(odd):not(.theme-selected),
-.theme-light .table-widget-cell:not(.theme-selected)[odd] {
-  background: rgba(128,128,128,0.05);
+.table-widget-cell:last-child {
+  border-bottom: 1px solid var(--table-splitter-color);
 }
 
-.theme-light .table-widget-cell:last-of-type {
-  box-shadow: inset 0 -1px 0 @smw_itemLightTopBorder@;
+:root:not(.filtering) .table-widget-cell:nth-child(odd):not(.theme-selected),
+.table-widget-cell:not(.theme-selected)[odd] {
+  background: var(--table-zebra-background);
 }
 
 .table-widget-cell.flash-out {
@@ -1349,10 +1304,6 @@
   text-align: center;
   font-size: large;
   margin-top: -20px !important;
-}
-
-.theme-light .table-widget-empty-text {
-  background: #F7F7F7; /* Background-Sidebar */
 }
 
 .table-widget-body:empty + .table-widget-empty-text:not([value=""]),
@@ -1406,11 +1357,11 @@
 }
 
 .tree-widget-item[level="1"] {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* Twisties */
-.tree-widget-item:before {
+.tree-widget-item::before {
   content: "";
   width: 14px;
   height: 14px;
@@ -1423,24 +1374,24 @@
   background-position: -28px -14px;
 }
 
-.tree-widget-item:-moz-locale-dir(rtl):before {
+.tree-widget-item:-moz-locale-dir(rtl)::before {
   float: right;
   transform: scaleX(-1);
 }
 
-.theme-light .tree-widget-item:before {
+.theme-light .tree-widget-item:not(.theme-selected)::before {
   background-position: 0 -14px;
 }
 
-.tree-widget-item[empty]:before {
+.tree-widget-item[empty]::before {
   background: transparent;
 }
 
-.tree-widget-item[expanded]:before {
+.tree-widget-item[expanded]::before {
   background-position: -42px -14px;
 }
 
-.theme-light .tree-widget-item[expanded]:before {
+.theme-light .tree-widget-item:not(.theme-selected)[expanded]:before {
   background-position: -14px -14px;
 }
 
@@ -1518,7 +1469,7 @@
 
 /* Custom icons for certain tree items indicating the type of the item */
 
-.tree-widget-item[type]:after {
+.tree-widget-item[type]::after {
   content: "";
   float: left;
   width: 16px;
@@ -1526,31 +1477,36 @@
   -moz-margin-end: 4px;
   background-repeat: no-repeat;
   background-size: 20px auto;
-  filter: url('filters.svg#invert');
   background-position: 0 0;
   background-size: auto 20px;
+  opacity: 0.75;
 }
 
-.tree-widget-item:-moz-locale-dir(rtl):after {
+.tree-widget-item.theme-selected[type]::after {
+  opacity: 1;
+}
+
+.tree-widget-item:-moz-locale-dir(rtl)::after {
   float: right;
 }
 
-.theme-dark .tree-widget-item[type]:after {
-  filter: url('filters.svg#invert-white');
+.theme-light .tree-widget-item.theme-selected[type]::after,
+.theme-dark .tree-widget-item[type]::after {
+  filter: invert(1);
 }
 
-.tree-widget-item[type="dir"]:after {
+.tree-widget-item[type="dir"]::after {
   background-image: url(chrome://browser/skin/devtools/filetype-dir-close.svg);
   background-position: 2px 0;
   background-size: auto 16px;
   width: 20px;
 }
 
-.tree-widget-item[type="dir"][expanded]:not([empty]):after {
+.tree-widget-item[type="dir"][expanded]:not([empty])::after {
   background-image: url(chrome://browser/skin/devtools/filetype-dir-open.svg);
 }
 
-.tree-widget-item[type="url"]:after {
+.tree-widget-item[type="url"]::after {
   background-image: url(chrome://browser/skin/devtools/filetype-globe.svg);
   background-size: auto 18px;
   width: 18px;

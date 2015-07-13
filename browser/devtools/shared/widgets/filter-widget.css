@@ -2,74 +2,103 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#container {
-  color: var(--theme-body-color);
-  padding: 5px;
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
   font: message-box;
+  color: var(--theme-body-color);
+}
+
+/* Main container: Displays the filters and presets in 2 columns */
+
+#container {
+  height: 100%;
+  display: flex;
+  position: relative;
 }
 
 #container.dragging {
   -moz-user-select: none;
 }
 
-.theme-light #add-filter,
-.theme-light .remove-button {
-  filter: invert(1);
-}
-
-.filter {
+.filters-list,
+.presets-list {
   display: flex;
-  margin-bottom: 10px;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
+.filters-list {
+  /* Allow the filters list to take the full width when the presets list is
+     hidden */
+  flex-grow: 1;
+  padding: 0 6px;
+}
+
+.presets-list {
+  /* Make sure that when the presets list is shown, it has a fixed width */
+  width: 200px;
+  padding-left: 6px;
+  transition: width .1s;
+  flex-shrink: 0;
+  border-left: 1px solid var(--theme-splitter-color);
+}
+
+.presets-list .add {
+  margin-top: 4px;
+}
+
+#container:not(.show-presets) .presets-list {
+  width: 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+#container.show-presets .filters-list {
+  width: 300px;
+}
+
+/* The list of filters and list of presets should push their footers to the
+   bottom, so they can take as much space as there is */
+
+#filters,
+#presets {
+  flex-grow: 1;
+  /* Avoid pushing below the tooltip's area */
+  overflow-y: auto;
+}
+
+/* The filters and presets list both have footers displayed at the bottom.
+   These footers have some input (taking up as much space as possible) and an
+   add button next */
+
+.footer {
+  display: flex;
+  margin: 10px 3px;
+}
+
+.footer :not(button) {
+  flex-grow: 1;
+  margin-right: 3px;
+}
+
+/* Styles for 1 filter function item */
+
+.filter,
 .filter-name,
 .filter-value {
   display: flex;
   align-items: center;
 }
 
+.filter {
+  margin: 5px 0;
+}
+
 .filter-name {
-  padding-right: 10px;
-  flex: 1;
-}
-
-.filter-value {
-  min-width: 150px;
-  flex: 2;
-}
-
-.remove-button {
-  width: 16px;
-  height: 16px;
-  background: url(chrome://browser/skin/devtools/close@2x.png);
-  background-size: 16px;
-  font-size: 0;
-  border: none;
-  cursor: pointer;
-}
-
-/* drag/drop handle */
-#container i {
-  width: 10px;
-  margin-right: 15px;
-  padding: 10px 0;
-  cursor: grab;
-}
-
-#container i::before {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 1px;
-  background: currentColor;
-  box-shadow: 0 3px 0 0 currentColor,
-              0 -3px 0 0 currentColor;
-}
-
-#container .dragging {
-  position: relative;
-  z-index: 1;
-  cursor: grab;
+  width: 120px;
+  margin-right: 10px;
 }
 
 .filter-name label {
@@ -81,14 +110,105 @@
   cursor: ew-resize;
 }
 
+/* drag/drop handle */
+
+.filter-name i {
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  cursor: grab;
+  background: linear-gradient(to bottom,
+                              currentColor 0,
+                              currentcolor 1px,
+                              transparent 1px,
+                              transparent 2px);
+  background-repeat: repeat-y;
+  background-size: auto 4px;
+  background-position: 0 1px;
+}
+
+.filter-value {
+  min-width: 150px;
+  margin-right: 10px;
+  flex: 1;
+}
+
 .filter-value input {
-  min-width: 50%;
   flex-grow: 1;
 }
 
-.filter-value span {
-  max-width: 20px;
-  width: 20px;
+
+.theme-light .add,
+.theme-light .remove-button {
+  filter: invert(1);
+}
+
+.preset {
+  display: flex;
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 3px 5px;
+
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.preset label,
+.preset span {
+  display: flex;
+  align-items: center;
+}
+
+.preset label {
+  flex: 1 0;
+  cursor: pointer;
+  color: var(--theme-body-color);
+}
+
+.preset:hover {
+  background: var(--theme-selection-background);
+}
+
+.preset:hover label, .preset:hover span {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .preset:hover .remove-button {
+  filter: invert(0);
+}
+
+.preset .remove-button {
+  order: 2;
+}
+
+.preset span {
+  flex: 2 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  order: 3;
+  color: var(--theme-body-color-alt);
+}
+
+.remove-button {
+  width: 16px;
+  height: 16px;
+  background: url(chrome://browser/skin/devtools/close@2x.png);
+  background-size: cover;
+  font-size: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#container .dragging {
+  position: relative;
+  z-index: 10;
+  cursor: grab;
 }
 
 /* message shown when there's no filter specified */
@@ -97,20 +217,7 @@
   line-height: 20px;
 }
 
-#editor-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-
-#editor-footer select {
-  flex-grow: 1;
-  box-sizing: border-box;
-  font: inherit;
-  margin: 0 3px;
-}
-
-#add-filter {
-  -moz-appearance: none;
+.add {
   background: url(chrome://browser/skin/devtools/add.svg);
   background-size: cover;
   border: none;

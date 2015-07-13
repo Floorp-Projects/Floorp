@@ -7,7 +7,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Components.utils.import("resource:///modules/UITour.jsm");
 Components.utils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 function test() {

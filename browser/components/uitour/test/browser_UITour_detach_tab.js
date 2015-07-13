@@ -12,8 +12,6 @@ let gContentAPI;
 let gContentWindow;
 let gContentDoc;
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   registerCleanupFunction(function() {
     gContentDoc = null;

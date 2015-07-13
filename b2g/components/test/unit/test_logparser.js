@@ -54,7 +54,8 @@ add_test(function test_print_properties() {
     "sys.usb.state": "diag,serial_smd,serial_tty,rmnet_bam,mass_storage,adb"
   };
 
-  let logMessages = LogParser.prettyPrintPropertiesArray(properties);
+  let logMessagesRaw = LogParser.prettyPrintPropertiesArray(properties);
+  let logMessages = new TextDecoder("utf-8").decode(logMessagesRaw);
   let logMessagesArray = logMessages.split("\n");
 
   ok(logMessagesArray.length === 3, "There should be 3 lines in the log.");

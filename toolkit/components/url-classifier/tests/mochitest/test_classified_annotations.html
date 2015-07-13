@@ -17,58 +17,27 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-// Add some URLs to the tracking database
-var testData = "tracking.example.com/";
-var testUpdate =
-  "n:1000\ni:test-track-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
-  testData;
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 function cleanup() {
   SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");
   SpecialPowers.clearUserPref("channelclassifier.allowlist_example");
 }
 
-var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                .getService(Ci.nsIUrlClassifierDBService);
-
-function doUpdate(update) {
-  var listener = {
-    QueryInterface: function(iid)
-    {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) {
-      ok(false, "Couldn't update classifier.");
-      // Abort test.
-      SimpleTest.finish();
-    },
-    updateSuccess: function(requestedTimeout) {
-      SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
-      // Make sure chrome:// URIs are processed. This does not white-list
-      // any URIs unless 'https://allowlisted.example.com' is added in the
-      // permission manager (see test_allowlisted_annotations.html)
-      SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
-      document.getElementById("testFrame").src = "classifiedAnnotatedFrame.html";
-    }
-  };
-
-  dbService.beginUpdate(listener, "test-track-simple", "");
-  dbService.beginStream("", "");
-  dbService.updateStream(update);
-  dbService.finishStream();
-  dbService.finishUpdate();
-}
-
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.trackingTable", "test-track-simple"]]},
-  function() { doUpdate(testUpdate); });
+  test);
+
+function test() {
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    SpecialPowers.setBoolPref("privacy.trackingprotection.enabled", true);
+    // Make sure chrome:// URIs are processed. This does not white-list
+    // any URIs unless 'https://allowlisted.example.com' is added in the
+    // permission manager (see test_allowlisted_annotations.html)
+    SpecialPowers.setBoolPref("channelclassifier.allowlist_example", true);
+    document.getElementById("testFrame").src = "classifiedAnnotatedFrame.html";
+  });
+}
 
 // Expected finish() call is in "classifiedAnnotatedFrame.html".
 SimpleTest.waitForExplicitFinish();

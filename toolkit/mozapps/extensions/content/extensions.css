@@ -74,7 +74,8 @@ setting[type="bool"][localized="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-localized-bool");
 }
 
-setting[type="bool"]:not([learnmore]) .preferences-learnmore {
+setting[type="bool"]:not([learnmore]) .preferences-learnmore,
+setting[type="boolint"]:not([learnmore]) .preferences-learnmore {
   visibility: collapse;
 }
 
