@@ -31,9 +31,9 @@ public:
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual Telemetry::ID SpeedHistogram() override;
 
-  void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
-                   int32_t width, int32_t height,
-                   gfx::SurfaceFormat format);
+  nsresult CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
+                       int32_t aWidth, int32_t aHeight,
+                       gfx::SurfaceFormat aFormat);
   void EndImageFrame();
 
   // Check if PNG is valid ICO (32bpp RGBA)

@@ -51,6 +51,10 @@ if test -z "$bucket"; then
         ac_add_options --with-ccache
     esac
 else
+    if ! test -e $topsrcdir/sccache/sccache.py; then
+        echo "Sccache missing in the tooltool manifest" >&2
+        exit 1
+    fi
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     case "$master" in
     *use1.mozilla.com*|*usw2.mozilla.com*)

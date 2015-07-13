@@ -17,7 +17,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(f6bce897-1a4a-4664-b96b-abacd6543e95)]
+[scriptable, builtinclass, uuid(6b7f8798-3c28-44fc-8b1a-cd613eb826c5)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -196,6 +196,27 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(BaseURI)]
   nsIURI binaryBaseURI();
+
+  /**
+   * Returns true if document or any of the documents ancestors
+   * up to the toplevel document make use of the CSP directive
+   * 'upgrade-insecure-requests'. Used to identify upgrade
+   * requests in e10s where the loadingDocument is not available.
+   *
+   * Warning: If the loadingDocument is null, then the
+   * upgradeInsecureRequests is false.
+   */
+  readonly attribute boolean upgradeInsecureRequests;
+
+%{ C++
+  inline bool GetUpgradeInsecureRequests()
+  {
+    bool result;
+    mozilla::DebugOnly<nsresult> rv = GetUpgradeInsecureRequests(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
 
   /**
    * Typically these are the window IDs of the window in which the element being

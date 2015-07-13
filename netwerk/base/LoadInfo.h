@@ -58,6 +58,7 @@ private:
            nsIPrincipal* aTriggeringPrincipal,
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
+           bool aUpgradeInsecureRequests,
            uint64_t aInnerWindowID,
            uint64_t aOuterWindowID,
            uint64_t aParentOuterWindowID);
@@ -70,13 +71,14 @@ private:
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsWeakPtr mLoadingContext;
-  nsSecurityFlags mSecurityFlags;
-  nsContentPolicyType mContentPolicyType;
-  nsCOMPtr<nsIURI> mBaseURI;
-  uint64_t mInnerWindowID;
-  uint64_t mOuterWindowID;
-  uint64_t mParentOuterWindowID;
+  nsWeakPtr              mLoadingContext;
+  nsSecurityFlags        mSecurityFlags;
+  nsContentPolicyType    mContentPolicyType;
+  nsCOMPtr<nsIURI>       mBaseURI;
+  bool                   mUpgradeInsecureRequests;
+  uint64_t               mInnerWindowID;
+  uint64_t               mOuterWindowID;
+  uint64_t               mParentOuterWindowID;
 };
 
 } // namespace mozilla

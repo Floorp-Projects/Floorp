@@ -83,6 +83,10 @@ private:
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
   bool mWithCredentials;
   bool mRequestApproved;
+  // Please note that the member variable mHasBeenCrossSite may rely on the
+  // promise that the CSP directive 'upgrade-insecure-requests' upgrades
+  // an http: request to https: in nsHttpChannel::Connect() and hence
+  // a request might not be marked as cross site request based on that promise.
   bool mHasBeenCrossSite;
   bool mIsPreflight;
 #ifdef DEBUG

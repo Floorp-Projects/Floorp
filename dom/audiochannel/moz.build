@@ -4,25 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 XPIDL_SOURCES += [
     'nsIAudioChannelAgent.idl',
+    'nsIAudioChannelService.idl',
 ]
 
 XPIDL_MODULE = 'dom_audiochannel'
 
 EXPORTS += [
     'AudioChannelAgent.h',
-    'AudioChannelCommon.h',
     'AudioChannelService.h',
-    'AudioChannelServiceChild.h',
 ]
 
 UNIFIED_SOURCES += [
     'AudioChannelAgent.cpp',
     'AudioChannelService.cpp',
-    'AudioChannelServiceChild.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

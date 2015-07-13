@@ -255,6 +255,59 @@ CSP_IsQuotelessKeyword(const nsAString& aKey)
   return false;
 }
 
+/*
+ * Checks whether the current directive permits a specific
+ * scheme. This function is called from nsCSPSchemeSrc() and
+ * also nsCSPHostSrc.
+ * @param aEnforcementScheme
+ *        The scheme that this directive allows
+ * @param aUri
+ *        The uri of the subresource load.
+ * @param aReportOnly
+ *        Whether the enforced policy is report only or not.
+ * @param aUpgradeInsecure
+ *        Whether the policy makes use of the directive
+ *        'upgrade-insecure-requests'.
+ */
+
+bool
+permitsScheme(const nsAString& aEnforcementScheme,
+              nsIURI* aUri,
+              bool aReportOnly,
+              bool aUpgradeInsecure)
+{
+  nsAutoCString scheme;
+  nsresult rv = aUri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // no scheme to enforce, let's allow the load (e.g. script-src *)
+  if (aEnforcementScheme.IsEmpty()) {
+    return true;
+  }
+
+  // if the scheme matches, all good - allow the load
+  if (aEnforcementScheme.EqualsASCII(scheme.get())) {
+    return true;
+  }
+
+  // allow scheme-less sources where the protected resource is http
+  // and the load is https, see:
+  // http://www.w3.org/TR/CSP2/#match-source-expression
+  if (aEnforcementScheme.EqualsASCII("http") &&
+      scheme.EqualsASCII("https")) {
+    return true;
+  }
+
+  // Allow the load when enforcing upgrade-insecure-requests with the
+  // promise the request gets upgraded from http to https and ws to wss.
+  // See nsHttpChannel::Connect() and also WebSocket.cpp. Please note,
+  // the report only policies should not allow the load and report
+  // the error back to the page.
+  return ((aUpgradeInsecure && !aReportOnly) &&
+          ((scheme.EqualsASCII("http") && aEnforcementScheme.EqualsASCII("https")) ||
+           (scheme.EqualsASCII("ws") && aEnforcementScheme.EqualsASCII("wss"))));
+}
+
 /* ===== nsCSPSrc ============================ */
 
 nsCSPBaseSrc::nsCSPBaseSrc()
@@ -269,7 +322,8 @@ nsCSPBaseSrc::~nsCSPBaseSrc()
 // nsCSPKeywordSrc and nsCSPHashSource fall back to this base class
 // implementation which will never allow the load.
 bool
-nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
+nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                      bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
     nsAutoCString spec;
@@ -304,19 +358,16 @@ nsCSPSchemeSrc::~nsCSPSchemeSrc()
 }
 
 bool
-nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
+nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                        bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
     nsAutoCString spec;
     aUri->GetSpec(spec);
     CSPUTILSLOG(("nsCSPSchemeSrc::permits, aUri: %s", spec.get()));
   }
-
-  NS_ASSERTION((!mScheme.EqualsASCII("")), "scheme can not be the empty string");
-  nsAutoCString scheme;
-  nsresult rv = aUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, false);
-  return mScheme.EqualsASCII(scheme.get());
+  MOZ_ASSERT((!mScheme.EqualsASCII("")), "scheme can not be the empty string");
+  return permitsScheme(mScheme, aUri, aReportOnly, aUpgradeInsecure);
 }
 
 void
@@ -330,7 +381,6 @@ nsCSPSchemeSrc::toString(nsAString& outStr) const
 
 nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
   : mHost(aHost)
-  , mAllowHttps(false)
 {
   ToLowerCase(mHost);
 }
@@ -340,7 +390,8 @@ nsCSPHostSrc::~nsCSPHostSrc()
 }
 
 bool
-nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
+nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                      bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
     nsAutoCString spec;
@@ -352,21 +403,8 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   // http://www.w3.org/TR/CSP11/#match-source-expression
 
   // 4.3) scheme matching: Check if the scheme matches.
-  nsAutoCString scheme;
-  nsresult rv = aUri->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (!mScheme.IsEmpty() &&
-      !mScheme.EqualsASCII(scheme.get())) {
-
-    // We should not return false for scheme-less sources where the protected resource
-    // is http and the load is https, see:
-    // http://www.w3.org/TR/CSP2/#match-source-expression
-    bool isHttpsScheme =
-      (NS_SUCCEEDED(aUri->SchemeIs("https", &isHttpsScheme)) && isHttpsScheme);
-
-    if (!(isHttpsScheme && mAllowHttps)) {
-      return false;
-    }
+  if (!permitsScheme(mScheme, aUri, aReportOnly, aUpgradeInsecure)) {
+    return false;
   }
 
   // The host in nsCSpHostSrc should never be empty. In case we are enforcing
@@ -396,7 +434,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   // Before we can check if the host matches, we have to
   // extract the host part from aUri.
   nsAutoCString uriHost;
-  rv = aUri->GetHost(uriHost);
+  nsresult rv = aUri->GetHost(uriHost);
   NS_ENSURE_SUCCESS(rv, false);
 
   // 4.5) host matching: Check if the allowed host starts with a wilcard.
@@ -458,6 +496,11 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   int32_t uriPort;
   rv = aUri->GetPort(&uriPort);
   NS_ENSURE_SUCCESS(rv, false);
+
+  nsAutoCString scheme;
+  rv = aUri->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
   uriPort = (uriPort > 0) ? uriPort : NS_GetDefaultPort(scheme.get());
 
   // 4.7) Default port matching: If mPort is empty, we have to compare default ports.
@@ -468,7 +511,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
       // is http and the load is https, see: http://www.w3.org/TR/CSP2/#match-source-expression
       // BUT, we only allow scheme-less sources to be upgraded from http to https if CSP
       // does not explicitly define a port.
-      if (!(uriPort == NS_GetDefaultPort("https") && mAllowHttps)) {
+      if (!(uriPort == NS_GetDefaultPort("https"))) {
         return false;
       }
     }
@@ -515,11 +558,10 @@ nsCSPHostSrc::toString(nsAString& outStr) const
 }
 
 void
-nsCSPHostSrc::setScheme(const nsAString& aScheme, bool aAllowHttps)
+nsCSPHostSrc::setScheme(const nsAString& aScheme)
 {
   mScheme = aScheme;
   ToLowerCase(mScheme);
-  mAllowHttps = aAllowHttps;
 }
 
 void
@@ -590,7 +632,8 @@ nsCSPNonceSrc::~nsCSPNonceSrc()
 }
 
 bool
-nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
+nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                       bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
     nsAutoCString spec;
@@ -718,7 +761,8 @@ nsCSPDirective::~nsCSPDirective()
 }
 
 bool
-nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
+nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected,
+                        bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
     nsAutoCString spec;
@@ -727,18 +771,11 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
   }
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
-    if (mSrcs[i]->permits(aUri, aNonce, aWasRedirected)) {
+    if (mSrcs[i]->permits(aUri, aNonce, aWasRedirected, aReportOnly, aUpgradeInsecure)) {
       return true;
     }
   }
   return false;
-}
-
-bool
-nsCSPDirective::permits(nsIURI* aUri) const
-{
-  nsString dummyNonce;
-  return permits(aUri, dummyNonce, false);
 }
 
 bool
@@ -855,6 +892,11 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mForm_action.Value() = mozilla::Move(srcs);
       return;
 
+    case nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE:
+      outCSP.mUpgrade_insecure_requests.Construct();
+      // does not have any srcs
+      return;
+
     // REFERRER_DIRECTIVE is handled in nsCSPPolicy::toDomCSPStruct()
 
     default:
@@ -887,10 +929,29 @@ nsCSPDirective::getReportURIs(nsTArray<nsString> &outReportURIs) const
   }
 }
 
+/* =============== nsUpgradeInsecureDirective ============= */
+
+nsUpgradeInsecureDirective::nsUpgradeInsecureDirective(CSPDirective aDirective)
+: nsCSPDirective(aDirective)
+{
+}
+
+nsUpgradeInsecureDirective::~nsUpgradeInsecureDirective()
+{
+}
+
+void
+nsUpgradeInsecureDirective::toString(nsAString& outStr) const
+{
+  outStr.AppendASCII(CSP_CSPDirectiveToString(
+    nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE));
+}
+
 /* ===== nsCSPPolicy ========================= */
 
 nsCSPPolicy::nsCSPPolicy()
-  : mReportOnly(false)
+  : mUpgradeInsecDir(nullptr)
+  , mReportOnly(false)
 {
   CSPUTILSLOG(("nsCSPPolicy::nsCSPPolicy"));
 }
@@ -936,7 +997,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
   // These directive arrays are short (1-5 elements), not worth using a hashtable.
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
-      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected)) {
+      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected, mReportOnly, mUpgradeInsecDir)) {
         mDirectives[i]->toString(outViolatedDirective);
         return false;
       }
@@ -950,7 +1011,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (!aSpecific && defaultDir) {
-    if (!defaultDir->permits(aUri, aNonce, aWasRedirected)) {
+    if (!defaultDir->permits(aUri, aNonce, aWasRedirected, mReportOnly, mUpgradeInsecDir)) {
       defaultDir->toString(outViolatedDirective);
       return false;
     }

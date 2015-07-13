@@ -6,7 +6,8 @@
 "size": 24657188,
 "digest": "28258eff929158c04dd7d6839bd3c4aa8963c2d478fe88e55cc98d58d878cc673e3625be5c92fe5b6c45bae38980b9919d9aaa7f32a2d8fee89294e90e2a1e2f",
 "algorithm": "sha512",
-"filename": "gcc.tar.xz"
+"filename": "gcc.tar.xz",
+"unpack": true
 },
 {
 "size": 40,
