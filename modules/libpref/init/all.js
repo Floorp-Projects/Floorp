@@ -4804,6 +4804,10 @@ pref("dom.caches.enabled", true);
 pref("camera.control.low_memory_thresholdMB", 404);
 #endif
 
+// SystemUpdate API
+pref("dom.system_update.enabled", false);
+pref("dom.system_update.debug", false);
+
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 

@@ -13,6 +13,7 @@ contract @mozilla.org/content-permission/prompt;1 {8c719f03-afe0-4aac-91ff-6c215
 # UpdatePrompt.js
 component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
 contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
+category system-update-provider MozillaProvider @mozilla.org/updates/update-prompt;1,{88b3eb21-d072-4e3b-886d-f89d8c49fe59}
 #endif
 
 # DirectoryProvider.js

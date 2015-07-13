@@ -84,12 +84,22 @@ UpdateCheckListener.prototype = {
 
     if (updateCount == 0) {
       this._updatePrompt.setUpdateStatus("no-updates");
+
+      if (this._updatePrompt._systemUpdateListener) {
+        this._updatePrompt._systemUpdateListener.onError("no-updates");
+      }
+
       return;
     }
 
     let update = Services.aus.selectUpdate(updates, updateCount);
     if (!update) {
       this._updatePrompt.setUpdateStatus("already-latest-version");
+
+      if (this._updatePrompt._systemUpdateListener) {
+        this._updatePrompt._systemUpdateListener.onError("already-latest-version");
+      }
+
       return;
     }
 
@@ -102,14 +112,22 @@ UpdateCheckListener.prototype = {
     // require all 32 bits.
     let errorCode = update.errorCode >>> 0;
     let isNSError = (errorCode >>> 31) == 1;
+    let errorMsg = "check-error-";
 
     if (errorCode == NETWORK_ERROR_OFFLINE) {
-      this._updatePrompt.setUpdateStatus("retry-when-online");
+      errorMsg = "retry-when-online";
+      this._updatePrompt.setUpdateStatus(errorMsg);
     } else if (isNSError) {
-      this._updatePrompt.setUpdateStatus("check-error-" + errorCode);
+      errorMsg = "check-error-" + errorCode;
+      this._updatePrompt.setUpdateStatus(errorMsg);
     } else if (errorCode > HTTP_ERROR_OFFSET) {
       let httpErrorCode = errorCode - HTTP_ERROR_OFFSET;
-      this._updatePrompt.setUpdateStatus("check-error-http-" + httpErrorCode);
+      errorMsg = "check-error-http-" + httpErrorCode;
+      this._updatePrompt.setUpdateStatus(errorMsg);
+    }
+
+    if (this._updatePrompt._systemUpdateListener) {
+      this._updatePrompt._systemUpdateListener.onError(errorMsg);
     }
 
     Services.aus.QueryInterface(Ci.nsIUpdateCheckListener);
@@ -129,13 +147,93 @@ UpdatePrompt.prototype = {
                                          Ci.nsIUpdateCheckListener,
                                          Ci.nsIRequestObserver,
                                          Ci.nsIProgressEventSink,
-                                         Ci.nsIObserver]),
+                                         Ci.nsIObserver,
+                                         Ci.nsISystemUpdateProvider]),
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(UpdatePrompt),
 
   _update: null,
   _applyPromptTimer: null,
   _waitingForIdle: false,
   _updateCheckListner: null,
+  _systemUpdateListener: null,
+  _availableParameters: {
+    "deviceinfo.last_updated": null,
+    "gecko.updateStatus": null,
+    "app.update.channel": null,
+    "app.update.interval": null,
+    "app.update.url": null,
+  },
+  _pendingUpdateAvailablePackageInfo: null,
+  _isPendingUpdateReady: false,
+
+  // nsISystemUpdateProvider
+  checkForUpdate: function() {
+    this.forceUpdateCheck();
+  },
+
+  startDownload: function() {
+    this.downloadUpdate(this._update);
+  },
+
+  stopDownload: function() {
+    this.handleDownloadCancel();
+  },
+
+  applyUpdate: function() {
+    this.handleApplyPromptResult({result: "restart"});
+  },
+
+  setParameter: function(aName, aValue) {
+    if (!this._availableParameters.hasOwnProperty(aName)) {
+      return false;
+    }
+
+    this._availableParameters[aName] = aValue;
+
+    switch (aName) {
+      case "app.update.channel":
+      case "app.update.url":
+        Services.prefs.setCharPref(aName, aValue);
+        break;
+      case "app.update.interval":
+        Services.prefs.setIntPref(aName, parseInt(aValue, 10));
+        break;
+    }
+
+    return true;
+  },
+
+  getParameter: function(aName) {
+    if (!this._availableParameters.hasOwnProperty(aName)) {
+      return null;
+    }
+
+    return this._availableParameters[aName];
+  },
+
+  setListener: function(aListener) {
+    this._systemUpdateListener = aListener;
+
+    // If an update is available or ready, trigger the event right away at this point.
+    if (this._pendingUpdateAvailablePackageInfo) {
+      this._systemUpdateListener.onUpdateAvailable(this._pendingUpdateAvailablePackageInfo.type,
+                                             this._pendingUpdateAvailablePackageInfo.version,
+                                             this._pendingUpdateAvailablePackageInfo.description,
+                                             this._pendingUpdateAvailablePackageInfo.buildDate,
+                                             this._pendingUpdateAvailablePackageInfo.size);
+      // Set null when the listener is attached.
+      this._pendingUpdateAvailablePackageInfo = null;
+    }
+
+    if (this._isPendingUpdateReady) {
+      this._systemUpdateListener.onUpdateReady();
+      this._isPendingUpdateReady = false;
+    }
+  },
+
+  unsetListener: function(aListener) {
+    this._systemUpdateListener = null;
+  },
 
   get applyPromptTimeout() {
     return Services.prefs.getIntPref(PREF_APPLY_PROMPT_TIMEOUT);
@@ -157,6 +255,37 @@ UpdatePrompt.prototype = {
   checkForUpdates: function UP_checkForUpdates() { },
 
   showUpdateAvailable: function UP_showUpdateAvailable(aUpdate) {
+    let packageInfo = {};
+    packageInfo.version = aUpdate.displayVersion;
+    packageInfo.description = aUpdate.statusText;
+    packageInfo.buildDate = aUpdate.buildID;
+
+    let patch = aUpdate.selectedPatch;
+    if (!patch && aUpdate.patchCount > 0) {
+      // For now we just check the first patch to get size information if a
+      // patch hasn't been selected yet.
+      patch = aUpdate.getPatchAt(0);
+    }
+
+    if (patch) {
+      packageInfo.size = patch.size;
+      packageInfo.type = patch.type;
+    } else {
+      log("Warning: no patches available in update");
+    }
+
+    this._pendingUpdateAvailablePackageInfo = packageInfo;
+
+    if (this._systemUpdateListener) {
+      this._systemUpdateListener.onUpdateAvailable(packageInfo.type,
+                                             packageInfo.version,
+                                             packageInfo.description,
+                                             packageInfo.buildDate,
+                                             packageInfo.size);
+      // Set null since the event is fired.
+      this._pendingUpdateAvailablePackageInfo = null;
+    }
+
     if (!this.sendUpdateEvent("update-available", aUpdate)) {
 
       log("Unable to prompt for available update, forcing download");
@@ -165,6 +294,12 @@ UpdatePrompt.prototype = {
   },
 
   showUpdateDownloaded: function UP_showUpdateDownloaded(aUpdate, aBackground) {
+    if (this._systemUpdateListener) {
+      this._systemUpdateListener.onUpdateReady();
+    } else {
+      this._isPendingUpdateReady = true;
+    }
+
     // The update has been downloaded and staged. We send the update-downloaded
     // event right away. After the user has been idle for a while, we send the
     // update-prompt-restart event, increasing the chances that we can apply the
@@ -188,12 +323,18 @@ UpdatePrompt.prototype = {
   showUpdateError: function UP_showUpdateError(aUpdate) {
     log("Update error, state: " + aUpdate.state + ", errorCode: " +
         aUpdate.errorCode);
+    if (this._systemUpdateListener) {
+      this._systemUpdateListener.onError("update-error: " + aUpdate.errorCode + " " + aUpdate.statusText);
+    }
+
     this.sendUpdateEvent("update-error", aUpdate);
     this.setUpdateStatus(aUpdate.statusText);
   },
 
   showUpdateHistory: function UP_showUpdateHistory(aParent) { },
   showUpdateInstalled: function UP_showUpdateInstalled() {
+    this.setParameter("deviceinfo.last_updated", Date.now());
+
     if (useSettings()) {
       let lock = Services.settings.createLock();
       lock.set("deviceinfo.last_updated", Date.now(), null, null);
@@ -213,6 +354,8 @@ UpdatePrompt.prototype = {
   },
 
   setUpdateStatus: function UP_setUpdateStatus(aStatus) {
+     this.setParameter("gecko.updateStatus", aStatus);
+
      if (useSettings()) {
        log("Setting gecko.updateStatus: " + aStatus);
 
@@ -222,6 +365,14 @@ UpdatePrompt.prototype = {
   },
 
   showApplyPrompt: function UP_showApplyPrompt(aUpdate) {
+    // Notify update package is ready to apply
+    if (this._systemUpdateListener) {
+      this._systemUpdateListener.onUpdateReady();
+    } else {
+      // Set the flag to true and fire the onUpdateReady event when the listener is attached.
+      this._isPendingUpdateReady = true;
+    }
+
     if (!this.sendUpdateEvent("update-prompt-apply", aUpdate)) {
       log("Unable to prompt, forcing restart");
       this.restartProcess();
@@ -581,6 +732,10 @@ UpdatePrompt.prototype = {
 
   onProgress: function UP_onProgress(aRequest, aContext, aProgress,
                                      aProgressMax) {
+    if (this._systemUpdateListener) {
+      this._systemUpdateListener.onProgress(aProgress, aProgressMax);
+    }
+
     if (aProgress == aProgressMax) {
       // The update.mar validation done by onStopRequest may take
       // a while before the onStopRequest callback is made, so stop

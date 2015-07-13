@@ -690,6 +690,9 @@
 @RESPATH@/components/EngineeringModeAPI.js
 @RESPATH@/components/EngineeringModeService.js
 
+@RESPATH@/components/SystemUpdate.manifest
+@RESPATH@/components/SystemUpdateManager.js
+
 #ifdef MOZ_DEBUG
 @RESPATH@/components/TestInterfaceJS.js
 @RESPATH@/components/TestInterfaceJS.manifest
