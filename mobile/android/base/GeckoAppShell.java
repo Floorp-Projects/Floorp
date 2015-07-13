@@ -1254,9 +1254,15 @@ public class GeckoAppShell
         // Start with the original URI. If we end up modifying it, we'll
         // overwrite it.
         final String extension = MimeTypeMap.getFileExtensionFromUrl(targetURI);
-        final String mimeType2 = getMimeTypeFromExtension(extension);
         final Intent intent = getIntentForActionString(action);
-        intent.setDataAndType(uri, mimeType2);
+        intent.setData(uri);
+
+        if ("file".equals(scheme)) {
+            // Only set explicit mimeTypes on file://.
+            final String mimeType2 = getMimeTypeFromExtension(extension);
+            intent.setType(mimeType2);
+            return intent;
+        }
 
         if ("vnd.youtube".equals(scheme) &&
             !hasHandlersForIntent(intent) &&
