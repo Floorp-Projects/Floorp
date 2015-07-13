@@ -45,6 +45,10 @@ function* spawnTest () {
   ok(true, "Got expected cycle collection events");
 
   yield front.stopRecording();
+
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 }

@@ -37,8 +37,6 @@ function* spawnTest() {
   let secondRecordingProfile = secondRecording.getProfile();
   let secondRecordingSamples = secondRecordingProfile.threads[0].samples.data;
 
-  isnot(secondRecording._profilerStartTime, 0,
-    "The profiling start time should not be 0 on the second recording.");
   ok(secondRecording.getDuration() >= WAIT_TIME,
     "The second recording duration is correct.");
 
