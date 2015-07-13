@@ -38,17 +38,18 @@ GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing, bool aPersist)
 }
 
 void
-SanitizeOriginKeys(const uint64_t& aSinceWhen)
+SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing)
 {
-  LOG(("SanitizeOriginKeys since %llu", aSinceWhen));
+  LOG(("SanitizeOriginKeys since %llu %s", aSinceWhen,
+       (aOnlyPrivateBrowsing? "in Private Browsing." : ".")));
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // Avoid opening MediaManager in this case, since this is called by
     // sanitize.js when cookies are cleared, which can happen on startup.
     ScopedDeletePtr<Parent<NonE10s>> tmpParent(new Parent<NonE10s>(true));
-    tmpParent->RecvSanitizeOriginKeys(aSinceWhen);
+    tmpParent->RecvSanitizeOriginKeys(aSinceWhen, aOnlyPrivateBrowsing);
   } else {
-    Child::Get()->SendSanitizeOriginKeys(aSinceWhen);
+    Child::Get()->SendSanitizeOriginKeys(aSinceWhen, aOnlyPrivateBrowsing);
   }
 }
 
