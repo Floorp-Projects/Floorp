@@ -192,6 +192,82 @@ let OutputGenerator = {
   },
 
   /**
+   * Adds math roles to the output, for a MathML accessible.
+   * @param {Array} aOutput Output array.
+   * @param {nsIAccessible} aAccessible current accessible object.
+   * @param {String} aRoleStr aAccessible's role string.
+   */
+  _addMathRoles: function _addMathRoles(aOutput, aAccessible, aRoleStr) {
+    // First, determine the actual role to use (e.g. mathmlfraction).
+    let roleStr = aRoleStr;
+    switch(aAccessible.role) {
+      case Roles.MATHML_CELL:
+      case Roles.MATHML_ENCLOSED:
+      case Roles.MATHML_LABELED_ROW:
+      case Roles.MATHML_ROOT:
+      case Roles.MATHML_SQUARE_ROOT:
+      case Roles.MATHML_TABLE:
+      case Roles.MATHML_TABLE_ROW:
+        // Use the default role string.
+        break;
+      case Roles.MATHML_MULTISCRIPTS:
+      case Roles.MATHML_OVER:
+      case Roles.MATHML_SUB:
+      case Roles.MATHML_SUB_SUP:
+      case Roles.MATHML_SUP:
+      case Roles.MATHML_UNDER:
+      case Roles.MATHML_UNDER_OVER:
+        // For scripted accessibles, use the string 'mathmlscripted'.
+        roleStr = 'mathmlscripted';
+        break;
+      case Roles.MATHML_FRACTION:
+        // From a semantic point of view, the only important point is to
+        // distinguish between fractions that have a bar and those that do not.
+        // Per the MathML 3 spec, the latter happens iff the linethickness
+        // attribute is of the form [zero-float][optional-unit]. In that case,
+        // we use the string 'mathmlfractionwithoutbar'.
+        let linethickness = Utils.getAttributes(aAccessible).linethickness;
+        if (linethickness) {
+            let numberMatch = linethickness.match(/^(?:\d|\.)+/);
+            if (numberMatch && !parseFloat(numberMatch[0])) {
+                roleStr += 'withoutbar';
+            }
+        }
+        break;
+      default:
+        // Otherwise, do not output the actual role.
+        roleStr = null;
+        break;
+    }
+
+    // Get the math role based on the position in the parent accessible
+    // (e.g. numerator for the first child of a mathmlfraction).
+    let mathRole = Utils.getMathRole(aAccessible);
+    if (mathRole) {
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']
+        ({string: this._getOutputName(mathRole)});
+    }
+    if (roleStr) {
+      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift']
+        ({string: this._getOutputName(roleStr)});
+    }
+  },
+
+  /**
+   * Adds MathML menclose notations to the output.
+   * @param {Array} aOutput Output array.
+   * @param {nsIAccessible} aAccessible current accessible object.
+   */
+  _addMencloseNotations: function _addMencloseNotations(aOutput, aAccessible) {
+    let notations = Utils.getAttributes(aAccessible).notation || 'longdiv';
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'].apply(
+      aOutput, [for (notation of notations.split(' '))
+        {string: this._getOutputName('notation-' + notation)}
+      ]
+    );
+  },
+
+  /**
    * Adds an entry type attribute to the description if available.
    * @param {Array} aOutput Output array.
    * @param {nsIAccessible} aAccessible current accessible object.
@@ -212,7 +288,7 @@ let OutputGenerator = {
 
   _addState: function _addState(aOutput, aState, aRoleStr) {}, // jshint ignore:line
 
-  _addRole: function _addRole(aOutput, aRoleStr) {}, // jshint ignore:line
+  _addRole: function _addRole(aOutput, aAccessible, aRoleStr) {}, // jshint ignore:line
 
   get outputOrder() {
     if (!this._utteranceOrder) {
@@ -301,7 +377,67 @@ let OutputGenerator = {
     'dialog': INCLUDE_DESC | INCLUDE_NAME,
     'chrome window': IGNORE_EXPLICIT_NAME,
     'app root': IGNORE_EXPLICIT_NAME,
-    'statusbar': NAME_FROM_SUBTREE_RULE },
+    'statusbar': NAME_FROM_SUBTREE_RULE,
+    'mathml table': INCLUDE_DESC | INCLUDE_NAME,
+    'mathml labeled row': NAME_FROM_SUBTREE_RULE,
+    'mathml table row': NAME_FROM_SUBTREE_RULE,
+    'mathml cell': INCLUDE_DESC | INCLUDE_NAME,
+    'mathml fraction': INCLUDE_DESC,
+    'mathml square root': INCLUDE_DESC,
+    'mathml root': INCLUDE_DESC,
+    'mathml enclosed': INCLUDE_DESC,
+    'mathml sub': INCLUDE_DESC,
+    'mathml sup': INCLUDE_DESC,
+    'mathml sub sup': INCLUDE_DESC,
+    'mathml under': INCLUDE_DESC,
+    'mathml over': INCLUDE_DESC,
+    'mathml under over': INCLUDE_DESC,
+    'mathml multiscripts': INCLUDE_DESC,
+    'mathml identifier': INCLUDE_DESC,
+    'mathml number': INCLUDE_DESC,
+    'mathml operator': INCLUDE_DESC,
+    'mathml text': INCLUDE_DESC,
+    'mathml string literal': INCLUDE_DESC,
+    'mathml row': INCLUDE_DESC,
+    'mathml style': INCLUDE_DESC,
+    'mathml error': INCLUDE_DESC },
+
+  mathmlRolesSet: new Set([
+    Roles.MATHML_MATH,
+    Roles.MATHML_IDENTIFIER,
+    Roles.MATHML_NUMBER,
+    Roles.MATHML_OPERATOR,
+    Roles.MATHML_TEXT,
+    Roles.MATHML_STRING_LITERAL,
+    Roles.MATHML_GLYPH,
+    Roles.MATHML_ROW,
+    Roles.MATHML_FRACTION,
+    Roles.MATHML_SQUARE_ROOT,
+    Roles.MATHML_ROOT,
+    Roles.MATHML_FENCED,
+    Roles.MATHML_ENCLOSED,
+    Roles.MATHML_STYLE,
+    Roles.MATHML_SUB,
+    Roles.MATHML_SUP,
+    Roles.MATHML_SUB_SUP,
+    Roles.MATHML_UNDER,
+    Roles.MATHML_OVER,
+    Roles.MATHML_UNDER_OVER,
+    Roles.MATHML_MULTISCRIPTS,
+    Roles.MATHML_TABLE,
+    Roles.LABELED_ROW,
+    Roles.MATHML_TABLE_ROW,
+    Roles.MATHML_CELL,
+    Roles.MATHML_ACTION,
+    Roles.MATHML_ERROR,
+    Roles.MATHML_STACK,
+    Roles.MATHML_LONG_DIVISION,
+    Roles.MATHML_STACK_GROUP,
+    Roles.MATHML_STACK_ROW,
+    Roles.MATHML_STACK_CARRIES,
+    Roles.MATHML_STACK_CARRY,
+    Roles.MATHML_STACK_LINE
+  ]),
 
   objectOutputFunctions: {
     _generateBaseOutput:
@@ -311,7 +447,7 @@ let OutputGenerator = {
         if (aFlags & INCLUDE_DESC) {
           this._addState(output, aState, aRoleStr);
           this._addType(output, aAccessible, aRoleStr);
-          this._addRole(output, aRoleStr);
+          this._addRole(output, aAccessible, aRoleStr);
         }
 
         if (aFlags & INCLUDE_VALUE && aAccessible.value.trim()) {
@@ -348,7 +484,7 @@ let OutputGenerator = {
       aAccessible.groupPosition({}, itemof, itemno);
       let output = [];
       this._addState(output, aState);
-      this._addRole(output, aRoleStr);
+      this._addRole(output, aAccessible, aRoleStr);
       output.push({
         string: 'objItemOfN',
         args: [itemno.value, itemof.value]
@@ -374,7 +510,7 @@ let OutputGenerator = {
         if (table.isProbablyForLayout()) {
           return output;
         }
-        this._addRole(output, aRoleStr);
+        this._addRole(output, aAccessible, aRoleStr);
         output.push.call(output, {
           string: this._getOutputName('tblColumnInfo'),
           count: table.columnCount
@@ -393,6 +529,23 @@ let OutputGenerator = {
       this._addState(output, aState);
       this._addName(output, aAccessible, aFlags);
       this._addLandmark(output, aAccessible);
+      return output;
+    },
+
+    // Use the table output functions for MathML tabular elements.
+    mathmltable: function mathmltable() {
+      return this.objectOutputFunctions.table.apply(this, arguments);
+    },
+
+    mathmlcell: function mathmlcell() {
+      return this.objectOutputFunctions.cell.apply(this, arguments);
+    },
+
+    mathmlenclosed: function mathmlenclosed(aAccessible, aRoleStr, aState,
+                                            aFlags, aContext) {
+      let output = this.objectOutputFunctions.defaultFunc.
+        apply(this, [aAccessible, aRoleStr, aState, aFlags, aContext]);
+      this._addMencloseNotations(output, aAccessible);
       return output;
     }
   }
@@ -597,8 +750,12 @@ this.UtteranceGenerator = {  // jshint ignore:line
     return aContext.newAncestry;
   },
 
-  _addRole: function _addRole(aOutput, aRoleStr) {
-    aOutput.push({string: this._getOutputName(aRoleStr)});
+  _addRole: function _addRole(aOutput, aAccessible, aRoleStr) {
+    if (this.mathmlRolesSet.has(aAccessible.role)) {
+      this._addMathRoles(aOutput, aAccessible, aRoleStr);
+    } else {
+      aOutput.push({string: this._getOutputName(aRoleStr)});
+    }
   },
 
   _addState: function _addState(aOutput, aState, aRoleStr) {
@@ -657,7 +814,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
   _getListUtterance:
     function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
       let utterance = [];
-      this._addRole(utterance, aRoleStr);
+      this._addRole(utterance, aAccessible, aRoleStr);
       utterance.push({
         string: this._getOutputName('listItemsCount'),
         count: aItemCount
@@ -805,8 +962,12 @@ this.BrailleGenerator = {  // jshint ignore:line
     return OutputGenerator._getOutputName(aName) + 'Abbr';
   },
 
-  _addRole: function _addRole(aBraille, aRoleStr) {
-    aBraille.push({string: this._getOutputName(aRoleStr)});
+  _addRole: function _addRole(aBraille, aAccessible, aRoleStr) {
+    if (this.mathmlRolesSet.has(aAccessible.role)) {
+      this._addMathRoles(aBraille, aAccessible, aRoleStr);
+    } else {
+      aBraille.push({string: this._getOutputName(aRoleStr)});
+    }
   },
 
   _addState: function _addState(aBraille, aState, aRoleStr) {
