@@ -345,16 +345,7 @@ public:
   {
     mLayerEventRegions = aItem;
   }
-  bool IsBuildingLayerEventRegions()
-  {
-    if (mMode == PAINTING) {
-      // Note: this is the only place that gets to query LayoutEventRegionsEnabled
-      // 'directly' - other code should call this function.
-      return gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
-             mAsyncPanZoomEnabled;
-    }
-    return false;
-  }
+  bool IsBuildingLayerEventRegions();
   bool IsInsidePointerEventsNoneDoc()
   {
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;

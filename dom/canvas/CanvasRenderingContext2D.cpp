@@ -53,6 +53,7 @@
 #include "gfxPlatform.h"
 #include "gfxFont.h"
 #include "gfxBlur.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 
 #include "nsFrameLoader.h"

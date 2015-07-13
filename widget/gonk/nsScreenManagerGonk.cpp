@@ -15,6 +15,7 @@
 
 #include "android/log.h"
 #include "GLContext.h"
+#include "gfxPrefs.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Hal.h"
