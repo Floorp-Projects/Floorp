@@ -188,17 +188,26 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
   nsMenuChainItem* item = GetTopVisibleMenu();
   if (item) {
     if (aLastRolledUp) {
-      // we need to get the popup that will be closed last, so that
-      // widget can keep track of it so it doesn't reopen if a mouse
-      // down event is going to processed.
-      // Keep going up the menu chain to get the first level menu. This will
-      // be the one that closes up last. It's possible that this menu doesn't
-      // end up closing because the popuphiding event was cancelled, but in
-      // that case we don't need to deal with the menu reopening as it will
-      // already still be open.
+      // We need to get the popup that will be closed last, so that widget can
+      // keep track of it so it doesn't reopen if a mousedown event is going to
+      // processed. Keep going up the menu chain to get the first level menu of
+      // the same type. If a different type is encountered it means we have,
+      // for example, a menulist or context menu inside a panel, and we want to
+      // treat these as distinct. It's possible that this menu doesn't end up
+      // closing because the popuphiding event was cancelled, but in that case
+      // we don't need to deal with the menu reopening as it will already still
+      // be open.
       nsMenuChainItem* first = item;
-      while (first->GetParent())
-        first = first->GetParent();
+      while (first->GetParent()) {
+        nsMenuChainItem* parent = first->GetParent();
+        if (first->Frame()->PopupType() != parent->Frame()->PopupType() ||
+            first->IsContextMenu() != parent->IsContextMenu()) {
+          break;
+        }
+        first = parent;
+      }
+
+
       *aLastRolledUp = first->Content();
     }
 
