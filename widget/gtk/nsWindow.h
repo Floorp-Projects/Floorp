@@ -203,14 +203,12 @@ private:
     void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);
 
     void               NativeResize(int32_t aWidth,
-                                    int32_t aHeight,
-                                    bool    aRepaint);
+                                    int32_t aHeight);
 
     void               NativeResize(int32_t aX,
                                     int32_t aY,
                                     int32_t aWidth,
-                                    int32_t aHeight,
-                                    bool    aRepaint);
+                                    int32_t aHeight);
 
     void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
