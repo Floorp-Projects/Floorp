@@ -282,7 +282,7 @@ TLSServerSecurityObserverProxy::OnHandshakeDoneRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 NS_IMPL_ISUPPORTS(TLSServerConnectionInfo,
                   nsITLSServerConnectionInfo,

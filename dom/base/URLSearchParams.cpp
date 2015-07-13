@@ -272,7 +272,7 @@ void SerializeString(const nsCString& aInput, nsAString& aValue)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 URLParams::Serialize(nsAString& aValue) const

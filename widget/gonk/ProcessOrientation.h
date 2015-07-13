@@ -107,4 +107,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif

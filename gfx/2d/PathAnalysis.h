@@ -53,5 +53,5 @@ private:
   std::vector<FlatPathOp> mPathOps;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

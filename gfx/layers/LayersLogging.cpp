@@ -342,8 +342,8 @@ AppendToString(std::stringstream& aStream, mozilla::gfx::SurfaceFormat format,
   aStream << sfx;
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 void
 print_stderr(std::stringstream& aStr)

@@ -60,7 +60,7 @@ public:
     virtual bool SwapBuffers() override;
 };
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif // GLCONTEXTCGL_H_

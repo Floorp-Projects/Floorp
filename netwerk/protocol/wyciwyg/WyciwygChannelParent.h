@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
   class PBrowserParent;
-}
+} // namespace dom
 
 namespace net {
 

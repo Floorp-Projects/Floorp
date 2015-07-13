@@ -127,4 +127,5 @@ DNSRequestParent::OnLookupComplete(nsICancelable *request,
 
 
 
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla

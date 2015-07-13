@@ -25,8 +25,8 @@ namespace mozilla {
 namespace layers {
 class Image;
 class ImageContainer;
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 class nsIClearSiteDataCallback;
 

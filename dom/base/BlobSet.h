@@ -83,7 +83,7 @@ protected:
   uint64_t mDataBufferLen;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_BlobSet_h

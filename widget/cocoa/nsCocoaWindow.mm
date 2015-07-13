@@ -45,8 +45,8 @@
 namespace mozilla {
 namespace layers {
 class LayerManager;
-}
-}
+} // namespace layers
+} // namespace mozilla
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla;

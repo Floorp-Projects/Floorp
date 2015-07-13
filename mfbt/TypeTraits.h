@@ -1041,7 +1041,7 @@ struct RemovePointerHelper<T, Pointee*>
   typedef Pointee Type;
 };
 
-} // namespac detail
+} // namespace detail
 
 /**
  * Produces the pointed-to type if a pointer is provided, else returns the input

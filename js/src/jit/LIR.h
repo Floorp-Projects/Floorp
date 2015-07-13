@@ -1031,7 +1031,7 @@ namespace details {
             return getDef(0);
         }
     };
-}
+} // namespace details
 
 template <size_t Defs, size_t Operands, size_t Temps>
 class LInstructionHelper : public details::LInstructionFixedDefsTempsHelper<Defs, Temps>

@@ -52,8 +52,8 @@ public:
   virtual mozilla::TimeStamp GetTransactionStart() = 0;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 
 #endif /* GFX_TRANSACTION_ID_ALLOCATOR_H */

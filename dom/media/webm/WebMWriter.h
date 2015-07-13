@@ -70,5 +70,6 @@ private:
   uint8_t mMetadataRequiredFlag;
 };
 
-}
+} // namespace mozilla
+
 #endif

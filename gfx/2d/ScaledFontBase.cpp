@@ -185,5 +185,5 @@ ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
 }
 #endif
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

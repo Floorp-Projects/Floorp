@@ -22,5 +22,5 @@ PersistentBufferProviderBasic::PersistentBufferProviderBasic(LayerManager* aMana
   mDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(aBackend, aSize, aFormat);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

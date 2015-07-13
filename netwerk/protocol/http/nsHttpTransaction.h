@@ -450,6 +450,7 @@ private:
     NetAddr                         mPeerAddr;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpTransaction_h__

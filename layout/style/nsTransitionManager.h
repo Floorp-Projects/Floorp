@@ -22,7 +22,7 @@ class nsCSSPropertySet;
 
 namespace mozilla {
 struct StyleTransition;
-}
+} // namespace mozilla
 
 /*****************************************************************************
  * Per-Element data                                                          *

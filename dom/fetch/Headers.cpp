@@ -92,5 +92,6 @@ Headers::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 Headers::~Headers()
 {
 }
+
 } // namespace dom
 } // namespace mozilla

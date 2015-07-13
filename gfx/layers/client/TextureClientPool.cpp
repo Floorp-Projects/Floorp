@@ -267,5 +267,5 @@ TextureClientPool::Clear()
   }
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

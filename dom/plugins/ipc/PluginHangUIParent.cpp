@@ -64,7 +64,7 @@ private:
   uint32_t mResponseTimeMs;
   uint32_t mTimeoutMs;
 };
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace plugins {

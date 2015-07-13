@@ -423,7 +423,7 @@ static void TestPipe2(uint32_t aNumBytes,
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-} // anonymous namespace
+} // namespace
 
 TEST(Pipes, Blocking_32k)
 {
@@ -602,7 +602,7 @@ static void TestPipeClone(uint32_t aTotalBytes,
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 TEST(Pipes, Clone_BeforeWrite_ReadAtEnd)
 {
@@ -852,7 +852,7 @@ TestCloseDuringRead(uint32_t aSegmentSize, uint32_t aDataSize)
   ASSERT_EQ(NS_BASE_STREAM_CLOSED, rv);
 }
 
-} // anonymous namespace
+} // namespace
 
 TEST(Pipes, Close_During_Read_Partial_Segment)
 {

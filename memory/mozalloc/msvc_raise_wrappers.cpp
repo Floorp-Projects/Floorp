@@ -57,4 +57,4 @@ moz_Xruntime_error(const char* what)
     abort_from_exception("runtime_error", what);
 }
 
-}  // namespace std
+} // namespace std

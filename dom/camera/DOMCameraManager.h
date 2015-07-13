@@ -26,8 +26,8 @@ namespace mozilla {
   class nsDOMCameraControl;
   namespace dom {
     struct CameraConfiguration;
-  }
-}
+  } // namespace dom
+} // namespace mozilla
 
 typedef nsTArray<nsWeakPtr> CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;

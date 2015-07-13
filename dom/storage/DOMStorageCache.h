@@ -264,7 +264,7 @@ private:
   int64_t mUsage[DOMStorageCache::kDataSetCount];
 };
 
-} // ::dom
-} // ::mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif

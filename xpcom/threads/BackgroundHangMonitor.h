@@ -19,7 +19,7 @@ namespace mozilla {
 
 namespace Telemetry {
 class ThreadHangStats;
-};
+} // namespace Telemetry
 
 class BackgroundHangThread;
 class BackgroundHangManager;

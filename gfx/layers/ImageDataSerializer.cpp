@@ -44,7 +44,7 @@ struct SurfaceBufferInfo
     return GetAlignedStride<16>(sizeof(SurfaceBufferInfo));
   }
 };
-} // anonymous namespace
+} // namespace
 
 static SurfaceBufferInfo*
 GetBufferInfo(uint8_t* aData, size_t aDataSize)

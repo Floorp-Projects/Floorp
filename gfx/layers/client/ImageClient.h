@@ -168,7 +168,7 @@ public:
 };
 #endif
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

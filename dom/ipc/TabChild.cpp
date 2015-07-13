@@ -742,7 +742,7 @@ NestedTabChildMap()
   static std::map<TabId, nsRefPtr<TabChild>> sNestedTabChildMap;
   return sNestedTabChildMap;
 }
-} // anonymous namespace
+} // namespace
 
 already_AddRefed<TabChild>
 TabChild::FindTabChild(const TabId& aTabId)

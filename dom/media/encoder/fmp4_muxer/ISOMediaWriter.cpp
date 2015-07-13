@@ -228,4 +228,4 @@ ISOMediaWriter::SetMetadata(TrackMetadataBase* aMetadata)
   return NS_ERROR_FAILURE;
 }
 
-}  // namespace mozilla
+} // namespace mozilla

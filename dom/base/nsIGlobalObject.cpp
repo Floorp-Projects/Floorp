@@ -64,7 +64,7 @@ private:
   nsTArray<nsCString> mURIs;
 };
 
-} // anonymous namespace
+} // namespace
 
 void
 nsIGlobalObject::UnlinkHostObjectURIs()

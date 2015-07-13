@@ -122,7 +122,7 @@ private:
 
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_USERDATA_H_ */

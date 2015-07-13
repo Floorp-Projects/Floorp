@@ -95,5 +95,5 @@ CSS::Escape(const GlobalObject& aGlobal,
   }
 }
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla

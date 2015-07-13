@@ -87,5 +87,5 @@ HTMLFrameElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLFrameElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla

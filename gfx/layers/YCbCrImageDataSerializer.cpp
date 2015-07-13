@@ -304,5 +304,5 @@ YCbCrImageDataDeserializer::ToDataSourceSurface()
 }
 
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

@@ -26,6 +26,6 @@ struct IsNullPointer : FalseType {};
 template<>
 struct IsNullPointer<decltype(nullptr)> : TrueType {};
 
-}
+} // namespace mozilla
 
 #endif /* mozilla_NullPtr_h */

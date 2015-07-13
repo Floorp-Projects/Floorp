@@ -32,4 +32,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_ASYNCEVENTRUNNER_H_ */

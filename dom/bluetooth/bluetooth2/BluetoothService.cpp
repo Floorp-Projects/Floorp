@@ -125,7 +125,7 @@ GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 BluetoothService::ToggleBtAck::ToggleBtAck(bool aEnabled)
   : mEnabled(aEnabled)

@@ -558,5 +558,5 @@ OscillatorNode::NotifyMainThreadStreamFinished()
   MarkInactive();
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

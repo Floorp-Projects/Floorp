@@ -588,4 +588,4 @@ bool MP3FrameParser::NeedsData()
   return IsMP3() && !HasExactDuration();
 }
 
-}
+} // namespace mozilla

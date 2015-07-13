@@ -67,7 +67,7 @@ private:
   DisconnectableParent * mParent;
 };
 
-} // net namespace
-} // mozilla namespace
+} // namespace net
+} // namespace mozilla
 
 #endif // nsOfflineObserver_h__

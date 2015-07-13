@@ -510,7 +510,7 @@ const sqlite3_mem_methods memMethods = {
   nullptr
 };
 
-} // anonymous namespace
+} // namespace
 
 #endif  // MOZ_STORAGE_MEMORY
 
@@ -754,7 +754,7 @@ private:
   nsRefPtr<mozIStorageCompletionCallback> mCallback;
 };
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 Service::OpenAsyncDatabase(nsIVariant *aDatabaseStore,

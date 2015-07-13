@@ -19,7 +19,7 @@ class ScriptFrameIter;
 
 namespace jit {
 class JitFrameLayout;
-}
+} // namespace jit
 
 /*
  * ArgumentsData stores the initial indexed arguments provided to the

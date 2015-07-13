@@ -93,12 +93,12 @@ class EventStates;
 
 namespace layers {
 class Layer;
-}
+} // namespace layers
 
 namespace gfx {
 class Matrix;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -364,7 +364,8 @@ struct IntrinsicSize {
     return !(*this == rhs);
   }
 };
-}
+
+} // namespace mozilla
 
 /// Generic destructor for frame properties. Calls delete.
 template<typename T>

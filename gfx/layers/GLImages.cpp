@@ -82,5 +82,5 @@ GLImage::GetAsSourceSurface()
   return source.forget();
 }
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla

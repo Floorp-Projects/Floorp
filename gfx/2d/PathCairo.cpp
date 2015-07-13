@@ -319,5 +319,5 @@ PathCairo::AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransf
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

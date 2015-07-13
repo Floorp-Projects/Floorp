@@ -37,7 +37,7 @@ namespace frontend {
     template <typename ParseHandler> struct ParseContext;
     class FullParseHandler;
     class ParseNode;
-}
+} // namespace frontend
 
 typedef frontend::Parser<frontend::FullParseHandler> AsmJSParser;
 typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;

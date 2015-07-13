@@ -456,5 +456,5 @@ ParsedHeaderValueListList::ParsedHeaderValueListList(const nsCString &fullHeader
     }
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

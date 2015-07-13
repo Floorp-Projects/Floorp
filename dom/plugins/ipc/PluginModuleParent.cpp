@@ -358,7 +358,7 @@ PRCList PluginModuleMapping::sModuleListHead =
 
 bool PluginModuleMapping::sIsLoadModuleOnStack = false;
 
-} // anonymous namespace
+} // namespace
 
 void
 mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
@@ -958,7 +958,7 @@ GetProcessCpuUsage(const InfallibleTArray<base::ProcessHandle>& processHandles, 
   return true;
 }
 
-} // anonymous namespace
+} // namespace
 
 #endif // #ifdef XP_WIN
 

@@ -274,7 +274,7 @@ class AutoDisableSpew
     }
 };
 
-} /* ion */
-} /* js */
+} // namespace jit
+} // namespace js
 
 #endif /* jit_JitSpewer_h */

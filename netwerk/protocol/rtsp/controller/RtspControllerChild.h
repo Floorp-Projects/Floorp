@@ -92,6 +92,7 @@ class RtspControllerChild : public nsIStreamingProtocolController
   // receiving Stop command or OnDisconnected event.
   void StopPlayAndPauseTimer();
 };
+
 } // namespace net
 } // namespace mozilla
 

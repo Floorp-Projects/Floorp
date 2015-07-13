@@ -759,5 +759,6 @@ int TestNrSocket::PortMapping::cancel(int how) {
 
   return external_socket_->cancel(how);
 }
+
 } // namespace mozilla
 

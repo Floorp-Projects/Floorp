@@ -91,7 +91,7 @@ bool ConvertToAccessPointData(const NDIS_WLAN_BSSID& data, nsWifiAccessPoint* ac
 int GetDataFromBssIdList(const NDIS_802_11_BSSID_LIST& bss_id_list,
                          int list_size,
                          nsCOMArray<nsWifiAccessPoint>& outData);
-}  // namespace
+} // namespace
 
 class WindowsNdisApi
 {
@@ -375,7 +375,7 @@ bool ResizeBuffer(size_t requested_size, std::vector<char>& buffer) {
   return true;
 }
 
-}  // namespace
+} // namespace
 
 
 nsresult

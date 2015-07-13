@@ -511,7 +511,7 @@ ServerSocketListenerProxy::OnStopListeningRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)

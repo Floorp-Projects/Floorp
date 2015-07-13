@@ -125,7 +125,7 @@ private:
   }
 };
 
-} // anonymous namespace
+} // namespace
 
 already_AddRefed<Promise>
 ServiceWorkerWindowClient::Focus(ErrorResult& aRv) const

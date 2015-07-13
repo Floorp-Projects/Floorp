@@ -86,6 +86,7 @@ private:
   RefPtr<ContentHost> mBuffer;
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_PaintedLayerComposite_H */

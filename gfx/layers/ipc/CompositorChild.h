@@ -24,7 +24,7 @@ namespace mozilla {
 
 namespace dom {
   class TabChild;
-}
+} // namespace dom
 
 namespace layers {
 
@@ -204,7 +204,7 @@ private:
   bool mCanSend;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_CompositorChild_h

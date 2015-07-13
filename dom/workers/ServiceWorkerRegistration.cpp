@@ -521,7 +521,7 @@ public:
     return NS_OK;
   }
 };
-} // anonymous namespace
+} // namespace
 
 void
 ServiceWorkerRegistrationMainThread::Update()
@@ -1000,5 +1000,6 @@ WorkerListener::UpdateFound()
     }
   }
 }
-} // dom namespace
-} // mozilla namespace
+
+} // namespace dom
+} // namespace mozilla

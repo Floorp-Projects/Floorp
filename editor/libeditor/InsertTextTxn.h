@@ -73,7 +73,7 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTxn, NS_INSERTTEXTTXN_IID)
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

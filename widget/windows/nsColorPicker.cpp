@@ -89,7 +89,7 @@ BGRIntToRGBString(DWORD color, nsAString& aResult)
   aResult.Append(ToHexString(g));
   aResult.Append(ToHexString(b));
 }
-} // anonymous namespace
+} // namespace
 
 static AsyncColorChooser* gColorChooser;
 

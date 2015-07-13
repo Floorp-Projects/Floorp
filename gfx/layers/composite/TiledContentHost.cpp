@@ -607,5 +607,5 @@ TiledContentHost::Dump(std::stringstream& aStream,
   mTiledBuffer.Dump(aStream, aPrefix, aDumpHtml);
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

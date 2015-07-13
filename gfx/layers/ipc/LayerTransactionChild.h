@@ -20,7 +20,7 @@ namespace mozilla {
 namespace layout {
 class RenderFrameChild;
 class ShadowLayerForwarder;
-}
+} // namespace layout
 
 namespace layers {
 

@@ -35,8 +35,8 @@ namespace mozilla {
 namespace dom {
 template<typename T> class Sequence;
 struct MozPluginParameter;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener

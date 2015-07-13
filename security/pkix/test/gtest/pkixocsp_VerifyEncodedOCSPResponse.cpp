@@ -175,7 +175,7 @@ namespace {
 // Alias for nullptr to aid readability in the code below.
 static const char* byKey = nullptr;
 
-} // unnamed namespcae
+} // namespace
 
 class pkixocsp_VerifyEncodedResponse_successful
   : public pkixocsp_VerifyEncodedResponse

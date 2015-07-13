@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace media {
 class MediaSystemResourceManagerParent;
-}
+} // namespace media
 
 /**
  * Manage media system resource allocation requests within system.

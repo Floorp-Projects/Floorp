@@ -35,7 +35,7 @@ private:
   RefPtr<TextureClient> mTextureClient;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // GFX_SHAREDTEXTUREIMAGE_H

@@ -36,7 +36,7 @@ protected:
   uint32_t mId;
 };
 
-}
-}
+} // namespace net
+} // namespace mozilla
 
 #endif

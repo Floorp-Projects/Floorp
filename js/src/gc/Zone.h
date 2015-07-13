@@ -22,7 +22,7 @@ namespace js {
 
 namespace jit {
 class JitZone;
-}
+} // namespace jit
 
 namespace gc {
 

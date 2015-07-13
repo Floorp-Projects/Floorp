@@ -44,7 +44,7 @@ public:
                                         const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_ShadowLayersManager_h

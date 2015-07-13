@@ -35,8 +35,8 @@ namespace css {
 class StyleRule;
 struct URLValue;
 struct ImageValue;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 

@@ -50,6 +50,7 @@ private:
     bool               mWaitEOF;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif

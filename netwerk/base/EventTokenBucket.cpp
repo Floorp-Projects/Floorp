@@ -434,5 +434,5 @@ EventTokenBucket::FineGrainResetTimerNotify()
 
 #endif
 
-} // mozilla::net
-} // mozilla
+} // namespace net
+} // namespace mozilla

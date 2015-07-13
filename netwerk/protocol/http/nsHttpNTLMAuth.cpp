@@ -483,5 +483,5 @@ nsHttpNTLMAuth::GetAuthFlags(uint32_t *flags)
     return NS_OK;
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

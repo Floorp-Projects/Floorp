@@ -425,7 +425,8 @@ struct MOZ_STACK_CLASS AutoPrepareFocusRange
   Maybe<Selection::AutoApplyUserSelectStyle> mUserSelect;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-}
+
+} // namespace mozilla
 
 ////////////BEGIN nsFrameSelection methods
 

@@ -122,4 +122,4 @@ TEST(UTF, Hash16)
 #endif
 }
 
-}
+} // namespace TestUTF

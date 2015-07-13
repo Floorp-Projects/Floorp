@@ -16,8 +16,8 @@ class nsAString;
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////
 // nsISMILAttr: A variable targeted by SMIL for animation and can therefore have

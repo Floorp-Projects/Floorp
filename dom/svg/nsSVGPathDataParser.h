@@ -13,7 +13,7 @@
 
 namespace mozilla {
 class SVGPathData;
-}
+} // namespace mozilla
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathDataParser: a simple recursive descent parser that builds

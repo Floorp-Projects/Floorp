@@ -346,6 +346,6 @@ AnalyserNode::AppendChunk(const AudioChunk& aChunk)
   }
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

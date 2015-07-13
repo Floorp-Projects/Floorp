@@ -161,7 +161,7 @@ private:
   RefPtr<DrawTarget> mB;
 };
      
-}
-}
+} // namespace gfx
+} // namespace mozilla
      
 #endif /* MOZILLA_GFX_DRAWTARGETDUAL_H_ */ 

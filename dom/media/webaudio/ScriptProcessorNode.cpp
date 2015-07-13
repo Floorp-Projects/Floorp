@@ -517,6 +517,6 @@ ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
   return ScriptProcessorNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

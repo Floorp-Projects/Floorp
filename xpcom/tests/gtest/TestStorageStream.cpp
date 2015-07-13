@@ -24,7 +24,7 @@ WriteData(nsIOutputStream* aOut, nsTArray<char>& aData, uint32_t aNumBytes,
   aDataWritten.Append(aData.Elements(), aNumBytes);
 }
 
-} // anonymous namespace
+} // namespace
 TEST(StorageStreams, Main)
 {
   // generate some test data we will write in 4k chunks to the stream

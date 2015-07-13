@@ -195,5 +195,5 @@ DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   return MakeAndAddRef<DrawTargetDual>(dtA, dtB);
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

@@ -1469,7 +1469,7 @@ FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence, nsString &aOutput)
   return true;
 }
 
-} // anonymous namespace
+} // namespace
 
 bool
 Console::ProcessArguments(JSContext* aCx,

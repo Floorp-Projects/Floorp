@@ -130,7 +130,7 @@ struct ScaleFactors2D {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEFACTORS2D_H_ */

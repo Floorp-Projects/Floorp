@@ -123,6 +123,7 @@ WindowHook::CallbackData::Invoke(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return false;
   return cb(context, hWnd, msg, wParam, lParam, aResult);
 }
+
 } // namespace widget
 } // namespace mozilla
 

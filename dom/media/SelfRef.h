@@ -42,6 +42,7 @@ public:
 private:
   bool mHeld;
 };
-} // mozilla
+
+} // namespace mozilla
 
 #endif // SELF_REF_H

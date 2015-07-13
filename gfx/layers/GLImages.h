@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace gl {
 class AndroidSurfaceTexture;
-}
+} // namespace gl
 namespace layers {
 
 class GLImage : public Image {
@@ -78,7 +78,7 @@ private:
 
 #endif // MOZ_WIDGET_ANDROID
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // GFX_GLIMAGES_H

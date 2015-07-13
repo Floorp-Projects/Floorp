@@ -21,7 +21,7 @@ protected:
     GfxInfoWebGL() { }
 };
 
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 #endif

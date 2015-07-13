@@ -160,6 +160,6 @@ private:
   uint32_t mPosition;
 };
 
-}
+} // namespace mozilla
 
 #endif // MOZILLA_SCRATCHBUFFER_H_

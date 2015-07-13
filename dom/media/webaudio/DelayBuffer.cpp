@@ -264,4 +264,4 @@ DelayBuffer::UpdateUpmixChannels(int aNewReadChunk, uint32_t aChannelCount,
   }
 }
 
-} // mozilla
+} // namespace mozilla

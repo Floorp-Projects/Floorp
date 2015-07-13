@@ -24,7 +24,7 @@ USING_BLUETOOTH_NAMESPACE
 namespace {
   StaticRefPtr<BluetoothHidManager> sBluetoothHidManager;
   bool sInShutdown = false;
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 BluetoothHidManager::Observe(nsISupports* aSubject,

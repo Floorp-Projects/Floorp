@@ -168,7 +168,7 @@ bool IsHeadRequest(CacheRequestOrVoid aRequest, CacheQueryParams aParams)
   return false;
 }
 
-} // anonymous namespace
+} // namespace
 
 // ----------------------------------------------------------------------------
 

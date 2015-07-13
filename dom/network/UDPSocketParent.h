@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace net {
 class PNeckoParent;
-}
+} // namespace net
 
 namespace dom {
 

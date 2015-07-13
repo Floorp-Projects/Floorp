@@ -17,7 +17,7 @@ class Index;
 class MP4Metadata;
 class ResourceStream;
 class SampleIterator;
-}
+} // namespace mp4_demuxer
 
 namespace mozilla {
 

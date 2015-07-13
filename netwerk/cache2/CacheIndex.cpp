@@ -1610,7 +1610,7 @@ CacheIndex::WriteIndexToDisk()
   mSkipEntries = 0;
 }
 
-namespace { // anon
+namespace {
 
 struct WriteRecordsHelper
 {
@@ -1623,7 +1623,7 @@ struct WriteRecordsHelper
 #endif
 };
 
-} // anon
+} // namespace
 
 void
 CacheIndex::WriteRecords()
@@ -3196,7 +3196,7 @@ CacheIndex::ReleaseBuffer()
   mRWBufPos = 0;
 }
 
-namespace { // anon
+namespace {
 
 class FrecencyComparator
 {
@@ -3216,7 +3216,7 @@ public:
   }
 };
 
-} // anon
+} // namespace
 
 void
 CacheIndex::InsertRecordToFrecencyArray(CacheIndexRecord *aRecord)
@@ -3634,7 +3634,7 @@ CacheIndex::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
   return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace { // anon
+namespace {
 
 class HashComparator
 {
@@ -3680,7 +3680,7 @@ ReportHashSizeMatch(const SHA1Sum::Hash *aHash1, const SHA1Sum::Hash *aHash2)
   MOZ_ASSERT(false, "Found a collision in the index!");
 }
 
-} // anon
+} // namespace
 
 void
 CacheIndex::ReportHashStats()
@@ -3702,5 +3702,5 @@ CacheIndex::ReportHashStats()
   CacheObserver::SetHashStatsReported();
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

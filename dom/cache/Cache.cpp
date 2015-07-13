@@ -79,7 +79,7 @@ IsValidPutRequestMethod(const RequestOrUSVString& aRequest, ErrorResult& aRv)
   return IsValidPutRequestMethod(aRequest.GetAsRequest(), aRv);
 }
 
-} // anonymous namespace
+} // namespace
 
 // Helper class to wait for Add()/AddAll() fetch requests to complete and
 // then perform a PutAll() with the responses.  This class holds a Feature

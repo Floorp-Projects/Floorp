@@ -70,7 +70,7 @@ protected:
   nsCOMPtr<nsIContent> mRefNode;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

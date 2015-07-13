@@ -24,7 +24,7 @@ namespace {
 
 NS_DEFINE_CID(kAppShellCID2, NS_APPSHELL_CID);
 
-} // anonymous namespace
+} // namespace
 
 IDBFileHandle::IDBFileHandle(FileMode aMode,
                              RequestMode aRequestMode,

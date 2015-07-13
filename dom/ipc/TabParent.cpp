@@ -3351,5 +3351,5 @@ FakeChannel::OnAuthCancelled(nsISupports *aContext, bool userCancel)
 }
 
 
-} // namespace tabs
+} // namespace dom
 } // namespace mozilla

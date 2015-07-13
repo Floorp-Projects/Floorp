@@ -61,7 +61,7 @@ protected:
   Float mSize;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEDFONTBASE_H_ */

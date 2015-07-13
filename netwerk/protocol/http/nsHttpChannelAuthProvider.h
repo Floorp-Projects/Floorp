@@ -162,6 +162,7 @@ private:
     static uint32_t                   sAuthAllowPref;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpChannelAuthProvider_h__

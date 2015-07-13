@@ -336,4 +336,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_TRACKBUFFERSMANAGER_H_ */

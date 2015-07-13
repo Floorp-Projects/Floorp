@@ -103,7 +103,7 @@ namespace {
     *aBuffer += sizeof(uint8_t);
     return result;
   }
-}
+} // namespace
 
 WaveReader::WaveReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)

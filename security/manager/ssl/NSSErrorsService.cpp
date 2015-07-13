@@ -201,5 +201,5 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode, nsAString &aErrorMes
   return rv;
 }
 
-} // psm
-} // mozilla
+} // namespace psm
+} // namespace mozilla

@@ -423,7 +423,7 @@ InterposedNtQueryFullAttributesFile(
                                             aFileInformation);
 }
 
-} // anonymous namespace
+} // namespace
 
 /******************************** IO Poisoning ********************************/
 

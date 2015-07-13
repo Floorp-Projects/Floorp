@@ -20,8 +20,8 @@ namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
 class SourceSurface;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 /**
  * A raw image buffer. The format can be set in the constructor. Its main

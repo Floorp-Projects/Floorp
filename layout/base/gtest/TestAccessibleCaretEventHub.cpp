@@ -758,4 +758,4 @@ TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
-}; // namespace mozilla
+} // namespace mozilla

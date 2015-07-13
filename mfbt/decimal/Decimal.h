@@ -58,7 +58,7 @@ namespace WebCore {
 
 namespace DecimalPrivate {
 class SpecialValueHandler;
-}
+} // namespace DecimalPrivate
 
 // This class represents decimal base floating point number.
 //
@@ -200,7 +200,7 @@ private:
 
 namespace mozilla {
   typedef WebCore::Decimal Decimal;
-}
+} // namespace mozilla
 
 #undef WTF_MAKE_FAST_ALLOCATED
 

@@ -530,8 +530,8 @@ DeallocPMediaParent(media::PMediaParent *aActor)
   return true;
 }
 
-}
-}
+} // namespace media
+} // namespace mozilla
 
 // Instantiate templates to satisfy linker
 template class mozilla::media::Parent<mozilla::media::NonE10s>;

@@ -25,7 +25,7 @@ Element::UnregisterActivityObserver()
   OwnerDoc()->UnregisterActivityObserver(this);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_ElementInlines_h

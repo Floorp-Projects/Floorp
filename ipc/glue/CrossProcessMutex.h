@@ -19,7 +19,7 @@
 namespace IPC {
 template<typename T>
 struct ParamTraits;
-}
+} // namespace IPC
 
 //
 // Provides:
@@ -110,5 +110,6 @@ private:
 typedef BaseAutoLock<CrossProcessMutex> CrossProcessMutexAutoLock;
 typedef BaseAutoUnlock<CrossProcessMutex> CrossProcessMutexAutoUnlock;
 
-}
+} // namespace mozilla
+
 #endif

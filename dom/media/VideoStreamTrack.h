@@ -25,7 +25,7 @@ public:
   virtual void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* VIDEOSTREAMTRACK_H_ */

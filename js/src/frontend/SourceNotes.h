@@ -95,7 +95,7 @@ SN_IS_TERMINATOR(jssrcnote* sn)
     return *sn == SRC_NULL;
 }
 
-}  // namespace js
+} // namespace js
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
@@ -205,6 +205,6 @@ SrcNoteLength(jssrcnote* sn);
 extern JS_FRIEND_API(ptrdiff_t)
 GetSrcNoteOffset(jssrcnote* sn, unsigned which);
 
-}
+} // namespace js
 
 #endif /* frontend_SourceNotes_h */

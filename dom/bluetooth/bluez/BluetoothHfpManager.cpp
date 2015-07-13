@@ -120,7 +120,7 @@ namespace {
   // Dialer stops playing.
   static int sBusyToneInterval = 3700; //unit: ms
 #endif // MOZ_B2G_RIL
-} // anonymous namespace
+} // namespace
 
 #ifdef MOZ_B2G_RIL
 /* CallState for sCINDItems[CINDType::CALL].value

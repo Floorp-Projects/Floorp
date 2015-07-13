@@ -198,7 +198,7 @@ private:
 };
 
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_SOURCESURFACECG_H

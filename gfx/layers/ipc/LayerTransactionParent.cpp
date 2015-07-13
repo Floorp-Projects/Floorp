@@ -50,7 +50,7 @@ using mozilla::layout::RenderFrameParent;
 namespace mozilla {
 namespace gfx {
 class VRHMDInfo;
-}
+} // namespace gfx
 
 namespace layers {
 

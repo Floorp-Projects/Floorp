@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace layers {
 class Image;
-}
+} // namespace layers
 
 namespace dom {
 

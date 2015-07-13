@@ -152,4 +152,4 @@ StatementRow::Resolve(nsIXPConnectWrappedNative *aWrapper,
 }
 
 } // namespace storage
-} // namescape mozilla
+} // namespace mozilla

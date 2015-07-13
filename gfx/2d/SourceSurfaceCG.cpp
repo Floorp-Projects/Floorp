@@ -453,5 +453,5 @@ SourceSurfaceCGIOSurfaceContext::GetData()
   return (unsigned char*)mData;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

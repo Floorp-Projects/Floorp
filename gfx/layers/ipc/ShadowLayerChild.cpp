@@ -34,5 +34,5 @@ ShadowLayerChild::ActorDestroy(ActorDestroyReason why)
   }
 }
 
-}  // namespace layers
-}  // namespace mozilla
+} // namespace layers
+} // namespace mozilla

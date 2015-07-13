@@ -279,4 +279,4 @@ TEST(ReadSysFile, Bool) {
 
 #endif /* ReadSysFile_PRESENT */
 
-}
+} // namespace mozilla

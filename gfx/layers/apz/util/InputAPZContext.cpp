@@ -65,5 +65,5 @@ InputAPZContext::WasRoutedToChildProcess()
   return sRoutedToChildProcess;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

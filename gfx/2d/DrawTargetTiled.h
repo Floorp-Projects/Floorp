@@ -207,7 +207,7 @@ public:
   IntRect mRect;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

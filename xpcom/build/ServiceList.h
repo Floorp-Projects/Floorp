@@ -47,6 +47,6 @@ MOZ_SERVICE(HistoryService, IHistory,
             "@mozilla.org/browser/history;1")
 
 #ifdef MOZ_USE_NAMESPACE
-}
+} // namespace mozilla
 #endif
 #endif // !defined(MOZILLA_XPCOMRT_API)

@@ -86,8 +86,8 @@ namespace mozilla {
 namespace widget {
 // This constructor should really be shared with all platforms.
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_POPUP_CID);

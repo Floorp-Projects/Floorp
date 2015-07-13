@@ -28,7 +28,7 @@ class APZCTreeManager;
 class TargetConfig;
 struct TextureFactoryIdentifier;
 struct ScrollableLayerGuid;
-}
+} // namespace layers
 
 namespace layout {
 

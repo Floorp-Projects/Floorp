@@ -1321,4 +1321,5 @@ HttpChannelParent::ReportSecurityMessage(const nsAString& aMessageTag,
   return NS_OK;
 }
 
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla

@@ -24,8 +24,8 @@ namespace css {
 class Declaration;
 class Loader;
 class Rule;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 class nsDOMCSSDeclaration : public nsICSSDeclaration
 {

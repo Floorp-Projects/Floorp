@@ -266,7 +266,7 @@ AtomicBoolPrefChangedCallback(const char* aPrefName, void* aClosure)
   *static_cast<Atomic<bool>*>(aClosure) = Preferences::GetBool(aPrefName);
 }
 
-} // anonymous namespace
+} // namespace
 
 IndexedDatabaseManager::IndexedDatabaseManager()
 : mFileMutex("IndexedDatabaseManager.mFileMutex")

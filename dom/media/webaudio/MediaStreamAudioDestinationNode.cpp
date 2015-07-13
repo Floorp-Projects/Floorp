@@ -81,5 +81,5 @@ MediaStreamAudioDestinationNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*
   return MediaStreamAudioDestinationNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

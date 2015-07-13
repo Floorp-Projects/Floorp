@@ -768,4 +768,5 @@ WyciwygChannelChild::GetCharsetAndSource(int32_t *aSource, nsACString & _retval)
 }
 
 //------------------------------------------------------------------------------
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla

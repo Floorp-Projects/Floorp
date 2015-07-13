@@ -57,4 +57,5 @@ protected:
 
 } // namespace net
 } // namespace mozilla
+
 #endif // mozilla_net_DNSRequestChild_h

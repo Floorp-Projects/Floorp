@@ -15,11 +15,11 @@
 namespace js {
 namespace gc {
 class GCRuntime;
-}
+} // namespace gc
 namespace gcstats {
 struct Statistics;
-}
-}
+} // namespace gcstats
+} // namespace js
 
 typedef enum JSGCMode {
     /* Perform only global GCs. */

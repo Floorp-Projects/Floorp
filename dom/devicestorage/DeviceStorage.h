@@ -38,7 +38,7 @@ class DeviceStorageFileSystem;
 } // namespace dom
 namespace ipc {
 class FileDescriptor;
-}
+} // namespace ipc
 } // namespace mozilla
 
 class DeviceStorageFile final

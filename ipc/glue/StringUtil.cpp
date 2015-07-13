@@ -41,7 +41,8 @@ GhettoStringConvert(const FromType& in)
       out[i] = static_cast<typename ToType::value_type>(in[i]);
   return out;
 }
-}
+
+} // namespace base
 
 // Implement functions that were in the chromium ICU library, which
 // we're not taking.
@@ -88,4 +89,4 @@ std::wstring SysNativeMBToWide(const StringPiece& native_mb) {
 }
 #endif
 
-}  // namespace base
+} // namespace base

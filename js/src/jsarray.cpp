@@ -1632,7 +1632,8 @@ enum ComparatorMatchResult {
     Match_RightMinusLeft
 };
 
-} /* namespace anonymous */
+} // namespace
+
 
 /*
  * Specialize behavior for comparator functions with particular common bytecode

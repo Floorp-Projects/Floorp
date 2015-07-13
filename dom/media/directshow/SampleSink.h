@@ -64,4 +64,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif // SampleSink_h_

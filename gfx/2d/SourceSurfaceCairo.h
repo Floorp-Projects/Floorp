@@ -64,7 +64,7 @@ private:
   cairo_surface_t* mImageSurface;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_OP_SOURCESURFACE_CAIRO_H

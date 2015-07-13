@@ -277,8 +277,8 @@ template class TracerConcrete<js::jit::JitCode>;
 template class TracerConcreteWithCompartment<js::Shape>;
 template class TracerConcreteWithCompartment<js::BaseShape>;
 template class TracerConcrete<js::ObjectGroup>;
-}
-}
+} // namespace ubi
+} // namespace JS
 
 namespace JS {
 namespace ubi {

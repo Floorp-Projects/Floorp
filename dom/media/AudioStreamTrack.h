@@ -25,7 +25,7 @@ public:
   virtual void GetKind(nsAString& aKind) override { aKind.AssignLiteral("audio"); }
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* AUDIOSTREAMTRACK_H_ */

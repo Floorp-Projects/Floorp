@@ -16,8 +16,8 @@ namespace mozilla {
 namespace media {
 template<class T>
 class IntervalSet;
-}
-}
+} // namespace media
+} // namespace mozilla
 
 template<class E>
 struct nsTArray_CopyChooser<mozilla::media::IntervalSet<E>>

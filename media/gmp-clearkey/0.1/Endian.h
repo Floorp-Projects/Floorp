@@ -63,6 +63,6 @@ public:
   }
 };
 
-}
+} // namespace mozilla
 
 #endif // __Endian_h__

@@ -154,7 +154,7 @@ private:
   nsTArray<UniquePtr<CancelableBlockState>> mInputBlockQueue;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_InputQueue_h

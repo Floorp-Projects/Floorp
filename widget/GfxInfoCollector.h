@@ -88,7 +88,7 @@ class GfxInfoCollector : public GfxInfoCollectorBase
 
 };
 
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 #endif

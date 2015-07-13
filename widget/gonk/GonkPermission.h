@@ -80,5 +80,7 @@ private:
   GonkPermissionService(): android::BnPermissionController() {}
   nsTArray<PermissionGrant> mGrantArray;
 };
+
 } // namespace mozilla
+
 #endif // GONKPERMISSION_H

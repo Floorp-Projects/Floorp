@@ -161,7 +161,7 @@ private:
                                    const nsSubstring& aNewValue);
 };
 
-} // ::dom
-} // ::mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif /* nsDOMStorage_h___ */

@@ -83,6 +83,6 @@ class WatchpointMap {
     Map map;
 };
 
-}
+} // namespace js
 
 #endif /* jswatchpoint_h */

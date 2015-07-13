@@ -68,7 +68,7 @@ class MoveEmitterX86
 
 typedef MoveEmitterX86 MoveEmitter;
 
-} // ion
-} // js
+} // namespace jit
+} // namespace js
 
 #endif /* jit_MoveEmitter_x86_shared_h */

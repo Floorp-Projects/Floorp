@@ -852,7 +852,7 @@ ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 const JSClass IDBObjectStore::sDummyPropJSClass = {
   "IDBObjectStore Dummy",

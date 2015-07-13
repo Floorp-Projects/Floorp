@@ -17,7 +17,7 @@ class WebGLBuffer;
 class WebGLSampler;
 namespace gl {
     class GLContext;
-}
+} // namespace gl
 
 class WebGLContextUnchecked
 {

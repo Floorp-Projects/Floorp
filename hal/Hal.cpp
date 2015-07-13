@@ -110,7 +110,7 @@ void InitLastIDToVibrate()
   ClearOnShutdown(&gLastIDToVibrate);
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 Vibrate(const nsTArray<uint32_t>& pattern, nsIDOMWindow* window)

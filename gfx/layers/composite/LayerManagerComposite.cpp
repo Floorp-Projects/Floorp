@@ -1357,5 +1357,5 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

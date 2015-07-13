@@ -62,5 +62,5 @@ APZTestData::ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext) const
   return dom::ToJSValue(aContext, result, aOutValue);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

@@ -116,8 +116,8 @@ namespace layers {
 void InitGralloc();
 #endif
 void ShutdownTileCache();
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::layers;

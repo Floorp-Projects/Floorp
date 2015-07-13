@@ -349,4 +349,5 @@ private:
 };
 
 } // namespace android
+
 #endif // OMXCodecWrapper_h_

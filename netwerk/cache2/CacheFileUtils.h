@@ -146,8 +146,8 @@ private:
   static HitRate sHRStats[kNumOfRanges];
 };
 
-} // CacheFileUtils
-} // net
-} // mozilla
+} // namespace CacheFileUtils
+} // namespace net
+} // namespace mozilla
 
 #endif

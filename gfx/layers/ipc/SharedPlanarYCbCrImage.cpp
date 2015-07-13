@@ -228,5 +228,5 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   return mBufferSize > 0;
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

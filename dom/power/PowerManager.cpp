@@ -206,5 +206,5 @@ PowerManager::CreateInstance(nsPIDOMWindow* aWindow)
   return powerManager.forget();
 }
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla

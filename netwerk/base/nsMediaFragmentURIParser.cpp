@@ -406,4 +406,5 @@ void nsMediaFragmentURIParser::Parse(nsACString& aRef)
   }
 }
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla

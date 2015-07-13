@@ -86,7 +86,7 @@ private:
   int mActiveAPZTransforms;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* mozilla_layers_APZEventState_h */

@@ -65,7 +65,7 @@ public:
   static bool IsWebMType(const nsACString& aType);
 };
 
-}
+} // namespace mozilla
 
 #endif
 

@@ -38,8 +38,8 @@ class nsIntRegion;
 namespace mozilla {
 namespace layers {
 struct TileClient;
-}
-}
+} // namespace layers
+} // namespace mozilla
 //
 // nsTArray is a resizable array class, like std::vector.
 //
@@ -310,8 +310,8 @@ struct nsTArray_SafeElementAtHelper<nsRefPtr<E>, Derived>
 namespace mozilla {
 namespace dom {
 template<class T> class OwningNonNull;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 template<class E, class Derived>
 struct nsTArray_SafeElementAtHelper<mozilla::dom::OwningNonNull<E>, Derived>

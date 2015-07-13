@@ -21,8 +21,8 @@ struct nsBorderColors;
 namespace mozilla {
 namespace gfx {
 class GradientStops;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 // define this to enable a bunch of debug dump info
 #undef DEBUG_NEW_BORDERS
@@ -277,6 +277,6 @@ static inline void PrintAsStringNewline(const char *s = nullptr) {}
 static inline void PrintAsFormatString(const char *fmt, ...) {}
 #endif
 
-}
+} // namespace mozilla
 
 #endif /* NS_CSS_RENDERING_BORDERS_H */

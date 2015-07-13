@@ -241,7 +241,7 @@ IsExpandedPrincipal(nsIPrincipal* aPrincipal)
   return !!ep;
 }
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 

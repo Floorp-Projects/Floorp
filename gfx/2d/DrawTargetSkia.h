@@ -145,7 +145,7 @@ private:
   SourceSurfaceSkia* mSnapshot;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_SOURCESURFACESKIA_H

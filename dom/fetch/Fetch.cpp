@@ -879,7 +879,7 @@ public:
     return mFormData.forget();
   }
 };
-} // anonymous namespace
+} // namespace
 
 nsresult
 ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& aBodyInit,
@@ -1206,7 +1206,7 @@ public:
     return true;
   }
 };
-} // anonymous namespace
+} // namespace
 
 template <class Derived>
 class FetchBodyFeature final : public workers::WorkerFeature

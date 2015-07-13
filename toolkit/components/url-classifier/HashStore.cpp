@@ -1054,5 +1054,5 @@ HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
   return NS_OK;
 }
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla

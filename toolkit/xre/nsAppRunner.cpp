@@ -252,7 +252,7 @@ extern "C" MFBT_API bool IsSignalHandlingBroken();
 
 namespace mozilla {
 int (*RunGTest)() = 0;
-}
+} // namespace mozilla
 
 using namespace mozilla;
 using mozilla::unused;
@@ -1967,7 +1967,7 @@ private:
   nsresult mRv;
 };
 
-} // anonymous namespace
+} // namespace
 
 static ReturnAbortOnError
 ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
@@ -3579,7 +3579,7 @@ static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
 
 namespace mozilla {
   ShutdownChecksMode gShutdownChecks = SCM_NOTHING;
-}
+} // namespace mozilla
 
 static void SetShutdownChecks() {
   // Set default first. On debug builds we crash. On nightly and local

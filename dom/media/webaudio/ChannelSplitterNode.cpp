@@ -74,6 +74,6 @@ ChannelSplitterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
   return ChannelSplitterNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

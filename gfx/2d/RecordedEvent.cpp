@@ -1565,5 +1565,5 @@ RecordedFilterNodeSetInput::OutputSimpleEventInfo(stringstream &aStringStream) c
   aStringStream << ")";
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

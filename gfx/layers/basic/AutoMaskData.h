@@ -54,7 +54,7 @@ private:
   AutoMoz2DMaskData& operator=(const AutoMoz2DMaskData&) = delete;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // GFX_AUTOMASKDATA_H_

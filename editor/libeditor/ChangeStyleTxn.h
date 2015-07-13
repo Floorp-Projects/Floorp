@@ -106,7 +106,7 @@ private:
   bool mRedoAttributeWasSet;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

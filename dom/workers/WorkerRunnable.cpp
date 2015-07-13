@@ -39,7 +39,7 @@ MaybeReportMainThreadException(JSContext* aCx, bool aResult)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 #ifdef DEBUG
 WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate,
