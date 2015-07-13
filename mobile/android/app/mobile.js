@@ -799,9 +799,6 @@ pref("dom.phonenumber.substringmatching.BR", 8);
 pref("dom.phonenumber.substringmatching.CO", 10);
 pref("dom.phonenumber.substringmatching.VE", 7);
 
-// Support for the mozAudioChannel attribute on media elements is disabled in non-webapps
-pref("media.useAudioChannelService", false);
-
 // Enable hardware-accelerated Skia canvas
 pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
