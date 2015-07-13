@@ -84,52 +84,6 @@ ServiceWorkerManagerService::UnregisterActor(ServiceWorkerManagerParent* aParent
 
 namespace {
 
-struct MOZ_STACK_CLASS RegistrationData final
-{
-  RegistrationData(ServiceWorkerRegistrationData& aData,
-                   uint64_t aParentID)
-    : mData(aData)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(RegistrationData);
-  }
-
-  ~RegistrationData()
-  {
-    MOZ_COUNT_DTOR(RegistrationData);
-  }
-
-  const ServiceWorkerRegistrationData& mData;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-RegistrationEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<RegistrationData*>(aPtr);
-
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyRegister(data->mData);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 struct MOZ_STACK_CLASS SoftUpdateData final
 {
   SoftUpdateData(const OriginAttributes& aOriginAttributes,
@@ -323,11 +277,22 @@ ServiceWorkerManagerService::PropagateRegistration(
 {
   AssertIsOnBackgroundThread();
 
-  RegistrationData data(aData, aParentID);
-  mAgents.EnumerateEntries(RegistrationEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      unused << parent->SendNotifyRegister(aData);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
