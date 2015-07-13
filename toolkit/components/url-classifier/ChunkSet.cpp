@@ -94,5 +94,5 @@ ChunkSet::Clear()
   mChunks.Clear();
 }
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla

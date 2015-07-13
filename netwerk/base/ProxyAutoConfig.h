@@ -13,7 +13,7 @@
 class nsITimer;
 namespace JS {
 class CallArgs;
-}
+} // namespace JS
 
 namespace mozilla { namespace net {
 
@@ -111,6 +111,7 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif  // ProxyAutoConfig_h__

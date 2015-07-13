@@ -148,5 +148,5 @@ FrameUniformityData::ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext)
   return dom::ToJSValue(aContext, results, aOutValue);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

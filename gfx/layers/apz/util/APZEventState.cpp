@@ -7,14 +7,22 @@
 
 #include "ActiveElementManager.h"
 #include "APZCCallbackHelper.h"
+#include "gfxPrefs.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TouchEvents.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "nsCOMPtr.h"
 #include "nsDocShell.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsIScrollableFrame.h"
+#include "nsIScrollbarMediator.h"
 #include "nsITimer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
+#include "nsLayoutUtils.h"
+#include "nsQueryFrame.h"
 #include "TouchManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsLayoutUtils.h"
@@ -74,7 +82,7 @@ WidgetModifiersToDOMModifiers(mozilla::Modifiers aModifiers)
   return result;
 }
 
-}
+} // namespace
 
 namespace mozilla {
 namespace layers {
@@ -408,6 +416,6 @@ APZEventState::GetWidget() const
   return result.forget();
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 

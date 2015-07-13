@@ -349,5 +349,5 @@ size_t CacheIOThread::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) co
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

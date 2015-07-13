@@ -53,7 +53,7 @@ namespace mozilla {
 namespace dom {
 class Blob;
 class BlobSet;
-}
+} // namespace dom
 
 // A helper for building up an ArrayBuffer object's data
 // before creating the ArrayBuffer itself.  Will do doubling

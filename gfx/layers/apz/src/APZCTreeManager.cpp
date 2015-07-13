@@ -1841,5 +1841,5 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
   return ancestor.forget();
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

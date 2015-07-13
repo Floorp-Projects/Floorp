@@ -16,5 +16,5 @@ VideoStreamTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return VideoStreamTrackBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

@@ -31,7 +31,7 @@ private:
   nsCOMPtr<nsIApplicationCache> mAppCache;
 };
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

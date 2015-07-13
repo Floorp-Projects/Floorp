@@ -117,5 +117,5 @@ AxisPhysicsModel::LinearInterpolate(double aV1, double aV2, double aBlend)
   return aV1 * (1.0 - aBlend) + aV2 * aBlend;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

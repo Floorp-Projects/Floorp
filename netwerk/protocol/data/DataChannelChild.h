@@ -37,7 +37,7 @@ private:
     bool mIPCOpen;
 };
 
-} // namespace mozilla
 } // namespace net
+} // namespace mozilla
 
 #endif /* NS_DATACHANNELCHILD_H */

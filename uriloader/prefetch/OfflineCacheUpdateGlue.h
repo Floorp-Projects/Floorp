@@ -74,7 +74,7 @@ private:
     nsCOMPtr<nsIURI> mDocumentURI;
 };
 
-}
-}
+} // namespace docshell
+} // namespace mozilla
 
 #endif

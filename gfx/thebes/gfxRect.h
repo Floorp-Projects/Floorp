@@ -34,8 +34,8 @@ namespace mozilla {
             eCornerBottomLeft = 3,
             eNumCorners = 4
         };
-    }
-}
+    } // namespace css
+} // namespace mozilla
 #define NS_CORNER_TOP_LEFT mozilla::css::eCornerTopLeft
 #define NS_CORNER_TOP_RIGHT mozilla::css::eCornerTopRight
 #define NS_CORNER_BOTTOM_RIGHT mozilla::css::eCornerBottomRight

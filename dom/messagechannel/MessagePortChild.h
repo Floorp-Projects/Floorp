@@ -46,7 +46,7 @@ private:
   MessagePort* mPort;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_MessagePortChild_h

@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace gl {
 class GLContext;
-}
+} // namespace gl
 
 namespace layers {
 
@@ -38,6 +38,7 @@ public:
                                const gfx::Rect& aTextureRect) = 0;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif

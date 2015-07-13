@@ -1014,7 +1014,7 @@ WorkerPermissionRequestChildProcessActor::Recv__delete__(
   return true;
 }
 
-} // anonymous namespace
+} // namespace
 
 /*******************************************************************************
  * Local class implementations

@@ -61,7 +61,7 @@ using JS::DoubleNaNValue;
 
 namespace js {
     bool gCanUseExtraThreads = true;
-};
+} // namespace js
 
 void
 js::DisableExtraThreads()

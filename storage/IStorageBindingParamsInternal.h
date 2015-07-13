@@ -45,7 +45,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IStorageBindingParamsInternal,
 #define NS_DECL_ISTORAGEBINDINGPARAMSINTERNAL \
   already_AddRefed<mozIStorageError> bind(sqlite3_stmt *aStatement) override;
 
-} // storage
-} // mozilla
+} // namespace storage
+} // namespace mozilla
 
 #endif // mozilla_storage_IStorageBindingParamsInternal_h_

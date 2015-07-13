@@ -10,6 +10,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/unused.h"
 #include "gfxUtils.h"
 #include "nsNetUtil.h"
 
@@ -206,7 +207,7 @@ public:
     rv = NS_DispatchToMainThread(mEncodingCompleteEvent);
     if (NS_FAILED(rv)) {
       // Better to leak than to crash.
-      mEncodingCompleteEvent.forget();
+      unused << mEncodingCompleteEvent.forget();
       return rv;
     }
 

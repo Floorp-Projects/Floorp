@@ -68,4 +68,5 @@ private:
 
 } // namespace net
 } // namespace mozilla
+
 #endif // DNSListenerProxy_h__

@@ -96,7 +96,7 @@ private:
   uint32_t mBufferedHTTP1Consumed;
 };
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_SpdyPush3_Internal_h

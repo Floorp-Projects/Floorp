@@ -169,5 +169,5 @@ TextRenderer::EnsureInitialized()
   png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

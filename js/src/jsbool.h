@@ -21,6 +21,6 @@ InitBooleanClass(JSContext* cx, js::HandleObject obj);
 extern JSString*
 BooleanToString(js::ExclusiveContext* cx, bool b);
 
-}
+} // namespace js
 
 #endif /* jsbool_h */

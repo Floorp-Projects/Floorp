@@ -250,7 +250,7 @@ private:
   bool mLocked;
 };
 
-} // anonymous namespace
+} // namespace
 
 #if !defined(MOZILLA_XPCOMRT_API)
 // this is safe to call during InitXPCOM

@@ -345,5 +345,6 @@ AllChildrenIterator::GetNextChild()
 
   return nullptr;
 }
+
 } // namespace dom
 } // namespace mozilla

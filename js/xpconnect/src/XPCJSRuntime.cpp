@@ -526,7 +526,7 @@ CurrentWindowOrNull(JSContext* cx)
     return glob ? WindowOrNull(glob) : nullptr;
 }
 
-}
+} // namespace xpc
 
 static void
 CompartmentDestroyedCallback(JSFreeOp* fop, JSCompartment* compartment)

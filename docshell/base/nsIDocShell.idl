@@ -46,7 +46,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(b3137b7c-d589-48aa-b89b-e02aa451d42c)]
+[scriptable, builtinclass, uuid(97471054-0BC8-4A57-BBFE-6C255BCBBB67)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -347,9 +347,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   /*
    * Tells the docshell to offer focus to its tree owner.
    * This is currently only necessary for embedding chrome.
+   * If forDocumentNavigation is true, then document navigation should be
+   * performed, where only the root of documents are selected. Otherwise, the
+   * next element in the parent should be returned. Returns true if focus was
+   * successfully taken by the tree owner.
    */
-  void tabToTreeOwner(in boolean forward,
-                      out boolean tookFocus);
+  bool tabToTreeOwner(in boolean forward, in boolean forDocumentNavigation);
 
   /**
    * Current busy state for DocShell

@@ -229,7 +229,7 @@ private:
     GonkDisplay::DisplayType mType;
     bool mConnected;
 };
-} // anonymous namespace
+} // namespace
 
 void
 HwcComposer2D::Hotplug(int aDisplay, int aConnected)

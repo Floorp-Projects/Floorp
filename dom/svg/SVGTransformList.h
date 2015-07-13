@@ -16,7 +16,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGTransform;
-}
+} // namespace dom
 
 /**
  * ATTENTION! WARNING! WATCH OUT!!

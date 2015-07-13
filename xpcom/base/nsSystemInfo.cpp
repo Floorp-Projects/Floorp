@@ -172,7 +172,7 @@ nsresult GetInstallYear(uint32_t& aYear)
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 #endif // defined(XP_WIN)
 
 using namespace mozilla;

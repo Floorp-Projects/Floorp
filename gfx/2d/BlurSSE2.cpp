@@ -311,5 +311,5 @@ AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
 
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

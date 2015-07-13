@@ -17,5 +17,5 @@ SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
           aPid, ProcessPriorityToString(aPriority), aLRU);
 }
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

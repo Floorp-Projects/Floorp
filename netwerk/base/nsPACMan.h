@@ -242,7 +242,7 @@ private:
 namespace mozilla {
 namespace net {
 PRLogModuleInfo* GetProxyLog();
-}
-}
+} // namespace net
+} // namespace mozilla
 
 #endif  // nsPACMan_h__

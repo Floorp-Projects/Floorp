@@ -218,7 +218,7 @@ const JSStructuredCloneCallbacks gCallbacks = {
   FreeTransfer,
 };
 
-} // anonymous namespace
+} // namespace
 
 bool
 ReadStructuredCloneWithTransfer(JSContext* aCx, nsTArray<uint8_t>& aData,
@@ -286,6 +286,6 @@ FreeStructuredClone(nsTArray<uint8_t>& aData, StructuredCloneClosure& aClosure)
   aData.Clear();
 }
 
-} // messageport namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace messageport
+} // namespace dom
+} // namespace mozilla

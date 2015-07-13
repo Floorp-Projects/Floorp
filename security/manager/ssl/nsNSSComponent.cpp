@@ -853,7 +853,7 @@ CipherSuiteChangeObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
 void nsNSSComponent::setValidationOptions(bool isInitialSetting,

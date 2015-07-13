@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace gl {
 class GLContext;
-}
+} // namespace gl
 
 /**
  * This class tracks the state of the context for debugging and profiling.
@@ -78,6 +78,7 @@ private:
   void Flush(GLContext* aGL);
 };
 
-}
+} // namespace mozilla
+
 #endif
 

@@ -19,7 +19,7 @@ Mutex* sMutex = NULL;
 CondVar* sCondVar = NULL;
 bool sTracerProcessed = false;
 
-}
+} // namespace
 
 namespace mozilla {
 

@@ -631,7 +631,7 @@ imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
   }
 }
 
-namespace { // anon
+namespace {
 
 already_AddRefed<nsIApplicationCache>
 GetApplicationCache(nsIRequest* aRequest)
@@ -659,7 +659,7 @@ GetApplicationCache(nsIRequest* aRequest)
   return appCache.forget();
 }
 
-} // anon
+} // namespace
 
 bool
 imgRequest::CacheChanged(nsIRequest* aNewRequest)

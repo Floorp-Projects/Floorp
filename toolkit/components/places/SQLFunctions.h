@@ -325,6 +325,6 @@ public:
 
 
 } // namespace places
-} // namespace storage
+} // namespace mozilla
 
 #endif // mozilla_places_SQLFunctions_h_

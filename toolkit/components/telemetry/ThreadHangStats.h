@@ -194,4 +194,5 @@ public:
 
 } // namespace Telemetry
 } // namespace mozilla
+
 #endif // mozilla_BackgroundHangTelemetry_h

@@ -71,5 +71,6 @@ SpeechRecognitionResult::IsFinal() const
 {
   return true; // TODO
 }
+
 } // namespace dom
 } // namespace mozilla

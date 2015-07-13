@@ -19,6 +19,6 @@ public:
 
 };
 
-}
+} // namespace mozilla
 
 #endif // __AppleDecoder_h__

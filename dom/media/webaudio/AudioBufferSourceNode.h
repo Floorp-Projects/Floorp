@@ -144,8 +144,8 @@ private:
   bool mStartCalled;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

@@ -28,7 +28,7 @@ struct ScopedMappedViewTraits
 };
 typedef mozilla::Scoped<ScopedMappedViewTraits> ScopedMappedView;
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

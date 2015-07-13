@@ -253,7 +253,7 @@ private:
 #endif
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

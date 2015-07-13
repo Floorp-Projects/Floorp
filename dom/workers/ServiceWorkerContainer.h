@@ -19,7 +19,7 @@ struct RegistrationOptions;
 
 namespace workers {
 class ServiceWorker;
-}
+} // namespace workers
 
 // Lightweight serviceWorker APIs collection.
 class ServiceWorkerContainer final : public DOMEventTargetHelper

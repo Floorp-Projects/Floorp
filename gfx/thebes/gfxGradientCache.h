@@ -30,7 +30,7 @@ public:
     static void Shutdown();
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

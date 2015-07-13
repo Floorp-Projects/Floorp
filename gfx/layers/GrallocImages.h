@@ -129,6 +129,7 @@ private:
 
 } // namespace layers
 } // namespace mozilla
+
 #endif
 
 #endif /* GRALLOCIMAGES_H */

@@ -19,5 +19,5 @@ void
 CancelVibrate(const hal::WindowIdentifier &)
 {}
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

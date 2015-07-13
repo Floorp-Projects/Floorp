@@ -116,8 +116,8 @@ protected:
   float mSampleRate;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

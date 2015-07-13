@@ -37,6 +37,6 @@ OfflineAudioCompletionEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObj
   return OfflineAudioCompletionEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

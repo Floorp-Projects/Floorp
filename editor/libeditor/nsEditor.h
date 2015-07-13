@@ -73,8 +73,8 @@ class JoinNodeTxn;
 class Selection;
 class SplitNodeTxn;
 class Text;
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
 
 namespace mozilla {
 namespace widget {

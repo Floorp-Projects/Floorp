@@ -293,6 +293,7 @@ UNIFIED_SOURCES += [
     'Compositor.cpp',
     'CopyableCanvasLayer.cpp',
     'Effects.cpp',
+    'FrameMetrics.cpp',
     'GLImages.cpp',
     'ImageDataSerializer.cpp',
     'ImageLayers.cpp',

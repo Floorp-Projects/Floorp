@@ -235,6 +235,25 @@ public:
     return attr->getAnnotation() == spelling;
   }
 
+  void HandleUnusedExprResult(const Stmt *stmt) {
+    const Expr* E = dyn_cast_or_null<Expr>(stmt);
+    if (E) {
+      // XXX It would be nice if we could use getAsTagDecl,
+      // but our version of clang is too old.
+      // (getAsTagDecl would also cover enums etc.)
+      QualType T = E->getType();
+      CXXRecordDecl *decl = T->getAsCXXRecordDecl();
+      if (decl) {
+        decl = decl->getDefinition();
+        if (decl && hasCustomAnnotation(decl, "moz_must_use")) {
+          unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+            DiagnosticIDs::Error, "Unused MOZ_MUST_USE value of type %0");
+          Diag.Report(E->getLocStart(), errorID) << T;
+        }
+      }
+    }
+  }
+
   bool VisitCXXRecordDecl(CXXRecordDecl *d) {
     // We need definitions, not declarations
     if (!d->isThisDeclarationADefinition()) return true;
@@ -315,6 +334,41 @@ public:
       }
     }
 
+    return true;
+  }
+
+  bool VisitSwitchCase(SwitchCase* stmt) {
+    HandleUnusedExprResult(stmt->getSubStmt());
+    return true;
+  }
+  bool VisitCompoundStmt(CompoundStmt* stmt) {
+    for (CompoundStmt::body_iterator it = stmt->body_begin(), e = stmt->body_end();
+         it != e; ++it) {
+      HandleUnusedExprResult(*it);
+    }
+    return true;
+  }
+  bool VisitIfStmt(IfStmt* Stmt) {
+    HandleUnusedExprResult(Stmt->getThen());
+    HandleUnusedExprResult(Stmt->getElse());
+    return true;
+  }
+  bool VisitWhileStmt(WhileStmt* Stmt) {
+    HandleUnusedExprResult(Stmt->getBody());
+    return true;
+  }
+  bool VisitDoStmt(DoStmt* Stmt) {
+    HandleUnusedExprResult(Stmt->getBody());
+    return true;
+  }
+  bool VisitForStmt(ForStmt* Stmt) {
+    HandleUnusedExprResult(Stmt->getBody());
+    HandleUnusedExprResult(Stmt->getInit());
+    HandleUnusedExprResult(Stmt->getInc());
+    return true;
+  }
+  bool VisitBinComma(BinaryOperator* Op) {
+    HandleUnusedExprResult(Op->getLHS());
     return true;
   }
 };

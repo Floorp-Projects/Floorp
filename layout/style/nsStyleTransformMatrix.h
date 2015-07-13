@@ -19,7 +19,7 @@ class nsPresContext;
 struct nsRect;
 namespace mozilla {
 class RuleNodeCacheConditions;
-}
+} // namespace mozilla
 
 /**
  * A helper to generate gfxMatrixes from css transform functions.

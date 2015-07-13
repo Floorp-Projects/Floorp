@@ -2335,7 +2335,7 @@ private:
   uint32_t                                mLength;
 };
 
-} // anonymous namespace
+} // namespace
 
 static void
 AppendEncodedCharacters(const nsTextFragment* aText, StringBuilder& aBuilder)

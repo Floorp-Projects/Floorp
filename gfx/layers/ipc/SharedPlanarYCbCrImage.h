@@ -58,7 +58,7 @@ private:
   RefPtr<ImageClient> mCompositable;
 };
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 #endif

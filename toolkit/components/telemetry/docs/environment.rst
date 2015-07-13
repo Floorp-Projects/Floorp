@@ -133,6 +133,18 @@ Structure::
               },
               ...
             ],
+            // Note: currently only added on Desktop. On Linux, only a single
+            // monitor is returned representing the entire virtual screen.
+            monitors: [
+              {
+                screenWidth: <number>,  // screen width in pixels
+                screenHeight: <number>, // screen height in pixels
+                refreshRate: <number>,  // refresh rate in hertz (present on Windows only)
+                pseudoDisplay: <bool>,  // networked screen (present on Windows only)
+                scale: <number>,        // backing scale factor (present on Mac only)
+              },
+              ...
+            ],
           },
       },
       addons: {

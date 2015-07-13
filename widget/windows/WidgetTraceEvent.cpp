@@ -129,4 +129,4 @@ bool FireAndWaitForTracerEvent()
   return true;
 }
 
-}  // namespace mozilla
+} // namespace mozilla

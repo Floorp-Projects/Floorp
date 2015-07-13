@@ -1218,7 +1218,7 @@ MappedAttrParser::CreateStyleRule()
   return rule.forget();
 }
 
-} // anonymous namespace
+} // namespace
 
 //----------------------------------------------------------------------
 // Implementation Helpers:

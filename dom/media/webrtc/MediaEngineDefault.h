@@ -24,7 +24,7 @@ namespace mozilla {
 
 namespace layers {
 class ImageContainer;
-}
+} // namespace layers
 
 class MediaEngineDefault;
 
@@ -194,6 +194,6 @@ private:
   nsTArray<nsRefPtr<MediaEngineAudioSource> > mASources;
 };
 
-}
+} // namespace mozilla
 
 #endif /* NSMEDIAENGINEDEFAULT_H_ */

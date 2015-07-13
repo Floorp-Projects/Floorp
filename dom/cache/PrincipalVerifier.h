@@ -15,7 +15,7 @@ namespace mozilla {
 
 namespace ipc {
   class PBackgroundParent;
-}
+} // namespace ipc
 
 namespace dom {
 namespace cache {
@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIRUNNABLE
 };
 
-} // namesapce cache
+} // namespace cache
 } // namespace dom
 } // namespace mozilla
 

@@ -87,6 +87,7 @@ private:
   Atomic<int> mEntry;
   nsCString mContentType;
 };
-}
+
+} // namespace mozilla
 
 #endif

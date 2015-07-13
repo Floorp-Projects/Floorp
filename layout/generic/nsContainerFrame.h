@@ -26,7 +26,7 @@
 class nsOverflowContinuationTracker;
 namespace mozilla {
 class FramePropertyTable;
-}
+} // namespace mozilla
 
 // Some macros for container classes to do sanity checking on
 // width/height/x/y values computed during reflow.

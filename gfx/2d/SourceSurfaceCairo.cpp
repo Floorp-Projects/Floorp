@@ -158,5 +158,5 @@ DataSourceSurfaceCairo::GetSurface() const
   return mImageSurface;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

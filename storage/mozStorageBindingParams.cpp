@@ -98,7 +98,7 @@ sqlite3_T_blob(BindingColumnData aData,
 
 #include "variantToSQLiteT_impl.h"
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// BindingParams

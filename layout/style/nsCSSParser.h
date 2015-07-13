@@ -34,8 +34,8 @@ class Rule;
 class Declaration;
 class Loader;
 class StyleRule;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 // Interface to the css parser.
 

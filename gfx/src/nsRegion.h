@@ -818,8 +818,8 @@ private:
   }
 };
 
-}  // namespace mozilla::gfx
-}  // namespace mozilla
+} // namespace gfx
+} // namespace mozilla
 
 class NS_GFX nsIntRegion : public mozilla::gfx::BaseIntRegion<nsIntRegion, mozilla::gfx::IntRect, nsIntPoint, nsIntMargin>
 {

@@ -208,4 +208,4 @@ OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
   return NS_OK;
 }
 
-}
+} // namespace mozilla

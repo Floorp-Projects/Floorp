@@ -213,6 +213,6 @@ private:
 
 };
 
-}
+} // namespace mozilla
 
 #endif

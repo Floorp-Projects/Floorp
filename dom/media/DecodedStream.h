@@ -35,7 +35,7 @@ template <class T> class MediaQueue;
 
 namespace layers {
 class Image;
-}
+} // namespace layers
 
 /*
  * All MediaStream-related data is protected by the decoder's monitor.

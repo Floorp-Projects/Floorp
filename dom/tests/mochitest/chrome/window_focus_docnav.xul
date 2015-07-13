@@ -9,12 +9,12 @@
 
 <textbox id="textbox"/>
 
-<panel id="panel2" onpopupshown="runTests(this, 2);" onpopuphidden="document.getElementById('panel').hidePopup()">
-  <textbox id="p2textbox" value="Popup2"/>
-</panel>
 <panel id="panel" onpopupshown="runTests(this, 1);"
                   onpopuphidden="done()">
   <textbox id="p1textbox" value="Popup1"/>
+</panel>
+<panel id="panel2" onpopupshown="runTests(this, 2);" onpopuphidden="document.getElementById('panel').hidePopup()">
+  <textbox id="p2textbox" value="Popup2"/>
 </panel>
 
 <browser id="browser" type="content" src="focus_frameset.html" width="500" height="400"/>
@@ -62,11 +62,11 @@ function runTests(panel, popupCount)
   var childwin = document.getElementById("browser").contentWindow;
 
   if (popupCount) {
+    next(window, document.getElementById("p1textbox").inputField, "First into popup 1 with " + popupCount);
+
     if (popupCount == 2) {
       next(window, document.getElementById("p2textbox").inputField, "First into popup 2 with " + popupCount);
     }
-
-    next(window, document.getElementById("p1textbox").inputField, "First into popup 1 with " + popupCount);
   }
 
   next(childwin.frames[0], childwin.frames[0].document.documentElement, "First with " + popupCount);
@@ -74,11 +74,11 @@ function runTests(panel, popupCount)
   previous(childwin.frames[0], childwin.frames[0].document.documentElement, "Second back with " + popupCount);
 
   if (popupCount) {
-    previous(window, document.getElementById("p1textbox").inputField, "First back from popup 1 with " + popupCount);
-
     if (popupCount == 2) {
       previous(window, document.getElementById("p2textbox").inputField, "First back from popup 2 with " + popupCount);
     }
+
+    previous(window, document.getElementById("p1textbox").inputField, "First back from popup 1 with " + popupCount);
   }
 
   previous(window, document.getElementById("textbox").inputField, "First back with " + popupCount);

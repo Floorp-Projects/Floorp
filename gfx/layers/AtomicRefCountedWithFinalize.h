@@ -27,7 +27,7 @@ class RefSet;
 
 template<typename T>
 class RefQueue;
-}
+} // namespace gl
 
 template<typename T>
 class AtomicRefCountedWithFinalize

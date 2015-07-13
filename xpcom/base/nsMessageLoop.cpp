@@ -141,7 +141,7 @@ MessageLoopTimerCallback::Notify(nsITimer* aTimer)
 
 NS_IMPL_ISUPPORTS(MessageLoopTimerCallback, nsITimerCallback)
 
-} // anonymous namespace
+} // namespace
 
 NS_IMPL_ISUPPORTS(nsMessageLoop, nsIMessageLoop)
 

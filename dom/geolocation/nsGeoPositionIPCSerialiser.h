@@ -147,6 +147,6 @@ struct ParamTraits<nsIDOMGeoPosition*>
 
 };
 
-}
+} // namespace IPC
 
 #endif

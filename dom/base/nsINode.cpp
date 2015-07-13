@@ -2501,7 +2501,7 @@ struct SelectorMatchInfo {
   nsCSSSelectorList* const mSelectorList;
   TreeMatchContext& mMatchContext;
 };
-}
+} // namespace
 
 // Given an id, find elements with that id under aRoot that match aMatchInfo if
 // any is provided.  If no SelectorMatchInfo is provided, just find the ones

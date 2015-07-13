@@ -23,8 +23,8 @@ namespace mozilla {
     struct RectCornerRadii;
     class SourceSurface;
     class DrawTarget;
-  }
-}
+  } // namespace gfx
+} // namespace mozilla
 
 /**
  * Implementation of a triple box blur approximation of a Gaussian blur.

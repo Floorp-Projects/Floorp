@@ -87,6 +87,6 @@ ChannelMergerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return ChannelMergerNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

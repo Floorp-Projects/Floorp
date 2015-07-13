@@ -941,7 +941,7 @@ public:
     NS_IMETHOD Run() { return NS_OK; }
 };
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 nsXPConnect::OnProcessNextEvent(nsIThreadInternal* aThread, bool aMayWait,

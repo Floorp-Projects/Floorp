@@ -275,7 +275,7 @@ public:
     return NS_OK;
   }
 };
-} // anonymous namespace
+} // namespace
 
 // Subclass that can be directly dispatched to child workers from the main
 // thread.
@@ -1663,6 +1663,7 @@ Notification::UnregisterFeature()
                                 mFeature.get());
   mFeature = nullptr;
 }
+
 } // namespace dom
 } // namespace mozilla
 

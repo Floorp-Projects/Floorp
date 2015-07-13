@@ -64,7 +64,7 @@ RunBeforeNextEvent(IDBTransaction* aTransaction)
   return true;
 }
 
-} // anonymous namespace
+} // namespace
 
 class IDBTransaction::WorkerFeature final
   : public mozilla::dom::workers::WorkerFeature

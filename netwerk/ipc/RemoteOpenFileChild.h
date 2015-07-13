@@ -20,7 +20,7 @@ namespace mozilla {
 
 namespace ipc {
 class FileDescriptor;
-}
+} // namespace ipc
 
 namespace net {
 

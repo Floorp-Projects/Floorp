@@ -700,7 +700,7 @@ continue_loading:
 
 WindowsDllInterceptor NtDllIntercept;
 
-} // anonymous namespace
+} // namespace
 
 NS_EXPORT void
 DllBlocklist_Initialize()

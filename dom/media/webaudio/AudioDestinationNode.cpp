@@ -685,5 +685,5 @@ AudioDestinationNode::InputMuted(bool aMuted)
   WindowVolumeChanged(volume, muted);
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

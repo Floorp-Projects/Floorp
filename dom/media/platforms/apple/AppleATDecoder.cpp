@@ -505,4 +505,5 @@ AppleATDecoder::GetImplicitAACMagicCookie(const MediaRawData* aSample)
 
   return (mFileStreamError || status) ? NS_ERROR_FAILURE : NS_OK;
 }
+
 } // namespace mozilla

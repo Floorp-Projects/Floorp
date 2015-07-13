@@ -19,7 +19,7 @@ namespace mozilla {
             nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
             gfxInfo->LogFailure(failure);
         }
-    }
-}
+    } // namespace gfx
+} // namespace mozilla
 
 #endif // gfxFailure_h_

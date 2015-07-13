@@ -11,8 +11,8 @@
 namespace mozilla {
 namespace ipc {
 class URIParams;
-}
-}
+} // namespace ipc
+} // namespace mozilla
 
 #define NS_IIPCSERIALIZABLEURI_IID \
   {0xfee3437d, 0x3daf, 0x411f, {0xb0, 0x1d, 0xdc, 0xd4, 0x88, 0x55, 0xe3, 0xd}}

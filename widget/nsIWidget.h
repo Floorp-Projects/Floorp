@@ -37,32 +37,34 @@ class   ViewWrapper;
 class   nsIWidgetListener;
 class   nsIntRegion;
 class   nsIScreen;
+class   nsIRunnable;
 
 namespace mozilla {
 class CompositorVsyncDispatcher;
 class WritingMode;
 namespace dom {
 class TabChild;
-}
+} // namespace dom
 namespace plugins {
 class PluginWidgetChild;
-}
+} // namespace plugins
 namespace layers {
 class Composer2D;
+class Compositor;
 class CompositorChild;
 class LayerManager;
 class LayerManagerComposite;
 class PLayerTransactionChild;
 struct ScrollableLayerGuid;
-}
+} // namespace layers
 namespace gfx {
 class DrawTarget;
 class SourceSurface;
-}
+} // namespace gfx
 namespace widget {
 class TextEventDispatcher;
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 /**
  * Callback function that processes events.
@@ -119,8 +121,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x53376F57, 0xF081, 0x4949, \
-  { 0xB5, 0x5E, 0x87, 0xEF, 0x6A, 0xE9, 0xE3, 0x5A } };
+{ 0x22b4504e, 0xddba, 0x4211, \
+  { 0xa1, 0x49, 0x6e, 0x11, 0x73, 0xc4, 0x11, 0x45 } }
 
 /*
  * Window shadow styles
@@ -1696,18 +1698,33 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
 
+    enum FullscreenTransitionStage
+    {
+      eBeforeFullscreenToggle,
+      eAfterFullscreenToggle
+    };
+
     /**
-     * Ask the widget to start the transition for entering or exiting
-     * DOM Fullscreen.
-     *
-     * XXX This method is currently not actually implemented by any
-     * widget. The only function of this method is to notify cocoa
-     * window that it should not use the native fullscreen mode. This
-     * method is reserved for bug 1160014 where a transition will be
-     * added for DOM fullscreen. Hence, this function is likely to
-     * be further changed then.
+     * Prepares for fullscreen transition and returns whether the widget
+     * supports fullscreen transition. If this method returns false,
+     * PerformFullscreenTransition() must never be called. Otherwise,
+     * caller should call that method twice with "before" and "after"
+     * stages respectively in order. In the latter case, this method may
+     * return some data via aData pointer. Caller must pass that data to
+     * PerformFullscreenTransition() if any, and caller is responsible
+     * for releasing that data.
      */
-    virtual void PrepareForDOMFullscreenTransition() = 0;
+    virtual bool PrepareForFullscreenTransition(nsISupports** aData) = 0;
+
+    /**
+     * Performs fullscreen transition. This method returns immediately,
+     * and will post aCallback to the main thread when the transition
+     * finishes.
+     */
+    virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                             uint16_t aDuration,
+                                             nsISupports* aData,
+                                             nsIRunnable* aCallback) = 0;
 
     /**
      * Put the toplevel window into or out of fullscreen mode.
@@ -1717,6 +1734,18 @@ class nsIWidget : public nsISupports {
      * aTargetScreen support is currently only implemented on Windows.
      */
     NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) = 0;
+
+    /**
+     * Same as MakeFullScreen, except that, on systems which natively
+     * support fullscreen transition, calling this method explicitly
+     * requests that behavior.
+     * It is currently only supported on OS X 10.7+.
+     */
+    NS_IMETHOD MakeFullScreenWithNativeTransition(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr)
+    {
+      return MakeFullScreen(aFullScreen, aTargetScreen);
+    }
 
     /**
      * Invalidate a specified rect for a widget so that it will be repainted
@@ -1827,6 +1856,16 @@ class nsIWidget : public nsISupports {
     virtual void EndRemoteDrawingInRegion(mozilla::gfx::DrawTarget* aDrawTarget, nsIntRegion& aInvalidRegion) {
       EndRemoteDrawing();
     }
+
+    /**
+     * A hook for the widget to prepare a Compositor, during the latter's initialization.
+     *
+     * If this method returns true, it means that the widget will be able to
+     * present frames from the compoositor.
+     * Returning false will cause the compositor's initialization to fail, and
+     * a different compositor backend will be used (if any).
+     */
+    virtual bool InitCompositor(mozilla::layers::Compositor*) { return true; }
 
     /**
      * Clean up any resources used by Start/EndRemoteDrawing.

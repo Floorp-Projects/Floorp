@@ -58,7 +58,8 @@ private:
   nsString mSpec;
   bool mPending;
 };
-}
+
+} // namespace
 
 static bool sReportErrors;
 static nsIConsoleService *sConsoleService;

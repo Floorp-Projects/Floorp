@@ -17,7 +17,7 @@ namespace Shark {
 bool Start();
 void Stop();
 
-}
+} // namespace Shark
 
 #endif /* __APPLE__ */
 

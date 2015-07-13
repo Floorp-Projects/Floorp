@@ -44,4 +44,4 @@ SourceBufferContentManager::CreateManager(dom::SourceBuffer* aParent,
   return  manager.forget();
 }
 
-}
+} // namespace mozilla

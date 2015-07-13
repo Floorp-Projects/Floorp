@@ -152,5 +152,5 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

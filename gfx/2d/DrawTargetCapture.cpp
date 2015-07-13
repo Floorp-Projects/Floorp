@@ -193,5 +193,5 @@ DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransf
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

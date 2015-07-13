@@ -17,7 +17,7 @@
 
 namespace mozilla {
 class ErrorResult;
-}
+} // namespace mozilla
 
 class nsDOMStringMap : public nsStubMutationObserver,
                        public nsWrapperCache

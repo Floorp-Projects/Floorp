@@ -88,7 +88,7 @@ private:
   Point mCurrentPoint;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATH_CAIRO_H_ */

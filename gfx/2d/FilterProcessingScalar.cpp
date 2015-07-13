@@ -240,5 +240,5 @@ FilterProcessing::ApplyArithmeticCombine_Scalar(DataSourceSurface* aInput1, Data
   return ApplyArithmeticCombine_SIMD<simd::Scalari32x4_t,simd::Scalari16x8_t,simd::Scalaru8x16_t>(aInput1, aInput2, aK1, aK2, aK3, aK4);
 }
 
-} // namespace mozilla
 } // namespace gfx
+} // namespace mozilla

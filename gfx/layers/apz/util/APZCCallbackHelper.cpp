@@ -7,18 +7,21 @@
 
 #include "ContentHelper.h"
 #include "gfxPlatform.h" // For gfxPlatform::UseTiling
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/TouchEvents.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsIDOMElement.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsRefreshDriver.h"
+#include "nsString.h"
 #include "nsView.h"
+#include "Layers.h"
 
 #define APZCCH_LOG(...)
 // #define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
@@ -754,6 +757,6 @@ APZCCallbackHelper::NotifyFlushComplete()
   observerService->NotifyObservers(nullptr, "apz-repaints-flushed", nullptr);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 

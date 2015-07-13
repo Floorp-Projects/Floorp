@@ -151,7 +151,7 @@ public:
   UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;
 };
 
-} // namespace JS
 } // namespace ubi
+} // namespace JS
 
 #endif // mozilla_devtools_DeserializedNode__

@@ -49,11 +49,11 @@ namespace layers {
 class Layer;
 class ImageLayer;
 class ImageContainer;
-} //namespace
+} // namespace layers
 namespace gfx {
 class VRHMDInfo;
-} //namespace
-} //namespace
+} // namespace gfx
+} // namespace mozilla
 
 // A set of blend modes, that never includes OP_OVER (since it's
 // considered the default, rather than a specific blend mode).
@@ -345,16 +345,7 @@ public:
   {
     mLayerEventRegions = aItem;
   }
-  bool IsBuildingLayerEventRegions()
-  {
-    if (mMode == PAINTING) {
-      // Note: this is the only place that gets to query LayoutEventRegionsEnabled
-      // 'directly' - other code should call this function.
-      return gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
-             mAsyncPanZoomEnabled;
-    }
-    return false;
-  }
+  bool IsBuildingLayerEventRegions();
   bool IsInsidePointerEventsNoneDoc()
   {
     return CurrentPresShellState()->mInsidePointerEventsNoneDoc;

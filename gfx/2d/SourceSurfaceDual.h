@@ -37,7 +37,7 @@ private:
   RefPtr<SourceSurface> mB;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACEDUAL_H_ */

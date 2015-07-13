@@ -116,5 +116,5 @@ PathRecording::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFill
   return recording.forget();
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

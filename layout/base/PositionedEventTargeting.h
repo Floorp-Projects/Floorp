@@ -27,6 +27,6 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
                               const nsPoint& aPointRelativeToRootFrame,
                               uint32_t aFlags = 0);
 
-}
+} // namespace mozilla
 
 #endif /* mozilla_PositionedEventTargeting_h */

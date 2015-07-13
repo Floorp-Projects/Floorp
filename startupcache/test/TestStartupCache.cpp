@@ -42,8 +42,8 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 NS_IMPORT nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream, 
                            char** buffer, uint32_t* len);
-}
-}
+} // namespace scache
+} // namespace mozilla
 
 using namespace mozilla::scache;
 

@@ -269,6 +269,6 @@ CompositableParentManager::SendPendingAsyncMessages()
   mPendingAsyncMessage.clear();
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 

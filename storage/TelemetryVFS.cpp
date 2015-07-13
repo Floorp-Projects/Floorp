@@ -823,7 +823,7 @@ xNextSystemCall(sqlite3_vfs *vfs, const char *zName)
   return orig_vfs->xNextSystemCall(orig_vfs, zName);
 }
 
-}
+} // namespace
 
 namespace mozilla {
 namespace storage {
@@ -888,5 +888,5 @@ sqlite3_vfs* ConstructTelemetryVFS()
   return tvfs;
 }
 
-}
-}
+} // namespace storage
+} // namespace mozilla

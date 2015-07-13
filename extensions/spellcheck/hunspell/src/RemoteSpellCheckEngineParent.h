@@ -34,5 +34,6 @@ private:
   nsCOMPtr<nsISpellChecker> mSpellChecker;
 };
 
-}
+} // namespace mozilla
+
 #endif

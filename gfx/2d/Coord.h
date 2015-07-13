@@ -136,7 +136,7 @@ struct CoordTyped :
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_COORD_H_ */

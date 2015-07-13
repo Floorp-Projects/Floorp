@@ -1333,5 +1333,5 @@ BlobSet::AppendBlobImpls(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls)
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

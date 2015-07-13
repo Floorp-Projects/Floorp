@@ -99,4 +99,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif // ISOMediaWriter_h_

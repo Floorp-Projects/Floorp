@@ -28,7 +28,7 @@ struct SelectionDetails;
 namespace mozilla {
 class ErrorResult;
 struct AutoPrepareFocusRange;
-}
+} // namespace mozilla
 
 struct RangeData
 {

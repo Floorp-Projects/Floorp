@@ -13,7 +13,7 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundChildImpl;
-}
+} // namespace ipc
 
 namespace dom {
 
@@ -53,7 +53,7 @@ private:
   bool mActorDestroyed;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_BroadcastChannelChild_h

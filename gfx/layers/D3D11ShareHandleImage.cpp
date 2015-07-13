@@ -140,5 +140,5 @@ D3D11ShareHandleImage::GetTexture() const {
   return mTexture;
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

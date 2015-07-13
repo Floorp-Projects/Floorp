@@ -17,7 +17,7 @@ namespace dom {
 struct ThreeDPoint;
 class AudioParamTimeline;
 class DelayNodeEngine;
-}
+} // namespace dom
 
 class AudioNodeStream;
 
@@ -402,6 +402,6 @@ private:
   const uint16_t mOutputCount;
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_AUDIONODEENGINE_H_ */

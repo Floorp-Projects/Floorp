@@ -35,7 +35,7 @@ private:
     virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
-} // namespace mozilla
 } // namespace net
+} // namespace mozilla
 
 #endif /* NS_DATACHANNELPARENT_H */

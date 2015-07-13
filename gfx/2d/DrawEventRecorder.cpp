@@ -50,5 +50,5 @@ DrawEventRecorderFile::Flush()
   mOutputFile.flush();
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

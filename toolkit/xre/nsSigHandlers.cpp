@@ -38,7 +38,9 @@
 #endif
 
 static char _progname[1024] = "huh?";
-static unsigned int _gdb_sleep_duration = 300;
+
+// Note: some tests manipulate this value.
+unsigned int _gdb_sleep_duration = 300;
 
 #if defined(LINUX) && defined(DEBUG) && \
       (defined(__i386) || defined(__x86_64) || defined(PPC))

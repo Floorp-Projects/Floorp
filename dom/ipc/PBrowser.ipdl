@@ -150,9 +150,9 @@ parent:
 parent:
     /**
      * When child sends this message, parent should move focus to
-     * the next or previous focusable element.
+     * the next or previous focusable element or document.
      */
-    MoveFocus(bool forward);
+    MoveFocus(bool forward, bool forDocumentNavigation);
 
     Event(RemoteDOMEvent aEvent);
 
@@ -702,6 +702,11 @@ child:
      * Tell the child to update its docShell's active state.
      */
     SetIsDocShellActive(bool aIsActive);
+
+    /**
+     * Navigate by document.
+     */
+    NavigateDocument(bool aForward);
 
     /**
      * The parent (chrome thread) requests that the child inform it when

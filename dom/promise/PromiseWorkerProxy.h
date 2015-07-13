@@ -22,7 +22,7 @@ class Promise;
 
 namespace workers {
 class WorkerPrivate;
-}
+} // namespace workers
 
 // A proxy to catch the resolved/rejected Promise's result from the main thread
 // and resolve/reject that on the worker thread eventually.

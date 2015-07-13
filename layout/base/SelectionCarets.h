@@ -28,7 +28,7 @@ namespace mozilla {
 
 namespace dom {
 class Selection;
-}
+} // namespace dom
 
 /**
  * The SelectionCarets draw a pair of carets when the selection is not
@@ -273,6 +273,7 @@ private:
   // Unique ID of current Mobile ActionBar view.
   uint32_t mActionBarViewID;
 };
+
 } // namespace mozilla
 
 #endif //SelectionCarets_h__

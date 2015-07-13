@@ -16,7 +16,7 @@
 
 namespace IPC {
 template<typename T> struct ParamTraits;
-}
+} // namespace IPC
 
 #ifdef XP_WIN
 // defines TimeStampValue as a complex value keeping both
@@ -571,6 +571,6 @@ private:
   TimeStampValue mValue;
 };
 
-}
+} // namespace mozilla
 
 #endif /* mozilla_TimeStamp_h */

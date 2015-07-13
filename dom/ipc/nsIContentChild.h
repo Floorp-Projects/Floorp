@@ -21,14 +21,14 @@ class nsString;
 
 namespace IPC {
 class Principal;
-} // IPC
+} // namespace IPC
 
 namespace mozilla {
 
 namespace jsipc {
 class PJavaScriptChild;
 class CpowEntry;
-} // jsipc
+} // namespace jsipc
 
 namespace dom {
 
@@ -86,6 +86,7 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentChild, NS_ICONTENTCHILD_IID)
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla
+
 #endif /* mozilla_dom_nsIContentChild_h */

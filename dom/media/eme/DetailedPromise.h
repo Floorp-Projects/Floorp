@@ -43,7 +43,7 @@ private:
   bool mResponded;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif // __DetailedPromise_h__

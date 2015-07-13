@@ -38,7 +38,7 @@ private:
     DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererParent);
 };
 
-}
-}
+} // namespace ipc
+} // namespace mozilla
 
 #endif

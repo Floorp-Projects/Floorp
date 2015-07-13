@@ -21,7 +21,7 @@ namespace {
 
 StaticRefPtr<RequestSyncWifiService> sService;
 
-} // anonymous namespace
+} // namespace
 
 /* static */ void
 RequestSyncWifiService::Init()
@@ -63,5 +63,5 @@ RequestSyncWifiService::Notify(const hal::NetworkInformation& aNetworkInfo)
   }
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

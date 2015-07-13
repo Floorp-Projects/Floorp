@@ -1251,7 +1251,7 @@ SyncProfile* NewSyncProfile()
   return profile;
 }
 
-} // anonymous namespace
+} // namespace
 
 SyncProfile* GeckoSampler::GetBacktrace()
 {

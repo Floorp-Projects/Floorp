@@ -26,12 +26,12 @@ namespace JS {
 template <typename T>
 class AutoVectorRooter;
 typedef AutoVectorRooter<Value> AutoValueVector;
-}
+} // namespace JS
 
 namespace mozilla {
 template <class> class Maybe;
 struct CycleCollectorResults;
-}
+} // namespace mozilla
 
 // The amount of time we wait between a request to GC (due to leaving
 // a page) and doing the actual GC.

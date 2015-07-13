@@ -835,5 +835,5 @@ nsHttpResponseHead::ParsePragma(const char *val)
         mPragmaNoCache = true;
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

@@ -323,7 +323,7 @@ private:
   bool mEnabled;
 };
 
-} // anonymous namespace
+} // namespace
 
 /* static */ bool
 BroadcastChannel::IsEnabled(JSContext* aCx, JSObject* aGlobal)
@@ -740,5 +740,5 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BroadcastChannel, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BroadcastChannel, DOMEventTargetHelper)
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

@@ -498,7 +498,9 @@ private:
   Matrix mTransform;
 };
 
-} /* namespace mozilla */
-} /* namespace gfx */
+} // namespace gfx
+
+} // namespace mozilla
+
 
 #endif /* MOZILLA_GFX_DRAWCOMMAND_H_ */

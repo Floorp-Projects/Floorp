@@ -84,5 +84,5 @@ DataChannelParent::OnDataAvailable(nsIRequest *aRequest,
     MOZ_CRASH("Should never be called");
 }
 
-} // namespace mozilla
 } // namespace net
+} // namespace mozilla

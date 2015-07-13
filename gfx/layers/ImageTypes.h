@@ -97,6 +97,6 @@ enum class StereoMode {
   TOP_BOTTOM
 };
 
-} // namespace
+} // namespace mozilla
 
 #endif

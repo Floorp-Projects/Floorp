@@ -38,7 +38,7 @@ bool sCubebLatencyPrefSet;
 // visible on the querying thread/CPU.
 uint32_t sPreferredSampleRate;
 
-} // anonymous namespace
+} // namespace
 
 extern PRLogModuleInfo* gAudioStreamLog;
 

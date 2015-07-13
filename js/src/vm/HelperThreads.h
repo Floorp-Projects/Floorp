@@ -29,7 +29,7 @@ struct AsmJSParallelTask;
 struct ParseTask;
 namespace jit {
   class IonBuilder;
-}
+} // namespace jit
 
 // Per-process state for off thread work items.
 class GlobalHelperThreadState

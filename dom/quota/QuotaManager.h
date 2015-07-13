@@ -34,8 +34,8 @@ class nsIRunnable;
 namespace mozilla {
 namespace dom {
 class OptionalContentId;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 BEGIN_QUOTA_NAMESPACE
 

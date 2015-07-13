@@ -69,7 +69,7 @@ public:
   bool LookupAppCache() const { return mLookupAppCache; }
 };
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

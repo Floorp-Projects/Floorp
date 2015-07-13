@@ -62,5 +62,5 @@ MediaStreamTrack::Stop()
   mStream->StopTrack(mTrackID);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

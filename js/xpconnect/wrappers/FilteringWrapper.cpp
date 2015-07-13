@@ -261,4 +261,4 @@ template class XOW;
 template class NNXOW;
 template class NNXOWC;
 template class ChromeObjectWrapperBase;
-}
+} // namespace xpc

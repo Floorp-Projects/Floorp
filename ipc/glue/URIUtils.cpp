@@ -30,7 +30,7 @@ NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
 NS_DEFINE_CID(kIconURICID, NS_MOZICONURI_CID);
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace ipc {

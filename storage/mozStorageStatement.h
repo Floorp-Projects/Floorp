@@ -112,7 +112,7 @@ private:
   friend class StatementJSHelper;
 };
 
-} // storage
-} // mozilla
+} // namespace storage
+} // namespace mozilla
 
 #endif // mozStorageStatement_h

@@ -2719,7 +2719,7 @@ EvictionNotifierRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 nsresult
 CacheFileIOManager::EvictAllInternal()
@@ -3883,7 +3883,7 @@ CacheFileIOManager::UpdateSmartCacheSize(int64_t aFreeSpace)
 
 // Memory reporting
 
-namespace { // anon
+namespace {
 
 // A helper class that dispatches and waits for an event that gets result of
 // CacheFileIOManager->mHandles.SizeOfExcludingThis() on the I/O thread
@@ -3944,7 +3944,7 @@ private:
   size_t mSize;
 };
 
-} // anon
+} // namespace
 
 size_t
 CacheFileIOManager::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const
@@ -4004,5 +4004,5 @@ CacheFileIOManager::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
   return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

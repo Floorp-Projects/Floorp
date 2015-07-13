@@ -13,8 +13,8 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class Pattern;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 /**
  * This class should not be instantiated. It's just a container

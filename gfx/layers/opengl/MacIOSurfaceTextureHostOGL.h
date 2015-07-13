@@ -99,7 +99,7 @@ protected:
   RefPtr<MacIOSurface> mSurface;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // MOZILLA_GFX_MACIOSURFACETEXTUREHOSTOGL_H

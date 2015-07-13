@@ -94,5 +94,5 @@ GMPSharedMemManager::NumInUse(GMPSharedMem::GMPMemoryClasses aClass)
   return mData->mGmpAllocated[aClass] - GetGmpFreelist(aClass).Length();
 }
 
-}
-}
+} // namespace gmp
+} // namespace mozilla

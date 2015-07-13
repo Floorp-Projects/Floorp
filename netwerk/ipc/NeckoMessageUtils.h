@@ -180,6 +180,6 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct>
   }
 };
 
-}
+} // namespace IPC
 
 #endif // mozilla_net_NeckoMessageUtils_h

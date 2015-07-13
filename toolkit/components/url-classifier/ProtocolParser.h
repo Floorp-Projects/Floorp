@@ -113,7 +113,7 @@ private:
   TableUpdate *mTableUpdate;
 };
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla
 
 #endif

@@ -591,5 +591,5 @@ CacheFileContextEvictor::EvictEntries()
   return NS_OK;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

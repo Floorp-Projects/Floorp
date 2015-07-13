@@ -45,8 +45,8 @@ namespace layout {
       // is normally done when manipulating child lists.
       kNoReflowPrincipalList        = 0x4000
   };
-}
-}
+} // namespace layout
+} // namespace mozilla
 
 // Uncomment this to enable expensive frame-list integrity checking
 // #define DEBUG_FRAME_LIST
@@ -559,9 +559,10 @@ union AlignedFrameListBytes {
   char bytes[sizeof(nsFrameList)];
 };
 extern const AlignedFrameListBytes gEmptyFrameListBytes;
-}
-}
-}
+} // namespace detail
+
+} // namespace layout
+} // namespace mozilla
 
 /* static */ inline const nsFrameList&
 nsFrameList::EmptyList()

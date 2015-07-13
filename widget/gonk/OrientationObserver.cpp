@@ -153,7 +153,7 @@ ConvertToDomOrientation(uint32_t aRotation, ScreenOrientation *aResult)
 // should be on the main thread.
 static StaticAutoPtr<OrientationObserver> sOrientationSensorObserver;
 
-} // Anonymous namespace
+} // namespace
 
 OrientationObserver*
 OrientationObserver::GetInstance()

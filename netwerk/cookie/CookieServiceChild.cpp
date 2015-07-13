@@ -223,6 +223,6 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                  aServerTime, true);
 }
 
-}
-}
+} // namespace net
+} // namespace mozilla
 

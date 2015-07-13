@@ -174,8 +174,8 @@ FirstNon8BitUnvectorized(const char16_t *str, const char16_t *end)
 namespace mozilla {
   namespace SSE2 {
     int32_t FirstNon8Bit(const char16_t *str, const char16_t *end);
-  }
-}
+  } // namespace SSE2
+} // namespace mozilla
 #endif
 
 /*

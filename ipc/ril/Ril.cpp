@@ -193,7 +193,7 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace ipc {

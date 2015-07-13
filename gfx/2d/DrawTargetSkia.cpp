@@ -1014,5 +1014,5 @@ DrawTargetSkia::SnapshotDestroyed()
   mSnapshot = nullptr;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

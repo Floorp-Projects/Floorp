@@ -475,4 +475,4 @@ DisplayItemClip::ToString() const
   return str;
 }
 
-}
+} // namespace mozilla

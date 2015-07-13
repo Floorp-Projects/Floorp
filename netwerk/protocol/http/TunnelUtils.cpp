@@ -1643,5 +1643,5 @@ NS_IMPL_ISUPPORTS(OutputStreamShim, nsIOutputStream, nsIAsyncOutputStream)
 NS_IMPL_ISUPPORTS(SocketInWrapper, nsIAsyncInputStream)
 NS_IMPL_ISUPPORTS(SocketOutWrapper, nsIAsyncOutputStream)
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

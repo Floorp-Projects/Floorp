@@ -99,8 +99,8 @@ protected:
   bool mPrivateBrowsing;
 };
 
-}
-}
+} // namespace net
+} // namespace mozilla
 
 #endif
 

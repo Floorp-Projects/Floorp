@@ -1372,7 +1372,7 @@ ProcessLRUPool::Add(ParticularProcessPriorityManager* aParticularManager)
       ProcessPriorityToString(mPriority));
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

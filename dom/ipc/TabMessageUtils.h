@@ -34,8 +34,8 @@ typedef CrashReporter::ThreadId NativeThreadId;
 typedef int32_t NativeThreadId;
 #endif
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 namespace IPC {
 
@@ -95,6 +95,6 @@ struct ParamTraits<nsEventStatus>
                                     nsEventStatus_eSentinel>
 { };
 
-}
+} // namespace IPC
 
 #endif

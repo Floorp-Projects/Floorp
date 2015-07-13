@@ -31,7 +31,7 @@ public:
   }
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

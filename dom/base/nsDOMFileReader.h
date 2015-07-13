@@ -28,8 +28,8 @@
 namespace mozilla {
 namespace dom {
 class Blob;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsDOMFileReader final : public mozilla::dom::FileIOObject,
                               public nsIDOMFileReader,

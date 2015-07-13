@@ -24,7 +24,7 @@ private:
   ~JSDebugger();
 };
 
-}
-}
+} // namespace jsdebugger
+} // namespace mozilla
 
 #endif /* JSDebugger_h */

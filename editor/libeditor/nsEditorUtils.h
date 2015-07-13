@@ -23,8 +23,8 @@ namespace mozilla {
 namespace dom {
 template <class T> class OwningNonNull;
 class Selection;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a

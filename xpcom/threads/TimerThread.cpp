@@ -78,7 +78,7 @@ TimerObserverRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 nsresult
 TimerThread::Init()

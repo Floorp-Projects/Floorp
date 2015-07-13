@@ -146,6 +146,6 @@ AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
   return audioNodeInputValue;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

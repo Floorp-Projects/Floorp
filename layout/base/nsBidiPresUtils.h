@@ -30,7 +30,7 @@ template<class T> class nsTHashtable;
 namespace mozilla {
   class WritingMode;
   class LogicalMargin;
-}
+} // namespace mozilla
 
 /**
  * A structure representing some continuation state for each frame on the line,

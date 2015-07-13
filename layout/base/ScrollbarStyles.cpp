@@ -29,4 +29,4 @@ namespace mozilla {
       mScrollSnapDestinationX(aDisplay->mScrollSnapDestination.mXPosition),
       mScrollSnapDestinationY(aDisplay->mScrollSnapDestination.mYPosition) {}
 
-}
+} // namespace mozilla

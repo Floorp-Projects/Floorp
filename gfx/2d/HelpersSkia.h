@@ -142,6 +142,8 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
 
     for (uint32_t i = 0; i < dashCount; i++) {
       pattern[i] = SkFloatToScalar(aOptions.mDashPattern[i % aOptions.mDashLength]);
+      if (!pattern[i])
+          pattern[i] = SK_ScalarNearlyZero;
     }
 
     SkDashPathEffect* dash = SkDashPathEffect::Create(&pattern.front(),
@@ -355,7 +357,7 @@ private:
 
 // End of code imported from Skia.
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_HELPERSSKIA_H_ */

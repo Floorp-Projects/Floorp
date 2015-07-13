@@ -116,7 +116,7 @@ namespace mozilla {
     extern bool MFBT_DATA neon_enabled;
 #endif
 #endif
-  }
+  } // namespace arm_private
 
 #if defined(MOZILLA_PRESUME_EDSP)
 #  define MOZILLA_MAY_SUPPORT_EDSP 1
@@ -158,6 +158,6 @@ namespace mozilla {
   inline bool supports_neon() { return false; }
 #endif
 
-}
+} // namespace mozilla
 
 #endif /* !defined(mozilla_arm_h_) */

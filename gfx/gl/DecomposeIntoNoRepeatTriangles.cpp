@@ -176,5 +176,5 @@ DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
     }
 }
 
-}
-}
+} // namespace gl
+} // namespace mozilla

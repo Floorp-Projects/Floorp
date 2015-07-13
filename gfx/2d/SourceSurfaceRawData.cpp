@@ -87,5 +87,5 @@ SourceSurfaceAlignedRawData::InitWithStride(const IntSize &aSize,
   return mArray != nullptr;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

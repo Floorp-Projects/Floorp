@@ -591,6 +591,6 @@ gfx::ScaleFactor<src, dst> MinScaleRatio(const gfx::SizeTyped<dst>& aDestSize, c
                                              aDestSize.height / aSrcSize.height));
 }
 
-}
+} // namespace mozilla
 
 #endif

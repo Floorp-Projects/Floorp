@@ -218,7 +218,7 @@ private: // data
   static cairo_surface_t *mDummySurface;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_DRAWTARGET_CAIRO_H_

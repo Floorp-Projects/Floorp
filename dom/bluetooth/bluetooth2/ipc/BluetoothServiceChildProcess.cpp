@@ -38,7 +38,7 @@ SendRequest(BluetoothReplyRunnable* aRunnable, const Request& aRequest)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 // static
 BluetoothServiceChildProcess*

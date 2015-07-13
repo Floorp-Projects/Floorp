@@ -43,7 +43,7 @@ private:
   FallibleTArray<uint32_t> mChunks;
 };
 
-}
-}
+} // namespace safebrowsing
+} // namespace mozilla
 
 #endif

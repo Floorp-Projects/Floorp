@@ -38,8 +38,8 @@ namespace layers {
   class ImageContainer;
   class ImageLayer;
   class LayerManager;
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 class nsImageListener : public imgINotificationObserver
 {

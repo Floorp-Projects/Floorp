@@ -95,6 +95,6 @@ ServiceWorkerManagerChild::RecvNotifyRemoveAll()
   return true;
 }
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla

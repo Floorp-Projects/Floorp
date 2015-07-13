@@ -30,4 +30,4 @@ CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
 }
 
 } // namespace layers
-} // namespace gfx
+} // namespace mozilla

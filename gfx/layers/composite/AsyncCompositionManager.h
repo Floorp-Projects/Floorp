@@ -237,7 +237,7 @@ private:
   AutoResolveRefLayers& operator=(const AutoResolveRefLayers&) = delete;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif

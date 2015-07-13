@@ -8648,7 +8648,7 @@ TelemetryIdForFile(nsIFile* aFile)
   return id;
 }
 
-} // anonymous namespace
+} // namespace
 
 /*******************************************************************************
  * Exported functions

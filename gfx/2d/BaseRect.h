@@ -546,7 +546,7 @@ private:
   bool operator!=(const Sub& aRect) const { return false; }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BASERECT_H_ */

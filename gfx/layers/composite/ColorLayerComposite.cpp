@@ -46,5 +46,5 @@ ColorLayerComposite::GenEffectChain(EffectChain& aEffect)
       Color(color.r, color.g, color.b, color.a));
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

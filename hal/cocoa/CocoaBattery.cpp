@@ -129,7 +129,7 @@ SingletonDestroyer::Observe(nsISupports*, const char* aTopic, const char16_t*)
   MacPowerInformationService::Shutdown();
   return NS_OK;
 }
-} // anonymous namespace
+} // namespace
 
 /* static */ MacPowerInformationService*
 MacPowerInformationService::GetInstance()

@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 
-#include "gfxPrefs.h"
 #include "gfxTypes.h"
 #include "gfxFontFamilyList.h"
 #include "gfxBlur.h"
@@ -42,7 +41,7 @@ class SRGBOverrideObserver;
 namespace mozilla {
 namespace gl {
 class SkiaGLGlue;
-}
+} // namespace gl
 namespace gfx {
 class DrawTarget;
 class SourceSurface;
@@ -56,12 +55,13 @@ BackendTypeBit(BackendType b)
 {
   return 1 << uint8_t(b);
 }
-}
-}
+
+} // namespace gfx
+} // namespace mozilla
 
 #define MOZ_PERFORMANCE_WARNING(module, ...) \
   do { \
-    if (gfxPrefs::PerfWarnings()) { \
+    if (gfxPlatform::PerfWarnings()) { \
       printf_stderr("[" module "] " __VA_ARGS__); \
     } \
   } while (0)
@@ -174,8 +174,8 @@ public:
      * and image format.
      */
     virtual already_AddRefed<gfxASurface>
-      CreateOffscreenSurface(const IntSize& size,
-                             gfxContentType contentType) = 0;
+      CreateOffscreenSurface(const IntSize& aSize,
+                             gfxImageFormat aFormat) = 0;
 
     /**
      * Beware that these methods may return DrawTargets which are not fully supported
@@ -260,7 +260,7 @@ public:
 
     /// These should be used instead of directly accessing the preference,
     /// as different platforms may override the behaviour.
-    virtual bool UseProgressivePaint() { return gfxPrefs::ProgressivePaintDoNotUseDirectly(); }
+    virtual bool UseProgressivePaint();
 
     static bool AsyncPanZoomEnabled();
 
@@ -618,6 +618,12 @@ public:
       CreateDrawTargetForBackend(mozilla::gfx::BackendType aBackend,
                                  const mozilla::gfx::IntSize& aSize,
                                  mozilla::gfx::SurfaceFormat aFormat);
+
+    /**
+     * Wrapper around gfxPrefs::PerfWarnings().
+     * Extracted into a function to avoid including gfxPrefs.h from this file.
+     */
+    static bool PerfWarnings();
 
 protected:
     gfxPlatform();

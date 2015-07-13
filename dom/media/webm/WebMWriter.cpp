@@ -75,4 +75,4 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
   return NS_OK;
 }
 
-} // mozilla namespace
+} // namespace mozilla

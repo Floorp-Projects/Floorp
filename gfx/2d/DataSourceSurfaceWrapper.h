@@ -33,7 +33,7 @@ private:
   RefPtr<DataSourceSurface> mSurface;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_DATASOURCESURFACEWRAPPER_H_ */

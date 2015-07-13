@@ -22,6 +22,6 @@ bool FireAndWaitForTracerEvent();
 // Signal that the event has been received by the event loop.
 void SignalTracerThread();
 
-}
+} // namespace mozilla
 
 #endif  // WIDGET_PUBLIC_WIDGETTRACEEVENT_H_

@@ -3094,5 +3094,5 @@ SpdySession31::SendPing()
   gHttpHandler->ConnMgr()->ActivateTimeoutTick();
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

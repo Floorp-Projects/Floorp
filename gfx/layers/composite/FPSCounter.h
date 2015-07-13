@@ -108,7 +108,7 @@ private:
   RefPtr<DataTextureSource> mFPSTextureSource;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_opengl_FPSCounter_h_

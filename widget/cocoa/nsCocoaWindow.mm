@@ -45,8 +45,8 @@
 namespace mozilla {
 namespace layers {
 class LayerManager;
-}
-}
+} // namespace layers
+} // namespace mozilla
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla;
@@ -108,7 +108,6 @@ nsCocoaWindow::nsCocoaWindow()
 , mSheetNeedsShow(false)
 , mInFullScreenMode(false)
 , mInFullScreenTransition(false)
-, mInDOMFullscreenTransition(false)
 , mModal(false)
 , mSupportsNativeFullScreen(false)
 , mInNativeFullScreenMode(false)
@@ -1266,11 +1265,6 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void nsCocoaWindow::PrepareForDOMFullscreenTransition()
-{
-  mInDOMFullscreenTransition = true;
-}
-
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
 {
   mInFullScreenTransition = false;
@@ -1284,7 +1278,9 @@ void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
   }
 }
 
-inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen)
+inline bool
+nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
+                                            bool aUseSystemTransition)
 {
   if (!mSupportsNativeFullScreen) {
     // If we cannot use native fullscreen, don't touch it.
@@ -1294,17 +1290,30 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen)
     // If we are using native fullscreen, go ahead to exit it.
     return true;
   }
-  if (mInDOMFullscreenTransition) {
-    // We shouldn't use native fullscreen for DOM fullscreen.
+  if (!aUseSystemTransition) {
+    // If we do not want the system fullscreen transition,
+    // don't use the native fullscreen.
     return false;
   }
-  // If we are using native fullscreen, we should have returned earlier,
-  // which means if we reach here for exiting fullscreen, we must be
-  // exiting from DOM fullscreen, not native fullscreen.
+  // If we are using native fullscreen, we should have returned earlier.
   return aFullScreen;
 }
 
-NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
+NS_IMETHODIMP
+nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
+{
+  return DoMakeFullScreen(aFullScreen, false);
+}
+
+NS_IMETHODIMP
+nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
+                                                  nsIScreen* aTargetScreen)
+{
+  return DoMakeFullScreen(aFullScreen, true);
+}
+
+nsresult
+nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1322,7 +1331,7 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
 
   mInFullScreenTransition = true;
 
-  if (ShouldToggleNativeFullscreen(aFullScreen)) {
+  if (ShouldToggleNativeFullscreen(aFullScreen, aUseSystemTransition)) {
     // If we're using native fullscreen mode and our native window is invisible,
     // our attempt to go into fullscreen mode will fail with an assertion in
     // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
@@ -1348,11 +1357,6 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScre
     NS_ENSURE_SUCCESS(rv, rv);
 
     EnteredFullScreen(aFullScreen, /* aNativeMode */ false);
-  }
-
-  if (mInDOMFullscreenTransition) {
-    // Clear the flag about DOM fullscreen.
-    mInDOMFullscreenTransition = false;
   }
 
   return NS_OK;

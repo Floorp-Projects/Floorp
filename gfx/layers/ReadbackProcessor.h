@@ -75,6 +75,7 @@ protected:
   nsTArray<Update> mAllUpdates;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_READBACKPROCESSOR_H */

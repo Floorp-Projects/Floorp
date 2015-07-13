@@ -13,6 +13,7 @@
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "ShadowLayerParent.h"          // for ShadowLayerParent
 #include "CompositableTransactionParent.h"  // for EditReplyVector
+#include "gfxPrefs.h"
 #include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
 #include "mozilla/layers/CanvasLayerComposite.h"
 #include "mozilla/layers/ColorLayerComposite.h"
@@ -50,7 +51,7 @@ using mozilla::layout::RenderFrameParent;
 namespace mozilla {
 namespace gfx {
 class VRHMDInfo;
-}
+} // namespace gfx
 
 namespace layers {
 

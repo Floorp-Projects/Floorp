@@ -28,6 +28,6 @@ public:
                                    bool anonymize);
 };
 
-}
+} // namespace xpc
 
 #endif

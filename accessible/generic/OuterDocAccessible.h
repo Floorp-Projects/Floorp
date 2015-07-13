@@ -52,6 +52,7 @@ Accessible::AsOuterDoc()
 {
   return IsOuterDoc() ? static_cast<OuterDocAccessible*>(this) : nullptr;
 }
+
 } // namespace a11y
 } // namespace mozilla
 

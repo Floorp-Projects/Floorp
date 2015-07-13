@@ -23,7 +23,7 @@ namespace {
 
 BluetoothServiceChildProcess* sBluetoothService;
 
-} // anonymous namespace
+} // namespace
 
 /*******************************************************************************
  * BluetoothChild

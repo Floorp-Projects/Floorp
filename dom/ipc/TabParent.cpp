@@ -225,7 +225,7 @@ private:
             // Intentionally leak the runnable (but not the fd) rather
             // than crash when trying to release a main thread object
             // off the main thread.
-            mTabParent.forget();
+            mozilla::unused << mTabParent.forget();
             CloseFile();
         }
     }
@@ -509,13 +509,17 @@ TabParent::ActorDestroy(ActorDestroyReason why)
 }
 
 bool
-TabParent::RecvMoveFocus(const bool& aForward)
+TabParent::RecvMoveFocus(const bool& aForward, const bool& aForDocumentNavigation)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
     nsCOMPtr<nsIDOMElement> dummy;
-    uint32_t type = aForward ? uint32_t(nsIFocusManager::MOVEFOCUS_FORWARD)
-                             : uint32_t(nsIFocusManager::MOVEFOCUS_BACKWARD);
+
+    uint32_t type = aForward ?
+      (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :
+                                static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD)) :
+      (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
+                                static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
     nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
     fm->MoveFocus(nullptr, frame, type, nsIFocusManager::FLAG_BYKEY,
                   getter_AddRefs(dummy));
@@ -2932,6 +2936,13 @@ TabParent::SetHasContentOpener(bool aHasContentOpener)
   mHasContentOpener = aHasContentOpener;
 }
 
+NS_IMETHODIMP
+TabParent::NavigateDocument(bool aForward)
+{
+  unused << SendNavigateDocument(aForward);
+  return NS_OK;
+}
+
 class LayerTreeUpdateRunnable final
   : public nsRunnable
 {
@@ -3340,5 +3351,5 @@ FakeChannel::OnAuthCancelled(nsISupports *aContext, bool userCancel)
 }
 
 
-} // namespace tabs
+} // namespace dom
 } // namespace mozilla

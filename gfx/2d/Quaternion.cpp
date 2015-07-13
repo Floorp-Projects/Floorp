@@ -53,5 +53,5 @@ Quaternion::SetFromRotationMatrix(const Matrix4x4& m)
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

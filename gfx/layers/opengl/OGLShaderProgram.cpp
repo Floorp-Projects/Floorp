@@ -652,5 +652,5 @@ ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
   SetArrayUniform(KnownUniform::BlurGaussianKernel, GAUSSIAN_KERNEL_HALF_WIDTH, gaussianKernel);
 }
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla

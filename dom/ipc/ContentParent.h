@@ -50,7 +50,7 @@ class TestShellParent;
 
 namespace jsipc {
 class PJavaScriptParent;
-}
+} // namespace jsipc
 
 namespace layers {
 class PCompositorParent;

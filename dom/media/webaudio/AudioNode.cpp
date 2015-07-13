@@ -431,5 +431,5 @@ AudioNode::SetPassThrough(bool aPassThrough)
   mStream->SetPassThrough(mPassThrough);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

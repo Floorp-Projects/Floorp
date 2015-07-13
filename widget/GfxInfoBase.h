@@ -54,7 +54,8 @@ public:
   NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature, nsAString & _retval) override;
   NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval) override;
 
-    NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
+  NS_IMETHOD GetMonitors(JSContext* cx, JS::MutableHandleValue _retval) override;
+  NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
   NS_IMETHOD_(void) LogFailure(const nsACString &failure) override;
   NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
 
@@ -114,7 +115,7 @@ private:
 
 };
 
-}
-}
+} // namespace widget
+} // namespace mozilla
 
 #endif /* __mozilla_widget_GfxInfoBase_h__ */

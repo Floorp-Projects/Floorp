@@ -491,7 +491,7 @@ private:
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
 };
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_Http2Session_h

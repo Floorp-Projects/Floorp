@@ -136,7 +136,7 @@ public:
   }
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

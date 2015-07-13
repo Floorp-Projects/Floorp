@@ -239,6 +239,7 @@ private:
   nsRefPtr<nsHttpTransaction>    mDrivingTransaction;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_TLSFilterTransaction_h

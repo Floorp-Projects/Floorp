@@ -34,7 +34,7 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     bool ok(ReturnStatus* rs);
 };
 
-} // mozilla
-} // jsipc
+} // namespace jsipc
+} // namespace mozilla
 
 #endif

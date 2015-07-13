@@ -266,7 +266,7 @@ bool IsValidBufferSize(uint32_t aBufferSize) {
   }
 }
 
-}
+} // namespace
 
 already_AddRefed<MediaStreamAudioDestinationNode>
 AudioContext::CreateMediaStreamDestination(ErrorResult& aRv)
@@ -1103,5 +1103,5 @@ BasicWaveFormCache::GetBasicWaveForm(OscillatorType aType)
   }
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

@@ -23,4 +23,4 @@ mozilla_Throw(const exception& e)
     mozalloc_abort(e.what());
 }
 
-}  // namespace std
+} // namespace std
