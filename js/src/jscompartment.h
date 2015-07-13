@@ -482,9 +482,6 @@ struct JSCompartment
 
     bool init(JSContext* maybecx);
 
-    /* Mark cross-compartment wrappers. */
-    void markCrossCompartmentWrappers(JSTracer* trc);
-
     inline bool wrap(JSContext* cx, JS::MutableHandleValue vp,
                      JS::HandleObject existing = nullptr);
 
@@ -515,8 +512,9 @@ struct JSCompartment
         explicit WrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
     };
 
+    void traceCrossCompartmentWrappers(JSTracer* trc);
     void trace(JSTracer* trc);
-    void markRoots(JSTracer* trc);
+    void traceRoots(JSTracer* trc);
     bool preserveJitCode() { return gcPreserveJitCode; }
 
     void sweepAfterMinorGC();
