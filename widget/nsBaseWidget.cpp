@@ -1111,10 +1111,7 @@ nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
     aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
-  // At the moment, BasicCompositor is broken on mac.
-#ifndef XP_MACOSX
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
-#endif
 }
 
 nsIDocument*
@@ -1170,13 +1167,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     return;
   }
 
-  nsTArray<LayersBackend> backendHints;
-  GetPreferredCompositorBackends(backendHints);
-  if (backendHints.IsEmpty()) {
-    mLayerManager = nullptr;
-    return;
-  }
-
   CreateCompositorVsyncDispatcher();
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   nsRefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
@@ -1194,10 +1184,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager = nullptr;
+  nsTArray<LayersBackend> backendHints;
+  GetPreferredCompositorBackends(backendHints);
 
   bool success = false;
-  shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
-    backendHints, 0, &textureFactoryIdentifier, &success);
+  if (!backendHints.IsEmpty()) {
+    shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
+      backendHints, 0, &textureFactoryIdentifier, &success);
+  }
 
   ShadowLayerForwarder* lf = lm->AsShadowForwarder();
 
