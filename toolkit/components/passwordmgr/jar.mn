@@ -10,3 +10,4 @@ toolkit.jar:
 *   content/passwordmgr/passwordManagerExceptions.js   (content/passwordManagerExceptions.js)
     content/passwordmgr/passwordManagerExceptions.xul  (content/passwordManagerExceptions.xul)
     content/passwordmgr/passwordManagerCommon.js       (content/passwordManagerCommon.js)
+    content/passwordmgr/recipes.json                   (content/recipes.json)
