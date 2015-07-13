@@ -6,22 +6,74 @@
   #image1 { background-color: rgb(10, 100, 250); }
 </style>
 <script>
+  var gImg;
+
+  function runAfterAsyncEvents(aCallback) {
+    function handlePostMessage(aEvent) {
+      if (aEvent.data == 'next') {
+        window.removeEventListener('message', handlePostMessage, false);
+        aCallback();
+      }
+    }
+
+    window.addEventListener('message', handlePostMessage, false);
+
+    // We'll receive the 'message' event after everything else that's currently in
+    // the event queue (which is a stronger guarantee than setTimeout, because
+    // setTimeout events may be coalesced). This lets us ensure that we run
+    // aCallback *after* any asynchronous events are delivered.
+    window.postMessage('next', '*');
+  }
+
   // The image is loaded async after the page loads
   // wait for it to finish loading
   function onImageLoad() { 
+    // Use a canvas to force the image to get sync decoded.
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+
+    try {
+      ctx.drawImage(gImg, 0, 0);
+    } catch (e) {
+    }
+
+    // Continue after pumping the event loop.
+    runAfterAsyncEvents(step2);
+  }
+
+  function step2() {
+    // Only now, once the image has already been sync decoded, do we load it in
+    // the <img> element we're going to snapshot. That's because for some of the
+    // tests that use wrapper.html, an error is only detected when decoding the
+    // actual image data - i.e., the error isn't detected in the header. The
+    // precise time when we detect the error, unfortunately, affects how we draw
+    // the image. This will be fixed in bug 1182531, and then we can simplify this
+    // code.
+
+    var finalImg = document.getElementById('image1');
+    finalImg.alt = "";
+    finalImg.onload = finalImg.onerror = step3;
+    finalImg.src = gImg.src;
+  }
+
+  function step3() {
+    // We're ready to take the snapshot, but pump the event loop first just to
+    // be sure that everything has settled down.
+    runAfterAsyncEvents(takeSnapshot);
+  }
+
+  function takeSnapshot() {
     document.documentElement.removeAttribute("class");
-  };
+  }
 </script>
 </head>
 <body>
 <img id="image1">
 <script>
   // Use as "wrapper.html?image.png
-  var imgURL = document.location.search.substr(1);
-  document.images[0].onload = onImageLoad;
-  document.images[0].onerror = onImageLoad;
-  document.images[0].alt = "";
-  document.images[0].src = imgURL;
+  gImg = document.createElement('img');
+  gImg.onload = gImg.onerror = onImageLoad;
+  gImg.src = document.location.search.substr(1);
 </script>
 </body>
 </html>

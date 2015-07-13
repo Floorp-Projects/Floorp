@@ -1894,6 +1894,7 @@ js::TenuringTracer::moveToTenured(JSObject* src)
 
     AllocKind dstKind = src->allocKindForTenure(nursery());
     Zone* zone = src->zone();
+
     TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
     if (!t) {
         zone->arenas.checkEmptyFreeList(dstKind);
@@ -1909,6 +1910,10 @@ js::TenuringTracer::moveToTenured(JSObject* src)
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);
     insertIntoFixupList(overlay);
+
+    if (MOZ_UNLIKELY(zone->hasDebuggers())) {
+        zone->enqueueForPromotionToTenuredLogging(*dst);
+    }
 
     TracePromoteToTenured(src, dst);
     return dst;

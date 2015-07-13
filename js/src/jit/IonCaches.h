@@ -16,6 +16,8 @@
 #endif
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
+#include "js/TrackedOptimizationInfo.h"
+
 #include "vm/TypedArrayCommon.h"
 
 namespace js {
@@ -298,7 +300,8 @@ class IonCache
     // Combine both linkStub and attachStub into one function. In addition, it
     // produces a spew augmented with the attachKind string.
     bool linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& attacher,
-                           IonScript* ion, const char* attachKind);
+                           IonScript* ion, const char* attachKind,
+                           JS::TrackedOutcome = JS::TrackedOutcome::ICOptStub_GenericSuccess);
 
 #ifdef DEBUG
     bool isAllocated() {

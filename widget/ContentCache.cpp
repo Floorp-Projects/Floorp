@@ -39,6 +39,8 @@ GetEventMessageName(uint32_t aMessage)
       return "NS_COMPOSITION_COMMIT_AS_IS";
     case NS_COMPOSITION_COMMIT:
       return "NS_COMPOSITION_COMMIT";
+    case NS_SELECTION_SET:
+      return "NS_SELECTION_SET";
     default:
       return "unacceptable event message";
   }
@@ -471,6 +473,7 @@ ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
   , mCompositionStart(UINT32_MAX)
   , mCompositionEventsDuringRequest(0)
+  , mPendingEventsNeedingAck(0)
   , mIsComposing(false)
   , mRequestedToCommitOrCancelComposition(false)
 {
@@ -844,10 +847,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p OnCompositionEvent(aEvent={ "
      "message=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
-     "mIsComposing=%s, mRequestedToCommitOrCancelComposition=%s",
+     "mPendingEventsNeedingAck=%u, mIsComposing=%s, "
+     "mRequestedToCommitOrCancelComposition=%s",
      this, GetEventMessageName(aEvent.message),
      NS_ConvertUTF16toUTF8(aEvent.mData).get(), aEvent.mData.Length(),
-     aEvent.mRanges ? aEvent.mRanges->Length() : 0, GetBoolName(mIsComposing),
+     aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
+     GetBoolName(mIsComposing),
      GetBoolName(mRequestedToCommitOrCancelComposition)));
 
   if (!aEvent.CausesDOMTextEvent()) {
@@ -860,6 +865,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
       mCompositionEventsDuringRequest++;
       return false;
     }
+    mPendingEventsNeedingAck++;
     return true;
   }
 
@@ -884,7 +890,47 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     mCompositionStart = mSelection.StartOffset();
   }
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
+  mPendingEventsNeedingAck++;
   return true;
+}
+
+void
+ContentCacheInParent::OnSelectionEvent(
+                        const WidgetSelectionEvent& aSelectionEvent)
+{
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+    ("ContentCacheInParent: 0x%p OnSelectionEvent(aEvent={ "
+     "message=%s, mOffset=%u, mLength=%u, mReversed=%s, "
+     "mExpandToClusterBoundary=%s, mUseNativeLineBreak=%s }), "
+     "mPendingEventsNeedingAck=%u, mIsComposing=%s",
+     this, GetEventMessageName(aSelectionEvent.message),
+     aSelectionEvent.mOffset, aSelectionEvent.mLength,
+     GetBoolName(aSelectionEvent.mReversed),
+     GetBoolName(aSelectionEvent.mExpandToClusterBoundary),
+     GetBoolName(aSelectionEvent.mUseNativeLineBreak), mPendingEventsNeedingAck,
+     GetBoolName(mIsComposing)));
+
+  mPendingEventsNeedingAck++;
+}
+
+void
+ContentCacheInParent::OnEventNeedingAckReceived(nsIWidget* aWidget,
+                                                uint32_t aMessage)
+{
+  // This is called when the child process receives WidgetCompositionEvent or
+  // WidgetSelectionEvent.
+
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+    ("ContentCacheInParent: 0x%p OnEventNeedingAckReceived(aWidget=0x%p, "
+     "aMessage=%s), mPendingEventsNeedingAck=%u",
+     this, aWidget, GetEventMessageName(aMessage), mPendingEventsNeedingAck));
+
+  MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
+  if (--mPendingEventsNeedingAck) {
+    return;
+  }
+
+  FlushPendingNotifications(aWidget);
 }
 
 uint32_t
@@ -913,15 +959,83 @@ ContentCacheInParent::RequestToCommitComposition(nsIWidget* aWidget,
 }
 
 void
-ContentCacheInParent::InitNotification(IMENotification& aNotification) const
+ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
+                                     IMENotification& aNotification)
 {
-  if (NS_WARN_IF(aNotification.mMessage != NOTIFY_IME_OF_SELECTION_CHANGE)) {
+  if (aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE) {
+    aNotification.mSelectionChangeData.mOffset = mSelection.StartOffset();
+    aNotification.mSelectionChangeData.mLength = mSelection.Length();
+    aNotification.mSelectionChangeData.mReversed = mSelection.Reversed();
+    aNotification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
+  }
+
+  if (!mPendingEventsNeedingAck) {
+    IMEStateManager::NotifyIME(aNotification, aWidget, true);
     return;
   }
-  aNotification.mSelectionChangeData.mOffset = mSelection.StartOffset();
-  aNotification.mSelectionChangeData.mLength = mSelection.Length();
-  aNotification.mSelectionChangeData.mReversed = mSelection.Reversed();
-  aNotification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
+
+  switch (aNotification.mMessage) {
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      mPendingSelectionChange.MergeWith(aNotification);
+      break;
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      mPendingTextChange.MergeWith(aNotification);
+      break;
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      mPendingCompositionUpdate.MergeWith(aNotification);
+      break;
+    default:
+      MOZ_CRASH("Unsupported notification");
+      break;
+  }
+}
+
+void
+ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
+{
+  MOZ_ASSERT(!mPendingEventsNeedingAck);
+
+  // New notifications which are notified during flushing pending notifications
+  // should be merged again.
+  mPendingEventsNeedingAck++;
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(aWidget);
+
+  // First, text change notification should be sent because selection change
+  // notification notifies IME of current selection range in the latest content.
+  // So, IME may need the latest content before that.
+  if (mPendingTextChange.HasNotification()) {
+    IMENotification notification(mPendingTextChange);
+    if (!aWidget->Destroyed()) {
+      mPendingTextChange.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  if (mPendingSelectionChange.HasNotification()) {
+    IMENotification notification(mPendingSelectionChange);
+    if (!aWidget->Destroyed()) {
+      mPendingSelectionChange.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  // Finally, send composition update notification because it notifies IME of
+  // finishing handling whole sending events.
+  if (mPendingCompositionUpdate.HasNotification()) {
+    IMENotification notification(mPendingCompositionUpdate);
+    if (!aWidget->Destroyed()) {
+      mPendingCompositionUpdate.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
+  if (!--mPendingEventsNeedingAck && !aWidget->Destroyed() &&
+      (mPendingTextChange.HasNotification() ||
+       mPendingSelectionChange.HasNotification() ||
+       mPendingCompositionUpdate.HasNotification())) {
+    FlushPendingNotifications(aWidget);
+  }
 }
 
 /*****************************************************************************

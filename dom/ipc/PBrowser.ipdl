@@ -197,16 +197,16 @@ parent:
      *
      *  contentCache Cache of content
      *  offset       Starting offset of the change
-     *  end          Ending offset of the range deleted
-     *  newEnd       New ending offset after insertion
+     *  removedEnd   Ending offset of the range deleted
+     *  addedEnd     New ending offset after insertion
      *  causedByComposition true if the change is caused by composition
      *
      *  for insertion, offset == end
      *  for deletion, offset == newEnd
      */
     prio(urgent) async NotifyIMETextChange(ContentCache contentCache,
-                                           uint32_t offset, uint32_t end,
-                                           uint32_t newEnd,
+                                           uint32_t offset, uint32_t removedEnd,
+                                           uint32_t addedEnd,
                                            bool causedByComposition);
 
     /**
@@ -264,6 +264,15 @@ parent:
      */
     prio(urgent) sync EndIMEComposition(bool cancel)
                         returns (bool noCompositionEvent, nsString composition);
+
+    /**
+     * OnEventNeedingAckReceived() is called when a child process dispatches a
+     * composition event or a selection event which is sent from the parent
+     * process.
+     *
+     * message      The message value of the received event.
+     */
+    prio(urgent) async OnEventNeedingAckReceived(uint32_t message);
 
     /**
      * Tells chrome to start plugin IME.  If this results in a string getting
@@ -539,6 +548,10 @@ parent:
     InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                       nsCString visualData, uint32_t width, uint32_t height,
                       uint32_t stride, uint8_t format, int32_t dragAreaX, int32_t dragAreaY);
+
+    async AudioChannelActivityNotification(uint32_t aAudioChannel,
+                                           bool aActive);
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this

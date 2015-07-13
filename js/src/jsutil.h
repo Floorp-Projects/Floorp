@@ -297,44 +297,55 @@ PodSet(T* aDst, T aSrc, size_t aNElem)
 static inline void*
 Poison(void* ptr, uint8_t value, size_t num)
 {
-    static bool poison = !bool(getenv("JSGC_DISABLE_POISONING"));
-    if (poison) {
-        // Without a valid Value tag, a poisoned Value may look like a valid
-        // floating point number. To ensure that we crash more readily when
-        // observing a poised Value, we make the poison an invalid ObjectValue.
-        uintptr_t obj;
-        memset(&obj, value, sizeof(obj));
-#if defined(JS_PUNBOX64)
-        obj = obj & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
-#endif
-        const jsval_layout layout = OBJECT_TO_JSVAL_IMPL((JSObject*)obj);
-
-        size_t value_count = num / sizeof(jsval_layout);
-        size_t byte_count = num % sizeof(jsval_layout);
-        mozilla::PodSet((jsval_layout*)ptr, layout, value_count);
-        if (byte_count) {
-            uint8_t* bytes = static_cast<uint8_t*>(ptr);
-            uint8_t* end = bytes + num;
-            mozilla::PodSet(end - byte_count, value, byte_count);
-        }
+    static bool disablePoison = bool(getenv("JSGC_DISABLE_POISONING"));
+    if (disablePoison)
         return ptr;
-    }
 
-    return nullptr;
+    // Without a valid Value tag, a poisoned Value may look like a valid
+    // floating point number. To ensure that we crash more readily when
+    // observing a poisoned Value, we make the poison an invalid ObjectValue.
+    // Unfortunately, this adds about 2% more overhead, so we can only enable
+    // it in debug.
+#if defined(DEBUG)
+    uintptr_t obj;
+    memset(&obj, value, sizeof(obj));
+# if defined(JS_PUNBOX64)
+    obj = obj & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
+# endif
+    const jsval_layout layout = OBJECT_TO_JSVAL_IMPL((JSObject*)obj);
+
+    size_t value_count = num / sizeof(jsval_layout);
+    size_t byte_count = num % sizeof(jsval_layout);
+    mozilla::PodSet((jsval_layout*)ptr, layout, value_count);
+    if (byte_count) {
+        uint8_t* bytes = static_cast<uint8_t*>(ptr);
+        uint8_t* end = bytes + num;
+        mozilla::PodSet(end - byte_count, value, byte_count);
+    }
+#else // !DEBUG
+    memset(ptr, value, num);
+#endif // !DEBUG
+    return ptr;
 }
 
-/* Crash diagnostics */
-#if defined(DEBUG) && !defined(MOZ_ASAN)
+/* Crash diagnostics by default in debug and on nightly channel. */
+#if (defined(DEBUG) || defined(NIGHTLY_BUILD)) && !defined(MOZ_ASAN)
 # define JS_CRASH_DIAGNOSTICS 1
 #endif
+
+/* Enable poisoning in crash-diagnostics and zeal builds. */
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
 # define JS_POISON(p, val, size) Poison(p, val, size)
 #else
 # define JS_POISON(p, val, size) ((void) 0)
 #endif
 
-/* Bug 984101: Disable labeled poisoning until we have poison checking. */
-#define JS_EXTRA_POISON(p, val, size) ((void) 0)
+/* Enable even more poisoning in purely debug builds. */
+#if defined(DEBUG)
+# define JS_EXTRA_POISON(p, val, size) Poison(p, val, size)
+#else
+# define JS_EXTRA_POISON(p, val, size) ((void) 0)
+#endif
 
 /* Basic stats */
 #ifdef DEBUG

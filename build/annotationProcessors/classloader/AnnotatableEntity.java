@@ -10,13 +10,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 /**
  * Union type to hold either a method, field, or ctor. Allows us to iterate "The generatable stuff", despite
  * the fact that such things can be of either flavour.
  */
 public class AnnotatableEntity {
-    public enum ENTITY_TYPE {METHOD, FIELD, CONSTRUCTOR}
+    public enum ENTITY_TYPE {METHOD, NATIVE, FIELD, CONSTRUCTOR}
 
     private final Member mMember;
     public final ENTITY_TYPE mEntityType;
@@ -28,7 +29,11 @@ public class AnnotatableEntity {
         mAnnotationInfo = aAnnotationInfo;
 
         if (aObject instanceof Method) {
-            mEntityType = ENTITY_TYPE.METHOD;
+            if (Modifier.isNative(aObject.getModifiers())) {
+                mEntityType = ENTITY_TYPE.NATIVE;
+            } else {
+                mEntityType = ENTITY_TYPE.METHOD;
+            }
         } else if (aObject instanceof Field) {
             mEntityType = ENTITY_TYPE.FIELD;
         } else {
@@ -37,7 +42,7 @@ public class AnnotatableEntity {
     }
 
     public Method getMethod() {
-        if (mEntityType != ENTITY_TYPE.METHOD) {
+        if (mEntityType != ENTITY_TYPE.METHOD && mEntityType != ENTITY_TYPE.NATIVE) {
             throw new UnsupportedOperationException("Attempt to cast to unsupported member type.");
         }
         return (Method) mMember;

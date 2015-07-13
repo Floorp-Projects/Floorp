@@ -1699,6 +1699,13 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // indicating the status
       aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayAltFeedback(aBuilder, this));
+
+      // This image is visible (we are being asked to paint it) but it's not
+      // decoded yet. And we are not going to ask the image to draw, so this
+      // may be the only chance to tell it that it should decode.
+      if (currentRequest) {
+        currentRequest->RequestDecode();
+      }
     } else {
       aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayImage(aBuilder, this, mImage));

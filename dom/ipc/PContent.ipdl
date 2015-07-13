@@ -81,8 +81,6 @@ using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::asmjscache::WriteParams from "mozilla/dom/asmjscache/AsmJSCache.h";
-using mozilla::dom::AudioChannel from "mozilla/dom/AudioChannelBinding.h";
-using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
@@ -498,11 +496,6 @@ child:
     PMemoryReportRequest(uint32_t generation, bool anonymize,
                          bool minimizeMemoryUsage, MaybeFileDesc DMDFile);
 
-    /**
-     * Notify the AudioChannelService in the child processes.
-     */
-    async AudioChannelNotify();
-
     async SpeakerManagerNotify();
 
     /**
@@ -740,7 +733,8 @@ parent:
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
 
-    sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
+    sync GetLookAndFeelCache()
+        returns (LookAndFeelInt[] lookAndFeelIntCache);
 
     prio(urgent) async PHal();
 
@@ -870,17 +864,10 @@ parent:
     // Tell the parent that the child has gone idle for the first time
     async FirstIdle();
 
-    // Get Muted from the main AudioChannelService.
-    sync AudioChannelGetState(AudioChannel aChannel, bool aElementHidden,
-                              bool aElementWasHidden)
-        returns (AudioChannelState value);
+    async AudioChannelServiceStatus(bool aActiveTelephonyChannel,
+                                    bool aContentOrNormalChannel,
+                                    bool aAnyActiveChannel);
 
-    sync AudioChannelRegisterType(AudioChannel aChannel, bool aWithVideo);
-    sync AudioChannelUnregisterType(AudioChannel aChannel,
-                                    bool aElementHidden,
-                                    bool aWithVideo);
-
-    async AudioChannelChangedNotification();
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
 
     sync DataStoreGetStores(nsString aName, nsString aOwner, Principal aPrincipal)

@@ -206,7 +206,10 @@ public:
   void     SetLoopCount(int32_t aLoopCount);
 
   /// Notification that the entire image has been decoded.
-  void OnDecodingComplete();
+  void OnDecodingComplete(bool aIsAnimated);
+
+  /// Helper method for OnDecodingComplete.
+  void MarkAnimationDecoded();
 
   /**
    * Sends the provided progress notifications to ProgressTracker.

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1139297 - Implement CSP upgrade-insecure-requests directive</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load an https page which includes an http image. We make sure that
+ * the image request gets upgraded to https but also make sure that a report
+ * is sent when a CSP report only is used which only allows https requests.
+ */
+
+var expectedResults = 2;
+
+function finishTest() {
+  // let's wait till the image was loaded and the report was received
+  if (--expectedResults > 0) {
+    return;
+  }
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+function runTest() {
+  // (1) Lets send off an XHR request which will return once the server receives
+  // the violation report from the report only policy.
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_upgrade_insecure_reporting_server.sjs?queryresult");
+  myXHR.onload = function(e) {
+    is(myXHR.responseText, "report-ok", "csp-report was sent correctly");
+    finishTest();
+  }
+  myXHR.onerror = function(e) {
+    ok(false, "could not query result for csp-report from server (" + e.message + ")");
+    finishTest();
+  }
+  myXHR.send();
+
+  // (2) We load a page that is served using a CSP and a CSP report only which loads
+  // an image over http.
+  SimpleTest.executeSoon(function() {
+    document.getElementById("testframe").src =
+      "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_reporting_server.sjs?toplevel";
+  });
+}
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to bubble up results back to this main page.
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  // (3) make sure the image was correctly loaded
+  is(event.data.result, "img-ok", "upgraded insecure image load from http -> https");
+  finishTest();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</body>
+</html>

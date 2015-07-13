@@ -6,22 +6,17 @@
 "filename": "mozmake.exe"
 },
 {
-"size": 51,
-"digest": "c8e40edb314eeabfb92c77cf5ff9a7857033f15dd65a00349bcf9e3e5b75624afc71f733b2ff7e029c20a78313038409c2bd022bf7e5a7e0c487fc2c2d640986",
-"algorithm": "sha512",
-"filename": "setup.sh"
-},
-{
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2"
+"filename": "sccache.tar.bz2",
+"unpack": true
 },
 {
 "size": 31057326,
 "digest": "b844c3e52be493d2cacafa58c4a924b89c9be8d2dcc2a7c71aed58c253d8035fba4d51df309f73e3c4342a1f3c3898a9a25c4815e2112888d1280f43c41c8e51",
 "algorithm": "sha512",
 "filename": "moztt.tar.bz2",
-"unpack": "True"
+"unpack": true
 }
 ]

@@ -34,6 +34,4 @@ if [ -z "$CXX" ]; then
     export CXX=clang++
 fi
 
-. "$topsrcdir/build/mozconfig.cache"
-
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token

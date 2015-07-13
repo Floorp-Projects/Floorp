@@ -7,7 +7,8 @@
       "algorithm" : "sha512",
       "digest" : "bb7fcbcaf8d160bba92fa66b2e3607f3335d68c8339996c880ea5757c6e611b74ced6c6d5c50d523fc8d688cc922ee6e1628f3fb514af8ebeb9c877ad580e5fd",
       "filename" : "sixgill.tar.xz",
-      "size" : 2159496
+      "size" : 2159496,
+      "unpack": true
    },
    {
       "algorithm" : "sha512",

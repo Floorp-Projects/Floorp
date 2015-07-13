@@ -28,6 +28,12 @@ const TEST_FAILED_RENDER=1;
 const TEST_FAILED_VIDEO=2;
 const TEST_CRASHED=3;
 
+// GRAPHICS_SANITY_TEST_REASON enumeration values.
+const REASON_FIRST_RUN=0;
+const REASON_FIREFOX_CHANGED=1;
+const REASON_DEVICE_CHANGED=2;
+const REASON_DRIVER_CHANGED=3;
+
 // GRAPHICS_SANITY_TEST_OS_SNAPSHOT histogram enumeration values
 const SNAPSHOT_VIDEO_OK=0;
 const SNAPSHOT_VIDEO_FAIL=1;
@@ -61,6 +67,21 @@ function reportResult(val) {
 function reportSnapshotResult(val) {
   let histogram = Services.telemetry.getHistogramById("GRAPHICS_SANITY_TEST_OS_SNAPSHOT");
   histogram.add(val);
+}
+
+function reportTestReason(val) {
+  let histogram = Services.telemetry.getHistogramById("GRAPHICS_SANITY_TEST_REASON");
+  histogram.add(val);
+}
+
+function annotateCrashReport(value) {
+  try {
+    // "1" if we're annotating the crash report, "" to remove the annotation.
+    var crashReporter = Cc['@mozilla.org/toolkit/crash-reporter;1'].
+                          getService(Ci.nsICrashReporter);
+    crashReporter.annotateCrashReport("GraphicsSanityTest", value ? "1" : "");
+  } catch (e) {
+  }
 }
 
 function takeWindowSnapshot(win, ctx) {
@@ -196,6 +217,10 @@ let listener = {
     });
 
     this.mm = null;
+  
+    // Remove the annotation after we've cleaned everything up, to catch any
+    // incidental crashes from having performed the sanity test.
+    annotateCrashReport(false);
   }
 };
 
@@ -218,10 +243,24 @@ SanityTest.prototype = {
       return false;
     }
 
+    function checkPref(pref, value, reason) {
+      var prefValue = Preferences.get(pref, "");
+      if (prefValue == value) {
+        return true;
+      }
+      if (value == "") {
+        reportTestReason(REASON_FIRST_RUN);
+      } else {
+        reportTestReason(reason);
+      }
+      return false;
+    }
+
     // TODO: Handle dual GPU setups
-    if (Preferences.get(DRIVER_PREF, "") == gfxinfo.adapterDriverVersion &&
-        Preferences.get(DEVICE_PREF, "") == gfxinfo.adapterDeviceID &&
-        Preferences.get(VERSION_PREF, "") == xulVersion) {
+    if (checkPref(DRIVER_PREF, gfxinfo.adapterDriverVersion, REASON_DRIVER_CHANGED) &&
+        checkPref(DEVICE_PREF, gfxinfo.adapterDeviceID, REASON_DEVICE_CHANGED) &&
+        checkPref(VERSION_PREF, xulVersion, REASON_FIREFOX_CHANGED))
+    {
       return false;
     }
 
@@ -241,6 +280,8 @@ SanityTest.prototype = {
   observe: function(subject, topic, data) {
     if (topic != "profile-after-change") return;
     if (!this.shouldRunTest()) return;
+
+    annotateCrashReport(true);
 
     // Open a tiny window to render our test page, and notify us when it's loaded
     var sanityTest = Services.ww.openWindow(null,

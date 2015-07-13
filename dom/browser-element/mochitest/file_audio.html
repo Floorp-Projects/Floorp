@@ -1,0 +1,15 @@
+<html>
+<body>
+<audio src="http://mochi.test:8888/tests/dom/browser-element/mochitest/audio.ogg" id="audio" />
+<script>
+var audio = document.getElementById('audio');
+audio.play();
+audio.onended = function() {
+  setTimeout(function() {
+    audio.play();
+  }, 0);
+}
+</script>
+
+</body>
+</html>

@@ -13,6 +13,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "acs",
+                                   "@mozilla.org/audiochannel/service;1",
+                                   "nsIAudioChannelService");
+
 let kLongestReturnedString = 128;
 
 function debug(msg) {
@@ -51,6 +55,7 @@ let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
 
 const OBSERVED_EVENTS = [
   'xpcom-shutdown',
+  'media-playback',
   'activity-done'
 ];
 
@@ -233,6 +238,11 @@ BrowserElementChild.prototype = {
       "find-all": this._recvFindAll.bind(this),
       "find-next": this._recvFindNext.bind(this),
       "clear-match": this._recvClearMatch.bind(this),
+      "get-audio-channel-volume": this._recvGetAudioChannelVolume,
+      "set-audio-channel-volume": this._recvSetAudioChannelVolume,
+      "get-audio-channel-muted": this._recvGetAudioChannelMuted,
+      "set-audio-channel-muted": this._recvSetAudioChannelMuted,
+      "get-is-audio-channel-active": this._recvIsAudioChannelActive
     }
 
     addMessageListener("browser-element-api:call", function(aMessage) {
@@ -270,13 +280,21 @@ BrowserElementChild.prototype = {
   observe: function(subject, topic, data) {
     // Ignore notifications not about our document.  (Note that |content| /can/
     // be null; see bug 874900.)
-    if (topic !== 'activity-done' && (!content || subject != content.document))
+
+    if (topic !== 'activity-done' && topic !== 'media-playback' &&
+        (!content || subject !== content.document)) {
       return;
+    }
     if (topic == 'activity-done' && docShell !== subject)
       return;
     switch (topic) {
       case 'activity-done':
         sendAsyncMsg('activitydone', { success: (data == 'activity-success') });
+        break;
+      case 'media-playback':
+        if (subject === content) {
+          sendAsyncMsg('mediaplaybackchange', { _payload_: data });
+        }
         break;
       case 'xpcom-shutdown':
         this._shuttingDown = true;
@@ -850,6 +868,10 @@ BrowserElementChild.prototype = {
       }
     }
 
+    // Pass along the position where the context menu should be located
+    menuData.clientX = e.clientX;
+    menuData.clientY = e.clientY;
+
     // The value returned by the contextmenu sync call is true if the embedder
     // called preventDefault() on its contextmenu event.
     //
@@ -1231,6 +1253,55 @@ BrowserElementChild.prototype = {
       this._selectionStateChangedTarget = null;
       docShell.doCommand(COMMAND_MAP[data.json.command]);
     }
+  },
+
+  _recvGetAudioChannelVolume: function(data) {
+    debug("Received getAudioChannelVolume message: (" + data.json.id + ")");
+
+    let volume = acs.getAudioChannelVolume(content,
+                                           data.json.args.audioChannel);
+    sendAsyncMsg('got-audio-channel-volume', {
+      id: data.json.id, successRv: volume
+    });
+  },
+
+  _recvSetAudioChannelVolume: function(data) {
+    debug("Received setAudioChannelVolume message: (" + data.json.id + ")");
+
+    acs.setAudioChannelVolume(content,
+                              data.json.args.audioChannel,
+                              data.json.args.volume);
+    sendAsyncMsg('got-set-audio-channel-volume', {
+      id: data.json.id, successRv: true
+    });
+  },
+
+  _recvGetAudioChannelMuted: function(data) {
+    debug("Received getAudioChannelMuted message: (" + data.json.id + ")");
+
+    let muted = acs.getAudioChannelMuted(content, data.json.args.audioChannel);
+    sendAsyncMsg('got-audio-channel-muted', {
+      id: data.json.id, successRv: muted
+    });
+  },
+
+  _recvSetAudioChannelMuted: function(data) {
+    debug("Received setAudioChannelMuted message: (" + data.json.id + ")");
+
+    acs.setAudioChannelMuted(content, data.json.args.audioChannel,
+                             data.json.args.muted);
+    sendAsyncMsg('got-set-audio-channel-muted', {
+      id: data.json.id, successRv: true
+    });
+  },
+
+  _recvIsAudioChannelActive: function(data) {
+    debug("Received isAudioChannelActive message: (" + data.json.id + ")");
+
+    let active = acs.isAudioChannelActive(content, data.json.args.audioChannel);
+    sendAsyncMsg('got-is-audio-channel-active', {
+      id: data.json.id, successRv: active
+    });
   },
 
   _initFinder: function() {

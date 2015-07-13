@@ -12,9 +12,6 @@ ac_add_options --enable-profiling
 ac_add_options --enable-instruments
 ac_add_options --enable-dtrace
 
-# Nightlies only since this has a cost in performance
-ac_add_options --enable-js-diagnostics
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
@@ -30,3 +27,4 @@ export MOZ_PACKAGE_JSSHELL=1
 MOZTTDIR=$topsrcdir/moztt
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

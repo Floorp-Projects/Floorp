@@ -23,6 +23,7 @@ EXPORTS += [
     'gfxFontFamilyList.h',
     'gfxFontFeatures.h',
     'gfxFontInfoLoader.h',
+    'gfxFontPrefLangList.h',
     'gfxFontTest.h',
     'gfxFontUtils.h',
     'gfxGradientCache.h',

@@ -8,7 +8,12 @@ EXPORTS.mozilla += [
     'BrowserElementParent.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'BrowserElementAudioChannel.h',
+]
+
 SOURCES += [
+    'BrowserElementAudioChannel.cpp',
     'BrowserElementParent.cpp',
 ]
 

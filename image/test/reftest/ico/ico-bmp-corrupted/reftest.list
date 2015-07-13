@@ -1,12 +1,12 @@
 # ICOs containing corrupted BMP tests
 
-# Invalid value for bits per pixel (BPP)
+# Invalid value for bits per pixel (BPP) - detected when decoding the header.
 == wrapper.html?invalid-bpp.ico about:blank
-# Invalid BPP values for RLE4
+# Invalid BPP values for RLE4 - detected when decoding the image data.
 == wrapper.html?invalid-compression-RLE4.ico about:blank
-# Invalid BPP values for RLE8
+# Invalid BPP values for RLE8 - detected when decoding the image data.
 == wrapper.html?invalid-compression-RLE8.ico about:blank
-# Invalid compression value
+# Invalid compression value - detected when decoding the image data.
 == wrapper.html?invalid-compression.ico about:blank
 
 # Invalid ICO width and heigth should be ignored if the

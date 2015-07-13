@@ -4381,8 +4381,6 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone>& finder)
                 finder.addEdgeTo(w);
         }
     }
-
-    Debugger::findCompartmentEdges(zone(), finder);
 }
 
 void
@@ -4404,6 +4402,8 @@ Zone::findOutgoingEdges(ComponentFinder<JS::Zone>& finder)
             finder.addEdgeTo(r.front());
     }
     gcZoneGroupEdges.clear();
+
+    Debugger::findZoneEdges(this, finder);
 }
 
 bool
