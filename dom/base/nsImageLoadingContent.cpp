@@ -41,6 +41,8 @@
 #include "nsIContentPolicy.h"
 #include "nsSVGEffects.h"
 
+#include "gfxPrefs.h"
+
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventStates.h"
