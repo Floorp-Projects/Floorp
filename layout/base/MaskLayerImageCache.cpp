@@ -26,7 +26,7 @@ MaskLayerImageCache::SweepFunc(MaskLayerImageEntry* aEntry,
 {
   const MaskLayerImageCache::MaskLayerImageKey* key = aEntry->mKey;
 
-  if (key->mLayerCount == 0) {
+  if (key->HasZeroLayerCount()) {
     return PL_DHASH_REMOVE;
   }
 
@@ -58,15 +58,15 @@ MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey, ImageContainer* aCo
 }
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
-  : mLayerCount(0)
-  , mRoundedClipRects()
+  : mRoundedClipRects()
+  , mLayerCount(0)
 {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(const MaskLayerImageKey& aKey)
-  : mLayerCount(aKey.mLayerCount)
-  , mRoundedClipRects(aKey.mRoundedClipRects)
+  : mRoundedClipRects(aKey.mRoundedClipRects)
+  , mLayerCount(aKey.mLayerCount)
 {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
