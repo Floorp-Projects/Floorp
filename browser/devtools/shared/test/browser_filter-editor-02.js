@@ -68,7 +68,7 @@ add_task(function*() {
     widget.setCssValue(cssValue);
 
     if (cssValue === "none") {
-      const text = container.querySelector(".filters").textContent;
+      const text = container.querySelector("#filters").textContent;
       ok(text.indexOf(L10N.getStr("emptyFilterList")) > -1,
          "Contains |emptyFilterList| string when given value 'none'");
       ok(text.indexOf(L10N.getStr("addUsingList")) > -1,

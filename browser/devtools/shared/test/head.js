@@ -283,3 +283,39 @@ function waitUntil(predicate, interval = 10) {
     }, interval);
   });
 }
+
+/**
+ * Show the presets list sidebar in the cssfilter widget popup
+ * @param {CSSFilterWidget} widget
+ * @return {Promise}
+ */
+function showFilterPopupPresets(widget) {
+  let onRender = widget.once("render");
+  widget._togglePresets();
+  return onRender;
+}
+
+/**
+ * Show presets list and create a sample preset with the name and value provided
+ * @param  {CSSFilterWidget} widget
+ * @param  {string} name
+ * @param  {string} value
+ * @return {Promise}
+ */
+let showFilterPopupPresetsAndCreatePreset = Task.async(function*(widget, name, value) {
+  yield showFilterPopupPresets(widget);
+
+  let onRender = widget.once("render");
+  widget.setCssValue(value);
+  yield onRender;
+
+  let footer = widget.el.querySelector(".presets-list .footer");
+  footer.querySelector("input").value = name;
+
+  onRender = widget.once("render");
+  widget._savePreset({
+    preventDefault: () => {}
+  });
+
+  yield onRender;
+});
