@@ -10,6 +10,8 @@
 
 #include "nsSubDocumentFrame.h"
 
+#include "gfxPrefs.h"
+
 #include "mozilla/layout/RenderFrameParent.h"
 
 #include "nsCOMPtr.h"
