@@ -2186,12 +2186,6 @@ extern JS_PUBLIC_API(void*)
 JS_GetInstancePrivate(JSContext* cx, JS::Handle<JSObject*> obj, const JSClass* clasp,
                       JS::CallArgs* args);
 
-extern JS_PUBLIC_API(bool)
-JS_GetPrototype(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject protop);
-
-extern JS_PUBLIC_API(bool)
-JS_SetPrototype(JSContext* cx, JS::HandleObject obj, JS::HandleObject proto);
-
 extern JS_PUBLIC_API(JSObject*)
 JS_GetConstructor(JSContext* cx, JS::Handle<JSObject*> proto);
 
@@ -2417,10 +2411,6 @@ JS_FireOnNewGlobalObject(JSContext* cx, JS::HandleObject global);
 extern JS_PUBLIC_API(JSObject*)
 JS_NewObject(JSContext* cx, const JSClass* clasp);
 
-/* Queries the [[Extensible]] property of the object. */
-extern JS_PUBLIC_API(bool)
-JS_IsExtensible(JSContext* cx, JS::HandleObject obj, bool* extensible);
-
 extern JS_PUBLIC_API(bool)
 JS_IsNative(JSObject* obj);
 
@@ -2451,26 +2441,6 @@ JS_DeepFreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
  */
 extern JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
-
-/*
- * Attempt to make |obj| non-extensible.  If an error occurs while making the
- * attempt, return false (with a pending exception set, depending upon the
- * nature of the error).  If no error occurs, return true with |result| set
- * to indicate whether the attempt successfully set the [[Extensible]] property
- * to false.
- */
-extern JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
-
-/*
- * Attempt to make the [[Prototype]] of |obj| immutable, such that any attempt
- * to modify it will fail.  If an error occurs during the attempt, return false
- * (with a pending exception set, depending upon the nature of the error).  If
- * no error occurs, return true with |*succeeded| set to indicate whether the
- * attempt successfully made the [[Prototype]] immutable.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
 
 extern JS_PUBLIC_API(JSObject*)
 JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
@@ -2766,6 +2736,81 @@ ObjectToCompletePropertyDescriptor(JSContext* cx,
                                    JS::MutableHandle<JSPropertyDescriptor> desc);
 
 } // namespace JS
+
+
+/*** Standard internal methods ********************************************************************
+ *
+ * The functions below are the fundamental operations on objects.
+ *
+ * ES6 specifies 14 internal methods that define how objects behave.  The
+ * standard is actually quite good on this topic, though you may have to read
+ * it a few times. See ES6 sections 6.1.7.2 and 6.1.7.3.
+ *
+ * When 'obj' is an ordinary object, these functions have boring standard
+ * behavior as specified by ES6 section 9.1; see the section about internal
+ * methods in js/src/vm/NativeObject.h.
+ *
+ * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
+ * any one of the functions below could do just about anything. See
+ * js/public/Proxy.h.
+ */
+
+/**
+ * Get the prototype of obj, storing it in result.
+ *
+ * Implements: ES6 [[GetPrototypeOf]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_GetPrototype(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject result);
+
+/**
+ * Change the prototype of obj.
+ *
+ * Implements: ES6 [[SetPrototypeOf]] internal method.
+ *
+ * In cases where ES6 [[SetPrototypeOf]] returns false without an exception,
+ * JS_SetPrototype throws a TypeError and returns false.
+ *
+ * Performance warning: JS_SetPrototype is very bad for performance. It may
+ * cause compiled jit-code to be invalidated. It also causes not only obj but
+ * all other objects in the same "group" as obj to be permanently deoptimized.
+ * It's better to create the object with the right prototype from the start.
+ */
+extern JS_PUBLIC_API(bool)
+JS_SetPrototype(JSContext* cx, JS::HandleObject obj, JS::HandleObject proto);
+
+/**
+ * Determine whether obj is extensible. Extensible objects can have new
+ * properties defined on them. Inextensible objects can't, and their
+ * [[Prototype]] slot is fixed as well.
+ *
+ * Implements: ES6 [[IsExtensible]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_IsExtensible(JSContext* cx, JS::HandleObject obj, bool* extensible);
+
+/**
+ * Attempt to make |obj| non-extensible.
+ *
+ * Not all failures are treated as errors. See the comment on
+ * JS::ObjectOpResult in js/public/Class.h.
+ *
+ * Implements: ES6 [[PreventExtensions]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
+
+/**
+ * Attempt to make the [[Prototype]] of |obj| immutable, such that any attempt
+ * to modify it will fail.  If an error occurs during the attempt, return false
+ * (with a pending exception set, depending upon the nature of the error).  If
+ * no error occurs, return true with |*succeeded| set to indicate whether the
+ * attempt successfully made the [[Prototype]] immutable.
+ *
+ * This is a nonstandard internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
 
 
 /*** [[DefineOwnProperty]] and variations ********************************************************/
