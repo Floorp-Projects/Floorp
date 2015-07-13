@@ -21,6 +21,7 @@
 #include "IMFYCbCrImage.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Preferences.h"
+#include "nsPrintfCString.h"
 
 PRLogModuleInfo* GetDemuxerLog();
 #define LOG(...) MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -128,8 +129,9 @@ WMFVideoMFTManager::GetMediaSubtypeGUID()
 
 class CreateDXVAManagerEvent : public nsRunnable {
 public:
-  CreateDXVAManagerEvent(LayersBackend aBackend)
+  CreateDXVAManagerEvent(LayersBackend aBackend, nsCString& aFailureReason)
     : mBackend(aBackend)
+    , mFailureReason(aFailureReason)
   {}
 
   NS_IMETHOD Run() {
@@ -137,14 +139,15 @@ public:
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
         Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", false) &&
         IsWin8OrLater()) {
-      mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA();
+      mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(mFailureReason);
     } else {
-      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA();
+      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(mFailureReason);
     }
     return NS_OK;
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
   LayersBackend mBackend;
+  nsACString& mFailureReason;
 };
 
 bool
@@ -155,15 +158,19 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   // If we use DXVA but aren't running with a D3D layer manager then the
   // readback of decoded video frames from GPU to CPU memory grinds painting
   // to a halt, and makes playback performance *worse*.
-  if (!mDXVAEnabled ||
-      (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
-       mLayersBackend != LayersBackend::LAYERS_D3D11)) {
+  if (!mDXVAEnabled) {
+    mDXVAFailureReason.AssignLiteral("Hardware video decoding disabled or blacklisted");
+    return false;
+  }
+  if (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
+      mLayersBackend != LayersBackend::LAYERS_D3D11) {
+    mDXVAFailureReason.AssignLiteral("Unsupported layers backend");
     return false;
   }
 
   // The DXVA manager must be created on the main thread.
   nsRefPtr<CreateDXVAManagerEvent> event = 
-    new CreateDXVAManagerEvent(aForceD3D9 ? LayersBackend::LAYERS_D3D9 : mLayersBackend);
+    new CreateDXVAManagerEvent(aForceD3D9 ? LayersBackend::LAYERS_D3D9 : mLayersBackend, mDXVAFailureReason);
 
   if (NS_IsMainThread()) {
     event->Run();
@@ -184,7 +191,10 @@ WMFVideoMFTManager::Init()
   // to d3d9.
   if (!decoder && mDXVA2Manager && mDXVA2Manager->IsD3D11()) {
     mDXVA2Manager = nullptr;
+    nsCString d3d11Failure = mDXVAFailureReason;
     decoder = InitInternal(true);
+    mDXVAFailureReason.Append(NS_LITERAL_CSTRING("; "));
+    mDXVAFailureReason.Append(d3d11Failure);
   }
 
   return decoder.forget();
@@ -225,7 +235,11 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
       hr = decoder->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER, manager);
       if (SUCCEEDED(hr)) {
         mUseHwAccel = true;
+      } else {
+        mDXVAFailureReason = nsPrintfCString("MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
       }
+    } else {
+      mDXVAFailureReason.AssignLiteral("Decoder returned false for MF_SA_D3D_AWARE");
     }
   }
 
@@ -555,8 +569,9 @@ WMFVideoMFTManager::Shutdown()
 }
 
 bool
-WMFVideoMFTManager::IsHardwareAccelerated() const
+WMFVideoMFTManager::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
+  aFailureReason = mDXVAFailureReason;
   return mDecoder && mUseHwAccel;
 }
 

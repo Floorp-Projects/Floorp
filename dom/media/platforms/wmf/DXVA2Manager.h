@@ -23,8 +23,8 @@ public:
 
   // Creates and initializes a DXVA2Manager. We can use DXVA2 via either
   // D3D9Ex or D3D11.
-  static DXVA2Manager* CreateD3D9DXVA();
-  static DXVA2Manager* CreateD3D11DXVA();
+  static DXVA2Manager* CreateD3D9DXVA(nsACString& aFailureReason);
+  static DXVA2Manager* CreateD3D11DXVA(nsACString& aFailureReason);
 
   // Returns a pointer to the D3D device manager responsible for managing the
   // device we're using for hardware accelerated video decoding. If we're using

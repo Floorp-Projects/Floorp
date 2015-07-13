@@ -121,12 +121,12 @@ H264Converter::Shutdown()
 }
 
 bool
-H264Converter::IsHardwareAccelerated() const
+H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
   if (mDecoder) {
-    return mDecoder->IsHardwareAccelerated();
+    return mDecoder->IsHardwareAccelerated(aFailureReason);
   }
-  return MediaDataDecoder::IsHardwareAccelerated();
+  return MediaDataDecoder::IsHardwareAccelerated(aFailureReason);
 }
 
 nsresult
