@@ -1459,7 +1459,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   padding-right: 5.01px;
 }
 
-#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover) {
+#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
   background-color: var(--verified-identity-box-backgroundcolor);
 }
 
