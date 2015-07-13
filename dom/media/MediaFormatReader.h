@@ -285,12 +285,14 @@ private:
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
+      mNextStreamSourceID.reset();
     }
 
     // Used by the MDSM for logging purposes.
     Atomic<size_t> mSizeOfQueue;
     // Sample format monitoring.
     uint32_t mLastStreamSourceID;
+    Maybe<uint32_t> mNextStreamSourceID;
     media::TimeIntervals mTimeRanges;
     nsRefPtr<SharedTrackInfo> mInfo;
   };
