@@ -1651,6 +1651,43 @@ FoldForHead(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& par
     return true;
 }
 
+static bool
+FoldDottedProperty(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+                   bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_DOT));
+    MOZ_ASSERT(node->isArity(PN_NAME));
+
+    // Iterate through a long chain of dotted property accesses to find the
+    // most-nested non-dotted property node, then fold that.
+    ParseNode** nested = &node->pn_expr;
+    while ((*nested)->isKind(PNK_DOT)) {
+        MOZ_ASSERT((*nested)->isArity(PN_NAME));
+        nested = &(*nested)->pn_expr;
+    }
+
+    return Fold(cx, nested, parser, inGenexpLambda, SyntacticContext::Other);
+}
+
+static bool
+FoldName(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+         bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_NAME));
+    MOZ_ASSERT(node->isArity(PN_NAME));
+
+    // Name nodes that are used, are in use-definition lists.  Such nodes store
+    // name analysis information and contain nothing foldable.
+    if (node->isUsed())
+        return true;
+
+    // Other names might have a foldable expression in pn_expr.
+    if (!node->pn_expr)
+        return true;
+
+    return Fold(cx, &node->pn_expr, parser, inGenexpLambda, SyntacticContext::Other);
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1799,6 +1836,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CALLSITEOBJ:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC_LIST:
+      case PNK_GENEXP:
         return FoldList(cx, pn, parser, inGenexpLambda);
 
       case PNK_YIELD_STAR:
@@ -1903,13 +1941,21 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FORHEAD:
         return FoldForHead(cx, pn, parser, inGenexpLambda);
 
-      case PNK_GENEXP:
       case PNK_LABEL:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        return Fold(cx, &pn->pn_expr, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_DOT:
+        return FoldDottedProperty(cx, pn, parser, inGenexpLambda);
+
       case PNK_LEXICALSCOPE:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        if (!pn->pn_expr)
+            return true;
+        return Fold(cx, &pn->pn_expr, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_NAME:
-        MOZ_ASSERT(!pn->isArity(PN_CODE), "only functions are code nodes");
-        break; // for now
+        return FoldName(cx, pn, parser, inGenexpLambda);
 
       case PNK_LIMIT: // invalid sentinel value
         MOZ_CRASH("invalid node kind");
