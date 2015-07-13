@@ -1023,7 +1023,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   padding-right: 5.01px;
 }
 
-#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover) {
+#identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
   background-color: var(--verified-identity-box-backgroundcolor);
 }
 
