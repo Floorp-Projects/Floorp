@@ -20,7 +20,7 @@ class MarionetteTransport(object):
     max_packet_length = 4096
     connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
 
-    def __init__(self, addr, port, socket_timeout=360.0, instance=None):
+    def __init__(self, addr, port, socket_timeout=360.0):
         self.addr = addr
         self.port = port
         self.socket_timeout = socket_timeout
@@ -28,7 +28,6 @@ class MarionetteTransport(object):
         self.traits = None
         self.applicationType = None
         self.actor = 'root'
-        self.instance = instance
 
     def _recv_n_bytes(self, n):
         """ Convenience method for receiving exactly n bytes from
@@ -53,16 +52,13 @@ class MarionetteTransport(object):
         bytes_to_recv = 10
         while time.time() - now < self.socket_timeout:
             try:
-                response += self.sock.recv(bytes_to_recv)
+                data = self.sock.recv(bytes_to_recv)
+                response += data
             except socket.timeout:
                 pass
-            if self.instance and not hasattr(self.instance, 'detached'):
-                # If we've launched the binary we've connected to, make
-                # sure it hasn't died.
-                poll = self.instance.runner.process_handler.proc.poll()
-                if poll is not None:
-                    # process isn't alive
-                    raise IOError("process has died with return code %d" % poll)
+            else:
+                if not data:
+                    raise IOError(self.connection_lost_msg)
             sep = response.find(':')
             if sep > -1:
                 length = response[0:sep]
@@ -70,7 +66,7 @@ class MarionetteTransport(object):
                 if len(remaining) == int(length):
                     return json.loads(remaining)
                 bytes_to_recv = int(length) - len(remaining)
-        raise IOError(self.connection_lost_msg)
+        raise socket.timeout('connection timed out after %d s' % self.socket_timeout)
 
     def connect(self):
         """ Connect to the server and process the hello message we expect
