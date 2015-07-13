@@ -3921,7 +3921,7 @@ bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t a
     return false;
 
   double scaleFactor = 1.0;
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) || defined(XP_WIN)
   NPError err = NPN_GetValue(static_cast<TestNPObject*>(npobj)->npp,
                              NPNVcontentsScaleFactor, &scaleFactor);
   if (err != NPERR_NO_ERROR) {
