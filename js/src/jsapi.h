@@ -2442,9 +2442,6 @@ JS_DeepFreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 extern JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
-extern JS_PUBLIC_API(JSObject*)
-JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
-
 
 /*** Property descriptors ************************************************************************/
 
@@ -3154,6 +3151,139 @@ JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
 extern JS_PUBLIC_API(bool)
 JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
 
+/*
+ * API for determining callability and constructability. [[Call]] and
+ * [[Construct]] are internal methods that aren't present on all objects, so it
+ * is useful to ask if they are there or not. The standard itself asks these
+ * questions routinely.
+ */
+namespace JS {
+
+/**
+ * Return true if the given object is callable. In ES6 terms, an object is
+ * callable if it has a [[Call]] internal method.
+ *
+ * Implements: ES6 7.2.3 IsCallable(argument).
+ *
+ * Functions are callable. A scripted proxy or wrapper is callable if its
+ * target is callable. Most other objects aren't callable.
+ */
+extern JS_PUBLIC_API(bool)
+IsCallable(JSObject* obj);
+
+/**
+ * Return true if the given object is a constructor. In ES6 terms, an object is
+ * a constructor if it has a [[Construct]] internal method. The expression
+ * `new obj()` throws a TypeError if obj is not a constructor.
+ *
+ * Implements: ES6 7.2.4 IsConstructor(argument).
+ *
+ * JS functions and classes are constructors. Arrow functions and most builtin
+ * functions are not. A scripted proxy or wrapper is a constructor if its
+ * target is a constructor.
+ */
+extern JS_PUBLIC_API(bool)
+IsConstructor(JSObject* obj);
+
+} /* namespace JS */
+
+/**
+ * Call a function, passing a this-value and arguments. This is the C++
+ * equivalent of `rval = Reflect.apply(fun, obj, args)`.
+ *
+ * Implements: ES6 7.3.12 Call(F, V, [argumentsList]).
+ * Use this function to invoke the [[Call]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
+                     const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+JS_CallFunction(JSContext* cx, JS::HandleObject obj, JS::HandleFunction fun,
+                const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+/**
+ * Perform the method call `rval = obj[name](args)`.
+ */
+extern JS_PUBLIC_API(bool)
+JS_CallFunctionName(JSContext* cx, JS::HandleObject obj, const char* name,
+                    const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+namespace JS {
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleFunction fun,
+     const JS::HandleValueArray& args, MutableHandleValue rval)
+{
+    return !!JS_CallFunction(cx, thisObj, fun, args, rval);
+}
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleValue fun, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval);
+}
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, const char* name, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    return !!JS_CallFunctionName(cx, thisObj, name, args, rval);
+}
+
+extern JS_PUBLIC_API(bool)
+Call(JSContext* cx, JS::HandleValue thisv, JS::HandleValue fun, const JS::HandleValueArray& args,
+     MutableHandleValue rval);
+
+static inline bool
+Call(JSContext* cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    MOZ_ASSERT(funObj);
+    JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
+    return Call(cx, thisv, fun, args, rval);
+}
+
+/**
+ * Invoke a constructor. This is the C++ equivalent of
+ * `rval = Reflect.construct(fun, args, newTarget)`.
+ *
+ * JS::Construct() takes a `newTarget` argument that most callers don't need.
+ * Consider using the four-argument Construct signature instead. (But if you're
+ * implementing a subclass or a proxy handler's construct() method, this is the
+ * right function to call.)
+ *
+ * Implements: ES6 7.3.13 Construct(F, [argumentsList], [newTarget]).
+ * Use this function to invoke the [[Construct]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+Construct(JSContext* cx, JS::HandleValue fun, HandleObject newTarget,
+          const JS::HandleValueArray &args, MutableHandleValue rval);
+
+/**
+ * Invoke a constructor. This is the C++ equivalent of
+ * `rval = new fun(...args)`.
+ *
+ * The value left in rval on success is always an object in practice,
+ * though at the moment this is not enforced by the C++ type system.
+ *
+ * Implements: ES6 7.3.13 Construct(F, [argumentsList], [newTarget]), when
+ * newTarget is omitted.
+ */
+extern JS_PUBLIC_API(bool)
+Construct(JSContext* cx, JS::HandleValue fun, const JS::HandleValueArray& args,
+          MutableHandleValue rval);
+
+} /* namespace JS */
+
+/**
+ * Invoke a constructor, like the JS expression `new ctor(...args)`. Returns
+ * the new object, or null on error.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
+
 
 /*** Other property-defining functions ***********************************************************/
 
@@ -3327,20 +3457,6 @@ JS_GetFunctionDisplayId(JSFunction* fun);
  */
 extern JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction* fun);
-
-/*
- * API for determining callability and constructability. This does the right
- * thing for proxies.
- */
-namespace JS {
-
-extern JS_PUBLIC_API(bool)
-IsCallable(JSObject* obj);
-
-extern JS_PUBLIC_API(bool)
-IsConstructor(JSObject* obj);
-
-} /* namespace JS */
 
 /*
  * Infallible predicate to test whether obj is a function object (faster than
@@ -4037,66 +4153,6 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
          const char* filename, JS::MutableHandleValue rval);
-
-} /* namespace JS */
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunction(JSContext* cx, JS::HandleObject obj, JS::HandleFunction fun,
-                const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunctionName(JSContext* cx, JS::HandleObject obj, const char* name,
-                    const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
-                     const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-namespace JS {
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleFunction fun,
-     const JS::HandleValueArray& args, MutableHandleValue rval)
-{
-    return !!JS_CallFunction(cx, thisObj, fun, args, rval);
-}
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, const char* name, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    return !!JS_CallFunctionName(cx, thisObj, name, args, rval);
-}
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleValue fun, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval);
-}
-
-extern JS_PUBLIC_API(bool)
-Call(JSContext* cx, JS::HandleValue thisv, JS::HandleValue fun, const JS::HandleValueArray& args,
-     MutableHandleValue rval);
-
-static inline bool
-Call(JSContext* cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    MOZ_ASSERT(funObj);
-    JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
-    return Call(cx, thisv, fun, args, rval);
-}
-
-extern JS_PUBLIC_API(bool)
-Construct(JSContext* cx, JS::HandleValue fun,
-          const JS::HandleValueArray& args,
-          MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-Construct(JSContext* cx, JS::HandleValue fun,
-          HandleObject newTarget, const JS::HandleValueArray &args,
-          MutableHandleValue rval);
 
 } /* namespace JS */
 
