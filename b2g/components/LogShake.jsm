@@ -7,15 +7,16 @@
  * response to a sufficiently large acceleration (a shake), it will save log
  * files to an arbitrary directory which it will then return on a
  * 'capture-logs-success' event with detail.logFilenames representing each log
- * file's filename in the directory. If an error occurs it will instead produce
- * a 'capture-logs-error' event.
+ * file's name and detail.logPaths representing the patch to each log file or
+ * the path to the archive.
+ * If an error occurs it will instead produce a 'capture-logs-error' event.
  * We send a capture-logs-start events to notify the system app and the user,
  * since dumping can be a bit long sometimes.
  */
 
 /* enable Mozilla javascript extensions and global strictness declaration,
  * disable valid this checking */
-/* jshint moz: true */
+/* jshint moz: true, esnext: true */
 /* jshint -W097 */
 /* jshint -W040 */
 /* global Services, Components, dump, LogCapture, LogParser,
@@ -23,10 +24,16 @@
 
 "use strict";
 
-const Cu = Components.utils;
+const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// Constants for creating zip file taken from toolkit/webapps/tests/head.js
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_TRUNCATE    = 0x20;
 
 XPCOMUtils.defineLazyModuleGetter(this, "LogCapture", "resource://gre/modules/LogCapture.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LogParser", "resource://gre/modules/LogParser.jsm");
@@ -69,6 +76,12 @@ const CAPTURE_LOGS_SUCCESS_EVENT = "capture-logs-success";
 
 let LogShake = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  /**
+   * If LogShake is in QA Mode, which bundles all files into a compressed archive
+   */
+  qaModeEnabled: false,
+
   /**
    * If LogShake is listening for device motion events. Required due to lag
    * between HAL layer of device motion events and listening for device motion
@@ -173,6 +186,16 @@ let LogShake = {
     }
   },
 
+  enableQAMode: function() {
+    debug("Enabling QA Mode");
+    this.qaModeEnabled = true;
+  },
+
+  disableQAMode: function() {
+    debug("Disabling QA Mode");
+    this.qaModeEnabled = false;
+  },
+
   enableDeviceMotionListener: function() {
     this.listenToDeviceMotion = true;
     this.startDeviceMotionListener();
@@ -208,11 +231,11 @@ let LogShake = {
       return;
     }
 
-    var acc = event.accelerationIncludingGravity;
+    let acc = event.accelerationIncludingGravity;
 
     // Updates excitement by a factor of at most alpha, ignoring sudden device
     // motion. See bug #1101994 for more information.
-    var newExcitement = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
+    let newExcitement = acc.x * acc.x + acc.y * acc.y + acc.z * acc.z;
     this.excitement += (newExcitement - this.excitement) * EXCITEMENT_FILTER_ALPHA;
 
     if (this.excitement > EXCITEMENT_THRESHOLD) {
@@ -229,8 +252,8 @@ let LogShake = {
     this.captureLogs().then(logResults => {
       // On resolution send the success event to the requester
       SystemAppProxy._sendCustomEvent(CAPTURE_LOGS_SUCCESS_EVENT, {
-        logFilenames: logResults.logFilenames,
-        logPrefix: logResults.logPrefix
+        logPaths: logResults.logPaths,
+        logFilenames: logResults.logFilenames
       });
       this.captureRequested = false;
     }, error => {
@@ -255,7 +278,7 @@ let LogShake = {
    */
   captureLogs: function() {
     let logArrays = this.readLogs();
-    return saveLogs(logArrays);
+    return this.saveLogs(logArrays);
   },
 
   /**
@@ -324,6 +347,25 @@ let LogShake = {
   },
 
   /**
+   * Save the formatted arrays of log files to an sdcard if available
+   */
+  saveLogs: function(logArrays) {
+    if (!logArrays || Object.keys(logArrays).length === 0) {
+      return Promise.reject("Zero logs saved");
+    }
+
+    if (this.qaModeEnabled) {
+      return makeBaseLogsDirectory().then(writeLogArchive(logArrays),
+                                          rejectFunction("Error making base log directory"));
+    } else {
+      return makeBaseLogsDirectory().then(makeLogsDirectory,
+                                          rejectFunction("Error making base log directory"))
+                                    .then(writeLogFiles(logArrays),
+                                          rejectFunction("Error creating log directory"));
+    }
+  },
+
+  /**
    * Stop logshake, removing all listeners
    */
   uninit: function() {
@@ -359,82 +401,168 @@ function getLogDirectoryRoot() {
   return "logs";
 }
 
-function getLogDirectory() {
+function getLogIdentifier() {
   let d = new Date();
   d = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   let timestamp = d.toISOString().slice(0, -5).replace(/[:T]/g, "-");
   return timestamp;
 }
 
-/**
- * Save the formatted arrays of log files to an sdcard if available
- */
-function saveLogs(logArrays) {
-  if (!logArrays || Object.keys(logArrays).length === 0) {
-    return Promise.resolve({
-      logFilenames: [],
-      logPrefix: ""
-    });
-  }
+function rejectFunction(message) {
+  return function(err) {
+    debug(message + ": " + err);
+    return Promise.reject(err);
+  };
+}
 
-  let sdcardPrefix, dirNameRoot, dirName;
+function makeBaseLogsDirectory() {
+  let sdcardPrefix;
   try {
     sdcardPrefix = getSdcardPrefix();
-    dirNameRoot = getLogDirectoryRoot();
-    dirName = getLogDirectory();
   } catch(e) {
-    // Return promise failed with exception e
     // Handles missing sdcard
     return Promise.reject(e);
   }
 
-  debug("making a directory all the way from " + sdcardPrefix + " to " + (sdcardPrefix + "/" + dirNameRoot + "/" + dirName) );
+  let dirNameRoot = getLogDirectoryRoot();
+
   let logsRoot = OS.Path.join(sdcardPrefix, dirNameRoot);
+
+  debug("Creating base log directory at root " + sdcardPrefix);
+
   return OS.File.makeDir(logsRoot, {from: sdcardPrefix}).then(
     function() {
-      debug("First OS.File.makeDir done");
-      let logsDir = OS.Path.join(logsRoot, dirName);
-      debug("Creating " + logsDir);
-      return OS.File.makeDir(logsDir, {ignoreExisting: false}).then(
-        function() {
-          debug("Created: " + logsDir);
-          // Now the directory is guaranteed to exist, save the logs
-          let logFilenames = [];
-          let saveRequests = [];
+      return {
+        sdcardPrefix: sdcardPrefix,
+        basePrefix: dirNameRoot
+      };
+    }
+  );
+}
 
-          debug("Will now traverse logArrays: " + logArrays.length);
+function makeLogsDirectory({sdcardPrefix, basePrefix}) {
+  let dirName = getLogIdentifier();
 
-          for (let logLocation in logArrays) {
-            debug("requesting save of " + logLocation);
-            let logArray = logArrays[logLocation];
-            // The filename represents the relative path within the SD card, not the
-            // absolute path because Gaia will refer to it using the DeviceStorage
-            // API
-            let filename = OS.Path.join(dirNameRoot, dirName, getLogFilename(logLocation));
-            logFilenames.push(filename);
-            let saveRequest = OS.File.writeAtomic(OS.Path.join(sdcardPrefix, filename), logArray);
-            saveRequests.push(saveRequest);
-          }
+  let logsRoot = OS.Path.join(sdcardPrefix, basePrefix);
+  let logsDir = OS.Path.join(logsRoot, dirName);
 
-          return Promise.all(saveRequests).then(
-            function() {
-              debug("returning logfilenames: "+logFilenames.toSource());
-              return {
-                logFilenames: logFilenames,
-                logPrefix: OS.Path.join(dirNameRoot, dirName)
-              };
-            }, function(err) {
-              debug("Error at some save request: " + err);
-              return Promise.reject(err);
-            });
-        }, function(err) {
-          debug("Error at OS.File.makeDir for " + logsDir + ": " + err);
-          return Promise.reject(err);
-        });
-    }, function(err) {
-      debug("Error at first OS.File.makeDir: " + err);
-      return Promise.reject(err);
-    });
+  debug("Creating base log directory at root " + sdcardPrefix);
+  debug("Final created directory will be " + logsDir);
+
+  return OS.File.makeDir(logsDir, {ignoreExisting: false}).then(
+    function() {
+      debug("Created: " + logsDir);
+      return {
+        logPrefix: OS.Path.join(basePrefix, dirName),
+        sdcardPrefix: sdcardPrefix
+      };
+    },
+    rejectFunction("Error at OS.File.makeDir for " + logsDir)
+  );
+}
+
+function getFile(filename) {
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.initWithPath(filename);
+  return file;
+}
+
+/**
+ * Make a zip file
+ * @param {String} absoluteZipFilename - Fully qualified desired location of the zip file
+ * @param {Map<String, Uint8Array>} logArrays - Map from log location to log data
+ * @return {Array<String>} Paths of entries in the archive
+ */
+function makeZipFile(absoluteZipFilename, logArrays) {
+  let logFilenames = [];
+  let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
+  let zipFile = getFile(absoluteZipFilename);
+  zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
+
+  for (let logLocation in logArrays) {
+    let logArray = logArrays[logLocation];
+    let logFilename = getLogFilename(logLocation);
+    logFilenames.push(logFilename);
+
+    debug("Adding " + logFilename + " to the zip");
+    let logArrayStream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+                           .createInstance(Ci.nsIArrayBufferInputStream);
+    // Set data to be copied, default offset to 0 because it is not present on
+    // ArrayBuffer objects
+    logArrayStream.setData(logArray.buffer, logArray.byteOffset || 0,
+                           logArray.byteLength);
+
+    zipWriter.addEntryStream(logFilename, Date.now(),
+                             Ci.nsIZipWriter.COMPRESSION_DEFAULT,
+                             logArrayStream, false);
+  }
+  zipWriter.close();
+
+  return logFilenames;
+}
+
+function writeLogArchive(logArrays) {
+  return function({sdcardPrefix, basePrefix}) {
+    // Now the directory is guaranteed to exist, save the logs into their
+    // archive file
+
+    let zipFilename = getLogIdentifier() + "-logs.zip";
+    let zipPath = OS.Path.join(basePrefix, zipFilename);
+    let zipPrefix = OS.Path.dirname(zipPath);
+    let absoluteZipPath = OS.Path.join(sdcardPrefix, zipPath);
+
+    debug("Creating zip file at " + zipPath);
+    let logFilenames = [];
+    try {
+      logFilenames = makeZipFile(absoluteZipPath, logArrays);
+    } catch(e) {
+      return Promise.reject(e);
+    }
+    debug("Zip file created");
+
+    return {
+      logFilenames: logFilenames,
+      logPaths: [zipPath],
+      compressed: true
+    };
+  };
+}
+
+function writeLogFiles(logArrays) {
+  return function({sdcardPrefix, logPrefix}) {
+    // Now the directory is guaranteed to exist, save the logs
+    let logFilenames = [];
+    let logPaths = [];
+    let saveRequests = [];
+
+    for (let logLocation in logArrays) {
+      debug("Requesting save of " + logLocation);
+      let logArray = logArrays[logLocation];
+      let logFilename = getLogFilename(logLocation);
+      // The local pathrepresents the relative path within the SD card, not the
+      // absolute path because Gaia will refer to it using the DeviceStorage
+      // API
+      let localPath = OS.Path.join(logPrefix, logFilename);
+
+      logFilenames.push(logFilename);
+      logPaths.push(localPath);
+
+      let absolutePath = OS.Path.join(sdcardPrefix, localPath);
+      let saveRequest = OS.File.writeAtomic(absolutePath, logArray);
+      saveRequests.push(saveRequest);
+    }
+
+    return Promise.all(saveRequests).then(
+      function() {
+        return {
+          logFilenames: logFilenames,
+          logPaths: logPaths,
+          compressed: false
+        };
+      },
+      rejectFunction("Error at some save request")
+    );
+  };
 }
 
 LogShake.init();
