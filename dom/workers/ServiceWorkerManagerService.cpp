@@ -84,54 +84,6 @@ ServiceWorkerManagerService::UnregisterActor(ServiceWorkerManagerParent* aParent
 
 namespace {
 
-struct MOZ_STACK_CLASS UnregisterData final
-{
-  UnregisterData(const PrincipalInfo& aPrincipalInfo,
-                 const nsAString& aScope,
-                 uint64_t aParentID)
-    : mPrincipalInfo(aPrincipalInfo)
-    , mScope(aScope)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(UnregisterData);
-  }
-
-  ~UnregisterData()
-  {
-    MOZ_COUNT_DTOR(UnregisterData);
-  }
-
-  const PrincipalInfo mPrincipalInfo;
-  const nsString mScope;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-UnregisterEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<UnregisterData*>(aPtr);
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyUnregister(data->mPrincipalInfo, data->mScope);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 struct MOZ_STACK_CLASS RemoveAllData final
 {
   explicit RemoveAllData(uint64_t aParentID)
@@ -293,11 +245,23 @@ ServiceWorkerManagerService::PropagateUnregister(
   service->UnregisterServiceWorker(aPrincipalInfo,
                                    NS_ConvertUTF16toUTF8(aScope));
 
-  UnregisterData data(aPrincipalInfo, aScope, aParentID);
-  mAgents.EnumerateEntries(UnregisterEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      nsString scope(aScope);
+      unused << parent->SendNotifyUnregister(aPrincipalInfo, scope);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
