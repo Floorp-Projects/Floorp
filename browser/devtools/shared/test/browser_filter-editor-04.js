@@ -17,7 +17,7 @@ add_task(function*() {
   const initialValue = "blur(2px) contrast(200%) brightness(200%)";
   let widget = new CSSFilterEditorWidget(container, initialValue);
 
-  const filters = widget.el.querySelector(".filters");
+  const filters = widget.el.querySelector("#filters");
   function first() {
     return filters.children[0];
   }
@@ -27,6 +27,7 @@ add_task(function*() {
   function last() {
     return filters.children[2];
   }
+
 
   info("Test re-ordering neighbour filters");
   widget._mouseDown({
@@ -67,7 +68,7 @@ add_task(function*() {
     pageY: 0
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
-  ok(first().offsetTop >= boundaries.top,
+  ok(first().getBoundingClientRect().top >= boundaries.top,
      "First filter should not move outside filter list");
 
   widget._mouseUp();
@@ -78,7 +79,7 @@ add_task(function*() {
     pageY: 0
   });
   widget._mouseMove({ pageY: -LIST_ITEM_HEIGHT * 5 });
-  ok(last().offsetTop <= boundaries.bottom,
+  ok(last().getBoundingClientRect().bottom <= boundaries.bottom,
      "Last filter should not move outside filter list");
 
   widget._mouseUp();

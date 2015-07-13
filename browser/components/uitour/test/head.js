@@ -204,8 +204,6 @@ function UITourTest() {
   waitForExplicitFinish();
 
   registerCleanupFunction(function() {
-    delete window.UITour;
-    delete window.UITourMetricsProvider;
     delete window.gContentWindow;
     delete window.gContentAPI;
     if (gTestTab)

@@ -20,7 +20,7 @@ add_task(function*() {
   const container = doc.querySelector("#container");
   const initialValue = "drop-shadow(rgb(0, 0, 0) 1px 1px 0px)";
   let widget = new CSSFilterEditorWidget(container, initialValue);
-  widget.el.querySelector("input").setSelectionRange(13, 13);
+  widget.el.querySelector("#filters input").setSelectionRange(13, 13);
 
   let value = 1;
 
@@ -102,7 +102,7 @@ add_task(function*() {
 // Triggers the specified keyCode and modifier key on
 // first filter's input
 function triggerKey(key, modifier) {
-  const filter = this.el.querySelector(".filters").children[0];
+  const filter = this.el.querySelector("#filters").children[0];
   const input = filter.querySelector("input");
 
   this._keyDown({

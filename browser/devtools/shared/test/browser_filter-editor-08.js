@@ -70,7 +70,7 @@ add_task(function*() {
 // Triggers the specified keyCode and modifier key on
 // first filter's input
 function triggerKey(key, modifier) {
-  const filter = this.el.querySelector(".filters").children[0];
+  const filter = this.el.querySelector("#filters").children[0];
   const input = filter.querySelector("input");
 
   this._keyDown({

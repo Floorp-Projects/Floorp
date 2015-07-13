@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.fxa.sync;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient;
 import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException;
 import org.mozilla.gecko.background.fxa.profile.FxAccountProfileClient10;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import java.util.concurrent.Executor;
@@ -66,6 +68,14 @@ public class FxAccountProfileService extends IntentService {
       @Override
       public void handleFailure(FxAccountAbstractClientException.FxAccountAbstractClientRemoteException e) {
         Logger.warn(LOG_TAG, "Failed to fetch Account profile.", e);
+
+        if (e.isInvalidAuthentication()) {
+          // The profile server rejected the cached oauth token! Invalidate it.
+          // A new token will be generated upon next request.
+          Logger.info(LOG_TAG, "Invalidating oauth token after 401!");
+          AccountManager.get(FxAccountProfileService.this).invalidateAuthToken(FxAccountConstants.ACCOUNT_TYPE, authToken);
+        }
+
         sendResult("Failed to fetch Account profile.", resultReceiver, Activity.RESULT_CANCELED);
       }
 

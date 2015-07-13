@@ -21,6 +21,10 @@ Login Manager test: notifications
 
 /** Test for Login Manager: notifications. **/
 
+const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+
+const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
+
 // Set testpath to the directory where we live. Used to load tests from
 // alternate Mochitest servers (different hostnames, same content).
 var testpath = document.location.pathname + "/../";
@@ -95,6 +99,8 @@ function checkTest() {
     var gotUser = SpecialPowers.wrap(iframe).contentDocument.getElementById("user").textContent;
     var gotPass = SpecialPowers.wrap(iframe).contentDocument.getElementById("pass").textContent;
 
+    let brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
+    let brandShortName = brandBundle.GetStringFromName("brandShortName");
 
     switch(testNum) {
 
@@ -356,8 +362,8 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
         notificationText = popup.message;
-        expectedText = /^Would you like to remember the password on example.org\?$/;
-        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        expectedText = "Would you like " + brandShortName + " to remember this login?";
+        is(expectedText, notificationText, "Checking text: " + notificationText);
         popup.remove();
         break;
 
@@ -369,8 +375,8 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginText string.
         notificationText = popup.message;
-        expectedText = /^Would you like to remember the password on example.org\?$/;
-        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        expectedText = "Would you like " + brandShortName + " to remember this login\?";
+        is(expectedText, notificationText, "Checking text: " + notificationText);
         popup.remove();
         break;
 
@@ -382,8 +388,8 @@ function checkTest() {
         ok(popup, "got notification popup");
         // Check the text, which comes from the localized saveLoginTextNoUser string.
         notificationText = popup.message;
-        expectedText = /^Would you like to remember the password on example.org\?$/;
-        ok(expectedText.test(notificationText), "Checking text: " + notificationText);
+        expectedText = "Would you like " + brandShortName + " to remember this password\?";
+        is(expectedText, notificationText, "Checking text: " + notificationText);
         popup.remove();
         break;
 
