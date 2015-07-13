@@ -13,6 +13,7 @@ const SUPPORTED_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
 
 Cu.importGlobalProperties(["URL"]);
 
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -27,9 +28,11 @@ XPCOMUtils.defineLazyGetter(this, "log", () => LoginHelper.createLogger("LoginRe
  * calling methods on the object.
  *
  * @constructor
- * @param {boolean} [aOptions.defaults=true] whether to load default application recipes.
- */
-function LoginRecipesParent(aOptions = { defaults: true }) {
+ * @param {String} [aOptions.defaults=null] the URI to load the recipes from.
+ *                                          If it's null, nothing is loaded.
+ *
+*/
+function LoginRecipesParent(aOptions = { defaults: null }) {
   if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
     throw new Error("LoginRecipesParent should only be used from the main process");
   }
@@ -88,10 +91,29 @@ LoginRecipesParent.prototype = {
     this._recipesByHost = new Map();
 
     if (this._defaults) {
-      // XXX: Bug 1134850 will handle reading recipes from a file.
-      this.initializationPromise = this.load(DEFAULT_RECIPES).then(resolve => {
-        return this;
-      });
+      let channel = NetUtil.newChannel({uri: NetUtil.newURI(this._defaults, "UTF-8"),
+                                        loadUsingSystemPrincipal: true});
+      channel.contentType = "application/json";
+
+      try {
+        this.initializationPromise = new Promise(function(resolve) {
+          NetUtil.asyncFetch(channel, function (stream, result) {
+            if (!Components.isSuccessCode(result)) {
+              throw new Error("Error fetching recipe file:" + result);
+              return;
+            }
+            let count = stream.available();
+            let data = NetUtil.readInputStreamToString(stream, count, { charset: "UTF-8" });
+            resolve(JSON.parse(data));
+          });
+        }).then(recipes => {
+          return this.load(recipes);
+        }).then(resolve => {
+          return this;
+        });
+      } catch (e) {
+        throw new Error("Error reading recipe file:" + e);
+      }
     } else {
       this.initializationPromise = Promise.resolve(this);
     }
@@ -236,24 +258,4 @@ let LoginRecipesContent = {
     }
     return field;
   },
-};
-
-const DEFAULT_RECIPES = {
-  "siteRecipes": [
-    {
-      "description": "okta uses a hidden password field to disable filling",
-      "hosts": ["mozilla.okta.com"],
-      "passwordSelector": "#pass-signin"
-    },
-    {
-      "description": "anthem uses a hidden password and username field to disable filling",
-      "hosts": ["www.anthem.com"],
-      "passwordSelector": "#LoginContent_txtLoginPass"
-    },
-    {
-      "description": "An ephemeral password-shim field is incorrectly selected as the username field.",
-      "hosts": ["www.discover.com"],
-      "usernameSelector": "#login-account"
-    }
-  ]
 };
