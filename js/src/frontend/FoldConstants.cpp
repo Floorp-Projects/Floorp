@@ -512,9 +512,6 @@ enum class SyntacticContext : int {
     // or || in such a context.
     Condition,
 
-    // pn is the operand of the 'delete' keyword.
-    Delete,
-
     // Any other syntactic context.
     Other
 };
