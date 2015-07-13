@@ -2708,6 +2708,62 @@ JS_HasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* found
     return JS_HasOwnPropertyById(cx, obj, id, foundp);
 }
 
+JS_PUBLIC_API(bool)
+JS_ForwardGetPropertyTo(JSContext* cx, HandleObject obj, HandleId id, HandleValue receiver,
+                        MutableHandleValue vp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id, receiver);
+
+    return GetProperty(cx, obj, receiver, id, vp);
+}
+
+JS_PUBLIC_API(bool)
+JS_ForwardGetElementTo(JSContext* cx, HandleObject obj, uint32_t index, HandleObject receiver,
+                       MutableHandleValue vp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    return GetElement(cx, obj, receiver, index, vp);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetPropertyById(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+{
+    RootedValue receiver(cx, ObjectValue(*obj));
+    return JS_ForwardGetPropertyTo(cx, obj, id, receiver, vp);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetProperty(JSContext* cx, HandleObject obj, const char* name, MutableHandleValue vp)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                 MutableHandleValue vp)
+{
+    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetPropertyById(cx, obj, id, vp);
+}
+
+JS_PUBLIC_API(bool)
+JS_GetElement(JSContext* cx, HandleObject objArg, uint32_t index, MutableHandleValue vp)
+{
+    return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
+}
+
 
 /* * */
 
@@ -2986,69 +3042,6 @@ JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
     CompletePropertyDescriptor(desc);
     desc.object().set(obj);
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_GetPropertyById(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    return GetProperty(cx, obj, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext* cx, HandleObject obj, HandleId id, HandleValue onBehalfOf,
-                        MutableHandleValue vp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id, onBehalfOf);
-
-    return GetProperty(cx, obj, onBehalfOf, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetElement(JSContext* cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    return GetElement(cx, obj, obj, index, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_ForwardGetElementTo(JSContext* cx, HandleObject obj, uint32_t index, HandleObject onBehalfOf,
-                       MutableHandleValue vp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    return GetElement(cx, obj, onBehalfOf, index, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetProperty(JSContext* cx, HandleObject obj, const char* name, MutableHandleValue vp)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_GetPropertyById(cx, obj, id, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                 MutableHandleValue vp)
-{
-    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_GetPropertyById(cx, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
