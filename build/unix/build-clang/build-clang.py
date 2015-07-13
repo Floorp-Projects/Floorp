@@ -196,9 +196,17 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', required=True,
                         type=argparse.FileType('r'),
                         help="Clang configuration file")
+    parser.add_argument('--clean', required=False,
+                        action='store_true',
+                        help="Clean the build directory")
 
     args = parser.parse_args()
     config = json.load(args.config)
+
+    if args.clean:
+        shutil.rmtree(build_dir)
+        os.sys.exit(0)
+
     llvm_revision = config["llvm_revision"]
     llvm_repo = config["llvm_repo"]
     clang_repo = config["clang_repo"]
