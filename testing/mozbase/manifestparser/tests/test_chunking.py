@@ -66,6 +66,15 @@ class ChunkBySlice(TestCase):
         disabled = list(i for i in xrange(num_tests) if i % 4 == 0)
         self.run_all_combos(num_tests=num_tests, disabled=disabled)
 
+    def test_two_times_more_chunks_than_tests(self):
+        # test case for bug 1182817
+        tests = self.generate_tests(5)
+
+        total_chunks = 10
+        for i in range(1, total_chunks + 1):
+            # ensure IndexError is not raised
+            chunk_by_slice(i, total_chunks)(tests, {})
+
 
 class ChunkByDir(TestCase):
     """Test chunking related filters"""
