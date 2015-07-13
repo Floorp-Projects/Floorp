@@ -6811,4 +6811,5 @@ nsHttpChannel::OnPush(const nsACString &url, Http2PushedStream *pushedStream)
     return rv;
 }
 
-} } // namespace mozilla::net
+} // namespace net
+} // namespace mozilla

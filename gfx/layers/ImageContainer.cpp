@@ -686,5 +686,5 @@ ImageContainer::AllocateProducerID()
   return ++sProducerID;
 }
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

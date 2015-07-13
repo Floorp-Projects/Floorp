@@ -50,7 +50,7 @@ private:
   bool mAutoHinting;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEDFONTCAIRO_H_ */

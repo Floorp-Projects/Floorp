@@ -18,8 +18,8 @@
 namespace mozilla {
 namespace dom {
 class IMETextTxn;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * An aggregate transaction that knows how to absorb all subsequent

@@ -19,14 +19,14 @@ namespace mozilla {
 
 namespace net {
 class LoadInfoArgs;
-}
+} // namespace net
 
 namespace ipc {
 // we have to forward declare that function so we can use it as a friend.
 nsresult
 LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
                        nsILoadInfo** outLoadInfo);
-}
+} // namespace ipc
 
 /**
  * Class that provides an nsILoadInfo implementation.

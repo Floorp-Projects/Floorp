@@ -21,7 +21,7 @@ class PlanarYCbCrImage;
 class GrallocImage;
 class SurfaceTextureImage;
 class EGLImageImage;
-}
+} // namespace layers
 
 namespace gl {
 

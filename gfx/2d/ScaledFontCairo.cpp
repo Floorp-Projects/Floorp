@@ -61,5 +61,5 @@ SkTypeface* ScaledFontCairo::GetSkTypeface()
 }
 #endif
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

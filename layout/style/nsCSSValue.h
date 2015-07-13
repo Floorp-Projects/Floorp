@@ -236,8 +236,8 @@ private:
     }
 };
 
-}
-}
+} // namespace css
+} // namespace mozilla
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified

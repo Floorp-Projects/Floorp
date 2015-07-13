@@ -197,6 +197,6 @@ struct ParamTraits<OverrideMapping>
   }
 };
 
-}
+} // namespace IPC
 
 #endif // RegistryMessageUtils_h

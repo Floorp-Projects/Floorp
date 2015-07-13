@@ -34,7 +34,7 @@ namespace {
   static BluetoothGattInterface* sBluetoothGattInterface;
   static BluetoothGattClientInterface* sBluetoothGattClientInterface;
   static BluetoothGattServerInterface* sBluetoothGattServerInterface;
-} // anonymous namespace
+} // namespace
 
 bool BluetoothGattManager::mInShutdown = false;
 

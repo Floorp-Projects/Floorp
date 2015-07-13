@@ -180,7 +180,7 @@ Paths* gPaths = nullptr;
  * on the main thread.
  */
 uint32_t gUserUmask = 0;
-}
+} // namespace
 
 /**
  * Return the path to one of the special directories.

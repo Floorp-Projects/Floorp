@@ -106,7 +106,7 @@ private:
   std::string mStr;
 };
 
-} // namespace moz-decimal-utils
+} // namespace moz_decimal_utils
 
 #endif
 

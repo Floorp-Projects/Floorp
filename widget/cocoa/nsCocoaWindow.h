@@ -285,10 +285,12 @@ public:
                                         nsIWidget *aWidget, bool aActivate) override;
     NS_IMETHOD              SetSizeMode(int32_t aMode) override;
     NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
-    virtual void            PrepareForDOMFullscreenTransition() override;
     void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
-    inline bool ShouldToggleNativeFullscreen(bool aFullScreen);
-    NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;
+    NS_IMETHOD MakeFullScreen(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
+    NS_IMETHOD MakeFullScreenWithNativeTransition(
+      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
+
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              GetClientBounds(nsIntRect &aRect) override;
@@ -385,6 +387,10 @@ protected:
   nsresult             DoResize(double aX, double aY, double aWidth, double aHeight,
                                 bool aRepaint, bool aConstrainToCurrentScreen);
 
+  inline bool ShouldToggleNativeFullscreen(bool aFullScreen,
+                                           bool aUseSystemTransition);
+  nsresult DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition);
+
   virtual already_AddRefed<nsIWidget>
   AllocateChildPopupWidget() override
   {
@@ -414,10 +420,6 @@ protected:
   bool                 mInFullScreenMode;
   bool                 mInFullScreenTransition; // true from the request to enter/exit fullscreen
                                                 // (MakeFullScreen() call) to EnteredFullScreen()
-  // We are in transition to/from DOM Fullscreen.
-  // XXX The transition is not implemented yet. This is currently only
-  // used to distinguish between DOM fullscreen and fullscreen mode.
-  bool                 mInDOMFullscreenTransition;
   bool                 mModal;
 
   // Only true on 10.7+ if SetShowsFullScreenButton(true) is called.

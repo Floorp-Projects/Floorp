@@ -26,7 +26,7 @@ namespace {
 
 StaticRefPtr<BluetoothServiceChildProcess> sBluetoothService;
 
-} // anonymous namespace
+} // namespace
 
 /*******************************************************************************
  * BluetoothChild

@@ -66,5 +66,5 @@ DataChannelChild::ActorDestroy(ActorDestroyReason why)
     Release();
 }
 
-} // namespace mozilla
 } // namespace net
+} // namespace mozilla

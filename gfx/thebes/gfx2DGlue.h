@@ -356,7 +356,7 @@ To3DMatrix(const Matrix4x4& aIn)
   return m;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

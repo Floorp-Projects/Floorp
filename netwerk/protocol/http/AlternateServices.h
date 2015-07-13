@@ -133,6 +133,7 @@ private:
   nsRefPtrHashtable<nsCStringHashKey, AltSvcMapping> mHash;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // include guard

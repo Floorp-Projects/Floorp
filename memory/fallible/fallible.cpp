@@ -8,4 +8,4 @@ namespace mozilla {
 
 const fallible_t fallible = {};
 
-}
+} // namespace mozilla

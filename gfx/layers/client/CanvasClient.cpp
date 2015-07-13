@@ -62,14 +62,13 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     gfxContentType contentType = isOpaque
                                                 ? gfxContentType::COLOR
                                                 : gfxContentType::COLOR_ALPHA;
-    gfxImageFormat format
-      = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
+    gfx::SurfaceFormat surfaceFormat
+      = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(contentType);
     TextureFlags flags = TextureFlags::DEFAULT;
     if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
-    gfx::SurfaceFormat surfaceFormat = gfx::ImageFormatToSurfaceFormat(format);
     mBuffer = CreateTextureClientForCanvas(surfaceFormat, aSize, flags, aLayer);
     if (!mBuffer) {
       NS_WARNING("Failed to allocate the TextureClient");

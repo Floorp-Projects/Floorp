@@ -225,7 +225,7 @@ EncodeInputStream(nsIInputStream* aInputStream,
   return NS_OK;
 }
 
-} // namespace (anonymous)
+} // namespace
 
 namespace mozilla {
 

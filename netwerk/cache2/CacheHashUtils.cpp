@@ -187,6 +187,6 @@ CacheHash::GetHash16()
   return (hash & 0xFFFF);
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 

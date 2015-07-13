@@ -1628,7 +1628,7 @@ SameType(const Value& lhs, const Value& rhs)
 
 namespace JS {
 JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const Value& next);
-}
+} // namespace JS
 
 namespace js {
 
@@ -1967,7 +1967,7 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
 extern JS_PUBLIC_DATA(const HandleValue) TrueHandleValue;
 extern JS_PUBLIC_DATA(const HandleValue) FalseHandleValue;
 
-}
+} // namespace JS
 
 #undef JS_VALUE_IS_CONSTEXPR
 #undef JS_RETURN_LAYOUT_FROM_BITS

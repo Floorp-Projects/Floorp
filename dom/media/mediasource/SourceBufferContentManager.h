@@ -111,4 +111,5 @@ protected:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_SOURCEBUFFERCONTENTMANAGER_H_ */

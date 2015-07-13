@@ -46,6 +46,7 @@ private:
   RefPtr<TextureClientRecycleAllocatorImp> mAllocator;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
+
 #endif /* MOZILLA_GFX_TEXTURECLIENT_RECYCLE_ALLOCATOR_H */

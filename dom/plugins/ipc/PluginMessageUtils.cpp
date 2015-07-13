@@ -43,7 +43,7 @@ DeferNPObjectReleaseRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace plugins {

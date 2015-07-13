@@ -116,7 +116,7 @@ NPObjectIsOutOfProcessProxy(NPObject *obj)
          obj->_class == PluginAsyncSurrogate::GetClass();
 }
 
-} // anonymous namespace
+} // namespace
 
 // Helper class that reports any JS exceptions that were thrown while
 // the plugin executed JS.
@@ -472,9 +472,9 @@ GetJSContext(NPP npp)
   return scx->GetNativeContext();
 }
 
-}
-}
-}
+} // namespace parent
+} // namespace plugins
+} // namespace mozilla
 
 static NPP
 LookupNPP(NPObject *npobj);

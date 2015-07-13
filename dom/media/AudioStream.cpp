@@ -1220,4 +1220,5 @@ bool AudioClock::GetPreservesPitch() const
 {
   return mPreservesPitch;
 }
+
 } // namespace mozilla

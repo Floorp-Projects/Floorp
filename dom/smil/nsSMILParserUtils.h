@@ -20,8 +20,8 @@ class nsSMILTimeValueSpecParams;
 namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * Common parsing utilities for the SMIL module. There is little re-use here; it

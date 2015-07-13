@@ -31,5 +31,5 @@ RenderFrameChild::Destroy()
   // WARNING: |this| is dead, hands off
 }
 
-}  // namespace layout
-}  // namespace mozilla
+} // namespace layout
+} // namespace mozilla

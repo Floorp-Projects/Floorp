@@ -279,7 +279,7 @@ struct Functions {
   void (*xFunc)(::sqlite3_context*, int, sqlite3_value**);
 };
 
-} // anonymous namespace
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Exposed Functions

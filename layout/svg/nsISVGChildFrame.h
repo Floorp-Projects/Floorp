@@ -25,8 +25,8 @@ class SVGUserUnitList;
 
 namespace gfx {
 class Matrix;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 /**
  * This class is not particularly well named. It is inherited by some, but

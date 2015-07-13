@@ -42,7 +42,7 @@ protected:
   }
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

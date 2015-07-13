@@ -145,6 +145,7 @@ private:
   /* Buffer containing the mixed audio data. */
   nsTArray<AudioDataValue> mMixedAudio;
 };
-}
+
+} // namespace mozilla
 
 #endif // MOZILLA_AUDIOMIXER_H_

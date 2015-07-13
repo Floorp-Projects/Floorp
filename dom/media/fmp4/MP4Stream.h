@@ -92,6 +92,6 @@ private:
   nsTArray<CacheBlock> mCache;
 };
 
-}
+} // namespace mozilla
 
 #endif

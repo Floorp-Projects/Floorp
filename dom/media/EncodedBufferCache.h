@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace dom {
 class Blob;
-}
+} // namespace dom
 
 /**
  * Data is moved into a temporary file when it grows beyond

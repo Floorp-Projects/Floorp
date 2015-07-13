@@ -29,7 +29,7 @@ void UpdateListIndicesFromIndex(
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

@@ -26,7 +26,7 @@ private:
   nsCOMPtr<nsILoadContextInfo> mInfo;
 };
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

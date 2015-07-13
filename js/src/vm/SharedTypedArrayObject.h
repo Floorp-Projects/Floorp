@@ -143,7 +143,7 @@ SharedTypedArrayObject::byteLengthValue(SharedTypedArrayObject* tarr)
     return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
 }
 
-}  // namespace js
+} // namespace js
 
 template <>
 inline bool

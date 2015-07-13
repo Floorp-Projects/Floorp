@@ -127,5 +127,5 @@ BroadcastChannelChild::ActorDestroy(ActorDestroyReason aWhy)
   mActorDestroyed = true;
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

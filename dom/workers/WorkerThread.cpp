@@ -28,7 +28,7 @@ namespace {
 // consistency.
 const uint32_t kWorkerStackSize = 256 * sizeof(size_t) * 1024;
 
-} // anonymous namespace
+} // namespace
 
 WorkerThreadFriendKey::WorkerThreadFriendKey()
 {

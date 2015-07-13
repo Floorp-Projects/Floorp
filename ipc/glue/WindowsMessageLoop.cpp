@@ -435,7 +435,7 @@ ProcessOrDeferMessage(HWND hwnd,
   return res;
 }
 
-} // anonymous namespace
+} // namespace
 
 // We need the pointer value of this in PluginInstanceChild.
 LRESULT CALLBACK
@@ -680,7 +680,7 @@ TimeoutHasExpired(const TimeoutData& aData)
   return now >= aData.targetTicks;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace ipc {

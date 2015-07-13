@@ -72,4 +72,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif // AudioSinkInputPin_h_

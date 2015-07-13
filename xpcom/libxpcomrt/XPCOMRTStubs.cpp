@@ -33,7 +33,7 @@ class nsCString;
 
 namespace base {
   class Histogram;
-}
+} // namespace base
 
 namespace mozilla {
 namespace Telemetry {
@@ -55,5 +55,5 @@ base::Histogram* GetKeyedHistogramById(ID id, const nsAString&)
   return nullptr;
 }
 
-} // Telemetry
-} // mozilla
+} // namespace Telemetry
+} // namespace mozilla

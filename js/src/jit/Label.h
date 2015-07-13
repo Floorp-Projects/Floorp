@@ -108,6 +108,7 @@ class NonAssertingLabel : public Label
     }
 };
 
-} } // namespace js::jit
+} // namespace jit
+} // namespace js
 
 #endif // jit_Label_h

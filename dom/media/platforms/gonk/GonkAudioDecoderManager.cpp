@@ -298,4 +298,5 @@ void GonkAudioDecoderManager::ReleaseAudioBuffer() {
     mAudioBuffer = nullptr;
   }
 }
+
 } // namespace mozilla

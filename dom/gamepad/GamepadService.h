@@ -132,6 +132,7 @@ class GamepadService : public nsIObserver
   nsCOMPtr<nsITimer> mTimer;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
+
 #endif // mozilla_dom_GamepadService_h_

@@ -37,5 +37,5 @@ void
 SetScreenBrightness(double aBrightness)
 {}
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

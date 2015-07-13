@@ -43,22 +43,22 @@ class nsIDOMWindowUtils;
 namespace mozilla {
 namespace layout {
 class RenderFrameChild;
-}
+} // namespace layout
 
 namespace layers {
 class APZEventState;
 class ImageCompositeNotification;
 struct SetTargetAPZCCallback;
 struct SetAllowedTouchBehaviorCallback;
-}
+} // namespace layers
 
 namespace widget {
 struct AutoCacheNativeKeyCommands;
-}
+} // namespace widget
 
 namespace plugins {
 class PluginWidgetChild;
-}
+} // namespace plugins
 
 namespace dom {
 
@@ -525,6 +525,7 @@ protected:
     virtual bool RecvDestroy() override;
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) override;
     virtual bool RecvSetIsDocShellActive(const bool& aIsActive) override;
+    virtual bool RecvNavigateDocument(const bool& aForward) override;
 
     virtual bool RecvRequestNotifyAfterRemotePaint() override;
 
@@ -666,7 +667,7 @@ private:
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_TabChild_h

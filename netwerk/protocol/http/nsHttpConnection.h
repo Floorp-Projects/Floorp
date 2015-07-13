@@ -349,6 +349,7 @@ private:
     nsCOMPtr<nsITimer>              mTCPKeepaliveTransitionTimer;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpConnection_h__

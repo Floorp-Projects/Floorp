@@ -70,7 +70,7 @@ private:
   IntSize mSize;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACERAWDATA_H_ */

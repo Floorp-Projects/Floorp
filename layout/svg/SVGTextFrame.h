@@ -35,7 +35,7 @@ class TextRenderedRunIterator;
 namespace dom {
 class SVGIRect;
 class SVGPathElement;
-}
+} // namespace dom
 
 /**
  * Information about the positioning for a single character in an SVG <text>

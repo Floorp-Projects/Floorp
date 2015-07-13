@@ -92,5 +92,5 @@ namespace mozilla {
       return sTracerRunnable->Signal();
     }
   }
-}  // namespace mozilla
+} // namespace mozilla
 

@@ -40,14 +40,14 @@ class GeckoContentController;
 class APZEventState;
 struct ScrollableLayerGuid;
 struct SetAllowedTouchBehaviorCallback;
-}
+} // namespace layers
 
 class CompositorVsyncDispatcher;
-}
+} // namespace mozilla
 
 namespace base {
 class Thread;
-}
+} // namespace base
 
 // Windows specific constant indicating the maximum number of touch points the
 // inject api will allow. This also sets the maximum numerical value for touch
@@ -143,8 +143,13 @@ public:
   virtual void            SetShowsFullScreenButton(bool aShow) override {}
   virtual void            SetWindowAnimationType(WindowAnimationType aType) override {}
   NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
-  virtual void            PrepareForDOMFullscreenTransition() override {}
+  virtual bool PrepareForFullscreenTransition(nsISupports** aData) override { return false; }
+  virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                           uint16_t aDuration,
+                                           nsISupports* aData,
+                                           nsIRunnable* aCallback) override;
   NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr) override;
+
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
@@ -278,6 +283,13 @@ public:
   {
     return aClientSize;
   }
+
+  // return the widget's outside dimensions
+  // in global coordinates in display pixel.
+  nsIntRect GetScaledScreenBounds();
+
+  // return the screen the widget is in.
+  already_AddRefed<nsIScreen> GetWidgetScreen();
 
   // return true if this is a popup widget with a native titlebar
   bool IsPopupWithTitleBar() const

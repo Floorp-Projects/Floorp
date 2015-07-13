@@ -24,7 +24,7 @@ namespace {
 
 FileHandleBase* gCurrentFileHandle = nullptr;
 
-} // anonymous namespace
+} // namespace
 
 FileHelper::FileHelper(FileHandleBase* aFileHandle,
                        FileRequestBase* aFileRequest)

@@ -305,5 +305,5 @@ DrawTargetTiled::Fill(const Path* aPath, const Pattern& aPattern, const DrawOpti
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

@@ -109,7 +109,7 @@ struct MakeIndexSequenceImpl<N, IndexTuple<Indices...>>
   typedef IndexSequence<Indices...> Type;
 };
 
-}  // namespace detail
+} // namespace detail
 
 /**
  * A utility for building an IndexSequence of consecutive indices.

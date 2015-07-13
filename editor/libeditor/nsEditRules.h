@@ -16,8 +16,8 @@ class nsPlaintextEditor;
 namespace mozilla {
 namespace dom {
 class Selection;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /***************************************************************************
  * base for an object to encapsulate any additional info needed to be passed

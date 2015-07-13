@@ -507,6 +507,8 @@ function runTest(testNum) {
         subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
         SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+        SpecialPowers.setCharPref("full-screen-api.transition-duration.enter", "0 0");
+        SpecialPowers.setCharPref("full-screen-api.transition-duration.leave", "0 0");
         full_screen_element.mozRequestFullScreen();
     },
 

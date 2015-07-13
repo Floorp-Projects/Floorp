@@ -60,5 +60,5 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv)
   return aRv.Failed() ? nullptr : promise.forget();
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

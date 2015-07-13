@@ -770,6 +770,16 @@ NS_IMETHODIMP nsBaseWidget::HideWindowChrome(bool aShouldHide)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* virtual */ void
+nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                          uint16_t aDuration,
+                                          nsISupports* aData,
+                                          nsIRunnable* aCallback)
+{
+  MOZ_ASSERT_UNREACHABLE(
+    "Should never call PerformFullscreenTransition on nsBaseWidget");
+}
+
 //-------------------------------------------------------------------------
 //
 // Put the window into full-screen mode
@@ -782,37 +792,19 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
   if (aFullScreen) {
     if (!mOriginalBounds)
       mOriginalBounds = new nsIntRect();
-    GetScreenBounds(*mOriginalBounds);
-    // convert dev pix to display pix for window manipulation
-    CSSToLayoutDeviceScale scale = GetDefaultScale();
-    mOriginalBounds->x = NSToIntRound(mOriginalBounds->x / scale.scale);
-    mOriginalBounds->y = NSToIntRound(mOriginalBounds->y / scale.scale);
-    mOriginalBounds->width = NSToIntRound(mOriginalBounds->width / scale.scale);
-    mOriginalBounds->height = NSToIntRound(mOriginalBounds->height / scale.scale);
+    *mOriginalBounds = GetScaledScreenBounds();
 
     // Move to top-left corner of screen and size to the screen dimensions
-    nsCOMPtr<nsIScreenManager> screenManager;
-    screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
-    NS_ASSERTION(screenManager, "Unable to grab screenManager.");
-    if (screenManager) {
-      nsCOMPtr<nsIScreen> screen = aScreen;
-      if (!screen) {
-        // no screen was passed in, use the one that the window is on
-        screenManager->ScreenForRect(mOriginalBounds->x,
-                                     mOriginalBounds->y,
-                                     mOriginalBounds->width,
-                                     mOriginalBounds->height,
-                                     getter_AddRefs(screen));
-      }
-
-      if (screen) {
-        int32_t left, top, width, height;
-        if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
-          Resize(left, top, width, height, true);
-        }
+    nsCOMPtr<nsIScreen> screen = aScreen;
+    if (!screen) {
+      screen = GetWidgetScreen();
+    }
+    if (screen) {
+      int32_t left, top, width, height;
+      if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
+        Resize(left, top, width, height, true);
       }
     }
-
   } else if (mOriginalBounds) {
     Resize(mOriginalBounds->x, mOriginalBounds->y, mOriginalBounds->width,
            mOriginalBounds->height, true);
@@ -1119,10 +1111,7 @@ nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
     aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
-  // At the moment, BasicCompositor is broken on mac.
-#ifndef XP_MACOSX
   aHints.AppendElement(LayersBackend::LAYERS_BASIC);
-#endif
 }
 
 nsIDocument*
@@ -1178,13 +1167,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     return;
   }
 
-  nsTArray<LayersBackend> backendHints;
-  GetPreferredCompositorBackends(backendHints);
-  if (backendHints.IsEmpty()) {
-    mLayerManager = nullptr;
-    return;
-  }
-
   CreateCompositorVsyncDispatcher();
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   nsRefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
@@ -1202,10 +1184,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager = nullptr;
+  nsTArray<LayersBackend> backendHints;
+  GetPreferredCompositorBackends(backendHints);
 
   bool success = false;
-  shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
-    backendHints, 0, &textureFactoryIdentifier, &success);
+  if (!backendHints.IsEmpty()) {
+    shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
+      backendHints, 0, &textureFactoryIdentifier, &success);
+  }
 
   ShadowLayerForwarder* lf = lm->AsShadowForwarder();
 
@@ -1747,6 +1733,36 @@ nsBaseWidget::GetRootAccessible()
 }
 
 #endif // ACCESSIBILITY
+
+nsIntRect
+nsBaseWidget::GetScaledScreenBounds()
+{
+  nsIntRect bounds;
+  GetScreenBounds(bounds);
+  CSSToLayoutDeviceScale scale = GetDefaultScale();
+  bounds.x = NSToIntRound(bounds.x / scale.scale);
+  bounds.y = NSToIntRound(bounds.y / scale.scale);
+  bounds.width = NSToIntRound(bounds.width / scale.scale);
+  bounds.height = NSToIntRound(bounds.height / scale.scale);
+  return bounds;
+}
+
+already_AddRefed<nsIScreen>
+nsBaseWidget::GetWidgetScreen()
+{
+  nsCOMPtr<nsIScreenManager> screenManager;
+  screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (!screenManager) {
+    return nullptr;
+  }
+
+  nsIntRect bounds = GetScaledScreenBounds();
+  nsCOMPtr<nsIScreen> screen;
+  screenManager->ScreenForRect(bounds.x, bounds.y,
+                               bounds.width, bounds.height,
+                               getter_AddRefs(screen));
+  return screen.forget();
+}
 
 nsresult
 nsIWidget::SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint, bool aLongTap,

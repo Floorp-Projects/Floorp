@@ -97,4 +97,4 @@ WaiveXrayWrapper::getPrototype(JSContext* cx, HandleObject wrapper, MutableHandl
            (!protop || WrapperFactory::WaiveXrayAndWrap(cx, protop));
 }
 
-}
+} // namespace xpc

@@ -49,8 +49,8 @@ private:
   ChangeType mChange;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

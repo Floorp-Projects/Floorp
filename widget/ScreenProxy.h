@@ -66,5 +66,6 @@ private:
 
 } // namespace widget
 } // namespace mozilla
+
 #endif
 

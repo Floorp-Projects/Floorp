@@ -24,7 +24,7 @@ class ErrorResult;
 
 namespace ipc {
   class PrincipalInfo;
-}
+} // namespace ipc
 
 namespace dom {
 
@@ -33,7 +33,7 @@ class Promise;
 
 namespace workers {
   class WorkerPrivate;
-}
+} // namespace workers
 
 namespace cache {
 

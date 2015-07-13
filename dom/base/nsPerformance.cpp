@@ -712,7 +712,7 @@ private:
   bool mEnabled;
 };
 
-} // anonymous namespace
+} // namespace
 
 /* static */ bool
 nsPerformance::IsEnabled(JSContext* aCx, JSObject* aGlobal)

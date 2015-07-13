@@ -125,7 +125,7 @@ public:
 
 #endif // defined MOZ_USE_WIFI_TICKLER
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_Tickler_h

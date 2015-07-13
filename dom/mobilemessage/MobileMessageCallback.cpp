@@ -315,6 +315,6 @@ MobileMessageCallback::NotifySetSmscAddressFailed(int32_t aError)
   return NS_OK;
 }
 
-} // namesapce mobilemessage
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

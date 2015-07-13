@@ -19,11 +19,11 @@
 namespace mozilla {
     namespace gl {
         class GLContext;
-    }
+    } // namespace gl
     namespace gfx {
         class DataSourceSurface;
-    }
-}
+    } // namespace gfx
+} // namespace mozilla
 
 namespace mozilla {
 namespace gl {
@@ -93,7 +93,8 @@ public:
     }
 };
 
-} /* namespace gfx */
+} // namespace gl
+
 } /* namespace mozilla */
 
 #endif /* SHARED_SURFACE_GL_H_ */

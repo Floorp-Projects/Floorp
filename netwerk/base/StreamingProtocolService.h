@@ -29,7 +29,8 @@ public:
   StreamingProtocolControllerService() {};
   static already_AddRefed<StreamingProtocolControllerService> GetInstance();
 };
-} // namespace dom
+
+} // namespace net
 } // namespace mozilla
 
 #endif //mozilla_net_StreamingProtocolControllerService_h

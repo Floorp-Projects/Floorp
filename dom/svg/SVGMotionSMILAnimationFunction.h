@@ -24,7 +24,7 @@ namespace mozilla {
 
 namespace dom {
 class SVGMPathElement;
-}
+} // namespace dom
 
 //----------------------------------------------------------------------
 // SVGMotionSMILAnimationFunction

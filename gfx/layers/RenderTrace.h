@@ -69,7 +69,7 @@ inline void renderTraceEventEnd(const char *aColor)
 
 #endif // MOZ_RENDERTRACE
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif //GFX_RENDERTRACE_H

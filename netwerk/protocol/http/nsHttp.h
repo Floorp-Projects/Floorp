@@ -251,7 +251,7 @@ private:
 };
 
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // nsHttp_h__

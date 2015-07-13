@@ -34,11 +34,11 @@ struct ScrollReflowState;
 namespace mozilla {
 namespace layers {
 class Layer;
-}
+} // namespace layers
 namespace layout {
 class ScrollbarActivity;
-}
-}
+} // namespace layout
+} // namespace mozilla
 
 namespace mozilla {
 
@@ -559,7 +559,7 @@ protected:
   static int32_t sVertScrollFraction;
 };
 
-}
+} // namespace mozilla
 
 /**
  * The scroll frame creates and manages the scrolling view

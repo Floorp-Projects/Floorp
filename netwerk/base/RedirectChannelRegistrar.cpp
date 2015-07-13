@@ -72,5 +72,5 @@ RedirectChannelRegistrar::DeregisterChannels(uint32_t id)
   return NS_OK;
 }
 
-}
-}
+} // namespace net
+} // namespace mozilla

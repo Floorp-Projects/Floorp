@@ -248,6 +248,6 @@ PowerManagerService::NewWakeLockOnBehalfOfProcess(const nsAString& aTopic,
   return wakelock.forget();
 }
 
-} // power
-} // dom
-} // mozilla
+} // namespace power
+} // namespace dom
+} // namespace mozilla

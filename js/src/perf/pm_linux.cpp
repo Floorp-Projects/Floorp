@@ -224,7 +224,7 @@ Impl::stop(PerfMeasurement* counters)
     }
 }
 
-} // anonymous namespace
+} // namespace
 
 
 namespace JS {

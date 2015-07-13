@@ -114,5 +114,5 @@ DisconnectableParent::OfflineNotification(nsISupports *aSubject)
   return NS_OK;
 }
 
-} // net namespace
-} // mozilla namespace
+} // namespace net
+} // namespace mozilla

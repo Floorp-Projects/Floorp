@@ -309,4 +309,5 @@ DNSRequestChild::Cancel(nsresult reason)
 }
 
 //------------------------------------------------------------------------------
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla

@@ -48,7 +48,7 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 namespace mozilla {
 namespace dom {
 class PCrashReporterChild;
-}
+} // namespace dom
 
 namespace plugins {
 

@@ -103,7 +103,7 @@ ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 already_AddRefed<InternalRequest>
 TypeUtils::ToInternalRequest(const RequestOrUSVString& aIn,

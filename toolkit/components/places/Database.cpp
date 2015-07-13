@@ -291,7 +291,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
 }
 
 
-} // Anonymous namespace
+} // namespace
 
 /**
  * An AsyncShutdown blocker in charge of shutting down places

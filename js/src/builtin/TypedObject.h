@@ -123,7 +123,7 @@ enum Kind {
     Array = JS_TYPEREPR_ARRAY_KIND
 };
 
-}
+} // namespace type
 
 ///////////////////////////////////////////////////////////////////////////
 // Typed Prototypes

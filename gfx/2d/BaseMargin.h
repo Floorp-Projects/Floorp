@@ -138,7 +138,7 @@ struct BaseMargin {
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BASEMARGIN_H_ */

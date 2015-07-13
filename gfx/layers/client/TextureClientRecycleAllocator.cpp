@@ -272,5 +272,5 @@ TextureClientRecycleAllocator::CreateOrRecycleForDrawing(
                                                aAllocFlags);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

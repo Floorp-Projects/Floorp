@@ -176,7 +176,7 @@ class BitSet::Iterator
     }
 };
 
-}
-}
+} // namespace jit
+} // namespace js
 
 #endif /* jit_BitSet_h */

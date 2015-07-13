@@ -40,6 +40,6 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     static const WaiveXrayWrapper singleton;
 };
 
-}
+} // namespace xpc
 
 #endif

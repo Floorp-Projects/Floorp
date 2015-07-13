@@ -26,6 +26,7 @@
 #include "MediaDecoder.h"
 // nsNPAPIPluginInstance must be included before nsIDocument.h, which is included in mozAutoDocUpdate.h.
 #include "nsNPAPIPluginInstance.h"
+#include "gfxPrefs.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -442,7 +443,7 @@ private:
   nsCString mCharset;
 };
 
-} // anonymous namespace
+} // namespace
 
 /* static */
 TimeDuration
@@ -2026,9 +2027,9 @@ namespace dom {
 namespace workers {
 extern bool IsCurrentThreadRunningChromeWorker();
 extern JSContext* GetCurrentThreadJSContext();
-}
-}
-}
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
 
 bool
 nsContentUtils::ThreadsafeIsCallerChrome()

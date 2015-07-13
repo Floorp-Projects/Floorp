@@ -89,6 +89,7 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
     char                           mHashBuf[DIGEST_LENGTH];
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpDigestAuth_h__

@@ -471,5 +471,5 @@ HTMLAnchorElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
          Link::SizeOfExcludingThis(aMallocSizeOf);
 }
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla

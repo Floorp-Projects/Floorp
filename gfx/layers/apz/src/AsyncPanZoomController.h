@@ -36,7 +36,7 @@ namespace ipc {
 
 class SharedMemoryBasic;
 
-}
+} // namespace ipc
 
 namespace layers {
 
@@ -1117,7 +1117,7 @@ private:
   bool mAsyncTransformAppliedToContent;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_PanZoomController_h

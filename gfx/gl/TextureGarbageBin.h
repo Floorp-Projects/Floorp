@@ -41,7 +41,7 @@ public:
     void EmptyGarbage();
 };
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif // TEXTUREGARBAGEBIN_H_

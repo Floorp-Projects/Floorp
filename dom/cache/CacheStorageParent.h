@@ -53,7 +53,7 @@ private:
   nsRefPtr<ManagerId> mManagerId;
 };
 
-} // namesapce cache
+} // namespace cache
 } // namespace dom
 } // namespace mozilla
 

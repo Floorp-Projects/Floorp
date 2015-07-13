@@ -32,7 +32,7 @@ namespace mozilla {
 
 namespace dom {
 class PrefSetting;
-}
+} // namespace dom
 
 class Preferences final : public nsIPrefService,
                           public nsIObserver,

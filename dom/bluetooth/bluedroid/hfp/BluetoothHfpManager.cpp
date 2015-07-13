@@ -54,7 +54,7 @@ namespace {
   // The mechanism should be revised once we know the exact time at which
   // Dialer stops playing.
   static int sBusyToneInterval = 3700; //unit: ms
-} // anonymous namespace
+} // namespace
 
 const int BluetoothHfpManager::MAX_NUM_CLIENTS = 1;
 

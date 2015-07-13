@@ -1637,7 +1637,7 @@ private:
   NS_ConvertASCIItoUTF16 mCookie;
 };
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 HttpBaseChannel::SetCookie(const char *aCookieHeader)
@@ -2762,6 +2762,6 @@ HttpBaseChannel::GetPerformance()
 
 //------------------------------------------------------------------------------
 
-}  // namespace net
-}  // namespace mozilla
+} // namespace net
+} // namespace mozilla
 

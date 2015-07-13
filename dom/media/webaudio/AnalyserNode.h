@@ -82,8 +82,8 @@ private:
   AlignedFallibleTArray<float> mOutputBuffer;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

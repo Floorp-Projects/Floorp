@@ -66,5 +66,6 @@ SpeechRecognitionResultList::Item(uint32_t aIndex)
   nsRefPtr<SpeechRecognitionResult> result = mItems.ElementAt(aIndex);
   return result.forget();
 }
+
 } // namespace dom
 } // namespace mozilla

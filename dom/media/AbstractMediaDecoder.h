@@ -20,7 +20,7 @@ namespace mozilla
 namespace layers
 {
   class ImageContainer;
-}
+} // namespace layers
 class MediaResource;
 class ReentrantMonitor;
 class VideoFrameContainer;
@@ -259,7 +259,7 @@ private:
   nsRefPtr<AbstractMediaDecoder> mDecoder;
 };
 
-}
+} // namespace mozilla
 
 #endif
 

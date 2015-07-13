@@ -25,5 +25,5 @@ SetThreadPriority(PlatformThreadId aThreadId,
           aThreadId, ThreadPriorityToString(aPriority));
 }
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

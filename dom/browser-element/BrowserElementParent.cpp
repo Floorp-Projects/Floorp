@@ -130,7 +130,7 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   return NS_SUCCEEDED(rv);
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

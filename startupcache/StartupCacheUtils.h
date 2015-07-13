@@ -36,6 +36,7 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
 
 NS_EXPORT nsresult
 PathifyURI(nsIURI *in, nsACString &out);
-}
-}
+} // namespace scache
+} // namespace mozilla
+
 #endif //nsStartupCacheUtils_h_

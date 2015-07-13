@@ -18,7 +18,7 @@ namespace mozilla {
 
 namespace Telemetry {
   enum ID : uint32_t;
-}
+} // namespace Telemetry
 
 namespace image {
 

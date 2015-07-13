@@ -119,5 +119,5 @@ void TexturePoolOGL::Shutdown()
   delete sTextures;
 }
 
-} // gl
-} // mozilla
+} // namespace gl
+} // namespace mozilla

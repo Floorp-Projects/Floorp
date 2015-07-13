@@ -70,5 +70,6 @@ public:
   virtual uint32_t GetVideoFrameRate() = 0;
 };
 
-}
+} // namespace mozilla
+
 #endif

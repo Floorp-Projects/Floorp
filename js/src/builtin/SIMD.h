@@ -61,7 +61,6 @@
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
-  V(clamp, Clamp<Float32x4>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
   V(select, (Select<Float32x4, Int32x4>), 3)                                          \
   V(store,  (Store<Float32x4, 4>), 3)                                                 \
@@ -114,7 +113,6 @@
   V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)
 
 #define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                            \
-  V(clamp, Clamp<Float64x2>, 3)                                                       \
   V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
   V(select, (Select<Float64x2, Int32x4>), 3)                                          \
   V(store,  (Store<Float64x2, 2>), 3)                                                 \

@@ -216,5 +216,5 @@ nsresult CacheStorage::ChooseApplicationCache(nsIURI* aURI,
   return NS_OK;
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

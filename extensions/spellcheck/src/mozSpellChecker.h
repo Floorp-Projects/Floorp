@@ -22,7 +22,7 @@
 namespace mozilla {
 class PRemoteSpellcheckEngineChild;
 class RemoteSpellcheckEngineChild;
-}
+} // namespace mozilla
 
 class mozSpellChecker : public nsISpellChecker
 {

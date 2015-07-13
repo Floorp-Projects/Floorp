@@ -61,7 +61,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 
 namespace JS {
     struct CodeSizes;
-}
+} // namespace JS
 
 namespace js {
 namespace jit {

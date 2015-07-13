@@ -82,4 +82,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_RESOURCEQUEUE_H_ */

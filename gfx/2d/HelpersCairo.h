@@ -234,15 +234,7 @@ CairoFormatToGfxFormat(cairo_format_t format)
   }
 }
 
-static inline SurfaceFormat
-GfxFormatForCairoSurface(cairo_surface_t* surface)
-{
-  if (cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE) {
-    return CairoFormatToGfxFormat(cairo_image_surface_get_format(surface));
-  }
-
-  return CairoContentToGfxFormat(cairo_surface_get_content(surface));
-}
+SurfaceFormat GfxFormatForCairoSurface(cairo_surface_t* surface);
 
 static inline void
 GfxMatrixToCairoMatrix(const Matrix& mat, cairo_matrix_t& retval)
@@ -319,7 +311,7 @@ private:
   cairo_matrix_t mSaveMatrix;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_HELPERSCAIRO_H_ */

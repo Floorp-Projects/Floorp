@@ -358,6 +358,6 @@ PathCG::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
 }
 
 
-}
+} // namespace gfx
 
-}
+} // namespace mozilla

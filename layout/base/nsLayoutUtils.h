@@ -80,8 +80,8 @@ struct RectCornerRadii;
 } // namespace gfx
 namespace layers {
 class Layer;
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 namespace mozilla {
 
@@ -2825,8 +2825,8 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
 
     void MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView);
 
-  }
-}
+  } // namespace layout
+} // namespace mozilla
 
 class nsSetAttrRunnable : public nsRunnable
 {

@@ -1618,7 +1618,7 @@ OpenFile(nsIPrincipal* aPrincipal,
   return JS::AsmJSCache_Success;
 }
 
-} // anonymous namespace
+} // namespace
 
 typedef uint32_t AsmJSCookieType;
 static const uint32_t sAsmJSCookie = 0x600d600d;

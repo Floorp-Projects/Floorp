@@ -9,5 +9,5 @@
 namespace mozilla {
 namespace media {
 
-}
-}
+} // namespace media
+} // namespace mozilla

@@ -73,5 +73,7 @@ protected:
   bool mInitialized;
   bool mIsWritingComplete;
 };
-}
+
+} // namespace mozilla
+
 #endif

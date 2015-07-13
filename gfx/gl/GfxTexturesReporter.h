@@ -89,7 +89,7 @@ private:
   int32_t mBytes;
 };
 
-}
-}
+} // namespace gl
+} // namespace mozilla
 
 #endif // GFXTEXTURESREPORTER_H_

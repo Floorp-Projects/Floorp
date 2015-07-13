@@ -145,7 +145,7 @@ private:
   nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
-} // anonymous namespace
+} // namespace
 
 ServiceWorkerManagerParent::ServiceWorkerManagerParent()
   : mService(ServiceWorkerManagerService::GetOrCreate())
@@ -313,6 +313,6 @@ ServiceWorkerManagerParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-} // workers namespace
-} // dom namespace
-} // mozilla namespace
+} // namespace workers
+} // namespace dom
+} // namespace mozilla

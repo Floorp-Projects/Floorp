@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace gfx {
 class Matrix;
-}
+} // namespace gfx
 
 namespace layers {
 
@@ -425,7 +425,7 @@ protected:
   BufferSizePolicy      mBufferSizePolicy;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* ROTATEDBUFFER_H_ */

@@ -92,19 +92,16 @@ JS_ObjectToOuterObject(JSContext* cx, HandleObject obj)
     return GetOuterObject(cx, obj);
 }
 
-JSObject*
-js::NonNullObject(JSContext* cx, const Value& v)
+void
+js::ReportNotObject(JSContext* cx, const Value& v)
 {
-    if (v.isPrimitive()) {
-        RootedValue value(cx, v);
-        UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
-        if (!bytes)
-            return nullptr;
+    MOZ_ASSERT(!v.isObject());
+
+    RootedValue value(cx, v);
+    UniquePtr<char[], JS::FreePolicy> bytes =
+        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
+    if (bytes)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
-        return nullptr;
-    }
-    return &v.toObject();
 }
 
 const char*
@@ -292,12 +289,9 @@ js::ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors
                          MutableHandle<PropertyDescriptor> desc)
 {
     // step 2
-    if (!descval.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
-                             InformalValueTypeName(descval));
+    RootedObject obj(cx, NonNullObject(cx, descval));
+    if (!obj)
         return false;
-    }
-    RootedObject obj(cx, &descval.toObject());
 
     // step 3
     desc.clear();
@@ -548,6 +542,19 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
 
         MOZ_ASSERT(nobj->lastProperty()->slotSpan() == last->slotSpan());
         JS_ALWAYS_TRUE(nobj->setLastProperty(cx, last));
+
+        // Ordinarily ArraySetLength handles this, but we're going behind its back
+        // right now, so we must do this manually.
+        //
+        // ArraySetLength also implements the capacity <= length invariant for
+        // arrays with non-writable length.  We don't need to do anything special
+        // for that, because capacity was zeroed out by preventExtensions.  (See
+        // the assertion about getDenseCapacity above.)
+        if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
+            if (!obj->as<ArrayObject>().maybeCopyElementsForWrite(cx))
+                return false;
+            obj->as<ArrayObject>().getElementsHeader()->setNonwritableArrayLength();
+        }
     } else {
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
@@ -584,21 +591,6 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             if (!DefineProperty(cx, obj, id, desc))
                 return false;
         }
-    }
-
-    // Ordinarily ArraySetLength handles this, but we're going behind its back
-    // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the DefineProperty call in the above code will do
-    // this for us.
-    //
-    // ArraySetLength also implements the capacity <= length invariant for
-    // arrays with non-writable length.  We don't need to do anything special
-    // for that, because capacity was zeroed out by preventExtensions.  (See
-    // the assertion before the if-else above.)
-    if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
-        if (!obj->as<ArrayObject>().maybeCopyElementsForWrite(cx))
-            return false;
-        obj->as<ArrayObject>().getElementsHeader()->setNonwritableArrayLength();
     }
 
     return true;

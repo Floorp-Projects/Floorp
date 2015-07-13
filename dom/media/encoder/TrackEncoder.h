@@ -312,5 +312,6 @@ protected:
   VideoSegment mRawSegment;
 };
 
-}
+} // namespace mozilla
+
 #endif

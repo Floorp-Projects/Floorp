@@ -39,6 +39,6 @@ SVGAnimateElement::AnimationFunction()
   return mAnimationFunction;
 }
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla
 

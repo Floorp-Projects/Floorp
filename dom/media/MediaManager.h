@@ -48,7 +48,7 @@ namespace mozilla {
 namespace dom {
 struct MediaStreamConstraints;
 struct MediaTrackConstraintSet;
-}
+} // namespace dom
 
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define MM_LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)

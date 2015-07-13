@@ -46,4 +46,5 @@ private:
 
 } // namespace net
 } // namespace mozilla
+
 #endif // mozilla_net_DNSRequestParent_h

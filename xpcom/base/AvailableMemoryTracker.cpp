@@ -477,7 +477,7 @@ nsMemoryPressureWatcher::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace AvailableMemoryTracker {

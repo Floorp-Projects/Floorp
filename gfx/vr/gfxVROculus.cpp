@@ -234,7 +234,7 @@ FromFovPort(const ovrFovPort& aFOV)
   return fovInfo;
 }
 
-} // anonymous namespace
+} // namespace
 
 HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
   : VRHMDInfo(VRHMDType::Oculus)

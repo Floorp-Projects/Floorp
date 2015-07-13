@@ -255,6 +255,7 @@ private:
     nsRefPtr<AppDataClearObserver> mObserver;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpAuthCache_h__

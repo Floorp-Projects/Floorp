@@ -78,8 +78,8 @@ private:
   uint32_t mNumberOfInputChannels;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

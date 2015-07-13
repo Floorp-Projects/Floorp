@@ -37,8 +37,8 @@ namespace mozilla {
 namespace plugins {
 class PluginAsyncSurrogate;
 class PluginTag;
-} // namespace mozilla
 } // namespace plugins
+} // namespace mozilla
 
 class nsNPAPIPlugin;
 class nsIFile;

@@ -220,5 +220,5 @@ SurfaceFactory_IOSurface::CreateShared(const gfx::IntSize& size)
     return SharedSurface_IOSurface::Create(ioSurf, mGL, hasAlpha);
 }
 
-}
-}
+} // namespace gl
+} // namespace mozilla

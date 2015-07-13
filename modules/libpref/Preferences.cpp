@@ -395,7 +395,7 @@ class AddPreferencesMemoryReporterRunnable : public nsRunnable
     return RegisterStrongMemoryReporter(new PreferenceServiceReporter());
   }
 };
-} // anonymous namespace
+} // namespace
 
 // static
 Preferences*

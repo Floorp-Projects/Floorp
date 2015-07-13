@@ -259,6 +259,6 @@ protected:
   DebugOnly<bool> mExtraClipUsed;
 };
 
-}
+} // namespace mozilla
 
 #endif /* DISPLAYLISTCLIPSTATE_H_ */

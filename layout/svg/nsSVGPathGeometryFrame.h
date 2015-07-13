@@ -18,8 +18,8 @@
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 class gfxContext;
 class nsDisplaySVGPathGeometry;

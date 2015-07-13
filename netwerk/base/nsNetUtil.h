@@ -984,8 +984,8 @@ bool InScriptableRange(int64_t val);
 // Make sure a 64bit value can be captured by JS MAX_SAFE_INTEGER
 bool InScriptableRange(uint64_t val);
 
+} // namespace net
 } // namespace mozilla
-} // namespace mozilla::net
 
 // Include some function bodies for callers with external linkage
 #ifndef MOZILLA_INTERNAL_API

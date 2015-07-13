@@ -366,5 +366,5 @@ BiquadFilterNode::SendGainToStream(AudioNode* aNode)
   SendTimelineParameterToStream(This, BiquadFilterNodeEngine::GAIN, *This->mGain);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

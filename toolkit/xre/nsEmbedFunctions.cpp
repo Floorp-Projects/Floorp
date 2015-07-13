@@ -220,8 +220,8 @@ XRE_ChildProcessTypeToString(GeckoProcessType aProcessType)
 namespace mozilla {
 namespace startup {
 GeckoProcessType sChildProcessType = GeckoProcessType_Default;
-}
-}
+} // namespace startup
+} // namespace mozilla
 
 void
 XRE_SetProcessType(const char* aProcessTypeString)
@@ -831,7 +831,8 @@ TestShellParent* GetOrCreateTestShellParent()
     }
     return tsp;
 }
-}
+
+} // namespace
 
 bool
 XRE_SendTestShellCommand(JSContext* aCx,

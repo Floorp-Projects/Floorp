@@ -22,5 +22,5 @@ MediaElementAudioSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aG
   return MediaElementAudioSourceNodeBinding::Wrap(aCx, this, aGivenProto);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

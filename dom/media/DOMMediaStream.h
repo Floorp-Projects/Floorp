@@ -48,12 +48,12 @@ class VideoTrack;
 class AudioTrackList;
 class VideoTrackList;
 class MediaTrackListListener;
-}
+} // namespace dom
 
 namespace layers {
 class ImageContainer;
 class OverlayImage;
-}
+} // namespace layers
 
 class MediaStreamDirectListener;
 
@@ -418,6 +418,6 @@ private:
 #endif
 };
 
-}
+} // namespace mozilla
 
 #endif /* NSDOMMEDIASTREAM_H_ */

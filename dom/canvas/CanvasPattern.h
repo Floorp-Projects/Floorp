@@ -17,7 +17,7 @@ class nsIPrincipal;
 namespace mozilla {
 namespace gfx {
 class SourceSurface;
-}
+} // namespace gfx
 
 namespace dom {
 class SVGMatrix;
@@ -74,7 +74,7 @@ public:
   const RepeatMode mRepeat;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_CanvasPattern_h

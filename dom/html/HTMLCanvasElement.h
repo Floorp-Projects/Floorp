@@ -23,10 +23,10 @@ namespace mozilla {
 namespace layers {
 class CanvasLayer;
 class LayerManager;
-}
+} // namespace layers
 namespace gfx {
 class SourceSurface;
-}
+} // namespace gfx
 
 namespace dom {
 class CanvasCaptureMediaStream;

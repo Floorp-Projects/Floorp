@@ -57,8 +57,8 @@ XBLChildrenElement::ParseAttribute(int32_t aNamespaceID,
   return false;
 }
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla
 
 using namespace mozilla::dom;
 

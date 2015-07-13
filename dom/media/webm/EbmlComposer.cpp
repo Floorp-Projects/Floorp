@@ -212,4 +212,4 @@ EbmlComposer::EbmlComposer()
   , mChannels(0)
 {}
 
-}
+} // namespace mozilla

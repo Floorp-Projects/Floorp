@@ -397,5 +397,5 @@ Matrix4x4::SetRotationFromQuaternion(const Quaternion& q)
   _44 = 1.0f;
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

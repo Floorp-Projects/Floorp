@@ -34,7 +34,7 @@ namespace {
   bool sInShutdown = false;
   static BluetoothA2dpInterface* sBtA2dpInterface;
   static BluetoothAvrcpInterface* sBtAvrcpInterface;
-} // anonymous namespace
+} // namespace
 
 /*
  * This function maps attribute id and returns corresponding values

@@ -40,8 +40,8 @@ bool IsNSSErrorCode(PRErrorCode code);
 nsresult GetXPCOMFromNSSError(PRErrorCode code);
 bool ErrorIsOverridable(PRErrorCode code);
 
-} // psm
-} // mozilla
+} // namespace psm
+} // namespace mozilla
 
 #define NS_NSSERRORSSERVICE_CID \
   { 0x9ef18451, 0xa157, 0x4d17, { 0x81, 0x32, 0x47, 0xaf, 0xef, 0x21, 0x36, 0x89 } }

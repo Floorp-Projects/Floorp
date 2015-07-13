@@ -99,7 +99,8 @@ protected:
     return static_cast<BasicLayerManager*>(mManager);
   }
 };
-}
-}
+
+} // namespace layers
+} // namespace mozilla
 
 #endif

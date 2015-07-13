@@ -15,6 +15,6 @@ namespace CommandLineServiceMac {
   // SetupMacCommandLine. Returns false if no command line is
   // being set up or the addition fails for any other reason.
   bool AddURLToCurrentCommandLine(const char* aURL);
-}
+} // namespace CommandLineServiceMac
 
 #endif // nsCommandLineServiceMac_h_

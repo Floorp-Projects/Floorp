@@ -91,4 +91,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif // AudioSinkFilter_h_

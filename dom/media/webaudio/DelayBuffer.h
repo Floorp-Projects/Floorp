@@ -110,6 +110,6 @@ private:
 #endif
 };
 
-} // mozilla
+} // namespace mozilla
 
 #endif // DelayBuffer_h_

@@ -565,7 +565,7 @@ namespace {
   const uint32_t NOT_VISITED = UINT32_MAX;
   // Value of mCycleMarker for ordered streams in muted cycles.
   const uint32_t IN_MUTED_CYCLE = 1;
-}
+} // namespace
 
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
@@ -1671,7 +1671,7 @@ public:
   NS_DECL_NSIOBSERVER
 };
 
-}
+} // namespace
 
 void
 MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
@@ -3008,7 +3008,7 @@ ForceShutdownEnumerator(const uint32_t& /* aAudioChannel */,
   return PL_DHASH_NEXT;
 }
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
@@ -3535,4 +3535,4 @@ ProcessedMediaStream::AddInput(MediaInputPort* aPort)
   GraphImpl()->SetStreamOrderDirty();
 }
 
-}
+} // namespace mozilla

@@ -104,7 +104,7 @@ MOZ_END_EXTERN_C
 namespace mozilla {
 namespace dmd {
 struct DMDFuncs;
-}
+} // namespace dmd
 
 /* Callbacks to register debug file handles for Poison IO interpose.
  * See Mozilla(|Un)RegisterDebugHandle in xpcom/build/PoisonIOInterposer.h */

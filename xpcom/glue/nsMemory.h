@@ -117,7 +117,7 @@ struct AlignmentTestStruct
   char c;
   T t;
 };
-}
+} // namespace mozilla
 
 #define NS_ALIGNMENT_OF(t_) \
   (sizeof(mozilla::AlignmentTestStruct<t_>) - sizeof(t_))

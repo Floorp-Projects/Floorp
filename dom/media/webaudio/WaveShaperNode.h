@@ -69,7 +69,7 @@ private:
   OverSampleType mType;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

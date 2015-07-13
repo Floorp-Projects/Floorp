@@ -18,7 +18,7 @@ namespace dom {
 namespace indexedDB {
 class IDBObjectStore;
 class IDBRequest;
-}
+} // namespace indexedDB
 
 class DataStoreRevisionCallback;
 

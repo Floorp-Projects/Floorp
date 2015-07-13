@@ -246,7 +246,7 @@ namespace PlacesFolderConversion {
 
     return NS_OK;
   }
-}
+} // namespace PlacesFolderConversion
 
 // nsNavHistory::QueryStringToQueries
 //

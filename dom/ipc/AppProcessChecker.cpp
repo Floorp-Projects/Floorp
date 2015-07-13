@@ -28,8 +28,8 @@ using namespace mozilla::services;
 namespace mozilla {
 namespace dom {
 class PContentParent;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsIPrincipal;
 #endif

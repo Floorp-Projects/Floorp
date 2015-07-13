@@ -14,7 +14,7 @@ namespace mozilla {
 
 namespace layers {
 class ImageContainer;
-}
+} // namespace layers
 
 /**
  * Keeps a record of image containers for mask layers, containers are mapped
@@ -119,6 +119,8 @@ public:
     PixelRoundedRect() = delete;
   };
 
+  struct MaskLayerImageKeyRef;
+
   /**
    * A key to identify cached image containers.
    * The const-ness of this class is with respect to its use as a key into a
@@ -131,16 +133,15 @@ public:
    */
   struct MaskLayerImageKey
   {
+    friend struct MaskLayerImageKeyRef;
+
     MaskLayerImageKey();
     MaskLayerImageKey(const MaskLayerImageKey& aKey);
 
     ~MaskLayerImageKey();
 
-    void AddRef() const { ++mLayerCount; }
-    void Release() const
-    {
-      NS_ASSERTION(mLayerCount > 0, "Inconsistent layer count");
-      --mLayerCount;
+    bool HasZeroLayerCount() const {
+      return mLayerCount == 0;
     }
 
     PLDHashNumber Hash() const
@@ -159,11 +160,54 @@ public:
       return mRoundedClipRects == aOther.mRoundedClipRects;
     }
 
-    mutable uint32_t mLayerCount;
     nsTArray<PixelRoundedRect> mRoundedClipRects;
+  private:
+    void IncLayerCount() const { ++mLayerCount; }
+    void DecLayerCount() const
+    {
+      NS_ASSERTION(mLayerCount > 0, "Inconsistent layer count");
+      --mLayerCount;
+    }
+    mutable uint32_t mLayerCount;
   };
 
-  
+  /**
+   * This struct maintains a reference to a MaskLayerImageKey, via a variant on
+   * refcounting. When a key is passed in via Reset(), we increment the
+   * passed-in key's mLayerCount, and we decrement its mLayerCount when we're
+   * destructed (or when the key is replaced via a second Reset() call).
+   *
+   * However, unlike standard refcounting smart-pointers, this object does
+   * *not* delete the tracked MaskLayerImageKey -- instead, deletion happens
+   * in MaskLayerImageCache::Sweep(), for any keys whose mLayerCount is 0.
+   */
+  struct MaskLayerImageKeyRef
+  {
+    ~MaskLayerImageKeyRef()
+    {
+      if (mRawPtr) {
+        mRawPtr->DecLayerCount();
+      }
+    }
+
+    MaskLayerImageKeyRef() : mRawPtr(nullptr) {}
+    MaskLayerImageKeyRef(const MaskLayerImageKeyRef&) = delete;
+    void operator=(const MaskLayerImageKeyRef&) = delete;
+
+    void Reset(const MaskLayerImageKey* aPtr)
+    {
+      MOZ_ASSERT(aPtr, "Cannot initialize a MaskLayerImageKeyRef with a null pointer");
+      aPtr->IncLayerCount();
+      if (mRawPtr) {
+        mRawPtr->DecLayerCount();
+      }
+      mRawPtr = aPtr;
+    }
+
+  private:
+    const MaskLayerImageKey* mRawPtr;
+  };
+
   // Find an image container for aKey, returns nullptr if there is no suitable
   // cached image. If there is an image, then aKey is set to point at the stored
   // key for the image.
@@ -236,7 +280,7 @@ protected:
 };
 
 
-}
+} // namespace mozilla
 
 
 #endif

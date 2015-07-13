@@ -1723,7 +1723,7 @@ private:
   nsCOMPtr<nsIDownload> mResult;
   nsCOMPtr<nsIDownloadManagerResult> mCallback;
 };
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 nsDownloadManager::GetDownloadByGUID(const nsACString& aGUID,

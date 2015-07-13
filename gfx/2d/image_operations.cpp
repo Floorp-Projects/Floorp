@@ -155,7 +155,7 @@ void ComputeFilters(ImageOperations::ResizeMethod method,
   output->PaddingForSIMD(8);
 }
 
-}
+} // namespace resize
 
 ImageOperations::ResizeMethod ResizeMethodToAlgorithmMethod(
     ImageOperations::ResizeMethod method) {
@@ -388,4 +388,4 @@ SkBitmap ImageOperations::Resize(const SkBitmap& source,
                 dest_pixels);
 }
 
-}  // namespace skia
+} // namespace skia

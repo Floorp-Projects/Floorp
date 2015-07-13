@@ -58,6 +58,7 @@
         screenX="4" screenY="4"
         fullscreenbutton="true"
         sizemode="normal"
+        retargetdocumentfocus="urlbar"
         persist="screenX screenY width height sizemode">
 
 # All JS files which are not content (only) dependent that browser.xul

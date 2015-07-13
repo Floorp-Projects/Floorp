@@ -10,4 +10,4 @@ namespace mozilla {
 
 const unused_t unused = unused_t();
 
-}  // namespace mozilla
+} // namespace mozilla

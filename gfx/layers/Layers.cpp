@@ -49,8 +49,6 @@ FILEOrDefault(FILE* aFile)
 }
 
 typedef FrameMetrics::ViewID ViewID;
-const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
-const FrameMetrics FrameMetrics::sNullMetrics;
 
 using namespace mozilla::gfx;
 

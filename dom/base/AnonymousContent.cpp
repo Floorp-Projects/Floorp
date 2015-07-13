@@ -138,5 +138,5 @@ AnonymousContent::WrapObject(JSContext* aCx,
   return AnonymousContentBinding::Wrap(aCx, this, aGivenProto, aReflector);
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

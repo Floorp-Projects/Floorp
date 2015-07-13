@@ -470,7 +470,7 @@ public:
                                 const nsTArray<nsIntRegion>& aInputExtents);
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // __FilterSupport_h

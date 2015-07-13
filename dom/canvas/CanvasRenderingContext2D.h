@@ -35,7 +35,7 @@ class nsXULElement;
 namespace mozilla {
 namespace gl {
 class SourceSurface;
-}
+} // namespace gl
 
 namespace dom {
 class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
@@ -991,7 +991,7 @@ protected:
     mozilla::gfx::Float miterLimit;
     mozilla::gfx::Float globalAlpha;
     mozilla::gfx::Float shadowBlur;
-    FallibleTArray<mozilla::gfx::Float> dash;
+    nsTArray<mozilla::gfx::Float> dash;
     mozilla::gfx::Float dashOffset;
 
     mozilla::gfx::CompositionOp op;
@@ -1052,7 +1052,7 @@ protected:
   friend class CanvasDrawObserver;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* CanvasRenderingContext2D_h */

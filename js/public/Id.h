@@ -191,6 +191,6 @@ DispatchIdTyped(F f, jsid& id, Args&&... args)
 
 #undef id
 
-}
+} // namespace js
 
 #endif /* js_Id_h */

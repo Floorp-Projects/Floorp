@@ -279,8 +279,8 @@ struct GradientStop
   Color color;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #if defined(XP_WIN) && defined(MOZ_GFX)
 #ifdef GFX2D_INTERNAL
@@ -322,6 +322,7 @@ enum SideBits {
   eSideBitsLeftRight = eSideBitsLeft | eSideBitsRight,
   eSideBitsAll = eSideBitsTopBottom | eSideBitsLeftRight
 };
+
 } // namespace mozilla
 
 #define NS_SIDE_TOP    mozilla::eSideTop

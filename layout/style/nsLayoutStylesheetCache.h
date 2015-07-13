@@ -21,8 +21,8 @@ namespace mozilla {
 class CSSStyleSheet;
 namespace css {
 class Loader;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 class nsLayoutStylesheetCache final
  : public nsIObserver

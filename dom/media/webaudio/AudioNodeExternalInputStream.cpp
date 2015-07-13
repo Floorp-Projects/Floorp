@@ -195,4 +195,4 @@ AudioNodeExternalInputStream::IsEnabled()
   return ((MediaStreamAudioSourceNodeEngine*)Engine())->IsEnabled();
 }
 
-}
+} // namespace mozilla

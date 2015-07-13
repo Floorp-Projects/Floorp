@@ -547,6 +547,6 @@ private:
   nsRefPtr<MediaStreamGraphImpl> mShutdownGrip;
 };
 
-}
+} // namespace mozilla
 
 #endif // GRAPHDRIVER_H_

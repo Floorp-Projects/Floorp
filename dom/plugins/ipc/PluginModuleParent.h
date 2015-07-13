@@ -41,7 +41,7 @@ class ProfileGatherer;
 namespace dom {
 class PCrashReporterParent;
 class CrashReporterParent;
-}
+} // namespace dom
 
 namespace plugins {
 //-----------------------------------------------------------------------------

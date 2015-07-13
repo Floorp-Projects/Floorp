@@ -244,5 +244,5 @@ ProbeManager::StopSession()
   return NS_OK;
 }
 
-}  // namespace probes
-}  // namespace mozilla
+} // namespace probes
+} // namespace mozilla

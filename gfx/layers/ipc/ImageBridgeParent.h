@@ -24,12 +24,12 @@ class MessageLoop;
 
 namespace base {
 class Thread;
-}
+} // namespace base
 
 namespace mozilla {
 namespace ipc {
 class Shmem;
-}
+} // namespace ipc
 
 namespace layers {
 
@@ -171,7 +171,7 @@ private:
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // gfx_layers_ipc_ImageBridgeParent_h_

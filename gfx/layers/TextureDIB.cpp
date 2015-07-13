@@ -292,8 +292,7 @@ DIBTextureHost::DIBTextureHost(TextureFlags aFlags,
   MOZ_ASSERT(mSurface);
 
   mSize = mSurface->GetSize();
-  mFormat = ImageFormatToSurfaceFormat(
-    gfxPlatform::GetPlatform()->OptimalFormatForContent(mSurface->GetContentType()));
+  mFormat = mSurface->GetSurfaceFormat();
 }
 
 void

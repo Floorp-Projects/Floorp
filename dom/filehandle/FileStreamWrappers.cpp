@@ -83,7 +83,7 @@ private:
   nsRefPtr<FileHelper> mFileHelper;
 };
 
-} // anonymous namespace
+} // namespace
 
 FileStreamWrapper::FileStreamWrapper(nsISupports* aFileStream,
                                      FileHelper* aFileHelper,

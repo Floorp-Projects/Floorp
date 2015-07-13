@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundParentImpl;
-}
+} // namespace ipc
 
 namespace layout {
 
@@ -49,7 +49,7 @@ private:
   nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
 };
 
-} //layout
-} //mozilla
+} // namespace layout
+} // namespace mozilla
 
 #endif  //mozilla_layout_ipc_VsyncParent_h

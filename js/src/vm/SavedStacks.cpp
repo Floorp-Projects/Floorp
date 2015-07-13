@@ -487,7 +487,7 @@ public:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-} // anonymous namespace
+} // namespace
 
 static inline js::SavedFrame*
 UnwrapSavedFrame(JSContext* cx, HandleObject obj, bool& skippedAsync)

@@ -130,5 +130,6 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver *aObserver)
 
     return NS_OK;
 }
-} // namespace mozilla::net
+
+} // namespace net
 } // namespace mozilla

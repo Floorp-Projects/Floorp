@@ -98,5 +98,5 @@ DataStoreRevision::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

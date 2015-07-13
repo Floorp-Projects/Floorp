@@ -225,4 +225,5 @@ void HRTFDatabaseLoader::shutdown()
         delete loaderMap;
     }
 }
+
 } // namespace WebCore

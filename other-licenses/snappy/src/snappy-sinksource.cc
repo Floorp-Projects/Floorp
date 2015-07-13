@@ -69,4 +69,4 @@ char* UncheckedByteArraySink::GetAppendBuffer(size_t len, char* scratch) {
 }
 
 
-}
+} // namespace snappy

@@ -1594,7 +1594,7 @@ namespace JS {
 extern JS_PUBLIC_API(JSObject*)
 CurrentGlobalOrNull(JSContext* cx);
 
-}
+} // namespace JS
 
 /*
  * Initialize the 'Reflect' object on a global object.
@@ -4043,7 +4043,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(AutoSetAsyncStackForNewCalls)
     ~AutoSetAsyncStackForNewCalls();
 };
 
-}
+} // namespace JS
 
 /************************************************************************/
 

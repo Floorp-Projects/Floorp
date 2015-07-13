@@ -26,7 +26,7 @@ MaskLayerImageCache::SweepFunc(MaskLayerImageEntry* aEntry,
 {
   const MaskLayerImageCache::MaskLayerImageKey* key = aEntry->mKey;
 
-  if (key->mLayerCount == 0) {
+  if (key->HasZeroLayerCount()) {
     return PL_DHASH_REMOVE;
   }
 
@@ -57,24 +57,16 @@ MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey, ImageContainer* aCo
   entry->mContainer = aContainer;
 }
 
-// This case is particularly 'clever' because it uses AddRef/Release to track the use
-// not to release the object.
-template<>
-struct HasDangerousPublicDestructor<MaskLayerImageCache::MaskLayerImageKey>
-{
-  static const bool value = true;
-};
-
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
-  : mLayerCount(0)
-  , mRoundedClipRects()
+  : mRoundedClipRects()
+  , mLayerCount(0)
 {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(const MaskLayerImageKey& aKey)
-  : mLayerCount(aKey.mLayerCount)
-  , mRoundedClipRects(aKey.mRoundedClipRects)
+  : mRoundedClipRects(aKey.mRoundedClipRects)
+  , mLayerCount(aKey.mLayerCount)
 {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
@@ -84,4 +76,4 @@ MaskLayerImageCache::MaskLayerImageKey::~MaskLayerImageKey()
   MOZ_COUNT_DTOR(MaskLayerImageKey);
 }
 
-}
+} // namespace mozilla

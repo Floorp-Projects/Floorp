@@ -33,8 +33,8 @@ private:
   virtual ~GamepadServiceTest();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
 
 #define NS_GAMEPAD_TEST_CID \
 { 0xfb1fcb57, 0xebab, 0x4cf4, \

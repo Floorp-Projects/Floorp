@@ -20,8 +20,8 @@ class WidgetEvent;
 class WidgetGUIEvent;
 namespace dom {
 class HTMLInputElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * This frame type is used for <input type=number>.

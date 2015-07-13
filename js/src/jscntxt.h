@@ -26,7 +26,7 @@ namespace js {
 namespace jit {
 class JitContext;
 class DebugModeOSRVolatileJitFrameIterator;
-}
+} // namespace jit
 
 typedef HashSet<JSObject*> ObjectSet;
 typedef HashSet<Shape*> ShapeSet;

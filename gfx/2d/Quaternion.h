@@ -94,7 +94,7 @@ public:
   }
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

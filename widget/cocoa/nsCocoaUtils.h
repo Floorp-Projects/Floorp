@@ -49,8 +49,8 @@ class nsIWidget;
 namespace mozilla {
 namespace gfx {
 class SourceSurface;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {

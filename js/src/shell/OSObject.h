@@ -26,7 +26,7 @@ enum PathResolutionMode {
 JSString*
 ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode resolveMode);
 
-}
-}
+} // namespace shell
+} // namespace js
 
 #endif /* shell_OSObject_h */

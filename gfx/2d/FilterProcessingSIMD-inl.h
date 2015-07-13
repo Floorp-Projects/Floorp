@@ -1077,5 +1077,5 @@ ApplyArithmeticCombine_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInpu
   return target.forget();
 }
 
-} // namespace mozilla
 } // namespace gfx
+} // namespace mozilla

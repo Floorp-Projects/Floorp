@@ -46,5 +46,7 @@ private:
   ogg_page mOggPage;
   ogg_packet mPacket;
 };
-}
+
+} // namespace mozilla
+
 #endif

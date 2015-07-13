@@ -52,5 +52,7 @@ private:
 };
 
 }
+
 } // namespace mozilla::net
+
 #endif

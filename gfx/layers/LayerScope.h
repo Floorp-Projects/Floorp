@@ -56,7 +56,7 @@ private:
     static void EndFrame();
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_LAYERSCOPE_H */

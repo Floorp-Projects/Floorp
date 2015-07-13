@@ -84,5 +84,6 @@ private:
   int mChannels;
 };
 
-}
+} // namespace mozilla
+
 #endif

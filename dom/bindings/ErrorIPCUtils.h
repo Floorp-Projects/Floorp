@@ -65,6 +65,6 @@ struct ParamTraits<mozilla::ErrorResult>
   }
 };
 
-}
+} // namespace IPC
 
 #endif

@@ -24,7 +24,7 @@ private:
   ~Module();
 };
 
-}
-}
+} // namespace reflect
+} // namespace mozilla
 
 #endif

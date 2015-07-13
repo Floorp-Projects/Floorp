@@ -158,7 +158,7 @@ LogMessageRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 // nsIConsoleService methods
 NS_IMETHODIMP

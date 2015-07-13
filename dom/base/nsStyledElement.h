@@ -20,8 +20,8 @@
 namespace mozilla {
 namespace css {
 class StyleRule;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 typedef mozilla::dom::Element nsStyledElementBase;
 

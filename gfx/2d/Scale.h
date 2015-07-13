@@ -30,7 +30,7 @@ GFX2D_API bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int3
                      uint8_t* dstData, int32_t dstWidth, int32_t dstHeight, int32_t dstStride,
                      SurfaceFormat format);
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_BLUR_H_ */
