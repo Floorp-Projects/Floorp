@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(6064615a-a782-4d08-86db-26ef3851208a)]
+[scriptable, uuid(47fa312b-2ad1-4b80-8a0a-c9822e2d1ec9)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1342,7 +1342,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * test video, does not mean that all h264 video decoding will be done
    * in hardware.
    */
-  readonly attribute boolean supportsHardwareH264Decoding;
+  readonly attribute AString supportsHardwareH264Decoding;
 
   /**
    * Record (and return) frame-intervals for frames which were presented
