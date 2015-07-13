@@ -2629,6 +2629,29 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     }
   }
 
+  // Check if the starting content is the same as the content assigned to the
+  // retargetdocumentfocus attribute. Is so, we don't want to start searching
+  // from there but instead from the beginning of the document. Otherwise, the
+  // content that appears before the retargetdocumentfocus element will never
+  // get checked as it will be skipped when the focus is retargetted to it.
+  if (forDocumentNavigation && doc->IsXULDocument()) {
+    nsAutoString retarget;
+
+    if (rootContent->GetAttr(kNameSpaceID_None,
+                             nsGkAtoms::retargetdocumentfocus, retarget)) {
+      nsIContent* retargetElement = doc->GetElementById(retarget);
+      // The common case here is the urlbar where focus is on the anonymous
+      // input inside the textbox, but the retargetdocumentfocus attribute
+      // refers to the textbox. The Contains check will return false and the
+      // ContentIsDescendantOf check will return true in this case.
+      if (retargetElement && (retargetElement == startContent ||
+                              (!retargetElement->Contains(startContent) &&
+                              nsContentUtils::ContentIsDescendantOf(startContent, retargetElement)))) {
+        startContent = rootContent;
+      }
+    }
+  }
+
   NS_ASSERTION(startContent, "starting content not set");
 
   // keep a reference to the starting content. If we find that again, it means
@@ -3190,6 +3213,23 @@ nsFocusManager::FocusFirst(nsIContent* aRootContent, nsIContent** aNextContent)
 
   nsIDocument* doc = aRootContent->GetComposedDoc();
   if (doc) {
+    if (doc->IsXULDocument()) {
+      // If the redirectdocumentfocus attribute is set, redirect the focus to a
+      // specific element. This is primarily used to retarget the focus to the
+      // urlbar during document navigation.
+      nsAutoString retarget;
+
+      if (aRootContent->GetAttr(kNameSpaceID_None,
+                               nsGkAtoms::retargetdocumentfocus, retarget)) {
+        nsCOMPtr<nsIContent> retargetElement =
+          CheckIfFocusable(doc->GetElementById(retarget), 0);
+        if (retargetElement) {
+          retargetElement.forget(aNextContent);
+          return NS_OK;
+        }
+      }
+    }
+
     nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
     if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
       // If the found content is in a chrome shell, navigate forward one
