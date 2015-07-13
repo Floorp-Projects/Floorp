@@ -219,7 +219,7 @@ const SNAPSHOT_SCHEMA = {
           type: "boolean",
         },
         supportsHardwareH264: {
-          type: "boolean",
+          type: "string",
         },
         numAcceleratedWindowsMessage: {
           type: "array",
