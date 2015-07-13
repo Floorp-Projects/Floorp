@@ -19,47 +19,32 @@ namespace js {
 
 class TempAllocPolicy;
 
-// If we had C++11 template aliases, we could just use this:
-//
-//   template <typename T,
-//             size_t MinInlineCapacity = 0,
-//             class AllocPolicy = TempAllocPolicy>
-//   using Vector = mozilla::Vector<T, MinInlineCapacity, AllocPolicy>;
-//
-// ...and get rid of all the CRTP madness in mozilla::Vector(Base).  But we
-// can't because compiler support's not up to snuff.  (Template aliases are in
-// gcc 4.7 and clang 3.0 and are expected to be in MSVC 2013.)  Instead, have a
-// completely separate class inheriting from mozilla::Vector, and throw CRTP at
-// the problem til things work.
-//
-// This workaround presents a couple issues.  First, because js::Vector is a
-// distinct type from mozilla::Vector, overload resolution, method calls, etc.
-// are affected.  *Hopefully* this won't be too bad in practice.  (A bunch of
-// places had to be fixed when mozilla::Vector was introduced, but it wasn't a
-// crazy number.)  Second, mozilla::Vector's interface has to be made subclass-
-// ready via CRTP -- or rather, via mozilla::VectorBase, which basically no one
-// should use.  :-)  Third, we have to redefine the constructors and the non-
-// inherited operators.  Blech.  Happily there aren't too many of these, so it
-// isn't the end of the world.
+namespace detail {
+
+template <typename T>
+struct TypeIsGCThing : mozilla::FalseType
+{};
+
+// Uncomment this once we actually can assert it:
+//template <>
+//struct TypeIsGCThing<JS::Value> : mozilla::TrueType
+//{};
+
+} // namespace detail
 
 template <typename T,
           size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy>
-class Vector
-  : public mozilla::VectorBase<T,
-                               MinInlineCapacity,
-                               AllocPolicy,
-                               Vector<T, MinInlineCapacity, AllocPolicy> >
-{
-    typedef typename mozilla::VectorBase<T, MinInlineCapacity, AllocPolicy, Vector> Base;
-
-  public:
-    explicit Vector(AllocPolicy alloc = AllocPolicy()) : Base(alloc) {}
-    Vector(Vector&& vec) : Base(mozilla::Move(vec)) {}
-    Vector& operator=(Vector&& vec) {
-        return Base::operator=(mozilla::Move(vec));
-    }
-};
+          class AllocPolicy = TempAllocPolicy
+// 1800 is MSVC2013.  Optimistically assume MSVC2015 (1900) is fixed.
+// If you're porting to MSVC2015 and this doesn't work, extend the
+// condition to encompass that additional version (but *do* keep the
+// version-check so we know when MSVC's fixed).
+#if !defined(_MSC_VER) || (1800 <= _MSC_VER && _MSC_VER <= 1800)
+         // Don't use this with JS::Value!  Use JS::AutoValueVector instead.
+         , typename = typename mozilla::EnableIf<!detail::TypeIsGCThing<T>::value>::Type
+#endif
+         >
+using Vector = mozilla::Vector<T, MinInlineCapacity, AllocPolicy>;
 
 } // namespace js
 
