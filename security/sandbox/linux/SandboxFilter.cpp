@@ -166,6 +166,7 @@ public:
       // Simple I/O
     case __NR_write:
     case __NR_read:
+    case __NR_writev: // see SandboxLogging.cpp
       return Allow();
 
       // Memory mapping
