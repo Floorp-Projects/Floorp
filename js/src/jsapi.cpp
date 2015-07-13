@@ -2648,8 +2648,117 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, double valueAr
                          attrs, getter, setter);
 }
 
+JS_PUBLIC_API(bool)
+JS_HasPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return HasProperty(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_HasProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_HasPropertyById(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_HasUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen, bool* foundp)
+{
+    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_HasPropertyById(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_HasElement(JSContext* cx, HandleObject obj, uint32_t index, bool* foundp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_HasPropertyById(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_HasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id);
+
+    return HasOwnProperty(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_HasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_HasOwnPropertyById(cx, obj, id, foundp);
+}
+
 
 /* * */
+
+JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id);
+
+    if (!obj->isNative())
+        return js::HasOwnProperty(cx, obj, id, foundp);
+
+    RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
+    RootedShape prop(cx);
+    NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
+    *foundp = !!prop;
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
+{
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                           bool* foundp)
+{
+    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
+}
+
+JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnElement(JSContext* cx, HandleObject obj, uint32_t index, bool* foundp)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
+}
 
 JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext* cx, HandleObject obj)
@@ -2690,95 +2799,6 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
     }
 
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_HasPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    return HasProperty(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_HasElement(JSContext* cx, HandleObject obj, uint32_t index, bool* foundp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return JS_HasPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_HasProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_HasPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_HasUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen, bool* foundp)
-{
-    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_HasPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    if (!obj->isNative())
-        return js::HasOwnProperty(cx, obj, id, foundp);
-
-    RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
-    RootedShape prop(cx);
-    NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
-    *foundp = !!prop;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnElement(JSContext* cx, HandleObject obj, uint32_t index, bool* foundp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                           bool* foundp)
-{
-    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
 }
 
 static bool
@@ -2966,26 +2986,6 @@ JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
     CompletePropertyDescriptor(desc);
     desc.object().set(obj);
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_HasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    return HasOwnProperty(cx, obj, id, foundp);
-}
-
-JS_PUBLIC_API(bool)
-JS_HasOwnProperty(JSContext* cx, HandleObject obj, const char* name, bool* foundp)
-{
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return JS_HasOwnPropertyById(cx, obj, id, foundp);
 }
 
 JS_PUBLIC_API(bool)
