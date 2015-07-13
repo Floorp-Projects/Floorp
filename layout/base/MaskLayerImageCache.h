@@ -119,6 +119,8 @@ public:
     PixelRoundedRect() = delete;
   };
 
+  struct MaskLayerImageKeyRef;
+
   /**
    * A key to identify cached image containers.
    * The const-ness of this class is with respect to its use as a key into a
@@ -131,16 +133,15 @@ public:
    */
   struct MaskLayerImageKey
   {
+    friend struct MaskLayerImageKeyRef;
+
     MaskLayerImageKey();
     MaskLayerImageKey(const MaskLayerImageKey& aKey);
 
     ~MaskLayerImageKey();
 
-    void IncLayerCount() const { ++mLayerCount; }
-    void DecLayerCount() const
-    {
-      NS_ASSERTION(mLayerCount > 0, "Inconsistent layer count");
-      --mLayerCount;
+    bool HasZeroLayerCount() const {
+      return mLayerCount == 0;
     }
 
     PLDHashNumber Hash() const
@@ -159,8 +160,15 @@ public:
       return mRoundedClipRects == aOther.mRoundedClipRects;
     }
 
-    mutable uint32_t mLayerCount;
     nsTArray<PixelRoundedRect> mRoundedClipRects;
+  private:
+    void IncLayerCount() const { ++mLayerCount; }
+    void DecLayerCount() const
+    {
+      NS_ASSERTION(mLayerCount > 0, "Inconsistent layer count");
+      --mLayerCount;
+    }
+    mutable uint32_t mLayerCount;
   };
 
   /**
