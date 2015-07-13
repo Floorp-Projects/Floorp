@@ -1605,6 +1605,52 @@ FoldCall(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser
     return true;
 }
 
+static bool
+FoldForInOrOf(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+              bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_FORIN) || node->isKind(PNK_FOROF));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    if (ParseNode*& decl = node->pn_kid1) {
+        if (!Fold(cx, &decl, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return Fold(cx, &node->pn_kid2, parser, inGenexpLambda, SyntacticContext::Other) &&
+           Fold(cx, &node->pn_kid3, parser, inGenexpLambda, SyntacticContext::Other);
+}
+
+static bool
+FoldForHead(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+            bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_FORHEAD));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    if (ParseNode*& init = node->pn_kid1) {
+        if (!Fold(cx, &init, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    if (ParseNode*& test = node->pn_kid2) {
+        if (!Fold(cx, &test, parser, inGenexpLambda, SyntacticContext::Condition))
+            return false;
+
+        if (test->isKind(PNK_TRUE)) {
+            parser.freeTree(test);
+            test = nullptr;
+        }
+    }
+
+    if (ParseNode*& update = node->pn_kid3) {
+        if (!Fold(cx, &update, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1691,6 +1737,8 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_COMPUTED_NAME:
       case PNK_SPREAD:
       case PNK_SUPERELEM:
+      case PNK_EXPORT:
+      case PNK_EXPORT_DEFAULT:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         return Fold(cx, &pn->pn_kid, parser, inGenexpLambda, SyntacticContext::Other);
 
@@ -1807,9 +1855,25 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_MODASSIGN:
       case PNK_MULASSIGN:
       case PNK_POWASSIGN:
+      case PNK_IMPORT:
+      case PNK_EXPORT_FROM:
+      case PNK_SHORTHAND:
+      case PNK_LETBLOCK:
+      case PNK_FOR:
+      case PNK_CLASSMETHOD:
+      case PNK_IMPORT_SPEC:
+      case PNK_EXPORT_SPEC:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
+
+      case PNK_CLASSNAMES:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (ParseNode*& outerBinding = pn->pn_left) {
+            if (!Fold(cx, &outerBinding, parser, inGenexpLambda, SyntacticContext::Other))
+                return false;
+        }
+        return Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
 
       case PNK_DOWHILE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -1827,26 +1891,23 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         MOZ_ASSERT(pn->pn_right->isKind(PNK_STATEMENTLIST));
         return Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
 
-      case PNK_EXPORT:
-      case PNK_SHORTHAND:
-      case PNK_LETBLOCK:
-      case PNK_FOR:
-      case PNK_CLASSMETHOD:
       case PNK_WITH:
-      case PNK_CLASSNAMES:
-      case PNK_IMPORT:
-      case PNK_EXPORT_FROM:
-      case PNK_EXPORT_DEFAULT:
+        MOZ_ASSERT(pn->isArity(PN_BINARY_OBJ));
+        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
+               Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_FORIN:
       case PNK_FOROF:
+        return FoldForInOrOf(cx, pn, parser, inGenexpLambda);
+
       case PNK_FORHEAD:
+        return FoldForHead(cx, pn, parser, inGenexpLambda);
+
       case PNK_GENEXP:
       case PNK_LABEL:
       case PNK_DOT:
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
-      case PNK_EXPORT_SPEC:
-      case PNK_IMPORT_SPEC:
         MOZ_ASSERT(!pn->isArity(PN_CODE), "only functions are code nodes");
         break; // for now
 
