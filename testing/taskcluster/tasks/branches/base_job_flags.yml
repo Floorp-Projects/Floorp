@@ -18,15 +18,19 @@ flags:
     - win32_gecko    # b2g desktop win 32 bit
     - flame-kk-ota
     - flame-kk       # b2g flame kitkat
+    - flame-kk-blobfree
     - flame-kk-eng   # b2g flame eng build
     - flame-kk-spark-eng
+    - flame-kk-eng-blobfree
     - dolphin
     - dolphin-eng
     - dolphin-512
     - dolphin-512-eng
     - aries
+    - aries-blobfree
     - aries-ota
     - aries-eng
+    - aries-eng-blobfree
     - aries-dogfood
     - android-api-11
     - linux64
