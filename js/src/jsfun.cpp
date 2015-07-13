@@ -2182,11 +2182,6 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject paren
 #endif
 
     if (clone->isInterpreted()) {
-        // The self-hosting compartment is shared across processes, and
-        // AutoDelazify enters fun->compartment(). We would get races if the
-        // self-hosting compartment has lazy interpreted functions.
-        MOZ_ASSERT_IF(fun->compartment()->isSelfHosting, !fun->isInterpretedLazy());
-
         RootedScript script(cx, fun->nonLazyScript());
         MOZ_ASSERT(script->compartment() == fun->compartment());
         MOZ_ASSERT(cx->compartment() == clone->compartment(),
