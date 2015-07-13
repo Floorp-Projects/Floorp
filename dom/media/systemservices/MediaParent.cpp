@@ -474,7 +474,8 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
 }
 
 template<class Super> bool
-Parent<Super>::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen)
+Parent<Super>::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
+                                      const bool& aOnlyPrivateBrowsing)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIFile> profileDir;
@@ -489,11 +490,14 @@ Parent<Super>::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen)
   MOZ_ASSERT(sts);
   nsRefPtr<OriginKeyStore> store(mOriginKeyStore);
 
-  rv = sts->Dispatch(NewRunnableFrom([profileDir, store, aSinceWhen]() -> nsresult {
+  rv = sts->Dispatch(NewRunnableFrom([profileDir, store, aSinceWhen,
+                                      aOnlyPrivateBrowsing]() -> nsresult {
     MOZ_ASSERT(!NS_IsMainThread());
-    store->mOriginKeys.SetProfileDir(profileDir);
     store->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
-    store->mOriginKeys.Clear(aSinceWhen);
+    if (!aOnlyPrivateBrowsing) {
+      store->mOriginKeys.SetProfileDir(profileDir);
+      store->mOriginKeys.Clear(aSinceWhen);
+    }
     return NS_OK;
   }), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
