@@ -9,6 +9,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NumericLimits.h"
+#include "mozilla/Vector.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -40,6 +41,7 @@
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
 #include "gc/Zone.h"
+#include "js/Vector.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -2658,7 +2660,7 @@ jsvalToPtrExplicit(JSContext* cx, Value val, uintptr_t* result)
 
 template<class IntegerType, class CharType, size_t N, class AP>
 void
-IntegerToString(IntegerType i, int radix, Vector<CharType, N, AP>& result)
+IntegerToString(IntegerType i, int radix, mozilla::Vector<CharType, N, AP>& result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
@@ -3654,7 +3656,7 @@ BuildTypeSource(JSContext* cx,
 
     const FieldInfoHash* fields = StructType::GetFieldInfo(typeObj);
     size_t length = fields->count();
-    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    Vector<const FieldInfoHash::Entry*, 64, SystemAllocPolicy> fieldsArray;
     if (!fieldsArray.resize(length))
       break;
 
@@ -3812,7 +3814,7 @@ BuildDataSource(JSContext* cx,
     // be able to ImplicitConvert successfully.
     const FieldInfoHash* fields = StructType::GetFieldInfo(typeObj);
     size_t length = fields->count();
-    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    Vector<const FieldInfoHash::Entry*, 64, SystemAllocPolicy> fieldsArray;
     if (!fieldsArray.resize(length))
       return false;
 
@@ -6510,7 +6512,7 @@ FunctionType::ConstructData(JSContext* cx,
   return JS_FreezeObject(cx, dataObj);
 }
 
-typedef Array<AutoValue, 16> AutoValueAutoArray;
+typedef Vector<AutoValue, 16, SystemAllocPolicy> AutoValueAutoArray;
 
 static bool
 ConvertArgument(JSContext* cx,
