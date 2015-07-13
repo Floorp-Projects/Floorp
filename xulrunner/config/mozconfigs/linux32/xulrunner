@@ -6,7 +6,4 @@ ac_add_options --disable-tests
 
 . $topsrcdir/build/unix/mozconfig.linux32
 
-#Use ccache
-. "$topsrcdir/build/mozconfig.cache"
-
 . "$topsrcdir/xulrunner/config/mozconfigs/common.override"

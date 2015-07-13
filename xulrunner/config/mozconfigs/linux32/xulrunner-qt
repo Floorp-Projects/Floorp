@@ -6,9 +6,6 @@ ac_add_options --disable-tests
 
 . $topsrcdir/build/unix/mozconfig.linux32
 
-#Use ccache
-. "$topsrcdir/build/mozconfig.cache"
-
 # QT Options
 export PKG_CONFIG_PATH=/tools/qt-4.6.3/qt/lib/pkgconfig
 ac_add_options --with-qtdir=/tools/qt-4.6.3/qt

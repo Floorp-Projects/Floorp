@@ -240,10 +240,11 @@ browser.jar:
         skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
         skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
         skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
+        skin/classic/browser/places/autocomplete-star.png            (places/autocomplete-star.png)
+        skin/classic/browser/places/autocomplete-star@2x.png         (places/autocomplete-star@2x.png)
+        skin/classic/browser/places/autocomplete-star-XPVista7.png   (places/autocomplete-star-XPVista7.png)
         skin/classic/browser/places/places.css                       (places/places.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
-        skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
-        skin/classic/browser/places/bookmark-XP.png                  (places/bookmark-XP.png)
         skin/classic/browser/places/query.png                        (places/query.png)
         skin/classic/browser/places/query-XP.png                     (places/query-XP.png)
         skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
@@ -603,7 +604,6 @@ browser.jar:
 % override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-XP.png                    os=WINNT osversion<6
 % override chrome://browser/skin/feeds/feedIcon.png                   chrome://browser/skin/feeds/feedIcon-XP.png                       os=WINNT osversion<6
 % override chrome://browser/skin/feeds/feedIcon16.png                 chrome://browser/skin/feeds/feedIcon16-XP.png                     os=WINNT osversion<6
-% override chrome://browser/skin/places/bookmark.png                  chrome://browser/skin/places/bookmark-XP.png                      os=WINNT osversion<6
 % override chrome://browser/skin/places/query.png                     chrome://browser/skin/places/query-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/places/bookmarksMenu.png             chrome://browser/skin/places/bookmarksMenu-XP.png                 os=WINNT osversion<6
 % override chrome://browser/skin/places/bookmarksToolbar.png          chrome://browser/skin/places/bookmarksToolbar-XP.png              os=WINNT osversion<6
@@ -630,6 +630,7 @@ browser.jar:
 % override chrome://browser/skin/syncProgress-toolbar.png             chrome://browser/skin/syncProgress-toolbar-XPVista7.png           os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-toolbar@2x.png          chrome://browser/skin/syncProgress-toolbar-XPVista7@2x.png        os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
+% override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1

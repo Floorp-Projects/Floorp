@@ -141,38 +141,43 @@ nsPNGDecoder::~nsPNGDecoder()
 }
 
 // CreateFrame() is used for both simple and animated images
-void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
-                               int32_t width, int32_t height,
-                               gfx::SurfaceFormat format)
+nsresult
+nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
+                          int32_t aWidth, int32_t aHeight,
+                          gfx::SurfaceFormat aFormat)
 {
   MOZ_ASSERT(HasSize());
 
-  if (format == gfx::SurfaceFormat::B8G8R8A8) {
+  if (aFormat == gfx::SurfaceFormat::B8G8R8A8) {
     PostHasTransparency();
   }
 
-  // Our first full frame is automatically created by the image decoding
-  // infrastructure. Just use it as long as it matches up.
-  nsIntRect neededRect(x_offset, y_offset, width, height);
-  nsRefPtr<imgFrame> currentFrame = GetCurrentFrame();
-  if (!currentFrame->GetRect().IsEqualEdges(neededRect)) {
-    if (mNumFrames == 0) {
-      // We need padding on the first frame, which means that we don't draw into
-      // part of the image at all. Report that as transparency.
-      PostHasTransparency();
-    }
-
-    NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
-  } else if (mNumFrames != 0) {
-    NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
+  nsIntRect frameRect(aXOffset, aYOffset, aWidth, aHeight);
+  if (mNumFrames == 0 &&
+      !nsIntRect(nsIntPoint(), GetSize()).IsEqualEdges(frameRect)) {
+    // We need padding on the first frame, which means that we don't draw into
+    // part of the image at all. Report that as transparency.
+    PostHasTransparency();
   }
 
-  mFrameRect = neededRect;
+  // XXX(seth): Some tests depend on the first frame of PNGs being B8G8R8A8.
+  // This is something we should fix.
+  gfx::SurfaceFormat format = aFormat;
+  if (mNumFrames == 0) {
+    format = gfx::SurfaceFormat::B8G8R8A8;
+  }
+
+  nsresult rv = AllocateFrame(mNumFrames, GetSize(), frameRect, format);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mFrameRect = frameRect;
 
   MOZ_LOG(GetPNGDecoderAccountingLog(), LogLevel::Debug,
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
           "image frame with %dx%d pixels in container %p",
-          width, height,
+          aWidth, aHeight,
           &mImage));
 
 #ifdef PNG_APNG_SUPPORTED
@@ -186,6 +191,8 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     }
   }
 #endif
+
+  return NS_OK;
 }
 
 // set timeout and frame disposal method for the current frame
@@ -651,7 +658,11 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mFrameIsHidden = true;
   } else {
 #endif
-    decoder->CreateFrame(0, 0, width, height, decoder->format);
+    nsresult rv = decoder->CreateFrame(0, 0, width, height, decoder->format);
+    if (NS_FAILED(rv)) {
+      png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
+    }
+    MOZ_ASSERT(decoder->mImageData, "Should have a buffer now");
 #ifdef PNG_APNG_SUPPORTED
   }
 #endif
@@ -673,12 +684,6 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     if (!decoder->interlacebuf) {
       png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
     }
-  }
-
-  if (decoder->NeedsNewFrame()) {
-    // We know that we need a new frame, so pause input so the decoder
-    // infrastructure can give it to us.
-    png_process_data_pause(png_ptr, /* save = */ 1);
   }
 }
 
@@ -831,13 +836,12 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   width = png_get_next_frame_width(png_ptr, decoder->mInfo);
   height = png_get_next_frame_height(png_ptr, decoder->mInfo);
 
-  decoder->CreateFrame(x_offset, y_offset, width, height, decoder->format);
-
-  if (decoder->NeedsNewFrame()) {
-    // We know that we need a new frame, so pause input so the decoder
-    // infrastructure can give it to us.
-    png_process_data_pause(png_ptr, /* save = */ 1);
+  nsresult rv =
+    decoder->CreateFrame(x_offset, y_offset, width, height, decoder->format);
+  if (NS_FAILED(rv)) {
+    png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
   }
+  MOZ_ASSERT(decoder->mImageData, "Should have a buffer now");
 }
 #endif
 

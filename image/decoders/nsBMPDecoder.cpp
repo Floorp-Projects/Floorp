@@ -437,10 +437,14 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           return;
         }
       }
-      if (!mImageData) {
-        PostDecoderError(NS_ERROR_FAILURE);
-        return;
+
+      MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+      nsresult rv = AllocateBasicFrame();
+      if (NS_FAILED(rv)) {
+          return;
       }
+
+      MOZ_ASSERT(mImageData, "Should have a buffer now");
 
       // Prepare for transparency
       if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {

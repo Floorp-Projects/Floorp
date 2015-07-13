@@ -7,9 +7,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Components.utils.import("resource:///modules/UITour.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 requestLongerTimeout(2);
 
 function test() {

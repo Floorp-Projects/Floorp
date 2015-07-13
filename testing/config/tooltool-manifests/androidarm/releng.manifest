@@ -3,5 +3,5 @@
 "digest": "9d538d8fc9e1aa2851e825386e6e947c0e076e5ff425afc853f07a18675045971b8acc5902221c8e72de0fda480c79490ed82fe4a19e4fff334ecdf1fbb04808",
 "algorithm": "sha512",
 "filename": "AVDs-armv7a-gingerbread-build-2015-03-09-ubuntu.tar.gz",
-"unpack": "True"
+"unpack": true
 }]

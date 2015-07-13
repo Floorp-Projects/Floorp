@@ -684,9 +684,9 @@ protected:
 
     bool mInitialized;
   };
-  // mLockedContent caches content of the document ONLY while the document
-  // is locked.  I.e., the content is cleared at unlocking the document since
-  // we need to reduce the memory usage.  This is initialized by
+  // mLockedContent starts to cache content of the document at first query of
+  // the content during a document lock.  This is abandoned after document is
+  // unlocked and dispatched events are handled.  This is initialized by
   // LockedContent() automatically.  So, don't access this member directly
   // except at calling Clear(), IsInitialized(), IsLayoutChangedAfter() or
   // IsLayoutChanged().
@@ -779,6 +779,9 @@ protected:
   // During the documet is locked, we shouldn't destroy the instance.
   // If this is true, the instance will be destroyed after unlocked.
   bool                         mPendingDestroy;
+  // If this is true, MaybeFlushPendingNotifications() will clear the
+  // mLockedContent.
+  bool                         mPendingClearLockedContent;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
   // While the instance is dispatching events, the event may not be handled

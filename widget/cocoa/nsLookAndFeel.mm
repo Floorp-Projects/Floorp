@@ -668,9 +668,9 @@ nsLookAndFeel::GetIntCacheImpl()
 }
 
 void
-nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& lookAndFeelIntCache)
+nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache)
 {
-  for (auto entry : lookAndFeelIntCache) {
+  for (auto entry : aLookAndFeelIntCache) {
     switch(entry.id) {
       case eIntID_UseOverlayScrollbars:
         mUseOverlayScrollbars = entry.value;

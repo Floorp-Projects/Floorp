@@ -7,8 +7,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 let hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
 
 let hasPocket = false;

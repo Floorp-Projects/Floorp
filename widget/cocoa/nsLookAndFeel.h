@@ -27,7 +27,7 @@ public:
   static bool UseOverlayScrollbars();
 
   virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& lookAndFeelIntCache);
+  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
 
   virtual void RefreshImpl();
 protected:

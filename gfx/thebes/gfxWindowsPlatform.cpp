@@ -1690,6 +1690,78 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
   return true;
 }
 
+void CheckIfRenderTargetViewNeedsRecreating(ID3D11Device *device)
+{
+    nsRefPtr<ID3D11DeviceContext> deviceContext;
+    device->GetImmediateContext(getter_AddRefs(deviceContext));
+    int backbufferWidth = 32; int backbufferHeight = 32;
+    nsRefPtr<ID3D11Texture2D> offscreenTexture;
+    nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+
+    D3D11_TEXTURE2D_DESC offscreenTextureDesc = { 0 };
+    offscreenTextureDesc.Width = backbufferWidth;
+    offscreenTextureDesc.Height = backbufferHeight;
+    offscreenTextureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    offscreenTextureDesc.MipLevels = 0;
+    offscreenTextureDesc.ArraySize = 1;
+    offscreenTextureDesc.SampleDesc.Count = 1;
+    offscreenTextureDesc.SampleDesc.Quality = 0;
+    offscreenTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+    offscreenTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    offscreenTextureDesc.CPUAccessFlags = 0;
+    offscreenTextureDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+    HRESULT result = device->CreateTexture2D(&offscreenTextureDesc, NULL, getter_AddRefs(offscreenTexture));
+
+    result = offscreenTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(keyedMutex));
+
+    D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
+    offscreenRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    offscreenRTVDesc.Texture2D.MipSlice = 0;
+
+    nsRefPtr<ID3D11RenderTargetView> offscreenRTView;
+    result = device->CreateRenderTargetView(offscreenTexture, &offscreenRTVDesc, getter_AddRefs(offscreenRTView));
+
+    // Acquire and clear
+    keyedMutex->AcquireSync(0, INFINITE);
+    FLOAT color1[4] = { 1, 1, 0.5, 1 };
+    deviceContext->ClearRenderTargetView(offscreenRTView, color1);
+    keyedMutex->ReleaseSync(0);
+
+
+    keyedMutex->AcquireSync(0, INFINITE);
+    FLOAT color2[4] = { 1, 1, 0, 1 };
+
+    deviceContext->ClearRenderTargetView(offscreenRTView, color2);
+    D3D11_TEXTURE2D_DESC desc;
+
+    offscreenTexture->GetDesc(&desc);
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+    desc.BindFlags = 0;
+    ID3D11Texture2D* cpuTexture;
+    device->CreateTexture2D(&desc, NULL, &cpuTexture);
+
+    deviceContext->CopyResource(cpuTexture, offscreenTexture);
+
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped);
+    int resultColor = *(int*)mapped.pData;
+    deviceContext->Unmap(cpuTexture, 0);
+    cpuTexture->Release();
+
+    // XXX on some drivers resultColor will not have changed to
+    // match the clear
+    if (resultColor != 0xffffff00) {
+        gfxCriticalNote << "RenderTargetViewNeedsRecreating";
+    }
+
+    keyedMutex->ReleaseSync(0);
+}
+
+
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
 bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bindflags)
@@ -1909,6 +1981,7 @@ gfxWindowsPlatform::InitD3D11Devices()
     }
 
     if (mD3D11Device) {
+      CheckIfRenderTargetViewNeedsRecreating(mD3D11Device);
       // Only test this when not using WARP since it can fail and cause GetDeviceRemovedReason to return
       // weird values.
       mDoesD3D11TextureSharingWork = ::DoesD3D11TextureSharingWork(mD3D11Device);

@@ -9,3 +9,4 @@ ac_add_options --enable-official-branding
 export BUILDING_RELEASE=1
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

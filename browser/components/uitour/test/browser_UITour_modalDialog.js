@@ -74,8 +74,6 @@ function getDialogDoc() {
   return null;
 }
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   UITourTest();
 }

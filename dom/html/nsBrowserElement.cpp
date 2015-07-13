@@ -9,15 +9,21 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementBinding.h"
+#include "mozilla/dom/BrowserElementAudioChannel.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 
+#include "AudioChannelService.h"
+
+#include "mozIApplication.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsFrameLoader.h"
+#include "nsIAppsService.h"
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMElement.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 
@@ -505,6 +511,139 @@ nsBrowserElement::SetInputMethodActive(bool aIsActive,
   }
 
   return req.forget().downcast<DOMRequest>();
+}
+
+void
+nsBrowserElement::GetAllowedAudioChannels(
+                 nsTArray<nsRefPtr<BrowserElementAudioChannel>>& aAudioChannels,
+                 ErrorResult& aRv)
+{
+  aAudioChannels.Clear();
+
+  // If empty, it means that this is the first call of this method.
+  if (mBrowserElementAudioChannels.IsEmpty()) {
+    nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
+    if (!frameLoader) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    bool isBrowserOrApp;
+    aRv = frameLoader->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    if (!isBrowserOrApp) {
+      return;
+    }
+
+    nsCOMPtr<nsIDOMElement> frameElement;
+    aRv = frameLoader->GetOwnerElement(getter_AddRefs(frameElement));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(frameElement);
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    aRv = frameElement->GetOwnerDocument(getter_AddRefs(doc));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(doc);
+
+    nsCOMPtr<nsIDOMWindow> win;
+    aRv = doc->GetDefaultView(getter_AddRefs(win));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(win);
+
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(win);
+
+    if (!window->IsInnerWindow()) {
+      window = window->GetCurrentInnerWindow();
+    }
+
+    nsCOMPtr<nsIMozBrowserFrame> mozBrowserFrame =
+      do_QueryInterface(frameElement);
+    if (NS_WARN_IF(!mozBrowserFrame)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    nsAutoString manifestURL;
+    aRv = mozBrowserFrame->GetAppManifestURL(manifestURL);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService("@mozilla.org/AppsService;1");
+    if (NS_WARN_IF(!appsService)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    nsCOMPtr<mozIApplication> app;
+    aRv = appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    // Normal is always allowed.
+    nsTArray<nsRefPtr<BrowserElementAudioChannel>> channels;
+
+    nsRefPtr<BrowserElementAudioChannel> ac =
+      new BrowserElementAudioChannel(window, frameLoader, mBrowserElementAPI,
+                                     AudioChannel::Normal);
+
+    aRv = ac->Initialize();
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    channels.AppendElement(ac);
+
+    if (app) {
+      const nsAttrValue::EnumTable* audioChannelTable =
+        AudioChannelService::GetAudioChannelTable();
+
+      bool allowed;
+      nsAutoCString permissionName;
+
+      for (uint32_t i = 0; audioChannelTable && audioChannelTable[i].tag; ++i) {
+        permissionName.AssignASCII("audio-channel-");
+        permissionName.AppendASCII(audioChannelTable[i].tag);
+
+        aRv = app->HasPermission(permissionName.get(), &allowed);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return;
+        }
+
+        if (allowed) {
+          nsRefPtr<BrowserElementAudioChannel> ac =
+            new BrowserElementAudioChannel(window, frameLoader,
+                                           mBrowserElementAPI,
+                                           (AudioChannel)audioChannelTable[i].value);
+
+          aRv = ac->Initialize();
+          if (NS_WARN_IF(aRv.Failed())) {
+            return;
+          }
+
+          channels.AppendElement(ac);
+        }
+      }
+    }
+
+    mBrowserElementAudioChannels.AppendElements(channels);
+  }
+
+  aAudioChannels.AppendElements(mBrowserElementAudioChannels);
 }
 
 void

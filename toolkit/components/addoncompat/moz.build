@@ -10,7 +10,6 @@ EXTRA_COMPONENTS += [
     'addoncompat.manifest',
     'defaultShims.js',
     'multiprocessShims.js',
-    'remoteTagService.js',
 ]
 
 EXTRA_JS_MODULES += [

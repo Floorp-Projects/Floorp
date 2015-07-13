@@ -40,16 +40,15 @@ public:
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual void FinishInternal() override;
-  virtual nsresult AllocateFrame(const nsIntSize& aTargetSize
-                                   /* = nsIntSize() */) override;
-
-protected:
-  virtual bool NeedsNewFrame() const override;
+  virtual void FinishWithErrorInternal() override;
 
 private:
   // Writes to the contained decoder and sets the appropriate errors
   // Returns true if there are no errors.
   bool WriteToContainedDecoder(const char* aBuffer, uint32_t aCount);
+
+  // Gets decoder state from the contained decoder so it's visible externally.
+  void GetFinalStateFromContainedDecoder();
 
   // Processes a single dir entry of the icon resource
   void ProcessDirEntry(IconDirEntry& aTarget);
@@ -84,7 +83,6 @@ private:
   uint32_t mRowBytes; // How many bytes of the row were already received
   int32_t mOldLine;   // Previous index of the line
   nsRefPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
-  RawAccessFrameRef mRefForContainedDecoder; // Avoid locking off-main-thread
 
   char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
   IconDirEntry mDirEntry; // Holds a decoded dir entry

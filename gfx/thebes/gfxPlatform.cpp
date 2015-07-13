@@ -352,76 +352,22 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
-// this needs to match the list of pref font.default.xx entries listed in all.js!
-// the order *must* match the order in eFontPrefLang
+// xxx - this can probably be eliminated by reworking pref font handling code
 static const char *gPrefLangNames[] = {
-    "x-western",
-    "ja",
-    "zh-TW",
-    "zh-CN",
-    "zh-HK",
-    "ko",
-    "x-cyrillic",
-    "el",
-    "th",
-    "he",
-    "ar",
-    "x-devanagari",
-    "x-tamil",
-    "x-armn",
-    "x-beng",
-    "x-cans",
-    "x-ethi",
-    "x-geor",
-    "x-gujr",
-    "x-guru",
-    "x-khmr",
-    "x-mlym",
-    "x-orya",
-    "x-telu",
-    "x-knda",
-    "x-sinh",
-    "x-tibt",
-    "x-unicode",
+    #define FONT_PREF_LANG(enum_id_, str_, atom_id_) str_
+    #include "gfxFontPrefLangList.h"
+    #undef FONT_PREF_LANG
 };
 
 static nsIAtom* PrefLangToLangGroups(uint32_t aIndex)
 {
-    // This needs to match the list of pref font.default.xx entries listed in
-    // all.js! The order *must* match the order in eFontPrefLang.
-    //
-    // Having this array within a static function rather than at the top-level
-    // avoids a static constructor.
+    // static array here avoids static constructor
     static nsIAtom* gPrefLangToLangGroups[] = {
-        nsGkAtoms::x_western,
-        nsGkAtoms::Japanese,
-        nsGkAtoms::Taiwanese,
-        nsGkAtoms::Chinese,
-        nsGkAtoms::HongKongChinese,
-        nsGkAtoms::ko,
-        nsGkAtoms::x_cyrillic,
-        nsGkAtoms::el,
-        nsGkAtoms::th,
-        nsGkAtoms::he,
-        nsGkAtoms::ar,
-        nsGkAtoms::x_devanagari,
-        nsGkAtoms::x_tamil,
-        nsGkAtoms::x_armn,
-        nsGkAtoms::x_beng,
-        nsGkAtoms::x_cans,
-        nsGkAtoms::x_ethi,
-        nsGkAtoms::x_geor,
-        nsGkAtoms::x_gujr,
-        nsGkAtoms::x_guru,
-        nsGkAtoms::x_khmr,
-        nsGkAtoms::x_mlym,
-        nsGkAtoms::x_orya,
-        nsGkAtoms::x_telu,
-        nsGkAtoms::x_knda,
-        nsGkAtoms::x_sinh,
-        nsGkAtoms::x_tibt,
-        nsGkAtoms::Unicode
+        #define FONT_PREF_LANG(enum_id_, str_, atom_id_) nsGkAtoms::atom_id_
+        #include "gfxFontPrefLangList.h"
+        #undef FONT_PREF_LANG
     };
+
     return aIndex < ArrayLength(gPrefLangToLangGroups)
          ? gPrefLangToLangGroups[aIndex]
          : nsGkAtoms::Unicode;

@@ -40,4 +40,5 @@ interface ChromeUtils : ThreadSafeChromeUtils {
 dictionary OriginAttributesDictionary {
   unsigned long appId = 0;
   boolean inBrowser = false;
+  DOMString addonId = "";
 };
