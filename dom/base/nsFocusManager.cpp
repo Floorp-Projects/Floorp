@@ -2361,7 +2361,8 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
                                              eLeaf,
                                              false, // aVisual
                                              false, // aLockInScrollView
-                                             true      // aFollowOOFs
+                                             true,  // aFollowOOFs
+                                             false  // aSkipPopupChecks
                                              );
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2791,7 +2792,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        ePreOrder,
                                        false, // aVisual
                                        false, // aLockInScrollView
-                                       true      // aFollowOOFs
+                                       true,  // aFollowOOFs
+                                       false  // aSkipPopupChecks
                                        );
     NS_ENSURE_SUCCESS(rv, rv);
 

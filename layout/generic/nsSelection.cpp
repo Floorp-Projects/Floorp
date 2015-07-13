@@ -1327,7 +1327,8 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
                                    eLeaf,
                                    false, // aVisual
                                    false, // aLockInScrollView
-                                   false     // aFollowOOFs
+                                   false, // aFollowOOFs
+                                   false  // aSkipPopupChecks
                                    );
   if (NS_FAILED(result))
     return result;
