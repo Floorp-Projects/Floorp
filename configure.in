@@ -4345,10 +4345,7 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    # skip event loop instrumentation on UIKit for now
-    if test "$MOZ_WIDGET_TOOLKIT" == "cocoa"; then
-      MOZ_INSTRUMENT_EVENT_LOOP=1
-    fi
+    MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
 cairo-uikit)
