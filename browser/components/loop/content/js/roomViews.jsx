@@ -762,6 +762,14 @@ loop.roomViews = (function(mozL10n) {
                         posterUrl={this.props.localPosterUrl}
                         srcVideoObject={this.state.localSrcVideoObject} />
                     </div>
+                    <DesktopRoomEditContextView
+                      dispatcher={this.props.dispatcher}
+                      error={this.state.error}
+                      mozLoop={this.props.mozLoop}
+                      onClose={this.handleEditContextClose}
+                      roomData={roomData}
+                      savingContext={this.state.savingContext}
+                      show={!shouldRenderInvitationOverlay && shouldRenderEditContextView} />
                   </div>
                   <sharedViews.ConversationToolbar
                     audio={{enabled: !this.state.audioMuted, visible: true}}
@@ -774,14 +782,6 @@ loop.roomViews = (function(mozL10n) {
                     video={{enabled: !this.state.videoMuted, visible: true}} />
                 </div>
               </div>
-              <DesktopRoomEditContextView
-                dispatcher={this.props.dispatcher}
-                error={this.state.error}
-                mozLoop={this.props.mozLoop}
-                onClose={this.handleEditContextClose}
-                roomData={roomData}
-                savingContext={this.state.savingContext}
-                show={!shouldRenderInvitationOverlay && shouldRenderEditContextView} />
               <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
                 showAlways={false}
