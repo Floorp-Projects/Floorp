@@ -202,6 +202,7 @@ public:
 private:
     void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);
 
+    void               NativeMove();
     void               NativeResize(int32_t aWidth,
                                     int32_t aHeight);
 
