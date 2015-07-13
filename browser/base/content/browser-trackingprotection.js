@@ -12,6 +12,7 @@ let TrackingProtection = {
     let $ = selector => document.querySelector(selector);
     this.container = $("#tracking-protection-container");
     this.content = $("#tracking-protection-content");
+    this.icon = $("#tracking-protection-icon");
 
     this.updateEnabled();
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this, false);
@@ -60,15 +61,14 @@ let TrackingProtection = {
       STATE_BLOCKED_TRACKING_CONTENT, STATE_LOADED_TRACKING_CONTENT
     } = Ci.nsIWebProgressListener;
 
-    if (state & STATE_BLOCKED_TRACKING_CONTENT) {
-      this.content.setAttribute("block-active", true);
-      this.content.removeAttribute("block-disabled");
-    } else if (state & STATE_LOADED_TRACKING_CONTENT) {
-      this.content.setAttribute("block-disabled", true);
-      this.content.removeAttribute("block-active");
-    } else {
-      this.content.removeAttribute("block-disabled");
-      this.content.removeAttribute("block-active");
+    for (let element of [this.icon, this.content]) {
+      if (state & STATE_BLOCKED_TRACKING_CONTENT) {
+        element.setAttribute("state", "blocked-tracking-content");
+      } else if (state & STATE_LOADED_TRACKING_CONTENT) {
+        element.setAttribute("state", "loaded-tracking-content");
+      } else {
+        element.removeAttribute("state");
+      }
     }
 
     // Telemetry for state change.
