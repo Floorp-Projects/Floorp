@@ -284,6 +284,13 @@ public:
     return aClientSize;
   }
 
+  // return the widget's outside dimensions
+  // in global coordinates in display pixel.
+  nsIntRect GetScaledScreenBounds();
+
+  // return the screen the widget is in.
+  already_AddRefed<nsIScreen> GetWidgetScreen();
+
   // return true if this is a popup widget with a native titlebar
   bool IsPopupWithTitleBar() const
   {
