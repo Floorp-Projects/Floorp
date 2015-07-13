@@ -57,14 +57,6 @@ MaskLayerImageCache::PutImage(const MaskLayerImageKey* aKey, ImageContainer* aCo
   entry->mContainer = aContainer;
 }
 
-// This case is particularly 'clever' because it uses AddRef/Release to track the use
-// not to release the object.
-template<>
-struct HasDangerousPublicDestructor<MaskLayerImageCache::MaskLayerImageKey>
-{
-  static const bool value = true;
-};
-
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
   : mLayerCount(0)
   , mRoundedClipRects()
