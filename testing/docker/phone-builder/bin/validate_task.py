@@ -36,6 +36,10 @@ def check_task(task):
         print('Invalid base repository', repo, file=sys.stderr)
         return -1
 
+    if "MOZHARNESS_CONFIG" in payload["env"] and \
+            "blobfree" in payload["env"]["MOZHARNESS_CONFIG"]:
+        return 0
+
     locations = task["extra"]["locations"]
     if "img" in locations:
         img = locations["img"]
