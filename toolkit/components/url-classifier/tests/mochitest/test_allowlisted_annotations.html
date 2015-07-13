@@ -17,20 +17,12 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
 // Add https://allowlisted.example.com to the permissions manager
 SpecialPowers.addPermission("trackingprotection",
                             Ci.nsIPermissionManager.ALLOW_ACTION,
                             { url: "https://allowlisted.example.com" });
-
-// Add some URLs to the tracking database
-var testData = "tracking.example.com/";
-var testUpdate =
-  "n:1000\ni:test-track-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
-  testData;
-
-var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                .getService(Ci.nsIUrlClassifierDBService);
 
 function clearPermissions() {
   SpecialPowers.removePermission("trackingprotection",
@@ -40,40 +32,18 @@ function clearPermissions() {
                                    { url: "https://allowlisted.example.com" }));
 }
 
-function doUpdate(update) {
-  var listener = {
-    QueryInterface: function(iid)
-    {
-      if (iid.equals(Ci.nsISupports) ||
-          iid.equals(Ci.nsIUrlClassifierUpdateObserver))
-        return this;
-
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    updateUrlRequested: function(url) { },
-    streamFinished: function(status) { },
-    updateError: function(errorCode) {
-      ok(false, "Couldn't update classifier.");
-      // Abort test.
-      SimpleTest.finish();
-    },
-    updateSuccess: function(requestedTimeout) {
-      document.getElementById("testFrame").src = "allowlistAnnotatedFrame.html";
-    }
-  };
-
-  dbService.beginUpdate(listener, "test-track-simple", "");
-  dbService.beginStream("", "");
-  dbService.updateStream(update);
-  dbService.finishStream();
-  dbService.finishUpdate();
-}
-
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.enabled", true],
             ["channelclassifier.allowlist_example", true]]},
-  function() { doUpdate(testUpdate); });
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    document.getElementById("testFrame").src = "allowlistAnnotatedFrame.html";
+  });
+}
 
 // Expected finish() call is in "allowlistedAnnotatedFrame.html".
 SimpleTest.waitForExplicitFinish();

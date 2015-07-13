@@ -7,8 +7,6 @@ let gTestTab;
 let gContentAPI;
 let gContentWindow;
 
-Components.utils.import("resource:///modules/UITour.jsm");
-
 function test() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("services.sync.username");

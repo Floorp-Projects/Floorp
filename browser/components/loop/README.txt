@@ -19,7 +19,7 @@ Our views use [React](http://facebook.github.io/react/) written in JSX files
 and transpiled to JS before we commit. You need to install the JSX compiler
 using npm in order to compile the .jsx files into regular .js ones:
 
-    npm install -g react-tools
+    npm install -g react-tools@0.12.2
 
 Once installed, run build-jsx with the --watch option from
 browser/components/loop, eg.:
