@@ -2593,7 +2593,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
         comp->sweepCrossCompartmentWrappers();
 
         // Mark the contents of the map to update each wrapper's cross compartment pointer.
-        comp->markCrossCompartmentWrappers(&trc);
+        comp->traceCrossCompartmentWrappers(&trc);
     }
 
     // Iterate through all cells that can contain JSObject pointers to update
