@@ -33,26 +33,96 @@ template <typename T,
           size_t MinInlineCapacity = 0,
           typename AllocPolicy = TempAllocPolicy,
           typename GCPolicy = DefaultGCPolicy<T>>
-class TraceableVector
-  : public mozilla::VectorBase<T,
-                               MinInlineCapacity,
-                               AllocPolicy,
-                               TraceableVector<T, MinInlineCapacity, AllocPolicy, GCPolicy>>,
-    public JS::Traceable
+class TraceableVector : public JS::Traceable
 {
-    using Base = mozilla::VectorBase<T, MinInlineCapacity, AllocPolicy, TraceableVector>;
+    mozilla::Vector<T, MinInlineCapacity, AllocPolicy> vector;
 
   public:
-    explicit TraceableVector(AllocPolicy alloc = AllocPolicy()) : Base(alloc) {}
-    TraceableVector(TraceableVector&& vec) : Base(mozilla::Forward<TraceableVector>(vec)) {}
+    explicit TraceableVector(AllocPolicy alloc = AllocPolicy())
+      : vector(alloc)
+    {}
+
+    TraceableVector(TraceableVector&& vec)
+      : vector(mozilla::Move(vec.vector))
+    {}
+
     TraceableVector& operator=(TraceableVector&& vec) {
-        return Base::operator=(mozilla::Forward<TraceableVector>(vec));
+        vector = mozilla::Move(vec.vector);
+        return *this;
+    }
+
+    size_t length() const { return vector.length(); }
+    bool empty() const { return vector.empty(); }
+    size_t capacity() const { return vector.capacity(); }
+
+    T* begin() { return vector.begin(); }
+    const T* begin() const { return vector.begin(); }
+
+    T* end() { return vector.end(); }
+    const T* end() const { return vector.end(); }
+
+    T& operator[](size_t i) { return vector[i]; }
+    const T& operator[](size_t i) const { return vector[i]; }
+
+    T& back() { return vector.back(); }
+    const T& back() const { return vector.back(); }
+
+    bool initCapacity(size_t cap) { return vector.initCapacity(cap); }
+    bool reserve(size_t req) { return vector.reserve(req); }
+    void shrinkBy(size_t amount) { return vector.shrinkBy(amount); }
+    bool growBy(size_t amount) { return vector.growBy(amount); }
+    bool resize(size_t newLen) { return vector.resize(newLen); }
+
+    void clear() { return vector.clear(); }
+
+    template<typename U> bool append(U&& item) { return vector.append(mozilla::Forward<U>(item)); }
+
+    template<typename... Args>
+    bool
+    emplaceBack(Args&&... args) {
+        return vector.emplaceBack(mozilla::Forward<Args>(args)...);
+    }
+
+    template<typename U>
+    void infallibleAppend(U&& aU) {
+        return vector.infallibleAppend(mozilla::Forward<U>(aU));
+    }
+    void infallibleAppendN(const T& aT, size_t aN) {
+        return vector.infallibleAppendN(aT, aN);
+    }
+    template<typename U> void
+    infallibleAppend(const U* aBegin, const U* aEnd) {
+        return vector.infallibleAppend(aBegin, aEnd);
+    }
+    template<typename U> void infallibleAppend(const U* aBegin, size_t aLength) {
+        return vector.infallibleAppend(aBegin, aLength);
+    }
+
+    bool appendN(const T& val, size_t count) { return vector.appendN(val, count); }
+
+    template<typename U> bool append(const U* aBegin, const U* aEnd) {
+        return vector.append(aBegin, aEnd);
+    }
+    template<typename U> bool append(const U* aBegin, size_t aLength) {
+        return vector.append(aBegin, aLength);
+    }
+
+    void popBack() { return vector.popBack(); }
+    T popCopy() { return vector.popCopy(); }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return vector.sizeOfExcludingThis(mallocSizeOf);
+    }
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return vector.sizeOfIncludingThis(mallocSizeOf);
     }
 
     static void trace(TraceableVector* vec, JSTracer* trc) { vec->trace(trc); }
+
     void trace(JSTracer* trc) {
-        for (size_t i = 0; i < this->length(); ++i)
-            GCPolicy::trace(trc, &Base::operator[](i), "vector element");
+        for (auto& elem : vector)
+            GCPolicy::trace(trc, &elem, "vector element");
     }
 };
 
@@ -114,8 +184,8 @@ class MutableTraceableVectorOperations
     template<typename... Args> bool emplaceBack(Args&&... aArgs) {
         return vec().emplaceBack(mozilla::Forward<Args...>(aArgs...));
     }
-    template<typename U, size_t O, class BP, class UV>
-    bool appendAll(const mozilla::VectorBase<U, O, BP, UV>& aU) { return vec().appendAll(aU); }
+    template<typename U, size_t O, class BP>
+    bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vec().appendAll(aU); }
     bool appendN(const T& aT, size_t aN) { return vec().appendN(aT, aN); }
     template<typename U> bool append(const U* aBegin, const U* aEnd) {
         return vec().append(aBegin, aEnd);
