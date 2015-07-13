@@ -222,6 +222,11 @@ if __name__ == "__main__":
         build_type = config["build_type"]
         if build_type not in ("Release", "Debug", "RelWithDebInfo", "MinSizeRel"):
             raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or MinSizeRel builds")
+    build_libcxx = False
+    if "build_libcxx" in config:
+        build_libcxx = config["build_libcxx"]
+        if build_libcxx not in (True, False):
+            raise ValueError("Only boolean values are accepted for build_libcxx.")
     assertions = False
     if "assertions" in config:
         assertions = config["assertions"]
@@ -262,7 +267,6 @@ if __name__ == "__main__":
         extra_cxxflags2 = "-stdlib=libc++"
         cc = "/usr/bin/clang"
         cxx = "/usr/bin/clang++"
-        build_libcxx = True
     else:
         extra_cflags = "-static-libgcc"
         extra_cxxflags = "-static-libgcc -static-libstdc++"
@@ -270,7 +274,6 @@ if __name__ == "__main__":
         extra_cxxflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
         cc = gcc_dir + "/bin/gcc"
         cxx = gcc_dir + "/bin/g++"
-        build_libcxx = False
 
     if os.environ.has_key('LD_LIBRARY_PATH'):
         os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
