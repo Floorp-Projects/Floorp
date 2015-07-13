@@ -3097,6 +3097,45 @@ JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t v);
 extern JS_PUBLIC_API(bool)
 JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double v);
 
+/**
+ * Delete a property. This is the C++ equivalent of
+ * `result = Reflect.deleteProperty(obj, id)`.
+ *
+ * This function has a `result` out parameter that most callers don't need.
+ * Unless you can pass through an ObjectOpResult provided by your caller, it's
+ * probably best to use the JS_DeletePropertyById signature with just 3
+ * arguments.
+ *
+ * Implements: ES6 [[Delete]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name,
+                  JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                    JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::ObjectOpResult& result);
+
+/**
+ * Delete a property, ignoring strict failures. This is the C++ equivalent of
+ * the JS `delete obj[id]` in non-strict mode code.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, jsid id);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
+
 
 /*** Other property-defining functions ***********************************************************/
 
@@ -3131,24 +3170,6 @@ JS_AlreadyHasOwnUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnElement(JSContext* cx, JS::HandleObject obj, uint32_t index, bool* foundp);
 
-extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name,
-                  JS::ObjectOpResult& result);
-
-extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, jsid id);
-
-extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                      JS::ObjectOpResult& result);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::ObjectOpResult& result);
-
 extern JS_PUBLIC_API(JSObject*)
 JS_NewArrayObject(JSContext* cx, const JS::HandleValueArray& contents);
 
@@ -3176,12 +3197,6 @@ JS_GetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t* lengthp);
 
 extern JS_PUBLIC_API(bool)
 JS_SetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t length);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::ObjectOpResult& result);
 
 /*
  * Assign 'undefined' to all of the object's non-reserved slots. Note: this is

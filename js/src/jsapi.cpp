@@ -2861,6 +2861,74 @@ JS_SetElement(JSContext* cx, HandleObject obj, uint32_t index, double v)
     return SetElement(cx, obj, index, value);
 }
 
+JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id);
+
+    return DeleteProperty(cx, obj, id, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, HandleObject obj, const char* name, ObjectOpResult& result)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    JSAtom* atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return DeleteProperty(cx, obj, id, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeleteUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                    ObjectOpResult& result)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return DeleteProperty(cx, obj, id, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResult& result)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    return DeleteElement(cx, obj, index, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, HandleObject obj, HandleId id)
+{
+    ObjectOpResult ignored;
+    return JS_DeletePropertyById(cx, obj, id, ignored);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, HandleObject obj, const char* name)
+{
+    ObjectOpResult ignored;
+    return JS_DeleteProperty(cx, obj, name, ignored);
+}
+
+JS_PUBLIC_API(bool)
+JS_DeleteElement(JSContext* cx, HandleObject obj, uint32_t index)
+{
+    ObjectOpResult ignored;
+    return JS_DeleteElement(cx, obj, index, ignored);
+}
+
 
 /* * */
 
@@ -3139,74 +3207,6 @@ JS::ObjectToCompletePropertyDescriptor(JSContext* cx,
     CompletePropertyDescriptor(desc);
     desc.object().set(obj);
     return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, id);
-
-    return DeleteProperty(cx, obj, id, result);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResult& result)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    return DeleteElement(cx, obj, index, result);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, HandleObject obj, const char* name, ObjectOpResult& result)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    JSAtom* atom = Atomize(cx, name, strlen(name));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return DeleteProperty(cx, obj, id, result);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeleteUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    ObjectOpResult& result)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-
-    JSAtom* atom = AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-    return DeleteProperty(cx, obj, id, result);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, HandleObject obj, HandleId id)
-{
-    ObjectOpResult ignored;
-    return JS_DeletePropertyById(cx, obj, id, ignored);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, HandleObject obj, uint32_t index)
-{
-    ObjectOpResult ignored;
-    return JS_DeleteElement(cx, obj, index, ignored);
-}
-
-JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, HandleObject obj, const char* name)
-{
-    ObjectOpResult ignored;
-    return JS_DeleteProperty(cx, obj, name, ignored);
 }
 
 JS_PUBLIC_API(void)
