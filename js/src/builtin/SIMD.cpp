@@ -1038,6 +1038,31 @@ Bool(JSContext* cx, unsigned argc, Value* vp)
     return StoreResult<V>(cx, args, result);
 }
 
+template<typename In>
+static bool
+Clamp(JSContext* cx, unsigned argc, Value* vp)
+{
+    typedef typename In::Elem InElem;
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 3 || !IsVectorObject<In>(args[0]) ||
+        !IsVectorObject<In>(args[1]) || !IsVectorObject<In>(args[2]))
+    {
+        return ErrorBadArgs(cx);
+    }
+
+    InElem* val = TypedObjectMemory<InElem*>(args[0]);
+    InElem* lowerLimit = TypedObjectMemory<InElem*>(args[1]);
+    InElem* upperLimit = TypedObjectMemory<InElem*>(args[2]);
+
+    InElem result[In::lanes];
+    for (unsigned i = 0; i < In::lanes; i++) {
+        result[i] = val[i] < lowerLimit[i] ? lowerLimit[i] : val[i];
+        result[i] = result[i] > upperLimit[i] ? upperLimit[i] : result[i];
+    }
+
+    return StoreResult<In>(cx, args, result);
+}
+
 template<typename V, typename MaskType>
 static bool
 SelectBits(JSContext* cx, unsigned argc, Value* vp)
