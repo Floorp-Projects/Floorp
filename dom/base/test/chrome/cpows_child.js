@@ -17,7 +17,9 @@ const Cu = Components.utils;
     sync_test,
     async_test,
     rpc_test,
-    lifetime_test
+    lifetime_test,
+    cancel_test,
+    cancel_test2,
   ];
 
   function go() {
@@ -260,5 +262,74 @@ function lifetime_test(finish)
       finish();
     });
     sendRpcMessage("cpows:lifetime_test_2");
+  });
+}
+
+function cancel_test(finish)
+{
+  if (!is_remote) {
+    // No point in doing this in single-process mode.
+    finish();
+    return;
+  }
+
+  let fin1 = false, fin2 = false;
+
+  // CPOW from the parent runs f. When it sends a sync message, the
+  // CPOW is canceled. The parent starts running again immediately
+  // after the CPOW is canceled; f also continues running.
+  function f() {
+    let res = sendSyncMessage("cpows:cancel_sync_message");
+    ok(res[0] == 12, "cancel_sync_message result correct");
+    fin1 = true;
+    if (fin1 && fin2) finish();
+  }
+
+  sendAsyncMessage("cpows:cancel_test", null, {f: f});
+  addMessageListener("cpows:cancel_test_done", msg => {
+    fin2 = true;
+    if (fin1 && fin2) finish();
+  });
+}
+
+function cancel_test2(finish)
+{
+  if (!is_remote) {
+    // No point in doing this in single-process mode.
+    finish();
+    return;
+  }
+
+  let fin1 = false, fin2 = false;
+
+  // CPOW from the parent runs f. When it does a sync XHR, the
+  // CPOW is canceled. The parent starts running again immediately
+  // after the CPOW is canceled; f also continues running.
+  function f() {
+    let req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Components.interfaces.nsIXMLHttpRequest);
+    let fin = false;
+    let reqListener = () => {
+      if (req.readyState != req.DONE) {
+        return;
+      }
+      ok(req.status == 200, "XHR succeeded");
+      fin = true;
+    };
+
+    req.onload = reqListener;
+    req.open("get", "http://example.com", false);
+    req.send(null);
+
+    ok(fin == true, "XHR happened");
+
+    fin1 = true;
+    if (fin1 && fin2) finish();
+  }
+
+  sendAsyncMessage("cpows:cancel_test2", null, {f: f});
+  addMessageListener("cpows:cancel_test2_done", msg => {
+    fin2 = true;
+    if (fin1 && fin2) finish();
   });
 }

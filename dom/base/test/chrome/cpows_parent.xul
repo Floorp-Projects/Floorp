@@ -364,6 +364,32 @@
       });
     }
 
+    function recvCancelTest(msg) {
+      let failed = false;
+      try {
+        msg.objects.f();
+      } catch (e if /cross-process JS call failed/.test(String(e))) {
+        failed = true;
+      }
+      ok(failed, "CPOW should fail due to cancelation");
+      msg.target.messageManager.sendAsyncMessage("cpows:cancel_test_done");
+    }
+
+    function recvCancelSyncMessage() {
+      return 12;
+    }
+
+    function recvCancelTest2(msg) {
+      let failed = false;
+      try {
+        msg.objects.f();
+      } catch (e if /cross-process JS call failed/.test(String(e))) {
+        failed = true;
+      }
+      ok(failed, "CPOW should fail due to cancelation");
+      msg.target.messageManager.sendAsyncMessage("cpows:cancel_test2_done");
+    }
+
     function run_tests(type) {
       info("Running tests: " + type);
       var node = document.getElementById('cpowbrowser_' + type);
@@ -400,6 +426,9 @@
       mm.addMessageListener("cpows:postmessage_test", recvPostMessageTest);
       mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);
       mm.addMessageListener("cpows:lifetime_test_2", recvLifetimeTest2);
+      mm.addMessageListener("cpows:cancel_test", recvCancelTest);
+      mm.addMessageListener("cpows:cancel_sync_message", recvCancelSyncMessage);
+      mm.addMessageListener("cpows:cancel_test2", recvCancelTest2);
       mm.loadFrameScript("chrome://mochitests/content/chrome/dom/base/test/chrome/cpows_child.js", true);
     }
 
