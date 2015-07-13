@@ -59,6 +59,8 @@ public:
 
   virtual uint32_t OperatingSystemVersion() override { return mOSXVersion; }
 
+  nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
+
 protected:
 
   virtual ~GfxInfo() {}
