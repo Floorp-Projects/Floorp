@@ -131,7 +131,9 @@ nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
     Drawable d = GDK_DRAWABLE_XID(gd);
 
     GC gc = XCreateGC(dpy, d, 0, nullptr);
-    nsIntRegionRectIterator iter(aRegion);
+    nsIntRegion bounded;
+    bounded.And(aRegion, nsIntRect(0, 0, mImage->width, mImage->height));
+    nsIntRegionRectIterator iter(bounded);
     for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
         XShmPutImage(dpy, d, gc, mImage,
                      r->x, r->y,
@@ -159,7 +161,9 @@ nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
     int dx = 0, dy = 0;
 
     GC gc = XCreateGC(dpy, d, 0, nullptr);
-    nsIntRegionRectIterator iter(aRegion);
+    nsIntRegion bounded;
+    bounded.And(aRegion, nsIntRect(0, 0, mImage->width, mImage->height));
+    nsIntRegionRectIterator iter(bounded);
     for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
         XShmPutImage(dpy, d, gc, mImage,
                      r->x, r->y,
