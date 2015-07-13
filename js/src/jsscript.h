@@ -1764,14 +1764,7 @@ class JSScript : public js::gc::TenuredCell
 
       private:
         void holdScript(JS::HandleFunction fun);
-
-        void dropScript()
-        {
-            if (script_) {
-                script_->setDoNotRelazify(oldDoNotRelazify_);
-                script_ = nullptr;
-            }
-        }
+        void dropScript();
     };
 };
 

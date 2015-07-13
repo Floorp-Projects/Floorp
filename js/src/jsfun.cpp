@@ -2159,6 +2159,13 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject paren
     MOZ_ASSERT(NewFunctionScopeIsWellFormed(cx, parent));
     MOZ_ASSERT(!fun->isBoundFunction());
 
+    JSScript::AutoDelazify funScript(cx);
+    if (fun->isInterpreted()) {
+        funScript = fun;
+        if (!funScript)
+            return nullptr;
+    }
+
     RootedFunction clone(cx, NewFunctionClone(cx, fun, SingletonObject, allocKind, proto));
     if (!clone)
         return nullptr;
@@ -2186,17 +2193,6 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject paren
 #endif
 
     if (clone->isInterpreted()) {
-        // The self-hosting compartment is shared across processes, and
-        // AutoDelazify enters fun->compartment(). We would get races if the
-        // self-hosting compartment has lazy interpreted functions.
-        MOZ_ASSERT_IF(fun->compartment()->isSelfHosting, !fun->isInterpretedLazy());
-        JSScript::AutoDelazify funScript(cx);
-        if (fun->isInterpretedLazy()) {
-            funScript = fun;
-            if (!funScript)
-                return nullptr;
-        }
-
         RootedScript script(cx, fun->nonLazyScript());
         MOZ_ASSERT(script->compartment() == fun->compartment());
         MOZ_ASSERT(cx->compartment() == clone->compartment(),
