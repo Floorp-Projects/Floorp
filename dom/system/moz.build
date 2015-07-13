@@ -19,6 +19,7 @@ elif toolkit == 'gonk':
 
 XPIDL_SOURCES += [
     'nsIOSFileConstantsService.idl',
+    'nsISystemUpdateProvider.idl',
 ]
 
 XPIDL_MODULE = 'dom_system'
@@ -39,6 +40,12 @@ UNIFIED_SOURCES += [
 EXTRA_COMPONENTS += [
     'NetworkGeolocationProvider.js',
     'NetworkGeolocationProvider.manifest',
+    'SystemUpdate.manifest',
+    'SystemUpdateManager.js',
+]
+
+EXTRA_JS_MODULES += [
+    'SystemUpdateService.jsm',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -57,3 +64,4 @@ DEFINES['DLL_PREFIX'] = '"%s"' % CONFIG['DLL_PREFIX']
 DEFINES['DLL_SUFFIX'] = '"%s"' % CONFIG['DLL_SUFFIX']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
