@@ -1964,34 +1964,6 @@ JS_GetInstancePrivate(JSContext* cx, HandleObject obj, const JSClass* clasp, Cal
     return obj->as<NativeObject>().getPrivate();
 }
 
-JS_PUBLIC_API(bool)
-JS_GetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> protop)
-{
-    return GetPrototype(cx, obj, protop);
-}
-
-JS_PUBLIC_API(bool)
-JS_SetPrototype(JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> proto)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, proto);
-
-    return SetPrototype(cx, obj, proto);
-}
-
-JS_PUBLIC_API(bool)
-JS_IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
-{
-    return IsExtensible(cx, obj, extensible);
-}
-
-JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, ObjectOpResult& result)
-{
-    return PreventExtensions(cx, obj, result);
-}
-
 JS_PUBLIC_API(JSObject*)
 JS_GetConstructor(JSContext* cx, HandleObject proto)
 {
@@ -2165,6 +2137,46 @@ JS_GetObjectRuntime(JSObject* obj)
 {
     return obj->compartment()->runtimeFromMainThread();
 }
+
+
+/*** Standard internal methods *******************************************************************/
+
+JS_PUBLIC_API(bool)
+JS_GetPrototype(JSContext* cx, HandleObject obj, MutableHandleObject result)
+{
+    return GetPrototype(cx, obj, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, proto);
+
+    return SetPrototype(cx, obj, proto);
+}
+
+JS_PUBLIC_API(bool)
+JS_IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
+{
+    return IsExtensible(cx, obj, extensible);
+}
+
+JS_PUBLIC_API(bool)
+JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, ObjectOpResult& result)
+{
+    return PreventExtensions(cx, obj, result);
+}
+
+JS_PUBLIC_API(bool)
+JS_SetImmutablePrototype(JSContext *cx, JS::HandleObject obj, bool *succeeded)
+{
+    return SetImmutablePrototype(cx, obj, succeeded);
+}
+
+
+/* * */
 
 JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext* cx, HandleObject obj)
@@ -6388,12 +6400,6 @@ JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length)
     if (!decoder.codeFunction(&funobj))
         return nullptr;
     return funobj;
-}
-
-JS_PUBLIC_API(bool)
-JS_SetImmutablePrototype(JSContext *cx, JS::HandleObject obj, bool *succeeded)
-{
-    return SetImmutablePrototype(cx, obj, succeeded);
 }
 
 JS_PUBLIC_API(void)
