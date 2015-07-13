@@ -973,10 +973,9 @@ nsWindow::Show(bool aState)
     // resize the widget.
     if (aState) {
         if (mNeedsMove) {
-            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-                         false);
+            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
         } else if (mNeedsResize) {
-            NativeResize(mBounds.width, mBounds.height, false);
+            NativeResize(mBounds.width, mBounds.height);
         }
     }
 
@@ -1025,9 +1024,9 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
             // moved back then
             if (mNeedsMove)
                 NativeResize(mBounds.x, mBounds.y,
-                             mBounds.width, mBounds.height, aRepaint);
+                             mBounds.width, mBounds.height);
             else
-                NativeResize(mBounds.width, mBounds.height, aRepaint);
+                NativeResize(mBounds.width, mBounds.height);
 
             // Does it need to be shown because it was previously insane?
             if (mNeedsShow)
@@ -1053,7 +1052,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
             // For widgets that we listen for resizes for (widgets created
             // with native parents) we apparently _always_ have to resize.  I
             // dunno why, but apparently we're lame like that.
-            NativeResize(width, height, aRepaint);
+            NativeResize(width, height);
         }
         else {
             mNeedsResize = true;
@@ -1101,7 +1100,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
         // Are the bounds sane?
         if (AreBoundsSane()) {
             // Yep?  Resize the window
-            NativeResize(x, y, width, height, aRepaint);
+            NativeResize(x, y, width, height);
             // Does it need to be shown because it was previously insane?
             if (mNeedsShow)
                 NativeShow(true);
@@ -1126,7 +1125,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
             // For widgets that we listen for resizes for (widgets created
             // with native parents) we apparently _always_ have to resize.  I
             // dunno why, but apparently we're lame like that.
-            NativeResize(x, y, width, height, aRepaint);
+            NativeResize(x, y, width, height);
         }
         else {
             mNeedsResize = true;
@@ -3873,7 +3872,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(int32_t aWidth, int32_t aHeight, bool    aRepaint)
+nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
 {
     gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
     gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
@@ -3904,8 +3903,7 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight, bool    aRepaint)
 
 void
 nsWindow::NativeResize(int32_t aX, int32_t aY,
-                       int32_t aWidth, int32_t aHeight,
-                       bool    aRepaint)
+                       int32_t aWidth, int32_t aHeight)
 {
     gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
     gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
