@@ -1367,6 +1367,27 @@ FoldCatch(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parse
     return true;
 }
 
+static bool
+FoldClass(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
+          bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_CLASS));
+    MOZ_ASSERT(node->isArity(PN_TERNARY));
+
+    if (ParseNode*& classNames = node->pn_kid1) {
+        if (!Fold(cx, &classNames, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    if (ParseNode*& heritage = node->pn_kid2) {
+        if (!Fold(cx, &heritage, parser, inGenexpLambda, SyntacticContext::Other))
+            return false;
+    }
+
+    ParseNode*& body = node->pn_kid3;
+    return Fold(cx, &body, parser, inGenexpLambda, SyntacticContext::Other);
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda,
      SyntacticContext sc)
@@ -1541,6 +1562,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CATCH:
         return FoldCatch(cx, pn, parser, inGenexpLambda);
 
+      case PNK_CLASS:
+        return FoldClass(cx, pn, parser, inGenexpLambda);
+
       case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1574,7 +1598,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FORIN:
       case PNK_FOROF:
       case PNK_FORHEAD:
-      case PNK_CLASS:
       case PNK_ADD:
       case PNK_NEW:
       case PNK_CALL:
