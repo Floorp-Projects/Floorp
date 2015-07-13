@@ -115,9 +115,11 @@ class TestEnvironment(object):
 
         self.cache_manager = multiprocessing.Manager()
         self.routes = self.get_routes()
+        self.stash = serve.stash.StashServer()
 
 
     def __enter__(self):
+        self.stash.__enter__()
         self.ssl_env.__enter__()
         self.cache_manager.__enter__()
         self.setup_server_logging()
@@ -131,12 +133,12 @@ class TestEnvironment(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.process_interrupts()
-        self.cache_manager.__exit__(exc_type, exc_val, exc_tb)
-        self.ssl_env.__exit__(exc_type, exc_val, exc_tb)
-
         for scheme, servers in self.servers.iteritems():
             for port, server in servers:
                 server.kill()
+        self.cache_manager.__exit__(exc_type, exc_val, exc_tb)
+        self.ssl_env.__exit__(exc_type, exc_val, exc_tb)
+        self.stash.__exit__()
 
     def ignore_interrupts(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
