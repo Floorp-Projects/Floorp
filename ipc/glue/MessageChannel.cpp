@@ -106,7 +106,7 @@ struct RunnableMethodTraits<mozilla::ipc::MessageChannel>
             DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
     } while (0)
 
-static MessageChannel* gParentProcessBlocker;
+static MessageChannel* gMainThreadBlocker;
 
 namespace mozilla {
 namespace ipc {
@@ -404,8 +404,8 @@ MessageChannel::Clear()
     // In practice, mListener owns the channel, so the channel gets deleted
     // before mListener.  But just to be safe, mListener is a weak pointer.
 
-    if (gParentProcessBlocker == this) {
-        gParentProcessBlocker = nullptr;
+    if (gMainThreadBlocker == this) {
+        gMainThreadBlocker = nullptr;
     }
 
     mDequeueOneTask->Cancel();
@@ -1334,7 +1334,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
 
     MessageChannel* dummy;
-    MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
+    MessageChannel*& blockingVar = NS_IsMainThread() ? gMainThreadBlocker : dummy;
 
     Result rv;
     if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
@@ -2046,22 +2046,25 @@ MessageChannel::CancelCurrentTransactionInternal()
     // see if mCurrentTransaction is 0 before examining DispatchSyncMessage.
 }
 
-void
+bool
 MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
-    if (mCurrentTransaction) {
+    if (mCurrentTransaction &&
+        (DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH))
+    {
         CancelCurrentTransactionInternal();
         mLink->SendMessage(new CancelMessage());
+        return true;
     }
+    return false;
 }
 
 void
 CancelCPOWs()
 {
-    if (gParentProcessBlocker) {
+    if (gMainThreadBlocker && gMainThreadBlocker->CancelCurrentTransaction()) {
         mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_TRANSACTION_CANCEL, true);
-        gParentProcessBlocker->CancelCurrentTransaction();
     }
 }
 

@@ -143,7 +143,7 @@ class MessageChannel : HasResultCodes
         return !mCxxStackFrames.empty();
     }
 
-    void CancelCurrentTransaction();
+    bool CancelCurrentTransaction();
 
     /**
      * This function is used by hang annotation code to determine which IPDL
