@@ -62,6 +62,10 @@ CompositorD3D9::Initialize()
     return false;
   }
 
+  if (!mWidget->InitCompositor(this)) {
+    return false;
+  }
+
   reporter.SetSuccessful();
   return true;
 }
