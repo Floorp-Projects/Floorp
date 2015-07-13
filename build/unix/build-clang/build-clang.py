@@ -119,9 +119,9 @@ def svn_update(directory, revision):
     run_in(directory, ["svn", "update", "-r", revision])
 
 
-def build_one_stage(env, src_dir, stage_dir, build_libcxx):
+def build_one_stage(env, src_dir, stage_dir, build_libcxx, build_type, assertions):
     with updated_env(env):
-        build_one_stage_aux(src_dir, stage_dir, build_libcxx)
+        build_one_stage_aux(src_dir, stage_dir, build_libcxx, build_type, assertions)
 
 
 def get_platform():
@@ -141,7 +141,7 @@ def is_darwin():
     return platform.system() == "Darwin"
 
 
-def build_one_stage_aux(src_dir, stage_dir, build_libcxx):
+def build_one_stage_aux(src_dir, stage_dir, build_libcxx, build_type, assertions):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -159,9 +159,9 @@ def build_one_stage_aux(src_dir, stage_dir, build_libcxx):
         run_cmake = False
 
     cmake_args = ["-GNinja",
-                  "-DCMAKE_BUILD_TYPE=Release",
+                  "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
-                  "-DLLVM_ENABLE_ASSERTIONS=OFF",
+                  "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
                   "-DPYTHON_EXECUTABLE=%s" % python_path,
                   "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
@@ -209,6 +209,16 @@ if __name__ == "__main__":
         stages = int(config["stages"])
         if stages not in (1, 2, 3):
             raise ValueError("We only know how to build 1, 2, or 3 stages")
+    build_type = "Release"
+    if "build_type" in config:
+        build_type = config["build_type"]
+        if build_type not in ("Release", "Debug", "RelWithDebInfo", "MinSizeRel"):
+            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or MinSizeRel builds")
+    assertions = False
+    if "assertions" in config:
+        assertions = config["assertions"]
+        if assertions not in (True, False):
+            raise ValueError("Only boolean values are accepted for assertions.")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -262,7 +272,8 @@ if __name__ == "__main__":
     build_one_stage(
         {"CC": cc + " %s" % extra_cflags,
          "CXX": cxx + " %s" % extra_cxxflags},
-        llvm_source_dir, stage1_dir, build_libcxx)
+        llvm_source_dir, stage1_dir, build_libcxx,
+        build_type, assertions)
 
     if stages > 1:
         stage2_dir = build_dir + '/stage2'
@@ -271,7 +282,8 @@ if __name__ == "__main__":
         build_one_stage(
             {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags2,
              "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
-            llvm_source_dir, stage2_dir, build_libcxx)
+            llvm_source_dir, stage2_dir, build_libcxx,
+            build_type, assertions)
 
         if stages > 2:
             stage3_dir = build_dir + '/stage3'
@@ -279,7 +291,8 @@ if __name__ == "__main__":
             build_one_stage(
                 {"CC": stage2_inst_dir + "/bin/clang %s" % extra_cflags2,
                  "CXX": stage2_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
-                llvm_source_dir, stage3_dir, build_libcxx)
+                llvm_source_dir, stage3_dir, build_libcxx,
+                build_type, assertions)
 
     if not is_darwin():
         final_stage_inst_dir = final_stage_dir + '/clang'
