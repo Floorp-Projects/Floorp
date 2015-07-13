@@ -1251,7 +1251,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                             eLeaf,
                             false, // aVisual
                             false, // aLockInScrollView
-                            false     // aFollowOOFs
+                            false, // aFollowOOFs
+                            false  // aSkipPopupChecks
                             );
 
   if (!frameTraversal)

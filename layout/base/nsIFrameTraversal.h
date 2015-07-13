@@ -34,9 +34,9 @@ enum nsIteratorType {
   ePostOrder
 };
 
-// {9d469828-9bf2-4151-a385-05f30219221b}
+// {d33fe76c-207c-4359-a315-8eb1eecf80e5}
 #define NS_IFRAMETRAVERSAL_IID \
-{ 0x9d469828, 0x9bf2, 0x4151, { 0xa3, 0x85, 0x05, 0xf3, 0x02, 0x19, 0x22, 0x1b } }
+{ 0xd33fe76c, 0x207c, 0x4359, { 0xa3, 0x15, 0x8e, 0xb1, 0xee, 0xcf, 0x80, 0xe5 } }
 
 class nsIFrameTraversal : public nsISupports
 {
@@ -57,6 +57,8 @@ public:
    *        If true, when reaching a placeholder frame while going down will get
    *        the real frame. Going back up will go on past the placeholder,
    *        so the placeholders are logically part of the frame tree.
+   * @param aSkipPopupChecks [in] if false, then don't iterate into or out of a
+   *        popup frame. If true, skip any popup related checks.
    */
   NS_IMETHOD NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                                nsPresContext* aPresContext,
@@ -64,7 +66,8 @@ public:
                                int32_t aType,
                                bool aVisual,
                                bool aLockInScrollView,
-                               bool aFollowOOFs) = 0;
+                               bool aFollowOOFs,
+                               bool aSkipPopupChecks) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameTraversal, NS_IFRAMETRAVERSAL_IID)
