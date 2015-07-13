@@ -34,7 +34,7 @@ public:
   static void Shutdown();
 };
 
-} // gl
-} // mozilla
+} // namespace gl
+} // namespace mozilla
 
 #endif // GFX_TEXTUREPOOLOGL_H

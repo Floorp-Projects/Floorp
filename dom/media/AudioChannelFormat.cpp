@@ -198,4 +198,4 @@ AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
   }
 }
 
-}
+} // namespace mozilla

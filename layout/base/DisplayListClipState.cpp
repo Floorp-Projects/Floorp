@@ -114,4 +114,4 @@ DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBu
   , mRestored(false)
 {}
 
-}
+} // namespace mozilla

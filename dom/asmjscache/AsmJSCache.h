@@ -19,7 +19,7 @@ namespace dom {
 
 namespace quota {
 class Client;
-}
+} // namespace quota
 
 namespace asmjscache {
 

@@ -353,5 +353,5 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   aLayers.AppendElements(sortedList);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

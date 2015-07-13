@@ -765,7 +765,7 @@ IsMarked(const jit::VMFunction*)
 namespace JS {
 namespace ubi {
 template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };
-}
-}
+} // namespace ubi
+} // namespace JS
 
 #endif /* jit_IonCode_h */

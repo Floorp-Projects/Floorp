@@ -249,4 +249,4 @@ status_t OMXCodecProxy::pause()
   return mOMXCodec->pause();
 }
 
-}  // namespace android
+} // namespace android

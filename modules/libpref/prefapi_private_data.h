@@ -16,8 +16,8 @@ extern bool gDirty;
 namespace mozilla {
 namespace dom {
 class PrefSetting;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 void
 pref_savePrefs(PLDHashTable* aTable, char** aPrefArray);

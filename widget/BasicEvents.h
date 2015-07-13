@@ -447,7 +447,7 @@
 namespace IPC {
 template<typename T>
 struct ParamTraits;
-}
+} // namespace IPC
 
 namespace mozilla {
 

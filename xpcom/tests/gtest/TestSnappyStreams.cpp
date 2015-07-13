@@ -98,7 +98,7 @@ static void TestUncompressCorrupt(const char* aCorruptData,
   ASSERT_EQ(NS_ERROR_CORRUPTED_CONTENT, rv);
 }
 
-} // anonymous namespace
+} // namespace
 
 TEST(SnappyStream, Compress_32k)
 {

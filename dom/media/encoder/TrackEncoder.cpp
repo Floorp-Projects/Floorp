@@ -261,4 +261,4 @@ VideoTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
   return mRawSegment.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-}
+} // namespace mozilla

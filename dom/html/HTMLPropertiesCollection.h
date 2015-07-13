@@ -218,4 +218,5 @@ protected:
 
 } // namespace dom
 } // namespace mozilla
+
 #endif // HTMLPropertiesCollection_h_

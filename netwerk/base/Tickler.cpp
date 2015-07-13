@@ -291,7 +291,7 @@ NS_IMETHODIMP TicklerTimer::Notify(nsITimer *timer)
 namespace mozilla {
 namespace net {
 NS_IMPL_ISUPPORTS0(Tickler)
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // defined MOZ_USE_WIFI_TICKLER

@@ -13,11 +13,11 @@ class gfxSharedImageSurface;
 namespace mozilla {
 namespace ipc {
 class Shmem;
-}
+} // namespace ipc
 namespace layers {
 class ISurfaceAllocator;
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 /**
  * A cross-process capable implementation of gfxReusableSurfaceWrapper based

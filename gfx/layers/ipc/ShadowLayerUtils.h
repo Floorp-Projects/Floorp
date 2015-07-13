@@ -24,7 +24,8 @@ namespace mozilla { namespace layers {
 struct SurfaceDescriptorX11 {
   bool operator==(const SurfaceDescriptorX11&) const { return false; }
 };
-} }
+} // namespace layers
+} // namespace mozilla
 #endif
 
 #if defined(MOZ_WIDGET_GONK)
@@ -38,7 +39,8 @@ struct MagicGrallocBufferHandle {
 struct GrallocBufferRef {
   bool operator==(const GrallocBufferRef&) const { return false; }
 };
-} }
+} // namespace layers
+} // namespace mozilla
 #endif
 
 namespace IPC {

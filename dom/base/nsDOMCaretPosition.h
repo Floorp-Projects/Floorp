@@ -15,8 +15,8 @@
 namespace mozilla {
 namespace dom {
 class DOMRect;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * Implementation of a DOM Caret Position, which is a node and offset within

@@ -222,10 +222,10 @@ namespace WebAudioUtils {
                         uint32_t aChannel,
                         const int16_t* aIn, uint32_t* aInLen,
                         int16_t* aOut, uint32_t* aOutLen);
-  }
+  } // namespace WebAudioUtils
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

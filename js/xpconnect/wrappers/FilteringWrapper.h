@@ -18,7 +18,7 @@ namespace JS {
 template <typename T>
 class AutoVectorRooter;
 typedef AutoVectorRooter<jsid> AutoIdVector;
-}
+} // namespace JS
 
 namespace xpc {
 
@@ -87,6 +87,6 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
                                        JS::MutableHandle<JSPropertyDescriptor> desc) const override;
 };
 
-}
+} // namespace xpc
 
 #endif /* __FilteringWrapper_h__ */

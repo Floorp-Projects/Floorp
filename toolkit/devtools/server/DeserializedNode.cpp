@@ -180,5 +180,5 @@ Concrete<DeserializedNode>::edges(JSContext* cx, bool) const
   return UniquePtr<EdgeRange>(range.release());
 }
 
-} // namespace JS
 } // namespace ubi
+} // namespace JS

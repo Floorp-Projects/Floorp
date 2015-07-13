@@ -28,7 +28,7 @@ class SVGPointList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGStringList;
 class SVGTransformList;
-}
+} // namespace mozilla
 
 namespace mozilla {
 

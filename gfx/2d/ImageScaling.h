@@ -70,7 +70,7 @@ private:
   uint32_t mStride;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

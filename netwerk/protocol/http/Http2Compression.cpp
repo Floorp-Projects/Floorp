@@ -1224,5 +1224,5 @@ Http2Compressor::SetMaxBufferSizeInternal(uint32_t maxBufferSize)
   return NS_OK;
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

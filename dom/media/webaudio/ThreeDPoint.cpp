@@ -45,5 +45,5 @@ bool operator==(const ThreeDPoint& lhs, const ThreeDPoint& rhs)
          lhs.z == rhs.z;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

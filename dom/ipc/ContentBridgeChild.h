@@ -80,7 +80,7 @@ protected: // members
   Transport* mTransport; // owned
 };
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_ContentBridgeChild_h

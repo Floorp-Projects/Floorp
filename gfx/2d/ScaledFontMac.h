@@ -47,7 +47,7 @@ public:
   static CTFontDrawGlyphsFuncT* CTFontDrawGlyphsPtr;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SCALEDFONTMAC_H_ */

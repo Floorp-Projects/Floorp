@@ -324,7 +324,7 @@ FuncData* Functions[] = {
 
 const int NumFunctions = ArrayLength(Functions);
 
-} // anonymous namespace
+} // namespace
 
 /******************************** IO Poisoning ********************************/
 

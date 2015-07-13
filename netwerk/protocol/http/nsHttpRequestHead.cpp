@@ -107,5 +107,5 @@ nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
     mHeaders.Flatten(buf, pruneProxyHeaders);
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

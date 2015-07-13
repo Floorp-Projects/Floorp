@@ -140,7 +140,7 @@ protected:
   }
 };
 
-} // anonymous namespace
+} // namespace
 
 /* static */ bool
 MessageChannel::Enabled(JSContext* aCx, JSObject* aGlobal)

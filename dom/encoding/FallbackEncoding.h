@@ -89,8 +89,8 @@ private:
   nsCString mFallback;
 };
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_FallbackEncoding_h_
 

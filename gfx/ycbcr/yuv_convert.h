@@ -75,7 +75,7 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* yplane,
                                 Rotate view_rotate,
                                 ScaleFilter filter);
 
-}  // namespace gfx
-}  // namespace mozilla
+} // namespace gfx
+} // namespace mozilla
  
 #endif  // MEDIA_BASE_YUV_CONVERT_H_

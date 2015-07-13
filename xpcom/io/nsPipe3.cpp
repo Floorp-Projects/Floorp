@@ -65,7 +65,7 @@ enum SegmentChangeResult
   SegmentDeleted
 };
 
-} // anonymous namespace
+} // namespace
 
 //-----------------------------------------------------------------------------
 

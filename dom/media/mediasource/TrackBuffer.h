@@ -245,4 +245,5 @@ private:
 };
 
 } // namespace mozilla
+
 #endif /* MOZILLA_TRACKBUFFER_H_ */

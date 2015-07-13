@@ -324,7 +324,7 @@ private:
   bool mPlainTextTunnel;
 };
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_Http2Stream_h

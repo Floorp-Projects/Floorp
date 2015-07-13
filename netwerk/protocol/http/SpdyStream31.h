@@ -277,6 +277,7 @@ private:
   bool mPlainTextTunnel;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_SpdyStream31_h

@@ -18,7 +18,7 @@ class ErrorResult;
 namespace dom {
 namespace workers {
 class WorkerPrivate;
-}
+} // namespace workers
 
 class Promise;
 struct PromiseDebuggingStateHolder;

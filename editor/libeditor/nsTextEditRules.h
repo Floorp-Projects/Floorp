@@ -22,8 +22,8 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 class Selection;
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
 
 /** Object that encapsulates HTML text-specific editing rules.
   *

@@ -616,8 +616,8 @@ RenderFrameParent::TakeFocusForClick()
                         nsIFocusManager::FLAG_NOSCROLL);
 }
 
-}  // namespace layout
-}  // namespace mozilla
+} // namespace layout
+} // namespace mozilla
 
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  nsSubDocumentFrame* aFrame,

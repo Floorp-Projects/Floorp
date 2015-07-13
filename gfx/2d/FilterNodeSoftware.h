@@ -718,7 +718,7 @@ private:
 #endif
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif // _MOZILLA_GFX_FILTERNODESOFTWARE_H_

@@ -668,7 +668,7 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(FillResponseHeaders, nsIHttpHeaderVisitor)
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 FetchDriver::OnStartRequest(nsIRequest* aRequest,
@@ -964,5 +964,6 @@ FetchDriver::SetDocument(nsIDocument* aDocument)
   MOZ_ASSERT(mFetchRecursionCount == 0);
   mDocument = aDocument;
 }
+
 } // namespace dom
 } // namespace mozilla

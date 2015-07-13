@@ -395,7 +395,7 @@ namespace mozilla {
 namespace gmp {
 class GMPLoader;
 } // namespace gmp
-} // namepsace mozilla
+} // namespace mozilla
 
 XRE_API(nsresult,
         XRE_InitChildProcess, (int aArgc,

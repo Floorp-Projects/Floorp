@@ -40,6 +40,7 @@ private:
   PRIntervalTime                  mLastNotificationTime[2];
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif /* NetworkActivityMonitor_h___ */

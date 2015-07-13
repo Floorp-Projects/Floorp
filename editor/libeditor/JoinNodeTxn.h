@@ -60,7 +60,7 @@ protected:
   nsCOMPtr<nsINode> mParent;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif

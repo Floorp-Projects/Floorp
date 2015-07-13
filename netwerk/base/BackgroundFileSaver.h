@@ -413,6 +413,7 @@ private:
   // Don't accidentally copy construct.
   DigestOutputStream(const DigestOutputStream& d);
 };
+
 } // namespace net
 } // namespace mozilla
 

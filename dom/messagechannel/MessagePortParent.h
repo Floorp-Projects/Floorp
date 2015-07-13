@@ -59,7 +59,7 @@ private:
   bool mCanSendData;
 };
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_MessagePortParent_h

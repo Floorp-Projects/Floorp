@@ -274,7 +274,7 @@ private:
 
 NS_IMPL_ISUPPORTS(MemoryPressureWatcher, nsIRunnable, nsIObserver);
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

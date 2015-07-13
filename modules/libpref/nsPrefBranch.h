@@ -26,7 +26,7 @@
 
 namespace mozilla {
 class PreferenceServiceReporter;
-} // namespace mozilla;
+} // namespace mozilla
 
 class nsPrefBranch;
 

@@ -353,5 +353,5 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const uint8* y_buf,
     EMMS();
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+} // namespace gfx
+} // namespace mozilla

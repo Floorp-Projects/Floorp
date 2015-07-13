@@ -506,7 +506,7 @@ protected:
   FilterNode() {}
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif

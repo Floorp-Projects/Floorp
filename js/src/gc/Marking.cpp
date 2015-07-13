@@ -1803,8 +1803,8 @@ template void
 StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(StoreBuffer*, TenuringTracer&);
 template void
 StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::trace(StoreBuffer*, TenuringTracer&);
-} // namespace js
 } // namespace gc
+} // namespace js
 
 void
 js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const

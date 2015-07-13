@@ -19,7 +19,7 @@ template<class T> struct already_AddRefed;
 
 namespace mozilla {
 class CycleCollectedJSRuntime;
-}
+} // namespace mozilla
 
 bool nsCycleCollector_init();
 

@@ -260,7 +260,7 @@ private:
   CompositableClient* mCompositable;
 };
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla
 
 #endif

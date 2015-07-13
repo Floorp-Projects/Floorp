@@ -386,5 +386,6 @@ NeckoChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
   return true;
 }
 
-}} // mozilla::net
+} // namespace net
+} // namespace mozilla
 

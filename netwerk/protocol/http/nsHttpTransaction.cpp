@@ -2251,5 +2251,5 @@ nsHttpTransaction::GetNetworkAddresses(NetAddr &self, NetAddr &peer)
     peer = mPeerAddr;
 }
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla

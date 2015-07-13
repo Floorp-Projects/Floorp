@@ -555,4 +555,5 @@ GonkBufferQueueConsumer::getSlotFromTextureClientLocked(GonkBufferSlot::TextureC
     ALOGE("getSlotFromBufferLocked: unknown TextureClient: %p", client);
     return BAD_VALUE;
 }
+
 } // namespace android

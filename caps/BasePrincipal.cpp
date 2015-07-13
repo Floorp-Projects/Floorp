@@ -108,7 +108,7 @@ private:
   OriginAttributes* mOriginAttributes;
 };
 
-} // anonymous namespace
+} // namespace
 
 bool
 OriginAttributes::PopulateFromSuffix(const nsACString& aStr)

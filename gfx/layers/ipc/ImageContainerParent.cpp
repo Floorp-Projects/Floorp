@@ -33,5 +33,5 @@ bool ImageContainerParent::RecvAsyncDelete()
   return true;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

@@ -21,5 +21,5 @@ void
 StartForceQuitWatchdog(hal::ShutdownMode aMode, int32_t aTimeoutSecs)
 {}
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

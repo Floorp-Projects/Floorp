@@ -44,7 +44,7 @@ private:
   gfx::DataSourceSurface::MappedSurface mMap;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif

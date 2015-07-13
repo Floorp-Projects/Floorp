@@ -7,4 +7,4 @@ namespace mozilla {
 
 extern int (*RunGTest)();
 
-}
+} // namespace mozilla

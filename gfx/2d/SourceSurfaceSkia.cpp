@@ -153,5 +153,5 @@ SourceSurfaceSkia::MaybeUnlock()
   }
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

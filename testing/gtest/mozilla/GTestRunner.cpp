@@ -121,4 +121,4 @@ public:
   }
 } InitRunGTest;
 
-}
+} // namespace mozilla

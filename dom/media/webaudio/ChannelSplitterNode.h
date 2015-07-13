@@ -43,8 +43,8 @@ private:
   const uint16_t mOutputCount;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

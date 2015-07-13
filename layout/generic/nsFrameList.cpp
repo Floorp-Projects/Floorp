@@ -17,9 +17,9 @@ namespace mozilla {
 namespace layout {
 namespace detail {
 const AlignedFrameListBytes gEmptyFrameListBytes = { 0 };
-}
-}
-}
+} // namespace detail
+} // namespace layout
+} // namespace mozilla
 
 void*
 nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
@@ -542,5 +542,5 @@ AutoFrameListPtr::~AutoFrameListPtr()
   }
 }
 
-}
-}
+} // namespace layout
+} // namespace mozilla

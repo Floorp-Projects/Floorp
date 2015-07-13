@@ -37,8 +37,8 @@ namespace layers {
 class ImageContainer;
 class Layer;
 class LayerManager;
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 typedef nsFrame nsPluginFrameSuper;
 

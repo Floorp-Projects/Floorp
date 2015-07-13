@@ -27,7 +27,7 @@ AssertIsInMainProcess()
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 }
 
-} // anonymous namespace
+} // namespace
 
 class MessagePortService::MessagePortServiceData final
 {
@@ -374,5 +374,5 @@ MessagePortService::ForceClose(const nsID& aUUID,
   return true;
 }
 
-} // dom namespace
-} // mozilla namespace
+} // namespace dom
+} // namespace mozilla

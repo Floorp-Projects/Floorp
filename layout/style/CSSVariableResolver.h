@@ -143,6 +143,6 @@ private:
 #endif
 };
 
-}
+} // namespace mozilla
 
 #endif

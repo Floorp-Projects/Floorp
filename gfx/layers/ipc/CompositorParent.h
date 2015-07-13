@@ -44,7 +44,7 @@ class nsIWidget;
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace layers {
 
@@ -502,7 +502,7 @@ protected:
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_CompositorParent_h

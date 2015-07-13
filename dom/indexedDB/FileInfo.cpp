@@ -76,7 +76,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-} // anonymous namespace
+} // namespace
 
 FileInfo::FileInfo(FileManager* aFileManager)
   : mFileManager(aFileManager)

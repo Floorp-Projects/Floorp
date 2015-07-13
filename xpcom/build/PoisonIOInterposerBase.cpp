@@ -206,7 +206,7 @@ getDebugFileIDs()
 }
 
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 

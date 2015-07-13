@@ -26,7 +26,7 @@ namespace dom {
  { 0x9d, 0xa9, 0xf2, 0xeb, 0x03, 0x91, 0x0b, 0xd1 } }
 
 class MediaStreamError;
-}
+} // namespace dom
 
 class BaseMediaMgrError
 {

@@ -24,7 +24,7 @@ private:
   ~Module();
 };
 
-}
-}
+} // namespace ctypes
+} // namespace mozilla
 
 #endif

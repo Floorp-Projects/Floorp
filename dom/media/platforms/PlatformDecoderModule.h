@@ -21,7 +21,7 @@ class MediaRawData;
 
 namespace layers {
 class ImageContainer;
-}
+} // namespace layers
 
 class MediaDataDecoder;
 class MediaDataDecoderCallback;

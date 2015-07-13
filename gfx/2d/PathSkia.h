@@ -86,7 +86,7 @@ private:
   FillRule mFillRule;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATH_SKIA_H_ */

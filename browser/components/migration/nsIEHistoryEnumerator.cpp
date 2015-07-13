@@ -37,7 +37,7 @@ namespace {
     return PR_ImplodeTime(&prt);
   }
 
-} // Anonymous namespace.
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIEHistoryEnumerator

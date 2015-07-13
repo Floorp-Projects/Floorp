@@ -41,5 +41,5 @@ CacheIndexContextIterator::AddRecords(
   }
 }
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla

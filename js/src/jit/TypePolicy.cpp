@@ -1226,8 +1226,8 @@ namespace jit {
     TEMPLATE_TYPE_POLICY_LIST(template<> DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_)
 #undef DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_
 
-}
-}
+} // namespace jit
+} // namespace js
 
 namespace {
 
@@ -1243,7 +1243,7 @@ thisTypeSpecialization()
     MOZ_CRASH("TypeSpecialization lacks definition of thisTypeSpecialization.");
 }
 
-}
+} // namespace
 
 TypePolicy*
 MGetElementCache::thisTypePolicy()

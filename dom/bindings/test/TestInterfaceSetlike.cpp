@@ -54,5 +54,5 @@ TestInterfaceSetlike::GetParentObject() const
   return mParent;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

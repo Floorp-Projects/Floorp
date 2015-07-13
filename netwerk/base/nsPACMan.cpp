@@ -780,5 +780,5 @@ GetProxyLog()
     return sLog;
 }
 
-}
-}
+} // namespace net
+} // namespace mozilla

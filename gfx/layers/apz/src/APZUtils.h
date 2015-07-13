@@ -53,7 +53,7 @@ static bool IsZero(const gfx::PointTyped<Units>& aPoint)
       && FuzzyEqualsAdditive(aPoint.y, 0.0f, COORDINATE_EPSILON);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif // mozilla_layers_APZUtils_h

@@ -67,5 +67,5 @@ void
 DisableRDS()
 {}
 
-} // hal_impl
+} // namespace hal_impl
 } // namespace mozilla

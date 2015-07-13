@@ -54,5 +54,5 @@ LayerRenderState::LayerRenderState(android::GraphicBuffer* aSurface,
 {}
 #endif
 
-} // namespace
-} // namespace
+} // namespace layers
+} // namespace mozilla

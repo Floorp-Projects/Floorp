@@ -77,6 +77,6 @@ struct ScrollbarStyles
   }
 };
 
-}
+} // namespace mozilla
 
 #endif

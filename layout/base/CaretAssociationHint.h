@@ -17,6 +17,6 @@ enum CaretAssociationHint {
   CARET_ASSOCIATE_AFTER
 };
 
-}
+} // namespace mozilla
 
 #endif

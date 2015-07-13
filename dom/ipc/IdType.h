@@ -11,7 +11,7 @@
 
 namespace IPC {
 template<typename T> struct ParamTraits;
-}
+} // namespace IPC
 
 namespace mozilla {
 namespace dom {
@@ -69,6 +69,6 @@ struct ParamTraits<mozilla::dom::IdType<T>>
   }
 };
 
-}
+} // namespace IPC
 
 #endif

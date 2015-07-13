@@ -33,8 +33,8 @@ namespace mozilla {
 class CSSStyleSheet;
 namespace dom {
 class Element;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 namespace mozilla {
 

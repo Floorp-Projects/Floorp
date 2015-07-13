@@ -77,7 +77,7 @@ private:
   bool mIsConnected;
 };
 
-} // namespace anonymous
+} // namespace
 
 NS_IMPL_ISUPPORTS(PortConnectionChangedCallback, nsITimerCallback)
 

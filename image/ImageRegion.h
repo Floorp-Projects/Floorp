@@ -152,7 +152,7 @@ private:
   bool    mIsRestricted;
 };
 
-}  // namespace image
-}  // namespace mozilla
+} // namespace image
+} // namespace mozilla
 
 #endif // mozilla_image_ImageRegion_h

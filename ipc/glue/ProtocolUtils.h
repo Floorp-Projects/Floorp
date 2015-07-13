@@ -46,16 +46,17 @@ enum {
 
     // kuint16max - 1 is used by ipc_channel.h.
 };
-}
+
+} // namespace
 
 namespace mozilla {
 namespace dom {
 class ContentParent;
-}
+} // namespace dom
 
 namespace net {
 class NeckoParent;
-}
+} // namespace net
 
 namespace ipc {
 

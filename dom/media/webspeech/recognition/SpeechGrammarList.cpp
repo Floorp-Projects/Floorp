@@ -107,5 +107,6 @@ SpeechGrammarList::IndexedGetter(uint32_t aIndex, bool& aPresent,
   aPresent = true;
   return Item(aIndex, rv);
 }
+
 } // namespace dom
 } // namespace mozilla

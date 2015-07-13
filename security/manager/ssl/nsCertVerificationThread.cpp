@@ -34,7 +34,7 @@ private:
   nsCOMPtr<nsIX509Cert> mCert;
   nsCOMPtr<nsICertVerificationResult> mResult;
 };
-} // anonymous namespace
+} // namespace
 
 void nsCertVerificationJob::Run()
 {

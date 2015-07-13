@@ -53,7 +53,7 @@ protected:
   static StringInfo sStringInfo[2];
 };
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_SVGFEComponentTransferElement_h

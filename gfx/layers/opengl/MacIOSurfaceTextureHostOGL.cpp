@@ -123,5 +123,5 @@ MacIOSurfaceTextureSourceOGL::gl() const
   return mCompositor ? mCompositor->gl() : nullptr;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla

@@ -13,8 +13,8 @@
 namespace mozilla {
 namespace css {
 class ErrorReporter;
-}
-}
+} // namespace css
+} // namespace mozilla
 
 // Token types; in close but not perfect correspondence to the token
 // categorization in section 4.1.1 of CSS2.1.  (The deviations are all

@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 class ContentParent;
-}
+} // namespace dom
 
 /**
  * This class sets the priority of subprocesses in response to explicit

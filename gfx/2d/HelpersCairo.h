@@ -311,7 +311,7 @@ private:
   cairo_matrix_t mSaveMatrix;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_HELPERSCAIRO_H_ */

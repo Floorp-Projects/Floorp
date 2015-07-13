@@ -80,7 +80,7 @@ private:
 };
 
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_NV3DVUTILS_H */

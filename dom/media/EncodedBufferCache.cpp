@@ -88,4 +88,4 @@ EncodedBufferCache::ExtractBlob(nsISupports* aParent,
   return blob.forget();
 }
 
-} //end namespace
+} // namespace mozilla

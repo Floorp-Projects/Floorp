@@ -52,7 +52,7 @@ NS_DEFINE_CID(kWifiWorkerCID, NS_WIFIWORKER_CID);
 // Doesn't carry a reference, we're owned by services.
 SystemWorkerManager *gInstance = nullptr;
 
-} // anonymous namespace
+} // namespace
 
 SystemWorkerManager::SystemWorkerManager()
   : mShutdown(false)

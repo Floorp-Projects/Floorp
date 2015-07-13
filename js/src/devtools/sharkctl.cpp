@@ -202,6 +202,6 @@ Stop()
     connected = false;
 }
 
-}
+} // namespace Shark
 
 #endif

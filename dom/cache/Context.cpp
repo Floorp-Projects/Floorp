@@ -40,7 +40,7 @@ public:
   }
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace dom {

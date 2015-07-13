@@ -174,7 +174,7 @@ static const JSFunctionSpec sWitnessClassFunctions[] = {
   JS_FS_END
 };
 
-}
+} // namespace
 
 NS_IMPL_ISUPPORTS(FinalizationWitnessService, nsIFinalizationWitnessService, nsIObserver)
 

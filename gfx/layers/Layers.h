@@ -60,15 +60,15 @@ class StyleAnimationValue;
 
 namespace gl {
 class GLContext;
-}
+} // namespace gl
 
 namespace gfx {
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace dom {
 class OverfillCallback;
-}
+} // namespace dom
 
 namespace layers {
 
@@ -97,7 +97,7 @@ class PersistentBufferProvider;
 
 namespace layerscope {
 class LayersPacket;
-}
+} // namespace layerscope
 
 #define MOZ_LAYER_DECL_NAME(n, e)                              \
   virtual const char* Name() const override { return n; }  \

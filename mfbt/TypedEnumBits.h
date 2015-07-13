@@ -118,7 +118,7 @@ template<typename E>
 struct UnsignedIntegerTypeForEnum
   : UnsignedStdintTypeForSize<sizeof(E)>
 {};
-}
+} // namespace detail
 
 } // namespace mozilla
 

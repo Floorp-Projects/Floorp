@@ -267,7 +267,7 @@ int RowId(sqlite3_vtab_cursor* aCursor, sqlite3_int64* aRowid)
   return SQLITE_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace storage {

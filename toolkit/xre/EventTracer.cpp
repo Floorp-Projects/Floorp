@@ -264,4 +264,4 @@ void ShutdownEventTracing()
   CleanUpWidgetTracing();
 }
 
-}  // namespace mozilla
+} // namespace mozilla

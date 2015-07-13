@@ -223,7 +223,7 @@ class Float64x2Defn {
     static const JSFunctionSpec Methods[];
 };
 
-}
+} // namespace
 
 const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
@@ -675,7 +675,8 @@ struct ShiftRightLogical {
         return uint32_t(bits) >= sizeof(T) * 8 ? 0 : uint32_t(v) >> bits;
     }
 };
-}
+
+} // namespace js
 
 template<typename Out>
 static bool

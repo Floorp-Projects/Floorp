@@ -511,6 +511,7 @@ private: // cache telemetry
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)
-} } // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpChannel_h__

@@ -67,7 +67,7 @@ protected:
   bool mEnabled;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* MEDIASTREAMTRACK_H_ */

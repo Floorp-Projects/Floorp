@@ -29,6 +29,7 @@ protected:
   nsHttpAuthCache *mPrivateAuthCache;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif // nsHttpAuthManager_h__

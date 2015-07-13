@@ -856,7 +856,7 @@ protected:
   nsRefPtr<StringResult> mResult;
 };
 
-} // osfile
+} // namespace
 
 // The OS.File service
 

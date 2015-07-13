@@ -42,7 +42,7 @@ private:
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif  // ifndef dom_tabs_ContentThread_h

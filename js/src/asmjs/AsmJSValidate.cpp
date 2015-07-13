@@ -987,7 +987,8 @@ class Signature
     RetType retType() const { return retType_; }
 };
 
-} /* namespace anonymous */
+} // namespace
+
 
 static
 bool operator==(const Signature& lhs, const Signature& rhs)
@@ -7022,7 +7023,7 @@ class CheckSimdReplaceLaneArgs
     }
 };
 
-} // anonymous namespace
+} // namespace
 
 static void
 SwitchPackOp(FunctionBuilder& f, AsmJSSimdType type, I32X4 i32x4, F32X4 f32x4)
@@ -7291,7 +7292,7 @@ CheckSimdCast(FunctionBuilder& f, ParseNode* call, AsmJSSimdType fromType, AsmJS
     return true;
 }
 
-}
+} // namespace
 
 template<class T>
 inline bool

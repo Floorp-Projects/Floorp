@@ -59,6 +59,7 @@ public:
   virtual const char* Name() const override { return "ColorLayerComposite"; }
 };
 
-} /* layers */
-} /* mozilla */
+} // namespace layers
+} // namespace mozilla
+
 #endif /* GFX_ColorLayerComposite_H */

@@ -28,7 +28,7 @@ DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
                        const InfallibleTArray<uint8_t>& aBuffer,
                        JS::MutableHandle<JS::Value> aVal);
 
-}
+} // namespace IPC
 
 namespace mozilla {
 namespace dom {

@@ -20,8 +20,8 @@ namespace mozilla {
 namespace dom {
 class SVGAnimationElement;
 class SVGAnimatedBoolean;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsSVGBoolean
 {

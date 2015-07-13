@@ -304,7 +304,7 @@ nsNameThreadRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 NS_SetThreadName(nsIThread* aThread, const nsACString& aName)

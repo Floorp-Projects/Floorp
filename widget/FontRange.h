@@ -22,6 +22,6 @@ struct FontRange
   gfxFloat mFontSize; // in device pixels
 };
 
-}
+} // namespace mozilla
 
 #endif // mozilla_FontRange_h_

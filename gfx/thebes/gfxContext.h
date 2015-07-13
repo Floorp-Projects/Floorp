@@ -25,8 +25,8 @@ template <typename T> class FallibleTArray;
 namespace mozilla {
 namespace gfx {
 struct RectCornerRadii;
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 class ClipExporter;
 

@@ -164,7 +164,7 @@ Init()
   }
 }
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 
@@ -283,5 +283,5 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
   *aWakeLockInfo = WakeLockInfoFromLockCount(aTopic, totalCount);
 }
 
-} // hal_impl
-} // mozilla
+} // namespace hal_impl
+} // namespace mozilla

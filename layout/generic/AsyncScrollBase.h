@@ -87,6 +87,6 @@ protected:
   nsSMILKeySpline mTimingFunctionY;
 };
 
-}
+} // namespace mozilla
 
 #endif // mozilla_layout_AsyncScrollBase_h_

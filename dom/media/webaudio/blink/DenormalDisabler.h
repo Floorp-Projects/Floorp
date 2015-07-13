@@ -119,7 +119,7 @@ public:
 
 #endif
 
-} // WebCore
+} // namespace WebCore
 
 #undef HAVE_DENORMAL
 #endif // DenormalDisabler_h

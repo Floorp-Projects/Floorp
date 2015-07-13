@@ -107,6 +107,7 @@ private:
   Maybe<int>       mSampleSize;
 };
 
-}} // namespace mozilla::net
+} // namespace net
+} // namespace mozilla
 
 #endif

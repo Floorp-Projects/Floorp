@@ -38,5 +38,5 @@ CrashReporterChild::GetCrashReporter()
   return nullptr;
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

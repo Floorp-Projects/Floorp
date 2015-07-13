@@ -78,7 +78,7 @@ public:
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-} // anonymous namespace
+} // namespace
 
 namespace mozilla {
 namespace ipc {
@@ -292,7 +292,7 @@ private:
   nsCString mFilter;
 };
 
-}
+} // namespace
 
 auto
 BackgroundParentImpl::AllocPUDPSocketParent(const OptionalPrincipalInfo& /* unused */,
@@ -431,7 +431,7 @@ private:
   nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
-} // anonymous namespace
+} // namespace
 
 bool
 BackgroundParentImpl::RecvPBroadcastChannelConstructor(

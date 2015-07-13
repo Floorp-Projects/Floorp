@@ -59,6 +59,6 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
   return buffer.forget();
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 

@@ -119,7 +119,7 @@ private:
   uint32_t mBufferedHTTP1Consumed;
 };
 
-} // namespace mozilla::net
+} // namespace net
 } // namespace mozilla
 
 #endif // mozilla_net_Http2Push_Internal_h

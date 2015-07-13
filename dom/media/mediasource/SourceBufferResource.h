@@ -33,7 +33,7 @@ namespace dom {
 
 class SourceBuffer;
 
-}  // namespace dom
+} // namespace dom
 
 class SourceBufferResource final : public MediaResource
 {

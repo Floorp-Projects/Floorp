@@ -19,8 +19,8 @@ struct nsStyleFilter;
 namespace mozilla {
 namespace dom {
 class SVGFilterElement;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 /**
  * This class helps nsFilterInstance build its filter graph by processing a

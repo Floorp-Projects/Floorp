@@ -47,16 +47,16 @@ class nsIURI;
 
 namespace JS {
 struct RuntimeStats;
-}
+} // namespace JS
 
 namespace mozilla {
 namespace dom {
 class Function;
-}
+} // namespace dom
 namespace ipc {
 class PrincipalInfo;
-}
-}
+} // namespace ipc
+} // namespace mozilla
 
 struct PRThread;
 

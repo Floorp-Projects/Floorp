@@ -43,7 +43,7 @@ const uint32_t POSSIBLE_VERSION_DOWNGRADE = 4;
 const uint32_t POSSIBLE_CIPHER_SUITE_DOWNGRADE = 2;
 const uint32_t KEA_NOT_SUPPORTED = 1;
 
-}
+} // namespace
 
 class nsHTTPDownloadEvent : public nsRunnable {
 public:

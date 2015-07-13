@@ -18,8 +18,8 @@ class nsIController;
 namespace mozilla {
 namespace dom {
 class TabParent;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #define NS_IWINDOWROOT_IID \
 { 0x238edca0, 0xb30d, 0x46d3, \

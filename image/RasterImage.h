@@ -125,7 +125,7 @@ namespace mozilla {
 namespace layers {
 class ImageContainer;
 class Image;
-}
+} // namespace layers
 
 namespace image {
 

@@ -35,5 +35,5 @@ DrawTarget::DrawCapturedDT(DrawTargetCapture *aCaptureDT,
   static_cast<DrawTargetCaptureImpl*>(aCaptureDT)->ReplayToDrawTarget(this, aTransform);
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

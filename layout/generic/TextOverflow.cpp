@@ -814,5 +814,5 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   mInitialized = true;
 }
 
-}  // namespace css
-}  // namespace mozilla
+} // namespace css
+} // namespace mozilla

@@ -151,6 +151,6 @@ private:
   bool mAtIntraLevelWhitespace;
 };
 
-}
+} // namespace mozilla
 
 #endif /* !defined(mozilla_RubyUtils_h_) */

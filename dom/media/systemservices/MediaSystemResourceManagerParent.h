@@ -51,7 +51,7 @@ private:
   nsClassHashtable<nsUint32HashKey, MediaSystemResourceRequest> mResourceRequests;
 };
 
-} // namespatce media
-} // namespatce mozilla
+} // namespace media
+} // namespace mozilla
 
 #endif

@@ -89,5 +89,5 @@ ContentHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceInt
   return behavior;
 }
 
-}
-}
+} // namespace widget
+} // namespace mozilla

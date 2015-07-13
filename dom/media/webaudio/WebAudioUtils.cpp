@@ -105,5 +105,5 @@ WebAudioUtils::SpeexResamplerProcess(SpeexResamplerState* aResampler,
 #endif
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

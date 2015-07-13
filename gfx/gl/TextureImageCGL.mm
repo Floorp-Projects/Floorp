@@ -107,5 +107,5 @@ TileGenFuncCGL(GLContext *gl,
     return teximage.forget();
 }
 
-}
-}
+} // namespace gl
+} // namespace mozilla

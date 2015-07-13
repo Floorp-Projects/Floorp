@@ -50,5 +50,6 @@ private:
   vorbis_block mVorbisBlock;
 };
 
-}
+} // namespace mozilla
+
 #endif

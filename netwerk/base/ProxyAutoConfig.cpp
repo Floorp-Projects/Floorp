@@ -1021,5 +1021,5 @@ ProxyAutoConfig::IsInBrowser(const JS::CallArgs &aArgs)
   return true;
 }
 
+} // namespace net
 } // namespace mozilla
-} // namespace mozilla::net

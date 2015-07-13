@@ -199,7 +199,7 @@ StorageNotifierRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 void
 DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
@@ -338,5 +338,5 @@ DOMStorage::GetSupportedNames(unsigned, nsTArray<nsString>& aKeys)
   mCache->GetKeys(this, aKeys);
 }
 
-} // ::dom
-} // ::mozilla
+} // namespace dom
+} // namespace mozilla

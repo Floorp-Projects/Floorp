@@ -23,7 +23,7 @@ class FlushableMediaTaskQueue;
 class MediaDataDecoderCallback;
 namespace layers {
   class ImageContainer;
-}
+} // namespace layers
 
 class AppleVDADecoder : public MediaDataDecoder {
 public:

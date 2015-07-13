@@ -35,7 +35,7 @@ class nsXULElement;
 namespace mozilla {
 namespace gl {
 class SourceSurface;
-}
+} // namespace gl
 
 namespace dom {
 class HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement;
@@ -1052,7 +1052,7 @@ protected:
   friend class CanvasDrawObserver;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif /* CanvasRenderingContext2D_h */

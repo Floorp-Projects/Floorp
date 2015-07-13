@@ -11,8 +11,8 @@
 namespace mozilla {
 namespace dom {
 class Animation;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #define NS_IANIMATION_OBSERVER_IID \
 { 0xed025fc7, 0xdeda, 0x48b9, \

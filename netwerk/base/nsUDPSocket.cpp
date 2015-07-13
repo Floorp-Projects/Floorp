@@ -1278,7 +1278,7 @@ SendRequestRunnable::Run()
   return NS_OK;
 }
 
-} // anonymous namespace
+} // namespace
 
 NS_IMETHODIMP
 nsUDPSocket::AsyncListen(nsIUDPSocketListener *aListener)

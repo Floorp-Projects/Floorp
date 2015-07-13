@@ -1344,6 +1344,6 @@ protected:
   TrackRate mSampleRate;
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_MEDIASTREAMGRAPH_H_ */

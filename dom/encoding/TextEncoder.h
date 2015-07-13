@@ -88,7 +88,7 @@ private:
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
 };
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_textencoder_h_

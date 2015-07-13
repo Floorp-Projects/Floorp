@@ -21,7 +21,7 @@ class ImageContainer;
 
 namespace layerscope {
 class LayersPacket;
-}
+} // namespace layerscope
 
 /**
  * A Layer which renders an Image.
@@ -102,7 +102,7 @@ protected:
   gfx::Matrix4x4 mEffectiveTransformForBuffer;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_IMAGELAYER_H */

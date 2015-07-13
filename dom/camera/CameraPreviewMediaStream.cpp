@@ -205,4 +205,4 @@ CameraPreviewMediaStream::ClearCurrentFrame()
   }
 }
 
-}
+} // namespace mozilla

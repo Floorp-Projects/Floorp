@@ -130,7 +130,7 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED(GCAndCCLogDumpRunnable, nsRunnable,
                             nsIDumpGCAndCCLogsCallback)
 
-} // anonymous namespace
+} // namespace
 
 #if defined(MOZ_SUPPORTS_RT_SIGNALS) // {
 namespace {
@@ -188,7 +188,7 @@ void doGCCCDump(const uint8_t aRecvSig)
   NS_DispatchToMainThread(runnable);
 }
 
-} // anonymous namespace
+} // namespace
 #endif // MOZ_SUPPORTS_RT_SIGNALS }
 
 #if defined(MOZ_SUPPORTS_FIFO) // {
@@ -258,7 +258,7 @@ OnFifoEnabledChange(const char* /*unused*/, void* /*unused*/)
   }
 }
 
-} // anonymous namespace
+} // namespace
 #endif // MOZ_SUPPORTS_FIFO }
 
 NS_IMPL_ISUPPORTS(nsMemoryInfoDumper, nsIMemoryInfoDumper)

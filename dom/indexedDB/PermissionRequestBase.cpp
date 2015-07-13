@@ -47,7 +47,7 @@ AssertSanity()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-} // anonymous namespace
+} // namespace
 
 PermissionRequestBase::PermissionRequestBase(Element* aOwnerElement,
                                              nsIPrincipal* aPrincipal)

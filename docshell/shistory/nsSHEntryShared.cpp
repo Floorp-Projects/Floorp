@@ -27,7 +27,7 @@ namespace {
 
 uint64_t gSHEntrySharedID = 0;
 
-} // anonymous namespace
+} // namespace
 
 #define CONTENT_VIEWER_TIMEOUT_SECONDS "browser.sessionhistory.contentViewerTimeout"
 // Default this to time out unused content viewers after 30 minutes

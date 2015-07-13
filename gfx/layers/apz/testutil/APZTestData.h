@@ -127,8 +127,8 @@ private:
   SequenceNumber mPaintSequenceNumber;
 };
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 namespace IPC {
 
@@ -162,7 +162,7 @@ template <>
 struct ParamTraits<mozilla::layers::APZTestData::DataStore>
   : ParamTraits<mozilla::layers::APZTestData::DataStoreBase> {};
 
-}
+} // namespace IPC
 
 
 #endif /* mozilla_layers_APZTestData_h */

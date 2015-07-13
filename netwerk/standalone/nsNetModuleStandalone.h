@@ -8,6 +8,6 @@ namespace mozilla {
 nsresult InitNetModuleStandalone();
 nsresult ShutdownNetModuleStandalone();
 
-}
+} // namespace mozilla
 
 #endif //  ns_net_module_standalone_h_

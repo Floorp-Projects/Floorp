@@ -2886,7 +2886,7 @@ class MemoryInitVisitor {
     void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
 };
 
-} // anonymous namespace
+} // namespace
 
 void
 MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
@@ -2956,7 +2956,7 @@ class MemoryTracingVisitor {
     void visitReference(ReferenceTypeDescr& descr, uint8_t* mem);
 };
 
-} // anonymous namespace
+} // namespace
 
 void
 MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
@@ -3011,7 +3011,7 @@ struct TraceListVisitor {
     bool fillList(Vector<int32_t>& entries);
 };
 
-} // anonymous namespace
+} // namespace
 
 void
 TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)

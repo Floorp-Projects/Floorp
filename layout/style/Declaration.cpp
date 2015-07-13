@@ -1534,5 +1534,5 @@ Declaration::GetVariableValueIsImportant(const nsAString& aName) const
   return mImportantVariables && mImportantVariables->Has(aName);
 }
 
-} // namespace mozilla::css
+} // namespace css
 } // namespace mozilla

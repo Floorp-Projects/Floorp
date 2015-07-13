@@ -67,7 +67,7 @@ const wchar_t * kMozillaWindowClass = L"MozillaWindowClass";
 namespace {
 // see PluginModuleChild::GetChrome()
 PluginModuleChild* gChromeInstance = nullptr;
-}
+} // namespace
 
 #ifdef MOZ_WIDGET_QT
 typedef void (*_gtk_init_fn)(int argc, char **argv);

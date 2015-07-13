@@ -24,7 +24,7 @@ namespace Library
 
   static bool Close(JSContext* cx, unsigned argc, jsval* vp);
   static bool Declare(JSContext* cx, unsigned argc, jsval* vp);
-}
+} // namespace Library
 
 /*******************************************************************************
 ** JSObject implementation
@@ -369,6 +369,6 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   return true;
 }
 
-}
-}
+} // namespace ctypes
+} // namespace js
 

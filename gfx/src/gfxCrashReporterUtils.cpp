@@ -112,6 +112,6 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 
 namespace mozilla {
 void ScopedGfxFeatureReporter::WriteAppNote(char) {}
-}
+} // namespace mozilla
 
 #endif

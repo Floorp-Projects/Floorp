@@ -59,7 +59,7 @@ void ApplyStereoPanning(const AudioChunk& aInput, AudioChunk* aOutput,
   }
 }
 
-} // dom
-} // mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif // PANNING_UTILS_H

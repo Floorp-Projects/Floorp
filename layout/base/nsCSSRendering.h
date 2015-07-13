@@ -26,11 +26,11 @@ namespace mozilla {
 
 namespace gfx {
 class DrawTarget;
-}
+} // namespace gfx
 
 namespace layers {
 class ImageContainer;
-}
+} // namespace layers
 
 // A CSSSizeOrRatio represents a (possibly partially specified) size for use
 // in computing image sizes. Either or both of the width and height might be
@@ -98,7 +98,7 @@ struct CSSSizeOrRatio
   bool mHasHeight;
 };
 
-}
+} // namespace mozilla
 
 /**
  * This is a small wrapper class to encapsulate image drawing that can draw an

@@ -425,6 +425,6 @@ protected:
 #endif
 };
 
-}
+} // namespace mozilla
 
 #endif /* MOZILLA_MEDIASEGMENT_H_ */

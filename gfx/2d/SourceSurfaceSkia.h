@@ -66,7 +66,7 @@ private:
   bool mLocked;
 };
 
-}
-}
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_SOURCESURFACESKIA_H_ */

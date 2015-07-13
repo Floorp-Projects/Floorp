@@ -47,7 +47,7 @@ GetLoadContextInfo(bool const aIsPrivate = false,
                    bool const aIsInBrowserElement = false,
                    bool const aIsAnonymous = false);
 
-} // net
-} // mozilla
+} // namespace net
+} // namespace mozilla
 
 #endif

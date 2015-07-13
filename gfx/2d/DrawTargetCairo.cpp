@@ -1824,5 +1824,5 @@ BorrowedXlibDrawable::Finish()
 }
 #endif
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

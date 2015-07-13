@@ -128,8 +128,8 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
   return NS_OK;
 }
 
-}
-}
+} // namespace ctypes
+} // namespace mozilla
 
 NS_DEFINE_NAMED_CID(JSCTYPES_CID);
 

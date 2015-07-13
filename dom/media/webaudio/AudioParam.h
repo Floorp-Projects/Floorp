@@ -199,8 +199,8 @@ private:
   nsRefPtr<MediaInputPort> mNodeStreamPort;
 };
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 #endif
 

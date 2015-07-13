@@ -45,9 +45,9 @@ private:
   explicit IntRegionTyped(const nsRegion& aRegion) : Super(aRegion) {}
 };
 
-}
+} // namespace gfx
 
-}
+} // namespace mozilla
 
 
 

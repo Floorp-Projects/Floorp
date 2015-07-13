@@ -67,7 +67,7 @@ public:
   static NumberListInfo sNumberListInfo[1];
 };
 
-} // namespace mozilla
 } // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_SVGFEColorMatrixElement_h

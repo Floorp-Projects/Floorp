@@ -786,6 +786,6 @@ RotatedContentBuffer::GetSourceSurface(ContextSource aSource) const
   }
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 

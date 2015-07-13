@@ -60,8 +60,8 @@ protected:
   bool mThirdPartySession;
 };
 
-}
-}
+} // namespace net
+} // namespace mozilla
 
 #endif // mozilla_net_CookieServiceChild_h__
 

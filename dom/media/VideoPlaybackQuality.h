@@ -61,4 +61,5 @@ private:
 
 } // namespace dom
 } // namespace mozilla
+
 #endif /* mozilla_dom_VideoPlaybackQuality_h_ */

@@ -368,5 +368,6 @@ InternalHeaders::GetUnsafeHeaders(nsTArray<nsCString>& aNames) const
     }
   }
 }
+
 } // namespace dom
 } // namespace mozilla

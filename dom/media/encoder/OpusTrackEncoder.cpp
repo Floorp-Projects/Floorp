@@ -436,4 +436,4 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-}
+} // namespace mozilla

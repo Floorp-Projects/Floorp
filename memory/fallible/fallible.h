@@ -62,6 +62,7 @@ struct fallible_t { };
 extern const fallible_t fallible;
 
 } // namespace mozilla
+
 #endif
 
 #endif // mozilla_fallible_h

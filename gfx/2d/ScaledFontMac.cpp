@@ -270,5 +270,5 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 
 }
 
-}
-}
+} // namespace gfx
+} // namespace mozilla

@@ -157,7 +157,9 @@ private:
   std::vector<uint8_t> mDrawCommandStorage;
 };
 
-} /* namespace mozilla */
-} /* namespace gfx */
+} // namespace gfx
+
+} // namespace mozilla
+
 
 #endif /* MOZILLA_GFX_DRAWTARGETCAPTURE_H_ */

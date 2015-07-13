@@ -27,13 +27,13 @@ class nsIURI;
 
 namespace JS {
   class SourceBufferHolder;
-}
+} // namespace JS
 
 namespace mozilla {
 namespace dom {
 class AutoJSAPI;
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 //////////////////////////////////////////////////////////////
 // Per-request data structure

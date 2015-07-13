@@ -757,6 +757,6 @@ APZCCallbackHelper::NotifyFlushComplete()
   observerService->NotifyObservers(nullptr, "apz-repaints-flushed", nullptr);
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 

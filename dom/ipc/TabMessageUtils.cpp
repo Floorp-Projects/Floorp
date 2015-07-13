@@ -29,5 +29,5 @@ ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
   return aResult->mEvent->Deserialize(aMsg, aIter);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

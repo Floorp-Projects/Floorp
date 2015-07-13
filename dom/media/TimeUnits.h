@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace media {
 class TimeIntervals;
-}
-}
+} // namespace media
+} // namespace mozilla
 // CopyChooser specalization for nsTArray
 template<>
 struct nsTArray_CopyChooser<mozilla::media::TimeIntervals>

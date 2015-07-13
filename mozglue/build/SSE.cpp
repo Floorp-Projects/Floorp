@@ -106,7 +106,7 @@ has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 
 #endif // end CPUID declarations
 
-}
+} // namespace
 
 namespace mozilla {
 
