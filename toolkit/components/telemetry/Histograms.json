@@ -7986,5 +7986,11 @@
     "kind": "enumerated",
     "n_values": 5,
     "description": "The result of trying to download a document to show in reader view (0=Success, 1=Error XHR, 2=Error no document)"
+  },
+  "FENNEC_TITLE_IN_TITLEBAR_ENABLED": {
+    "alert_emails": ["michael.l.comella@gmail.com"],
+    "expires_in_version": "43",
+    "kind": "boolean",
+    "description": "Is the title shown in the url bar (as determined by the titlebar title or url preference)?"
   }
 }
