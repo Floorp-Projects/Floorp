@@ -1127,7 +1127,17 @@ EnvironmentCache.prototype = {
       // again as part of bug 1154500.
       //DWriteVersion: getGfxField("DWriteVersion", null),
       adapters: [],
+      monitors: [],
     };
+
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GTK)
+    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+    try {
+      gfxData.monitors = gfxInfo.getMonitors();
+    } catch (e) {
+      this._log.error("nsIGfxInfo.getMonitors() caught error", e);
+    }
+#endif
 
     // GfxInfo does not yet expose a way to iterate through all the adapters.
     gfxData.adapters.push(getGfxAdapter(""));
