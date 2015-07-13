@@ -3136,6 +3136,24 @@ JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name);
 extern JS_PUBLIC_API(bool)
 JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
 
+/**
+ * Get an array of the non-symbol enumerable properties of obj.
+ * This function is roughly equivalent to:
+ *
+ *     var result = [];
+ *     for (key in obj)
+ *         result.push(key);
+ *     return result;
+ *
+ * This is the closest thing we currently have to the ES6 [[Enumerate]]
+ * internal method.
+ *
+ * The JSIdArray returned by JS_Enumerate must be rooted to protect its
+ * contents from garbage collection. Use JS::AutoIdArray.
+ */
+extern JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
+
 
 /*** Other property-defining functions ***********************************************************/
 
@@ -3247,14 +3265,12 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length);
 extern JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length);
 
-extern JS_PUBLIC_API(bool)
-JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
-
 extern JS_PUBLIC_API(JS::Value)
 JS_GetReservedSlot(JSObject* obj, uint32_t index);
 
 extern JS_PUBLIC_API(void)
 JS_SetReservedSlot(JSObject* obj, uint32_t index, JS::Value v);
+
 
 /************************************************************************/
 

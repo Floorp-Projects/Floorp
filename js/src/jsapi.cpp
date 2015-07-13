@@ -2929,6 +2929,21 @@ JS_DeleteElement(JSContext* cx, HandleObject obj, uint32_t index)
     return JS_DeleteElement(cx, obj, index, ignored);
 }
 
+JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, HandleObject obj, JS::MutableHandle<IdVector> props)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    MOZ_ASSERT(props.empty());
+
+    AutoIdVector ids(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &ids))
+        return false;
+
+    return props.append(ids.begin(), ids.end());
+}
+
 
 /* * */
 
@@ -3225,21 +3240,6 @@ JS_SetAllNonReservedSlotsToUndefined(JSContext* cx, JSObject* objArg)
     unsigned numSlots = obj->as<NativeObject>().slotSpan();
     for (unsigned i = numReserved; i < numSlots; i++)
         obj->as<NativeObject>().setSlot(i, UndefinedValue());
-}
-
-JS_PUBLIC_API(bool)
-JS_Enumerate(JSContext* cx, HandleObject obj, JS::MutableHandle<IdVector> props)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    MOZ_ASSERT(props.empty());
-
-    AutoIdVector ids(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &ids))
-        return false;
-
-    return props.append(ids.begin(), ids.end());
 }
 
 JS_PUBLIC_API(Value)
