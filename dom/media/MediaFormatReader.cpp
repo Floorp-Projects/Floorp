@@ -875,6 +875,17 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
         return;
       }
 
+      if (decoder.mNextStreamSourceID.isNothing() ||
+          decoder.mNextStreamSourceID.ref() != info->GetID()) {
+        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+            TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
+            info->GetID());
+        decoder.mNeedDraining = true;
+        decoder.mNextStreamSourceID = Some(info->GetID());
+        DrainDecoder(aTrack);
+        return;
+      }
+
       LOG("%s stream id has changed from:%d to:%d, recreating decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
