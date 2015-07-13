@@ -25,7 +25,6 @@ class FMRadio final : public DOMEventTargetHelper
                     , public FMRadioEventObserver
                     , public nsSupportsWeakReference
                     , public nsIAudioChannelAgentCallback
-                    , public nsIDOMEventListener
 
 {
   friend class FMRadioRequest;
@@ -109,13 +108,9 @@ public:
   IMPL_EVENT_HANDLER(rtchange);
   IMPL_EVENT_HANDLER(newrdsgroup);
 
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
 private:
   ~FMRadio();
 
-  void SetCanPlay(bool aCanPlay);
   void EnableAudioChannelAgent();
 
   hal::SwitchState mHeadphoneState;

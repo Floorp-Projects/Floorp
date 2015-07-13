@@ -6,24 +6,13 @@
 
 interface nsIDOMWindow;
 
-[uuid(194b55d9-39c0-45c6-b8ef-b8049f978ea5)]
+[uuid(4f537c88-3722-4946-9a09-ce559fa0591d)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
-   * Notified when the playable status of channel is changed.
-   *
-   * @param canPlay
-   *        Callback from agent to notify component of the playable status
-   *        of the channel. If canPlay is muted state, component SHOULD stop
-   *        playing media associated with this channel as soon as possible. if
-   *        it is faded state then the volume of media should be reduced.
-   */
-  void canPlayChanged(in long canPlay);
-
-  /**
    * Notified when the window volume/mute is changed
    */
-  void windowVolumeChanged();
+  void windowVolumeChanged(in float aVolume, in bool aMuted);
 };
 
 /**
@@ -40,7 +29,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[uuid(2b0222a5-8f7b-49d2-9ab8-cd01b744b23e)]
+[uuid(e28e1569-2a44-4f71-9cd0-216874b05d57)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -61,6 +50,13 @@ interface nsIAudioChannelAgent : nsISupports
    * Before init() is called, this returns AUDIO_AGENT_CHANNEL_ERROR.
    */
   readonly attribute long audioChannelType;
+
+  %{C++
+  inline int32_t AudioChannelType() {
+    int32_t channel;
+    return NS_SUCCEEDED(GetAudioChannelType(&channel)) ? channel : AUDIO_AGENT_CHANNEL_ERROR;
+  }
+  %}
 
   /**
    * Initialize the agent with a channel type.
@@ -92,16 +88,6 @@ interface nsIAudioChannelAgent : nsISupports
                             in nsIAudioChannelAgentCallback callback);
 
   /**
-   * This method is just like init(), and specify the channel is associated
-   * with video.
-   *
-   * @param weak
-   *    true if weak reference should be hold.
-   */
-  void initWithVideo(in nsIDOMWindow window, in long channelType,
-                     in nsIAudioChannelAgentCallback callback, in boolean weak);
-
-  /**
    * Notify the agent that we want to start playing.
    * Note: Gecko component SHOULD call this function first then start to
    *          play audio stream only when return value is true.
@@ -115,28 +101,15 @@ interface nsIAudioChannelAgent : nsISupports
    *    faded state: the agent has registered with audio channel service the
    *          component should start playback as well as reducing the volume.
    */
-  long startPlaying();
+  void notifyStartedPlaying(out float volume, out bool muted);
 
   /**
    * Notify the agent we no longer want to play.
    *
-   * Note : even if startPlaying() returned false, the agent would still be
-   *        registered with the audio channel service and receive callbacks for status changes.
-   *        So stopPlaying must still eventually be called to unregister the agent with the
-   *        channel service.
+   * Note : even if notifyStartedPlaying() returned false, the agent would
+   * still be registered with the audio channel service and receive callbacks
+   * for status changes. So notifyStoppedPlaying must still eventually be
+   * called to unregister the agent with the channel service.
    */
-  void stopPlaying();
-
-  /**
-   * Notify the agent of the visibility state of the window using this agent.
-   * @param visible
-   *    True if the window associated with the agent is visible.
-   */
-  void setVisibilityState(in boolean visible);
-
-  /**
-   * Retrieve the volume from the window.
-   */
-  readonly attribute float windowVolume;
+  void notifyStoppedPlaying();
 };
-

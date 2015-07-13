@@ -41,8 +41,6 @@ Decoder::Decoder(RasterImage* aImage)
   , mImageIsLocked(false)
   , mFrameCount(0)
   , mFailCode(NS_OK)
-  , mNeedsNewFrame(false)
-  , mNeedsToFlushData(false)
   , mInitialized(false)
   , mSizeDecode(false)
   , mInFrame(false)
@@ -86,33 +84,6 @@ Decoder::Init()
   // Implementation-specific initialization
   InitInternal();
 
-  mInitialized = true;
-}
-
-// Initializes a decoder whose image and observer is already being used by a
-// parent decoder
-void
-Decoder::InitSharedDecoder(uint8_t* aImageData, uint32_t aImageDataLength,
-                           uint32_t* aColormap, uint32_t aColormapSize,
-                           RawAccessFrameRef&& aFrameRef)
-{
-  // No re-initializing
-  MOZ_ASSERT(!mInitialized, "Can't re-initialize a decoder!");
-
-  mImageData = aImageData;
-  mImageDataLength = aImageDataLength;
-  mColormap = aColormap;
-  mColormapSize = aColormapSize;
-  mCurrentFrame = Move(aFrameRef);
-
-  // We have all the frame data, so we've started the frame.
-  if (!IsSizeDecode()) {
-    mFrameCount++;
-    PostFrameStart();
-  }
-
-  // Implementation-specific initialization
-  InitInternal();
   mInitialized = true;
 }
 
@@ -179,6 +150,9 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   PROFILER_LABEL("ImageDecoder", "Write",
     js::ProfileEntry::Category::GRAPHICS);
 
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
+
   // We're strict about decoder errors
   MOZ_ASSERT(!HasDecoderError(),
              "Not allowed to make more decoder calls after error!");
@@ -190,12 +164,6 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   // Keep track of the total number of bytes written.
   mBytesDecoded += aCount;
 
-  // If we're flushing data, clear the flag.
-  if (aBuffer == nullptr && aCount == 0) {
-    MOZ_ASSERT(mNeedsToFlushData, "Flushing when we don't need to");
-    mNeedsToFlushData = false;
-  }
-
   // If a data error occured, just ignore future data.
   if (HasDataError()) {
     return;
@@ -206,27 +174,8 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
     return;
   }
 
-  MOZ_ASSERT(!NeedsNewFrame() || HasDataError(),
-             "Should not need a new frame before writing anything");
-  MOZ_ASSERT(!NeedsToFlushData() || HasDataError(),
-             "Should not need to flush data before writing anything");
-
   // Pass the data along to the implementation.
   WriteInternal(aBuffer, aCount);
-
-  // If we need a new frame to proceed, let's create one and call it again.
-  while (NeedsNewFrame() && !HasDataError()) {
-    MOZ_ASSERT(!IsSizeDecode(), "Shouldn't need new frame for size decode");
-
-    nsresult rv = AllocateFrame();
-
-    if (NS_SUCCEEDED(rv)) {
-      // Use the data we saved when we asked for a new frame.
-      WriteInternal(nullptr, 0);
-    }
-
-    mNeedsToFlushData = false;
-  }
 
   // Finish telemetry.
   mDecodeTime += (TimeStamp::Now() - start);
@@ -238,6 +187,8 @@ Decoder::CompleteDecode()
   // Implementation-specific finalization
   if (!HasError()) {
     FinishInternal();
+  } else {
+    FinishWithErrorInternal();
   }
 
   // If the implementation left us mid-frame, finish that up.
@@ -328,135 +279,51 @@ Decoder::Finish()
       mCurrentFrame->SetOptimizable();
     }
 
-    mImage->OnDecodingComplete();
-  }
-}
-
-void
-Decoder::FinishSharedDecoder()
-{
-  if (!HasError()) {
-    FinishInternal();
+    mImage->OnDecodingComplete(mIsAnimated);
   }
 }
 
 nsresult
-Decoder::AllocateFrame(const nsIntSize& aTargetSize /* = nsIntSize() */)
+Decoder::AllocateFrame(uint32_t aFrameNum,
+                       const nsIntSize& aTargetSize,
+                       const nsIntRect& aFrameRect,
+                       gfx::SurfaceFormat aFormat,
+                       uint8_t aPaletteDepth)
 {
-  MOZ_ASSERT(mNeedsNewFrame);
-
-  nsIntSize targetSize = aTargetSize;
-  if (targetSize == nsIntSize()) {
-    MOZ_ASSERT(HasSize());
-    targetSize = mImageMetadata.GetSize();
-  }
-
-  mCurrentFrame = EnsureFrame(mNewFrameData.mFrameNum,
-                              targetSize,
-                              mNewFrameData.mFrameRect,
-                              GetDecodeFlags(),
-                              mNewFrameData.mFormat,
-                              mNewFrameData.mPaletteDepth,
-                              mCurrentFrame.get());
+  mCurrentFrame = AllocateFrameInternal(aFrameNum, aTargetSize, aFrameRect,
+                                        GetDecodeFlags(), aFormat,
+                                        aPaletteDepth, mCurrentFrame.get());
 
   if (mCurrentFrame) {
     // Gather the raw pointers the decoders will use.
     mCurrentFrame->GetImageData(&mImageData, &mImageDataLength);
     mCurrentFrame->GetPaletteData(&mColormap, &mColormapSize);
 
-    if (mNewFrameData.mFrameNum + 1 == mFrameCount) {
+    if (aFrameNum + 1 == mFrameCount) {
       PostFrameStart();
     }
   } else {
     PostDataError();
   }
 
-  // Mark ourselves as not needing another frame before talking to anyone else
-  // so they can tell us if they need yet another.
-  mNeedsNewFrame = false;
-
-  // If we've received any data at all, we may have pending data that needs to
-  // be flushed now that we have a frame to decode into.
-  if (mBytesDecoded > 0) {
-    mNeedsToFlushData = true;
-  }
-
   return mCurrentFrame ? NS_OK : NS_ERROR_FAILURE;
 }
 
 RawAccessFrameRef
-Decoder::EnsureFrame(uint32_t aFrameNum,
-                     const nsIntSize& aTargetSize,
-                     const nsIntRect& aFrameRect,
-                     uint32_t aDecodeFlags,
-                     SurfaceFormat aFormat,
-                     uint8_t aPaletteDepth,
-                     imgFrame* aPreviousFrame)
+Decoder::AllocateFrameInternal(uint32_t aFrameNum,
+                               const nsIntSize& aTargetSize,
+                               const nsIntRect& aFrameRect,
+                               uint32_t aDecodeFlags,
+                               SurfaceFormat aFormat,
+                               uint8_t aPaletteDepth,
+                               imgFrame* aPreviousFrame)
 {
   if (mDataError || NS_FAILED(mFailCode)) {
     return RawAccessFrameRef();
   }
 
-  MOZ_ASSERT(aFrameNum <= mFrameCount, "Invalid frame index!");
-  if (aFrameNum > mFrameCount) {
-    return RawAccessFrameRef();
-  }
-
-  // Adding a frame that doesn't already exist. This is the normal case.
-  if (aFrameNum == mFrameCount) {
-    return InternalAddFrame(aFrameNum, aTargetSize, aFrameRect, aDecodeFlags,
-                            aFormat, aPaletteDepth, aPreviousFrame);
-  }
-
-  // We're replacing a frame. It must be the first frame; there's no reason to
-  // ever replace any other frame, since the first frame is the only one we
-  // speculatively allocate without knowing what the decoder really needs.
-  // XXX(seth): I'm not convinced there's any reason to support this at all. We
-  // should figure out how to avoid triggering this and rip it out.
-  MOZ_ASSERT(aFrameNum == 0, "Replacing a frame other than the first?");
-  MOZ_ASSERT(mFrameCount == 1, "Should have only one frame");
-  MOZ_ASSERT(aPreviousFrame, "Need the previous frame to replace");
-  if (aFrameNum != 0 || !aPreviousFrame || mFrameCount != 1) {
-    return RawAccessFrameRef();
-  }
-
-  MOZ_ASSERT(!aPreviousFrame->GetRect().IsEqualEdges(aFrameRect) ||
-             aPreviousFrame->GetFormat() != aFormat ||
-             aPreviousFrame->GetPaletteDepth() != aPaletteDepth,
-             "Replacing first frame with the same kind of frame?");
-
-  // Reset our state.
-  mInFrame = false;
-  RawAccessFrameRef ref = Move(mCurrentFrame);
-
-  MOZ_ASSERT(ref, "No ref to current frame?");
-
-  // Reinitialize the old frame.
-  nsIntSize oldSize = aPreviousFrame->GetImageSize();
-  bool nonPremult =
-    aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-  if (NS_FAILED(aPreviousFrame->ReinitForDecoder(oldSize, aFrameRect, aFormat,
-                                                 aPaletteDepth, nonPremult))) {
-    NS_WARNING("imgFrame::ReinitForDecoder should succeed");
-    mFrameCount = 0;
-    aPreviousFrame->Abort();
-    return RawAccessFrameRef();
-  }
-
-  return ref;
-}
-
-RawAccessFrameRef
-Decoder::InternalAddFrame(uint32_t aFrameNum,
-                          const nsIntSize& aTargetSize,
-                          const nsIntRect& aFrameRect,
-                          uint32_t aDecodeFlags,
-                          SurfaceFormat aFormat,
-                          uint8_t aPaletteDepth,
-                          imgFrame* aPreviousFrame)
-{
-  MOZ_ASSERT(aFrameNum <= mFrameCount, "Invalid frame index!");
-  if (aFrameNum > mFrameCount) {
+  if (aFrameNum != mFrameCount) {
+    MOZ_ASSERT_UNREACHABLE("Allocating frames out of order");
     return RawAccessFrameRef();
   }
 
@@ -559,6 +426,7 @@ Decoder::SetSizeOnImage()
 void Decoder::InitInternal() { }
 void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
 void Decoder::FinishInternal() { }
+void Decoder::FinishWithErrorInternal() { }
 
 /*
  * Progress Notifications
@@ -683,24 +551,6 @@ Decoder::PostDecoderError(nsresult aFailureCode)
   if (mInFrame && mCurrentFrame) {
     mCurrentFrame->Abort();
   }
-}
-
-void
-Decoder::NeedNewFrame(uint32_t framenum, uint32_t x_offset, uint32_t y_offset,
-                      uint32_t width, uint32_t height,
-                      gfx::SurfaceFormat format,
-                      uint8_t palette_depth /* = 0 */)
-{
-  // Decoders should never call NeedNewFrame without yielding back to Write().
-  MOZ_ASSERT(!mNeedsNewFrame);
-
-  // We don't want images going back in time or skipping frames.
-  MOZ_ASSERT(framenum == mFrameCount || framenum == (mFrameCount - 1));
-
-  mNewFrameData = NewFrameData(framenum,
-                               nsIntRect(x_offset, y_offset, width, height),
-                               format, palette_depth);
-  mNeedsNewFrame = true;
 }
 
 Telemetry::ID

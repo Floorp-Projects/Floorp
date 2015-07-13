@@ -5,3 +5,4 @@
 # This file is included at the bottom of all xulrunner mozconfigs
 
 . "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"

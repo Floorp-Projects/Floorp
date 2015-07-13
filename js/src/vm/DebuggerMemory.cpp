@@ -320,6 +320,135 @@ DebuggerMemory::getAllocationsLogOverflowed(JSContext* cx, unsigned argc, Value*
 }
 
 /* static */ bool
+DebuggerMemory::setTrackingTenurePromotions(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set trackingTenurePromotions)", args, memory);
+    if (!args.requireAtLeast(cx, "(set trackingTenurePromotions)", 1))
+        return false;
+
+    Debugger* dbg = memory->getDebugger();
+    dbg->trackingTenurePromotions = ToBoolean(args[0]);
+    return undefined(args);
+}
+
+/* static */ bool
+DebuggerMemory::getTrackingTenurePromotions(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get trackingTenurePromotions)", args, memory);
+    args.rval().setBoolean(memory->getDebugger()->trackingTenurePromotions);
+    return true;
+}
+
+/* static */ bool
+DebuggerMemory::drainTenurePromotionsLog(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "drainTenurePromotionsLog", args, memory);
+    Debugger* dbg = memory->getDebugger();
+
+    if (!dbg->trackingTenurePromotions) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_TRACKING_TENURINGS,
+                             "drainTenurePromotionsLog");
+        return false;
+    }
+
+    size_t length = dbg->tenurePromotionsLogLength;
+
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, length));
+    if (!result)
+        return false;
+    result->ensureDenseInitializedLength(cx, 0, length);
+
+    for (size_t i = 0; i < length; i++) {
+        RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        if (!obj)
+            return false;
+
+        // Don't pop the TenurePromotionsEntry yet. The queue's links are
+        // followed by the GC to find the TenurePromotionsEntry, but are not
+        // barriered, so we must edit them with great care. Use the queue entry
+        // in place, and then pop and delete together.
+        auto* entry = dbg->tenurePromotionsLog.getFirst();
+
+        RootedValue frame(cx, ObjectOrNullValue(entry->frame));
+        if (!cx->compartment()->wrap(cx, &frame) ||
+            !DefineProperty(cx, obj, cx->names().frame, frame))
+        {
+            return false;
+        }
+
+        RootedValue timestampValue(cx, NumberValue(entry->when));
+        if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
+            return false;
+
+        RootedString className(cx, Atomize(cx, entry->className, strlen(entry->className)));
+        if (!className)
+            return false;
+        RootedValue classNameValue(cx, StringValue(className));
+        if (!DefineProperty(cx, obj, cx->names().class_, classNameValue))
+            return false;
+
+        result->setDenseElement(i, ObjectValue(*obj));
+
+        // Pop the front queue entry, and delete it immediately, so that
+        // the GC sees the TenurePromotionsEntry's RelocatablePtr barriers run
+        // atomically with the change to the graph (the queue link).
+        MOZ_ALWAYS_TRUE(dbg->tenurePromotionsLog.popFirst() == entry);
+        js_delete(entry);
+    }
+
+    dbg->tenurePromotionsLogOverflowed = false;
+    dbg->tenurePromotionsLogLength = 0;
+    args.rval().setObject(*result);
+    return true;
+}
+
+/* static */ bool
+DebuggerMemory::getMaxTenurePromotionsLogLength(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get maxTenurePromotionsLogLength)", args, memory);
+    args.rval().setInt32(memory->getDebugger()->maxTenurePromotionsLogLength);
+    return true;
+}
+
+/* static */ bool
+DebuggerMemory::setMaxTenurePromotionsLogLength(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set maxTenurePromotionsLogLength)", args, memory);
+    if (!args.requireAtLeast(cx, "(set maxTenurePromotionsLogLength)", 1))
+        return false;
+
+    int32_t max;
+    if (!ToInt32(cx, args[0], &max))
+        return false;
+
+    if (max < 1) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                             "(set maxTenurePromotionsLogLength)'s parameter",
+                             "not a positive integer");
+        return false;
+    }
+
+    Debugger* dbg = memory->getDebugger();
+    dbg->maxTenurePromotionsLogLength = max;
+
+    while (dbg->tenurePromotionsLogLength > dbg->maxAllocationsLogLength) {
+        js_delete(dbg->tenurePromotionsLog.getFirst());
+        dbg->tenurePromotionsLogLength--;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+/* static */ bool
+DebuggerMemory::getTenurePromotionsLogOverflowed(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get tenurePromotionsLogOverflowed)", args, memory);
+    args.rval().setBoolean(memory->getDebugger()->tenurePromotionsLogOverflowed);
+    return true;
+}
+
+/* static */ bool
 DebuggerMemory::getOnGarbageCollection(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get onGarbageCollection)", args, memory);
@@ -1478,12 +1607,18 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
     JS_PSGS("maxAllocationsLogLength", getMaxAllocationsLogLength, setMaxAllocationsLogLength, 0),
     JS_PSGS("allocationSamplingProbability", getAllocationSamplingProbability, setAllocationSamplingProbability, 0),
     JS_PSG("allocationsLogOverflowed", getAllocationsLogOverflowed, 0),
+
+    JS_PSGS("trackingTenurePromotions", getTrackingTenurePromotions, setTrackingTenurePromotions, 0),
+    JS_PSGS("maxTenurePromotionsLogLength", getMaxTenurePromotionsLogLength, setMaxTenurePromotionsLogLength, 0),
+    JS_PSG("tenurePromotionsLogOverflowed", getTenurePromotionsLogOverflowed, 0),
+
     JS_PSGS("onGarbageCollection", getOnGarbageCollection, setOnGarbageCollection, 0),
     JS_PS_END
 };
 
 /* static */ const JSFunctionSpec DebuggerMemory::methods[] = {
     JS_FN("drainAllocationsLog", DebuggerMemory::drainAllocationsLog, 0, 0),
+    JS_FN("drainTenurePromotionsLog", DebuggerMemory::drainTenurePromotionsLog, 0, 0),
     JS_FN("takeCensus", takeCensus, 0, 0),
     JS_FS_END
 };

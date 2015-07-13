@@ -6,6 +6,7 @@
 
 #include "mozilla/BasePrincipal.h"
 
+#include "nsIAddonPolicyService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -15,6 +16,7 @@
 #include "nsIURIWithPrincipal.h"
 #include "nsNullPrincipal.h"
 #include "nsScriptSecurityManager.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -39,6 +41,10 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   if (mInBrowser) {
     params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
+  }
+
+  if (!mAddonId.IsEmpty()) {
+    params->Set(NS_LITERAL_STRING("addonId"), mAddonId);
   }
 
   aStr.Truncate();
@@ -85,6 +91,12 @@ public:
       }
 
       mOriginAttributes->mInBrowser = true;
+      return true;
+    }
+
+    if (aName.EqualsLiteral("addonId")) {
+      MOZ_RELEASE_ASSERT(mOriginAttributes->mAddonId.IsEmpty());
+      mOriginAttributes->mAddonId.Assign(aValue);
       return true;
     }
 
@@ -344,6 +356,21 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs)
   rv = codebase->Init(aURI, aAttrs);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return codebase.forget();
+}
+
+bool
+BasePrincipal::AddonAllowsLoad(nsIURI* aURI)
+{
+  if (mOriginAttributes.mAddonId.IsEmpty()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
+  NS_ENSURE_TRUE(aps, false);
+
+  bool allowed = false;
+  nsresult rv = aps->AddonMayLoadURI(mOriginAttributes.mAddonId, aURI, &allowed);
+  return NS_SUCCEEDED(rv) && allowed;
 }
 
 } // namespace mozilla

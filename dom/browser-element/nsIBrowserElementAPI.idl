@@ -26,7 +26,7 @@ interface nsIBrowserElementNextPaintListener : nsISupports
  * Interface to the BrowserElementParent implementation. All methods
  * but setFrameLoader throw when the remote process is dead.
  */
-[scriptable, uuid(8ecb598c-f886-11e4-9915-778f934fbf93)]
+[scriptable, uuid(daa264b2-54df-4fc7-89b7-c9d02167c5d4)]
 interface nsIBrowserElementAPI : nsISupports
 {
   const long FIND_CASE_SENSITIVE = 0;
@@ -81,6 +81,14 @@ interface nsIBrowserElementAPI : nsISupports
   void removeNextPaintListener(in nsIBrowserElementNextPaintListener listener);
 
   nsIDOMDOMRequest setInputMethodActive(in boolean isActive);
+
+  nsIDOMDOMRequest getAudioChannelVolume(in uint32_t audioChannel);
+  nsIDOMDOMRequest setAudioChannelVolume(in uint32_t audioChannel, in float volume);
+
+  nsIDOMDOMRequest getAudioChannelMuted(in uint32_t audioChannel);
+  nsIDOMDOMRequest setAudioChannelMuted(in uint32_t audioChannel, in bool muted);
+
+  nsIDOMDOMRequest isAudioChannelActive(in uint32_t audioChannel);
 
   void setNFCFocus(in boolean isFocus);
 };

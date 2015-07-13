@@ -1,0 +1,22 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+/**
+ * This interface allows the security manager to query custom per-addon security
+ * policy.
+ */
+[scriptable,uuid(fedf126c-988e-42df-82c9-f2ac99cd65f3)]
+interface nsIAddonPolicyService : nsISupports
+{
+  /**
+   * Returns true if unprivileged code associated with the given addon may load
+   * data from |aURI|.
+   */
+  boolean addonMayLoadURI(in AString aAddonId, in nsIURI aURI);
+};

@@ -25,10 +25,11 @@ template<class Cls> class LocalRef;
 template<class Cls> class GlobalRef;
 
 // Type used for a reference parameter. Default is a wrapped object
-// reference, but Param can be specialized to define custom behavior,
+// reference, but ParamImpl can be specialized to define custom behavior,
 // e.g. a StringParam class that automatically converts nsAString& and
 // nsACString& to a jstring.
-template<class Cls> struct Param { typedef Ref<Cls> Type; };
+template<class Cls> struct ParamImpl { typedef Ref<Cls> Type; };
+template<class Cls> using Param = typename ParamImpl<Cls>::Type;
 
 
 // How exception during a JNI call should be treated.
@@ -41,6 +42,13 @@ enum class ExceptionMode
     // Catch any exception and return a nsresult.
     NSRESULT,
 };
+
+
+// Class to hold the native types of a method's arguments.
+// For example, if a method has signature (ILjava/lang/String;)V,
+// its arguments class would be jni::Args<int32_t, jni::String::Param>
+template<typename...>
+struct Args {};
 
 
 // Base class for all JNI binding classes.
@@ -73,7 +81,7 @@ public:
     typedef jni::Ref<Object> Ref;
     typedef jni::LocalRef<Object>  LocalRef;
     typedef jni::GlobalRef<Object> GlobalRef;
-    typedef const typename jni::Param<Object>::Type& Param;
+    typedef const jni::Param<Object>& Param;
 };
 
 
@@ -90,7 +98,7 @@ public:
     typedef jni::Ref<Self> Ref;
     typedef jni::LocalRef<Self>  LocalRef;
     typedef jni::GlobalRef<Self> GlobalRef;
-    typedef const typename jni::Param<Self>::Type& Param;
+    typedef const jni::Param<Self>& Param;
 };
 
 // Define bindings for built-in types.
@@ -108,7 +116,7 @@ typedef TypedObject<jfloatArray>   FloatArray;
 typedef TypedObject<jdoubleArray>  DoubleArray;
 typedef TypedObject<jobjectArray>  ObjectArray;
 
-template<> struct Param<String> { class Type; };
+template<> struct ParamImpl<String> { class Type; };
 
 
 // Base class for Ref and its specializations.
@@ -525,7 +533,7 @@ public:
 
 // Define a custom parameter type for String,
 // which accepts both String::Ref and nsAString/nsACString
-class Param<String>::Type : public Ref<String>
+class ParamImpl<String>::Type : public Ref<String>
 {
 private:
     // Not null if we should delete ref on destruction.

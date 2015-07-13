@@ -309,6 +309,18 @@ public:
   }
 
   /**
+   * If true, this flag indicates that all subresource loads for this
+   * document need to be upgraded from http to https.
+   * This flag becomes true if the CSP of the document itself, or any
+   * of the document's ancestors up to the toplevel document makes use
+   * of the CSP directive 'upgrade-insecure-requests'.
+   */
+  bool GetUpgradeInsecureRequests() const
+  {
+    return mUpgradeInsecureRequests;
+  }
+
+  /**
    * Set the principal responsible for this document.
    */
   virtual void SetPrincipal(nsIPrincipal *aPrincipal) = 0;
@@ -2630,6 +2642,8 @@ protected:
 
   bool mReferrerPolicySet;
   ReferrerPolicyEnum mReferrerPolicy;
+
+  bool mUpgradeInsecureRequests;
 
   mozilla::WeakPtr<nsDocShell> mDocumentContainer;
 

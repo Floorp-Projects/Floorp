@@ -1,0 +1,38 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Add assembler flags and includes
+ASFLAGS += CONFIG['LIBAV_FFT_ASFLAGS']
+ASFLAGS += ['-I%s/media/libav' % TOPSRCDIR]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    # Fix inline symbols and math defines for windows.
+    DEFINES['_USE_MATH_DEFINES'] = True
+    DEFINES['inline'] = "__inline"
+    # snprintf is prefixed with an underscore on windows.
+    DEFINES['snprintf'] = "_snprintf"
+    ASFLAGS += ['-Pconfig_win.asm']
+    # 32-bit windows need to prefix symbols with an underscore.
+    if CONFIG['CPU_ARCH'] == 'x86':
+        ASFLAGS += ['-DPREFIX']
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    # 32/64-bit macosx assemblers need to prefix symbols with an underscore.
+    ASFLAGS += ['-Pconfig_darwin.asm', '-DPREFIX']
+else:
+    # Default to unix, similar to how ASFLAGS setup works in configure.in
+    ASFLAGS += ['-Pconfig_unix.asm']
+
+LOCAL_INCLUDES += ['/media/libav']
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+        '-Wno-pointer-sign'
+    ]
+
+FINAL_LIBRARY = 'lgpllibs'

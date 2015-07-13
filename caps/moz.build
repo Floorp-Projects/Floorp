@@ -9,6 +9,7 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
+    'nsIAddonPolicyService.idl',
     'nsIDomainPolicy.idl',
     'nsIPrincipal.idl',
     'nsIScriptSecurityManager.idl',
