@@ -86,10 +86,7 @@ let AutoUpdate = {
 };
 
 let State = {
-  _monitor: PerformanceStats.getMonitor([
-    "jank", "cpow", "ticks",
-    "jank-content", "cpow-content", "ticks-content",
-  ]),
+  _monitor: PerformanceStats.getMonitor(["jank", "cpow", "ticks"]),
 
   /**
    * @type{PerformanceData}
@@ -247,7 +244,7 @@ let updateLiveData = Task.async(function*() {
     let headerElt = document.createElement("tr");
     dataElt.appendChild(headerElt);
     headerElt.classList.add("header");
-    for (let column of [...MEASURES, {key: "name", name: ""}, {key: "process", name: ""}]) {
+    for (let column of [...MEASURES, {key: "name", name: ""}]) {
       let el = document.createElement("td");
       el.classList.add(column.key);
       el.textContent = column.label;
@@ -283,37 +280,20 @@ let updateLiveData = Task.async(function*() {
         el.textContent = value;
       }
 
-      {
-        // Name
-        let el = document.createElement("td");
-        let id = item.id;
-        el.classList.add("contents");
-        el.classList.add("name");
-        row.appendChild(el);
-        if (item.addonId) {
-          let _el = el;
-          let _item = item;
-          AddonManager.getAddonByID(item.addonId, a => {
-            _el.textContent = a ? a.name : _item.name
-          });
-        } else {
-          el.textContent = item.title || item.name;
-        }
-      }
-
-      {
-        // Process information.
-        let el = document.createElement("td");
-        el.classList.add("contents");
-        el.classList.add("process");
-        row.appendChild(el);
-        if (item.isChildProcess) {
-          el.textContent = "(child)";
-          row.classList.add("child");
-        } else {
-          el.textContent = "(parent)";
-          row.classList.add("parent");
-        }
+      // Name
+      let el = document.createElement("td");
+      let id = item.id;
+      el.classList.add("contents");
+      el.classList.add("name");
+      row.appendChild(el);
+      if (item.addonId) {
+        let _el = el;
+        let _item = item;
+        AddonManager.getAddonByID(item.addonId, a => {
+          _el.textContent = a ? a.name : _item.name
+        });
+      } else {
+        el.textContent = item.title || item.name;
       }
     }
   } catch (ex) {
