@@ -1148,6 +1148,15 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
   } else if (!strcmp("alertfinished", aTopic)) {
+    // In b2g-desktop, if the app is closed, closing a notification still
+    // triggers the observer which might be alive even though the owner window
+    // was closed. Keeping this until we remove the close event (Bug 1139363)
+    // from implementation.
+    nsCOMPtr<nsPIDOMWindow> window = notification->GetOwner();
+    if (NS_WARN_IF(!window || !window->IsCurrentInnerWindow())) {
+      return NS_ERROR_FAILURE;
+    }
+
     notification->UnpersistNotification();
     notification->mIsClosed = true;
     notification->DispatchTrustedEvent(NS_LITERAL_STRING("close"));
