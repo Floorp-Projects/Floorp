@@ -2122,6 +2122,12 @@ gfxWindowsPlatform::InitD3D11Devices()
     mD3D11Status = FeatureStatus::Failed;
   }
 
+  // Only test for texture sharing on Windows 8 since it puts the device into
+  // an unusable state if used on Windows 7
+  if (mD3D11Device && IsWin8OrLater()) {
+    mDoesD3D11TextureSharingWork = ::DoesD3D11TextureSharingWork(mD3D11Device);
+  }
+
   if (!mD3D11Device) {
     // We could not get a D3D11 compositor, and there's nothing more we can try.
     return;
