@@ -34,7 +34,7 @@ def query_activedata(suite, platforms=None):
     data = response.json()["data"]
     return data
 
-def write_runtimes(data, suite):
+def write_runtimes(data, suite, indir=here, outdir=here):
     testdata = defaultdict(lambda: defaultdict(list))
     for result in data:
         # Each result is a list with four members: platform,
@@ -46,6 +46,19 @@ def write_runtimes(data, suite):
     for platform in testdata:
         for buildtype in testdata[platform]:
             print 'processing %s-%s results' % (platform, buildtype)
+            dirname = "%s-%s" % (platform, buildtype)
+            out_path = os.path.join(outdir, dirname)
+            in_path = os.path.join(indir, dirname)
+            outfilename = os.path.join(out_path, "%s.runtimes.json" % suite)
+            infilename = os.path.join(in_path, "%s.runtimes.json" % suite)
+            if not os.path.exists(out_path):
+                os.makedirs(out_path)
+
+            # read in existing data, if any
+            indata = None
+            if os.path.exists(infilename):
+                with open(infilename, 'r') as f:
+                    indata = json.loads(f.read()).get('runtimes')
 
             # identify a threshold of durations, below which we ignore
             runtimes = []
@@ -58,30 +71,45 @@ def write_runtimes(data, suite):
 
             # split the durations into two groups; excluded and specified
             ommitted = []
-            specified = {}
+            specified = indata if indata else {}
+            current_tests = []
             for test, duration in testdata[platform][buildtype]:
+                current_tests.append(test)
                 duration = int(duration * 1000) if duration else 0
                 if duration > 0 and duration < threshold:
                     ommitted.append(duration)
-                elif duration >= threshold:
-                    specified[test] = duration
+                    if test in specified:
+                        del specified[test]
+                elif duration >= threshold and test != "automation.py":
+                    original = specified.get(test, 0)
+                    if not original or abs(original - duration) > (original/20):
+                        # only write new data if it's > 20% different than original
+                        specified[test] = duration
+
+            # delete any test references no longer needed
+            to_delete = []
+            for test in specified:
+                if test not in current_tests:
+                    to_delete.append(test)
+            for test in to_delete:
+                del specified[test]
+
             avg = int(sum(ommitted)/len(ommitted))
 
             results = {'excluded_test_average': avg,
                        'runtimes': specified}
 
-            dirname = "%s-%s" % (platform, buildtype)
-            if not os.path.exists(dirname):
-                os.mkdir(dirname)
-            outfilename = os.path.join(dirname, "%s.runtimes.json" % suite)
             with open(outfilename, 'w') as f:
-                f.write(json.dumps(results))
+                f.write(json.dumps(results, indent=2, sort_keys=True))
 
 
 def cli(args=sys.argv[1:]):
     parser = ArgumentParser()
     parser.add_argument('-o', '--output-directory', dest='outdir',
         default=here, help="Directory to save runtime data.")
+
+    parser.add_argument('-i', '--input-directory', dest='indir',
+        default=here, help="Directory from which to read current runtime data.")
 
     parser.add_argument('-p', '--platforms', default=None,
         help="Comma separated list of platforms from which to generate data.")
@@ -100,7 +128,7 @@ def cli(args=sys.argv[1:]):
         args.platforms = args.platforms.split(',')
 
     data = query_activedata(args.suite, args.platforms)
-    write_runtimes(data, args.suite)
+    write_runtimes(data, args.suite, indir=args.indir, outdir=args.outdir)
 
 if __name__ == "__main__":
     sys.exit(cli())
