@@ -521,6 +521,37 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
      SyntacticContext sc);
 
 static bool
+FoldCondition(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& parser,
+              bool inGenexpLambda)
+{
+    // Conditions fold like any other expression...
+    if (!Fold(cx, nodePtr, parser, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    // ...but then they sometimes can be further folded to constants.
+    ParseNode* node = *nodePtr;
+    Truthiness t = Boolish(node);
+    if (t != Unknown) {
+        // We can turn function nodes into constant nodes here, but mutating
+        // function nodes is tricky --- in particular, mutating a function node
+        // that appears on a method list corrupts the method list. However,
+        // methods are M's in statements of the form 'this.foo = M;', which we
+        // never fold, so we're okay.
+        parser.prepareNodeForMutation(node);
+        if (t == Truthy) {
+            node->setKind(PNK_TRUE);
+            node->setOp(JSOP_TRUE);
+        } else {
+            node->setKind(PNK_FALSE);
+            node->setOp(JSOP_FALSE);
+        }
+        node->setArity(PN_NULLARY);
+    }
+
+    return true;
+}
+
+static bool
 FoldTypeOfExpr(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
                bool inGenexpLambda)
 {
@@ -673,7 +704,7 @@ FoldNot(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
     MOZ_ASSERT(node->isArity(PN_UNARY));
 
     ParseNode*& expr = node->pn_kid;
-    if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Condition))
+    if (!FoldCondition(cx, &expr, parser, inGenexpLambda))
         return false;
 
     if (expr->isKind(PNK_NUMBER)) {
@@ -857,7 +888,7 @@ FoldConditional(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandl
         MOZ_ASSERT(node->isArity(PN_TERNARY));
 
         ParseNode*& expr = node->pn_kid1;
-        if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Condition))
+        if (!FoldCondition(cx, &expr, parser, inGenexpLambda))
             return false;
 
         ParseNode*& ifTruthy = node->pn_kid2;
@@ -948,7 +979,7 @@ FoldIf(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& pars
         MOZ_ASSERT(node->isArity(PN_TERNARY));
 
         ParseNode*& expr = node->pn_kid1;
-        if (!Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Condition))
+        if (!FoldCondition(cx, &expr, parser, inGenexpLambda))
             return false;
 
         ParseNode*& consequent = node->pn_kid2;
@@ -1308,7 +1339,7 @@ FoldCatch(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parse
         return false;
 
     if (ParseNode*& cond = node->pn_kid2) {
-        if (!Fold(cx, &cond, parser, inGenexpLambda, SyntacticContext::Condition))
+        if (!FoldCondition(cx, &cond, parser, inGenexpLambda))
             return false;
     }
 
@@ -1631,7 +1662,7 @@ FoldForHead(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& par
     }
 
     if (ParseNode*& test = node->pn_kid2) {
-        if (!Fold(cx, &test, parser, inGenexpLambda, SyntacticContext::Condition))
+        if (!FoldCondition(cx, &test, parser, inGenexpLambda))
             return false;
 
         if (test->isKind(PNK_TRUE)) {
@@ -1913,11 +1944,11 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_DOWHILE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Other) &&
-               Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Condition);
+               FoldCondition(cx, &pn->pn_right, parser, inGenexpLambda);
 
       case PNK_WHILE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
-        return Fold(cx, &pn->pn_left, parser, inGenexpLambda, SyntacticContext::Condition) &&
+        return FoldCondition(cx, &pn->pn_left, parser, inGenexpLambda) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda, SyntacticContext::Other);
 
       case PNK_DEFAULT:
