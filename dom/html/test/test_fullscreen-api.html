@@ -86,8 +86,12 @@ is(window.fullScreen, false, "Shouldn't be able to set window fullscreen from co
 // to write
 addLoadEvent(function() {
   SpecialPowers.pushPrefEnv({
-    "set":[["full-screen-api.enabled", true],
-            ["full-screen-api.allow-trusted-requests-only", false]]}, nextTest);
+      "set": [
+        ["full-screen-api.enabled", true],
+        ["full-screen-api.allow-trusted-requests-only", false],
+        ["full-screen-api.transition-duration.enter", "0 0"],
+        ["full-screen-api.transition-duration.leave", "0 0"]
+      ]}, nextTest);
 });
 SimpleTest.waitForExplicitFinish();
 </script>
