@@ -1929,7 +1929,8 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId, MediaSourceEnum aVideoTyp
   // thread later once GetOriginKey resolves. Needed variables are "captured"
   // (passed by value) safely into the lambda.
 
-  nsRefPtr<Pledge<nsCString>> p = media::GetOriginKey(origin, privateBrowsing);
+  nsRefPtr<Pledge<nsCString>> p = media::GetOriginKey(origin, privateBrowsing,
+                                                      true);
   p->Then([id, aWindowId, aVideoType,
            aFake, aFakeTracks](const nsCString& aOriginKey) mutable {
     MOZ_ASSERT(NS_IsMainThread());
