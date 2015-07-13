@@ -32,8 +32,12 @@ var principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                   .getNoAppCodebasePrincipal(uri);
 pm.removeFromPrincipal(principal, "fullscreen");
 
-SpecialPowers.pushPrefEnv({"set": [['full-screen-api.enabled', true],
-                                   ['full-screen-api.allow-trusted-requests-only', false]]}, setup);
+SpecialPowers.pushPrefEnv({"set": [
+  ['full-screen-api.enabled', true],
+  ['full-screen-api.allow-trusted-requests-only', false],
+  ['full-screen-api.transition-duration.enter', '0 0'],
+  ['full-screen-api.transition-duration.leave', '0 0']
+]}, setup);
 
 function setup() {
    newwindow = window.open("MozDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");

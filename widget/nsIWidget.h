@@ -37,6 +37,7 @@ class   ViewWrapper;
 class   nsIWidgetListener;
 class   nsIntRegion;
 class   nsIScreen;
+class   nsIRunnable;
 
 namespace mozilla {
 class CompositorVsyncDispatcher;
@@ -119,8 +120,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0xb81e1264, 0x9f79, 0x4962, \
-  { 0x8d, 0x9a, 0x64, 0xdd, 0x21, 0x5d, 0x6a, 0x01 } }
+{ 0x22b4504e, 0xddba, 0x4211, \
+  { 0xa1, 0x49, 0x6e, 0x11, 0x73, 0xc4, 0x11, 0x45 } }
 
 /*
  * Window shadow styles
@@ -1695,6 +1696,34 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD HideWindowChrome(bool aShouldHide) = 0;
+
+    enum FullscreenTransitionStage
+    {
+      eBeforeFullscreenToggle,
+      eAfterFullscreenToggle
+    };
+
+    /**
+     * Prepares for fullscreen transition and returns whether the widget
+     * supports fullscreen transition. If this method returns false,
+     * PerformFullscreenTransition() must never be called. Otherwise,
+     * caller should call that method twice with "before" and "after"
+     * stages respectively in order. In the latter case, this method may
+     * return some data via aData pointer. Caller must pass that data to
+     * PerformFullscreenTransition() if any, and caller is responsible
+     * for releasing that data.
+     */
+    virtual bool PrepareForFullscreenTransition(nsISupports** aData) = 0;
+
+    /**
+     * Performs fullscreen transition. This method returns immediately,
+     * and will post aCallback to the main thread when the transition
+     * finishes.
+     */
+    virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                             uint16_t aDuration,
+                                             nsISupports* aData,
+                                             nsIRunnable* aCallback) = 0;
 
     /**
      * Put the toplevel window into or out of fullscreen mode.
