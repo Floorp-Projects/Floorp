@@ -92,6 +92,36 @@
   }
 }
 
+#toggle-pause-exceptions[state="0"] {
+  list-style-image: url(debugger-no-pause-exceptions.png);
+}
+
+@media (min-resolution: 1.25dppx) {
+  #toggle-pause-exceptions[state="0"] {
+    list-style-image: url(debugger-no-pause-exceptions@2x.png);
+  }
+}
+
+#toggle-pause-exceptions[state="1"] {
+  list-style-image: url(debugger-pause-all-exceptions.png);
+}
+
+@media (min-resolution: 1.25dppx) {
+  #toggle-pause-exceptions[state="1"] {
+    list-style-image: url(debugger-pause-all-exceptions@2x.png);
+  }
+}
+
+#toggle-pause-exceptions[state="2"] {
+  list-style-image: url(debugger-pause-uncaught-exceptions.png);
+}
+
+@media (min-resolution: 1.25dppx) {
+  #toggle-pause-exceptions[state="2"] {
+    list-style-image: url(debugger-pause-uncaught-exceptions@2x.png);
+  }
+}
+
 #sources-toolbar .devtools-toolbarbutton:not([label]) {
   -moz-image-region: rect(0px,16px,16px,0px);
 }

@@ -8,6 +8,9 @@
 const KNOWN_SOURCE_GROUPS = {
   "Add-on SDK": "resource://gre/modules/commonjs/",
 };
+const DO_NOT_PAUSE_ON_EXCEPTIONS = 0;
+const PAUSE_ON_ALL_EXCEPTIONS = 1;
+const PAUSE_ON_UNCAUGHT_EXCEPTIONS = 2;
 
 KNOWN_SOURCE_GROUPS[L10N.getStr("anonymousSourcesLabel")] = "anonymous";
 
@@ -20,10 +23,12 @@ function SourcesView(DebuggerController, DebuggerView) {
   this.Breakpoints = DebuggerController.Breakpoints;
   this.SourceScripts = DebuggerController.SourceScripts;
   this.DebuggerView = DebuggerView;
+  this.DebuggerController = DebuggerController;
 
   this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
   this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
   this.toggleBreakpoints = this.toggleBreakpoints.bind(this);
+  this.togglePauseOnExceptions = this.togglePauseOnExceptions.bind(this);
 
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
@@ -56,6 +61,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._unnamedSourceIndex = 0;
     this.emptyText = L10N.getStr("noSourcesText");
     this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
+    this._pauseAllExceptionsTooltip = L10N.getStr("pauseAllExceptionsTooltip");
+    this._pauseUncaughtExceptionsTooltip = L10N.getStr("pauseUncaughtExceptionsTooltip");
+    this._pauseNoExceptionsTooltip = L10N.getStr("pauseNoExceptionsTooltip");
 
     this._commandset = document.getElementById("debuggerCommands");
     this._popupset = document.getElementById("debuggerPopupset");
@@ -66,12 +74,16 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
     this._toggleBreakpointsButton = document.getElementById("toggle-breakpoints");
+    this._togglePauseOnExceptionsButton = document.getElementById("toggle-pause-exceptions");
     this._newTabMenuItem = document.getElementById("debugger-sources-context-newtab");
     this._copyUrlMenuItem = document.getElementById("debugger-sources-context-copyurl");
 
     if (Prefs.prettyPrintEnabled) {
       this._prettyPrintButton.removeAttribute("hidden");
     }
+
+    this._togglePauseOnExceptionsButton.setAttribute("tooltiptext", this._pauseAllExceptionsTooltip);
+    this._togglePauseOnExceptionsButton.setAttribute("state", DO_NOT_PAUSE_ON_EXCEPTIONS);
 
     window.on(EVENTS.EDITOR_LOADED, this._onEditorLoad, false);
     window.on(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
@@ -138,6 +150,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       unBlackBoxButton: () => this._onStopBlackBoxing(),
       prettyPrintCommand: () => this.togglePrettyPrint(),
       toggleBreakpointsCommand: () =>this.toggleBreakpoints(),
+      togglePauseOnExceptionsCommand: () => this.togglePauseOnExceptions(),
       nextSourceCommand: () => this.selectNextItem(),
       prevSourceCommand: () => this.selectPrevItem()
     });
@@ -613,6 +626,37 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       this._toggleBreakpointsButton.removeAttribute("checked");
       this._onEnableAll();
     }
+  },
+
+  /**
+   * Toggles the pause on exceptions functionality
+   */
+  togglePauseOnExceptions: function() {
+    let state = Number(this._togglePauseOnExceptionsButton.getAttribute("state"));
+    let tooltip;
+
+    state = ++state % 3;
+
+    if (state === DO_NOT_PAUSE_ON_EXCEPTIONS) {
+      tooltip = this._pauseAllExceptionsTooltip;
+      Prefs.pauseOnExceptions = false;
+      Prefs.ignoreCaughtExceptions = false;
+    } else if ( state === PAUSE_ON_ALL_EXCEPTIONS) {
+      tooltip = this._pauseUncaughtExceptionsTooltip;
+      Prefs.pauseOnExceptions = true;
+      Prefs.ignoreCaughtExceptions = false;
+    } else {
+      tooltip = this._pauseNoExceptionsTooltip;
+      Prefs.pauseOnExceptions = true;
+      Prefs.ignoreCaughtExceptions = true;
+    }
+
+    this.DebuggerController.activeThread.pauseOnExceptions(
+      Prefs.pauseOnExceptions,
+      Prefs.ignoreCaughtExceptions);
+
+    this._togglePauseOnExceptionsButton.setAttribute("tooltiptext", tooltip);
+    this._togglePauseOnExceptionsButton.setAttribute("state", state);
   },
 
   hidePrettyPrinting: function() {
