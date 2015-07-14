@@ -89,17 +89,19 @@ public:
   }
 
   void GetKeys(nsTArray<nsString>& aKeys) const {
-    // Sadly, EnumerateEntries is not a const method
-    const_cast<SelfType*>(this)->EnumerateEntries(KeyEnumerator, &aKeys);
+    for (auto iter = this->ConstIter(); !iter.Done(); iter.Next()) {
+      aKeys.AppendElement(iter.Get()->GetKey());
+    }
   }
 
   // XXXbz we expose this generic enumerator for tracing.  Otherwise we'd end up
   // with a dependency on BindingUtils.h here for the SequenceTracer bits.
-  typedef PLDHashOperator (* Enumerator)(DataType* aValue, void* aClosure);
+  typedef void (* Enumerator)(DataType* aValue, void* aClosure);
   void EnumerateValues(Enumerator aEnumerator, void *aClosure)
   {
-    ValueEnumClosure args = { aEnumerator, aClosure };
-    this->EnumerateEntries(ValueEnumerator, &args);
+    for (auto iter = this->Iter(); !iter.Done(); iter.Next()) {
+      aEnumerator(&iter.Get()->mData, aClosure);
+    }
   }
 
   MOZ_WARN_UNUSED_RESULT
@@ -110,27 +112,6 @@ public:
       return nullptr;
     }
     return &ent->mData;
-  }
-
-private:
-  static PLDHashOperator
-  KeyEnumerator(EntryType* aEntry, void* aClosure)
-  {
-    nsTArray<nsString>& keys = *static_cast<nsTArray<nsString>*>(aClosure);
-    keys.AppendElement(aEntry->GetKey());
-    return PL_DHASH_NEXT;
-  }
-
-  struct ValueEnumClosure {
-    Enumerator mEnumerator;
-    void* mClosure;
-  };
-
-  static PLDHashOperator
-  ValueEnumerator(EntryType* aEntry, void* aClosure)
-  {
-    ValueEnumClosure* enumClosure = static_cast<ValueEnumClosure*>(aClosure);
-    return enumClosure->mEnumerator(&aEntry->mData, enumClosure->mClosure);
   }
 };
 
