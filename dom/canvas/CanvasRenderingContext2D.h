@@ -596,6 +596,10 @@ protected:
                    nsTArray<nsStyleFilter>& aFilterChain,
                    ErrorResult& error);
 
+  // Returns whether the font was successfully updated.
+  bool SetFontInternal(const nsAString& font, mozilla::ErrorResult& error);
+
+
   /**
    * Creates the error target, if it doesn't exist
    */
@@ -630,7 +634,7 @@ protected:
    */
   RenderingMode EnsureTarget(RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
 
-  /*
+  /**
    * Disposes an old target and prepares to lazily create a new target.
    */
   void ClearTarget();
@@ -855,10 +859,10 @@ protected:
 protected:
   gfxFontGroup *GetCurrentFontStyle();
 
-  /*
-    * Implementation of the fillText, strokeText, and measure functions with
-    * the operation abstracted to a flag.
-    */
+  /**
+   * Implementation of the fillText, strokeText, and measure functions with
+   * the operation abstracted to a flag.
+   */
   nsresult DrawOrMeasureText(const nsAString& text,
                              float x,
                              float y,
