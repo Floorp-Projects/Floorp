@@ -1105,17 +1105,22 @@ public:
                                   nscolor aBackgroundColor,
                                   gfxContext* aRenderedContext) = 0;
 
+  enum {
+    RENDER_AUTO_SCALE = 0x80
+  };
+
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used
    * to clip the rendering. This region is measured in CSS pixels from the
-   * edge of the presshell area. The aPoint, aScreenRect and aSurface
-   * arguments function in a similar manner as RenderSelection.
+   * edge of the presshell area. The aPoint, aScreenRect and aFlags arguments
+   * function in a similar manner as RenderSelection.
    */
   virtual already_AddRefed<SourceSurface>
   RenderNode(nsIDOMNode* aNode,
              nsIntRegion* aRegion,
              nsIntPoint& aPoint,
-             nsIntRect* aScreenRect) = 0;
+             nsIntRect* aScreenRect,
+             uint32_t aFlags) = 0;
 
   /**
    * Renders a selection to a surface and returns it. This method is primarily
@@ -1124,18 +1129,20 @@ public:
    * aScreenRect will be filled in with the bounding rectangle of the
    * selection area on screen.
    *
-   * If the area of the selection is large, the image will be scaled down.
-   * The argument aPoint is used in this case as a reference point when
-   * determining the new screen rectangle after scaling. Typically, this
-   * will be the mouse position, so that the screen rectangle is positioned
-   * such that the mouse is over the same point in the scaled image as in
-   * the original. When scaling does not occur, the mouse point isn't used
-   * as the position can be determined from the displayed frames.
+   * If the area of the selection is large and the RENDER_AUTO_SCALE flag is
+   * set, the image will be scaled down. The argument aPoint is used in this
+   * case as a reference point when determining the new screen rectangle after
+   * scaling. Typically, this will be the mouse position, so that the screen
+   * rectangle is positioned such that the mouse is over the same point in the
+   * scaled image as in the original. When scaling does not occur, the mouse
+   * point isn't used because the position can be determined from the displayed
+   * frames.
    */
   virtual already_AddRefed<SourceSurface>
   RenderSelection(nsISelection* aSelection,
                   nsIntPoint& aPoint,
-                  nsIntRect* aScreenRect) = 0;
+                  nsIntRect* aScreenRect,
+                  uint32_t aFlags) = 0;
 
   void AddWeakFrameInternal(nsWeakFrame* aWeakFrame);
   virtual void AddWeakFrameExternal(nsWeakFrame* aWeakFrame);

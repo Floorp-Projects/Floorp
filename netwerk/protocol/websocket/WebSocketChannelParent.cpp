@@ -66,7 +66,7 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const bool& aClientSetPingInterval,
                                       const uint32_t& aPingTimeout,
                                       const bool& aClientSetPingTimeout,
-                                      const LoadInfoArgs& aLoadInfoArgs)
+                                      const OptionalLoadInfoArgs& aLoadInfoArgs)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 

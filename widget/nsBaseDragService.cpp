@@ -558,7 +558,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // draw the image for selections
   if (mSelection) {
     nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
-    *aSurface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect);
+    *aSurface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect,
+                                           mImage ? 0 : nsIPresShell::RENDER_AUTO_SCALE);
     return NS_OK;
   }
 
@@ -600,7 +601,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
     nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
     *aSurface = presShell->RenderNode(dragNode, aRegion ? &clipRegion : nullptr,
-                                      pnt, aScreenDragRect);
+                                      pnt, aScreenDragRect,
+                                      mImage ? 0 : nsIPresShell::RENDER_AUTO_SCALE);
   }
 
   // if an image was specified, reposition the drag rectangle to

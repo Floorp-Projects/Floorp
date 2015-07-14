@@ -4,6 +4,7 @@
 
 import sys
 
+from marionette import __version__
 from marionette.marionette_test import MarionetteTestCase, MarionetteJSTestCase
 from mozlog import structured
 from marionette.runner import (
@@ -35,7 +36,8 @@ def startTestRunner(runner_class, options, tests):
     return runner
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteOptions):
-    parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
+    parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...',
+                          version='%prog ' + __version__)
     structured.commandline.add_logging_group(parser)
     options, tests = parser.parse_args()
     parser.verify_usage(options, tests)
