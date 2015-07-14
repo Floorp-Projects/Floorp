@@ -96,7 +96,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
     }
 
     public void hide() {
-        if (!mInflated) {
+        if (!mInflated || getVisibility() == View.GONE) {
             // There's nothing to hide yet.
             return;
         }
@@ -104,8 +104,13 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         // Always clear the Find string, primarily for privacy.
         mFindText.setText("");
 
+        // Only close the IMM if its EditText is the one with focus.
+        if (mFindText.isFocused()) {
+          getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
+        }
+
+        // Close the FIPB / FindHelper state.
         setVisibility(GONE);
-        getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FindInPage:Closed", null));
     }
 
