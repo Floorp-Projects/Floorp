@@ -735,23 +735,27 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 
 typedef nsTHashtable<nsPtrHashKey<nsIStyleRuleProcessor> > RuleProcessorSet;
 
-static PLDHashOperator
-EnumRuleProcessors(nsRefPtrHashKey<nsIContent> *aKey, void* aClosure)
+static RuleProcessorSet*
+GetContentSetRuleProcessors(nsTHashtable<nsRefPtrHashKey<nsIContent>>* aContentSet)
 {
-  nsIContent *boundContent = aKey->GetKey();
-  nsAutoPtr<RuleProcessorSet> *set = static_cast<nsAutoPtr<RuleProcessorSet>*>(aClosure);
-  for (nsXBLBinding *binding = boundContent->GetXBLBinding(); binding;
-       binding = binding->GetBaseBinding()) {
-    nsIStyleRuleProcessor *ruleProc =
-      binding->PrototypeBinding()->GetRuleProcessor();
-    if (ruleProc) {
-      if (!(*set)) {
-        *set = new RuleProcessorSet;
+  RuleProcessorSet* set = nullptr;
+
+  for (auto iter = aContentSet->Iter(); !iter.Done(); iter.Next()) {
+    nsIContent* boundContent = iter.Get()->GetKey();
+    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
+         binding = binding->GetBaseBinding()) {
+      nsIStyleRuleProcessor* ruleProc =
+        binding->PrototypeBinding()->GetRuleProcessor();
+      if (ruleProc) {
+        if (!set) {
+          set = new RuleProcessorSet;
+        }
+        set->PutEntry(ruleProc);
       }
-      (*set)->PutEntry(ruleProc);
     }
   }
-  return PL_DHASH_NEXT;
+
+  return set;
 }
 
 struct WalkAllRulesData {
@@ -780,9 +784,10 @@ nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   }
 
   nsAutoPtr<RuleProcessorSet> set;
-  mBoundContentSet->EnumerateEntries(EnumRuleProcessors, &set);
-  if (!set)
+  set = GetContentSetRuleProcessors(mBoundContentSet);
+  if (!set) {
     return;
+  }
 
   WalkAllRulesData data = { aFunc, aData };
   set->EnumerateEntries(EnumWalkAllRules, &data);
@@ -817,7 +822,7 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
   }
 
   nsAutoPtr<RuleProcessorSet> set;
-  mBoundContentSet->EnumerateEntries(EnumRuleProcessors, &set);
+  set = GetContentSetRuleProcessors(mBoundContentSet);
   if (!set) {
     return NS_OK;
   }
