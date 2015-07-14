@@ -28,7 +28,14 @@ const {setBaseCssDocsUrl, MdnDocsWidget} = devtools.require("devtools/shared/wid
 const MDN_DOCS_TOOLTIP_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
-const BASIC_EXPECTED_SYNTAX = "/* The part we want   */\nthis: is-the-part-we-want";
+const BASIC_EXPECTED_SYNTAX = [{type: "comment",        text: "/* The part we want   */"},
+                               {type: "text",           text: "\n"},
+                               {type: "property-name",  text: "this"},
+                               {type: "text",           text: ":"},
+                               {type: "text",           text: " "},
+                               {type: "property-value", text: "is-the-part-we-want"},
+                               {type: "text",           text: ";"}];
+
 const ERROR_MESSAGE = "Could not load docs page.";
 
 /**
@@ -52,7 +59,7 @@ const TEST_DATA = [{
   expectedContents: {
     propertyName: "i-dont-exist.html",
     summary: ERROR_MESSAGE,
-    syntax: ""
+    syntax: []
   }
 }, {
   desc: "Test a property whose syntax section is specified using an old-style page",
@@ -76,7 +83,7 @@ const TEST_DATA = [{
   expectedContents: {
     propertyName: NO_SYNTAX,
     summary: BASIC_EXPECTED_SUMMARY,
-    syntax: ""
+    syntax: []
   }
 }, {
   desc: "Test a property whose page doesn't have a summary or a syntax",
@@ -84,7 +91,7 @@ const TEST_DATA = [{
   expectedContents: {
     propertyName: NO_SUMMARY_OR_SYNTAX,
     summary: ERROR_MESSAGE,
-    syntax: ""
+    syntax: []
   }
 }
 ];
@@ -128,7 +135,5 @@ function checkTooltipContents(doc, expected) {
      expected.summary,
      "Summary is correct");
 
-  is(doc.syntax.textContent,
-     expected.syntax,
-     "Syntax is correct");
+  checkCssSyntaxHighlighterOutput(expected.syntax, doc.syntax);
 }
