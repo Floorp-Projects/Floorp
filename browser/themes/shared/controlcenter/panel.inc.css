@@ -1,14 +1,24 @@
+/* Show the organization name only for EV certs. */
 #identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-content-owner,
+#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
+/* Show the "Verified by" label only for DV and EV certs. */
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-content-verifier,
+/* Show a longer explanation for non-secure sites, mixed content, and weak
+   connection security. Show the organization address for EV certs. */
 #identity-popup-securityView:not(.unknownIdentity):not(.verifiedIdentity):not(.mixedContent):not(.weakCipher) > #identity-popup-content-supplemental,
+/* Show the "Connection is secure" labels only for EV and DV certs. */
 #identity-popup-security-content:not(.verifiedIdentity):not(.verifiedDomain) > .identity-popup-connection-secure,
 #identity-popup-securityView:not(.verifiedIdentity):not(.verifiedDomain) > #identity-popup-securityView-header > .identity-popup-connection-secure,
-#identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
-#identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
+/* Show the "Connection is not secure" labels only for non-secure sites. */
 #identity-popup-security-content:not(.unknownIdentity) > .identity-popup-connection-not-secure,
-#identity-popup-securityView:not(.verifiedIdentity) > #identity-popup-securityView-connection,
+#identity-popup-securityView:not(.unknownIdentity) > #identity-popup-securityView-header > .identity-popup-connection-not-secure,
+/* Show "This is a secure internal page" only for whitelisted pages. */
+#identity-popup-securityView:not(.chromeUI) > #identity-popup-securityView-header > .identity-popup-connection-internal,
 #identity-popup-security-content:not(.chromeUI) > .identity-popup-connection-internal,
-#identity-popup-security-content.chromeUI + .identity-popup-expander {
+/* Hide the subsection arrow for whitelisted chromeUI pages. */
+#identity-popup-security-content.chromeUI + .identity-popup-expander,
+/* Hide the tracking protection section for whitelisted chromeUI pages. */
+#identity-popup-mainView.chromeUI > #tracking-protection-container {
   display: none;
 }
 
@@ -243,7 +253,7 @@
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
-#tracking-protection-content[block-disabled]  {
+#tracking-protection-content[state="loaded-tracking-content"]  {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
 }
 
@@ -252,13 +262,12 @@
   margin: 1em 0 0;
 }
 
-#tracking-protection-content[block-active] > #tracking-not-detected,
-#tracking-protection-content[block-disabled] > #tracking-not-detected,
-#tracking-protection-content:not([block-active]) > #tracking-blocked,
-#tracking-protection-content:not([block-active]) #tracking-action-unblock,
-#tracking-protection-content:not([block-disabled]) > #tracking-loaded,
-#tracking-protection-content:not([block-disabled]) #tracking-action-block,
-#tracking-protection-content:not([block-active]):not([block-disabled]) > #tracking-actions {
+#tracking-protection-content[state] > #tracking-not-detected,
+#tracking-protection-content:not([state="blocked-tracking-content"]) > #tracking-blocked,
+#tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock,
+#tracking-protection-content:not([state="loaded-tracking-content"]) > #tracking-loaded,
+#tracking-protection-content:not([state="loaded-tracking-content"]) #tracking-action-block,
+#tracking-protection-content:not([state]) > #tracking-actions {
   display: none;
 }
 

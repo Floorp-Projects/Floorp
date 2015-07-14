@@ -343,13 +343,13 @@
       </hbox>
     </vbox>
     <spacer flex="1"/>
-    <vbox id="tosPP-small">
+    <hbox id="tosPP-small">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;
       </label>
       <label id="tosPP-small-PP" class="text-link">
         &fxaPrivacyNotice.link.label;
       </label>
-    </vbox>
+    </hbox>
   </vbox>
 </deck>

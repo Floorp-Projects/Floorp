@@ -65,7 +65,7 @@ protected:
   bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
                    const nsCString& aEntityID,
                    const OptionalInputStreamParams& aUploadStream,
-                   const LoadInfoArgs& aLoadInfoArgs);
+                   const OptionalLoadInfoArgs& aLoadInfoArgs);
 
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during HTTP->FTP redirects.

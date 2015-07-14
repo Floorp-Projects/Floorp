@@ -460,8 +460,14 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
       nsIDocShell* docShell = aDocument->GetDocShell();
       if (docShell) {
         nsCOMPtr<nsITabChild> tabChild = do_GetInterface(docShell);
-        static_cast<TabChild*>(tabChild.get())->
-          SendPDocAccessibleConstructor(ipcDoc, nullptr, 0);
+
+        // XXX We may need to handle the case that we don't have a tab child
+        // differently.  It may be that this will cause us to fail to notify
+        // the parent process about important accessible documents.
+        if (tabChild) {
+          static_cast<TabChild*>(tabChild.get())->
+            SendPDocAccessibleConstructor(ipcDoc, nullptr, 0);
+        }
       }
     }
   } else {
