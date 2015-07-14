@@ -125,19 +125,14 @@ FontFaceSet::FontFaceSet(nsPIDOMWindow* aWindow, nsIDocument* aDocument)
   mUserFontSet = new UserFontSet(this);
 }
 
-static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
-                                       void* aUserArg)
-{
-  aKey->GetKey()->Cancel();
-  return PL_DHASH_REMOVE;
-}
-
 FontFaceSet::~FontFaceSet()
 {
   MOZ_COUNT_DTOR(FontFaceSet);
 
   Disconnect();
-  mLoaders.EnumerateEntries(DestroyIterator, nullptr);
+  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
+    it.Get()->GetKey()->Cancel();
+  }
 }
 
 JSObject*
