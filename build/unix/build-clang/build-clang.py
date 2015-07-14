@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -97,6 +97,8 @@ def build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir):
     configure_opts = ["--enable-optimized",
                       "--enable-targets=" + ",".join(targets),
                       "--disable-assertions",
+                      "--disable-libedit",
+                      "--with-python=/usr/local/bin/python2.7",
                       "--prefix=%s" % inst_dir,
                       "--with-gcc-toolchain=%s" % gcc_toolchain_dir,
                       "--disable-compiler-version-checks"]
@@ -115,6 +117,7 @@ if __name__ == "__main__":
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
+    libcxx_source_dir = source_dir + "/libcxx"
 
     gcc_dir = "/tools/gcc-4.7.3-0moz1"
 
@@ -132,15 +135,19 @@ if __name__ == "__main__":
     llvm_repo = config["llvm_repo"]
     clang_repo = config["clang_repo"]
     compiler_repo = config["compiler_repo"]
+    libcxx_repo = config["libcxx_repo"]
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
         svn_co(llvm_repo, llvm_source_dir, llvm_revision)
         svn_co(clang_repo, clang_source_dir, llvm_revision)
         svn_co(compiler_repo, compiler_rt_source_dir, llvm_revision)
+        svn_co(libcxx_repo, libcxx_source_dir, llvm_revision)
         os.symlink("../../clang", llvm_source_dir + "/tools/clang")
         os.symlink("../../compiler-rt",
                    llvm_source_dir + "/projects/compiler-rt")
+        os.symlink("../../libcxx",
+                   llvm_source_dir + "/projects/libcxx")
         for p in config.get("patches", {}).get(get_platform(), []):
             patch(p, source_dir)
 
@@ -153,12 +160,16 @@ if __name__ == "__main__":
 
     if is_darwin():
         extra_cflags = ""
-        extra_cxxflags = ""
+        extra_cxxflags = "-stdlib=libc++"
+        extra_cflags2 = ""
+        extra_cxxflags2 = "-stdlib=libc++"
         cc = "/usr/bin/clang"
         cxx = "/usr/bin/clang++"
     else:
-        extra_cflags = "-static-libgcc"
-        extra_cxxflags = "-static-libgcc -static-libstdc++"
+        extra_cflags = ""
+        extra_cxxflags = ""
+        extra_cflags2 = "-static-libgcc"
+        extra_cxxflags2 = "-static-libgcc -static-libstdc++"
         cc = gcc_dir + "/bin/gcc"
         cxx = gcc_dir + "/bin/g++"
 
@@ -167,12 +178,15 @@ if __name__ == "__main__":
     else:
         os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
 
-    build_one_stage({"CC": cc, "CXX": cxx}, stage1_dir, llvm_source_dir, gcc_dir)
+    build_one_stage(
+        {"CC": cc + " %s" % extra_cflags,
+         "CXX": cxx + " %s" % extra_cxxflags},
+        stage1_dir, llvm_source_dir, gcc_dir)
 
     stage2_dir = build_dir + '/stage2'
     build_one_stage(
-        {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags,
-         "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags},
+        {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags2,
+         "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
         stage2_dir, llvm_source_dir, gcc_dir)
 
     build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")

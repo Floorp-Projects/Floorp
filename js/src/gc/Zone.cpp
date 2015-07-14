@@ -140,6 +140,7 @@ Zone::logPromotionsToTenured()
         return;
 
     auto now = JS_GetCurrentEmbedderTime();
+    JSRuntime* rt = runtimeFromAnyThread();
 
     for (auto** dbgp = dbgs->begin(); dbgp != dbgs->end(); dbgp++) {
         if (!(*dbgp)->isEnabled() || !(*dbgp)->isTrackingTenurePromotions())
@@ -147,7 +148,7 @@ Zone::logPromotionsToTenured()
 
         for (auto range = awaitingTenureLogging.all(); !range.empty(); range.popFront()) {
             if ((*dbgp)->isDebuggee(range.front()->compartment()))
-                (*dbgp)->logTenurePromotion(*range.front(), now);
+                (*dbgp)->logTenurePromotion(rt, *range.front(), now);
         }
     }
 

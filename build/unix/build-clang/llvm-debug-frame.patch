@@ -1,13 +1,13 @@
-diff --git a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-index d6d4510..c488d4a 100644
---- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-+++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-@@ -172,6 +172,8 @@ bool AsmPrinter::doInitialization(Module &M) {
-     OutStreamer.EmitFileDirective(M.getModuleIdentifier());
+Index: lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+===================================================================
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp	(revision 226419)
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp	(working copy)
+@@ -210,6 +210,8 @@
+     OutStreamer->EmitFileDirective(M.getModuleIdentifier());
    }
- 
-+  OutStreamer.EmitCFISections(true, true);
+
++  OutStreamer->EmitCFISections(true, true);
 +
    GCModuleInfo *MI = getAnalysisIfAvailable<GCModuleInfo>();
    assert(MI && "AsmPrinter didn't require GCModuleInfo?");
-   for (GCModuleInfo::iterator I = MI->begin(), E = MI->end(); I != E; ++I)
+   for (auto &I : *MI)
