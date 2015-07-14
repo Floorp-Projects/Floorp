@@ -17,8 +17,14 @@ const {ELEMENT_STYLE, PSEUDO_ELEMENTS} =
       require("devtools/server/actors/styles");
 const {OutputParser} = require("devtools/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
-const {parseSingleValue, parseDeclarations} =
-      require("devtools/styleinspector/css-parsing-utils");
+const {
+  parseDeclarations,
+  parseSingleValue,
+  parsePseudoClassesAndAttributes,
+  SELECTOR_ATTRIBUTE,
+  SELECTOR_ELEMENT,
+  SELECTOR_PSEUDO_CLASS
+} = require("devtools/styleinspector/css-parsing-utils");
 const overlays = require("devtools/styleinspector/style-inspector-overlays");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 
@@ -1563,7 +1569,11 @@ CssRuleView.prototype = {
       };
     } else if (classes.contains("ruleview-selector-unmatched") ||
                classes.contains("ruleview-selector-matched") ||
-               classes.contains("ruleview-selector")) {
+               classes.contains("ruleview-selectorcontainer") ||
+               classes.contains("ruleview-selector") ||
+               classes.contains("ruleview-selector-attribute") ||
+               classes.contains("ruleview-selector-pseudo-class") ||
+               classes.contains("ruleview-selector-pseudo-class-lock")) {
       type = overlays.VIEW_NODE_SELECTOR_TYPE;
       value = node.offsetParent._ruleEditor.selectorText.textContent;
     } else if (classes.contains("ruleview-rule-source")) {
@@ -2730,9 +2740,22 @@ RuleEditor.prototype = {
 
     let header = createChild(code, "div", {});
 
-    this.selectorContainer = createChild(header, "span", {
-      class: "ruleview-selectorcontainer"
+    this.selectorText = createChild(header, "span", {
+      class: "ruleview-selectorcontainer theme-fg-color3",
+      tabindex: this.isSelectorEditable ? "0" : "-1",
     });
+
+    if (this.isSelectorEditable) {
+      this.selectorText.addEventListener("click", aEvent => {
+        // Clicks within the selector shouldn't propagate any further.
+        aEvent.stopPropagation();
+      }, false);
+
+      editableField({
+        element: this.selectorText,
+        done: this._onSelectorDone,
+      });
+    }
 
     if (this.rule.domRule.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE &&
         this.rule.domRule.selectors) {
@@ -2746,23 +2769,6 @@ RuleEditor.prototype = {
       });
       selectorHighlighter.addEventListener("click", () => {
         this.ruleView.toggleSelectorHighlighter(selectorHighlighter, selector);
-      });
-    }
-
-    this.selectorText = createChild(this.selectorContainer, "span", {
-      class: "ruleview-selector theme-fg-color3",
-      tabindex: this.isSelectorEditable ? "0" : "-1",
-    });
-
-    if (this.isSelectorEditable) {
-      this.selectorContainer.addEventListener("click", aEvent => {
-        // Clicks within the selector shouldn't propagate any further.
-        aEvent.stopPropagation();
-      }, false);
-
-      editableField({
-        element: this.selectorText,
-        done: this._onSelectorDone,
       });
     }
 
@@ -2863,16 +2869,41 @@ RuleEditor.prototype = {
             textContent: ", "
           });
         }
-        let cls;
-        if (this.rule.matchedSelectors.indexOf(selector) > -1) {
-          cls = "ruleview-selector-matched";
-        } else {
-          cls = "ruleview-selector-unmatched";
-        }
-        createChild(this.selectorText, "span", {
-          class: cls,
-          textContent: selector
+
+        let containerClass =
+          (this.rule.matchedSelectors.indexOf(selector) > -1) ?
+          "ruleview-selector-matched" : "ruleview-selector-unmatched";
+        let selectorContainer = createChild(this.selectorText, "span", {
+          class: containerClass
         });
+
+        let parsedSelector = parsePseudoClassesAndAttributes(selector);
+
+        for (let selectorText of parsedSelector) {
+          let selectorClass = "";
+
+          switch (selectorText.type) {
+            case SELECTOR_ATTRIBUTE:
+              selectorClass = "ruleview-selector-attribute";
+              break;
+            case SELECTOR_ELEMENT:
+              selectorClass = "ruleview-selector";
+              break;
+            case SELECTOR_PSEUDO_CLASS:
+              selectorClass =
+                [":active", ":focus", ":hover"].includes(selectorText.value) ?
+                "ruleview-selector-pseudo-class-lock" :
+                "ruleview-selector-pseudo-class";
+              break;
+            default:
+              break;
+          }
+
+          createChild(selectorContainer, "span", {
+            textContent: selectorText.value,
+            class: selectorClass
+          });
+        }
       });
     }
 
