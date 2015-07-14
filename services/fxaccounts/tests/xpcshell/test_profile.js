@@ -164,6 +164,137 @@ add_test(function fetchAndCacheProfile_ok() {
     });
 });
 
+// Check that a second profile request when one is already in-flight reuses
+// the in-flight one.
+add_task(function fetchAndCacheProfileOnce() {
+  // A promise that remains unresolved while we fire off 2 requests for
+  // a profile.
+  let resolveProfile;
+  let promiseProfile = new Promise(resolve => {
+    resolveProfile = resolve;
+  });
+  let numFetches = 0;
+  let client = mockClient(mockFxa());
+  client.fetchProfile = function () {
+    numFetches += 1;
+    return promiseProfile;
+  };
+  let profile = CreateFxAccountsProfile(null, client);
+
+  let request1 = profile._fetchAndCacheProfile();
+  let request2 = profile._fetchAndCacheProfile();
+
+  // should be one request made to fetch the profile (but the promise returned
+  // by it remains unresolved)
+  do_check_eq(numFetches, 1);
+
+  // resolve the promise.
+  resolveProfile({ avatar: "myimg"});
+
+  // both requests should complete with the same data.
+  let got1 = yield request1;
+  do_check_eq(got1.avatar, "myimg");
+  let got2 = yield request1;
+  do_check_eq(got2.avatar, "myimg");
+
+  // and still only 1 request was made.
+  do_check_eq(numFetches, 1);
+});
+
+// Check that sharing a single fetch promise works correctly when the promise
+// is rejected.
+add_task(function fetchAndCacheProfileOnce() {
+  // A promise that remains unresolved while we fire off 2 requests for
+  // a profile.
+  let rejectProfile;
+  let promiseProfile = new Promise((resolve,reject) => {
+    rejectProfile = reject;
+  });
+  let numFetches = 0;
+  let client = mockClient(mockFxa());
+  client.fetchProfile = function () {
+    numFetches += 1;
+    return promiseProfile;
+  };
+  let profile = CreateFxAccountsProfile(null, client);
+
+  let request1 = profile._fetchAndCacheProfile();
+  let request2 = profile._fetchAndCacheProfile();
+
+  // should be one request made to fetch the profile (but the promise returned
+  // by it remains unresolved)
+  do_check_eq(numFetches, 1);
+
+  // reject the promise.
+  rejectProfile("oh noes");
+
+  // both requests should reject.
+  try {
+    yield request1;
+    throw new Error("should have rejected");
+  } catch (ex if ex == "oh noes") {}
+  try {
+    yield request2;
+    throw new Error("should have rejected");
+  } catch (ex if ex == "oh noes") {}
+
+  // but a new request should work.
+  client.fetchProfile = function () {
+    return Promise.resolve({ avatar: "myimg"});
+  };
+
+  let got = yield profile._fetchAndCacheProfile();
+  do_check_eq(got.avatar, "myimg");
+});
+
+// Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
+// last one doesn't kick off a new request to check the cached copy is fresh.
+add_task(function fetchAndCacheProfileAfterThreshold() {
+  let numFetches = 0;
+  let client = mockClient(mockFxa());
+  client.fetchProfile = function () {
+    numFetches += 1;
+    return Promise.resolve({ avatar: "myimg"});
+  };
+  let profile = CreateFxAccountsProfile(null, client);
+  profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
+
+  yield profile.getProfile();
+  do_check_eq(numFetches, 1);
+
+  yield profile.getProfile();
+  do_check_eq(numFetches, 1);
+
+  yield new Promise(resolve => {
+    do_timeout(1000, resolve);
+  });
+
+  yield profile.getProfile();
+  do_check_eq(numFetches, 2);
+});
+
+// Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
+// last one *does* kick off a new request if ON_PROFILE_CHANGE_NOTIFICATION
+// is sent.
+add_task(function fetchAndCacheProfileBeforeThresholdOnNotification() {
+  let numFetches = 0;
+  let client = mockClient(mockFxa());
+  client.fetchProfile = function () {
+    numFetches += 1;
+    return Promise.resolve({ avatar: "myimg"});
+  };
+  let profile = CreateFxAccountsProfile(null, client);
+  profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
+
+  yield profile.getProfile();
+  do_check_eq(numFetches, 1);
+
+  Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, null);
+
+  yield profile.getProfile();
+  do_check_eq(numFetches, 2);
+});
+
 add_test(function tearDown_ok() {
   let profile = CreateFxAccountsProfile();
 
