@@ -623,19 +623,14 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
 #endif
 }
 
-static PLDHashOperator CheckForeignObjectInvalidatedArea(nsPtrHashKey<nsSVGForeignObjectFrame>* aEntry, void* aData)
-{
-  nsRegion* region = static_cast<nsRegion*>(aData);
-  region->Or(*region, aEntry->GetKey()->GetInvalidRegion());
-  return PL_DHASH_NEXT;
-}
-
 nsRegion
 nsSVGOuterSVGFrame::FindInvalidatedForeignObjectFrameChildren(nsIFrame* aFrame)
 {
   nsRegion result;
   if (mForeignObjectHash && mForeignObjectHash->Count()) {
-    mForeignObjectHash->EnumerateEntries(CheckForeignObjectInvalidatedArea, &result);
+    for (auto it = mForeignObjectHash->Iter(); !it.Done(); it.Next()) {
+      result.Or(result, it.Get()->GetKey()->GetInvalidRegion());
+    }
   }
   return result;
 }
