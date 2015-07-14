@@ -189,7 +189,7 @@ function runTests()
   synthesizeMouse(document.getElementById("option3"), 2, 2, { type: "mousedown" });
   synthesizeMouse(document.getElementById("option3"), 2, 1000, { type: "mousemove" });
   var select = document.getElementById("select");
-  is(select.selectedIndex, 9, "scroll select");
+  is(select.selectedIndex, 2, "scroll select");
   synthesizeMouse(document.getElementById("select"), 2, 2, { type: "mouseup" });
 
   synthesizeMouse(custom, 2, 2, { type: "mousedown" });
