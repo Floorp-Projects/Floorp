@@ -117,9 +117,11 @@ function run_test() {
 function check_open_result(name, expectedRv) {
   return function openSignedAppFileCallback(rv, aZipReader, aSignerCert) {
     do_print("openSignedAppFileCallback called for " + name);
-    do_check_eq(rv, expectedRv);
-    do_check_eq(aZipReader != null,  Components.isSuccessCode(expectedRv));
-    do_check_eq(aSignerCert != null, Components.isSuccessCode(expectedRv));
+    equal(rv, expectedRv, "Actual and expected return value should match");
+    equal(aZipReader != null, Components.isSuccessCode(expectedRv),
+          "ZIP reader should be null only if the return value denotes failure");
+    equal(aSignerCert != null, Components.isSuccessCode(expectedRv),
+          "Signer cert should be null only if the return value denotes failure");
     run_next_test();
   };
 }
