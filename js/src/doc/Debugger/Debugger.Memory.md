@@ -284,6 +284,7 @@ Function Properties of the `Debugger.Memory.prototype` Object
       "timestamp": <i>timestamp</i>,
       "frame": <i>allocationSite</i>,
       "class": <i>className</i>,
+      "size": <i>byteSize</i>,
     }
     </pre>
 
@@ -301,6 +302,9 @@ Function Properties of the `Debugger.Memory.prototype` Object
     * *className* is the string name of the allocated object's internal
       `[[Class]]` property, for example "Array", "Date", "RegExp", or (most
       commonly) "Object".
+
+    * *byteSize* is the size of the newly tenured object (within the tenured
+      heap, not the nursery) in bytes.
 
     When `trackingTenurePromotions` is `false`, `drainTenurePromotionsLog()`
     throws an `Error`.

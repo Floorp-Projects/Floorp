@@ -1545,4 +1545,10 @@ function setMediaTestsPrefs(callback, extraPrefs) {
   SpecialPowers.pushPrefEnv({"set": prefs}, callback);
 }
 
+// B2G emulator and Android 2.3 are condidered slow platforms
+function isSlowPlatform() {
+  return SpecialPowers.Services.appinfo.name == "B2G" ||
+         navigator.userAgent.indexOf("Mobile") != -1 && androidVersion == 10;
+}
+
 SimpleTest.requestFlakyTimeout("untriaged");
