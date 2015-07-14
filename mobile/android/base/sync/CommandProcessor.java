@@ -267,7 +267,7 @@ public class CommandProcessor {
     final NotificationManager notificationManager = (NotificationManager) context.getSystemService(ns);
 
     // Create a Notification.
-    final int icon = R.drawable.icon;
+    final int icon = R.drawable.flat_icon;
     String notificationTitle = context.getString(R.string.sync_new_tab);
     if (title != null) {
       notificationTitle = notificationTitle.concat(": " + title);
