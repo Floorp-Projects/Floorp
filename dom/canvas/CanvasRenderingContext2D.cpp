@@ -2580,7 +2580,6 @@ CanvasRenderingContext2D::BeginPath()
 void
 CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
 {
-  EnsureTarget();
   EnsureUserSpacePath(winding);
 
   if (!mPath) {
@@ -2626,7 +2625,6 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
 void
 CanvasRenderingContext2D::Stroke()
 {
-  EnsureTarget();
   EnsureUserSpacePath();
 
   if (!mPath) {
@@ -2762,8 +2760,6 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aEleme
 void
 CanvasRenderingContext2D::Clip(const CanvasWindingRule& winding)
 {
-  EnsureTarget();
-
   EnsureUserSpacePath(winding);
 
   if (!mPath) {
@@ -2905,6 +2901,8 @@ CanvasRenderingContext2D::Rect(double x, double y, double w, double h)
 void
 CanvasRenderingContext2D::EnsureWritablePath()
 {
+  EnsureTarget();
+
   if (mDSPathBuilder) {
     return;
   }
@@ -2923,7 +2921,6 @@ CanvasRenderingContext2D::EnsureWritablePath()
     return;
   }
 
-  EnsureTarget();
   if (!mPath) {
     NS_ASSERTION(!mPathTransformWillUpdate, "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
@@ -2944,8 +2941,9 @@ CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
   if(winding == CanvasWindingRule::Evenodd)
     fillRule = FillRule::FILL_EVEN_ODD;
 
+  EnsureTarget();
+
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {
-    EnsureTarget();
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   }
 
@@ -3212,6 +3210,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 {
   RefPtr<gfx::Path> path;
   if (options.mPath) {
+    EnsureTarget();
     path = options.mPath->GetPath(CanvasWindingRule::Nonzero, mTarget);
   }
 
