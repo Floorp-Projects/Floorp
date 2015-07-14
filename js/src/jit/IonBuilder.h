@@ -720,6 +720,9 @@ class IonBuilder
 
     static InliningDecision DontInline(JSScript* targetScript, const char* reason);
 
+    // Helper function for canInlineTarget
+    bool hasCommonInliningPath(const JSScript* scriptToInline);
+
     // Oracles.
     InliningDecision canInlineTarget(JSFunction* target, CallInfo& callInfo);
     InliningDecision makeInliningDecision(JSObject* target, CallInfo& callInfo);
