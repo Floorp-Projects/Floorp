@@ -342,7 +342,7 @@ class RemoteReftest(RefTest):
         self.server.stop()
 
     def createReftestProfile(self, options, reftestlist):
-        profile = RefTest.createReftestProfile(self, options, reftestlist, server=options.remoteWebServer, port=options.httpPort)
+        profile = RefTest.createReftestProfile(self, options, reftestlist, server=options.remoteWebServer)
         profileDir = profile.profile
 
         prefs = {}

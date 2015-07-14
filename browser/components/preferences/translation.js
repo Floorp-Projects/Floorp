@@ -9,7 +9,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gLangBundle", () =>
   Services.strings.createBundle("chrome://global/locale/languageNames.properties"));
@@ -84,7 +83,7 @@ let gTranslationExceptions = {
 
       if (perm.type == kPermissionType &&
           perm.capability == Services.perms.DENY_ACTION) {
-        this._sites.push(perm.principal.origin);
+        this._sites.push(perm.host);
       }
     }
     Services.obs.addObserver(this, "perm-changed", false);
@@ -127,14 +126,14 @@ let gTranslationExceptions = {
         if (aData == "added") {
           if (perm.capability != Services.perms.DENY_ACTION)
             return;
-          this._sites.push(perm.principal.origin);
+          this._sites.push(perm.host);
           this._sites.sort();
           let boxObject = this._siteTree.boxObject;
           boxObject.rowCountChanged(0, 1);
           boxObject.invalidate();
         }
         else if (aData == "deleted") {
-          let index = this._sites.indexOf(perm.principal.origin);
+          let index = this._sites.indexOf(perm.host);
           if (index == -1)
             return;
           this._sites.splice(index, 1);
@@ -189,9 +188,9 @@ let gTranslationExceptions = {
 
   onSiteDeleted: function() {
     let removedSites = this._siteTree.getSelectedItems();
-    for (let origin of removedSites) {
-      let principal = BrowserUtils.principalFromOrigin(origin);
-      Services.perms.removeFromPrincipal(principal, kPermissionType);
+    for (let host of removedSites) {
+      let uri = Services.io.newURI("http://" + host, null, null);
+      Services.perms.remove(uri, kPermissionType);
     }
   },
 
@@ -202,9 +201,9 @@ let gTranslationExceptions = {
     let removedSites = this._sites.splice(0, this._sites.length);
     this._siteTree.boxObject.rowCountChanged(0, -removedSites.length);
 
-    for (let origin of removedSites) {
-      let principal = BrowserUtils.principalFromOrigin(origin);
-      Services.perms.removeFromPrincipal(principal, kPermissionType);
+    for (let host of removedSites) {
+      let uri = Services.io.newURI("http://" + host, null, null);
+      Services.perms.remove(uri, kPermissionType);
     }
 
     this.onSiteSelected();
