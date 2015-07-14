@@ -2,6 +2,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+// Tests that adding a certificate already present in the certificate database
+// with different trust bits than those stored in the database does not result
+// in the new trust bits being ignored.
+
 do_get_profile();
 let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
@@ -34,7 +40,7 @@ function run_test() {
   // addCertFromBase64(). We use findCertByNickname first to ensure that the
   // certificate already exists.
   let int_cert = certDB.findCertByNickname(null, "int-limited-depth");
-  ok(int_cert);
+  notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
   let base64_cert = btoa(getDERString(int_cert));
   certDB.addCertFromBase64(base64_cert, "p,p,p", "ignored_argument");
   checkCertErrorGeneric(certDB, ee, SEC_ERROR_UNTRUSTED_ISSUER,
