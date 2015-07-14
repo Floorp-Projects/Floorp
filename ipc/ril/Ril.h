@@ -35,6 +35,9 @@ public:
   static void Shutdown();
 
 private:
+  class RegisterConsumerTask;
+  class UnregisterConsumerTask;
+
   RilWorker(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
   nsresult RegisterConsumer(unsigned int aClientId);
