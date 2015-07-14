@@ -1151,7 +1151,8 @@ nsPluginHost::HavePluginForExtension(const nsACString & aExtension,
 }
 
 void
-nsPluginHost::GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray)
+nsPluginHost::GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray,
+                         bool aIncludeDisabled)
 {
   aPluginArray.Clear();
 
@@ -1159,7 +1160,7 @@ nsPluginHost::GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray)
 
   nsPluginTag* plugin = mPlugins;
   while (plugin != nullptr) {
-    if (plugin->IsEnabled()) {
+    if (plugin->IsEnabled() || aIncludeDisabled) {
       aPluginArray.AppendElement(plugin);
     }
     plugin = plugin->mNext;
@@ -2555,7 +2556,7 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
   }
 
   nsTArray<nsRefPtr<nsPluginTag>> plugins;
-  GetPlugins(plugins);
+  GetPlugins(plugins, true);
 
   for (size_t i = 0; i < plugins.Length(); i++) {
     nsRefPtr<nsPluginTag> tag = plugins[i];
