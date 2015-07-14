@@ -1338,12 +1338,12 @@ function getMajorMimeType(mimetype) {
 // Force releasing decoder to avoid timeout in waiting for decoding resource.
 function removeNodeAndSource(n) {
   n.remove();
-  // Clearing mozSrcObject and/or src will actually set them to some default
+  // Clearing srcObject and/or src will actually set them to some default
   // URI that will fail to load, so make sure we don't produce a spurious
   // bailing error.
   n.onerror = null;
-  // reset |mozSrcObject| first since it takes precedence over |src|.
-  n.mozSrcObject = null;
+  // reset |srcObject| first since it takes precedence over |src|.
+  n.srcObject = null;
   n.src = "";
   while (n.firstChild) {
     n.removeChild(n.firstChild);

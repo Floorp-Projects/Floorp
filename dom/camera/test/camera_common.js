@@ -85,7 +85,7 @@ function CameraTestSuite() {
   var self = this;
   this._window.addEventListener('beforeunload', function() {
     if (isDefinedObj(self.viewfinder)) {
-      self.viewfinder.mozSrcObject = null;
+      self.viewfinder.srcObject = null;
     }
 
     self.hw = null;
@@ -211,7 +211,7 @@ CameraTestSuite.prototype = {
       function postTest(pass) {
         ok(pass, test.name + ' finished');
         var camera = self.camera;
-        self.viewfinder.mozSrcObject = null;
+        self.viewfinder.srcObject = null;
         self.camera = null;
 
         if (!isDefinedObj(camera)) {
@@ -325,7 +325,7 @@ CameraTestSuite.prototype = {
         return;
       }
 
-      self.viewfinder.mozSrcObject = self.camera;
+      self.viewfinder.srcObject = self.camera;
       self.viewfinder.play();
       self.camera.addEventListener('previewstatechange', onPreviewStateChange);
     });

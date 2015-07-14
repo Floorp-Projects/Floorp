@@ -42,7 +42,7 @@ var Camera = {
       var camera = d.camera;
       var cfg = d.configuration;
       Camera.cameraObj = camera;
-      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.srcObject = camera;
       Camera.viewfinder.play();
 
       // Check the default configuration
@@ -66,7 +66,7 @@ var Camera = {
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
+  Camera.viewfinder.srcObject = null;
   if (Camera.cameraObj) {
     Camera.cameraObj.release();
     Camera.cameraObj = null;

@@ -232,7 +232,7 @@ var Camera = {
       Camera.cameraObj.addEventListener('configurationchanged', Camera.onConfigChange);
       Camera.cameraObj.addEventListener('shutter', Camera.shutter);
       Camera.cameraObj.addEventListener('picture', Camera.takePictureEvent.bind(Camera));
-      Camera.viewfinder.mozSrcObject = d.camera;
+      Camera.viewfinder.srcObject = d.camera;
       Camera.viewfinder.play();
       SimpleTest.expectAssertions(0);
       ok(true, "Camera Control object has been successfully initialized");
@@ -245,7 +245,7 @@ var Camera = {
 SimpleTest.waitForExplicitFinish();
 
 window.addEventListener('beforeunload', function() {
-  Camera.viewfinder.mozSrcObject = null;
+  Camera.viewfinder.srcObject = null;
   Camera.cameraObj.release();
   Camera.cameraObj = null;
 });

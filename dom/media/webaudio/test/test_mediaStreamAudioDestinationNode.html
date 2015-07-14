@@ -27,7 +27,7 @@ addLoadEvent(function() {
   source.connect(dest);
 
   var elem = document.getElementById('audioelem');
-  elem.mozSrcObject = dest.stream;
+  elem.srcObject = dest.stream;
   elem.onloadedmetadata = function() {
     ok(true, "got metadata event");
     setTimeout(function() {

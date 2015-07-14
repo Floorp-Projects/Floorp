@@ -24,7 +24,7 @@
       var playback = new LocalMediaStreamPlayback(testVideo, stream);
       var video = playback.mediaElement;
 
-      video.mozSrcObject = stream;
+      video.srcObject = stream;
       return new Promise(resolve => {
         ok(playback.mediaElement.paused,
            "Media element should be paused before play()ing");
