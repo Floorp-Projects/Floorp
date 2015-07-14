@@ -120,7 +120,7 @@ var startTest = function(media, token) {
 
   v1.src = media.name;
   v2.src = media.name;
-  v3.mozSrcObject = v2.mozCaptureStreamUntilEnded();
+  v3.srcObject = v2.mozCaptureStreamUntilEnded();
 }
 
 manager.runTests(getPlayableVideos(gSmallTests), startTest);

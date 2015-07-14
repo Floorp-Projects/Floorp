@@ -20,7 +20,7 @@ if (media == null) {
   SimpleTest.finish();
 } else {
   v1.src = media.name;
-  v2.mozSrcObject = v1.mozCaptureStream();
+  v2.srcObject = v1.mozCaptureStream();
   var onPlayingEventFired = false;
 
   v2.onplaying = function() {

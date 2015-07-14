@@ -21,7 +21,7 @@ function startTest() {
     };
 
     mStream = stream;
-    element.mozSrcObject = mStream;
+    element.srcObject = mStream;
     element.play();
   })
   .catch(function(reason) {

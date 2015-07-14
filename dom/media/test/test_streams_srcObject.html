@@ -6,48 +6,56 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="manifest.js"></script>
 </head>
-<body onload="doTest()">
-<audio id="a"></audio>
+<body onload="doTests()">
+<audio id="a1"></audio>
+<audio id="a2"></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var a = document.getElementById('a');
-a.src = getPlayableAudio(gSmallTests).name;
+var doTest = srcObject => new Promise(resolve => {
+  var a = document.getElementById('a1');
+  a.src = getPlayableAudio(gSmallTests).name;
+  var b = new Audio();
 
-var b = new Audio();
-
-function doTest() {
   var newSrc = a.src + "?2";
   b.src = newSrc;
-  is(b.mozSrcObject, null, "Initial srcObject is null");
+  is(b[srcObject], null, "Initial srcObject is null");
   var stream = a.mozCaptureStream();
-  b.mozSrcObject = stream;
-  is(b.mozSrcObject, stream, "Stream set correctly");
+  b[srcObject] = stream;
+  is(b[srcObject], stream, "Stream set correctly");
   try {
-    b.mozSrcObject = "invalid";
-    ok(false, "Setting mozSrcObject to an invalid value should throw.");
+    b[srcObject] = "invalid";
+    ok(false, "Setting srcObject to an invalid value should throw.");
   } catch (e) {
     ok(e instanceof TypeError, "Exception should be a TypeError");
   }
-  is(b.mozSrcObject, stream, "Stream not set to invalid value");
+  is(b[srcObject], stream, "Stream not set to invalid value");
   is(b.src, newSrc, "src attribute not affected by setting srcObject");
   var step = 0;
   b.addEventListener("loadedmetadata", function() {
     if (step == 0) {
       is(b.currentSrc, "", "currentSrc set to empty string while playing srcObject");
-      b.mozSrcObject = null;
-      is(b.mozSrcObject, null, "Stream set to null");
+      b[srcObject] = null;
+      is(b[srcObject], null, "Stream set to null");
       // The resource selection algorithm will run again and choose b.src
     } else if (step == 1) {
       is(b.currentSrc, b.src, "currentSrc set to src now that srcObject is null");
-      SimpleTest.finish();
+      resolve();
     }
     ++step;
   });
   a.play();
   b.play();
-}
+});
+
+// TODO: remove prefixed version soon (1183495).
+
+var doTests = () => doTest("srcObject").then(() => doTest("mozSrcObject"))
+  .catch(e => ok(false, "Unexpected error: " + e))
+  .then(() => SimpleTest.finish())
+  .catch(e => ok(false, "Coding error: " + e));
+
 </script>
 </pre>
 </body>
