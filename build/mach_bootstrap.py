@@ -151,6 +151,21 @@ CATEGORIES = {
 }
 
 
+def get_state_dir():
+    """Obtain the path to a directory to hold state.
+
+    Returns a tuple of the path and a bool indicating whether the value came
+    from an environment variable.
+    """
+    state_user_dir = os.path.expanduser('~/.mozbuild')
+    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH', None)
+
+    if state_env_dir:
+        return state_env_dir, True
+    else:
+        return state_user_dir, False
+
+
 def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
@@ -181,19 +196,17 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if key is None:
             return
         if key == 'state_dir':
-            state_user_dir = os.path.expanduser('~/.mozbuild')
-            state_env_dir = os.environ.get('MOZBUILD_STATE_PATH', None)
-            if state_env_dir:
-                if not os.path.exists(state_env_dir):
+            state_dir, is_environ = get_state_dir()
+            if is_environ:
+                if not os.path.exists(state_dir):
                     print('Creating global state directory from environment variable: %s'
-                        % state_env_dir)
-                    os.makedirs(state_env_dir, mode=0o770)
+                        % state_dir)
+                    os.makedirs(state_dir, mode=0o770)
                     print('Please re-run mach.')
                     sys.exit(1)
-                state_dir = state_env_dir
             else:
-                if not os.path.exists(state_user_dir):
-                    print(STATE_DIR_FIRST_RUN.format(userdir=state_user_dir))
+                if not os.path.exists(state_dir):
+                    print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
                     try:
                         for i in range(20, -1, -1):
                             time.sleep(1)
@@ -202,15 +215,16 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                     except KeyboardInterrupt:
                         sys.exit(1)
 
-                    print('\nCreating default state directory: %s' % state_user_dir)
-                    os.mkdir(state_user_dir)
+                    print('\nCreating default state directory: %s' % state_dir)
+                    os.mkdir(state_dir)
                     print('Please re-run mach.')
                     sys.exit(1)
-                state_dir = state_user_dir
 
             return state_dir
+
         if key == 'topdir':
             return topsrcdir
+
         raise AttributeError(key)
 
     mach = mach.main.Mach(os.getcwd())
