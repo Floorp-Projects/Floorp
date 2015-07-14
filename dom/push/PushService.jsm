@@ -1001,15 +1001,14 @@ this.PushService = {
     return this._checkActivated()
       .then(_ => this._db.getByIdentifiers(aPageRecord))
       .then(record => {
-        // If the endpoint didn't exist, let's just fail.
         if (record === undefined) {
-          throw "NotFoundError";
+          return false;
         }
 
         return Promise.all([
           this._sendRequest("unregister", record),
           this._db.delete(record.keyID),
-        ]);
+        ]).then(() => true);
       });
   },
 
@@ -1017,15 +1016,17 @@ this.PushService = {
     debug("unregister() " + JSON.stringify(aPageRecord));
 
     this._unregister(aPageRecord)
-      .then(_ =>
-        aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
-          requestID: aPageRecord.requestID,
-          pushEndpoint: aPageRecord.pushEndpoint
-        }), error =>
-        aMessageManager.sendAsyncMessage("PushService:Unregister:KO", {
-          requestID: aPageRecord.requestID,
-          error
-        })
+      .then(result => {
+          aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
+            requestID: aPageRecord.requestID,
+            result: result,
+          })
+        }, error => {
+          debug("unregister(): Actual error " + error);
+          aMessageManager.sendAsyncMessage("PushService:Unregister:KO", {
+            requestID: aPageRecord.requestID,
+          })
+        }
       );
   },
 

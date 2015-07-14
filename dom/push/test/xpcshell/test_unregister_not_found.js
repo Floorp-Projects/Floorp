@@ -28,10 +28,8 @@ add_task(function* test_unregister_not_found() {
     }
   });
 
-  let promise = PushNotificationService.unregister(
+  let result = yield PushNotificationService.unregister(
     'https://example.net/nonexistent',
     ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }));
-  yield rejects(promise, function(error) {
-    return error == 'NotFoundError';
-  }, 'Wrong error for nonexistent scope');
+  ok(result === false, "unregister should resolve with false for nonexistent scope");
 });

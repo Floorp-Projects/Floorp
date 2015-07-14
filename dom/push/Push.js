@@ -91,10 +91,16 @@ PushSubscription.prototype = {
 
     switch (aMessage.name) {
       case "PushService:Unregister:OK":
-        resolver.resolve(true);
+        if (typeof json.result !== "boolean") {
+          debug("Expected boolean result from PushService!");
+          resolve.reject("NetworkError");
+          return;
+        }
+
+        resolver.resolve(json.result);
         break;
       case "PushService:Unregister:KO":
-        resolver.resolve(false);
+        resolver.reject("NetworkError");
         break;
       default:
         debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
