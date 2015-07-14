@@ -73,7 +73,7 @@ public:
 
     HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpTexture));
     if (FAILED(hr)) {
-      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1 CreateTexture2D failure " << size << " Code: " << hexa(hr);
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1 CreateTexture2D failure " << size << " Code: " << hexa(hr) << " format " << (int)format;
       return;
     }
     mDT->mDevice->CopyResource(tmpTexture, mDT->mTexture);
@@ -323,7 +323,7 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
       }
       if (FAILED(hr)) {
         IntSize size(sourceRect.width, sourceRect.height);
-        gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1CreateBitmap failure " << size << " Code: " << hexa(hr);
+        gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(size))) << "[D2D] 1CreateBitmap failure " << size << " Code: " << hexa(hr) << " format " << (int)srcSurf->GetFormat();
         return nullptr;
       }
 
@@ -1401,7 +1401,7 @@ DrawTargetD2D::Init(ID3D10Texture2D *aTexture, SurfaceFormat aFormat)
   hr = device->QueryInterface((ID3D10Device1**)byRef(mDevice));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << "Failed to get D3D10 device from texture.";
+    gfxCriticalError() << "Failed to get D3D10 device from texture." << " format " << (int)aFormat;
     return false;
   }
 
