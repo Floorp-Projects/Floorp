@@ -362,6 +362,10 @@ function listGCPointers() {
         'JS::Value',
         'jsid',
 
+        'js::TypeSet',
+        'js::TypeSet::ObjectKey',
+        'js::TypeSet::Type',
+
         // AutoCheckCannotGC should also not be held live across a GC function.
         'JS::AutoCheckCannotGC',
     ];
