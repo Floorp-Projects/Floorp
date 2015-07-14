@@ -994,7 +994,7 @@ UnboxedArrayObject::convertToNative(JSContext* cx, JSObject* obj)
 
     AppendUnboxedDenseElementsFunctor functor(&obj->as<UnboxedArrayObject>(), initlen, &values);
     DebugOnly<DenseElementResult> result = CallBoxedOrUnboxedSpecialization(functor, obj);
-    MOZ_ASSERT(result == DenseElementResult::Success);
+    MOZ_ASSERT(result.value == DenseElementResult::Success);
 
     obj->setGroup(layout.nativeGroup());
 
