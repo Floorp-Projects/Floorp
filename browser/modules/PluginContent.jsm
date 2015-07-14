@@ -199,6 +199,9 @@ PluginContent.prototype = {
    */
   setVisibility : function (plugin, overlay, shouldShow) {
     overlay.classList.toggle("visible", shouldShow);
+    if (shouldShow) {
+      overlay.removeAttribute("dismissed");
+    }
   },
 
   /**
@@ -434,8 +437,8 @@ PluginContent.prototype = {
     }
 
     // Show the in-content UI if it's not too big. The crashed plugin handler already did this.
+    let overlay = this.getPluginUI(plugin, "main");
     if (eventType != "PluginCrashed") {
-      let overlay = this.getPluginUI(plugin, "main");
       if (overlay != null) {
         this.setVisibility(plugin, overlay,
                            this.shouldShowOverlay(plugin, overlay));
@@ -452,8 +455,10 @@ PluginContent.prototype = {
     let closeIcon = this.getPluginUI(plugin, "closeIcon");
     if (closeIcon) {
       closeIcon.addEventListener("click", event => {
-        if (event.button == 0 && event.isTrusted)
+        if (event.button == 0 && event.isTrusted) {
           this.hideClickToPlayOverlay(plugin);
+          overlay.setAttribute("dismissed", "true");
+        }
       }, true);
     }
 
@@ -627,7 +632,7 @@ PluginContent.prototype = {
     // Have to check that the target is not the link to update the plugin
     if (!(event.originalTarget instanceof contentWindow.HTMLAnchorElement) &&
         (event.originalTarget.getAttribute('anonid') != 'closeIcon') &&
-        overlay.classList.contains('visible') &&
+        !overlay.hasAttribute('dismissed') &&
         event.button == 0 &&
         event.isTrusted) {
       this._showClickToPlayNotification(plugin, true);
