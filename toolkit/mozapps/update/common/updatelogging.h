@@ -32,7 +32,8 @@ public:
 protected:
   UpdateLog();
   FILE *logFP;
-  NS_tchar* sourcePath;
+  NS_tchar mTmpFilePath[MAXPATHLEN];
+  NS_tchar mDstFilePath[MAXPATHLEN];
 };
 
 #define LOG_WARN(args) UpdateLog::GetPrimaryLog().WarnPrintf args

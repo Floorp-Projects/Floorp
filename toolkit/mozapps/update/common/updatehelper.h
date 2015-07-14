@@ -10,7 +10,6 @@ BOOL StartServiceUpdate(LPCWSTR installDir);
 BOOL GetUpdateDirectoryPath(LPWSTR path);
 DWORD LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);
-BOOL WriteStatusPending(LPCWSTR updateDirPath);
 DWORD WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds);
 DWORD WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds);
 BOOL DoesFallbackKeyExist();

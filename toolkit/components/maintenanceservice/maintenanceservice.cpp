@@ -130,18 +130,13 @@ wmain(int argc, WCHAR **argv)
 BOOL
 GetLogDirectoryPath(WCHAR *path)
 {
-  HRESULT hr = SHGetFolderPathW(nullptr, CSIDL_COMMON_APPDATA, nullptr, 
-    SHGFP_TYPE_CURRENT, path);
-  if (FAILED(hr)) {
+  if (!GetModuleFileNameW(nullptr, path, MAX_PATH)) {
     return FALSE;
   }
 
-  if (!PathAppendSafe(path, L"Mozilla")) {
+  if (!PathRemoveFileSpecW(path)) {
     return FALSE;
   }
-  // The directory should already be created from the installer, but
-  // just to be safe in case someone deletes.
-  CreateDirectoryW(path, nullptr);
 
   if (!PathAppendSafe(path, L"logs")) {
     return FALSE;
