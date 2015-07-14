@@ -139,7 +139,7 @@ PocketSphinxSpeechRecognitionService::PocketSphinxSpeechRecognitionService()
   tmpFile->AppendRelativePath(NS_LITERAL_STRING(".."));
 #endif
   tmpFile->AppendRelativePath(NS_LITERAL_STRING("models"));
-  tmpFile->AppendRelativePath(NS_LITERAL_STRING("en-us-semi"));
+  tmpFile->AppendRelativePath(NS_LITERAL_STRING("en-US"));
   tmpFile->GetPath(aStringAMPath);
 
   NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(tmpFile));
@@ -149,7 +149,7 @@ PocketSphinxSpeechRecognitionService::PocketSphinxSpeechRecognitionService()
 #endif
   tmpFile->AppendRelativePath(NS_LITERAL_STRING("models"));     //
   tmpFile->AppendRelativePath(NS_LITERAL_STRING("dict"));       //
-  tmpFile->AppendRelativePath(NS_LITERAL_STRING("cmu07a.dic")); //
+  tmpFile->AppendRelativePath(NS_LITERAL_STRING("en-US.dic")); //
   tmpFile->GetPath(aStringDictPath);
 
   // FOR B2G PATHS HARDCODED (APPEND /DATA ON THE BEGINING, FOR DESKTOP, ONLY
