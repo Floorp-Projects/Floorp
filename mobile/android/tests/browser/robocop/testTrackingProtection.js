@@ -43,7 +43,6 @@ function promiseLoadEvent(browser, url, eventType="load", runBeforeLoad) {
 // Code is mostly stolen from:
 // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/test/general/browser_trackingUI.js
 
-var PREF = "privacy.trackingprotection.enabled";
 var TABLE = "urlclassifier.trackingTable";
 
 // Update tracking database
@@ -84,35 +83,23 @@ function doUpdate() {
   });
 }
 
-// Track the <browser> where the tests are happening
-let browser;
-
-add_test(function setup_browser() {
-  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-  let BrowserApp = chromeWin.BrowserApp;
-
-  do_register_cleanup(function cleanup() {
-    Services.prefs.clearUserPref(PREF);
-    Services.prefs.clearUserPref(TABLE);
-    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
-  });
+// Tests the tracking protection UI in private browsing. By default, tracking protection is
+// enabled in private browsing ("privacy.trackingprotection.pbmode.enabled").
+add_task(function* test_tracking_pb() {
+  let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
 
   // Load a blank page
-  let url = "about:blank";
-  browser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
-  browser.addEventListener("load", function startTests(event) {
-    browser.removeEventListener("load", startTests, true);
-    Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
-  }, true);
-});
+  let browser = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id, isPrivate: true }).browser;
+  yield new Promise((resolve, reject) => {
+    browser.addEventListener("load", function startTests(event) {
+      browser.removeEventListener("load", startTests, true);
+      Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    }, true);
+  });
 
-add_task(function* () {
   // Populate and use 'test-track-simple' for tracking protection lookups
   Services.prefs.setCharPref(TABLE, "test-track-simple");
   yield doUpdate();
-
-  // Enable Tracking Protection
-  Services.prefs.setBoolPref(PREF, true);
 
   // Point tab to a test page NOT containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
@@ -135,8 +122,8 @@ add_task(function* () {
   });
   Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 
-  // Disable Tracking Protection
-  Services.prefs.setBoolPref(PREF, false);
+  // Disable tracking protection to make sure we don't show the UI when the pref is disabled.
+  Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
 
   // Point tab to a test page containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
