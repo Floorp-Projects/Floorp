@@ -1689,6 +1689,30 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
   return true;
 }
 
+static void
+CheckForAdapterMismatch(ID3D11Device *device)
+{
+  nsRefPtr<IDXGIDevice> dxgiDevice;
+  if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice),
+                                    getter_AddRefs(dxgiDevice)))) {
+      return;
+  }
+  nsRefPtr<IDXGIAdapter> dxgiAdapter;
+  if (FAILED(dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter)))) {
+      return;
+  }
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsString vendorID;
+  gfxInfo->GetAdapterVendorID(vendorID);
+  nsresult ec;
+  int32_t vendor = vendorID.ToInteger(&ec, 16);
+  DXGI_ADAPTER_DESC desc;
+  dxgiAdapter->GetDesc(&desc);
+  if (vendor != desc.VendorId) {
+      gfxCriticalNote << "VendorIDMismatch " << hexa(vendor) << " " << hexa(desc.VendorId);
+  }
+}
+
 void CheckIfRenderTargetViewNeedsRecreating(ID3D11Device *device)
 {
     nsRefPtr<ID3D11DeviceContext> deviceContext;
@@ -1758,6 +1782,9 @@ void CheckIfRenderTargetViewNeedsRecreating(ID3D11Device *device)
     }
 
     keyedMutex->ReleaseSync(0);
+
+    // It seems like this may only happen when we're using the NVIDIA gpu
+    CheckForAdapterMismatch(device);
 }
 
 
