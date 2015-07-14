@@ -531,6 +531,7 @@ gbjar.sources += [
     'widget/IconTabWidget.java',
     'widget/LoginDoorHanger.java',
     'widget/ResizablePathDrawable.java',
+    'widget/RoundedCornerLayout.java',
     'widget/SiteLogins.java',
     'widget/SquaredImageView.java',
     'widget/SquaredRelativeLayout.java',
