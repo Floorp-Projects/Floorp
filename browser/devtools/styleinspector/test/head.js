@@ -645,7 +645,8 @@ function synthesizeKeys(input, win) {
 function getRuleViewRule(view, selectorText) {
   let rule;
   for (let r of view.doc.querySelectorAll(".ruleview-rule")) {
-    let selector = r.querySelector(".ruleview-selector, .ruleview-selector-matched");
+    let selector = r.querySelector(".ruleview-selectorcontainer, " +
+                                   ".ruleview-selector-matched");
     if (selector && selector.textContent === selectorText) {
       rule = r;
       break;
