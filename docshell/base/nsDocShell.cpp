@@ -13519,15 +13519,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   // if per element referrer is enabled, the element referrer overrules
   // the document wide referrer
   if (IsElementAnchor(aContent)) {
-    MOZ_ASSERT(aContent->IsHTMLElement());
-    if (Preferences::GetBool("network.http.enablePerElementReferrer", false)) {
-      nsAutoString referrerPolicy;
-      if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::referrer, referrerPolicy)) {
-        uint32_t refPolEnum = mozilla::net::ReferrerPolicyFromString(referrerPolicy);
-        if (refPolEnum != mozilla::net::RP_Unset) {
-          refererPolicy = refPolEnum;
-        }
-      }
+    net::ReferrerPolicy refPolEnum = aContent->AsElement()->GetReferrerPolicy();
+    if (refPolEnum != net::RP_Unset) {
+      refererPolicy = refPolEnum;
     }
   }
 

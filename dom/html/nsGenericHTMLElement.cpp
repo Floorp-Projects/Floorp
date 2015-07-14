@@ -105,8 +105,6 @@
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
 
-#include "mozilla/net/ReferrerPolicy.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
