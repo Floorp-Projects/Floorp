@@ -36,6 +36,15 @@ struct LoadInfoArgs
   uint64_t      parentOuterWindowID;
 };
 
+/**
+ * Not every channel necessarily has a loadInfo attached.
+ */
+union OptionalLoadInfoArgs
+{
+  void_t;
+  LoadInfoArgs;
+};
+
 //-----------------------------------------------------------------------------
 // HTTP IPDL structs
 //-----------------------------------------------------------------------------
@@ -77,7 +86,7 @@ struct HttpChannelOpenArgs
   bool                        allowSpdy;
   bool                        allowAltSvc;
   OptionalFileDescriptorSet   fds;
-  LoadInfoArgs                loadInfo;
+  OptionalLoadInfoArgs        loadInfo;
   OptionalHttpResponseHead    synthesizedResponseHead;
   uint32_t                    cacheKey;
 };
@@ -104,7 +113,7 @@ struct FTPChannelOpenArgs
   uint64_t                  startPos;
   nsCString                 entityID;
   OptionalInputStreamParams uploadStream;
-  LoadInfoArgs              loadInfo;
+  OptionalLoadInfoArgs      loadInfo;
 };
 
 struct FTPChannelConnectArgs

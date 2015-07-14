@@ -6250,12 +6250,6 @@ private:
   VerifyRequestParams(const RequestParams& aParams) const;
 
   bool
-  VerifyRequestParams(const OpenCursorParams& aParams) const;
-
-  bool
-  VerifyRequestParams(const CursorRequestParams& aParams) const;
-
-  bool
   VerifyRequestParams(const SerializedKeyRange& aKeyRange) const;
 
   bool
@@ -7551,6 +7545,12 @@ private:
   nsRefPtr<FileManager> mFileManager;
   PBackgroundParent* mBackgroundParent;
 
+  // These should only be touched on the PBackground thread to check whether the
+  // objectStore or index has been deleted. Holding these saves a hash lookup
+  // for every call to continue()/advance().
+  nsRefPtr<FullObjectStoreMetadata> mObjectStoreMetadata;
+  nsRefPtr<FullIndexMetadata> mIndexMetadata;
+
   const int64_t mObjectStoreId;
   const int64_t mIndexId;
 
@@ -7566,7 +7566,8 @@ private:
   const Type mType;
   const Direction mDirection;
 
-  bool mUniqueIndex;
+  const bool mUniqueIndex;
+  const bool mIsSameProcessActor;
   bool mActorDestroyed;
 
 public:
@@ -7576,8 +7577,8 @@ private:
   // Only created by TransactionBase.
   Cursor(TransactionBase* aTransaction,
          Type aType,
-         int64_t aObjectStoreId,
-         int64_t aIndexId,
+         FullObjectStoreMetadata* aObjectStoreMetadata,
+         FullIndexMetadata* aIndexMetadata,
          Direction aDirection);
 
   // Reference counted.
@@ -7585,6 +7586,9 @@ private:
   {
     MOZ_ASSERT(mActorDestroyed);
   }
+
+  bool
+  VerifyRequestParams(const CursorRequestParams& aParams) const;
 
   // Only called by TransactionBase.
   bool
@@ -13373,119 +13377,6 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
 }
 
 bool
-TransactionBase::VerifyRequestParams(const OpenCursorParams& aParams) const
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
-
-  switch (aParams.type()) {
-    case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      const ObjectStoreOpenCursorParams& params =
-        aParams.get_ObjectStoreOpenCursorParams();
-      nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-        GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      break;
-    }
-
-    case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      const ObjectStoreOpenKeyCursorParams& params =
-        aParams.get_ObjectStoreOpenKeyCursorParams();
-      nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-        GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      break;
-    }
-
-    case OpenCursorParams::TIndexOpenCursorParams: {
-      const IndexOpenCursorParams& params = aParams.get_IndexOpenCursorParams();
-      nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-        GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      nsRefPtr<FullIndexMetadata> indexMetadata =
-        GetMetadataForIndexId(objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      break;
-    }
-
-    case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      const IndexOpenKeyCursorParams& params =
-        aParams.get_IndexOpenKeyCursorParams();
-      nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-        GetMetadataForObjectStoreId(params.objectStoreId());
-      if (NS_WARN_IF(!objectStoreMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      nsRefPtr<FullIndexMetadata> indexMetadata =
-        GetMetadataForIndexId(objectStoreMetadata, params.indexId());
-      if (NS_WARN_IF(!indexMetadata)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      if (NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-
-  return true;
-}
-
-bool
-TransactionBase::VerifyRequestParams(const CursorRequestParams& aParams) const
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
-
-  switch (aParams.type()) {
-    case CursorRequestParams::TContinueParams:
-      break;
-
-    case CursorRequestParams::TAdvanceParams:
-        if (NS_WARN_IF(aParams.get_AdvanceParams().count() == 0)) {
-          ASSERT_UNLESS_FUZZING();
-          return false;
-        }
-        break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-
-  return true;
-}
-
-bool
 TransactionBase::VerifyRequestParams(const SerializedKeyRange& aParams) const
 {
   AssertIsOnBackgroundThread();
@@ -13804,58 +13695,94 @@ PBackgroundIDBCursorParent*
 TransactionBase::AllocCursor(const OpenCursorParams& aParams, bool aTrustParams)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
 #ifdef DEBUG
   // Always verify parameters in DEBUG builds!
   aTrustParams = false;
 #endif
 
-  if (!aTrustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  if (NS_WARN_IF(mCommitOrAbortReceived)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
   OpenCursorParams::Type type = aParams.type();
-  MOZ_ASSERT(type != OpenCursorParams::T__None);
-
-  int64_t objectStoreId;
-  int64_t indexId;
+  nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata;
+  nsRefPtr<FullIndexMetadata> indexMetadata;
   Cursor::Direction direction;
 
-  switch(type) {
+  switch (type) {
     case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      const auto& params = aParams.get_ObjectStoreOpenCursorParams();
-      objectStoreId = params.objectStoreId();
-      indexId = 0;
+      const ObjectStoreOpenCursorParams& params =
+        aParams.get_ObjectStoreOpenCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
       direction = params.direction();
       break;
     }
 
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      const auto& params = aParams.get_ObjectStoreOpenKeyCursorParams();
-      objectStoreId = params.objectStoreId();
-      indexId = 0;
+      const ObjectStoreOpenKeyCursorParams& params =
+        aParams.get_ObjectStoreOpenKeyCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
       direction = params.direction();
       break;
     }
 
     case OpenCursorParams::TIndexOpenCursorParams: {
-      const auto& params = aParams.get_IndexOpenCursorParams();
-      objectStoreId = params.objectStoreId();
-      indexId = params.indexId();
+      const IndexOpenCursorParams& params = aParams.get_IndexOpenCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      indexMetadata =
+        GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      if (NS_WARN_IF(!indexMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
       direction = params.direction();
       break;
     }
 
     case OpenCursorParams::TIndexOpenKeyCursorParams: {
-      const auto& params = aParams.get_IndexOpenKeyCursorParams();
-      objectStoreId = params.objectStoreId();
-      indexId = params.indexId();
+      const IndexOpenKeyCursorParams& params =
+        aParams.get_IndexOpenKeyCursorParams();
+      objectStoreMetadata = GetMetadataForObjectStoreId(params.objectStoreId());
+      if (NS_WARN_IF(!objectStoreMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      indexMetadata =
+        GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      if (NS_WARN_IF(!indexMetadata)) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
+      if (aTrustParams &&
+          NS_WARN_IF(!VerifyRequestParams(params.optionalKeyRange()))) {
+        ASSERT_UNLESS_FUZZING();
+        return nullptr;
+      }
       direction = params.direction();
       break;
     }
@@ -13864,8 +13791,13 @@ TransactionBase::AllocCursor(const OpenCursorParams& aParams, bool aTrustParams)
       MOZ_CRASH("Should never get here!");
   }
 
+  if (NS_WARN_IF(mCommitOrAbortReceived)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
   nsRefPtr<Cursor> actor =
-    new Cursor(this, type, objectStoreId, indexId, direction);
+    new Cursor(this, type, objectStoreMetadata, indexMetadata, direction);
 
   // Transfer ownership to IPDL.
   return actor.forget().take();
@@ -14696,26 +14628,32 @@ VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
 
 Cursor::Cursor(TransactionBase* aTransaction,
                Type aType,
-               int64_t aObjectStoreId,
-               int64_t aIndexId,
+               FullObjectStoreMetadata* aObjectStoreMetadata,
+               FullIndexMetadata* aIndexMetadata,
                Direction aDirection)
   : mTransaction(aTransaction)
   , mBackgroundParent(nullptr)
-  , mObjectStoreId(aObjectStoreId)
-  , mIndexId(aIndexId)
+  , mObjectStoreMetadata(aObjectStoreMetadata)
+  , mIndexMetadata(aIndexMetadata)
+  , mObjectStoreId(aObjectStoreMetadata->mCommonMetadata.id())
+  , mIndexId(aIndexMetadata ? aIndexMetadata->mCommonMetadata.id() : 0)
   , mCurrentlyRunningOp(nullptr)
   , mType(aType)
   , mDirection(aDirection)
-  , mUniqueIndex(false)
+  , mUniqueIndex(aIndexMetadata ?
+                 aIndexMetadata->mCommonMetadata.unique() :
+                 false)
+  , mIsSameProcessActor(!BackgroundParent::IsOtherProcessActor(
+                           aTransaction->GetBackgroundParent()))
   , mActorDestroyed(false)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(aType != OpenCursorParams::T__None);
-  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(aObjectStoreMetadata);
   MOZ_ASSERT_IF(aType == OpenCursorParams::TIndexOpenCursorParams ||
                   aType == OpenCursorParams::TIndexOpenKeyCursorParams,
-                aIndexId);
+                aIndexMetadata);
 
   if (mType == OpenCursorParams::TObjectStoreOpenCursorParams ||
       mType == OpenCursorParams::TIndexOpenCursorParams) {
@@ -14726,24 +14664,91 @@ Cursor::Cursor(TransactionBase* aTransaction,
     MOZ_ASSERT(mBackgroundParent);
   }
 
-  if (aIndexId) {
-    MOZ_ASSERT(aType == OpenCursorParams::TIndexOpenCursorParams ||
-                 aType == OpenCursorParams::TIndexOpenKeyCursorParams);
-
-    nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
-      aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
-    MOZ_ASSERT(objectStoreMetadata);
-
-    nsRefPtr<FullIndexMetadata> indexMetadata =
-      aTransaction->GetMetadataForIndexId(objectStoreMetadata, aIndexId);
-    MOZ_ASSERT(indexMetadata);
-
-    mUniqueIndex = indexMetadata->mCommonMetadata.unique();
-  }
-
   static_assert(OpenCursorParams::T__None == 0 &&
                   OpenCursorParams::T__Last == 4,
                 "Lots of code here assumes only four types of cursors!");
+}
+
+bool
+Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
+  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
+                  mType == OpenCursorParams::TIndexOpenKeyCursorParams,
+                mIndexMetadata);
+
+#ifdef DEBUG
+  {
+    nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      mTransaction->GetMetadataForObjectStoreId(mObjectStoreId);
+    if (objectStoreMetadata) {
+      MOZ_ASSERT(objectStoreMetadata == mObjectStoreMetadata);
+    } else {
+      MOZ_ASSERT(mObjectStoreMetadata->mDeleted);
+    }
+
+    if (objectStoreMetadata &&
+        (mType == OpenCursorParams::TIndexOpenCursorParams ||
+         mType == OpenCursorParams::TIndexOpenKeyCursorParams)) {
+      nsRefPtr<FullIndexMetadata> indexMetadata =
+        mTransaction->GetMetadataForIndexId(objectStoreMetadata, mIndexId);
+      if (indexMetadata) {
+        MOZ_ASSERT(indexMetadata == mIndexMetadata);
+      } else {
+        MOZ_ASSERT(mIndexMetadata->mDeleted);
+      }
+    }
+  }
+#endif
+
+  if (NS_WARN_IF(mObjectStoreMetadata->mDeleted) ||
+      (mIndexMetadata && NS_WARN_IF(mIndexMetadata->mDeleted))) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  switch (aParams.type()) {
+    case CursorRequestParams::TContinueParams: {
+      const Key& key = aParams.get_ContinueParams().key();
+      if (!key.IsUnset()) {
+        switch (mDirection) {
+          case IDBCursor::NEXT:
+          case IDBCursor::NEXT_UNIQUE:
+            if (NS_WARN_IF(key <= mKey)) {
+              ASSERT_UNLESS_FUZZING();
+              return false;
+            }
+            break;
+
+          case IDBCursor::PREV:
+          case IDBCursor::PREV_UNIQUE:
+            if (NS_WARN_IF(key >= mKey)) {
+              ASSERT_UNLESS_FUZZING();
+              return false;
+            }
+            break;
+
+          default:
+            MOZ_CRASH("Should never get here!");
+        }
+      }
+      break;
+    }
+
+    case CursorRequestParams::TAdvanceParams:
+      if (NS_WARN_IF(!aParams.get_AdvanceParams().count())) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return true;
 }
 
 bool
@@ -14871,6 +14876,9 @@ Cursor::ActorDestroy(ActorDestroyReason aWhy)
   }
 
   mBackgroundParent = nullptr;
+
+  mObjectStoreMetadata = nullptr;
+  mIndexMetadata = nullptr;
 }
 
 bool
@@ -14893,6 +14901,24 @@ Cursor::RecvContinue(const CursorRequestParams& aParams)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   MOZ_ASSERT(!mActorDestroyed);
+  MOZ_ASSERT(mObjectStoreMetadata);
+  MOZ_ASSERT_IF(mType == OpenCursorParams::TIndexOpenCursorParams ||
+                  mType == OpenCursorParams::TIndexOpenKeyCursorParams,
+                mIndexMetadata);
+
+  const bool trustParams =
+#ifdef DEBUG
+  // Always verify parameters in DEBUG builds!
+    false
+#else
+    mIsSameProcessActor
+#endif
+    ;
+
+  if (!trustParams && !VerifyRequestParams(aParams)) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
@@ -14902,32 +14928,6 @@ Cursor::RecvContinue(const CursorRequestParams& aParams)
   if (NS_WARN_IF(mTransaction->mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
     return false;
-  }
-
-  if (aParams.type() == CursorRequestParams::TContinueParams) {
-    const Key& key = aParams.get_ContinueParams().key();
-    if (!key.IsUnset()) {
-      switch (mDirection) {
-        case IDBCursor::NEXT:
-        case IDBCursor::NEXT_UNIQUE:
-          if (NS_WARN_IF(key <= mKey)) {
-            ASSERT_UNLESS_FUZZING();
-            return false;
-          }
-          break;
-
-        case IDBCursor::PREV:
-        case IDBCursor::PREV_UNIQUE:
-          if (NS_WARN_IF(key >= mKey)) {
-            ASSERT_UNLESS_FUZZING();
-            return false;
-          }
-          break;
-
-        default:
-          MOZ_CRASH("Should never get here!");
-      }
-    }
   }
 
   if (mTransaction->IsInvalidated()) {

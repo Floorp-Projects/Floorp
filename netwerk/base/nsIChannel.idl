@@ -4,12 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIRequest.idl"
+#include "nsILoadInfo.idl"
 
 interface nsIURI;
 interface nsIInterfaceRequestor;
 interface nsIInputStream;
 interface nsIStreamListener;
-interface nsILoadInfo;
+
+%{C++
+#include "nsCOMPtr.h"
+%}
 
 /**
  * The nsIChannel interface allows clients to construct "GET" requests for
@@ -309,4 +313,15 @@ interface nsIChannel : nsIRequest
      * redirects and the like.
      */
     attribute nsILoadInfo loadInfo;
+
+%{ C++
+  inline already_AddRefed<nsILoadInfo> GetLoadInfo()
+  {
+    nsCOMPtr<nsILoadInfo> result;
+    mozilla::DebugOnly<nsresult> rv = GetLoadInfo(getter_AddRefs(result));
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || !result);
+    return result.forget();
+  }
+%}
+
 };

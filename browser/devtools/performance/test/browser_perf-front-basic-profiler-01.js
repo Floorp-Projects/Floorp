@@ -27,6 +27,9 @@ function* spawnTest() {
   ok(stopModel.getProfile(), "recording model has a profile after stopping.");
   ok(stopModel.getDuration(), "recording model has a duration after stopping.");
 
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 }

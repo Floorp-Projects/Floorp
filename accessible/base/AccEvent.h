@@ -194,6 +194,7 @@ public:
   bool IsTextInserted() const { return mIsInserted; }
   void GetModifiedText(nsAString& aModifiedText)
     { aModifiedText = mModifiedText; }
+  const nsString& ModifiedText() const { return mModifiedText; }
 
 private:
   int32_t mStart;

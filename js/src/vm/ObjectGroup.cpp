@@ -835,20 +835,19 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
     ObjectGroupCompartment::ArrayObjectKey key(elementType);
     DependentAddPtr<ObjectGroupCompartment::ArrayObjectTable> p(cx, *table, key);
 
-    if (!p) {
-        RootedArrayObject obj(cx, NewDenseCopiedArray(cx, length, vp, nullptr, TenuredObject));
-        if (!obj)
+    RootedObjectGroup group(cx);
+    if (p) {
+        group = p->value();
+    } else {
+        RootedObject proto(cx);
+        if (!GetBuiltinPrototype(cx, JSProto_Array, &proto))
             return nullptr;
-
-        Rooted<TaggedProto> proto(cx, TaggedProto(obj->getProto()));
-        RootedObjectGroup group(cx, ObjectGroupCompartment::makeGroup(cx, &ArrayObject::class_,
-                                                                      proto));
+        Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
+        group = ObjectGroupCompartment::makeGroup(cx, &ArrayObject::class_, taggedProto);
         if (!group)
             return nullptr;
 
         AddTypePropertyId(cx, group, nullptr, JSID_VOID, elementType);
-
-        obj->setGroup(group);
 
         if (elementType != TypeSet::UnknownType()) {
             // Keep track of the initial objects we create with this type.
@@ -859,16 +858,12 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
             if (!preliminaryObjects)
                 return nullptr;
             group->setPreliminaryObjects(preliminaryObjects);
-            preliminaryObjects->registerNewObject(obj);
         }
 
         if (!p.add(cx, *table, key, group))
             return nullptr;
-
-        return obj;
     }
 
-    RootedObjectGroup group(cx, p->value());
     return NewCopiedArrayTryUseGroup(cx, group, vp, length, newKind,
                                      ShouldUpdateTypes::DontUpdate);
 }

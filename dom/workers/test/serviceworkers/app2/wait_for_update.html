@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1178233</title>
+    <script type='application/javascript;version=1.7'>
+
+function update() {
+  alert('UPDATE');
+}
+
+function onLoad() {
+  navigator.serviceWorker.getRegistration(".").then(function(swr) {
+    swr.onupdatefound = function() {
+      swr.onupdatefound = null;
+      parent.postMessage({status: "callback", data: "done"}, "*");
+    };
+    update();
+  });
+}
+
+    </script>
+  </head>
+  <body onload='onLoad()'>
+  </body>
+</html>

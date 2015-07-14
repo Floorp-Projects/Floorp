@@ -8,6 +8,10 @@
 
 const {cssTokenizer} = require("devtools/sourceeditor/css-tokenizer");
 
+const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;
+const SELECTOR_ELEMENT = exports.SELECTOR_ELEMENT = 2;
+const SELECTOR_PSEUDO_CLASS = exports.SELECTOR_PSEUDO_CLASS = 3;
+
 /**
  * Returns an array of CSS declarations given an string.
  * For example, parseDeclarations("width: 1px; height: 1px") would return
@@ -87,8 +91,111 @@ function parseDeclarations(inputString) {
   declarations = declarations.filter(prop => prop.name || prop.value);
 
   return declarations;
-};
-exports.parseDeclarations = parseDeclarations;
+}
+
+/**
+ * Returns an array of the parsed CSS selector value and type given a string.
+ *
+ * The components making up the CSS selector can be extracted into 3 different
+ * types: element, attribute and pseudoclass. The object that is appended to
+ * the returned array contains the value related to one of the 3 types described
+ * along with the actual type.
+ *
+ * The following are the 3 types that can be returned in the object signature:
+ * (1) SELECTOR_ATTRIBUTE
+ * (2) SELECTOR_ELEMENT
+ * (3) SELECTOR_PSEUDO_CLASS
+ *
+ * @param {string} value
+ *        The CSS selector text.
+ * @return {Array} an array of objects with the following signature:
+ *         [{ "value": string, "type": integer }, ...]
+ */
+function parsePseudoClassesAndAttributes(value) {
+  if (!value) {
+    throw new Error("empty input string");
+  }
+
+  let tokens = cssTokenizer(value);
+  let result = [];
+  let current = "";
+  let functionCount = 0;
+  let hasAttribute = false;
+  let hasColon = false;
+
+  for (let token of tokens) {
+    if (token.tokenType === "ident") {
+      current += value.substring(token.startOffset, token.endOffset);
+
+      if (hasColon && !functionCount) {
+        if (current) {
+          result.push({ value: current, type: SELECTOR_PSEUDO_CLASS });
+        }
+
+        current = "";
+        hasColon = false;
+      }
+    } else if (token.tokenType === "symbol" && token.text === ":") {
+      if (!hasColon) {
+        if (current) {
+          result.push({ value: current, type: SELECTOR_ELEMENT });
+        }
+
+        current = "";
+        hasColon = true;
+      }
+
+      current += token.text;
+    } else if (token.tokenType === "function") {
+      current += value.substring(token.startOffset, token.endOffset);
+      functionCount++;
+    } else if (token.tokenType === "symbol" && token.text === ")") {
+      current += token.text;
+
+      if (hasColon && functionCount == 1) {
+        if (current) {
+          result.push({ value: current, type: SELECTOR_PSEUDO_CLASS });
+        }
+
+        current = "";
+        functionCount--;
+        hasColon = false;
+      } else {
+        functionCount--;
+      }
+    } else if (token.tokenType === "symbol" && token.text === "[") {
+      if (!hasAttribute && !functionCount) {
+        if (current) {
+          result.push({ value: current, type: SELECTOR_ELEMENT });
+        }
+
+        current = "";
+        hasAttribute = true;
+      }
+
+      current += token.text;
+    } else if (token.tokenType === "symbol" && token.text === "]") {
+      current += token.text;
+
+      if (hasAttribute && !functionCount) {
+        if (current) {
+          result.push({ value: current, type: SELECTOR_ATTRIBUTE });
+        }
+
+        current = "";
+        hasAttribute = false;
+      }
+    } else {
+      current += value.substring(token.startOffset, token.endOffset);
+    }
+  }
+
+  if (current) {
+    result.push({ value: current, type: SELECTOR_ELEMENT });
+  }
+
+  return result;
+}
 
 /**
  * Expects a single CSS value to be passed as the input and parses the value
@@ -103,5 +210,8 @@ function parseSingleValue(value) {
     value: declaration ? declaration.value : "",
     priority: declaration ? declaration.priority : ""
   };
-};
+}
+
+exports.parseDeclarations = parseDeclarations;
+exports.parsePseudoClassesAndAttributes = parsePseudoClassesAndAttributes;
 exports.parseSingleValue = parseSingleValue;

@@ -8,99 +8,55 @@
  */
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+const { ProfilerFront } = devtools.require("devtools/server/actors/profiler");
 
-function run_test()
-{
-  get_chrome_actors((client, form) => {
-    let actor = form.profilerActor;
-    activate_profiler(client, actor, () => {
-      test_events(client, actor, () => {
-        client.close(do_test_finished);
-      });
-    });
-  })
-
-  do_test_pending();
+function run_test() {
+  run_next_test();
 }
 
-function activate_profiler(client, actor, callback)
-{
-  client.request({ to: actor, type: "startProfiler" }, response => {
-    do_check_true(response.started);
-    client.request({ to: actor, type: "isActive" }, response => {
-      do_check_true(response.isActive);
-      callback();
-    });
-  });
-}
+add_task(function *() {
+  let [client, form] = yield getChromeActors();
+  let front = new ProfilerFront(client, form);
 
-function register_events(client, actor, events, callback)
-{
-  client.request({
-    to: actor,
-    type: "registerEventNotifications",
-    events: events
-  }, callback);
-}
-
-function unregister_events(client, actor, events, callback)
-{
-  client.request({
-    to: actor,
-    type: "unregisterEventNotifications",
-    events: events
-  }, callback);
-}
-
-function emit_and_wait_for_event(client, subject, topic, data, callback)
-{
+  let events = [0, 0, 0, 0];
+  front.on("console-api-profiler", () => events[0]++);
+  front.on("profiler-started", () => events[1]++);
+  front.on("profiler-stopped", () => events[2]++);
   client.addListener("eventNotification", (type, response) => {
-    do_check_eq(type, "eventNotification");
-    do_check_eq(response.topic, topic);
-    do_check_eq(typeof response.subject, "object");
-
-    delete subject.wrappedJSObject;
-    do_check_eq(JSON.stringify(response.subject), JSON.stringify(subject));
-
-    do_check_eq(response.data, data);
-    callback();
+    do_check_true(type === "eventNotification");
+    events[3]++;
   });
 
-  // Make sure cyclic objects are handled before sending them over the protocol.
-  // See ProfilerActor.prototype.observe for more information.
-  subject.wrappedJSObject = subject;
-  Services.obs.notifyObservers(subject, topic, data);
-}
+  yield front.startProfiler();
+  yield front.stopProfiler();
 
-function test_events(client, actor, callback)
-{
-  register_events(client, actor, ["foo", "bar"], response => {
-    do_check_eq(typeof response.registered, "object");
-    do_check_eq(response.registered.length, 2);
-    do_check_eq(response.registered[0], "foo");
-    do_check_eq(response.registered[1], "bar");
+  // All should be empty without binding events
+  do_check_true(events[0] === 0);
+  do_check_true(events[1] === 0);
+  do_check_true(events[2] === 0);
+  do_check_true(events[3] === 0);
 
-    register_events(client, actor, ["foo"], response => {
-      do_check_eq(typeof response.registered, "object");
-      do_check_eq(response.registered.length, 0);
+  let ret = yield front.registerEventNotifications({ events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
+  do_check_true(ret.registered.length === 3);
 
-      emit_and_wait_for_event(client, { hello: "world" }, "foo", "bar", () => {
+  yield front.startProfiler();
+  do_check_true(events[0] === 0);
+  do_check_true(events[1] === 1);
+  do_check_true(events[2] === 0);
+  do_check_true(events[3] === 1, "compatibility events supported for eventNotifications");
 
-        unregister_events(client, actor, ["foo", "bar", "baz"], response => {
-          do_check_eq(typeof response.unregistered, "object");
-          do_check_eq(response.unregistered.length, 2);
-          do_check_eq(response.unregistered[0], "foo");
-          do_check_eq(response.unregistered[1], "bar");
+  yield front.stopProfiler();
+  do_check_true(events[0] === 0);
+  do_check_true(events[1] === 1);
+  do_check_true(events[2] === 1);
+  do_check_true(events[3] === 2, "compatibility events supported for eventNotifications");
 
-          // All events being now unregistered, sending an event shouldn't
-          // do anything. If it does, the eventNotification listeners added
-          // above will catch the event and fail on the data.event test.
-          Services.obs.notifyObservers(null, "foo", null);
-          Services.obs.notifyObservers(null, "bar", null);
+  ret = yield front.unregisterEventNotifications({ events: ["console-api-profiler", "profiler-started", "profiler-stopped"] });
+  do_check_true(ret.registered.length === 3);
+});
 
-          callback();
-        });
-      });
-    });
-  });
+function getChromeActors () {
+  let deferred = promise.defer();
+  get_chrome_actors((client, form) => deferred.resolve([client, form]));
+  return deferred.promise;
 }
