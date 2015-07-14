@@ -1660,7 +1660,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 @media (-moz-mac-yosemite-theme) {
-  #urlbar:not([focused="true"]) > #identity-box {
+  #urlbar:not([focused="true"]):not(:-moz-window-inactive) > #identity-box {
     margin: -2px 0;
     -moz-margin-end: 3px;
     padding: 3px 4px;
