@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(b1367554-51c6-4153-b20a-effec50ca827)]
+[scriptable, uuid(609692b0-1fc7-404a-91c4-eb2ec4d16c20)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -52,7 +52,9 @@ interface nsIMobileMessageCallback : nsISupports
   /**
    *  SMSC Address get/set result
    */
-  void notifyGetSmscAddress(in DOMString aSmscAddress);
+  void notifyGetSmscAddress(in DOMString aSmscAddress,
+                            in unsigned long aTypeOfNumber,
+                            in unsigned long aNumberPlanIdentification);
   void notifyGetSmscAddressFailed(in long error);
   void notifySetSmscAddress();
   void notifySetSmscAddressFailed(in long error);
