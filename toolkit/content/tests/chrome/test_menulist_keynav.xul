@@ -44,7 +44,6 @@ var iswin = (navigator.platform.indexOf("Win") == 0);
 
 function runTests()
 {
-  var list = $("list");
   list.focus();
 
   // on Mac, up and cursor keys open the menu, but on other platforms, the
@@ -92,8 +91,6 @@ function pressLetter()
 
 function pressedAgain()
 {
-  var list = $("list");
-
   keyCheck(list, "T", iswin ? "2b" : 3, "letter pressed again");
   SpecialPowers.setIntPref("ui.menu.incremental_search.timeout", 0); // prevent to timeout
   keyCheck(list, "W", 2, "second letter pressed");
@@ -103,8 +100,6 @@ function pressedAgain()
 
 function differentPressed()
 {
-  var list = $("list");
-
   keyCheck(list, "O", 1, "different letter pressed");
 
   if (gOpenPhase) {
@@ -117,19 +112,27 @@ function differentPressed()
 
     list.selectedItem = $("i1");
 
+    // Hide and show the list to avoid using any existing incremental key state.
+    list.hidden = true;
+    list.clientWidth;
+    list.hidden = false;
+
     gShowPopup = true;
-    list.open = true;
     gOpenPhase = true;
 
     list.addEventListener("popupshown", function popupShownListener() {
       list.removeEventListener("popupshown", popupShownListener, false);
       pressLetter();
     }, false);
+
+    list.open = true;
   }
 }
 
 function tabAndScroll()
 {
+  list = $("list");
+
   if (navigator.platform.indexOf("Mac") == -1) {
     $("button1").focus();
     synthesizeKeyExpectEvent("VK_TAB", { }, list, "focus", "focus to menulist");
@@ -192,7 +195,6 @@ function checkModifiers(event)
 
 function checkEnter()
 {
-  var list = $("list");
   list.addEventListener("popuphidden", checkEnterWithModifiers, false);
   list.addEventListener("command", checkModifiers, false);
   list.open = true;
@@ -203,7 +205,6 @@ function checkEnterWithModifiers()
 {
   is(gModifiers, 1, "modifiers checked when not set");
 
-  var list = $("list");
   ok(!list.open, "list closed on enter press");
   list.removeEventListener("popuphidden", checkEnterWithModifiers, false);
 
@@ -217,7 +218,6 @@ function verifyPopupOnClose()
 {
   is(gModifiers, 2, "modifiers checked when set");
 
-  var list = $("list");
   ok(!list.open, "list closed on enter press with modifiers");
   list.removeEventListener("popuphidden", done, false);
 
@@ -228,8 +228,6 @@ function verifyPopupOnClose()
 
 function checkCursorNavigation()
 {
-  var list = $("list2");
-
   var commandEventsCount = 0;
   list.addEventListener("command", event => {
     is(event.target, list.selectedItem, "command event fired on selected item");
