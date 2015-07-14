@@ -112,6 +112,7 @@ function buildOptionListForChildren(node) {
         // We need to do this for every option element as each one can have
         // an individual style set for direction
         textDirection: win.getComputedStyle(child).getPropertyValue("direction"),
+        tooltip: child.title,
         // XXX this uses a highlight color when this is the selected element.
         // We need to suppress such highlighting in the content process to get
         // the option's correct unhighlighted color here.
