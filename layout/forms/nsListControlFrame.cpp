@@ -1751,40 +1751,6 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     return NS_OK;
   }
 
-  int32_t numOptions = GetNumberOfOptions();
-  if (numOptions < 1)
-    return NS_ERROR_FAILURE;
-
-  nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
-
-  // If the event coordinate is above the first option frame, then target the
-  // first option frame
-  nsRefPtr<dom::HTMLOptionElement> firstOption = GetOption(0);
-  NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
-  nsIFrame* optionFrame = firstOption->GetPrimaryFrame();
-  if (optionFrame) {
-    nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
-    if (ptInOptionFrame.y < 0 && ptInOptionFrame.x >= 0 &&
-        ptInOptionFrame.x < optionFrame->GetSize().width) {
-      aCurIndex = 0;
-      return NS_OK;
-    }
-  }
-
-  nsRefPtr<dom::HTMLOptionElement> lastOption = GetOption(numOptions - 1);
-  // If the event coordinate is below the last option frame, then target the
-  // last option frame
-  NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
-  optionFrame = lastOption->GetPrimaryFrame();
-  if (optionFrame) {
-    nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
-    if (ptInOptionFrame.y >= optionFrame->GetSize().height && ptInOptionFrame.x >= 0 &&
-        ptInOptionFrame.x < optionFrame->GetSize().width) {
-      aCurIndex = numOptions - 1;
-      return NS_OK;
-    }
-  }
-
   return NS_ERROR_FAILURE;
 }
 
