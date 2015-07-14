@@ -3544,9 +3544,9 @@ NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length
 
 JSObject*
 js::NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
-                                      NewObjectKind newKind)
+                                      NewObjectKind newKind, bool forceAnalyze)
 {
-    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind);
+    return NewArrayTryUseGroup<UINT32_MAX>(cx, group, length, newKind, forceAnalyze);
 }
 
 JSObject*
@@ -3617,7 +3617,31 @@ js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
                               const Value* vp, size_t length, NewObjectKind newKind,
                               ShouldUpdateTypes updateTypes)
 {
-    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind);
+    bool forceAnalyze = false;
+
+    static const size_t EagerPreliminaryObjectAnalysisThreshold = 800;
+
+    // Force analysis to see if an unboxed array can be used when making a
+    // sufficiently large array, to avoid excessive analysis and copying later
+    // on. If this is the first array of its group that is being created, first
+    // make a dummy array with the initial elements of the array we are about
+    // to make, so there is some basis for the unboxed array analysis.
+    if (length > EagerPreliminaryObjectAnalysisThreshold) {
+        if (PreliminaryObjectArrayWithTemplate* objects = group->maybePreliminaryObjects()) {
+            if (objects->empty()) {
+                size_t nlength = Min<size_t>(length, 100);
+                JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, nlength);
+                if (!obj)
+                    return nullptr;
+                DebugOnly<DenseElementResult> result =
+                    SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, 0, vp, nlength, updateTypes);
+                MOZ_ASSERT(result.value == DenseElementResult::Success);
+            }
+        }
+        forceAnalyze = true;
+    }
+
+    JSObject* obj = NewFullyAllocatedArrayTryUseGroup(cx, group, length, newKind, forceAnalyze);
     if (!obj)
         return nullptr;
 

@@ -5,11 +5,19 @@
 #ifndef GDKX_WRAPPER_H
 #define GDKX_WRAPPER_H
 
+#define gdk_x11_window_foreign_new_for_display gdk_x11_window_foreign_new_for_display_
 #define gdk_x11_window_lookup_for_display gdk_x11_window_lookup_for_display_
 #define gdk_x11_window_get_xid gdk_x11_window_get_xid_
 #include_next <gdk/gdkx.h>
+#undef gdk_x11_window_foreign_new_for_display
 #undef gdk_x11_window_lookup_for_display
 #undef gdk_x11_window_get_xid
+
+static inline GdkWindow *
+gdk_x11_window_foreign_new_for_display(GdkDisplay *display, Window window)
+{
+  return gdk_window_foreign_new_for_display(display, window);
+}
 
 static inline GdkWindow *
 gdk_x11_window_lookup_for_display(GdkDisplay *display, Window window)

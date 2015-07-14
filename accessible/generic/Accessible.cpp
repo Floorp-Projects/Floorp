@@ -864,6 +864,16 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
                                                          ipcDoc->SendEvent(id, event->GetCaretOffset());
                                                          break;
                                                        }
+      case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
+      case nsIAccessibleEvent::EVENT_TEXT_REMOVED: {
+        AccTextChangeEvent* event = downcast_accEvent(aEvent);
+        ipcDoc->SendTextChangeEvent(id, event->ModifiedText(),
+                                    event->GetStartOffset(),
+                                    event->GetLength(),
+                                    event->IsTextInserted(),
+                                    event->IsFromUserInput());
+        break;
+                                                   }
       default:
                                                        ipcDoc->SendEvent(id, aEvent->GetEventType());
     }

@@ -72,6 +72,11 @@ wait_for_contents          (GtkClipboard *clipboard, GdkAtom target);
 static gchar *
 wait_for_text              (GtkClipboard *clipboard);
 
+static GdkFilterReturn
+selection_request_filter   (GdkXEvent *gdk_xevent,
+                            GdkEvent *event,
+                            gpointer data);
+
 nsClipboard::nsClipboard()
 {
 }
@@ -99,6 +104,13 @@ nsClipboard::Init(void)
 
     os->AddObserver(this, "quit-application", false);
 
+    // A custom event filter to workaround attempting to dereference a null
+    // selection requestor in GTK3 versions before 3.11.3. See bug 1178799.
+#if (MOZ_WIDGET_GTK == 3) && defined(MOZ_X11)
+    if (gtk_check_version(3, 11, 3))
+        gdk_window_add_filter(nullptr, selection_request_filter, nullptr);
+#endif
+
     return NS_OK;
 }
 
@@ -108,6 +120,7 @@ nsClipboard::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *
     if (strcmp(aTopic, "quit-application") == 0) {
         // application is going to quit, save clipboard content
         Store();
+        gdk_window_remove_filter(nullptr, selection_request_filter, nullptr);
     }
     return NS_OK;
 }
@@ -1012,4 +1025,27 @@ wait_for_text(GtkClipboard *clipboard)
     context.get()->AddRef();
     gtk_clipboard_request_text(clipboard, clipboard_text_received, context.get());
     return static_cast<gchar*>(context->Wait());
+}
+
+static GdkFilterReturn
+selection_request_filter(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
+{
+    XEvent *xevent = static_cast<XEvent*>(gdk_xevent);
+    if (xevent->xany.type == SelectionRequest) {
+        if (xevent->xselectionrequest.requestor == None)
+            return GDK_FILTER_REMOVE;
+
+        GdkDisplay *display = gdk_x11_lookup_xdisplay(
+                xevent->xselectionrequest.display);
+        if (!display)
+            return GDK_FILTER_REMOVE;
+
+        GdkWindow *window = gdk_x11_window_foreign_new_for_display(display,
+                xevent->xselectionrequest.requestor);
+        if (!window)
+            return GDK_FILTER_REMOVE;
+
+        g_object_unref(window);
+    }
+    return GDK_FILTER_CONTINUE;
 }

@@ -3555,12 +3555,18 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
         buffer.mGlyphs = &glyphBuf.front();
         buffer.mNumGlyphs = 1;
         const ContextState& state = *mState;
-        AdjustedTarget target(mCtx, &bounds);
+
         const StrokeOptions strokeOpts(state.lineWidth, state.lineJoin,
                                        state.lineCap, state.miterLimit,
                                        state.dash.Length(),
                                        state.dash.Elements(),
                                        state.dashOffset);
+
+        // We need to adjust the bounds for the adjusted target
+        bounds.Inflate(MaxStrokeExtents(strokeOpts, mCtx->mTarget->GetTransform()));
+
+        AdjustedTarget target(mCtx, &bounds);
+
         CanvasGeneralPattern cgp;
         const Pattern& patForStyle
           (cgp.ForStyle(mCtx, CanvasRenderingContext2D::Style::STROKE, mCtx->mTarget));
