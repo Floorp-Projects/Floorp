@@ -27,7 +27,7 @@ function f() {
   }
 }
 
-window.mozRequestAnimationFrame(f);
+window.requestAnimationFrame(f);
 var xhr = new XMLHttpRequest();
 xhr.open("GET", "file_bug675121.sjs", false);
 xhrInProgress = true;
