@@ -188,7 +188,7 @@ add_test(function() {
 // ensure that the intercepted channel can be cancelled
 add_test(function() {
   var chan = make_channel(URL + '/body', null, function(intercepted) {
-    intercepted.cancel();
+    intercepted.cancel(Cr.NS_BINDING_ABORTED);
   });
   chan.asyncOpen(new ChannelListener(run_next_test, null,
 				     CL_EXPECT_FAILURE), null);

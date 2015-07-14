@@ -318,6 +318,19 @@
   ERROR(NS_NET_STATUS_SENDING_TO,      FAILURE(5)),
   ERROR(NS_NET_STATUS_WAITING_FOR,     FAILURE(10)),
   ERROR(NS_NET_STATUS_RECEIVING_FROM,  FAILURE(6)),
+
+  /* nsIInterceptedChannel */
+  /* Generic error for non-specific failures during service worker interception */
+  ERROR(NS_ERROR_INTERCEPTION_FAILED,                  FAILURE(100)),
+  /* Service worker intercepted with an opaque response while
+     dom.serviceWorkers.interception.opaque.enabled pref was set to false */
+  ERROR(NS_ERROR_OPAQUE_INTERCEPTION_DISABLED,         FAILURE(101)),
+  /* Attempt to return opaque response for anything but "non-cors" request */
+  ERROR(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE, FAILURE(102)),
+  /* Service worker intercepted with an error response */
+  ERROR(NS_ERROR_INTERCEPTED_ERROR_RESPONSE,           FAILURE(103)),
+  /* Service worker intercepted with a response with bodyUsed set to true */
+  ERROR(NS_ERROR_INTERCEPTED_USED_RESPONSE,            FAILURE(104)),
 #undef MODULE
 
 
