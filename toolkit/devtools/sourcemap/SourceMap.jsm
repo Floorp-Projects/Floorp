@@ -355,25 +355,45 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     function SourceMapConsumer_fromSourceMap(aSourceMap) {
       var smc = Object.create(BasicSourceMapConsumer.prototype);
 
-      smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
-      smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
+      var names = smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
+      var sources = smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
       smc.sourceRoot = aSourceMap._sourceRoot;
       smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(),
                                                               smc.sourceRoot);
       smc.file = aSourceMap._file;
 
-      smc.__generatedMappings = aSourceMap._mappings.toArray().slice();
-      smc.__originalMappings = aSourceMap._mappings.toArray().slice().sort();
+      // Because we are modifying the entries (by converting string sources and
+      // names to indices into the sources and names ArraySets), we have to make
+      // a copy of the entry or else bad things happen. Shared mutable state
+      // strikes again! See github issue #191.
 
-      smc.__generatedMappings.forEach(function (m) {
-        if (m.source !== null) {
-          m.source = smc._sources.indexOf(m.source);
+      var generatedMappings = aSourceMap._mappings.toArray().slice();
+      var destGeneratedMappings = smc.__generatedMappings = [];
+      var destOriginalMappings = smc.__originalMappings = [];
 
-          if (m.name !== null) {
-            m.name = smc._names.indexOf(m.name);
+      for (var i = 0, length = generatedMappings.length; i < length; i++) {
+        var srcMapping = generatedMappings[i];
+        var destMapping = new Mapping;
+        destMapping.generatedLine = srcMapping.generatedLine;
+        destMapping.generatedColumn = srcMapping.generatedColumn;
+
+        if (srcMapping.source) {
+          destMapping.source = sources.indexOf(srcMapping.source);
+          destMapping.originalLine = srcMapping.originalLine;
+          destMapping.originalColumn = srcMapping.originalColumn;
+
+          if (srcMapping.name) {
+            destMapping.name = names.indexOf(srcMapping.name);
           }
+
+          destOriginalMappings.push(destMapping);
         }
-      });
+
+        destGeneratedMappings.push(destMapping);
+      }
+
+      quickSort(smc.__originalMappings, util.compareByOriginalPositions);
+
       return smc;
     };
 
@@ -507,7 +527,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         }
       }
 
-      quickSort(generatedMappings, util.compareByGeneratedPositions);
+      quickSort(generatedMappings, util.compareByGeneratedPositionsDeflated);
       this.__generatedMappings = generatedMappings;
 
       quickSort(originalMappings, util.compareByOriginalPositions);
@@ -597,7 +617,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         this._generatedMappings,
         "generatedLine",
         "generatedColumn",
-        util.compareByGeneratedPositions,
+        util.compareByGeneratedPositionsDeflated,
         util.getArg(aArgs, 'bias', SourceMapConsumer.GREATEST_LOWER_BOUND)
       );
 
@@ -1066,7 +1086,7 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
         };
       };
 
-      quickSort(this.__generatedMappings, util.compareByGeneratedPositions);
+      quickSort(this.__generatedMappings, util.compareByGeneratedPositionsDeflated);
       quickSort(this.__originalMappings, util.compareByOriginalPositions);
     };
 
@@ -1355,15 +1375,15 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
   exports.compareByOriginalPositions = compareByOriginalPositions;
 
   /**
-   * Comparator between two mappings where the generated positions are
-   * compared.
+   * Comparator between two mappings with deflated source and name indices where
+   * the generated positions are compared.
    *
    * Optionally pass in `true` as `onlyCompareGenerated` to consider two
    * mappings with the same generated line and column, but different
    * source/name/original line and column the same. Useful when searching for a
    * mapping with a stubbed out mapping.
    */
-  function compareByGeneratedPositions(mappingA, mappingB, onlyCompareGenerated) {
+  function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
     var cmp = mappingA.generatedLine - mappingB.generatedLine;
     if (cmp !== 0) {
       return cmp;
@@ -1391,7 +1411,53 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
 
     return mappingA.name - mappingB.name;
   };
-  exports.compareByGeneratedPositions = compareByGeneratedPositions;
+  exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
+
+  function strcmp(aStr1, aStr2) {
+    if (aStr1 === aStr2) {
+      return 0;
+    }
+
+    if (aStr1 > aStr2) {
+      return 1;
+    }
+
+    return -1;
+  }
+
+  /**
+   * Comparator between two mappings with inflated source and name strings where
+   * the generated positions are compared.
+   */
+  function compareByGeneratedPositionsInflated(mappingA, mappingB) {
+    var cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+
+    return strcmp(mappingA.name, mappingB.name);
+  };
+  exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
 });
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2238,7 +2304,6 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
       var mapping;
 
       var mappings = this._mappings.toArray();
-
       for (var i = 0, len = mappings.length; i < len; i++) {
         mapping = mappings[i];
 
@@ -2251,7 +2316,7 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
         }
         else {
           if (i > 0) {
-            if (!util.compareByGeneratedPositions(mapping, mappings[i - 1])) {
+            if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
               continue;
             }
             result += ',';
@@ -2360,7 +2425,7 @@ define('source-map/mapping-list', ['require', 'exports', 'module' ,  'source-map
     var columnA = mappingA.generatedColumn;
     var columnB = mappingB.generatedColumn;
     return lineB > lineA || lineB == lineA && columnB >= columnA ||
-           util.compareByGeneratedPositions(mappingA, mappingB) <= 0;
+           util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0;
   }
 
   /**
@@ -2413,7 +2478,7 @@ define('source-map/mapping-list', ['require', 'exports', 'module' ,  'source-map
    */
   MappingList.prototype.toArray = function MappingList_toArray() {
     if (!this._sorted) {
-      this._array.sort(util.compareByGeneratedPositions);
+      this._array.sort(util.compareByGeneratedPositionsInflated);
       this._sorted = true;
     }
     return this._array;

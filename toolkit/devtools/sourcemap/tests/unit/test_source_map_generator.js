@@ -723,6 +723,30 @@ define("test/source-map/test-source-map-generator", ["require", "exports", "modu
 
       util.assertEqualMaps(assert, map1.toJSON(), expectedMap.toJSON());
     };
+
+  exports['test issue #192'] = function (assert, util) {
+    var generator = new SourceMapGenerator();
+    generator.addMapping({
+      source: 'a.js',
+      generated: { line: 1, column: 10 },
+      original: { line: 1, column: 10 },
+    });
+    generator.addMapping({
+      source: 'b.js',
+      generated: { line: 1, column: 10 },
+      original: { line: 2, column: 20 },
+    });
+
+    var consumer = new SourceMapConsumer(generator.toJSON());
+
+    var n = 0;
+    consumer.eachMapping(function () { n++ });
+
+    assert.equal(n, 2,
+                 "Should not de-duplicate mappings that have the same " +
+                 "generated positions, but different original positions.");
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-generator', do_throw);
