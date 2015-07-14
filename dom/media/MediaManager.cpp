@@ -684,6 +684,7 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
+    const nsCString& aOrigin,
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource,
     PeerIdentity* aPeerIdentity)
@@ -691,6 +692,7 @@ public:
     , mVideoSource(aVideoSource)
     , mWindowID(aWindowID)
     , mListener(aListener)
+    , mOrigin(aOrigin)
     , mPeerIdentity(aPeerIdentity)
     , mManager(MediaManager::GetInstance())
   {
@@ -868,6 +870,7 @@ private:
   nsRefPtr<MediaEngineSource> mVideoSource;
   uint64_t mWindowID;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
+  nsCString mOrigin;
   nsAutoPtr<PeerIdentity> mPeerIdentity;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
@@ -1040,6 +1043,7 @@ public:
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
     MediaEnginePrefs &aPrefs,
+    const nsCString& aOrigin,
     MediaManager::SourceSet* aSourceSet)
     : mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
@@ -1047,6 +1051,7 @@ public:
     , mWindowID(aWindowID)
     , mListener(aListener)
     , mPrefs(aPrefs)
+    , mOrigin(aOrigin)
     , mDeviceChosen(false)
     , mSourceSet(aSourceSet)
     , mManager(MediaManager::GetInstance())
@@ -1112,7 +1117,7 @@ public:
     }
 
     NS_DispatchToMainThread(do_AddRef(new GetUserMediaStreamRunnable(
-      mOnSuccess, mOnFailure, mWindowID, mListener,
+      mOnSuccess, mOnFailure, mWindowID, mListener, mOrigin,
       (mAudioDevice? mAudioDevice->GetSource() : nullptr),
       (mVideoDevice? mVideoDevice->GetSource() : nullptr),
       peerIdentity
@@ -1191,6 +1196,7 @@ private:
   nsRefPtr<AudioDevice> mAudioDevice;
   nsRefPtr<VideoDevice> mVideoDevice;
   MediaEnginePrefs mPrefs;
+  nsCString mOrigin;
 
   bool mDeviceChosen;
 public:
@@ -1585,11 +1591,18 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
   // Determine permissions early (while we still have a stack).
 
   nsIURI* docURI = aWindow->GetDocumentURI();
+  if (!docURI) {
+    return NS_ERROR_UNEXPECTED;
+  }
   bool loop = IsLoop(docURI);
   bool privileged = loop || IsPrivileged();
   bool isHTTPS = false;
-  if (docURI) {
-    docURI->SchemeIs("https", &isHTTPS);
+  docURI->SchemeIs("https", &isHTTPS);
+
+  nsCString origin;
+  nsresult rv = nsPrincipal::GetOriginForURI(docURI, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (!Preferences::GetBool("media.navigator.video.enabled", true)) {
@@ -1696,7 +1709,6 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
 
   if (!privileged) {
     // Check if this site has had persistent permissions denied.
-    nsresult rv;
     nsCOMPtr<nsIPermissionManager> permManager =
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1736,7 +1748,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
   MediaEnginePrefs prefs = mPrefs;
 
   nsString callID;
-  nsresult rv = GenerateUUID(callID);
+  rv = GenerateUUID(callID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool fake = c.mFake.WasPassed()? c.mFake.Value() :
@@ -1749,8 +1761,8 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
 
   nsRefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID, videoType,
                                                      fake, fakeTracks);
-  p->Then([this, onSuccess, onFailure, windowID, c, listener,
-           askPermission, prefs, isHTTPS, callID](SourceSet*& aDevices) mutable {
+  p->Then([this, onSuccess, onFailure, windowID, c, listener, askPermission,
+           prefs, isHTTPS, callID, origin](SourceSet*& aDevices) mutable {
     ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
 
     // Ensure this pointer is still valid, and window is still alive.
@@ -1788,7 +1800,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
     nsAutoPtr<GetUserMediaTask> task (new GetUserMediaTask(c, onSuccess.forget(),
                                                            onFailure.forget(),
                                                            windowID, listener,
-                                                           prefs,
+                                                           prefs, origin,
                                                            devices.forget()));
     // Store the task w/callbacks.
     mActiveCallbacks.Put(callID, task.forget());
