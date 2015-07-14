@@ -361,7 +361,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
 
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
             if (!c->zone()->isCollecting())
-                c->traceCrossCompartmentWrappers(trc);
+                c->traceOutgoingCrossCompartmentWrappers(trc);
         }
         Debugger::markIncomingCrossCompartmentEdges(trc);
     }
@@ -426,29 +426,8 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
         }
     }
 
-    /* We can't use GCCompartmentsIter if we're called from TraceRuntime. */
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->traceRoots(trc);
-
-        if (traceOrMark == MarkRuntime && !c->zone()->isCollecting())
-            continue;
-
-        /* During a GC, these are treated as weak pointers. */
-        if (traceOrMark == TraceRuntime) {
-            if (c->watchpointMap)
-                c->watchpointMap->markAll(trc);
-        }
-
-        /* Mark debug scopes, if present */
-        if (c->debugScopes)
-            c->debugScopes->mark(trc);
-
-        if (c->lazyArrayBuffers)
-            c->lazyArrayBuffers->trace(trc);
-
-        if (c->objectMetadataTable)
-            c->objectMetadataTable->trace(trc);
-    }
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        c->traceRoots(trc, traceOrMark);
 
     MarkInterpreterActivations(rt, trc);
 
