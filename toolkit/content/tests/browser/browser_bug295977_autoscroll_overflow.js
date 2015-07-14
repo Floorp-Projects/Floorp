@@ -117,7 +117,7 @@ function test()
       // although it also depends on acceleration, which here in this test
       // should be > 1 due to how it synthesizes mouse events below.
       if (timeCompensation < 5) {
-        window.mozRequestAnimationFrame(checkScroll);
+        window.requestAnimationFrame(checkScroll);
         return;
       }
 
@@ -174,7 +174,7 @@ function test()
       Services.prefs.clearUserPref("middlemouse.paste");
 
     // Start checking for the scroll.
-    window.mozRequestAnimationFrame(checkScroll);
+    window.requestAnimationFrame(checkScroll);
   }
 
   waitForExplicitFinish();
