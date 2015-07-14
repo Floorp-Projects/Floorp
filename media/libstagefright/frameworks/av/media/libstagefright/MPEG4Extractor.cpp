@@ -4099,7 +4099,13 @@ status_t MPEG4Source::fragmentedRead(
 static int compositionOrder(MediaSource::Indice* const* indice0,
         MediaSource::Indice* const* indice1)
 {
-  return (*indice0)->start_composition - (*indice1)->start_composition;
+  if ((*indice0)->start_composition > (*indice1)->start_composition) {
+      return 1;
+  } else if ((*indice0)->start_composition == (*indice1)->start_composition) {
+      return 0;
+  } else {
+      return -1;
+  }
 }
 
 Vector<MediaSource::Indice> MPEG4Source::exportIndex()
