@@ -23,8 +23,8 @@ function test_cert_for_usages(certChainNicks, expected_usages_string) {
   let verified = {};
   let usages = {};
   cert.getUsagesString(true, verified, usages);
-  do_print("usages.value = " + usages.value);
-  do_check_eq(expected_usages_string, usages.value);
+  equal(expected_usages_string, usages.value,
+        "Expected and actual usages string should match");
 }
 
 function run_test() {

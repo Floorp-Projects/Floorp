@@ -105,7 +105,8 @@ function run_test() {
     ocspResponder.stop(run_next_test);
   });
 
-  // bug 917380: Chcek that an untrusted EV root is untrusted.
+  // bug 917380: Check that explicitly removing trust from an EV root actually
+  // causes the root to be untrusted.
   const nsIX509Cert = Ci.nsIX509Cert;
   add_test(function() {
     let evRootCA = certdb.findCertByNickname(null, evrootnick);
@@ -113,11 +114,11 @@ function run_test() {
 
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("ev-valid",SEC_ERROR_UNKNOWN_ISSUER);
+    check_cert_err("ev-valid", SEC_ERROR_UNKNOWN_ISSUER);
     ocspResponder.stop(run_next_test);
   });
 
-  // bug 917380: Chcek that a trusted EV root is trusted after disabling and
+  // bug 917380: Check that a trusted EV root is trusted after disabling and
   // re-enabling trust.
   add_test(function() {
     let evRootCA = certdb.findCertByNickname(null, evrootnick);
@@ -206,10 +207,11 @@ function run_test() {
 
       let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, flags,
                                        null, verifiedChain, hasEVPolicy);
-      do_check_eq(hasEVPolicy.value, gEVExpected);
-      do_check_eq(error,
-                  gEVExpected ? PRErrorCodeSuccess
-                              : SEC_ERROR_POLICY_VALIDATION_FAILED);
+      equal(hasEVPolicy.value, gEVExpected,
+            "Actual and expected EV status should match for local only EV");
+      equal(error,
+            gEVExpected ? PRErrorCodeSuccess : SEC_ERROR_POLICY_VALIDATION_FAILED,
+            "Actual and expected error code should match for local only EV");
       failingOcspResponder.stop(run_next_test);
     });
   });
@@ -229,11 +231,10 @@ function run_test() {
   });
 
   // Bug 991815 old but valid end-entities are NOT OK for EV
-  // Unfortunatelly because of soft-fail we consider these OK for DV
-  // libpkix does not enforce the age restriction and thus EV is valid
+  // Unfortunately because of soft-fail we consider these OK for DV.
   add_test(function () {
     clearOCSPCache();
-    // Since Mozilla::pkix does not consider the old amost invalid OCSP
+    // Since Mozilla::pkix does not consider the old almost invalid OCSP
     // response valid, it does not cache the old response and thus
     // makes a separate request for DV
     let debugCertNickArray = ["int-ev-valid", "ev-valid", "ev-valid"];
@@ -287,7 +288,9 @@ function check_no_ocsp_requests(cert_name, expected_error) {
   let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, flags,
                                    null, verifiedChain, hasEVPolicy);
   // Since we're not doing OCSP requests, no certificate will be EV.
-  do_check_eq(hasEVPolicy.value, false);
-  do_check_eq(expected_error, error);
+  equal(hasEVPolicy.value, false,
+        "EV status should be false when not doing OCSP requests");
+  equal(error, expected_error,
+        "Actual and expected error should match when not doing OCSP requests");
   ocspResponder.stop(run_next_test);
 }

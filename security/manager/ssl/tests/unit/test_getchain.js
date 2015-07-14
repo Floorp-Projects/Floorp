@@ -14,7 +14,7 @@ let certList = [
   'ee',
   'ca-1',
   'ca-2',
-]
+];
 
 function load_cert(cert_name, trust_string) {
   var cert_filename = cert_name + ".der";
@@ -41,11 +41,13 @@ function get_ca_array() {
 function check_matching_issuer_and_getchain(expected_issuer_serial, cert) {
   const nsIX509Cert = Components.interfaces.nsIX509Cert;
 
-  do_check_eq(expected_issuer_serial, cert.issuer.serialNumber);
+  equal(expected_issuer_serial, cert.issuer.serialNumber,
+        "Expected and actual issuer serial numbers should match");
   let chain = cert.getChain();
   let issuer_via_getchain = chain.queryElementAt(1, nsIX509Cert);
   // The issuer returned by cert.issuer or cert.getchain should be consistent.
-  do_check_eq(cert.issuer.serialNumber, issuer_via_getchain.serialNumber);
+  equal(cert.issuer.serialNumber, issuer_via_getchain.serialNumber,
+        "Serial numbers via cert.issuer and via getChain() should match");
 }
 
 function check_getchain(ee_cert, ssl_ca, email_ca){
@@ -63,7 +65,7 @@ function check_getchain(ee_cert, ssl_ca, email_ca){
   check_matching_issuer_and_getchain(email_ca.serialNumber, ee_cert);
   certdb.setCertTrust(email_ca, nsIX509Cert.CA_CERT, 0);
   // Do a final test on the case of no trust. The results must
-  // be cosistent (the actual value is non-deterministic).
+  // be consistent (the actual value is non-deterministic).
   check_matching_issuer_and_getchain(ee_cert.issuer.serialNumber, ee_cert);
 }
 
@@ -76,7 +78,7 @@ function run_test() {
   }
 
   let ee_cert = certdb.findCertByNickname(null, 'ee');
-  do_check_false(!ee_cert);
+  notEqual(ee_cert, null, "EE cert should be in the cert DB");
 
   let ca = get_ca_array();
 
