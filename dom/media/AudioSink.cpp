@@ -351,7 +351,13 @@ AudioSink::PlayFromAudioQueue()
 
   SINK_LOG_V("playing %u frames of audio at time %lld",
              audio->mFrames, audio->mTime);
-  mAudioStream->Write(audio->mAudioData, audio->mFrames);
+  if (audio->mRate == mInfo.mRate && audio->mChannels == mInfo.mChannels) {
+    mAudioStream->Write(audio->mAudioData, audio->mFrames);
+  } else {
+    SINK_LOG_V("mismatched sample format mInfo=[%uHz/%u channels] audio=[%uHz/%u channels]",
+               mInfo.mRate, mInfo.mChannels, audio->mRate, audio->mChannels);
+    PlaySilence(audio->mFrames);
+  }
 
   StartAudioStreamPlaybackIfNeeded();
 
