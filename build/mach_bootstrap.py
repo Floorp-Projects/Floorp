@@ -4,7 +4,6 @@
 
 from __future__ import print_function, unicode_literals
 
-import errno
 import os
 import platform
 import sys
@@ -22,36 +21,6 @@ MOZBUILD_STATE_PATH environment variable to the directory you would like to
 use and re-run mach. For this change to take effect forever, you'll likely
 want to export this environment variable from your shell's init scripts.
 '''.lstrip()
-
-NO_MERCURIAL_SETUP = '''
-*** MERCURIAL NOT CONFIGURED ***
-
-mach has detected that you have never run `mach mercurial-setup`.
-
-Running this command will ensure your Mercurial version control tool is up
-to date and optimally configured for a better, more productive experience
-when working on Mozilla projects.
-
-Please run `mach mercurial-setup` now.
-'''.strip()
-
-OLD_MERCURIAL_TOOLS = '''
-*** MERCURIAL CONFIGURATION POTENTIALLY OUT OF DATE ***
-
-mach has detected that it has been a while since you have run
-`mach mercurial-setup`.
-
-Having the latest Mercurial tools and configuration should lead to a better,
-more productive experience when working on Mozilla projects.
-
-Please run `mach mercurial-setup` now.
-
-To avoid this message in the future, run `mach mercurial-setup` once a month.
-Or, schedule `mach mercurial-setup --update-only` to run automatically in
-the background at least once a month.
-'''.strip()
-
-MERCURIAL_SETUP_FATAL_INTERVAL = 31 * 24 * 60 * 60
 
 
 # TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
@@ -223,54 +192,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
         import mach.main
 
-    def pre_dispatch_handler(context, handler, args):
-        """Perform global checks before command dispatch.
-
-        Currently, our goal is to ensure developers periodically run
-        `mach mercurial-setup` (when applicable) to ensure their Mercurial
-        tools are up to date.
-        """
-        # Don't do anything when...
-
-        # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mercurial-setup'):
-            return
-
-        # We are running in automation.
-        if 'MOZ_AUTOMATION' in os.environ:
-            return
-
-        # We are a curmudgeon who has found this undocumented variable.
-        if 'I_PREFER_A_SUBOPTIMAL_MERCURIAL_EXPERIENCE' in os.environ:
-            return
-
-        # The environment is likely a machine invocation.
-        if not sys.stdin.isatty():
-            return
-
-        # Mercurial isn't managing this source checkout.
-        if not os.path.exists(os.path.join(topsrcdir, '.hg')):
-            return
-
-        state_dir = get_state_dir()[0]
-        last_check_path = os.path.join(state_dir, 'mercurial',
-                                       'setup.lastcheck')
-
-        mtime = None
-        try:
-            mtime = os.path.getmtime(last_check_path)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
-
-        # No last run file means mercurial-setup has never completed.
-        if mtime is None:
-            print(NO_MERCURIAL_SETUP, file=sys.stderr)
-            sys.exit(2)
-        elif time.time() - mtime > MERCURIAL_SETUP_FATAL_INTERVAL:
-            print(OLD_MERCURIAL_TOOLS, file=sys.stderr)
-            sys.exit(2)
-
     def populate_context(context, key=None):
         if key is None:
             return
@@ -303,9 +224,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         if key == 'topdir':
             return topsrcdir
-
-        if key == 'pre_dispatch_handler':
-            return pre_dispatch_handler
 
         raise AttributeError(key)
 
