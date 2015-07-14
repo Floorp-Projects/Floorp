@@ -273,14 +273,6 @@ public:
                             AudioChunk* aOutput,
                             bool* aFinished) override
   {
-    MutexAutoLock lock(NodeMutex());
-
-    // If our node is dead, just output silence.
-    if (!Node()) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
-
     // This node is not connected to anything. Per spec, we don't fire the
     // onaudioprocess event. We also want to clear out the input and output
     // buffer queue, and output a null buffer.
