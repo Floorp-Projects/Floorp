@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test app for bug 1178233</title>
+    <script type='application/javascript;version=1.7'>
+
+function onLoad() {
+  navigator.serviceWorker.ready.then(function(swr) {
+    parent.postMessage({status: "callback", data: "done"}, '*');
+  });
+}
+
+    </script>
+  </head>
+  <body onload='onLoad()'>
+  </body>
+</html>
