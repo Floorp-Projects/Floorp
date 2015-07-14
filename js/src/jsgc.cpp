@@ -2589,11 +2589,10 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
 
     // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
-        // Sweep the wrapper map to update its pointers.
+        // Sweep the wrapper map to update its pointers to the wrappers.
         comp->sweepCrossCompartmentWrappers();
-
-        // Mark the contents of the map to update each wrapper's cross compartment pointer.
-        comp->traceCrossCompartmentWrappers(&trc);
+        // Trace the wrappers in the map to update their edges to their referents.
+        comp->traceOutgoingCrossCompartmentWrappers(&trc);
     }
 
     // Iterate through all cells that can contain JSObject pointers to update
