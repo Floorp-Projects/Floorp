@@ -146,6 +146,7 @@ MediaSourceDecoder::Shutdown()
   if (mMediaSource) {
     mMediaSource->Detach();
   }
+  mDemuxer = nullptr;
 
   MediaDecoder::Shutdown();
   // Kick WaitForData out of its slumber.

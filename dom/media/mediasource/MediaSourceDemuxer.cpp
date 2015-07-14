@@ -314,7 +314,10 @@ MediaSourceTrackDemuxer::BreakCycles()
 {
   nsRefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableFunction([self]() { self->mParent = nullptr; } );
+    NS_NewRunnableFunction([self]() {
+      self->mParent = nullptr;
+      self->mManager = nullptr;
+    } );
   mParent->GetTaskQueue()->Dispatch(task.forget());
 }
 
