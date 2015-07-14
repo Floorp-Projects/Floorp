@@ -23,7 +23,20 @@ class VersionControlCommands(object):
         description='Help configure Mercurial for optimal development.')
     @CommandArgument('-u', '--update-only', action='store_true',
         help='Only update recommended extensions, don\'t run the wizard.')
-    def mercurial_bootstrap(self, update_only=False):
+    def mercurial_setup(self, update_only=False):
+        """Ensure Mercurial is optimally configured.
+
+        This command will inspect your Mercurial configuration and
+        guide you through an interactive wizard helping you configure
+        Mercurial for optimal use on Mozilla projects.
+
+        User choice is respected: no changes are made without explicit
+        confirmation from you.
+
+        If "--update-only" is used, the interactive wizard is disabled
+        and this command only ensures that remote repositories providing
+        Mercurial extensions are up to date.
+        """
         sys.path.append(os.path.dirname(__file__))
 
         config_paths = ['~/.hgrc']
