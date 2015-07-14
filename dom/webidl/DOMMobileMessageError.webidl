@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.sms.enabled",
- CheckPermissions="sms",
+ CheckAnyPermissions="sms",
  AvailableIn="CertifiedApps"]
 interface DOMMobileMessageError : DOMError {
   readonly attribute (MozSmsMessage or MozMmsMessage) data;

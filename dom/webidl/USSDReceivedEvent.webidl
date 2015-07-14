@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckPermissions="telephony",
+ CheckAnyPermissions="telephony",
  AvailableIn="CertifiedApps",
  Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict)]
 interface USSDReceivedEvent : Event

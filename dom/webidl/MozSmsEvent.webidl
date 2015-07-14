@@ -6,7 +6,7 @@
 interface MozSmsMessage;
 
 [Pref="dom.sms.enabled",
- CheckPermissions="sms",
+ CheckAnyPermissions="sms",
  AvailableIn="CertifiedApps",
  Constructor(DOMString type, optional MozSmsEventInit eventInitDict)]
 interface MozSmsEvent : Event

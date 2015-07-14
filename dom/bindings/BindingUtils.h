@@ -3094,7 +3094,7 @@ AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
 // Returns true if aObj's global has any of the permissions named in aPermissions
 // set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be null-terminated.
 bool
-CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
+CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
 // Returns true if aObj's global has all of the permissions named in aPermissions
 // set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be null-terminated.
