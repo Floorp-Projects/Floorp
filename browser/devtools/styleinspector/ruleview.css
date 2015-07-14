@@ -64,8 +64,7 @@ body {
   pointer-events: none;
 }
 
-.ruleview-namecontainer,
-.ruleview-selectorcontainer {
+.ruleview-namecontainer {
   cursor: text;
 }
 

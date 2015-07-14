@@ -400,3 +400,7 @@ description > html|a {
   background-color: transparent;
   opacity: 1;
 }
+
+#tosPP-small-ToS {
+  margin-right: 3em;
+}

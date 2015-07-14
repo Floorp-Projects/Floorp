@@ -5314,6 +5314,9 @@ var BrowserEventHandler = {
         if (this._inCluster && this._clickInZoomedView != true) {
           this._clusterClicked(x, y);
         } else {
+          if (this._clickInZoomedView != true) {
+            this._closeZoomedView();
+          }
           // The _highlightElement was chosen after fluffing the touch events
           // that led to this SingleTap, so by fluffing the mouse events, they
           // should find the same target since we fluff them again below.
@@ -5342,6 +5345,12 @@ var BrowserEventHandler = {
         dump('BrowserEventHandler.handleUserEvent: unexpected topic "' + aTopic + '"');
         break;
     }
+  },
+
+  _closeZoomedView: function() {
+    Messaging.sendRequest({
+      type: "Gesture:CloseZoomedView"
+    });
   },
 
   _clusterClicked: function(aX, aY) {
