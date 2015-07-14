@@ -512,9 +512,24 @@ struct JSCompartment
         explicit WrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
     };
 
-    void traceCrossCompartmentWrappers(JSTracer* trc);
+    /*
+     * This method traces data that is live iff we know that this compartment's
+     * global is still live.
+     */
     void trace(JSTracer* trc);
-    void traceRoots(JSTracer* trc);
+    /*
+     * This method traces JSCompartment-owned GC roots that are considered live
+     * regardless of whether the JSCompartment itself is still live.
+     */
+    void traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark);
+    /*
+     * This method marks pointers that cross compartment boundaries. It is
+     * called in per-zone GCs to prevent the wrappers' outgoing edges from
+     * dangling (full GCs naturally follow pointers across compartments) and
+     * when compacting to update cross-compartment pointers.
+     */
+    void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
+
     bool preserveJitCode() { return gcPreserveJitCode; }
 
     void sweepAfterMinorGC();
