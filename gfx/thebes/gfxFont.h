@@ -324,9 +324,7 @@ public:
         AgeAllGenerations();
     }
 
-    void FlushShapedWordCaches() {
-        mFonts.EnumerateEntries(ClearCachedWordsForFont, nullptr);
-    }
+    void FlushShapedWordCaches();
 
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes* aSizes) const;
@@ -395,8 +393,6 @@ protected:
 
     nsTHashtable<HashEntry> mFonts;
 
-    static PLDHashOperator ClearCachedWordsForFont(HashEntry* aHashEntry, void*);
-    static PLDHashOperator AgeCachedWordsForFont(HashEntry* aHashEntry, void*);
     static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
     nsCOMPtr<nsITimer>      mWordCacheExpirationTimer;
 };
@@ -1715,11 +1711,7 @@ public:
 
     // Called by the gfxFontCache timer to increment the age of all the words,
     // so that they'll expire after a sufficient period of non-use
-    void AgeCachedWords() {
-        if (mWordCache) {
-            (void)mWordCache->EnumerateEntries(AgeCacheEntry, this);
-        }
-    }
+    void AgeCachedWords();
 
     // Discard all cached word records; called on memory-pressure notification.
     void ClearCachedWords() {
@@ -2026,7 +2018,6 @@ protected:
 
     nsAutoPtr<nsTHashtable<CacheHashEntry> > mWordCache;
 
-    static PLDHashOperator AgeCacheEntry(CacheHashEntry *aEntry, void *aUserData);
     static const uint32_t  kShapedWordCacheMaxAge = 3;
 
     bool                       mIsValid;
