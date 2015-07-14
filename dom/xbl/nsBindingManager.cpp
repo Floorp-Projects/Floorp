@@ -475,13 +475,15 @@ void
 nsBindingManager::ExecuteDetachedHandlers()
 {
   // Walk our hashtable of bindings.
-  if (mBoundContentSet) {
-    BindingTableReadClosure closure;
-    mBoundContentSet->EnumerateEntries(AccumulateBindingsToDetach, &closure);
-    uint32_t i, count = closure.mBindings.Length();
-    for (i = 0; i < count; ++i) {
-      closure.mBindings[i]->ExecuteDetachedHandler();
-    }
+  if (!mBoundContentSet) {
+    return;
+  }
+
+  BindingTableReadClosure closure;
+  mBoundContentSet->EnumerateEntries(AccumulateBindingsToDetach, &closure);
+  uint32_t i, count = closure.mBindings.Length();
+  for (i = 0; i < count; ++i) {
+    closure.mBindings[i]->ExecuteDetachedHandler();
   }
 }
 
@@ -567,9 +569,11 @@ MarkForDeath(nsRefPtrHashKey<nsIContent> *aKey, void* aClosure)
 void
 nsBindingManager::FlushSkinBindings()
 {
-  if (mBoundContentSet) {
-    mBoundContentSet->EnumerateEntries(MarkForDeath, nullptr);
+  if (!mBoundContentSet) {
+    return;
   }
+
+  mBoundContentSet->EnumerateEntries(MarkForDeath, nullptr);
 }
 
 // Used below to protect from recurring in QI calls through XPConnect.
@@ -839,9 +843,11 @@ EnumAppendAllSheets(nsRefPtrHashKey<nsIContent> *aKey, void* aClosure)
 void
 nsBindingManager::AppendAllSheets(nsTArray<CSSStyleSheet*>& aArray)
 {
-  if (mBoundContentSet) {
-    mBoundContentSet->EnumerateEntries(EnumAppendAllSheets, &aArray);
+  if (!mBoundContentSet) {
+    return;
   }
+
+  mBoundContentSet->EnumerateEntries(EnumAppendAllSheets, &aArray);
 }
 
 static void
