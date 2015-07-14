@@ -358,6 +358,11 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     NS_WARNING("Unable to clone current MediaDataDemuxer");
     return;
   }
+
+  if (!videoActive && !audioActive) {
+    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+    return;
+  }
   if (videoActive) {
     mVideoTrackDemuxer =
       mMainThreadDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
