@@ -108,6 +108,13 @@ public:
 #endif
     }
 
+#ifdef MOZ_X11
+    virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) override {
+      gfxPlatform::GetAzureBackendInfo(aObj);
+      aObj.DefineProperty("CairoUseXRender", UseXRender());
+    }
+#endif
+
     static bool UseFcFontList() { return sUseFcFontList; }
 
     bool UseImageOffscreenSurfaces() {
