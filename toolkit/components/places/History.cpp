@@ -1579,49 +1579,6 @@ NS_IMPL_ISUPPORTS(
 )
 
 /**
- * Enumerator used by NotifyRemoveVisits to transfer the hash entries.
- */
-static PLDHashOperator TransferHashEntries(PlaceHashKey* aEntry,
-                                           void* aHash)
-{
-  nsTHashtable<PlaceHashKey>* hash =
-    static_cast<nsTHashtable<PlaceHashKey> *>(aHash);
-  PlaceHashKey* copy = hash->PutEntry(aEntry->GetKey());
-  copy->SetProperties(aEntry->VisitCount(), aEntry->IsBookmarked());
-  aEntry->mVisits.SwapElements(copy->mVisits);
-  return PL_DHASH_NEXT;
-}
-
-/**
- * Enumerator used by NotifyRemoveVisits to notify removals.
- */
-static PLDHashOperator NotifyVisitRemoval(PlaceHashKey* aEntry,
-                                          void* aHistory)
-{
-  nsNavHistory* history = static_cast<nsNavHistory *>(aHistory);
-  const nsTArray<VisitData>& visits = aEntry->mVisits;
-  nsCOMPtr<nsIURI> uri;
-  (void)NS_NewURI(getter_AddRefs(uri), visits[0].spec);
-  bool removingPage =
-    visits.Length() == aEntry->VisitCount() &&
-    !aEntry->IsBookmarked();
-  // FindRemovableVisits only sets the transition type on the VisitData objects
-  // it collects if the visits were filtered by transition type.
-  // RemoveVisitsFilter currently only supports filtering by transition type, so
-  // FindRemovableVisits will either find all visits, or all visits of a given
-  // type. Therefore, if transitionType is set on this visit, we pass the
-  // transition type to NotifyOnPageExpired which in turns passes it to
-  // OnDeleteVisits to indicate that all visits of a given type were removed.
-  uint32_t transition = visits[0].transitionType < UINT32_MAX ?
-                          visits[0].transitionType : 0;
-  history->NotifyOnPageExpired(uri, visits[0].visitTime, removingPage,
-                               visits[0].guid,
-                               nsINavHistoryObserver::REASON_DELETED,
-                               transition);
-  return PL_DHASH_NEXT;
-}
-
-/**
  * Notify removed visits to observers.
  */
 class NotifyRemoveVisits : public nsRunnable
@@ -1634,7 +1591,12 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread(),
                "This should not be called on the main thread");
-    aPlaces.EnumerateEntries(TransferHashEntries, &mPlaces);
+    for (auto iter = aPlaces.Iter(); !iter.Done(); iter.Next()) {
+      PlaceHashKey* entry = iter.Get();
+      PlaceHashKey* copy = mPlaces.PutEntry(entry->GetKey());
+      copy->SetProperties(entry->VisitCount(), entry->IsBookmarked());
+      entry->mVisits.SwapElements(copy->mVisits);
+    }
   }
 
   NS_IMETHOD Run()
@@ -1657,7 +1619,30 @@ public:
     // more performant way, by initiating a refresh after a limited number of
     // single changes.
     (void)navHistory->BeginUpdateBatch();
-    mPlaces.EnumerateEntries(NotifyVisitRemoval, navHistory);
+    for (auto iter = mPlaces.Iter(); !iter.Done(); iter.Next()) {
+      PlaceHashKey* entry = iter.Get();
+      const nsTArray<VisitData>& visits = entry->mVisits;
+      nsCOMPtr<nsIURI> uri;
+      (void)NS_NewURI(getter_AddRefs(uri), visits[0].spec);
+      bool removingPage = visits.Length() == entry->VisitCount() &&
+                          !entry->IsBookmarked();
+
+      // FindRemovableVisits only sets the transition type on the VisitData
+      // objects it collects if the visits were filtered by transition type.
+      // RemoveVisitsFilter currently only supports filtering by transition
+      // type, so FindRemovableVisits will either find all visits, or all
+      // visits of a given type. Therefore, if transitionType is set on this
+      // visit, we pass the transition type to NotifyOnPageExpired which in
+      // turns passes it to OnDeleteVisits to indicate that all visits of a
+      // given type were removed.
+      uint32_t transition = visits[0].transitionType < UINT32_MAX
+                          ? visits[0].transitionType
+                          : 0;
+      navHistory->NotifyOnPageExpired(uri, visits[0].visitTime, removingPage,
+                                      visits[0].guid,
+                                      nsINavHistoryObserver::REASON_DELETED,
+                                      transition);
+    }
     (void)navHistory->EndUpdateBatch();
 
     return NS_OK;
@@ -1672,24 +1657,6 @@ private:
    */
   nsRefPtr<History> mHistory;
 };
-
-/**
- * Enumerator used by RemoveVisits to populate list of removed place ids.
- */
-static PLDHashOperator ListToBeRemovedPlaceIds(PlaceHashKey* aEntry,
-                                               void* aIdsList)
-{
-  const nsTArray<VisitData>& visits = aEntry->mVisits;
-  // Only orphan ids should be listed.
-  if (visits.Length() == aEntry->VisitCount() &&
-      !aEntry->IsBookmarked()) {
-    nsCString* list = static_cast<nsCString*>(aIdsList);
-    if (!list->IsEmpty())
-      list->Append(',');
-    list->AppendInt(visits[0].placeId);
-  }
-  return PL_DHASH_NEXT;
-}
 
 /**
  * Remove visits from history.
@@ -1869,7 +1836,16 @@ private:
                "This should not be called on the main thread");
 
     nsCString placeIdsToRemove;
-    aPlaces.EnumerateEntries(ListToBeRemovedPlaceIds, &placeIdsToRemove);
+    for (auto iter = aPlaces.Iter(); !iter.Done(); iter.Next()) {
+      PlaceHashKey* entry = iter.Get();
+      const nsTArray<VisitData>& visits = entry->mVisits;
+      // Only orphan ids should be listed.
+      if (visits.Length() == entry->VisitCount() && !entry->IsBookmarked()) {
+        if (!placeIdsToRemove.IsEmpty())
+          placeIdsToRemove.Append(',');
+        placeIdsToRemove.AppendInt(visits[0].placeId);
+      }
+    }
 
 #ifdef DEBUG
     {
