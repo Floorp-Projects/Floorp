@@ -268,13 +268,12 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
 
 struct Closure
 {
-  explicit Closure(nsCycleCollectionNoteRootCallback* aCb)
-    : mCycleCollectionEnabled(true), mCb(aCb)
+  explicit Closure()
+    : mCycleCollectionEnabled(true)
   {
   }
 
   bool mCycleCollectionEnabled;
-  nsCycleCollectionNoteRootCallback* mCb;
 };
 
 static void
@@ -658,13 +657,13 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
 
-  Closure closure(&aCb);
+  Closure closure;
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
     void* holder = iter.GetKey();
     nsScriptObjectTracer*& tracer = iter.GetData();
 
     bool noteRoot;
-    if (MOZ_UNLIKELY(closure.mCb->WantAllTraces())) {
+    if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
       noteRoot = true;
     } else {
       closure.mCycleCollectionEnabled = false;
@@ -675,7 +674,7 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
     }
 
     if (noteRoot) {
-      closure.mCb->NoteNativeRoot(holder, tracer);
+      aCb.NoteNativeRoot(holder, tracer);
     }
   }
 }
