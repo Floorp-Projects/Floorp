@@ -5,16 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ipc/Ril.h"
-
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netdb.h> // For gethostbyname.
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/workers/Workers.h"
-#include "mozilla/ipc/StreamSocket.h"
-#include "mozilla/ipc/StreamSocketConsumer.h"
+#include "mozilla/ipc/RilSocket.h"
+#include "mozilla/ipc/RilSocketConsumer.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 #include "RilConnector.h"
 
@@ -29,10 +28,10 @@
 #define CHROMIUM_LOG(args...)  printf(args);
 #endif
 
-USING_WORKERS_NAMESPACE
-
 namespace mozilla {
 namespace ipc {
+
+USING_WORKERS_NAMESPACE
 
 class RilConsumer;
 
@@ -44,29 +43,30 @@ static nsTArray<nsAutoPtr<RilConsumer>> sRilConsumers;
 // RilConsumer
 //
 
-class RilConsumer final : public StreamSocketConsumer
+class RilConsumer final : public RilSocketConsumer
 {
 public:
-  friend class RilWorker;
-
-  RilConsumer(unsigned long aClientId,
-              WorkerCrossThreadDispatcher* aDispatcher);
+  RilConsumer();
 
   void Send(UnixSocketRawData* aRawData);
   void Close();
 
-  // Methods for |StreamSocketConsumer|
+  nsresult Register(unsigned long aClientId,
+                    WorkerCrossThreadDispatcher* aDispatcher);
+  void Unregister();
+
+  // Methods for |RilSocketConsumer|
   //
 
-  void ReceiveSocketData(int aIndex,
+  void ReceiveSocketData(JSContext* aCx,
+                         int aIndex,
                          nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
   void OnConnectSuccess(int aIndex) override;
   void OnConnectError(int aIndex) override;
   void OnDisconnect(int aIndex) override;
 
 private:
-  nsRefPtr<StreamSocket> mSocket;
-  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
+  nsRefPtr<RilSocket> mSocket;
   nsCString mAddress;
   bool mShutdown;
 };
@@ -77,39 +77,10 @@ public:
   bool RunTask(JSContext* aCx) override;
 };
 
-class SendRilSocketDataTask final : public nsRunnable
-{
-public:
-  SendRilSocketDataTask(unsigned long aClientId,
-                        UnixSocketRawData* aRawData)
-    : mRawData(aRawData)
-    , mClientId(aClientId)
-  { }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (sRilConsumers.Length() <= mClientId || !sRilConsumers[mClientId]) {
-      // Probably shutting down.
-      delete mRawData;
-      return NS_OK;
-    }
-
-    sRilConsumers[mClientId]->Send(mRawData);
-    return NS_OK;
-  }
-
-private:
-  UnixSocketRawData* mRawData;
-  unsigned long mClientId;
-};
-
 static bool
 PostToRIL(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
-  NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
 
   if (args.length() != 2) {
     JS_ReportError(aCx, "Expecting two arguments with the RIL message");
@@ -119,7 +90,7 @@ PostToRIL(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
   int clientId = args[0].toInt32();
   JS::Value v = args[1];
 
-  UnixSocketRawData* raw = nullptr;
+  nsAutoPtr<UnixSocketRawData> raw;
 
   if (v.isString()) {
     JSAutoByteString abs;
@@ -159,9 +130,13 @@ PostToRIL(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
     return false;
   }
 
-  nsRefPtr<SendRilSocketDataTask> task = new SendRilSocketDataTask(clientId,
-                                                                   raw);
-  NS_DispatchToMainThread(task);
+  if ((ssize_t)sRilConsumers.Length() <= clientId || !sRilConsumers[clientId]) {
+    // Probably shutting down.
+    return true;
+  }
+
+  sRilConsumers[clientId]->Send(raw.forget());
+
   return true;
 }
 
@@ -170,7 +145,7 @@ ConnectWorkerToRIL::RunTask(JSContext* aCx)
 {
   // Set up the postRILMessage on the function for worker -> RIL thread
   // communication.
-  NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
+  //NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
   NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
   JS::Rooted<JSObject*> workerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
@@ -191,49 +166,13 @@ ConnectWorkerToRIL::RunTask(JSContext* aCx)
                              PostToRIL, 2, 0);
 }
 
-class DispatchRILEvent final : public WorkerTask
-{
-public:
-  DispatchRILEvent(unsigned long aClient, UnixSocketBuffer* aBuffer)
-    : mClientId(aClient)
-    , mBuffer(aBuffer)
-  { }
+RilConsumer::RilConsumer()
+  : mShutdown(false)
+{ }
 
-  bool RunTask(JSContext* aCx) override;
-
-private:
-  unsigned long mClientId;
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
-};
-
-bool
-DispatchRILEvent::RunTask(JSContext* aCx)
-{
-  JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  JS::Rooted<JSObject*> array(aCx,
-                              JS_NewUint8Array(aCx, mBuffer->GetSize()));
-  if (!array) {
-    return false;
-  }
-  {
-    JS::AutoCheckCannotGC nogc;
-    memcpy(JS_GetArrayBufferViewData(array, nogc),
-           mBuffer->GetData(), mBuffer->GetSize());
-  }
-
-  JS::AutoValueArray<2> args(aCx);
-  args[0].setNumber((uint32_t)mClientId);
-  args[1].setObject(*array);
-
-  JS::Rooted<JS::Value> rval(aCx);
-  return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
-}
-
-RilConsumer::RilConsumer(unsigned long aClientId,
-                         WorkerCrossThreadDispatcher* aDispatcher)
-  : mDispatcher(aDispatcher)
-  , mShutdown(false)
+nsresult
+RilConsumer::Register(unsigned long aClientId,
+                      WorkerCrossThreadDispatcher* aDispatcher)
 {
   // Only append client id after RIL_SOCKET_NAME when it's not connected to
   // the first(0) rilproxy for compatibility.
@@ -246,8 +185,21 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     mAddress = addr_un.sun_path;
   }
 
-  mSocket = new StreamSocket(this, aClientId);
-  mSocket->Connect(new RilConnector(mAddress, aClientId));
+  mSocket = new RilSocket(aDispatcher, this, aClientId);
+
+  nsresult rv = mSocket->Connect(new RilConnector(mAddress, aClientId));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+RilConsumer::Unregister()
+{
+  mShutdown = true;
+  Close();
 }
 
 void
@@ -270,16 +222,31 @@ RilConsumer::Close()
   }
 }
 
-// |StreamSocketConnector|
+// |RilSocketConnector|
 
 void
-RilConsumer::ReceiveSocketData(int aIndex,
+RilConsumer::ReceiveSocketData(JSContext* aCx,
+                               int aIndex,
                                nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(aIndex, aBuffer.forget()));
-  mDispatcher->PostTask(dre);
+  JS::Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, aBuffer->GetSize()));
+  if (!array) {
+    return;
+  }
+  {
+    JS::AutoCheckCannotGC nogc;
+    memcpy(JS_GetArrayBufferViewData(array, nogc),
+           aBuffer->GetData(), aBuffer->GetSize());
+  }
+
+  JS::AutoValueArray<2> args(aCx);
+  args[0].setNumber((uint32_t)aIndex);
+  args[1].setObject(*array);
+
+  JS::Rooted<JS::Value> rval(aCx);
+  JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
 void
@@ -357,6 +324,39 @@ RilWorker::RilWorker(WorkerCrossThreadDispatcher* aDispatcher)
   MOZ_ASSERT(mDispatcher);
 }
 
+class RilWorker::RegisterConsumerTask : public WorkerTask
+{
+public:
+  RegisterConsumerTask(unsigned int aClientId,
+                       WorkerCrossThreadDispatcher* aDispatcher)
+    : mClientId(aClientId)
+    , mDispatcher(aDispatcher)
+  {
+    MOZ_ASSERT(mDispatcher);
+  }
+
+  bool RunTask(JSContext* aCx) override
+  {
+    sRilConsumers.EnsureLengthAtLeast(mClientId + 1);
+
+    MOZ_ASSERT(!sRilConsumers[mClientId]);
+
+    nsAutoPtr<RilConsumer> rilConsumer(new RilConsumer());
+
+    nsresult rv = rilConsumer->Register(mClientId, mDispatcher);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+    sRilConsumers[mClientId] = rilConsumer;
+
+    return true;
+  }
+
+private:
+  unsigned int mClientId;
+  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
+};
+
 nsresult
 RilWorker::RegisterConsumer(unsigned int aClientId)
 {
@@ -366,24 +366,48 @@ RilWorker::RegisterConsumer(unsigned int aClientId)
     return NS_ERROR_UNEXPECTED;
   }
 
-  sRilConsumers.EnsureLengthAtLeast(aClientId + 1);
-
-  MOZ_ASSERT(!sRilConsumers[aClientId]);
-
-  sRilConsumers[aClientId] = new RilConsumer(aClientId, mDispatcher);
+  nsRefPtr<RegisterConsumerTask> task = new RegisterConsumerTask(aClientId,
+                                                                 mDispatcher);
+  if (!mDispatcher->PostTask(task)) {
+    NS_WARNING("Failed to post register-consumer task.");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 }
 
+class RilWorker::UnregisterConsumerTask : public WorkerTask
+{
+public:
+  UnregisterConsumerTask(unsigned int aClientId)
+    : mClientId(aClientId)
+  { }
+
+  bool RunTask(JSContext* aCx) override
+  {
+    MOZ_ASSERT(mClientId < sRilConsumers.Length());
+    MOZ_ASSERT(sRilConsumers[mClientId]);
+
+    sRilConsumers[mClientId]->Unregister();
+    sRilConsumers[mClientId] = nullptr;
+
+    return true;
+  }
+
+private:
+  unsigned int mClientId;
+};
+
 void
 RilWorker::UnregisterConsumer(unsigned int aClientId)
 {
-  MOZ_ASSERT(aClientId < sRilConsumers.Length());
-  MOZ_ASSERT(sRilConsumers[aClientId]);
+  nsRefPtr<UnregisterConsumerTask> task =
+    new UnregisterConsumerTask(aClientId);
 
-  sRilConsumers[aClientId]->mShutdown = true;
-  sRilConsumers[aClientId]->Close();
-  sRilConsumers[aClientId] = nullptr;
+  if (!mDispatcher->PostTask(task)) {
+    NS_WARNING("Failed to post unregister-consumer task.");
+    return;
+  }
 }
 
 } // namespace ipc
