@@ -973,17 +973,6 @@ inline bool isInlinableCall(jsbytecode* pc);
 bool
 ClassCanHaveExtraProperties(const Class* clasp);
 
-/*
- * Whether Array.prototype, or an object on its proto chain, has an
- * indexed property.
- */
-bool
-ArrayPrototypeHasIndexedProperty(CompilerConstraintList* constraints, JSScript* script);
-
-/* Whether obj or any of its prototypes have an indexed property. */
-bool
-TypeCanHaveExtraIndexedProperties(CompilerConstraintList* constraints, TemporaryTypeSet* types);
-
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
 {

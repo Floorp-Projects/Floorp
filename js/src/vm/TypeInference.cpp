@@ -2449,57 +2449,6 @@ js::ClassCanHaveExtraProperties(const Class* clasp)
         || IsAnyTypedArrayClass(clasp);
 }
 
-static bool
-PrototypeHasIndexedProperty(CompilerConstraintList* constraints, JSObject* obj)
-{
-    do {
-        TypeSet::ObjectKey* key = TypeSet::ObjectKey::get(obj);
-        if (ClassCanHaveExtraProperties(key->clasp()))
-            return true;
-        if (key->unknownProperties())
-            return true;
-        HeapTypeSetKey index = key->property(JSID_VOID);
-        if (index.nonData(constraints) || index.isOwnProperty(constraints))
-            return true;
-        obj = obj->getProto();
-    } while (obj);
-
-    return false;
-}
-
-bool
-js::ArrayPrototypeHasIndexedProperty(CompilerConstraintList* constraints, JSScript* script)
-{
-    if (JSObject* proto = script->global().maybeGetArrayPrototype())
-        return PrototypeHasIndexedProperty(constraints, proto);
-    return true;
-}
-
-bool
-js::TypeCanHaveExtraIndexedProperties(CompilerConstraintList* constraints,
-                                      TemporaryTypeSet* types)
-{
-    const Class* clasp = types->getKnownClass(constraints);
-
-    // Note: typed arrays have indexed properties not accounted for by type
-    // information, though these are all in bounds and will be accounted for
-    // by JIT paths.
-    if (!clasp || (ClassCanHaveExtraProperties(clasp) && !IsAnyTypedArrayClass(clasp)))
-        return true;
-
-    if (types->hasObjectFlags(constraints, OBJECT_FLAG_SPARSE_INDEXES))
-        return true;
-
-    JSObject* proto;
-    if (!types->getCommonPrototype(constraints, &proto))
-        return true;
-
-    if (!proto)
-        return false;
-
-    return PrototypeHasIndexedProperty(constraints, proto);
-}
-
 void
 TypeZone::processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles)
 {

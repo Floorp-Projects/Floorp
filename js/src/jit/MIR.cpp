@@ -4838,15 +4838,14 @@ jit::ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints, MDefin
 }
 
 bool
-jit::ElementAccessHasExtraIndexedProperty(CompilerConstraintList* constraints,
-                                          MDefinition* obj)
+jit::ElementAccessHasExtraIndexedProperty(IonBuilder* builder, MDefinition* obj)
 {
     TemporaryTypeSet* types = obj->resultTypeSet();
 
-    if (!types || types->hasObjectFlags(constraints, OBJECT_FLAG_LENGTH_OVERFLOW))
+    if (!types || types->hasObjectFlags(builder->constraints(), OBJECT_FLAG_LENGTH_OVERFLOW))
         return true;
 
-    return TypeCanHaveExtraIndexedProperties(constraints, types);
+    return TypeCanHaveExtraIndexedProperties(builder, types);
 }
 
 MIRType
@@ -5010,7 +5009,6 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
 
 BarrierKind
 jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
-                                             CompilerConstraintList* constraints,
                                              MDefinition* obj, PropertyName* name,
                                              TemporaryTypeSet* observed)
 {
@@ -5028,13 +5026,14 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(IonBuilder* builder,
         if (!key)
             continue;
         while (true) {
-            if (!key->hasStableClassAndProto(constraints))
+            if (!key->hasStableClassAndProto(builder->constraints()))
                 return BarrierKind::TypeSet;
             if (!key->proto().isObject())
                 break;
             JSObject* proto = builder->checkNurseryObject(key->proto().toObject());
             key = TypeSet::ObjectKey::get(proto);
-            BarrierKind kind = PropertyReadNeedsTypeBarrier(constraints, key, name, observed);
+            BarrierKind kind = PropertyReadNeedsTypeBarrier(builder->constraints(),
+                                                            key, name, observed);
             if (kind == BarrierKind::TypeSet)
                 return BarrierKind::TypeSet;
 
@@ -5116,6 +5115,58 @@ jit::AddObjectsForPropertyRead(MDefinition* obj, PropertyName* name,
                 observed->addType(TypeSet::ObjectType(key), alloc);
         }
     }
+}
+
+static bool
+PrototypeHasIndexedProperty(IonBuilder* builder, JSObject* obj)
+{
+    do {
+        TypeSet::ObjectKey* key = TypeSet::ObjectKey::get(builder->checkNurseryObject(obj));
+        if (ClassCanHaveExtraProperties(key->clasp()))
+            return true;
+        if (key->unknownProperties())
+            return true;
+        HeapTypeSetKey index = key->property(JSID_VOID);
+        if (index.nonData(builder->constraints()) || index.isOwnProperty(builder->constraints()))
+            return true;
+        obj = obj->getProto();
+    } while (obj);
+
+    return false;
+}
+
+// Whether Array.prototype, or an object on its proto chain, has an indexed property.
+bool
+jit::ArrayPrototypeHasIndexedProperty(IonBuilder* builder, JSScript* script)
+{
+    if (JSObject* proto = script->global().maybeGetArrayPrototype())
+        return PrototypeHasIndexedProperty(builder, proto);
+    return true;
+}
+
+// Whether obj or any of its prototypes have an indexed property.
+bool
+jit::TypeCanHaveExtraIndexedProperties(IonBuilder* builder, TemporaryTypeSet* types)
+{
+    const Class* clasp = types->getKnownClass(builder->constraints());
+
+    // Note: typed arrays have indexed properties not accounted for by type
+    // information, though these are all in bounds and will be accounted for
+    // by JIT paths.
+    if (!clasp || (ClassCanHaveExtraProperties(clasp) && !IsAnyTypedArrayClass(clasp)))
+        return true;
+
+    if (types->hasObjectFlags(builder->constraints(), OBJECT_FLAG_SPARSE_INDEXES))
+        return true;
+
+    JSObject* proto;
+    if (!types->getCommonPrototype(builder->constraints(), &proto))
+        return true;
+
+    if (!proto)
+        return false;
+
+    return PrototypeHasIndexedProperty(builder, proto);
 }
 
 static bool
