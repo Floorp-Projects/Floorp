@@ -40,6 +40,10 @@
 #include "mozilla/Preferences.h"
 #endif
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#include "WebrtcGmpVideoCodec.h"
+#endif
+
 #include <stdlib.h>
 
 namespace mozilla {
@@ -315,6 +319,14 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack)
 {
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // The GMP code is all the way on the other side of webrtc.org, and it is not
+  // feasible to plumb this information all the way through. So, we set it (for
+  // the duration of this call) in a global variable. This allows the GMP code
+  // to report errors to the PC.
+  WebrtcGmpPCHandleSetter setter(mPC->GetHandle());
+#endif
+
   MOZ_ASSERT(aTrackPair.mRtpTransport);
 
   bool receiving =
