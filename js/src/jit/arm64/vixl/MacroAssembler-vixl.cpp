@@ -63,6 +63,25 @@ void MacroAssembler::B(Label* label, BranchType type, Register reg, int bit) {
 }
 
 
+void MacroAssembler::B(Label* label, Condition cond) {
+  VIXL_ASSERT((cond != al) && (cond != nv));
+
+  if (label->bound() && LabelIsOutOfRange(label, CondBranchType)) {
+    // If the label is out of range, invert the condition to use an
+    // unconditional branch, which has 26 bits instead of 19.
+    Label done;
+    b(&done, InvertCondition(cond));
+    b(label);
+    bind(&done);
+  } else {
+    // TODO: Need to register a slot in a literal pool, so that we can
+    // write a branch instruction there and use that to branch in case
+    // the unbound label winds up being out of range.
+    b(label, cond);
+  }
+}
+
+
 void MacroAssembler::And(const Register& rd, const Register& rn, const Operand& operand) {
   LogicalMacro(rd, rn, operand, AND);
 }
