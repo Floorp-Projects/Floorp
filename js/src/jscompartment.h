@@ -550,6 +550,7 @@ struct JSCompartment
     void purge();
     void clearTables();
 
+    static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupInitialShapeTable();
     void fixupAfterMovingGC();
     void fixupGlobal();
