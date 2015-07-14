@@ -1701,10 +1701,18 @@ Debugger::isDebuggee(const JSCompartment* compartment) const
     return compartment->isDebuggee() && debuggees.has(compartment->maybeGlobal());
 }
 
+Debugger::TenurePromotionsEntry::TenurePromotionsEntry(JSRuntime* rt, JSObject& obj, double when)
+  : className(obj.getClass()->name),
+    when(when),
+    frame(getObjectAllocationSite(obj)),
+    size(JS::ubi::Node(&obj).size(rt->debuggerMallocSizeOf))
+{ }
+
+
 void
-Debugger::logTenurePromotion(JSObject& obj, double when)
+Debugger::logTenurePromotion(JSRuntime* rt, JSObject& obj, double when)
 {
-    auto* entry = js_new<TenurePromotionsEntry>(obj, when);
+    auto* entry = js_new<TenurePromotionsEntry>(rt, obj, when);
     if (!entry)
         CrashAtUnhandlableOOM("Debugger::logTenurePromotion");
 
