@@ -4129,8 +4129,8 @@ Vector<MediaSource::Indice> MPEG4Source::exportIndex()
       indice.start_composition = (compositionTime * 1000000ll) / mTimescale;
       // end_composition is overwritten everywhere except the last frame, where
       // the presentation duration is equal to the sample duration.
-      indice.end_composition = ((compositionTime + duration) * 1000000ll) /
-              mTimescale;
+      indice.end_composition =
+          (compositionTime * 1000000ll + duration * 1000000ll) / mTimescale;
       indice.sync = isSyncSample;
       index.add(indice);
   }
