@@ -66,7 +66,6 @@ using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::dom::Promise;
 using mozilla::dom::PromiseNativeHandler;
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 using mozilla::ErrorResult;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::UniquePtr;
@@ -151,13 +150,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
   } else if (aIsMainScript) {
-    // If this script loader is being used to make a new worker then we need
-    // to do a same-origin check. Otherwise we need to clear the load with the
-    // security manager.
-    nsCString scheme;
-    rv = uri->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // We pass true as the 3rd argument to checkMayLoad here.
     // This allows workers in sandboxed documents to load data URLs
     // (and other URLs that inherit their principal from their
@@ -1567,7 +1559,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
   return NS_OK;
 }
 
- class ChannelGetterRunnable final : public nsRunnable
+class ChannelGetterRunnable final : public nsRunnable
 {
   WorkerPrivate* mParentWorker;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
