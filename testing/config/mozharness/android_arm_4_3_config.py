@@ -12,7 +12,6 @@ config = {
                 "--http-port=%(http_port)s", "--ssl-port=%(ssl_port)s",
                 "--certificate-path=%(certs_path)s", "--symbols-path=%(symbols_path)s",
                 "--quiet", "--log-raw=%(raw_log_file)s", "--screenshot-on-fail",
-                "--total-chunks=16",
             ],
         },
         "mochitest-gl": {

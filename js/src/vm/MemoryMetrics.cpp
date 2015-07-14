@@ -693,9 +693,9 @@ FindNotableScriptSources(JS::RuntimeSizes& runtime)
     return true;
 }
 
-JS_PUBLIC_API(bool)
-JS::CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisitor* opv,
-                        bool anonymize)
+static bool
+CollectRuntimeStatsHelper(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisitor* opv,
+                          bool anonymize, IterateCellCallback statsCellCallback)
 {
     if (!rtStats->compartmentStatsVector.reserve(rt->numCompartments))
         return false;
@@ -720,7 +720,7 @@ JS::CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisit
                                         StatsZoneCallback,
                                         StatsCompartmentCallback,
                                         StatsArenaCallback,
-                                        StatsCellCallback<FineGrained>);
+                                        statsCellCallback);
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
@@ -728,7 +728,7 @@ JS::CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisit
     if (!FindNotableScriptSources(rtStats->runtime))
         return false;
 
-    ZoneStatsVector& zs = rtStats->zoneStatsVector;
+    JS::ZoneStatsVector& zs = rtStats->zoneStatsVector;
     ZoneStats& zTotals = rtStats->zTotals;
 
     // We don't look for notable strings for zTotals. So we first sum all the
@@ -743,7 +743,7 @@ JS::CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisit
 
     MOZ_ASSERT(!zTotals.allStrings);
 
-    CompartmentStatsVector& cs = rtStats->compartmentStatsVector;
+    JS::CompartmentStatsVector& cs = rtStats->compartmentStatsVector;
     CompartmentStats& cTotals = rtStats->cTotals;
 
     // As with the zones, we sum all compartments first, and then get the
@@ -790,6 +790,13 @@ JS::CollectRuntimeStats(JSRuntime* rt, RuntimeStats* rtStats, ObjectPrivateVisit
     return true;
 }
 
+JS_PUBLIC_API(bool)
+JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv,
+                        bool anonymize)
+{
+    return CollectRuntimeStatsHelper(rt, rtStats, opv, anonymize, StatsCellCallback<FineGrained>);
+}
+
 JS_PUBLIC_API(size_t)
 JS::SystemCompartmentCount(JSRuntime* rt)
 {
@@ -820,26 +827,26 @@ JS::PeakSizeOfTemporary(const JSRuntime* rt)
 
 namespace JS {
 
+class SimpleJSRuntimeStats : public JS::RuntimeStats
+{
+  public:
+    explicit SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
+      : JS::RuntimeStats(mallocSizeOf)
+    {}
+
+    virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats)
+        override
+    {}
+
+    virtual void initExtraCompartmentStats(
+        JSCompartment* c, JS::CompartmentStats* cStats) override
+    {}
+};
+
 JS_PUBLIC_API(bool)
 AddSizeOfTab(JSRuntime* rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor* opv,
              TabSizes* sizes)
 {
-    class SimpleJSRuntimeStats : public JS::RuntimeStats
-    {
-      public:
-        explicit SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
-          : JS::RuntimeStats(mallocSizeOf)
-        {}
-
-        virtual void initExtraZoneStats(JS::Zone* zone, JS::ZoneStats* zStats)
-            override
-        {}
-
-        virtual void initExtraCompartmentStats(
-            JSCompartment* c, JS::CompartmentStats* cStats) override
-        {}
-    };
-
     SimpleJSRuntimeStats rtStats(mallocSizeOf);
 
     JS::Zone* zone = GetObjectZone(obj);
@@ -855,8 +862,10 @@ AddSizeOfTab(JSRuntime* rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     StatsClosure closure(&rtStats, opv, /* anonymize = */ false);
     if (!closure.init())
         return false;
-    IterateZoneCompartmentsArenasCells(rt, zone, &closure, StatsZoneCallback,
-                                       StatsCompartmentCallback, StatsArenaCallback,
+    IterateZoneCompartmentsArenasCells(rt, zone, &closure,
+                                       StatsZoneCallback,
+                                       StatsCompartmentCallback,
+                                       StatsArenaCallback,
                                        StatsCellCallback<CoarseGrained>);
 
     MOZ_ASSERT(rtStats.zoneStatsVector.length() == 1);
@@ -870,6 +879,39 @@ AddSizeOfTab(JSRuntime* rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
 
     rtStats.zTotals.addToTabSizes(sizes);
     rtStats.cTotals.addToTabSizes(sizes);
+
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+AddServoSizeOf(JSRuntime *rt, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
+               ServoSizes *sizes)
+{
+    SimpleJSRuntimeStats rtStats(mallocSizeOf);
+
+    // No need to anonymize because the results will be aggregated.
+    if (!CollectRuntimeStatsHelper(rt, &rtStats, opv, /* anonymize = */ false,
+                                   StatsCellCallback<CoarseGrained>))
+        return false;
+
+#ifdef DEBUG
+    size_t gcHeapTotalOriginal = sizes->gcHeapUsed +
+                                 sizes->gcHeapUnused +
+                                 sizes->gcHeapAdmin +
+                                 sizes->gcHeapDecommitted;
+#endif
+
+    rtStats.addToServoSizes(sizes);
+    rtStats.zTotals.addToServoSizes(sizes);
+    rtStats.cTotals.addToServoSizes(sizes);
+
+#ifdef DEBUG
+    size_t gcHeapTotal = sizes->gcHeapUsed +
+                         sizes->gcHeapUnused +
+                         sizes->gcHeapAdmin +
+                         sizes->gcHeapDecommitted;
+    MOZ_ASSERT(rtStats.gcHeapChunkTotal == gcHeapTotal - gcHeapTotalOriginal);
+#endif
 
     return true;
 }
