@@ -1,0 +1,115 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=892372
+-->
+<head>
+  <title>Test for Bug 892372</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 892372 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function testAutoIsSet(marker) {
+    is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO,
+       "orientType baseVal for auto");
+    is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_AUTO,
+       "orientType animVal for auto");
+    is(marker.orientAngle.baseVal.value, 0, "orientAngle baseVal for auto");
+    is(marker.orientAngle.animVal.value, 0, "orientAngle animVal for auto");
+  }
+
+  function testAutoStartReverseIsSet(marker) {
+    is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN,
+       "orientType baseVal for auto-start-reverse");
+    is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_UNKNOWN,
+       "orientType animVal for auto-start-reverse");
+    is(marker.orientAngle.baseVal.value, 0,
+       "orientAngle baseVal for auto-start-reverse");
+    is(marker.orientAngle.animVal.value, 0,
+       "orientAngle animVal for auto-start-reverse");
+  }
+
+  function testAngleIsSet(marker, angleVal) {
+    is(marker.orientType.baseVal, SVGMarkerElement.SVG_MARKER_ORIENT_ANGLE,
+       "orientType baseVal after numeric angle is set");
+    is(marker.orientType.animVal, SVGMarkerElement.SVG_MARKER_ORIENT_ANGLE,
+       "orientType animVal after numeric angle is set");
+    is(m.orientAngle.baseVal.value, angleVal,
+       "orientAngle baseVal after numeric angle is set");
+    is(m.orientAngle.animVal.value, angleVal,
+       "orientAngle animVal after numeric angle is set");
+  }
+
+  function run()
+  {
+    var m = $("m");
+
+    // Testing two conditions:
+    // 1) If orient is set to a numeric angle and then set to auto or
+    //    auto-start-reverse, orientAngle should return a value of 0
+    // 2) If orient is set to something of type other than
+    //    SVG_MARKER_ORIENT_ANGLE and then set to a numeric angle,
+    //    orientType should return SVG_MARKER_ORIENT_ANGLE
+
+    // default is orient="0"
+    testAngleIsSet(m, 0);
+
+    m.setOrientToAuto();
+    testAutoIsSet(m);
+
+    // testing condition 2 for an angle set using setOrientToAngle
+    var a = $("svg").createSVGAngle();
+    a.newValueSpecifiedUnits(SVGAngle.SVG_ANGLETYPE_DEG, 90);
+    m.setOrientToAngle(a);
+    testAngleIsSet(m, a.value);
+
+    // testing condition 1 for orient set using setOrientToAuto
+    m.setOrientToAuto();
+    testAutoIsSet(m);
+
+    // testing condition 2 for an angle set using setAttribute
+    m.setAttribute("orient", "180");
+    testAngleIsSet(m, 180);
+
+    // testing condition 1 for orient set to "auto" using setAttribute
+    m.setAttribute("orient", "auto");
+    testAutoIsSet(m);
+
+    m.setAttribute("orient", "270");
+
+    // testing condition 1 for orient set to "auto-start-reverse" using
+    // setAttribute
+    m.setAttribute("orient", "auto-start-reverse");
+    testAutoStartReverseIsSet(m);
+
+    SimpleTest.finish();
+  }
+
+  function runTestsWithPref() {
+    SpecialPowers.pushPrefEnv({ 'set': [['svg.marker-improvements.enabled', true]] }, run);
+  }
+
+  window.addEventListener("load", runTestsWithPref, false);
+
+  ]]>
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=892372">Mozilla Bug 892372</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  <svg xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <marker id="m" />
+    </defs>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

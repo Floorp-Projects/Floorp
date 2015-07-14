@@ -799,6 +799,7 @@ class PreliminaryObjectArray
     }
 
     bool full() const;
+    bool empty() const;
     void sweep();
 };
 

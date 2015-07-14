@@ -225,13 +225,15 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
         };
         touchListener = new ZoomedViewTouchListener();
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange");
+                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
+                "Gesture:CloseZoomedView");
     }
 
     void destroy() {
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange");
+                "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
+                "Gesture:CloseZoomedView");
     }
 
     // This method (onFinishInflate) is called only when the zoomed view class is used inside
@@ -548,6 +550,8 @@ public class ZoomedView extends FrameLayout implements LayerView.OnMetricsChange
                         refreshZoomedViewSize(metrics);
                     } else if (event.equals("Content:LocationChange")) {
                         stopZoomDisplay(false);
+                    } else if (event.equals("Gesture:CloseZoomedView")) {
+                        stopZoomDisplay(true);
                     }
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSON exception", e);

@@ -245,12 +245,26 @@
   border-bottom-color: hsl(0,0%,50%);
 }
 
-.ruleview-selector {
+.ruleview-selectorcontainer {
   word-wrap: break-word;
+  cursor: text;
 }
 
 .ruleview-selector-separator, .ruleview-selector-unmatched {
   color: #888;
+}
+
+.ruleview-selector-matched > .ruleview-selector-attribute {
+  /* TODO: Bug 1178535 Awaiting UX feedback on highlight colors */
+}
+
+.ruleview-selector-matched > .ruleview-selector-pseudo-class {
+  /* TODO: Bug 1178535 Awaiting UX feedback on highlight colors */
+}
+
+.ruleview-selector-matched > .ruleview-selector-pseudo-class-lock {
+  font-weight: bold;
+  color: var(--theme-highlight-orange);
 }
 
 .ruleview-selectorhighlighter {

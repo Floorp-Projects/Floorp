@@ -274,7 +274,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                allowSpdy,
                                  const bool&                allowAltSvc,
                                  const OptionalFileDescriptorSet& aFds,
-                                 const LoadInfoArgs&        aLoadInfoArgs,
+                                 const OptionalLoadInfoArgs& aLoadInfoArgs,
                                  const OptionalHttpResponseHead& aSynthesizedResponseHead,
                                  const uint32_t&            aCacheKey)
 {

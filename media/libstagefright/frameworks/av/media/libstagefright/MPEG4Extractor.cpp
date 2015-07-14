@@ -2454,7 +2454,7 @@ status_t MPEG4Extractor::verifyTrack(Track *track) {
         }
     }
 
-    if (!track->sampleTable->isValid()) {
+    if (!track->sampleTable.get() || !track->sampleTable->isValid()) {
         // Make sure we have all the metadata we need.
         return ERROR_MALFORMED;
     }
@@ -4099,7 +4099,13 @@ status_t MPEG4Source::fragmentedRead(
 static int compositionOrder(MediaSource::Indice* const* indice0,
         MediaSource::Indice* const* indice1)
 {
-  return (*indice0)->start_composition - (*indice1)->start_composition;
+  if ((*indice0)->start_composition > (*indice1)->start_composition) {
+      return 1;
+  } else if ((*indice0)->start_composition == (*indice1)->start_composition) {
+      return 0;
+  } else {
+      return -1;
+  }
 }
 
 Vector<MediaSource::Indice> MPEG4Source::exportIndex()
@@ -4129,8 +4135,8 @@ Vector<MediaSource::Indice> MPEG4Source::exportIndex()
       indice.start_composition = (compositionTime * 1000000ll) / mTimescale;
       // end_composition is overwritten everywhere except the last frame, where
       // the presentation duration is equal to the sample duration.
-      indice.end_composition = ((compositionTime + duration) * 1000000ll) /
-              mTimescale;
+      indice.end_composition =
+          (compositionTime * 1000000ll + duration * 1000000ll) / mTimescale;
       indice.sync = isSyncSample;
       index.add(indice);
   }

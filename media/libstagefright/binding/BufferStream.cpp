@@ -36,7 +36,7 @@ BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,
   }
   *aBytesRead =
     std::min(aLength, size_t(mStartOffset + mData->Length() - aOffset));
-  memcpy(aData, &(*mData)[aOffset - mStartOffset], *aBytesRead);
+  memcpy(aData, mData->Elements() + aOffset - mStartOffset, *aBytesRead);
   return true;
 }
 

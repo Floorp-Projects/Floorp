@@ -2,15 +2,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that pausing on exceptions works after reload.
+ * Make sure that pausing on exceptions works after tab reload.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_pause-exceptions.html";
 
 let gTab, gPanel, gDebugger;
-let gFrames, gVariables, gPrefs, gOptions;
+let gFrames, gVariables, gPrefs;
 
 function test() {
+  requestLongerTimeout(2);
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
@@ -18,19 +19,15 @@ function test() {
     gFrames = gDebugger.DebuggerView.StackFrames;
     gVariables = gDebugger.DebuggerView.Variables;
     gPrefs = gDebugger.Prefs;
-    gOptions = gDebugger.DebuggerView.Options;
 
     is(gPrefs.pauseOnExceptions, false,
       "The pause-on-exceptions pref should be disabled by default.");
-    isnot(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
-      "The pause-on-exceptions menu item should not be checked.");
 
-    enablePauseOnExceptions()
-      .then(disableIgnoreCaughtExceptions)
+    clickToPauseOnAllExceptions()
       .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
-      .then(testPauseOnExceptionsAfterReload)
-      .then(disablePauseOnExceptions)
-      .then(enableIgnoreCaughtExceptions)
+      .then(testPauseOnAllExceptionsEnabledAfterReload)
+      .then(clickToPauseOnUncaughtExceptions)
+      .then(clickToStopPauseOnExceptions)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -38,9 +35,9 @@ function test() {
   });
 }
 
-function testPauseOnExceptionsAfterReload() {
+function testPauseOnAllExceptionsEnabledAfterReload() {
   let finished = waitForCaretAndScopes(gPanel, 19).then(() => {
-    info("Testing enabled pause-on-exceptions.");
+    info("Testing enabled pause-on-all-exceptions.");
 
     is(gDebugger.gThreadClient.state, "paused",
       "Should only be getting stack frames while paused.");
@@ -61,7 +58,7 @@ function testPauseOnExceptionsAfterReload() {
       "Should have the right property value for <exception>.");
 
     let finished = waitForCaretAndScopes(gPanel, 26).then(() => {
-      info("Testing enabled pause-on-exceptions and resumed after pause.");
+      info("Testing enabled pause-on-all-exceptions and resumed after pause.");
 
       is(gDebugger.gThreadClient.state, "paused",
         "Should only be getting stack frames while paused.");
@@ -109,80 +106,61 @@ function testPauseOnExceptionsAfterReload() {
   return finished;
 }
 
-function enablePauseOnExceptions() {
-  let deferred = promise.defer();
+function clickToPauseOnAllExceptions() {
+  var deferred = promise.defer();
+  var pauseOnExceptionsButton = getPauseOnExceptionsButton();
 
   gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
-    is(gPrefs.pauseOnExceptions, true,
-      "The pause-on-exceptions pref should now be enabled.");
-    is(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
-      "The pause-on-exceptions menu item should now be checked.");
+    is(pauseOnExceptionsButton.getAttribute("tooltiptext"),
+      "Pause on uncaught exceptions",
+      "The button's tooltip text should be 'Pause on uncaught exceptions'.");
+    is(pauseOnExceptionsButton.getAttribute("state"), 1,
+      "The pause on exceptions button state variable should be 1");
 
-    ok(true, "Pausing on exceptions was enabled.");
-    deferred.resolve();
+      deferred.resolve();
   });
 
-  gOptions._pauseOnExceptionsItem.setAttribute("checked", "true");
-  gOptions._togglePauseOnExceptions();
+  pauseOnExceptionsButton.click();
 
   return deferred.promise;
 }
 
-function disablePauseOnExceptions() {
-  let deferred = promise.defer();
+function clickToPauseOnUncaughtExceptions() {
+  var deferred = promise.defer();
+  var pauseOnExceptionsButton = getPauseOnExceptionsButton();
 
-  gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
-    is(gPrefs.pauseOnExceptions, false,
-      "The pause-on-exceptions pref should now be disabled.");
-    isnot(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
-      "The pause-on-exceptions menu item should now be unchecked.");
+  gDebugger.gThreadClient.addOneTimeListener("resumed", () =>{
+    is(pauseOnExceptionsButton.getAttribute("tooltiptext"),
+      "Do not pause on exceptions",
+      "The button's tooltip text should be 'Do not pause on exceptions'.");
+    is(pauseOnExceptionsButton.getAttribute("state"), 2,
+      "The pause on exceptions button state variable should be 2");
 
-    ok(true, "Pausing on exceptions was disabled.");
-    deferred.resolve();
+      deferred.resolve();
   });
-
-  gOptions._pauseOnExceptionsItem.setAttribute("checked", "false");
-  gOptions._togglePauseOnExceptions();
-
+  pauseOnExceptionsButton.click();
   return deferred.promise;
 }
 
-function enableIgnoreCaughtExceptions() {
-  let deferred = promise.defer();
+function clickToStopPauseOnExceptions() {
+  var deferred = promise.defer();
+  var pauseOnExceptionsButton = getPauseOnExceptionsButton();
 
-  gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
-    is(gPrefs.ignoreCaughtExceptions, true,
-      "The ignore-caught-exceptions pref should now be enabled.");
-    is(gOptions._ignoreCaughtExceptionsItem.getAttribute("checked"), "true",
-      "The ignore-caught-exceptions menu item should now be checked.");
+  gDebugger.gThreadClient.addOneTimeListener("resumed", () =>{
+    is(pauseOnExceptionsButton.getAttribute("tooltiptext"),
+      "Pause on all exceptions",
+      "The button's tooltip text should be 'Pause on all exceptions'.");
+    is(pauseOnExceptionsButton.getAttribute("state"), 0,
+      "The pause on exceptions button state variable should be 0");
 
-    ok(true, "Ignore caught exceptions was enabled.");
-    deferred.resolve();
+      deferred.resolve();
   });
-
-  gOptions._ignoreCaughtExceptionsItem.setAttribute("checked", "true");
-  gOptions._toggleIgnoreCaughtExceptions();
-
+  pauseOnExceptionsButton.click();
   return deferred.promise;
 }
 
-function disableIgnoreCaughtExceptions() {
-  let deferred = promise.defer();
-
-  gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
-    is(gPrefs.ignoreCaughtExceptions, false,
-      "The ignore-caught-exceptions pref should now be disabled.");
-    isnot(gOptions._ignoreCaughtExceptionsItem.getAttribute("checked"), "true",
-      "The ignore-caught-exceptions menu item should now be unchecked.");
-
-    ok(true, "Ignore caught exceptions was disabled.");
-    deferred.resolve();
-  });
-
-  gOptions._ignoreCaughtExceptionsItem.setAttribute("checked", "false");
-  gOptions._toggleIgnoreCaughtExceptions();
-
-  return deferred.promise;
+function getPauseOnExceptionsButton() {
+  return gDebugger.document.getElementById("toggle-pause-exceptions");
 }
 
 registerCleanupFunction(function() {
@@ -192,5 +170,4 @@ registerCleanupFunction(function() {
   gFrames = null;
   gVariables = null;
   gPrefs = null;
-  gOptions = null;
 });
