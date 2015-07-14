@@ -67,6 +67,11 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
     return 0;
   }
 
+  if (mAccessibles.Contains(newChild.ID())) {
+    NS_ERROR("ID already in use");
+    return 0;
+  }
+
   auto role = static_cast<a11y::role>(newChild.Role());
   ProxyAccessible* newProxy =
     new ProxyAccessible(newChild.ID(), aParent, this, role);
