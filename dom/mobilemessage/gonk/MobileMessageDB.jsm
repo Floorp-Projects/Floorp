@@ -2,6 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * This file is documented in JSDoc format. To generate the document:
+ *
+ * 1. Follow the instruction of JSDoc project to install it. See
+ *    https://github.com/jsdoc3/jsdoc for details.
+ *
+ * 2. Since JSDoc does not recognize ES6 syntax and XPCOM components, you should
+ *    enable the "commentsOnly" plugin in your conf.json to strip all code out
+ *    before generating the document. You'll need to change source.includePattern
+ *    as well to include "*.jsm" since it's not included by default. Here's a
+ *    minimal example of conf.json you need:
+ *
+ *    {
+ *      "source": {
+ *        "includePattern": ".+\\.js(m)?$"
+ *      },
+ *      "plugins": ["plugins/commentsOnly"]
+ *    }
+ *
+ * 3. Run jsdoc:
+ *
+ *    $ jsdoc -c <path-to-conf-json> -d <output-directory> MobileMessageDB.jsm
+ */
+
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -27,10 +51,38 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 const DB_VERSION = 23;
 
+/**
+ * @typedef {string} MobileMessageDB.MESSAGE_STORE_NAME
+ *
+ * The name of the object store for messages.
+ */
 const MESSAGE_STORE_NAME = "sms";
+
+/**
+ * @typedef {string} MobileMessageDB.THREAD_STORE_NAME
+ *
+ * The name of the object store for threads.
+ */
 const THREAD_STORE_NAME = "thread";
+
+/**
+ * @typedef {string} MobileMessageDB.PARTICIPANT_STORE_NAME
+ *
+ * The name of the object store for participants.
+ */
 const PARTICIPANT_STORE_NAME = "participant";
+
+/**
+ * @typedef {string} MobileMessageDB.MOST_RECENT_STORE_NAME
+ * @deprecated
+ */
 const MOST_RECENT_STORE_NAME = "most-recent";
+
+/**
+ * @typedef {string} MobileMessageDB.SMS_SEGMENT_STORE_NAME
+ *
+ * The name of the object store for incoming SMS segments.
+ */
 const SMS_SEGMENT_STORE_NAME = "sms-segment";
 
 const DELIVERY_SENDING = "sending";
@@ -83,7 +135,289 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function() {
 });
 
 /**
- * MobileMessageDB
+ * @typedef {Object} MobileMessageDB.MessageRecord
+ *
+ * Represents a SMS or MMS message.
+ *
+ * <pre>
+ * +--------------------------------------------------------------------------+
+ * | MessageRecord                                                            |
+ * +--------------------------------------------------------------------------+
+ * | id: Number (primary-key)                                                 |
+ * |                                                                          |
+ * | [SMS / MMS Common]                                                       |
+ * | type: String                                                             |
+ * | read: Number // Works as boolean, only use 0 or 1.                       |
+ * | iccId: String                                                            |
+ * | sender: String                                                           |
+ * | delivery: String                                                         |
+ * | timestamp: Number                                                        |
+ * | sentTimestamp: Number                                                    |
+ * |                                                                          |
+ * | [Database Foreign Keys]                                                  |
+ * | threadId: Number                                                         |
+ * |                                                                          |
+ * | [Common Indices]                                                         |
+ * | threadIdIndex: Array // [threadId, timestamp]                            |
+ * | deliveryIndex: Array // [delivery, timestamp]                            |
+ * | readIndex: Array // [read, timpstamp]                                    |
+ * | participantIdsIndex: Array of Array // [[participantId, timestamp], ...] |
+ * |                                                                          |
+ * | [SMS / Common Fields]                                                    |
+ * | pid: Number                                                              |
+ * | SMSC: String                                                             |
+ * | receiver: String                                                         |
+ * | encoding: Number                                                         |
+ * | messageType: Number                                                      |
+ * | teleservice: Number                                                      |
+ * | messageClass: String                                                     |
+ * | deliveryStatus: String                                                   |
+ * | deliveryTimestamp: Number                                                |
+ * |                                                                          |
+ * | [SMS / Application Port Info]                                            |
+ * | originatorPort: Number                                                   |
+ * | destinationPort: Number                                                  |
+ * |                                                                          |
+ * | [SMS / MWI status]                                                       |
+ * | mwiPresent: Boolean                                                      |
+ * | mwiDiscard: Boolean                                                      |
+ * | mwiMsgCount: Number                                                      |
+ * | mwiActive: Boolean                                                       |
+ * |                                                                          |
+ * | [SMS / Message Body]                                                     |
+ * | data: Array of Uint8 (available if it's 8bit encoding)                   |
+ * | body: String (normal text body)                                          |
+ * | fullBody: String                                                         |
+ * |                                                                          |
+ * | [SMS / CDMA Cellbroadcast Related]                                       |
+ * | serviceCategory: Number                                                  |
+ * | language: String                                                         |
+ * |                                                                          |
+ * | [MMS Info]                                                               |
+ * | receivers: Array of String                                               |
+ * | phoneNumber: String                                                      |
+ * | transactionIdIndex: String                                               |
+ * | envelopeIdIndex: String                                                  |
+ * | isReadReportSent: Boolean                                                |
+ * | deliveryInfo: Array of {                                                 |
+ * |   receiver: String                                                       |
+ * |   deliveryStatus: String                                                 |
+ * |   deliveryTimestamp: Number                                              |
+ * |   readStatus: String                                                     |
+ * |   readTimestamp: Number                                                  |
+ * | }                                                                        |
+ * | headers: {                                                               |
+ * |   x-mms-message-type: Number                                             |
+ * |   x-mms-transaction-id: String                                           |
+ * |   x-mms-mms-version: Number                                              |
+ * |   from: {                                                                |
+ * |     address: String                                                      |
+ * |     type: String                                                         |
+ * |   }                                                                      |
+ * |   subject: String                                                        |
+ * |   x-mms-message-class: String                                            |
+ * |   x-mms-message-size: Number                                             |
+ * |   x-mms-expiry: Number                                                   |
+ * |   x-mms-content-location: {                                              |
+ * |     uri: String                                                          |
+ * |   }                                                                      |
+ * |   to: Array of {                                                         |
+ * |     address: String                                                      |
+ * |     type: String                                                         |
+ * |   }                                                                      |
+ * |   x-mms-read-report: Boolean                                             |
+ * |   x-mms-priority: Number                                                 |
+ * |   message-id: String                                                     |
+ * |   date: String                                                           |
+ * |   x-mms-delivery-report: Boolean                                         |
+ * |   content-type: {                                                        |
+ * |     media: String                                                        |
+ * |     params: {                                                            |
+ * |       type: String                                                       |
+ * |       start: String                                                      |
+ * |     }                                                                    |
+ * |   }                                                                      |
+ * | }                                                                        |
+ * | parts: Array of {                                                        |
+ * |    index: Number                                                         |
+ * |    headers: {                                                            |
+ * |      content-type: {                                                     |
+ * |        media: String                                                     |
+ * |        params: {                                                         |
+ * |          name: String                                                    |
+ * |          charset: {                                                      |
+ * |            charset: String                                               |
+ * |          }                                                               |
+ * |        }                                                                 |
+ * |      content-length: Number                                              |
+ * |      content-location: String                                            |
+ * |      content-id: String                                                  |
+ * |    }                                                                     |
+ * |    content: String                                                       |
+ * | }                                                                        |
+ * +--------------------------------------------------------------------------+
+ * </pre>
+ */
+
+/**
+ * @typedef {Object} MobileMessageDB.ThreadRecord
+ *
+ * Represents a message thread.
+ *
+ * <pre>
+ * +---------------------------------------+
+ * | ThreadRecord                          |
+ * +---------------------------------------+
+ * | id: Number (primary-key)              |
+ * | participantIds: Array of Number       |
+ * | participantAddresses: Array of String |
+ * | lastMessageId: Number                 |
+ * | lastTimestamp: Number                 |
+ * | unreadCount: Number                   |
+ * | lastMessageType: String               |
+ * |                                       |
+ * | [SMS Only]                            |
+ * | body: String                          |
+ * |                                       |
+ * | [MMS Only]                            |
+ * | lastMessageSubject: String            |
+ * +---------------------------------------+
+ * </pre>
+ */
+
+/**
+ * @typedef {Object} MobileMessageDB.ParticipantRecord
+ *
+ * Represents the mapping of a participant and one or multiple addresses.
+ * (National and Int'l numbers)
+ *
+ * <pre>
+ * +----------------------------+
+ * | ParticipantRecord          |
+ * +----------------------------+
+ * | id: Number (primary-key)   |
+ * | addresses: Array of String |
+ * +----------------------------+
+ * </pre>
+ */
+
+/**
+ * @typedef {Object} MobileMessageDB.SmsSegmentRecord
+ *
+ * Represents a SMS segment.
+ *
+ * <pre>
+ * +---------------------------------------------------------------+
+ * | SmsSegmentRecord                                              |
+ * +---------------------------------------------------------------+
+ * | [Common Fields in SMS segment]                                |
+ * | messageType: Number                                           |
+ * | teleservice: Number                                           |
+ * | SMSC: String                                                  |
+ * | sentTimestamp: Number                                         |
+ * | timestamp: Number                                             |
+ * | sender: String                                                |
+ * | pid: Number                                                   |
+ * | encoding: Number                                              |
+ * | messageClass: String                                          |
+ * | iccId: String                                                 |
+ * |                                                               |
+ * | [Concatenation Info]                                          |
+ * | segmentRef: Number                                            |
+ * | segmentSeq: Number                                            |
+ * | segmentMaxSeq: Number                                         |
+ * |                                                               |
+ * | [Application Port Info]                                       |
+ * | originatorPort: Number                                        |
+ * | destinationPort: Number                                       |
+ * |                                                               |
+ * | [MWI Status]                                                  |
+ * | mwiPresent: Boolean                                           |
+ * | mwiDiscard: Boolean                                           |
+ * | mwiMsgCount: Number                                           |
+ * | mwiActive: Boolean                                            |
+ * |                                                               |
+ * | [CDMA Cell Broadcast Related Fields]                          |
+ * | serviceCategory: Number                                       |
+ * | language: String                                              |
+ * |                                                               |
+ * | [Message Body]                                                |
+ * | data: Array of Uint8 (available if it's 8bit encoding)        |
+ * | body: String (normal text body)                               |
+ * |                                                               |
+ * | [Handy Fields Created by DB for Concatenation]                |
+ * | id: Number (primary-key)                                      |
+ * | hash: String // Use to identify the segments to the same SMS. |
+ * | receivedSegments: Number                                      |
+ * | segments: Array                                               |
+ * +---------------------------------------------------------------+
+ * </pre>
+ */
+
+/**
+ * @class MobileMessageDB
+ * @classdesc
+ *
+ * <p>
+ * MobileMessageDB is used to store all SMS / MMS messages, as well as the
+ * threads those messages belong to, and the participants of those messages.
+ * </p>
+ *
+ * <p>
+ * The relations between threads, messages and participants can be described as
+ * the following ERD -- each thread consists of one or many messages, and
+ * consists of one or many participants. A participant resolves to one or many
+ * (usually up to 2) addresses -- which represent different formats of the same
+ * address, for example a national number and an international number.
+ * </p>
+ *
+ * <pre>
+ *                      X
+ *                     / \
+ * +-----------+      /   \       +-----------+
+ * |           |     /     \     /|           |
+ * |  thread   |-|--|consist|--|--|participant|
+ * |           |     \  of /     \|           |
+ * +-----------+      \   /       +-----------+
+ *       |             \ /              |
+ *       -              V               -
+ *       |                              |
+ *       |                              |
+ *       X                              X
+ *      / \                            / \
+ *     /   \                          /   \
+ *    /     \                        /     \
+ *   |consist|                      |resolve|
+ *    \  of /                        \  to /
+ *     \   /                          \   /
+ *      \ /                            \ /
+ *       V                              V
+ *       |                              |
+ *       |                              |
+ *       -                              -
+ *       |                              |
+ *      /|\                            /|\
+ * +-----------+                  +-----------+
+ * |           |                  |           |
+ * |  message  |                  |  address  |
+ * |           |                  |           |
+ * +-----------+                  +-----------+
+ * </pre>
+ *
+ * <p>
+ * There are 4 object stores in use: </br>
+ * 1. MESSAGE_STORE: stores {@link MobileMessageDB.MessageRecord}. </br>
+ * 2. THREAD_STORE: stores {@link MobileMessageDB.ThreadRecord}. </br>
+ * 3. PARTICIPANT_STORE: stores {@link MobileMessageDB.ParticipantRecord}. </br>
+ * 4. SMS_SEGMENT_STORE: stores partial incoming SMS segments defined in
+ * {@link MobileMessageDB.SmsSegmentRecord}. The records are deleted as soon as
+ * it's enough to compose a complete SMS message.
+ * </p>
+ *
+ * <p>
+ * Besides all object stores mentioned above, there was a MOST_RECENT_STORE
+ * which is deprecated and no longer in use.
+ * </p>
  */
 this.MobileMessageDB = function() {};
 MobileMessageDB.prototype = {
@@ -91,25 +425,38 @@ MobileMessageDB.prototype = {
   dbVersion: null,
 
   /**
-   * Cache the DB here.
+   * Cache the DB instance.
+   *
+   * @member {IDBDatabase} MobileMessageDB.db
+   * @private
    */
   db: null,
 
   /**
    * Last sms/mms object store key value in the database.
+   *
+   * @member {number} MobileMessageDB.lastMessageId
+   * @private
    */
   lastMessageId: 0,
+
+  /**
+   * @callback MobileMessageDB.EnsureDBCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>null</code> on success.
+   * @param {IDBDatabase} aDatabase
+   *        The ready-to-use database object on success.
+   */
 
   /**
    * Prepare the database. This may include opening the database and upgrading
    * it to the latest schema version.
    *
-   * @param callback
+   * @function MobileMessageDB.ensureDB
+   * @param {MobileMessageDB.EnsureDBCallback} callback
    *        Function that takes an error and db argument. It is called when
    *        the database is ready to use or if an error occurs while preparing
    *        the database.
-   *
-   * @return (via callback) a database ready for use.
    */
   ensureDB: function(callback) {
     if (this.db) {
@@ -273,14 +620,27 @@ MobileMessageDB.prototype = {
   },
 
   /**
+   * @callback MobileMessageDB.NewTxnCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>null</code> on success.
+   * @param {IDBTransaction} aTransaction
+   *        The transaction object to operate the indexedDB on success.
+   * @param {IDBObjectStore|IDBObjectStore[]} aObjectStores
+   *        The object store(s) on success. If only one object store is passed,
+   *        it's passed as an <code>IDBObjectStore</code>; Otherwise, it's
+   *        <code>IDBObjectStore[]</code>.
+   */
+
+  /**
    * Start a new transaction.
    *
-   * @param txn_type
+   * @function MobileMessageDB.newTxn
+   * @param {string} txn_type
    *        Type of transaction (e.g. READ_WRITE)
-   * @param callback
+   * @param {MobileMessageDB.NewTxnCallback} callback
    *        Function to call when the transaction is available. It will
    *        be invoked with the transaction and opened object stores.
-   * @param storeNames
+   * @param {string[]} [storeNames=[{@link MobileMessageDB.MESSAGE_STORE_NAME}]]
    *        Names of the stores to open.
    */
   newTxn: function(txn_type, callback, storeNames) {
@@ -323,13 +683,20 @@ MobileMessageDB.prototype = {
   },
 
   /**
+   * @callback MobileMessageDB.InitCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>null</code> on success.
+   */
+
+  /**
    * Initialize this MobileMessageDB.
    *
-   * @param aDbName
+   * @function MobileMessageDB.init
+   * @param {string} aDbName
    *        A string name for that database.
-   * @param aDbVersion
-   *        The version that mmdb should upgrade to. 0 for the lastest version.
-   * @param aCallback
+   * @param {number} aDbVersion
+   *        The version that mmdb should upgrade to. 0 for the latest version.
+   * @param {MobileMessageDB.InitCallback} aCallback
    *        A function when either the initialization transaction is completed
    *        or any error occurs.  Should take only one argument -- null when
    *        initialized with success or the error object otherwise.
@@ -377,6 +744,11 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * Close the MobileMessageDB.
+   *
+   * @function MobileMessageDB.close
+   */
   close: function() {
     if (!this.db) {
       return;
@@ -389,7 +761,13 @@ MobileMessageDB.prototype = {
 
   /**
    * Sometimes user might reboot or remove battery while sending/receiving
-   * message. This is function set the status of message records to error.
+   * message. This function set the status of message records to error. The
+   * function can be used as the callback of {@link MobileMessageDB.init}.
+   *
+   * @function MobileMessageDB.updatePendingTransactionToError
+   * @param {number} aError
+   *        The function does nothing if <code>aError</code> is not
+   *        <code>null</code>.
    */
   updatePendingTransactionToError: function(aError) {
     if (aError) {
@@ -1609,6 +1987,21 @@ MobileMessageDB.prototype = {
     }; // End of messageStore.openCursor().onsuccess
   },
 
+  /**
+   * Check if <code>addr1</code> matches <code>addr2</code>.
+   *
+   * @function MobileMessageDB.matchParsedPhoneNumbers
+   * @param {string} addr1
+   *        Normalized address 1.
+   * @param {Object} parsedAddr1
+   *        Parsed address 1.
+   * @param {string} addr2
+   *        Normalized address 2.
+   * @param {Object} parsedAddr2
+   *        Parsed address 2.
+   * @return {boolean}
+   *         <code>true</code> if the 2 addresses match.
+   */
   matchParsedPhoneNumbers: function(addr1, parsedAddr1, addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
          parsedAddr1.internationalNumber === parsedAddr2.internationalNumber) ||
@@ -1632,6 +2025,21 @@ MobileMessageDB.prototype = {
            addr1.slice(-val) === addr2.slice(-val);
   },
 
+  /**
+   * Check if <code>addr1</code> matches <code>addr2</code>.
+   *
+   * @function MobileMessageDB.matchPhoneNumbers
+   * @param {string} addr1
+   *        Normalized address 1.
+   * @param {Object} parsedAddr1
+   *        Parsed address 1. Try to parse from <code>addr1</code> if not given.
+   * @param {string} addr2
+   *        Normalized address 2.
+   * @param {Object} parsedAddr2
+   *        Parsed address 2. Try to parse from <code>addr2</code> if not given.
+   * @return {boolean}
+   *         <code>true</code> if the 2 addresses match.
+   */
   matchPhoneNumbers: function(addr1, parsedAddr1, addr2, parsedAddr2) {
     if (parsedAddr1 && parsedAddr2) {
       return this.matchParsedPhoneNumbers(addr1, parsedAddr1, addr2, parsedAddr2);
@@ -1656,6 +2064,15 @@ MobileMessageDB.prototype = {
     return false;
   },
 
+  /**
+   * Generate a <code>nsIDOMMozSmsMessage</code> or
+   * <code>nsIDOMMozMmsMessage</code> instance from a stored message record.
+   *
+   * @function MobileMessageDB.createDomMessageFromRecord
+   * @param {MobileMessageDB.MessageRecord} aMessageRecord
+   *        The stored message record.
+   * @return {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage}
+   */
   createDomMessageFromRecord: function(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -1737,6 +2154,24 @@ MobileMessageDB.prototype = {
     }
   },
 
+  /**
+   * @callback MobileMessageDB.ParticipantRecordCallback
+   * @param {MobileMessageDB.ParticipantRecord} aParticipantRecord
+   *        The stored participant record.
+   */
+
+  /**
+   * Create a participant record with the given addresses, and add it into the
+   * participant object store immediately.
+   *
+   * @function MobileMessageDB.createParticipantRecord
+   * @param {IDBObjectStore} aParticipantStore
+   *        Object store for participants.
+   * @param {string[]} aAddresses
+   *        The addresses associated to the participant.
+   * @param {MobileMessageDB.ParticipantRecordCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   createParticipantRecord: function(aParticipantStore, aAddresses, aCallback) {
     let participantRecord = { addresses: aAddresses };
     let addRequest = aParticipantStore.add(participantRecord);
@@ -1749,6 +2184,21 @@ MobileMessageDB.prototype = {
     };
   },
 
+  /**
+   * Find or create the participant record associated to the given PLMN address.
+   *
+   * @function MobileMessageDB.findParticipantRecordByPlmnAddress
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {string} aAddress
+   *        The PLMN address to look up with.
+   * @param {boolean} aCreate
+   *        <code>true</code> to create a new participant record if not exists
+   *        yet, otherwise return <code>null</code> to the callback if record
+   *        not found.
+   * @param {MobileMessageDB.ParticipantRecordCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   findParticipantRecordByPlmnAddress: function(aParticipantStore, aAddress,
                                                aCreate, aCallback) {
     if (DEBUG) {
@@ -1846,6 +2296,22 @@ MobileMessageDB.prototype = {
     }).bind(this);
   },
 
+  /**
+   * Find or create the participant record associated to the given address other
+   * than PLMN address.
+   *
+   * @function MobileMessageDB.findParticipantRecordByOtherAddress
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {string} aAddress
+   *        The address to look up with.
+   * @param {boolean} aCreate
+   *        <code>true</code> to create a new participant record if not exists
+   *        yet, otherwise return <code>null</code> to the callback if record
+   *        not found.
+   * @param {MobileMessageDB.ParticipantRecordCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   findParticipantRecordByOtherAddress: function(aParticipantStore, aAddress,
                                                 aCreate, aCallback) {
     if (DEBUG) {
@@ -1873,6 +2339,28 @@ MobileMessageDB.prototype = {
     }).bind(this);
   },
 
+  /**
+   * @typedef {Object} MobileMessageDB.TypedAddress
+   * @property {string} address Address
+   * @property {string} type Type of the address, such as "PLMN", "IPv4",
+   *           "IPv6", "email" or "Others"
+   */
+
+  /**
+   * Find or create the participant record associated to the given address.
+   *
+   * @function MobileMessageDB.findParticipantRecordByTypedAddress
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {MobileMessageDB.TypedAddress} aTypedAddress
+   *        The address to look up with.
+   * @param {boolean} aCreate
+   *        <code>true</code> to create a new participant record if not exists
+   *        yet, otherwise return <code>null</code> to the callback if record
+   *        not found.
+   * @param {MobileMessageDB.ParticipantRecordCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   findParticipantRecordByTypedAddress: function(aParticipantStore,
                                                 aTypedAddress, aCreate,
                                                 aCallback) {
@@ -1931,6 +2419,33 @@ MobileMessageDB.prototype = {
     }) (0, []);
   },
 
+  /**
+   * @callback MobileMessageDB.ParticipantIdsCallback
+   * @param {number[]} aParticipantIds
+   *        An array of participant IDs. May be <code>null</code>.
+   */
+
+  /**
+   * Find or create participant records associated to the given addresses, and
+   * return the IDs of the participant records to the caller through the
+   * callback.
+   *
+   * @function MobileMessageDB.findParticipantIdsByTypedAddresses
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {MobileMessageDB.TypedAddress[]} aTypedAddresses
+   *        Addresses to look up with.
+   * @param {boolean} aCreate
+   *        <code>true</code> to create a new participant record associates to
+   *        the given addresses if not exists yet, otherwise return
+   *        <code>null</code> to the callback if no record found.
+   * @param {boolean} aSkipNonexistent
+   *        <code>true</code> to skip the addresses not exist in the participant
+   *        store, otherwise return <code>null</code> to the callback when one
+   *        or more addresses not found.
+   * @param {MobileMessageDB.ParticipantIdsCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   findParticipantIdsByTypedAddresses: function(aParticipantStore,
                                                aTypedAddresses, aCreate,
                                                aSkipNonexistent, aCallback) {
@@ -2009,6 +2524,30 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * @callback MobileMessageDB.ThreadRecordCallback
+   * @param {MobileMessageDB.ThreadRecord} aThreadRecord
+   *        The stored thread record.
+   * @param {number[]} aParticipantIds
+   *        IDs of participants of the thread.
+   */
+
+  /**
+   * Find the thread record associated to the given address.
+   *
+   * @function MobileMessageDB.findThreadRecordByTypedAddresses
+   * @param {IDBObjectStore} aThreadStore
+   *        The object store for threads.
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {MobileMessageDB.TypedAddress[]} aTypedAddresses
+   *        Addresses to look up with.
+   * @param {boolean} aCreateParticipants
+   *        <code>true</code> to create participant record associated to the
+   *        addresses if not exist yet.
+   * @param {MobileMessageDB.ThreadRecordCallback} aCallback
+   *        The callback function to invoke when the request finishes.
+   */
   findThreadRecordByTypedAddresses: function(aThreadStore, aParticipantStore,
                                              aTypedAddresses,
                                              aCreateParticipants, aCallback) {
@@ -2037,6 +2576,43 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * @callback MobileMessageDB.TransactionResultCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>NS_OK</code> on success.
+   * @param {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage} aDomMessage
+   *        The DOM message instance of the transaction result.
+   */
+
+  /**
+   * @callback MobileMessageDB.NewTxnWithCallbackRequestCallback
+   * @param {Object} aCapture
+   *        An output parameter. The <code>messageRecord</code> property will be
+   *        set on transaction finishes.
+   * @param {MobileMessageDB.MessageRecord} aCapture.messageRecord
+   *        The stored message record. The property presents if the transaction
+   *        finished successfully.
+   * @param {IDBObjectStore|IDBObjectStore[]} aObjectStores
+   *        The object store(s) on success. If only one object store is passed,
+   *        it's passed as an <code>IDBObjectStore</code>; Otherwise, it's
+   *        <code>IDBObjectStore[]</code>.
+   */
+
+  /**
+   * Start a new transaction with default <code>oncomplete</code> /
+   * <code>onabort</code> implementation on the <code>IDBTransaction</code>
+   * object which redirects the error / result to <code>aCallback</code>.
+   *
+   * @function MobileMessageDB.newTxnWithCallback
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.TransactionResultCallback} aCallback.notify
+   *        The callback function to invoke when the transaction finishes.
+   * @param {MobileMessageDB.NewTxnWithCallbackRequestCallback} aFunc
+   *        The callback function to invoke when the request finishes.
+   * @param {string[]} [aStoreNames=[{@link MobileMessageDB.MESSAGE_STORE_NAME}]]
+   *        Names of the stores to open.
+   */
   newTxnWithCallback: function(aCallback, aFunc, aStoreNames) {
     let self = this;
     this.newTxn(READ_WRITE, function(aError, aTransaction, aStores) {
@@ -2070,6 +2646,19 @@ MobileMessageDB.prototype = {
     }, aStoreNames);
   },
 
+  /**
+   * Save a message record.
+   *
+   * @function MobileMessageDB.saveRecord
+   * @param {MobileMessageDB.MessageRecord} aMessageRecord
+   *        Message record to store.
+   * @param {MobileMessageDB.TypedAddress[]} aThreadParticipants
+   *        Participants of the thread of the message.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.TransactionResultCallback} aCallback.notify
+   *        The callback function to invoke when the transaction finishes.
+   */
   saveRecord: function(aMessageRecord, aThreadParticipants, aCallback) {
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
@@ -2115,6 +2704,41 @@ MobileMessageDB.prototype = {
     }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME, THREAD_STORE_NAME]);
   },
 
+  /**
+   * @typedef {Object} MobileMessageDB.DeletedInfo
+   * @property {number[]} messageIds
+   *           IDs of deleted messages.
+   * @property {number[]} threadIds
+   *           IDs of deleted threads, which indicates all messages within the
+   *           threads have been deleted.
+   */
+
+  /**
+   * According to <i>3GPP 23.040 - subclause 9.2.3.9 TP-Protocol-Identifier (TP-PID)</i>,
+   * if the Protocol Identifier contains a <i>Replace Short Message Type</i> or
+   * <i>Return Call Message</i> code, it should replace any existing stored
+   * message having the same Protocol Identifier code and originating address.
+   *
+   * This function checks the Protocol Identifier before saving the message
+   * record to fulfill the feature.
+   *
+   * @function MobileMessageDB.replaceShortMessageOnSave
+   * @param {IDBTransaction} aTransaction
+   *        The transaction object.
+   * @param {IDBObjectStore} aMessageStore
+   *        The object store for messages.
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {IDBObjectStore} aThreadStore
+   *        The object store for threads.
+   * @param {MobileMessageDB.MessageRecord} aMessageRecord
+   *        The message record to store.
+   * @param {MobileMessageDB.TypedAddress[]} aThreadParticipants
+   *        Participants of the thread of the message.
+   * @param {MobileMessageDB.DeletedInfo} aDeletedInfo
+   *        An out parameter indicating which messages have been deleted due to
+   *        the replacement.
+   */
   replaceShortMessageOnSave: function(aTransaction, aMessageStore,
                                       aParticipantStore, aThreadStore,
                                       aMessageRecord, aThreadParticipants,
@@ -2187,6 +2811,26 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * The function where object store manipulations actually occur.
+   *
+   * @function MobileMessageDB.realSaveRecord
+   * @param {IDBTransaction} aTransaction
+   *        The transaction object.
+   * @param {IDBObjectStore} aMessageStore
+   *        The object store for messages.
+   * @param {IDBObjectStore} aParticipantStore
+   *        The object store for participants.
+   * @param {IDBObjectStore} aThreadStore
+   *        The object store for threads.
+   * @param {MobileMessageDB.MessageRecord} aMessageRecord
+   *        The message record to store.
+   * @param {MobileMessageDB.TypedAddress[]} aThreadParticipants
+   *        Participants of the thread of the message.
+   * @param {MobileMessageDB.DeletedInfo} aDeletedInfo
+   *        An out parameter indicating which messages have been deleted due to
+   *        the replacement.
+   */
   realSaveRecord: function(aTransaction, aMessageStore, aParticipantStore,
                            aThreadStore, aMessageRecord, aThreadParticipants,
                            aDeletedInfo) {
@@ -2294,6 +2938,34 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * @typedef {Object} MobileMessageDB.MmsDeliveryInfoElement
+   * @property {string} receiver
+   * @property {string} deliveryStatus
+   * @property {number} deliveryTimestamp
+   * @property {string} readStatus
+   * @property {number} readTimestamp
+   */
+
+  /**
+   * @callback MobileMessageDB.ForEachMatchedMmsDeliveryInfoCallback
+   * @param {MobileMessageDB.MmsDeliveryInfoElement} aElement
+   *        An element of the MMS <code>deliverInfo</code> of a message record.
+   */
+
+  /**
+   * Iterate all elements of <code>aDeliveryInfo</code>, check if the receiver
+   * address matches <code>aNeedle</code> and invoke <code>aCallback</code> on
+   * each matched element.
+   *
+   * @function MobileMessageDB.forEachMatchedMmsDeliveryInfo
+   * @param {MobileMessageDB.MmsDeliveryInfoElement[]} aDeliveryInfo
+   *        The MMS <code>deliverInfo</code> of a message record.
+   * @param {string} aNeedle
+   *        The receiver address to look up with.
+   * @param {MobileMessageDB.ForEachMatchedMmsDeliveryInfoCallback} aCallback
+   *        The callback function to invoke on each match.
+   */
   forEachMatchedMmsDeliveryInfo: function(aDeliveryInfo, aNeedle, aCallback) {
 
     let typedAddress = {
@@ -2339,6 +3011,33 @@ MobileMessageDB.prototype = {
     }
   },
 
+  /**
+   * Find the message of a given message ID or envelope ID. Update its
+   * <code>delivery</code>, <code>deliveryStatus</code>, and
+   * <code>envelopeId</code> accordingly.
+   *
+   * @function MobileMessageDB.updateMessageDeliveryById
+   * @param {string} id
+   *        If <code>type</code> is "messageId", it represents the message ID;
+   *        If <code>type</code> is "envelopeId", it represents the envelope ID,
+   *        which is the "x-mms-transaction-id" in the header of an MMS message.
+   * @param {string} type
+   *        Either "messageId" or "envelopeId".
+   * @param {string} receiver
+   *        The receiver address.
+   * @param {string} delivery
+   *        If given, it will be used to update the <code>deliveryIndex</code>
+   *        property of a stored message record.
+   * @param {string} deliveryStatus
+   *        If given, it will be used to update the <code>deliveryStatus</code>
+   *        property of a stored message record.
+   * @param {string} envelopeId
+   *        If given, it will be used to update the <code>envelopeIdIndex</code>
+   *        property of a stored message record.
+   * @param {Object} callback
+   *        The object passed as <code>aCallback</code> to
+   *        {@link MobileMessageDB.newTxnWithCallback}.
+   */
   updateMessageDeliveryById: function(id, type, receiver, delivery,
                                       deliveryStatus, envelopeId, callback) {
     if (DEBUG) {
@@ -2441,6 +3140,16 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * Map receivers of a MMS message record to the thread participant list if MMS
+   * grouping is enabled.
+   *
+   * @function MobileMessageDB.fillReceivedMmsThreadParticipants
+   * @param {MobileMessageDB.MessageRecord} aMessage
+   *        The MMS message.
+   * @param {MobileMessageDB.TypedAddress[]} threadParticipants
+   *        Participants to add.
+   */
   fillReceivedMmsThreadParticipants: function(aMessage, threadParticipants) {
     let receivers = aMessage.receivers;
     // If we don't want to disable the MMS grouping for receiving, we need to
@@ -2470,8 +3179,8 @@ MobileMessageDB.prototype = {
     }
 
     if (!isSuccess) {
-      // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's
-      // own phone number), so we cannot correcly exclude the user's own
+      // For some SIMs we cannot retrieve the valid MSISDN (i.e. the user's
+      // own phone number), so we cannot correctly exclude the user's own
       // number from the receivers, thus wrongly building the thread index.
       if (DEBUG) debug("Error! Cannot strip out user's own phone number!");
     }
@@ -2485,6 +3194,27 @@ MobileMessageDB.prototype = {
       });
   },
 
+  /**
+   * Update the thread when one or more messages are deleted / replaced.
+   *
+   * @function MobileMessageDB.updateThreadByMessageChange
+   * @param {IDBObjectStore} messageStore
+   *        The object store for messages.
+   * @param {IDBObjectStore} threadStore
+   *        The object store for threads.
+   * @param {number} threadId
+   *        The thread ID.
+   * @param {number[]} removedMsgIds
+   *        The IDs of removed messages.
+   * @param {number} ignoredUnreadCount
+   *        Negative offset for <code>unreadCount</code>. For example, if the
+   *        <code>unreadCount</code> was 5, given
+   *        <code>ignoredUnreadCount</code> to 3 causes <code>unreadCount</code>
+   *        becomes 2.
+   * @param {MobileMessageDB.DeletedInfo} deletedInfo
+   *        An out parameter indicating if the thread is deleted after the
+   *        operation.
+   */
   updateThreadByMessageChange: function(messageStore, threadStore, threadId,
                                         removedMsgIds, ignoredUnreadCount, deletedInfo) {
     let self = this;
@@ -2543,6 +3273,13 @@ MobileMessageDB.prototype = {
     };
   },
 
+  /**
+   * Notify the observers that one or more messages are deleted.
+   *
+   * @function MobileMessageDB.notifyDeletedInfo
+   * @param {MobileMessageDB.DeletedInfo} info
+   *        The IDs of deleted messages and threads.
+   */
   notifyDeletedInfo: function(info) {
     if (!info ||
         (info.messageIds.length === 0 && info.threadIds.length === 0)) {
@@ -2562,6 +3299,17 @@ MobileMessageDB.prototype = {
    * nsIGonkMobileMessageDatabaseService API
    */
 
+  /**
+   * Store an incoming message.
+   *
+   * @function MobileMessageDB.saveReceivedMessage
+   * @param {MobileMessageDB.MessageRecord} aMessage
+   *        The message record to store.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.TransactionResultCallback} aCallback.notify
+   *        The callback function to invoke when the transaction finishes.
+   */
   saveReceivedMessage: function(aMessage, aCallback) {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
         (aMessage.type == "sms" && (aMessage.messageClass == undefined ||
@@ -2640,6 +3388,17 @@ MobileMessageDB.prototype = {
     this.saveRecord(aMessage, threadParticipants, aCallback);
   },
 
+  /**
+   * Store an outgoing message.
+   *
+   * @function MobileMessageDB.saveSendingMessage
+   * @param {MobileMessageDB.MessageRecord} aMessage
+   *        The message record to store.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.TransactionResultCallback} aCallback.notify
+   *        The callback function to invoke when the transaction finishes.
+   */
   saveSendingMessage: function(aMessage, aCallback) {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
         (aMessage.type == "sms" && aMessage.receiver == undefined) ||
@@ -2705,6 +3464,29 @@ MobileMessageDB.prototype = {
     this.saveRecord(aMessage, threadParticipants, aCallback);
   },
 
+  /**
+   * Update the <code>delivery</code>, <code>deliveryStatus</code>, and
+   * <code>envelopeId</code> of a stored message record matching the given
+   * message ID.
+   *
+   * @function MobileMessageDB.setMessageDeliveryByMessageId
+   * @param {number} messageId
+   *        The message ID.
+   * @param {string} receiver
+   *        The receiver address.
+   * @param {string} delivery
+   *        If given, it will be used to update the <code>deliveryIndex</code>
+   *        property of a stored message record.
+   * @param {string} deliveryStatus
+   *        If given, it will be used to update the <code>deliveryStatus</code>
+   *        property of a stored message record.
+   * @param {string} envelopeId
+   *        If given, it will be used to update the <code>envelopeIdIndex</code>
+   *        property of a stored message record.
+   * @param {Object} callback
+   *        The object passed as <code>aCallback</code> to
+   *        {@link MobileMessageDB.newTxnWithCallback}.
+   */
   setMessageDeliveryByMessageId: function(messageId, receiver, delivery,
                                           deliveryStatus, envelopeId, callback) {
     this.updateMessageDeliveryById(messageId, "messageId",
@@ -2713,12 +3495,47 @@ MobileMessageDB.prototype = {
 
   },
 
+  /**
+   * Update the <code>deliveryStatus</code> of the specified
+   * <code>aReceiver</code> within the <code>deliveryInfo</code> of the message
+   * record retrieved by the given <code>envelopeId</code>.
+   *
+   * @function MobileMessageDB.setMessageDeliveryStatusByEnvelopeId
+   * @param {string} aEnvelopeId
+   *        The envelope ID, which is the "x-mms-transaction-id" in the header
+   *        of an MMS message.
+   * @param {string} aReceiver
+   *        The receiver address.
+   * @param {string} aDeliveryStatus
+   *        If given, it will be used to update the <code>deliveryStatus</code>
+   *        property of a stored message record.
+   * @param {Object} aCallback
+   *        The object passed as <code>aCallback</code> to
+   *        {@link MobileMessageDB.newTxnWithCallback}.
+   */
   setMessageDeliveryStatusByEnvelopeId: function(aEnvelopeId, aReceiver,
                                                  aDeliveryStatus, aCallback) {
     this.updateMessageDeliveryById(aEnvelopeId, "envelopeId", aReceiver, null,
                                    aDeliveryStatus, null, aCallback);
   },
 
+  /**
+   * Update the <code>readStatus</code> of the specified <code>aReceiver</code>
+   * within the <code>deliveryInfo</code> of the message record retrieved by the
+   * given <code>envelopeId</code>.
+   *
+   * @function MobileMessageDB.setMessageReadStatusByEnvelopeId
+   * @param {string} aEnvelopeId
+   *        The envelope ID, which is the "x-mms-transaction-id" in the header
+   *        of an MMS message.
+   * @param {string} aReceiver
+   *        The receiver address.
+   * @param {string} aReadStatus
+   *        The updated read status.
+   * @param {Object} aCallback
+   *        The object passed as <code>aCallback</code> to
+   *        {@link MobileMessageDB.newTxnWithCallback}.
+   */
   setMessageReadStatusByEnvelopeId: function(aEnvelopeId, aReceiver,
                                              aReadStatus, aCallback) {
     if (DEBUG) {
@@ -2769,6 +3586,27 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * @callback MobileMessageDB.GetMessageRecordCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>NS_OK</code> on success.
+   * @param {MobileMessageDB.MessageRecord} aMessageRecord
+   *        The stored message record.
+   * @param {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage} aDomMessage
+   *        The DOM message instance of the message record.
+   */
+
+  /**
+   * Get the message record with given transaction ID.
+   *
+   * @function MobileMessageDB.getMessageRecordByTransactionId
+   * @param {string} aTransactionId
+   *        The transaction ID.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.GetMessageRecordCallback} aCallback.notify
+   *        The callback function to invoke when the request finishes.
+   */
   getMessageRecordByTransactionId: function(aTransactionId, aCallback) {
     if (DEBUG) debug("Retrieving message with transaction ID " + aTransactionId);
     let self = this;
@@ -2804,6 +3642,17 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * Get the message record with given message ID.
+   *
+   * @function MobileMessageDB.getMessageRecordById
+   * @param {string} aMessageID
+   *        The message ID.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.GetMessageRecordCallback} aCallback.notify
+   *        The callback function to invoke when the request finishes.
+   */
   getMessageRecordById: function(aMessageId, aCallback) {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
     let self = this;
@@ -2851,6 +3700,16 @@ MobileMessageDB.prototype = {
     });
   },
 
+  /**
+   * Helper to translate NS errors to the error causes defined in
+   * <code>nsIMobileMessageCallback</code>.
+   *
+   * @function MobileMessageDB.translateCrErrorToMessageCallbackError
+   * @param {number} aCrError
+   *        The error code defined in <code>Components.result</code>
+   * @return {number}
+   *         The error code defined in <code>nsIMobileMessageCallback</code>
+   */
   translateCrErrorToMessageCallbackError: function(aCrError) {
     switch(aCrError) {
       case Cr.NS_OK:
@@ -2866,6 +3725,26 @@ MobileMessageDB.prototype = {
     }
   },
 
+  /**
+   * @callback MobileMessageDB.SaveSmsSegmentCallback
+   * @param {number} aErrorCode
+   *        The error code on failure, or <code>NS_OK</code> on success.
+   * @param {MobileMessageDB.SmsSegmentRecord} aCompleteMessage
+   *        The composing message. It becomes a complete message once the last
+   *        segment is stored.
+   */
+
+  /**
+   * Store a single SMS segment.
+   *
+   * @function MobileMessageDB.saveSmsSegment
+   * @param {MobileMessageDB.SmsSegmentRecord} aSmsSegment
+   *        Single SMS segment.
+   * @param {Object} aCallback
+   *        The object which includes a callback function.
+   * @param {MobileMessageDB.SaveSmsSegmentCallback} aCallback.notify
+   *        The callback function to invoke when the request finishes.
+   */
   saveSmsSegment: function(aSmsSegment, aCallback) {
     let completeMessage = null;
     this.newTxn(READ_WRITE, function(error, txn, segmentStore) {
@@ -2881,7 +3760,7 @@ MobileMessageDB.prototype = {
           // Rebuild full body
           if (completeMessage.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
             // Uint8Array doesn't have `concat`, so
-            // we have to merge all segements by hand.
+            // we have to merge all segments by hand.
             let fullDataLen = 0;
             for (let i = 1; i <= completeMessage.segmentMaxSeq; i++) {
               fullDataLen += completeMessage.segments[i].length;
@@ -2995,6 +3874,15 @@ MobileMessageDB.prototype = {
    * nsIMobileMessageDatabaseService API
    */
 
+  /**
+   * Get the message record with given message ID.
+   *
+   * @function MobileMessageDB.getMessage
+   * @param {string} aMessageID
+   *        The message ID.
+   * @param {nsIMobileMessageCallback} aRequest
+   *        The callback object.
+   */
   getMessage: function(aMessageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
     let self = this;
@@ -3011,6 +3899,17 @@ MobileMessageDB.prototype = {
     this.getMessageRecordById(aMessageId, notifyCallback);
   },
 
+  /**
+   * Delete the message record with given message IDs.
+   *
+   * @function MobileMessageDB.deleteMessage
+   * @param {number[]} messageIds
+   *        The IDs of messages to delete.
+   * @param {number} length
+   *        The length of the <code>messageIds</code> array.
+   * @param {nsIMobileMessageCallback} aRequest
+   *        The callback object.
+   */
   deleteMessage: function(messageIds, length, aRequest) {
     if (DEBUG) debug("deleteMessage: message ids " + JSON.stringify(messageIds));
     let deleted = [];
@@ -3108,6 +4007,42 @@ MobileMessageDB.prototype = {
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
+  /**
+   * Create a cursor to iterate on stored message records.
+   *
+   * @function MobileMessageDB.createMessageCursor
+   * @param {boolean} aHasStartDate
+   *        <code>true</code> to query only messages starts with
+   *        <code>aStartDate</code>
+   * @param {number} aStartDate
+   *        The timestamp of start date in milliseconds.
+   * @param {boolean} aHasEndDate
+   *        <code>true</code> to query only messages before the
+   *        <code>aEndDate</code>
+   * @param {number} aEndDate
+   *        The timestamp of end date in milliseconds.
+   * @param {string[]} aNumbers
+   *        If not <code>null</code>, query only messages with sender or
+   *        receiver who's number matches one of the numbers listed in the array.
+   * @param {number} aNumbersCount
+   *        The length of <code>aNumbers</code> array.
+   * @param {string} aDelivery
+   *        If not <code>null</code>, query only messages matching the delivery
+   *        value.
+   * @param {boolean} aHasRead
+   *        <code>true</code> to query only messages match the read value
+   *        specified by <code>aRead</code>
+   * @param {boolean} aRead
+   *        Specify the <code>read</code> query condition.
+   * @param {number} aThreadId
+   *        If not <code>null</code>, query only messages in the given thread.
+   * @param {boolean} aReverse
+   *        <code>true</code> to reverse the order.
+   * @param {nsIMobileMessageCursorCallback} aCallback
+   *        The callback object used by GetMessagesCursor
+   * @return {GetMessagesCursor}
+   *         The cursor to iterate on messages.
+   */
   createMessageCursor: function(aHasStartDate, aStartDate, aHasEndDate,
                                 aEndDate, aNumbers, aNumbersCount, aDelivery,
                                 aHasRead, aRead, aThreadId, aReverse, aCallback) {
@@ -3154,6 +4089,20 @@ MobileMessageDB.prototype = {
     return cursor;
   },
 
+  /**
+   * Change the <code>read</code> property of a stored message record.
+   *
+   * @function MobileMessageDB.markMessageRead
+   * @param {number} messageId
+   *        The message ID.
+   * @param {boolean} value
+   *        The updated <code>read</code> value.
+   * @param {boolean} aSendReadReport
+   *        <code>true</code> to update the <code>isReadReportSent</code>
+   *        property if the message is MMS.
+   * @param {nsIMobileMessageCallback} aRequest
+   *        The callback object.
+   */
   markMessageRead: function(messageId, value, aSendReadReport, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
     let self = this;
@@ -3250,6 +4199,15 @@ MobileMessageDB.prototype = {
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
+  /**
+   * Create a cursor to iterate on stored threads.
+   *
+   * @function MobileMessageDB.createThreadCursor
+   * @param {nsIMobileMessageCursorCallback} callback
+   *        The callback object used by GetMessagesCursor
+   * @return {GetThreadsCursor}
+   *         The cursor to iterate on threads.
+   */
   createThreadCursor: function(callback) {
     if (DEBUG) debug("Getting thread list");
 
@@ -3319,7 +4277,7 @@ let FilterSearcherHelper = {
   },
 
   /**
-   * Explicitly fiter message on the timestamp index.
+   * Explicitly filter message on the timestamp index.
    *
    * @param startDate
    *        Timestamp of the starting date.
@@ -3346,7 +4304,7 @@ let FilterSearcherHelper = {
   },
 
   /**
-   * Instanciate a filtering transaction.
+   * Initiate a filtering transaction.
    *
    * @param mmdb
    *        A MobileMessageDB.
@@ -3360,7 +4318,7 @@ let FilterSearcherHelper = {
    *        A boolean value indicating whether we should filter message in
    *        reversed order.
    * @param collect
-   *        Result colletor function. It takes three parameters -- txn, message
+   *        Result collector function. It takes three parameters -- txn, message
    *        id, and message timestamp.
    */
   transact: function(mmdb, txn, error, filter, reverse, collect) {

@@ -1,15 +1,15 @@
 ifdef MOZ_WEBSPEECH_MODELS
 MODELSPS_KEEP_PATH := 1
 
-MODELSPS_FILES := models/dict/cmu07a.dic \
-		models/en-us-semi/mixture_weights \
-		models/en-us-semi/feat.params \
-		models/en-us-semi/mdef \
-		models/en-us-semi/means \
-		models/en-us-semi/noisedict \
-		models/en-us-semi/sendump \
-		models/en-us-semi/transition_matrices \
-		models/en-us-semi/variances
+MODELSPS_FILES := models/dict/en-US.dic \
+		models/en-US/mixture_weights \
+		models/en-US/feat.params \
+		models/en-US/mdef \
+		models/en-US/means \
+		models/en-US/noisedict \
+		models/en-US/sendump \
+		models/en-US/transition_matrices \
+		models/en-US/variances
 
 MODELSPS_DEST := $(DIST)/bin
 INSTALL_TARGETS += MODELSPS

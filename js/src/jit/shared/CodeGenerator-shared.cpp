@@ -1002,7 +1002,7 @@ CodeGeneratorShared::markSafepoint(LInstruction* ins)
 void
 CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction* ins)
 {
-    MOZ_ASSERT_IF(!safepointIndices_.empty(),
+    MOZ_ASSERT_IF(!safepointIndices_.empty() && !masm.oom(),
                   offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
     masm.propagateOOM(safepointIndices_.append(SafepointIndex(offset, ins->safepoint())));
 }

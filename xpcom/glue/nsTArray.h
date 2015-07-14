@@ -2358,6 +2358,12 @@ public:
   }
 };
 
+template<class E, size_t N>
+struct nsTArray_CopyChooser<nsAutoTArray<E, N>>
+{
+  typedef nsTArray_CopyWithConstructors<nsAutoTArray<E, N>> Type;
+};
+
 // Assert that nsAutoTArray doesn't have any extra padding inside.
 //
 // It's important that the data stored in this auto array takes up a multiple of

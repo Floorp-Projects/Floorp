@@ -483,7 +483,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
-  LoadInfoArgs loadInfoArgs;
+  OptionalLoadInfoArgs loadInfoArgs;
   nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
   NS_ENSURE_SUCCESS(rv, rv);
 

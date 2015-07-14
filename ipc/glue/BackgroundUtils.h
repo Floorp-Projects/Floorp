@@ -40,8 +40,10 @@ struct ParamTraits<mozilla::OriginAttributes>
 
 namespace mozilla {
 namespace net {
-class LoadInfoArgs;
+class OptionalLoadInfoArgs;
 } // namespace net
+
+using namespace mozilla::net;
 
 namespace ipc {
 
@@ -70,16 +72,14 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
  */
 nsresult
 LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
-                       mozilla::net::LoadInfoArgs* outLoadInfoArgs);
+                       OptionalLoadInfoArgs* outOptionalLoadInfoArgs);
 
 /**
  * Convert LoadInfoArgs to a LoadInfo.
  */
 nsresult
-LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
+LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                        nsILoadInfo** outLoadInfo);
-
-
 
 } // namespace ipc
 } // namespace mozilla
