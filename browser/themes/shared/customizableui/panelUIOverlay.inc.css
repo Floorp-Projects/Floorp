@@ -640,9 +640,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
-#PanelUI-fxa-icon[fxastatus="migrate-signup"],
-#PanelUI-fxa-icon[fxastatus="migrate-verify"] {
-  list-style-image: url(chrome://browser/skni/warning16.png);
+#PanelUI-footer-fxa[fxastatus="migrate-signup"] > #PanelUI-fxa-status > #PanelUI-fxa-label,
+#PanelUI-footer-fxa[fxastatus="migrate-verify"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
+  list-style-image: url(chrome://browser/skin/warning16.png);
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
@@ -1509,8 +1509,8 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
 
-  #PanelUI-fxa-icon[fxastatus="migrate-signup"],
-  #PanelUI-fxa-icon[fxastatus="migrate-verify"] {
+  #PanelUI-footer-fxa[fxastatus="migrate-signup"] > #PanelUI-fxa-status > #PanelUI-fxa-label,
+  #PanelUI-footer-fxa[fxastatus="migrate-verify"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
     list-style-image: url(chrome://browser/skin/warning16@2x.png);
     -moz-image-region: rect(0, 64px, 32px, 32px);
   }
