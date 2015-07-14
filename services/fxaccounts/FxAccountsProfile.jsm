@@ -73,12 +73,18 @@ function hasChanged(oldData, newData) {
 
 this.FxAccountsProfile = function (options = {}) {
   this._cachedProfile = null;
+  this._cachedAt = 0; // when we saved the cached version.
+  this._currentFetchPromise = null;
+  this._isNotifying = false; // are we sending a notification?
   this.fxa = options.fxa || fxAccounts;
   this.client = options.profileClient || new FxAccountsProfileClient({
     fxa: this.fxa,
     serverURL: options.profileServerUrl,
   });
 
+  // An observer to invalidate our _cachedAt optimization. We use a weak-ref
+  // just incase this.tearDown isn't called in some cases.
+  Services.obs.addObserver(this, ON_PROFILE_CHANGE_NOTIFICATION, true);
   // for testing
   if (options.channel) {
     this.channel = options.channel;
@@ -86,11 +92,25 @@ this.FxAccountsProfile = function (options = {}) {
 }
 
 this.FxAccountsProfile.prototype = {
+  // If we get subsequent requests for a profile within this period, don't bother
+  // making another request to determine if it is fresh or not.
+  PROFILE_FRESHNESS_THRESHOLD: 120000, // 2 minutes
+
+  observe(subject, topic, data) {
+    // If we get a profile change notification from our webchannel it means
+    // the user has just changed their profile via the web, so we want to
+    // ignore our "freshness threshold"
+    if (topic == ON_PROFILE_CHANGE_NOTIFICATION && !this._isNotifying) {
+      log.debug("FxAccountsProfile observed profile change");
+      this._cachedAt = 0;
+    }
+  },
 
   tearDown: function () {
     this.fxa = null;
     this.client = null;
     this._cachedProfile = null;
+    Services.obs.removeObserver(this, ON_PROFILE_CHANGE_NOTIFICATION);
   },
 
   _getCachedProfile: function () {
@@ -100,7 +120,9 @@ this.FxAccountsProfile.prototype = {
   },
 
   _notifyProfileChange: function (uid) {
+    this._isNotifying = true;
     Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, uid);
+    this._isNotifying = false;
   },
 
   // Cache fetched data if it is different from what's in the cache.
@@ -111,6 +133,7 @@ this.FxAccountsProfile.prototype = {
       return Promise.resolve(null); // indicates no change (but only tests care)
     }
     this._cachedProfile = profileData;
+    this._cachedAt = Date.now();
     return this.fxa.getSignedInUser()
       .then(userData => {
         log.debug("notifying profile changed for user ${uid}", userData);
@@ -120,10 +143,20 @@ this.FxAccountsProfile.prototype = {
   },
 
   _fetchAndCacheProfile: function () {
-    return this.client.fetchProfile()
-      .then(profile => {
-        return this._cacheProfile(profile).then(() => profile);
+    if (!this._currentFetchPromise) {
+      this._currentFetchPromise = this.client.fetchProfile().then(profile => {
+        return this._cacheProfile(profile).then(() => {
+          return profile;
+        });
+      }).then(profile => {
+        this._currentFetchPromise = null;
+        return profile;
+      }, err => {
+        this._currentFetchPromise = null;
+        throw err;
       });
+    }
+    return this._currentFetchPromise
   },
 
   // Returns cached data right away if available, then fetches the latest profile
@@ -133,11 +166,15 @@ this.FxAccountsProfile.prototype = {
     return this._getCachedProfile()
       .then(cachedProfile => {
         if (cachedProfile) {
-          // Note that _fetchAndCacheProfile isn't returned, so continues
-          // in the background.
-          this._fetchAndCacheProfile().catch(err => {
-            log.error("Background refresh of profile failed", err);
-          });
+          if (Date.now() > this._cachedAt + this.PROFILE_FRESHNESS_THRESHOLD) {
+            // Note that _fetchAndCacheProfile isn't returned, so continues
+            // in the background.
+            this._fetchAndCacheProfile().catch(err => {
+              log.error("Background refresh of profile failed", err);
+            });
+          } else {
+            log.trace("not checking freshness of profile as it remains recent");
+          }
           return cachedProfile;
         }
         return this._fetchAndCacheProfile();
@@ -146,4 +183,9 @@ this.FxAccountsProfile.prototype = {
         return profile;
       });
   },
+
+  QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+  ]),
 };
