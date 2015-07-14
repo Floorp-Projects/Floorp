@@ -329,8 +329,6 @@ nsWindow::nsWindow()
 {
     mIsTopLevel       = false;
     mIsDestroyed      = false;
-    mNeedsResize      = false;
-    mNeedsMove        = false;
     mListenForResizes = false;
     mIsShown          = false;
     mNeedsShow        = false;
@@ -969,16 +967,6 @@ nsWindow::Show(bool aState)
     if (!aState)
         mNeedsShow = false;
 
-    // If someone is showing this window and it needs a resize then
-    // resize the widget.
-    if (aState) {
-        if (mNeedsMove) {
-            NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
-        } else if (mNeedsResize) {
-            NativeResize(mBounds.width, mBounds.height);
-        }
-    }
-
 #ifdef ACCESSIBILITY
     if (aState && a11y::ShouldA11yBeEnabled())
         CreateRootAccessible();
@@ -1007,57 +995,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     if (!mCreated)
         return NS_OK;
 
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
-
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            //Maybe, the toplevel has moved
-
-            // Note that if the widget needs to be positioned because its
-            // size was previously insane in Resize(x,y,w,h), then we need
-            // to set the x and y here too, because the widget wasn't
-            // moved back then
-            if (mNeedsMove)
-                NativeResize(mBounds.x, mBounds.y,
-                             mBounds.width, mBounds.height);
-            else
-                NativeResize(mBounds.width, mBounds.height);
-
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(true);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(false) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = true;
-                NativeShow(false);
-            }
-        }
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown.
-    else {
-        if (AreBoundsSane() && mListenForResizes) {
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(width, height);
-        }
-        else {
-            mNeedsResize = true;
-        }
-    }
+    NativeResize(width, height);
 
     NotifyRollupGeometryChange();
     ResizePluginSocketWidget();
@@ -1086,51 +1024,10 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     mBounds.y = y;
     mBounds.SizeTo(width, height);
 
-    mNeedsMove = true;
-
     if (!mCreated)
         return NS_OK;
 
-    // There are several cases here that we need to handle, based on a
-    // matrix of the visibility of the widget, the sanity of this resize
-    // and whether or not the widget was previously sane.
-
-    // Has this widget been set to visible?
-    if (mIsShown) {
-        // Are the bounds sane?
-        if (AreBoundsSane()) {
-            // Yep?  Resize the window
-            NativeResize(x, y, width, height);
-            // Does it need to be shown because it was previously insane?
-            if (mNeedsShow)
-                NativeShow(true);
-        }
-        else {
-            // If someone has set this so that the needs show flag is false
-            // and it needs to be hidden, update the flag and hide the
-            // window.  This flag will be cleared the next time someone
-            // hides the window or shows it.  It also prevents us from
-            // calling NativeShow(false) excessively on the window which
-            // causes unneeded X traffic.
-            if (!mNeedsShow) {
-                mNeedsShow = true;
-                NativeShow(false);
-            }
-        }
-    }
-    // If the widget hasn't been shown, mark the widget as needing to be
-    // resized before it is shown
-    else {
-        if (AreBoundsSane() && mListenForResizes){
-            // For widgets that we listen for resizes for (widgets created
-            // with native parents) we apparently _always_ have to resize.  I
-            // dunno why, but apparently we're lame like that.
-            NativeResize(x, y, width, height);
-        }
-        else {
-            mNeedsResize = true;
-        }
-    }
+    NativeResize(x, y, width, height);
 
     NotifyRollupGeometryChange();
     ResizePluginSocketWidget();
@@ -1216,8 +1113,6 @@ nsWindow::Move(double aX, double aY)
 void
 nsWindow::NativeMove()
 {
-    mNeedsMove = false;
-
     GdkPoint point = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
     if (mIsTopLevel) {
@@ -3478,16 +3373,24 @@ nsWindow::Create(nsIWidget        *aParent,
     case eWindowType_invisible: {
         mIsTopLevel = true;
 
+        // Popups that are not noautohide are only temporary. The are used
+        // for menus and the like and disappear when another window is used.
+        // For most popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
+        // which will use a Window with the override-redirect attribute
+        // (for temporary windows).
+        // For long-lived windows, their stacking order is managed by the
+        // window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
+        GtkWindowType type =
+            mWindowType != eWindowType_popup || aInitData->mNoAutoHide ?
+              GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+        mShell = gtk_window_new(type);
+
         // We only move a general managed toplevel window if someone has
         // actually placed the window somewhere.  If no placement has taken
         // place, we just let the window manager Do The Right Thing.
-        //
-        // Indicate that if we're shown, we at least need to have our size set.
-        // If we get explicitly moved, the position will also be set.
-        mNeedsResize = true;
+        NativeResize(mBounds.width, mBounds.height);
 
         if (mWindowType == eWindowType_dialog) {
-            mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Dialog", 
                                    gdk_get_program_class());
@@ -3500,18 +3403,8 @@ nsWindow::Create(nsIWidget        *aParent,
             // With popup windows, we want to control their position, so don't
             // wait for the window manager to place them (which wouldn't
             // happen with override-redirect windows anyway).
-            mNeedsMove = true;
+            NativeMove();
 
-            // Popups that are not noautohide are only temporary. The are used
-            // for menus and the like and disappear when another window is used.
-            // For most popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
-            // which will use a Window with the override-redirect attribute
-            // (for temporary windows).
-            // For long-lived windows, their stacking order is managed by the
-            // window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
-            GtkWindowType type = aInitData->mNoAutoHide ?
-                                     GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
-            mShell = gtk_window_new(type);
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
                                    gdk_get_program_class());
 
@@ -3584,7 +3477,6 @@ nsWindow::Create(nsIWidget        *aParent,
             }
         }
         else { // must be eWindowType_toplevel
-            mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", 
                                    gdk_get_program_class());
@@ -3881,14 +3773,25 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 void
 nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
 {
+    if (!AreBoundsSane()) {
+        // If someone has set this so that the needs show flag is false
+        // and it needs to be hidden, update the flag and hide the
+        // window.  This flag will be cleared the next time someone
+        // hides the window or shows it.  It also prevents us from
+        // calling NativeShow(false) excessively on the window which
+        // causes unneeded X traffic.
+        if (!mNeedsShow && mIsShown) {
+            mNeedsShow = true;
+            NativeShow(false);
+        }
+        return;
+    }
+
     gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
     gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
     
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          width, height));
-
-    // clear our resize flag
-    mNeedsResize = false;
 
     if (mIsTopLevel) {
         gtk_window_resize(GTK_WINDOW(mShell), width, height);
@@ -3906,19 +3809,35 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
     else if (mGdkWindow) {
         gdk_window_resize(mGdkWindow, width, height);
     }
+
+    // Does it need to be shown because bounds were previously insane?
+    if (mNeedsShow && mIsShown) {
+        NativeShow(true);
+    }
 }
 
 void
 nsWindow::NativeResize(int32_t aX, int32_t aY,
                        int32_t aWidth, int32_t aHeight)
 {
+    if (!AreBoundsSane()) {
+        // If someone has set this so that the needs show flag is false
+        // and it needs to be hidden, update the flag and hide the
+        // window.  This flag will be cleared the next time someone
+        // hides the window or shows it.  It also prevents us from
+        // calling NativeShow(false) excessively on the window which
+        // causes unneeded X traffic.
+        if (!mNeedsShow && mIsShown) {
+            mNeedsShow = true;
+            NativeShow(false);
+        }
+        NativeMove();
+    }
+
     gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
     gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
     gint x = DevicePixelsToGdkCoordRoundDown(aX);
     gint y = DevicePixelsToGdkCoordRoundDown(aY);
-
-    mNeedsResize = false;
-    mNeedsMove = false;
 
     LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
          x, y, width, height));
@@ -3939,6 +3858,11 @@ nsWindow::NativeResize(int32_t aX, int32_t aY,
     }
     else if (mGdkWindow) {
         gdk_window_move_resize(mGdkWindow, x, y, width, height);
+    }
+
+    // Does it need to be shown because bounds were previously insane?
+    if (mNeedsShow && mIsShown) {
+        NativeShow(true);
     }
 }
 

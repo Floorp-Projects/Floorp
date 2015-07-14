@@ -340,12 +340,6 @@ protected:
     // Has this widget been destroyed yet?
     bool                mIsDestroyed;
 
-    // This is a flag that tracks if we need to resize a widget or
-    // window when we show it.
-    bool                mNeedsResize;
-    // This is a flag that tracks if we need to move a widget or
-    // window when we show it.
-    bool                mNeedsMove;
     // Should we send resize events on all resizes?
     bool                mListenForResizes;
     // This flag tracks if we're hidden or shown.
