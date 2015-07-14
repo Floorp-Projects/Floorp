@@ -19,9 +19,9 @@ function checkDrawColorInitialRed() {
 
   h.drawColor(c, h.red);
 
-  vauto.mozSrcObject = c.captureStream();
-  vmanual.mozSrcObject = c.captureStream(0);
-  vrate.mozSrcObject = c.captureStream(10);
+  vauto.srcObject = c.captureStream();
+  vmanual.srcObject = c.captureStream(0);
+  vrate.srcObject = c.captureStream(10);
 
   ok(h.testPixel(vauto, [0, 0, 0, 0], 0), "vauto hould not be drawn to before stable state");
   ok(h.testPixel(vrate, [0, 0, 0, 0], 0), "vrate Should not be drawn to before stable state");

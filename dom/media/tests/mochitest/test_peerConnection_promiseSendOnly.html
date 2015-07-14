@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -27,7 +27,7 @@
 
   var v1, v2;
   var delivered = new Promise(resolve =>
-    pc2.onaddstream = e => resolve(v2.mozSrcObject = e.stream));
+    pc2.onaddstream = e => resolve(v2.srcObject = e.stream));
 
   runNetworkTest(function() {
     v1 = createMediaElement('video', 'v1');
@@ -37,7 +37,7 @@
     is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
     navigator.mediaDevices.getUserMedia({ fake: true, video: true, audio: true })
-    .then(stream => pc1.addStream(v1.mozSrcObject = stream))
+    .then(stream => pc1.addStream(v1.srcObject = stream))
     .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
     .then(offer => pc1.setLocalDescription(offer))
     .then(() => pc2.setRemoteDescription(pc1.localDescription))
@@ -46,7 +46,7 @@
     .then(() => pc1.setRemoteDescription(pc2.localDescription))
     .then(() => delivered)
 //    .then(() => canPlayThrough)    // why doesn't this fire?
-    .then(() => waitUntil(() => v2.currentTime > 0 && v2.mozSrcObject.currentTime > 0))
+    .then(() => waitUntil(() => v2.currentTime > 0 && v2.srcObject.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
     .then(() => ok(true, "Connected."))
     .catch(reason => ok(false, "unexpected failure: " + reason))

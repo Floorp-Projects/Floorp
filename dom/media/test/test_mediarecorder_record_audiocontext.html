@@ -25,7 +25,7 @@ function startTest() {
   var dest = context.createMediaStreamDestination();
   source.connect(dest);
   var elem = document.createElement('audio');
-  elem.mozSrcObject = dest.stream;
+  elem.srcObject = dest.stream;
   mMediaStream = dest.stream;
   source.start(0);
   elem.play();
