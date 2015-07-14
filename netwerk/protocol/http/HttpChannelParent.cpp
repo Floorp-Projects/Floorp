@@ -1274,7 +1274,8 @@ nsresult
 HttpChannelParent::ReportSecurityMessage(const nsAString& aMessageTag,
                                          const nsAString& aMessageCategory)
 {
-  if (NS_WARN_IF(!SendReportSecurityMessage(nsString(aMessageTag),
+  if (mIPCClosed ||
+      NS_WARN_IF(!SendReportSecurityMessage(nsString(aMessageTag),
                                             nsString(aMessageCategory)))) {
     return NS_ERROR_UNEXPECTED;
   }
