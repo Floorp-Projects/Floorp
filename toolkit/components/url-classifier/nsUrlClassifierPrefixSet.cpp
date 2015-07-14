@@ -322,6 +322,9 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     for (uint32_t i = 0; i < indexSize; i++) {
       uint32_t numInDelta = i == indexSize - 1 ? deltaSize - indexStarts[i]
                                : indexStarts[i + 1] - indexStarts[i];
+      if (numInDelta > DELTAS_LIMIT) {
+        return NS_ERROR_FILE_CORRUPTED;
+      }
       if (numInDelta > 0) {
         mIndexDeltas[i].SetLength(numInDelta);
         mTotalPrefixes += numInDelta;
