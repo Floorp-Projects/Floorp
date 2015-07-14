@@ -953,37 +953,6 @@ nsTHashtable<gfxUserFontSet::UserFontCache::Entry>*
 
 NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::Flusher, nsIObserver)
 
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::RemoveUnlessPersistent(Entry* aEntry,
-                                                             void* aUserData)
-{
-    return aEntry->mPersistence == kPersistent ? PL_DHASH_NEXT :
-                                                 PL_DHASH_REMOVE;
-}
-
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::RemoveIfPrivate(Entry* aEntry,
-                                                      void* aUserData)
-{
-    return aEntry->mPrivate ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::RemoveIfMatches(Entry* aEntry,
-                                                      void* aUserData)
-{
-    return aEntry->GetFontEntry() == static_cast<gfxFontEntry*>(aUserData) ?
-        PL_DHASH_REMOVE : PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::DisconnectSVG(Entry* aEntry,
-                                                    void* aUserData)
-{
-    aEntry->GetFontEntry()->DisconnectSVG();
-    return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
                                                 const char* aTopic,
@@ -994,11 +963,21 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
     }
 
     if (!strcmp(aTopic, "cacheservice:empty-cache")) {
-        sUserFonts->EnumerateEntries(Entry::RemoveUnlessPersistent, nullptr);
+        for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
+            if (!i.Get()->IsPersistent()) {
+                i.Remove();
+            }
+        }
     } else if (!strcmp(aTopic, "last-pb-context-exited")) {
-        sUserFonts->EnumerateEntries(Entry::RemoveIfPrivate, nullptr);
+        for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
+            if (i.Get()->IsPrivate()) {
+                i.Remove();
+            }
+        }
     } else if (!strcmp(aTopic, "xpcom-shutdown")) {
-        sUserFonts->EnumerateEntries(Entry::DisconnectSVG, nullptr);
+        for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
+            i.Get()->GetFontEntry()->DisconnectSVG();
+        }
     } else {
         NS_NOTREACHED("unexpected topic");
     }
@@ -1133,8 +1112,11 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry)
     // We can't simply use RemoveEntry here because it's possible the principal
     // may have changed since the font was cached, in which case the lookup
     // would no longer find the entry (bug 838105).
-    sUserFonts->EnumerateEntries(
-        gfxUserFontSet::UserFontCache::Entry::RemoveIfMatches, aFontEntry);
+    for (auto i = sUserFonts->Iter(); !i.Done(); i.Next()) {
+        if (i.Get()->GetFontEntry() == aFontEntry)  {
+            i.Remove();
+        }
+    }
 
 #ifdef DEBUG_USERFONT_CACHE
     printf("userfontcache removed fontentry: %p\n", aFontEntry);
@@ -1209,38 +1191,37 @@ gfxUserFontSet::UserFontCache::Shutdown()
 
 #ifdef DEBUG_USERFONT_CACHE
 
-PLDHashOperator
-gfxUserFontSet::UserFontCache::Entry::DumpEntry(Entry* aEntry, void* aUserData)
+void
+gfxUserFontSet::UserFontCache::Entry::Dump()
 {
     nsresult rv;
 
     nsAutoCString principalURISpec("(null)");
     bool setDomain = false;
 
-    if (aEntry->mPrincipal) {
+    if (mPrincipal) {
         nsCOMPtr<nsIURI> principalURI;
-        rv = aEntry->mPrincipal->GetURI(getter_AddRefs(principalURI));
+        rv = mPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv)) {
             principalURI->GetSpec(principalURISpec);
         }
 
         nsCOMPtr<nsIURI> domainURI;
-        aEntry->mPrincipal->GetDomain(getter_AddRefs(domainURI));
+        mPrincipal->GetDomain(getter_AddRefs(domainURI));
         if (domainURI) {
             setDomain = true;
         }
     }
 
-    NS_ASSERTION(aEntry->mURI, "null URI in userfont cache entry");
+    NS_ASSERTION(mURI, "null URI in userfont cache entry");
 
-    printf("userfontcache fontEntry: %p fonturihash: %8.8x family: %s domainset: %s principal: [%s]\n",
-            aEntry->mFontEntry,
-            nsURIHashKey::HashKey(aEntry->mURI),
-            NS_ConvertUTF16toUTF8(aEntry->mFontEntry->FamilyName()).get(),
-            (setDomain ? "true" : "false"),
-            principalURISpec.get()
-           );
-    return PL_DHASH_NEXT;
+    printf("userfontcache fontEntry: %p fonturihash: %8.8x "
+           "family: %s domainset: %s principal: [%s]\n",
+           mFontEntry,
+           nsURIHashKey::HashKey(mURI),
+           NS_ConvertUTF16toUTF8(mFontEntry->FamilyName()).get(),
+           setDomain ? "true" : "false",
+           principalURISpec.get());
 }
 
 void
@@ -1251,7 +1232,9 @@ gfxUserFontSet::UserFontCache::Dump()
     }
 
     printf("userfontcache dump count: %d ========\n", sUserFonts->Count());
-    sUserFonts->EnumerateEntries(Entry::DumpEntry, nullptr);
+    for (auto it = sUserFonts->Iter(); !it.Done(); it.Next()) {
+        it.Get()->Dump();
+    }
     printf("userfontcache dump ==================\n");
 }
 
