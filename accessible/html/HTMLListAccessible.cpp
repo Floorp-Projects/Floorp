@@ -102,19 +102,28 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     return;
   }
 
+  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
+  AutoTreeMutation mut(this);
+
   DocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     document->BindToDocument(mBullet, nullptr);
     InsertChildAt(0, mBullet);
+
+    nsRefPtr<AccShowEvent> event = new AccShowEvent(mBullet, mBullet->GetContent());
+    mDoc->FireDelayedEvent(event);
+    reorderEvent->AddSubMutationEvent(event);
   } else {
+    nsRefPtr<AccHideEvent> event = new AccHideEvent(mBullet, mBullet->GetContent());
+    mDoc->FireDelayedEvent(event);
+    reorderEvent->AddSubMutationEvent(event);
+
     RemoveChild(mBullet);
-    document->UnbindFromDocument(mBullet);
     mBullet = nullptr;
   }
 
-  // XXXtodo: fire show/hide and reorder events. That's hard to make it
-  // right now because coalescence happens by DOM node.
+  mDoc->FireDelayedEvent(reorderEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
