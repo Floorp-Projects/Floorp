@@ -246,24 +246,17 @@ DomainSet::GetType(uint32_t* aType)
     return NS_OK;
 }
 
-static
-PLDHashOperator
-DomainEnumerator(nsURIHashKey* aEntry, void* aUserArg)
-{
-    InfallibleTArray<URIParams>* uris = static_cast<InfallibleTArray<URIParams>*>(aUserArg);
-    nsIURI* key = aEntry->GetKey();
-
-    URIParams uri;
-    SerializeURI(key, uri);
-
-    uris->AppendElement(uri);
-    return PL_DHASH_NEXT;
-}
-
 void
 DomainSet::CloneSet(InfallibleTArray<URIParams>* aDomains)
 {
-    mHashTable.EnumerateEntries(DomainEnumerator, aDomains);
+    for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
+        nsIURI* key = iter.Get()->GetKey();
+
+        URIParams uri;
+        SerializeURI(key, uri);
+
+        aDomains->AppendElement(uri);
+    }
 }
 
 } /* namespace mozilla */
