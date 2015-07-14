@@ -6,6 +6,7 @@
 
 #include "RilSocket.h"
 #include <fcntl.h>
+#include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 #include "mozilla/RefPtr.h"
 #include "nsXULAppAPI.h"
@@ -15,6 +16,8 @@ static const size_t MAX_READ_SIZE = 1 << 16;
 
 namespace mozilla {
 namespace ipc {
+
+USING_WORKERS_NAMESPACE
 
 //
 // RilSocketIO
@@ -27,7 +30,8 @@ public:
   class DelayedConnectTask;
   class ReceiveTask;
 
-  RilSocketIO(MessageLoop* aConsumerLoop,
+  RilSocketIO(WorkerCrossThreadDispatcher* aDispatcher,
+              MessageLoop* aConsumerLoop,
               MessageLoop* aIOLoop,
               RilSocket* aRilSocket,
               UnixSocketConnector* aConnector);
@@ -63,6 +67,11 @@ public:
 
 private:
   /**
+   * Cross-thread dispatcher for the RIL worker
+   */
+  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
+
+  /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
@@ -86,15 +95,18 @@ private:
   nsAutoPtr<UnixSocketRawData> mBuffer;
 };
 
-RilSocketIO::RilSocketIO(MessageLoop* aConsumerLoop,
+RilSocketIO::RilSocketIO(WorkerCrossThreadDispatcher* aDispatcher,
+                         MessageLoop* aConsumerLoop,
                          MessageLoop* aIOLoop,
                          RilSocket* aRilSocket,
                          UnixSocketConnector* aConnector)
   : ConnectionOrientedSocketIO(aConsumerLoop, aIOLoop, aConnector)
+  , mDispatcher(aDispatcher)
   , mRilSocket(aRilSocket)
   , mShuttingDownOnIOThread(false)
   , mDelayedConnectTask(nullptr)
 {
+  MOZ_ASSERT(mDispatcher);
   MOZ_ASSERT(mRilSocket);
 }
 
@@ -164,41 +176,45 @@ RilSocketIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
  * |ReceiveTask| transfers data received on the I/O thread
  * to an instance of |RilSocket| on the consumer thread.
  */
-class RilSocketIO::ReceiveTask final : public SocketTask<RilSocketIO>
+class RilSocketIO::ReceiveTask final : public WorkerTask
 {
 public:
   ReceiveTask(RilSocketIO* aIO, UnixSocketBuffer* aBuffer)
-    : SocketTask<RilSocketIO>(aIO)
+    : mIO(aIO)
     , mBuffer(aBuffer)
-  { }
-
-  void Run() override
   {
-    RilSocketIO* io = SocketTask<RilSocketIO>::GetIO();
+    MOZ_ASSERT(mIO);
+  }
 
-    MOZ_ASSERT(io->IsConsumerThread());
+  bool RunTask(JSContext* aCx) override
+  {
+    // Dispatched via WCTD, but still needs to run on the consumer thread
+    MOZ_ASSERT(mIO->IsConsumerThread());
 
-    if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
+    if (NS_WARN_IF(mIO->IsShutdownOnConsumerThread())) {
       // Since we've already explicitly closed and the close
       // happened before this, this isn't really an error.
-      return;
+      return true;
     }
 
-    RilSocket* rilSocket = io->GetRilSocket();
+    RilSocket* rilSocket = mIO->GetRilSocket();
     MOZ_ASSERT(rilSocket);
 
-    rilSocket->ReceiveSocketData(mBuffer);
+    rilSocket->ReceiveSocketData(aCx, mBuffer);
+
+    return true;
   }
 
 private:
+  RilSocketIO* mIO;
   nsAutoPtr<UnixSocketBuffer> mBuffer;
 };
 
 void
 RilSocketIO::ConsumeBuffer()
 {
-  GetConsumerThread()->PostTask(FROM_HERE,
-                                new ReceiveTask(this, mBuffer.forget()));
+  nsRefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
+  NS_WARN_IF(!mDispatcher->PostTask(task));
 }
 
 void
@@ -299,11 +315,14 @@ public:
 // RilSocket
 //
 
-RilSocket::RilSocket(RilSocketConsumer* aConsumer, int aIndex)
+RilSocket::RilSocket(WorkerCrossThreadDispatcher* aDispatcher,
+                     RilSocketConsumer* aConsumer, int aIndex)
   : mIO(nullptr)
+  , mDispatcher(aDispatcher)
   , mConsumer(aConsumer)
   , mIndex(aIndex)
 {
+  MOZ_ASSERT(mDispatcher);
   MOZ_ASSERT(mConsumer);
 }
 
@@ -313,9 +332,10 @@ RilSocket::~RilSocket()
 }
 
 void
-RilSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+RilSocket::ReceiveSocketData(JSContext* aCx,
+                             nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  mConsumer->ReceiveSocketData(mIndex, aBuffer);
+  mConsumer->ReceiveSocketData(aCx, mIndex, aBuffer);
 }
 
 nsresult
@@ -324,7 +344,7 @@ RilSocket::Connect(UnixSocketConnector* aConnector, int aDelayMs,
 {
   MOZ_ASSERT(!mIO);
 
-  mIO = new RilSocketIO(aConsumerLoop, aIOLoop, this, aConnector);
+  mIO = new RilSocketIO(mDispatcher, aConsumerLoop, aIOLoop, this, aConnector);
   SetConnectionStatus(SOCKET_CONNECTING);
 
   if (aDelayMs > 0) {
