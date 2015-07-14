@@ -39,7 +39,7 @@ class URL final : public URLSearchParamsObserver
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(URL)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URL)
 
   URL(nsISupports* aParent, already_AddRefed<nsIURI> aURI);
 
