@@ -71,22 +71,35 @@ public:
   {
   public:
     explicit PermissionKey(nsIPrincipal* aPrincipal);
-    explicit PermissionKey(const nsACString& aOrigin)
-      : mOrigin(aOrigin)
+    PermissionKey(const nsACString& aHost,
+                  uint32_t aAppId,
+                  bool aIsInBrowserElement)
+      : mHost(aHost)
+      , mAppId(aAppId)
+      , mIsInBrowserElement(aIsInBrowserElement)
     {
     }
 
     bool operator==(const PermissionKey& aKey) const {
-      return mOrigin.Equals(aKey.mOrigin);
+      return mHost.Equals(aKey.mHost) &&
+             mAppId == aKey.mAppId &&
+             mIsInBrowserElement == aKey.mIsInBrowserElement;
     }
 
     PLDHashNumber GetHashCode() const {
-      return mozilla::HashString(mOrigin);
+      nsAutoCString str;
+      str.Assign(mHost);
+      str.AppendInt(mAppId);
+      str.AppendInt(static_cast<int32_t>(mIsInBrowserElement));
+
+      return mozilla::HashString(str);
     }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PermissionKey)
 
-    nsCString mOrigin;
+    nsCString mHost;
+    uint32_t  mAppId;
+    bool      mIsInBrowserElement;
 
   private:
     // Default ctor shouldn't be used.
@@ -209,9 +222,11 @@ private:
   int32_t GetTypeIndex(const char *aTypeString,
                        bool        aAdd);
 
-  PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
-                                          uint32_t      aType,
-                                          bool          aExactHostMatch);
+  PermissionHashKey* GetPermissionHashKey(const nsACString& aHost,
+                                          uint32_t aAppId,
+                                          bool aIsInBrowserElement,
+                                          uint32_t          aType,
+                                          bool              aExactHostMatch);
 
   nsresult CommonTestPermission(nsIPrincipal* aPrincipal,
                                 const char *aType,
@@ -226,7 +241,9 @@ private:
   nsresult ImportDefaults();
   nsresult _DoImport(nsIInputStream *inputStream, mozIStorageConnection *aConn);
   nsresult Read();
-  void     NotifyObserversWithPermission(nsIPrincipal*     aPrincipal,
+  void     NotifyObserversWithPermission(const nsACString &aHost,
+                                         uint32_t          aAppId,
+                                         bool              aIsInBrowserElement,
                                          const nsCString  &aType,
                                          uint32_t          aPermission,
                                          uint32_t          aExpireType,
@@ -244,12 +261,14 @@ private:
   static void UpdateDB(OperationType aOp,
                        mozIStorageAsyncStatement* aStmt,
                        int64_t aID,
-                       const nsACString& aOrigin,
+                       const nsACString& aHost,
                        const nsACString& aType,
                        uint32_t aPermission,
                        uint32_t aExpireType,
                        int64_t aExpireTime,
-                       int64_t aModificationTime);
+                       int64_t aModificationTime,
+                       uint32_t aAppId,
+                       bool aIsInBrowserElement);
 
   nsresult RemoveExpiredPermissionsForApp(uint32_t aAppId);
 

@@ -20,20 +20,26 @@ namespace IPC {
 
 struct Permission
 {
-  nsCString origin, type;
+  nsCString host, type;
   uint32_t capability, expireType;
   int64_t expireTime;
+  uint32_t appId;
+  bool isInBrowserElement;
 
   Permission() { }
-  Permission(const nsCString& aOrigin,
+  Permission(const nsCString& aHost,
+             const uint32_t aAppId,
+             const bool aIsInBrowserElement,
              const nsCString& aType,
              const uint32_t aCapability,
              const uint32_t aExpireType,
-             const int64_t aExpireTime) : origin(aOrigin),
+             const int64_t aExpireTime) : host(aHost),
                                           type(aType),
                                           capability(aCapability),
                                           expireType(aExpireType),
-                                          expireTime(aExpireTime)
+                                          expireTime(aExpireTime),
+                                          appId(aAppId),
+                                          isInBrowserElement(aIsInBrowserElement)
   {}
 };
 
@@ -42,26 +48,34 @@ struct ParamTraits<Permission>
 {
   static void Write(Message* aMsg, const Permission& aParam)
   {
-    WriteParam(aMsg, aParam.origin);
+    WriteParam(aMsg, aParam.host);
     WriteParam(aMsg, aParam.type);
     WriteParam(aMsg, aParam.capability);
     WriteParam(aMsg, aParam.expireType);
     WriteParam(aMsg, aParam.expireTime);
+    WriteParam(aMsg, aParam.appId);
+    WriteParam(aMsg, aParam.isInBrowserElement);
   }
 
   static bool Read(const Message* aMsg, void** aIter, Permission* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->origin) &&
+    return ReadParam(aMsg, aIter, &aResult->host) &&
            ReadParam(aMsg, aIter, &aResult->type) &&
            ReadParam(aMsg, aIter, &aResult->capability) &&
            ReadParam(aMsg, aIter, &aResult->expireType) &&
-           ReadParam(aMsg, aIter, &aResult->expireTime);
+           ReadParam(aMsg, aIter, &aResult->expireTime) &&
+           ReadParam(aMsg, aIter, &aResult->appId) &&
+           ReadParam(aMsg, aIter, &aResult->isInBrowserElement);
   }
 
   static void Log(const Permission& p, std::wstring* l)
   {
     l->append(L"(");
-    LogParam(p.origin, l);
+    LogParam(p.host, l);
+    l->append(L", ");
+    LogParam(p.appId, l);
+    l->append(L", ");
+    LogParam(p.isInBrowserElement, l);
     l->append(L", ");
     LogParam(p.capability, l);
     l->append(L", ");

@@ -7,7 +7,6 @@ this.EXPORTED_SYMBOLS = ["PermissionsUtils"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm")
 
 
 let gImportedPrefBranches = new Set();
@@ -16,40 +15,29 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
   let list = Services.prefs.getChildList(aPrefBranch, {});
 
   for (let pref of list) {
-    let origins = "";
+    let hosts = "";
     try {
-      origins = Services.prefs.getCharPref(pref);
+      hosts = Services.prefs.getCharPref(pref);
     } catch (e) {}
 
-    if (!origins)
+    if (!hosts)
       continue;
 
-    origins = origins.split(",");
+    hosts = hosts.split(",");
 
-    for (let origin of origins) {
-      let principals = [];
+    for (let host of hosts) {
+      let uri = null;
       try {
-        principals = [ BrowserUtils.principalFromOrigin(origin) ];
+        uri = Services.io.newURI("http://" + host, null, null);
       } catch (e) {
-        // This preference used to contain a list of hosts. For back-compat
-        // reasons, we convert these hosts into http:// and https:// permissions
-        // on default ports.
         try {
-          let httpURI = Services.io.newURI("http://" + origin, null, null);
-          let httpsURI = Services.io.newURI("https://" + origin, null, null);
-
-          principals = [
-            Services.scriptSecurityManager.getNoAppCodebasePrincipal(httpURI),
-            Services.scriptSecurityManager.getNoAppCodebasePrincipal(httpsURI)
-          ];
+          uri = Services.io.newURI(host, null, null);
         } catch (e2) {}
       }
 
-      for (let principal of principals) {
-        try {
-          Services.perms.addFromPrincipal(principal, aPermission, aAction);
-        } catch (e) {}
-      }
+      try {
+        Services.perms.add(uri, aPermission, aAction);
+      } catch (e) {}
     }
 
     Services.prefs.setCharPref(pref, "");
