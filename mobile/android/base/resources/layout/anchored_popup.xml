@@ -13,13 +13,13 @@
               android:paddingBottom="4dp">
 
     <ScrollView android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/anchored_popup_bg">
+                android:layout_height="wrap_content">
 
-        <LinearLayout android:id="@+id/content"
-                      android:layout_width="match_parent"
-                      android:layout_height="wrap_content"
-                      android:orientation="vertical"/>
+        <org.mozilla.gecko.widget.RoundedCornerLayout android:id="@+id/content"
+                                                      android:layout_width="match_parent"
+                                                      android:layout_height="wrap_content"
+                                                      android:background="@color/toolbar_grey"
+                                                      android:orientation="vertical"/>
 
     </ScrollView>
 </LinearLayout>
