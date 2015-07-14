@@ -393,12 +393,16 @@ public:
     PLDHashTable* mTable;             // Main table pointer.
 
   private:
-    char* mCurrent;                   // Pointer to the current entry.
+    char* mStart;                     // The first entry.
     char* mLimit;                     // One past the last entry.
+    char* mCurrent;                   // Pointer to the current entry.
+    uint32_t mNexts;                  // Number of Next() calls.
+    uint32_t mNextsLimit;             // Next() call limit.
 
     bool mHaveRemoved;                // Have any elements been removed?
 
     bool IsOnNonLiveEntry() const;
+    void MoveToNextEntry();
 
     Iterator() = delete;
     Iterator(const Iterator&) = delete;

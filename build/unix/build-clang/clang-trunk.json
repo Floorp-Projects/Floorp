@@ -1,11 +1,12 @@
 {
-    "llvm_revision": "200213",
+    "llvm_revision": "241406",
     "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
     "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
     "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "patches": {
         "macosx64": ["llvm-debug-frame.patch"],
-        "linux64": ["llvm-debug-frame.patch", "no-sse-on-linux-trunk.patch"],
-        "linux32": ["llvm-debug-frame.patch", "no-sse-on-linux-trunk.patch"]
+        "linux64": ["llvm-debug-frame.patch"],
+        "linux32": ["llvm-debug-frame.patch"]
     }
 }

@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 function init() {
   // Include the build date and a warning about Telemetry
   // if this is an "a#" (nightly or aurora) build
-#expand const version = "__MOZ_APP_VERSION_ABOUT__";
+#expand const version = "__MOZ_APP_VERSION_DISPLAY__";
   if (/a\d+$/.test(version)) {
     let buildID = Services.appinfo.appBuildID;
     let buildDate = buildID.slice(0, 4) + "-" + buildID.slice(4, 6) + "-" + buildID.slice(6, 8);

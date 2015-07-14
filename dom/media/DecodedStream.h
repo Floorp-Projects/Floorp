@@ -9,17 +9,18 @@
 
 #include "nsRefPtr.h"
 #include "nsTArray.h"
+#include "MediaInfo.h"
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
 class AudioData;
 class VideoData;
-class MediaInfo;
 class AudioSegment;
 class MediaStream;
 class MediaInputPort;
@@ -96,24 +97,26 @@ public:
 class DecodedStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
-  DecodedStream();
+  DecodedStream(MediaQueue<AudioData>& aAudioQueue,
+                MediaQueue<VideoData>& aVideoQueue);
+
+  // Mimic MDSM::StartAudioThread.
+  // Must be called before any calls to SendData().
+  void StartPlayback(int64_t aStartTime, const MediaInfo& aInfo);
+  // Mimic MDSM::StopAudioThread.
+  void StopPlayback();
+
   void DestroyData();
   void RecreateData();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
-  bool HaveEnoughAudio(const MediaInfo& aInfo) const;
-  bool HaveEnoughVideo(const MediaInfo& aInfo) const;
-  CheckedInt64 AudioEndTime(int64_t aStartTime, uint32_t aRate) const;
+  CheckedInt64 AudioEndTime() const;
   int64_t GetPosition() const;
   bool IsFinished() const;
 
   // Return true if stream is finished.
-  bool SendData(int64_t aStartTime,
-                const MediaInfo& aInfo,
-                MediaQueue<AudioData>& aAudioQueue,
-                MediaQueue<VideoData>& aVideoQueue,
-                double aVolume, bool aIsSameOrigin);
+  bool SendData(double aVolume, bool aIsSameOrigin);
 
 protected:
   virtual ~DecodedStream() {}
@@ -123,18 +126,10 @@ private:
   void RecreateData(MediaStreamGraph* aGraph);
   void Connect(OutputStreamData* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
-  void InitTracks(int64_t aStartTime, const MediaInfo& aInfo);
-  void AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo);
-
-  void SendAudio(int64_t aStartTime,
-                 const MediaInfo& aInfo,
-                 MediaQueue<AudioData>& aQueue,
-                 double aVolume, bool aIsSameOrigin);
-
-  void SendVideo(int64_t aStartTime,
-                 const MediaInfo& aInfo,
-                 MediaQueue<VideoData>& aQueue,
-                 bool aIsSameOrigin);
+  void InitTracks();
+  void AdvanceTracks();
+  void SendAudio(double aVolume, bool aIsSameOrigin);
+  void SendVideo(bool aIsSameOrigin);
 
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
@@ -150,6 +145,11 @@ private:
   mutable ReentrantMonitor mMonitor;
 
   bool mPlaying;
+  Maybe<int64_t> mStartTime;
+  MediaInfo mInfo;
+
+  MediaQueue<AudioData>& mAudioQueue;
+  MediaQueue<VideoData>& mVideoQueue;
 };
 
 } // namespace mozilla

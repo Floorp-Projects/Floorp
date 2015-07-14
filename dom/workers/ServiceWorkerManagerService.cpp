@@ -82,240 +82,6 @@ ServiceWorkerManagerService::UnregisterActor(ServiceWorkerManagerParent* aParent
   mAgents.RemoveEntry(aParent);
 }
 
-namespace {
-
-struct MOZ_STACK_CLASS RegistrationData final
-{
-  RegistrationData(ServiceWorkerRegistrationData& aData,
-                   uint64_t aParentID)
-    : mData(aData)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(RegistrationData);
-  }
-
-  ~RegistrationData()
-  {
-    MOZ_COUNT_DTOR(RegistrationData);
-  }
-
-  const ServiceWorkerRegistrationData& mData;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-RegistrationEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<RegistrationData*>(aPtr);
-
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyRegister(data->mData);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-struct MOZ_STACK_CLASS SoftUpdateData final
-{
-  SoftUpdateData(const OriginAttributes& aOriginAttributes,
-                 const nsAString& aScope,
-                 uint64_t aParentID)
-    : mOriginAttributes(aOriginAttributes)
-    , mScope(aScope)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(SoftUpdateData);
-  }
-
-  ~SoftUpdateData()
-  {
-    MOZ_COUNT_DTOR(SoftUpdateData);
-  }
-
-  const OriginAttributes& mOriginAttributes;
-  const nsString mScope;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-SoftUpdateEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<SoftUpdateData*>(aPtr);
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused <<parent->SendNotifySoftUpdate(data->mOriginAttributes,
-                                          data->mScope);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-struct MOZ_STACK_CLASS UnregisterData final
-{
-  UnregisterData(const PrincipalInfo& aPrincipalInfo,
-                 const nsAString& aScope,
-                 uint64_t aParentID)
-    : mPrincipalInfo(aPrincipalInfo)
-    , mScope(aScope)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(UnregisterData);
-  }
-
-  ~UnregisterData()
-  {
-    MOZ_COUNT_DTOR(UnregisterData);
-  }
-
-  const PrincipalInfo mPrincipalInfo;
-  const nsString mScope;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-UnregisterEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<UnregisterData*>(aPtr);
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyUnregister(data->mPrincipalInfo, data->mScope);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-struct MOZ_STACK_CLASS RemoveAllData final
-{
-  explicit RemoveAllData(uint64_t aParentID)
-    : mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(RemoveAllData);
-  }
-
-  ~RemoveAllData()
-  {
-    MOZ_COUNT_DTOR(RemoveAllData);
-  }
-
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-RemoveAllEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<RemoveAllData*>(aPtr);
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyRemoveAll();
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-struct MOZ_STACK_CLASS RemoveData final
-{
-  RemoveData(const nsACString& aHost,
-             uint64_t aParentID)
-    : mHost(aHost)
-    , mParentID(aParentID)
-#ifdef DEBUG
-    , mParentFound(false)
-#endif
-  {
-    MOZ_COUNT_CTOR(RemoveData);
-  }
-
-  ~RemoveData()
-  {
-    MOZ_COUNT_DTOR(RemoveData);
-  }
-
-  const nsCString mHost;
-  const uint64_t mParentID;
-#ifdef DEBUG
-  bool mParentFound;
-#endif
-};
-
-PLDHashOperator
-RemoveEnumerator(nsPtrHashKey<ServiceWorkerManagerParent>* aKey, void* aPtr)
-{
-  AssertIsOnBackgroundThread();
-
-  auto* data = static_cast<RemoveData*>(aPtr);
-  ServiceWorkerManagerParent* parent = aKey->GetKey();
-  MOZ_ASSERT(parent);
-
-  if (parent->ID() != data->mParentID) {
-    unused << parent->SendNotifyRemove(data->mHost);
-#ifdef DEBUG
-  } else {
-    data->mParentFound = true;
-#endif
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 void
 ServiceWorkerManagerService::PropagateRegistration(
                                            uint64_t aParentID,
@@ -323,11 +89,22 @@ ServiceWorkerManagerService::PropagateRegistration(
 {
   AssertIsOnBackgroundThread();
 
-  RegistrationData data(aData, aParentID);
-  mAgents.EnumerateEntries(RegistrationEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      unused << parent->SendNotifyRegister(aData);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
@@ -339,11 +116,24 @@ ServiceWorkerManagerService::PropagateSoftUpdate(
 {
   AssertIsOnBackgroundThread();
 
-  SoftUpdateData data(aOriginAttributes, aScope, aParentID);
-  mAgents.EnumerateEntries(SoftUpdateEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      nsString scope(aScope);
+      unused << parent->SendNotifySoftUpdate(aOriginAttributes,
+                                             scope);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
@@ -364,11 +154,23 @@ ServiceWorkerManagerService::PropagateUnregister(
   service->UnregisterServiceWorker(aPrincipalInfo,
                                    NS_ConvertUTF16toUTF8(aScope));
 
-  UnregisterData data(aPrincipalInfo, aScope, aParentID);
-  mAgents.EnumerateEntries(UnregisterEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      nsString scope(aScope);
+      unused << parent->SendNotifyUnregister(aPrincipalInfo, scope);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
@@ -378,11 +180,23 @@ ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
 {
   AssertIsOnBackgroundThread();
 
-  RemoveData data(aHost, aParentID);
-  mAgents.EnumerateEntries(RemoveEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      nsCString host(aHost);
+      unused << parent->SendNotifyRemove(host);
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
@@ -397,11 +211,22 @@ ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID)
 
   service->RemoveAll();
 
-  RemoveAllData data(aParentID);
-  mAgents.EnumerateEntries(RemoveAllEnumerator, &data);
+  DebugOnly<bool> parentFound = false;
+  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerManagerParent* parent = iter.Get()->GetKey();
+    MOZ_ASSERT(parent);
+
+    if (parent->ID() != aParentID) {
+      unused << parent->SendNotifyRemoveAll();
+#ifdef DEBUG
+    } else {
+      parentFound = true;
+#endif
+    }
+  }
 
 #ifdef DEBUG
-  MOZ_ASSERT(data.mParentFound);
+  MOZ_ASSERT(parentFound);
 #endif
 }
 
