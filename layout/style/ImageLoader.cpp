@@ -45,22 +45,6 @@ ImageLoader::SetAnimationModeEnumerator(nsISupports* aKey, FrameSet* aValue,
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-ClearImageHashSet(nsPtrHashKey<ImageLoader::Image>* aKey, void* aClosure)
-{
-  nsIDocument* doc = static_cast<nsIDocument*>(aClosure);
-  ImageLoader::Image* image = aKey->GetKey();
-
-  imgIRequest* request = image->mRequests.GetWeak(doc);
-  if (request) {
-    request->CancelAndForgetObserver(NS_BINDING_ABORTED);
-  }
-
-  image->mRequests.Remove(doc);
-
-  return PL_DHASH_REMOVE;
-}
-
 void
 ImageLoader::DropDocumentReference()
 {
@@ -68,7 +52,17 @@ ImageLoader::DropDocumentReference()
   // on the document being null) as that means the presshell has already
   // been destroyed, and it also calls ClearFrames when it is destroyed.
   ClearFrames(GetPresContext());
-  mImages.EnumerateEntries(&ClearImageHashSet, mDocument);
+
+  for (auto it = mImages.Iter(); !it.Done(); it.Next()) {
+    ImageLoader::Image* image = it.Get()->GetKey();
+    imgIRequest* request = image->mRequests.GetWeak(mDocument);
+    if (request) {
+      request->CancelAndForgetObserver(NS_BINDING_ABORTED);
+    }
+    image->mRequests.Remove(mDocument);
+  }
+  mImages.Clear();
+
   mDocument = nullptr;
 }
 
