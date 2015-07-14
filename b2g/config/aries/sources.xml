@@ -125,7 +125,7 @@
   <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="e9ef670a15d56ea312e70d4b11c4aaeac404f9d2"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="5ada05ac150f643ef19e87015df7e106b88effe7"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="d415406c7d810321a7cdd9af9c6271b2a378794c"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="d61fc97258c8b0c362430dd2eb195dcc4d266f14"/>
   <project name="init_sh" path="external/init_sh" remote="b2g" revision="3bdd26e092db9c47c5beb04b4809a35f8f767b8a"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0a01977f34d6e86fe23d6c0ec75e96ba988bbebb"/>
