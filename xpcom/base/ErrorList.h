@@ -331,6 +331,8 @@
   ERROR(NS_ERROR_INTERCEPTED_ERROR_RESPONSE,           FAILURE(103)),
   /* Service worker intercepted with a response with bodyUsed set to true */
   ERROR(NS_ERROR_INTERCEPTED_USED_RESPONSE,            FAILURE(104)),
+  /* Service worker intercepted a client request with an opaque response */
+  ERROR(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION,   FAILURE(105)),
 #undef MODULE
 
 
