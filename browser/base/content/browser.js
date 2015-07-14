@@ -6642,6 +6642,11 @@ var gIdentityHandler = {
     return this._identityPopupSecurityView =
       document.getElementById("identity-popup-securityView");
   },
+  get _identityPopupMainView () {
+    delete this._identityPopupMainView;
+    return this._identityPopupMainView =
+      document.getElementById("identity-popup-mainView");
+  },
   get _identityIconLabel () {
     delete this._identityIconLabel;
     return this._identityIconLabel = document.getElementById("identity-icon-label");
@@ -6987,6 +6992,7 @@ var gIdentityHandler = {
   setPopupMessages : function(newMode) {
 
     this._identityPopup.className = newMode;
+    this._identityPopupMainView.className = newMode;
     this._identityPopupSecurityView.className = newMode;
     this._identityPopupSecurityContent.className = newMode;
 

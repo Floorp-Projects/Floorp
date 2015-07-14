@@ -34,6 +34,9 @@ function* spawnTest() {
   is(counters.memory.length, 3, "three memory events fired.");
   is(counters.ticks.length, 3, "three ticks events fired.");
 
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 

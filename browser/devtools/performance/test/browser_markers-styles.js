@@ -27,6 +27,9 @@ function* spawnTest () {
 
   ok(markers.some(({restyleHint}) => restyleHint != void 0), "some markers have a restyleHint property");
 
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 
