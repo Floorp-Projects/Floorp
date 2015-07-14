@@ -35,6 +35,9 @@ function* spawnTest () {
   ok(markers.every(({causeName}) => typeof causeName === "string"),
     "All markers have a causeName.");
 
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 

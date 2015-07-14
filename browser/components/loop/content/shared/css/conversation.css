@@ -1466,7 +1466,7 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
   display: flex;
   flex-direction: row;
   margin-bottom: .5em;
-  text-align: end;
+  text-align: start;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-content: stretch;
