@@ -234,7 +234,7 @@ Animation::Finish(ErrorResult& aRv)
   TimeDuration limit =
     mPlaybackRate > 0 ? TimeDuration(EffectEnd()) : TimeDuration(0);
 
-  SetCurrentTime(limit);
+  SilentlySetCurrentTime(limit);
 
   // If we are paused or play-pending we need to fill in the start time in
   // order to transition to the finished state.
@@ -250,12 +250,16 @@ Animation::Finish(ErrorResult& aRv)
                         limit.MultDouble(1.0 / mPlaybackRate));
   }
 
-  // If we just resolved the start time for a pause-pending animation, we need
-  // to clear the task. We don't do this as a branch of the above however since
-  // we can have a play-pending animation with a resolved start time if we
-  // aborted a pause operation.
-  if (mPendingState == PendingState::PlayPending &&
-      !mStartTime.IsNull()) {
+  // If we just resolved the start time for a pause or play-pending
+  // animation, we need to clear the task. We don't do this as a branch of
+  // the above however since we can have a play-pending animation with a
+  // resolved start time if we aborted a pause operation.
+  if (!mStartTime.IsNull() &&
+      (mPendingState == PendingState::PlayPending ||
+       mPendingState == PendingState::PausePending)) {
+    if (mPendingState == PendingState::PausePending) {
+      mHoldTime.SetNull();
+    }
     CancelPendingTasks();
     if (mReady) {
       mReady->MaybeResolve(this);
