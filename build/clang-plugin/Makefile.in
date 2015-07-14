@@ -18,3 +18,10 @@ DSO_LDOPTS := -shared
 # correctly.  Note that the binary produced here is a host tool and doesn't need
 # to be distributed.
 MACOSX_DEPLOYMENT_TARGET :=
+
+# Temporarily relax the requirements for libstdc++ symbol versions on static
+# analysis plugin in order to use a recent clang by accepting libstdc++ from
+# gcc 4.4.0 (GLIBCXX_3.4.11).
+ifdef CHECK_STDCXX
+CHECK_STDCXX = $(call CHECK_SYMBOLS,$(1),GLIBCXX,libstdc++,v[1] > 3 || (v[1] == 3 && v[2] == 4 && v[3] > 11))
+endif

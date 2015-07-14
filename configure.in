@@ -1959,14 +1959,14 @@ MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --t
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
-FIREFOX_VERSION_ABOUT=`cat $_topsrcdir/browser/config/version_about.txt`
+FIREFOX_VERSION_DISPLAY=`cat $_topsrcdir/browser/config/version_display.txt`
 
 if test -z "$FIREFOX_VERSION"; then
     AC_MSG_ERROR([FIREFOX_VERSION is unexpectedly blank.])
 fi
 
-if test -z "$FIREFOX_VERSION_ABOUT"; then
-    AC_MSG_ERROR([FIREFOX_VERSION_ABOUT is unexpectedly blank.])
+if test -z "$FIREFOX_VERSION_DISPLAY"; then
+    AC_MSG_ERROR([FIREFOX_VERSION_DISPLAY is unexpectedly blank.])
 fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
@@ -8760,7 +8760,7 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 # Mac Bundle name, Updater, Installer), it is typically used for nightly
 # builds (e.g. Aurora for Firefox).
 # - MOZ_APP_VERSION: Defines the application version number.
-# - MOZ_APP_VERSION_ABOUT: Defines the application version number. Used
+# - MOZ_APP_VERSION_DISPLAY: Defines the application version number. Used
 # in the "About" window. If not set, defaults to MOZ_APP_VERSION.
 # - MOZ_APP_NAME: Used for e.g. the binary program file name. If not set,
 # defaults to a lowercase form of MOZ_APP_BASENAME.
@@ -8780,8 +8780,8 @@ if test -z "$MOZ_APP_REMOTINGNAME"; then
    MOZ_APP_REMOTINGNAME=$MOZ_APP_NAME
 fi
 
-if test -z "$MOZ_APP_VERSION_ABOUT"; then
-   MOZ_APP_VERSION_ABOUT=$MOZ_APP_VERSION
+if test -z "$MOZ_APP_VERSION_DISPLAY"; then
+   MOZ_APP_VERSION_DISPLAY=$MOZ_APP_VERSION
 fi
 
 # For extensions and langpacks, we require a max version that is compatible
@@ -8820,7 +8820,7 @@ AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")
 AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
 AC_SUBST(MOZ_APP_VERSION)
-AC_SUBST(MOZ_APP_VERSION_ABOUT)
+AC_SUBST(MOZ_APP_VERSION_DISPLAY)
 AC_SUBST(MOZ_APP_MAXVERSION)
 AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)

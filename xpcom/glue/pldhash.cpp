@@ -792,30 +792,49 @@ PL_DHashTableSizeOfIncludingThis(
 
 PLDHashTable::Iterator::Iterator(Iterator&& aOther)
   : mTable(aOther.mTable)
-  , mCurrent(aOther.mCurrent)
+  , mStart(aOther.mStart)
   , mLimit(aOther.mLimit)
+  , mCurrent(aOther.mCurrent)
+  , mNexts(aOther.mNexts)
+  , mNextsLimit(aOther.mNextsLimit)
   , mHaveRemoved(aOther.mHaveRemoved)
 {
   // No need to change |mChecker| here.
   aOther.mTable = nullptr;
-  aOther.mCurrent = nullptr;
+  aOther.mStart = nullptr;
   aOther.mLimit = nullptr;
+  aOther.mCurrent = nullptr;
+  aOther.mNexts = 0;
+  aOther.mNextsLimit = 0;
   aOther.mHaveRemoved = false;
 }
 
 PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   : mTable(aTable)
-  , mCurrent(mTable->mEntryStore)
+  , mStart(mTable->mEntryStore)
   , mLimit(mTable->mEntryStore + mTable->Capacity() * mTable->mEntrySize)
+  , mCurrent(mTable->mEntryStore)
+  , mNexts(0)
+  , mNextsLimit(mTable->EntryCount())
   , mHaveRemoved(false)
 {
 #ifdef DEBUG
   mTable->mChecker.StartReadOp();
 #endif
 
-  // Advance to the first live entry, or to the end if there are none.
-  while (IsOnNonLiveEntry()) {
-    mCurrent += mTable->mEntrySize;
+  if (ChaosMode::isActive(ChaosMode::HashTableIteration) &&
+      mTable->Capacity() > 0) {
+    // Start iterating at a random entry. It would be even more chaotic to
+    // iterate in fully random order, but that's harder.
+    mCurrent += ChaosMode::randomUint32LessThan(mTable->Capacity()) *
+                mTable->mEntrySize;
+  }
+
+  // Advance to the first live entry, if there is one.
+  if (!Done()) {
+    while (IsOnNonLiveEntry()) {
+      MoveToNextEntry();
+    }
   }
 }
 
@@ -834,13 +853,23 @@ PLDHashTable::Iterator::~Iterator()
 bool
 PLDHashTable::Iterator::Done() const
 {
-  return mCurrent == mLimit;
+  return mNexts == mNextsLimit;
 }
 
 MOZ_ALWAYS_INLINE bool
 PLDHashTable::Iterator::IsOnNonLiveEntry() const
 {
-  return !Done() && !ENTRY_IS_LIVE(reinterpret_cast<PLDHashEntryHdr*>(mCurrent));
+  MOZ_ASSERT(!Done());
+  return !ENTRY_IS_LIVE(reinterpret_cast<PLDHashEntryHdr*>(mCurrent));
+}
+
+MOZ_ALWAYS_INLINE void
+PLDHashTable::Iterator::MoveToNextEntry()
+{
+  mCurrent += mTable->mEntrySize;
+  if (mCurrent == mLimit) {
+    mCurrent = mStart;  // Wrap-around. Possible due to Chaos Mode.
+  }
 }
 
 PLDHashEntryHdr*
@@ -858,9 +887,14 @@ PLDHashTable::Iterator::Next()
 {
   MOZ_ASSERT(!Done());
 
-  do {
-    mCurrent += mTable->mEntrySize;
-  } while (IsOnNonLiveEntry());
+  mNexts++;
+
+  // Advance to the next live entry, if there is one.
+  if (!Done()) {
+    do {
+      MoveToNextEntry();
+    } while (IsOnNonLiveEntry());
+  }
 }
 
 void

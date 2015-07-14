@@ -659,30 +659,6 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
     (aFrame->Properties().Get(FilterProperty()));
 }
 
-static PLDHashOperator
-GatherEnumerator(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
-{
-  nsTArray<nsSVGRenderingObserver*>* array =
-    static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
-  array->AppendElement(aEntry->GetKey());
-
-  return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-GatherEnumeratorForReflow(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
-{
-  if (!aEntry->GetKey()->ObservesReflow()) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsTArray<nsSVGRenderingObserver*>* array =
-    static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
-  array->AppendElement(aEntry->GetKey());
-
-  return PL_DHASH_REMOVE;
-}
-
 void
 nsSVGRenderingObserverList::InvalidateAll()
 {
@@ -691,8 +667,10 @@ nsSVGRenderingObserverList::InvalidateAll()
 
   nsAutoTArray<nsSVGRenderingObserver*,10> observers;
 
-  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
-  mObservers.EnumerateEntries(GatherEnumerator, &observers);
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    observers.AppendElement(it.Get()->GetKey());
+  }
+  mObservers.Clear();
 
   for (uint32_t i = 0; i < observers.Length(); ++i) {
     observers[i]->InvalidateViaReferencedElement();
@@ -707,8 +685,13 @@ nsSVGRenderingObserverList::InvalidateAllForReflow()
 
   nsAutoTArray<nsSVGRenderingObserver*,10> observers;
 
-  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
-  mObservers.EnumerateEntries(GatherEnumeratorForReflow, &observers);
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    nsSVGRenderingObserver* obs = it.Get()->GetKey();
+    if (obs->ObservesReflow()) {
+      observers.AppendElement(obs);
+      it.Remove();
+    }
+  }
 
   for (uint32_t i = 0; i < observers.Length(); ++i) {
     observers[i]->InvalidateViaReferencedElement();
@@ -720,8 +703,10 @@ nsSVGRenderingObserverList::RemoveAll()
 {
   nsAutoTArray<nsSVGRenderingObserver*,10> observers;
 
-  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
-  mObservers.EnumerateEntries(GatherEnumerator, &observers);
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    observers.AppendElement(it.Get()->GetKey());
+  }
+  mObservers.Clear();
 
   // Our list is now cleared.  We need to notify the observers we've removed,
   // so they can update their state & remove themselves as mutation-observers.

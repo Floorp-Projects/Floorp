@@ -10,7 +10,6 @@
 #include "VideoSegment.h"
 #include "MediaQueue.h"
 #include "MediaData.h"
-#include "MediaInfo.h"
 #include "SharedBuffer.h"
 #include "VideoUtils.h"
 
@@ -185,11 +184,30 @@ OutputStreamData::Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStr
   aStream->AddListener(mListener);
 }
 
-DecodedStream::DecodedStream()
+DecodedStream::DecodedStream(MediaQueue<AudioData>& aAudioQueue,
+                             MediaQueue<VideoData>& aVideoQueue)
   : mMonitor("DecodedStream::mMonitor")
   , mPlaying(false)
+  , mAudioQueue(aAudioQueue)
+  , mVideoQueue(aVideoQueue)
 {
   //
+}
+
+void
+DecodedStream::StartPlayback(int64_t aStartTime, const MediaInfo& aInfo)
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  if (mStartTime.isNothing()) {
+    mStartTime.emplace(aStartTime);
+    mInfo = aInfo;
+  }
+}
+
+void DecodedStream::StopPlayback()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  mStartTime.reset();
 }
 
 void
@@ -343,38 +361,8 @@ DecodedStream::SetPlaying(bool aPlaying)
   }
 }
 
-bool
-DecodedStream::HaveEnoughAudio(const MediaInfo& aInfo) const
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  if (mData->mStreamInitialized && !mData->mHaveSentFinishAudio) {
-    MOZ_ASSERT(aInfo.HasAudio());
-    TrackID audioTrackId = aInfo.mAudio.mTrackId;
-    if (!mData->mStream->HaveEnoughBuffered(audioTrackId)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool
-DecodedStream::HaveEnoughVideo(const MediaInfo& aInfo) const
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
-  if (mData->mStreamInitialized && !mData->mHaveSentFinishVideo) {
-    MOZ_ASSERT(aInfo.HasVideo());
-    TrackID videoTrackId = aInfo.mVideo.mTrackId;
-    if (!mData->mStream->HaveEnoughBuffered(videoTrackId)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void
-DecodedStream::InitTracks(int64_t aStartTime, const MediaInfo& aInfo)
+DecodedStream::InitTracks()
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
 
@@ -384,20 +372,20 @@ DecodedStream::InitTracks(int64_t aStartTime, const MediaInfo& aInfo)
 
   SourceMediaStream* sourceStream = mData->mStream;
 
-  if (aInfo.HasAudio()) {
-    TrackID audioTrackId = aInfo.mAudio.mTrackId;
+  if (mInfo.HasAudio()) {
+    TrackID audioTrackId = mInfo.mAudio.mTrackId;
     AudioSegment* audio = new AudioSegment();
-    sourceStream->AddAudioTrack(audioTrackId, aInfo.mAudio.mRate, 0, audio,
+    sourceStream->AddAudioTrack(audioTrackId, mInfo.mAudio.mRate, 0, audio,
                                 SourceMediaStream::ADDTRACK_QUEUED);
-    mData->mNextAudioTime = aStartTime;
+    mData->mNextAudioTime = mStartTime.ref();
   }
 
-  if (aInfo.HasVideo()) {
-    TrackID videoTrackId = aInfo.mVideo.mTrackId;
+  if (mInfo.HasVideo()) {
+    TrackID videoTrackId = mInfo.mVideo.mTrackId;
     VideoSegment* video = new VideoSegment();
     sourceStream->AddTrack(videoTrackId, 0, video,
                            SourceMediaStream::ADDTRACK_QUEUED);
-    mData->mNextVideoTime = aStartTime;
+    mData->mNextVideoTime = mStartTime.ref();
   }
 
   sourceStream->FinishAddTracks();
@@ -452,28 +440,25 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
 }
 
 void
-DecodedStream::SendAudio(int64_t aStartTime,
-                         const MediaInfo& aInfo,
-                         MediaQueue<AudioData>& aQueue,
-                         double aVolume, bool aIsSameOrigin)
+DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (!aInfo.HasAudio()) {
+  if (!mInfo.HasAudio()) {
     return;
   }
 
   AudioSegment output;
-  uint32_t rate = aInfo.mAudio.mRate;
+  uint32_t rate = mInfo.mAudio.mRate;
   nsAutoTArray<nsRefPtr<AudioData>,10> audio;
-  TrackID audioTrackId = aInfo.mAudio.mTrackId;
+  TrackID audioTrackId = mInfo.mAudio.mTrackId;
   SourceMediaStream* sourceStream = mData->mStream;
 
   // It's OK to hold references to the AudioData because AudioData
   // is ref-counted.
-  aQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
+  mAudioQueue.GetElementsAfter(mData->mNextAudioTime, &audio);
   for (uint32_t i = 0; i < audio.Length(); ++i) {
-    SendStreamAudio(mData.get(), aStartTime, audio[i], &output, rate, aVolume);
+    SendStreamAudio(mData.get(), mStartTime.ref(), audio[i], &output, rate, aVolume);
   }
 
   if (!aIsSameOrigin) {
@@ -487,7 +472,7 @@ DecodedStream::SendAudio(int64_t aStartTime,
     sourceStream->AppendToTrack(audioTrackId, &output);
   }
 
-  if (aQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
+  if (mAudioQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
     sourceStream->EndTrack(audioTrackId);
     mData->mHaveSentFinishAudio = true;
   }
@@ -520,25 +505,22 @@ ZeroDurationAtLastChunk(VideoSegment& aInput)
 }
 
 void
-DecodedStream::SendVideo(int64_t aStartTime,
-                         const MediaInfo& aInfo,
-                         MediaQueue<VideoData>& aQueue,
-                         bool aIsSameOrigin)
+DecodedStream::SendVideo(bool aIsSameOrigin)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (!aInfo.HasVideo()) {
+  if (!mInfo.HasVideo()) {
     return;
   }
 
   VideoSegment output;
-  TrackID videoTrackId = aInfo.mVideo.mTrackId;
+  TrackID videoTrackId = mInfo.mVideo.mTrackId;
   nsAutoTArray<nsRefPtr<VideoData>, 10> video;
   SourceMediaStream* sourceStream = mData->mStream;
 
   // It's OK to hold references to the VideoData because VideoData
   // is ref-counted.
-  aQueue.GetElementsAfter(mData->mNextVideoTime, &video);
+  mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i];
@@ -580,7 +562,7 @@ DecodedStream::SendVideo(int64_t aStartTime,
     sourceStream->AppendToTrack(videoTrackId, &output);
   }
 
-  if (aQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
+  if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
     if (mData->mEOSVideoCompensation) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
@@ -601,21 +583,21 @@ DecodedStream::SendVideo(int64_t aStartTime,
 }
 
 void
-DecodedStream::AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo)
+DecodedStream::AdvanceTracks()
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
 
   StreamTime endPosition = 0;
 
-  if (aInfo.HasAudio()) {
+  if (mInfo.HasAudio()) {
     StreamTime audioEnd = mData->mStream->TicksToTimeRoundDown(
-        aInfo.mAudio.mRate, mData->mAudioFramesWritten);
+        mInfo.mAudio.mRate, mData->mAudioFramesWritten);
     endPosition = std::max(endPosition, audioEnd);
   }
 
-  if (aInfo.HasVideo()) {
+  if (mInfo.HasVideo()) {
     StreamTime videoEnd = mData->mStream->MicrosecondsToStreamTimeRoundDown(
-        mData->mNextVideoTime - aStartTime);
+        mData->mNextVideoTime - mStartTime.ref());
     endPosition = std::max(endPosition, videoEnd);
   }
 
@@ -625,21 +607,18 @@ DecodedStream::AdvanceTracks(int64_t aStartTime, const MediaInfo& aInfo)
 }
 
 bool
-DecodedStream::SendData(int64_t aStartTime,
-                        const MediaInfo& aInfo,
-                        MediaQueue<AudioData>& aAudioQueue,
-                        MediaQueue<VideoData>& aVideoQueue,
-                        double aVolume, bool aIsSameOrigin)
+DecodedStream::SendData(double aVolume, bool aIsSameOrigin)
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
 
-  InitTracks(aStartTime, aInfo);
-  SendAudio(aStartTime, aInfo, aAudioQueue, aVolume, aIsSameOrigin);
-  SendVideo(aStartTime, aInfo, aVideoQueue, aIsSameOrigin);
-  AdvanceTracks(aStartTime, aInfo);
+  InitTracks();
+  SendAudio(aVolume, aIsSameOrigin);
+  SendVideo(aIsSameOrigin);
+  AdvanceTracks();
 
-  bool finished = (!aInfo.HasAudio() || aAudioQueue.IsFinished()) &&
-                  (!aInfo.HasVideo() || aVideoQueue.IsFinished());
+  bool finished = (!mInfo.HasAudio() || mAudioQueue.IsFinished()) &&
+                  (!mInfo.HasVideo() || mVideoQueue.IsFinished());
 
   if (finished && !mData->mHaveSentFinish) {
     mData->mHaveSentFinish = true;
@@ -650,17 +629,22 @@ DecodedStream::SendData(int64_t aStartTime,
 }
 
 CheckedInt64
-DecodedStream::AudioEndTime(int64_t aStartTime, uint32_t aRate) const
+DecodedStream::AudioEndTime() const
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return aStartTime + FramesToUsecs(mData->mAudioFramesWritten, aRate);
+  MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
+  return mStartTime.ref() +
+         FramesToUsecs(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
 }
 
 int64_t
 DecodedStream::GetPosition() const
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return mData->GetPosition();
+  // This is only called after MDSM starts playback. So mStartTime is
+  // guaranteed to be something.
+  MOZ_ASSERT(mStartTime.isSome());
+  return mStartTime.ref() + mData->GetPosition();
 }
 
 bool
