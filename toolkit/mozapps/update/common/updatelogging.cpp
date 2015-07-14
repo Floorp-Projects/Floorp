@@ -26,17 +26,32 @@ void UpdateLog::Init(NS_tchar* sourcePath,
   if (logFP)
     return;
 
-  this->sourcePath = sourcePath;
-  NS_tchar logFile[MAXPATHLEN];
-  NS_tsnprintf(logFile, sizeof(logFile)/sizeof(logFile[0]),
-    NS_T("%s/%s"), sourcePath, fileName);
+#ifdef XP_WIN
+  GetTempFileNameW(sourcePath, L"log", 0, mTmpFilePath);
+  if (append) {
+    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+      NS_T("%s/%s"), sourcePath, alternateFileName);
+    MoveFileExW(mDstFilePath, mTmpFilePath, MOVEFILE_REPLACE_EXISTING);
+  } else {
+    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+                 NS_T("%s/%s"), sourcePath, fileName);
+  }
 
-  if (alternateFileName && NS_taccess(logFile, F_OK)) {
-    NS_tsnprintf(logFile, sizeof(logFile)/sizeof(logFile[0]),
+  logFP = NS_tfopen(mTmpFilePath, append ? NS_T("a") : NS_T("w"));
+  // Delete this file now so it is possible to tell from the unelevated
+  // updater process if the elevated updater process has written the log.
+  DeleteFileW(mDstFilePath);
+#else
+  NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+               NS_T("%s/%s"), sourcePath, fileName);
+
+  if (alternateFileName && NS_taccess(mDstFilePath, F_OK)) {
+    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
       NS_T("%s/%s"), sourcePath, alternateFileName);
   }
 
-  logFP = NS_tfopen(logFile, append ? NS_T("a") : NS_T("w"));
+  logFP = NS_tfopen(mDstFilePath, append ? NS_T("a") : NS_T("w"));
+#endif
 }
 
 void UpdateLog::Finish()
@@ -46,6 +61,16 @@ void UpdateLog::Finish()
 
   fclose(logFP);
   logFP = nullptr;
+
+#ifdef XP_WIN
+  // When the log file already exists then the elevated updater has already
+  // written the log file and the temp file for the log should be discarded.
+  if (!NS_taccess(mDstFilePath, F_OK)) {
+    DeleteFileW(mTmpFilePath);
+  } else {
+    MoveFileW(mTmpFilePath, mDstFilePath);
+  }
+#endif
 }
 
 void UpdateLog::Flush()

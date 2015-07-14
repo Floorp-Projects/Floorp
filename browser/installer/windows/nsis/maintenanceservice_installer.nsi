@@ -262,6 +262,62 @@ Section "Uninstall"
   Call un.RenameDelete
   Push "$INSTDIR\update\updater.exe"
   Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-1.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-2.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-3.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-4.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-5.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-6.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-7.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-8.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-9.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-10.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-install.log"
+  Call un.RenameDelete
+  Push "$INSTDIR\logs\maintenanceservice-uninstall.log"
+  Call un.RenameDelete
+  SetShellVarContext all
+  Push "$APPDATA\Mozilla\logs\maintenanceservice.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-1.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-2.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-3.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-4.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-5.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-6.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-7.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-8.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-9.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-10.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-install.log"
+  Call un.RenameDelete
+  Push "$APPDATA\Mozilla\logs\maintenanceservice-uninstall.log"
+  Call un.RenameDelete
+  RMDir /REBOOTOK "$APPDATA\Mozilla\logs"
+  RMDir /REBOOTOK "$APPDATA\Mozilla"
+  RMDir /REBOOTOK "$INSTDIR\logs"
   RMDir /REBOOTOK "$INSTDIR\update"
   RMDir /REBOOTOK "$INSTDIR"
 
