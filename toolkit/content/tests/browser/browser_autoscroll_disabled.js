@@ -43,7 +43,7 @@ function test()
     var skipFrames = 1;
     var checkScroll = function () {
       if (skipFrames--) {
-        window.mozRequestAnimationFrame(checkScroll);
+        window.requestAnimationFrame(checkScroll);
         return;
       }
       ok(elem.scrollTop == 0, "element should not have scrolled vertically");
@@ -70,6 +70,6 @@ function test()
      * so request and force redraws to get the chance to check for scrolling at
      * all.
      */
-    window.mozRequestAnimationFrame(checkScroll);
+    window.requestAnimationFrame(checkScroll);
   }
 }
