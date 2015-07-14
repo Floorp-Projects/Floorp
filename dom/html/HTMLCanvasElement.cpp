@@ -882,19 +882,21 @@ HTMLCanvasElement::UpdateContext(JSContext* aCx, JS::Handle<JS::Value> aNewConte
 
   nsIntSize sz = GetWidthHeight();
 
-  nsresult rv = mCurrentContext->SetIsOpaque(HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque));
+  nsCOMPtr<nsICanvasRenderingContextInternal> currentContext = mCurrentContext;
+
+  nsresult rv = currentContext->SetIsOpaque(HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque));
   if (NS_FAILED(rv)) {
     mCurrentContext = nullptr;
     return rv;
   }
 
-  rv = mCurrentContext->SetContextOptions(aCx, aNewContextOptions);
+  rv = currentContext->SetContextOptions(aCx, aNewContextOptions);
   if (NS_FAILED(rv)) {
     mCurrentContext = nullptr;
     return rv;
   }
 
-  rv = mCurrentContext->SetDimensions(sz.width, sz.height);
+  rv = currentContext->SetDimensions(sz.width, sz.height);
   if (NS_FAILED(rv)) {
     mCurrentContext = nullptr;
     return rv;
