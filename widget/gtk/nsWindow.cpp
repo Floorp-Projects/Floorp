@@ -995,7 +995,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     if (!mCreated)
         return NS_OK;
 
-    NativeResize(width, height);
+    NativeResize();
 
     NotifyRollupGeometryChange();
     ResizePluginSocketWidget();
@@ -1027,7 +1027,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     if (!mCreated)
         return NS_OK;
 
-    NativeResize(x, y, width, height);
+    NativeMoveResize();
 
     NotifyRollupGeometryChange();
     ResizePluginSocketWidget();
@@ -3388,7 +3388,7 @@ nsWindow::Create(nsIWidget        *aParent,
         // We only move a general managed toplevel window if someone has
         // actually placed the window somewhere.  If no placement has taken
         // place, we just let the window manager Do The Right Thing.
-        NativeResize(mBounds.width, mBounds.height);
+        NativeResize();
 
         if (mWindowType == eWindowType_dialog) {
             SetDefaultIcon();
@@ -3771,7 +3771,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 }
 
 void
-nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
+nsWindow::NativeResize()
 {
     if (!AreBoundsSane()) {
         // If someone has set this so that the needs show flag is false
@@ -3787,14 +3787,13 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
         return;
     }
 
-    gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
-    gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
+    GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
     
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
-         width, height));
+         size.width, size.height));
 
     if (mIsTopLevel) {
-        gtk_window_resize(GTK_WINDOW(mShell), width, height);
+        gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
     }
     else if (mContainer) {
         GtkWidget *widget = GTK_WIDGET(mContainer);
@@ -3802,12 +3801,12 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
         gtk_widget_get_allocation(widget, &prev_allocation);
         allocation.x = prev_allocation.x;
         allocation.y = prev_allocation.y;
-        allocation.width = width;
-        allocation.height = height;
+        allocation.width = size.width;
+        allocation.height = size.height;
         gtk_widget_size_allocate(widget, &allocation);
     }
     else if (mGdkWindow) {
-        gdk_window_resize(mGdkWindow, width, height);
+        gdk_window_resize(mGdkWindow, size.width, size.height);
     }
 
     // Does it need to be shown because bounds were previously insane?
@@ -3817,8 +3816,7 @@ nsWindow::NativeResize(int32_t aWidth, int32_t aHeight)
 }
 
 void
-nsWindow::NativeResize(int32_t aX, int32_t aY,
-                       int32_t aWidth, int32_t aHeight)
+nsWindow::NativeMoveResize()
 {
     if (!AreBoundsSane()) {
         // If someone has set this so that the needs show flag is false
@@ -3834,30 +3832,29 @@ nsWindow::NativeResize(int32_t aX, int32_t aY,
         NativeMove();
     }
 
-    gint width = DevicePixelsToGdkCoordRoundUp(aWidth);
-    gint height = DevicePixelsToGdkCoordRoundUp(aHeight);
-    gint x = DevicePixelsToGdkCoordRoundDown(aX);
-    gint y = DevicePixelsToGdkCoordRoundDown(aY);
+    GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
+    GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
-    LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
-         x, y, width, height));
+    LOG(("nsWindow::NativeMoveResize [%p] %d %d %d %d\n", (void *)this,
+         topLeft.x, topLeft.y, size.width, size.height));
 
     if (mIsTopLevel) {
         // x and y give the position of the window manager frame top-left.
-        gtk_window_move(GTK_WINDOW(mShell), x, y);
+        gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
         // This sets the client window size.
-        gtk_window_resize(GTK_WINDOW(mShell), width, height);
+        gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
     }
     else if (mContainer) {
         GtkAllocation allocation;
-        allocation.x = x;
-        allocation.y = y;
-        allocation.width = width;
-        allocation.height = height;
+        allocation.x = topLeft.x;
+        allocation.y = topLeft.y;
+        allocation.width = size.width;
+        allocation.height = size.height;
         gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
     }
     else if (mGdkWindow) {
-        gdk_window_move_resize(mGdkWindow, x, y, width, height);
+        gdk_window_move_resize(mGdkWindow,
+                               topLeft.x, topLeft.y, size.width, size.height);
     }
 
     // Does it need to be shown because bounds were previously insane?
@@ -6365,6 +6362,14 @@ nsWindow::DevicePixelsToGdkRectRoundOut(nsIntRect rect) {
     int right = (rect.x + rect.width + scale - 1) / scale;
     int bottom = (rect.y + rect.height + scale - 1) / scale;
     return { x, y, right - x, bottom - y };
+}
+
+GdkRectangle
+nsWindow::DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize) {
+    gint scale = GdkScaleFactor();
+    gint width = (pixelSize.width + scale - 1) / scale;
+    gint height = (pixelSize.height + scale - 1) / scale;
+    return { 0, 0, width, height };
 }
 
 int
