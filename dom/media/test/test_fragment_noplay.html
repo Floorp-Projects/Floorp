@@ -12,6 +12,11 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+//longer timeout for slow platforms
+if (isSlowPlatform()) {
+  SimpleTest.requestLongerTimeout(1.5);
+}
+
 var manager = new MediaTestManager;
 
 // Fragment parameters to try
