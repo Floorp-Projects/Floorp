@@ -69,7 +69,7 @@ function checkRuleViewContent({doc}) {
   is(rules.length, 4, "There are 4 rules in the view");
 
   for (let rule of rules) {
-    let selector = rule.querySelector(".ruleview-selector");
+    let selector = rule.querySelector(".ruleview-selectorcontainer");
     is(selector.textContent,
       STRINGS.GetStringFromName("rule.sourceElement"),
       "The rule's selector is correct");
