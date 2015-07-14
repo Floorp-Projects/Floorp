@@ -289,24 +289,31 @@ Push.prototype = {
     return p;
   },
 
-  hasPermission: function() {
-    debug("hasPermission()" + this._scope);
+  permissionState: function() {
+    debug("permissionState()" + this._scope);
 
-    let p = this.createPromise(function(resolve, reject) {
-      let permissionManager = Cc["@mozilla.org/permissionmanager;1"]
-                              .getService(Ci.nsIPermissionManager);
-      let permission =
-        permissionManager.testExactPermissionFromPrincipal(this._principal,
-                                                           "push");
+    let p = this.createPromise((resolve, reject) => {
+      let permission = Ci.nsIPermissionManager.DENY_ACTION;
 
-      let pushPermissionStatus = "default";
+      try {
+        let permissionManager = Cc["@mozilla.org/permissionmanager;1"]
+                                .getService(Ci.nsIPermissionManager);
+        permission =
+          permissionManager.testExactPermissionFromPrincipal(this._principal,
+                                                             "push");
+      } catch(e) {
+        reject();
+        return;
+      }
+
+      let pushPermissionStatus = "prompt";
       if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
         pushPermissionStatus = "granted";
       } else if (permission == Ci.nsIPermissionManager.DENY_ACTION) {
         pushPermissionStatus = "denied";
       }
       resolve(pushPermissionStatus);
-    }.bind(this));
+    });
     return p;
   },
 }

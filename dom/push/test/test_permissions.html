@@ -70,10 +70,21 @@ http://creativecommons.org/licenses/publicdomain/
     return p;
   }
 
+  function checkPermissionState(swr) {
+    return swr.pushManager.permissionState().then(function(state) {
+      ok(state === "denied", "permissionState() should resolve to denied.");
+      return swr;
+    }).catch(function(e) {
+      ok(false, "permissionState() should resolve to denied.");
+      return swr;
+    });
+  }
+
   function runTest() {
     start()
     .then(setupPushNotification)
     .then(getEndpoint)
+    .then(checkPermissionState)
     .then(unregister)
     .catch(function(e) {
       ok(false, "Some test failed with error " + e);
