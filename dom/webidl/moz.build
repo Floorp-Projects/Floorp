@@ -735,6 +735,7 @@ if CONFIG['MOZ_B2G_FM']:
     ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [
+    'AnimationPlaybackEvent.webidl',
     'AutocompleteErrorEvent.webidl',
     'BlobEvent.webidl',
     'CallEvent.webidl',

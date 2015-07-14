@@ -32,6 +32,10 @@ const kEventConstructors = {
                                                          return new AnimationEvent(aName, aProps);
                                                        },
                                              },
+  AnimationPlaybackEvent:                    { create: function (aName, aProps) {
+                                                         return new AnimationPlaybackEvent(aName, aProps);
+                                                       },
+                                             },
   AudioProcessingEvent:                      { create: null, // Cannot create untrusted event from JS.
                                              },
   BeforeAfterKeyboardEvent:                  { create: function (aName, aProps) {
