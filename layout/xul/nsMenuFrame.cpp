@@ -428,6 +428,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
     else {
       if (!IsOpen()) {
+        menuParent->ChangeMenuItem(this, false, false);
         OpenMenu(false);
       }
     }

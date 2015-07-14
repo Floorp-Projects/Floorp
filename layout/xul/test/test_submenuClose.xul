@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1181560
+-->
+<window title="Mozilla Bug 1181560"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="SimpleTest.waitForFocus(nextTest, window)">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1181560"
+     target="_blank">Mozilla Bug 1181560</a>
+  </body>
+
+  <vbox>
+    <menubar>
+      <menu id="menu" label="MyMenu">
+        <menupopup>
+          <menuitem label="A"/>
+          <menu id="b" label="B">
+            <menupopup>
+              <menuitem label="B1"/>
+            </menupopup>
+          </menu>
+          <menu id="c" label="C">
+            <menupopup>
+              <menuitem label="C1"/>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </menu>
+    </menubar>
+  </vbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 1181560 **/
+  SimpleTest.waitForExplicitFinish();
+
+  let menuB, menuC, mainMenu, menuBOpen, menuCOpen;
+  let menuBOpenCount = 0;
+
+  function handleBOpens() {
+    menuBOpenCount++;
+    menuBOpen = true;
+    ok(!menuCOpen, "Menu C should not be open when menu B has opened");
+    if (menuBOpenCount >= 2) {
+      SimpleTest.finish();
+      return;
+    }
+    sendKey("LEFT", window);
+    sendKey("DOWN", window);
+    sendKey("RIGHT", window);
+  }
+
+  function handleBCloses() {
+    menuBOpen = false;
+  }
+
+  function handleCOpens() {
+    menuCOpen = true;
+    ok(!menuBOpen, "Menu B should not be open when menu C has opened");
+    synthesizeMouseAtCenter(menuB, {}, window);
+  }
+
+  function handleCCloses() {
+    menuCOpen = false;
+  }
+
+  function nextTest(e) {
+    mainMenu = document.getElementById("menu");
+    menuB = document.getElementById("b");
+    menuC = document.getElementById("c");
+    menuB.firstChild.addEventListener("popupshown", handleBOpens, false);
+    menuB.firstChild.addEventListener("popuphidden", handleBCloses, false);
+    menuC.firstChild.addEventListener("popupshown", handleCOpens, false);
+    menuC.firstChild.addEventListener("popuphidden", handleCCloses, false);
+    mainMenu.addEventListener("popupshown", ev => {
+      synthesizeMouseAtCenter(menuB, {}, window);
+    });
+    mainMenu.open = true;
+  }
+  ]]>
+  </script>
+</window>
