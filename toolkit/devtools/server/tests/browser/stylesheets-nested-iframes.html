@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>StyleSheetsActor iframe test</title>
+  <style>
+    p {
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+  <p>A test page with nested iframes</p>
+  <iframe></iframe>
+  <script type="application/javascript;version=1.8">
+    let iframe = document.querySelector("iframe");
+    let i = parseInt(location.href.split("?")[1]) || 1;
+
+    // The frame can't have the same src URL as any of its ancestors.
+    // This will not infinitely recurse because a frame won't get a content
+    // document once it's nested deeply enough.
+    iframe.src = location.href.split("?")[0] + "?" + (++i);
+  </script>
+</body>
+</html>
