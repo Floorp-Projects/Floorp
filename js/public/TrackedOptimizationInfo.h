@@ -150,7 +150,6 @@ namespace JS {
     _(CantInlineClassConstructor)                                       \
     _(CantInlineDisabledIon)                                            \
     _(CantInlineTooManyArgs)                                            \
-    _(CantInlineRecursive)                                              \
     _(CantInlineHeavyweight)                                            \
     _(CantInlineNeedsArgsObj)                                           \
     _(CantInlineDebuggee)                                               \
@@ -168,6 +167,7 @@ namespace JS {
     _(CantInlineNativeNoTemplateObj)                                    \
     _(CantInlineBound)                                                  \
     _(CantInlineNativeNoSpecialization)                                 \
+    _(HasCommonInliningPath)                                            \
                                                                         \
     _(GenericSuccess)                                                   \
     _(Inlined)                                                          \
