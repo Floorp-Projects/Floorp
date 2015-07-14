@@ -81,16 +81,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
 MediaFormatReader::~MediaFormatReader()
 {
   MOZ_COUNT_DTOR(MediaFormatReader);
-  // shutdown main thread demuxer and track demuxers.
-  if (mAudioTrackDemuxer) {
-    mAudioTrackDemuxer->BreakCycles();
-    mAudioTrackDemuxer = nullptr;
-  }
-  if (mVideoTrackDemuxer) {
-    mVideoTrackDemuxer->BreakCycles();
-    mVideoTrackDemuxer = nullptr;
-  }
-  mMainThreadDemuxer = nullptr;
 }
 
 nsRefPtr<ShutdownPromise>
@@ -144,6 +134,17 @@ MediaFormatReader::Shutdown()
   MOZ_ASSERT(mVideo.mPromise.IsEmpty());
 
   mDemuxer = nullptr;
+
+  // shutdown main thread demuxer and track demuxers.
+  if (mAudioTrackDemuxer) {
+    mAudioTrackDemuxer->BreakCycles();
+    mAudioTrackDemuxer = nullptr;
+  }
+  if (mVideoTrackDemuxer) {
+    mVideoTrackDemuxer->BreakCycles();
+    mVideoTrackDemuxer = nullptr;
+  }
+  mMainThreadDemuxer = nullptr;
 
   mPlatform = nullptr;
 
@@ -1524,9 +1525,11 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aLength);
 
-  if (!mInitDone) {
+  if (!mInitDone || mShutdown) {
     return;
   }
+
+  MOZ_ASSERT(mMainThreadDemuxer);
 
   // Queue a task to notify our main thread demuxer.
   nsCOMPtr<nsIRunnable> task =
@@ -1543,7 +1546,7 @@ MediaFormatReader::NotifyDataRemoved()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (!mInitDone) {
+  if (!mInitDone || mShutdown) {
     return;
   }
 
