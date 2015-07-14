@@ -436,19 +436,11 @@ gfxPlatformFontList::LoadBadUnderlineList()
     }
 }
 
-static PLDHashOperator
-RebuildLocalFonts(nsPtrHashKey<gfxUserFontSet>* aKey,
-                  void* aClosure)
-{
-    aKey->GetKey()->RebuildLocalRules();
-    return PL_DHASH_NEXT;
-}
-
 void
 gfxPlatformFontList::UpdateFontList()
 {
     InitFontList();
-    mUserFontSetList.EnumerateEntries(RebuildLocalFonts, nullptr);
+    RebuildLocalFonts();
 }
 
 struct FontListData {
@@ -966,50 +958,6 @@ gfxPlatformFontList::LoadFontInfo()
     return done;
 }
 
-struct LookupMissedFaceNamesData {
-    explicit LookupMissedFaceNamesData(gfxPlatformFontList *aFontList)
-        : mFontList(aFontList), mFoundName(false) {}
-
-    gfxPlatformFontList *mFontList;
-    bool mFoundName;
-};
-
-/*static*/ PLDHashOperator
-gfxPlatformFontList::LookupMissedFaceNamesProc(nsStringHashKey *aKey,
-                                               void *aUserArg)
-{
-    LookupMissedFaceNamesData *data =
-        reinterpret_cast<LookupMissedFaceNamesData*>(aUserArg);
-
-    if (data->mFontList->FindFaceName(aKey->GetKey())) {
-        data->mFoundName = true;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
-
-struct LookupMissedOtherNamesData {
-    explicit LookupMissedOtherNamesData(gfxPlatformFontList *aFontList)
-        : mFontList(aFontList), mFoundName(false) {}
-
-    gfxPlatformFontList *mFontList;
-    bool mFoundName;
-};
-
-/*static*/ PLDHashOperator
-gfxPlatformFontList::LookupMissedOtherNamesProc(nsStringHashKey *aKey,
-                                                void *aUserArg)
-{
-    LookupMissedOtherNamesData *data =
-        reinterpret_cast<LookupMissedOtherNamesData*>(aUserArg);
-
-    if (data->mFontList->FindFamily(aKey->GetKey())) {
-        data->mFoundName = true;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
-
 void 
 gfxPlatformFontList::CleanupLoader()
 {
@@ -1018,26 +966,26 @@ gfxPlatformFontList::CleanupLoader()
     bool rebuilt = false, forceReflow = false;
 
     // if had missed face names that are now available, force reflow all
-    if (mFaceNamesMissed &&
-        mFaceNamesMissed->Count() != 0) {
-        LookupMissedFaceNamesData namedata(this);
-        mFaceNamesMissed->EnumerateEntries(LookupMissedFaceNamesProc, &namedata);
-        if (namedata.mFoundName) {
-            rebuilt = true;
-            mUserFontSetList.EnumerateEntries(RebuildLocalFonts, nullptr);
+    if (mFaceNamesMissed) {
+        for (auto it = mFaceNamesMissed->Iter(); !it.Done(); it.Next()) {
+            if (FindFaceName(it.Get()->GetKey())) {
+                rebuilt = true;
+                RebuildLocalFonts();
+                break;
+            }
         }
         mFaceNamesMissed = nullptr;
     }
 
     if (mOtherNamesMissed) {
-        LookupMissedOtherNamesData othernamesdata(this);
-        mOtherNamesMissed->EnumerateEntries(LookupMissedOtherNamesProc,
-                                            &othernamesdata);
-        mOtherNamesMissed = nullptr;
-        if (othernamesdata.mFoundName) {
-            forceReflow = true;
-            ForceGlobalReflow();
+        for (auto it = mOtherNamesMissed->Iter(); !it.Done(); it.Next()) {
+            if (FindFamily(it.Get()->GetKey())) {
+                forceReflow = true;
+                ForceGlobalReflow();
+                break;
+            }
         }
+        mOtherNamesMissed = nullptr;
     }
 
     if (LOG_FONTINIT_ENABLED() && mFontInfo) {
@@ -1078,6 +1026,14 @@ gfxPlatformFontList::ForceGlobalReflow()
     static const char kPrefName[] = "font.internaluseonly.changed";
     bool fontInternalChange = Preferences::GetBool(kPrefName, false);
     Preferences::SetBool(kPrefName, !fontInternalChange);
+}
+
+void
+gfxPlatformFontList::RebuildLocalFonts()
+{
+    for (auto it = mUserFontSetList.Iter(); !it.Done(); it.Next()) {
+        it.Get()->GetKey()->RebuildLocalRules();
+    }
 }
 
 // Support for memory reporting
