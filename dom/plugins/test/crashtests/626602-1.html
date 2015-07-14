@@ -35,7 +35,7 @@ function start() {
   canvas = document.getElementById("two");
   paintCanvas();
 
-  mozRequestAnimationFrame(moveSomething);
+  requestAnimationFrame(moveSomething);
 }
 
 function paintCanvas() {
@@ -52,7 +52,7 @@ function moveSomething() {
     return finish();
   }
 
-  mozRequestAnimationFrame(moveSomething);
+  requestAnimationFrame(moveSomething);
 }
 
 function finish() {
