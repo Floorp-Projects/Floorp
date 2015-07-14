@@ -13,6 +13,11 @@ Sending only happens on official builds with ``MOZ_TELEMETRY_REPORTING`` defined
   * Telemetry is always enabled and recording *base* data.
   * Telemetry will send additional ``main`` pings.
 
+``toolkit.telemetry.unifiedIsOptIn``
+
+  When true, we enable the Telemetry system only for people that opted into Telemetry, even if unified Telemetry is enabled.
+  Defaults to false & requires a restart.
+
 ``toolkit.telemetry.enabled``
 
   If ``unified`` is off, this controls whether the Telemetry module is enabled.
