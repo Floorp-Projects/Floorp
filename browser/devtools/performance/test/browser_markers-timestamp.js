@@ -36,6 +36,9 @@ function* spawnTest () {
   is(markers[0].causeName, void 0, "Unlabeled timestamps have an empty causeName");
   is(markers[1].causeName, "myLabel", "Labeled timestamps have correct causeName");
 
+  // Destroy the front before removing tab to ensure no
+  // lingering requests
+  yield front.destroy();
   yield removeTab(target.tab);
   finish();
 

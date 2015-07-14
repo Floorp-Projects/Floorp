@@ -171,7 +171,7 @@ RootActor.prototype = {
     },
     // Whether or not `getProfile()` supports specifying a `startTime`
     // and `endTime` to filter out samples. Fx40+
-    profilerDataFilterable: true
+    profilerDataFilterable: true,
   },
 
   /**

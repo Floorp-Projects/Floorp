@@ -52,6 +52,8 @@ browser.jar:
         skin/classic/browser/identity-mixed-active-blocked.svg       (../shared/identity-block/identity-mixed-active-blocked.svg)
         skin/classic/browser/identity-mixed-passive-loaded.svg       (../shared/identity-block/identity-mixed-passive-loaded.svg)
         skin/classic/browser/identity-mixed-active-loaded.svg        (../shared/identity-block/identity-mixed-active-loaded.svg)
+        skin/classic/browser/tracking-protection-16.svg              (../shared/identity-block/tracking-protection-16.svg)
+        skin/classic/browser/tracking-protection-disabled-16.svg     (../shared/identity-block/tracking-protection-disabled-16.svg)
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -466,6 +468,12 @@ browser.jar:
         skin/classic/browser/devtools/debugger-blackbox@2x.png      (../shared/devtools/images/debugger-blackbox@2x.png)
         skin/classic/browser/devtools/debugger-prettyprint.png      (../shared/devtools/images/debugger-prettyprint.png)
         skin/classic/browser/devtools/debugger-prettyprint@2x.png   (../shared/devtools/images/debugger-prettyprint@2x.png)
+        skin/classic/browser/devtools/debugger-no-pause-exceptions.png  (../shared/devtools/images/debugger-no-pause-exceptions.png)
+        skin/classic/browser/devtools/debugger-no-pause-exceptions@2x.png (../shared/devtools/images/debugger-no-pause-exceptions@2x.png)
+        skin/classic/browser/devtools/debugger-pause-all-exceptions.png  (../shared/devtools/images/debugger-pause-all-exceptions.png)
+        skin/classic/browser/devtools/debugger-pause-all-exceptions@2x.png (../shared/devtools/images/debugger-pause-all-exceptions@2x.png)
+        skin/classic/browser/devtools/debugger-pause-uncaught-exceptions.png  (../shared/devtools/images/debugger-pause-uncaught-exceptions.png)
+        skin/classic/browser/devtools/debugger-pause-uncaught-exceptions@2x.png (../shared/devtools/images/debugger-pause-uncaught-exceptions@2x.png)
         skin/classic/browser/devtools/debugger-toggleBreakpoints.png  (../shared/devtools/images/debugger-toggleBreakpoints.png)
         skin/classic/browser/devtools/debugger-toggleBreakpoints@2x.png  (../shared/devtools/images/debugger-toggleBreakpoints@2x.png)
         skin/classic/browser/devtools/tracer-icon.png               (../shared/devtools/images/tracer-icon.png)

@@ -1,355 +1,222 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
-const Services = require("Services");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+const { Cu } = require("chrome");
+const protocol = require("devtools/server/protocol");
+const { custom, method, RetVal, Arg, Option, types } = protocol;
+const { Profiler } = require("devtools/toolkit/shared/profiler");
+const { actorBridge } = require("devtools/server/actors/common");
 
-let DEFAULT_PROFILER_OPTIONS = {
-  // When using the DevTools Performance Tools, this will be overridden
-  // by the pref `devtools.performance.profiler.buffer-size`.
-  entries: Math.pow(10, 7),
-  // When using the DevTools Performance Tools, this will be overridden
-  // by the pref `devtools.performance.profiler.sample-rate-khz`.
-  interval: 1,
-  features: ["js"],
-  threadFilters: ["GeckoMain"]
-};
+loader.lazyRequireGetter(this, "events", "sdk/event/core");
+loader.lazyRequireGetter(this, "extend", "sdk/util/object", true);
 
-/**
- * The nsIProfiler is target agnostic and interacts with the whole platform.
- * Therefore, special care needs to be given to make sure different actor
- * consumers (i.e. "toolboxes") don't interfere with each other.
- */
-let gProfilerConsumers = 0;
-
-loader.lazyGetter(this, "nsIProfilerModule", () => {
-  return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+types.addType("profiler-data", {
+  // On Fx42+, the profile is only deserialized on the front; older
+  // servers will get the profiler data as an object from nsIProfiler,
+  // causing one parse/stringify cycle, then again implicitly in a packet.
+  read: (v) => {
+    if (typeof v.profile === "string") {
+      // Create a new response object since `profile` is read only.
+      let newValue = Object.create(null);
+      newValue.profile = JSON.parse(v.profile);
+      newValue.currentTime = v.currentTime;
+      return newValue;
+    }
+    return v;
+  }
 });
 
 /**
- * The profiler actor provides remote access to the built-in nsIProfiler module.
+ * This actor wraps the Profiler module at toolkit/devtools/shared/profiler.js
+ * and provides RDP definitions.
+ *
+ * @see toolkit/devtools/shared/profiler.js for documentation.
  */
-function ProfilerActor() {
-  gProfilerConsumers++;
-  this._observedEvents = new Set();
-}
+let ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
+  typeName: "profiler",
 
-ProfilerActor.prototype = {
-  actorPrefix: "profiler",
+  /**
+   * The set of events the ProfilerActor emits over RDP.
+   */
+  events: {
+    "console-api-profiler": {
+      data: Arg(0, "json"),
+    },
+    "profiler-started": {
+      data: Arg(0, "json"),
+    },
+    "profiler-stopped": {
+      data: Arg(0, "json"),
+    },
+
+    // Only for older geckos, pre-protocol.js ProfilerActor (<Fx42).
+    // Emitted on other events as a transition from older profiler events
+    // to newer ones.
+    "eventNotification": {
+      subject: Option(0, "json"),
+      topic: Option(0, "string"),
+      details: Option(0, "json")
+    }
+  },
+
+  initialize: function (conn) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this._onProfilerEvent = this._onProfilerEvent.bind(this);
+
+    this.bridge = new Profiler();
+    events.on(this.bridge, "*", this._onProfilerEvent);
+  },
+
+  /**
+   * `disconnect` method required to call destroy, since this
+   * actor is not managed by a parent actor.
+   */
   disconnect: function() {
-    for (let event of this._observedEvents) {
-      Services.obs.removeObserver(this, event);
+    this.destroy();
+  },
+
+  destroy: function() {
+    events.off(this.bridge, "*", this._onProfilerEvent);
+    this.bridge.destroy();
+    protocol.Actor.prototype.destroy.call(this);
+  },
+
+  startProfiler: actorBridge("start", {
+    // Write out every property in the request, since we want all these options to be
+    // on the packet's top-level for backwards compatibility, when the profiler actor
+    // was not using protocol.js (<Fx42)
+    request: {
+      entries: Option(0, "nullable:number"),
+      interval: Option(0, "nullable:number"),
+      features: Option(0, "nullable:array:string"),
+      threadFilters: Option(0, "nullable:array:string"),
+    },
+    response: RetVal("json"),
+  }),
+
+  stopProfiler: actorBridge("stop", {
+    response: RetVal("json"),
+  }),
+
+  getProfile: actorBridge("getProfile", {
+    request: {
+      startTime: Option(0, "nullable:number"),
+      stringify: Option(0, "nullable:boolean")
+    },
+    response: RetVal("profiler-data")
+  }),
+
+  getFeatures: actorBridge("getFeatures", {
+    response: RetVal("json")
+  }),
+
+  getBufferInfo: actorBridge("getBufferInfo", {
+    response: RetVal("json")
+  }),
+
+  getStartOptions: actorBridge("getStartOptions", {
+    response: RetVal("json")
+  }),
+
+  isActive: actorBridge("isActive", {
+    response: RetVal("json")
+  }),
+
+  getSharedLibraryInformation: actorBridge("getSharedLibraryInformation", {
+    response: RetVal("json")
+  }),
+
+  registerEventNotifications: actorBridge("registerEventNotifications", {
+    // Explicitly enumerate the arguments
+    // @see ProfilerActor#startProfiler
+    request: {
+      events: Option(0, "nullable:array:string"),
+    },
+    response: RetVal("json")
+  }),
+
+  unregisterEventNotifications: actorBridge("unregisterEventNotifications", {
+    // Explicitly enumerate the arguments
+    // @see ProfilerActor#startProfiler
+    request: {
+      events: Option(0, "nullable:array:string"),
+    },
+    response: RetVal("json")
+  }),
+
+  /**
+   * Pipe events from Profiler module to this actor.
+   */
+  _onProfilerEvent: function (eventName, ...data) {
+    events.emit(this, eventName, ...data);
+  },
+});
+
+/**
+ * This can be used on older Profiler implementations, but the methods cannot
+ * be changed -- you must introduce a new method, and detect the server.
+ */
+exports.ProfilerFront = protocol.FrontClass(ProfilerActor, {
+  initialize: function(client, form) {
+    protocol.Front.prototype.initialize.call(this, client, form);
+    this.actorID = form.profilerActor;
+    this.manage(this);
+
+    this._onProfilerEvent = this._onProfilerEvent.bind(this);
+    events.on(this, "*", this._onProfilerEvent);
+  },
+
+  destroy: function () {
+    events.off(this, "*", this._onProfilerEvent);
+    protocol.Front.prototype.destroy.call(this);
+  },
+
+  /**
+   * If using the protocol.js Fronts, then make stringify default,
+   * since the read/write mechanisms will expose it as an object anyway, but
+   * this lets other consumers who connect directly (xpcshell tests, Gecko Profiler) to
+   * have unchanged behaviour.
+   */
+  getProfile: custom(function (options) {
+    return this._getProfile(extend({ stringify: true }, options));
+  }, {
+    impl: "_getProfile"
+  }),
+
+  /**
+   * Also emit an old `eventNotification` for older consumers of the profiler.
+   */
+  _onProfilerEvent: function (eventName, data) {
+    // If this event already passed through once, don't repropagate
+    if (data.relayed) {
+      return;
     }
-    this._observedEvents = null;
-    this.onStopProfiler();
+    data.relayed = true;
 
-    gProfilerConsumers--;
-    checkProfilerConsumers();
-  },
-
-  /**
-   * Returns an array of feature strings, describing the profiler features
-   * that are available on this platform. Can be called while the profiler
-   * is stopped.
-   */
-  onGetFeatures: function() {
-    return { features: nsIProfilerModule.GetFeatures([]) };
-  },
-
-  /**
-   * Returns an object with the values of the current status of the
-   * circular buffer in the profiler, returning `position`, `totalSize`,
-   * and the current `generation` of the buffer.
-   */
-  onGetBufferInfo: function() {
-    let position = {}, totalSize = {}, generation = {};
-    nsIProfilerModule.GetBufferInfo(position, totalSize, generation);
-    return {
-      position: position.value,
-      totalSize: totalSize.value,
-      generation: generation.value
+    // If this is `eventNotification`, this is coming from an older Gecko (<Fx42)
+    // that doesn't use protocol.js style events. Massage it to emit a protocol.js
+    // style event as well.
+    if (eventName === "eventNotification") {
+      events.emit(this, data.topic, data);
     }
-  },
-
-  /**
-   * Returns the configuration used that was originally passed in to start up the
-   * profiler. Used for tests, and does not account for others using nsIProfiler.
-   */
-  onGetStartOptions: function() {
-    return this._profilerStartOptions || {};
-  },
-
-  /**
-   * Starts the nsIProfiler module. Doing so will discard any samples
-   * that might have been accumulated so far.
-   *
-   * @param number entries [optional]
-   * @param number interval [optional]
-   * @param array:string features [optional]
-   * @param array:string threadFilters [description]
-   */
-  onStartProfiler: function(request = {}) {
-    let options = this._profilerStartOptions = {
-      entries: request.entries || DEFAULT_PROFILER_OPTIONS.entries,
-      interval: request.interval || DEFAULT_PROFILER_OPTIONS.interval,
-      features: request.features || DEFAULT_PROFILER_OPTIONS.features,
-      threadFilters: request.threadFilters || DEFAULT_PROFILER_OPTIONS.threadFilters,
-    };
-
-    // The start time should be before any samples we might be
-    // interested in.
-    let currentTime = nsIProfilerModule.getElapsedTime();
-
-    nsIProfilerModule.StartProfiler(
-      options.entries,
-      options.interval,
-      options.features,
-      options.features.length,
-      options.threadFilters,
-      options.threadFilters.length
-    );
-    let { position, totalSize, generation } = this.onGetBufferInfo();
-
-    return { started: true, position, totalSize, generation, currentTime };
-  },
-
-  /**
-   * Stops the nsIProfiler module, if no other client is using it.
-   */
-  onStopProfiler: function() {
-    // Actually stop the profiler only if the last client has stopped profiling.
-    // Since this is a root actor, and the profiler module interacts with the
-    // whole platform, we need to avoid a case in which the profiler is stopped
-    // when there might be other clients still profiling.
-    if (gProfilerConsumers == 1) {
-      nsIProfilerModule.StopProfiler();
-    }
-    return { started: false };
-  },
-
-  /**
-   * Verifies whether or not the nsIProfiler module has started.
-   * If already active, the current time is also returned.
-   */
-  onIsActive: function() {
-    let isActive = nsIProfilerModule.IsActive();
-    let elapsedTime = isActive ? nsIProfilerModule.getElapsedTime() : undefined;
-    let { position, totalSize, generation } = this.onGetBufferInfo();
-    return { isActive: isActive, currentTime: elapsedTime, position, totalSize, generation };
-  },
-
-  /**
-   * Returns a stringified JSON object that describes the shared libraries
-   * which are currently loaded into our process. Can be called while the
-   * profiler is stopped.
-   */
-  onGetSharedLibraryInformation: function() {
-    return { sharedLibraryInformation: nsIProfilerModule.getSharedLibraryInformation() };
-  },
-
-  /**
-   * Returns all the samples accumulated since the profiler was started,
-   * along with the current time. The data has the following format:
-   * {
-   *   libs: string,
-   *   meta: {
-   *     interval: number,
-   *     platform: string,
-   *     ...
-   *   },
-   *   threads: [{
-   *     samples: [{
-   *       frames: [{
-   *         line: number,
-   *         location: string,
-   *         category: number
-   *       } ... ],
-   *       name: string
-   *       responsiveness: number
-   *       time: number
-   *     } ... ]
-   *   } ... ]
-   * }
-   *
-   *
-   * @param number startTime
-   *        Since the circular buffer will only grow as long as the profiler lives,
-   *        the buffer can contain unwanted samples. Pass in a `startTime` to only retrieve
-   *        samples that took place after the `startTime`, with 0 being when the profiler
-   *        just started.
-   */
-  onGetProfile: function(request) {
-    let startTime = request.startTime || 0;
-    let profile = nsIProfilerModule.getProfileData(startTime);
-    return { profile: profile, currentTime: nsIProfilerModule.getElapsedTime() };
-  },
-
-  /**
-   * Registers for certain event notifications.
-   * Currently supported events:
-   *   - "console-api-profiler"
-   *   - "profiler-started"
-   *   - "profiler-stopped"
-   */
-  onRegisterEventNotifications: function(request) {
-    let response = [];
-    for (let event of request.events) {
-      if (this._observedEvents.has(event)) {
-        continue;
-      }
-      Services.obs.addObserver(this, event, false);
-      this._observedEvents.add(event);
-      response.push(event);
-    }
-    return { registered: response };
-  },
-
-  /**
-   * Unregisters from certain event notifications.
-   * Currently supported events:
-   *   - "console-api-profiler"
-   *   - "profiler-started"
-   *   - "profiler-stopped"
-   */
-  onUnregisterEventNotifications: function(request) {
-    let response = [];
-    for (let event of request.events) {
-      if (!this._observedEvents.has(event)) {
-        continue;
-      }
-      Services.obs.removeObserver(this, event);
-      this._observedEvents.delete(event);
-      response.push(event);
-    }
-    return { unregistered: response };
-  },
-
-  /**
-   * Callback for all observed notifications.
-   * @param object subject
-   * @param string topic
-   * @param object data
-   */
-  observe: DevToolsUtils.makeInfallible(function(subject, topic, data) {
-    // Create JSON objects suitable for transportation across the RDP,
-    // by breaking cycles and making a copy of the `subject` and `data` via
-    // JSON.stringifying those values with a replacer that omits properties
-    // known to introduce cycles, and then JSON.parsing the result.
-    // This spends some CPU cycles, but it's simple.
-    subject = (subject && !Cu.isXrayWrapper(subject) && subject.wrappedJSObject) || subject;
-    subject = JSON.parse(JSON.stringify(subject, cycleBreaker));
-    data = (data && !Cu.isXrayWrapper(data) && data.wrappedJSObject) || data;
-    data = JSON.parse(JSON.stringify(data, cycleBreaker));
-
-    // Sends actor, type and other additional information over the remote
-    // debugging protocol to any profiler clients.
-    let reply = details => {
-      this.conn.send({
-        from: this.actorID,
-        type: "eventNotification",
-        subject: subject,
-        topic: topic,
-        data: data,
-        details: details
+    // Otherwise if a modern protocol.js event, emit it also as `eventNotification`
+    // for compatibility reasons on the client (like for any add-ons/Gecko Profiler using this
+    // event) and log a deprecation message if there is a listener.
+    else {
+      this.conn.emit("eventNotification", {
+        subject: data.subject,
+        topic: data.topic,
+        data: data.data,
+        details: data.details
       });
-    };
-
-    switch (topic) {
-      case "console-api-profiler":
-        return void reply(this._handleConsoleEvent(subject, data));
-      case "profiler-started":
-      case "profiler-stopped":
-      default:
-        return void reply();
-    }
-  }, "ProfilerActor.prototype.observe"),
-
-  /**
-   * Handles `console.profile` and `console.profileEnd` invocations and
-   * creates an appropriate response sent over the protocol.
-   * @param object subject
-   * @param object data
-   * @return object
-   */
-  _handleConsoleEvent: function(subject, data) {
-    // An optional label may be specified when calling `console.profile`.
-    // If that's the case, stringify it and send it over with the response.
-    let { action, arguments: args } = subject;
-    let profileLabel = args.length > 0 ? args[0] + "" : undefined;
-
-    // If the event was generated from `console.profile` or `console.profileEnd`
-    // we need to start the profiler right away and then just notify the client.
-    // Otherwise, we'll lose precious samples.
-
-    if (action === "profile" || action === "profileEnd") {
-      let { isActive, currentTime } = this.onIsActive();
-
-      // Start the profiler only if it wasn't already active. Otherwise, any
-      // samples that might have been accumulated so far will be discarded.
-      if (!isActive && action === "profile") {
-        this.onStartProfiler();
-        return {
-          profileLabel: profileLabel,
-          currentTime: 0
-        };
+      if (this.conn._getListeners("eventNotification").length) {
+        Cu.reportError(`
+          ProfilerActor's "eventNotification" on the DebuggerClient has been deprecated.
+          Use the ProfilerFront found in "devtools/server/actors/profiler".`);
       }
-      // Otherwise, if inactive and a call to profile end, send
-      // an empty object because we can't do anything with this.
-      else if (!isActive) {
-        return {};
-      }
-
-      // Otherwise, the profiler is already active, so just send
-      // to the front the current time, label, and the notification
-      // adds the action as well.
-      return {
-        profileLabel: profileLabel,
-        currentTime: currentTime
-      };
     }
-  }
-};
-
-exports.ProfilerActor = ProfilerActor;
-
-/**
- * JSON.stringify callback used in ProfilerActor.prototype.observe.
- */
-function cycleBreaker(key, value) {
-  if (key == "wrappedJSObject") {
-    return undefined;
-  }
-  return value;
-}
-
-/**
- * Asserts the value sanity of `gProfilerConsumers`.
- */
-function checkProfilerConsumers() {
-  if (gProfilerConsumers < 0) {
-    let msg = "Somehow the number of started profilers is now negative.";
-    DevToolsUtils.reportException("ProfilerActor", msg);
-  }
-}
-
-/**
- * The request types this actor can handle.
- * At the moment there are two known users of the Profiler actor:
- * the devtools and the Gecko Profiler addon, which uses the debugger
- * protocol to get profiles from Fennec.
- */
-ProfilerActor.prototype.requestTypes = {
-  "getBufferInfo": ProfilerActor.prototype.onGetBufferInfo,
-  "getFeatures": ProfilerActor.prototype.onGetFeatures,
-  "startProfiler": ProfilerActor.prototype.onStartProfiler,
-  "stopProfiler": ProfilerActor.prototype.onStopProfiler,
-  "isActive": ProfilerActor.prototype.onIsActive,
-  "getSharedLibraryInformation": ProfilerActor.prototype.onGetSharedLibraryInformation,
-  "getProfile": ProfilerActor.prototype.onGetProfile,
-  "registerEventNotifications": ProfilerActor.prototype.onRegisterEventNotifications,
-  "unregisterEventNotifications": ProfilerActor.prototype.onUnregisterEventNotifications,
-  "getStartOptions": ProfilerActor.prototype.onGetStartOptions
-};
+  },
+});
