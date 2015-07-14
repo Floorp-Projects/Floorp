@@ -82,7 +82,7 @@ NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::In
 
 extern JSObject*
 NewFullyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
-                                  NewObjectKind newKind = GenericObject);
+                                  NewObjectKind newKind = GenericObject, bool forceAnalyze = false);
 
 extern JSObject*
 NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length);
