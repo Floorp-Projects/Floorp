@@ -33,7 +33,7 @@ enum DomainSetType{
     SUPER_WHITELIST
 };
 
-class DomainSet : public nsIDomainSet
+class DomainSet final : public nsIDomainSet
 {
 public:
     NS_DECL_ISUPPORTS
@@ -51,7 +51,7 @@ protected:
     DomainSetType mType;
 };
 
-class DomainPolicy : public nsIDomainPolicy
+class DomainPolicy final : public nsIDomainPolicy
 {
 public:
     NS_DECL_ISUPPORTS
