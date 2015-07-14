@@ -203,13 +203,8 @@ private:
     void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);
 
     void               NativeMove();
-    void               NativeResize(int32_t aWidth,
-                                    int32_t aHeight);
-
-    void               NativeResize(int32_t aX,
-                                    int32_t aY,
-                                    int32_t aWidth,
-                                    int32_t aHeight);
+    void               NativeResize();
+    void               NativeMoveResize();
 
     void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
@@ -500,6 +495,7 @@ private:
     gint DevicePixelsToGdkCoordRoundDown(int pixels);
     GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
     GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
+    GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
 
     // From GDK
     int GdkCoordToDevicePixels(gint coord);
