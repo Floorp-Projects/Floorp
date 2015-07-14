@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type, optional MozCellBroadcastEventInit eventInitDict),
  Pref="dom.cellbroadcast.enabled",
- CheckPermissions="cellbroadcast",
+ CheckAnyPermissions="cellbroadcast",
  AvailableIn="CertifiedApps"]
 interface MozCellBroadcastEvent : Event
 {

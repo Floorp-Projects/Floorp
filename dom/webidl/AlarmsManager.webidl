@@ -8,7 +8,7 @@
 
 [NavigatorProperty="mozAlarms",
  JSImplementation="@mozilla.org/alarmsManager;1",
- CheckPermissions="alarms",
+ CheckAnyPermissions="alarms",
  Pref="dom.mozAlarms.enabled"]
 interface AlarmsManager {
   DOMRequest getAll();

@@ -6,7 +6,7 @@
 
 [AvailableIn=CertifiedApps,
  Pref="dom.requestSync.enabled",
- CheckPermissions="requestsync-manager",
+ CheckAnyPermissions="requestsync-manager",
  JSImplementation="@mozilla.org/dom/request-sync-task-app;1"]
 interface RequestSyncApp {
   readonly attribute USVString origin;
@@ -19,7 +19,7 @@ enum RequestSyncTaskPolicyState { "enabled", "disabled", "wifiOnly" };
 // Like a normal task, but with info about the app.
 [AvailableIn=CertifiedApps,
  Pref="dom.requestSync.enabled",
- CheckPermissions="requestsync-manager",
+ CheckAnyPermissions="requestsync-manager",
  JSImplementation="@mozilla.org/dom/request-sync-task-manager;1"]
 interface RequestSyncTask {
   // This object describes the app that is owning the task.
@@ -48,7 +48,7 @@ interface RequestSyncTask {
 [NavigatorProperty="syncManager",
  AvailableIn=CertifiedApps,
  Pref="dom.requestSync.enabled",
- CheckPermissions="requestsync-manager",
+ CheckAnyPermissions="requestsync-manager",
  JSImplementation="@mozilla.org/dom/request-sync-manager;1"]
 // This interface will be used only by the B2G SystemApp
 interface RequestSyncManager {

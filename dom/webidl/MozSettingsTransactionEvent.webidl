@@ -5,7 +5,7 @@
  */
 
 [Constructor(DOMString type, optional MozSettingsTransactionEventInit eventInitDict),
- CheckPermissions="settings-api-read settings-api-write"]
+ CheckAnyPermissions="settings-api-read settings-api-write"]
 interface MozSettingsTransactionEvent : Event
 {
   readonly attribute DOMString? error;

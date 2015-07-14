@@ -5,7 +5,7 @@
  */
 
 [Constructor(DOMString type, optional ExternalAppEventInit eventInitDict),
- CheckPermissions="external-app"]
+ CheckAnyPermissions="external-app"]
 interface ExternalAppEvent : Event
 {
   readonly attribute DOMString data;

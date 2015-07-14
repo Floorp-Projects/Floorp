@@ -115,7 +115,7 @@ dictionary SmscAddress {
 };
 
 [Pref="dom.sms.enabled",
- CheckPermissions="sms",
+ CheckAnyPermissions="sms",
  AvailableIn="CertifiedApps"]
 interface MozMobileMessageManager : EventTarget
 {

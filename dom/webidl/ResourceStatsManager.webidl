@@ -70,7 +70,7 @@ dictionary ResourceStatsAlarmOptions
   any                           data;
 };
 
-[CheckPermissions="resourcestats-manage",
+[CheckAnyPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/resourceStatsAlarm;1"]
@@ -112,7 +112,7 @@ interface ResourceStatsAlarm
   readonly attribute any                    data;
 };
 
-[CheckPermissions="resourcestats-manage",
+[CheckAnyPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  Constructor(ResourceType type),
  AvailableIn="CertifiedApps",

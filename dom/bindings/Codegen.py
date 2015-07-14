@@ -1895,11 +1895,11 @@ class MemberCondition:
     None, they should be strings that have the pref name (for "pref")
     or function name (for "func" and "available").
     """
-    def __init__(self, pref, func, available=None, checkPermissions=None, checkAllPermissions=None):
+    def __init__(self, pref, func, available=None, checkAnyPermissions=None, checkAllPermissions=None):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
         assert available is None or isinstance(available, str)
-        assert checkPermissions is None or isinstance(checkPermissions, int)
+        assert checkAnyPermissions is None or isinstance(checkAnyPermissions, int)
         assert checkAllPermissions is None or isinstance(checkAllPermissions, int)
         self.pref = pref
 
@@ -1909,10 +1909,10 @@ class MemberCondition:
             return "&" + val
         self.func = toFuncPtr(func)
         self.available = toFuncPtr(available)
-        if checkPermissions is None:
-            self.checkPermissions = "nullptr"
+        if checkAnyPermissions is None:
+            self.checkAnyPermissions = "nullptr"
         else:
-            self.checkPermissions = "permissions_%i" % checkPermissions
+            self.checkAnyPermissions = "anypermissions_%i" % checkAnyPermissions
         if checkAllPermissions is None:
             self.checkAllPermissions = "nullptr"
         else:
@@ -1921,7 +1921,7 @@ class MemberCondition:
     def __eq__(self, other):
         return (self.pref == other.pref and self.func == other.func and
                 self.available == other.available and
-                self.checkPermissions == other.checkPermissions and
+                self.checkAnyPermissions == other.checkAnyPermissions and
                 self.checkAllPermissions == other.checkAllPermissions)
 
     def __ne__(self, other):
@@ -1990,7 +1990,7 @@ class PropertyDefiner:
                                PropertyDefiner.getStringAttr(interfaceMember,
                                                              "Func"),
                                getAvailableInTestFunc(interfaceMember),
-                               descriptor.checkPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
+                               descriptor.checkAnyPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
                                descriptor.checkAllPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
 
     def generatePrefableArray(self, array, name, specFormatter, specTerminator,
@@ -2043,7 +2043,7 @@ class PropertyDefiner:
             prefableSpecs.append(prefableTemplate %
                                  (condition.func,
                                   condition.available,
-                                  condition.checkPermissions,
+                                  condition.checkAnyPermissions,
                                   condition.checkAllPermissions,
                                   name + "_specs", len(specs)))
 
@@ -3175,9 +3175,9 @@ class CGConstructorEnabled(CGAbstractMethod):
         availableIn = getAvailableInTestFunc(iface)
         if availableIn:
             conditions.append("%s(aCx, aObj)" % availableIn)
-        checkPermissions = self.descriptor.checkPermissionsIndex
-        if checkPermissions is not None:
-            conditions.append("CheckPermissions(aCx, aObj, permissions_%i)" % checkPermissions)
+        checkAnyPermissions = self.descriptor.checkAnyPermissionsIndex
+        if checkAnyPermissions is not None:
+            conditions.append("CheckAnyPermissions(aCx, aObj, anypermissions_%i)" % checkAnyPermissions)
         checkAllPermissions = self.descriptor.checkAllPermissionsIndex
         if checkAllPermissions is not None:
             conditions.append("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions)
@@ -11447,7 +11447,7 @@ class CGDescriptor(CGThing):
         if descriptor.concrete and descriptor.wrapperCache:
             cgThings.append(CGClassObjectMovedHook(descriptor))
 
-        for name in ["permissions", "allpermissions"]:
+        for name in ["anypermissions", "allpermissions"]:
             permissions = getattr(descriptor, name)
             if len(permissions):
                 for (k, v) in sorted(permissions.items()):

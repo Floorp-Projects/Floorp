@@ -4,6 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.inputport.enabled", CheckPermissions="inputport", AvailableIn=CertifiedApps]
+[Pref="dom.inputport.enabled", CheckAnyPermissions="inputport", AvailableIn=CertifiedApps]
  interface HDMIInputPort : InputPort {
  };
