@@ -7,7 +7,9 @@
 #ifndef mozilla_ipc_Ril_h
 #define mozilla_ipc_Ril_h 1
 
+#include "nsAutoPtr.h"
 #include "nsError.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -21,6 +23,8 @@ class WorkerCrossThreadDispatcher;
 
 namespace ipc {
 
+class RilConsumer;
+
 class RilWorker final
 {
 public:
@@ -29,6 +33,16 @@ public:
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
   static void Shutdown();
+
+private:
+  RilWorker(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+
+  nsresult RegisterConsumer(unsigned int aClientId);
+  void     UnregisterConsumer(unsigned int aClientId);
+
+  static nsTArray<nsAutoPtr<RilWorker>> sRilWorkers;
+
+  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
 };
 
 } // namespace ipc
