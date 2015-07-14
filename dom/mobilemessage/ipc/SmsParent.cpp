@@ -761,9 +761,13 @@ SmsRequestParent::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-SmsRequestParent::NotifyGetSmscAddress(const nsAString& aSmscAddress)
+SmsRequestParent::NotifyGetSmscAddress(const nsAString& aSmscAddress,
+                                       uint32_t aTypeOfNumber,
+                                       uint32_t aNumberPlanIdentification)
 {
-  return SendReply(ReplyGetSmscAddress(nsString(aSmscAddress)));
+  return SendReply(ReplyGetSmscAddress(nsString(aSmscAddress),
+                                       aTypeOfNumber,
+                                       aNumberPlanIdentification));
 }
 
 NS_IMETHODIMP
