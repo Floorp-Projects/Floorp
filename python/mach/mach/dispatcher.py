@@ -92,7 +92,6 @@ class CommandAction(argparse.Action):
         elif values:
             command = values[0].lower()
             args = values[1:]
-
             if command == 'help':
                 if args and args[0] not in ['-h', '--help']:
                     # Make sure args[0] is indeed a command.
@@ -102,8 +101,17 @@ class CommandAction(argparse.Action):
                 sys.exit(0)
             elif '-h' in args or '--help' in args:
                 # -h or --help is in the command arguments.
-                self._handle_command_help(parser, command)
-                sys.exit(0)
+                if '--' in args:
+                    # -- is in command arguments
+                    if '-h' in args[:args.index('--')] or '--help' in args[:args.index('--')]:
+                        # Honor -h or --help only if it appears before --
+                        self._handle_main_help(parser, command)
+                        sys.exit(0)
+                else:
+                    self._handle_main_help(parser, command)
+                    sys.exit(0)
+
+
         else:
             raise NoCommandError()
 
