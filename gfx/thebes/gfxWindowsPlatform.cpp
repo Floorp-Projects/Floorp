@@ -1876,6 +1876,11 @@ gfxWindowsPlatform::InitD3D11Devices()
   }
 
   bool useWARP = false;
+  bool allowWARP = false;
+
+  if (IsWin8OrLater()) {
+    allowWARP = true;
+  }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
@@ -1899,7 +1904,7 @@ gfxWindowsPlatform::InitD3D11Devices()
             }
         }
 
-        useWARP = true;
+        useWARP = allowWARP;
       }
     }
   }
@@ -1935,7 +1940,7 @@ gfxWindowsPlatform::InitD3D11Devices()
       if (!gfxPrefs::LayersD3D11DisableWARP()) {
         return;
       }
-      useWARP = true;
+      useWARP = allowWARP;
     }
   }
 
@@ -1957,7 +1962,7 @@ gfxWindowsPlatform::InitD3D11Devices()
         return;
       }
 
-      useWARP = true;
+      useWARP = allowWARP;
       adapter = nullptr;
     }
 
@@ -1967,7 +1972,7 @@ gfxWindowsPlatform::InitD3D11Devices()
         return;
       }
 
-      useWARP = true;
+      useWARP = allowWARP;
       adapter = nullptr;
     }
   }
@@ -2001,6 +2006,9 @@ gfxWindowsPlatform::InitD3D11Devices()
       return;
     }
   }
+
+  if (!mD3D11Device)
+    return;
 
   mD3D11Device->SetExceptionMode(0);
 
