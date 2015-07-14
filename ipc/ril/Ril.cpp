@@ -31,7 +31,8 @@
 namespace mozilla {
 namespace ipc {
 
-USING_WORKERS_NAMESPACE
+USING_WORKERS_NAMESPACE;
+using namespace JS;
 
 class RilConsumer;
 
@@ -48,8 +49,7 @@ class RilConsumer final : public RilSocketConsumer
 public:
   RilConsumer();
 
-  void Send(UnixSocketRawData* aRawData);
-  void Close();
+  nsresult ConnectWorkerToRIL(JSContext* aCx);
 
   nsresult Register(unsigned long aClientId,
                     WorkerCrossThreadDispatcher* aDispatcher);
@@ -65,110 +65,54 @@ public:
   void OnConnectError(int aIndex) override;
   void OnDisconnect(int aIndex) override;
 
+protected:
+  static bool PostRILMessage(JSContext* aCx, unsigned aArgc, Value* aVp);
+
+  nsresult Send(JSContext* aCx, const CallArgs& aArgs);
+  nsresult Receive(JSContext* aCx,
+                   uint32_t aClientId,
+                   const UnixSocketBuffer* aBuffer);
+  void Close();
+
 private:
   nsRefPtr<RilSocket> mSocket;
   nsCString mAddress;
   bool mShutdown;
 };
 
-class ConnectWorkerToRIL final : public WorkerTask
-{
-public:
-  bool RunTask(JSContext* aCx) override;
-};
+RilConsumer::RilConsumer()
+  : mShutdown(false)
+{ }
 
-static bool
-PostToRIL(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
-
-  if (args.length() != 2) {
-    JS_ReportError(aCx, "Expecting two arguments with the RIL message");
-    return false;
-  }
-
-  int clientId = args[0].toInt32();
-  JS::Value v = args[1];
-
-  nsAutoPtr<UnixSocketRawData> raw;
-
-  if (v.isString()) {
-    JSAutoByteString abs;
-    JS::Rooted<JSString*> str(aCx, v.toString());
-    if (!abs.encodeUtf8(aCx, str)) {
-      return false;
-    }
-
-    raw = new UnixSocketRawData(abs.ptr(), abs.length());
-  } else if (!v.isPrimitive()) {
-    JSObject* obj = v.toObjectOrNull();
-    if (!JS_IsTypedArrayObject(obj)) {
-      JS_ReportError(aCx, "Object passed in wasn't a typed array");
-      return false;
-    }
-
-    uint32_t type = JS_GetArrayBufferViewType(obj);
-    if (type != js::Scalar::Int8 &&
-        type != js::Scalar::Uint8 &&
-        type != js::Scalar::Uint8Clamped) {
-      JS_ReportError(aCx, "Typed array data is not octets");
-      return false;
-    }
-
-    JS::AutoCheckCannotGC nogc;
-    size_t size = JS_GetTypedArrayByteLength(obj);
-    void* data = JS_GetArrayBufferViewData(obj, nogc);
-    raw = new UnixSocketRawData(data, size);
-  } else {
-    JS_ReportError(
-      aCx, "Incorrect argument. Expecting a string or a typed array");
-    return false;
-  }
-
-  if (!raw) {
-    JS_ReportError(aCx, "Unable to post to RIL");
-    return false;
-  }
-
-  if ((ssize_t)sRilConsumers.Length() <= clientId || !sRilConsumers[clientId]) {
-    // Probably shutting down.
-    return true;
-  }
-
-  sRilConsumers[clientId]->Send(raw.forget());
-
-  return true;
-}
-
-bool
-ConnectWorkerToRIL::RunTask(JSContext* aCx)
+nsresult
+RilConsumer::ConnectWorkerToRIL(JSContext* aCx)
 {
   // Set up the postRILMessage on the function for worker -> RIL thread
   // communication.
-  //NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
   NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
-  JS::Rooted<JSObject*> workerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
+  Rooted<JSObject*> workerGlobal(aCx, CurrentGlobalOrNull(aCx));
 
   // Check whether |postRILMessage| has been defined.  No one but this class
   // should ever define |postRILMessage| in a RIL worker.
-  JS::Rooted<JS::Value> val(aCx);
+  Rooted<Value> val(aCx);
   if (!JS_GetProperty(aCx, workerGlobal, "postRILMessage", &val)) {
     JS_ReportPendingException(aCx);
-    return false;
+    return NS_ERROR_FAILURE;
   }
 
   // Make sure that |postRILMessage| is a function.
   if (JSTYPE_FUNCTION == JS_TypeOfValue(aCx, val)) {
-    return true;
+    return NS_OK;
   }
 
-  return !!JS_DefineFunction(aCx, workerGlobal, "postRILMessage",
-                             PostToRIL, 2, 0);
+  JSFunction* postRILMessage = JS_DefineFunction(aCx, workerGlobal,
+                                                 "postRILMessage",
+                                                 PostRILMessage, 2, 0);
+  if (NS_WARN_IF(!postRILMessage)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
-
-RilConsumer::RilConsumer()
-  : mShutdown(false)
-{ }
 
 nsresult
 RilConsumer::Register(unsigned long aClientId,
@@ -202,15 +146,114 @@ RilConsumer::Unregister()
   Close();
 }
 
-void
-RilConsumer::Send(UnixSocketRawData* aRawData)
+bool
+RilConsumer::PostRILMessage(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
-  if (!mSocket || mSocket->GetConnectionStatus() != SOCKET_CONNECTED) {
-    // Probably shutting down.
-    delete aRawData;
-    return;
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (args.length() != 2) {
+    JS_ReportError(aCx, "Expecting two arguments with the RIL message");
+    return false;
   }
-  mSocket->SendSocketData(aRawData);
+
+  int clientId = args[0].toInt32();
+
+  if ((ssize_t)sRilConsumers.Length() <= clientId || !sRilConsumers[clientId]) {
+    // Probably shutting down.
+    return true;
+  }
+
+  nsresult rv = sRilConsumers[clientId]->Send(aCx, args);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return true;
+}
+
+nsresult
+RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
+{
+  if (NS_WARN_IF(!mSocket) ||
+      NS_WARN_IF(mSocket->GetConnectionStatus() != SOCKET_CONNECTED)) {
+    // Probably shutting down.
+    return NS_OK;
+  }
+
+  nsAutoPtr<UnixSocketRawData> raw;
+
+  Value v = aArgs[1];
+
+  if (v.isString()) {
+    JSAutoByteString abs;
+    Rooted<JSString*> str(aCx, v.toString());
+    if (!abs.encodeUtf8(aCx, str)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    raw = new UnixSocketRawData(abs.ptr(), abs.length());
+  } else if (!v.isPrimitive()) {
+    JSObject* obj = v.toObjectOrNull();
+    if (!JS_IsTypedArrayObject(obj)) {
+      JS_ReportError(aCx, "Object passed in wasn't a typed array");
+      return NS_ERROR_FAILURE;
+    }
+
+    uint32_t type = JS_GetArrayBufferViewType(obj);
+    if (type != js::Scalar::Int8 &&
+        type != js::Scalar::Uint8 &&
+        type != js::Scalar::Uint8Clamped) {
+      JS_ReportError(aCx, "Typed array data is not octets");
+      return NS_ERROR_FAILURE;
+    }
+
+    AutoCheckCannotGC nogc;
+    size_t size = JS_GetTypedArrayByteLength(obj);
+    void* data = JS_GetArrayBufferViewData(obj, nogc);
+    raw = new UnixSocketRawData(data, size);
+  } else {
+    JS_ReportError(
+      aCx, "Incorrect argument. Expecting a string or a typed array");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!raw) {
+    JS_ReportError(aCx, "Unable to post to RIL");
+    return NS_ERROR_FAILURE;
+  }
+
+  mSocket->SendSocketData(raw.forget());
+
+  return NS_OK;
+}
+
+nsresult
+RilConsumer::Receive(JSContext* aCx,
+                     uint32_t aClientId,
+                     const UnixSocketBuffer* aBuffer)
+{
+  MOZ_ASSERT(aBuffer);
+
+  Rooted<JSObject*> obj(aCx, CurrentGlobalOrNull(aCx));
+
+  Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, aBuffer->GetSize()));
+  if (NS_WARN_IF(!array)) {
+    return NS_ERROR_FAILURE;
+  }
+  {
+    AutoCheckCannotGC nogc;
+    memcpy(JS_GetArrayBufferViewData(array, nogc),
+           aBuffer->GetData(), aBuffer->GetSize());
+  }
+
+  AutoValueArray<2> args(aCx);
+  args[0].setNumber(aClientId);
+  args[1].setObject(*array);
+
+  Rooted<Value> rval(aCx);
+  JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
+
+  return NS_OK;
 }
 
 void
@@ -229,24 +272,7 @@ RilConsumer::ReceiveSocketData(JSContext* aCx,
                                int aIndex,
                                nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
-
-  JS::Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, aBuffer->GetSize()));
-  if (!array) {
-    return;
-  }
-  {
-    JS::AutoCheckCannotGC nogc;
-    memcpy(JS_GetArrayBufferViewData(array, nogc),
-           aBuffer->GetData(), aBuffer->GetSize());
-  }
-
-  JS::AutoValueArray<2> args(aCx);
-  args[0].setNumber((uint32_t)aIndex);
-  args[1].setObject(*array);
-
-  JS::Rooted<JS::Value> rval(aCx);
-  JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
+  Receive(aCx, (uint32_t)aIndex, aBuffer);
 }
 
 void
@@ -343,7 +369,12 @@ public:
 
     nsAutoPtr<RilConsumer> rilConsumer(new RilConsumer());
 
-    nsresult rv = rilConsumer->Register(mClientId, mDispatcher);
+    nsresult rv = rilConsumer->ConnectWorkerToRIL(aCx);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    rv = rilConsumer->Register(mClientId, mDispatcher);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -360,12 +391,6 @@ private:
 nsresult
 RilWorker::RegisterConsumer(unsigned int aClientId)
 {
-  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
-  if (!mDispatcher->PostTask(connection)) {
-    NS_WARNING("Failed to connect worker to ril");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsRefPtr<RegisterConsumerTask> task = new RegisterConsumerTask(aClientId,
                                                                  mDispatcher);
   if (!mDispatcher->PostTask(task)) {
