@@ -48,7 +48,7 @@ function runTest() {
     // Delay until next repaint in case stuff is asynchronous. Also
     // take a trip through the event loop.
     setTimeout(function() {
-      window.mozRequestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
         is(sel.anchorNode, target.firstChild, "Should have selected 'target' text node");
         is(sel.anchorOffset, 1, "Selection should have moved left one character");
         // We should not have needed to scroll the caret into view

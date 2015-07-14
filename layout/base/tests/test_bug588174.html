@@ -21,24 +21,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=569520
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
-var startNow = Date.now();
-var start = window.mozAnimationStartTime;
+var start = window.performance.now();
 var firstListenerArg;
 var secondListenerArg;
 var thirdListenerTime;
 
-// callback arg is wallclock from mozRequestAnimationFrame
+// callback arg is in the same timeline as performance.now()
 function thirdListener(t) {
   thirdListenerTime = t;
 
-  // They really shouldn't be more than 100ms apart, but we can get weird
-  // effects on slow machines.  5 minutes is our test timeout, though.
-  ok(Math.abs(startNow - start) <= 5 * 60 * 1000, "Bogus animation start time");
-
-  ok(secondListenerArg >= firstListenerArg, // callback args from consecutive unprefixed requestAnimationFrame
+  ok(secondListenerArg >= firstListenerArg, // callback args from consecutive requestAnimationFrame
      "Second listener should fire after first listener");
 
-  ok(thirdListenerTime >= start, "Third listener should fire after start");
+  ok(thirdListenerTime >= secondListenerArg,
+     "Third listener should fire after second listener");
+
+  ok(firstListenerArg >= start, "First listener should fire after start");
 
   SimpleTest.finish();
 }
@@ -46,7 +44,7 @@ function thirdListener(t) {
 // callback arg is from requestAnimationFrame and comparable to performance.now()
 function secondListener(t) {
   secondListenerArg = t;
-  mozRequestAnimationFrame(thirdListener);
+  requestAnimationFrame(thirdListener);
 }
 
 function firstListener(t) {
