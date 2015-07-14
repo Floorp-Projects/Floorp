@@ -1117,9 +1117,8 @@ var imagePermissionObserver = {
         var row = getSelectedRow(imageTree);
         var item = gImageView.data[row][COL_IMAGE_NODE];
         var url = gImageView.data[row][COL_IMAGE_ADDRESS];
-        if (permission.matchesURI(makeURI(url), true)) {
+        if (makeURI(url).host == permission.host)
           makeBlockImage(url);
-        }
       }
     }
   }
