@@ -1603,15 +1603,13 @@ PLDHashOperator
 nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey* entry, void* arg)
 {
   GetPermissionsForAppStruct* data = static_cast<GetPermissionsForAppStruct*>(arg);
+  if (entry->GetKey()->mAppId != data->appId ||
+      (data->browserOnly && !entry->GetKey()->mIsInBrowserElement)) {
+    return PL_DHASH_NEXT;
+  }
 
   for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
     nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
-
-    if (entry->GetKey()->mAppId != data->appId ||
-        (data->browserOnly && !entry->GetKey()->mIsInBrowserElement)) {
-      continue;
-    }
-
     data->permissions.AppendObject(new nsPermission(entry->GetKey()->mHost,
                                                     entry->GetKey()->mAppId,
                                                     entry->GetKey()->mIsInBrowserElement,
@@ -1692,12 +1690,11 @@ nsPermissionManager::RemoveExpiredPermissionsForAppEnumerator(
   nsPermissionManager::PermissionHashKey* entry, void* arg)
 {
   uint32_t* appId = static_cast<uint32_t*>(arg);
+  if (entry->GetKey()->mAppId != *appId) {
+    return PL_DHASH_NEXT;
+  }
 
   for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    if (entry->GetKey()->mAppId != *appId) {
-      continue;
-    }
-
     nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
     if (permEntry.mExpireType != nsIPermissionManager::EXPIRE_SESSION) {
       continue;
