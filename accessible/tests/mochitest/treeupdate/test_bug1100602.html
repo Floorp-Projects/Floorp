@@ -1,0 +1,114 @@
+<html>
+
+<head>
+  <title>Test hide/show events for HTMLListBulletAccessibles on list restyle</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Change list style type to none.
+     */
+    function hideBullet()
+    {
+      this.eventSeq = [];
+      this.liAcc = getAccessible("list_element");
+      this.bullet = this.liAcc.firstChild;
+
+      this.eventSeq.push(new invokerChecker(EVENT_HIDE, this.bullet));
+      this.eventSeq.push(new invokerChecker(EVENT_REORDER, this.liAcc));
+
+      this.invoke = function hideBullet_invoke()
+      {
+        getNode("list").setAttribute("style", "list-style-type: none;");
+      }
+
+      this.finalCheck = function hideBullet_finalCheck()
+      {
+        is(this.liAcc.name, "list element",
+          "Check that first child of LI is not a bullet.");
+      }
+
+      this.getID = function hideBullet_getID()
+      {
+        return "Hide bullet by setting style to none";
+      }
+    }
+
+    /**
+     * Change list style type to circles.
+     */
+    function showBullet()
+    {
+      this.eventSeq = [];
+      this.liAcc = getAccessible("list_element");
+
+      this.eventSeq.push(new invokerChecker(EVENT_SHOW,
+                                            function(aNode) { return aNode.firstChild; },
+                                            this.liAcc));
+      this.eventSeq.push(new invokerChecker(EVENT_REORDER, this.liAcc));
+
+      this.invoke = function showBullet_invoke()
+      {
+        getNode("list").setAttribute("style", "list-style-type: circle;");
+      }
+
+      this.finalCheck = function showBullet_finalCheck()
+      {
+        is(this.liAcc.name, "◦ list element",
+          "Check that first child of LI is a circle bullet.");
+      }
+
+      this.getID = function showBullet_getID()
+      {
+        return "Show bullet by setting style to circle";
+      }
+    }
+
+    var gQueue = null;
+    function doTest()
+    {
+
+      var list = getNode("list");
+      list.setAttribute("style", "list-style-type: circle;");
+
+      gQueue = new eventQueue();
+      gQueue.push(new hideBullet());
+      gQueue.push(new showBullet());
+      gQueue.invoke(); // SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1100602"
+     title="[e10s] crash in mozilla::a11y::ProxyAccessible::Shutdown()">
+    Mozilla Bug 1100602
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ol id="list">
+    <li id="list_element">list element</li>
+  </ol>
+
+</body>
+</html>
