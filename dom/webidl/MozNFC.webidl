@@ -35,44 +35,44 @@ interface MozNFCManager {
    * Returns success if given manifestUrl is registered for 'onpeerready',
    * otherwise error
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   Promise<boolean> checkP2PRegistration(DOMString manifestUrl);
 
   /**
    * Notify that user has accepted to share nfc message on P2P UI
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   void notifyUserAcceptedP2P(DOMString manifestUrl);
 
   /**
    * Notify the status of sendFile operation
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   void notifySendFileStatus(octet status, DOMString requestId);
 
   /**
    * Power on the NFC hardware and start polling for NFC tags or devices.
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   Promise<void> startPoll();
 
   /**
    * Stop polling for NFC tags or devices. i.e. enter low power mode.
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   Promise<void> stopPoll();
 
   /**
    * Power off the NFC hardware.
    */
-  [CheckPermissions="nfc-manager", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-manager", AvailableIn=CertifiedApps]
   Promise<void> powerOff();
 };
 
 [JSImplementation="@mozilla.org/nfc/manager;1",
  NavigatorProperty="mozNfc",
  Func="Navigator::HasNFCSupport",
- CheckPermissions="nfc nfc-share",
+ CheckAnyPermissions="nfc nfc-share",
  AvailableIn="PrivilegedApps",
  UnsafeInPrerendering]
 interface MozNFC : EventTarget {
@@ -86,7 +86,7 @@ interface MozNFC : EventTarget {
    * to share data to the NFCPeer object by calling mozNFC.notifyUserAcceptedP2P.
    * The event will be type of NFCPeerEvent.
    */
-  [CheckPermissions="nfc-share", AvailableIn=CertifiedApps]
+  [CheckAnyPermissions="nfc-share", AvailableIn=CertifiedApps]
   attribute EventHandler onpeerready;
 
   /**

@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type,
              optional BluetoothStatusChangedEventInit eventInitDict),
- CheckPermissions="bluetooth"]
+ CheckAnyPermissions="bluetooth"]
 interface BluetoothStatusChangedEvent : Event
 {
   readonly attribute DOMString address;

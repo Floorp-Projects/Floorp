@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type,
              optional BluetoothDiscoveryStateChangedEventInit eventInitDict),
- CheckPermissions="bluetooth"]
+ CheckAnyPermissions="bluetooth"]
 interface BluetoothDiscoveryStateChangedEvent : Event
 {
     readonly attribute boolean discovering;

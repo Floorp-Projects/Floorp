@@ -6,7 +6,7 @@
 
 [Constructor(DOMString typeArg,
  optional BeforeAfterKeyboardEventInit eventInitDict),
- CheckPermissions="embed-apps before-after-keyboard-event",
+ CheckAnyPermissions="embed-apps before-after-keyboard-event",
  Pref="dom.beforeAfterKeyboardEvent.enabled"]
 interface BeforeAfterKeyboardEvent : KeyboardEvent
 {

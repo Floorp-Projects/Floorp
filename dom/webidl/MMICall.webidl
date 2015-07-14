@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckPermissions="telephony",
+ CheckAnyPermissions="telephony",
  AvailableIn="CertifiedApps"]
 interface MMICall {
   [Throws]

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[CheckPermissions="external-app"]
+[CheckAnyPermissions="external-app"]
 interface HTMLExtAppElement : HTMLElement {
   // Gets the value of the property from a property bag
   // that was provided to the external application.

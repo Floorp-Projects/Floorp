@@ -30,32 +30,32 @@ BrowserElement implements BrowserElementPrivileged;
 interface BrowserElementCommon {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   void setVisible(boolean visible);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   DOMRequest getVisible();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   void setActive(boolean active);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   boolean getActive();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   void addNextPaintListener(BrowserElementNextPaintEventCallback listener);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser embed-widgets"]
+   CheckAnyPermissions="browser embed-widgets"]
   void removeNextPaintListener(BrowserElementNextPaintEventCallback listener);
 };
 
@@ -63,7 +63,7 @@ interface BrowserElementCommon {
 interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void sendMouseEvent(DOMString type,
                       unsigned long x,
                       unsigned long y,
@@ -74,7 +74,7 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    Func="TouchEvent::PrefEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void sendTouchEvent(DOMString type,
                       sequence<unsigned long> identifiers,
                       sequence<long> x,
@@ -88,60 +88,60 @@ interface BrowserElementPrivileged {
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void goBack();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void goForward();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void reload(optional boolean hardReload = false);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void stop();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest download(DOMString url,
                       optional BrowserElementDownloadOptions options);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest purgeHistory();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest getScreenshot([EnforceRange] unsigned long width,
                            [EnforceRange] unsigned long height,
                            optional DOMString mimeType="");
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void zoom(float zoom);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest getCanGoBack();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest getCanGoForward();
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest getContentDimensions();
 
   [Throws,
@@ -156,23 +156,23 @@ interface BrowserElementPrivileged {
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void findAll(DOMString searchString, BrowserFindCaseSensitivity caseSensitivity);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void findNext(BrowserFindDirection direction);
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   void clearMatch();
 
   // Additional |browser:universalxss| permission is required for executeScript API
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckPermissions="browser"]
+   CheckAnyPermissions="browser"]
   DOMRequest executeScript(DOMString script,
                            optional BrowserElementExecuteScriptOptions options);
 

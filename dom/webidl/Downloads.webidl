@@ -19,7 +19,7 @@ enum DownloadState {
 
 //
 // XXXTODO: When we have a generic way to do feature detection in marketplace
-//          we will *STOP* using the pref and use CheckPermissions like 
+//          we will *STOP* using the pref and use CheckAnyPermissions like 
 //          DOMDownload and DownloadEvent.
 //
 [NoInterfaceObject,
@@ -69,7 +69,7 @@ interface DOMDownloadManager : EventTarget {
 
 [JSImplementation="@mozilla.org/downloads/download;1",
  Pref="dom.mozDownloads.enabled",
- CheckPermissions="downloads"]
+ CheckAnyPermissions="downloads"]
 interface DOMDownload : EventTarget {
   // The full size of the resource.
   readonly attribute long long totalBytes;

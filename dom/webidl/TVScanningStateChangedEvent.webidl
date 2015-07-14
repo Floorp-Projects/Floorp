@@ -20,7 +20,7 @@ dictionary TVScanningStateChangedEventInit : EventInit {
 };
 
 [Pref="dom.tv.enabled",
- CheckPermissions="tv",
+ CheckAnyPermissions="tv",
  Func="Navigator::HasTVSupport",
  Constructor(DOMString type, optional TVScanningStateChangedEventInit eventInitDict)]
 interface TVScanningStateChangedEvent : Event {

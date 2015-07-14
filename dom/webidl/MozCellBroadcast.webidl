@@ -9,7 +9,7 @@
  * a particular region.
  */
 [Pref="dom.cellbroadcast.enabled",
- CheckPermissions="cellbroadcast",
+ CheckAnyPermissions="cellbroadcast",
  AvailableIn="CertifiedApps"]
 interface MozCellBroadcast : EventTarget
 {
