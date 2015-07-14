@@ -266,28 +266,18 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
   bool mAnyMarked;
 };
 
-struct Closure
-{
-  explicit Closure()
-    : mCycleCollectionEnabled(true)
-  {
-  }
-
-  bool mCycleCollectionEnabled;
-};
-
 static void
 CheckParticipatesInCycleCollection(JS::GCCellPtr aThing, const char* aName,
                                    void* aClosure)
 {
-  Closure* closure = static_cast<Closure*>(aClosure);
+  bool* cycleCollectionEnabled = static_cast<bool*>(aClosure);
 
-  if (closure->mCycleCollectionEnabled) {
+  if (*cycleCollectionEnabled) {
     return;
   }
 
   if (AddToCCKind(aThing.kind()) && JS::GCThingIsMarkedGray(aThing)) {
-    closure->mCycleCollectionEnabled = true;
+    *cycleCollectionEnabled = true;
   }
 }
 
@@ -657,20 +647,17 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
 
-  Closure closure;
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
     void* holder = iter.GetKey();
     nsScriptObjectTracer*& tracer = iter.GetData();
 
-    bool noteRoot;
+    bool noteRoot = false;
     if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
       noteRoot = true;
     } else {
-      closure.mCycleCollectionEnabled = false;
       tracer->Trace(holder,
                     TraceCallbackFunc(CheckParticipatesInCycleCollection),
-                    &closure);
-      noteRoot = closure.mCycleCollectionEnabled;
+                    &noteRoot);
     }
 
     if (noteRoot) {
