@@ -9,6 +9,7 @@
                                    hsla(0,0%,16%,.2) 35%,
                                    hsla(0,0%,16%,.2) 65%,
                                    hsla(0,0%,16%,0));
+  --identity-box-selected-background-color: rgb(231,230,230);
   --identity-box-verified-color: hsl(92,100%,30%);
   --identity-box-verified-background-image: linear-gradient(hsla(92,81%,16%,0),
                                             hsla(92,81%,16%,.2) 35%,
@@ -50,7 +51,7 @@
 
 #identity-box:hover,
 #identity-box[open=true] {
-  background-color: rgb(231,230,230);
+  background-color: var(--identity-box-selected-background-color);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
