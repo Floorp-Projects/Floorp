@@ -242,16 +242,6 @@ void mozPersonalDictionary::SyncLoadInternal()
   mDirty = false;
 }
 
-// A little helper function to add the key to the list.
-// This is not threadsafe, and only safe if the consumer does not 
-// modify the list.
-static PLDHashOperator
-AddHostToStringArray(nsUnicharPtrHashKey *aEntry, void *aArg)
-{
-  static_cast<nsTArray<nsString>*>(aArg)->AppendElement(nsDependentString(aEntry->GetKey()));
-  return PL_DHASH_NEXT;
-}
-
 /* void Save (); */
 NS_IMETHODIMP mozPersonalDictionary::Save()
 {
@@ -277,7 +267,9 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   if (NS_FAILED(res)) return res;
 
   nsTArray<nsString> array(mDictionaryTable.Count());
-  mDictionaryTable.EnumerateEntries(AddHostToStringArray, &array);
+  for (auto iter = mDictionaryTable.Iter(); !iter.Done(); iter.Next()) {
+    array.AppendElement(nsDependentString(iter.Get()->GetKey()));
+  }
 
   uint32_t bytesWritten;
   nsAutoCString utf8Key;
@@ -307,10 +299,9 @@ NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
   WaitForLoad();
 
   nsTArray<nsString> *array = new nsTArray<nsString>(mDictionaryTable.Count());
-  if (!array)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mDictionaryTable.EnumerateEntries(AddHostToStringArray, array);
+  for (auto iter = mDictionaryTable.Iter(); !iter.Done(); iter.Next()) {
+    array->AppendElement(nsDependentString(iter.Get()->GetKey()));
+  }
 
   array->Sort();
 
