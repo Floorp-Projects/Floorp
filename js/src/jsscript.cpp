@@ -4160,8 +4160,7 @@ JSScript::AutoDelazify::dropScript()
 {
     // Don't touch script_ if it's in the self-hosting compartment, see the
     // comment in holdScript.
-    if (script_ && !script_->compartment()->isSelfHosting) {
+    if (script_ && !script_->compartment()->isSelfHosting)
         script_->setDoNotRelazify(oldDoNotRelazify_);
-        script_ = nullptr;
-    }
+    script_ = nullptr;
 }
