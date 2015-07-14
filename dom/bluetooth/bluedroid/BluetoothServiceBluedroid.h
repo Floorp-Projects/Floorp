@@ -17,6 +17,7 @@ class BluetoothServiceBluedroid : public BluetoothService
                                 , public BluetoothNotificationHandler
 {
   class CancelDiscoveryResultHandler;
+  class CleanupResultHandler;
   class CreateBondResultHandler;
   class DisableResultHandler;
   class EnableResultHandler;
