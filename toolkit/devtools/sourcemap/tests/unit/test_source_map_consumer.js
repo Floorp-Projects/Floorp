@@ -1062,6 +1062,30 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     assert.equal(pos.column, 4);
   };
 
+  exports['test issue #191'] = function (assert, util) {
+    var generator = new SourceMapGenerator({ file: 'a.css' });
+    generator.addMapping({
+      source:   'b.css',
+      original: {
+        line:   1,
+        column: 0
+      },
+      generated: {
+        line:   1,
+        column: 0
+      }
+    });
+
+    // Create a SourceMapConsumer from the SourceMapGenerator, ...
+    var consumer  = SourceMapConsumer.fromSourceMap(generator);
+    // ... and then try and use the SourceMapGenerator again. This should not
+    // throw.
+    generator.toJSON();
+
+    assert.ok(true, "Using a SourceMapGenerator again after creating a " +
+                    "SourceMapConsumer from it should not throw");
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-consumer', do_throw);
