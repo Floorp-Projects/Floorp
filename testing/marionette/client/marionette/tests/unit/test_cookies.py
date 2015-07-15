@@ -88,3 +88,11 @@ class CookieTest(MarionetteTestCase):
 
         self.assertFalse(cookie1["name"] == cookies[0]["name"], msg=str(cookies))
         self.assertEquals(cookie2["name"] , cookies[0]["name"], msg=str(cookies))
+
+    def test_we_get_required_elements_when_available(self):
+        self.marionette.add_cookie(self.COOKIE_A)
+        cookies = self.marionette.get_cookies()
+
+        self.assertIn("name", cookies[0], 'name not available')
+        self.assertIn("value", cookies[0], 'value not available')
+        self.assertIn("httpOnly", cookies[0], 'httpOnly not available')
