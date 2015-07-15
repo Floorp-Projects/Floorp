@@ -138,6 +138,13 @@ let gSyncPane = {
     document.getElementById("fxaSaveChangeDeviceName").hidden = !editMode;
   },
 
+  _focusComputerNameTextbox: function() {
+    let textbox = document.getElementById("fxaSyncComputerName");
+    let valLength = textbox.value.length;
+    textbox.focus();
+    textbox.setSelectionRange(valLength, valLength);
+  },
+
   _updateComputerNameValue: function(save) {
     let textbox = document.getElementById("fxaSyncComputerName");
     if (save) {
@@ -182,6 +189,7 @@ let gSyncPane = {
     });
     setEventListener("fxaChangeDeviceName", "click", function () {
       this._toggleComputerNameControls(true);
+      this._focusComputerNameTextbox();
     });
     setEventListener("fxaCancelChangeDeviceName", "click", function () {
       this._toggleComputerNameControls(false);
@@ -252,6 +260,13 @@ let gSyncPane = {
     setEventListener("sync-migrate-resend", "click", function () {
       let win = Services.wm.getMostRecentWindow("navigator:browser");
       fxaMigrator.resendVerificationMail(win);
+    });
+    setEventListener("fxaSyncComputerName", "keypress", function (e) {
+      if (e.keyCode == KeyEvent.DOM_VK_RETURN) {
+        document.getElementById("fxaSaveChangeDeviceName").click();
+      } else if (e.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+        document.getElementById("fxaCancelChangeDeviceName").click();
+      }
     });
   },
 

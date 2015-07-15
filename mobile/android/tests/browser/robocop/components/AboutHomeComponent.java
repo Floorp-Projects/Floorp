@@ -22,8 +22,8 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.TextView;
 
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
+import com.robotium.solo.Condition;
+import com.robotium.solo.Solo;
 
 /**
  * A class representing any interactions that take place on the Awesomescreen.

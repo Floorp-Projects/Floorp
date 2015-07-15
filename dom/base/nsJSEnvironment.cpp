@@ -424,7 +424,20 @@ public:
     }
 
     if (status != nsEventStatus_eConsumeNoDefault) {
-      mReport->LogToConsole();
+      if (mError.isObject()) {
+        AutoJSAPI jsapi;
+        if (NS_WARN_IF(!jsapi.Init(mError.toObjectOrNull()))) {
+          mReport->LogToConsole();
+          return NS_OK;
+        }
+        JSContext* cx = jsapi.cx();
+        JS::Rooted<JSObject*> exObj(cx, mError.toObjectOrNull());
+        JS::RootedObject stack(cx, ExceptionStackOrNull(cx, exObj));
+        mReport->LogToConsoleWithStack(stack);
+      } else {
+        mReport->LogToConsole();
+      }
+
     }
 
     return NS_OK;
@@ -502,7 +515,14 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
         report->errorNumber == JSMSG_OUT_OF_MEMORY)
     {
-      xpcReport->LogToConsole();
+      if (exception.isObject()) {
+        JS::RootedObject exObj(cx, exception.toObjectOrNull());
+        JSAutoCompartment ac(cx, exObj);
+        JS::RootedObject stackVal(cx, ExceptionStackOrNull(cx, exObj));
+        xpcReport->LogToConsoleWithStack(stackVal);
+      } else {
+        xpcReport->LogToConsole();
+      }
       return;
     }
 
