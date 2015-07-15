@@ -22,7 +22,7 @@ namespace HangMonitor {
 } // namespace HangMonitor
 namespace Telemetry {
 
-#include "TelemetryHistogramEnums.h"
+#include "mozilla/TelemetryHistogramEnums.h"
 
 enum TimerResolution {
   Millisecond,

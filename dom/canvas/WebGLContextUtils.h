@@ -7,9 +7,11 @@
 #define WEBGL_CONTEXT_UTILS_H_
 
 #include "WebGLContext.h"
-#include "WebGLStrongTypes.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingUtils.h"
+
+#include "WebGLStrongTypes.h"
 
 namespace mozilla {
 

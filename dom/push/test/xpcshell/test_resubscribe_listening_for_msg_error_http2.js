@@ -67,7 +67,9 @@ add_task(function* test1() {
     subscriptionUri: 'http://localhost/subscriptionNotExist',
     pushEndpoint: serverURL + '/pushEndpoint',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint',
-    scope: 'https://example.com/page'
+    scope: 'https://example.com/page',
+    originAttributes: '',
+    quota: Infinity,
   }];
 
   for (let record of records) {

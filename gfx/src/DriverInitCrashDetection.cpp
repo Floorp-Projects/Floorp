@@ -14,6 +14,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Services.h"
 #include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
@@ -150,7 +151,7 @@ DriverInitCrashDetection::RecoverFromDriverInitCrash()
 bool
 DriverInitCrashDetection::UpdateEnvironment()
 {
-  mGfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  mGfxInfo = services::GetGfxInfo();
 
   bool changed = false;
   if (mGfxInfo) {
