@@ -52,8 +52,6 @@ public:
   // essentially, this is a sentinel used to represent an invalid or blank
   // tile.
   TileHost()
-  : x(-1)
-  , y(-1)
   {}
 
   // Constructs a TileHost from a gfxSharedReadLock and TextureHost.
@@ -67,8 +65,6 @@ public:
     , mTextureHostOnWhite(aTextureHostOnWhite)
     , mTextureSource(aSource)
     , mTextureSourceOnWhite(aSourceOnWhite)
-    , x(-1)
-    , y(-1)
   {}
 
   TileHost(const TileHost& o) {
@@ -77,8 +73,7 @@ public:
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
     mSharedLock = o.mSharedLock;
-    x = o.x;
-    y = o.y;
+    mTilePosition = o.mTilePosition;
   }
   TileHost& operator=(const TileHost& o) {
     if (this == &o) {
@@ -89,8 +84,7 @@ public:
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
     mSharedLock = o.mSharedLock;
-    x = o.x;
-    y = o.y;
+    mTilePosition = o.mTilePosition;
     return *this;
   }
 
@@ -125,8 +119,7 @@ public:
   mutable CompositableTextureSourceRef mTextureSource;
   mutable CompositableTextureSourceRef mTextureSourceOnWhite;
   // This is not strictly necessary but makes debugging whole lot easier.
-  DebugOnly<int> x;
-  DebugOnly<int> y;
+  TileIntPoint mTilePosition;
 };
 
 class TiledLayerBufferComposite
