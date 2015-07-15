@@ -194,7 +194,7 @@ def append_signatures(d, sigs):
 def generate_file_content(signatures):
     output = []
     for s in sorted(signatures.keys()):
-        archs = set(signatures[s])
+        archs = set(sorted(signatures[s]))
         if len(archs.symmetric_difference(architecture_independent)) == 0:
             output.append(s + ';\n')
             if s.startswith('inline'):
