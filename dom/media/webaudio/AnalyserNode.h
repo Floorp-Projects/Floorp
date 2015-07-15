@@ -78,8 +78,8 @@ private:
   double mMaxDecibels;
   double mSmoothingTimeConstant;
   uint32_t mWriteIndex;
-  AlignedFallibleTArray<float> mBuffer;
-  AlignedFallibleTArray<float> mOutputBuffer;
+  AlignedTArray<float> mBuffer;
+  AlignedTArray<float> mOutputBuffer;
 };
 
 } // namespace dom
