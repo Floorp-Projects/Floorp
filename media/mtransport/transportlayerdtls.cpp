@@ -75,8 +75,10 @@ struct Packet {
 };
 
 void TransportLayerNSPRAdapter::PacketReceived(const void *data, int32_t len) {
-  input_.push(new Packet());
-  input_.back()->Assign(data, len);
+  if (enabled_) {
+    input_.push(new Packet());
+    input_.back()->Assign(data, len);
+  }
 }
 
 int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
