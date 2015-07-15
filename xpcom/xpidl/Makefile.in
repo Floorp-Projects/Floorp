@@ -4,7 +4,7 @@
 
 export::
 ifndef LIBXUL_SDK
-	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser)
+	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser/xpidl)
 endif
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)

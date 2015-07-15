@@ -30,7 +30,7 @@ interface nsIURIClassifierCallback : nsISupports
  * The URI classifier service checks a URI against lists of phishing
  * and malware sites.
  */
-[scriptable, uuid(750c4313-f689-4a4c-87c2-a04710a2395b)]
+[scriptable, uuid(9168a330-7fba-40e8-9c47-4ce8f15a57fd)]
 interface nsIURIClassifier : nsISupports
 {
   /**
@@ -54,14 +54,6 @@ interface nsIURIClassifier : nsISupports
   boolean classify(in nsIPrincipal aPrincipal,
                    in boolean aTrackingProtectionEnabled,
                    in nsIURIClassifierCallback aCallback);
-
-  /**
-   * Synchronously classify a Principal locally using its URI. This does not
-   * make network requests. The result is an error code with which the channel
-   * should be cancelled, or NS_OK if no result was found.
-   */
-  nsresult classifyLocal(in nsIPrincipal aPrincipal,
-                         in boolean aTrackingProtectionEnabled);
 
   /**
    * Synchronously classify a Principal locally using its URI with a

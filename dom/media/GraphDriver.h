@@ -119,6 +119,11 @@ public:
     return mNextDriver || mPreviousDriver;
   }
 
+  GraphDriver* NextDriver()
+  {
+    return mNextDriver;
+  }
+
   /**
    * If we are running a real time graph, get the current time stamp to schedule
    * video frames. This has to be reimplemented by real time drivers.
