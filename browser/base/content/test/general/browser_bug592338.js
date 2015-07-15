@@ -30,8 +30,7 @@ function test_install_http() {
     gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
 
     executeSoon(function() {
-      var link = gBrowser.contentDocument.getElementById("theme-install");
-      EventUtils.synthesizeMouse(link, 2, 2, {}, gBrowser.contentWindow);
+      BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
 
       is(LightweightThemeManager.currentTheme, null, "Should not have installed the test theme");
 
@@ -57,19 +56,21 @@ function test_install_lwtheme() {
 
     gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
 
-    executeSoon(function() {
-      var link = gBrowser.contentDocument.getElementById("theme-install");
-      EventUtils.synthesizeMouse(link, 2, 2, {}, gBrowser.contentWindow);
+    BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
+    let notification;
+    let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    waitForCondition(
+      () => (notification = notificationBox.getNotificationWithValue("lwtheme-install-notification")),
+      () => {
+        is(LightweightThemeManager.currentTheme.id, "test", "Should have installed the test theme");
 
-      is(LightweightThemeManager.currentTheme.id, "test", "Should have installed the test theme");
+        LightweightThemeManager.currentTheme = null;
+        gBrowser.removeTab(gBrowser.selectedTab);
+        Services.perms.remove(makeURI("http://example.com/"), "install");
 
-      LightweightThemeManager.currentTheme = null;
-      gBrowser.removeTab(gBrowser.selectedTab);
-
-      Services.perms.remove(makeURI("http://example.com/"), "install");
-
-      runNextTest();
-    });
+        runNextTest();
+      }
+    );
   }, false);
 },
 
@@ -92,7 +93,6 @@ function test_lwtheme_switch_theme() {
       gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
 
       executeSoon(function() {
-        var link = gBrowser.contentDocument.getElementById("theme-install");
         wait_for_notification(function(aPanel) {
           is(LightweightThemeManager.currentTheme, null, "Should not have installed the test lwtheme");
           ok(aAddon.isActive, "Test theme should still be active");
@@ -110,7 +110,7 @@ function test_lwtheme_switch_theme() {
 
           runNextTest();
         });
-        EventUtils.synthesizeMouse(link, 2, 2, {}, gBrowser.contentWindow);
+        BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
       });
     }, false);
   });
