@@ -235,7 +235,13 @@ struct InternalGCMethods {};
 template <typename T>
 struct InternalGCMethods<T*>
 {
-    static bool isMarkable(T* v) { return v != nullptr; }
+    static bool isMarkable(T* v) {
+        return mozilla::IsBaseOf<JSObject, T>::value
+               ? !IsNullTaggedPointer(v)
+               : mozilla::IsBaseOf<Shape, T>::value
+                 ? uintptr_t(v) > 1
+                 : v != nullptr;
+    }
 
     static void preBarrier(T* v) { T::writeBarrierPre(v); }
 
