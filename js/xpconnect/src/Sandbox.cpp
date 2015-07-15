@@ -1053,15 +1053,26 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
 
-            // Now check what sort of thing we've got in |proto|
-            JSObject* unwrappedProto = js::CheckedUnwrap(options.proto, false);
-            if (!unwrappedProto) {
-                JS_ReportError(cx, "Sandbox must subsume sandboxPrototype");
-                return NS_ERROR_INVALID_ARG;
+            // Now check what sort of thing we've got in |proto|, and figure out
+            // if we need a SandboxProxyHandler.
+            //
+            // Note that, in the case of a window, we can't require that the
+            // Sandbox subsumes the prototype, because we have to hold our
+            // reference to it via an outer window, and the window may navigate
+            // at any time. So we have to handle that case separately.
+            bool useSandboxProxy = !!WindowOrNull(js::UncheckedUnwrap(options.proto, false));
+            if (!useSandboxProxy) {
+                JSObject* unwrappedProto = js::CheckedUnwrap(options.proto, false);
+                if (!unwrappedProto) {
+                    JS_ReportError(cx, "Sandbox must subsume sandboxPrototype");
+                    return NS_ERROR_INVALID_ARG;
+                }
+                const js::Class* unwrappedClass = js::GetObjectClass(unwrappedProto);
+                useSandboxProxy = IS_WN_CLASS(unwrappedClass) ||
+                                  mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass));
             }
-            const js::Class* unwrappedClass = js::GetObjectClass(unwrappedProto);
-            if (IS_WN_CLASS(unwrappedClass) ||
-                mozilla::dom::IsDOMClass(Jsvalify(unwrappedClass))) {
+
+            if (useSandboxProxy) {
                 // Wrap it up in a proxy that will do the right thing in terms
                 // of this-binding for methods.
                 RootedValue priv(cx, ObjectValue(*options.proto));
