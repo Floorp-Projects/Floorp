@@ -220,7 +220,7 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
           case MDefinition::Op_GuardShape: {
             MGuardShape* guard = def->toGuardShape();
             MOZ_ASSERT(!ins->isGuardShape());
-            if (obj->as<NativeObject>().lastProperty() != guard->shape()) {
+            if (obj->maybeShape() != guard->shape()) {
                 JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
                 return true;
             }
