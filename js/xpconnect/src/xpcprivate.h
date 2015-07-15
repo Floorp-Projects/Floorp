@@ -3448,6 +3448,7 @@ public:
                             JSObject* options = nullptr)
         : OptionsBase(cx, options)
         , wantXrays(true)
+        , allowWaivers(true)
         , wantComponents(true)
         , wantExportHelpers(false)
         , proto(cx)
@@ -3463,6 +3464,7 @@ public:
     virtual bool Parse();
 
     bool wantXrays;
+    bool allowWaivers;
     bool wantComponents;
     bool wantExportHelpers;
     JS::RootedObject proto;
@@ -3659,6 +3661,7 @@ public:
 
     explicit CompartmentPrivate(JSCompartment* c)
         : wantXrays(false)
+        , allowWaivers(true)
         , writeToGlobalPrototype(false)
         , skipWriteToGlobalPrototype(false)
         , universalXPConnectEnabled(false)
@@ -3686,8 +3689,16 @@ public:
         return Get(compartment);
     }
 
-
+    // Controls whether this compartment gets Xrays to same-origin. This behavior
+    // is deprecated, but is still the default for sandboxes for compatibity
+    // reasons.
     bool wantXrays;
+
+    // Controls whether this compartment is allowed to waive Xrays to content
+    // that it subsumes. This should generally be true, except in cases where we
+    // want to prevent code from depending on Xray Waivers (which might make it
+    // more portable to other browser architectures).
+    bool allowWaivers;
 
     // This flag is intended for a very specific use, internal to Gecko. It may
     // go away or change behavior at any time. It should not be added to any
