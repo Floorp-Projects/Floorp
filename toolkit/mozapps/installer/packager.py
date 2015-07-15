@@ -146,13 +146,16 @@ def precompile_cache(formatter, source_path, gre_path, app_path):
     os.remove(cache)
 
     try:
+        extra_env = {'MOZ_STARTUP_CACHE': cache}
+        if buildconfig.substs.get('MOZ_TSAN'):
+            extra_env['TSAN_OPTIONS'] = 'report_bugs=0'
         if launcher.launch(['xpcshell', '-g', gre_path, '-a', app_path,
                             '-f', os.path.join(os.path.dirname(__file__),
                             'precompile_cache.js'),
                             '-e', 'precompile_startupcache("resource://%s/");'
                                   % resource],
                            extra_linker_path=gre_path,
-                           extra_env={'MOZ_STARTUP_CACHE': cache}):
+                           extra_env=extra_env):
             errors.fatal('Error while running startup cache precompilation')
             return
         from mozpack.mozjar import JarReader
