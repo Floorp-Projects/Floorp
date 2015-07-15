@@ -27,6 +27,8 @@
 const {Cc, Cu, Ci} = require("chrome");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                 .getService(Ci.inIDOMUtils);
 
 // Parameters for the XHR request
 // see https://developer.mozilla.org/en-US/docs/MDN/Kuma/API#Document_parameters
@@ -37,11 +39,111 @@ var XHR_CSS_URL = "https://developer.mozilla.org/en-US/docs/Web/CSS/";
 // Parameters for the link to MDN in the tooltip, so
 // so we know which MDN visits come from this feature
 const PAGE_LINK_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default"
-// URL for the page link
-// omits locale, so a locale-specific page will be loaded
+// URL for the page link omits locale, so a locale-specific page will be loaded
 var PAGE_LINK_URL = "https://developer.mozilla.org/docs/Web/CSS/";
 
 const BROWSER_WINDOW = 'navigator:browser';
+
+const PROPERTY_NAME_COLOR = "theme-fg-color5";
+const PROPERTY_VALUE_COLOR = "theme-fg-color1";
+const COMMENT_COLOR = "theme-comment";
+
+/**
+ * Turns a string containing a series of CSS declarations into
+ * a series of DOM nodes, with classes applied to provide syntax
+ * highlighting.
+ *
+ * It uses the CSS tokenizer to generate a stream of CSS tokens.
+ * https://mxr.mozilla.org/mozilla-central/source/dom/webidl/CSSLexer.webidl
+ * lists all the token types.
+ *
+ * - "whitespace", "comment", and "symbol" tokens are appended as TEXT nodes,
+ * and will inherit the default style for text.
+ *
+ * - "ident" tokens that we think are property names are considered to be
+ * a property name, and are appended as SPAN nodes with a distinct color class.
+ *
+ * - "ident" nodes which we do not think are property names, and nodes
+ * of all other types ("number", "url", "percentage", ...) are considered
+ * to be part of a property value, and are appended as SPAN nodes with
+ * a different color class.
+ *
+ * @param {Document} doc
+ * Used to create nodes.
+ *
+ * @param {String} syntaxText
+ * The CSS input. This is assumed to consist of a series of
+ * CSS declarations, with trailing semicolons.
+ *
+ * @param {DOM node} syntaxSection
+ * This is the parent for the output nodes. Generated nodes
+ * are appended to this as children.
+ */
+function appendSyntaxHighlightedCSS(cssText, parentElement) {
+  let doc = parentElement.ownerDocument;
+  let identClass = PROPERTY_NAME_COLOR;
+  let lexer = DOMUtils.getCSSLexer(cssText);
+
+  /**
+   * Create a SPAN node with the given text content and class.
+   */
+  function createStyledNode(textContent, className) {
+    let newNode = doc.createElement("span");
+    newNode.classList.add(className);
+    newNode.textContent = textContent;
+    return newNode;
+  }
+
+  /**
+   * If the symbol is ":", we will expect the next
+   * "ident" token to be part of a property value.
+   *
+   * If the symbol is ";", we will expect the next
+   * "ident" token to be a property name.
+   */
+  function updateIdentClass(tokenText) {
+    if (tokenText === ":") {
+      identClass = PROPERTY_VALUE_COLOR;
+    }
+    else {
+      if (tokenText === ";") {
+        identClass = PROPERTY_NAME_COLOR;
+      }
+    }
+  }
+
+  /**
+   * Create the appropriate node for this token type.
+   *
+   * If this token is a symbol, also update our expectations
+   * for what the next "ident" token represents.
+   */
+  function tokenToNode(token, tokenText) {
+    switch (token.tokenType) {
+      case "ident":
+        return createStyledNode(tokenText, identClass);
+      case "symbol":
+        updateIdentClass(tokenText);
+        return doc.createTextNode(tokenText);
+      case "whitespace":
+        return doc.createTextNode(tokenText);
+      case "comment":
+        return createStyledNode(tokenText, COMMENT_COLOR);
+      default:
+        return createStyledNode(tokenText, PROPERTY_VALUE_COLOR);
+    }
+  }
+
+  let token = lexer.nextToken();
+  while (token) {
+    let tokenText = cssText.slice(token.startOffset, token.endOffset);
+    let newNode = tokenToNode(token, tokenText);
+    parentElement.appendChild(newNode);
+    token = lexer.nextToken();
+  }
+}
+
+exports.appendSyntaxHighlightedCSS = appendSyntaxHighlightedCSS;
 
 /**
  * Fetch an MDN page.
@@ -154,6 +256,8 @@ function MdnDocsWidget(tooltipDocument) {
     linkToMdn: tooltipDocument.getElementById("visit-mdn-page")
   };
 
+  this.doc = tooltipDocument;
+
   // get the localized string for the link text
   this.elements.linkToMdn.textContent =
     l10n.strings.GetStringFromName("docsTooltip.visitMDN");
@@ -209,7 +313,9 @@ MdnDocsWidget.prototype = {
 
       // clear docs summary and syntax
       elements.summary.textContent = "";
-      elements.syntax.textContent = "";
+      while (elements.syntax.firstChild) {
+        elements.syntax.firstChild.remove();
+      }
 
       // reset the scroll position
       elements.info.scrollTop = 0;
@@ -226,7 +332,7 @@ MdnDocsWidget.prototype = {
     function finalizeDocument({summary, syntax}) {
       // set docs summary and syntax
       elements.summary.textContent = summary;
-      elements.syntax.textContent = syntax;
+      appendSyntaxHighlightedCSS(syntax, elements.syntax);
 
       // hide the throbber
       elements.info.classList.remove("devtools-throbber");
@@ -252,11 +358,17 @@ MdnDocsWidget.prototype = {
 
     let deferred = Promise.defer();
     let elements = this.elements;
+    let doc = this.doc;
 
     initializeDocument(propertyName);
     getCssDocs(propertyName).then(finalizeDocument, gotError);
 
     return deferred.promise;
+  },
+
+  destroy: function() {
+    this.elements = null;
+    this.doc = null;
   }
 }
 

@@ -1665,10 +1665,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
     -moz-margin-end: 3px;
     padding: 3px 4px;
   }
-
-  #urlbar > #identity-box:hover,
-  #urlbar > #identity-box[open=true] {
-    background-color: rgb(240,237,237);
+  #identity-box {
+    --identity-box-selected-background-color: rgb(240,237,237);
   }
 }
 

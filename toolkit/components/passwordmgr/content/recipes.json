@@ -1,0 +1,19 @@
+{
+  "siteRecipes": [
+    {
+      "description": "okta uses a hidden password field to disable filling",
+      "hosts": ["mozilla.okta.com"],
+      "passwordSelector": "#pass-signin"
+    },
+    {
+      "description": "anthem uses a hidden password and username field to disable filling",
+      "hosts": ["www.anthem.com"],
+      "passwordSelector": "#LoginContent_txtLoginPass"
+    },
+    {
+      "description": "An ephemeral password-shim field is incorrectly selected as the username field.",
+      "hosts": ["www.discover.com"],
+      "usernameSelector": "#login-account"
+    }
+  ]
+}

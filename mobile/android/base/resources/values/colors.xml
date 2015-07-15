@@ -7,6 +7,7 @@
   <!-- Fennec color palette (bug 1127517) -->
   <color name="fennec_ui_orange">#FF9500</color>
   <color name="affirmative_green">#6FBE4A</color>
+  <color name="rejection_red">#D23228</color>
   <color name="action_orange">#E66000</color>
   <color name="action_orange_pressed">#DC5600</color>
   <color name="link_blue">#0096DD</color>

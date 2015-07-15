@@ -8,7 +8,7 @@
 "use strict";
 
 add_task(function* test_init() {
-  let parent = new LoginRecipesParent({ defaults: false });
+  let parent = new LoginRecipesParent({ defaults: null });
   let initPromise1 = parent.initializationPromise;
   let initPromise2 = parent.initializationPromise;
   Assert.strictEqual(initPromise1, initPromise2, "Check that the same promise is returned");
