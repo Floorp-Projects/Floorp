@@ -212,20 +212,16 @@ FramePropertyTable::DeleteAllFor(nsIFrame* aFrame)
   mEntries.RawRemoveEntry(entry);
 }
 
-/* static */ PLDHashOperator
-FramePropertyTable::DeleteEnumerator(Entry* aEntry, void* aArg)
-{
-  DeleteAllForEntry(aEntry);
-  return PL_DHASH_REMOVE;
-}
-
 void
 FramePropertyTable::DeleteAll()
 {
   mLastFrame = nullptr;
   mLastEntry = nullptr;
 
-  mEntries.EnumerateEntries(DeleteEnumerator, nullptr);
+  for (auto iter = mEntries.Iter(); !iter.Done(); iter.Next()) {
+    DeleteAllForEntry(iter.Get());
+  }
+  mEntries.Clear();
 }
 
 size_t
