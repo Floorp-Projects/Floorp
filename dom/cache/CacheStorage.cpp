@@ -145,15 +145,15 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
 // static
 already_AddRefed<CacheStorage>
 CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                                 nsIPrincipal* aPrincipal, bool aPrivateBrowsing,
+                                 nsIPrincipal* aPrincipal, bool aStorageDisabled,
                                  bool aForceTrustedOrigin, ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aPrivateBrowsing) {
-    NS_WARNING("CacheStorage not supported during private browsing.");
+  if (aStorageDisabled) {
+    NS_WARNING("CacheStorage has been disabled.");
     nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
     return ref.forget();
   }
@@ -188,6 +188,12 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (!aWorkerPrivate->IsStorageAllowed()) {
+    NS_WARNING("CacheStorage is not allowed.");
+    nsRefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
+    return ref.forget();
+  }
 
   if (aWorkerPrivate->IsInPrivateBrowsing()) {
     NS_WARNING("CacheStorage not supported during private browsing.");
