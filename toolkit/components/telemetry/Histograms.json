@@ -6887,13 +6887,6 @@
     "kind": "boolean",
     "description": "The result of the startup default desktop browser check."
   },
-  "WIN_10_DEFAULT_BROWSER_AB_TEST": {
-    "alert_emails": ["jwein@mozilla.com"],
-    "expires_in_version": "45",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "A/B test of different default browser dialogs on Windows 10 (0=openas-notdefault, 1=openas-default, 2=modernsettings-notdefault, 3=modernsettings-default)."
-  },
   "BROWSER_IS_ASSIST_DEFAULT": {
     "expires_in_version": "never",
     "kind": "boolean",

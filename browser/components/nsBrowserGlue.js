@@ -166,9 +166,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -1126,17 +1123,6 @@ BrowserGlue.prototype = {
       if (isDefault) {
         let now = Date.now().toString().slice(0, -3);
         Services.prefs.setCharPref("browser.shell.mostRecentDateSetAsDefault", now);
-      }
-
-      if (Services.prefs.getIntPref("browser.shell.windows10DefaultBrowserABTest") == -1) {
-        let abTest = Math.round(Math.random());
-        Services.prefs.setIntPref("browser.shell.windows10DefaultBrowserABTest", abTest);
-      }
-
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-        let abTest = Services.prefs.getIntPref("browser.shell.windows10DefaultBrowserABTest");
-        let result = abTest * 2 + Number(isDefault);
-        Services.telemetry.getHistogramById("WIN_10_DEFAULT_BROWSER_AB_TEST").add(result);
       }
 
       if (shouldCheck && !isDefault && !willRecoverSession) {
