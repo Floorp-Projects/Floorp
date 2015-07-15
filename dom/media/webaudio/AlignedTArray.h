@@ -31,9 +31,17 @@ public:
   elem_type& operator[](index_type i) { return Elements()[i];}
   const elem_type& operator[](index_type i) const { return Elements()[i]; }
 
-  typename Alloc::ResultType SetLength(size_type newLen) {
-    return base_type::SetLength(newLen + sExtra);
+  void SetLength(size_type newLen)
+  {
+    base_type::SetLength(newLen + sExtra);
   }
+
+  MOZ_WARN_UNUSED_RESULT
+  bool SetLength(size_type newLen, const mozilla::fallible_t&)
+  {
+    return base_type::SetLength(newLen + sExtra, mozilla::fallible);
+  }
+
   size_type Length() const {
     return base_type::Length() <= sExtra ? 0 : base_type::Length() - sExtra;
   }
