@@ -1457,7 +1457,6 @@ pref("devtools.debugger.source-maps-enabled", true);
 pref("devtools.debugger.pretty-print-enabled", true);
 pref("devtools.debugger.auto-pretty-print", false);
 pref("devtools.debugger.auto-black-box", true);
-pref("devtools.debugger.tracer", false);
 pref("devtools.debugger.workers", false);
 pref("devtools.debugger.promise", false);
 
