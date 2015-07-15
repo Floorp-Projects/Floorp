@@ -4227,7 +4227,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
-			memset(ret, 0xa5, size);
+			memset(ret, 0xe4, size);
 		else if (opt_zero)
 			memset(ret, 0, size);
 #endif
@@ -4263,7 +4263,7 @@ arena_malloc_large(arena_t *arena, size_t size, bool zero)
 	if (zero == false) {
 #ifdef MALLOC_FILL
 		if (opt_junk)
-			memset(ret, 0xa5, size);
+			memset(ret, 0xe4, size);
 		else if (opt_zero)
 			memset(ret, 0, size);
 #endif
@@ -4365,7 +4365,7 @@ arena_palloc(arena_t *arena, size_t alignment, size_t size, size_t alloc_size)
 
 #ifdef MALLOC_FILL
 	if (opt_junk)
-		memset(ret, 0xa5, size);
+		memset(ret, 0xe4, size);
 	else if (opt_zero)
 		memset(ret, 0, size);
 #endif
@@ -4586,7 +4586,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 
 #ifdef MALLOC_FILL
 	if (opt_poison)
-		memset(ptr, 0x5a, size);
+		memset(ptr, 0xe5, size);
 #endif
 
 	arena_run_reg_dalloc(run, bin, ptr, size);
@@ -4679,7 +4679,7 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 #ifdef MALLOC_STATS
 		if (opt_poison)
 #endif
-			memset(ptr, 0x5a, size);
+			memset(ptr, 0xe5, size);
 #endif
 #ifdef MALLOC_STATS
 		arena->stats.allocated_large -= size;
@@ -4818,7 +4818,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 		/* Same size class. */
 #ifdef MALLOC_FILL
 		if (opt_poison && size < oldsize) {
-			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize -
+			memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize -
 			    size);
 		}
 #endif
@@ -4835,7 +4835,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 #ifdef MALLOC_FILL
 			/* Fill before shrinking in order avoid a race. */
 			if (opt_poison) {
-				memset((void *)((uintptr_t)ptr + size), 0x5a,
+				memset((void *)((uintptr_t)ptr + size), 0xe5,
 				    oldsize - size);
 			}
 #endif
@@ -4905,7 +4905,7 @@ arena_ralloc(void *ptr, size_t size, size_t oldsize)
 IN_PLACE:
 #ifdef MALLOC_FILL
 	if (opt_poison && size < oldsize)
-		memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize - size);
+		memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize - size);
 	else if (opt_zero && size > oldsize)
 		memset((void *)((uintptr_t)ptr + oldsize), 0, size - oldsize);
 #endif
@@ -5125,9 +5125,9 @@ huge_palloc(size_t size, size_t alignment, bool zero)
 	if (zero == false) {
 		if (opt_junk)
 #  ifdef MALLOC_DECOMMIT
-			memset(ret, 0xa5, psize);
+			memset(ret, 0xe4, psize);
 #  else
-			memset(ret, 0xa5, csize);
+			memset(ret, 0xe4, csize);
 #  endif
 		else if (opt_zero)
 #  ifdef MALLOC_DECOMMIT
@@ -5154,7 +5154,7 @@ huge_ralloc(void *ptr, size_t size, size_t oldsize)
 		size_t psize = PAGE_CEILING(size);
 #ifdef MALLOC_FILL
 		if (opt_poison && size < oldsize) {
-			memset((void *)((uintptr_t)ptr + size), 0x5a, oldsize
+			memset((void *)((uintptr_t)ptr + size), 0xe5, oldsize
 			    - size);
 		}
 #endif
