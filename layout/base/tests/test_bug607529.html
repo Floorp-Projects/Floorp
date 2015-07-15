@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
   SimpleTest.waitForExplicitFinish();
 
   /* General idea: Open a new window (needed because we don't bfcache
-     subframes) that uses mozRequestAnimationFrame, navigate it, navigate it
+     subframes) that uses requestAnimationFrame, navigate it, navigate it
      back, and verify that the animations are still running.  */
 
   var doneOneLoad = false;

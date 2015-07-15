@@ -21,10 +21,12 @@ function runTests() {
         return testFetchAppResource('test_custom_content_type',
                                     'customContentType', 'text/html');
     })
-    .then(testRedirectedResponse)
-    .then(testRedirectedHttpsResponse)
-    .then(testCachedRedirectedResponse)
-    .then(testCachedRedirectedHttpsResponse)
+    // XXX: Cross-origin interceptions without CORS result in opaque responses
+    //      which are illegal for navigations like iframes. (bug 1183313)
+    //.then(testRedirectedResponse)
+    //.then(testRedirectedHttpsResponse)
+    //.then(testCachedRedirectedResponse)
+    //.then(testCachedRedirectedHttpsResponse)
     .then(done);
 }
   </script>

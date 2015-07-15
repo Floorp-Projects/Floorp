@@ -73,3 +73,6 @@ MSG_DEF(MSG_INVALID_URL_SCHEME, 2, JSEXN_TYPEERR, "{0} URL {1} must be either ht
 MSG_DEF(MSG_RESPONSE_URL_IS_NULL, 0, JSEXN_TYPEERR, "Cannot set Response.finalURL when Response.url is null.")
 MSG_DEF(MSG_RESPONSE_HAS_VARY_STAR, 0, JSEXN_TYPEERR, "Invalid Response object with a 'Vary: *' header.")
 MSG_DEF(MSG_BAD_FORMDATA, 0, JSEXN_TYPEERR, "Could not parse content as FormData.")
+MSG_DEF(MSG_NO_ACTIVE_WORKER, 1, JSEXN_TYPEERR, "No active worker for scope {0}.")
+MSG_DEF(MSG_NOTIFICATION_PERMISSION_DENIED, 0, JSEXN_TYPEERR, "Permission to show Notification denied.")
+MSG_DEF(MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER, 0, JSEXN_TYPEERR, "Notification constructor cannot be used in ServiceWorkerGlobalScope. Use registration.showNotification() instead.")
