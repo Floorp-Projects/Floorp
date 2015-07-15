@@ -8,8 +8,7 @@
 #include "GLContext.h"
 #include "WebGLSync.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 // -------------------------------------------------------------------------
 // Sync objects
@@ -131,3 +130,5 @@ WebGL2Context::GetSyncParameter(JSContext*, WebGLSync* sync, GLenum pname, JS::M
 
     ErrorInvalidEnum("getSyncParameter: Invalid pname 0x%04x", pname);
 }
+
+} // namespace mozilla

@@ -403,9 +403,9 @@ WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
 // Boilerplate
 
 JSObject*
-WebGLShader::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
+WebGLShader::WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLShaderBinding::Wrap(js, this, aGivenProto);
+    return dom::WebGLShaderBinding::Wrap(js, this, givenProto);
 }
 
 size_t
