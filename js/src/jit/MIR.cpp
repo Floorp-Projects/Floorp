@@ -4103,10 +4103,11 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConst
 {
     setResultType(MIRType_Object);
     if (templateObject()) {
-        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, templateObject());
-        setResultTypeSet(types);
-        if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
-            convertDoubleElements_ = true;
+        if (TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, templateObject())) {
+            setResultTypeSet(types);
+            if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
+                convertDoubleElements_ = true;
+        }
     }
 }
 
