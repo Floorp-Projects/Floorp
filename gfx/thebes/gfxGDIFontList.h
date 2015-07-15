@@ -183,7 +183,7 @@ public:
         return false;
     }
 
-    virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const {
+    virtual bool SupportsLangGroup(nsIAtom* aLangGroup) const override {
         if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
             return true;
         }
@@ -197,8 +197,6 @@ public:
             bit = SHIFTJIS_CHARSET;
         } else if (aLangGroup == nsGkAtoms::ko) {
             bit = HANGEUL_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::ko_xxx) {
-            bit = JOHAB_CHARSET;
         } else if (aLangGroup == nsGkAtoms::zh_cn) {
             bit = GB2312_CHARSET;
         } else if (aLangGroup == nsGkAtoms::zh_tw) {
@@ -213,8 +211,6 @@ public:
             bit = RUSSIAN_CHARSET;
         } else if (aLangGroup == nsGkAtoms::th) {
             bit = THAI_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_symbol) {
-            bit = SYMBOL_CHARSET;
         }
 
         if (bit != -1) {

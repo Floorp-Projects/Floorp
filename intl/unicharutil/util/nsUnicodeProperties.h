@@ -62,25 +62,23 @@ inline VerticalOrientation GetVerticalOrientation(uint32_t aCh) {
 }
 
 enum XidmodType {
-  XIDMOD_INCLUSION,
   XIDMOD_RECOMMENDED,
-  XIDMOD_DEFAULT_IGNORABLE,
-  XIDMOD_HISTORIC,
-  XIDMOD_LIMITED_USE,
-  XIDMOD_NOT_NFKC,
-  XIDMOD_NOT_XID,
-  XIDMOD_OBSOLETE,
+  XIDMOD_INCLUSION,
+  XIDMOD_UNCOMMON_USE,
   XIDMOD_TECHNICAL,
+  XIDMOD_OBSOLETE,
+  XIDMOD_ASPIRATIONAL,
+  XIDMOD_LIMITED_USE,
+  XIDMOD_EXCLUSION,
+  XIDMOD_NOT_XID,
+  XIDMOD_NOT_NFKC,
+  XIDMOD_DEFAULT_IGNORABLE,
+  XIDMOD_DEPRECATED,
   XIDMOD_NOT_CHARS
 };
 
 inline XidmodType GetIdentifierModification(uint32_t aCh) {
   return XidmodType(GetCharProps2(aCh).mXidmod);
-}
-
-inline bool IsRestrictedForIdentifiers(uint32_t aCh) {
-  XidmodType xm = GetIdentifierModification(aCh);
-  return (xm > XIDMOD_RECOMMENDED);
 }
 
 /**

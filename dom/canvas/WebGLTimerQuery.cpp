@@ -14,14 +14,14 @@
 namespace mozilla {
 
 JSObject*
-WebGLTimerQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
+WebGLTimerQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-  return dom::WebGLTimerQueryEXTBinding::Wrap(cx, this, aGivenProto);
+  return dom::WebGLTimerQueryEXTBinding::Wrap(cx, this, givenProto);
 }
 
-WebGLTimerQuery::WebGLTimerQuery(WebGLContext* webgl, GLuint aName)
+WebGLTimerQuery::WebGLTimerQuery(WebGLContext* webgl, GLuint name)
   : WebGLContextBoundObject(webgl)
-  , mGLName(aName)
+  , mGLName(name)
   , mTarget(LOCAL_GL_NONE)
 {
 }

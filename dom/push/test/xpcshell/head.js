@@ -10,6 +10,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/Timer.jsm');
 Cu.import('resource://gre/modules/Promise.jsm');
 Cu.import('resource://gre/modules/Preferences.jsm');
+Cu.import('resource://gre/modules/PlacesUtils.jsm');
 
 const serviceExports = Cu.import('resource://gre/modules/PushService.jsm', {});
 const servicePrefs = new Preferences('dom.push.');
@@ -59,6 +60,25 @@ function after(times, func) {
       return func.apply(this, arguments);
     }
   };
+}
+
+/**
+ * Updates the places database.
+ *
+ * @param {mozIPlaceInfo} place A place record to insert.
+ * @returns {Promise} A promise that fulfills when the database is updated.
+ */
+function addVisit(place) {
+  return new Promise((resolve, reject) => {
+    if (typeof place.uri == 'string') {
+      place.uri = Services.io.newURI(place.uri, null, null);
+    }
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+      handleCompletion: resolve,
+      handleError: reject,
+      handleResult() {},
+    });
+  });
 }
 
 /**
@@ -199,7 +219,8 @@ function setPrefs(prefs = {}) {
     'adaptive.mobile': '',
     'http2.maxRetries': 2,
     'http2.retryInterval': 500,
-    'http2.reset_retry_count_after_ms': 60000
+    'http2.reset_retry_count_after_ms': 60000,
+    maxQuotaPerSubscription: 16,
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);

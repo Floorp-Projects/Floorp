@@ -4,10 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGL2Context.h"
-#include "GLContext.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 // -------------------------------------------------------------------------
 // Writing to the drawing buffer
@@ -17,3 +15,5 @@ WebGL2Context::DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei 
 {
     MOZ_CRASH("Not Implemented.");
 }
+
+} // namespace mozilla

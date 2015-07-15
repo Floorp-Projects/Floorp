@@ -202,15 +202,9 @@ public:
 private:
     void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);
 
-    void               NativeResize(int32_t aWidth,
-                                    int32_t aHeight,
-                                    bool    aRepaint);
-
-    void               NativeResize(int32_t aX,
-                                    int32_t aY,
-                                    int32_t aWidth,
-                                    int32_t aHeight,
-                                    bool    aRepaint);
+    void               NativeMove();
+    void               NativeResize();
+    void               NativeMoveResize();
 
     void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
@@ -341,12 +335,6 @@ protected:
     // Has this widget been destroyed yet?
     bool                mIsDestroyed;
 
-    // This is a flag that tracks if we need to resize a widget or
-    // window when we show it.
-    bool                mNeedsResize;
-    // This is a flag that tracks if we need to move a widget or
-    // window when we show it.
-    bool                mNeedsMove;
     // Should we send resize events on all resizes?
     bool                mListenForResizes;
     // This flag tracks if we're hidden or shown.
@@ -507,6 +495,7 @@ private:
     gint DevicePixelsToGdkCoordRoundDown(int pixels);
     GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
     GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
+    GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
 
     // From GDK
     int GdkCoordToDevicePixels(gint coord);

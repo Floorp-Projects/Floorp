@@ -55,6 +55,7 @@ add_task(function* test_pushUnsubscriptionSuccess() {
     pushReceiptEndpoint: serverURL + '/receiptPushEndpointUnsubscriptionSuccess',
     scope: 'https://example.com/page/unregister-success',
     originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    quota: Infinity,
   });
 
   PushService.init({

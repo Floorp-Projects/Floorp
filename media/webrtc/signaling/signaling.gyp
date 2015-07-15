@@ -156,6 +156,8 @@
          './src/sdp/SdpAttribute.cpp',
          './src/sdp/SdpAttributeList.h',
          './src/sdp/SdpErrorHolder.h',
+         './src/sdp/SdpHelper.h',
+         './src/sdp/SdpHelper.cpp',
          './src/sdp/SdpMediaSection.h',
          './src/sdp/SipccSdp.h',
          './src/sdp/SipccSdpAttributeList.h',

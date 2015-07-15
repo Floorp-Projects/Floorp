@@ -187,7 +187,7 @@ private:
 
 class PushEvent final : public ExtendableEvent
 {
-  nsString mData;
+  nsRefPtr<PushMessageData> mData;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
 
 protected:
@@ -196,6 +196,7 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PushEvent, ExtendableEvent)
   NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
@@ -213,7 +214,7 @@ public:
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
     e->SetTrusted(trusted);
     if(aOptions.mData.WasPassed()){
-      e->mData = aOptions.mData.Value();
+      e->mData = new PushMessageData(aOptions.mData.Value());
     }
     return e.forget();
   }
@@ -233,10 +234,9 @@ public:
     mServiceWorker = aServiceWorker;
   }
 
-  already_AddRefed<PushMessageData> Data()
+  PushMessageData* Data()
   {
-    nsRefPtr<PushMessageData> data = new PushMessageData(mData);
-    return data.forget();
+    return mData;
   }
 };
 #endif /* ! MOZ_SIMPLEPUSH */
