@@ -473,12 +473,10 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     collectToFixedPoint(mover, tenureCounts);
     TIME_END(collectToFP);
 
-    // Update the array buffer object's view lists.
+    // Sweep compartments to update the array buffer object's view lists.
     TIME_START(sweepArrayBufferViewList);
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        if (c->innerViews.needsSweepAfterMinorGC())
-            c->innerViews.sweepAfterMinorGC(rt);
-    }
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        c->sweepAfterMinorGC();
     TIME_END(sweepArrayBufferViewList);
 
     // Update any slot or element pointers whose destination has been tenured.
