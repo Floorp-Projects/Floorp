@@ -29,6 +29,7 @@ let ClickEventHandler = {
     this._screenX = null;
     this._screenY = null;
     this._lastFrame = null;
+    this.autoscrollLoop = this.autoscrollLoop.bind(this);
 
     Services.els.addSystemEventListener(global, "mousedown", this, true);
 
@@ -142,9 +143,9 @@ let ClickEventHandler = {
     this._screenY = event.screenY;
     this._scrollErrorX = 0;
     this._scrollErrorY = 0;
-    this._lastFrame = content.mozAnimationStartTime;
+    this._lastFrame = content.performance.now();
 
-    content.mozRequestAnimationFrame(this);
+    content.requestAnimationFrame(this.autoscrollLoop);
   },
 
   stopScroll: function() {
@@ -211,11 +212,7 @@ let ClickEventHandler = {
       this._scrollable.scrollLeft += actualScrollX;
       this._scrollable.scrollTop += actualScrollY;
     }
-    content.mozRequestAnimationFrame(this);
-  },
-
-  sample: function(timestamp) {
-    this.autoscrollLoop(timestamp);
+    content.requestAnimationFrame(this.autoscrollLoop);
   },
 
   handleEvent: function(event) {

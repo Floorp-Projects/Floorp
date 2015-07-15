@@ -79,16 +79,19 @@ namespace {
 class CancelChannelRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  const nsresult mStatus;
 public:
-  explicit CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
+  CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                        nsresult aStatus)
     : mChannel(aChannel)
+    , mStatus(aStatus)
   {
   }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    nsresult rv = mChannel->Cancel();
+    nsresult rv = mChannel->Cancel(mStatus);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
@@ -146,15 +149,17 @@ class RespondWithHandler final : public PromiseNativeHandler
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   RequestMode mRequestMode;
+  bool mIsClientRequest;
 public:
   NS_DECL_ISUPPORTS
 
   RespondWithHandler(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                      nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
-                     RequestMode aRequestMode)
+                     RequestMode aRequestMode, bool aIsClientRequest)
     : mInterceptedChannel(aChannel)
     , mServiceWorker(aServiceWorker)
     , mRequestMode(aRequestMode)
+    , mIsClientRequest(aIsClientRequest)
   {
   }
 
@@ -162,7 +167,7 @@ public:
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void CancelRequest();
+  void CancelRequest(nsresult aStatus);
 private:
   ~RespondWithHandler() {}
 };
@@ -192,7 +197,8 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
                                data->mInternalResponse,
                                data->mWorkerChannelInfo);
   } else {
-    event = new CancelChannelRunnable(data->mInterceptedChannel);
+    event = new CancelChannelRunnable(data->mInterceptedChannel,
+                                      NS_ERROR_INTERCEPTION_FAILED);
   }
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(event)));
 }
@@ -200,18 +206,26 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
 class MOZ_STACK_CLASS AutoCancel
 {
   nsRefPtr<RespondWithHandler> mOwner;
+  nsresult mStatus;
 
 public:
   explicit AutoCancel(RespondWithHandler* aOwner)
     : mOwner(aOwner)
+    , mStatus(NS_ERROR_INTERCEPTION_FAILED)
   {
   }
 
   ~AutoCancel()
   {
     if (mOwner) {
-      mOwner->CancelRequest();
+      mOwner->CancelRequest(mStatus);
     }
+  }
+
+  void SetCancelStatus(nsresult aStatus)
+  {
+    MOZ_ASSERT(NS_FAILED(aStatus));
+    mStatus = aStatus;
   }
 
   void Reset()
@@ -246,17 +260,35 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   // security implications are not a complete disaster.
   if (response->Type() == ResponseType::Opaque &&
       !worker->OpaqueInterceptionEnabled()) {
+    autoCancel.SetCancelStatus(NS_ERROR_OPAQUE_INTERCEPTION_DISABLED);
     return;
   }
 
-  // Section 4.2, step 2.2 "If either response's type is "opaque" and request's
-  // mode is not "no-cors" or response's type is error, return a network error."
-  if (((response->Type() == ResponseType::Opaque) && (mRequestMode != RequestMode::No_cors)) ||
-      response->Type() == ResponseType::Error) {
+  // Section 4.2, step 2.2:
+  //  If one of the following conditions is true, return a network error:
+  //    * response's type is "error".
+  //    * request's mode is not "no-cors" and response's type is "opaque".
+  //    * request is a client request and response's type is neither "basic"
+  //      nor "default".
+
+  if (response->Type() == ResponseType::Error) {
+    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_ERROR_RESPONSE);
+    return;
+  }
+
+  if (response->Type() == ResponseType::Opaque && mRequestMode != RequestMode::No_cors) {
+    autoCancel.SetCancelStatus(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE);
+    return;
+  }
+
+  if (mIsClientRequest && response->Type() != ResponseType::Basic &&
+      response->Type() != ResponseType::Default) {
+    autoCancel.SetCancelStatus(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION);
     return;
   }
 
   if (NS_WARN_IF(response->BodyUsed())) {
+    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_USED_RESPONSE);
     return;
   }
 
@@ -302,13 +334,14 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 void
 RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  CancelRequest();
+  CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
 }
 
 void
-RespondWithHandler::CancelRequest()
+RespondWithHandler::CancelRequest(nsresult aStatus)
 {
-  nsCOMPtr<nsIRunnable> runnable = new CancelChannelRunnable(mInterceptedChannel);
+  nsCOMPtr<nsIRunnable> runnable =
+    new CancelChannelRunnable(mInterceptedChannel, aStatus);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -337,9 +370,11 @@ FetchEvent::RespondWith(const ResponseOrPromise& aArg, ErrorResult& aRv)
   } else if (aArg.IsPromise()) {
     promise = &aArg.GetAsPromise();
   }
+  nsRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   mWaitToRespond = true;
   nsRefPtr<RespondWithHandler> handler =
-    new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode());
+    new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode(),
+                           ir->IsClientRequest());
   promise->AppendNativeHandler(handler);
 }
 

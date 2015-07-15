@@ -298,6 +298,12 @@ protected:
 
     nsresult
     Persist(nsIContent* aElement, int32_t aNameSpaceID, nsIAtom* aAttribute);
+    // Just like Persist but ignores the return value so we can use it
+    // as a runnable method.
+    void DoPersist(nsIContent* aElement, int32_t aNameSpaceID, nsIAtom* aAttribute)
+    {
+        Persist(aElement, aNameSpaceID, aAttribute);
+    }
 
     virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
