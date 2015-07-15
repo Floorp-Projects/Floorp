@@ -142,11 +142,6 @@ private:
     enum { ALLOW_MEMMOVE = false };
   };
 
-#if defined(MOZ_HAVE_MEM_CHECKS)
-  static PLDHashOperator UnpoisonFreeList(FreeList* aEntry, void*);
-#endif
-  static PLDHashOperator FreeListEnumerator(FreeList* aEntry, void* aData);
-
   nsTHashtable<FreeList> mFreeLists;
   PLArenaPool mPool;
 };
