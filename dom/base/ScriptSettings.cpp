@@ -564,7 +564,8 @@ AutoEntryScript::DocshellEntryMonitor::DocshellEntryMonitor(JSContext* aCx,
 
 void
 AutoEntryScript::DocshellEntryMonitor::Entry(JSContext* aCx, JSFunction* aFunction,
-                                             JSScript* aScript)
+                                             JSScript* aScript, JS::Handle<JS::Value> aAsyncStack,
+                                             JS::Handle<JSString*> aAsyncCause)
 {
   JS::Rooted<JSFunction*> rootedFunction(aCx);
   if (aFunction) {
@@ -609,10 +610,13 @@ AutoEntryScript::DocshellEntryMonitor::Entry(JSContext* aCx, JSFunction* aFuncti
     const char16_t* functionNameChars = functionName.isTwoByte() ?
       functionName.twoByteChars() : nullptr;
 
+    JS::Rooted<JS::Value> asyncCauseValue(aCx, aAsyncCause ? StringValue(aAsyncCause) :
+                                          JS::NullValue());
     docShellForJSRunToCompletion->NotifyJSRunToCompletionStart(mReason,
                                                                functionNameChars,
                                                                filename.BeginReading(),
-                                                               lineNumber);
+                                                               lineNumber, aAsyncStack,
+                                                               asyncCauseValue);
   }
 }
 
