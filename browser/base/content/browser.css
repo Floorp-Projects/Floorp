@@ -1358,3 +1358,10 @@ toolbarpaletteitem[place="palette"][hidden] {
 #password-notification-password[focused]::after {
   content: none;
 }
+
+/* Bug 1175941: Disable the transition on 10.10 due to flickering, possibly due to an OS X bug. */
+@media (-moz-mac-yosemite-theme) {
+  #password-notification-password::after {
+    transition: none;
+  }
+}
