@@ -98,7 +98,7 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
   // If this is an intercepted channel, we need to make sure that any resources are
   // cleaned up to avoid leaks.
   if (mInterceptedChannel) {
-    mInterceptedChannel->Cancel();
+    mInterceptedChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
     mInterceptedChannel = nullptr;
   }
 }

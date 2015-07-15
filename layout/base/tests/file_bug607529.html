@@ -11,7 +11,7 @@
     if (report) {
       opener.postMessage("callbackHappened", "*");
     }
-    window.mozRequestAnimationFrame(g);
+    window.requestAnimationFrame(g);
   }
   g();
 

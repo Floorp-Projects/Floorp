@@ -4,7 +4,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(9f1c43b9-f01b-4c87-ad3d-1a86520c2159)]
+[scriptable, uuid(c1622232-259c-43b0-b52e-89c39dcd9796)]
 interface nsINotificationStorageCallback : nsISupports
 {
   /**
@@ -28,7 +28,8 @@ interface nsINotificationStorageCallback : nsISupports
               in DOMString tag,
               in DOMString icon,
               in DOMString data,
-              in DOMString behavior);
+              in DOMString behavior,
+              in DOMString serviceWorkerRegistrationID);
 
   /**
    * Callback function used to notify C++ the we have returned
@@ -41,7 +42,7 @@ interface nsINotificationStorageCallback : nsISupports
 /**
  * Interface for notification persistence layer.
  */
-[scriptable, uuid(cac01fb0-c2eb-4252-b2f4-5b1fac933bd4)]
+[scriptable, uuid(17f85e52-fe57-440e-9ba1-5c312ca02b95)]
 interface nsINotificationStorage : nsISupports
 {
 
@@ -61,6 +62,10 @@ interface nsINotificationStorage : nsISupports
    *                   Stored in the database to avoid re-computing
    *                   it. Built from origin and tag or id depending
    *                   whether there is a tag defined.
+   * @param registrationID: Opaque string that identifies the service worker
+   *                        registration this Notification is associated with.
+   *                        May be empty. Only set for Notifications created by
+   *                        showNotification().
    */
   void put(in DOMString origin,
            in DOMString id,
@@ -72,7 +77,8 @@ interface nsINotificationStorage : nsISupports
            in DOMString icon,
            in DOMString alertName,
            in DOMString data,
-           in DOMString behavior);
+           in DOMString behavior,
+           in DOMString serviceWorkerRegistrationID);
 
   /**
    * Retrieve a list of notifications.
@@ -85,6 +91,20 @@ interface nsINotificationStorage : nsISupports
   void get(in DOMString origin,
            in DOMString tag,
            in nsINotificationStorageCallback aCallback);
+
+  /**
+   * Retrieve a notification by ID.
+   *
+   * @param origin: the origin/app for which to fetch notifications.
+   * @param id: the id of the notification.
+   * @param callback: nsINotificationStorageCallback whose Handle method will
+   * be called *at most once* if the notification with that ID is found. Not
+   * called if that ID is not found. Done() will be called right after
+   * Handle().
+   */
+  void getByID(in DOMString origin,
+               in DOMString id,
+               in nsINotificationStorageCallback aCallback);
 
   /**
    * Remove a notification from storage.

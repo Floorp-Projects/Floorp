@@ -183,12 +183,12 @@ class chunk_by_slice(InstanceFilter):
             # chunk will contain an equal number of enabled tests.
             if self.this_chunk == 1:
                 start = 0
-            else:
+            elif start < len(chunk_tests):
                 start = tests.index(chunk_tests[start])
 
             if self.this_chunk == self.total_chunks:
                 end = len(tests)
-            else:
+            elif end < len(chunk_tests):
                 end = tests.index(chunk_tests[end])
         return (t for t in tests[start:end])
 

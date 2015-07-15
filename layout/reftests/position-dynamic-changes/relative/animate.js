@@ -1,8 +1,6 @@
 var rfa = null;
 if (window.requestAnimationFrame) {
   rfa = requestAnimationFrame;
-} else if (window.mozRequestAnimationFrame) {
-  rfa = mozRequestAnimationFrame;
 } else if (window.webkitRequestAnimationFrame) {
   rfa = webkitRequestAnimationFrame;
 } else if (window.msRequestAnimationFrame) {

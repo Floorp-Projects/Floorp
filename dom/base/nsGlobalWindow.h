@@ -1538,6 +1538,11 @@ protected:
   // show, in that case we show a separate dialog to ask this question.
   bool ConfirmDialogIfNeeded();
 
+private:
+  // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
+  void FireOnNewGlobalObject();
+
+protected:
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
