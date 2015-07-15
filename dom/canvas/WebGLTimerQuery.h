@@ -29,7 +29,7 @@ public:
   WebGLContext* GetParentObject() const;
 
   // NS
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
   const GLenum mGLName;
 
@@ -37,7 +37,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTimerQuery)
 
 private:
-  explicit WebGLTimerQuery(WebGLContext* webgl, GLuint aName);
+  explicit WebGLTimerQuery(WebGLContext* webgl, GLuint name);
   ~WebGLTimerQuery();
 
   GLenum mTarget;

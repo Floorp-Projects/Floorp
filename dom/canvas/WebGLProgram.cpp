@@ -6,7 +6,11 @@
 #include "WebGLProgram.h"
 
 #include "GLContext.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "nsRefPtr.h"
+#include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
 #include "WebGLUniformLocation.h"
@@ -67,12 +71,12 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
 static void
 AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
               const nsACString& baseUserName, const nsACString& baseMappedName,
-              std::vector<nsRefPtr<WebGLActiveInfo>>* activeInfoList,
+              std::vector<RefPtr<WebGLActiveInfo>>* activeInfoList,
               std::map<nsCString, const WebGLActiveInfo*>* infoLocMap)
 {
-    nsRefPtr<WebGLActiveInfo> info = new WebGLActiveInfo(webgl, elemCount, elemType,
-                                                         isArray, baseUserName,
-                                                         baseMappedName);
+    RefPtr<WebGLActiveInfo> info = new WebGLActiveInfo(webgl, elemCount, elemType,
+                                                       isArray, baseUserName,
+                                                       baseMappedName);
     activeInfoList->push_back(info);
 
     infoLocMap->insert(std::make_pair(info->mBaseUserName, info.get()));
@@ -202,10 +206,10 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                 // By GLES 3, GetUniformLocation("foo[0]") should return -1 if `foo` is
                 // not an array. Our current linux Try slaves return the location of `foo`
                 // anyways, though.
-                std::string mappedName = baseMappedName.BeginReading();
-                mappedName += "[0]";
+                std::string mappedNameStr = baseMappedName.BeginReading();
+                mappedNameStr += "[0]";
 
-                GLint loc = gl->fGetUniformLocation(prog->mGLName, mappedName.c_str());
+                GLint loc = gl->fGetUniformLocation(prog->mGLName, mappedNameStr.c_str());
                 if (loc != -1)
                     isArray = true;
             }
@@ -246,14 +250,17 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                 MOZ_CRASH("Failed to parse `mappedName` received from driver.");
 
             nsAutoCString baseUserName;
-            if (!prog->FindUniformBlockByMappedName(baseMappedName, &baseUserName, &isArray)) {
+            if (!prog->FindUniformBlockByMappedName(baseMappedName, &baseUserName,
+                                                    &isArray))
+            {
                 baseUserName = baseMappedName;
 
                 if (needsCheckForArrays && !isArray) {
-                    std::string mappedName = baseMappedName.BeginReading();
-                    mappedName += "[0]";
+                    std::string mappedNameStr = baseMappedName.BeginReading();
+                    mappedNameStr += "[0]";
 
-                    GLuint loc = gl->fGetUniformBlockIndex(prog->mGLName, mappedName.c_str());
+                    GLuint loc = gl->fGetUniformBlockIndex(prog->mGLName,
+                                                           mappedNameStr.c_str());
                     if (loc != LOCAL_GL_INVALID_INDEX)
                         isArray = true;
                 }
@@ -277,8 +284,8 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* aProg)
-    : prog(aProg)
+webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
+    : prog(prog)
     , fragDataMap(nullptr)
 { }
 
@@ -298,6 +305,11 @@ WebGLProgram::WebGLProgram(WebGLContext* webgl)
     , mTransformFeedbackBufferMode(LOCAL_GL_NONE)
 {
     mContext->mPrograms.insertBack(this);
+}
+
+WebGLProgram::~WebGLProgram()
+{
+    DeleteOnce();
 }
 
 void
@@ -425,7 +437,7 @@ WebGLProgram::GetActiveAttrib(GLuint index) const
         return nullptr;
     }
 
-    nsRefPtr<WebGLActiveInfo> ret =  activeList[index];
+    RefPtr<WebGLActiveInfo> ret = activeList[index];
     return ret.forget();
 }
 
@@ -446,7 +458,7 @@ WebGLProgram::GetActiveUniform(GLuint index) const
         return nullptr;
     }
 
-    nsRefPtr<WebGLActiveInfo> ret = activeList[index];
+    RefPtr<WebGLActiveInfo> ret = activeList[index];
     return ret.forget();
 }
 
@@ -627,7 +639,7 @@ WebGLProgram::GetActiveUniformBlockName(GLuint uniformBlockIndex, nsAString& ret
 
 void
 WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname,
-                                         Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval) const
+                                         dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval) const
 {
     retval.SetNull();
     if (!IsLinked()) {
@@ -663,7 +675,7 @@ WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname,
 
 void
 WebGLProgram::GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformBlockIndex,
-                                                  Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
+                                                  dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
                                                   ErrorResult& rv) const
 {
     if (!IsLinked()) {
@@ -1013,7 +1025,7 @@ WebGLProgram::GetTransformFeedbackVarying(GLuint index)
     LinkInfo()->FindAttrib(varyingUserName, (const WebGLActiveInfo**) &info);
     MOZ_ASSERT(info);
 
-    nsRefPtr<WebGLActiveInfo> ret(info);
+    RefPtr<WebGLActiveInfo> ret(info);
     return ret.forget();
 }
 
@@ -1034,9 +1046,9 @@ WebGLProgram::FindUniformBlockByMappedName(const nsACString& mappedName,
 ////////////////////////////////////////////////////////////////////////////////
 
 JSObject*
-WebGLProgram::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
+WebGLProgram::WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLProgramBinding::Wrap(js, this, aGivenProto);
+    return dom::WebGLProgramBinding::Wrap(js, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mVertShader, mFragShader)

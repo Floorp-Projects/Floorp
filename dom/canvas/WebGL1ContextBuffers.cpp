@@ -4,11 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGL1Context.h"
-#include "WebGLBuffer.h"
-#include "GLContext.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 // -------------------------------------------------------------------------
 // Buffer objects
@@ -50,3 +47,5 @@ WebGL1Context::ValidateBufferUsageEnum(GLenum usage, const char* info)
     ErrorInvalidEnumInfo(info, usage);
     return false;
 }
+
+} // namespace mozilla

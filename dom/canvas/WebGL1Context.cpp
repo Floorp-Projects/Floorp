@@ -28,9 +28,9 @@ WebGL1Context::~WebGL1Context()
 }
 
 JSObject*
-WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
+WebGL1Context::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLRenderingContextBinding::Wrap(cx, this, aGivenProto);
+    return dom::WebGLRenderingContextBinding::Wrap(cx, this, givenProto);
 }
 
 bool

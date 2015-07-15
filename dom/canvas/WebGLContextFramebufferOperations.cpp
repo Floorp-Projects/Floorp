@@ -9,7 +9,7 @@
 #include "WebGLFramebuffer.h"
 #include "GLContext.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 void
 WebGLContext::Clear(GLbitfield mask)
@@ -250,6 +250,4 @@ WebGLContext::StencilMaskSeparate(GLenum face, GLuint mask)
     gl->fStencilMaskSeparate(face, mask);
 }
 
-
-
-
+} // namespace mozilla
