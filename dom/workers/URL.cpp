@@ -482,7 +482,7 @@ private:
   mozilla::ErrorResult& mRv;
 };
 
-NS_IMPL_CYCLE_COLLECTION(URL, mSearchParams)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URL, mSearchParams)
 
 // The reason for using worker::URL is to have different refcnt logging than
 // for main thread URL.
@@ -490,6 +490,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(workers::URL)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(workers::URL)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URL)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
