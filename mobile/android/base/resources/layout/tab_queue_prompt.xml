@@ -14,7 +14,7 @@
 
     <LinearLayout
         android:id="@+id/tab_queue_container"
-        android:layout_width="@dimen/tab_queue_container_width"
+        android:layout_width="@dimen/overlay_prompt_container_width"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
         android:background="@android:color/white"
@@ -22,7 +22,7 @@
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_width="@dimen/overlay_prompt_content_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:fontFamily="sans-serif-light"
@@ -36,7 +36,7 @@
 
         <TextView
             android:id="@+id/text"
-            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_width="@dimen/overlay_prompt_content_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
@@ -50,7 +50,7 @@
 
         <TextView
             android:id="@+id/tip_text"
-            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_width="@dimen/overlay_prompt_content_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
@@ -88,7 +88,7 @@
                 <TextView
                     android:id="@+id/cancel_button"
                     style="@style/Widget.BaseButton"
-                    android:layout_width="@dimen/tab_queue_button_width"
+                    android:layout_width="@dimen/overlay_prompt_button_width"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:background="@color/android:white"
@@ -101,7 +101,7 @@
                 <Button
                     android:id="@+id/ok_button"
                     style="@style/Widget.BaseButton"
-                    android:layout_width="@dimen/tab_queue_button_width"
+                    android:layout_width="@dimen/overlay_prompt_button_width"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:background="@drawable/button_background_action_orange_round"

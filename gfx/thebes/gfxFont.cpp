@@ -295,27 +295,21 @@ gfxFontCache::DestroyFont(gfxFont *aFont)
 }
 
 /*static*/
-PLDHashOperator
-gfxFontCache::AgeCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
-{
-    aHashEntry->mFont->AgeCachedWords();
-    return PL_DHASH_NEXT;
-}
-
-/*static*/
 void
 gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache)
 {
     gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
-    cache->mFonts.EnumerateEntries(AgeCachedWordsForFont, nullptr);
+    for (auto it = cache->mFonts.Iter(); !it.Done(); it.Next()) {
+        it.Get()->mFont->AgeCachedWords();
+    }
 }
 
-/*static*/
-PLDHashOperator
-gfxFontCache::ClearCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
+void
+gfxFontCache::FlushShapedWordCaches()
 {
-    aHashEntry->mFont->ClearCachedWords();
-    return PL_DHASH_NEXT;
+    for (auto it = mFonts.Iter(); !it.Done(); it.Next()) {
+        it.Get()->mFont->ClearCachedWords();
+    }
 }
 
 /*static*/
@@ -639,14 +633,11 @@ gfxShapedText::SetGlyphs(uint32_t aIndex, CompressedGlyph aGlyph,
 
 #define ZWNJ 0x200C
 #define ZWJ  0x200D
-// U+061C ARABIC LETTER MARK is expected to be added to XIDMOD_DEFAULT_IGNORABLE
-// in a future Unicode update. Add it manually for now
-#define ALM  0x061C
 static inline bool
 IsDefaultIgnorable(uint32_t aChar)
 {
     return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
-           aChar == ZWNJ || aChar == ZWJ || aChar == ALM;
+           aChar == ZWNJ || aChar == ZWJ;
 }
 
 void
@@ -762,14 +753,6 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
     mKerningSet = HasFeatureSet(HB_TAG('k','e','r','n'), mKerningEnabled);
 }
 
-static PLDHashOperator
-NotifyFontDestroyed(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
-                    void* aClosure)
-{
-    aKey->GetKey()->ForgetFont();
-    return PL_DHASH_NEXT;
-}
-
 gfxFont::~gfxFont()
 {
     uint32_t i, count = mGlyphExtentsArray.Length();
@@ -783,7 +766,9 @@ gfxFont::~gfxFont()
     mFontEntry->NotifyFontDestroyed(this);
 
     if (mGlyphChangeObservers) {
-        mGlyphChangeObservers->EnumerateEntries(NotifyFontDestroyed, nullptr);
+        for (auto it = mGlyphChangeObservers->Iter(); !it.Done(); it.Next()) {
+            it.Get()->GetKey()->ForgetFont();
+        }
     }
 }
 
@@ -810,20 +795,6 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
         return 0;
     }
     return shaper->GetGlyphHAdvance(aGID) / 65536.0;
-}
-
-/*static*/
-PLDHashOperator
-gfxFont::AgeCacheEntry(CacheHashEntry *aEntry, void *aUserData)
-{
-    if (!aEntry->mShapedWord) {
-        NS_ASSERTION(aEntry->mShapedWord, "cache entry has no gfxShapedWord!");
-        return PL_DHASH_REMOVE;
-    }
-    if (aEntry->mShapedWord->IncrementAge() == kShapedWordCacheMaxAge) {
-        return PL_DHASH_REMOVE;
-    }
-    return PL_DHASH_NEXT;
 }
 
 static void
@@ -2323,12 +2294,22 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     return metrics;
 }
 
-static PLDHashOperator
-NotifyGlyphChangeObservers(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
-                           void* aClosure)
+void
+gfxFont::AgeCachedWords()
 {
-    aKey->GetKey()->NotifyGlyphsChanged();
-    return PL_DHASH_NEXT;
+    if (mWordCache) {
+        for (auto it = mWordCache->Iter(); !it.Done(); it.Next()) {
+            CacheHashEntry *entry = it.Get();
+            if (!entry->mShapedWord) {
+                NS_ASSERTION(entry->mShapedWord,
+                             "cache entry has no gfxShapedWord!");
+                it.Remove();
+            } else if (entry->mShapedWord->IncrementAge() ==
+                       kShapedWordCacheMaxAge) {
+                it.Remove();
+            }
+        }
+    }
 }
 
 void
@@ -2341,7 +2322,9 @@ gfxFont::NotifyGlyphsChanged()
     }
 
     if (mGlyphChangeObservers) {
-        mGlyphChangeObservers->EnumerateEntries(NotifyGlyphChangeObservers, nullptr);
+        for (auto it = mGlyphChangeObservers->Iter(); !it.Done(); it.Next()) {
+            it.Get()->GetKey()->NotifyGlyphsChanged();
+        }
     }
 }
 

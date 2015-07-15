@@ -112,7 +112,7 @@ public:
     {
     }
 
-    void InitExtensions();
+    void InitExtensionsFromDisplay(EGLDisplay eglDisplay);
 
     /**
      * Known GL extensions that can be queried by
@@ -131,6 +131,8 @@ public:
         KHR_image,
         KHR_fence_sync,
         ANDROID_native_fence_sync,
+        ANGLE_platform_angle,
+        ANGLE_platform_angle_d3d,
         Extensions_Max
     };
 
@@ -151,6 +153,14 @@ public:
     {
         BEFORE_GL_CALL;
         EGLDisplay disp = mSymbols.fGetDisplay(display_id);
+        AFTER_GL_CALL;
+        return disp;
+    }
+
+    EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display, const EGLint* attrib_list)
+    {
+        BEFORE_GL_CALL;
+        EGLDisplay disp = mSymbols.fGetPlatformDisplayEXT(platform, native_display, attrib_list);
         AFTER_GL_CALL;
         return disp;
     }
@@ -486,6 +496,8 @@ public:
     struct {
         typedef EGLDisplay (GLAPIENTRY * pfnGetDisplay)(void *display_id);
         pfnGetDisplay fGetDisplay;
+        typedef EGLDisplay(GLAPIENTRY * pfnGetPlatformDisplayEXT)(EGLenum platform, void *native_display, const EGLint *attrib_list);
+        pfnGetPlatformDisplayEXT fGetPlatformDisplayEXT;
         typedef EGLBoolean (GLAPIENTRY * pfnTerminate)(EGLDisplay dpy);
         pfnTerminate fTerminate;
         typedef EGLSurface (GLAPIENTRY * pfnGetCurrentSurface)(EGLint);

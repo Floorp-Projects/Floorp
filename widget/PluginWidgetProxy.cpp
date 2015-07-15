@@ -35,8 +35,7 @@ NS_IMPL_ISUPPORTS_INHERITED(PluginWidgetProxy, PuppetWidget, nsIWidget)
 PluginWidgetProxy::PluginWidgetProxy(dom::TabChild* aTabChild,
                                      mozilla::plugins::PluginWidgetChild* aActor) :
   PuppetWidget(aTabChild),
-  mActor(aActor),
-  mCachedPluginPort(0)
+  mActor(aActor)
 {
   // See ChannelDestroyed() in the header
   mActor->SetWidget(this);
@@ -75,6 +74,8 @@ PluginWidgetProxy::Create(nsIWidget*        aParent,
 NS_IMETHODIMP
 PluginWidgetProxy::SetParent(nsIWidget* aNewParent)
 {
+  mParent = aNewParent;
+
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   nsIWidget* parent = GetParent();
   if (parent) {
@@ -83,7 +84,6 @@ PluginWidgetProxy::SetParent(nsIWidget* aNewParent)
   if (aNewParent) {
     aNewParent->AddChild(this);
   }
-  mParent = aNewParent;
   return NS_OK;
 }
 
@@ -135,14 +135,10 @@ PluginWidgetProxy::GetNativeData(uint32_t aDataType)
       NS_WARNING("PluginWidgetProxy::GetNativeData received request for unsupported data type.");
       return nullptr;
   }
-  // The parent side window handle or xid never changes so we can
-  // cache this for our lifetime.
-  if (mCachedPluginPort) {
-    return (void*)mCachedPluginPort;
-  }
-  mActor->SendGetNativePluginPort(&mCachedPluginPort);
-  PWLOG("PluginWidgetProxy::GetNativeData %p\n", (void*)mCachedPluginPort);
-  return (void*)mCachedPluginPort;
+  uintptr_t value = 0;
+  mActor->SendGetNativePluginPort(&value);
+  PWLOG("PluginWidgetProxy::GetNativeData %p\n", (void*)value);
+  return (void*)value;
 }
 
 #if defined(XP_WIN)

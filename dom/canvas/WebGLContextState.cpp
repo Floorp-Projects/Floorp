@@ -15,8 +15,7 @@
 #include "GLContext.h"
 #include "mozilla/dom/ToJSValue.h"
 
-using namespace mozilla;
-using namespace dom;
+namespace mozilla {
 
 void
 WebGLContext::Disable(GLenum cap)
@@ -353,7 +352,8 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::Int32Value(0);
         case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS: {
             uint32_t length = mCompressedTextureFormats.Length();
-            JSObject* obj = Uint32Array::Create(cx, this, length, mCompressedTextureFormats.Elements());
+            JSObject* obj = dom::Uint32Array::Create(cx, this, length,
+                                                     mCompressedTextureFormats.Elements());
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -419,7 +419,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE: {
             GLfloat fv[2] = { 0 };
             gl->fGetFloatv(pname, fv);
-            JSObject* obj = Float32Array::Create(cx, this, 2, fv);
+            JSObject* obj = dom::Float32Array::Create(cx, this, 2, fv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -431,7 +431,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_BLEND_COLOR: {
             GLfloat fv[4] = { 0 };
             gl->fGetFloatv(pname, fv);
-            JSObject* obj = Float32Array::Create(cx, this, 4, fv);
+            JSObject* obj = dom::Float32Array::Create(cx, this, 4, fv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -442,7 +442,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_MAX_VIEWPORT_DIMS: {
             GLint iv[2] = { 0 };
             gl->fGetIntegerv(pname, iv);
-            JSObject* obj = Int32Array::Create(cx, this, 2, iv);
+            JSObject* obj = dom::Int32Array::Create(cx, this, 2, iv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -454,7 +454,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_VIEWPORT: {
             GLint iv[4] = { 0 };
             gl->fGetIntegerv(pname, iv);
-            JSObject* obj = Int32Array::Create(cx, this, 4, iv);
+            JSObject* obj = dom::Int32Array::Create(cx, this, 4, iv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -468,7 +468,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             bool vals[4] = { bool(gl_bv[0]), bool(gl_bv[1]),
                              bool(gl_bv[2]), bool(gl_bv[3]) };
             JS::Rooted<JS::Value> arr(cx);
-            if (!ToJSValue(cx, vals, &arr)) {
+            if (!dom::ToJSValue(cx, vals, &arr)) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
             return arr;
@@ -593,3 +593,5 @@ WebGLContext::GetStateTrackingSlot(GLenum cap)
 
     return nullptr;
 }
+
+} // namespace mozilla

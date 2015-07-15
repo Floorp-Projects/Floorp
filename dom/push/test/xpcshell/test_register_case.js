@@ -48,7 +48,7 @@ add_task(function* test_register_case() {
 
   let newRecord = yield waitForPromise(
     PushNotificationService.register('https://example.net/case',
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     DEFAULT_TIMEOUT,
     'Mixed-case register response timed out'
   );

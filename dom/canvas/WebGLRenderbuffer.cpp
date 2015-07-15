@@ -9,6 +9,7 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "ScopedGLHelpers.h"
 #include "WebGLContext.h"
+#include "WebGLStrongTypes.h"
 #include "WebGLTexture.h"
 
 namespace mozilla {
@@ -41,9 +42,9 @@ NeedsDepthStencilEmu(gl::GLContext* gl, GLenum internalFormat)
 }
 
 JSObject*
-WebGLRenderbuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
+WebGLRenderbuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLRenderbufferBinding::Wrap(cx, this, aGivenProto);
+    return dom::WebGLRenderbufferBinding::Wrap(cx, this, givenProto);
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)

@@ -315,18 +315,6 @@ function startTestDebuggerServer(title, server = DebuggerServer) {
   return connect(client).then(() => client);
 }
 
-function initTestTracerServer(aServer = DebuggerServer)
-{
-  aServer.registerModule("xpcshell-test/testactors");
-  aServer.registerModule("devtools/server/actors/tracer", {
-    prefix: "trace",
-    constructor: "TracerActor",
-    type: { global: true, tab: true }
-  });
-  // Allow incoming connections.
-  aServer.init(function () { return true; });
-}
-
 function finishClient(aClient)
 {
   aClient.close(function() {

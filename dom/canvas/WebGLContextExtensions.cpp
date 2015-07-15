@@ -393,7 +393,7 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
 
 void
 WebGLContext::GetSupportedExtensions(JSContext* cx,
-                                     Nullable< nsTArray<nsString> >& retval)
+                                     dom::Nullable< nsTArray<nsString> >& retval)
 {
     retval.SetNull();
     if (IsContextLost())

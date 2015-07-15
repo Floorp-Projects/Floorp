@@ -88,7 +88,6 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/styles.js',
     'actors/stylesheets.js',
     'actors/timeline.js',
-    'actors/tracer.js',
     'actors/webapps.js',
     'actors/webaudio.js',
     'actors/webbrowser.js',

@@ -51,6 +51,10 @@ typedef enum {
   MOZ_GTK_STEPPER_VERTICAL    = 1 << 2
 } GtkScrollbarButtonFlags;
 
+typedef enum {
+  MOZ_GTK_TRACK_OPAQUE        = 1 << 0
+} GtkScrollbarTrackFlags;
+
 /** flags for tab state **/
 typedef enum {
   /* first eight bits are used to pass a margin */

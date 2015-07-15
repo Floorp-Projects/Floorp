@@ -579,17 +579,17 @@ public:
 
   nsresult EnumerateDevices(nsPIDOMWindow* aWindow, dom::Promise& aPromise);
   void OnNavigation(uint64_t aWindowID);
-  bool IsWindowActivelyCapturing(uint64_t aWindowId);
+  bool IsActivelyCapturingOrHasAPermission(uint64_t aWindowId);
 
   MediaEnginePrefs mPrefs;
 
   typedef nsTArray<nsRefPtr<MediaDevice>> SourceSet;
+  static bool IsPrivateBrowsing(nsPIDOMWindow *window);
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError> PledgeSourceSet;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
-  static bool IsPrivateBrowsing(nsPIDOMWindow *window);
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 public: // TODO: make private once we upgrade to GCC 4.8+ on linux.

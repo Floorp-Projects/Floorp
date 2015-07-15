@@ -195,7 +195,15 @@ public class RestrictedProfiles {
             return false;
         }
 
-        return !getRestrictions(context).isEmpty();
+        Bundle restrictions = getRestrictions(context);
+        for (String key : restrictions.keySet()) {
+            if (restrictions.getBoolean(key)) {
+                // At least one restriction is enabled -> We are a restricted profile
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static boolean isAllowed(final Context context, final Restriction action) {
