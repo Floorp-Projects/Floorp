@@ -18,6 +18,10 @@
  * a document view. When we hand an object off to an AT, we always want
  * to give it the represented view, in the latter case.
  */
+
+namespace mozilla {
+namespace a11y {
+
 inline id <mozAccessible>
 GetObjectOrRepresentedView(id <mozAccessible> aObject)
 {
@@ -25,7 +29,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
 }
 
 inline mozAccessible*
-GetNativeFromGeckoAccessible(mozilla::a11y::Accessible* aAccessible)
+GetNativeFromGeckoAccessible(Accessible* aAccessible)
 {
   mozAccessible* native = nil;
   aAccessible->GetNativeInterface((void**)&native);
@@ -33,10 +37,13 @@ GetNativeFromGeckoAccessible(mozilla::a11y::Accessible* aAccessible)
 }
 
 inline mozAccessible*
-GetNativeFromProxy(mozilla::a11y::ProxyAccessible* aProxy)
+GetNativeFromProxy(ProxyAccessible* aProxy)
 {
   return reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
 }
+
+} // a11y
+} // mozilla
 
 // This is OR'd with the Accessible owner to indicate the wrap-ee is a proxy.
 static const uintptr_t IS_PROXY = 1;
