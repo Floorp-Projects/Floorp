@@ -519,6 +519,8 @@ struct JSCompartment
     void markRoots(JSTracer* trc);
     bool preserveJitCode() { return gcPreserveJitCode; }
 
+    void sweepAfterMinorGC();
+
     void sweepInnerViews();
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
