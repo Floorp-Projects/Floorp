@@ -433,8 +433,6 @@ nsLayoutStatics::Shutdown()
   nsHyphenationManager::Shutdown();
   nsDOMMutationObserver::Shutdown();
 
-  AudioChannelService::Shutdown();
-
   DataStoreService::Shutdown();
 
   ContentParent::ShutDown();
