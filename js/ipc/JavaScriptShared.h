@@ -107,7 +107,7 @@ class ObjectToIdMap
     typedef js::HashMap<JSObject*, ObjectId, Hasher, js::SystemAllocPolicy> Table;
 
   public:
-    ObjectToIdMap(JSRuntime* rt);
+    explicit ObjectToIdMap(JSRuntime* rt);
     ~ObjectToIdMap();
 
     bool init();
