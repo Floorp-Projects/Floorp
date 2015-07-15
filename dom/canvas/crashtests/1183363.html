@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var ctx = canvas.getContext('2d');
+    ctx.rect(2, 6, 9, 8);
+    ctx.setTransform(1, 2, 3, 0, 4, 1);
+    setTimeout(function() {
+        ctx.moveTo(0, 1);
+        ctx.isPointInPath(0, 0, 'evenodd');
+    }, 0);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<canvas id="canvas"></canvas>
+</body>
+</html>
