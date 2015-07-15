@@ -1791,8 +1791,16 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     // script modifies the hashtable. Instead, we build a (local) array of
     // images to refresh, and then we refresh each image in that array.
     nsCOMArray<imgIContainer> imagesToRefresh(mRequests.Count());
-    mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator,
-                               &imagesToRefresh);
+
+    for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
+      nsISupportsHashKey* entry = iter.Get();
+      auto req = static_cast<imgIRequest*>(entry->GetKey());
+      MOZ_ASSERT(req, "Unable to retrieve the image request");
+      nsCOMPtr<imgIContainer> image;
+      if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
+        imagesToRefresh.AppendElement(image);
+      }
+    }
 
     for (uint32_t i = 0; i < imagesToRefresh.Length(); i++) {
       imagesToRefresh[i]->RequestRefresh(aNowTime);
@@ -1849,40 +1857,22 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   NS_ASSERTION(mInRefresh, "Still in refresh");
 }
 
-/* static */ PLDHashOperator
-nsRefreshDriver::ImageRequestEnumerator(nsISupportsHashKey* aEntry,
-                                        void* aUserArg)
+void
+nsRefreshDriver::BeginRefreshingImages(RequestTable& aEntries,
+                                       ImageRequestParameters* aParms)
 {
-  nsCOMArray<imgIContainer>* imagesToRefresh =
-    static_cast<nsCOMArray<imgIContainer>*> (aUserArg);
-  imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
-  MOZ_ASSERT(req, "Unable to retrieve the image request");
-  nsCOMPtr<imgIContainer> image;
-  if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
-    imagesToRefresh->AppendElement(image);
+  for (auto iter = aEntries.Iter(); !iter.Done(); iter.Next()) {
+    auto req = static_cast<imgIRequest*>(iter.Get()->GetKey());
+    MOZ_ASSERT(req, "Unable to retrieve the image request");
+
+    aParms->mRequests->PutEntry(req);
+
+    nsCOMPtr<imgIContainer> image;
+    if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
+      image->SetAnimationStartTime(aParms->mDesired);
+    }
   }
-
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-nsRefreshDriver::BeginRefreshingImages(nsISupportsHashKey* aEntry,
-                                       void* aUserArg)
-{
-  ImageRequestParameters* parms =
-    static_cast<ImageRequestParameters*> (aUserArg);
-
-  imgIRequest* req = static_cast<imgIRequest*>(aEntry->GetKey());
-  MOZ_ASSERT(req, "Unable to retrieve the image request");
-
-  parms->mRequests->PutEntry(req);
-
-  nsCOMPtr<imgIContainer> image;
-  if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
-    image->SetAnimationStartTime(parms->mDesired);
-  }
-
-  return PL_DHASH_REMOVE;
+  aEntries.Clear();
 }
 
 /* static */ PLDHashOperator
@@ -1905,14 +1895,14 @@ nsRefreshDriver::StartTableRefresh(const uint32_t& aDelay,
     // to the main requests table.
     if (prevMultiple != static_cast<uint32_t>(curr.ToMilliseconds()) / aDelay) {
       parms->mDesired = start + TimeDuration::FromMilliseconds(prevMultiple * aDelay);
-      aData->mEntries.EnumerateEntries(nsRefreshDriver::BeginRefreshingImages, parms);
+      BeginRefreshingImages(aData->mEntries, parms);
     }
   } else {
     // This is the very first time we've drawn images with this time delay.
     // Set the animation start time to "now" and move all the images in this
     // table to the main requests table.
     parms->mDesired = parms->mCurrent;
-    aData->mEntries.EnumerateEntries(nsRefreshDriver::BeginRefreshingImages, parms);
+    BeginRefreshingImages(aData->mEntries, parms);
     aData->mStartTime.emplace(parms->mCurrent);
   }
 
