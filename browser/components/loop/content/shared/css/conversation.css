@@ -1031,6 +1031,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   margin-bottom: 1em;
 }
 
+.room-context-label,
 .room-context-description,
 .room-context > .checkbox-wrapper > label {
   color: #fff;
