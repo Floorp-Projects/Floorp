@@ -888,39 +888,6 @@ function reopenVarPopup(...aArgs) {
   return hideVarPopup.apply(this, aArgs).then(() => openVarPopup.apply(this, aArgs));
 }
 
-// Tracing helpers
-
-function startTracing(aPanel) {
-  const deferred = promise.defer();
-  aPanel.panelWin.DebuggerController.Tracer.startTracing(aResponse => {
-    if (aResponse.error) {
-      deferred.reject(aResponse);
-    } else {
-      deferred.resolve(aResponse);
-    }
-  });
-  return deferred.promise;
-}
-
-function stopTracing(aPanel) {
-  const deferred = promise.defer();
-  aPanel.panelWin.DebuggerController.Tracer.stopTracing(aResponse => {
-    if (aResponse.error) {
-      deferred.reject(aResponse);
-    } else {
-      deferred.resolve(aResponse);
-    }
-  });
-  return deferred.promise;
-}
-
-function filterTraces(aPanel, f) {
-  const traces = aPanel.panelWin.document
-    .getElementById("tracer-traces")
-    .querySelector("scrollbox")
-    .children;
-  return Array.filter(traces, f);
-}
 function attachAddonActorForUrl(aClient, aUrl) {
   let deferred = promise.defer();
 
