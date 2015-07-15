@@ -3420,15 +3420,21 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
   // If we have suspended the last AudioContext, and we don't have other
   // streams that have audio, this graph will automatically switch to a
   // SystemCallbackDriver, because it can't find a MediaStream that has an audio
-  // track. When resuming, force switching to an AudioCallbackDriver. It would
-  // have happened at the next iteration anyways, but doing this now save
-  // some time.
+  // track. When resuming, force switching to an AudioCallbackDriver (if we're
+  // not already switching). It would have happened at the next iteration
+  // anyways, but doing this now save some time.
   if (aOperation == AudioContextOperation::Resume) {
     if (!CurrentDriver()->AsAudioCallbackDriver()) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+      AudioCallbackDriver* driver;
+      if (CurrentDriver()->Switching()) {
+        MOZ_ASSERT(CurrentDriver()->NextDriver()->AsAudioCallbackDriver());
+        driver = CurrentDriver()->NextDriver()->AsAudioCallbackDriver();
+      } else {
+        driver = new AudioCallbackDriver(this);
+        mMixer.AddCallback(driver);
+        CurrentDriver()->SwitchAtNextIteration(driver);
+      }
       driver->EnqueueStreamAndPromiseForOperation(aStream, aPromise, aOperation);
-      mMixer.AddCallback(driver);
-      CurrentDriver()->SwitchAtNextIteration(driver);
     } else {
       // We are resuming a context, but we are already using an
       // AudioCallbackDriver, we can resolve the promise now.
@@ -3456,9 +3462,14 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
       CurrentDriver()->AsAudioCallbackDriver()->
         EnqueueStreamAndPromiseForOperation(aStream, aPromise, aOperation);
 
-      SystemClockDriver* driver = new SystemClockDriver(this);
-      mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
-      CurrentDriver()->SwitchAtNextIteration(driver);
+      SystemClockDriver* driver;
+      if (CurrentDriver()->NextDriver()) {
+        MOZ_ASSERT(!CurrentDriver()->NextDriver()->AsAudioCallbackDriver());
+      } else {
+        driver = new SystemClockDriver(this);
+        mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
+        CurrentDriver()->SwitchAtNextIteration(driver);
+      }
     } else {
       // We are closing or suspending an AudioContext, but something else is
       // using the audio stream, we can resolve the promise now.
