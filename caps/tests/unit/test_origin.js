@@ -20,9 +20,6 @@ function checkCrossOrigin(a, b) {
   do_check_false(a.subsumesConsideringDomain(b));
   do_check_false(b.subsumes(a));
   do_check_false(b.subsumesConsideringDomain(a));
-  do_check_eq(a.cookieJar === b.cookieJar,
-              a.originAttributes.appId == b.originAttributes.appId &&
-              a.originAttributes.inBrowser == b.originAttributes.inBrowser);
 }
 
 function checkOriginAttributes(prin, attrs, suffix) {

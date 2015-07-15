@@ -425,7 +425,7 @@ public:
                        Lifetime          aLifetime)
   {
     // If this is a duplicate surface, refuse to replace the original.
-    if (MOZ_UNLIKELY(Lookup(aImageKey, aSurfaceKey))) {
+    if (MOZ_UNLIKELY(Lookup(aImageKey, aSurfaceKey, /* aMarkUsed = */ false))) {
       return InsertOutcome::FAILURE_ALREADY_PRESENT;
     }
 
@@ -545,7 +545,8 @@ public:
   }
 
   LookupResult Lookup(const ImageKey    aImageKey,
-                      const SurfaceKey& aSurfaceKey)
+                      const SurfaceKey& aSurfaceKey,
+                      bool aMarkUsed = true)
   {
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -565,10 +566,8 @@ public:
       return LookupResult();
     }
 
-    if (cache->IsLocked()) {
-      LockSurface(surface);
-    } else {
-      mExpirationTracker.MarkUsed(surface);
+    if (aMarkUsed) {
+      MarkUsed(surface, cache);
     }
 
     return LookupResult(Move(ref), /* aIsExactMatch = */ true);
@@ -607,12 +606,6 @@ public:
       Remove(surface);
     }
 
-    if (cache->IsLocked()) {
-      LockSurface(surface);
-    } else {
-      mExpirationTracker.MarkUsed(surface);
-    }
-
     SurfaceKey key = surface->GetSurfaceKey();
     const bool isExactMatch = key.Size() == aSurfaceKey.Size();
 
@@ -620,6 +613,11 @@ public:
       (key == aSurfaceKey ||
          (aAlternateFlags && key == aSurfaceKey.WithNewFlags(*aAlternateFlags))),
       "Result differs in a way other than size or alternate flags");
+
+
+    if (isExactMatch) {
+      MarkUsed(surface, cache);
+    }
 
     return LookupResult(Move(ref), isExactMatch);
   }
@@ -858,6 +856,15 @@ private:
   bool CanHoldAfterDiscarding(const Cost aCost) const
   {
     return aCost <= mMaxCost - mLockedCost;
+  }
+
+  void MarkUsed(CachedSurface* aSurface, ImageSurfaceCache* aCache)
+  {
+    if (aCache->IsLocked()) {
+      LockSurface(aSurface);
+    } else {
+      mExpirationTracker.MarkUsed(aSurface);
+    }
   }
 
   struct SurfaceTracker : public nsExpirationTracker<CachedSurface, 2>

@@ -30,7 +30,8 @@ add_task(function* test_register_flush() {
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/page/1',
     originAttributes: '',
-    version: 2
+    version: 2,
+    quota: Infinity,
   };
   yield db.put(record);
 

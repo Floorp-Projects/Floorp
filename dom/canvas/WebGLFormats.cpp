@@ -5,6 +5,7 @@
 
 #include "WebGLFormats.h"
 
+#include "GLDefs.h"
 #include "mozilla/StaticMutex.h"
 
 namespace mozilla {
