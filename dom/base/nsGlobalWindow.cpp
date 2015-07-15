@@ -11100,9 +11100,16 @@ nsGlobalWindow::GetCaches(ErrorResult& aRv)
     bool forceTrustedOrigin =
       GetOuterWindowInternal()->GetServiceWorkersTestingEnabled();
 
+    nsContentUtils::StorageAccess access =
+      nsContentUtils::StorageAllowedForWindow(this);
+
+    // We don't block the cache API when being told to only allow storage for the
+    // current session.
+    bool storageBlocked = access <= nsContentUtils::StorageAccess::ePrivateBrowsing;
+
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
                                                      this, GetPrincipal(),
-                                                     IsPrivateBrowsing(),
+                                                     storageBlocked,
                                                      forceTrustedOrigin, aRv);
   }
 
