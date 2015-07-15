@@ -824,7 +824,7 @@ nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame)
 {
   // We use this as a shortcut, since if the compositor will never use APZ,
   // no widget will either.
-  if (!gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly()) {
+  if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return false;
   }
 
