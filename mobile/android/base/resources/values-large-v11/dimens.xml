@@ -26,7 +26,7 @@
     <dimen name="reading_list_row_height">96dp</dimen>
     <dimen name="reading_list_row_padding_right">15dp</dimen>
 
-    <dimen name="tab_queue_container_width">360dp</dimen>
+    <dimen name="overlay_prompt_container_width">360dp</dimen>
 
     <!-- Should be closer to 0.83 (140/168) but various roundings mean that 0.9 works better -->
     <item name="thumbnail_aspect_ratio" format="float" type="dimen">0.9</item>
