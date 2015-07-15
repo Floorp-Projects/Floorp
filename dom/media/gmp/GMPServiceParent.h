@@ -49,7 +49,6 @@ public:
 
   void AsyncShutdownNeeded(GMPParent* aParent);
   void AsyncShutdownComplete(GMPParent* aParent);
-  void AbortAsyncShutdown();
 
   int32_t AsyncShutdownTimeoutMs();
 
