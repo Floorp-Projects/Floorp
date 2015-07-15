@@ -12,7 +12,7 @@
 interface PushManager {
     Promise<PushSubscription>     subscribe();
     Promise<PushSubscription?>    getSubscription();
-    Promise<PushPermissionStatus> hasPermission();
+    Promise<PushPermissionState> permissionState();
 
     // We need a setter in the bindings so that the C++ can use it,
     // but we don't want it exposed to client JS.  WebPushMethodHider
@@ -20,9 +20,9 @@ interface PushManager {
     [Func="ServiceWorkerRegistration::WebPushMethodHider"] void setScope(DOMString scope);
 };
 
-enum PushPermissionStatus
+enum PushPermissionState
 {
     "granted",
     "denied",
-    "default"
+    "prompt"
 };

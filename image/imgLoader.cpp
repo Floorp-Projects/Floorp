@@ -77,8 +77,13 @@ public:
       mKnownLoaders[i]->mChromeCache.EnumerateRead(DoRecordCounter, &chrome);
       mKnownLoaders[i]->mCache.EnumerateRead(DoRecordCounter, &content);
       MutexAutoLock lock(mKnownLoaders[i]->mUncachedImagesMutex);
-      mKnownLoaders[i]->
-        mUncachedImages.EnumerateEntries(DoRecordCounterUncached, &uncached);
+      for (auto iter = mKnownLoaders[i]->mUncachedImages.Iter();
+           !iter.Done();
+           iter.Next()) {
+        nsPtrHashKey<imgRequest>* entry = iter.Get();
+        nsRefPtr<imgRequest> req = entry->GetKey();
+        RecordCounterForRequest(req, &uncached, req->HasConsumers());
+      }
     }
 
     // Note that we only need to anonymize content image URIs.
@@ -406,16 +411,6 @@ private:
     RecordCounterForRequest(req,
                            static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
                            !aEntry->HasNoProxies());
-    return PL_DHASH_NEXT;
-  }
-
-  static PLDHashOperator
-  DoRecordCounterUncached(nsPtrHashKey<imgRequest>* aEntry, void* aUserArg)
-  {
-    nsRefPtr<imgRequest> req = aEntry->GetKey();
-    RecordCounterForRequest(req,
-                           static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
-                           req->HasConsumers());
     return PL_DHASH_NEXT;
   }
 
@@ -1154,15 +1149,6 @@ imgLoader::GetInstance()
   return loader.forget();
 }
 
-static PLDHashOperator
-ClearLoaderPointer(nsPtrHashKey<imgRequest>* aEntry, void* aUserArg)
-{
-  nsRefPtr<imgRequest> req = aEntry->GetKey();
-  req->ClearLoader();
-
-  return PL_DHASH_NEXT;
-}
-
 imgLoader::~imgLoader()
 {
   ClearChromeImageCache();
@@ -1171,7 +1157,11 @@ imgLoader::~imgLoader()
     // If there are any of our imgRequest's left they are in the uncached
     // images set, so clear their pointer to us.
     MutexAutoLock lock(mUncachedImagesMutex);
-    mUncachedImages.EnumerateEntries(ClearLoaderPointer, nullptr);
+    for (auto iter = mUncachedImages.Iter(); !iter.Done(); iter.Next()) {
+      nsPtrHashKey<imgRequest>* entry = iter.Get();
+      nsRefPtr<imgRequest> req = entry->GetKey();
+      req->ClearLoader();
+    }
   }
   sMemReporter->UnregisterLoader(this);
   sMemReporter->Release();

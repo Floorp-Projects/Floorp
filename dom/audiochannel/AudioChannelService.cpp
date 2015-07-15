@@ -185,7 +185,7 @@ AudioChannelService::Shutdown()
       if (obs) {
         obs->RemoveObserver(gAudioChannelService, "ipc:content-shutdown");
         obs->RemoveObserver(gAudioChannelService, "xpcom-shutdown");
-        obs->RemoveObserver(gAudioChannelService, "inner-window-destroyed");
+        obs->RemoveObserver(gAudioChannelService, "outer-window-destroyed");
 #ifdef MOZ_WIDGET_GONK
         // To monitor the volume settings based on audio channel.
         obs->RemoveObserver(gAudioChannelService, "mozsettings-changed");
@@ -218,7 +218,7 @@ AudioChannelService::AudioChannelService()
     if (obs) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
       obs->AddObserver(this, "xpcom-shutdown", false);
-      obs->AddObserver(this, "inner-window-destroyed", false);
+      obs->AddObserver(this, "outer-window-destroyed", false);
 #ifdef MOZ_WIDGET_GONK
       // To monitor the volume settings based on audio channel.
       obs->AddObserver(this, "mozsettings-changed", false);
@@ -508,12 +508,12 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
   }
 #endif
 
-  else if (!strcmp(aTopic, "inner-window-destroyed")) {
+  else if (!strcmp(aTopic, "outer-window-destroyed")) {
     nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
     NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
 
-    uint64_t innerID;
-    nsresult rv = wrapper->GetData(&innerID);
+    uint64_t outerID;
+    nsresult rv = wrapper->GetData(&outerID);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -524,7 +524,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
         iter(mWindows);
       while (iter.HasMore()) {
         nsAutoPtr<AudioChannelWindow>& next = iter.GetNext();
-        if (next->mWindowID == innerID) {
+        if (next->mWindowID == outerID) {
           uint32_t pos = mWindows.IndexOf(next);
           winData = next.forget();
           mWindows.RemoveElementAt(pos);

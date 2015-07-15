@@ -26,7 +26,6 @@ add_task(function* test_webapps_cleardata() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
-  PushService._generateID = () => channelID;
   PushService.init({
     serverURI: "wss://push.example.org",
     networkInfo: new MockDesktopNetworkInfo(),

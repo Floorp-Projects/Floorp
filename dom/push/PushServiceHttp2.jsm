@@ -11,6 +11,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
+const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
@@ -33,7 +34,7 @@ function debug(s) {
 }
 
 const kPUSHHTTP2DB_DB_NAME = "pushHttp2";
-const kPUSHHTTP2DB_DB_VERSION = 3; // Change this if the IndexedDB format changes
+const kPUSHHTTP2DB_DB_VERSION = 4; // Change this if the IndexedDB format changes
 const kPUSHHTTP2DB_STORE_NAME = "pushHttp2";
 
 /**
@@ -285,16 +286,15 @@ SubscriptionListener.prototype = {
       return;
     }
 
-    var reply = {
+    let reply = new PushRecordHttp2({
       subscriptionUri: subscriptionUri,
       pushEndpoint: linkParserResult.pushEndpoint,
       pushReceiptEndpoint: linkParserResult.pushReceiptEndpoint,
-      pageURL: this._subInfo.record.pageURL,
       scope: this._subInfo.record.scope,
       originAttributes: this._subInfo.record.originAttributes,
-      pushCount: 0,
-      lastPush: 0
-    };
+      quota: this._subInfo.record.maxQuota,
+    });
+
     this._subInfo.resolve(reply);
   },
 };
@@ -379,51 +379,12 @@ this.PushServiceHttp2 = {
   _conns: {},
   _started: false,
 
-  upgradeSchema: function(aTransaction,
-                          aDb,
-                          aOldVersion,
-                          aNewVersion,
-                          aDbInstance) {
-    debug("upgradeSchemaHttp2()");
-
-    //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
-    //registrations away without even informing the app.
-    if (aNewVersion != aOldVersion) {
-      try {
-        aDb.deleteObjectStore(aDbInstance._dbStoreName);
-      } catch (e) {
-        if (e.name === "NotFoundError") {
-          debug("No existing object store found");
-        } else {
-          throw e;
-        }
-      }
-    }
-
-    let objectStore = aDb.createObjectStore(aDbInstance._dbStoreName,
-                                            { keyPath: "subscriptionUri" });
-
-    // index to fetch records based on endpoints. used by unregister
-    objectStore.createIndex("pushEndpoint", "pushEndpoint", { unique: true });
-
-    // index to fetch records by identifiers.
-    // In the current security model, the originAttributes distinguish between
-    // different 'apps' on the same origin. Since ServiceWorkers are
-    // same-origin to the scope they are registered for, the attributes and
-    // scope are enough to reconstruct a valid principal.
-    objectStore.createIndex("identifiers", ["scope", "originAttributes"], { unique: true });
-    objectStore.createIndex("originAttributes", "originAttributes", { unique: false });
-  },
-
-  getKeyFromRecord: function(aRecord) {
-    return aRecord.subscriptionUri;
-  },
-
   newPushDB: function() {
     return new PushDB(kPUSHHTTP2DB_DB_NAME,
                       kPUSHHTTP2DB_DB_VERSION,
                       kPUSHHTTP2DB_STORE_NAME,
-                      this.upgradeSchema);
+                      "subscriptionUri",
+                      PushRecordHttp2);
   },
 
   hasmainPushService: function() {
@@ -798,20 +759,11 @@ this.PushServiceHttp2 = {
   _pushChannelOnStop: function(aUri, aAckUri, aMessage) {
     debug("pushChannelOnStop() ");
 
-    let sendNotification = function(aAckUri, aPushRecord, self) {
-      aPushRecord.pushCount = aPushRecord.pushCount + 1;
-      aPushRecord.lastPush = new Date().getTime();
-      self._mainPushService.receivedPushMessage(aPushRecord, aMessage);
-      self._ackMsgRecv(aAckUri);
-    };
-
-    let recoverNoSuchEndpoint = function() {
-      debug("Could not get push endpoint " + aUri + " from DB");
-    };
-
-    this._mainPushService.getByKeyID(aUri)
-      .then(pushRecord => sendNotification(aAckUri, pushRecord, this),
-            recoverNoSuchEndpoint);
+    this._mainPushService.receivedPushMessage(aUri, aMessage, record => {
+      // Always update the stored record.
+      return record;
+    });
+    this._ackMsgRecv(aAckUri);
   },
 
   onAlarmFired: function() {
@@ -819,21 +771,30 @@ this.PushServiceHttp2 = {
     // i.e. when _waitingForPong is true, other conditions are also true.
     this._startConnectionsWaitingForAlarm();
   },
+};
 
-  prepareRegistration: function(aPushRecord) {
-    return {
-      pushEndpoint: aPushRecord.pushEndpoint,
-      pushReceiptEndpoint: aPushRecord.pushReceiptEndpoint,
-      version: aPushRecord.version,
-      lastPush: aPushRecord.lastPush,
-      pushCount: aPushRecord.pushCount
-    };
+function PushRecordHttp2(record) {
+  PushRecord.call(this, record);
+  this.subscriptionUri = record.subscriptionUri;
+  this.pushReceiptEndpoint = record.pushReceiptEndpoint;
+}
+
+PushRecordHttp2.prototype = Object.create(PushRecord.prototype, {
+  keyID: {
+    get() {
+      return this.subscriptionUri;
+    },
   },
+});
 
-  prepareRegister: function(aPushRecord) {
-    return {
-      pushEndpoint: aPushRecord.pushEndpoint,
-      pushReceiptEndpoint: aPushRecord.pushReceiptEndpoint
-    };
-  }
+PushRecordHttp2.prototype.toRegistration = function() {
+  let registration = PushRecord.prototype.toRegistration.call(this);
+  registration.pushReceiptEndpoint = this.pushReceiptEndpoint;
+  return registration;
+};
+
+PushRecordHttp2.prototype.toRegister = function() {
+  let register = PushRecord.prototype.toRegister.call(this);
+  register.pushReceiptEndpoint = this.pushReceiptEndpoint;
+  return register;
 };

@@ -109,6 +109,7 @@ TrackBuffersManager::TrackBuffersManager(dom::SourceBuffer* aParent, MediaSource
 
 TrackBuffersManager::~TrackBuffersManager()
 {
+  ShutdownDemuxers();
 }
 
 bool
@@ -733,7 +734,7 @@ TrackBuffersManager::ScheduleSegmentParserLoop()
 }
 
 void
-TrackBuffersManager::CreateDemuxerforMIMEType()
+TrackBuffersManager::ShutdownDemuxers()
 {
   if (mVideoTracks.mDemuxer) {
     mVideoTracks.mDemuxer->BreakCycles();
@@ -744,6 +745,13 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
     mAudioTracks.mDemuxer = nullptr;
   }
   mInputDemuxer = nullptr;
+}
+
+void
+TrackBuffersManager::CreateDemuxerforMIMEType()
+{
+  ShutdownDemuxers();
+
   if (mType.LowerCaseEqualsLiteral("video/webm") || mType.LowerCaseEqualsLiteral("audio/webm")) {
     NS_WARNING("Waiting on WebMDemuxer");
   // mInputDemuxer = new WebMDemuxer(mCurrentInputBuffer);

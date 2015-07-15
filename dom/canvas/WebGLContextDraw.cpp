@@ -17,9 +17,7 @@
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::gl;
+namespace mozilla {
 
 // For a Tegra workaround.
 static const int MAX_DRAW_CALLS_SINCE_FLUSH = 100;
@@ -748,7 +746,7 @@ WebGLContext::UnbindFakeBlackTextures()
     gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
 }
 
-WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext* gl, TexTarget target, GLenum format)
+WebGLContext::FakeBlackTexture::FakeBlackTexture(gl::GLContext* gl, TexTarget target, GLenum format)
     : mGL(gl)
     , mGLName(0)
 {
@@ -788,3 +786,5 @@ WebGLContext::FakeBlackTexture::~FakeBlackTexture()
       mGL->fDeleteTextures(1, &mGLName);
   }
 }
+
+} // namespace mozilla

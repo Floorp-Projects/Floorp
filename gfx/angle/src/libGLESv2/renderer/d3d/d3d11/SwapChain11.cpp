@@ -654,7 +654,7 @@ ID3D11RenderTargetView *SwapChain11::getRenderTarget()
 
 void SwapChain11::releaseSync()
 {
-    SafeRelease(mOffscreenRTView);
+    //SafeRelease(mOffscreenRTView);
 }
 
 ID3D11ShaderResourceView *SwapChain11::getRenderTargetShaderResource()

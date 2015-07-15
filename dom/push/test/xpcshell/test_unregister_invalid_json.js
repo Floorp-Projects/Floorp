@@ -25,13 +25,15 @@ add_task(function* test_unregister_invalid_json() {
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.edu/page/1',
     originAttributes: '',
-    version: 1
+    version: 1,
+    quota: Infinity,
   }, {
     channelID: '057caa8f-9b99-47ff-891c-adad18ce603e',
     pushEndpoint: 'https://example.com/update/2',
     scope: 'https://example.net/page/1',
     originAttributes: '',
-    version: 1
+    version: 1,
+    quota: Infinity,
   }];
   for (let record of records) {
     yield db.put(record);

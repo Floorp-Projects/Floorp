@@ -21,7 +21,8 @@ add_task(function* test_unregister_error() {
     pushEndpoint: 'https://example.org/update/failure',
     scope: 'https://example.net/page/failure',
     originAttributes: '',
-    version: 1
+    version: 1,
+    quota: Infinity,
   });
 
   let unregisterDefer = Promise.defer();

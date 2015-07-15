@@ -42,10 +42,10 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
-  void SetCanvasElement(mozilla::dom::HTMLCanvasElement* aParentCanvas)
+  void SetCanvasElement(mozilla::dom::HTMLCanvasElement* parentCanvas)
   {
     RemovePostRefreshObserver();
-    mCanvasElement = aParentCanvas;
+    mCanvasElement = parentCanvas;
     AddPostRefreshObserverIfNecessary();
   }
 
@@ -93,24 +93,24 @@ public:
   NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) = 0;
 
   // Creates an image buffer. Returns null on failure.
-  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat) = 0;
+  virtual void GetImageBuffer(uint8_t** imageBuffer, int32_t* format) = 0;
 
   // Gives you a stream containing the image represented by this context.
-  // The format is given in aMimeTime, for example "image/png".
+  // The format is given in mimeTime, for example "image/png".
   //
-  // If the image format does not support transparency or aIncludeTransparency
+  // If the image format does not support transparency or includeTransparency
   // is false, alpha will be discarded and the result will be the image
   // composited on black.
-  NS_IMETHOD GetInputStream(const char *aMimeType,
-                            const char16_t *aEncoderOptions,
-                            nsIInputStream **aStream) = 0;
-  
+  NS_IMETHOD GetInputStream(const char *mimeType,
+                            const char16_t *encoderOptions,
+                            nsIInputStream **stream) = 0;
+
   // This gets an Azure SourceSurface for the canvas, this will be a snapshot
   // of the canvas at the time it was called.
-  // If aPremultAlpha is provided, then it assumed the callee can handle
-  // un-premultiplied surfaces, and *aPremultAlpha will be set to false
+  // If premultAlpha is provided, then it assumed the callee can handle
+  // un-premultiplied surfaces, and *premultAlpha will be set to false
   // if one is returned.
-  virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) = 0;
+  virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* premultAlpha = nullptr) = 0;
 
   // If this context is opaque, the backing store of the canvas should
   // be created as opaque; all compositing operators should assume the
@@ -125,27 +125,27 @@ public:
 
   // Return the CanvasLayer for this context, creating
   // one for the given layer manager if not available.
-  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                                       CanvasLayer *aOldLayer,
-                                                       LayerManager *aManager) = 0;
+  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* builder,
+                                                       CanvasLayer *oldLayer,
+                                                       LayerManager *manager) = 0;
 
   // Return true if the canvas should be forced to be "inactive" to ensure
   // it can be drawn to the screen even if it's too large to be blitted by
   // an accelerated CanvasLayer.
-  virtual bool ShouldForceInactiveLayer(LayerManager *aManager) { return false; }
+  virtual bool ShouldForceInactiveLayer(LayerManager *manager) { return false; }
 
   virtual void MarkContextClean() = 0;
 
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
 
-  NS_IMETHOD SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions) { return NS_OK; }
+  NS_IMETHOD SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options) { return NS_OK; }
 
   // return true and fills in the bounding rect if elementis a child and has a hit region.
-  virtual bool GetHitRegionRect(mozilla::dom::Element* aElement, nsRect& aRect) { return false; }
+  virtual bool GetHitRegionRect(mozilla::dom::Element* element, nsRect& rect) { return false; }
 
   // Given a point, return hit region ID if it exists or an empty string if it doesn't
-  virtual nsString GetHitRegion(const mozilla::gfx::Point& aPoint) { return nsString(); }
+  virtual nsString GetHitRegion(const mozilla::gfx::Point& point) { return nsString(); }
 
   //
   // shmem support

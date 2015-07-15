@@ -7,7 +7,7 @@
 #define WEBGLOBJECTMODEL_H_
 
 #include "nsCycleCollectionNoteChild.h"
-#include "nsICanvasRenderingContextInternal.h"
+
 #include "WebGLTypes.h"
 
 namespace mozilla {
