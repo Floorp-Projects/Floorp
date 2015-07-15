@@ -15,7 +15,7 @@ dictionary ProfileTimelineStackFrame {
   DOMString functionDisplayName;
   object? parent = null;
   object? asyncParent = null;
-  object? asyncCause = null;
+  DOMString asyncCause;
 };
 
 dictionary ProfileTimelineLayerRect {
