@@ -420,11 +420,13 @@ private:
   NS_IMETHOD
   CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
                                ServiceWorkerInfo* aInfo,
+                               nsIRunnable* aLoadFailedRunnable,
                                ServiceWorker** aServiceWorker);
 
   NS_IMETHOD
   CreateServiceWorker(nsIPrincipal* aPrincipal,
                       ServiceWorkerInfo* aInfo,
+                      nsIRunnable* aLoadFailedRunnable,
                       ServiceWorker** aServiceWorker);
 
   NS_IMETHODIMP
@@ -435,7 +437,8 @@ private:
 
   already_AddRefed<ServiceWorker>
   CreateServiceWorkerForScope(const OriginAttributes& aOriginAttributes,
-                              const nsACString& aScope);
+                              const nsACString& aScope,
+                              nsIRunnable* aLoadFailedRunnable);
 
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
