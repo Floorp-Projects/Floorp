@@ -775,18 +775,14 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 
     // Check for restricted characters; aspirational scripts are permitted
     XidmodType xm = GetIdentifierModification(ch);
-    int32_t script = GetScriptCode(ch);
-    if (xm > XIDMOD_RECOMMENDED &&
-        !(xm == XIDMOD_LIMITED_USE &&
-          (script == MOZ_SCRIPT_CANADIAN_ABORIGINAL ||
-           script == MOZ_SCRIPT_MIAO ||
-           script == MOZ_SCRIPT_MONGOLIAN ||
-           script == MOZ_SCRIPT_TIFINAGH ||
-           script == MOZ_SCRIPT_YI))) {
+    if (xm != XIDMOD_RECOMMENDED &&
+        xm != XIDMOD_INCLUSION &&
+        xm != XIDMOD_ASPIRATIONAL) {
       return false;
     }
 
     // Check for mixed script
+    int32_t script = GetScriptCode(ch);
     if (script != MOZ_SCRIPT_COMMON &&
         script != MOZ_SCRIPT_INHERITED &&
         script != lastScript) {

@@ -633,14 +633,11 @@ gfxShapedText::SetGlyphs(uint32_t aIndex, CompressedGlyph aGlyph,
 
 #define ZWNJ 0x200C
 #define ZWJ  0x200D
-// U+061C ARABIC LETTER MARK is expected to be added to XIDMOD_DEFAULT_IGNORABLE
-// in a future Unicode update. Add it manually for now
-#define ALM  0x061C
 static inline bool
 IsDefaultIgnorable(uint32_t aChar)
 {
     return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
-           aChar == ZWNJ || aChar == ZWJ || aChar == ALM;
+           aChar == ZWNJ || aChar == ZWJ;
 }
 
 void
