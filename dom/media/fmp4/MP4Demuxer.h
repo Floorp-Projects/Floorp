@@ -96,6 +96,7 @@ private:
   // Queued samples extracted by the demuxer, but not yet returned.
   nsRefPtr<MediaRawData> mQueuedSample;
   bool mNeedReIndex;
+  bool mNeedSPSForTelemetry;
 
   // We do not actually need a monitor, however MoofParser will assert
   // if a monitor isn't held.
