@@ -13,7 +13,6 @@
 #include "nsColor.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
-#include "CanvasUtils.h"
 #include "gfxTextRun.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/CanvasGradient.h"

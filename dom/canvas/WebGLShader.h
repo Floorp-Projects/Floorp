@@ -6,10 +6,15 @@
 #ifndef WEBGL_SHADER_H_
 #define WEBGL_SHADER_H_
 
+#include <string>
+#include <vector>
+
 #include "GLDefs.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsString.h"
 #include "nsWrapperCache.h"
+
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
@@ -65,12 +70,12 @@ public:
                                         std::vector<std::string>* out_mappedVaryings) const;
 
     // Other funcs
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
     void Delete();
 
     WebGLContext* GetParentObject() const { return Context(); }
 
-    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto) override;
+    virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShader)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)

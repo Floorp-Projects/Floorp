@@ -116,6 +116,7 @@
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "Units.h"
+#include "CanvasUtils.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -5277,12 +5278,12 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
   //uint8_t *src = aArray->Data();
   uint8_t *dst = imgsurf->Data();
   uint8_t* srcLine = aArray->Data() + copyY * (w * 4) + copyX * 4;
-#if 0  
+#if 0
   printf("PutImageData_explicit: dirty x=%d y=%d w=%d h=%d copy x=%d y=%d w=%d h=%d ext x=%d y=%d w=%d h=%d\n",
 	     dirtyRect.x, dirtyRect.y, copyWidth, copyHeight,
 	     copyX, copyY, copyWidth, copyHeight,
 	     x, y, w, h);
-#endif	     
+#endif
   for (uint32_t j = 0; j < copyHeight; j++) {
     uint8_t *src = srcLine;
     for (uint32_t i = 0; i < copyWidth; i++) {

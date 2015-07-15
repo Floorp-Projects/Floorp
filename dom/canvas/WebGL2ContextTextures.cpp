@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "GLContext.h"
 #include "WebGL2Context.h"
 #include "WebGLContextUtils.h"
-#include "GLContext.h"
+#include "WebGLTexture.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 bool
 WebGL2Context::ValidateSizedInternalFormat(GLenum internalformat, const char* info)
@@ -205,7 +205,7 @@ void
 WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
                           GLsizei width, GLsizei height, GLsizei depth,
                           GLint border, GLenum format, GLenum type,
-                          const Nullable<dom::ArrayBufferView> &pixels,
+                          const dom::Nullable<dom::ArrayBufferView> &pixels,
                           ErrorResult& rv)
 {
     if (IsContextLost())
@@ -219,7 +219,7 @@ WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
         dataLength = 0;
         jsArrayType = js::Scalar::MaxTypedArrayViewType;
     } else {
-        const ArrayBufferView& view = pixels.Value();
+        const dom::ArrayBufferView& view = pixels.Value();
         view.ComputeLengthAndData();
 
         data = view.Data();
@@ -318,7 +318,8 @@ void
 WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
                              GLint xoffset, GLint yoffset, GLint zoffset,
                              GLsizei width, GLsizei height, GLsizei depth,
-                             GLenum format, GLenum type, const Nullable<dom::ArrayBufferView>& pixels,
+                             GLenum format, GLenum type,
+                             const dom::Nullable<dom::ArrayBufferView>& pixels,
                              ErrorResult& rv)
 {
     if (IsContextLost())
@@ -327,7 +328,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
     if (pixels.IsNull())
         return ErrorInvalidValue("texSubImage3D: pixels must not be null!");
 
-    const ArrayBufferView& view = pixels.Value();
+    const dom::ArrayBufferView& view = pixels.Value();
     view.ComputeLengthAndData();
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexSubImage;
@@ -489,3 +490,5 @@ WebGL2Context::GetTexParameterInternal(const TexTarget& target, GLenum pname)
 
     return WebGLContext::GetTexParameterInternal(target, pname);
 }
+
+} // namespace mozilla

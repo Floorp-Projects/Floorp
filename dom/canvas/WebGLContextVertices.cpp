@@ -16,8 +16,7 @@
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
-using namespace mozilla;
-using namespace dom;
+namespace mozilla {
 
 void
 WebGLContext::VertexAttrib1f(GLuint index, GLfloat x0)
@@ -306,7 +305,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                 vec[2] = mVertexAttrib0Vector[2];
                 vec[3] = mVertexAttrib0Vector[3];
             }
-            JSObject* obj = Float32Array::Create(cx, this, 4, vec);
+            JSObject* obj = dom::Float32Array::Create(cx, this, 4, vec);
             if (!obj) {
                 rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             }
@@ -410,3 +409,5 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
 
     gl->fVertexAttribDivisor(index, divisor);
 }
+
+} // namespace mozilla

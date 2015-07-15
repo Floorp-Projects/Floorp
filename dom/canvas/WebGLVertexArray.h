@@ -6,8 +6,10 @@
 #ifndef WEBGL_VERTEX_ARRAY_H_
 #define WEBGL_VERTEX_ARRAY_H_
 
+#include "nsTArray.h"
 #include "mozilla/LinkedList.h"
 #include "nsWrapperCache.h"
+
 #include "WebGLBuffer.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
@@ -48,7 +50,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLVertexArray)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLVertexArray)

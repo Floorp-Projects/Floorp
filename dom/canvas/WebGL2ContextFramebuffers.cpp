@@ -6,10 +6,11 @@
 #include "WebGL2Context.h"
 
 #include "GLContext.h"
+#include "GLScreenBuffer.h"
 #include "WebGLContextUtils.h"
+#include "WebGLFramebuffer.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 // Returns one of FLOAT, INT, UNSIGNED_INT.
 // Fixed-points (normalized ints) are considered FLOAT.
@@ -374,7 +375,7 @@ TranslateDefaultAttachments(const dom::Sequence<GLenum>& in, dom::Sequence<GLenu
 void
 WebGL2Context::InvalidateFramebuffer(GLenum target,
                                      const dom::Sequence<GLenum>& attachments,
-                                     ErrorResult& aRv)
+                                     ErrorResult& rv)
 {
     if (IsContextLost())
         return;
@@ -420,7 +421,7 @@ WebGL2Context::InvalidateFramebuffer(GLenum target,
     if (!fb && !isDefaultFB) {
         dom::Sequence<GLenum> tmpAttachments;
         if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
-            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             return;
         }
 
@@ -433,7 +434,7 @@ WebGL2Context::InvalidateFramebuffer(GLenum target,
 void
 WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments,
                                         GLint x, GLint y, GLsizei width, GLsizei height,
-                                        ErrorResult& aRv)
+                                        ErrorResult& rv)
 {
     if (IsContextLost())
         return;
@@ -479,7 +480,7 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
     if (!fb && !isDefaultFB) {
         dom::Sequence<GLenum> tmpAttachments;
         if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
-            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             return;
         }
 
@@ -536,3 +537,5 @@ WebGL2Context::RenderbufferStorageMultisample(GLenum target, GLsizei samples,
     RenderbufferStorage_base("renderbufferStorageMultisample", target, samples,
                               internalFormat, width, height);
 }
+
+} // namespace mozilla
