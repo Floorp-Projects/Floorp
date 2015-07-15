@@ -29,22 +29,27 @@ endif
 
 AB_CD = $(MOZ_UI_LOCALE)
 
-AB := $(firstword $(subst -, ,$(AB_CD)))
+ifeq (zh-TW,$(AB_CD))
+LPROJ_ROOT := $(subst -,_,$(AB_CD))
+else
+LPROJ_ROOT := $(firstword $(subst -, ,$(AB_CD)))
+endif
+LPROJ := Contents/Resources/$(LPROJ_ROOT).lproj
 
 clean clobber repackage::
 	rm -rf $(DIST)/$(APP_NAME).app
 
 libs-preqs = \
   $(call mkdir_deps,$(DIST)/$(APP_NAME).app/Contents/MacOS) \
-  $(call mkdir_deps,$(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj) \
+  $(call mkdir_deps,$(DIST)/$(APP_NAME).app/$(LPROJ)) \
   $(NULL)
 
 .PHONY: repackage
 tools repackage:: $(libs-preqs)
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
-	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/$(LPROJ)
 	sed -e 's/%MOZ_APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MOZ_APP_NAME%/$(MOZ_APP_NAME)/' -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' -e 's/%APP_BINARY%/$(APP_BINARY)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	sed -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	sed -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/$(LPROJ_ROOT)/InfoPlist.strings
 	rsync -a --exclude 'mangle' --exclude 'shlibsign' --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/Resources
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 ifdef LIBXUL_SDK
