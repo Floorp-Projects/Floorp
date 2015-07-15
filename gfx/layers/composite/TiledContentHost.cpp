@@ -379,7 +379,6 @@ TiledLayerBufferComposite::Clear()
   mTiles.mFirst = TileIntPoint();
   mTiles.mSize = TileIntSize();
   mValidRegion = nsIntRegion();
-  mPaintedRegion = nsIntRegion();
   mResolution = 1.0;
 }
 
