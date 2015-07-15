@@ -3,7 +3,12 @@
 <title>localStorage cookies settings test</title>
 
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="interOriginTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+</head>
+<body>
+<iframe></iframe>
 
 <script type="text/javascript">
 
@@ -37,11 +42,33 @@ function test2() {
     is(ex.name, "SecurityError");
   }
 
+  // Set cookies behavior to "reject 3rd party"
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
+                             "clear": [["network.cookie.lifetimePolicy"]]},
+                            test3);
+}
+
+function test3() {
+  try {
+    localStorage.setItem("contentkey", "test-value");
+    ok(true, "Setting localStorageItem should not throw a security exception");
+  }
+  catch(ex) {
+    ok(false, "Setting localStorageItem should not throw a security exception");
+  }
+
+  var fileTest = (location.protocol + "//example.com" + location.pathname)
+                 .replace("test_l", "frameL");
+
+  var myframe = document.querySelector("iframe");
+  myframe.src = fileTest;
+}
+
+// Called by interOriginTest.js
+function doNextTest() {
   SimpleTest.finish();
 }
 
 </script>
-</head>
-<body>
 </body>
 </html>
