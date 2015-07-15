@@ -185,6 +185,10 @@ class StoreBuffer
             return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
         }
 
+        bool isEmpty() {
+            return !storage_ || storage_->isEmpty();
+        }
+
       private:
         GenericBuffer& operator=(const GenericBuffer& other) = delete;
     };
@@ -469,6 +473,10 @@ class StoreBuffer
     void* addressOfWholeCellBufferPointer() const { return (void*)&bufferWholeCell.insert_; }
     void* addressOfWholeCellBufferEnd() const {
         return (void*)(bufferWholeCell.buffer_ + bufferWholeCell.NumBufferEntries);
+    }
+
+    bool hasPostBarrierCallbacks() {
+        return !bufferGeneric.isEmpty();
     }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes* sizes);
