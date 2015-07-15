@@ -86,10 +86,12 @@
   padding: 2em 15px;
 }
 
+#UITourTooltipButtons > label,
 #UITourTooltipButtons > button {
   margin: 0 15px;
 }
 
+#UITourTooltipButtons > label:first-child,
 #UITourTooltipButtons > button:first-child {
   -moz-margin-start: 0;
 }
@@ -100,6 +102,7 @@
   -moz-margin-end: 5px;
 }
 
+#UITourTooltipButtons > label,
 #UITourTooltipButtons > button .button-text {
   font-size: 1.15rem;
 }
@@ -122,6 +125,7 @@
   box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
 }
 
+#UITourTooltipButtons > label,
 #UITourTooltipButtons > button.button-link {
   -moz-appearance: none;
   background: transparent;
