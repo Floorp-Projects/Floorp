@@ -10,7 +10,7 @@
         </shape>
     </item>
     <item>
-        <bitmap android:src="@drawable/tab_panel_tab_globe"
+        <bitmap android:src="@drawable/globe_light"
                 android:gravity="center"
                 />
     </item>

@@ -4,11 +4,44 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
+loader.lazyRequireGetter(this, "extend",
+  "sdk/util/object", true);
 
 /**
  * Utility functions for managing recording models and their internal data,
  * such as filtering profile samples or offsetting timestamps.
  */
+
+/**
+ * Takes an options object for `startRecording`, and normalizes
+ * it based off of server support. For example, if the user
+ * requests to record memory `withMemory = true`, but the server does
+ * not support that feature, then the `false` will overwrite user preference
+ * in order to define the recording with what is actually available, not
+ * what the user initially requested.
+ *
+ * @param {object} options
+ * @param {boolean} support.timeline
+ * @param {boolean} support.memory
+ * @param {boolean}
+ */
+function normalizePerformanceFeatures (options, support) {
+  let supportOptions = Object.create(null);
+
+  // TODO bug 1172180 disable `withAllocations` and `withJITOptimizations` when using the
+  // pseudo front, as we only want to support it directly from the real actor
+  // in Fx42+
+  if (!support.memory) {
+    supportOptions.withMemory = false;
+    supportOptions.withAllocations = false;
+  }
+  if (!support.timeline) {
+    supportOptions.withMarkers = false;
+    supportOptions.withTicks = false;
+  }
+
+  return extend(options, supportOptions);
+}
 
 /**
  * Filters all the samples in the provided profiler data to be more recent
@@ -531,6 +564,7 @@ UniqueStacks.prototype.getOrAddStringIndex = function(s) {
   return this._uniqueStrings.getOrAddStringIndex(s);
 };
 
+exports.normalizePerformanceFeatures = normalizePerformanceFeatures;
 exports.filterSamples = filterSamples;
 exports.offsetSampleTimes = offsetSampleTimes;
 exports.offsetMarkerTimes = offsetMarkerTimes;

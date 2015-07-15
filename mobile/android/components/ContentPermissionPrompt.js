@@ -128,7 +128,7 @@ ContentPermissionPrompt.prototype = {
     let message = browserBundle.formatStringFromName(entityName + ".ask", [requestor], 1);
     let options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
 
-    chromeWin.NativeWindow.doorhanger.show(message, entityName + request.principal.URI.host, buttons, tab.id, options);
+    chromeWin.NativeWindow.doorhanger.show(message, entityName + request.principal.URI.host, buttons, tab.id, options, entityName.toUpperCase());
   }
 };
 

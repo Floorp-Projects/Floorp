@@ -1272,6 +1272,41 @@ function getTestDirFile(aRelPath, aAllowNonExists) {
   return do_get_file(relpath, !!aAllowNonExists);
 }
 
+/**
+ * Helper function for getting the nsIFile for the maintenance service
+ * directory on Windows.
+ *
+ * @return  The nsIFile for the maintenance service directory.
+ */
+function getMaintSvcDir() {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
+  }
+
+  const CSIDL_PROGRAM_FILES = 0x26;
+  const CSIDL_PROGRAM_FILESX86 = 0x2A;
+  // This will return an empty string on our Win XP build systems.
+  let maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILESX86);
+  if (maintSvcDir) {
+    maintSvcDir.append("Mozilla Maintenance Service");
+    debugDump("using CSIDL_PROGRAM_FILESX86 - maintenance service install " +
+              "directory path: " + maintSvcDir.path);
+  }
+  if (!maintSvcDir || !maintSvcDir.exists()) {
+    maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILES);
+    if (maintSvcDir) {
+      maintSvcDir.append("Mozilla Maintenance Service");
+      debugDump("using CSIDL_PROGRAM_FILES - maintenance service install " +
+                "directory path: " + maintSvcDir.path);
+    }
+  }
+  if (!maintSvcDir) {
+    do_throw("Unable to find the maintenance service install directory");
+  }
+
+  return maintSvcDir;
+}
+
 function getSpecialFolderDir(aCSIDL) {
   if (!IS_WIN) {
     do_throw("Windows only function called by a different platform!");
@@ -1933,26 +1968,7 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
  * a unprivileged location.
  */
 function attemptServiceInstall() {
-  const CSIDL_PROGRAM_FILES = 0x26;
-  const CSIDL_PROGRAM_FILESX86 = 0x2A;
-  // This will return an empty string on our Win XP build systems.
-  let maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILESX86);
-  if (maintSvcDir) {
-    maintSvcDir.append("Mozilla Maintenance Service");
-    debugDump("using CSIDL_PROGRAM_FILESX86 - maintenance service install " +
-              "directory path: " + maintSvcDir.path);
-  }
-  if (!maintSvcDir || !maintSvcDir.exists()) {
-    maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILES);
-    if (maintSvcDir) {
-      maintSvcDir.append("Mozilla Maintenance Service");
-      debugDump("using CSIDL_PROGRAM_FILES - maintenance service install " +
-                "directory path: " + maintSvcDir.path);
-    }
-  }
-  if (!maintSvcDir) {
-    do_throw("Unable to find the maintenance service install directory");
-  }
+  let maintSvcDir = getMaintSvcDir();
   Assert.ok(maintSvcDir.exists(), MSG_SHOULD_EXIST);
   let oldMaintSvcBin = maintSvcDir.clone();
   oldMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
@@ -2013,10 +2029,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
                     "contain the successful launch string");
   }
   function readServiceLogFile() {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties).
-               get("CmAppData", Ci.nsIFile);
-    file.append("Mozilla");
+    let file = getMaintSvcDir();
     file.append("logs");
     file.append("maintenanceservice.log");
     return readFile(file);

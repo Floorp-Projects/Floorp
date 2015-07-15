@@ -11,15 +11,12 @@ const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100; // ms
 const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms
 const GRAPH_REQUIREMENTS = {
   timeline: {
-    actors: ["timeline"],
     features: ["withMarkers"]
   },
   framerate: {
-    actors: ["timeline"],
     features: ["withTicks"]
   },
   memory: {
-    actors: ["memory"],
     features: ["withMemory"]
   },
 }
@@ -342,7 +339,7 @@ let OverviewView = {
 
   _setGraphVisibilityFromRecordingFeatures: function (recording) {
     for (let [graphName, requirements] of Iterator(GRAPH_REQUIREMENTS)) {
-      this.graphs.enable(graphName, PerformanceController.isFeatureSupported(requirements));
+      this.graphs.enable(graphName, PerformanceController.isFeatureSupported(requirements.features));
     }
   },
 

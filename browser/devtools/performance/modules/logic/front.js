@@ -17,6 +17,8 @@ loader.lazyRequireGetter(this, "Actors",
   "devtools/performance/actors");
 loader.lazyRequireGetter(this, "RecordingModel",
   "devtools/performance/recording-model", true);
+loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
+  "devtools/performance/recording-utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 
@@ -316,16 +318,21 @@ PerformanceFront.prototype = {
    *         A promise that is resolved once recording has started.
    */
   startRecording: Task.async(function*(options = {}) {
-    let model = new RecordingModel(options);
+    let model = new RecordingModel(normalizePerformanceFeatures(options, this.getActorSupport()));
+
     this.emit("recording-starting", model);
 
     // All actors are started asynchronously over the remote debugging protocol.
     // Get the corresponding start times from each one of them.
     // The timeline and memory actors are target-dependent, so start those as well,
     // even though these are mocked in older Geckos (FF < 35)
-    let { startTime, position, generation, totalSize } = yield this._profiler.start(options);
-    let timelineStartTime = yield this._timeline.start(options);
-    let memoryStartTime = yield this._memory.start(options);
+    let profilerStart = this._profiler.start(options);
+    let timelineStart = this._timeline.start(options);
+    let memoryStart = this._memory.start(options);
+
+    let { startTime, position, generation, totalSize } = yield profilerStart;
+    let timelineStartTime = yield timelineStart;
+    let memoryStartTime = yield memoryStart;
 
     let data = {
       profilerStartTime: startTime, timelineStartTime, memoryStartTime,

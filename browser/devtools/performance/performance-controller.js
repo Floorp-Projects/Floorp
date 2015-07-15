@@ -485,39 +485,28 @@ let PerformanceController = {
   },
 
   /**
-   * Utility method taking the currently selected recording item's features, or optionally passed
-   * in recording item, as well as the actor support on the server, returning a boolean
-   * indicating if the requirements pass or not. Used to toggle features' visibility mostly.
+   * Utility method taking a string or an array of strings of feature names (like
+   * "withAllocations" or "withMarkers"), and returns whether or not the current
+   * recording supports that feature, based off of UI preferences and server support.
    *
-   * @option {Array<string>} features
-   *         An array of strings indicating what configuration is needed on the recording
+   * @option {Array<string>|string} features
+   *         A string or array of strings indicating what configuration is needed on the recording
    *         model, like `withTicks`, or `withMemory`.
-   * @option {Array<string>} actors
-   *         An array of strings indicating what actors must exist.
-   * @option {boolean} mustBeCompleted
-   *         A boolean indicating whether the recording must be either completed or not.
-   *         Setting to undefined will allow either state.
-   * @param {RecordingModel} recording
-   *        An optional recording model to use instead of the currently selected.
    *
    * @return boolean
    */
-  isFeatureSupported: function ({ features, actors, mustBeCompleted }, recording) {
-    recording = recording || this.getCurrentRecording();
-    let recordingConfig = recording ? recording.getConfiguration() : {};
-    let currentCompletedState = recording ? recording.isCompleted() : void 0;
-    let actorsSupported = gFront.getActorSupport();
+  isFeatureSupported: function (features) {
+    if (!features) {
+      return true;
+    }
 
-    if (mustBeCompleted != null && mustBeCompleted !== currentCompletedState) {
+    let recording = this.getCurrentRecording();
+    if (!recording) {
       return false;
     }
-    if (actors && !actors.every(a => actorsSupported[a])) {
-      return false;
-    }
-    if (features && !features.every(f => recordingConfig[f])) {
-      return false;
-    }
-    return true;
+
+    let config = recording.getConfiguration();
+    return [].concat(features).every(f => config[f]);
   },
 
   /**

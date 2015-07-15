@@ -5,13 +5,17 @@
  * Tests if the waterfall collapsing logic works properly.
  */
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   const WaterfallUtils = devtools.require("devtools/performance/waterfall-utils");
 
-  let rootMarkerNode = WaterfallUtils.makeParentMarkerNode({ name: "(root)" });
+  let rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
 
   WaterfallUtils.collapseMarkersIntoNode({
-    markerNode: rootMarkerNode,
+    rootNode: rootMarkerNode,
     markersList: gTestMarkers
   });
 
@@ -22,14 +26,13 @@ function test() {
           compare(marker.submarkers[i], expected.submarkers[i]);
         }
       } else if (prop !== "uid") {
-        is(marker[prop], expected[prop], `${expected.name} matches ${prop}`);
+        equal(marker[prop], expected[prop], `${expected.name} matches ${prop}`);
       }
     }
   }
 
   compare(rootMarkerNode, gExpectedOutput);
-  finish();
-}
+});
 
 const gTestMarkers = [
   { start: 1, end: 18, name: "DOMEvent" },
@@ -44,7 +47,7 @@ const gTestMarkers = [
       { start: 12, end: 13, name: "Parse XML" },
       { start: 14, end: 15, name: "GarbageCollection" },
   // Test that JS markers can be parents without being a child of DOM events
-  { start: 25, end: 30, name: "JavaScript" },
+  { start: 25, end: 30, name: "Javascript" },
     { start: 26, end: 27, name: "Paint" },
 ];
 
@@ -61,7 +64,7 @@ const gExpectedOutput = {
         { start: 14, end: 15, name: "GarbageCollection" },
       ]}
     ]},
-    { start: 25, end: 30, name: "JavaScript", submarkers: [
+    { start: 25, end: 30, name: "Javascript", submarkers: [
       { start: 26, end: 27, name: "Paint" },
     ]}
 ]};
