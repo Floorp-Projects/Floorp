@@ -197,16 +197,16 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
     text-shadow: none;
   }
 
-  #PanelUI-fxa-status,
+  #PanelUI-fxa-label,
   #PanelUI-help,
   #PanelUI-customize {
     border: 1px solid transparent;
   }
 
-  #PanelUI-fxa-status:not([disabled]):hover,
+  #PanelUI-fxa-label:not([disabled]):hover,
   #PanelUI-help:not([disabled]):hover,
   #PanelUI-customize:hover,
-  #PanelUI-fxa-status:not([disabled]):hover:active,
+  #PanelUI-fxa-label:not([disabled]):hover:active,
   #PanelUI-help:not([disabled]):hover:active,
   #PanelUI-customize:hover:active {
     border-color: ThreeDLightShadow;

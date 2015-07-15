@@ -221,7 +221,7 @@ description > html|a {
   border-radius: 50%;
   border-width: 5px;
   border-color: red;
-  background-image: url(chrome://browser/skin/preferences/in-content/default-profile-image.svg);
+  background-image: url(chrome://browser/skin/fxa/default-profile-image.svg);
   background-size: contain;
   cursor: pointer;
   -moz-margin-end: 15px;
