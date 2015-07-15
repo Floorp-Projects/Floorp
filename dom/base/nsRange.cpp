@@ -1129,7 +1129,9 @@ nsRange::SetStart(nsIDOMNode* aParent, int32_t aOffset)
 nsRange::SetStart(nsINode* aParent, int32_t aOffset)
 {
   nsINode* newRoot = IsValidBoundary(aParent);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+  if (!newRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
 
   if (aOffset < 0 || uint32_t(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1228,7 +1230,9 @@ nsRange::SetEnd(nsIDOMNode* aParent, int32_t aOffset)
 nsRange::SetEnd(nsINode* aParent, int32_t aOffset)
 {
   nsINode* newRoot = IsValidBoundary(aParent);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+  if (!newRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
 
   if (aOffset < 0 || uint32_t(aOffset) > aParent->Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;

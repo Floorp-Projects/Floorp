@@ -490,26 +490,28 @@ var gUnseekableTests = [
   { name:"no-cues.webm", type:"video/webm" },
   { name:"bogus.duh", type:"bogus/duh"}
 ];
-// Android supports fragmented MP4 playback from 4.3.
-// Fragmented MP4.
+
+var androidVersion = -1; // non-Android platforms
 if (manifestNavigator().userAgent.indexOf("Mobile") != -1) {
   // See nsSystemInfo.cpp, the getProperty('version') returns different value
   // on each platforms, so we need to distinguish the android and B2G platform.
-  var androidVersion;
-  if (navigator.userAgent.indexOf("Android") != -1) {
-    androidSDKVer = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                                 .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                 .getProperty('version');
-  } else if (navigator.userAgent.indexOf("Android") == -1) {
-    androidSDKVer = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                                 .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                 .getProperty('sdk_version');
-  }
-  if (androidVersion >= 18) {
-    gUnseekableTests = gUnseekableTests.concat([
-      { name:"street.mp4", type:"video/mp4" }
-    ]);
-  }
+  var versionString = manifestNavigator().userAgent.indexOf("Android") != -1 ?
+                      'version' : 'sdk_version';
+  androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                .getProperty(versionString);
+}
+
+function getAndroidVersion() {
+  return androidVersion;
+}
+
+//Android supports fragmented MP4 playback from 4.3.
+//Fragmented MP4.
+if (getAndroidVersion() >= 18) {
+  gUnseekableTests = gUnseekableTests.concat([
+    { name:"street.mp4", type:"video/mp4" }
+  ]);
 }
 
 // These are files suitable for using with a "new Audio" constructor.
@@ -1547,8 +1549,7 @@ function setMediaTestsPrefs(callback, extraPrefs) {
 
 // B2G emulator and Android 2.3 are condidered slow platforms
 function isSlowPlatform() {
-  return SpecialPowers.Services.appinfo.name == "B2G" ||
-         navigator.userAgent.indexOf("Mobile") != -1 && androidVersion == 10;
+  return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
 }
 
 SimpleTest.requestFlakyTimeout("untriaged");

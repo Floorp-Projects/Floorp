@@ -7,8 +7,7 @@
 #include "WebGLSampler.h"
 #include "GLContext.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 already_AddRefed<WebGLSampler>
 WebGL2Context::CreateSampler()
@@ -225,3 +224,5 @@ WebGL2Context::GetSamplerParameter(JSContext*, WebGLSampler* sampler, GLenum pna
         return;
     }
 }
+
+} // namespace mozilla

@@ -91,9 +91,9 @@ WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum el
 ////////////////////////////////////////////////////////////////////////////////
 
 JSObject*
-WebGLActiveInfo::WrapObject(JSContext* js, JS::Handle<JSObject*> aGivenProto)
+WebGLActiveInfo::WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLActiveInfoBinding::Wrap(js, this, aGivenProto);
+    return dom::WebGLActiveInfoBinding::Wrap(js, this, givenProto);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLActiveInfo)

@@ -1133,6 +1133,7 @@ static gint
 moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
                                cairo_t *cr, GdkRectangle* rect,
                                GtkWidgetState* state,
+                               GtkScrollbarTrackFlags flags,
                                GtkTextDirection direction)
 {
     GtkStyleContext* style;
@@ -1147,6 +1148,11 @@ moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
 
     gtk_widget_set_direction(GTK_WIDGET(scrollbar), direction);
     
+    if (flags & MOZ_GTK_TRACK_OPAQUE) {
+        style = gtk_widget_get_style_context(GTK_WIDGET(gProtoWindow));
+        gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+    }
+
     style = gtk_widget_get_style_context(GTK_WIDGET(scrollbar));
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
@@ -3104,7 +3110,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
     case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
         return moz_gtk_scrollbar_trough_paint(widget, cr, rect,
-                                              state, direction);
+                                              state,
+                                              (GtkScrollbarTrackFlags) flags,
+                                              direction);
         break;
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:

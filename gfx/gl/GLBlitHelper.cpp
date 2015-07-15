@@ -6,6 +6,7 @@
 
 #include "GLBlitHelper.h"
 #include "GLContext.h"
+#include "GLScreenBuffer.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/Preferences.h"
 #include "ImageContainer.h"

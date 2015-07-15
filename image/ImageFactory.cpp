@@ -50,54 +50,36 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   bool doDecodeImmediately = gfxPrefs::ImageDecodeImmediatelyEnabled();
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
-  // We use the platform APZ value here since we don't have a widget to test.
-  // It's safe since this is an optimization, and
-  // ImageDecodeOnlyOnDraw is disabled everywhere and will be removed soon.
-  bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
-                            gfxPlatform::AsyncPanZoomEnabled();
-
   // We want UI to be as snappy as possible and not to flicker. Disable
-  // discarding and decode-only-on-draw for chrome URLS.
+  // discarding for chrome URLS.
   bool isChrome = false;
   rv = uri->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && isChrome) {
-    isDiscardable = doDecodeOnlyOnDraw = false;
+    isDiscardable = false;
   }
 
-  // We don't want resources like the "loading" icon to be discardable or
-  // decode-only-on-draw either.
+  // We don't want resources like the "loading" icon to be discardable either.
   bool isResource = false;
   rv = uri->SchemeIs("resource", &isResource);
   if (NS_SUCCEEDED(rv) && isResource) {
-    isDiscardable = doDecodeOnlyOnDraw = false;
+    isDiscardable = false;
   }
 
-  // Downscale-during-decode and decode-only-on-draw are only enabled for
-  // certain content types.
-  if ((doDownscaleDuringDecode || doDecodeOnlyOnDraw) &&
-      !ShouldDownscaleDuringDecode(aMimeType)) {
+  // Downscale-during-decode is only enabled for certain content types.
+  if (doDownscaleDuringDecode && !ShouldDownscaleDuringDecode(aMimeType)) {
     doDownscaleDuringDecode = false;
-    doDecodeOnlyOnDraw = false;
-  }
-
-  // If we're decoding immediately, disable decode-only-on-draw.
-  if (doDecodeImmediately) {
-    doDecodeOnlyOnDraw = false;
   }
 
   // For multipart/x-mixed-replace, we basically want a direct channel to the
   // decoder. Disable everything for this case.
   if (isMultiPart) {
-    isDiscardable = doDecodeOnlyOnDraw = doDownscaleDuringDecode = false;
+    isDiscardable = doDownscaleDuringDecode = false;
   }
 
   // We have all the information we need.
   uint32_t imageFlags = Image::INIT_FLAG_NONE;
   if (isDiscardable) {
     imageFlags |= Image::INIT_FLAG_DISCARDABLE;
-  }
-  if (doDecodeOnlyOnDraw) {
-    imageFlags |= Image::INIT_FLAG_DECODE_ONLY_ON_DRAW;
   }
   if (doDecodeImmediately) {
     imageFlags |= Image::INIT_FLAG_DECODE_IMMEDIATELY;

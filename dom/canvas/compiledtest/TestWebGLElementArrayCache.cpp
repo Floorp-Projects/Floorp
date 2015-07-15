@@ -13,8 +13,6 @@
 #include "nscore.h"
 #include "nsTArray.h"
 
-using namespace mozilla;
-
 int gTestsPassed = 0;
 
 void
@@ -65,7 +63,7 @@ GLType()
 }
 
 void
-CheckValidate(bool expectSuccess, WebGLElementArrayCache& c, GLenum type,
+CheckValidate(bool expectSuccess, mozilla::WebGLElementArrayCache& c, GLenum type,
               uint32_t maxAllowed, size_t first, size_t count)
 {
   uint32_t out_upperBound = 0;
@@ -80,7 +78,8 @@ CheckValidate(bool expectSuccess, WebGLElementArrayCache& c, GLenum type,
 
 template<typename T>
 void
-CheckValidateOneTypeVariousBounds(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+CheckValidateOneTypeVariousBounds(mozilla::WebGLElementArrayCache& c, size_t firstByte,
+                                  size_t countBytes)
 {
   size_t first = firstByte / sizeof(T);
   size_t count = countBytes / sizeof(T);
@@ -101,7 +100,8 @@ CheckValidateOneTypeVariousBounds(WebGLElementArrayCache& c, size_t firstByte, s
   }
 }
 
-void CheckValidateAllTypes(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+void CheckValidateAllTypes(mozilla::WebGLElementArrayCache& c, size_t firstByte,
+                           size_t countBytes)
 {
   CheckValidateOneTypeVariousBounds<uint8_t>(c, firstByte, countBytes);
   CheckValidateOneTypeVariousBounds<uint16_t>(c, firstByte, countBytes);
@@ -120,7 +120,7 @@ CheckSanity()
 
   GLenum type = GLType<T>();
 
-  WebGLElementArrayCache c;
+  mozilla::WebGLElementArrayCache c;
   c.BufferData(data, numBytes);
   CheckValidate(true,  c, type, 6, 0, 8);
   CheckValidate(false, c, type, 5, 0, 8);
@@ -161,7 +161,7 @@ CheckUintOverflow()
 
   GLenum type = GLType<T>();
 
-  WebGLElementArrayCache c;
+  mozilla::WebGLElementArrayCache c;
 
   for(size_t i = 0; i < numElems; i++)
     data[i] = numElems - i;
@@ -187,7 +187,7 @@ main(int argc, char* argv[])
   CheckUintOverflow<uint16_t>();
 
   nsTArray<uint8_t> v, vsub;
-  WebGLElementArrayCache b;
+  mozilla::WebGLElementArrayCache b;
 
   for (int maxBufferSize = 1; maxBufferSize <= 4096; maxBufferSize *= 2) {
     // See bug 800612. We originally had | repeat = min(maxBufferSize, 20) |
@@ -229,3 +229,4 @@ main(int argc, char* argv[])
   std::cerr << argv[0] << ": all " << gTestsPassed << " tests passed" << std::endl;
   return 0;
 }
+

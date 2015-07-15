@@ -102,6 +102,7 @@ private:
   void SegmentParserLoop();
   void AppendIncomingBuffers();
   void InitializationSegmentReceived();
+  void ShutdownDemuxers();
   void CreateDemuxerforMIMEType();
   void NeedMoreData();
   void RejectAppend(nsresult aRejectValue, const char* aName);

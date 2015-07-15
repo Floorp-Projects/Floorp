@@ -6,13 +6,19 @@
 #ifndef WEBGL_EXTENSIONS_H_
 #define WEBGL_EXTENSIONS_H_
 
-#include "jsapi.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "nsWrapperCache.h"
+
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
+
+namespace dom {
+template<typename T>
+class Sequence;
+} // namespace dom
 
 class WebGLContext;
 class WebGLShader;
@@ -43,12 +49,12 @@ protected:
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP \
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
 #define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType, WebGLBindingType)\
     JSObject*                                                    \
-    WebGLExtensionType::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) {              \
-        return dom::WebGLBindingType##Binding::Wrap(cx, this, aGivenProto); \
+    WebGLExtensionType::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) {              \
+        return dom::WebGLBindingType##Binding::Wrap(cx, this, givenProto); \
     }
 
 class WebGLExtensionCompressedTextureATC

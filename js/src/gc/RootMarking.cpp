@@ -469,9 +469,6 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         c->markRoots(trc);
 
-        if (rt->isHeapMinorCollecting())
-            c->globalWriteBarriered = false;
-
         if (traceOrMark == MarkRuntime && !c->zone()->isCollecting())
             continue;
 
