@@ -44,6 +44,9 @@ GetNativeFromProxy(const ProxyAccessible* aProxy)
 
 ProxyAccessible* GetProxyUnignoredParent(const ProxyAccessible* aProxy);
 
+void GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
+                               nsTArray<ProxyAccessible*>* aChildrenArray);
+
 BOOL IsProxyIgnored(const ProxyAccessible* aProxy);
 
 } // a11y
