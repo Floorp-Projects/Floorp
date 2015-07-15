@@ -485,7 +485,7 @@ bool TransportLayerDtls::Setup() {
   pr_fd.forget(); // ownership transfered to ssl_fd;
 
   if (role_ == CLIENT) {
-    MOZ_MTLOG(ML_DEBUG, "Setting up DTLS as client");
+    MOZ_MTLOG(ML_INFO, "Setting up DTLS as client");
     rv = SSL_GetClientAuthDataHook(ssl_fd, GetClientAuthDataHook,
                                    this);
     if (rv != SECSuccess) {
@@ -493,7 +493,7 @@ bool TransportLayerDtls::Setup() {
       return false;
     }
   } else {
-    MOZ_MTLOG(ML_DEBUG, "Setting up DTLS as server");
+    MOZ_MTLOG(ML_INFO, "Setting up DTLS as server");
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
                                 identity_->privkey(),
@@ -728,7 +728,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   }
 
   for (size_t i = 0; i < PR_ARRAY_SIZE(EnabledCiphers); ++i) {
-    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
     rv = SSL_CipherPrefSet(ssl_fd, EnabledCiphers[i], PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, LAYER_INFO <<
@@ -738,7 +738,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   }
 
   for (size_t i = 0; i < PR_ARRAY_SIZE(DisabledCiphers); ++i) {
-    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
 
     PRBool enabled = false;
     rv = SSL_CipherPrefGet(ssl_fd, DisabledCiphers[i], &enabled);
