@@ -18,6 +18,8 @@
 %define conditionalForwardWithUrlbarWidth 30
 
 :root {
+  --space-above-tabbar: 15px;
+
   --toolbarbutton-vertical-inner-padding: 2px;
   --toolbarbutton-vertical-outer-padding: 8px;
 
@@ -70,7 +72,7 @@
 
 #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
 #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-  margin-top: 15px;
+  margin-top: var(--space-above-tabbar);
 }
 
 #toolbar-menubar:not([autohide="true"]) {
