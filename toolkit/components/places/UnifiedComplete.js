@@ -559,9 +559,33 @@ function makeActionURL(action, params) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Search Class
-//// Manages a single instance of an autocomplete search.
 
+/**
+ * Manages a single instance of an autocomplete search.
+ *
+ * The first three parameters all originate from the similarly named parameters
+ * of nsIAutoCompleteSearch.startSearch().
+ *
+ * @param searchString
+ *        The search string.
+ * @param searchParam
+ *        A space-delimited string of search parameters.  The following
+ *        parameters are supported:
+ *        * enable-actions: Include "actions", such as switch-to-tab and search
+ *          engine aliases, in the results.
+ *        * disable-private-actions: The search is taking place in a private
+ *          window outside of permanent private-browsing mode.  The search
+ *          should exclude privacy-sensitive results as appropriate.
+ *        * private-window: The search is taking place in a private window,
+ *          possibly in permanent private-browsing mode.  The search
+ *          should exclude privacy-sensitive results as appropriate.
+ * @param autocompleteListener
+ *        An nsIAutoCompleteObserver.
+ * @param resultListener
+ *        An nsIAutoCompleteSimpleResultListener.
+ * @param autocompleteSearch
+ *        An nsIAutoCompleteSearch.
+ */
 function Search(searchString, searchParam, autocompleteListener,
                 resultListener, autocompleteSearch) {
   // We want to store the original string for case sensitive searches.
@@ -872,8 +896,9 @@ Search.prototype = {
   }),
 
   *_matchSearchSuggestions() {
-    if (!this.hasBehavior("searches"))
+    if (!this.hasBehavior("searches") || this._inPrivateWindow) {
       return;
+    }
 
     this._searchSuggestionController =
       PlacesSearchAutocompleteProvider.getSuggestionController(
