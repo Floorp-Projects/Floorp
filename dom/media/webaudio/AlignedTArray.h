@@ -75,19 +75,4 @@ private:
   void operator=(const AlignedTArray& other) = delete;
 };
 
-template <typename E, int N=32>
-class AlignedFallibleTArray : public AlignedTArray_Impl<E, N, nsTArrayFallibleAllocator>
-{
-public:
-  typedef AlignedTArray_Impl<E, N, nsTArrayFallibleAllocator> base_type;
-  typedef AlignedFallibleTArray<E, N>                         self_type;
-  typedef typename base_type::size_type                       size_type;
-
-  AlignedFallibleTArray() {}
-  explicit AlignedFallibleTArray(size_type capacity) : base_type(capacity) {}
-private:
-  AlignedFallibleTArray(const AlignedFallibleTArray& other) = delete;
-  void operator=(const AlignedFallibleTArray& other) = delete;
-};
-
 #endif // AlignedTArray_h__
