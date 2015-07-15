@@ -185,26 +185,23 @@ trap "kill $KILLER" EXIT
 
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
-
+    export JSTESTS_EXTRA_ARGS=--jitflags=debug
 elif [[ "$VARIANT" = "compacting" ]]; then
     export JS_GC_ZEAL=14
 
     # Ignore timeouts from tests that are known to take too long with this zeal mode
-    export JITTEST_EXTRA_ARGS=--ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt
-    export JSTESTS_EXTRA_ARGS=--exclude-file=$ABSDIR/cgc-jstests-slow.txt
+    export JITTEST_EXTRA_ARGS="--jitflags=debug --ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt"
+    export JSTESTS_EXTRA_ARGS="--jitflags=debug --exclude-file=$ABSDIR/cgc-jstests-slow.txt"
 
     case "$platform" in
     win*)
         RUN_JSTESTS=false
     esac
-fi
-
-if [[ "$VARIANT" = "warnaserr" ||
-      "$VARIANT" = "warnaserrdebug" ||
-      "$VARIANT" = "plain" ]]; then
+elif [[ "$VARIANT" = "warnaserr" ||
+        "$VARIANT" = "warnaserrdebug" ||
+        "$VARIANT" = "plain" ]]; then
     export JSTESTS_EXTRA_ARGS=--jitflags=all
 elif [[ "$VARIANT" = "arm-sim" ||
-        "$VARIANT" = "rootanalysis" ||
         "$VARIANT" = "plaindebug" ]]; then
     export JSTESTS_EXTRA_ARGS=--jitflags=debug
 fi
