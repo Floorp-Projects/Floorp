@@ -189,9 +189,11 @@ if [[ "$VARIANT" = "rootanalysis" ]]; then
 elif [[ "$VARIANT" = "compacting" ]]; then
     export JS_GC_ZEAL=14
 
-    # Ignore timeouts from tests that are known to take too long with this zeal mode
+    # Ignore timeouts from tests that are known to take too long with this zeal mode.
+    # Run jittests with reduced jitflags option (3 configurations).
+    # Run jstests with default jitflags option (1 configuration).
     export JITTEST_EXTRA_ARGS="--jitflags=debug --ignore-timeouts=$ABSDIR/cgc-jittest-timeouts.txt"
-    export JSTESTS_EXTRA_ARGS="--jitflags=debug --exclude-file=$ABSDIR/cgc-jstests-slow.txt"
+    export JSTESTS_EXTRA_ARGS="--exclude-file=$ABSDIR/cgc-jstests-slow.txt"
 
     case "$platform" in
     win*)
