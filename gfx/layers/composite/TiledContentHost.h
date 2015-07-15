@@ -77,7 +77,6 @@ public:
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
     mSharedLock = o.mSharedLock;
-    mPreviousSharedLock = o.mPreviousSharedLock;
     x = o.x;
     y = o.y;
   }
@@ -90,7 +89,6 @@ public:
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
     mSharedLock = o.mSharedLock;
-    mPreviousSharedLock = o.mPreviousSharedLock;
     x = o.x;
     y = o.y;
     return *this;
@@ -112,13 +110,6 @@ public:
     }
   }
 
-  void ReadUnlockPrevious() {
-    if (mPreviousSharedLock) {
-      mPreviousSharedLock->ReadUnlock();
-      mPreviousSharedLock = nullptr;
-    }
-  }
-
   void Dump(std::stringstream& aStream) {
     aStream << "TileHost(...)"; // fill in as needed
   }
@@ -129,14 +120,13 @@ public:
   }
 
   RefPtr<gfxSharedReadLock> mSharedLock;
-  RefPtr<gfxSharedReadLock> mPreviousSharedLock;
   CompositableTextureHostRef mTextureHost;
   CompositableTextureHostRef mTextureHostOnWhite;
   mutable CompositableTextureSourceRef mTextureSource;
   mutable CompositableTextureSourceRef mTextureSourceOnWhite;
   // This is not strictly necessary but makes debugging whole lot easier.
-  int x;
-  int y;
+  DebugOnly<int> x;
+  DebugOnly<int> y;
 };
 
 class TiledLayerBufferComposite
@@ -154,6 +144,9 @@ public:
 
   void Clear();
 
+  void MarkTilesForUnlock();
+  void ProcessDelayedUnlocks();
+
   TileHost GetPlaceholderTile() const { return TileHost(); }
 
   // Stores the absolute resolution of the containing frame, calculated
@@ -167,7 +160,9 @@ public:
   static void RecycleCallback(TextureHost* textureHost, void* aClosure);
 
 protected:
+
   CSSToParentLayerScale2D mFrameResolution;
+  nsTArray<RefPtr<gfxSharedReadLock>> mDelayedUnlocks;
 };
 
 /**
