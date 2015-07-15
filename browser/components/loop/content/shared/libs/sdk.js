@@ -1,12 +1,12 @@
 /**
- * @license  OpenTok JavaScript Library v2.5.1 23265fa HEAD
+ * @license  OpenTok JavaScript Library v2.5.2 f4508e1 2015Q1.patch.1
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: April 13 06:37:42 2015
+ * Date: July 13 05:38:08 2015
  */
 
 
@@ -15,12 +15,12 @@
 !(function(window, OTHelpers, undefined) {
 
 /**
- * @license  Common JS Helpers on OpenTok 0.3.0 058dfa5 2015Q1
+ * @license  Common JS Helpers on OpenTok 0.3.0 f151b47 HEAD
  * http://www.tokbox.com/
  *
  * Copyright (c) 2015 TokBox, Inc.
  *
- * Date: April 13 06:37:28 2015
+ * Date: July 13 05:37:51 2015
  *
  */
 
@@ -3716,6 +3716,19 @@ OTHelpers.getCookie = function(key) {
   return null;
 };
 
+/*jshint browser:true, smarttabs:true*/
+
+// tb_require('../helpers.js')
+
+OTHelpers.castToBoolean = function(value, defaultValue) {
+  if (value === undefined) return defaultValue;
+  return value === 'true' || value === true;
+};
+
+OTHelpers.roundFloat = function(value, places) {
+  return Number(value.toFixed(places));
+};
+
 // tb_require('../helpers.js')
 
 /* jshint globalstrict: true, strict: false, undef: true, unused: true,
@@ -3894,19 +3907,6 @@ OTHelpers.Collection = function(idField) {
   };
 };
 
-
-/*jshint browser:true, smarttabs:true*/
-
-// tb_require('../helpers.js')
-
-OTHelpers.castToBoolean = function(value, defaultValue) {
-  if (value === undefined) return defaultValue;
-  return value === 'true' || value === true;
-};
-
-OTHelpers.roundFloat = function(value, places) {
-  return Number(value.toFixed(places));
-};
 
 /*jshint browser:true, smarttabs:true*/
 
@@ -6105,12 +6105,12 @@ OTHelpers.post = function(url, options, callback) {
 
 
 /**
- * @license  TB Plugin 0.4.0.10 01e58ad 2015Q1
+ * @license  TB Plugin 0.4.0.10 6935b20 HEAD
  * http://www.tokbox.com/
  *
  * Copyright (c) 2015 TokBox, Inc.
  *
- * Date: April 13 06:37:38 2015
+ * Date: July 13 05:38:06 2015
  *
  */
 
@@ -7426,96 +7426,6 @@ var MediaConstraints = function(userConstraints) {
 
 // tb_require('./header.js')
 // tb_require('./shims.js')
-
-/* global scope:true */
-/* exported  createFrame */
-
-var createFrame = function createFrame (bodyContent, callbackId, callback) {
-  var Proto = function Frame () {},
-      api = new Proto(),
-      domElement = scope.document.createElement('iframe');
-
-  domElement.id = 'OTPlugin_frame_' + $.uuid().replace(/\-+/g, '');
-  domElement.style.border = '0';
-
-  try {
-    domElement.style.backgroundColor = 'rgba(0,0,0,0)';
-  } catch (err) {
-    // Old IE browsers don't support rgba
-    domElement.style.backgroundColor = 'transparent';
-    domElement.setAttribute('allowTransparency', 'true');
-  }
-
-  domElement.scrolling = 'no';
-  domElement.setAttribute('scrolling', 'no');
-
-  // This is necessary for IE, as it will not inherit it's doctype from
-  // the parent frame.
-  var frameContent = '<!DOCTYPE html><html><head>' +
-                    '<meta http-equiv="x-ua-compatible" content="IE=Edge">' +
-                    '<meta http-equiv="Content-type" content="text/html; charset=utf-8">' +
-                    '<title></title></head><body>' +
-                    bodyContent +
-                    '<script>window.parent["' + callbackId + '"](' +
-                      'document.querySelector("object")' +
-                    ');</script></body></html>';
-
-  var wrappedCallback = function() {
-    OTPlugin.log('LOADED IFRAME');
-    var doc = domElement.contentDocument || domElement.contentWindow.document;
-
-    if ($.env.iframeNeedsLoad) {
-      doc.body.style.backgroundColor = 'transparent';
-      doc.body.style.border = 'none';
-
-      if ($.env.name !== 'IE') {
-        // Skip this for IE as we use the bookmarklet workaround
-        // for THAT browser.
-        doc.open();
-        doc.write(frameContent);
-        doc.close();
-      }
-    }
-
-    if (callback) {
-      callback(
-        api,
-        domElement.contentWindow,
-        doc
-      );
-    }
-  };
-
-  scope.document.body.appendChild(domElement);
-
-  if($.env.iframeNeedsLoad) {
-    if ($.env.name === 'IE') {
-      // This works around some issues with IE and document.write.
-      // Basically this works by slightly abusing the bookmarklet/scriptlet
-      // functionality that all browsers support.
-      domElement.contentWindow.contents = frameContent;
-      /*jshint scripturl:true*/
-      domElement.src = 'javascript:window["contents"]';
-      /*jshint scripturl:false*/
-    }
-
-    $.on(domElement, 'load', wrappedCallback);
-  } else {
-    setTimeout(wrappedCallback, 0);
-  }
-
-  api.reparent = function reparent (target) {
-    // document.adoptNode(domElement);
-    target.appendChild(domElement);
-  };
-
-  api.element = domElement;
-
-  return api;
-};
-
-// tb_require('./header.js')
-// tb_require('./shims.js')
 // tb_require('./plugin_proxies.js')
 
 /* global OT:true, OTPlugin:true, ActiveXObject:true,
@@ -7847,6 +7757,96 @@ var // jshint -W098
 
 // tb_require('./header.js')
 // tb_require('./shims.js')
+
+/* global scope:true */
+/* exported  createFrame */
+
+var createFrame = function createFrame (bodyContent, callbackId, callback) {
+  var Proto = function Frame () {},
+      api = new Proto(),
+      domElement = scope.document.createElement('iframe');
+
+  domElement.id = 'OTPlugin_frame_' + $.uuid().replace(/\-+/g, '');
+  domElement.style.border = '0';
+
+  try {
+    domElement.style.backgroundColor = 'rgba(0,0,0,0)';
+  } catch (err) {
+    // Old IE browsers don't support rgba
+    domElement.style.backgroundColor = 'transparent';
+    domElement.setAttribute('allowTransparency', 'true');
+  }
+
+  domElement.scrolling = 'no';
+  domElement.setAttribute('scrolling', 'no');
+
+  // This is necessary for IE, as it will not inherit it's doctype from
+  // the parent frame.
+  var frameContent = '<!DOCTYPE html><html><head>' +
+                    '<meta http-equiv="x-ua-compatible" content="IE=Edge">' +
+                    '<meta http-equiv="Content-type" content="text/html; charset=utf-8">' +
+                    '<title></title></head><body>' +
+                    bodyContent +
+                    '<script>window.parent["' + callbackId + '"](' +
+                      'document.querySelector("object")' +
+                    ');</script></body></html>';
+
+  var wrappedCallback = function() {
+    OTPlugin.log('LOADED IFRAME');
+    var doc = domElement.contentDocument || domElement.contentWindow.document;
+
+    if ($.env.iframeNeedsLoad) {
+      doc.body.style.backgroundColor = 'transparent';
+      doc.body.style.border = 'none';
+
+      if ($.env.name !== 'IE') {
+        // Skip this for IE as we use the bookmarklet workaround
+        // for THAT browser.
+        doc.open();
+        doc.write(frameContent);
+        doc.close();
+      }
+    }
+
+    if (callback) {
+      callback(
+        api,
+        domElement.contentWindow,
+        doc
+      );
+    }
+  };
+
+  scope.document.body.appendChild(domElement);
+
+  if($.env.iframeNeedsLoad) {
+    if ($.env.name === 'IE') {
+      // This works around some issues with IE and document.write.
+      // Basically this works by slightly abusing the bookmarklet/scriptlet
+      // functionality that all browsers support.
+      domElement.contentWindow.contents = frameContent;
+      /*jshint scripturl:true*/
+      domElement.src = 'javascript:window["contents"]';
+      /*jshint scripturl:false*/
+    }
+
+    $.on(domElement, 'load', wrappedCallback);
+  } else {
+    setTimeout(wrappedCallback, 0);
+  }
+
+  api.reparent = function reparent (target) {
+    // document.adoptNode(domElement);
+    target.appendChild(domElement);
+  };
+
+  api.element = domElement;
+
+  return api;
+};
+
+// tb_require('./header.js')
+// tb_require('./shims.js')
 // tb_require('./proxy.js')
 // tb_require('./auto_updater.js')
 // tb_require('./media_constraints.js')
@@ -8065,8 +8065,8 @@ if (!window.TB) window.TB = OT;
 // tb_require('../js/ot.js')
 
 OT.properties = {
-  version: 'v2.5.1',         // The current version (eg. v2.0.4) (This is replaced by gradle)
-  build: '23265fa',    // The current build hash (This is replaced by gradle)
+  version: 'v2.5.2',         // The current version (eg. v2.0.4) (This is replaced by gradle)
+  build: 'f4508e1',    // The current build hash (This is replaced by gradle)
 
   // Whether or not to turn on debug logging by default
   debug: 'false',
@@ -8250,122 +8250,6 @@ OT.$.userAgent = function() { return OT.$.env.userAgent; };
   * @function
   * @see <a href="#setLogLevel">OT.setLogLevel()</a>
   */
-
-// tb_require('../../../helpers/helpers.js')
-
-/* jshint globalstrict: true, strict: false, undef: true, unused: true,
-          trailing: true, browser: true, smarttabs:true */
-/* global OT */
-
-// Rumor Messaging for JS
-//
-// https://tbwiki.tokbox.com/index.php/Rumor_:_Messaging_FrameWork
-//
-// @todo Rumor {
-//     Add error codes for all the error cases
-//     Add Dependability commands
-// }
-
-OT.Rumor = {
-  MessageType: {
-    // This is used to subscribe to address/addresses. The address/addresses the
-    // client specifies here is registered on the server. Once any message is sent to
-    // that address/addresses, the client receives that message.
-    SUBSCRIBE: 0,
-
-    // This is used to unsubscribe to address / addresses. Once the client unsubscribe
-    // to an address, it will stop getting messages sent to that address.
-    UNSUBSCRIBE: 1,
-
-    // This is used to send messages to arbitrary address/ addresses. Messages can be
-    // anything and Rumor will not care about what is included.
-    MESSAGE: 2,
-
-    // This will be the first message that the client sends to the server. It includes
-    // the uniqueId for that client connection and a disconnect_notify address that will
-    // be notified once the client disconnects.
-    CONNECT: 3,
-
-    // This will be the message used by the server to notify an address that a
-    // client disconnected.
-    DISCONNECT: 4,
-
-    //Enhancements to support Keepalives
-    PING: 7,
-    PONG: 8,
-    STATUS: 9
-  }
-};
-
-// tb_require('../../../helpers/helpers.js')
-// tb_require('./rumor.js')
-
-/* jshint globalstrict: true, strict: false, undef: true, unused: true,
-          trailing: true, browser: true, smarttabs:true */
-/* global OT, OTPlugin */
-
-!(function() {
-
-  OT.Rumor.PluginSocket = function(messagingURL, events) {
-
-    var webSocket,
-        state = 'initializing';
-
-    OTPlugin.initRumorSocket(messagingURL, OT.$.bind(function(err, rumorSocket) {
-      if(err) {
-        state = 'closed';
-        events.onClose({ code: 4999 });
-      } else if(state === 'initializing') {
-        webSocket = rumorSocket;
-
-        webSocket.onOpen(function() {
-          state = 'open';
-          events.onOpen();
-        });
-        webSocket.onClose(function(error) {
-          state = 'closed'; /* CLOSED */
-          events.onClose({ code: error });
-        });
-        webSocket.onError(function(error) {
-          state = 'closed'; /* CLOSED */
-          events.onError(error);
-          /* native websockets seem to do this, so should we */
-          events.onClose({ code: error });
-        });
-
-        webSocket.onMessage(function(type, addresses, headers, payload) {
-          var msg = new OT.Rumor.Message(type, addresses, headers, payload);
-          events.onMessage(msg);
-        });
-
-        webSocket.open();
-      } else {
-        this.close();
-      }
-    }, this));
-
-    this.close = function() {
-      if(state === 'initializing' || state === 'closed') {
-        state = 'closed';
-        return;
-      }
-
-      webSocket.close(1000, '');
-    };
-
-    this.send = function(msg) {
-      if(state === 'open') {
-        webSocket.send(msg);
-      }
-    };
-
-    this.isClosed = function() {
-      return state === 'closed';
-    };
-
-  };
-
-}(this));
 
 // tb_require('../../../helpers/helpers.js')
 
@@ -9421,6 +9305,122 @@ OT.Rumor = {
   global['TextDecoder'] = global['TextDecoder'] || TextDecoder;
 
   /* jshint ignore:end */
+
+}(this));
+
+// tb_require('../../../helpers/helpers.js')
+
+/* jshint globalstrict: true, strict: false, undef: true, unused: true,
+          trailing: true, browser: true, smarttabs:true */
+/* global OT */
+
+// Rumor Messaging for JS
+//
+// https://tbwiki.tokbox.com/index.php/Rumor_:_Messaging_FrameWork
+//
+// @todo Rumor {
+//     Add error codes for all the error cases
+//     Add Dependability commands
+// }
+
+OT.Rumor = {
+  MessageType: {
+    // This is used to subscribe to address/addresses. The address/addresses the
+    // client specifies here is registered on the server. Once any message is sent to
+    // that address/addresses, the client receives that message.
+    SUBSCRIBE: 0,
+
+    // This is used to unsubscribe to address / addresses. Once the client unsubscribe
+    // to an address, it will stop getting messages sent to that address.
+    UNSUBSCRIBE: 1,
+
+    // This is used to send messages to arbitrary address/ addresses. Messages can be
+    // anything and Rumor will not care about what is included.
+    MESSAGE: 2,
+
+    // This will be the first message that the client sends to the server. It includes
+    // the uniqueId for that client connection and a disconnect_notify address that will
+    // be notified once the client disconnects.
+    CONNECT: 3,
+
+    // This will be the message used by the server to notify an address that a
+    // client disconnected.
+    DISCONNECT: 4,
+
+    //Enhancements to support Keepalives
+    PING: 7,
+    PONG: 8,
+    STATUS: 9
+  }
+};
+
+// tb_require('../../../helpers/helpers.js')
+// tb_require('./rumor.js')
+
+/* jshint globalstrict: true, strict: false, undef: true, unused: true,
+          trailing: true, browser: true, smarttabs:true */
+/* global OT, OTPlugin */
+
+!(function() {
+
+  OT.Rumor.PluginSocket = function(messagingURL, events) {
+
+    var webSocket,
+        state = 'initializing';
+
+    OTPlugin.initRumorSocket(messagingURL, OT.$.bind(function(err, rumorSocket) {
+      if(err) {
+        state = 'closed';
+        events.onClose({ code: 4999 });
+      } else if(state === 'initializing') {
+        webSocket = rumorSocket;
+
+        webSocket.onOpen(function() {
+          state = 'open';
+          events.onOpen();
+        });
+        webSocket.onClose(function(error) {
+          state = 'closed'; /* CLOSED */
+          events.onClose({ code: error });
+        });
+        webSocket.onError(function(error) {
+          state = 'closed'; /* CLOSED */
+          events.onError(error);
+          /* native websockets seem to do this, so should we */
+          events.onClose({ code: error });
+        });
+
+        webSocket.onMessage(function(type, addresses, headers, payload) {
+          var msg = new OT.Rumor.Message(type, addresses, headers, payload);
+          events.onMessage(msg);
+        });
+
+        webSocket.open();
+      } else {
+        this.close();
+      }
+    }, this));
+
+    this.close = function() {
+      if(state === 'initializing' || state === 'closed') {
+        state = 'closed';
+        return;
+      }
+
+      webSocket.close(1000, '');
+    };
+
+    this.send = function(msg) {
+      if(state === 'open') {
+        webSocket.send(msg);
+      }
+    };
+
+    this.isClosed = function() {
+      return state === 'closed';
+    };
+
+  };
 
 }(this));
 
@@ -16558,6 +16558,140 @@ var loadCSS = function loadCSS(cssURL) {
 };
 
 // tb_require('../helpers.js')
+
+/* jshint globalstrict: true, strict: false, undef: true, unused: true,
+          trailing: true, browser: true, smarttabs:true */
+/* global OTPlugin, OT */
+
+///
+// Capabilities
+//
+// Support functions to query browser/client Media capabilities.
+//
+
+
+// Indicates whether this client supports the getUserMedia
+// API.
+//
+OT.$.registerCapability('getUserMedia', function() {
+  if (OT.$.env === 'Node') return false;
+  return !!(navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia ||
+            OTPlugin.isInstalled());
+});
+
+
+
+// TODO Remove all PeerConnection stuff, that belongs to the messaging layer not the Media layer.
+// Indicates whether this client supports the PeerConnection
+// API.
+//
+// Chrome Issues:
+// * The explicit prototype.addStream check is because webkitRTCPeerConnection was
+// partially implemented, but not functional, in Chrome 22.
+//
+// Firefox Issues:
+// * No real support before Firefox 19
+// * Firefox 19 has issues with generating Offers.
+// * Firefox 20 doesn't interoperate with Chrome.
+//
+OT.$.registerCapability('PeerConnection', function() {
+  if (OT.$.env === 'Node') {
+    return false;
+  }
+  else if (typeof(window.webkitRTCPeerConnection) === 'function' &&
+                    !!window.webkitRTCPeerConnection.prototype.addStream) {
+    return true;
+  } else if (typeof(window.mozRTCPeerConnection) === 'function' && OT.$.env.version > 20.0) {
+    return true;
+  } else {
+    return OTPlugin.isInstalled();
+  }
+});
+
+
+
+// Indicates whether this client supports WebRTC
+//
+// This is defined as: getUserMedia + PeerConnection + exceeds min browser version
+//
+OT.$.registerCapability('webrtc', function() {
+  if (OT.properties) {
+    var minimumVersions = OT.properties.minimumVersion || {},
+        minimumVersion = minimumVersions[OT.$.env.name.toLowerCase()];
+
+    if(minimumVersion && OT.$.env.versionGreaterThan(minimumVersion)) {
+      OT.debug('Support for', OT.$.env.name, 'is disabled because we require',
+        minimumVersion, 'but this is', OT.$.env.version);
+      return false;
+    }
+  }
+
+  if (OT.$.env === 'Node') {
+    // Node works, even though it doesn't have getUserMedia
+    return true;
+  }
+
+  return OT.$.hasCapabilities('getUserMedia', 'PeerConnection');
+});
+
+
+// TODO Remove all transport stuff, that belongs to the messaging layer not the Media layer.
+// Indicates if the browser supports bundle
+//
+// Broadly:
+// * Firefox doesn't support bundle
+// * Chrome support bundle
+// * OT Plugin supports bundle
+// * We assume NodeJs supports bundle (e.g. 'you're on your own' mode)
+//
+OT.$.registerCapability('bundle', function() {
+  return OT.$.hasCapabilities('webrtc') &&
+            (OT.$.env.name === 'Chrome' ||
+              OT.$.env.name === 'Node' ||
+              OTPlugin.isInstalled());
+});
+
+// Indicates if the browser supports RTCP Mux
+//
+// Broadly:
+// * Older versions of Firefox (<= 25) don't support RTCP Mux
+// * Older versions of Firefox (>= 26) support RTCP Mux (not tested yet)
+// * Chrome support RTCP Mux
+// * OT Plugin supports RTCP Mux
+// * We assume NodeJs supports RTCP Mux (e.g. 'you're on your own' mode)
+//
+OT.$.registerCapability('RTCPMux', function() {
+  return OT.$.hasCapabilities('webrtc') &&
+              (OT.$.env.name === 'Chrome' ||
+                OT.$.env.name === 'Node' ||
+                OTPlugin.isInstalled());
+});
+
+
+
+// Indicates whether this browser supports the getMediaDevices (getSources) API.
+//
+OT.$.registerCapability('getMediaDevices', function() {
+  return OT.$.isFunction(window.MediaStreamTrack) &&
+            OT.$.isFunction(window.MediaStreamTrack.getSources);
+});
+
+
+OT.$.registerCapability('audioOutputLevelStat', function() {
+  return OT.$.env.name === 'Chrome' || OT.$.env.name === 'IE';
+});
+
+OT.$.registerCapability('webAudioCapableRemoteStream', function() {
+  return OT.$.env.name === 'Firefox';
+});
+
+OT.$.registerCapability('webAudio', function() {
+  return 'AudioContext' in window;
+});
+
+
+// tb_require('../helpers.js')
 // tb_require('./properties.js')
 
 /* jshint globalstrict: true, strict: false, undef: true, unused: true,
@@ -16705,140 +16839,6 @@ OT.Config = (function() {
 
   return _this;
 })();
-
-// tb_require('../helpers.js')
-
-/* jshint globalstrict: true, strict: false, undef: true, unused: true,
-          trailing: true, browser: true, smarttabs:true */
-/* global OTPlugin, OT */
-
-///
-// Capabilities
-//
-// Support functions to query browser/client Media capabilities.
-//
-
-
-// Indicates whether this client supports the getUserMedia
-// API.
-//
-OT.$.registerCapability('getUserMedia', function() {
-  if (OT.$.env === 'Node') return false;
-  return !!(navigator.webkitGetUserMedia ||
-            navigator.mozGetUserMedia ||
-            OTPlugin.isInstalled());
-});
-
-
-
-// TODO Remove all PeerConnection stuff, that belongs to the messaging layer not the Media layer.
-// Indicates whether this client supports the PeerConnection
-// API.
-//
-// Chrome Issues:
-// * The explicit prototype.addStream check is because webkitRTCPeerConnection was
-// partially implemented, but not functional, in Chrome 22.
-//
-// Firefox Issues:
-// * No real support before Firefox 19
-// * Firefox 19 has issues with generating Offers.
-// * Firefox 20 doesn't interoperate with Chrome.
-//
-OT.$.registerCapability('PeerConnection', function() {
-  if (OT.$.env === 'Node') {
-    return false;
-  }
-  else if (typeof(window.webkitRTCPeerConnection) === 'function' &&
-                    !!window.webkitRTCPeerConnection.prototype.addStream) {
-    return true;
-  } else if (typeof(window.mozRTCPeerConnection) === 'function' && OT.$.env.version > 20.0) {
-    return true;
-  } else {
-    return OTPlugin.isInstalled();
-  }
-});
-
-
-
-// Indicates whether this client supports WebRTC
-//
-// This is defined as: getUserMedia + PeerConnection + exceeds min browser version
-//
-OT.$.registerCapability('webrtc', function() {
-  if (OT.properties) {
-    var minimumVersions = OT.properties.minimumVersion || {},
-        minimumVersion = minimumVersions[OT.$.env.name.toLowerCase()];
-
-    if(minimumVersion && OT.$.env.versionGreaterThan(minimumVersion)) {
-      OT.debug('Support for', OT.$.env.name, 'is disabled because we require',
-        minimumVersion, 'but this is', OT.$.env.version);
-      return false;
-    }
-  }
-
-  if (OT.$.env === 'Node') {
-    // Node works, even though it doesn't have getUserMedia
-    return true;
-  }
-
-  return OT.$.hasCapabilities('getUserMedia', 'PeerConnection');
-});
-
-
-// TODO Remove all transport stuff, that belongs to the messaging layer not the Media layer.
-// Indicates if the browser supports bundle
-//
-// Broadly:
-// * Firefox doesn't support bundle
-// * Chrome support bundle
-// * OT Plugin supports bundle
-// * We assume NodeJs supports bundle (e.g. 'you're on your own' mode)
-//
-OT.$.registerCapability('bundle', function() {
-  return OT.$.hasCapabilities('webrtc') &&
-            (OT.$.env.name === 'Chrome' ||
-              OT.$.env.name === 'Node' ||
-              OTPlugin.isInstalled());
-});
-
-// Indicates if the browser supports RTCP Mux
-//
-// Broadly:
-// * Older versions of Firefox (<= 25) don't support RTCP Mux
-// * Older versions of Firefox (>= 26) support RTCP Mux (not tested yet)
-// * Chrome support RTCP Mux
-// * OT Plugin supports RTCP Mux
-// * We assume NodeJs supports RTCP Mux (e.g. 'you're on your own' mode)
-//
-OT.$.registerCapability('RTCPMux', function() {
-  return OT.$.hasCapabilities('webrtc') &&
-              (OT.$.env.name === 'Chrome' ||
-                OT.$.env.name === 'Node' ||
-                OTPlugin.isInstalled());
-});
-
-
-
-// Indicates whether this browser supports the getMediaDevices (getSources) API.
-//
-OT.$.registerCapability('getMediaDevices', function() {
-  return OT.$.isFunction(window.MediaStreamTrack) &&
-            OT.$.isFunction(window.MediaStreamTrack.getSources);
-});
-
-
-OT.$.registerCapability('audioOutputLevelStat', function() {
-  return OT.$.env.name === 'Chrome' || OT.$.env.name === 'IE';
-});
-
-OT.$.registerCapability('webAudioCapableRemoteStream', function() {
-  return OT.$.env.name === 'Firefox';
-});
-
-OT.$.registerCapability('webAudio', function() {
-  return 'AudioContext' in window;
-});
-
 
 // tb_require('../helpers.js')
 // tb_require('./config.js')
@@ -25970,9 +25970,9 @@ OT.Publisher = function(options) {
               var peerConnection = _peerConnections[connectionId];
               peerConnection.getSenders().forEach(function(sender) {
                 if (sender.track.kind === 'audio' && newStream.getAudioTracks().length) {
-                  replacePromises.push(sender.switchTracks(newStream.getAudioTracks()[0]));
+                  replacePromises.push(sender.replaceTrack(newStream.getAudioTracks()[0]));
                 } else if (sender.track.kind === 'video' && newStream.getVideoTracks().length) {
-                  replacePromises.push(sender.switchTracks(newStream.getVideoTracks()[0]));
+                  replacePromises.push(sender.replaceTrack(newStream.getVideoTracks()[0]));
                 }
               });
             });
@@ -26249,6 +26249,38 @@ OT.Publisher = function(options) {
 // Helper function to generate unique publisher ids
 OT.Publisher.nextId = OT.$.uuid;
 
+// tb_require('./helpers/lib/css_loader.js')
+// tb_require('./ot/system_requirements.js')
+// tb_require('./ot/session.js')
+// tb_require('./ot/publisher.js')
+// tb_require('./ot/subscriber.js')
+// tb_require('./ot/archive.js')
+// tb_require('./ot/connection.js')
+// tb_require('./ot/stream.js')
+// We want this to be included at the end, just before footer.js
+
+/* jshint globalstrict: true, strict: false, undef: true, unused: true,
+          trailing: true, browser: true, smarttabs:true */
+/* global loadCSS, define */
+
+// Tidy up everything on unload
+OT.onUnload(function() {
+  OT.publishers.destroy();
+  OT.subscribers.destroy();
+  OT.sessions.destroy('unloaded');
+});
+
+loadCSS(OT.properties.cssURL);
+
+// Register as a named AMD module, since TokBox could be concatenated with other
+// files that may use define, but not via a proper concatenation script that
+// understands anonymous AMD modules. A named AMD is safest and most robust
+// way to register. Uppercase TB is used because AMD module names are
+// derived from file names, and OpenTok is normally delivered in an uppercase
+// file name.
+if (typeof define === 'function' && define.amd) {
+  define( 'TB', [], function () { return TB; } );
+}
 // tb_require('../../conf/properties.js')
 // tb_require('../ot.js')
 // tb_require('./session.js')
@@ -26948,38 +26980,6 @@ OT.components = {};
  */
 
 
-// tb_require('./helpers/lib/css_loader.js')
-// tb_require('./ot/system_requirements.js')
-// tb_require('./ot/session.js')
-// tb_require('./ot/publisher.js')
-// tb_require('./ot/subscriber.js')
-// tb_require('./ot/archive.js')
-// tb_require('./ot/connection.js')
-// tb_require('./ot/stream.js')
-// We want this to be included at the end, just before footer.js
-
-/* jshint globalstrict: true, strict: false, undef: true, unused: true,
-          trailing: true, browser: true, smarttabs:true */
-/* global loadCSS, define */
-
-// Tidy up everything on unload
-OT.onUnload(function() {
-  OT.publishers.destroy();
-  OT.subscribers.destroy();
-  OT.sessions.destroy('unloaded');
-});
-
-loadCSS(OT.properties.cssURL);
-
-// Register as a named AMD module, since TokBox could be concatenated with other
-// files that may use define, but not via a proper concatenation script that
-// understands anonymous AMD modules. A named AMD is safest and most robust
-// way to register. Uppercase TB is used because AMD module names are
-// derived from file names, and OpenTok is normally delivered in an uppercase
-// file name.
-if (typeof define === 'function' && define.amd) {
-  define( 'TB', [], function () { return TB; } );
-}
 // tb_require('./postscript.js')
 
 /* jshint ignore:start */
