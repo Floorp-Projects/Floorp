@@ -488,11 +488,6 @@ var DebuggerServer = {
       constructor: "GcliActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/tracer", {
-      prefix: "trace",
-      constructor: "TracerActor",
-      type: { tab: true }
-    });
     this.registerModule("devtools/server/actors/memory", {
       prefix: "memory",
       constructor: "MemoryActor",

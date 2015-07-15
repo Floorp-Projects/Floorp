@@ -15,7 +15,7 @@ Components.utils.import('resource:///modules/devtools/SourceMap.jsm');
 
 function run_test()
 {
-  initTestTracerServer();
+  initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-breakpoints");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {

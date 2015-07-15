@@ -56,9 +56,9 @@
     <dimen name="firstrun_content_width">300dp</dimen>
     <dimen name="firstrun_min_height">180dp</dimen>
 
-    <dimen name="tab_queue_content_width">260dp</dimen>
-    <dimen name="tab_queue_button_width">148dp</dimen>
-    <dimen name="tab_queue_container_width">@dimen/match_parent</dimen>
+    <dimen name="overlay_prompt_content_width">260dp</dimen>
+    <dimen name="overlay_prompt_button_width">148dp</dimen>
+    <dimen name="overlay_prompt_container_width">@dimen/match_parent</dimen>
 
     <!-- Site security icon -->
     <dimen name="browser_toolbar_site_security_height">@dimen/match_parent</dimen>
