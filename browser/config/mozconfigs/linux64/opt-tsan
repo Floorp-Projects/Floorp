@@ -1,0 +1,8 @@
+ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
+
+. $topsrcdir/build/unix/mozconfig.tsan
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=tsan
+
+. "$topsrcdir/build/mozconfig.common.override"
