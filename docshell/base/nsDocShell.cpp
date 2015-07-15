@@ -10423,6 +10423,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
         // Here we prevent navigating to an app or widget which loses its validity
         // by loading invalid page or other way.
         if (browserFrame && !browserFrame->GetReallyIsApp()) {
+          nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+          if (serv) {
+              serv->NotifyObservers(GetDocument(), "invalid-widget", nullptr);
+          }
           return NS_ERROR_MALFORMED_URI;
         }
       }
