@@ -74,7 +74,7 @@
             document.getAnonymousElementByAttribute(this, "anonid", "spacer");
           var isLTR =
            document.defaultView.getComputedStyle(this, null).direction == "ltr";
-          var startTime = window.mozAnimationStartTime;
+          var startTime = performance.now();
           var self = this;
 
           function nextStep(t) {
@@ -83,7 +83,7 @@
               if (!width) {
                 // Maybe we've been removed from the document.
                 if (self._alive)
-                  mozRequestAnimationFrame(nextStep);
+                  requestAnimationFrame(nextStep);
                 return;
               }
 
@@ -101,11 +101,11 @@
               spacer.width = width;
               spacer.left = width * position;
 
-              mozRequestAnimationFrame(nextStep);
+              requestAnimationFrame(nextStep);
             } catch (e) {
             }
           }
-          mozRequestAnimationFrame(nextStep);
+          requestAnimationFrame(nextStep);
         ]]></body>
       </method>
 

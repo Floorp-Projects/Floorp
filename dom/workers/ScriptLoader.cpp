@@ -66,7 +66,6 @@ using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::dom::Promise;
 using mozilla::dom::PromiseNativeHandler;
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
 using mozilla::ErrorResult;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::UniquePtr;
@@ -151,13 +150,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
   } else if (aIsMainScript) {
-    // If this script loader is being used to make a new worker then we need
-    // to do a same-origin check. Otherwise we need to clear the load with the
-    // security manager.
-    nsCString scheme;
-    rv = uri->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // We pass true as the 3rd argument to checkMayLoad here.
     // This allows workers in sandboxed documents to load data URLs
     // (and other URLs that inherit their principal from their
@@ -282,6 +274,8 @@ struct ScriptLoadInfo
   };
 
   CacheStatus mCacheStatus;
+
+  Maybe<bool> mMutedErrorFlag;
 
   bool Finished() const
   {
@@ -955,12 +949,33 @@ private:
 
     NS_ASSERTION(aString, "This should never be null!");
 
-    // Make sure we're not seeing the result of a 404 or something by checking
-    // the 'requestSucceeded' attribute on the http channel.
     nsCOMPtr<nsIRequest> request;
     nsresult rv = aLoader->GetRequest(getter_AddRefs(request));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    MOZ_ASSERT(channel);
+
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    NS_ASSERTION(ssm, "Should never be null!");
+
+    nsCOMPtr<nsIPrincipal> channelPrincipal;
+    rv = ssm->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+    if (!principal) {
+      WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
+      MOZ_ASSERT(parentWorker, "Must have a parent!");
+      principal = parentWorker->GetPrincipal();
+    }
+
+    aLoadInfo.mMutedErrorFlag.emplace(principal->Subsumes(channelPrincipal));
+
+    // Make sure we're not seeing the result of a 404 or something by checking
+    // the 'requestSucceeded' attribute on the http channel.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
     if (httpChannel) {
       bool requestSucceeded;
@@ -995,9 +1010,6 @@ private:
     } else if (!aLoadInfo.mScriptTextBuf) {
       return NS_ERROR_FAILURE;
     }
-
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    NS_ASSERTION(channel, "This should never fail!");
 
     // Figure out what we actually loaded.
     nsCOMPtr<nsIURI> finalURI;
@@ -1104,6 +1116,18 @@ private:
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
     MOZ_ASSERT(loadInfo.mCacheStatus == ScriptLoadInfo::Cached);
 
+    nsCOMPtr<nsIPrincipal> responsePrincipal =
+      PrincipalInfoToPrincipal(*aPrincipalInfo);
+
+    nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+    if (!principal) {
+      WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
+      MOZ_ASSERT(parentWorker, "Must have a parent!");
+      principal = parentWorker->GetPrincipal();
+    }
+
+    loadInfo.mMutedErrorFlag.emplace(principal->Subsumes(responsePrincipal));
+
     // May be null.
     nsIDocument* parentDoc = mWorkerPrivate->GetDocument();
 
@@ -1126,8 +1150,6 @@ private:
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
 
-      nsCOMPtr<nsIPrincipal> responsePrincipal =
-        PrincipalInfoToPrincipal(*aPrincipalInfo);
       mozilla::DebugOnly<bool> equal = false;
       MOZ_ASSERT(responsePrincipal && NS_SUCCEEDED(responsePrincipal->Equals(principal, &equal)));
       MOZ_ASSERT(equal);
@@ -1567,7 +1589,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
   return NS_OK;
 }
 
- class ChannelGetterRunnable final : public nsRunnable
+class ChannelGetterRunnable final : public nsRunnable
 {
   WorkerPrivate* mParentWorker;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
@@ -1719,6 +1741,9 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     if (mScriptLoader.mWorkerScriptType == DebuggerScript) {
       options.setVersion(JSVERSION_LATEST);
     }
+
+    MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
+    options.setMutedErrors(loadInfo.mMutedErrorFlag.valueOr(true));
 
     JS::SourceBufferHolder srcBuf(loadInfo.mScriptTextBuf,
                                   loadInfo.mScriptTextLength,

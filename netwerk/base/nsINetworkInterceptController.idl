@@ -26,7 +26,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(f2c07a6b-366d-4ef4-85ab-a77f4bcb1646)]
+[scriptable, uuid(1062c96a-d73c-4ad5-beb7-6e803e414973)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -59,7 +59,7 @@ interface nsIInterceptedChannel : nsISupports
      * @return NS_ERROR_FAILURE if the response has already been synthesized or
      *         the original request has been instructed to continue.
      */
-    void cancel();
+    void cancel(in nsresult status);
 
     /**
      * The synthesized response body to be produced.

@@ -39,6 +39,7 @@
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RootedDictionary.h"
@@ -2280,6 +2281,133 @@ ServiceWorkerManager::SendPushSubscriptionChangeEvent(const nsACString& aOriginA
 
   return NS_OK;
 #endif
+}
+
+class SendNotificationClickEventRunnable final : public WorkerRunnable
+{
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+  const nsString mID;
+  const nsString mTitle;
+  const nsString mDir;
+  const nsString mLang;
+  const nsString mBody;
+  const nsString mTag;
+  const nsString mIcon;
+  const nsString mData;
+  const nsString mBehavior;
+  const nsString mScope;
+
+public:
+  SendNotificationClickEventRunnable(
+    WorkerPrivate* aWorkerPrivate,
+    nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
+    const nsAString& aID,
+    const nsAString& aTitle,
+    const nsAString& aDir,
+    const nsAString& aLang,
+    const nsAString& aBody,
+    const nsAString& aTag,
+    const nsAString& aIcon,
+    const nsAString& aData,
+    const nsAString& aBehavior,
+    const nsAString& aScope)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+      , mServiceWorker(aServiceWorker)
+      , mID(aID)
+      , mTitle(aTitle)
+      , mDir(aDir)
+      , mLang(aLang)
+      , mBody(aBody)
+      , mTag(aTag)
+      , mIcon(aIcon)
+      , mData(aData)
+      , mBehavior(aBehavior)
+      , mScope(aScope)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+
+    nsRefPtr<EventTarget> target = do_QueryObject(aWorkerPrivate->GlobalScope());
+
+    ErrorResult result;
+    nsRefPtr<Notification> notification =
+      Notification::ConstructFromFields(aWorkerPrivate->GlobalScope(), mID,
+                                        mTitle, mDir, mLang, mBody, mTag, mIcon,
+                                        mData, mScope, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return false;
+    }
+
+    NotificationEventInit nei;
+    nei.mNotification = notification;
+    nei.mBubbles = false;
+    nei.mCancelable = true;
+
+    nsRefPtr<NotificationEvent> event =
+      NotificationEvent::Constructor(target, NS_LITERAL_STRING("notificationclick"), nei, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return false;
+    }
+
+    event->SetTrusted(true);
+    nsRefPtr<Promise> waitUntilPromise =
+      DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(), event);
+
+    if (waitUntilPromise) {
+      nsRefPtr<KeepAliveHandler> handler = new KeepAliveHandler(mServiceWorker);
+      waitUntilPromise->AppendNativeHandler(handler);
+    }
+
+    return true;
+  }
+};
+
+NS_IMETHODIMP
+ServiceWorkerManager::SendNotificationClickEvent(const nsACString& aOriginSuffix,
+                                                 const nsACString& aScope,
+                                                 const nsAString& aID,
+                                                 const nsAString& aTitle,
+                                                 const nsAString& aDir,
+                                                 const nsAString& aLang,
+                                                 const nsAString& aBody,
+                                                 const nsAString& aTag,
+                                                 const nsAString& aIcon,
+                                                 const nsAString& aData,
+                                                 const nsAString& aBehavior)
+{
+  OriginAttributes attrs;
+  if (!attrs.PopulateFromSuffix(aOriginSuffix)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsRefPtr<ServiceWorker> serviceWorker = CreateServiceWorkerForScope(attrs, aScope);
+  if (!serviceWorker) {
+    return NS_ERROR_FAILURE;
+  }
+  nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+    new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
+
+  nsRefPtr<SendNotificationClickEventRunnable> r =
+    new SendNotificationClickEventRunnable(serviceWorker->GetWorkerPrivate(),
+                                           serviceWorkerHandle, aID, aTitle,
+                                           aDir, aLang, aBody, aTag, aIcon,
+                                           aData, aBehavior,
+                                           NS_ConvertUTF8toUTF16(aScope));
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
