@@ -293,6 +293,7 @@ void
 MediaSourceDecoder::GetMozDebugReaderData(nsAString& aString)
 {
   if (mIsUsingFormatReader) {
+    mDemuxer->GetMozDebugReaderData(aString);
     return;
   }
   GetReader()->GetMozDebugReaderData(aString);
