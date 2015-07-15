@@ -11,13 +11,13 @@
  */
 
 /*
- * Created on Tue Apr  7 00:14:33 2015 from UCD data files with version info:
+ * Created on Mon Jul 13 19:06:12 2015 from UCD data files with version info:
  *
 
-# Date: 2014-06-12, 20:18:00 GMT [KW]
+# Date: 2015-06-16, 20:24:00 GMT [KW]
 #
 # Unicode Character Database
-# Copyright (c) 1991-2014 Unicode, Inc.
+# Copyright (c) 1991-2015 Unicode, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # For documentation, see the following:
@@ -25,32 +25,32 @@
 # UAX #38, "Unicode Han Database (Unihan)"
 # UAX #44, "Unicode Character Database."
 #
-# The UAXes can be accessed at http://www.unicode.org/versions/Unicode7.0.0/
+# The UAXes can be accessed at http://www.unicode.org/versions/Unicode8.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database, for Version 7.0.0 of the Unicode
+for the Unicode Character Database, for Version 8.0.0 of the Unicode
 Standard.
 
 
-# Scripts-7.0.0.txt
-# Date: 2014-05-15, 00:11:35 GMT [MD]
+# Scripts-8.0.0.txt
+# Date: 2015-03-11, 22:29:42 GMT [MD]
 
-# EastAsianWidth-7.0.0.txt
-# Date: 2014-02-28, 23:15:00 GMT [KW, LI]
+# EastAsianWidth-8.0.0.txt
+# Date: 2015-02-10, 21:00:00 GMT [KW, LI]
 
-# BidiMirroring-7.0.0.txt
-# Date: 2013-12-17, 00:00:00 GMT [KW, LI]
+# BidiMirroring-8.0.0.txt
+# Date: 2015-01-20, 18:30:00 GMT [KW, LI]
 
-# HangulSyllableType-7.0.0.txt
-# Date: 2013-11-27, 09:54:39 GMT [MD]
+# HangulSyllableType-8.0.0.txt
+# Date: 2014-12-16, 23:07:45 GMT [MD]
 
 # File: xidmodifications.txt
-# Version: 7.0.0
-# Generated: 2014-09-09, 13:36:12 GMT
+# Version: 8.0.0
+# Generated: 2015-05-17, 03:09:04 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2014-05-09 18:17:02 GMT [JHJ]
+# Date: 2015-04-30 18:38:20 GMT [JHJ]
 
 # VerticalOrientation-13.txt
 # Date: 2014-09-03, 17:30:00 GMT [EM, KI, LI]
@@ -213,9 +213,15 @@ enum {
   MOZ_SCRIPT_SIDDHAM = 123,
   MOZ_SCRIPT_TIRHUTA = 124,
   MOZ_SCRIPT_WARANG_CITI = 125,
-  MOZ_SCRIPT_MATHEMATICAL_NOTATION = 126,
+  MOZ_SCRIPT_AHOM = 126,
+  MOZ_SCRIPT_ANATOLIAN_HIEROGLYPHS = 127,
+  MOZ_SCRIPT_HATRAN = 128,
+  MOZ_SCRIPT_MULTANI = 129,
+  MOZ_SCRIPT_OLD_HUNGARIAN = 130,
+  MOZ_SCRIPT_SIGNWRITING = 131,
+  MOZ_SCRIPT_MATHEMATICAL_NOTATION = 132,
 
-  MOZ_NUM_SCRIPT_CODES = 127,
+  MOZ_NUM_SCRIPT_CODES = 133,
 
   MOZ_SCRIPT_INVALID = -1
 };
