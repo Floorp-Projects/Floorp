@@ -917,3 +917,7 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/GfxSanityTest.manifest
 @RESPATH@/components/SanityTest.js
 #endif
+
+#ifdef MOZ_MULET
+#include ../../b2g/installer/package-manifest.in
+#endif
