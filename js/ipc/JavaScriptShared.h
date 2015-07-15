@@ -107,7 +107,7 @@ class ObjectToIdMap
     typedef js::HashMap<JSObject*, ObjectId, Hasher, js::SystemAllocPolicy> Table;
 
   public:
-    ObjectToIdMap();
+    ObjectToIdMap(JSRuntime* rt);
     ~ObjectToIdMap();
 
     bool init();
@@ -122,7 +122,8 @@ class ObjectToIdMap
   private:
     static void keyMarkCallback(JSTracer* trc, JSObject* key, void* data);
 
-    Table* table_;
+    JSRuntime* rt_;
+    Table table_;
 };
 
 class Logging;
