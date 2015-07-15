@@ -49,7 +49,7 @@ class CacheStorage final : public nsIIPCBackgroundChildCreateCallback
 public:
   static already_AddRefed<CacheStorage>
   CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                     nsIPrincipal* aPrincipal, bool aPrivateBrowsing,
+                     nsIPrincipal* aPrincipal, bool aStorageDisabled,
                      bool aForceTrustedOrigin, ErrorResult& aRv);
 
   static already_AddRefed<CacheStorage>
