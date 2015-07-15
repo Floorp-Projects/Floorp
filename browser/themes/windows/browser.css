@@ -18,6 +18,8 @@
 %define conditionalForwardWithUrlbarWidth 30
 
 :root {
+  --space-above-tabbar: 15px;
+
   --toolbarbutton-hover-background: hsla(210,4%,10%,.08);
   --toolbarbutton-hover-bordercolor: hsla(210,4%,10%,.1);
   --toolbarbutton-hover-boxshadow: none;
@@ -67,7 +69,7 @@
 
 #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
 #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
-  margin-top: 15px;
+  margin-top: var(--space-above-tabbar);
 }
 
 #toolbar-menubar:not([autohide="true"]) {
