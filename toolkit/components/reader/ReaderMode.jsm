@@ -206,7 +206,7 @@ this.ReaderMode = {
         if (meta) {
           let content = meta.getAttribute("content");
           if (content) {
-            let urlIndex = content.indexOf("URL=");
+            let urlIndex = content.toUpperCase().indexOf("URL=");
             if (urlIndex > -1) {
               let url = content.substring(urlIndex + 4);
               this._downloadDocument(url).then((doc) => resolve(doc));
