@@ -143,6 +143,17 @@ nsScriptError::GetCategory(char** result) {
 }
 
 NS_IMETHODIMP
+nsScriptError::GetStack(JS::MutableHandleValue aStack) {
+    aStack.setUndefined();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::SetStack(JS::HandleValue aStack) {
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptError::Init(const nsAString& message,
                     const nsAString& sourceName,
                     const nsAString& sourceLine,
