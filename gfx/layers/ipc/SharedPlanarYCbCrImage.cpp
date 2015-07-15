@@ -37,9 +37,11 @@ SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
 
   if (mCompositable->GetAsyncID() != 0 &&
       !InImageBridgeChildThread()) {
-    ADDREF_MANUALLY(mTextureClient);
-    ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
-    mTextureClient = nullptr;
+    if (mTextureClient) {
+      ADDREF_MANUALLY(mTextureClient);
+      ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
+      mTextureClient = nullptr;
+    }
 
     ImageBridgeChild::DispatchReleaseImageClient(mCompositable.forget().take());
   }
