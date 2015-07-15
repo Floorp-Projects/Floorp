@@ -37,10 +37,14 @@ GetNativeFromGeckoAccessible(Accessible* aAccessible)
 }
 
 inline mozAccessible*
-GetNativeFromProxy(ProxyAccessible* aProxy)
+GetNativeFromProxy(const ProxyAccessible* aProxy)
 {
   return reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
 }
+
+ProxyAccessible* GetProxyUnignoredParent(const ProxyAccessible* aProxy);
+
+BOOL IsProxyIgnored(const ProxyAccessible* aProxy);
 
 } // a11y
 } // mozilla

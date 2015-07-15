@@ -76,6 +76,26 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+ProxyAccessible*
+a11y::GetProxyUnignoredParent(const ProxyAccessible* aProxy)
+{
+  ProxyAccessible* parent = aProxy->Parent();
+  while (parent && IsProxyIgnored(aProxy))
+    parent = parent->Parent();
+
+  return parent;
+}
+
+BOOL
+a11y::IsProxyIgnored(const ProxyAccessible* aProxy)
+{
+  mozAccessible* nativeObject = GetNativeFromProxy(aProxy);
+  if (!nativeObject)
+   return true;
+
+  return [nativeObject accessibilityIsIgnored];
+}
+
 // convert an array of Gecko accessibles to an NSArray of native accessibles
 static inline NSMutableArray*
 ConvertToNSArray(nsTArray<Accessible*>& aArray)
@@ -612,21 +632,34 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  Accessible* accessibleParent = accWrap->GetUnignoredParent();
-  if (accessibleParent) {
-    id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
+  id nativeParent = nil;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    Accessible* accessibleParent = accWrap->GetUnignoredParent();
+    if (accessibleParent)
+      nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
       return GetClosestInterestingAccessible(nativeParent);
+    // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
+    // the root accessible. so we'll have to return whatever native accessible is above our root accessible
+    // (which might be the owning NSWindow in the application, for example).
+    //
+    // get the native root accessible, and tell it to return its first parent unignored accessible.
+    nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    // Go up the chain to find a parent that is not ignored.
+    ProxyAccessible* accessibleParent = GetProxyUnignoredParent(proxy);
+    if (accessibleParent)
+      nativeParent = GetNativeFromProxy(accessibleParent);
+    if (nativeParent)
+      return GetClosestInterestingAccessible(nativeParent);
+
+    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    nativeParent = outerDoc ?
+      GetNativeFromGeckoAccessible(outerDoc->RootAccessible()) : nil;
+  } else {
+    return nil;
   }
 
-  // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
-  // the root accessible. so we'll have to return whatever native accessible is above our root accessible
-  // (which might be the owning NSWindow in the application, for example).
-  //
-  // get the native root accessible, and tell it to return its first parent unignored accessible.
-  id nativeParent =
-    GetNativeFromGeckoAccessible(accWrap->RootAccessible());
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
 
   return GetClosestInterestingAccessible(nativeParent);
