@@ -1681,7 +1681,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #notification-popup-box:not([hidden]) + #identity-box {
-  -moz-padding-start: 10px;
+  -moz-padding-start: 10px !important;
   border-radius: 0;
 }
 

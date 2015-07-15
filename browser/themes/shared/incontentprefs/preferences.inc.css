@@ -392,8 +392,8 @@ description > html|a {
   margin-right: 80px;
 }
 
-#fxaDeviceName {
-  margin: 14px 0px;
+#fxaSyncComputerName {
+  margin-left: 0px;
 }
 
 #fxaSyncComputerName.plain {

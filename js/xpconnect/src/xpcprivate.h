@@ -2995,7 +2995,7 @@ xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError final : public nsIScriptError {
+class nsScriptError : public nsIScriptError {
 public:
     nsScriptError();
 
@@ -3005,7 +3005,7 @@ public:
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
 
-private:
+protected:
     virtual ~nsScriptError();
 
     void
@@ -3026,6 +3026,30 @@ private:
     // thread from InitializeOnMainThread().
     mozilla::Atomic<bool> mInitializedOnMainThread;
     bool mIsFromPrivateWindow;
+};
+
+class nsScriptErrorWithStack : public nsScriptError {
+public:
+    explicit nsScriptErrorWithStack(JS::HandleObject);
+
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptErrorWithStack)
+
+    NS_IMETHOD Init(const nsAString& message,
+                    const nsAString& sourceName,
+                    const nsAString& sourceLine,
+                    uint32_t lineNumber,
+                    uint32_t columnNumber,
+                    uint32_t flags,
+                    const char* category) override;
+
+    NS_IMETHOD GetStack(JS::MutableHandleValue);
+
+private:
+    virtual ~nsScriptErrorWithStack();
+    // Complete stackframe where the error happened.
+    // Must be SavedFrame object.
+    JS::Heap<JSObject*>  mStack;
 };
 
 /******************************************************************************
