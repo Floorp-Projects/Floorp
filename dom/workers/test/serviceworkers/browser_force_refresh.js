@@ -17,6 +17,7 @@ function test() {
   SpecialPowers.pushPrefEnv({'set': [['dom.serviceWorkers.enabled', true],
                                      ['dom.serviceWorkers.exemptFromPerDomainMax', true],
                                      ['dom.serviceWorkers.testing.enabled', true],
+                                     ['dom.serviceWorkers.interception.enabled', true],
                                      ['dom.caches.enabled', true]]},
                             function() {
     var url = gTestRoot + 'browser_base_force_refresh.html';
