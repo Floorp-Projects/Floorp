@@ -10937,7 +10937,7 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
   }
 
   if (!mLocalStorage) {
-    if (!DOMStorage::CanUseStorage()) {
+    if (!DOMStorage::CanUseStorage(this)) {
       aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
@@ -10952,13 +10952,6 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
     if (NS_FAILED(rv)) {
       aError.Throw(rv);
-      return nullptr;
-    }
-
-    // If the document has the sandboxed origin flag set
-    // don't allow access to localStorage.
-    if (mDoc && (mDoc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
 
