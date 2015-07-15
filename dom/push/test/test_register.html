@@ -43,6 +43,16 @@ http://creativecommons.org/licenses/publicdomain/
     return p;
   }
 
+  function checkPermissionState(swr) {
+    return swr.pushManager.permissionState().then(function(state) {
+      ok(state === "granted", "permissionState() should resolve to granted.");
+      return swr;
+    }).catch(function(e) {
+      ok(false, "permissionState() should resolve to granted.");
+      return swr;
+    });
+  }
+
   function sendPushToPushServer(pushEndpoint) {
     // Work around CORS for now.
     var xhr = new XMLHttpRequest();
@@ -104,6 +114,7 @@ http://creativecommons.org/licenses/publicdomain/
   function runTest() {
     start()
     .then(createControlledIFrame)
+    .then(checkPermissionState)
     .then(setupPushNotification)
     .then(waitForPushNotification)
     .then(unregisterPushNotification)

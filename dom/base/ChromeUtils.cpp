@@ -11,15 +11,6 @@ namespace mozilla {
 namespace dom {
 
 /* static */ void
-ChromeUtils::OriginAttributesToCookieJar(GlobalObject& aGlobal,
-                                         const OriginAttributesDictionary& aAttrs,
-                                         nsCString& aCookieJar)
-{
-  OriginAttributes attrs(aAttrs);
-  attrs.CookieJar(aCookieJar);
-}
-
-/* static */ void
 ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
                                       const dom::OriginAttributesDictionary& aAttrs,
                                       nsCString& aSuffix)
@@ -27,6 +18,16 @@ ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
 {
   OriginAttributes attrs(aAttrs);
   attrs.CreateSuffix(aSuffix);
+}
+
+/* static */ bool
+ChromeUtils::OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
+                                          const dom::OriginAttributesDictionary& aAttrs,
+                                          const dom::OriginAttributesPatternDictionary& aPattern)
+{
+  OriginAttributes attrs(aAttrs);
+  OriginAttributesPattern pattern(aPattern);
+  return pattern.Matches(attrs);
 }
 
 } // namespace dom

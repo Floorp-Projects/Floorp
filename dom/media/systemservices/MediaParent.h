@@ -27,7 +27,8 @@ class NonE10s
 protected:
   virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
                                 const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing) = 0;
+                                const bool& aPrivateBrowsing,
+                                const bool& aPersist) = 0;
   virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen) = 0;
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) = 0;
@@ -45,7 +46,8 @@ public:
 
   virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
                                 const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing) override;
+                                const bool& aPrivateBrowsing,
+                                const bool& aPersist) override;
   virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -48,12 +48,43 @@ public:
   void CreateSuffix(nsACString& aStr) const;
   bool PopulateFromSuffix(const nsACString& aStr);
 
-  void CookieJar(nsACString& aStr);
-
   // Populates the attributes from a string like
   // |uri!key1=value1&key2=value2| and returns the uri without the suffix.
   bool PopulateFromOrigin(const nsACString& aOrigin,
                           nsACString& aOriginNoSuffix);
+};
+
+class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary
+{
+public:
+  // To convert a JSON string to an OriginAttributesPattern, do the following:
+  //
+  // OriginAttributesPattern pattern;
+  // if (!pattern.Init(aJSONString)) {
+  //   ... // handle failure.
+  // }
+  OriginAttributesPattern() {}
+
+  explicit OriginAttributesPattern(const OriginAttributesPatternDictionary& aOther)
+    : OriginAttributesPatternDictionary(aOther) {}
+
+  // Performs a match of |aAttrs| against this pattern.
+  bool Matches(const OriginAttributes& aAttrs) const
+  {
+    if (mAppId.WasPassed() && mAppId.Value() != aAttrs.mAppId) {
+      return false;
+    }
+
+    if (mInBrowser.WasPassed() && mInBrowser.Value() != aAttrs.mInBrowser) {
+      return false;
+    }
+
+    if (mAddonId.WasPassed() && mAddonId.Value() != aAttrs.mAddonId) {
+      return false;
+    }
+
+    return true;
+  }
 };
 
 /*
@@ -84,7 +115,6 @@ public:
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) final;
   NS_IMETHOD GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) final;
   NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
-  NS_IMETHOD GetCookieJar(nsACString& aCookieJar) final;
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) final;
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) final;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) final;

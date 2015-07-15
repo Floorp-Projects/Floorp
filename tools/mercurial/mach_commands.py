@@ -49,8 +49,12 @@ class VersionControlCommands(object):
         # We put this before main command logic because the command can
         # persistently fail and we want people to get credit for the
         # intention, not whether the command is bug free.
-        state_path = os.path.join(self._context.state_dir,
-            'mercurial/setup.lastcheck')
+        state_dir = os.path.join(self._context.state_dir, 'mercurial')
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
+
+        state_path = os.path.join(state_dir, 'setup.lastcheck')
+
         with open(state_path, 'a'):
             os.utime(state_path, None)
 

@@ -268,12 +268,6 @@ protected:
     // maintains explicit mappings of fullname/psname ==> font
     virtual gfxFontEntry* LookupInFaceNameLists(const nsAString& aFontName);
 
-    static PLDHashOperator LookupMissedFaceNamesProc(nsStringHashKey *aKey,
-                                                     void *aUserArg);
-
-    static PLDHashOperator LookupMissedOtherNamesProc(nsStringHashKey *aKey,
-                                                      void *aUserArg);
-
     // commonly used fonts for which the name table should be loaded at startup
     virtual void PreloadNamesList();
 
@@ -299,6 +293,8 @@ protected:
 
     // for font list changes that affect all documents
     void ForceGlobalReflow();
+
+    void RebuildLocalFonts();
 
     // used by memory reporter to accumulate sizes of family names in the hash
     static size_t

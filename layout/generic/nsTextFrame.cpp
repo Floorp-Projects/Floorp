@@ -4958,6 +4958,12 @@ nsTextFrame::GetTextDecorations(
     if (f->IsFloating() || f->IsAbsolutelyPositioned()) {
       break;
     }
+
+    // If we're an outer <svg> element, which is classified as an atomic
+    // inline-level element, we're done.
+    if (f->GetType() == nsGkAtoms::svgOuterSVGFrame) {
+      break;
+    }
   }
 }
 

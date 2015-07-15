@@ -4,12 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGL2Context.h"
+
 #include "GLContext.h"
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "nsRefPtr.h"
+#include "WebGLBuffer.h"
 #include "WebGLContext.h"
 #include "WebGLProgram.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
-#include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
 namespace mozilla {
 
@@ -543,7 +546,7 @@ WebGL2Context::GetUniformBlockIndex(WebGLProgram* program,
 void
 WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* program,
                                               GLuint uniformBlockIndex, GLenum pname,
-                                              Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
+                                              dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
                                               ErrorResult& rv)
 {
     retval.SetNull();

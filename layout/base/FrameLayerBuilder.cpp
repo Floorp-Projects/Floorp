@@ -51,6 +51,41 @@ class PaintedDisplayItemLayerUserData;
 
 static nsTHashtable<nsPtrHashKey<FrameLayerBuilder::DisplayItemData>>* sAliveDisplayItemDatas;
 
+/**
+ * The address of gPaintedDisplayItemLayerUserData is used as the user
+ * data key for PaintedLayers created by FrameLayerBuilder.
+ * It identifies PaintedLayers used to draw non-layer content, which are
+ * therefore eligible for recycling. We want display items to be able to
+ * create their own dedicated PaintedLayers in BuildLayer, if necessary,
+ * and we wouldn't want to accidentally recycle those.
+ * The user data is a PaintedDisplayItemLayerUserData.
+ */
+uint8_t gPaintedDisplayItemLayerUserData;
+/**
+ * The address of gColorLayerUserData is used as the user
+ * data key for ColorLayers created by FrameLayerBuilder.
+ * The user data is null.
+ */
+uint8_t gColorLayerUserData;
+/**
+ * The address of gImageLayerUserData is used as the user
+ * data key for ImageLayers created by FrameLayerBuilder.
+ * The user data is null.
+ */
+uint8_t gImageLayerUserData;
+/**
+ * The address of gLayerManagerUserData is used as the user
+ * data key for retained LayerManagers managed by FrameLayerBuilder.
+ * The user data is a LayerManagerData.
+ */
+uint8_t gLayerManagerUserData;
+/**
+ * The address of gMaskLayerUserData is used as the user
+ * data key for mask layers managed by FrameLayerBuilder.
+ * The user data is a MaskLayerUserData.
+ */
+uint8_t gMaskLayerUserData;
+
 FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
                                                     Layer* aLayer, nsIFrame* aFrame)
 
@@ -222,11 +257,57 @@ public:
 #ifdef DEBUG_DISPLAY_ITEM_DATA
   void Dump(const char *aPrefix = "") {
     printf_stderr("%sLayerManagerData %p\n", aPrefix, this);
-    nsAutoCString prefix;
-    prefix += aPrefix;
-    prefix += "  ";
-    mDisplayItems.EnumerateEntries(
-        FrameLayerBuilder::DumpDisplayItemDataForFrame, (void*)prefix.get());
+
+    for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
+      FrameLayerBuilder::DisplayItemData* data = iter.Get()->GetKey();
+
+      nsAutoCString prefix;
+      prefix += aPrefix;
+      prefix += "  ";
+
+      const char* layerState;
+      switch (data->mLayerState) {
+      case LAYER_NONE:
+        layerState = "LAYER_NONE"; break;
+      case LAYER_INACTIVE:
+        layerState = "LAYER_INACTIVE"; break;
+      case LAYER_ACTIVE:
+        layerState = "LAYER_ACTIVE"; break;
+      case LAYER_ACTIVE_FORCE:
+        layerState = "LAYER_ACTIVE_FORCE"; break;
+      case LAYER_ACTIVE_EMPTY:
+        layerState = "LAYER_ACTIVE_EMPTY"; break;
+      case LAYER_SVG_EFFECTS:
+        layerState = "LAYER_SVG_EFFECTS"; break;
+      }
+      uint32_t mask = (1 << nsDisplayItem::TYPE_BITS) - 1;
+
+      nsAutoCString str;
+      str += prefix;
+      str += nsPrintfCString("Frame %p ", data->mFrameList[0]);
+      str += nsDisplayItem::DisplayItemTypeName(static_cast<nsDisplayItem::Type>(data->mDisplayItemKey & mask));
+      if ((data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS)) {
+        str += nsPrintfCString("(%i)", data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS);
+      }
+      str += nsPrintfCString(", %s, Layer %p", layerState, data->mLayer.get());
+      if (data->mOptLayer) {
+        str += nsPrintfCString(", OptLayer %p", data->mOptLayer.get());
+      }
+      if (data->mInactiveManager) {
+        str += nsPrintfCString(", InactiveLayerManager %p", data->mInactiveManager.get());
+      }
+      str += "\n";
+
+      printf_stderr("%s", str.get());
+
+      if (data->mInactiveManager) {
+        prefix += "  ";
+        printf_stderr("%sDumping inactive layer info:\n", prefix.get());
+        LayerManagerData* lmd = static_cast<LayerManagerData*>
+          (data->mInactiveManager->GetUserData(&gLayerManagerUserData));
+        lmd->Dump(prefix.get());
+      }
+    }
   }
 #endif
 
@@ -1393,41 +1474,6 @@ struct MaskLayerUserData : public LayerUserData
 };
 
 /**
- * The address of gPaintedDisplayItemLayerUserData is used as the user
- * data key for PaintedLayers created by FrameLayerBuilder.
- * It identifies PaintedLayers used to draw non-layer content, which are
- * therefore eligible for recycling. We want display items to be able to
- * create their own dedicated PaintedLayers in BuildLayer, if necessary,
- * and we wouldn't want to accidentally recycle those.
- * The user data is a PaintedDisplayItemLayerUserData.
- */
-uint8_t gPaintedDisplayItemLayerUserData;
-/**
- * The address of gColorLayerUserData is used as the user
- * data key for ColorLayers created by FrameLayerBuilder.
- * The user data is null.
- */
-uint8_t gColorLayerUserData;
-/**
- * The address of gImageLayerUserData is used as the user
- * data key for ImageLayers created by FrameLayerBuilder.
- * The user data is null.
- */
-uint8_t gImageLayerUserData;
-/**
- * The address of gLayerManagerUserData is used as the user
- * data key for retained LayerManagers managed by FrameLayerBuilder.
- * The user data is a LayerManagerData.
- */
-uint8_t gLayerManagerUserData;
-/**
- * The address of gMaskLayerUserData is used as the user
- * data key for mask layers managed by FrameLayerBuilder.
- * The user data is a MaskLayerUserData.
- */
-uint8_t gMaskLayerUserData;
-
-/**
   * Helper functions for getting user data and casting it to the correct type.
   * aLayer is the layer where the user data is stored.
   */
@@ -1693,94 +1739,32 @@ FrameLayerBuilder::WillEndTransaction()
   LayerManagerData* data = static_cast<LayerManagerData*>
     (mRetainingManager->GetUserData(&gLayerManagerUserData));
   NS_ASSERTION(data, "Must have data!");
+
   // Update all the frames that used to have layers.
-  data->mDisplayItems.EnumerateEntries(ProcessRemovedDisplayItems, this);
-  data->mInvalidateAllLayers = false;
-}
-
-/* static */ PLDHashOperator
-FrameLayerBuilder::ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* aEntry,
-                                              void* aUserArg)
-{
-  DisplayItemData* data = aEntry->GetKey();
-  FrameLayerBuilder* layerBuilder = static_cast<FrameLayerBuilder*>(aUserArg);
-  if (!data->mUsed) {
-    // This item was visible, but isn't anymore.
-
-    PaintedLayer* t = data->mLayer->AsPaintedLayer();
-    if (t && data->mGeometry) {
+  for (auto iter = data->mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
+    DisplayItemData* data = iter.Get()->GetKey();
+    if (!data->mUsed) {
+      // This item was visible, but isn't anymore.
+      PaintedLayer* t = data->mLayer->AsPaintedLayer();
+      if (t && data->mGeometry) {
 #ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+        }
+#endif
+        InvalidatePostTransformRegion(t,
+                                      data->mGeometry->ComputeInvalidationRegion(),
+                                      data->mClip,
+                                      GetLastPaintOffset(t));
       }
-#endif
-      InvalidatePostTransformRegion(t,
-                                    data->mGeometry->ComputeInvalidationRegion(),
-                                    data->mClip,
-                                    layerBuilder->GetLastPaintOffset(t));
+
+      iter.Remove();
+    } else {
+      ComputeGeometryChangeForItem(data);
     }
-    return PL_DHASH_REMOVE;
-  } else {
-    layerBuilder->ComputeGeometryChangeForItem(data);
   }
 
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-FrameLayerBuilder::DumpDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>* aEntry,
-                                               void* aClosure)
-{
-#ifdef DEBUG_DISPLAY_ITEM_DATA
-  DisplayItemData *data = aEntry->GetKey();
-
-  nsAutoCString prefix;
-  prefix += static_cast<const char*>(aClosure);
-
-  const char *layerState;
-  switch (data->mLayerState) {
-    case LAYER_NONE:
-      layerState = "LAYER_NONE"; break;
-    case LAYER_INACTIVE:
-      layerState = "LAYER_INACTIVE"; break;
-    case LAYER_ACTIVE:
-      layerState = "LAYER_ACTIVE"; break;
-    case LAYER_ACTIVE_FORCE:
-      layerState = "LAYER_ACTIVE_FORCE"; break;
-    case LAYER_ACTIVE_EMPTY:
-      layerState = "LAYER_ACTIVE_EMPTY"; break;
-    case LAYER_SVG_EFFECTS:
-      layerState = "LAYER_SVG_EFFECTS"; break;
-  }
-  uint32_t mask = (1 << nsDisplayItem::TYPE_BITS) - 1;
-
-  nsAutoCString str;
-  str += prefix;
-  str += nsPrintfCString("Frame %p ", data->mFrameList[0]);
-  str += nsDisplayItem::DisplayItemTypeName(static_cast<nsDisplayItem::Type>(data->mDisplayItemKey & mask));
-  if ((data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS)) {
-    str += nsPrintfCString("(%i)", data->mDisplayItemKey >> nsDisplayItem::TYPE_BITS);
-  }
-  str += nsPrintfCString(", %s, Layer %p", layerState, data->mLayer.get());
-  if (data->mOptLayer) {
-    str += nsPrintfCString(", OptLayer %p", data->mOptLayer.get());
-  }
-  if (data->mInactiveManager) {
-    str += nsPrintfCString(", InactiveLayerManager %p", data->mInactiveManager.get());
-  }
-  str += "\n";
-
-  printf_stderr("%s", str.get());
-
-  if (data->mInactiveManager) {
-    prefix += "  ";
-    printf_stderr("%sDumping inactive layer info:\n", prefix.get());
-    LayerManagerData* lmd = static_cast<LayerManagerData*>
-      (data->mInactiveManager->GetUserData(&gLayerManagerUserData));
-    lmd->Dump(prefix.get());
-  }
-#endif
-  return PL_DHASH_NEXT;
+  data->mInvalidateAllLayers = false;
 }
 
 /* static */ FrameLayerBuilder::DisplayItemData*
@@ -4944,41 +4928,6 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   return true;
 }
 
-/* static */ PLDHashOperator
-FrameLayerBuilder::RestoreDisplayItemData(nsRefPtrHashKey<DisplayItemData>* aEntry, void* aUserArg)
-{
-  DisplayItemData* data = aEntry->GetKey();
-  uint32_t *generation = static_cast<uint32_t*>(aUserArg);
-
-  if (data->mUsed && data->mContainerLayerGeneration >= *generation) {
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-FrameLayerBuilder::RestorePaintedLayerItemEntries(PaintedLayerItemsEntry* aEntry, void* aUserArg)
-{
-  uint32_t *generation = static_cast<uint32_t*>(aUserArg);
-
-  if (aEntry->mContainerLayerGeneration >= *generation) {
-    // We can just remove these items rather than attempting to revert them
-    // because we're going to want to invalidate everything when transitioning
-    // to component alpha flattening.
-    return PL_DHASH_REMOVE;
-  }
-
-  for (uint32_t i = 0; i < aEntry->mItems.Length(); i++) {
-    if (aEntry->mItems[i].mContainerLayerGeneration >= *generation) {
-      aEntry->mItems.TruncateLength(i);
-      return PL_DHASH_NEXT;
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 already_AddRefed<ContainerLayer>
 FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aManager,
@@ -5126,10 +5075,34 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       // We restore the previous FrameLayerBuilder state since the first set
       // of layer building will have changed it.
       flattenToSingleLayer = true;
-      data->mDisplayItems.EnumerateEntries(RestoreDisplayItemData,
-                                           &mContainerLayerGeneration);
-      mPaintedLayerItems.EnumerateEntries(RestorePaintedLayerItemEntries,
-                                         &mContainerLayerGeneration);
+
+      // Restore DisplayItemData
+      for (auto iter = data->mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
+        DisplayItemData* data = iter.Get()->GetKey();
+        if (data->mUsed && data->mContainerLayerGeneration >= mContainerLayerGeneration) {
+          iter.Remove();
+        }
+      }
+
+      // Restore PaintedLayerItemEntries
+      for (auto iter = mPaintedLayerItems.Iter(); !iter.Done(); iter.Next()) {
+        PaintedLayerItemsEntry* entry = iter.Get();
+        if (entry->mContainerLayerGeneration >= mContainerLayerGeneration) {
+          // We can just remove these items rather than attempting to revert them
+          // because we're going to want to invalidate everything when transitioning
+          // to component alpha flattening.
+          iter.Remove();
+          continue;
+        }
+
+        for (uint32_t i = 0; i < entry->mItems.Length(); i++) {
+          if (entry->mItems[i].mContainerLayerGeneration >= mContainerLayerGeneration) {
+            entry->mItems.TruncateLength(i);
+            break;
+          }
+        }
+      }
+
       aContainerFrame->AddStateBits(NS_FRAME_NO_COMPONENT_ALPHA);
       continue;
     }

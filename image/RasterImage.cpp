@@ -265,7 +265,6 @@ RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
   mFrameCount(0),
   mRetryCount(0),
   mHasSize(false),
-  mDecodeOnlyOnDraw(false),
   mTransient(false),
   mSyncLoad(false),
   mDiscardable(false),
@@ -308,18 +307,15 @@ RasterImage::Init(const char* aMimeType,
 
   NS_ENSURE_ARG_POINTER(aMimeType);
 
-  // We must be non-discardable and non-decode-only-on-draw for
-  // transient images.
+  // We want to avoid redecodes for transient images.
   MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
                (!(aFlags & INIT_FLAG_DISCARDABLE) &&
-                !(aFlags & INIT_FLAG_DECODE_ONLY_ON_DRAW) &&
                 !(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE)),
              "Illegal init flags for transient image");
 
   // Store initialization data
   mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
-  mDecodeOnlyOnDraw = !!(aFlags & INIT_FLAG_DECODE_ONLY_ON_DRAW);
   mWantFullDecode = !!(aFlags & INIT_FLAG_DECODE_IMMEDIATELY);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
   mDownscaleDuringDecode = !!(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE);
@@ -1260,13 +1256,6 @@ RasterImage::NotifyForLoadEvent(Progress aProgress)
              (mProgressTracker->GetProgress() & FLAG_SIZE_AVAILABLE),
              "Should have notified that the size is available if we have it");
 
-  if (mDecodeOnlyOnDraw) {
-    // For decode-only-on-draw images, we want to send notifications as if we've
-    // already finished decoding. Otherwise some observers will never even try
-    // to draw.
-    aProgress |= FLAG_FRAME_COMPLETE | FLAG_DECODE_COMPLETE;
-  }
-
   // If we encountered an error, make sure we notify for that as well.
   if (mError) {
     aProgress |= FLAG_HAS_ERROR;
@@ -1538,11 +1527,6 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
 NS_IMETHODIMP
 RasterImage::RequestDecode()
 {
-  // For decode-only-on-draw images, we only act on RequestDecodeForSize.
-  if (mDecodeOnlyOnDraw) {
-    return NS_OK;
-  }
-
   return RequestDecodeForSize(mSize, DECODE_FLAGS_DEFAULT);
 }
 
@@ -1550,11 +1534,6 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
-  // For decode-only-on-draw images, we only act on RequestDecodeForSize.
-  if (mDecodeOnlyOnDraw) {
-    return NS_OK;
-  }
-
   return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE_IF_FAST);
 }
 

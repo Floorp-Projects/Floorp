@@ -39,7 +39,11 @@ PushNotificationService.prototype = {
                                          Ci.nsIPushNotificationService]),
 
   register: function register(scope, originAttributes) {
-    return PushService._register({scope, originAttributes});
+    return PushService._register({
+      scope: scope,
+      originAttributes: originAttributes,
+      maxQuota: Infinity,
+    });
   },
 
   unregister: function unregister(scope, originAttributes) {

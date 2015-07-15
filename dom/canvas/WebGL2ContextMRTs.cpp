@@ -6,8 +6,7 @@
 #include "WebGL2Context.h"
 #include "GLContext.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 bool WebGL2Context::ValidateClearBuffer(const char* info, GLenum buffer, GLint drawbuffer, size_t elemCount)
 {
@@ -140,3 +139,5 @@ WebGL2Context::ClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLi
     MakeContextCurrent();
     gl->fClearBufferfi(buffer, drawbuffer, depth, stencil);
 }
+
+} // namespace mozilla

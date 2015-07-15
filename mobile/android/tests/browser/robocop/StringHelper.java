@@ -144,6 +144,8 @@ public class StringHelper {
 
     // Privacy
     public final String TRACKING_PROTECTION_LABEL;
+    public final String TRACKING_PROTECTION_PROMPT_TITLE;
+    public final String TRACKING_PROTECTION_PROMPT_BUTTON;
     public final String DNT_LABEL;
     public final String COOKIES_LABEL;
     public final String REMEMBER_LOGINS_LABEL;
@@ -327,6 +329,8 @@ public class StringHelper {
 
         // Privacy
         TRACKING_PROTECTION_LABEL = res.getString(R.string.pref_tracking_protection_title);
+        TRACKING_PROTECTION_PROMPT_TITLE = res.getString(R.string.tracking_protection_prompt_title);
+        TRACKING_PROTECTION_PROMPT_BUTTON = res.getString(R.string.tracking_protection_prompt_action_button);
         DNT_LABEL = res.getString(R.string.pref_donottrack_title);
         COOKIES_LABEL = res.getString(R.string.pref_cookies_menu);
         REMEMBER_LOGINS_LABEL = res.getString(R.string.pref_remember_signons);

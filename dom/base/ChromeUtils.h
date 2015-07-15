@@ -41,14 +41,14 @@ class ChromeUtils : public ThreadSafeChromeUtils
 {
 public:
   static void
-  OriginAttributesToCookieJar(dom::GlobalObject& aGlobal,
-                              const dom::OriginAttributesDictionary& aAttrs,
-                              nsCString& aCookieJar);
-
-  static void
   OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
                            const dom::OriginAttributesDictionary& aAttrs,
                            nsCString& aSuffix);
+
+  static bool
+  OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
+                               const dom::OriginAttributesDictionary& aAttrs,
+                               const dom::OriginAttributesPatternDictionary& aPattern);
 };
 
 } // namespace dom
