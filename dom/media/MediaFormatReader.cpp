@@ -526,7 +526,8 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(), "No sample requests allowed while seeking");
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise(), "No duplicate sample requests");
-  MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists());
+  MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists() ||
+                        mVideo.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!mSkipRequest.Exists(), "called mid-skipping");
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
   LOGV("RequestVideoData(%d, %lld)", aSkipToNextKeyframe, aTimeThreshold);
@@ -623,7 +624,8 @@ MediaFormatReader::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(), "No sample requests allowed while seeking");
-  MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists());
+  MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists() ||
+                        mAudio.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise(), "No duplicate sample requests");
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
   LOGV("");
@@ -754,6 +756,7 @@ MediaFormatReader::NeedInput(DecoderData& aDecoder)
   // run of input than we input, decoders fire an "input exhausted" callback,
   // which overrides our "few more samples" threshold.
   return
+    !aDecoder.mDraining &&
     !aDecoder.mError &&
     (aDecoder.HasPromise() || aDecoder.mForceDecodeAhead) &&
     !aDecoder.mDemuxRequest.Exists() &&
@@ -964,12 +967,13 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
 
   auto& decoder = GetDecoderData(aTrack);
-  if (!decoder.mNeedDraining) {
+  if (!decoder.mNeedDraining || decoder.mDraining) {
     return;
   }
   decoder.mOutputRequested = true;
   decoder.mDecoder->Drain();
   decoder.mNeedDraining = false;
+  decoder.mDraining = true;
   LOG("Requesting %s decoder to drain", TrackTypeToStr(aTrack));
 }
 
@@ -1024,6 +1028,7 @@ MediaFormatReader::Update(TrackType aTrack)
       }
     } else if (decoder.mDrainComplete) {
       decoder.mDrainComplete = false;
+      decoder.mDraining = false;
       if (decoder.mError) {
         LOG("Decoding Error");
         decoder.RejectPromise(DECODE_ERROR, __func__);
