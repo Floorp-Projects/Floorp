@@ -90,6 +90,10 @@ function run_test() {
   checkOriginAttributes(exampleCom_appBrowser, 42, true, '!appId=42&inBrowser=1');
   do_check_eq(exampleCom_appBrowser.origin, 'https://www.example.com:123!appId=42&inBrowser=1');
 
+  // Make sure that we refuse to create .origin for principals with UNKNOWN_APP_ID.
+  var simplePrin = ssm.getSimpleCodebasePrincipal(makeURI('http://example.com'));
+  try { simplePrin.origin; do_check_true(false); } catch (e) { do_check_true(true); }
+
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
   checkCrossOrigin(exampleOrg_app, nullPrin_app);
