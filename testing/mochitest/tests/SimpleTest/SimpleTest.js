@@ -255,7 +255,15 @@ SimpleTest.ok = function (condition, name, diag) {
       var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
       var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
     }
-    SimpleTest._logResult(test, successInfo, failureInfo);
+
+    var stack = null;
+    if (!condition) {
+      stack = (new Error).stack.replace(/^(.*@)http:\/\/mochi.test:8888\/tests\//gm, '    $1').split('\n');
+      stack.splice(0, 1);
+      stack = stack.join('\n');
+    }
+
+    SimpleTest._logResult(test, successInfo, failureInfo, stack);
     SimpleTest._tests.push(test);
 };
 
@@ -346,7 +354,7 @@ SimpleTest.requestCompleteLog = function() {
     });
 };
 
-SimpleTest._logResult = function (test, passInfo, failInfo) {
+SimpleTest._logResult = function (test, passInfo, failInfo, stack) {
     var url = SimpleTest._getCurrentTestURL();
     var result = test.result ? passInfo : failInfo;
     var diagnostic = test.diag || null;
@@ -370,7 +378,8 @@ SimpleTest._logResult = function (test, passInfo, failInfo) {
                                                  subtest,
                                                  result.status,
                                                  result.expected,
-                                                 diagnostic);
+                                                 diagnostic,
+                                                 stack);
     } else if (typeof dump === "function") {
         var diagMessage = test.name + (test.diag ? " - " + test.diag : "");
         var debugMsg = [result.message, url, diagMessage].join(' | ');

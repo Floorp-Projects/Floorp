@@ -141,7 +141,7 @@ function StructuredLogger(name) {
         this._logData("test_start", data);
     };
 
-    this.testStatus = function(test, subtest, status, expected="PASS", message=null) {
+    this.testStatus = function(test, subtest, status, expected="PASS", message=null, stack=null) {
         // Bugfix for assertions not passing an assertion name
         if (subtest === null || subtest === undefined) {
             subtest = "undefined assertion name";
@@ -154,6 +154,9 @@ function StructuredLogger(name) {
         }
         if (expected != status && status != 'SKIP') {
             data.expected = expected;
+        }
+        if (stack) {
+            data.stack = stack;
         }
 
         this._logData("test_status", data);
