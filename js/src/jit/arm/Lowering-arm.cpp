@@ -685,10 +685,10 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 
     if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSCompareExchangeCallout* lir =
-            new(alloc()) LAsmJSCompareExchangeCallout(useRegister(ptr),
-                                                      useRegister(ins->oldValue()),
-                                                      useRegister(ins->newValue()));
-        defineFixed(lir, ins, LAllocation(AnyRegister(ReturnReg)));
+            new(alloc()) LAsmJSCompareExchangeCallout(useRegisterAtStart(ptr),
+                                                      useRegisterAtStart(ins->oldValue()),
+                                                      useRegisterAtStart(ins->newValue()));
+        defineReturn(lir, ins);
         return;
     }
 
@@ -706,14 +706,12 @@ LIRGeneratorARM::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
     MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
 
-    const LAllocation ptr = useRegister(ins->ptr());
-    const LAllocation value = useRegister(ins->value());
+    const LAllocation ptr = useRegisterAtStart(ins->ptr());
+    const LAllocation value = useRegisterAtStart(ins->value());
 
     if (byteSize(ins->accessType()) < 4 && !HasLDSTREXBHD()) {
         // Call out on ARMv6.
-        defineFixed(new(alloc()) LAsmJSAtomicExchangeCallout(ptr, value),
-                    ins,
-                    LAllocation(AnyRegister(ReturnReg)));
+        defineReturn(new(alloc()) LAsmJSAtomicExchangeCallout(ptr, value), ins);
         return;
     }
 
@@ -730,8 +728,9 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
         LAsmJSAtomicBinopCallout* lir =
-            new(alloc()) LAsmJSAtomicBinopCallout(useRegister(ptr), useRegister(ins->value()));
-        defineFixed(lir, ins, LAllocation(AnyRegister(ReturnReg)));
+            new(alloc()) LAsmJSAtomicBinopCallout(useRegisterAtStart(ptr),
+                                                  useRegisterAtStart(ins->value()));
+        defineReturn(lir, ins);
         return;
     }
 
