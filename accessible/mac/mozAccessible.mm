@@ -86,6 +86,27 @@ a11y::GetProxyUnignoredParent(const ProxyAccessible* aProxy)
   return parent;
 }
 
+void
+a11y::GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
+                                nsTArray<ProxyAccessible*>* aChildrenArray)
+{
+  if (aProxy->MustPruneChildren())
+    return;
+
+  uint32_t childCount = aProxy->ChildrenCount();
+  for (size_t childIdx = 0; childIdx < childCount; childIdx++) {
+    ProxyAccessible* childProxy = aProxy->ChildAt(childIdx);
+
+    // If element is ignored, then add its children as substitutes.
+    if (IsProxyIgnored(childProxy)) {
+      GetProxyUnignoredChildren(aProxy, aChildrenArray);
+      continue;
+    }
+
+    aChildrenArray->AppendElement(childProxy);
+  }
+}
+
 BOOL
 a11y::IsProxyIgnored(const ProxyAccessible* aProxy)
 {
@@ -103,10 +124,28 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
   // iterate through the list, and get each native accessible.
-  uint32_t totalCount = aArray.Length();
-  for (uint32_t i = 0; i < totalCount; i++) {
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
     Accessible* curAccessible = aArray.ElementAt(i);
     mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
+// convert an array of Gecko proxy accessibles to an NSArray of native accessibles
+static inline NSMutableArray*
+ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
+{
+  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    ProxyAccessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromProxy(curAccessible);
     if (curNative)
       [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
   }
@@ -689,13 +728,19 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (mChildren || !accWrap->AreChildrenCached())
+  if (mChildren || (accWrap && !accWrap->AreChildrenCached()))
     return mChildren;
 
   // get the array of children.
-  nsAutoTArray<Accessible*, 10> childrenArray;
-  accWrap->GetUnignoredChildren(&childrenArray);
-  mChildren = ConvertToNSArray(childrenArray);
+  if (accWrap) {
+    nsAutoTArray<Accessible*, 10> childrenArray;
+    accWrap->GetUnignoredChildren(&childrenArray);
+    mChildren = ConvertToNSArray(childrenArray);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    nsAutoTArray<ProxyAccessible*, 10> childrenArray;
+    GetProxyUnignoredChildren(proxy, &childrenArray);
+    mChildren = ConvertToNSArray(childrenArray);
+  }
 
 #ifdef DEBUG_hakan
   // make sure we're not returning any ignored accessibles.
