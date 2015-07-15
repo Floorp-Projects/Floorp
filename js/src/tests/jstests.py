@@ -138,6 +138,8 @@ def parse_args():
     input_og.add_option('--no-extensions', action='store_true',
                         help='Run only tests conforming to the ECMAScript 5'
                         ' standard.')
+    input_og.add_option('--repeat', type=int, default=1,
+                        help='Repeat tests the given number of times.')
     op.add_option_group(input_og)
 
     output_og = OptionGroup(op, "Output",
@@ -322,6 +324,14 @@ def load_tests(options, requested_paths, excluded_paths):
 
     if not options.run_slow_tests:
         test_gen = (_ for _ in test_gen if not _.slow)
+
+    if options.repeat:
+        def repeat_gen(tests):
+            for test in tests:
+                for i in range(options.repeat):
+                    yield test
+        test_gen = repeat_gen(test_gen)
+        test_count *= options.repeat
 
     return test_count, test_gen
 
