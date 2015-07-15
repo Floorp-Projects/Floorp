@@ -207,8 +207,7 @@ NS_IMPL_ADDREF(AudioChannelService)
 NS_IMPL_RELEASE(AudioChannelService)
 
 AudioChannelService::AudioChannelService()
-  : mDisabled(false)
-  , mDefChannelChildID(CONTENT_PROCESS_ID_UNKNOWN)
+  : mDefChannelChildID(CONTENT_PROCESS_ID_UNKNOWN)
   , mTelephonyChannel(false)
   , mContentOrNormalChannel(false)
   , mAnyChannel(false)
@@ -238,10 +237,6 @@ void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                AudioChannel aChannel)
 {
-  if (mDisabled) {
-    return;
-  }
-
   uint64_t windowID = aAgent->WindowID();
   AudioChannelWindow* winData = GetWindowData(windowID);
   if (!winData) {
@@ -272,10 +267,6 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
 void
 AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
-  if (mDisabled) {
-    return;
-  }
-
   AudioChannelWindow* winData = GetWindowData(aAgent->WindowID());
   if (!winData) {
     return;
@@ -466,8 +457,8 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
                              const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
-    mDisabled = true;
     mWindows.Clear();
+    Shutdown();
   }
 
 #ifdef MOZ_WIDGET_GONK
