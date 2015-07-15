@@ -99,6 +99,7 @@ MediaFormatReader::Shutdown()
   MOZ_ASSERT(OnTaskQueue());
 
   mDemuxerInitRequest.DisconnectIfExists();
+  mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
   mSeekPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
   mSkipRequest.DisconnectIfExists();
 
