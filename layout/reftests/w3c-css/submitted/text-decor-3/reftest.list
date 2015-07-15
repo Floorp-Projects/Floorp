@@ -1,1 +1,2 @@
 pref(layout.css.ruby.enabled,true) == ruby-text-decoration-01.html ruby-text-decoration-01-ref.html
+== text-decoration-propagation-01.html text-decoration-propagation-01-ref.html

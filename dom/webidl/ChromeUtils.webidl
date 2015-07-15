@@ -11,34 +11,46 @@
 [ChromeOnly, Exposed=(Window,System)]
 interface ChromeUtils : ThreadSafeChromeUtils {
   /**
-   * A helper that converts OriginAttributesDictionary to cookie jar opaque
-   * identfier.
-   *
-   * @param originAttrs       The originAttributes from the caller.
-   */
-  static ByteString
-  originAttributesToCookieJar(optional OriginAttributesDictionary originAttrs);
-
-  /**
    * A helper that converts OriginAttributesDictionary to a opaque suffix string.
    *
    * @param originAttrs       The originAttributes from the caller.
    */
   static ByteString
   originAttributesToSuffix(optional OriginAttributesDictionary originAttrs);
+
+  /**
+   * Returns true if the members of |originAttrs| match the provided members
+   * of |pattern|.
+   *
+   * @param originAttrs       The originAttributes under consideration.
+   * @param pattern           The pattern to use for matching.
+   */
+  static boolean
+  originAttributesMatchPattern(optional OriginAttributesDictionary originAttrs,
+                               optional OriginAttributesPatternDictionary pattern);
 };
 
 /**
  * Used by principals and the script security manager to represent origin
- * attributes.
+ * attributes. The first dictionary is designed to contain the full set of
+ * OriginAttributes, the second is used for pattern-matching (i.e. does this
+ * OriginAttributesDictionary match the non-empty attributes in this pattern).
  *
- * IMPORTANT: If you add any members here, you need to update the
- * methods on mozilla::OriginAttributes, and bump the CIDs of all
- * the principal implementations that use OriginAttributes in their
- * nsISerializable implementations.
+ * IMPORTANT: If you add any members here, you need to do the following:
+ * (1) Add them to both dictionaries.
+ * (2) Update the methods on mozilla::OriginAttributes, including equality,
+ *     serialization, and deserialization.
+ * (3) Update the methods on mozilla::OriginAttributesPattern, including matching.
+ * (4) Bump the CIDs (_not_ IIDs) of all the principal implementations that
+ *     use OriginAttributes in their nsISerializable implementations.
  */
 dictionary OriginAttributesDictionary {
   unsigned long appId = 0;
   boolean inBrowser = false;
   DOMString addonId = "";
+};
+dictionary OriginAttributesPatternDictionary {
+  unsigned long appId;
+  boolean inBrowser;
+  DOMString addonId;
 };

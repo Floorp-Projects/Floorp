@@ -15,21 +15,21 @@
 
 namespace mozilla {
 
-WebGLFramebuffer::AttachPoint::AttachPoint(WebGLFramebuffer* fb,
-                                           FBAttachment attachmentPoint)
+WebGLFBAttachPoint::WebGLFBAttachPoint(WebGLFramebuffer* fb,
+                                       FBAttachment attachmentPoint)
     : mFB(fb)
     , mAttachmentPoint(attachmentPoint)
     , mTexImageTarget(LOCAL_GL_NONE)
 { }
 
-WebGLFramebuffer::AttachPoint::~AttachPoint()
+WebGLFBAttachPoint::~WebGLFBAttachPoint()
 {
     MOZ_ASSERT(!mRenderbufferPtr);
     MOZ_ASSERT(!mTexturePtr);
 }
 
 bool
-WebGLFramebuffer::AttachPoint::IsDeleteRequested() const
+WebGLFBAttachPoint::IsDeleteRequested() const
 {
     return Texture() ? Texture()->IsDeleteRequested()
          : Renderbuffer() ? Renderbuffer()->IsDeleteRequested()
@@ -37,14 +37,14 @@ WebGLFramebuffer::AttachPoint::IsDeleteRequested() const
 }
 
 bool
-WebGLFramebuffer::AttachPoint::IsDefined() const
+WebGLFBAttachPoint::IsDefined() const
 {
     return Renderbuffer() ||
            (Texture() && Texture()->HasImageInfoAt(ImageTarget(), 0));
 }
 
 bool
-WebGLFramebuffer::AttachPoint::HasAlpha() const
+WebGLFBAttachPoint::HasAlpha() const
 {
     MOZ_ASSERT(HasImage());
 
@@ -62,7 +62,7 @@ WebGLFramebuffer::AttachPoint::HasAlpha() const
 }
 
 GLenum
-WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::AttachPoint& attachment) const
+WebGLFramebuffer::GetFormatForAttachment(const WebGLFBAttachPoint& attachment) const
 {
     MOZ_ASSERT(attachment.IsDefined());
     MOZ_ASSERT(attachment.Texture() || attachment.Renderbuffer());
@@ -83,7 +83,7 @@ WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::AttachPoint& at
 }
 
 TexInternalFormat
-WebGLFramebuffer::AttachPoint::EffectiveInternalFormat() const
+WebGLFBAttachPoint::EffectiveInternalFormat() const
 {
     const WebGLTexture* tex = Texture();
     if (tex && tex->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
@@ -99,7 +99,7 @@ WebGLFramebuffer::AttachPoint::EffectiveInternalFormat() const
 }
 
 bool
-WebGLFramebuffer::AttachPoint::IsReadableFloat() const
+WebGLFBAttachPoint::IsReadableFloat() const
 {
     TexInternalFormat internalformat = EffectiveInternalFormat();
     MOZ_ASSERT(internalformat != LOCAL_GL_NONE);
@@ -110,7 +110,7 @@ WebGLFramebuffer::AttachPoint::IsReadableFloat() const
 }
 
 static void
-UnmarkAttachment(WebGLFramebuffer::AttachPoint& attachment)
+UnmarkAttachment(WebGLFBAttachPoint& attachment)
 {
     WebGLFramebufferAttachable* maybe = attachment.Texture();
     if (!maybe)
@@ -121,7 +121,7 @@ UnmarkAttachment(WebGLFramebuffer::AttachPoint& attachment)
 }
 
 void
-WebGLFramebuffer::AttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target,
+WebGLFBAttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget target,
                                           GLint level)
 {
     mFB->InvalidateFramebufferStatus();
@@ -138,7 +138,7 @@ WebGLFramebuffer::AttachPoint::SetTexImage(WebGLTexture* tex, TexImageTarget tar
 }
 
 void
-WebGLFramebuffer::AttachPoint::SetRenderbuffer(WebGLRenderbuffer* rb)
+WebGLFBAttachPoint::SetRenderbuffer(WebGLRenderbuffer* rb)
 {
     mFB->InvalidateFramebufferStatus();
 
@@ -152,7 +152,7 @@ WebGLFramebuffer::AttachPoint::SetRenderbuffer(WebGLRenderbuffer* rb)
 }
 
 bool
-WebGLFramebuffer::AttachPoint::HasUninitializedImageData() const
+WebGLFBAttachPoint::HasUninitializedImageData() const
 {
     if (!HasImage())
         return false;
@@ -171,7 +171,7 @@ WebGLFramebuffer::AttachPoint::HasUninitializedImageData() const
 }
 
 void
-WebGLFramebuffer::AttachPoint::SetImageDataStatus(WebGLImageDataStatus newStatus)
+WebGLFBAttachPoint::SetImageDataStatus(WebGLImageDataStatus newStatus)
 {
     if (!HasImage())
         return;
@@ -191,7 +191,7 @@ WebGLFramebuffer::AttachPoint::SetImageDataStatus(WebGLImageDataStatus newStatus
 }
 
 bool
-WebGLFramebuffer::AttachPoint::HasImage() const
+WebGLFBAttachPoint::HasImage() const
 {
     if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
         return true;
@@ -203,7 +203,7 @@ WebGLFramebuffer::AttachPoint::HasImage() const
 }
 
 const WebGLRectangleObject&
-WebGLFramebuffer::AttachPoint::RectangleObject() const
+WebGLFBAttachPoint::RectangleObject() const
 {
     MOZ_ASSERT(HasImage(),
                "Make sure it has an image before requesting the rectangle.");
@@ -285,7 +285,7 @@ WebGLContext::IsFormatValidForFB(GLenum sizedFormat) const
 }
 
 bool
-WebGLFramebuffer::AttachPoint::IsComplete() const
+WebGLFBAttachPoint::IsComplete() const
 {
     if (!HasImage())
         return false;
@@ -353,7 +353,7 @@ WebGLFramebuffer::AttachPoint::IsComplete() const
 }
 
 void
-WebGLFramebuffer::AttachPoint::FinalizeAttachment(gl::GLContext* gl,
+WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl,
                                                  FBAttachment attachmentLoc) const
 {
     if (!HasImage()) {
@@ -454,7 +454,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(FBAttachment attachPointEnum,
         return;
 
     // `attachPoint` is validated by ValidateFramebufferAttachment().
-    AttachPoint& attachPoint = GetAttachPoint(attachPointEnum);
+    WebGLFBAttachPoint& attachPoint = GetAttachPoint(attachPointEnum);
     attachPoint.SetRenderbuffer(rb);
 
     InvalidateFramebufferStatus();
@@ -481,13 +481,13 @@ WebGLFramebuffer::FramebufferTexture2D(FBAttachment attachPointEnum,
         }
     }
 
-    AttachPoint& attachPoint = GetAttachPoint(attachPointEnum);
+    WebGLFBAttachPoint& attachPoint = GetAttachPoint(attachPointEnum);
     attachPoint.SetTexImage(tex, texImageTarget, level);
 
     InvalidateFramebufferStatus();
 }
 
-WebGLFramebuffer::AttachPoint&
+WebGLFBAttachPoint&
 WebGLFramebuffer::GetAttachPoint(FBAttachment attachPoint)
 {
     switch (attachPoint.get()) {
@@ -581,7 +581,7 @@ WebGLFramebuffer::HasDefinedAttachments() const
 }
 
 static bool
-IsIncomplete(const WebGLFramebuffer::AttachPoint& cur)
+IsIncomplete(const WebGLFBAttachPoint& cur)
 {
     return cur.IsDefined() && !cur.IsComplete();
 }
@@ -631,7 +631,7 @@ WebGLFramebuffer::GetAnyRectObject() const
 }
 
 static bool
-RectsMatch(const WebGLFramebuffer::AttachPoint& attachment,
+RectsMatch(const WebGLFBAttachPoint& attachment,
            const WebGLRectangleObject& rect)
 {
     return attachment.RectangleObject().HasSameDimensionsAs(rect);
@@ -839,7 +839,7 @@ void WebGLFramebuffer::EnsureColorAttachPoints(size_t colorAttachmentId)
 
     while (ColorAttachmentCount() < WebGLContext::kMaxColorAttachments) {
         GLenum nextAttachPoint = LOCAL_GL_COLOR_ATTACHMENT0 + ColorAttachmentCount();
-        mMoreColorAttachments.AppendElement(AttachPoint(this, nextAttachPoint));
+        mMoreColorAttachments.AppendElement(WebGLFBAttachPoint(this, nextAttachPoint));
     }
 
     MOZ_ASSERT(ColorAttachmentCount() == WebGLContext::kMaxColorAttachments);
@@ -941,20 +941,20 @@ WebGLFramebuffer::ValidateForRead(const char* info, TexInternalFormat* const out
 // Goop.
 
 JSObject*
-WebGLFramebuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
+WebGLFramebuffer::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLFramebufferBinding::Wrap(cx, this, aGivenProto);
+    return dom::WebGLFramebufferBinding::Wrap(cx, this, givenProto);
 }
 
 inline void
-ImplCycleCollectionUnlink(mozilla::WebGLFramebuffer::AttachPoint& field)
+ImplCycleCollectionUnlink(mozilla::WebGLFBAttachPoint& field)
 {
     field.Unlink();
 }
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            mozilla::WebGLFramebuffer::AttachPoint& field,
+                            mozilla::WebGLFBAttachPoint& field,
                             const char* name,
                             uint32_t flags = 0)
 {

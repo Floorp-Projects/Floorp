@@ -116,6 +116,7 @@
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "Units.h"
+#include "CanvasUtils.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -2580,7 +2581,6 @@ CanvasRenderingContext2D::BeginPath()
 void
 CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
 {
-  EnsureTarget();
   EnsureUserSpacePath(winding);
 
   if (!mPath) {
@@ -2626,7 +2626,6 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
 void
 CanvasRenderingContext2D::Stroke()
 {
-  EnsureTarget();
   EnsureUserSpacePath();
 
   if (!mPath) {
@@ -2762,8 +2761,6 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aEleme
 void
 CanvasRenderingContext2D::Clip(const CanvasWindingRule& winding)
 {
-  EnsureTarget();
-
   EnsureUserSpacePath(winding);
 
   if (!mPath) {
@@ -2905,6 +2902,8 @@ CanvasRenderingContext2D::Rect(double x, double y, double w, double h)
 void
 CanvasRenderingContext2D::EnsureWritablePath()
 {
+  EnsureTarget();
+
   if (mDSPathBuilder) {
     return;
   }
@@ -2923,7 +2922,6 @@ CanvasRenderingContext2D::EnsureWritablePath()
     return;
   }
 
-  EnsureTarget();
   if (!mPath) {
     NS_ASSERTION(!mPathTransformWillUpdate, "mPathTransformWillUpdate should be false, if all paths are null");
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
@@ -2944,8 +2942,9 @@ CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
   if(winding == CanvasWindingRule::Evenodd)
     fillRule = FillRule::FILL_EVEN_ODD;
 
+  EnsureTarget();
+
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {
-    EnsureTarget();
     mPathBuilder = mTarget->CreatePathBuilder(fillRule);
   }
 
@@ -3212,6 +3211,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 {
   RefPtr<gfx::Path> path;
   if (options.mPath) {
+    EnsureTarget();
     path = options.mPath->GetPath(CanvasWindingRule::Nonzero, mTarget);
   }
 
@@ -5278,12 +5278,12 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
   //uint8_t *src = aArray->Data();
   uint8_t *dst = imgsurf->Data();
   uint8_t* srcLine = aArray->Data() + copyY * (w * 4) + copyX * 4;
-#if 0  
+#if 0
   printf("PutImageData_explicit: dirty x=%d y=%d w=%d h=%d copy x=%d y=%d w=%d h=%d ext x=%d y=%d w=%d h=%d\n",
 	     dirtyRect.x, dirtyRect.y, copyWidth, copyHeight,
 	     copyX, copyY, copyWidth, copyHeight,
 	     x, y, w, h);
-#endif	     
+#endif
   for (uint32_t j = 0; j < copyHeight; j++) {
     uint8_t *src = srcLine;
     for (uint32_t i = 0; i < copyWidth; i++) {

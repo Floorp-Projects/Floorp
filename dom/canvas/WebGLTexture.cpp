@@ -19,8 +19,8 @@
 namespace mozilla {
 
 JSObject*
-WebGLTexture::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) {
-    return dom::WebGLTextureBinding::Wrap(cx, this, aGivenProto);
+WebGLTexture::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) {
+    return dom::WebGLTextureBinding::Wrap(cx, this, givenProto);
 }
 
 WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)

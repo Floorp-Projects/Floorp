@@ -28,7 +28,7 @@ public:
     void Delete();
     WebGLContext* GetParentObject() const;
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
 private:
 

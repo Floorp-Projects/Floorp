@@ -35,7 +35,7 @@ class URL final : public mozilla::dom::URLSearchParamsObserver
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(URL)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(URL)
 
   URL(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy);
 
