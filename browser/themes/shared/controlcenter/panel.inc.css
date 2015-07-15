@@ -223,6 +223,15 @@
   background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
+#identity-popup-securityView.weakCipher,
+#identity-popup-securityView.mixedDisplayContent,
+#identity-popup-securityView.mixedDisplayContentLoadedActiveBlocked,
+#identity-popup-security-content.weakCipher,
+#identity-popup-security-content.mixedDisplayContent,
+#identity-popup-security-content.mixedDisplayContentLoadedActiveBlocked {
+  background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
+}
+
 #identity-popup-securityView.mixedActiveContent,
 #identity-popup-security-content.mixedActiveContent {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
