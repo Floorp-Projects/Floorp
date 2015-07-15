@@ -40,7 +40,7 @@ bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                     const ReadOnlyCompileOptions& options,
                     const AutoNameVector& formals, JS::SourceBufferHolder& srcBuf,
-                    Handle<ScopeObject*> enclosingStaticScope);
+                    HandleObject enclosingStaticScope);
 bool
 CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                          const ReadOnlyCompileOptions& options,
