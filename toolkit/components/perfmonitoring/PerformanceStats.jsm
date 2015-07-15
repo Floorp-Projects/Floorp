@@ -23,6 +23,14 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Task.jsm", this);
+
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
+  "resource://gre/modules/Timer.jsm");
 
 // The nsIPerformanceStatsService provides lower-level
 // access to SpiderMonkey and the probes.
@@ -37,14 +45,17 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizer",
   Ci.nsIFinalizationWitnessService
 );
 
-
 // The topic used to notify that a PerformanceMonitor has been garbage-collected
 // and that we can release/close the probes it holds.
 const FINALIZATION_TOPIC = "performancemonitor-finalize";
 
-const PROPERTIES_META_IMMUTABLE = ["name", "addonId", "isSystem", "groupId"];
-const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title"];
+const PROPERTIES_META_IMMUTABLE = ["addonId", "isSystem", "isChildProcess", "groupId"];
+const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title", "name"];
 
+// How long we wait for children processes to respond.
+const MAX_WAIT_FOR_CHILD_PROCESS_MS = 5000;
+
+let isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 /**
  * Access to a low-level performance probe.
  *
@@ -125,14 +136,14 @@ Probe.prototype = {
    * @return {object} An object representing `a - b`. If `b` is
    * `null`, this is `a`.
    */
-  substract: function(a, b) {
+  subtract: function(a, b) {
     if (a == null) {
       throw new TypeError();
     }
     if (b == null) {
       return a;
     }
-    return this._impl.substract(a, b);
+    return this._impl.subtract(a, b);
   },
 
   /**
@@ -204,7 +215,7 @@ let Probes = {
       }
       return true;
     },
-    substract: function(a, b) {
+    subtract: function(a, b) {
       // invariant: `a` and `b` are both non-null
       let result = {
         totalUserTime: a.totalUserTime - b.totalUserTime,
@@ -243,7 +254,7 @@ let Probes = {
     isEqual: function(a, b) {
       return a.totalCPOWTime == b.totalCPOWTime;
     },
-    substract: function(a, b) {
+    subtract: function(a, b) {
       return {
         totalCPOWTime: a.totalCPOWTime - b.totalCPOWTime
       };
@@ -272,10 +283,76 @@ let Probes = {
     isEqual: function(a, b) {
       return a.ticks == b.ticks;
     },
-    substract: function(a, b) {
+    subtract: function(a, b) {
       return {
         ticks: a.ticks - b.ticks
       };
+    }
+  }),
+
+  "jank-content": new Probe("jank-content", {
+    _isActive: false,
+    set isActive(x) {
+      this._isActive = x;
+      if (x) {
+        Process.broadcast("acquire", ["jank"]);
+      } else {
+        Process.broadcast("release", ["jank"]);
+      }
+    },
+    get isActive() {
+      return this._isActive;
+    },
+    extract: function(xpcom) {
+      return {};
+    },
+    isEqual: function(a, b) {
+      return true;
+    },
+    subtract: function(a, b) {
+      return null;
+    }
+  }),
+
+  "cpow-content": new Probe("cpow-content", {
+    _isActive: false,
+    set isActive(x) {
+      this._isActive = x;
+      if (x) {
+        Process.broadcast("acquire", ["cpow"]);
+      } else {
+        Process.broadcast("release", ["cpow"]);
+      }
+    },
+    get isActive() {
+      return this._isActive;
+    },
+    extract: function(xpcom) {
+      return {};
+    },
+    isEqual: function(a, b) {
+      return true;
+    },
+    subtract: function(a, b) {
+      return null;
+    }
+  }),
+
+  "ticks-content": new Probe("ticks-content", {
+    set isActive(x) {
+      // Ignore: This probe is always active.
+    },
+    get isActive() {
+      return true;
+    },
+    extract: function(xpcom) {
+      return {};
+    },
+    isEqual: function(a, b) {
+      return true;
+    },
+    subtract: function(a, b) {
+      return null;
     }
   }),
 };
@@ -306,6 +383,13 @@ function PerformanceMonitor(probes) {
 }
 PerformanceMonitor.prototype = {
   /**
+   * The names of probes activated in this monitor.
+   */
+  get probeNames() {
+    return [for (probe of this._probes) probe.name];
+  },
+
+  /**
    * Return asynchronously a snapshot with the data
    * for each probe monitored by this PerformanceMonitor.
    *
@@ -317,7 +401,7 @@ PerformanceMonitor.prototype = {
    * will return a `Snapshot` in which all values are 0. For most uses,
    * the appropriate scenario is to perform a first call to `promiseSnapshot()`
    * to obtain a baseline, and then watch evolution of the values by calling
-   * `promiseSnapshot()` and `substract()`.
+   * `promiseSnapshot()` and `subtract()`.
    *
    * On the other hand, numeric values are also monotonic across several instances
    * of a PerformanceMonitor with the same probes. 
@@ -330,18 +414,45 @@ PerformanceMonitor.prototype = {
    *
    *  // all values of `snapshot2` are greater or equal to values of `snapshot1`.
    *
+   * @param {object} options If provided, an object that may contain the following
+   *   fields:
+   *   {Array<string>} probeNames The subset of probes to use for this snapshot.
+   *      These probes must be a subset of the probes active in the monitor.
+   *
    * @return {Promise}
    * @resolve {Snapshot}
    */
-  promiseSnapshot: function() {
+  promiseSnapshot: function(options = null) {
     if (!this._finalizer) {
       throw new Error("dispose() has already been called, this PerformanceMonitor is not usable anymore");
     }
-    // Current implementation is actually synchronous.
-    return Promise.resolve().then(() => new Snapshot({
-      xpcom: performanceStatsService.getSnapshot(),
-      probes: this._probes
-    }));
+    let probes;
+    if (options && options.probeNames || undefined) {
+      if (!Array.isArray(options.probeNames)) {
+        throw new TypeError();
+      }
+      // Make sure that we only request probes that we have
+      for (let probeName of options.probeNames) {
+        let probe = this._probes.find(probe => probe.name == probeName);
+        if (!probe) {
+          throw new TypeError(`I need probe ${probeName} but I only have ${this.probeNames}`);
+        }
+        if (!probes) {
+          probes = [];
+        }
+        probes.push(probe);
+      }
+    } else {
+      probes = this._probes;
+    }
+    return Task.spawn(function*() {
+      let collected = yield Process.broadcastAndCollect("collect", {probeNames: [for (probe of probes) probe.name]});
+      return new Snapshot({
+        xpcom: performanceStatsService.getSnapshot(),
+        childProcesses: collected,
+        probes
+      });
+    });
   },
 
   /**
@@ -381,7 +492,7 @@ PerformanceMonitor.make = function(probeNames) {
   let probes = [];
   for (let probeName of probeNames) {
     if (!(probeName in Probes)) {
-      throw new TypeError("Probe not implemented: " + k);
+      throw new TypeError("Probe not implemented: " + probeName);
     }
     probes.push(Probes[probeName]);
   }
@@ -467,12 +578,24 @@ this.PerformanceStats = {
  * @field {object|undefined} cpow See the documentation of probe "cpow".
  *   `undefined` if this probe is not active.
  */
-function PerformanceData({xpcom, probes}) {
-  for (let k of PROPERTIES_META) {
-    this[k] = xpcom[k];
+function PerformanceData({xpcom, json, probes}) {
+  if (xpcom && json) {
+    throw new TypeError("Cannot import both xpcom and json data");
   }
-  for (let probe of probes) {
-    this[probe.name] = probe.extract(xpcom);
+  let source = xpcom || json;
+  for (let k of PROPERTIES_META) {
+    this[k] = source[k];
+  }
+  if (xpcom) {
+    for (let probe of probes) {
+      this[probe.name] = probe.extract(xpcom);
+    }
+    this.isChildProcess = false;
+  } else {
+    for (let probe of probes) {
+      this[probe.name] = json[probe.name];
+    }
+    this.isChildProcess = true;
   }
 }
 PerformanceData.prototype = {
@@ -519,20 +642,161 @@ function PerformanceDiff(current, old = null) {
   for (let probeName of Object.keys(Probes)) {
     let other = old ? old[probeName] : null;
     if (probeName in current) {
-      this[probeName] = Probes[probeName].substract(current[probeName], other);
+      this[probeName] = Probes[probeName].subtract(current[probeName], other);
     }
   }
 }
 
 /**
- * A snapshot of the performance usage of the process.
+ * A snapshot of the performance usage of the application.
+ *
+ * @param {nsIPerformanceSnapshot} xpcom The data acquired from this process.
+ * @param {Array<Object>} childProcesses The data acquired from children processes.
+ * @param {Array<Probe>} probes The active probes.
  */
-function Snapshot({xpcom, probes}) {
+function Snapshot({xpcom, childProcesses, probes}) {
   this.componentsData = [];
-  let enumeration = xpcom.getComponentsData().enumerate();
-  while (enumeration.hasMoreElements()) {
-    let stat = enumeration.getNext().QueryInterface(Ci.nsIPerformanceStats);
-    this.componentsData.push(new PerformanceData({xpcom: stat, probes}));
+
+  // Parent process
+  if (xpcom) {
+    let enumeration = xpcom.getComponentsData().enumerate();
+    while (enumeration.hasMoreElements()) {
+      let xpcom = enumeration.getNext().QueryInterface(Ci.nsIPerformanceStats);
+      this.componentsData.push(new PerformanceData({xpcom, probes}));
+    }
   }
+
+  // Content processes
+  if (childProcesses) {
+    for (let {componentsData} of childProcesses) {
+      // We are only interested in `componentsData` for the time being.
+      for (let json of componentsData) {
+        this.componentsData.push(new PerformanceData({json, probes}));
+      }
+    }
+  }
+
   this.processData = new PerformanceData({xpcom: xpcom.getProcessData(), probes});
 }
+
+/**
+ * Communication with other processes
+ */
+let Process = {
+  // `true` once communications have been initialized
+  _initialized: false,
+
+  // the message manager
+  _loader: null,
+
+  // a counter used to match responses to requests
+  _idcounter: 0,
+
+  /**
+   * If we are in a child process, return `null`.
+   * Otherwise, return the global parent process message manager
+   * and load the script to connect to children processes.
+   */
+  get loader() {
+    if (this._initialized) {
+      return this._loader;
+    }
+    this._initialized = true;
+    this._loader = Services.ppmm;
+    if (!this._loader) {
+      // We are in a child process.
+      return null;
+    }
+    this._loader.loadProcessScript("resource://gre/modules/PerformanceStats-content.js",
+      true/*including future processes*/);
+    return this._loader;
+  },
+
+  /**
+   * Broadcast a message to all children processes.
+   *
+   * NOOP if we are in a child process.
+   */
+  broadcast: function(topic, payload) {
+    if (!this.loader) {
+      return;
+    }
+    this.loader.broadcastAsyncMessage("performance-stats-service-" + topic, {payload});
+  },
+
+  /**
+   * Brodcast a message to all children processes and wait for answer.
+   *
+   * NOOP if we are in a child process, or if we have no children processes,
+   * in which case we return `undefined`.
+   *
+   * @return {undefined} If we have no children processes, in particular
+   * if we are in a child process.
+   * @return {Promise<Array<Object>>} If we have children processes, an
+   * array of objects with a structure similar to PerformanceData. Note
+   * that the array may be empty if no child process responded.
+   */
+  broadcastAndCollect: Task.async(function*(topic, payload) {
+    if (!this.loader || this.loader.childCount == 1) {
+      return undefined;
+    }
+    const TOPIC = "performance-stats-service-" + topic;
+    let id = this._idcounter++;
+
+    // The number of responses we are expecting. Note that we may
+    // not receive all responses if a process is too long to respond.
+    let expecting = this.loader.childCount;
+
+    // The responses we have collected, in arbitrary order.
+    let collected = [];
+    let deferred = PromiseUtils.defer();
+
+    // The content script may be loaded more than once (bug 1184115).
+    // To avoid double-responses, we keep track of who has already responded.
+    // Note that we could it on the other end, at the expense of implementing
+    // an additional .jsm just for that purpose.
+    let responders = new Set();
+    let observer = function({data, target}) {
+      if (data.id != id) {
+        // Collision between two collections,
+        // ignore the other one.
+        return;
+      }
+      if (responders.has(target)) {
+        return;
+      }
+      responders.add(target);
+      if (data.data) {
+        collected.push(data.data)
+      }
+      if (--expecting > 0) {
+        // We are still waiting for at least one response.
+        return;
+      }
+      deferred.resolve();
+    };
+    this.loader.addMessageListener(TOPIC, observer);
+    this.loader.broadcastAsyncMessage(
+      TOPIC,
+      {id, payload}
+    );
+
+    // Processes can die/freeze/be busy loading a page..., so don't expect
+    // that they will always respond.
+    let timeout = setTimeout(() => {
+      if (expecting == 0) {
+        return;
+      }
+      deferred.resolve();
+    }, MAX_WAIT_FOR_CHILD_PROCESS_MS);
+
+    deferred.promise.then(() => {
+      clearTimeout(timeout);
+    });
+
+    yield deferred.promise;
+    this.loader.removeMessageListener(TOPIC, observer);
+
+    return collected;
+  })
+};

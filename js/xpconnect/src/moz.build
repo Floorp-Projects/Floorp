@@ -15,6 +15,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'ExportHelpers.cpp',
     'nsScriptError.cpp',
+    'nsScriptErrorWithStack.cpp',
     'nsXPConnect.cpp',
     'Sandbox.cpp',
     'XPCCallContext.cpp',

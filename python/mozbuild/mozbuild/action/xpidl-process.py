@@ -16,9 +16,9 @@ import sys
 from io import BytesIO
 
 from buildconfig import topsrcdir
-from header import print_header
-from typelib import write_typelib
-from xpidl import IDLParser
+from xpidl.header import print_header
+from xpidl.typelib import write_typelib
+from xpidl.xpidl import IDLParser
 from xpt import xpt_link
 
 from mozbuild.makeutil import Makefile

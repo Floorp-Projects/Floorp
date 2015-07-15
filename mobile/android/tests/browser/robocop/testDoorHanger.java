@@ -6,7 +6,7 @@ package org.mozilla.gecko.tests;
 
 import android.widget.CheckBox;
 import android.view.View;
-import com.jayway.android.robotium.solo.Condition;
+import com.robotium.solo.Condition;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

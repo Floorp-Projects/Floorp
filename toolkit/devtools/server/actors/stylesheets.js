@@ -77,19 +77,21 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
    * all the style sheets in this document.
    */
   getStyleSheets: method(Task.async(function* () {
-    let documents = [this.document];
+    // Iframe document can change during load (bug 1171919). Track their windows
+    // instead.
+    let windows = [this.window];
     let actors = [];
 
-    for (let doc of documents) {
-      let sheets = yield this._addStyleSheets(doc);
+    for (let win of windows) {
+      let sheets = yield this._addStyleSheets(win);
       actors = actors.concat(sheets);
 
       // Recursively handle style sheets of the documents in iframes.
-      for (let iframe of doc.querySelectorAll("iframe, browser, frame")) {
-        if (iframe.contentDocument) {
+      for (let iframe of win.document.querySelectorAll("iframe, browser, frame")) {
+        if (iframe.contentDocument && iframe.contentWindow) {
           // Sometimes, iframes don't have any document, like the
           // one that are over deeply nested (bug 285395)
-          documents.push(iframe.contentDocument);
+          windows.push(iframe.contentWindow);
         }
       }
     }
@@ -122,21 +124,29 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   },
 
   /**
-   * Add all the stylesheets for this document to the map and create an actor
-   * for each one if not already created.
+   * Add all the stylesheets for the document in this window to the map and
+   * create an actor for each one if not already created.
    *
-   * @param {Document} doc
-   *        Document for which to add stylesheets
+   * @param {Window} win
+   *        Window for which to add stylesheets
    *
    * @return {Promise}
    *         Promise that resolves to an array of StyleSheetActors
    */
-  _addStyleSheets: function(doc)
+  _addStyleSheets: function(win)
   {
     return Task.spawn(function*() {
-      if (doc.readyState === "loading") {
+      let doc = win.document;
+      // readyState can be uninitialized if an iframe has just been created but
+      // it has not started to load yet.
+      if (doc.readyState === "loading" || doc.readyState === "uninitialized") {
         // Wait for the document to load first.
-        yield listenOnce(doc.defaultView, "DOMContentLoaded", true);
+        yield listenOnce(win, "DOMContentLoaded", true);
+
+        // Make sure we have the actual document for this window. If the
+        // readyState was initially uninitialized, the initial dummy document
+        // was replaced with the actual document (bug 1171919).
+        doc = win.document;
       }
 
       let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
