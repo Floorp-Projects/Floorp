@@ -27,7 +27,7 @@
 #
 #     The Unicode data files listed above should be together in one directory.
 #
-#     We also require the file 
+#     We also require the file
 #        http://www.unicode.org/Public/security/latest/xidmodifications.txt
 #     This file should be in a sub-directory "security" immediately below the
 #        directory containing the other Unicode data files.
@@ -229,9 +229,16 @@ my %scriptCode = (
   SIDDHAM => 123,
   TIRHUTA => 124,
   WARANG_CITI => 125,
+# unicode 8.0 additions
+  AHOM => 126,
+  ANATOLIAN_HIEROGLYPHS => 127,
+  HATRAN => 128,
+  MULTANI => 129,
+  OLD_HUNGARIAN => 130,
+  SIGNWRITING => 131,
 
 # additional "script" code, not from Unicode (but matches ISO 15924's Zmth tag)
-  MATHEMATICAL_NOTATION => 126,
+  MATHEMATICAL_NOTATION => 132,
 );
 
 my $sc = -1;
@@ -275,16 +282,19 @@ $scriptCodeToTag[$sc] = "'Z','m','t','h'";
 $scriptCodeToName[$sc] = "MATHEMATICAL_NOTATION";
 
 my %xidmodCode = (
-'inclusion'         => 0,
-'recommended'       => 1,
-'default-ignorable' => 2,
-'historic'          => 3,
-'limited-use'       => 4,
-'not-NFKC'          => 5,
-'not-xid'           => 6,
-'obsolete'          => 7,
-'technical'         => 8,
-'not-chars'         => 9
+'Recommended'       => 0,
+'Inclusion'         => 1,
+'Uncommon_Use'      => 2,
+'Technical'         => 3,
+'Obsolete'          => 4,
+'Aspirational'      => 5,
+'Limited_Use'       => 6,
+'Exclusion'         => 7,
+'Not_XID'           => 8,
+'Not_NFKC'          => 9,
+'Default_Ignorable' => 10,
+'Deprecated'        => 11,
+'not-chars'         => 12
 );
 
 my %bidicategoryCode = (
@@ -610,8 +620,6 @@ while (<FH>) {
   }
 }
 close FH;
-# special case U+30FB KATAKANA MIDDLE DOT -- see bug 857490
-$xidmod[0x30FB] = 1;
 
 open FH, "< $ARGV[1]/Unihan_Variants.txt" or die "can't open UCD file Unihan_Variants.txt (from Unihan.zip)\n";
 push @versionInfo, "";

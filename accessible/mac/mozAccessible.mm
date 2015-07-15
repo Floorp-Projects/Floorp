@@ -76,6 +76,47 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+ProxyAccessible*
+a11y::GetProxyUnignoredParent(const ProxyAccessible* aProxy)
+{
+  ProxyAccessible* parent = aProxy->Parent();
+  while (parent && IsProxyIgnored(aProxy))
+    parent = parent->Parent();
+
+  return parent;
+}
+
+void
+a11y::GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
+                                nsTArray<ProxyAccessible*>* aChildrenArray)
+{
+  if (aProxy->MustPruneChildren())
+    return;
+
+  uint32_t childCount = aProxy->ChildrenCount();
+  for (size_t childIdx = 0; childIdx < childCount; childIdx++) {
+    ProxyAccessible* childProxy = aProxy->ChildAt(childIdx);
+
+    // If element is ignored, then add its children as substitutes.
+    if (IsProxyIgnored(childProxy)) {
+      GetProxyUnignoredChildren(aProxy, aChildrenArray);
+      continue;
+    }
+
+    aChildrenArray->AppendElement(childProxy);
+  }
+}
+
+BOOL
+a11y::IsProxyIgnored(const ProxyAccessible* aProxy)
+{
+  mozAccessible* nativeObject = GetNativeFromProxy(aProxy);
+  if (!nativeObject)
+   return true;
+
+  return [nativeObject accessibilityIsIgnored];
+}
+
 // convert an array of Gecko accessibles to an NSArray of native accessibles
 static inline NSMutableArray*
 ConvertToNSArray(nsTArray<Accessible*>& aArray)
@@ -83,10 +124,28 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
   NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
 
   // iterate through the list, and get each native accessible.
-  uint32_t totalCount = aArray.Length();
-  for (uint32_t i = 0; i < totalCount; i++) {
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
     Accessible* curAccessible = aArray.ElementAt(i);
     mozAccessible* curNative = GetNativeFromGeckoAccessible(curAccessible);
+    if (curNative)
+      [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  }
+
+  return nativeArray;
+}
+
+// convert an array of Gecko proxy accessibles to an NSArray of native accessibles
+static inline NSMutableArray*
+ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
+{
+  NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+
+  // iterate through the list, and get each native accessible.
+  size_t totalCount = aArray.Length();
+  for (size_t i = 0; i < totalCount; i++) {
+    ProxyAccessible* curAccessible = aArray.ElementAt(i);
+    mozAccessible* curNative = GetNativeFromProxy(curAccessible);
     if (curNative)
       [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
   }
@@ -612,21 +671,34 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  Accessible* accessibleParent = accWrap->GetUnignoredParent();
-  if (accessibleParent) {
-    id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
+  id nativeParent = nil;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    Accessible* accessibleParent = accWrap->GetUnignoredParent();
+    if (accessibleParent)
+      nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
       return GetClosestInterestingAccessible(nativeParent);
+    // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
+    // the root accessible. so we'll have to return whatever native accessible is above our root accessible
+    // (which might be the owning NSWindow in the application, for example).
+    //
+    // get the native root accessible, and tell it to return its first parent unignored accessible.
+    nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    // Go up the chain to find a parent that is not ignored.
+    ProxyAccessible* accessibleParent = GetProxyUnignoredParent(proxy);
+    if (accessibleParent)
+      nativeParent = GetNativeFromProxy(accessibleParent);
+    if (nativeParent)
+      return GetClosestInterestingAccessible(nativeParent);
+
+    Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
+    nativeParent = outerDoc ?
+      GetNativeFromGeckoAccessible(outerDoc->RootAccessible()) : nil;
+  } else {
+    return nil;
   }
 
-  // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
-  // the root accessible. so we'll have to return whatever native accessible is above our root accessible
-  // (which might be the owning NSWindow in the application, for example).
-  //
-  // get the native root accessible, and tell it to return its first parent unignored accessible.
-  id nativeParent =
-    GetNativeFromGeckoAccessible(accWrap->RootAccessible());
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
 
   return GetClosestInterestingAccessible(nativeParent);
@@ -656,13 +728,19 @@ ConvertToNSArray(nsTArray<Accessible*>& aArray)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (mChildren || !accWrap->AreChildrenCached())
+  if (mChildren || (accWrap && !accWrap->AreChildrenCached()))
     return mChildren;
 
   // get the array of children.
-  nsAutoTArray<Accessible*, 10> childrenArray;
-  accWrap->GetUnignoredChildren(&childrenArray);
-  mChildren = ConvertToNSArray(childrenArray);
+  if (accWrap) {
+    nsAutoTArray<Accessible*, 10> childrenArray;
+    accWrap->GetUnignoredChildren(&childrenArray);
+    mChildren = ConvertToNSArray(childrenArray);
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    nsAutoTArray<ProxyAccessible*, 10> childrenArray;
+    GetProxyUnignoredChildren(proxy, &childrenArray);
+    mChildren = ConvertToNSArray(childrenArray);
+  }
 
 #ifdef DEBUG_hakan
   // make sure we're not returning any ignored accessibles.

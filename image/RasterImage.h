@@ -412,7 +412,6 @@ private: // data
 
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
-  bool                       mDecodeOnlyOnDraw:1; // Decoding only on draw?
   bool                       mTransient:1;     // Is the image short-lived?
   bool                       mSyncLoad:1;      // Are we loading synchronously?
   bool                       mDiscardable:1;   // Is container discardable?

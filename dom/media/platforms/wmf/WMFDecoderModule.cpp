@@ -10,6 +10,7 @@
 #include "WMFAudioMFTManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Services.h"
 #include "WMFMediaDataDecoder.h"
 #include "nsIWindowsRegKey.h"
 #include "nsComponentManagerUtils.h"
@@ -96,7 +97,7 @@ WMFDecoderModule::ShouldUseDXVA(const VideoInfo& aConfig) const
   static bool isAMD = false;
   static bool initialized = false;
   if (!initialized) {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     nsAutoString vendor;
     gfxInfo->GetAdapterVendorID(vendor);
     isAMD = vendor.Equals(widget::GfxDriverInfo::GetDeviceVendor(widget::VendorAMD), nsCaseInsensitiveStringComparator()) ||

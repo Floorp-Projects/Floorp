@@ -6,22 +6,19 @@
 #ifndef WEBGL_FRAMEBUFFER_ATTACHABLE_H_
 #define WEBGL_FRAMEBUFFER_ATTACHABLE_H_
 
-#include "GLDefs.h"
-#include "mozilla/WeakPtr.h"
 #include "nsTArray.h"
-#include "WebGLFramebuffer.h"
-#include "WebGLStrongTypes.h"
 
 namespace mozilla {
+class WebGLFBAttachPoint;
 
 class WebGLFramebufferAttachable
 {
-    nsTArray<const WebGLFramebuffer::AttachPoint*> mAttachmentPoints;
+    nsTArray<const WebGLFBAttachPoint*> mAttachmentPoints;
 
 public:
     // Track FBO/Attachment combinations
-    void MarkAttachment(const WebGLFramebuffer::AttachPoint& attachment);
-    void UnmarkAttachment(const WebGLFramebuffer::AttachPoint& attachment);
+    void MarkAttachment(const WebGLFBAttachPoint& attachment);
+    void UnmarkAttachment(const WebGLFBAttachPoint& attachment);
     void InvalidateStatusOfAttachedFBs() const;
 };
 

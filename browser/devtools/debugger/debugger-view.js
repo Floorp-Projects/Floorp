@@ -58,7 +58,6 @@ let DebuggerView = {
     this.Workers.initialize();
     this.Sources.initialize();
     this.VariableBubble.initialize();
-    this.Tracer.initialize();
     this.WatchExpressions.initialize();
     this.EventListeners.initialize();
     this.GlobalSearch.initialize();
@@ -91,7 +90,6 @@ let DebuggerView = {
     this.StackFramesClassicList.destroy();
     this.Sources.destroy();
     this.VariableBubble.destroy();
-    this.Tracer.destroy();
     this.WatchExpressions.destroy();
     this.EventListeners.destroy();
     this.GlobalSearch.destroy();
@@ -174,9 +172,7 @@ let DebuggerView = {
     VariablesViewController.attach(this.Variables, {
       getEnvironmentClient: aObject => gThreadClient.environment(aObject),
       getObjectClient: aObject => {
-        return aObject instanceof DebuggerController.Tracer.WrappedObject
-          ? DebuggerController.Tracer.syncGripClient(aObject.object)
-          : gThreadClient.pauseGrip(aObject)
+        return gThreadClient.pauseGrip(aObject)
       }
     });
 
@@ -219,9 +215,6 @@ let DebuggerView = {
     }
 
     let gutters = ["breakpoints"];
-    if (Services.prefs.getBoolPref("devtools.debugger.tracer")) {
-      gutters.unshift("hit-counts");
-    }
 
     this.editor = new Editor({
       mode: Editor.modes.text,
@@ -414,7 +407,6 @@ let DebuggerView = {
       // source.
       DebuggerView.Sources.selectedValue = aSource.actor;
       DebuggerController.Breakpoints.updateEditorBreakpoints();
-      DebuggerController.HitCounts.updateEditorHitCounts();
 
       histogram.add(Date.now() - startTime);
 
@@ -673,7 +665,6 @@ let DebuggerView = {
   GlobalSearch: null,
   StackFrames: null,
   Sources: null,
-  Tracer: null,
   Variables: null,
   VariableBubble: null,
   WatchExpressions: null,

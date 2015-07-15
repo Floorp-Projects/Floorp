@@ -7,11 +7,12 @@
 #define WEBGL_TEXTURE_H_
 
 #include <algorithm>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/LinkedList.h"
-#include "nsAlgorithm.h"
 #include "nsWrapperCache.h"
+
 #include "WebGLFramebufferAttachable.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
@@ -47,7 +48,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTexture)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTexture)

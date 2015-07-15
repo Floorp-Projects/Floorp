@@ -6863,7 +6863,7 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
       LayerManagerPrefs prefs;
       GetLayerManagerPrefs(&prefs);
       if (!prefs.mDisableAcceleration && !prefs.mPreferOpenGL) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+        nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
         if (gfxInfo) {
           int32_t status;
           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {

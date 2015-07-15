@@ -1,4 +1,3 @@
-no_tooltool=1
 no_sccache=1
 
 ac_add_options --with-l10n-base=../../l10n

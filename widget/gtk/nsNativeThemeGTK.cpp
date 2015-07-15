@@ -412,9 +412,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK_VERTICAL;
+    if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque)
+        *aWidgetFlags = MOZ_GTK_TRACK_OPAQUE;
+    else
+        *aWidgetFlags = 0;
     break;
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL;
+    if (GetWidgetTransparency(aFrame, aWidgetType) == eOpaque)
+        *aWidgetFlags = MOZ_GTK_TRACK_OPAQUE;
+    else
+        *aWidgetFlags = 0;
     break;
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_VERTICAL;
@@ -1807,14 +1815,23 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   switch (aWidgetType) {
   // These widgets always draw a default background.
 #if (MOZ_WIDGET_GTK == 2)
-  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
   case NS_THEME_TOOLBAR:
   case NS_THEME_MENUBAR:
 #endif
   case NS_THEME_MENUPOPUP:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
+    return eOpaque;
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+#if (MOZ_WIDGET_GTK == 3)
+    // Make scrollbar tracks opaque on the window's scroll frame to prevent
+    // leaf layers from overlapping. See bug 1179780.
+    if (!(CheckBooleanAttr(aFrame, nsGkAtoms::root_) &&
+          aFrame->PresContext()->IsRootContentDocument() &&
+          IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)))
+      return eTransparent;
+#endif
     return eOpaque;
   // Tooltips use gtk_paint_flat_box() on Gtk2
   // but are shaped on Gtk3

@@ -5,15 +5,12 @@
 
 #include "WebGLFramebufferAttachable.h"
 
-#include "WebGLContext.h"
 #include "WebGLFramebuffer.h"
-#include "WebGLRenderbuffer.h"
-#include "WebGLTexture.h"
 
 namespace mozilla {
 
 void
-WebGLFramebufferAttachable::MarkAttachment(const WebGLFramebuffer::AttachPoint& attachment)
+WebGLFramebufferAttachable::MarkAttachment(const WebGLFBAttachPoint& attachment)
 {
     if (mAttachmentPoints.Contains(&attachment))
         return; // Already attached. Ignore.
@@ -22,7 +19,7 @@ WebGLFramebufferAttachable::MarkAttachment(const WebGLFramebuffer::AttachPoint& 
 }
 
 void
-WebGLFramebufferAttachable::UnmarkAttachment(const WebGLFramebuffer::AttachPoint& attachment)
+WebGLFramebufferAttachable::UnmarkAttachment(const WebGLFBAttachPoint& attachment)
 {
     const size_t i = mAttachmentPoints.IndexOf(&attachment);
     if (i == mAttachmentPoints.NoIndex) {

@@ -5,7 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGL2Context.h"
+
+#include "GLContext.h"
+#include "WebGLBuffer.h"
 #include "WebGLContextUtils.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLSampler.h"
+#include "WebGLTransformFeedback.h"
+#include "WebGLVertexArray.h"
 
 namespace mozilla {
 
