@@ -2849,23 +2849,6 @@ nsRootPresContext::UnregisterPluginForGeometryUpdates(nsIContent* aPlugin)
   mRegisteredPlugins.RemoveEntry(aPlugin);
 }
 
-static PLDHashOperator
-SetPluginHidden(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
-{
-  nsIFrame* root = static_cast<nsIFrame*>(userArg);
-  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
-  if (!f) {
-    NS_WARNING("Null frame in SetPluginHidden");
-    return PL_DHASH_NEXT;
-  }
-  if (!nsLayoutUtils::IsAncestorFrameCrossDoc(root, f)) {
-    // f is not managed by this frame so we should ignore it.
-    return PL_DHASH_NEXT;
-  }
-  f->SetEmptyWidgetConfiguration();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
                                                 nsDisplayListBuilder* aBuilder,
@@ -2878,7 +2861,18 @@ nsRootPresContext::ComputePluginGeometryUpdates(nsIFrame* aFrame,
   // Initially make the next state for each plugin descendant of aFrame be
   // "hidden". Plugins that are visible will have their next state set to
   // unhidden by nsDisplayPlugin::ComputeVisibility.
-  mRegisteredPlugins.EnumerateEntries(SetPluginHidden, aFrame);
+  for (auto iter = mRegisteredPlugins.Iter(); !iter.Done(); iter.Next()) {
+    auto f = static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
+    if (!f) {
+      NS_WARNING("Null frame in ComputePluginGeometryUpdates");
+      continue;
+    }
+    if (!nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, f)) {
+      // f is not managed by this frame so we should ignore it.
+      continue;
+    }
+    f->SetEmptyWidgetConfiguration();
+  }
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
 
@@ -3014,35 +3008,33 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
   }
 }
 
-struct PluginGetGeometryUpdateClosure {
-  nsTArray<nsIWidget::Configuration> mConfigurations;
-};
-static PLDHashOperator
-PluginGetGeometryUpdate(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
+static void
+PluginGetGeometryUpdate(nsTHashtable<nsRefPtrHashKey<nsIContent>>& aPlugins,
+                        nsTArray<nsIWidget::Configuration>* aConfigurations)
 {
-  PluginGetGeometryUpdateClosure* closure =
-    static_cast<PluginGetGeometryUpdateClosure*>(userArg);
-  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
-  if (!f) {
-    NS_WARNING("Null frame in GetPluginGeometryUpdate");
-    return PL_DHASH_NEXT;
+  for (auto iter = aPlugins.Iter(); !iter.Done(); iter.Next()) {
+    auto f = static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
+    if (!f) {
+      NS_WARNING("Null frame in PluginGeometryUpdate");
+      continue;
+    }
+    f->GetWidgetConfiguration(aConfigurations);
   }
-  f->GetWidgetConfiguration(&closure->mConfigurations);
-  return PL_DHASH_NEXT;
 }
 
 #endif  // #ifndef XP_MACOSX
 
-static PLDHashOperator
-PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
+static void
+PluginDidSetGeometry(nsTHashtable<nsRefPtrHashKey<nsIContent>>& aPlugins)
 {
-  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
-  if (!f) {
-    NS_WARNING("Null frame in PluginDidSetGeometryEnumerator");
-    return PL_DHASH_NEXT;
+  for (auto iter = aPlugins.Iter(); !iter.Done(); iter.Next()) {
+    auto f = static_cast<nsPluginFrame*>(iter.Get()->GetKey()->GetPrimaryFrame());
+    if (!f) {
+      NS_WARNING("Null frame in PluginDidSetGeometry");
+      continue;
+    }
+    f->DidSetWidgetGeometry();
   }
-  f->DidSetWidgetGeometry();
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -3051,18 +3043,18 @@ nsRootPresContext::ApplyPluginGeometryUpdates()
 #ifndef XP_MACOSX
   CancelApplyPluginGeometryTimer();
 
-  PluginGetGeometryUpdateClosure closure;
-  mRegisteredPlugins.EnumerateEntries(PluginGetGeometryUpdate, &closure);
+  nsTArray<nsIWidget::Configuration> configurations;
+  PluginGetGeometryUpdate(mRegisteredPlugins, &configurations);
   // Walk mRegisteredPlugins and ask each plugin for its configuration
-  if (!closure.mConfigurations.IsEmpty()) {
-    nsIWidget* widget = closure.mConfigurations[0].mChild->GetParent();
+  if (!configurations.IsEmpty()) {
+    nsIWidget* widget = configurations[0].mChild->GetParent();
     NS_ASSERTION(widget, "Plugins must have a parent window");
-    SortConfigurations(&closure.mConfigurations);
-    widget->ConfigureChildren(closure.mConfigurations);
+    SortConfigurations(&configurations);
+    widget->ConfigureChildren(configurations);
   }
 #endif  // #ifndef XP_MACOSX
 
-  mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+  PluginDidSetGeometry(mRegisteredPlugins);
 }
 
 void
@@ -3073,17 +3065,18 @@ nsRootPresContext::CollectPluginGeometryUpdates(LayerManager* aLayerManager)
   // for transmission to the chrome process.
   NS_ASSERTION(aLayerManager, "layer manager is invalid!");
   mozilla::layers::ClientLayerManager* clm = aLayerManager->AsClientLayerManager();
-  PluginGetGeometryUpdateClosure closure;
-  mRegisteredPlugins.EnumerateEntries(PluginGetGeometryUpdate, &closure);
-  if (closure.mConfigurations.IsEmpty()) {
-    mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+
+  nsTArray<nsIWidget::Configuration> configurations;
+  PluginGetGeometryUpdate(mRegisteredPlugins, &configurations);
+  if (configurations.IsEmpty()) {
+    PluginDidSetGeometry(mRegisteredPlugins);
     return;
   }
-  SortConfigurations(&closure.mConfigurations);
+  SortConfigurations(&configurations);
   if (clm) {
-    clm->StorePluginWidgetConfigurations(closure.mConfigurations);
+    clm->StorePluginWidgetConfigurations(configurations);
   }
-  mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nullptr);
+  PluginDidSetGeometry(mRegisteredPlugins);
 #endif  // #ifndef XP_MACOSX
 }
 
