@@ -622,6 +622,7 @@ child:
     async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
                         nsCString[] aThreadNameFilters);
     async StopProfiler();
+    async PauseProfiler(bool aPause);
 
     async GatherProfile();
 
