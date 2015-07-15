@@ -6433,6 +6433,13 @@ GCRuntime::minorGC(JSContext* cx, JS::gcreason::Reason reason)
 }
 
 void
+GCRuntime::clearPostBarrierCallbacks()
+{
+    if (storeBuffer.hasPostBarrierCallbacks())
+        evictNursery();
+}
+
+void
 GCRuntime::disableGenerationalGC()
 {
     if (isGenerationalGCEnabled()) {
