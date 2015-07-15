@@ -5198,6 +5198,17 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         // Broken Content Detected. e.g. Content-MD5 check failure.
         error.AssignLiteral("corruptedContentError");
         break;
+      case NS_ERROR_INTERCEPTION_FAILED:
+      case NS_ERROR_OPAQUE_INTERCEPTION_DISABLED:
+      case NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE:
+      case NS_ERROR_INTERCEPTED_ERROR_RESPONSE:
+      case NS_ERROR_INTERCEPTED_USED_RESPONSE:
+      case NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION:
+        // ServiceWorker intercepted request, but something went wrong.
+        nsContentUtils::MaybeReportInterceptionErrorToConsole(GetDocument(),
+                                                              aError);
+        error.AssignLiteral("corruptedContentError");
+        break;
       default:
         break;
     }
@@ -7825,6 +7836,12 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
                aStatus == NS_ERROR_REMOTE_XUL ||
                aStatus == NS_ERROR_OFFLINE ||
+               aStatus == NS_ERROR_INTERCEPTION_FAILED ||
+               aStatus == NS_ERROR_OPAQUE_INTERCEPTION_DISABLED ||
+               aStatus == NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE ||
+               aStatus == NS_ERROR_INTERCEPTED_ERROR_RESPONSE ||
+               aStatus == NS_ERROR_INTERCEPTED_USED_RESPONSE ||
+               aStatus == NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION ||
                NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       // Errors to be shown for any frame
       DisplayLoadError(aStatus, url, nullptr, aChannel);
@@ -14091,7 +14108,7 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
   nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
-    aChannel->Cancel();
+    aChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
     return NS_OK;
   }
 

@@ -622,7 +622,7 @@ const KineticPanning = {
                    v.y * Math.exp(-t / c) * -c + a.y * t * t + v.y * c);
     }
 
-    let startTime = content.mozAnimationStartTime;
+    let startTime = content.performance.now();
     let elapsedTime = 0, targetedTime = 0, averageTime = 0;
 
     let velocity = this._velocity;
@@ -667,9 +667,9 @@ const KineticPanning = {
         return;
       }
 
-      content.mozRequestAnimationFrame(callback);
+      content.requestAnimationFrame(callback);
     }).bind(this);
 
-    content.mozRequestAnimationFrame(callback);
+    content.requestAnimationFrame(callback);
   }
 };

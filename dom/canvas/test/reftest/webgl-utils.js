@@ -62,7 +62,7 @@ function initGL(canvas) {
 }
 
 function rAF(func) {
-  var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame;
+  var raf = window.requestAnimationFrame;
   raf(func);
 }
 
