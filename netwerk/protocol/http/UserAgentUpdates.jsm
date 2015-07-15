@@ -10,6 +10,7 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -17,7 +18,13 @@ XPCOMUtils.defineLazyModuleGetter(
   this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
+  this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(
   this, "OS", "resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(
+  this, "Promise", "resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
   this, "UpdateChannel", "resource://gre/modules/UpdateChannel.jsm");
@@ -58,6 +65,30 @@ const PREF_APP_DISTRIBUTION_VERSION = "distribution.version";
 
 var gInitialized = false;
 
+function readChannel(url) {
+  return new Promise((resolve, reject) => {
+    try {
+      let channel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+      channel.contentType = "application/json";
+
+      NetUtil.asyncFetch(channel, (inputStream, status) => {
+        if (!Components.isSuccessCode(status)) {
+          reject();
+          return;
+        }
+
+        let data = JSON.parse(
+          NetUtil.readInputStreamToString(inputStream, inputStream.available())
+        );
+        resolve(data);
+      });
+    } catch (ex) {
+      reject(new Error("UserAgentUpdates: Could not fetch " + url + " " +
+                       ex + "\n" + ex.stack));
+    }
+  });
+}
+
 this.UserAgentUpdates = {
   init: function(callback) {
     if (gInitialized) {
@@ -97,6 +128,7 @@ this.UserAgentUpdates = {
     }
     // try loading from profile dir, then from app dir
     let dirs = [KEY_PREFDIR, KEY_APPDIR];
+
     dirs.reduce((prevLoad, dir) => {
       let file = FileUtils.getFile(dir, [FILE_UPDATES], true).path;
       // tryNext returns promise to read file under dir and parse it
@@ -111,10 +143,18 @@ this.UserAgentUpdates = {
       );
       // try to load next one if the previous load failed
       return prevLoad ? prevLoad.then(null, tryNext) : tryNext();
-    }, null).then(
-      // apply update if loading was successful
-      (update) => this._applyUpdate(update)
-    );
+    }, null).then(null, (ex) => {
+      if (AppConstants.platform !== "android") {
+        // All previous (non-Android) load attempts have failed, so we bail.
+        throw new Error("UserAgentUpdates: Failed to load " + FILE_UPDATES +
+                         ex + "\n" + ex.stack);
+      }
+      // Make one last attempt to read from the Fennec APK root.
+      return readChannel("resource://android/" + FILE_UPDATES);
+    }).then((update) => {
+      // Apply update if loading was successful
+      this._applyUpdate(update);
+    }).catch(Cu.reportError);
     this._scheduleUpdate();
   },
 
