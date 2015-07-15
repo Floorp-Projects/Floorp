@@ -33,17 +33,20 @@ class TransportLayerNSPRAdapter {
  public:
   explicit TransportLayerNSPRAdapter(TransportLayer *output) :
   output_(output),
-  input_() {}
+  input_(),
+  enabled_(true) {}
 
   void PacketReceived(const void *data, int32_t len);
   int32_t Recv(void *buf, int32_t buflen);
   int32_t Write(const void *buf, int32_t length);
+  void SetEnabled(bool enabled) { enabled_ = enabled; }
 
  private:
   DISALLOW_COPY_ASSIGN(TransportLayerNSPRAdapter);
 
   TransportLayer *output_;
   std::queue<Packet *> input_;
+  bool enabled_;
 };
 
 class TransportLayerDtls final : public TransportLayer {
