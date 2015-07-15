@@ -47,11 +47,33 @@ add_task(function* setUp() {
   Services.search.currentEngine = engine;
 });
 
-add_task(function* disabled() {
+add_task(function* disabled_urlbarSuggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
   yield check_autocomplete({
     search: "hello",
     matches: [],
+  });
+  yield cleanUpSuggestions();
+});
+
+add_task(function* disabled_allSuggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
+  yield check_autocomplete({
+    search: "hello",
+    matches: [],
+  });
+  yield cleanUpSuggestions();
+});
+
+add_task(function* disabled_privateWindow() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  yield check_autocomplete({
+    search: "hello",
+    matches: [],
+    searchParam: "private-window",
   });
   yield cleanUpSuggestions();
 });
