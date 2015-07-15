@@ -504,6 +504,17 @@ JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
     }
 }
 
+/* static */ void
+JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
+{
+    MOZ_ASSERT(trc->runtime()->isHeapMajorCollecting());
+    for (CompartmentsIter c(trc->runtime(), SkipAtoms); !c.done(); c.next()) {
+        if (!c->zone()->isCollecting())
+            c->traceOutgoingCrossCompartmentWrappers(trc);
+    }
+    Debugger::markIncomingCrossCompartmentEdges(trc);
+}
+
 void
 JSCompartment::trace(JSTracer* trc)
 {

@@ -523,12 +523,13 @@ struct JSCompartment
      */
     void traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark);
     /*
-     * This method marks pointers that cross compartment boundaries. It is
+     * These methods mark pointers that cross compartment boundaries. They are
      * called in per-zone GCs to prevent the wrappers' outgoing edges from
      * dangling (full GCs naturally follow pointers across compartments) and
      * when compacting to update cross-compartment pointers.
      */
     void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
+    static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
 
     bool preserveJitCode() { return gcPreserveJitCode; }
 
