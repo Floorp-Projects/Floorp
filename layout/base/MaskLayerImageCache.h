@@ -274,9 +274,6 @@ protected:
   };
 
   nsTHashtable<MaskLayerImageEntry> mMaskImageContainers;
-
-  // helper funtion for Sweep(), called for each entry in the hashtable
-  static PLDHashOperator SweepFunc(MaskLayerImageEntry* aEntry, void* aUserArg);
 };
 
 
