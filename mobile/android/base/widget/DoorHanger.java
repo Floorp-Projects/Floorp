@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
@@ -30,12 +29,12 @@ public abstract class DoorHanger extends LinearLayout {
                 return new LoginDoorHanger(context, config);
             case TRACKING:
             case MIXED_CONTENT:
-                return new DefaultDoorHanger(context, config, type);
+                return new ContentSecurityDoorHanger(context, config, type);
         }
         return new DefaultDoorHanger(context, config, type);
     }
 
-    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT}
+    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT, GEOLOCATION }
 
     public interface OnButtonClickListener {
         public void onButtonClick(JSONObject response, DoorHanger doorhanger);
@@ -153,6 +152,17 @@ public abstract class DoorHanger extends LinearLayout {
     public void setIcon(int resId) {
         mIcon.setImageResource(resId);
         mIcon.setVisibility(View.VISIBLE);
+    }
+
+    protected void addLink(String label, final String url) {
+        mLink.setText(label);
+        mLink.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                 Tabs.getInstance().loadUrlInTab(url);
+            }
+        });
+        mLink.setVisibility(VISIBLE);
     }
 
     protected abstract OnClickListener makeOnButtonClickListener(final int id);

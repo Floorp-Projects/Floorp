@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <TextView android:id="@+id/security_title"
+              android:focusable="true"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:paddingBottom="@dimen/doorhanger_subsection_padding"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
+              android:visibility="gone"/>
+
+    <TextView android:id="@+id/security_state"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:paddingBottom="@dimen/doorhanger_section_padding_small"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Bold"
+              android:visibility="gone"/>
+
+    <TextView android:id="@+id/security_message"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
+
+</LinearLayout>

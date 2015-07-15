@@ -463,10 +463,13 @@
   <string name="loaded_mixed_content_message">&loaded_mixed_content_message;</string>
   <string name="blocked_mixed_content_message_top">&blocked_mixed_content_message_top;</string>
   <string name="blocked_mixed_content_message_bottom">&blocked_mixed_content_message_bottom;</string>
-  <string name="loaded_tracking_content_message_top">&loaded_tracking_content_message_top;</string>
-  <string name="loaded_tracking_content_message_bottom">&loaded_tracking_content_message_bottom;</string>
-  <string name="blocked_tracking_content_message_top">&blocked_tracking_content_message_top2;</string>
-  <string name="blocked_tracking_content_message_bottom">&blocked_tracking_content_message_bottom2;</string>
+
+  <string name="doorhanger_tracking_title">&doorhanger_tracking_title;</string>
+  <string name="doorhanger_tracking_state_enabled">&doorhanger_tracking_state_enabled;</string>
+  <string name="doorhanger_tracking_state_disabled">&doorhanger_tracking_state_disabled;</string>
+  <string name="doorhanger_tracking_message_enabled">&doorhanger_tracking_message_enabled;</string>
+  <string name="doorhanger_tracking_message_disabled">&doorhanger_tracking_message_disabled;</string>
+
   <string name="learn_more">&learn_more;</string>
   <string name="enable_protection">&enable_protection;</string>
   <string name="disable_protection">&disable_protection;</string>

@@ -16,7 +16,6 @@ let DetailsView = {
     "waterfall": {
       id: "waterfall-view",
       view: WaterfallView,
-      actors: ["timeline"],
       features: ["withMarkers"]
     },
     "js-calltree": {
@@ -26,18 +25,15 @@ let DetailsView = {
     "js-flamegraph": {
       id: "js-flamegraph-view",
       view: JsFlameGraphView,
-      actors: ["timeline"]
     },
     "memory-calltree": {
       id: "memory-calltree-view",
       view: MemoryCallTreeView,
-      actors: ["memory"],
       features: ["withAllocations"]
     },
     "memory-flamegraph": {
       id: "memory-flamegraph-view",
       view: MemoryFlameGraphView,
-      actors: ["memory", "timeline"],
       features: ["withAllocations"]
     },
     "optimizations": {
@@ -97,7 +93,7 @@ let DetailsView = {
     let invalidCurrentView = false;
 
     for (let [name, { view }] of Iterator(this.components)) {
-      let isSupported = this._isViewSupported(name, true);
+      let isSupported = this._isViewSupported(name);
 
       $(`toolbarbutton[data-view=${name}]`).hidden = !isSupported;
 
@@ -123,15 +119,21 @@ let DetailsView = {
   }),
 
   /**
-   * Takes a view name and optionally if there must be a currently recording in progress.
+   * Takes a view name and determines if the current recording 
+   * can support the view.
    *
    * @param {string} viewName
-   * @param {boolean?} mustBeCompleted
    * @return {boolean}
    */
-  _isViewSupported: function (viewName, mustBeCompleted) {
-    let { features, actors } = this.components[viewName];
-    return PerformanceController.isFeatureSupported({ features, actors, mustBeCompleted });
+  _isViewSupported: function (viewName) {
+    let { features } = this.components[viewName];
+    let recording = PerformanceController.getCurrentRecording();
+
+    if (!recording || !recording.isCompleted()) {
+      return false;
+    }
+
+    return PerformanceController.isFeatureSupported(features);
   },
 
   /**

@@ -4,6 +4,7 @@
 
 from __future__ import print_function, unicode_literals
 
+import errno
 import os
 import platform
 import sys
@@ -21,6 +22,36 @@ MOZBUILD_STATE_PATH environment variable to the directory you would like to
 use and re-run mach. For this change to take effect forever, you'll likely
 want to export this environment variable from your shell's init scripts.
 '''.lstrip()
+
+NO_MERCURIAL_SETUP = '''
+*** MERCURIAL NOT CONFIGURED ***
+
+mach has detected that you have never run `mach mercurial-setup`.
+
+Running this command will ensure your Mercurial version control tool is up
+to date and optimally configured for a better, more productive experience
+when working on Mozilla projects.
+
+Please run `mach mercurial-setup` now.
+'''.strip()
+
+OLD_MERCURIAL_TOOLS = '''
+*** MERCURIAL CONFIGURATION POTENTIALLY OUT OF DATE ***
+
+mach has detected that it has been a while since you have run
+`mach mercurial-setup`.
+
+Having the latest Mercurial tools and configuration should lead to a better,
+more productive experience when working on Mozilla projects.
+
+Please run `mach mercurial-setup` now.
+
+To avoid this message in the future, run `mach mercurial-setup` once a month.
+Or, schedule `mach mercurial-setup --update-only` to run automatically in
+the background at least once a month.
+'''.strip()
+
+MERCURIAL_SETUP_FATAL_INTERVAL = 31 * 24 * 60 * 60
 
 
 # TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
@@ -151,6 +182,21 @@ CATEGORIES = {
 }
 
 
+def get_state_dir():
+    """Obtain the path to a directory to hold state.
+
+    Returns a tuple of the path and a bool indicating whether the value came
+    from an environment variable.
+    """
+    state_user_dir = os.path.expanduser('~/.mozbuild')
+    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH', None)
+
+    if state_env_dir:
+        return state_env_dir, True
+    else:
+        return state_user_dir, False
+
+
 def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
@@ -177,23 +223,69 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
         import mach.main
 
+    def pre_dispatch_handler(context, handler, args):
+        """Perform global checks before command dispatch.
+
+        Currently, our goal is to ensure developers periodically run
+        `mach mercurial-setup` (when applicable) to ensure their Mercurial
+        tools are up to date.
+        """
+        # Don't do anything when...
+
+        # The user is performing a maintenance command.
+        if handler.name in ('bootstrap', 'doctor', 'mercurial-setup'):
+            return
+
+        # We are running in automation.
+        if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
+            return
+
+        # We are a curmudgeon who has found this undocumented variable.
+        if 'I_PREFER_A_SUBOPTIMAL_MERCURIAL_EXPERIENCE' in os.environ:
+            return
+
+        # The environment is likely a machine invocation.
+        if not sys.stdin.isatty():
+            return
+
+        # Mercurial isn't managing this source checkout.
+        if not os.path.exists(os.path.join(topsrcdir, '.hg')):
+            return
+
+        state_dir = get_state_dir()[0]
+        last_check_path = os.path.join(state_dir, 'mercurial',
+                                       'setup.lastcheck')
+
+        mtime = None
+        try:
+            mtime = os.path.getmtime(last_check_path)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+        # No last run file means mercurial-setup has never completed.
+        if mtime is None:
+            print(NO_MERCURIAL_SETUP, file=sys.stderr)
+            sys.exit(2)
+        elif time.time() - mtime > MERCURIAL_SETUP_FATAL_INTERVAL:
+            print(OLD_MERCURIAL_TOOLS, file=sys.stderr)
+            sys.exit(2)
+
     def populate_context(context, key=None):
         if key is None:
             return
         if key == 'state_dir':
-            state_user_dir = os.path.expanduser('~/.mozbuild')
-            state_env_dir = os.environ.get('MOZBUILD_STATE_PATH', None)
-            if state_env_dir:
-                if not os.path.exists(state_env_dir):
+            state_dir, is_environ = get_state_dir()
+            if is_environ:
+                if not os.path.exists(state_dir):
                     print('Creating global state directory from environment variable: %s'
-                        % state_env_dir)
-                    os.makedirs(state_env_dir, mode=0o770)
+                        % state_dir)
+                    os.makedirs(state_dir, mode=0o770)
                     print('Please re-run mach.')
                     sys.exit(1)
-                state_dir = state_env_dir
             else:
-                if not os.path.exists(state_user_dir):
-                    print(STATE_DIR_FIRST_RUN.format(userdir=state_user_dir))
+                if not os.path.exists(state_dir):
+                    print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
                     try:
                         for i in range(20, -1, -1):
                             time.sleep(1)
@@ -202,15 +294,19 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                     except KeyboardInterrupt:
                         sys.exit(1)
 
-                    print('\nCreating default state directory: %s' % state_user_dir)
-                    os.mkdir(state_user_dir)
+                    print('\nCreating default state directory: %s' % state_dir)
+                    os.mkdir(state_dir)
                     print('Please re-run mach.')
                     sys.exit(1)
-                state_dir = state_user_dir
 
             return state_dir
+
         if key == 'topdir':
             return topsrcdir
+
+        if key == 'pre_dispatch_handler':
+            return pre_dispatch_handler
+
         raise AttributeError(key)
 
     mach = mach.main.Mach(os.getcwd())

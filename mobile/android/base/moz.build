@@ -510,6 +510,7 @@ gbjar.sources += [
     'widget/ButtonToast.java',
     'widget/CheckableLinearLayout.java',
     'widget/ClickableWhenDisabledEditText.java',
+    'widget/ContentSecurityDoorHanger.java',
     'widget/DateTimePicker.java',
     'widget/DefaultDoorHanger.java',
     'widget/Divider.java',

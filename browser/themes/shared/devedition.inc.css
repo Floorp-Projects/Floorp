@@ -50,12 +50,6 @@
   --toolbarbutton-combined-boxshadow: none;
   --toolbarbutton-combined-backgroundimage: linear-gradient(#5F6670 0, #5F6670 18px);
 
-  /* Identity box */
-  --identity-box-chrome-color: #46afe3;
-  --identity-box-chrome-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
-  --identity-box-verified-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
-  --verified-identity-box-backgroundcolor: transparent;
-
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
   --url-and-searchbar-color: #fff;
@@ -69,6 +63,14 @@
 
   /* Menu button separator */
   --panel-ui-button-background-image: linear-gradient(to bottom, transparent, #5F6670 30%, #5F6670 70%, transparent);
+}
+
+:root[devtoolstheme="dark"] #identity-box {
+  --identity-box-chrome-color: #46afe3;
+  --identity-box-chrome-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
+  --identity-box-verified-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
+  --verified-identity-box-background-color: transparent;
+  --identity-box-selected-background-color: rgba(231,230,230,.2);
 }
 
 :root[devtoolstheme="dark"] .searchbar-dropmarker-image {

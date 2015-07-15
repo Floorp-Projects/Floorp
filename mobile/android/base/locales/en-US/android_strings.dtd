@@ -558,10 +558,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY blocked_mixed_content_message_bottom "Most websites will still work properly even when this content is blocked.">
 
 <!-- Tracking content notifications in site identity popup -->
-<!ENTITY loaded_tracking_content_message_top "Tracking protection disabled.">
-<!ENTITY loaded_tracking_content_message_bottom "Parts of this page may track your online activity.">
-<!ENTITY blocked_tracking_content_message_top2 "Tracking protection enabled.">
-<!ENTITY blocked_tracking_content_message_bottom2 "Parts of the page that track your online activity have been blocked.">
+<!ENTITY doorhanger_tracking_title "Tracking protection">
+<!ENTITY doorhanger_tracking_state_enabled "Enabled">
+<!ENTITY doorhanger_tracking_state_disabled "Disabled">
+<!ENTITY doorhanger_tracking_message_enabled "Blocking tracking elements that may affect your browsing experience.">
+<!ENTITY doorhanger_tracking_message_disabled "Attempts to track your online behavior are not being blocked.">
 
 <!-- Common mixed and tracking content strings in site identity popup -->
 <!ENTITY learn_more "Learn More">
