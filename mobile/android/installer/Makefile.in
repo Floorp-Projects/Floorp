@@ -16,7 +16,13 @@ include $(topsrcdir)/config/rules.mk
 
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
-MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
+MOZ_PKG_MANIFEST = $(srcdir)/package-manifest.in
+
+ifdef MOZ_CHROME_MULTILOCALE
+MOZ_PKG_MANIFEST_DEPS = locale-manifest.in
+
+DEFINES += -DPKG_LOCALE_MANIFEST=$(CURDIR)/locale-manifest.in
+endif
 
 DEFINES += \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
@@ -29,10 +35,6 @@ DEFINES += \
 
 ifdef MOZ_DEBUG
 DEFINES += -DMOZ_DEBUG=1
-endif
-
-ifdef MOZ_PKG_MANIFEST_P
-MOZ_PKG_MANIFEST = package-manifest
 endif
 
 MOZ_PACKAGER_MINIFY=1
@@ -63,14 +65,12 @@ ifdef ENABLE_MARIONETTE
 DEFINES += -DENABLE_MARIONETTE=1
 endif
 
-ifdef MOZ_PKG_MANIFEST_P
+
+ifdef MOZ_CHROME_MULTILOCALE
 # When MOZ_CHROME_MULTILOCALE is defined, we write multilocale.json like:
 # {"locales": ["en-US", "de", "ar", ...]}
-
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS) FORCE
-	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
-ifdef MOZ_CHROME_MULTILOCALE
-	printf '\n[multilocale]\n' >> $@
+locale-manifest.in: $(GLOBAL_DEPS) FORCE
+	printf '\n[multilocale]\n' > $@
 	printf '@BINPATH@/res/multilocale.json\n' >> $@
 	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
 	do \
@@ -80,7 +80,6 @@ ifdef MOZ_CHROME_MULTILOCALE
 	COMMA=,
 	echo '{"locales": [$(foreach l,$(MOZ_CHROME_MULTILOCALE),"$(l)"$(COMMA)) "en-US"]}' \
 	  > $(FINAL_TARGET)/res/multilocale.json
-endif
 
-GARBAGE += $(MOZ_PKG_MANIFEST)
+GARBAGE += locale-manifest.in
 endif
