@@ -92,7 +92,8 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 .PanelUI-subView toolbarseparator,
 .PanelUI-subView menuseparator,
 .cui-widget-panelview menuseparator,
-#PanelUI-footer-inner > toolbarseparator {
+#PanelUI-footer-inner > toolbarseparator,
+#PanelUI-footer-fxa > toolbarseparator {
   -moz-appearance: none !important;
 }
 
