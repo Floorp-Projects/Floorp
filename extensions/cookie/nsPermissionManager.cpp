@@ -1455,57 +1455,31 @@ nsPermissionManager::GetPermissionHashKey(const nsACString& aHost,
   return nullptr;
 }
 
-// helper struct for passing arguments into hash enumeration callback.
-struct nsGetEnumeratorData
-{
-  nsGetEnumeratorData(nsCOMArray<nsIPermission> *aArray,
-                      const nsTArray<nsCString> *aTypes,
-                      int64_t aSince = 0)
-   : array(aArray)
-   , types(aTypes)
-   , since(aSince) {}
-
-  nsCOMArray<nsIPermission> *array;
-  const nsTArray<nsCString> *types;
-  int64_t since;
-};
-
-static PLDHashOperator
-AddPermissionsToList(nsPermissionManager::PermissionHashKey* entry, void *arg)
-{
-  nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(arg);
-
-  for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
-
-    // given how "default" permissions work and the possibility of them being
-    // overridden with UNKNOWN_ACTION, we might see this value here - but we
-    // do *not* want to return them via the enumerator.
-    if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-      continue;
-    }
-
-    nsPermission *perm = new nsPermission(entry->GetKey()->mHost,
-                                          entry->GetKey()->mAppId,
-                                          entry->GetKey()->mIsInBrowserElement,
-                                          data->types->ElementAt(permEntry.mType),
-                                          permEntry.mPermission,
-                                          permEntry.mExpireType,
-                                          permEntry.mExpireTime);
-
-    data->array->AppendObject(perm);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
   // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
-  nsGetEnumeratorData data(&array, &mTypeArray);
 
-  mPermissionTable.EnumerateEntries(AddPermissionsToList, &data);
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
+    for (const auto& permEntry : entry->GetPermissions()) {
+      // Given how "default" permissions work and the possibility of them being
+      // overridden with UNKNOWN_ACTION, we might see this value here - but we
+      // do *not* want to return them via the enumerator.
+      if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+        continue;
+      }
+
+      array.AppendObject(
+        new nsPermission(entry->GetKey()->mHost,
+                         entry->GetKey()->mAppId,
+                         entry->GetKey()->mIsInBrowserElement,
+                         mTypeArray.ElementAt(permEntry.mType),
+                         permEntry.mPermission,
+                         permEntry.mExpireType,
+                         permEntry.mExpireTime));
+    }
+  }
 
   return NS_NewArrayEnumerator(aEnum, array);
 }
@@ -1529,42 +1503,29 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
   return NS_OK;
 }
 
-static PLDHashOperator
-AddPermissionsModifiedSinceToList(
-  nsPermissionManager::PermissionHashKey* entry, void* arg)
-{
-  nsGetEnumeratorData* data = static_cast<nsGetEnumeratorData *>(arg);
-
-  for (size_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    const nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
-
-    if (data->since > permEntry.mModificationTime) {
-      continue;
-    }
-
-    nsPermission* perm = new nsPermission(entry->GetKey()->mHost,
-                                          entry->GetKey()->mAppId,
-                                          entry->GetKey()->mIsInBrowserElement,
-                                          data->types->ElementAt(permEntry.mType),
-                                          permEntry.mPermission,
-                                          permEntry.mExpireType,
-                                          permEntry.mExpireTime);
-
-    data->array->AppendObject(perm);
-  }
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsPermissionManager::RemoveAllModifiedSince(int64_t aModificationTime)
 {
   ENSURE_NOT_CHILD_PROCESS;
 
-  // roll an nsCOMArray of all our permissions, then hand out an enumerator
   nsCOMArray<nsIPermission> array;
-  nsGetEnumeratorData data(&array, &mTypeArray, aModificationTime);
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
+    for (const auto& permEntry : entry->GetPermissions()) {
+      if (aModificationTime > permEntry.mModificationTime) {
+        continue;
+      }
 
-  mPermissionTable.EnumerateEntries(AddPermissionsModifiedSinceToList, &data);
+      array.AppendObject(
+        new nsPermission(entry->GetKey()->mHost,
+                         entry->GetKey()->mAppId,
+                         entry->GetKey()->mIsInBrowserElement,
+                         mTypeArray.ElementAt(permEntry.mType),
+                         permEntry.mPermission,
+                         permEntry.mExpireType,
+                         permEntry.mExpireTime));
+    }
+  }
 
   for (int32_t i = 0; i<array.Count(); ++i) {
     nsAutoCString host;
@@ -1599,29 +1560,6 @@ nsPermissionManager::RemoveAllModifiedSince(int64_t aModificationTime)
   return NS_OK;
 }
 
-PLDHashOperator
-nsPermissionManager::GetPermissionsForApp(nsPermissionManager::PermissionHashKey* entry, void* arg)
-{
-  GetPermissionsForAppStruct* data = static_cast<GetPermissionsForAppStruct*>(arg);
-  if (entry->GetKey()->mAppId != data->appId ||
-      (data->browserOnly && !entry->GetKey()->mIsInBrowserElement)) {
-    return PL_DHASH_NEXT;
-  }
-
-  for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
-    data->permissions.AppendObject(new nsPermission(entry->GetKey()->mHost,
-                                                    entry->GetKey()->mAppId,
-                                                    entry->GetKey()->mIsInBrowserElement,
-                                                    gPermissionManager->mTypeArray.ElementAt(permEntry.mType),
-                                                    permEntry.mPermission,
-                                                    permEntry.mExpireType,
-                                                    permEntry.mExpireTime));
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
 {
@@ -1632,9 +1570,9 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   // After clearing the DB, we call AddInternal() to make sure that all
   // processes are aware of this change and the representation of the DB in
   // memory is updated.
-  // We have to get all permissions associated with an application and then
-  // remove those because doing so in EnumerateEntries() would fail because
-  // we might happen to actually delete entries from the list.
+  // We have to get all permissions associated with an application first
+  // because removing entries from the permissions table while iterating over
+  // it is dangerous.
 
   nsAutoCString sql;
   sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
@@ -1652,17 +1590,34 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   rv = removeStmt->ExecuteAsync(nullptr, getter_AddRefs(pending));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  GetPermissionsForAppStruct data(aAppId, aBrowserOnly);
-  mPermissionTable.EnumerateEntries(GetPermissionsForApp, &data);
+  nsCOMArray<nsIPermission> permissions;
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
+    if (entry->GetKey()->mAppId != aAppId ||
+        (aBrowserOnly && !entry->GetKey()->mIsInBrowserElement)) {
+      continue;
+    }
 
-  for (int32_t i=0; i<data.permissions.Count(); ++i) {
+    for (const auto& permEntry : entry->GetPermissions()) {
+      permissions.AppendObject(
+        new nsPermission(entry->GetKey()->mHost,
+                         entry->GetKey()->mAppId,
+                         entry->GetKey()->mIsInBrowserElement,
+                         mTypeArray.ElementAt(permEntry.mType),
+                         permEntry.mPermission,
+                         permEntry.mExpireType,
+                         permEntry.mExpireTime));
+    }
+  }
+
+  for (int32_t i = 0; i < permissions.Count(); ++i) {
     nsAutoCString host;
     bool isInBrowserElement;
     nsAutoCString type;
 
-    data.permissions[i]->GetHost(host);
-    data.permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
-    data.permissions[i]->GetType(type);
+    permissions[i]->GetHost(host);
+    permissions[i]->GetIsInBrowserElement(&isInBrowserElement);
+    permissions[i]->GetType(type);
 
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipal(host, aAppId, isInBrowserElement,
@@ -1685,62 +1640,59 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   return NS_OK;
 }
 
-PLDHashOperator
-nsPermissionManager::RemoveExpiredPermissionsForAppEnumerator(
-  nsPermissionManager::PermissionHashKey* entry, void* arg)
-{
-  uint32_t* appId = static_cast<uint32_t*>(arg);
-  if (entry->GetKey()->mAppId != *appId) {
-    return PL_DHASH_NEXT;
-  }
-
-  for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
-    nsPermissionManager::PermissionEntry& permEntry = entry->GetPermissions()[i];
-    if (permEntry.mExpireType != nsIPermissionManager::EXPIRE_SESSION) {
-      continue;
-    }
-
-    if (permEntry.mNonSessionExpireType == nsIPermissionManager::EXPIRE_SESSION) {
-      PermissionEntry oldPermissionEntry = entry->GetPermissions()[i];
-
-      entry->GetPermissions().RemoveElementAt(i);
-
-      gPermissionManager->NotifyObserversWithPermission(entry->GetKey()->mHost,
-                                                        entry->GetKey()->mAppId,
-                                                        entry->GetKey()->mIsInBrowserElement,
-                                                        gPermissionManager->mTypeArray.ElementAt(oldPermissionEntry.mType),
-                                                        oldPermissionEntry.mPermission,
-                                                        oldPermissionEntry.mExpireType,
-                                                        oldPermissionEntry.mExpireTime,
-                                                        MOZ_UTF16("deleted"));
-      --i;
-      continue;
-    }
-
-    permEntry.mPermission = permEntry.mNonSessionPermission;
-    permEntry.mExpireType = permEntry.mNonSessionExpireType;
-    permEntry.mExpireTime = permEntry.mNonSessionExpireTime;
-
-    gPermissionManager->NotifyObserversWithPermission(entry->GetKey()->mHost,
-                                                      entry->GetKey()->mAppId,
-                                                      entry->GetKey()->mIsInBrowserElement,
-                                                      gPermissionManager->mTypeArray.ElementAt(permEntry.mType),
-                                                      permEntry.mPermission,
-                                                      permEntry.mExpireType,
-                                                      permEntry.mExpireTime,
-                                                      MOZ_UTF16("changed"));
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsPermissionManager::RemoveExpiredPermissionsForApp(uint32_t aAppId)
 {
   ENSURE_NOT_CHILD_PROCESS;
 
-  if (aAppId != nsIScriptSecurityManager::NO_APP_ID) {
-    mPermissionTable.EnumerateEntries(RemoveExpiredPermissionsForAppEnumerator, &aAppId);
+  if (aAppId == nsIScriptSecurityManager::NO_APP_ID) {
+    return NS_OK;
+  }
+
+  for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
+    PermissionHashKey* entry = iter.Get();
+    if (entry->GetKey()->mAppId != aAppId) {
+      continue;
+    }
+
+    for (uint32_t i = 0; i < entry->GetPermissions().Length(); ++i) {
+      PermissionEntry& permEntry = entry->GetPermissions()[i];
+      if (permEntry.mExpireType != nsIPermissionManager::EXPIRE_SESSION) {
+        continue;
+      }
+
+      if (permEntry.mNonSessionExpireType ==
+            nsIPermissionManager::EXPIRE_SESSION) {
+        PermissionEntry oldPermEntry = entry->GetPermissions()[i];
+
+        entry->GetPermissions().RemoveElementAt(i);
+
+        NotifyObserversWithPermission(entry->GetKey()->mHost,
+                                      entry->GetKey()->mAppId,
+                                      entry->GetKey()->mIsInBrowserElement,
+                                      mTypeArray.ElementAt(oldPermEntry.mType),
+                                      oldPermEntry.mPermission,
+                                      oldPermEntry.mExpireType,
+                                      oldPermEntry.mExpireTime,
+                                      MOZ_UTF16("deleted"));
+
+        --i;
+        continue;
+      }
+
+      permEntry.mPermission = permEntry.mNonSessionPermission;
+      permEntry.mExpireType = permEntry.mNonSessionExpireType;
+      permEntry.mExpireTime = permEntry.mNonSessionExpireTime;
+
+      NotifyObserversWithPermission(entry->GetKey()->mHost,
+                                    entry->GetKey()->mAppId,
+                                    entry->GetKey()->mIsInBrowserElement,
+                                    mTypeArray.ElementAt(permEntry.mType),
+                                    permEntry.mPermission,
+                                    permEntry.mExpireType,
+                                    permEntry.mExpireTime,
+                                    MOZ_UTF16("changed"));
+    }
   }
 
   return NS_OK;
