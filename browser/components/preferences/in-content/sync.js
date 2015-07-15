@@ -187,15 +187,15 @@ let gSyncPane = {
     setEventListener("syncComputerName", "change", function (e) {
       gSyncUtils.changeName(e.target);
     });
-    setEventListener("fxaChangeDeviceName", "click", function () {
+    setEventListener("fxaChangeDeviceName", "command", function () {
       this._toggleComputerNameControls(true);
       this._focusComputerNameTextbox();
     });
-    setEventListener("fxaCancelChangeDeviceName", "click", function () {
+    setEventListener("fxaCancelChangeDeviceName", "command", function () {
       this._toggleComputerNameControls(false);
       this._updateComputerNameValue(false);
     });
-    setEventListener("fxaSaveChangeDeviceName", "click", function () {
+    setEventListener("fxaSaveChangeDeviceName", "command", function () {
       this._toggleComputerNameControls(false);
       this._updateComputerNameValue(true);
     });
@@ -319,11 +319,11 @@ let gSyncPane = {
         // We are logged in locally, but maybe we are in a state where the
         // server rejected our credentials (eg, password changed on the server)
         let fxaLoginStatus = document.getElementById("fxaLoginStatus");
-        let enginesListDisabled;
+        let syncReady;
         // Not Verfied implies login error state, so check that first.
         if (!data.verified) {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_UNVERIFIED;
-          enginesListDisabled = true;
+          syncReady = false;
         // So we think we are logged in, so login problems are next.
         // (Although if the Sync identity manager is still initializing, we
         // ignore login errors and assume all will eventually be good.)
@@ -332,12 +332,12 @@ let gSyncPane = {
         // away by themselves, so aren't reflected here.
         } else if (Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
-          enginesListDisabled = true;
+          syncReady = false;
         // Else we must be golden (or in an error state we expect to magically
         // resolve itself)
         } else {
           fxaLoginStatus.selectedIndex = FXA_LOGIN_VERIFIED;
-          enginesListDisabled = false;
+          syncReady = true;
         }
         fxaEmailAddress1Label.textContent = data.email;
         document.getElementById("fxaEmailAddress2").textContent = data.email;
@@ -345,8 +345,9 @@ let gSyncPane = {
         document.getElementById("fxaSyncComputerName").value = Weave.Service.clientsEngine.localName;
         let engines = document.getElementById("fxaSyncEngines")
         for (let checkbox of engines.querySelectorAll("checkbox")) {
-          checkbox.disabled = enginesListDisabled;
+          checkbox.disabled = !syncReady;
         }
+        document.getElementById("fxaChangeDeviceName").disabled = !syncReady;
 
         // Clear the profile image (if any) of the previously logged in account.
         document.getElementById("fxaProfileImage").style.removeProperty("background-image");
