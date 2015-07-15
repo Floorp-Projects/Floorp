@@ -335,6 +335,7 @@ WEBIDL_FILES = [
     'NodeIterator.webidl',
     'NodeList.webidl',
     'Notification.webidl',
+    'NotificationEvent.webidl',
     'NotifyPaintEvent.webidl',
     'OfflineAudioCompletionEvent.webidl',
     'OfflineAudioContext.webidl',

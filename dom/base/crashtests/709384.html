@@ -1,5 +1,5 @@
 <!DOCTYPE html>
 <script>
-  mozCancelRequestAnimationFrame(mozRequestAnimationFrame(function() {}));
-  mozRequestAnimationFrame(function() {});
+  cancelRequestAnimationFrame(requestAnimationFrame(function() {}));
+  requestAnimationFrame(function() {});
 </script>

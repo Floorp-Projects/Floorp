@@ -1761,10 +1761,10 @@ private:
   void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                        bool aUpdateCSSLoader);
 
-  // Revoke any pending notifications due to mozRequestAnimationFrame calls
+  // Revoke any pending notifications due to requestAnimationFrame calls
   void RevokeAnimationFrameNotifications();
   // Reschedule any notifications we need to handle
-  // mozRequestAnimationFrame, if it's OK to do so.
+  // requestAnimationFrame, if it's OK to do so.
   void MaybeRescheduleAnimationFrameNotifications();
 
   // These are not implemented and not supported.

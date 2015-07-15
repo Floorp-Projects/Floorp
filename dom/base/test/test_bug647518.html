@@ -22,7 +22,7 @@ SimpleTest.waitForExplicitFinish();
 var counter = 3;
 
 var called = false;
-var handle1 = window.mozRequestAnimationFrame(function() {
+var handle1 = window.requestAnimationFrame(function() {
   called = true;
 });
 ok(handle1 > 0, "Should get back a nonzero handle");
@@ -33,11 +33,11 @@ function checker() {
     is(called, false, "Canceled callback should not have been called");
     SimpleTest.finish();
   } else {
-    window.mozRequestAnimationFrame(checker);
+    window.requestAnimationFrame(checker);
   }
 }
-window.mozRequestAnimationFrame(checker);
-window.mozCancelAnimationFrame(handle1);
+window.requestAnimationFrame(checker);
+window.cancelAnimationFrame(handle1);
 
 </script>
 </pre>
