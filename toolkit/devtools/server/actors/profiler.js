@@ -51,6 +51,9 @@ let ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
     "profiler-stopped": {
       data: Arg(0, "json"),
     },
+    "profiler-status": {
+      data: Arg(0, "json"),
+    },
 
     // Only for older geckos, pre-protocol.js ProfilerActor (<Fx42).
     // Emitted on other events as a transition from older profiler events
@@ -145,6 +148,11 @@ let ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
       events: Option(0, "nullable:array:string"),
     },
     response: RetVal("json")
+  }),
+
+  setProfilerStatusInterval: actorBridge("setProfilerStatusInterval", {
+    request: { interval: Arg(0, "number") },
+    oneway: true
   }),
 
   /**
