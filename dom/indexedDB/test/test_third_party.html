@@ -10,11 +10,31 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
+    const BEHAVIOR_ACCEPT = 0;
+    const BEHAVIOR_REJECTFOREIGN = 1;
+    const BEHAVIOR_REJECT = 2;
+    const BEHAVIOR_LIMITFOREIGN = 3;
+
     const testData = [
-      { host: "http://" + window.location.host, expectedResult: true },
-      { host: "http://example.com", expectedResult: false },
-      { host: "http://sub1.test2.example.org:8000", expectedResult: false },
-      { host: "http://" + window.location.host, expectedResult: true }
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_ACCEPT, expectedResult: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_ACCEPT, expectedResult: true },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_ACCEPT, expectedResult: true },
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_ACCEPT, expectedResult: true },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECT, expectedResult: false },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECT, expectedResult: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECT, expectedResult: false },
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECT, expectedResult: false },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResult: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResult: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResult: false },
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResult: true },
+
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: false },
+      { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResult: true }
     ];
 
     const iframe1Path =
@@ -41,8 +61,12 @@
         testRunning = true;
         iframe.addEventListener("load", iframeLoaded, false);
       }
-
-      iframe.src = testData[testIndex].host + iframe1Path;
+      SpecialPowers.pushPrefEnv({
+        'set': [["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior]]
+      }, () => {
+        iframe.src = testData[testIndex].host + iframe1Path;
+      });
+      // SpecialPowers.setIntPref("network.cookie.cookieBehavior", testData[testIndex].cookieBehavior);
     }
 
     function messageListener(event) {
