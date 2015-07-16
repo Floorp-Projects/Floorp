@@ -2343,6 +2343,19 @@ GK_ATOM(toolbarspring, "toolbarspring")
 GK_ATOM(treegrid, "treegrid")
 GK_ATOM(_undefined, "undefined")
 GK_ATOM(xmlroles, "xml-roles")
+
+// MathML xml roles
+GK_ATOM(close_fence, "close-fence")
+GK_ATOM(denominator, "denominator")
+GK_ATOM(numerator, "numerator")
+GK_ATOM(open_fence, "open-fence")
+GK_ATOM(overscript, "overscript")
+GK_ATOM(presubscript, "presubscript")
+GK_ATOM(presuperscript, "presuperscript")
+GK_ATOM(root_index, "root-index")
+GK_ATOM(subscript, "subscript")
+GK_ATOM(superscript, "superscript")
+GK_ATOM(underscript, "underscript")
 #endif
 
 #ifdef MOZ_WEBSPEECH
