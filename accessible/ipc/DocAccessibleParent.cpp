@@ -67,6 +67,11 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
     return 0;
   }
 
+  if (mAccessibles.Contains(newChild.ID())) {
+    NS_ERROR("ID already in use");
+    return 0;
+  }
+
   auto role = static_cast<a11y::role>(newChild.Role());
   ProxyAccessible* newProxy =
     new ProxyAccessible(newChild.ID(), aParent, this, role);
@@ -94,6 +99,8 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
 {
   if (mShutdown)
     return true;
+
+  CheckDocTree();
 
   ProxyEntry* rootEntry = mAccessibles.GetEntry(aRootID);
   if (!rootEntry) {
@@ -234,6 +241,18 @@ DocAccessibleParent::Destroy()
     mParentDoc->RemoveChildDoc(this);
   else if (IsTopLevel())
     GetAccService()->RemoteDocShutdown(this);
+}
+
+void
+DocAccessibleParent::CheckDocTree() const
+{
+  size_t childDocs = mChildDocs.Length();
+  for (size_t i = 0; i < childDocs; i++) {
+    if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
+      MOZ_CRASH("document tree is broken!");
+
+    mChildDocs[i]->CheckDocTree();
+  }
 }
 
 } // a11y

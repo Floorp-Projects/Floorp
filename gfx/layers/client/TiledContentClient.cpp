@@ -866,7 +866,7 @@ ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
     // Reset the update rect
     tile.mUpdateRect = IntRect();
   }
-  return SurfaceDescriptorTiles(mValidRegion, mPaintedRegion,
+  return SurfaceDescriptorTiles(mValidRegion,
                                 tiles,
                                 mTiles.mFirst.x, mTiles.mFirst.y,
                                 mTiles.mSize.width, mTiles.mSize.height,

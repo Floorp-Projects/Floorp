@@ -66,40 +66,7 @@ TrackTypeToStr(TrackInfo::TrackType aTrack)
   }
 }
 
-bool
-AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
-{
-  SPSData spsdata;
-  if (H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
-   uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0) |
-                         (spsdata.constraint_set1_flag ? (1 << 1) : 0) |
-                         (spsdata.constraint_set2_flag ? (1 << 2) : 0) |
-                         (spsdata.constraint_set3_flag ? (1 << 3) : 0) |
-                         (spsdata.constraint_set4_flag ? (1 << 4) : 0) |
-                         (spsdata.constraint_set5_flag ? (1 << 5) : 0);
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG,
-                          constraints);
-
-    // Collect profile_idc values up to 244, otherwise 0 for unknown.
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_PROFILE,
-                          spsdata.profile_idc <= 244 ? spsdata.profile_idc : 0);
-
-    // Make sure level_idc represents a value between levels 1 and 5.2,
-    // otherwise collect 0 for unknown level.
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_LEVEL,
-                          (spsdata.level_idc >= 10 && spsdata.level_idc <= 52) ?
-                          spsdata.level_idc : 0);
-
-    // max_num_ref_frames should be between 0 and 16, anything larger will
-    // be treated as invalid.
-    Telemetry::Accumulate(Telemetry::VIDEO_H264_SPS_MAX_NUM_REF_FRAMES,
-                          std::min(spsdata.max_num_ref_frames, 17u));
-
-    return true;
-  }
-
-  return false;
-}
+extern bool AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata);
 
 // MP4Demuxer wants to do various blocking reads, which cause deadlocks while
 // mDemuxerMonitor is held. This stuff should really be redesigned, but we don't

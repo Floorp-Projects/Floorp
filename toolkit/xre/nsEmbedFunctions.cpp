@@ -604,6 +604,13 @@ XRE_InitChildProcess(int aArgc,
         return NS_ERROR_FAILURE;
       }
 
+#if defined(XP_WIN)
+      // Set child processes up such that they will get killed after the
+      // chrome process is killed in cases where the user shuts the system
+      // down or logs off.
+      ::SetProcessShutdownParameters(0x280 - 1, SHUTDOWN_NORETRY);
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
       // We need to do this after the process has been initialised, as
       // InitLoggingIfRequired may need access to prefs.

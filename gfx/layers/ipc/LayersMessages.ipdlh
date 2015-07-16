@@ -332,7 +332,6 @@ union TileDescriptor {
 
 struct SurfaceDescriptorTiles {
   nsIntRegion validRegion;
-  nsIntRegion paintedRegion;
   TileDescriptor[] tiles;
   int         firstTileX;
   int         firstTileY;

@@ -665,20 +665,20 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
     WritingMode wm = aReflowState.GetWritingMode();
     WritingMode kidWM = kidReflowState.GetWritingMode();
-    nscoord containerWidth = aReflowState.ComputedWidth();
+    nsSize containerSize = aReflowState.ComputedPhysicalSize();
 
     LogicalMargin margin = kidReflowState.ComputedLogicalMargin();
     LogicalPoint kidPt(kidWM, margin.IStart(kidWM), margin.BStart(kidWM));
 
-    kidReflowState.ApplyRelativePositioning(&kidPt, containerWidth);
+    kidReflowState.ApplyRelativePositioning(&kidPt, containerSize);
 
     // Reflow the frame
     ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                kidWM, kidPt, containerWidth, 0, aStatus);
+                kidWM, kidPt, containerSize, 0, aStatus);
 
     // Complete the reflow and position and size the child frame
     FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, &kidReflowState,
-                      kidWM, kidPt, containerWidth, 0);
+                      kidWM, kidPt, containerSize, 0);
 
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();

@@ -1365,7 +1365,7 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
         value = defaultIndexValue;
     }
 
-    if (forceComplete && value.IsEmpty()) {
+    if (forceComplete && value.IsEmpty() && shouldComplete) {
       // See if inputValue is one of the autocomplete results. It can be an
       // identical value, or if it matched the middle of a result it can be
       // something like "bar >> foobar" (user entered bar and foobar is
@@ -1384,34 +1384,39 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
         suggestedValue = inputValue;
       }
 
-      nsAutoString defaultValue;
       for (uint32_t i = 0; i < mResults.Length(); ++i) {
         nsIAutoCompleteResult *result = mResults[i];
         if (result) {
-          if (defaultValue.IsEmpty()) {
-            int32_t defaultIndex;
-            result->GetDefaultIndex(&defaultIndex);
-            if (defaultIndex >= 0) {
-              result->GetFinalCompleteValueAt(defaultIndex, defaultValue);
-            }
-          }
-
           uint32_t matchCount = 0;
           result->GetMatchCount(&matchCount);
           for (uint32_t j = 0; j < matchCount; ++j) {
             nsAutoString matchValue;
-            result->GetFinalCompleteValueAt(j, matchValue);
+            result->GetValueAt(j, matchValue);
             if (suggestedValue.Equals(matchValue, nsCaseInsensitiveStringComparator())) {
-              value = matchValue;
+              nsAutoString finalMatchValue;
+              result->GetFinalCompleteValueAt(j, finalMatchValue);
+              value = finalMatchValue;
               break;
             }
           }
         }
       }
-      if (value.IsEmpty()) {
-        // Since nothing was selected, and forceComplete is specified, that means
-        // we have to enter the first default match instead.
-        value = defaultValue;
+      // The value should have been set at this point. If not, then it's not
+      // a value that should be autocompleted.
+    }
+    else if (forceComplete && value.IsEmpty() && completeSelection) {
+      // Since nothing was selected, and forceComplete is specified, that means
+      // we have to find the first default match and enter it instead.
+      for (uint32_t i = 0; i < mResults.Length(); ++i) {
+        nsIAutoCompleteResult *result = mResults[i];
+        if (result) {
+          int32_t defaultIndex;
+          result->GetDefaultIndex(&defaultIndex);
+          if (defaultIndex >= 0) {
+            result->GetFinalCompleteValueAt(defaultIndex, value);
+            break;
+          }
+        }
       }
     }
   }
@@ -1760,6 +1765,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
  * contained in mSearchString. */
 {
   MOZ_ASSERT(mInput, "Must have a valid input");
+
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   const int32_t mSearchStringLength = mSearchString.Length();
   int32_t endSelect = aValue.Length();  // By default, select all of aValue.

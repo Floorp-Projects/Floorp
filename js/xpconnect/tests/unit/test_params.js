@@ -188,6 +188,9 @@ function test_component(contractid) {
   doIs2Test("testInterfaceIsArray", [makeA(), makeA(), makeA(), makeA(), makeA()], 5, Ci['nsIXPCTestInterfaceA'],
                                     [makeB(), makeB(), makeB()], 3, Ci['nsIXPCTestInterfaceB']);
 
+  // Test optional array size.
+  do_check_eq(o.testStringArrayOptionalSize(["some", "string", "array"]), "somestringarray");
+
   // Test incorrect (too big) array size parameter; this should throw NOT_ENOUGH_ELEMENTS.
   doTypedArrayMismatchTest("testShortArray", new Int16Array([-3, 7, 4]), 4,
                                              new Int16Array([1, -32, 6]), 3);

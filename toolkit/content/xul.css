@@ -134,8 +134,9 @@ toolbarbutton.badged-button {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged");
 }
 
-.toolbarbutton-badge[badge]:not([badge=""])::after {
-  content: attr(badge);
+.toolbarbutton-badge:not([value]),
+.toolbarbutton-badge[value=""] {
+  display: none;
 }
 
 toolbarbutton[type="menu"],

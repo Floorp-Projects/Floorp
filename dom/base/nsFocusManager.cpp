@@ -717,16 +717,6 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   if (!currentWindow)
     return NS_OK;
 
-  nsCOMPtr<nsIDocShell> currentDocShell = currentWindow->GetDocShell();
-
-  nsCOMPtr<nsIPresShell> presShell = currentDocShell->GetPresShell();
-  if (presShell) {
-    // disable selection mousedown state on activation
-    // XXXndeakin P3 not sure if this is necessary, but it doesn't hurt
-    nsRefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
-    frameSelection->SetDragState(false);
-  }
-
   // If there is no nsIXULWindow, then this is an embedded or child process window.
   // Pass false for aWindowRaised so that commands get updated.
   nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(baseWindow));
@@ -763,6 +753,19 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
 
   // clear the mouse capture as the active window has changed
   nsIPresShell::SetCapturingContent(nullptr, 0);
+
+  // In addition, reset the drag state to ensure that we are no longer in
+  // drag-select mode.
+  if (mFocusedWindow) {
+    nsCOMPtr<nsIDocShell> docShell = mFocusedWindow->GetDocShell();
+    if (docShell) {
+      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+      if (presShell) {
+        nsRefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
+        frameSelection->SetDragState(false);
+      }
+    }
+  }
 
   // If this is a parent or single process window, send the deactivate event.
   // Events for child process windows will be sent when ParentActivated

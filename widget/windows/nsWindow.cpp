@@ -2866,16 +2866,15 @@ FullscreenTransitionWindowProc(HWND hWnd, UINT uMsg,
   switch (uMsg) {
     case WM_FULLSCREEN_TRANSITION_BEFORE:
     case WM_FULLSCREEN_TRANSITION_AFTER: {
-      // The message sender should have added ref for us.
-      nsCOMPtr<nsIRunnable> callback =
-        already_AddRefed<nsIRunnable>((nsIRunnable*)wParam);
       DWORD duration = (DWORD)lParam;
       DWORD flags = AW_BLEND;
       if (uMsg == WM_FULLSCREEN_TRANSITION_AFTER) {
         flags |= AW_HIDE;
       }
       ::AnimateWindow(hWnd, duration, flags);
-      NS_DispatchToMainThread(callback);
+      // The message sender should have added ref for us.
+      NS_DispatchToMainThread(
+        already_AddRefed<nsIRunnable>((nsIRunnable*)wParam));
       break;
     }
     case WM_DESTROY:

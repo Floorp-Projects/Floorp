@@ -55,6 +55,10 @@ public:
   MediaTaskQueue* GetTaskQueue() { return mTaskQueue; }
   void NotifyTimeRangesChanged();
 
+  // Returns a string describing the state of the MediaSource internal
+  // buffered data. Used for debugging purposes.
+  void GetMozDebugReaderData(nsAString& aString);
+
 private:
   ~MediaSourceDemuxer();
   friend class MediaSourceTrackDemuxer;

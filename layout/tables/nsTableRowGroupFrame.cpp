@@ -261,7 +261,7 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
                                  nsIFrame*              aKidFrame,
                                  WritingMode            aWM,
                                  const LogicalPoint&    aKidPosition,
-                                 nscoord                aContainerWidth,
+                                 const nsSize&          aContainerSize,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  const nsRect&          aOriginalKidRect,
                                  const nsRect&          aOriginalKidVisualOverflow)
@@ -270,7 +270,7 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
 
   // Place and size the child
   FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr,
-                    aWM, aKidPosition, aContainerWidth, 0);
+                    aWM, aKidPosition, aContainerSize, 0);
 
   nsTableFrame::InvalidateTableFrame(aKidFrame, aOriginalKidRect,
                                      aOriginalKidVisualOverflow, isFirstReflow);
@@ -343,17 +343,11 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
                          tableFrame->IsGeometryDirty();
 
   // in vertical-rl mode, we always need the row bsizes in order to
-  // get the necessary containerWidth for placing our kids
+  // get the necessary containerSize for placing our kids
   bool needToCalcRowBSizes = reflowAllKids || wm.IsVerticalRL();
 
-  nscoord containerWidth = aReflowState.reflowState.ComputedWidth();
-  if (containerWidth == NS_UNCONSTRAINEDSIZE) {
-    containerWidth = 0; // we can't position frames correctly in RTL yet,
-                        // so they will need to be adjusted later
-  } else {
-    containerWidth +=
-      aReflowState.reflowState.ComputedPhysicalBorderPadding().LeftRight();
-  }
+  nsSize containerSize =
+    aReflowState.reflowState.ComputedSizeAsContainerIfConstrained();
 
   nsIFrame *prevKidFrame = nullptr;
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame;
@@ -373,7 +367,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
         (aReflowState.reflowState.mFlags.mSpecialBSizeReflow &&
          (isPaginated ||
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
-      LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerWidth);
+      LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerSize);
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
       // XXXldb We used to only pass aDesiredSize.mFlags through for the
@@ -408,13 +402,13 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
 
       LogicalPoint kidPosition(wm, 0, aReflowState.bCoord);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
-                  wm, kidPosition, containerWidth, 0, aStatus);
-      kidReflowState.ApplyRelativePositioning(&kidPosition, containerWidth);
+                  wm, kidPosition, containerSize, 0, aStatus);
+      kidReflowState.ApplyRelativePositioning(&kidPosition, containerSize);
 
       // Place the child
       PlaceChild(aPresContext, aReflowState, kidFrame,
-                 wm, kidPosition, containerWidth,
-                 desiredSize, oldKidRect.GetPhysicalRect(wm, containerWidth),
+                 wm, kidPosition, containerSize,
+                 desiredSize, oldKidRect.GetPhysicalRect(wm, containerSize),
                  oldKidVisualOverflow);
       aReflowState.bCoord += cellSpacingB;
 
@@ -558,10 +552,10 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
   // The current row group block-size is the block-origin of the 1st row
   // we are about to calculate a block-size for.
   WritingMode wm = aReflowState.GetWritingMode();
-  nscoord containerWidth = 0; // actual value is unimportant as we're initially
-                              // computing sizes, not physical positions
+  nsSize containerSize; // actual value is unimportant as we're initially
+                        // computing sizes, not physical positions
   nscoord startRowGroupBSize =
-    startRowFrame->GetLogicalNormalPosition(wm, containerWidth).B(wm);
+    startRowFrame->GetLogicalNormalPosition(wm, containerSize).B(wm);
 
   int32_t numRows = GetRowCount() - (startRowFrame->GetRowIndex() - GetStartRowIndex());
   // Collect the current bsize of each row.
@@ -787,9 +781,9 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
   }
 
   if (wm.IsVertical()) {
-    // we need the correct containerWidth below for block positioning in
+    // we need the correct containerSize below for block positioning in
     // vertical-rl writing mode
-    containerWidth = rowGroupBSize;
+    containerSize.width = rowGroupBSize;
   }
 
   nscoord bOrigin = startRowGroupBSize;
@@ -800,7 +794,7 @@ nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext*           aPresContext,
     LogicalSize rowBoundsSize(wm, rowBounds.Size());
     nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
     nscoord deltaB =
-      bOrigin - rowFrame->GetLogicalNormalPosition(wm, containerWidth).B(wm);
+      bOrigin - rowFrame->GetLogicalNormalPosition(wm, containerSize).B(wm);
 
     nscoord rowBSize = (rowInfo[rowIndex].bSize > 0) ? rowInfo[rowIndex].bSize : 0;
 
@@ -841,7 +835,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
                                                   WritingMode aWM)
 {
   nsTableFrame* tableFrame = GetTableFrame();
-  nscoord containerWidth = tableFrame->GetRect().width;
+  nsSize containerSize = tableFrame->GetSize();
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
@@ -861,7 +855,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
     rowFrame = rowFrame->GetNextRow();
   }
 
-  LogicalRect groupRect = GetLogicalRect(aWM, containerWidth);
+  LogicalRect groupRect = GetLogicalRect(aWM, containerSize);
   nsRect oldGroupRect = GetRect();
   nsRect oldGroupVisualOverflow = GetVisualOverflowRect();
 
@@ -879,7 +873,7 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
     InvalidateFrameSubtree();
   }
 
-  SetRect(aWM, groupRect, containerWidth);
+  SetRect(aWM, groupRect, containerSize);
   overflow.UnionAllWith(nsRect(0, 0, groupRect.Width(aWM),
                                groupRect.Height(aWM)));
   FinishAndStoreOverflow(overflow, groupRect.Size(aWM).GetPhysicalSize(aWM));
@@ -895,15 +889,19 @@ void
 nsTableRowGroupFrame::SlideChild(nsRowGroupReflowState& aReflowState,
                                  nsIFrame*              aKidFrame)
 {
-  // Move the frame if we need to
+  // Move the frame if we need to.
   WritingMode wm = aReflowState.reflowState.GetWritingMode();
-  LogicalPoint oldPosition = aKidFrame->GetLogicalNormalPosition(wm, 0);
+  const nsSize containerSize =
+    aReflowState.reflowState.ComputedSizeAsContainerIfConstrained();
+  LogicalPoint oldPosition =
+    aKidFrame->GetLogicalNormalPosition(wm, containerSize);
   LogicalPoint newPosition = oldPosition;
   newPosition.B(wm) = aReflowState.bCoord;
   if (oldPosition.B(wm) != newPosition.B(wm)) {
     aKidFrame->InvalidateFrameSubtree();
-    aReflowState.reflowState.ApplyRelativePositioning(&newPosition, 0);
-    aKidFrame->SetPosition(wm, newPosition, 0);
+    aReflowState.reflowState.ApplyRelativePositioning(&newPosition,
+                                                      containerSize);
+    aKidFrame->SetPosition(wm, newPosition, containerSize);
     nsTableFrame::RePositionViews(aKidFrame);
     aKidFrame->InvalidateFrameSubtree();
   }
@@ -1768,8 +1766,8 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
   nsTableCellMap* cellMap = table->GetCellMap();
 
   WritingMode wm = table->GetWritingMode();
-  nscoord cw = table->GetRect().width;
-  LogicalPoint pos(wm, aPos, cw);
+  nsSize containerSize = table->GetSize();
+  LogicalPoint pos(wm, aPos, containerSize);
 
   *aFrameFound = nullptr;
   *aPosIsBeforeFirstFrame = true;
@@ -1799,7 +1797,7 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
   int32_t n = numCells;
   nsIFrame* firstFrame = frame;
   while (n--) {
-    LogicalRect rect = frame->GetLogicalRect(wm, cw);
+    LogicalRect rect = frame->GetLogicalRect(wm, containerSize);
     if (rect.ISize(wm) > 0) {
       // If pos.I() is inside this frame - this is it
       if (rect.IStart(wm) <= pos.I(wm) && rect.IEnd(wm) > pos.I(wm)) {
@@ -1808,12 +1806,14 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
       }
       if (rect.IStart(wm) < pos.I(wm)) {
         if (!closestFromStart ||
-            rect.IEnd(wm) > closestFromStart->GetLogicalRect(wm, cw).IEnd(wm))
+            rect.IEnd(wm) > closestFromStart->
+                              GetLogicalRect(wm, containerSize).IEnd(wm))
           closestFromStart = frame;
       }
       else {
         if (!closestFromEnd ||
-            rect.IStart(wm) < closestFromEnd->GetLogicalRect(wm, cw).IStart(wm))
+            rect.IStart(wm) < closestFromEnd->
+                                GetLogicalRect(wm, containerSize).IStart(wm))
           closestFromEnd = frame;
       }
     }
@@ -1835,9 +1835,11 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
     *aFrameFound = closestFromStart;
   }
   else { // we're between two frames
-    nscoord delta = closestFromEnd->GetLogicalRect(wm, cw).IStart(wm) -
-                    closestFromStart->GetLogicalRect(wm, cw).IEnd(wm);
-    if (pos.I(wm) < closestFromStart->GetLogicalRect(wm, cw).IEnd(wm) + delta/2) {
+    nscoord delta =
+      closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm) -
+      closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm);
+    if (pos.I(wm) < closestFromStart->
+                      GetLogicalRect(wm, containerSize).IEnd(wm) + delta/2) {
       *aFrameFound = closestFromStart;
     } else {
       *aFrameFound = closestFromEnd;
