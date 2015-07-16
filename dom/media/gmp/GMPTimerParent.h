@@ -47,9 +47,6 @@ private:
     uint32_t mId;
   };
 
-  static PLDHashOperator
-  CancelTimers(nsPtrHashKey<Context>* aContext, void* aClosure);
-
   void TimerExpired(Context* aContext);
 
   nsTHashtable<nsPtrHashKey<Context>> mTimers;
