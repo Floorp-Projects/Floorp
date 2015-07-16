@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SourceBuffer_h_
 #define mozilla_dom_SourceBuffer_h_
 
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "MediaSource.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
@@ -195,7 +195,7 @@ private:
   uint32_t mUpdateID;
   int64_t mReportedOffset;
 
-  MediaPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
+  MozPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
   const nsCString mType;
 };
 

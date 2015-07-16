@@ -7,7 +7,7 @@
 #if !defined(StateMirroring_h_)
 #define StateMirroring_h_
 
-#include "MediaPromise.h"
+#include "MozPromise.h"
 
 #include "StateWatching.h"
 #include "TaskDispatcher.h"

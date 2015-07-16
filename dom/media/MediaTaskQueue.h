@@ -13,7 +13,7 @@
 #include "mozilla/unused.h"
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "TaskDispatcher.h"
 
 class nsIRunnable;
@@ -22,7 +22,7 @@ namespace mozilla {
 
 class SharedThreadPool;
 
-typedef MediaPromise<bool, bool, false> ShutdownPromise;
+typedef MozPromise<bool, bool, false> ShutdownPromise;
 
 // Abstracts executing runnables in order in a thread pool. The runnables
 // dispatched to the MediaTaskQueue will be executed in the order in which
@@ -156,7 +156,7 @@ protected:
 
   // True if we've started our shutdown process.
   bool mIsShutdown;
-  MediaPromiseHolder<ShutdownPromise> mShutdownPromise;
+  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
 
   // True if we're flushing; we reject new tasks if we're flushing.
   bool mIsFlushing;

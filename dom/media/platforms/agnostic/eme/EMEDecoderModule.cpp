@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-typedef MediaPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
+typedef MozPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
 
 static PLDHashOperator
 DropDecryptPromises(MediaRawData* aKey,

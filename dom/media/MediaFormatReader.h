@@ -227,12 +227,12 @@ private:
     bool mDiscontinuity;
 
     // Pending seek.
-    MediaPromiseRequestHolder<MediaTrackDemuxer::SeekPromise> mSeekRequest;
+    MozPromiseRequestHolder<MediaTrackDemuxer::SeekPromise> mSeekRequest;
 
     // Queued demux samples waiting to be decoded.
     nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
-    MediaPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
-    MediaPromiseHolder<WaitForDataPromise> mWaitingPromise;
+    MozPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    MozPromiseHolder<WaitForDataPromise> mWaitingPromise;
     bool HasWaitingPromise()
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
@@ -308,7 +308,7 @@ private:
       DecoderData(aOwner, aType, aDecodeAhead)
     {}
 
-    MediaPromiseHolder<PromiseType> mPromise;
+    MozPromiseHolder<PromiseType> mPromise;
 
     bool HasPromise() override
     {
@@ -335,7 +335,7 @@ private:
   // Demuxer objects.
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
-  MediaPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
+  MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   void OnDemuxFailed(TrackType aTrack, DemuxerFailureReason aFailure);
 
   void DoDemuxVideo();
@@ -353,7 +353,7 @@ private:
   }
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
-  MediaPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
+  MozPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
   void OnVideoSkipCompleted(uint32_t aSkipped);
   void OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailure);
 
@@ -368,7 +368,7 @@ private:
   // Metadata objects
   // True if we've read the streams' metadata.
   bool mInitDone;
-  MediaPromiseHolder<MetadataPromise> mMetadataPromise;
+  MozPromiseHolder<MetadataPromise> mMetadataPromise;
   // Accessed from multiple thread, in particular the MediaDecoderStateMachine,
   // however the value doesn't change after reading the metadata.
   bool mSeekable;
@@ -404,7 +404,7 @@ private:
   }
   // Temporary seek information while we wait for the data
   Maybe<media::TimeUnit> mPendingSeekTime;
-  MediaPromiseHolder<SeekPromise> mSeekPromise;
+  MozPromiseHolder<SeekPromise> mSeekPromise;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;
