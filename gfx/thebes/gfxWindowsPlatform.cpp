@@ -1914,12 +1914,6 @@ gfxWindowsPlatform::CheckD3D11Support() -> D3D11Status
         if (gfxPrefs::LayersD3D11DisableWARP() || GetModuleHandleA("nvdxgiwrap.dll")) {
           return D3D11Status::Blocked;
         }
-
-        if (!IsWin8OrLater()) {
-          // We do not use WARP on Windows 7 or earlier.
-          return D3D11Status::Blocked;
-        }
-
         return D3D11Status::TryWARP;
       }
     }
@@ -1978,10 +1972,6 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>
 bool
 gfxWindowsPlatform::AttemptWARPDeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels)
 {
-  if (gfxPrefs::LayersD3D11DisableWARP()) {
-    return false;
-  }
-
   MOZ_ASSERT(!mD3D11Device);
 
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
@@ -2102,11 +2092,16 @@ gfxWindowsPlatform::InitD3D11Devices()
     }
   }
 
-  if (status == D3D11Status::TryWARP || status == D3D11Status::ForceWARP) {
-    if (!AttemptWARPDeviceCreation(featureLevels)) {
-      // Nothing more we can do.
-      return;
-    }
+  if (IsWin8OrLater() &&
+      !gfxPrefs::LayersD3D11DisableWARP() &&
+      (status == D3D11Status::TryWARP || status == D3D11Status::ForceWARP))
+  {
+    AttemptWARPDeviceCreation(featureLevels);
+  }
+
+  if (!mD3D11Device) {
+    // We could not get a D3D11 compositor, and there's nothing more we can try.
+    return;
   }
 
   if (!mD3D11Device) {
