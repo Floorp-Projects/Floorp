@@ -2,43 +2,88 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="text/javascript" src="../../test/manifest.js"></script>
 </head>
 <body>
-<video id="v1" src="../../test/vp9cake.webm" height="120" width="160" autoplay muted></video>
 <pre id="test">
 <script type="application/javascript;version=1.8">
-  createHTML({
-    bug: "1081409",
-    title: "Captured video-only over peer connection",
-    visible: true
-  });
+var manager = new MediaTestManager;
 
-var metadataLoaded = new Promise(resolve => {
-  if (v1.readyState < v1.HAVE_METADATA) {
-    v1.onloadedmetadata = resolve;
-  } else {
-    resolve();
-  }
-});
-
-runNetworkTest(function() {
-  var test = new PeerConnectionTest();
-  test.setOfferOptions({ offerToReceiveVideo: false,
-                         offerToReceiveAudio: false });
-  test.setMediaConstraints([{video: true, audio: true}], []);
-  test.chain.replace("PC_LOCAL_GUM", [
-    function PC_LOCAL_CAPTUREVIDEO(test) {
-      return metadataLoaded
-        .then(() => {
-          var stream = v1.mozCaptureStreamUntilEnded();
-          is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
-          test.pcLocal.attachMedia(stream, "audiovideo", "local");
-        });
+createHTML({
+  bug: "1081409",
+  title: "Captured video-only over peer connection",
+  visible: true
+}).then(() => new Promise(resolve => {
+  manager.runTests(getPlayableVideos(gSmallTests), startTest);
+  manager.onFinished = () => {
+    // Tear down before SimpleTest.finish.
+    if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
+      getNetworkUtils().tearDownNetwork();
     }
-  ]);
-  test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
-  test.run();
-});
+    resolve();
+  };
+}))
+.catch(e => ok(false, "Unexpected " + e + ":\n" + e.stack));
+
+// Run tests in sequence for log readability.
+PARALLEL_TESTS = 1;
+
+function startTest(media, token) {
+  manager.started(token);
+  var video = document.createElement('video');
+  video.id = "id_" + media.name;
+  video.width = 160;
+  video.height = 120;
+  video.muted = true;
+  video.loop = true;
+  video.preload = "metadata";
+  video.src = "../../test/" + media.name;
+
+  document.getElementById("content").appendChild(video);
+
+  var test;
+  new Promise((resolve, reject) => {
+    video.onloadedmetadata = resolve;
+    video.onerror = () => reject(video.error);
+  })
+  .then(() => {
+    video.onerror = () => ok(false, media.name + " failed in playback (code=" +
+                             video.error.code + "). Stream should be OK. " +
+                             "Continuing test.");
+    return runNetworkTest(() => {
+      var stream = video.mozCaptureStream();
+      test = new PeerConnectionTest({ config_local: { label_suffix: media.name },
+                                      config_remote: { label_suffix: media.name } });
+      test.setOfferOptions({ offerToReceiveVideo: false,
+                             offerToReceiveAudio: false });
+      var hasVideo = stream.getVideoTracks().length > 0;
+      var hasAudio = stream.getAudioTracks().length > 0;
+      test.setMediaConstraints([{ video: hasVideo, audio: hasAudio }], []);
+      test.chain.replace("PC_LOCAL_GUM", [
+        function PC_LOCAL_CAPTUREVIDEO(test) {
+          var type = "";
+          if (hasAudio) { type += "audio"; }
+          if (hasVideo) { type += "video"; }
+          test.pcLocal.attachMedia(stream, type, "local");
+          video.play();
+        }
+      ]);
+      return test.chain.execute();
+    });
+  })
+  // Handle both MediaErrors (with the `code` attribute) and other errors.
+  .catch(e => ok(false, "Error (" + e + ")" +
+                        (e.code ? " (code=" + e.code + ")" : "") +
+                        " in test for " + media.name +
+                        (e.stack ? ":\n" + e.stack : "")))
+  .then(() => {
+    if (test) { test.close(); }
+    removeNodeAndSource(video);
+    manager.finished(token);
+  })
+  .catch(e => ok(false, "Error (" + e + ") during shutdown."));
+};
+
 </script>
 </pre>
 </body>
