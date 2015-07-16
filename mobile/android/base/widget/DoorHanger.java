@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
 
 public abstract class DoorHanger extends LinearLayout {
 
