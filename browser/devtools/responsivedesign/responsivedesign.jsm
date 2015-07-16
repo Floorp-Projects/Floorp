@@ -18,8 +18,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
 
 var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 let Telemetry = require("devtools/shared/telemetry");
-let {showDoorhanger} = require("devtools/shared/doorhanger");
-let {TouchEventHandler} = require("devtools/touch-events");
+let { showDoorhanger } = require("devtools/shared/doorhanger");
+let { TouchEventSimulator } = require("devtools/toolkit/touch/simulator");
+let { Task } = require("resource://gre/modules/Task.jsm");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
@@ -134,7 +135,6 @@ function ResponsiveUI(aWindow, aTab)
   this.container = aWindow.gBrowser.getBrowserContainer(this.browser);
   this.stack = this.container.querySelector(".browserStack");
   this._telemetry = new Telemetry();
-  this.e10s = !this.browser.contentWindow;
 
   let childOn = () => {
     this.mm.removeMessageListener("ResponsiveMode:Start:Done", childOn);
@@ -219,11 +219,9 @@ function ResponsiveUI(aWindow, aTab)
 
   this._telemetry.toolOpened("responsive");
 
-  if (!this.e10s) {
-    // Touch events support
-    this.touchEnableBefore = false;
-    this.touchEventHandler = new TouchEventHandler(this.browser);
-  }
+  // Touch events support
+  this.touchEnableBefore = false;
+  this.touchEventSimulator = new TouchEventSimulator(this.browser);
 
   // Hook to display promotional Developer Edition doorhanger. Only displayed once.
   showDoorhanger({
@@ -274,9 +272,7 @@ ResponsiveUI.prototype = {
     this.closebutton.removeEventListener("command", this.bound_close, true);
     this.addbutton.removeEventListener("command", this.bound_addPreset, true);
     this.removebutton.removeEventListener("command", this.bound_removePreset, true);
-    if (!this.e10s) {
-      this.touchbutton.removeEventListener("command", this.bound_touch, true);
-    }
+    this.touchbutton.removeEventListener("command", this.bound_touch, true);
 
     // Removed elements.
     this.container.removeChild(this.toolbar);
@@ -295,8 +291,8 @@ ResponsiveUI.prototype = {
     this.stack.removeAttribute("responsivemode");
 
     ActiveTabs.delete(this.tab);
-    if (!this.e10s && this.touchEventHandler) {
-      this.touchEventHandler.stop();
+    if (this.touchEventSimulator) {
+      this.touchEventSimulator.stop();
     }
     this._telemetry.toolClosed("responsive");
     let childOff = () => {
@@ -441,14 +437,12 @@ ResponsiveUI.prototype = {
     this.toolbar.appendChild(this.menulist);
     this.toolbar.appendChild(this.rotatebutton);
 
-    if (!this.e10s) {
-      this.touchbutton = this.chromeDoc.createElement("toolbarbutton");
-      this.touchbutton.setAttribute("tabindex", "0");
-      this.touchbutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.touch"));
-      this.touchbutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-touch";
-      this.touchbutton.addEventListener("command", this.bound_touch, true);
-      this.toolbar.appendChild(this.touchbutton);
-    }
+    this.touchbutton = this.chromeDoc.createElement("toolbarbutton");
+    this.touchbutton.setAttribute("tabindex", "0");
+    this.touchbutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.touch"));
+    this.touchbutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-touch";
+    this.touchbutton.addEventListener("command", this.bound_touch, true);
+    this.toolbar.appendChild(this.touchbutton);
 
     this.toolbar.appendChild(this.screenshotbutton);
 
@@ -793,19 +787,13 @@ ResponsiveUI.prototype = {
    * Enable/Disable mouse -> touch events translation.
    */
    enableTouch: function RUI_enableTouch() {
-     if (!this.touchEventHandler.enabled) {
-       let isReloadNeeded = this.touchEventHandler.start();
-       this.touchbutton.setAttribute("checked", "true");
-       return isReloadNeeded;
-     }
-     return false;
+     this.touchbutton.setAttribute("checked", "true");
+     return this.touchEventSimulator.start();
    },
 
    disableTouch: function RUI_disableTouch() {
-     if (this.touchEventHandler.enabled) {
-       this.touchEventHandler.stop();
-       this.touchbutton.removeAttribute("checked");
-     }
+     this.touchbutton.removeAttribute("checked");
+     return this.touchEventSimulator.stop();
    },
 
    hideTouchNotification: function RUI_hideTouchNotification() {
@@ -816,12 +804,12 @@ ResponsiveUI.prototype = {
      }
    },
 
-   toggleTouch: function RUI_toggleTouch() {
+   toggleTouch: Task.async(function*() {
      this.hideTouchNotification();
-     if (this.touchEventHandler.enabled) {
+     if (this.touchEventSimulator.enabled) {
        this.disableTouch();
      } else {
-       let isReloadNeeded = this.enableTouch();
+       let isReloadNeeded = yield this.enableTouch();
        if (isReloadNeeded) {
          if (Services.prefs.getBoolPref("devtools.responsiveUI.no-reload-notification")) {
            return;
@@ -851,7 +839,7 @@ ResponsiveUI.prototype = {
            buttons);
        }
      }
-   },
+   }),
 
   /**
    * Change the size of the browser.

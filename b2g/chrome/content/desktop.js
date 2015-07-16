@@ -10,13 +10,9 @@ let isMulet = "ResponsiveUI" in browserWindow;
 function enableTouch() {
   let require = Cu.import('resource://gre/modules/devtools/Loader.jsm', {})
                   .devtools.require;
-  let { TouchEventHandler } = require('devtools/touch-events');
-  let chromeEventHandler = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell)
-                                 .chromeEventHandler || window;
-  let touchEventHandler = new TouchEventHandler(chromeEventHandler);
-  touchEventHandler.start();
+  let { TouchEventSimulator } = require('devtools/toolkit/touch/simulator');
+  let touchEventSimulator = new TouchEventSimulator(shell.contentBrowser);
+  touchEventSimulator.start();
 }
 
 function setupButtons() {

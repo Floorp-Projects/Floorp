@@ -13,8 +13,11 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
 gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
+registerCleanupFunction(() => {
   gDevTools.testing = false;
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
 });
 
 /**
