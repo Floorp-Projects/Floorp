@@ -211,12 +211,16 @@ class BaseConfig(object):
     def __init__(self, config=None, initial_config_file=None, config_options=None,
                  all_actions=None, default_actions=None,
                  volatile_config=None, option_args=None,
-                 require_config_file=False, usage="usage: %prog [options]"):
+                 require_config_file=False,
+                 append_env_variables_from_configs=False,
+                 usage="usage: %prog [options]"):
         self._config = {}
         self.all_cfg_files_and_dicts = []
         self.actions = []
         self.config_lock = False
         self.require_config_file = require_config_file
+        # It allows to append env variables from multiple config files
+        self.append_env_variables_from_configs = append_env_variables_from_configs
 
         if all_actions:
             self.all_actions = all_actions[:]
@@ -477,8 +481,18 @@ class BaseConfig(object):
                 options.config_files + options.opt_config_files, options=options
             ))
             config = {}
-            for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
-                config.update(c_dict)
+            if self.append_env_variables_from_configs:
+                # We only append values from various configs for the 'env' entry
+                # For everything else we follow the standard behaviour
+                for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
+                    for v in c_dict.keys():
+                        if v == 'env' and v in config:
+                            config[v].update(c_dict[v])
+                        else:
+                            config[v] = c_dict[v]
+            else:
+                for i, (c_file, c_dict) in enumerate(self.all_cfg_files_and_dicts):
+                    config.update(c_dict)
             # assign or update self._config depending on if it exists or not
             #    NOTE self._config will be passed to ReadOnlyConfig's init -- a
             #    dict subclass with immutable locking capabilities -- and serve
