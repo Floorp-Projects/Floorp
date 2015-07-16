@@ -24,12 +24,12 @@ public:
   CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
-                     FlushableMediaTaskQueue* aVideoTaskQueue,
+                     FlushableTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
-                     FlushableMediaTaskQueue* aAudioTaskQueue,
+                     FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
 

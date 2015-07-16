@@ -19,7 +19,7 @@ PRLogModuleInfo* GetAppleMediaLog();
 namespace mozilla {
 
 AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
-                               FlushableMediaTaskQueue* aAudioTaskQueue,
+                               FlushableTaskQueue* aAudioTaskQueue,
                                MediaDataDecoderCallback* aCallback)
   : mConfig(aConfig)
   , mFileStreamError(false)

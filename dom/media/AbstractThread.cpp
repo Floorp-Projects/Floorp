@@ -6,7 +6,7 @@
 
 #include "AbstractThread.h"
 
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "nsThreadUtils.h"
 #include "TaskDispatcher.h"
 

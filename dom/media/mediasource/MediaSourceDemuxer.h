@@ -12,7 +12,7 @@
 #include "MediaDecoderReader.h"
 #include "MediaResource.h"
 #include "MediaSource.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "TrackBuffersManager.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
@@ -52,7 +52,7 @@ public:
   /* interface for TrackBuffersManager */
   void AttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
   void DetachSourceBuffer(TrackBuffersManager* aSourceBuffer);
-  MediaTaskQueue* GetTaskQueue() { return mTaskQueue; }
+  TaskQueue* GetTaskQueue() { return mTaskQueue; }
   void NotifyTimeRangesChanged();
 
   // Returns a string describing the state of the MediaSource internal
@@ -74,7 +74,7 @@ private:
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
 
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
   nsTArray<nsRefPtr<MediaSourceTrackDemuxer>> mDemuxers;
 
   nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;

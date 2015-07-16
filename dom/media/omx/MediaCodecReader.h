@@ -41,7 +41,7 @@ class GonkNativeWindow;
 
 namespace mozilla {
 
-class FlushableMediaTaskQueue;
+class FlushableTaskQueue;
 class MP3FrameParser;
 
 namespace layers {
@@ -77,7 +77,7 @@ protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
 public:
 
-  // Flush the MediaTaskQueue, flush MediaCodec and raise the mDiscontinuity.
+  // Flush the TaskQueue, flush MediaCodec and raise the mDiscontinuity.
   virtual nsresult ResetDecode() override;
 
   // Disptach a DecodeVideoFrameTask to decode video data.
@@ -154,7 +154,7 @@ protected:
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
     bool mDiscontinuity;
-    nsRefPtr<MediaTaskQueue> mTaskQueue;
+    nsRefPtr<TaskQueue> mTaskQueue;
     Monitor mTrackMonitor;
 
   private:
@@ -240,7 +240,7 @@ private:
     // Protected by mTrackMonitor.
     MozPromiseHolder<VideoDataPromise> mVideoPromise;
 
-    nsRefPtr<MediaTaskQueue> mReleaseBufferTaskQueue;
+    nsRefPtr<TaskQueue> mReleaseBufferTaskQueue;
   private:
     // Forbidden
     VideoTrack(const VideoTrack &rhs) = delete;

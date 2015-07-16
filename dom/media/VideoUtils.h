@@ -274,13 +274,13 @@ GenerateRandomName(nsCString& aOutSalt, uint32_t aLength);
 nsresult
 GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength);
 
-class MediaTaskQueue;
-class FlushableMediaTaskQueue;
+class TaskQueue;
+class FlushableTaskQueue;
 
-already_AddRefed<MediaTaskQueue>
+already_AddRefed<TaskQueue>
 CreateMediaDecodeTaskQueue();
 
-already_AddRefed<FlushableMediaTaskQueue>
+already_AddRefed<FlushableTaskQueue>
 CreateFlushableMediaDecodeTaskQueue();
 
 // Iteratively invokes aWork until aCondition returns true, or aWork returns false.

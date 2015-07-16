@@ -697,7 +697,7 @@ MediaSourceReader::ReleaseMediaResources()
 
 MediaDecoderReader*
 CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder,
-                    MediaTaskQueue* aBorrowedTaskQueue)
+                    TaskQueue* aBorrowedTaskQueue)
 {
 #ifdef MOZ_FMP4
   // The MP4Reader that supports fragmented MP4 and uses

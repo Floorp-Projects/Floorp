@@ -29,7 +29,7 @@ public:
     const VideoInfo& aConfig,
     layers::LayersBackend aLayersBackend,
     layers::ImageContainer* aImageContainer,
-    FlushableMediaTaskQueue* aVideoTaskQueue,
+    FlushableTaskQueue* aVideoTaskQueue,
     MediaDataDecoderCallback* aCallback);
 
   void SetReader(MediaDecoderReader* aReader);
@@ -52,7 +52,7 @@ private:
   nsRefPtr<MediaDataDecoder> mDecoder;
   layers::LayersBackend mLayersBackend;
   nsRefPtr<layers::ImageContainer> mImageContainer;
-  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
   SharedDecoderProxy* mActiveProxy;
   MediaDataDecoderCallback* mActiveCallback;
   nsAutoPtr<MediaDataDecoderCallback> mCallback;

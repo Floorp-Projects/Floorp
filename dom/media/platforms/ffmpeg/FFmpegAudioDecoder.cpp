@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "FFmpegRuntimeLinker.h"
 
 #include "FFmpegAudioDecoder.h"
@@ -16,7 +16,7 @@ namespace mozilla
 {
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
-  FlushableMediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
+  FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const AudioInfo& aConfig)
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mMimeType))
   , mCallback(aCallback)

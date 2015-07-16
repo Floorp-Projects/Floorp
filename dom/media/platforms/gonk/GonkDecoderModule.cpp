@@ -30,7 +30,7 @@ already_AddRefed<MediaDataDecoder>
 GonkDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      mozilla::layers::LayersBackend aLayersBackend,
                                      mozilla::layers::ImageContainer* aImageContainer,
-                                     FlushableMediaTaskQueue* aVideoTaskQueue,
+                                     FlushableTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
@@ -41,7 +41,7 @@ GonkDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 GonkDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                      FlushableMediaTaskQueue* aAudioTaskQueue,
+                                      FlushableTaskQueue* aAudioTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
