@@ -6,7 +6,7 @@
 /*
 Each video element based on MediaDecoder has a state machine to manage
 its play state and keep the current frame up to date. All state machines
-share time in a single shared thread. Each decoder also has a MediaTaskQueue
+share time in a single shared thread. Each decoder also has a TaskQueue
 running in a SharedThreadPool to decode audio and video data.
 Each decoder also has a thread to push decoded audio
 to the hardware. This thread is not created until playback starts, but

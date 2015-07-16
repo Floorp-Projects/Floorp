@@ -6,7 +6,7 @@
 
 #include "gfxPrefs.h"
 #include "MediaSystemResourceManagerChild.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 
 #include "MediaSystemResourceManager.h"

@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "nsISupportsImpl.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "MozPromise.h"
 #include "SharedThreadPool.h"
 #include "VideoUtils.h"
@@ -19,7 +19,7 @@ class MOZ_STACK_CLASS AutoTaskQueue
 {
 public:
   AutoTaskQueue()
-    : mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)))
+    : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)))
   {}
 
   ~AutoTaskQueue()
@@ -27,15 +27,15 @@ public:
     mTaskQueue->AwaitShutdownAndIdle();
   }
 
-  MediaTaskQueue* Queue() { return mTaskQueue; }
+  TaskQueue* Queue() { return mTaskQueue; }
 private:
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 };
 
 class DelayedResolveOrReject : public nsRunnable
 {
 public:
-  DelayedResolveOrReject(MediaTaskQueue* aTaskQueue,
+  DelayedResolveOrReject(TaskQueue* aTaskQueue,
                          TestPromise::Private* aPromise,
                          TestPromise::ResolveOrRejectValue aValue,
                          int aIterations)
@@ -71,7 +71,7 @@ protected:
   ~DelayedResolveOrReject() {}
 
 private:
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
   nsRefPtr<TestPromise::Private> mPromise;
   TestPromise::ResolveOrRejectValue mValue;
   int mIterations;
@@ -79,7 +79,7 @@ private:
 
 template<typename FunctionType>
 void
-RunOnTaskQueue(MediaTaskQueue* aQueue, FunctionType aFun)
+RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun)
 {
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(aFun);
   aQueue->Dispatch(r.forget());
@@ -91,7 +91,7 @@ RunOnTaskQueue(MediaTaskQueue* aQueue, FunctionType aFun)
 TEST(MozPromise, BasicResolve)
 {
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
     TestPromise::CreateAndResolve(42, __func__)->Then(queue, __func__,
       [queue] (int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); queue->BeginShutdown(); },
@@ -102,7 +102,7 @@ TEST(MozPromise, BasicResolve)
 TEST(MozPromise, BasicReject)
 {
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
     TestPromise::CreateAndReject(42.0, __func__)->Then(queue, __func__,
       DO_FAIL,
@@ -113,7 +113,7 @@ TEST(MozPromise, BasicReject)
 TEST(MozPromise, AsyncResolve)
 {
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
     nsRefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
 
@@ -143,7 +143,7 @@ TEST(MozPromise, CompletionPromises)
 {
   bool invokedPass = false;
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue, &invokedPass] () -> void {
     TestPromise::CreateAndResolve(40, __func__)
     ->Then(queue, __func__,
@@ -174,7 +174,7 @@ TEST(MozPromise, CompletionPromises)
 TEST(MozPromise, PromiseAllResolve)
 {
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
 
     nsTArray<nsRefPtr<TestPromise>> promises;
@@ -198,7 +198,7 @@ TEST(MozPromise, PromiseAllResolve)
 TEST(MozPromise, PromiseAllReject)
 {
   AutoTaskQueue atq;
-  nsRefPtr<MediaTaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
 
     nsTArray<nsRefPtr<TestPromise>> promises;

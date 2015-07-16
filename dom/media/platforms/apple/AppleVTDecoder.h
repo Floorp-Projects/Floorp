@@ -16,7 +16,7 @@ namespace mozilla {
 class AppleVTDecoder : public AppleVDADecoder {
 public:
   AppleVTDecoder(const VideoInfo& aConfig,
-                 FlushableMediaTaskQueue* aVideoTaskQueue,
+                 FlushableTaskQueue* aVideoTaskQueue,
                  MediaDataDecoderCallback* aCallback,
                  layers::ImageContainer* aImageContainer);
   virtual ~AppleVTDecoder();

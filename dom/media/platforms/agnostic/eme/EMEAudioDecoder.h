@@ -25,7 +25,7 @@ class EMEAudioDecoder : public GMPAudioDecoder {
 public:
   EMEAudioDecoder(CDMProxy* aProxy,
                   const AudioInfo& aConfig,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
    : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new EMEAudioCallbackAdapter(aCallback))
    , mProxy(aProxy)

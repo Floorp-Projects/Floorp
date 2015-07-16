@@ -15,7 +15,7 @@ AudioStream will be refactored to have a callback interface
 where it asks for data and this thread will no longer be
 needed.
 
-The element/state machine also has a MediaTaskQueue which runs in a
+The element/state machine also has a TaskQueue which runs in a
 SharedThreadPool that is shared with all other elements/decoders. The state
 machine dispatches tasks to this to call into the MediaDecoderReader to
 request decoded audio or video data. The Reader will callback with decoded
@@ -98,7 +98,7 @@ hardware (via AudioStream).
 namespace mozilla {
 
 class AudioSegment;
-class MediaTaskQueue;
+class TaskQueue;
 class AudioSink;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
@@ -264,7 +264,7 @@ public:
   }
 
   // Returns the state machine task queue.
-  MediaTaskQueue* OwnerThread() const { return mTaskQueue; }
+  TaskQueue* OwnerThread() const { return mTaskQueue; }
 
   // Calls ScheduleStateMachine() after taking the decoder lock. Also
   // notifies the decoder thread in case it's waiting on the decoder lock.
@@ -709,7 +709,7 @@ private:
   nsRefPtr<MediaDecoder> mDecoder;
 
   // Task queue for running the state machine.
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 
   // State-watching manager.
   WatchManager<MediaDecoderStateMachine> mWatchManager;
@@ -920,7 +920,7 @@ private:
   // The task queue in which we run decode tasks. This is referred to as
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
-  MediaTaskQueue* DecodeTaskQueue() const { return mReader->OwnerThread(); }
+  TaskQueue* DecodeTaskQueue() const { return mReader->OwnerThread(); }
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.

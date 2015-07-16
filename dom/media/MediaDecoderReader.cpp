@@ -63,12 +63,12 @@ public:
 };
 
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
-                                       MediaTaskQueue* aBorrowedTaskQueue)
+                                       TaskQueue* aBorrowedTaskQueue)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
   , mTaskQueue(aBorrowedTaskQueue ? aBorrowedTaskQueue
-                                  : new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                                                       /* aSupportsTailDispatch = */ true))
+                                  : new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                                                  /* aSupportsTailDispatch = */ true))
   , mWatchManager(this, mTaskQueue)
   , mTimer(new MediaTimer())
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")

@@ -12,7 +12,7 @@
 namespace mozilla {
 
 SamplesWaitingForKey::SamplesWaitingForKey(MediaDataDecoder* aDecoder,
-                                           MediaTaskQueue* aTaskQueue,
+                                           TaskQueue* aTaskQueue,
                                            CDMProxy* aProxy)
   : mMutex("SamplesWaitingForKey")
   , mDecoder(aDecoder)

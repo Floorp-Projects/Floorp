@@ -8,7 +8,7 @@
 #include "gfx2DGlue.h"
 #include "Layers.h"
 #include "MediaResource.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsError.h"
 #include "SharedThreadPool.h"
