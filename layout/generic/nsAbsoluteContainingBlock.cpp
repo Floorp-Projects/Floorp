@@ -470,10 +470,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsRect r =
     rect.GetPhysicalRect(outerWM, logicalCBSize.GetPhysicalSize(wm) +
                          border.Size(outerWM).GetPhysicalSize(outerWM));
-  // XXX hack to correct for lack of bidi support in vertical mode
-  if (outerWM.IsVertical() && !outerWM.IsBidiLTR()) {
-    r.y = logicalCBSize.Height(wm) + border.TopBottom(outerWM) - r.YMost();
-  }
 
   // Offset the frame rect by the given origin of the absolute containing block.
   // If the frame is auto-positioned on both sides of an axis, it will be

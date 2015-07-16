@@ -3824,11 +3824,12 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                                containerBP.IStart(flexWM),
                                                containerBP.BStart(flexWM));
 
-  nsSize containerSize;
-  containerSize.width = aAxisTracker.IsMainAxisHorizontal() ?
-                          aContentBoxMainSize : contentBoxCrossSize;
-  containerSize.width +=
-    aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  // Determine flex container's border-box size (used in positioning children):
+  LogicalSize logSize =
+    aAxisTracker.LogicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
+                                                  contentBoxCrossSize);
+  logSize += aReflowState.ComputedLogicalBorderPadding().Size(flexWM);
+  nsSize containerSize = logSize.GetPhysicalSize(flexWM);
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
