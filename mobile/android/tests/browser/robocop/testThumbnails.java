@@ -5,7 +5,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import android.content.ContentResolver;
 import android.graphics.Color;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 /**
  * Test for thumbnail updates.

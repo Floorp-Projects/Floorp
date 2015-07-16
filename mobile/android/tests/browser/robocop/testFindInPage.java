@@ -15,7 +15,7 @@ import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONObject;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 public class testFindInPage extends JavascriptTest implements GeckoEventListener {
     private static final int WAIT_FOR_CONDITION_MS = 3000;
