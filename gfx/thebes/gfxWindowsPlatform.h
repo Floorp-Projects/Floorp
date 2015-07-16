@@ -276,6 +276,8 @@ protected:
 private:
     void Init();
     void InitD3D11Devices();
+    void InitD2DSupport();
+    void InitDWriteSupport();
     IDXGIAdapter1 *GetDXGIAdapter();
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
 
