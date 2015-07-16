@@ -15,6 +15,7 @@
 #include "prprf.h"
 #include "plstr.h"
 #include <stdlib.h>
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -641,3 +642,29 @@ nsMozIconURI::Deserialize(const URIParams& aParams)
 
   return true;
 }
+
+////////////////////////////////////////////////////////////
+// Nested version of nsIconURI
+
+nsNestedMozIconURI::nsNestedMozIconURI()
+{ }
+
+nsNestedMozIconURI::~nsNestedMozIconURI()
+{ }
+
+NS_IMPL_ISUPPORTS_INHERITED(nsNestedMozIconURI, nsMozIconURI, nsINestedURI)
+
+NS_IMETHODIMP
+nsNestedMozIconURI::GetInnerURI(nsIURI** aURI)
+{
+  *aURI = mIconURL;
+  NS_IF_ADDREF(*aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNestedMozIconURI::GetInnermostURI(nsIURI** aURI)
+{
+  return NS_ImplGetInnermostURI(this, aURI);
+}
+

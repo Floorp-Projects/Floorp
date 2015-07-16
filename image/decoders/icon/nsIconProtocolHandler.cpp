@@ -67,12 +67,21 @@ nsIconProtocolHandler::NewURI(const nsACString& aSpec,
                               nsIURI* aBaseURI,
                               nsIURI** result)
 {
-
-  nsCOMPtr<nsIURI> uri = new nsMozIconURI();
+  nsCOMPtr<nsIMozIconURI> uri = new nsMozIconURI();
   if (!uri) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = uri->SetSpec(aSpec);
   if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIURL> iconURL;
+  uri->GetIconURL(getter_AddRefs(iconURL));
+  if (iconURL) {
+    //XXXgijs: is just assigning a new thing here OK?
+    uri = new nsNestedMozIconURI();
+    if (!uri) return NS_ERROR_OUT_OF_MEMORY;
+    rv = uri->SetSpec(aSpec);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   NS_ADDREF(*result = uri);
   return NS_OK;
