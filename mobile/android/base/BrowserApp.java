@@ -3954,4 +3954,13 @@ public class BrowserApp extends GeckoApp
     public static interface Refreshable {
         public void refresh();
     }
+
+    @Override
+    protected StartupAction getStartupAction(final String passedURL) {
+        final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
+        if (inGuestMode) {
+            return StartupAction.GUEST;
+        }
+        return (passedURL == null ? StartupAction.NORMAL : StartupAction.URL);
+    }
 }
