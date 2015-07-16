@@ -11110,13 +11110,9 @@ nsGlobalWindow::GetCaches(ErrorResult& aRv)
   MOZ_ASSERT(IsInnerWindow());
 
   if (!mCacheStorage) {
-    bool forceTrustedOrigin = false;
-    if (IsOuterWindow()) {
-      forceTrustedOrigin = GetServiceWorkersTestingEnabled();
-    } else {
-      nsRefPtr<nsGlobalWindow> outer = GetOuterWindowInternal();
-      forceTrustedOrigin = outer->GetServiceWorkersTestingEnabled();
-    }
+    bool forceTrustedOrigin =
+      GetOuterWindowInternal()->GetServiceWorkersTestingEnabled();
+
     mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
                                                      this, GetPrincipal(),
                                                      IsPrivateBrowsing(),
