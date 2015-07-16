@@ -2104,10 +2104,6 @@ gfxWindowsPlatform::InitD3D11Devices()
     return;
   }
 
-  if (!mD3D11Device) {
-    return;
-  }
-
   mD3D11Device->SetExceptionMode(0);
 
   // We create our device for D2D content drawing here. Normally we don't use
@@ -2387,4 +2383,21 @@ gfxWindowsPlatform::SupportsApzTouchInput() const
 {
   int value = Preferences::GetInt("dom.w3c_touch_events.enabled", 0);
   return value == 1 || value == 2;
+}
+
+void
+gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
+{
+  if (gfxPrefs::LayersPreferOpenGL()) {
+    aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
+  }
+
+  if (!gfxPrefs::LayersPreferD3D9()) {
+    aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
+  }
+
+  if (gfxPrefs::LayersPreferD3D9() || !IsVistaOrLater()) {
+    // We don't want D3D9 except on Windows XP
+    aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
+  }
 }

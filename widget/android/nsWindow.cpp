@@ -723,8 +723,6 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
         return;
     }
 
-    mUseLayersAcceleration = ComputeShouldAccelerate(mUseLayersAcceleration);
-
     if (ShouldUseOffMainThreadCompositing()) {
         if (sLayerManager) {
             return;
@@ -742,7 +740,7 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
         sFailedToCreateGLContext = true;
     }
 
-    if (!mUseLayersAcceleration || sFailedToCreateGLContext) {
+    if (!ComputeShouldAccelerate() || sFailedToCreateGLContext) {
         printf_stderr(" -- creating basic, not accelerated\n");
         mLayerManager = CreateBasicLayerManager();
     }
