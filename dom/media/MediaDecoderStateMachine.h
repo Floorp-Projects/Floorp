@@ -1070,6 +1070,7 @@ protected:
   // hardware in microseconds. This will approximately be the end time of the
   // audio stream, unless another frame is pushed to the hardware.
   int64_t mAudioEndTime;
+  int64_t AudioEndTime() const;
 
   // The end time of the last decoded audio frame. This signifies the end of
   // decoded audio data. Used to check if we are low in decoded data.
