@@ -329,8 +329,6 @@ private:
     PluginScriptableObjectChild* actor;
   };
 
-  static PLDHashOperator CollectForInstance(NPObjectData* d, void* userArg);
-
   /**
    * mObjectMap contains all the currently active NPObjects (from NPN_CreateObject until the
    * final release/dealloc, whether or not an actor is currently associated with the object.

@@ -1266,22 +1266,19 @@ PluginScriptableObjectChild::GetInstanceForNPObject(NPObject* aObject)
   return d->instance;
 }
 
-/* static */ PLDHashOperator
-PluginScriptableObjectChild::CollectForInstance(NPObjectData* d, void* userArg)
-{
-    PluginInstanceChild* instance = static_cast<PluginInstanceChild*>(userArg);
-    if (d->instance == instance) {
-        NPObject* o = d->GetKey();
-        instance->mDeletingHash->PutEntry(o);
-    }
-    return PL_DHASH_NEXT;
-}
-
 /* static */ void
 PluginScriptableObjectChild::NotifyOfInstanceShutdown(PluginInstanceChild* aInstance)
 {
   AssertPluginThread();
-  if (sObjectMap) {
-    sObjectMap->EnumerateEntries(CollectForInstance, aInstance);
+  if (!sObjectMap) {
+    return;
+  }
+
+  for (auto iter = sObjectMap->Iter(); !iter.Done(); iter.Next()) {
+    NPObjectData* d = iter.Get();
+    if (d->instance == aInstance) {
+        NPObject* o = d->GetKey();
+        aInstance->mDeletingHash->PutEntry(o);
+    }
   }
 }
