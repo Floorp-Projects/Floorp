@@ -10,6 +10,7 @@
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 #include "prenv.h"
+#include "nsAutoPtr.h"
 
 #include <string>
 
@@ -69,8 +70,8 @@ public:
   {}
   virtual ~GMPLoaderImpl() {}
 
-  virtual bool Load(const char* aLibPath,
-                    uint32_t aLibPathLen,
+  virtual bool Load(const char* aUTF8LibPath,
+                    uint32_t aUTF8LibPathLen,
                     char* aOriginSalt,
                     uint32_t aOriginSaltLen,
                     const GMPPlatformAPI* aPlatformAPI) override;
@@ -133,8 +134,8 @@ GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
 #endif
 
 bool
-GMPLoaderImpl::Load(const char* aLibPath,
-                    uint32_t aLibPathLen,
+GMPLoaderImpl::Load(const char* aUTF8LibPath,
+                    uint32_t aUTF8LibPathLen,
                     char* aOriginSalt,
                     uint32_t aOriginSaltLen,
                     const GMPPlatformAPI* aPlatformAPI)
@@ -200,14 +201,13 @@ GMPLoaderImpl::Load(const char* aLibPath,
   // loader will attempt to create an activation context which will fail because
   // of the sandbox. If we create an activation context before we start the
   // sandbox then this one will get picked up by the DLL loader.
-  int pathLen = MultiByteToWideChar(CP_ACP, 0, aLibPath, -1, nullptr, 0);
+  int pathLen = MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, nullptr, 0);
   if (pathLen == 0) {
     return false;
   }
 
-  wchar_t* widePath = new wchar_t[pathLen];
-  if (MultiByteToWideChar(CP_ACP, 0, aLibPath, -1, widePath, pathLen) == 0) {
-    delete[] widePath;
+  nsAutoArrayPtr<wchar_t> widePath(new wchar_t[pathLen]);
+  if (MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, widePath, pathLen) == 0) {
     return false;
   }
 
@@ -216,20 +216,24 @@ GMPLoaderImpl::Load(const char* aLibPath,
   actCtx.lpSource = widePath;
   actCtx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
   ScopedActCtxHandle actCtxHandle(CreateActCtx(&actCtx));
-  delete[] widePath;
 #endif
 
   // Start the sandbox now that we've generated the device bound node id.
   // This must happen after the node id is bound to the device id, as
   // generating the device id requires privileges.
-  if (mSandboxStarter && !mSandboxStarter->Start(aLibPath)) {
+  if (mSandboxStarter && !mSandboxStarter->Start(aUTF8LibPath)) {
     return false;
   }
 
   // Load the GMP.
   PRLibSpec libSpec;
-  libSpec.value.pathname = aLibPath;
+#ifdef XP_WIN
+  libSpec.value.pathname_u = widePath;
+  libSpec.type = PR_LibSpec_PathnameU;
+#else
+  libSpec.value.pathname = aUTF8LibPath;
   libSpec.type = PR_LibSpec_Pathname;
+#endif
   mLib = PR_LoadLibraryWithFlags(libSpec, 0);
   if (!mLib) {
     return false;
