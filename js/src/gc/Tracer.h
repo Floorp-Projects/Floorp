@@ -123,7 +123,7 @@ TraceGenericPointerRoot(JSTracer* trc, gc::Cell** thingp, const char* name);
 void
 TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const char* name);
 
-// Depricated. Please use one of the strongly typed variants above.
+// Deprecated. Please use one of the strongly typed variants above.
 void
 TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind);
 

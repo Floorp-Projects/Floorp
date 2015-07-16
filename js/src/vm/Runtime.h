@@ -1032,7 +1032,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Garbage collector state, used by jsgc.c. */
     js::gc::GCRuntime   gc;
 
-    /* Garbage collector state has been sucessfully initialized. */
+    /* Garbage collector state has been successfully initialized. */
     bool                gcInitialized;
 
     int gcZeal() { return gc.zeal(); }
@@ -1102,7 +1102,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
-    /* We are curently deleting an object due to an initialization failure. */
+    /* We are currently deleting an object due to an initialization failure. */
     mozilla::DebugOnly<bool> handlingInitFailure;
 
     /* A context has been created on this runtime. */
