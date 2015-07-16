@@ -7212,6 +7212,10 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
                                       getter_Copies(extensionListStr));
     } else if (token.First() == '.') {
+      if (token.FindChar(';') >= 0  || token.FindChar('*') >= 0) {
+        // Ignore this filter as it contains reserved characters
+        continue;
+      }
       extensionListStr = NS_LITERAL_STRING("*") + token;
       filterName = extensionListStr;
       atLeastOneFileExtensionFilter = true;
