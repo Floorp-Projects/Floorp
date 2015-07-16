@@ -1863,6 +1863,7 @@ CssRuleView.prototype = {
       let newRule = new Rule(elementStyle, options);
       rules.push(newRule);
       let editor = new RuleEditor(this, newRule);
+      newRule.editor = editor;
 
       // Insert the new rule editor after the inline element rule
       if (rules.length <= 1) {
