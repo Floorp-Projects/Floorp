@@ -200,7 +200,6 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     }
 
     private void showSplash() {
-
         // get the favicon dominant color, stored when the app was installed
         int dominantColor = Allocator.getInstance().getColor(getIndex());
 
@@ -405,5 +404,10 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
         // This is a legacy shortcut, which didn't provide a way to determine
         // that the app is debuggable, so we say the app is not debuggable.
         return false;
+    }
+
+    @Override
+    protected StartupAction getStartupAction(final String passedURL) {
+        return StartupAction.WEBAPP;
     }
 }
