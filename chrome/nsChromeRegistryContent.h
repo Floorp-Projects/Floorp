@@ -10,7 +10,7 @@
 #include "nsClassHashtable.h"
 
 struct ChromePackage;
-struct ResourceMapping;
+struct SubstitutionMapping;
 struct OverrideMapping;
 
 class nsChromeRegistryContent : public nsChromeRegistry
@@ -19,7 +19,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
   nsChromeRegistryContent();
 
   void RegisterRemoteChrome(const InfallibleTArray<ChromePackage>& aPackages,
-                            const InfallibleTArray<ResourceMapping>& aResources,
+                            const InfallibleTArray<SubstitutionMapping>& aResources,
                             const InfallibleTArray<OverrideMapping>& aOverrides,
                             const nsACString& aLocale,
                             bool aReset);
@@ -41,7 +41,7 @@ class nsChromeRegistryContent : public nsChromeRegistry
 
   void RegisterPackage(const ChromePackage& aPackage);
   void RegisterOverride(const OverrideMapping& aOverride);
-  void RegisterResource(const ResourceMapping& aResource);
+  void RegisterSubstitution(const SubstitutionMapping& aResource);
 
  private:
   struct PackageEntry
