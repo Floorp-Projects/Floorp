@@ -1246,8 +1246,9 @@ nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
 {
   WritingMode wm = aReflowState.GetWritingMode();
   const LogicalPoint gridOrigin(aContentArea.Origin(wm));
-  const nscoord containerWidth = aContentArea.Width(wm) +
-    aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  const nsSize containerSize =
+    (aContentArea.Size(wm) +
+     aReflowState.ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
   nsPresContext* pc = PresContext();
   for (; !aIter.AtEnd(); aIter.Next()) {
     nsIFrame* child = *aIter;
@@ -1275,20 +1276,22 @@ nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
       childRS.SetComputedBSize(std::max(bSize, 0));
     }
     // We need the width of the child before we can correctly convert
-    // the writing-mode of its origin, so we reflow at (0, 0) and then
-    // pass the correct position to FinishReflowChild.
+    // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
+    // containerSize, and then pass the correct position to FinishReflowChild.
     nsHTMLReflowMetrics childSize(childRS);
     nsReflowStatus childStatus;
+    const nsSize dummyContainerSize;
     ReflowChild(child, pc, childSize, childRS, childWM, LogicalPoint(childWM),
-                0, 0, childStatus);
+                dummyContainerSize, 0, childStatus);
     LogicalPoint childPos =
-      cb.Origin(wm).ConvertTo(childWM, wm, containerWidth - childSize.Width() -
-                                           margin.LeftRight(childWM));
+      cb.Origin(wm).ConvertTo(childWM, wm,
+                              containerSize - childSize.PhysicalSize() -
+                              margin.Size(childWM).GetPhysicalSize(childWM));
     childPos.I(childWM) += margin.IStart(childWM);
     childPos.B(childWM) += margin.BStart(childWM);
-    childRS.ApplyRelativePositioning(&childPos, containerWidth);
+    childRS.ApplyRelativePositioning(&childPos, containerSize);
     FinishReflowChild(child, pc, childSize, &childRS, childWM, childPos,
-                      containerWidth, 0);
+                      containerSize, 0);
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
     // XXX deal with 'childStatus' not being COMPLETE
   }
@@ -1318,7 +1321,7 @@ nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
           cb = new nsRect;
           child->Properties().Set(GridItemContainingBlockRect(), cb);
         }
-        *cb = itemCB.GetPhysicalRect(wm, containerWidth);
+        *cb = itemCB.GetPhysicalRect(wm, containerSize);
       }
       // This rect isn't used at all for layout so we use it to optimize
       // away the virtual GetType() call in the callee in most cases.

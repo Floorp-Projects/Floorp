@@ -15,7 +15,48 @@
 #include "mp4_demuxer/ResourceStream.h"
 #include "mp4_demuxer/BufferStream.h"
 
+// Used for telemetry
+#include "mozilla/Telemetry.h"
+#include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/H264.h"
+
 namespace mozilla {
+
+// Returns true if no SPS was found and search for it should continue.
+bool
+AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
+{
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
+    uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0) |
+                          (spsdata.constraint_set1_flag ? (1 << 1) : 0) |
+                          (spsdata.constraint_set2_flag ? (1 << 2) : 0) |
+                          (spsdata.constraint_set3_flag ? (1 << 3) : 0) |
+                          (spsdata.constraint_set4_flag ? (1 << 4) : 0) |
+                          (spsdata.constraint_set5_flag ? (1 << 5) : 0);
+    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG,
+                          constraints);
+
+    // Collect profile_idc values up to 244, otherwise 0 for unknown.
+    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_PROFILE,
+                          spsdata.profile_idc <= 244 ? spsdata.profile_idc : 0);
+
+    // Make sure level_idc represents a value between levels 1 and 5.2,
+    // otherwise collect 0 for unknown level.
+    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_LEVEL,
+                          (spsdata.level_idc >= 10 && spsdata.level_idc <= 52) ?
+                          spsdata.level_idc : 0);
+
+    // max_num_ref_frames should be between 0 and 16, anything larger will
+    // be treated as invalid.
+    Telemetry::Accumulate(Telemetry::VIDEO_H264_SPS_MAX_NUM_REF_FRAMES,
+                          std::min(spsdata.max_num_ref_frames, 17u));
+
+    return false;
+  }
+
+  return true;
+}
 
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
   : mResource(aResource)
@@ -169,6 +210,17 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                   &mMonitor);
   mIterator = MakeUnique<mp4_demuxer::SampleIterator>(mIndex);
   EnsureUpToDateIndex(); // Force update of index
+
+  // Collect telemetry from h264 AVCC SPS.
+  if (mInfo->GetAsVideoInfo() &&
+      (mInfo->mMimeType.EqualsLiteral("video/mp4") ||
+       mInfo->mMimeType.EqualsLiteral("video/avc"))) {
+    mNeedSPSForTelemetry =
+      AccumulateSPSTelemetry(mInfo->GetAsVideoInfo()->mExtraData);
+  } else {
+    // No SPS to be found.
+    mNeedSPSForTelemetry = false;
+  }
 }
 
 UniquePtr<TrackInfo>
@@ -268,6 +320,12 @@ MP4TrackDemuxer::UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples)
 {
   for (size_t i = 0; i < aSamples.Length(); i++) {
     MediaRawData* sample = aSamples[i];
+    // Collect telemetry from h264 Annex B SPS.
+    if (mNeedSPSForTelemetry && mp4_demuxer::AnnexB::HasSPS(sample)) {
+      nsRefPtr<MediaByteBuffer> extradata =
+        mp4_demuxer::AnnexB::ExtractExtraData(sample);
+      mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
+    }
     if (sample->mCrypto.mValid) {
       nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
       writer->mCrypto.mMode = mInfo->mCrypto.mMode;

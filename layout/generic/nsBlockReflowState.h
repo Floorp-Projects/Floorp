@@ -207,8 +207,7 @@ public:
 
   // Physical size. Use only for physical <-> logical coordinate conversion.
   nsSize mContainerSize;
-  nscoord ContainerWidth() const { return mContainerSize.width; }
-  nscoord ContainerHeight() const { return mContainerSize.height; }
+  const nsSize& ContainerSize() const { return mContainerSize; }
 
   // Continuation out-of-flow float frames that need to move to our
   // next in flow are placed here during reflow.  It's a pointer to

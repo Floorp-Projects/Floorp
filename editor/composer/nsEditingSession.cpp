@@ -206,7 +206,9 @@ nsEditingSession::DisableJSAndPlugins(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
 {
-  NS_ENSURE_TRUE(mDisabledJSAndPlugins, NS_OK);
+  if (!mDisabledJSAndPlugins) {
+    return NS_OK;
+  }
 
   mDisabledJSAndPlugins = false;
 

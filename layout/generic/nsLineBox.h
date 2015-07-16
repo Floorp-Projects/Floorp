@@ -448,9 +448,9 @@ public:
   void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   mozilla::LogicalRect GetOverflowArea(nsOverflowType aType,
                                        mozilla::WritingMode aWM,
-                                       nscoord aContainerWidth)
+                                       const nsSize& aContainerSize)
   {
-    return mozilla::LogicalRect(aWM, GetOverflowArea(aType), aContainerWidth);
+    return mozilla::LogicalRect(aWM, GetOverflowArea(aType), aContainerSize);
   }
   nsRect GetOverflowArea(nsOverflowType aType) {
     return mData ? mData->mOverflowAreas.Overflow(aType) : GetPhysicalBounds();
@@ -467,33 +467,36 @@ public:
   nsRect GetScrollableOverflowArea()
     { return GetOverflowArea(eScrollableOverflow); }
 
-  void SlideBy(nscoord aDBCoord, nscoord aContainerWidth) {
-    NS_ASSERTION(aContainerWidth == mContainerWidth || mContainerWidth == -1,
-                 "container width doesn't match");
-    mContainerWidth = aContainerWidth;
+  void SlideBy(nscoord aDBCoord, const nsSize& aContainerSize) {
+    NS_ASSERTION(aContainerSize == mContainerSize ||
+                 mContainerSize == nsSize(-1, -1),
+                 "container size doesn't match");
+    mContainerSize = aContainerSize;
     mBounds.BStart(mWritingMode) += aDBCoord;
     if (mData) {
-      nsPoint physicalDelta = mozilla::LogicalPoint(mWritingMode, 0, aDBCoord).
-                                         GetPhysicalPoint(mWritingMode, 0);
+      // Use a null containerSize to convert vector from logical to physical.
+      const nsSize nullContainerSize;
+      nsPoint physicalDelta =
+        mozilla::LogicalPoint(mWritingMode, 0, aDBCoord).
+          GetPhysicalPoint(mWritingMode, nullContainerSize);
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
         mData->mOverflowAreas.Overflow(otype) += physicalDelta;
       }
     }
   }
 
-  // Container-width for the line is changing (and therefore if writing mode
+  // Container-size for the line is changing (and therefore if writing mode
   // was vertical-rl, the line will move physically; this is like SlideBy,
-  // but it is the container width instead of the line's own logical coord
+  // but it is the container size instead of the line's own logical coord
   // that is changing.
-  nscoord UpdateContainerWidth(nscoord aNewContainerWidth)
+  nsSize UpdateContainerSize(const nsSize aNewContainerSize)
   {
-    NS_ASSERTION(mContainerWidth != -1, "container width not set");
-    nscoord delta = mContainerWidth - aNewContainerWidth;
-    mContainerWidth = aNewContainerWidth;
+    NS_ASSERTION(mContainerSize != nsSize(-1, -1), "container size not set");
+    nsSize delta = mContainerSize - aNewContainerSize;
+    mContainerSize = aNewContainerSize;
     // this has a physical-coordinate effect only in vertical-rl mode
     if (mWritingMode.IsVerticalRL() && mData) {
-      nsPoint physicalDelta = mozilla::LogicalPoint(mWritingMode, 0, delta).
-                                         GetPhysicalPoint(mWritingMode, 0);
+      nsPoint physicalDelta(-delta.width, 0);
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
         mData->mOverflowAreas.Overflow(otype) += physicalDelta;
       }
@@ -501,17 +504,19 @@ public:
     return delta;
   }
 
-  void IndentBy(nscoord aDICoord, nscoord aContainerWidth) {
-    NS_ASSERTION(aContainerWidth == mContainerWidth || mContainerWidth == -1,
-                 "container width doesn't match");
-    mContainerWidth = aContainerWidth;
+  void IndentBy(nscoord aDICoord, const nsSize& aContainerSize) {
+    NS_ASSERTION(aContainerSize == mContainerSize ||
+                 mContainerSize == nsSize(-1, -1),
+                 "container size doesn't match");
+    mContainerSize = aContainerSize;
     mBounds.IStart(mWritingMode) += aDICoord;
   }
 
-  void ExpandBy(nscoord aDISize, nscoord aContainerWidth) {
-    NS_ASSERTION(aContainerWidth == mContainerWidth || mContainerWidth == -1,
-                 "container width doesn't match");
-    mContainerWidth = aContainerWidth;
+  void ExpandBy(nscoord aDISize, const nsSize& aContainerSize) {
+    NS_ASSERTION(aContainerSize == mContainerSize ||
+                 mContainerSize == nsSize(-1, -1),
+                 "container size doesn't match");
+    mContainerSize = aContainerSize;
     mBounds.ISize(mWritingMode) += aDISize;
   }
 
@@ -608,8 +613,8 @@ public:
 
   mozilla::WritingMode mWritingMode;
 
-  // Physical width. Use only for physical <-> logical coordinate conversion.
-  nscoord mContainerWidth;
+  // Physical size. Use only for physical <-> logical coordinate conversion.
+  nsSize mContainerSize;
 
  private:
   mozilla::LogicalRect mBounds;
@@ -622,25 +627,26 @@ public:
       return nsRect(0, 0, 0, 0);
     }
 
-    NS_ASSERTION(mContainerWidth != -1, "mContainerWidth not initialized");
-    return mBounds.GetPhysicalRect(mWritingMode, mContainerWidth);
+    NS_ASSERTION(mContainerSize != nsSize(-1, -1),
+                 "mContainerSize not initialized");
+    return mBounds.GetPhysicalRect(mWritingMode, mContainerSize);
   }
   void SetBounds(mozilla::WritingMode aWritingMode,
                  nscoord aIStart, nscoord aBStart,
                  nscoord aISize, nscoord aBSize,
-                 nscoord aContainerWidth)
+                 const nsSize& aContainerSize)
   {
     mWritingMode = aWritingMode;
-    mContainerWidth = aContainerWidth;
+    mContainerSize = aContainerSize;
     mBounds = mozilla::LogicalRect(aWritingMode, aIStart, aBStart,
                                    aISize, aBSize);
   }
   void SetBounds(mozilla::WritingMode aWritingMode,
-                 nsRect aRect, nscoord aContainerWidth)
+                 nsRect aRect, const nsSize& aContainerSize)
   {
     mWritingMode = aWritingMode;
-    mContainerWidth = aContainerWidth;
-    mBounds = mozilla::LogicalRect(aWritingMode, aRect, aContainerWidth);
+    mContainerSize = aContainerSize;
+    mBounds = mozilla::LogicalRect(aWritingMode, aRect, aContainerSize);
   }
 
   // mFlags.mHasHashedFrames says which one to use
