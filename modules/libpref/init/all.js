@@ -3408,22 +3408,22 @@ pref("font.name.serif.zh-CN", "Times");
 pref("font.name.sans-serif.zh-CN", "Helvetica");
 pref("font.name.monospace.zh-CN", "Courier");
 pref("font.name-list.serif.zh-CN", "Times,STSong,Heiti SC");
-pref("font.name-list.sans-serif.zh-CN", "Helvetica,STHeiti,Heiti SC");
-pref("font.name-list.monospace.zh-CN", "Courier,STHeiti,Heiti SC");
+pref("font.name-list.sans-serif.zh-CN", "Helvetica,PingFang SC,STHeiti,Heiti SC");
+pref("font.name-list.monospace.zh-CN", "Courier,PingFang SC,STHeiti,Heiti SC");
 
 pref("font.name.serif.zh-TW", "Times");
 pref("font.name.sans-serif.zh-TW", "Helvetica");
 pref("font.name.monospace.zh-TW", "Courier");
 pref("font.name-list.serif.zh-TW", "Times,LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-TW", "Helvetica,Heiti TC,LiHei Pro");
-pref("font.name-list.monospace.zh-TW", "Courier,Heiti TC,LiHei Pro");
+pref("font.name-list.sans-serif.zh-TW", "Helvetica,PingFang TC,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-TW", "Courier,PingFang TC,Heiti TC,LiHei Pro");
 
 pref("font.name.serif.zh-HK", "Times");
 pref("font.name.sans-serif.zh-HK", "Helvetica");
 pref("font.name.monospace.zh-HK", "Courier");
 pref("font.name-list.serif.zh-HK", "Times,LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-HK", "Helvetica,Heiti TC,LiHei Pro");
-pref("font.name-list.monospace.zh-HK", "Courier,Heiti TC,LiHei Pro");
+pref("font.name-list.sans-serif.zh-HK", "Helvetica,PingFang TC,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-HK", "Courier,PingFang TC,Heiti TC,LiHei Pro");
 
 // XP_MACOSX changes to default font sizes
 pref("font.minimum-size.th", 10);
