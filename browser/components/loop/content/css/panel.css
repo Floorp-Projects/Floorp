@@ -215,7 +215,7 @@ body {
 
 .new-room-view > .context {
   margin: .5rem 0 0;
-  background-color: #DEEFF7;
+  background-color: #dbf7ff;
   border-radius: 3px 3px 0 0;
   padding: .5rem;
 }
@@ -243,7 +243,7 @@ body {
 }
 
 .new-room-view > .context > .checkbox-wrapper > label {
-  color: #3c3c3c;
+  color: #333;
   font-weight: 700;
 }
 
