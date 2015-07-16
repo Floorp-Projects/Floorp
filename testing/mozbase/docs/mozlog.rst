@@ -1,13 +1,13 @@
-:mod:`mozlog.structured` --- Structured logging for test output
+:mod:`mozlog` --- Structured logging for test output
 ===============================================================
 
-:py:mod:`mozlog.structured` is a library designed for logging the
+:py:mod:`mozlog` is a library designed for logging the
 execution and results of test harnesses. The internal data model is a
 stream of JSON-compatible objects, with one object per log entry. The
 default output format is line-based, with one JSON object serialized
 per line.
 
-:py:mod:`mozlog.structured` is *not* based on the stdlib logging
+:py:mod:`mozlog` is *not* based on the stdlib logging
 module, although it shares several concepts with it.
 
 One notable difference between this module and the standard logging
@@ -199,7 +199,7 @@ under test to crash).
 StructuredLogger Objects
 ------------------------
 
-.. automodule:: mozlog.structured.structuredlog
+.. automodule:: mozlog.structuredlog
   :members: set_default_logger, get_default_logger
 
 .. autoclass:: StructuredLogger
@@ -219,7 +219,7 @@ message. The typical example of this is a ``StreamHandler`` which takes
 a log message, invokes a formatter which converts the log to a string,
 and writes it to a file.
 
-.. automodule:: mozlog.structured.handlers
+.. automodule:: mozlog.handlers
 
 .. autoclass:: BaseHandler
   :members:
@@ -248,32 +248,32 @@ Formatter modules are written so that they can take raw input on stdin
 and write formatted output on stdout. This allows the formatters to be
 invoked as part of a command line for post-processing raw log files.
 
-.. automodule:: mozlog.structured.formatters.base
+.. automodule:: mozlog.formatters.base
 
 .. autoclass:: BaseFormatter
   :members:
 
-.. automodule:: mozlog.structured.formatters.unittest
+.. automodule:: mozlog.formatters.unittest
 
 .. autoclass:: UnittestFormatter
   :members:
 
-.. automodule:: mozlog.structured.formatters.xunit
+.. automodule:: mozlog.formatters.xunit
 
 .. autoclass:: XUnitFormatter
   :members:
 
-.. automodule:: mozlog.structured.formatters.html
+.. automodule:: mozlog.formatters.html
 
 .. autoclass:: HTMLFormatter
   :members:
 
-.. automodule:: mozlog.structured.formatters.machformatter
+.. automodule:: mozlog.formatters.machformatter
 
 .. autoclass:: MachFormatter
   :members:
 
-.. automodule:: mozlog.structured.formatters.tbplformatter
+.. automodule:: mozlog.formatters.tbplformatter
 
 .. autoclass:: TbplFormatter
   :members:
@@ -281,22 +281,22 @@ invoked as part of a command line for post-processing raw log files.
 Processing Log Files
 --------------------
 
-The ``mozlog.structured.reader`` module provides utilities for working
+The ``mozlog.reader`` module provides utilities for working
 with structured log files.
 
-.. automodule:: mozlog.structured.reader
+.. automodule:: mozlog.reader
   :members:
 
 Integration with argparse
 -------------------------
 
-The `mozlog.structured.commandline` module provides integration with
-the `argparse` module to provide uniform logging-related command line
-arguments to programs using `mozlog.structured`. Each known formatter
-gets a command line argument of the form ``--log-{name}``, which takes
-the name of a file to log to with that format, or ``-`` to indicate stdout.
+The `mozlog.commandline` module provides integration with the `argparse`
+module to provide uniform logging-related command line arguments to programs
+using `mozlog`. Each known formatter gets a command line argument of the form
+``--log-{name}``, which takes the name of a file to log to with that format,
+or ``-`` to indicate stdout.
 
-.. automodule:: mozlog.structured.commandline
+.. automodule:: mozlog.commandline
   :members:
 
 Simple Examples
@@ -304,8 +304,8 @@ Simple Examples
 
 Log to stdout::
 
-    from mozlog.structured import structuredlog
-    from mozlog.structured import handlers, formatters
+    from mozlog import structuredlog
+    from mozlog import handlers, formatters
     logger = structuredlog.StructuredLogger("my-test-suite")
     logger.add_handler(handlers.StreamHandler(sys.stdout,
                                               formatters.JSONFormatter()))
@@ -322,7 +322,7 @@ create a logger based on the value of those options, defaulting to
 JSON output on stdout if nothing else is supplied::
 
    import argparse
-   from mozlog.structured import commandline
+   from mozlog import commandline
 
    parser = argparse.ArgumentParser()
    # Here one would populate the parser with other options
@@ -333,7 +333,7 @@ JSON output on stdout if nothing else is supplied::
 
 Count the number of tests that timed out in a testsuite::
 
-   from mozlog.structured import reader
+   from mozlog import reader
 
    count = 0
 
@@ -373,7 +373,7 @@ set of structured logging arguments appropriate to all tools producing
 structured logging.
 
 The values of these command line arguments are used to create a
-:py:class:`mozlog.structured.StructuredLogger` object populated with the
+:py:class:`mozlog.StructuredLogger` object populated with the
 specified handlers and formatters in
 :py:func:`commandline.setup_logging`. The third argument to this
 function is the default arguments to use. In this case the default

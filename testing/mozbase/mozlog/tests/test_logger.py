@@ -11,7 +11,7 @@ import unittest
 
 import mozfile
 
-import mozlog
+import mozlog.unstructured as mozlog
 
 class ListHandler(mozlog.Handler):
     """Mock handler appends messages to a list for later inspection."""

@@ -5,7 +5,7 @@ import os
 import sys
 from threading import current_thread
 import time
-from mozlog.structured.reader import read
+from mozlog.reader import read
 
 
 def dump_entry(entry, output):

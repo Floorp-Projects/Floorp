@@ -1,6 +1,6 @@
 #/usr/bin/env python
 import mozdevice
-import mozlog
+import logging
 import unittest
 from sut import MockAgent
 
@@ -20,17 +20,17 @@ class TestGetIP(unittest.TestCase):
 
     def test_getIP_eth0(self):
         m = MockAgent(self, commands=[self.commands[0]])
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual('192.168.0.1', d.getIP(interfaces=['eth0']))
 
     def test_getIP_wlan0(self):
         m = MockAgent(self, commands=[self.commands[1]])
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual('10.1.39.126', d.getIP(interfaces=['wlan0']))
 
     def test_getIP_error(self):
         m = MockAgent(self, commands=[self.commands[2]])
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertRaises(mozdevice.DMError, d.getIP, interfaces=['fake0'])
 
 if __name__ == '__main__':

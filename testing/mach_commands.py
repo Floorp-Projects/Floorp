@@ -290,7 +290,7 @@ class MachCommands(MachCommandBase):
 
     def run_cppunit_test(self, **params):
         import mozinfo
-        from mozlog.structured import commandline
+        from mozlog import commandline
         import runcppunittests as cppunittests
 
         log = commandline.setup_logging("cppunittest",

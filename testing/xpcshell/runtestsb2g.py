@@ -11,8 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 import traceback
 from remotexpcshelltests import RemoteXPCShellTestThread, XPCShellRemote, RemoteXPCShellOptions
 from mozdevice import devicemanagerADB, DMError
-from mozlog import structured
-from mozlog.structured import commandline
+from mozlog import commandline
 
 DEVICE_TEST_ROOT = '/data/local/tests'
 
@@ -214,7 +213,7 @@ def run_remote_xpcshell(parser, options, args, log):
 
 def main():
     parser = B2GOptions()
-    structured.commandline.add_logging_group(parser)
+    commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     log = commandline.setup_logging("Remote XPCShell",
                                     options,

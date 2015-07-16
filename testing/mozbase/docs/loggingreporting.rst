@@ -8,4 +8,4 @@ less verbose. We created some libraries to make doing this easy.
 .. toctree::
    :maxdepth: 2
 
-   mozlog_structured
+   mozlog

@@ -10,15 +10,15 @@ import urllib2
 import zipfile
 from xml.dom import minidom
 
-from manifestparser import ManifestParser
 import mozfile
-import mozlog
+from manifestparser import ManifestParser
+from mozlog.unstructured import getLogger
 
 # Needed for the AMO's rest API - https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
 AMO_API_VERSION = "1.5"
 
 # Logger for 'mozprofile.addons' module
-module_logger = mozlog.getLogger(__name__)
+module_logger = getLogger(__name__)
 
 
 class AddonFormatError(Exception):

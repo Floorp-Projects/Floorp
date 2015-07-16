@@ -3,7 +3,7 @@ import sys
 import traceback
 import types
 
-from mozlog.structured import commandline, get_default_logger
+from mozlog import commandline, get_default_logger
 
 class TestAssertion(Exception):
     pass

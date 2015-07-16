@@ -14,7 +14,7 @@ from luciddream import LucidDreamTestCase
 from marionette import Marionette
 from marionette.runner import BaseMarionetteTestRunner
 import marionette
-from mozlog import structured
+import mozlog
 
 
 class CommandLineError(Exception):
@@ -60,7 +60,7 @@ def parse_args(in_args):
                         help='max time to wait for Marionette to be available after launching binary')
     parser.add_argument('manifest', metavar='MANIFEST', action='store',
                         help='path to manifest of tests to run')
-    structured.commandline.add_logging_group(parser)
+    mozlog.commandline.add_logging_group(parser)
 
     args = parser.parse_args(in_args)
     try:
@@ -117,7 +117,7 @@ def run(browser_path=None, b2g_desktop_path=None, emulator_path=None,
 
     kwargs["browser"] = browser
     if not "logger" in kwargs:
-        logger = structured.commandline.setup_logging(
+        logger = mozlog.commandline.setup_logging(
             "luciddream", kwargs, {"tbpl": sys.stdout})
         kwargs["logger"] = logger
 

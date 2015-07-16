@@ -8,7 +8,7 @@ import os
 import subprocess
 import traceback
 
-from mozlog.structured import get_default_logger
+from mozlog import get_default_logger
 from mozprocess import ProcessHandler
 import mozcrash
 
