@@ -3168,21 +3168,6 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    Enumerate(nsCStringHashKey* aKey, void* aClosure)
-    {
-      auto* client = static_cast<Client*>(aClosure);
-      MOZ_ASSERT(client);
-
-      client->AbortOperations(aKey->GetKey());
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   nsRefPtr<DirectoryLockImpl> lock =
     CreateDirectoryLock(aPersistenceType,
                         EmptyCString(),
@@ -3229,7 +3214,11 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
 
   for (uint32_t index : MakeRange(uint32_t(Client::TYPE_MAX))) {
     if (origins[index]) {
-      origins[index]->EnumerateEntries(Helper::Enumerate, mClients[index]);
+      for (auto iter = origins[index]->Iter(); !iter.Done(); iter.Next()) {
+        MOZ_ASSERT(mClients[index]);
+
+        mClients[index]->AbortOperations(iter.Get()->GetKey());
+      }
     }
   }
 }
