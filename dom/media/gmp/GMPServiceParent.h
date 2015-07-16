@@ -152,12 +152,6 @@ private:
     struct State { nsAutoCString mStateSequence; nsCString mLastStateDescription; };
     typedef nsClassHashtable<nsCStringHashKey, State> StatesByInstance;
     typedef nsClassHashtable<nsCStringHashKey, StatesByInstance> StateInstancesByPlugin;
-    static PLDHashOperator EnumReadPlugins(StateInstancesByPlugin::KeyType aKey,
-                                           StateInstancesByPlugin::UserDataType aData,
-                                           void* aUserArg);
-    static PLDHashOperator EnumReadInstances(StatesByInstance::KeyType aKey,
-                                             StatesByInstance::UserDataType aData,
-                                             void* aUserArg);
     StateInstancesByPlugin mStates;
   } mAsyncShutdownPluginStates;
 #endif // MOZ_CRASHREPORTER
