@@ -100,12 +100,29 @@ loop.store.TextChatStore = (function() {
         sentTimestamp: messageData.sentTimestamp,
         receivedTimestamp: messageData.receivedTimestamp
       };
-      var newList = this._storeState.messageList.concat(message);
+      var newList = [].concat(this._storeState.messageList);
+      var isContext = message.contentType === CHAT_CONTENT_TYPES.CONTEXT;
+      if (isContext) {
+        var contextUpdated = false;
+        for (var i = 0, l = newList.length; i < l; ++i) {
+          // Replace the current context message with the provided update.
+          if (newList[i].contentType === CHAT_CONTENT_TYPES.CONTEXT) {
+            newList[i] = message;
+            contextUpdated = true;
+            break;
+          }
+        }
+        if (!contextUpdated) {
+          newList.push(message);
+        }
+      } else {
+        newList.push(message);
+      }
       this.setStoreState({ messageList: newList });
 
       // Notify MozLoopService if appropriate that a message has been appended
       // and it should therefore check if we need a different sized window or not.
-      if (type != CHAT_MESSAGE_TYPES.SPECIAL) {
+      if (message.contentType != CHAT_CONTENT_TYPES.ROOM_NAME) {
         window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
       }
     },
