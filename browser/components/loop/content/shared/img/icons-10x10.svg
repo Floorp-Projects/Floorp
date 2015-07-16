@@ -17,13 +17,10 @@
       fill: #0095dd;
     }
     use[id$="-white"] {
-      fill: rgba(255,255,255,0.8);
+      fill: #fff;
     }
     use[id$="-disabled"] {
       fill: rgba(255,255,255,0.4);
-    }
-    use[id$="-darkergrey"] {
-      fill: #999;
     }
   </style>
   <defs>
@@ -44,7 +41,7 @@
   <use id="edit" xlink:href="#edit-shape"/>
   <use id="edit-active" xlink:href="#edit-shape"/>
   <use id="edit-disabled" xlink:href="#edit-shape"/>
-  <use id="edit-darkergrey" xlink:href="#edit-shape"/>
+  <use id="edit-white" xlink:href="#edit-shape"/>
   <use id="expand" xlink:href="#expand-shape"/>
   <use id="expand-active" xlink:href="#expand-shape"/>
   <use id="expand-disabled" xlink:href="#expand-shape"/>
