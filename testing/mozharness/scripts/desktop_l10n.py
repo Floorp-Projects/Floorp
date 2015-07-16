@@ -7,7 +7,6 @@
 """desktop_l10n.py
 
 This script manages Desktop repacks for nightly builds.
-In this version, a single partial is supported.
 """
 import os
 import re
@@ -45,7 +44,7 @@ except ImportError:
     import json
 
 
-# needed by summarize
+# needed by _map
 SUCCESS = 0
 FAILURE = 1
 
@@ -132,12 +131,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
          "type": "string",
          "help": "Specify the release config file to use"}
     ], [
-        ['--keystore', ],
-        {"action": "store",
-         "dest": "keystore",
-         "type": "string",
-         "help": "Specify the location of the signing keystore"}
-    ], [
         ['--this-chunk', ],
         {"action": "store",
          "dest": "this_locale_chunk",
@@ -175,15 +168,10 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 "buildbot_json_path": "buildprops.json",
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
-                "previous_mar_dir": "previous",
-                "current_mar_dir": "current",
                 "update_mar_dir": "dist/update",
-                "previous_mar_filename": "previous.mar",
-                "current_work_mar_dir": "current.work",
                 "buildid_section": "App",
                 "buildid_option": "BuildID",
                 "application_ini": "application.ini",
-                "unpack_script": "tools/update-packaging/unwrap_full_update.pl",
                 "log_name": "single_locale",
                 "clobber_file": 'CLOBBER',
                 "appName": "Firefox",
@@ -217,7 +205,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.locales_property = {}
         self.l10n_dir = None
         self.package_urls = {}
-        self.partials = {}
         self.pushdate = None
         # Each locale adds its list of files to upload_files - some will be
         # duplicates (like the mar binaries), so we use a set to prune those
@@ -386,7 +373,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         return self.upload_env
 
     def query_l10n_env(self):
-        l10n_env = self._query_upload_env()
+        l10n_env = self._query_upload_env().copy()
         # both upload_env and bootstrap_env define MOZ_SIGN_CMD
         # the one from upload_env is taken from os.environ, the one from
         # bootstrap_env is set with query_moz_sign_cmd()
@@ -467,16 +454,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.info('echo-variable-%s: %s' % (variable, output))
         return output
 
-    def query_base_package_name(self, locale):
-        """Gets the package name from the objdir.
-        Only valid after setup is run.
-        """
-        # optimization:
-        # replace locale with %(locale)s
-        # and store its values.
-        args = ['AB_CD=%s' % locale]
-        return self._query_make_variable('PACKAGE', make_args=args)
-
     def query_version(self):
         """Gets the version from the objdir.
         Only valid after setup is run."""
@@ -490,7 +467,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.version = self._query_make_variable("MOZ_APP_VERSION")
         return self.version
 
-    def summarize(self, func, items):
+    def _map(self, func, items):
         """runs func for any item in items, calls the add_failure() for each
            error. It assumes that function returns 0 when successful.
            returns a two element tuple with (success_count, total_count)"""
@@ -570,18 +547,11 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         """setup step"""
         dirs = self.query_abs_dirs()
         self._run_tooltool()
-        # create dirs
-        self._create_base_dirs()
-        # copy the mozconfig file
         self._copy_mozconfig()
-        # run mach conigure
         self._mach_configure()
         self._run_make_in_config_dir()
-        # download the en-us binary
         self.make_wget_en_US()
-        # ...and unpack it
-        self.make_unpack()
-        # get the revision
+        self.make_unpack_en_US()
         revision = self._query_revision()
         if not revision:
             self.fatal("Can't determine revision!")
@@ -604,7 +574,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         # than the one on default,
         self._mach_configure()
         self._run_make_in_config_dir()
-        self.make_wget_en_US()
+        self.download_mar_tools()
 
     def _run_make_in_config_dir(self):
         """this step creates nsinstall, needed my make_wget_en_US()
@@ -704,19 +674,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                                             silent=True,
                                             halt_on_failure=halt_on_failure)
 
-    def make_export(self, buildid):
-        """calls make export <buildid>"""
-        #  is it really needed ???
-        if buildid is None:
-            self.info('buildid is set to None, skipping make export')
-            return
-        dirs = self.query_abs_dirs()
-        cwd = dirs['abs_locales_dir']
-        env = self.query_bootstrap_env()
-        target = ["export", 'MOZ_BUILD_DATE=%s' % str(buildid)]
-        return self._make(target=target, cwd=cwd, env=env)
-
-    def make_unpack(self):
+    def make_unpack_en_US(self):
         """wrapper for make unpack"""
         config = self.config
         dirs = self.query_abs_dirs()
@@ -808,76 +766,19 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         return self._make(target=target, cwd=cwd,
                           env=env, halt_on_failure=False)
 
-    def generate_complete_mar(self, locale):
-        """creates a complete mar file"""
-        self.info('generating complete mar for locale %s' % (locale))
-        config = self.config
-        dirs = self.query_abs_dirs()
-        self._create_mar_dirs()
-        self.download_mar_tools()
-        package_basedir = os.path.join(dirs['abs_objdir'],
-                                       config['package_base_dir'])
-        dist_dir = os.path.join(dirs['abs_objdir'], 'dist')
-        env = self.query_l10n_env()
-        cmd = os.path.join(dirs['abs_objdir'], config['update_packaging_dir'])
-        cmd = ['-C', cmd, 'full-update', 'AB_CD=%s' % locale,
-               'PACKAGE_BASE_DIR=%s' % package_basedir,
-               'DIST=%s' % dist_dir,
-               'MOZ_PKG_PRETTYNAMES=']
-        return_code = self._make(target=cmd,
-                                 cwd=dirs['abs_mozilla_dir'],
-                                 env=env)
-        return return_code
-
-    def _copy_complete_mar(self, locale):
-        """copies the file generated by generate_complete_mar() into the right
-           place"""
-        # complete mar file is created in obj-l10n/dist/update
-        # but we need it in obj-l10n-dist/current, let's copy it
-        current_mar_file = self._current_mar_filename(locale)
-        src_file = self.localized_marfile(locale)
-        dst_file = os.path.join(self._current_mar_dir(), current_mar_file)
-        if os.path.exists(dst_file):
-            self.info('removing %s' % (dst_file))
-            os.remove(dst_file)
-        # copyfile returns None on success but we need 0 if the operation was
-        # successful
-        if self.copyfile(src_file, dst_file) is None:
-            # success
-            return SUCCESS
-        return FAILURE
-
     def repack_locale(self, locale):
         """wraps the logic for comapare locale, make installers and generate
-           partials"""
-        # get mar tools
-        self.download_mar_tools()
-        # remove current/previous/... directories
-        self._delete_mar_dirs()
-        self._create_mar_dirs()
+           complete updates."""
 
         if self.run_compare_locales(locale) != SUCCESS:
             self.error("compare locale %s failed" % (locale))
             return FAILURE
 
-        # compare locale succeded, let's run make installers
+        # compare locale succeeded, run make installers
         if self.make_installers(locale) != SUCCESS:
             self.error("make installers-%s failed" % (locale))
             return FAILURE
 
-        if self._requires_generate_mar('complete', locale):
-            if self.generate_complete_mar(locale) != SUCCESS:
-                self.error("generate complete %s mar failed" % (locale))
-                return FAILURE
-        # copy the complete mar file where generate_partial_updates expects it
-        if self._copy_complete_mar(locale) != SUCCESS:
-            self.error("copy_complete_mar failed!")
-            return FAILURE
-
-        if self._requires_generate_mar('partial', locale):
-            if self.generate_partial_updates(locale) != 0:
-                self.error("generate partials %s failed" % (locale))
-                return FAILURE
         if self.get_upload_files(locale):
             self.error("failed to get list of files to upload for locale %s" % (locale))
             return FAILURE
@@ -887,126 +788,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             return FAILURE
         return SUCCESS
 
-    def _requires_generate_mar(self, mar_type, locale):
-        # Bug 1136750 - Partial mar is generated but not uploaded
-        # do not use mozharness for complete/partial updates, testing
-        # a full cycle of intree only updates generation
-        return False
-
-        generate = True
-        if mar_type == 'complete':
-            complete_filename = self.localized_marfile(locale)
-            if os.path.exists(complete_filename):
-                self.info('complete mar, already exists: %s' % (complete_filename))
-                generate = False
-            else:
-                self.info('complete mar, does not exist: %s' % (complete_filename))
-        elif mar_type == 'partial':
-            if not self.has_partials():
-                self.info('partials are disabled: enable_partials == False')
-                generate = False
-            else:
-                partial_filename = self._query_partial_mar_filename(locale)
-                if os.path.exists(partial_filename):
-                    self.info('partial mar, already exists: %s' % (partial_filename))
-                    generate = False
-                else:
-                    self.info('partial mar, does not exist: %s' % (partial_filename))
-        else:
-            self.fatal('unknown mar_type: %s' % mar_type)
-        return generate
-
-    def has_partials(self):
-        """returns True if partials are enabled, False elsewhere"""
-        config = self.config
-        return config["enable_partials"]
-
     def repack(self):
         """creates the repacks and udpates"""
-        self.summarize(self.repack_locale, self.query_locales())
-
-    def localized_marfile(self, locale):
-        """returns the localized mar file name"""
-        config = self.config
-        version = self.query_version()
-        localized_mar = config['localized_mar'] % {'version': version,
-                                                   'locale': locale}
-        localized_mar = os.path.join(self._mar_dir('update_mar_dir'),
-                                     localized_mar)
-        return localized_mar
-
-    def generate_partial_updates(self, locale):
-        """create partial updates for locale"""
-        # clean up any left overs from previous locales
-        # remove current/ current.work/ previous/ directories
-        self.info('creating partial update for locale: %s' % (locale))
-        # and recreate current/ previous/
-        self._create_mar_dirs()
-        # download mar and mbsdiff executables, we need them later...
-        self.download_mar_tools()
-
-        # unpack current mar file
-        current_marfile = self._current_mar_filename(locale)
-        current_mar_dir = self._current_mar_dir()
-        result = self._unpack_mar(current_marfile, current_mar_dir)
-        if result != SUCCESS:
-            self.error('failed to unpack %s to %s' % (current_marfile,
-                                                      current_mar_dir))
-            return result
-        # current mar file unpacked, remove it
-        self.rmtree(current_marfile)
-        # partial filename
-        previous_mar_dir = self._previous_mar_dir()
-        previous_mar_buildid = self.get_buildid_from_mar_dir(previous_mar_dir)
-        partial_filename = self._query_partial_mar_filename(locale)
-        if locale not in self.package_urls:
-            self.package_urls[locale] = {}
-        self.package_urls[locale]['partial_filename'] = partial_filename
-        self.package_urls[locale]['previous_buildid'] = previous_mar_buildid
-        self._delete_pgc_files()
-        result = self.do_incremental_update(previous_mar_dir, current_mar_dir,
-                                            partial_filename)
-        if result == 0:
-            # incremental updates succeded
-            # prepare partialInfo for balrog submission
-            partialInfo = {}
-            p_marfile = self._query_partial_mar_filename(locale)
-            partialInfo['from_buildid'] = previous_mar_buildid
-            partialInfo['size'] = self.query_filesize(p_marfile)
-            partialInfo['hash'] = self.query_sha512sum(p_marfile)
-            # url will be available only after make upload
-            # self._query_partial_mar_url(locale)
-            # and of course we need to generate partials befrore uploading them
-            partialInfo['url'] = None
-            if locale not in self.partials:
-                self.partials[locale] = []
-
-            # append partialInfo
-            self.partials[locale].append(partialInfo)
-        return result
-
-    def _partial_filename(self, locale):
-        config = self.config
-        version = self.query_version()
-        # download the previous partial, if needed
-        self._create_mar_dirs()
-        # download mar and mbsdiff executables
-        self.download_mar_tools()
-        # get the previous mar file
-        previous_marfile = self._get_previous_mar(locale)
-        # and unpack it
-        previous_mar_dir = self._previous_mar_dir()
-        result = self._unpack_mar(previous_marfile, previous_mar_dir)
-        if result != SUCCESS:
-            self.error('failed to unpack %s to %s' % (previous_marfile,
-                                                      previous_mar_dir))
-            return result
-        previous_mar_buildid = self.get_buildid_from_mar_dir(previous_mar_dir)
-        current_mar_buildid = self._query_buildid()
-        return config['partial_mar'] % {'version': version,
-                                        'locale': locale,
-                                        'from_buildid': current_mar_buildid,
-                                        'to_buildid': previous_mar_buildid}
+        self._map(self.repack_locale, self.query_locales())
 
     def _query_objdir(self):
         """returns objdir name from configuration"""
@@ -1076,7 +860,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
 
         # submit complete mar to balrog
         # clean up buildbot_properties
-        self.summarize(self.submit_repack_to_balrog, self.query_locales())
+        self._map(self.submit_repack_to_balrog, self.query_locales())
 
     def submit_repack_to_balrog(self, locale):
         """submit a single locale to balrog"""
@@ -1117,19 +901,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             self.error("submit repack to balrog failed: %s" % (str(error)))
         return ret
 
-    def _get_partialInfo(self, locale):
-        """we can have 0, 1 or many partials, this method returns the partialInfo
-           needed by balrog submitter"""
-
-        if locale not in self.partials or not self.has_partials():
-            return []
-
-        # we have only a single partial for now
-        # MakeUploadOutputParser can match a single parser
-        partial_url = self.package_urls[locale]["partialMarUrl"]
-        self.partials[locale][0]["url"] = partial_url
-        return self.partials[locale]
-
     def _query_complete_mar_filename(self, locale):
         """returns the full path to a localized complete mar file"""
         config = self.config
@@ -1151,124 +922,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         #    return url.format(branch=self.query_branch())
         self.fatal("Couldn't find complete mar url in config or package_urls")
 
-    def _query_partial_mar_url(self, locale):
-        """returns partial mar url"""
-        try:
-            return self.package_urls[locale]["partialMarUrl"]
-        except KeyError:
-            msg = "Couldn't find package_urls: %s %s" % (locale, self.package_urls)
-            self.error("package_urls: %s" % (self.package_urls))
-            self.fatal(msg)
-
-    def _query_partial_mar_filename(self, locale):
-        """returns the full path to a partial, it returns a valid path only
-           after make upload"""
-        partial_mar_name = self._partial_filename(locale)
-        return os.path.join(self._update_mar_dir(), partial_mar_name)
-
-    def _query_previous_mar_buildid(self, locale):
-        """return the partial mar buildid,
-        this method returns a valid buildid only after generate partials,
-        it raises an exception when buildid is not available
-        """
-        try:
-            return self.package_urls[locale]["previous_buildid"]
-        except KeyError:
-            self.error("no previous mar buildid")
-            raise
-
-    def _delete_pgc_files(self):
-        """deletes pgc files"""
-        for directory in (self._previous_mar_dir(),
-                          self._current_mar_dir()):
-            for pcg_file in self._pgc_files(directory):
-                self.info("removing %s" % pcg_file)
-                self.rmtree(pcg_file)
-
-    def _current_mar_url(self, locale):
-        """returns current mar url"""
-        config = self.config
-        base_url = config['current_mar_url']
-        return "/".join((base_url, self._current_mar_name(locale)))
-
-    def _previous_mar_url(self, locale):
-        """returns the url for previous mar"""
-        config = self.config
-        base_url = config['previous_mar_url']
-        return "/".join((base_url, self._localized_mar_name(locale)))
-
-    def _get_previous_mar(self, locale):
-        """downloads the previous mar file"""
-        self.mkdir_p(self._previous_mar_dir())
-        self.download_file(self._previous_mar_url(locale),
-                           self._previous_mar_filename(locale))
-        return self._previous_mar_filename(locale)
-
-    def _current_mar_name(self, locale):
-        """returns current mar file name"""
-        config = self.config
-        version = self.query_version()
-        return config["current_mar_filename"] % {'version': version,
-                                                 'locale': locale, }
-
-    def _localized_mar_name(self, locale):
-        """returns localized mar name"""
-        config = self.config
-        version = self.query_version()
-        return config["localized_mar"] % {'version': version, 'locale': locale}
-
-    def _previous_mar_filename(self, locale):
-        """returns the complete path to previous.mar"""
-        config = self.config
-        return os.path.join(self._previous_mar_dir(),
-                            config['previous_mar_filename'])
-
-    def _current_mar_filename(self, locale):
-        """returns the complete path to current.mar"""
-        return os.path.join(self._current_mar_dir(), self._current_mar_name(locale))
-
-    def _create_mar_dirs(self):
-        """creates mar directories: previous/ current/"""
-        for directory in (self._previous_mar_dir(),
-                          self._current_mar_dir()):
-            self.info("creating: %s" % directory)
-            self.mkdir_p(directory)
-
-    def _delete_mar_dirs(self):
-        """delete mar directories: previous, current"""
-        for directory in (self._previous_mar_dir(),
-                          self._current_mar_dir(),
-                          self._current_work_mar_dir()):
-            self.info("deleting: %s" % directory)
-            if os.path.exists(directory):
-                self.rmtree(directory)
-
-    def _unpack_script(self):
-        """unpack script full path"""
-        config = self.config
-        dirs = self.query_abs_dirs()
-        return os.path.join(dirs['abs_mozilla_dir'], config['unpack_script'])
-
-    def _previous_mar_dir(self):
-        """returns the full path of the previous/ directory"""
-        return self._mar_dir('previous_mar_dir')
-
-    def _abs_dist_dir(self):
-        """returns the full path to abs_objdir/dst"""
-        dirs = self.query_abs_dirs()
-        return os.path.join(dirs['abs_objdir'], 'dist')
-
     def _update_mar_dir(self):
         """returns the full path of the update/ directory"""
         return self._mar_dir('update_mar_dir')
-
-    def _current_mar_dir(self):
-        """returns the full path of the current/ directory"""
-        return self._mar_dir('current_mar_dir')
-
-    def _current_work_mar_dir(self):
-        """returns the full path to current.work"""
-        return self._mar_dir('current_work_mar_dir')
 
     def _mar_binaries(self):
         """returns a tuple with mar and mbsdiff paths"""
@@ -1278,22 +934,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
     def _mar_dir(self, dirname):
         """returns the full path of dirname;
             dirname is an entry in configuration"""
-        config = self.config
-        return os.path.join(self._get_objdir(), config.get(dirname))
-
-    def _get_objdir(self):
-        """returns full path to objdir"""
         dirs = self.query_abs_dirs()
-        return dirs['abs_objdir']
-
-    def _pgc_files(self, basedir):
-        """returns a list of .pcf files in basedir"""
-        pgc_files = []
-        for dirpath, dirnames, filenames in os.walk(basedir):
-            for pgc in filenames:
-                if pgc.endswith('.pgc'):
-                    pgc_files.append(os.path.join(dirpath, pgc))
-        return pgc_files
+        return os.path.join(dirs['abs_objdir'], self.config[dirname])
 
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):
@@ -1336,16 +978,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True)
 
-    def _create_base_dirs(self):
-        config = self.config
-        dirs = self.query_abs_dirs()
-        for make_dir in config.get('make_dirs', []):
-            dirname = os.path.join(dirs['abs_objdir'], make_dir)
-            self.mkdir_p(dirname)
-
     def funsize_props(self):
-        """writes funsize info into buildprops.json"""
-        # see bug
+        """Set buildbot properties required to trigger funsize tasks
+         responsible to generate partial updates for successfully generated locales"""
         funsize_info = {
             'locales': self.query_locales(),
             'branch': self.config['branch'],

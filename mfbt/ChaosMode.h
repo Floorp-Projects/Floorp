@@ -15,8 +15,24 @@
 
 namespace mozilla {
 
+enum ChaosFeature {
+  None = 0x0,
+  // Altering thread scheduling.
+  ThreadScheduling = 0x1,
+  // Altering network request scheduling.
+  NetworkScheduling = 0x2,
+  // Altering timer scheduling.
+  TimerScheduling = 0x4,
+  // Read and write less-than-requested amounts.
+  IOAmounts = 0x8,
+  // Iterate over hash tables in random order.
+  HashTableIteration = 0x10,
+  Any = 0xffffffff,
+};
+
 namespace detail {
 extern MFBT_DATA Atomic<uint32_t> gChaosModeCounter;
+extern MFBT_DATA ChaosFeature gChaosFeatures;
 } // namespace detail
 
 /**
@@ -27,32 +43,17 @@ extern MFBT_DATA Atomic<uint32_t> gChaosModeCounter;
 class ChaosMode
 {
 public:
-  enum ChaosFeature {
-    None = 0x0,
-    // Altering thread scheduling.
-    ThreadScheduling = 0x1,
-    // Altering network request scheduling.
-    NetworkScheduling = 0x2,
-    // Altering timer scheduling.
-    TimerScheduling = 0x4,
-    // Read and write less-than-requested amounts.
-    IOAmounts = 0x8,
-    // Iterate over hash tables in random order.
-    HashTableIteration = 0x10,
-    Any = 0xffffffff,
-  };
+  static void SetChaosFeature(ChaosFeature aChaosFeature)
+  {
+    detail::gChaosFeatures = aChaosFeature;
+  }
 
-private:
-  // Change this to any non-None value to activate ChaosMode.
-  static const ChaosFeature sChaosFeatures = None;
-
-public:
   static bool isActive(ChaosFeature aFeature)
   {
     if (detail::gChaosModeCounter > 0) {
       return true;
     }
-    return sChaosFeatures & aFeature;
+    return detail::gChaosFeatures & aFeature;
   }
 
   /**

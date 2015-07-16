@@ -273,41 +273,6 @@ private:
   nsresult RemoveExpiredPermissionsForApp(uint32_t aAppId);
 
   /**
-   * This struct has to be passed as an argument to GetPermissionsForApp.
-   * |appId| and |browserOnly| have to be defined.
-   * |permissions| will be filed with permissions that are related to the app.
-   * If |browserOnly| is true, only permissions related to a browserElement will
-   * be in |permissions|.
-   */
-  struct GetPermissionsForAppStruct {
-    uint32_t                  appId;
-    bool                      browserOnly;
-    nsCOMArray<nsIPermission> permissions;
-
-    GetPermissionsForAppStruct() = delete;
-    GetPermissionsForAppStruct(uint32_t aAppId, bool aBrowserOnly)
-      : appId(aAppId)
-      , browserOnly(aBrowserOnly)
-    {}
-  };
-
-  /**
-   * This method will return the list of all permissions that are related to a
-   * specific app.
-   * @param arg has to be an instance of GetPermissionsForAppStruct.
-   */
-  static PLDHashOperator
-  GetPermissionsForApp(PermissionHashKey* entry, void* arg);
-
-  /**
-   * This method restores an app's permissions when its session ends.
-   */
-  static PLDHashOperator
-  RemoveExpiredPermissionsForAppEnumerator(PermissionHashKey* entry,
-                                           void* nonused);
-
-
-  /**
    * This method removes all permissions modified after the specified time.
    */
   nsresult
