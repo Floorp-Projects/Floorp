@@ -437,6 +437,95 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 }
 
 void
+gfxWindowsPlatform::InitD2DSupport()
+{
+#ifdef CAIRO_HAS_D2D_SURFACE
+  bool d2dBlocked = false;
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  if (gfxInfo) {
+    int32_t status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
+      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+        d2dBlocked = true;
+      }
+    }
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &status))) {
+      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+        d2dBlocked = true;
+      }
+    }
+  }
+
+  // If D2D is blocked or D3D9 is prefered, and D2D is not force-enabled, then
+  // we don't attempt to use D2D.
+  if ((d2dBlocked || gfxPrefs::LayersPreferD3D9()) && !gfxPrefs::Direct2DForceEnabled()) {
+    return;
+  }
+
+  // Do not ever try to use D2D if it's explicitly disabled or if we're not
+  // using DWrite fonts.
+  if (gfxPrefs::Direct2DDisabled() || mUsingGDIFonts) {
+    return;
+  }
+
+  ID3D11Device* device = GetD3D11Device();
+  if (IsVistaOrLater() &&
+      !InSafeMode() &&
+      device &&
+      mDoesD3D11TextureSharingWork)
+  {
+    VerifyD2DDevice(gfxPrefs::Direct2DForceEnabled());
+    if (mD3D10Device && GetD3D11Device()) {
+      mRenderMode = RENDER_DIRECT2D;
+      mUseDirectWrite = true;
+    }
+  } else {
+    mD3D10Device = nullptr;
+  }
+#endif
+}
+
+void
+gfxWindowsPlatform::InitDWriteSupport()
+{
+#ifdef CAIRO_HAS_DWRITE_FONT
+  // Enable when it's preffed on -and- we're using Vista or higher. Or when
+  // we're going to use D2D.
+  if (mDWriteFactory || (!mUseDirectWrite || !IsVistaOrLater())) {
+    return;
+  }
+
+  mozilla::ScopedGfxFeatureReporter reporter("DWrite");
+  decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
+      GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
+
+  if (!createDWriteFactory) {
+    return;
+  }
+
+  // I need a direct pointer to be able to cast to IUnknown**, I also need to
+  // remember to release this because the nsRefPtr will AddRef it.
+  IDWriteFactory *factory;
+  HRESULT hr = createDWriteFactory(
+      DWRITE_FACTORY_TYPE_SHARED,
+      __uuidof(IDWriteFactory),
+      reinterpret_cast<IUnknown**>(&factory));
+
+  if (SUCCEEDED(hr) && factory) {
+    mDWriteFactory = factory;
+    factory->Release();
+    hr = mDWriteFactory->CreateTextAnalyzer(getter_AddRefs(mDWriteAnalyzer));
+  }
+
+  SetupClearTypeParams();
+
+  if (hr == S_OK) {
+    reporter.SetSuccessful();
+  }
+#endif
+}
+
+void
 gfxWindowsPlatform::UpdateRenderMode()
 {
 /* Pick the default render mode for
@@ -461,92 +550,10 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 
     mRenderMode = RENDER_GDI;
+    mUseDirectWrite = gfxPrefs::DirectWriteFontRenderingEnabled();
 
-    bool isVistaOrHigher = IsVistaOrLater();
-
-    mUseDirectWrite = Preferences::GetBool("gfx.font_rendering.directwrite.enabled", false);
-
-#ifdef CAIRO_HAS_D2D_SURFACE
-    bool d2dDisabled = false;
-    bool d2dForceEnabled = false;
-    bool d2dBlocked = false;
-
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    if (gfxInfo) {
-        int32_t status;
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-                d2dBlocked = true;
-            }
-        }
-        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-                d2dBlocked = true;
-            }
-        }
-    }
-
-    // These will only be evaluated once, and any subsequent changes to
-    // the preferences will be ignored until restart.
-    d2dDisabled = gfxPrefs::Direct2DDisabled();
-    d2dForceEnabled = gfxPrefs::Direct2DForceEnabled();
-
-    bool tryD2D = d2dForceEnabled || (!d2dBlocked && !gfxPrefs::LayersPreferD3D9());
-
-    // Do not ever try if d2d is explicitly disabled,
-    // or if we're not using DWrite fonts.
-    if (d2dDisabled || mUsingGDIFonts) {
-        tryD2D = false;
-    }
-
-    ID3D11Device *device = GetD3D11Device();
-    if (isVistaOrHigher && !InSafeMode() && tryD2D && device &&
-        mDoesD3D11TextureSharingWork) {
-
-        VerifyD2DDevice(d2dForceEnabled);
-        if (mD3D10Device && GetD3D11Device()) {
-            mRenderMode = RENDER_DIRECT2D;
-            mUseDirectWrite = true;
-        }
-    } else {
-        mD3D10Device = nullptr;
-    }
-#endif
-
-#ifdef CAIRO_HAS_DWRITE_FONT
-    // Enable when it's preffed on -and- we're using Vista or higher. Or when
-    // we're going to use D2D.
-    if (!mDWriteFactory && (mUseDirectWrite && isVistaOrHigher)) {
-        mozilla::ScopedGfxFeatureReporter reporter("DWrite");
-        decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
-            GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
-
-        if (createDWriteFactory) {
-            /**
-             * I need a direct pointer to be able to cast to IUnknown**, I also
-             * need to remember to release this because the nsRefPtr will
-             * AddRef it.
-             */
-            IDWriteFactory *factory;
-            HRESULT hr = createDWriteFactory(
-                DWRITE_FACTORY_TYPE_SHARED,
-                __uuidof(IDWriteFactory),
-                reinterpret_cast<IUnknown**>(&factory));
-
-            if (SUCCEEDED(hr) && factory) {
-                mDWriteFactory = factory;
-                factory->Release();
-                hr = mDWriteFactory->CreateTextAnalyzer(
-                    getter_AddRefs(mDWriteAnalyzer));
-            }
-
-            SetupClearTypeParams();
-
-            if (hr == S_OK)
-              reporter.SetSuccessful();
-        }
-    }
-#endif
+    InitD2DSupport();
+    InitDWriteSupport();
 
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
     uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
