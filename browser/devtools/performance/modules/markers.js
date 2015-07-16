@@ -10,7 +10,7 @@ const { Formatters } = require("devtools/performance/marker-utils");
  * A simple schema for mapping markers to the timeline UI. The keys correspond
  * to marker names, while the values are objects with the following format:
  *
- * - group: The row index in the timeline overview graph; multiple markers
+ * - group: The row index in the overview graph; multiple markers
  *          can be added on the same row. @see <overview.js/buildGraphImage>
  * - label: The label used in the waterfall to identify the marker. Can be a
  *          string or just a function that accepts the marker and returns a
@@ -60,25 +60,25 @@ const TIMELINE_BLUEPRINT = {
   "Styles": {
     group: 0,
     colorName: "graphs-purple",
-    label: L10N.getStr("timeline.label.styles2"),
+    label: L10N.getStr("marker.label.styles"),
     fields: Formatters.StylesFields,
   },
   "Reflow": {
     group: 0,
     colorName: "graphs-purple",
-    label: L10N.getStr("timeline.label.reflow2"),
+    label: L10N.getStr("marker.label.reflow"),
   },
   "Paint": {
     group: 0,
     colorName: "graphs-green",
-    label: L10N.getStr("timeline.label.paint"),
+    label: L10N.getStr("marker.label.paint"),
   },
 
   /* Group 1 - JS */
   "DOMEvent": {
     group: 1,
     colorName: "graphs-yellow",
-    label: L10N.getStr("timeline.label.domevent"),
+    label: L10N.getStr("marker.label.domevent"),
     fields: Formatters.DOMEventFields,
   },
   "Javascript": {
@@ -90,32 +90,32 @@ const TIMELINE_BLUEPRINT = {
   "Parse HTML": {
     group: 1,
     colorName: "graphs-yellow",
-    label: L10N.getStr("timeline.label.parseHTML"),
+    label: L10N.getStr("marker.label.parseHTML"),
   },
   "Parse XML": {
     group: 1,
     colorName: "graphs-yellow",
-    label: L10N.getStr("timeline.label.parseXML"),
+    label: L10N.getStr("marker.label.parseXML"),
   },
   "GarbageCollection": {
     group: 1,
     colorName: "graphs-red",
     label: Formatters.GCLabel,
     fields: [
-      { property: "causeName", label: "Reason:" },
-      { property: "nonincrementalReason", label: "Non-incremental Reason:" }
+      { property: "causeName", label: L10N.getStr("marker.field.causeName") },
+      { property: "nonincrementalReason", label: L10N.getStr("marker.field.nonIncrementalCause") }
     ],
   },
   "nsCycleCollector::Collect": {
     group: 1,
     colorName: "graphs-red",
-    label: "Cycle Collection",
+    label: L10N.getStr("marker.label.cycleCollection"),
     fields: Formatters.CycleCollectionFields,
   },
   "nsCycleCollector::ForgetSkippable": {
     group: 1,
     colorName: "graphs-red",
-    label: "Cycle Collection",
+    label: L10N.getStr("marker.label.cycleCollection.forgetSkippable"),
     fields: Formatters.CycleCollectionFields,
   },
 
@@ -123,10 +123,10 @@ const TIMELINE_BLUEPRINT = {
   "ConsoleTime": {
     group: 2,
     colorName: "graphs-blue",
-    label: sublabelForProperty(L10N.getStr("timeline.label.consoleTime"), "causeName"),
+    label: sublabelForProperty(L10N.getStr("marker.label.consoleTime"), "causeName"),
     fields: [{
       property: "causeName",
-      label: L10N.getStr("timeline.markerDetail.consoleTimerName")
+      label: L10N.getStr("marker.field.consoleTimerName")
     }],
     nestable: false,
     collapsible: false,
@@ -134,7 +134,7 @@ const TIMELINE_BLUEPRINT = {
   "TimeStamp": {
     group: 2,
     colorName: "graphs-blue",
-    label: sublabelForProperty(L10N.getStr("timeline.label.timestamp"), "causeName"),
+    label: sublabelForProperty(L10N.getStr("marker.label.timestamp"), "causeName"),
     fields: [{
       property: "causeName",
       label: "Label:"
