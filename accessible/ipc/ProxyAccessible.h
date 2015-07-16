@@ -224,9 +224,9 @@ public:
 
   uint32_t RowExtent();
 
-  void ColHeaderCells(nsTArray<uint64_t>* aCells);
+  void ColHeaderCells(nsTArray<ProxyAccessible*>* aCells);
 
-  void RowHeaderCells(nsTArray<uint64_t>* aCells);
+  void RowHeaderCells(nsTArray<ProxyAccessible*>* aCells);
 
   bool IsCellSelected();
 
