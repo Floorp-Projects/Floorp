@@ -7213,7 +7213,7 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
                                       getter_Copies(extensionListStr));
     } else if (token.First() == '.') {
       extensionListStr = NS_LITERAL_STRING("*") + token;
-      filterName = extensionListStr + NS_LITERAL_STRING("; ");
+      filterName = extensionListStr;
       atLeastOneFileExtensionFilter = true;
     } else {
       //... if no image/audio/video filter is found, check mime types filters
