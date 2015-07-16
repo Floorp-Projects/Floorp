@@ -2323,9 +2323,10 @@ void
 nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
   for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.Get()->HasNameElement() ||
-        iter.Get()->HasIdElementExposedAsHTMLDocumentProperty()) {
-      aNames.AppendElement(iter.Get()->GetKey());
+    nsIdentifierMapEntry* entry = iter.Get();
+    if (entry->HasNameElement() ||
+        entry->HasIdElementExposedAsHTMLDocumentProperty()) {
+      aNames.AppendElement(entry->GetKey());
     }
   }
 }
