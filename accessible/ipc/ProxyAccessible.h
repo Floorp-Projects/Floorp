@@ -194,6 +194,12 @@ public:
 
   bool IsLinkValid();
 
+  // XXX checking mRole alone may not result in same behavior as Accessibles
+  // due to ARIA roles
+  inline bool IsTable() const { return mRole == roles::TABLE; }
+  inline bool IsTableRow() const { return mRole == roles::ROW; }
+  inline bool IsTableCell() const { return mRole == roles::CELL; }
+
   uint32_t AnchorCount(bool* aOk);
 
   void AnchorURIAt(uint32_t aIndex, nsCString& aURI, bool* aOk);
