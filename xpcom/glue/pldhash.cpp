@@ -822,7 +822,7 @@ PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   mTable->mChecker.StartReadOp();
 #endif
 
-  if (ChaosMode::isActive(ChaosMode::HashTableIteration) &&
+  if (ChaosMode::isActive(ChaosFeature::HashTableIteration) &&
       mTable->Capacity() > 0) {
     // Start iterating at a random entry. It would be even more chaotic to
     // iterate in fully random order, but that's harder.

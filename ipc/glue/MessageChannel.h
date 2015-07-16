@@ -129,6 +129,11 @@ class MessageChannel : HasResultCodes
 
     bool CanSend() const;
 
+    // Currently only for debugging purposes, doesn't aquire mMonitor.
+    ChannelState GetChannelState__TotallyRacy() const {
+        return mChannelState;
+    }
+
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
     bool IsOnCxxStack() const {
@@ -554,7 +559,7 @@ class MessageChannel : HasResultCodes
      public:
        explicit AutoEnterTransaction(MessageChannel *aChan, int32_t aMsgSeqno)
         : mChan(aChan),
-          mNewTransaction(0),
+          mNewTransaction(INT32_MAX),
           mOldTransaction(mChan->mCurrentTransaction)
        {
            mChan->mMonitor->AssertCurrentThreadOwns();

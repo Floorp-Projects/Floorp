@@ -945,7 +945,7 @@ IMEStateManager::SetInputContextForChildProcess(
      GetActionFocusChangeName(aAction.mFocusChange),
      sPresContext, sActiveTabParent.get()));
 
-  if (NS_WARN_IF(aTabParent != sActiveTabParent)) {
+  if (aTabParent != sActiveTabParent) {
     MOZ_LOG(sISMLog, LogLevel::Error,
       ("ISM:    IMEStateManager::SetInputContextForChildProcess(), FAILED, "
        "because non-focused tab parent tries to set input context"));

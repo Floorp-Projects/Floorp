@@ -9,6 +9,7 @@ interface nsIArray;
 interface nsIDocument;
 interface nsIInterceptedChannel;
 interface nsIPrincipal;
+interface nsIRunnable;
 interface nsIURI;
 
 [scriptable, uuid(52ee2c9d-ee87-4caf-9588-23ae77ff8798)]
@@ -33,7 +34,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(ed1cbbf2-0400-4caa-8eb2-b09d21a94e20)]
+[scriptable, builtinclass, uuid(8d80dd18-597b-4378-b41e-768bfe48dd4f)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -93,8 +94,11 @@ interface nsIServiceWorkerManager : nsISupports
 
   /*
    * Returns a ServiceWorker.
+   *  - aLoadFailedRunnable is an optional callback that will fire on main thread if
+   *    a ServiceWorker object is returned, but later fails to load for some reason.
    */
-  [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
+  [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow,
+                                               in nsIRunnable aLoadFailedRunnable);
 
   /*
    * Clears ServiceWorker registrations from memory and disk for the specified

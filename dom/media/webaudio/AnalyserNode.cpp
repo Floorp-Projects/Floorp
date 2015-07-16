@@ -251,11 +251,11 @@ bool
 AnalyserNode::FFTAnalysis()
 {
   float* inputBuffer;
-  AlignedFallibleTArray<float> tmpBuffer;
+  AlignedTArray<float> tmpBuffer;
   if (mWriteIndex == 0) {
     inputBuffer = mBuffer.Elements();
   } else {
-    if (!tmpBuffer.SetLength(FftSize())) {
+    if (!tmpBuffer.SetLength(FftSize(), fallible)) {
       return false;
     }
     inputBuffer = tmpBuffer.Elements();
@@ -301,13 +301,13 @@ AnalyserNode::AllocateBuffer()
 {
   bool result = true;
   if (mBuffer.Length() != FftSize()) {
-    if (!mBuffer.SetLength(FftSize())) {
+    if (!mBuffer.SetLength(FftSize(), fallible)) {
       return false;
     }
     memset(mBuffer.Elements(), 0, sizeof(float) * FftSize());
     mWriteIndex = 0;
 
-    if (!mOutputBuffer.SetLength(FrequencyBinCount())) {
+    if (!mOutputBuffer.SetLength(FrequencyBinCount(), fallible)) {
       return false;
     }
     memset(mOutputBuffer.Elements(), 0, sizeof(float) * FrequencyBinCount());

@@ -1466,10 +1466,11 @@ nsBidiPresUtils::RepositionRubyContentFrame(
 
   // When ruby-align is not "start", if the content does not fill this
   // frame, we need to center the children.
+  const nsSize dummyContainerSize;
   for (nsIFrame* child : childList) {
-    LogicalRect rect = child->GetLogicalRect(aFrameWM, 0);
+    LogicalRect rect = child->GetLogicalRect(aFrameWM, dummyContainerSize);
     rect.IStart(aFrameWM) += residualISize / 2;
-    child->SetRect(aFrameWM, rect, 0);
+    child->SetRect(aFrameWM, rect, dummyContainerSize);
   }
 }
 
@@ -1619,28 +1620,23 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
       frameWM.IsOrthogonalTo(aContainerWM) ? aFrame->BSize() : frameISize;
   }
 
-  // LogicalRect doesn't correctly calculate the vertical position
-  // in vertical writing modes with right-to-left direction (Bug 1131451).
-  // This does the correct calculation ad hoc pending the fix for that.
-  nsRect rect = aFrame->GetRect();
-
-  LogicalMargin margin = frameMargin.ConvertTo(aContainerWM, frameWM);
   // In the following variables, if aContainerReverseDir is true, i.e.
   // the container is positioning its children in reverse of its logical
   // direction, the "StartOrEnd" refers to the distance from the frame
   // to the inline end edge of the container, elsewise, it refers to the
   // distance to the inline start edge.
-  nscoord marginStartOrEnd = aContainerReverseDir ?
-    margin.IEnd(aContainerWM) : margin.IStart(aContainerWM);
+  const LogicalMargin margin = frameMargin.ConvertTo(aContainerWM, frameWM);
+  nscoord marginStartOrEnd =
+    aContainerReverseDir ? margin.IEnd(aContainerWM)
+                         : margin.IStart(aContainerWM);
   nscoord frameStartOrEnd = aStartOrEnd + marginStartOrEnd;
-  // Whether we are placing frames from right to left.
-  // e.g. If the frames are placed reversely in LTR mode, they are
-  // actually placed from right to left.
-  bool orderingRTL = aContainerReverseDir == aContainerWM.IsBidiLTR();
-  (aContainerWM.IsVertical() ? rect.y : rect.x) = orderingRTL ?
-    lineSize - (frameStartOrEnd + icoord) : frameStartOrEnd;
-  (aContainerWM.IsVertical() ? rect.height : rect.width) = icoord;
-  aFrame->SetRect(rect);
+
+  LogicalRect rect = aFrame->GetLogicalRect(aContainerWM, aContainerSize);
+  rect.ISize(aContainerWM) = icoord;
+  rect.IStart(aContainerWM) =
+    aContainerReverseDir ? lineSize - frameStartOrEnd - icoord
+                         : frameStartOrEnd;
+  aFrame->SetRect(aContainerWM, rect, aContainerSize);
 
   return icoord + margin.IStartEnd(aContainerWM);
 }
