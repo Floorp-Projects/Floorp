@@ -627,7 +627,7 @@ public:
                                size.width, size.height, data->Stride(), 0,
                                format, type, data->GetData(), byteLength,
                                js::Scalar::MaxTypedArrayViewType, srcFormat,
-                               mPixelStorePremultiplyAlpha);
+                               res.mIsPremultiplied);
     }
 
     void TexParameterf(GLenum target, GLenum pname, GLfloat param) {

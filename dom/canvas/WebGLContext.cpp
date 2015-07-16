@@ -1967,7 +1967,7 @@ WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xoffset
     TexSubImage2D_base(texImageTarget.get(), level, xoffset, yoffset, size.width,
                        size.height, data->Stride(), format, type, data->GetData(),
                        byteLength, js::Scalar::MaxTypedArrayViewType, srcFormat,
-                       mPixelStorePremultiplyAlpha);
+                       res.mIsPremultiplied);
 }
 
 size_t
