@@ -550,39 +550,45 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TraceMinorGCEnd();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
-        static bool printedHeader = false;
-        if (!printedHeader) {
-            fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn runFin frSlts clrSB  sweep resize pretnr logPtT\n");
-            printedHeader = true;
+        struct {
+            const char* name;
+            int64_t time;
+        } PrintList[] = {
+            {"canIon", TIME_TOTAL(cancelIonCompilations)},
+            {"mkVals", TIME_TOTAL(traceValues)},
+            {"mkClls", TIME_TOTAL(traceCells)},
+            {"mkSlts", TIME_TOTAL(traceSlots)},
+            {"mcWCll", TIME_TOTAL(traceWholeCells)},
+            {"mkGnrc", TIME_TOTAL(traceGenericEntries)},
+            {"ckTbls", TIME_TOTAL(checkHashTables)},
+            {"mkRntm", TIME_TOTAL(markRuntime)},
+            {"mkDbgr", TIME_TOTAL(markDebugger)},
+            {"clrNOC", TIME_TOTAL(clearNewObjectCache)},
+            {"collct", TIME_TOTAL(collectToFP)},
+            {"swpABO", TIME_TOTAL(sweepArrayBufferViewList)},
+            {"updtIn", TIME_TOTAL(updateJitActivations)},
+            {"frSlts", TIME_TOTAL(freeMallocedBuffers)},
+            {" clrSB", TIME_TOTAL(clearStoreBuffer)},
+            {" sweep", TIME_TOTAL(sweep)},
+            {"resize", TIME_TOTAL(resize)},
+            {"pretnr", TIME_TOTAL(pretenure)},
+            {"logPtT", TIME_TOTAL(logPromotionsToTenured)}
+        };
+        static int printedHeader = 0;
+        if ((printedHeader++ % 200) == 0) {
+            fprintf(stderr, "MinorGC:               Reason  PRate Size    Time");
+            for (auto &entry : PrintList)
+                fprintf(stderr, " %s", entry.name);
+            fprintf(stderr, "\n");
         }
 
 #define FMT " %6" PRIu64
-        fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
-                js::gcstats::ExplainReason(reason),
-                promotionRate * 100,
-                numActiveChunks_,
-                totalTime,
-                TIME_TOTAL(cancelIonCompilations),
-                TIME_TOTAL(traceValues),
-                TIME_TOTAL(traceCells),
-                TIME_TOTAL(traceSlots),
-                TIME_TOTAL(traceWholeCells),
-                TIME_TOTAL(traceGenericEntries),
-                TIME_TOTAL(checkHashTables),
-                TIME_TOTAL(markRuntime),
-                TIME_TOTAL(markDebugger),
-                TIME_TOTAL(clearNewObjectCache),
-                TIME_TOTAL(collectToFP),
-                TIME_TOTAL(sweepArrayBufferViewList),
-                TIME_TOTAL(updateJitActivations),
-                TIME_TOTAL(freeMallocedBuffers),
-                TIME_TOTAL(clearStoreBuffer),
-                TIME_TOTAL(sweep),
-                TIME_TOTAL(resize),
-                TIME_TOTAL(pretenure),
-                TIME_TOTAL(logPromotionsToTenured));
+        fprintf(stderr, "MinorGC: %20s %5.1f%% %4d " FMT, js::gcstats::ExplainReason(reason),
+                promotionRate * 100, numActiveChunks_, totalTime);
+        for (auto &entry : PrintList) {
+            fprintf(stderr, FMT, entry.time);
+        }
+        fprintf(stderr, "\n");
 #undef FMT
     }
 }
