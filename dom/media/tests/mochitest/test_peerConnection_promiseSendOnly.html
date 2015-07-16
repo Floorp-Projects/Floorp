@@ -38,10 +38,10 @@
 
     navigator.mediaDevices.getUserMedia({ fake: true, video: true, audio: true })
     .then(stream => pc1.addStream(v1.mozSrcObject = stream))
-    .then(() => pc1.createOffer())
+    .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
     .then(offer => pc1.setLocalDescription(offer))
     .then(() => pc2.setRemoteDescription(pc1.localDescription))
-    .then(() => pc2.createAnswer())
+    .then(() => pc2.createAnswer({}))  // check that createAnswer accepts arg.
     .then(answer => pc2.setLocalDescription(answer))
     .then(() => pc1.setRemoteDescription(pc2.localDescription))
     .then(() => delivered)
