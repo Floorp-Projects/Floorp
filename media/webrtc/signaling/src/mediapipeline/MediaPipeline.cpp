@@ -19,6 +19,7 @@
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "VideoSegment.h"
 #include "Layers.h"
+#include "LayersLogging.h"
 #include "ImageTypes.h"
 #include "ImageContainer.h"
 #include "VideoUtils.h"
@@ -1145,22 +1146,42 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
       if (cb == (y + YSIZE(width, height)) &&
           cr == (cb + CRSIZE(width, height)) &&
           length >= I420SIZE(width, height)) {
-        MOZ_MTLOG(ML_DEBUG, "Sending a video frame");
+        MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame");
         conduit->SendVideoFrame(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
         return;
+      } else {
+        MOZ_MTLOG(ML_ERROR, "Unsupported PlanarYCbCrImage format: "
+                            "width=" << width << ", height=" << height << ", y=" << y
+                            << "\n  Expected: cb=y+" << YSIZE(width, height)
+                                        << ", cr=y+" << YSIZE(width, height)
+                                                      + CRSIZE(width, height)
+                            << "\n  Observed: cb=y+" << cb - y
+                                        << ", cr=y+" << cr - y
+                            << "\n            ystride=" << data->mYStride
+                                        << ", yskip=" << data->mYSkip
+                            << "\n            cbcrstride=" << data->mCbCrStride
+                                        << ", cbskip=" << data->mCbSkip
+                                        << ", crskip=" << data->mCrSkip
+                            << "\n            ywidth=" << data->mYSize.width
+                                        << ", yheight=" << data->mYSize.height
+                            << "\n            cbcrwidth=" << data->mCbCrSize.width
+                                        << ", cbcrheight=" << data->mCbCrSize.height);
+        NS_ASSERTION(false, "Unsupported PlanarYCbCrImage format");
       }
     }
   }
 
   RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
   if (!surf) {
-    MOZ_MTLOG(ML_ERROR, "Getting surface from image failed");
+    MOZ_MTLOG(ML_ERROR, "Getting surface from " << Stringify(format) << " image failed");
     return;
   }
 
   RefPtr<DataSourceSurface> data = surf->GetDataSurface();
   if (!data) {
-    MOZ_MTLOG(ML_ERROR, "Getting data surface from image failed");
+    MOZ_MTLOG(ML_ERROR, "Getting data surface from " << Stringify(format)
+                        << " image with " << Stringify(surf->GetType()) << "("
+                        << Stringify(surf->GetFormat()) << ") surface failed");
     return;
   }
 
@@ -1176,7 +1197,9 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
   DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
   if (!map.IsMapped()) {
-    MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface failed");
+    MOZ_MTLOG(ML_ERROR, "Reading DataSourceSurface from " << Stringify(format)
+                        << " image with " << Stringify(surf->GetType()) << "("
+                        << Stringify(surf->GetFormat()) << ") surface failed");
     return;
   }
 
@@ -1202,14 +1225,16 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
                                 size.width, size.height);
       break;
     default:
-      MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format");
+      MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format" << Stringify(surf->GetFormat()));
       MOZ_ASSERT(PR_FALSE);
       return;
   }
   if (rv != 0) {
-    MOZ_MTLOG(ML_ERROR, "RGB to I420 conversion failed");
+    MOZ_MTLOG(ML_ERROR, Stringify(surf->GetFormat()) << " to I420 conversion failed");
     return;
   }
+  MOZ_MTLOG(ML_DEBUG, "Sending an I420 video frame converted from " <<
+                      Stringify(surf->GetFormat()));
   conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
 }
 #endif
