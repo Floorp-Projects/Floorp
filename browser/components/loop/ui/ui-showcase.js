@@ -1243,8 +1243,8 @@
                            width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(TextChatView, {dispatcher: dispatcher, 
-                              showAlways: false, 
-                              showRoomName: false})
+                              showRoomName: false, 
+                              useDesktopPaths: false})
               )
             ), 
 
@@ -1257,8 +1257,8 @@
                 React.createElement("div", {className: "media-wrapper"}, 
                   React.createElement(TextChatView, {
                     dispatcher: dispatcher, 
-                    showAlways: true, 
-                    showRoomName: true})
+                    showRoomName: true, 
+                    useDesktopPaths: false})
                 )
               )
             )
