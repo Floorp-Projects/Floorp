@@ -2393,11 +2393,19 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
   }
 
   if (!gfxPrefs::LayersPreferD3D9()) {
-    aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
+    if (gfxPlatform::CanUseDirect3D11() && GetD3D11Device()) {
+      aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
+    } else {
+      NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
+    }
   }
 
   if (gfxPrefs::LayersPreferD3D9() || !IsVistaOrLater()) {
     // We don't want D3D9 except on Windows XP
-    aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
+    if (gfxPlatform::CanUseDirect3D9()) {
+      aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
+    } else {
+      NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
+    }
   }
 }
