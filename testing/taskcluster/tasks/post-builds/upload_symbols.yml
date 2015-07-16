@@ -13,13 +13,14 @@ task:
   tags:
     createdForUser: {{owner}}
 
-  workerType: b2gtest
+  workerType: symbol-upload
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
+  scopes: ['docker-worker:image:taskclusterprivate/upload_symbols:0.0.3']
 
   payload:
-    image: 'quay.io/amiyaguchi/upload_symbols:0.0.3'
+    image: 'taskclusterprivate/upload_symbols:0.0.3'
 
     maxRunTime: 600
 
