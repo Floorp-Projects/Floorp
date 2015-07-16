@@ -506,14 +506,27 @@ this.BrowserIDManager.prototype = {
     return true;
   },
 
+  // Get our tokenServerURL - a private helper. Returns a string.
+  get _tokenServerUrl() {
+    // We used to support services.sync.tokenServerURI but this was a
+    // pain-point for people using non-default servers as Sync may auto-reset
+    // all services.sync prefs. So if that still exists, it wins.
+    let url = Svc.Prefs.get("tokenServerURI"); // Svc.Prefs "root" is services.sync
+    if (!url) {
+      url = Services.prefs.getCharPref("identity.sync.tokenserver.uri");
+    }
+    while (url.endsWith("/")) { // trailing slashes cause problems...
+      url = url.slice(0, -1);
+    }
+    return url;
+  },
+
   // Refresh the sync token for our user. Returns a promise that resolves
   // with a token (which may be null in one sad edge-case), or rejects with an
   // error.
   _fetchTokenForUser: function() {
-    let tokenServerURI = Svc.Prefs.get("tokenServerURI");
-    if (tokenServerURI.endsWith("/")) { // trailing slashes cause problems...
-      tokenServerURI = tokenServerURI.slice(0, -1);
-    }
+    // tokenServerURI is mis-named - convention is uri means nsISomething...
+    let tokenServerURI = this._tokenServerUrl;
     let log = this._log;
     let client = this._tokenServerClient;
     let fxa = this._fxaService;
