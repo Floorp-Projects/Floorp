@@ -49,6 +49,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 // Logging context
 MOZ_MTLOG_MODULE("mediapipeline")
@@ -1042,7 +1043,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     VideoSessionConduit* conduit,
     VideoChunk& chunk) {
-  layers::Image *img = chunk.mFrame.GetImage();
+  Image *img = chunk.mFrame.GetImage();
 
   // We now need to send the video frame to the other side
   if (!img) {
@@ -1051,7 +1052,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
   }
 
   if (!enabled_ || chunk.mFrame.GetForceBlack()) {
-    gfx::IntSize size = img->GetSize();
+    IntSize size = img->GetSize();
     uint32_t yPlaneLen = YSIZE(size.width, size.height);
     uint32_t cbcrPlaneLen = 2 * CRSIZE(size.width, size.height);
     uint32_t length = yPlaneLen + cbcrPlaneLen;
@@ -1081,7 +1082,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 
   ImageFormat format = img->GetFormat();
 #ifdef WEBRTC_GONK
-  layers::GrallocImage* nativeImage = img->AsGrallocImage();
+  GrallocImage* nativeImage = img->AsGrallocImage();
   if (nativeImage) {
     android::sp<android::GraphicBuffer> graphicBuffer = nativeImage->GetGraphicBuffer();
     int pixelFormat = graphicBuffer->getPixelFormat(); /* PixelFormat is an enum == int */
@@ -1091,10 +1092,10 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
         // all android must support this
         destFormat = mozilla::kVideoYV12;
         break;
-      case layers::GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP:
+      case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP:
         destFormat = mozilla::kVideoNV21;
         break;
-      case layers::GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_P:
+      case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_P:
         destFormat = mozilla::kVideoI420;
         break;
       default:
@@ -1119,12 +1120,11 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
 #endif
   if (format == ImageFormat::PLANAR_YCBCR) {
     // Cast away constness b/c some of the accessors are non-const
-    layers::PlanarYCbCrImage* yuv =
-    const_cast<layers::PlanarYCbCrImage *>(
-          static_cast<const layers::PlanarYCbCrImage *>(img));
+    PlanarYCbCrImage* yuv = const_cast<PlanarYCbCrImage *>(
+        static_cast<const PlanarYCbCrImage *>(img));
     // Big-time assumption here that this is all contiguous data coming
     // from getUserMedia or other sources.
-    const layers::PlanarYCbCrData *data = yuv->GetData();
+    const PlanarYCbCrData *data = yuv->GetData();
 
     uint8_t *y = data->mYChannel;
     uint8_t *cb = data->mCbChannel;
@@ -1159,19 +1159,19 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     // Not much for us to do with an error
     conduit->SendVideoFrame(y, I420SIZE(width, height), width, height, mozilla::kVideoI420, 0);
   } else {
-    RefPtr<gfx::SourceSurface> surf = img->GetAsSourceSurface();
+    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
     if (!surf) {
       MOZ_MTLOG(ML_ERROR, "Getting surface from image failed");
       return;
     }
 
-    RefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
+    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
     if (!data) {
       MOZ_MTLOG(ML_ERROR, "Getting data surface from image failed");
       return;
     }
 
-    gfx::IntSize size = img->GetSize();
+    IntSize size = img->GetSize();
     int half_width = (size.width + 1) >> 1;
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
@@ -1192,8 +1192,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
       int cb_offset = YSIZE(size.width, size.height);
       int cr_offset = cb_offset + c_size;
       switch (surf->GetFormat()) {
-        case gfx::SurfaceFormat::B8G8R8A8:
-        case gfx::SurfaceFormat::B8G8R8X8:
+        case SurfaceFormat::B8G8R8A8:
+        case SurfaceFormat::B8G8R8X8:
           rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
                                   map.GetStride(),
                                   yuv, size.width,
@@ -1201,7 +1201,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
                                   yuv + cr_offset, half_width,
                                   size.width, size.height);
           break;
-        case gfx::SurfaceFormat::R5G6B5:
+        case SurfaceFormat::R5G6B5:
           rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
                                     map.GetStride(),
                                     yuv, size.width,
@@ -1424,14 +1424,14 @@ MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
     width_(640),
     height_(480),
 #if defined(MOZILLA_XPCOMRT_API)
-    image_(new mozilla::SimpleImageBuffer),
+    image_(new SimpleImageBuffer),
 #elif defined(MOZILLA_INTERNAL_API)
     image_container_(),
     image_(),
 #endif
     monitor_("Video PipelineListener") {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  image_container_ = layers::LayerManager::CreateImageContainer();
+  image_container_ = LayerManager::CreateImageContainer();
 #endif
 }
 
@@ -1440,7 +1440,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
     unsigned int buffer_size,
     uint32_t time_stamp,
     int64_t render_time,
-    const RefPtr<layers::Image>& video_image) {
+    const RefPtr<Image>& video_image) {
 
 #ifdef MOZILLA_INTERNAL_API
   ReentrantMonitorAutoEnter enter(monitor_);
@@ -1458,11 +1458,11 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
 #else
     ImageFormat format = ImageFormat::PLANAR_YCBCR;
 #endif
-    nsRefPtr<layers::Image> image = image_container_->CreateImage(format);
-    layers::PlanarYCbCrImage* yuvImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
+    nsRefPtr<Image> image = image_container_->CreateImage(format);
+    PlanarYCbCrImage* yuvImage = static_cast<PlanarYCbCrImage*>(image.get());
     uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
 
-    layers::PlanarYCbCrData yuvData;
+    PlanarYCbCrData yuvData;
     yuvData.mYChannel = frame;
     yuvData.mYSize = IntSize(width_, height_);
     yuvData.mYStride = width_;
@@ -1496,7 +1496,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 #if defined(MOZILLA_XPCOMRT_API)
   nsRefPtr<SimpleImageBuffer> image = image_;
 #elif defined(MOZILLA_INTERNAL_API)
-  nsRefPtr<layers::Image> image = image_;
+  nsRefPtr<Image> image = image_;
   // our constructor sets track_rate_ to the graph rate
   MOZ_ASSERT(track_rate_ == source_->GraphRate());
 #endif
