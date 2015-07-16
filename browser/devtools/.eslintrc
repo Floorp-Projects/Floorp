@@ -19,6 +19,7 @@
     "Services": true,
     "Task": true,
     "XPCOMUtils": true,
+    "XPCNativeWrapper": true,
   },
   "rules": {
     // These are the rules that have been configured so far to match the
