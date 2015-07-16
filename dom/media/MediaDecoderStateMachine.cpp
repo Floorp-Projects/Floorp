@@ -2422,9 +2422,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         return NS_OK;
       }
 
-      StopAudioThread();
-      mDecodedStream->StopPlayback();
-
       if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
           !mSentPlaybackEndedEvent)
       {
@@ -2438,6 +2435,12 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
         mSentPlaybackEndedEvent = true;
       }
+
+      // Stop audio sink after call to AudioEndTime() above, otherwise it will
+      // return an incorrect value due to a null mAudioSink.
+      StopAudioThread();
+      mDecodedStream->StopPlayback();
+
       return NS_OK;
     }
   }
@@ -3078,6 +3081,9 @@ MediaDecoderStateMachine::AudioEndTime() const
   if (mAudioSink) {
     return mAudioSink->GetEndTime();
   }
+  // Don't call this after mAudioSink becomes null since we can't distinguish
+  // "before StartAudioThread" and "after StopAudioThread".
+  MOZ_ASSERT(mAudioCaptured || !mAudioCompleted);
   return mAudioEndTime;
 }
 
