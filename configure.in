@@ -6669,6 +6669,15 @@ AC_SUBST(MOZ_NO_EV_CERTS)
 dnl ========================================================
 dnl = Sandboxing support
 dnl ========================================================
+if test -n "$MOZ_TSAN"; then
+    # Bug 1182565: TSan conflicts with sandboxing on Linux.
+    case $OS_TARGET in
+    Linux|Android)
+        MOZ_SANDBOX=
+        ;;
+    esac
+fi
+
 MOZ_ARG_DISABLE_BOOL(sandbox,
 [  --disable-sandbox        Disable sandboxing support],
     MOZ_SANDBOX=,
