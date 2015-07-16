@@ -61,7 +61,6 @@ let tests = [
         "readerMode-urlBar",
         "search",
         "searchIcon",
-        "siteIdentity",
         "urlbar",
         ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
@@ -94,7 +93,6 @@ let tests = [
         "readerMode-urlBar",
         "search",
         "searchIcon",
-        "siteIdentity",
         "urlbar",
         ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
@@ -130,7 +128,6 @@ let tests = [
         "privateWindow",
         "quit",
         "readerMode-urlBar",
-        "siteIdentity",
         "urlbar",
         ...(hasWebIDE ? ["webide"] : [])
       ]);
