@@ -261,9 +261,10 @@ def parse_commit(message, jobs):
 
             # Generate list of post build tasks that run on this build
             post_build_jobs = []
-            for job_flag in jobs['flags']['post-build']:
+            for job_flag in jobs['flags'].get('post-build', []):
                 job = jobs['post-build'][job_flag]
-                if 'allowed_build_tasks' in job and build_task not in job['allowed_build_tasks']:
+                if ('allowed_build_tasks' in job and
+                        build_task not in job['allowed_build_tasks']):
                     continue
                 post_build_jobs.append(copy.deepcopy(job))
 
