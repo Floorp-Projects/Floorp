@@ -780,7 +780,7 @@ describe("loop.panel", function() {
        "conversation button",
       function() {
         navigator.mozLoop.userProfile = {email: fakeEmail};
-        var view = createTestComponent();
+        var view = createTestComponent(false);
 
         TestUtils.Simulate.click(view.getDOMNode().querySelector(".new-room-button"));
 
@@ -803,7 +803,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       // Simulate being visible
       view.onDocumentVisible();
@@ -843,7 +843,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       // Simulate being visible
       view.onDocumentVisible();
@@ -861,7 +861,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       view.setState({ checked: true });
 
@@ -880,7 +880,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       // Simulate being visible
       view.onDocumentVisible();
@@ -898,7 +898,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       view.onDocumentVisible();
 
@@ -915,7 +915,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       // Simulate being visible
       view.onDocumentVisible();
@@ -935,7 +935,7 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent();
+      var view = createTestComponent(false);
 
       // Simulate being visible.
       view.onDocumentVisible();

@@ -46,7 +46,10 @@ describe("loop.conversation", function() {
       },
       getAudioBlob: sinon.spy(function(name, callback) {
         callback(null, new Blob([new ArrayBuffer(10)], {type: "audio/ogg"}));
-      })
+      }),
+      getSelectedTabMetadata: function(callback) {
+        callback({});
+      }
     };
 
     fakeWindow = {
