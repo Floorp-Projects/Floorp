@@ -235,7 +235,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         true);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event.forget());
+    mDecoderStateMachine->OwnerThread()->Dispatch(event.forget());
 
     if (IsEnded()) {
       mWasEndedWhenEnteredDormant = true;
@@ -251,7 +251,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         false);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event.forget());
+    mDecoderStateMachine->OwnerThread()->Dispatch(event.forget());
   }
 }
 
@@ -623,7 +623,7 @@ void MediaDecoder::CallSeek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mSeekRequest.DisconnectIfExists();
-  mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->TaskQueue(),
+  mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->OwnerThread(),
                                     mDecoderStateMachine.get(), __func__,
                                     &MediaDecoderStateMachine::Seek, aTarget)
     ->Then(AbstractThread::MainThread(), __func__, this,
@@ -1376,7 +1376,7 @@ MediaDecoder::NotifyWaitingForResourcesStatusChanged()
     RefPtr<nsRunnable> task =
       NS_NewRunnableMethod(mDecoderStateMachine,
                            &MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged);
-    mDecoderStateMachine->TaskQueue()->Dispatch(task.forget());
+    mDecoderStateMachine->OwnerThread()->Dispatch(task.forget());
   }
 }
 

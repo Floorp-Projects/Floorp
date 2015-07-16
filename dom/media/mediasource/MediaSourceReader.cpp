@@ -163,7 +163,7 @@ MediaSourceReader::RequestAudioData()
     case SOURCE_NEW:
       GetAudioReader()->ResetDecode();
       mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(mLastAudioTime), 0)
-                              ->Then(TaskQueue(), __func__, this,
+                              ->Then(OwnerThread(), __func__, this,
                                      &MediaSourceReader::CompleteAudioSeekAndDoRequest,
                                      &MediaSourceReader::CompleteAudioSeekAndRejectPromise));
       break;
@@ -188,7 +188,7 @@ MediaSourceReader::RequestAudioData()
 void MediaSourceReader::DoAudioRequest()
 {
   mAudioRequest.Begin(GetAudioReader()->RequestAudioData()
-                      ->Then(TaskQueue(), __func__, this,
+                      ->Then(OwnerThread(), __func__, this,
                              &MediaSourceReader::OnAudioDecoded,
                              &MediaSourceReader::OnAudioNotDecoded));
 }
@@ -211,7 +211,7 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
       MSE_DEBUG("mTime=%lld < mTimeThreshold=%lld",
                 ourTime, mTimeThreshold);
       mAudioRequest.Begin(GetAudioReader()->RequestAudioData()
-                          ->Then(TaskQueue(), __func__, this,
+                          ->Then(OwnerThread(), __func__, this,
                                  &MediaSourceReader::OnAudioDecoded,
                                  &MediaSourceReader::OnAudioNotDecoded));
       return;
@@ -281,7 +281,7 @@ MediaSourceReader::OnAudioNotDecoded(NotDecodedReason aReason)
   if (result == SOURCE_NEW) {
     GetAudioReader()->ResetDecode();
     mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(mLastAudioTime), 0)
-                            ->Then(TaskQueue(), __func__, this,
+                            ->Then(OwnerThread(), __func__, this,
                                    &MediaSourceReader::CompleteAudioSeekAndDoRequest,
                                    &MediaSourceReader::CompleteAudioSeekAndRejectPromise));
     return;
@@ -339,7 +339,7 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe,
     case SOURCE_NEW:
       GetVideoReader()->ResetDecode();
       mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(mLastVideoTime), 0)
-                             ->Then(TaskQueue(), __func__, this,
+                             ->Then(OwnerThread(), __func__, this,
                                     &MediaSourceReader::CompleteVideoSeekAndDoRequest,
                                     &MediaSourceReader::CompleteVideoSeekAndRejectPromise));
       break;
@@ -368,7 +368,7 @@ MediaSourceReader::DoVideoRequest()
   mVideoRequest.Begin(GetVideoReader()->RequestVideoData(mDropVideoBeforeThreshold,
                                                          GetReaderVideoTime(mTimeThreshold),
                                                          mForceVideoDecodeAhead)
-                      ->Then(TaskQueue(), __func__, this,
+                      ->Then(OwnerThread(), __func__, this,
                              &MediaSourceReader::OnVideoDecoded,
                              &MediaSourceReader::OnVideoNotDecoded));
 }
@@ -438,7 +438,7 @@ MediaSourceReader::OnVideoNotDecoded(NotDecodedReason aReason)
   if (result == SOURCE_NEW) {
     GetVideoReader()->ResetDecode();
     mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(mLastVideoTime), 0)
-                           ->Then(TaskQueue(), __func__, this,
+                           ->Then(OwnerThread(), __func__, this,
                                   &MediaSourceReader::CompleteVideoSeekAndDoRequest,
                                   &MediaSourceReader::CompleteVideoSeekAndRejectPromise));
     return;
@@ -509,7 +509,7 @@ MediaSourceReader::ContinueShutdown()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mTrackBuffers.Length()) {
-    mTrackBuffers[0]->Shutdown()->Then(TaskQueue(), __func__, this,
+    mTrackBuffers[0]->Shutdown()->Then(OwnerThread(), __func__, this,
                                        &MediaSourceReader::ContinueShutdown,
                                        &MediaSourceReader::ContinueShutdown);
     mShutdownTrackBuffers.AppendElement(mTrackBuffers[0]);
@@ -742,7 +742,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, int64_t aTimestampO
   // borrowing.
   nsRefPtr<SourceBufferDecoder> decoder =
     new SourceBufferDecoder(new SourceBufferResource(aType), mDecoder, aTimestampOffset);
-  nsRefPtr<MediaDecoderReader> reader(CreateReaderForType(aType, decoder, TaskQueue()));
+  nsRefPtr<MediaDecoderReader> reader(CreateReaderForType(aType, decoder, OwnerThread()));
   if (!reader) {
     return nullptr;
   }
@@ -829,7 +829,7 @@ MediaSourceReader::NotifyTimeRangesChanged()
     //post a task to the decode queue to try to complete the pending seek.
     RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
         this, &MediaSourceReader::AttemptSeek));
-    TaskQueue()->Dispatch(task.forget());
+    OwnerThread()->Dispatch(task.forget());
   } else {
     MaybeNotifyHaveData();
   }
@@ -946,7 +946,7 @@ MediaSourceReader::DoAudioSeek()
   }
   GetAudioReader()->ResetDecode();
   mAudioSeekRequest.Begin(GetAudioReader()->Seek(GetReaderAudioTime(seekTime), 0)
-                         ->Then(TaskQueue(), __func__, this,
+                         ->Then(OwnerThread(), __func__, this,
                                 &MediaSourceReader::OnAudioSeekCompleted,
                                 &MediaSourceReader::OnAudioSeekFailed));
   MSE_DEBUG("reader=%p", GetAudioReader());
@@ -1018,7 +1018,7 @@ MediaSourceReader::DoVideoSeek()
   }
   GetVideoReader()->ResetDecode();
   mVideoSeekRequest.Begin(GetVideoReader()->Seek(GetReaderVideoTime(seekTime), 0)
-                          ->Then(TaskQueue(), __func__, this,
+                          ->Then(OwnerThread(), __func__, this,
                                  &MediaSourceReader::OnVideoSeekCompleted,
                                  &MediaSourceReader::OnVideoSeekFailed));
   MSE_DEBUG("reader=%p", GetVideoReader());
@@ -1220,7 +1220,7 @@ MediaSourceReader::Ended(bool aEnded)
     // seek or wait
     RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
         this, &MediaSourceReader::NotifyTimeRangesChanged));
-    TaskQueue()->Dispatch(task.forget());
+    OwnerThread()->Dispatch(task.forget());
   }
 }
 

@@ -166,7 +166,7 @@ MediaDecoderReader::DecodeToFirstVideoData()
   }, [self] () -> bool {
     MOZ_ASSERT(self->OnTaskQueue());
     return self->VideoQueue().GetSize();
-  })->Then(TaskQueue(), __func__, [self, p] () {
+  })->Then(OwnerThread(), __func__, [self, p] () {
     p->Resolve(self->VideoQueue().PeekFront(), __func__);
   }, [p] () {
     // We don't have a way to differentiate EOS, error, and shutdown here. :-(
@@ -207,7 +207,7 @@ MediaDecoderReader::ThrottledNotifyDataArrived(const Interval<int64_t>& aInterva
     nsRefPtr<MediaDecoderReader> self = this;
     mThrottledNotify.Begin(
       mTimer->WaitUntil(mLastThrottledNotify + mThrottleDuration, __func__)
-      ->Then(TaskQueue(), __func__,
+      ->Then(OwnerThread(), __func__,
              [self] () -> void {
                self->mThrottledNotify.Complete();
                NS_ENSURE_TRUE_VOID(!self->mShutdown);
