@@ -987,8 +987,12 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // We didn't reflow.  Do the positioning part of what
         // MovePositionBy does internally.  (This codepath should really
         // be merged into the else below if we can.)
-        LogicalMargin computedOffsets(wm, *static_cast<nsMargin*>
-          (kidFrame->Properties().Get(nsIFrame::ComputedOffsetProperty())));
+        nsMargin* computedOffsetProp = static_cast<nsMargin*>
+          (kidFrame->Properties().Get(nsIFrame::ComputedOffsetProperty()));
+        // Bug 975644: a position:sticky kid can end up with a null
+        // property value here.
+        LogicalMargin computedOffsets(wm, computedOffsetProp ?
+                                            *computedOffsetProp : nsMargin());
         nsHTMLReflowState::ApplyRelativePositioning(kidFrame, wm, computedOffsets,
                                                     &kidPosition, containerSize);
       }

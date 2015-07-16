@@ -413,6 +413,9 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       if (display->IsInnerTableStyle()) {
         // We don't currently support sticky positioning of inner table
         // elements (bug 975644). Bail.
+        //
+        // When this is fixed, remove the null-check for the computed
+        // offsets in nsTableRowFrame::ReflowChildren.
         return true;
       }
 
