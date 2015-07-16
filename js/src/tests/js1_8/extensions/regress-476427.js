@@ -31,7 +31,7 @@ let z;
 for (z = 1; z <= 16322; ++z) {
   this.__defineGetter__('functional', function x(){ yield; } );
   foo("this.__defineSetter__('', function(){});");
-  foo("for (yyy in this) y = this[yyy];");
+  foo("for each (y in this);");
 }
 
 reportCompare(expect, actual, summary);
