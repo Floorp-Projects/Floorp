@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import mozdevice
-import mozlog
+import logging
 import unittest
 from sut import MockAgent
 
@@ -15,7 +15,7 @@ class TestKill(unittest.TestCase):
                     ("kill com.android.settings",
                      "Successfully killed com.android.settings\n")]
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         # No error raised means success
         self.assertEqual(None,  d.killProcess("com.android.settings"))
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import mozdevice
-import mozlog
+import logging
 import unittest
 from sut import MockAgent
 
@@ -35,7 +35,7 @@ class TestLogCat(unittest.TestCase):
 
         commands = [(inp, logcat_output)]
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual(logcat_output[:-17].replace('\r\n', '\n').splitlines(True), d.getLogcat())
 
     def test_recordLogcat(self):
@@ -43,7 +43,7 @@ class TestLogCat(unittest.TestCase):
         commands = [("execsu /system/bin/logcat -c", "return code [0]")]
 
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         # No error raised means success
         self.assertEqual(None, d.recordLogcat())
 

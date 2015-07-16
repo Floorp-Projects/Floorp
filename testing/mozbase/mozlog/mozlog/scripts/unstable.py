@@ -2,7 +2,7 @@ import argparse
 from collections import defaultdict
 import json
 
-from mozlog.structured import reader
+from mozlog import reader
 
 class StatusHandler(reader.LogHandler):
     def __init__(self):

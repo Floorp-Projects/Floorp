@@ -13,7 +13,7 @@ assert sys.version_info[0] == 2
 
 deps = ['manifestparser >= 0.6',
         'mozfile >= 1.0',
-        'mozlog']
+        'mozlog >= 3.0']
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

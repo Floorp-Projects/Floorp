@@ -6,11 +6,11 @@ import argparse
 import optparse
 import os
 import sys
-
 from collections import defaultdict
-from structuredlog import StructuredLogger, set_default_logger
-import handlers
-import formatters
+
+from . import handlers
+from . import formatters
+from .structuredlog import StructuredLogger, set_default_logger
 
 log_formatters = {
     'raw': (formatters.JSONFormatter, "Raw structured log messages"),
@@ -170,7 +170,7 @@ def setup_logging(suite, args, defaults=None, formatter_defaults=None):
     Configure a structuredlogger based on command line arguments.
 
     The created structuredlogger will also be set as the default logger, and
-    can be retrieved with :py:func:`~mozlog.structured.structuredlog.get_default_logger`.
+    can be retrieved with :py:func:`~mozlog.get_default_logger`.
 
     :param suite: The name of the testsuite being run
     :param args: A dictionary of {argument_name:value} produced from

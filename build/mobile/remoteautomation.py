@@ -14,7 +14,7 @@ import sys
 
 from automation import Automation
 from devicemanager import DMError, DeviceManager
-from mozlog.structured import get_default_logger
+from mozlog import get_default_logger
 import mozcrash
 
 # signatures for logcat messages that we don't care about much

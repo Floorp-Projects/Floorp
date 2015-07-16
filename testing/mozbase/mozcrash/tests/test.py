@@ -5,7 +5,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os, unittest, subprocess, tempfile, shutil, urlparse, zipfile, StringIO
-import mozcrash, mozlog, mozhttpd
+import mozcrash
+import mozhttpd
+import mozlog.unstructured as mozlog
 
 # Make logs go away
 log = mozlog.getLogger("mozcrash", handler=mozlog.FileHandler(os.devnull))

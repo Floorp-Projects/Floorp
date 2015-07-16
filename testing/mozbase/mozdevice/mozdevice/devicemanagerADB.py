@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
 import re
 import os
 import shutil
@@ -12,7 +13,6 @@ import traceback
 from devicemanager import DeviceManager, DMError
 from mozprocess import ProcessHandler
 import mozfile
-import mozlog
 
 
 class DeviceManagerADB(DeviceManager):
@@ -34,7 +34,7 @@ class DeviceManagerADB(DeviceManager):
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None,
-                 logLevel=mozlog.ERROR, autoconnect=True, runAdbAsRoot=False,
+                 logLevel=logging.ERROR, autoconnect=True, runAdbAsRoot=False,
                  serverHost=None, serverPort=None, **kwargs):
         DeviceManager.__init__(self, logLevel=logLevel,
                                deviceRoot=deviceRoot)
