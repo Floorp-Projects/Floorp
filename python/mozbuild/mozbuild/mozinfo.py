@@ -108,6 +108,10 @@ def build_dict(config, env=os.environ):
 
             if d['buildapp'] == 'mulet':
                 p = '{}-mulet'.format(p)
+
+            if d['asan']:
+                p = '{}-asan'.format(p)
+
             return p
 
         if d['buildapp'] == 'b2g':
@@ -128,8 +132,6 @@ def build_dict(config, env=os.environ):
             return 'debug'
         if d['pgo']:
             return 'pgo'
-        if d['asan']:
-            return 'asan'
         return 'opt'
 
     # if buildapp or bits are unknown, we don't have a configuration similar to
