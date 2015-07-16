@@ -178,10 +178,10 @@ protected:
 
   android::sp<android::MediaExtractor> mExtractor;
 
-  MediaPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
+  MozPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
   // XXX Remove after bug 1168008 land.
-  MediaPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
-  MediaPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
+  MozPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
+  MozPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
 private:
 
@@ -216,7 +216,7 @@ private:
   {
     AudioTrack();
     // Protected by mTrackMonitor.
-    MediaPromiseHolder<AudioDataPromise> mAudioPromise;
+    MozPromiseHolder<AudioDataPromise> mAudioPromise;
 
   private:
     // Forbidden
@@ -238,7 +238,7 @@ private:
     nsIntRect mPictureRect;
     gfx::IntRect mRelativePictureRect;
     // Protected by mTrackMonitor.
-    MediaPromiseHolder<VideoDataPromise> mVideoPromise;
+    MozPromiseHolder<VideoDataPromise> mVideoPromise;
 
     nsRefPtr<MediaTaskQueue> mReleaseBufferTaskQueue;
   private:

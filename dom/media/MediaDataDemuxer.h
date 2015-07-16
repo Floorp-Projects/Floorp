@@ -9,7 +9,7 @@
 
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "TimeUnits.h"
 #include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
@@ -40,7 +40,7 @@ class MediaDataDemuxer
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDemuxer)
 
-  typedef MediaPromise<nsresult, DemuxerFailureReason, /* IsExclusive = */ true> InitPromise;
+  typedef MozPromise<nsresult, DemuxerFailureReason, /* IsExclusive = */ true> InitPromise;
 
   // Initializes the demuxer. Other methods cannot be called unless
   // initialization has completed and succeeded.
@@ -133,9 +133,9 @@ public:
     uint32_t mSkipped;
   };
 
-  typedef MediaPromise<media::TimeUnit, DemuxerFailureReason, /* IsExclusive = */ true> SeekPromise;
-  typedef MediaPromise<nsRefPtr<SamplesHolder>, DemuxerFailureReason, /* IsExclusive = */ true> SamplesPromise;
-  typedef MediaPromise<uint32_t, SkipFailureHolder, /* IsExclusive = */ true> SkipAccessPointPromise;
+  typedef MozPromise<media::TimeUnit, DemuxerFailureReason, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<nsRefPtr<SamplesHolder>, DemuxerFailureReason, /* IsExclusive = */ true> SamplesPromise;
+  typedef MozPromise<uint32_t, SkipFailureHolder, /* IsExclusive = */ true> SkipAccessPointPromise;
 
   // Returns the TrackInfo (a.k.a Track Description) for this track.
   // The TrackInfo returned will be:
