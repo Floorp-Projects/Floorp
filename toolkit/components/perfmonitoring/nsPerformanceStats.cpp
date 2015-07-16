@@ -260,7 +260,7 @@ nsPerformanceSnapshot::GetGroupId(JSContext* cx,
 
   groupId.AssignLiteral("process: ");
   groupId.AppendInt(mProcessId);
-  groupId.AppendLiteral(", thread: ");
+  groupId.AssignLiteral(", thread: ");
   groupId.AppendInt(runtimeId);
   groupId.AppendLiteral(", group: ");
   groupId.AppendInt(uid);
