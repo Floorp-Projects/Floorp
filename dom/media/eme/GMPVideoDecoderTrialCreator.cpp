@@ -452,6 +452,11 @@ TestGMPVideoDecoder::InitGMPDone(GMPVideoDecoderProxy* aGMP,
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(aHost);
+  if (!frame) {
+    EME_LOG("InitGMPDone() - Decode() failed to create frame!");
+    ReportFailure(NS_LITERAL_CSTRING("TestGMPVideoDecoder Decode() failed to create frame"));
+    return;
+  }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
