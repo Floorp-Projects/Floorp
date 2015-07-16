@@ -1945,11 +1945,11 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(
       cbSize.ISize(wm) = aContainingBlockRS->frame->ISize(wm) -
                          computedBorder.IStartEnd(wm);
       NS_ASSERTION(cbSize.ISize(wm) >= 0,
-                   "Negative containing block width!");
+                   "Negative containing block isize!");
       cbSize.BSize(wm) = aContainingBlockRS->frame->BSize(wm) -
                          computedBorder.BStartEnd(wm);
       NS_ASSERTION(cbSize.BSize(wm) >= 0,
-                   "Negative containing block height!");
+                   "Negative containing block bsize!");
     } else {
       // If the ancestor is block-level, the containing block is formed by the
       // padding edge of the ancestor
@@ -2184,11 +2184,12 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
     // this MUST come after we've computed our border and padding.
     ComputeMinMaxValues(cbSize);
 
-    // Calculate the computed width and blockSize. This varies by frame type
+    // Calculate the computed inlineSize and blockSize.
+    // This varies by frame type.
 
     if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType) {
       // Internal table elements. The rules vary depending on the type.
-      // Calculate the computed width
+      // Calculate the computed isize
       bool rowOrRowGroup = false;
       const nsStyleCoord &inlineSize = mStylePosition->ISize(wm);
       nsStyleUnit inlineSizeUnit = inlineSize.GetUnit();
@@ -2211,11 +2212,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
           if (ComputedISize() < 0)
             ComputedISize() = 0;
         }
-        NS_ASSERTION(ComputedISize() >= 0, "Bogus computed width");
+        NS_ASSERTION(ComputedISize() >= 0, "Bogus computed isize");
 
       } else {
         NS_ASSERTION(inlineSizeUnit == inlineSize.GetUnit(),
-                     "unexpected width unit change");
+                     "unexpected inline size unit change");
         ComputedISize() = ComputeISizeValue(cbSize.ISize(wm),
                                             mStylePosition->mBoxSizing,
                                             inlineSize);
