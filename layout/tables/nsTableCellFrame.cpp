@@ -944,14 +944,9 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowState.SetBResize(true);
   }
 
-  nscoord containerWidth;
-  if (aReflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE) {
-    containerWidth = 0; // avoid passing unconstrained container width to
-                        // ReflowChild; but position will not be valid
-  } else {
-    containerWidth = aReflowState.ComputedWidth() +
-      aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  }
+  nscoord containerWidth =
+    aReflowState.ComputedSizeAsContainerIfConstrained().width;
+
   LogicalPoint kidOrigin(wm, borderPadding.IStart(wm),
                          borderPadding.BStart(wm));
   nsRect origRect = firstKid->GetRect();

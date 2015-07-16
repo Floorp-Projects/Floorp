@@ -1266,8 +1266,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // relatively positioned...
   WritingMode cbwm = cbrs->GetWritingMode();
   nscoord containerWidth = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
-    ? cbrs->ComputedWidth() +
-      cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm)
+    ? cbrs->ComputedSizeAsContainerIfConstrained().width
     : containingBlock->GetSize().width;
   LogicalPoint placeholderOffset(wm, aPlaceholderFrame->GetOffsetTo(containingBlock),
                                  containerWidth);
