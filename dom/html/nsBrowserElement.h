@@ -19,6 +19,7 @@ namespace mozilla {
 
 namespace dom {
 struct BrowserElementDownloadOptions;
+struct BrowserElementExecuteScriptOptions;
 class BrowserElementNextPaintEventCallback;
 class DOMRequest;
 enum class BrowserFindCaseSensitivity: uint32_t;
@@ -99,6 +100,10 @@ public:
 
   already_AddRefed<dom::DOMRequest> SetInputMethodActive(bool isActive,
                                                          ErrorResult& aRv);
+
+  already_AddRefed<dom::DOMRequest> ExecuteScript(const nsAString& aScript,
+                                                  const dom::BrowserElementExecuteScriptOptions& aOptions,
+                                                  ErrorResult& aRv);
 
   void SetNFCFocus(bool isFocus,
                    ErrorResult& aRv);
