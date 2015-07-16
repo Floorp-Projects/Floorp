@@ -322,7 +322,7 @@ nsBlockReflowState::GetFloatAvailableSpaceWithState(
   nsFlowAreaRect result =
     mFloatManager->GetFlowArea(wm, aBCoord, nsFloatManager::BAND_FROM_POINT,
                                blockSize, mContentArea, aState,
-                               ContainerWidth());
+                               ContainerSize());
   // Keep the inline size >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.ISize(wm) < 0) {
     result.mRect.ISize(wm) = 0;
@@ -355,7 +355,7 @@ nsBlockReflowState::GetFloatAvailableSpaceForBSize(
 #endif
   nsFlowAreaRect result =
     mFloatManager->GetFlowArea(wm, aBCoord, nsFloatManager::WIDTH_WITHIN_HEIGHT,
-                               aBSize, mContentArea, aState, ContainerWidth());
+                               aBSize, mContentArea, aState, ContainerSize());
   // Keep the width >= 0 for compatibility with nsSpaceManager.
   if (result.mRect.ISize(wm) < 0) {
     result.mRect.ISize(wm) = 0;
@@ -479,7 +479,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
                tI, tB, mFloatManagerI, mFloatManagerB);
         nsFrame::ListTag(stdout, floatFrame);
         LogicalRect region = nsFloatManager::GetRegionFor(wm, floatFrame,
-                                                          ContainerWidth());
+                                                          ContainerSize());
         printf(" aDeltaBCoord=%d region={%d,%d,%d,%d}\n",
                aDeltaBCoord, region.IStart(wm), region.BStart(wm),
                region.ISize(wm), region.BSize(wm));
@@ -487,13 +487,13 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
 #endif
       mFloatManager->AddFloat(floatFrame,
                               nsFloatManager::GetRegionFor(wm, floatFrame,
-                                                           ContainerWidth()),
-                              wm, ContainerWidth());
+                                                           ContainerSize()),
+                              wm, ContainerSize());
       fc = fc->Next();
     }
   } else if (aLine->IsBlock()) {
     nsBlockFrame::RecoverFloatsFor(aLine->mFirstChild, *mFloatManager, wm,
-                                   ContainerWidth());
+                                   ContainerSize());
   }
 }
 
@@ -700,7 +700,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   // The float's old region, so we can propagate damage.
   LogicalRect oldRegion = nsFloatManager::GetRegionFor(wm, aFloat,
-                                                       ContainerWidth());
+                                                       ContainerSize());
 
   // Enforce CSS2 9.5.1 rule [2], i.e., make sure that a float isn't
   // ``above'' another float that preceded it in the flow.
@@ -857,9 +857,10 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     // with rtl direction. Since they don't yet (bug 1131451), we'll
     // just put left floats at the top of the line and right floats at
     // bottom.
-    floatPos.I(wm) = leftFloat
-                      ? floatAvailableSpace.mRect.Y(wm)
-                      : floatAvailableSpace.mRect.YMost(wm) - floatMarginISize;
+    floatPos.I(wm) =
+      leftFloat ? floatAvailableSpace.mRect.Y(wm, ContainerSize().height)
+                : floatAvailableSpace.mRect.YMost(wm, ContainerSize().height) -
+                  floatMarginISize;
   } else if (leftFloat == wm.IsBidiLTR()) {
     floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
   }
@@ -935,14 +936,14 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   // If float is relatively positioned, factor that in as well
   nsHTMLReflowState::ApplyRelativePositioning(aFloat, wm, floatOffsets,
-                                              &origin, ContainerWidth());
+                                              &origin, ContainerSize());
 
   // Position the float and make sure and views are properly
   // positioned. We need to explicitly position its child views as
   // well, since we're moving the float after flowing it.
-  bool moved = aFloat->GetLogicalPosition(wm, ContainerWidth()) != origin;
+  bool moved = aFloat->GetLogicalPosition(wm, ContainerSize()) != origin;
   if (moved) {
-    aFloat->SetPosition(wm, origin, ContainerWidth());
+    aFloat->SetPosition(wm, origin, ContainerSize());
     nsContainerFrame::PositionFrameView(aFloat);
     nsContainerFrame::PositionChildViews(aFloat);
   }
@@ -956,7 +957,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // calculate region
   LogicalRect region =
     nsFloatManager::CalculateRegionFor(wm, aFloat, floatMargin,
-                                       ContainerWidth());
+                                       ContainerSize());
   // if the float split, then take up all of the vertical height
   if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus) &&
       (NS_UNCONSTRAINEDSIZE != ContentBSize())) {
@@ -964,10 +965,10 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
                                 ContentBSize() - floatPos.B(wm));
   }
   DebugOnly<nsresult> rv = mFloatManager->AddFloat(aFloat, region, wm,
-                                                   ContainerWidth());
+                                                   ContainerSize());
   MOZ_ASSERT(NS_SUCCEEDED(rv), "bad float placement");
   // store region
-  nsFloatManager::StoreRegionFor(wm, aFloat, region, ContainerWidth());
+  nsFloatManager::StoreRegionFor(wm, aFloat, region, ContainerSize());
 
   // If the float's dimensions have changed, note the damage in the
   // float manager.

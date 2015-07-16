@@ -39,7 +39,7 @@ nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   }
 
   return kid->GetLogicalBaseline(aWritingMode) +
-         kid->BStart(aWritingMode, mRect.width);
+         kid->BStart(aWritingMode, mRect.Size());
 }
 
 nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
@@ -786,15 +786,15 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
                                       nsHTMLReflowMetrics&       aMetrics,
                                       nsReflowStatus&            aStatus)
 {
-  // Using zero as containerWidth here because we want consistency between
+  // Using zero as containerSize here because we want consistency between
   // the GetLogicalPosition and ReflowChild calls, to avoid unnecessarily
   // changing the frame's coordinates; but we don't yet know its final
   // position anyway so the actual value is unimportant.
-  const nscoord zeroCWidth = 0;
+  const nsSize zeroCSize;
   WritingMode wm = aChildRS.GetWritingMode();
 
   // Use the current position as a best guess for placement.
-  LogicalPoint childPt = aChildFrame->GetLogicalPosition(wm, zeroCWidth);
+  LogicalPoint childPt = aChildFrame->GetLogicalPosition(wm, zeroCSize);
   uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
 
   // We don't want to delete our next-in-flow's child if it's an inner table
@@ -807,7 +807,7 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
   }
 
   ReflowChild(aChildFrame, aPresContext, aMetrics, aChildRS,
-              wm, childPt, zeroCWidth, flags, aStatus);
+              wm, childPt, zeroCSize, flags, aStatus);
 }
 
 void 
@@ -960,14 +960,14 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   // XXX Need to recompute inner table's auto margins for the case of side
   // captions.  (Caption's are broken too, but that should be fixed earlier.)
 
-  // Compute the desiredSize so that we can use its Width() as containerWidth
+  // Compute the desiredSize so that we can use it as the containerSize
   // for the FinishReflowChild calls below.
   LogicalSize desiredSize(wm);
   SetDesiredSize(captionSide, innerSize, captionSize,
                  innerMargin, captionMargin,
                  desiredSize.ISize(wm), desiredSize.BSize(wm), wm);
   aDesiredSize.SetSize(wm, desiredSize);
-  nscoord containerWidth = aDesiredSize.Width();
+  nsSize containerSize = aDesiredSize.PhysicalSize();
   // XXX It's possible for this to be NS_UNCONSTRAINEDSIZE, which will result
   // in assertions from FinishReflowChild.
 
@@ -976,8 +976,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     GetCaptionOrigin(captionSide, containSize, innerSize, innerMargin,
                      captionSize, captionMargin, captionOrigin, wm);
     FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
-                      captionRS.ptr(), wm, captionOrigin, containerWidth,
-                      0);
+                      captionRS.ptr(), wm, captionOrigin, containerSize, 0);
     captionRS.reset();
   }
   // XXX If the bsize is constrained then we need to check whether
@@ -987,7 +986,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   GetInnerOrigin(captionSide, containSize, captionSize, captionMargin,
                  innerSize, innerMargin, innerOrigin, wm);
   FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRS.ptr(),
-                    wm, innerOrigin, containerWidth, 0);
+                    wm, innerOrigin, containerSize, 0);
   innerRS.reset();
 
   nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,

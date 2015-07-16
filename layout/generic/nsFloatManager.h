@@ -59,7 +59,7 @@ public:
    */
   static mozilla::LogicalRect GetRegionFor(mozilla::WritingMode aWM,
                                            nsIFrame* aFloatFrame,
-                                           nscoord aContainerWidth);
+                                           const nsSize& aContainerSize);
   /**
    * Calculate the float region for this frame using aMargin and the
    * frame's mRect. The region includes the margins around the float,
@@ -71,7 +71,7 @@ public:
                                 mozilla::WritingMode aWM,
                                 nsIFrame* aFloatFrame,
                                 const mozilla::LogicalMargin& aMargin,
-                                nscoord aContainerWidth);
+                                const nsSize& aContainerSize);
   /**
    * Store the float region on the frame. The region is stored
    * as a delta against the mRect, so repositioning the frame will
@@ -80,7 +80,7 @@ public:
   static void StoreRegionFor(mozilla::WritingMode aWM,
                              nsIFrame* aFloat,
                              const mozilla::LogicalRect& aRegion,
-                             nscoord aContainerWidth);
+                             const nsSize& aContainerSize);
 
   // Structure that stores the current state of a frame manager for
   // Save/Restore purposes.
@@ -162,7 +162,8 @@ public:
   nsFlowAreaRect GetFlowArea(mozilla::WritingMode aWM,
                              nscoord aBCoord, BandInfoType aInfoType,
                              nscoord aBSize, mozilla::LogicalRect aContentArea,
-                             SavedState* aState, nscoord mContainerWidth) const;
+                             SavedState* aState,
+                             const nsSize& aContainerSize) const;
 
   /**
    * Add a float that comes after all floats previously added.  Its
@@ -174,7 +175,7 @@ public:
    */
   nsresult AddFloat(nsIFrame* aFloatFrame,
                     const mozilla::LogicalRect& aMarginRect,
-                    mozilla::WritingMode aWM, nscoord aContainerWidth);
+                    mozilla::WritingMode aWM, const nsSize& aContainerSize);
 
   /**
    * Notify that we tried to place a float that could not fit at all and

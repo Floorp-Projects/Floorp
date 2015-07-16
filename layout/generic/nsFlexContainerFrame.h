@@ -183,13 +183,13 @@ protected:
    * @param aItem           The flex item whose frame should be moved.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
-   * @param aContainerWidth The flex container's width (required by some methods
+   * @param aContainerSize  The flex container's size (required by some methods
    *                        that we call, to interpret aFramePos correctly).
    */
   void MoveFlexItemToFinalPosition(const nsHTMLReflowState& aReflowState,
                                    const FlexItem& aItem,
                                    mozilla::LogicalPoint& aFramePos,
-                                   nscoord aContainerWidth);
+                                   const nsSize& aContainerSize);
   /**
    * Helper-function to reflow a child frame, at its final position determined
    * by flex layout.
@@ -200,7 +200,7 @@ protected:
    * @param aItem           The flex item to be reflowed.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
-   * @param aContainerWidth The flex container's width (required by some methods
+   * @param aContainerSize  The flex container's size (required by some methods
    *                        that we call, to interpret aFramePos correctly).
    */
   void ReflowFlexItem(nsPresContext* aPresContext,
@@ -208,7 +208,7 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       const FlexItem& aItem,
                       mozilla::LogicalPoint& aFramePos,
-                      nscoord aContainerWidth);
+                      const nsSize& aContainerSize);
 
   bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
                                    // to satisfy their 'order' values?
