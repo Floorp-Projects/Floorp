@@ -211,9 +211,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   // unknown (either unimplemented, or irrelevant) elements are marked as ignored
   // as well as expired elements.
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  return !accWrap || ([[self role] isEqualToString:NSAccessibilityUnknownRole] &&
-                               !(accWrap->InteractiveState() & states::FOCUSABLE));
+  bool noRole = [[self role] isEqualToString:NSAccessibilityUnknownRole];
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    return (noRole && !(accWrap->InteractiveState() & states::FOCUSABLE));
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible])
+    return (noRole && !(proxy->State() & states::FOCUSABLE));
+
+  return true;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
