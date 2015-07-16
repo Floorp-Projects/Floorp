@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizer",
 // and that we can release/close the probes it holds.
 const FINALIZATION_TOPIC = "performancemonitor-finalize";
 
-const PROPERTIES_META_IMMUTABLE = ["addonId", "isSystem", "isChildProcess", "groupId"];
+const PROPERTIES_META_IMMUTABLE = ["addonId", "isSystem", "isChildProcess", "groupId", "processId"];
 const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title", "name"];
 
 // How long we wait for children processes to respond.
