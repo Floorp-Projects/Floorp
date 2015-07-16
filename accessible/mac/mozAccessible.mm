@@ -680,7 +680,8 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (id)accessibilityHitTest:(NSPoint)point
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy)
     return nil;
 
   // Convert the given screen-global point in the cocoa coordinate system (with
@@ -692,15 +693,21 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   nsIntPoint geckoPoint = nsCocoaUtils::
     CocoaPointsToDevPixels(tmpPoint, nsCocoaUtils::GetBackingScaleFactor(mainView));
 
-  Accessible* child =
-    accWrap->ChildAtPoint(geckoPoint.x, geckoPoint.y,
-                          Accessible::eDeepestChild);
-
-  if (child) {
-    mozAccessible* nativeChild = GetNativeFromGeckoAccessible(child);
-    if (nativeChild)
-      return GetClosestInterestingAccessible(nativeChild);
+  mozAccessible* nativeChild = nil;
+  if (accWrap) {
+    Accessible* child = accWrap->ChildAtPoint(geckoPoint.x, geckoPoint.y,
+                                  Accessible::eDeepestChild);
+    if (child)
+      nativeChild = GetNativeFromGeckoAccessible(child);
+  } else if (proxy) {
+    ProxyAccessible* child = proxy->ChildAtPoint(geckoPoint.x, geckoPoint.y,
+                                  Accessible::eDeepestChild);
+    if (child)
+      nativeChild = GetNativeFromProxy(child);
   }
+
+  if (nativeChild)
+    return GetClosestInterestingAccessible(nativeChild);
 
   // if we didn't find anything, return ourself (or the first unignored ancestor).
   return GetClosestInterestingAccessible(self);
@@ -725,15 +732,23 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 - (id)accessibilityFocusedUIElement
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy)
     return nil;
 
-  Accessible* focusedGeckoChild = accWrap->FocusedChild();
-  if (focusedGeckoChild) {
-    mozAccessible *focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
-    if (focusedChild)
-      return GetClosestInterestingAccessible(focusedChild);
+  mozAccessible* focusedChild = nil;
+  if (accWrap) {
+    Accessible* focusedGeckoChild = accWrap->FocusedChild();
+    if (focusedGeckoChild)
+      focusedChild = GetNativeFromGeckoAccessible(focusedGeckoChild);
+  } else if (proxy) {
+    ProxyAccessible* focusedGeckoChild = proxy->FocusedChild();
+    if (focusedGeckoChild)
+      focusedChild = GetNativeFromProxy(focusedGeckoChild);
   }
+
+  if (focusedChild)
+    return GetClosestInterestingAccessible(focusedChild);
 
   // return ourself if we can't get a native focused child.
   return GetClosestInterestingAccessible(self);
