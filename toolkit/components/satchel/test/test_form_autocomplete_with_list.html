@@ -429,30 +429,36 @@ function runTest() {
       // Filter with a letter in the middle of the word.
       synthesizeKey("i", {});
       synthesizeKey("n", {});
-      setTimeout(function() {
-        doKey("down");
-        doKey("return");
-        checkForm("final");
-        expectPopup();
-        restoreForm();
-        doKey("down");
-      }, 500);
+      waitForMenuChange(1);
       break;
 
     case 303:
+      // Continuation of test 302.
+      doKey("down");
+      doKey("return");
+      checkForm("final");
+      expectPopup();
+      restoreForm();
+      doKey("down");
+      break;
+
+    case 304:
       // Filter is disabled with mozNoFilter.
       input.setAttribute('mozNoFilter', 'true');
       synthesizeKey("f", {});
-      setTimeout(function() {
-        doKey("down");
-        doKey("return");
-        checkForm("Google");
-        input.removeAttribute('mozNoFilter');
-        testNum = 399;
-        expectPopup();
-        restoreForm();
-        doKey("down");
-      }, 500);
+      waitForMenuChange(3); // no change
+      break;
+
+    case 305:
+      // Continuation of test 304.
+      doKey("down");
+      doKey("return");
+      checkForm("Google");
+      input.removeAttribute('mozNoFilter');
+      testNum = 399;
+      expectPopup();
+      restoreForm();
+      doKey("down");
       break;
 
     case 400:
@@ -496,7 +502,6 @@ function startTest() {
 window.onload = startTest;
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 </script>
 </pre>
 </body>
