@@ -203,6 +203,28 @@ function runTest() {
         doKey("return");
         checkForm("Google");
 
+        expectPopup();
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 10:
+        // Test autocompletion of datalists with cached results.
+        sendString("PAS");
+        waitForMenuChange(2);
+        break;
+
+    case 11:
+        // Continuation of test 10
+        sendString("S1");
+        waitForMenuChange(1);
+        break;
+
+    case 12:
+        doKey("down");
+        doKey("return");
+        checkForm("Google");
+
         // Trigger autocomplete popup
         // Look at form 3, try to trigger autocomplete popup
         input.value = "";
