@@ -23,10 +23,16 @@ function check_webm(v, enabled) {
                                      .getService(SpecialPowers.Ci.nsIPropertyBag2)
                                      .getProperty('sdk_version');
     info("android version:"+androidSDKVer);
-    if (androidSDKVer > 15) {
+
+    // Since from Android KK, vp9 sw decoder is supported.
+    if (androidSDKVer > 18) {
+      video = ['vp8', 'vp8.0', 'vp9', 'vp9.0'];
+      audio = ['vorbis'];
+    } else if (androidSDKVer > 15) {
       video = ['vp8', 'vp8.0'];
       audio = ['vorbis'];
     }
+
   }
 
   audio.forEach(function(acodec) {
