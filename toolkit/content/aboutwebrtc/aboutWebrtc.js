@@ -635,7 +635,7 @@ ICEStats.prototype = {
         stat = {
           localcandidate: this.candidateToString(local),
           state: pair.state,
-          priority: pair.mozPriority,
+          priority: pair.priority,
           nominated: pair.nominated,
           selected: pair.selected
         };
