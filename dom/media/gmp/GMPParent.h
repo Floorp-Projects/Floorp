@@ -184,6 +184,7 @@ private:
   }
 
 
+  static void AbortWaitingForGMPAsyncShutdown(nsITimer* aTimer, void* aClosure);
   nsresult EnsureAsyncShutdownTimeoutSet();
 
   GMPState mState;
