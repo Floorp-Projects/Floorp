@@ -1265,11 +1265,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
   WritingMode cbwm = cbrs->GetWritingMode();
-  nscoord containerWidth = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
-    ? cbrs->ComputedSizeAsContainerIfConstrained().width
-    : containingBlock->GetSize().width;
+  nsSize containerSize = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
+    ? cbrs->ComputedSizeAsContainerIfConstrained()
+    : containingBlock->GetSize();
   LogicalPoint placeholderOffset(wm, aPlaceholderFrame->GetOffsetTo(containingBlock),
-                                 containerWidth);
+                                 containerSize);
 
   // XXX hack to correct for lack of LogicalPoint bidi support in vertical mode
   if (wm.IsVertical() && !wm.IsBidiLTR()) {
@@ -1285,7 +1285,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   nsBlockFrame* blockFrame =
     nsLayoutUtils::GetAsBlock(containingBlock->GetContentInsertionFrame());
   if (blockFrame) {
-    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock), 0);
+    // Use a null containerSize to convert a LogicalPoint functioning as a
+    // vector into a physical nsPoint vector.
+    const nsSize nullContainerSize;
+    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock),
+                             nullContainerSize);
     bool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
     if (!isValid) {
@@ -1301,7 +1305,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // would have been inline-level or block-level
       LogicalRect lineBounds =
         lineBox->GetBounds().ConvertTo(wm, lineBox->mWritingMode,
-                                       lineBox->mContainerWidth);
+                                       lineBox->mContainerSize);
       if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the block-start of the inline box which the placeholder lives in
         // as the hypothetical box's block-start.
@@ -1414,9 +1418,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // scroll, and thus avoid the resulting incremental reflow bugs.
     cbOffset = containingBlock->GetOffsetTo(cbrs->frame);
   }
-  nscoord cbrsWidth = cbrs->ComputedWidth() +
-                        cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm);
-  LogicalPoint logCBOffs(wm, cbOffset, cbrsWidth - containerWidth);
+  nsSize cbrsSize =
+    cbrs->ComputedPhysicalSize() +
+    cbrs->ComputedLogicalBorderPadding().Size(cbwm).GetPhysicalSize(cbwm);
+  LogicalPoint logCBOffs(wm, cbOffset, cbrsSize - containerSize);
   aHypotheticalBox.mIStart += logCBOffs.I(wm);
   aHypotheticalBox.mIEnd += logCBOffs.I(wm);
   aHypotheticalBox.mBStart += logCBOffs.B(wm);

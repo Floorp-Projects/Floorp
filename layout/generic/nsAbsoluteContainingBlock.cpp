@@ -408,7 +408,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
        // Don't split if told not to (e.g. for fixed frames)
     && (aDelegatingFrame->GetType() != nsGkAtoms::inlineFrame)
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
-    && (aKidFrame->GetLogicalRect(aContainingBlock.width).BStart(wm) <=
+    && (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
         aReflowState.AvailableBSize());
        // Don't split things below the fold. (Ideally we shouldn't *have*
        // anything totally below the fold, but we can't position frames
@@ -468,8 +468,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                      margin.BStart(outerWM),
                    kidSize.ISize(outerWM), kidSize.BSize(outerWM));
   nsRect r =
-    rect.GetPhysicalRect(outerWM, logicalCBSize.Width(wm) +
-                                  border.LeftRight(outerWM));
+    rect.GetPhysicalRect(outerWM, logicalCBSize.GetPhysicalSize(wm) +
+                         border.Size(outerWM).GetPhysicalSize(outerWM));
   // XXX hack to correct for lack of bidi support in vertical mode
   if (outerWM.IsVertical() && !outerWM.IsBidiLTR()) {
     r.y = logicalCBSize.Height(wm) + border.TopBottom(outerWM) - r.YMost();

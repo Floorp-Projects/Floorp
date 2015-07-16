@@ -253,7 +253,9 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   }
 
   nscoord segmentISize = baseMetrics.ISize(lineWM);
-  LogicalRect baseRect = aBaseContainer->GetLogicalRect(lineWM, 0);
+  const nsSize dummyContainerSize;
+  LogicalRect baseRect =
+    aBaseContainer->GetLogicalRect(lineWM, dummyContainerSize);
   // We need to position our rtc frames on one side or the other of the
   // base container's rect, using a coordinate space that's relative to
   // the ruby frame. Right now, the base container's rect's block-axis
@@ -318,10 +320,11 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
         MOZ_ASSERT_UNREACHABLE("???");
       }
     }
-    // Container width is set to zero here. We will fix it in
-    // nsLineLayout after the whole line get reflowed.
+    // Using a dummy container-size here, so child positioning may not be
+    // correct. We will fix it in nsLineLayout after the whole line is
+    // reflowed.
     FinishReflowChild(textContainer, aPresContext, textMetrics,
-                      &textReflowState, lineWM, position, 0, 0);
+                      &textReflowState, lineWM, position, dummyContainerSize, 0);
   }
   MOZ_ASSERT(baseRect.ISize(lineWM) == offsetRect.ISize(lineWM),
              "Annotations should only be placed on the block directions");

@@ -122,7 +122,7 @@ nsFlowAreaRect
 nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
                             BandInfoType aInfoType, nscoord aBSize,
                             LogicalRect aContentArea, SavedState* aState,
-                            nscoord aContainerWidth) const
+                            const nsSize& aContainerSize) const
 {
   CHECK_BLOCK_DIR(aWM);
   NS_ASSERTION(aBSize >= 0, "unexpected max block size");
@@ -169,8 +169,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       blockEnd = nscoord_MAX;
     }
   }
-  nscoord lineLeft = mLineLeft + aContentArea.LineLeft(aWM, aContainerWidth);
-  nscoord lineRight = mLineLeft + aContentArea.LineRight(aWM, aContainerWidth);
+  nscoord lineLeft = mLineLeft + aContentArea.LineLeft(aWM, aContainerSize);
+  nscoord lineRight = mLineLeft + aContentArea.LineRight(aWM, aContainerSize);
   if (lineRight < lineLeft) {
     NS_WARNING("bad value");
     lineRight = lineLeft;
@@ -243,8 +243,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
                        nscoord_MAX : (blockEnd - blockStart);
   // convert back from LineLeft/Right to IStart
   nscoord inlineStart = aWM.IsVertical() || aWM.IsBidiLTR()
-                         ? lineLeft - mLineLeft
-                         : mLineLeft + aContainerWidth - lineRight;
+                        ? lineLeft - mLineLeft
+                        : mLineLeft - lineRight + aContainerSize.width;
 
   return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
                         lineRight - lineLeft, blockSize, haveFloats);
@@ -252,14 +252,14 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
 
 nsresult
 nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
-                         WritingMode aWM, nscoord aContainerWidth)
+                         WritingMode aWM, const nsSize& aContainerSize)
 {
   CHECK_BLOCK_DIR(aWM);
   NS_ASSERTION(aMarginRect.ISize(aWM) >= 0, "negative inline size!");
   NS_ASSERTION(aMarginRect.BSize(aWM) >= 0, "negative block size!");
 
   FloatInfo info(aFloatFrame,
-                 aMarginRect.LineLeft(aWM, aContainerWidth) + mLineLeft,
+                 aMarginRect.LineLeft(aWM, aContainerSize) + mLineLeft,
                  aMarginRect.BStart(aWM) + mBlockStart,
                  aMarginRect.ISize(aWM),
                  aMarginRect.BSize(aWM));
@@ -293,12 +293,12 @@ LogicalRect
 nsFloatManager::CalculateRegionFor(WritingMode          aWM,
                                    nsIFrame*            aFloat,
                                    const LogicalMargin& aMargin,
-                                   nscoord              aContainerWidth)
+                                   const nsSize&        aContainerSize)
 {
   // We consider relatively positioned frames at their original position.
   LogicalRect region(aWM, nsRect(aFloat->GetNormalPosition(),
                                  aFloat->GetSize()),
-                     aContainerWidth);
+                     aContainerSize);
 
   // Float region includes its margin
   region.Inflate(aWM, aMargin);
@@ -324,9 +324,9 @@ NS_DECLARE_FRAME_PROPERTY(FloatRegionProperty, DeleteValue<nsMargin>)
 
 LogicalRect
 nsFloatManager::GetRegionFor(WritingMode aWM, nsIFrame* aFloat,
-                             nscoord aContainerWidth)
+                             const nsSize& aContainerSize)
 {
-  LogicalRect region = aFloat->GetLogicalRect(aWM, aContainerWidth);
+  LogicalRect region = aFloat->GetLogicalRect(aWM, aContainerSize);
   void* storedRegion = aFloat->Properties().Get(FloatRegionProperty());
   if (storedRegion) {
     nsMargin margin = *static_cast<nsMargin*>(storedRegion);
@@ -338,9 +338,9 @@ nsFloatManager::GetRegionFor(WritingMode aWM, nsIFrame* aFloat,
 void
 nsFloatManager::StoreRegionFor(WritingMode aWM, nsIFrame* aFloat,
                                const LogicalRect& aRegion,
-                               nscoord aContainerWidth)
+                               const nsSize& aContainerSize)
 {
-  nsRect region = aRegion.GetPhysicalRect(aWM, aContainerWidth);
+  nsRect region = aRegion.GetPhysicalRect(aWM, aContainerSize);
   nsRect rect = aFloat->GetRect();
   FrameProperties props = aFloat->Properties();
   if (region.IsEqualEdges(rect)) {
