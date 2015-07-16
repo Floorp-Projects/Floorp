@@ -654,6 +654,7 @@ nsPermissionManager::Init()
   if (NS_SUCCEEDED(rv)) {
     mObserverService->AddObserver(this, "profile-before-change", true);
     mObserverService->AddObserver(this, "profile-do-change", true);
+    mObserverService->AddObserver(this, "xpcom-shutdown", true);
   }
 
   if (IsChildProcess()) {
@@ -1758,6 +1759,11 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
+  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
+    mObserverService = nullptr;
+    return NS_OK;
+  }
+
   ENSURE_NOT_CHILD_PROCESS;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
@@ -1766,8 +1772,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     mIsShuttingDown = true;
     RemoveAllFromMemory();
     CloseDB(false);
-  }
-  else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
+  } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
   }
