@@ -1166,6 +1166,9 @@ public:
   AbstractCanonical<bool>* CanonicalLogicallySeeking() { return &mLogicallySeeking; }
 protected:
 
+  // Returns true if heuristic dormant is supported.
+  bool IsHeuristicDormantSupported() const;
+
   virtual void CallSeek(const SeekTarget& aTarget);
 
   MediaPromiseConsumerHolder<SeekPromise> mSeekRequest;
