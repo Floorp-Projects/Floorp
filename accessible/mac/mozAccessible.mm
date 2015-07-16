@@ -18,6 +18,7 @@
 #include "RootAccessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
+#include "mozilla/a11y/PDocAccessible.h"
 
 #include "mozilla/Services.h"
 #include "nsRect.h"
@@ -370,7 +371,8 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  ProxyAccessible* proxy = [self getProxyAccessible];
+  if (!accWrap && !proxy)
     return nil;
 
 #if DEBUG
@@ -412,62 +414,117 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
     return [self title];
   if ([attribute isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
-    Relation rel =
-      accWrap->RelationByType(RelationType::LABELLED_BY);
-    Accessible* tempAcc = rel.Next();
-    return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
+    if (accWrap) {
+      Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
+      Accessible* tempAcc = rel.Next();
+      return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
+    }
+    nsTArray<ProxyAccessible*> rel = proxy->RelationByType(RelationType::LABELLED_BY);
+    ProxyAccessible* tempProxy = rel.SafeElementAt(0);
+    return tempProxy ? GetNativeFromProxy(tempProxy) : nil;
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
 
-  if (accWrap->IsTable()) {
-    TableAccessible* table = accWrap->AsTable();
-    if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
-      return @(table->RowCount());
-    if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
-      return @(table->ColCount());
-    if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
-      // Create a new array with the list of table rows.
-      NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
-      uint32_t totalCount = accWrap->ChildCount();
-      for (uint32_t i = 0; i < totalCount; i++) {
-        if (accWrap->GetChildAt(i)->IsTableRow()) {
-          mozAccessible* curNative =
-            GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
-          if (curNative)
-            [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+  if (accWrap) {
+    if (accWrap->IsTable()) {
+      TableAccessible* table = accWrap->AsTable();
+      if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
+        return @(table->RowCount());
+      if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
+        return @(table->ColCount());
+      if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
+        // Create a new array with the list of table rows.
+        NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+        uint32_t totalCount = accWrap->ChildCount();
+        for (uint32_t i = 0; i < totalCount; i++) {
+          if (accWrap->GetChildAt(i)->IsTableRow()) {
+            mozAccessible* curNative =
+              GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
+            if (curNative)
+              [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          }
         }
+        return nativeArray;
       }
-      return nativeArray;
-    }
-  } else if (accWrap->IsTableRow()) {
-    if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
-      // Count the number of rows before that one to obtain the row index.
-      uint32_t index = 0;
-      for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
-        if (accWrap->GetChildAt(i)->IsTableRow()) {
-          index++;
+    } else if (accWrap->IsTableRow()) {
+      if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
+        // Count the number of rows before that one to obtain the row index.
+        uint32_t index = 0;
+        for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
+          if (accWrap->GetChildAt(i)->IsTableRow()) {
+            index++;
+          }
         }
+        return [NSNumber numberWithUnsignedInteger:index];
       }
-      return [NSNumber numberWithUnsignedInteger:index];
+    } else if (accWrap->IsTableCell()) {
+      TableCellAccessible* cell = accWrap->AsTableCell();
+      if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
+        return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(),
+                                                   cell->RowExtent())];
+      if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
+        return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
+                                                   cell->ColExtent())];
+      if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+        nsAutoTArray<Accessible*, 10> headerCells;
+        cell->RowHeaderCells(&headerCells);
+        return ConvertToNSArray(headerCells);
+      }
+      if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
+        nsAutoTArray<Accessible*, 10> headerCells;
+        cell->ColHeaderCells(&headerCells);
+        return ConvertToNSArray(headerCells);
+      }
     }
-  } else if (accWrap->IsTableCell()) {
-    TableCellAccessible* cell = accWrap->AsTableCell();
-    if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(),
-                                                 cell->RowExtent())];
-    if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-      return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
-                                                 cell->ColExtent())];
-    if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
-      nsAutoTArray<Accessible*, 10> headerCells;
-      cell->RowHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
-    }
-    if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
-      nsAutoTArray<Accessible*, 10> headerCells;
-      cell->ColHeaderCells(&headerCells);
-      return ConvertToNSArray(headerCells);
+  } else if (proxy) {
+    if (proxy->IsTable()) {
+      if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
+        return @(proxy->TableRowCount());
+      if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
+        return @(proxy->TableColumnCount());
+      if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
+        // Create a new array with the list of table rows.
+        NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
+        uint32_t totalCount = proxy->ChildrenCount();
+        for (uint32_t i = 0; i < totalCount; i++) {
+          if (proxy->ChildAt(i)->IsTableRow()) {
+            mozAccessible* curNative =
+              GetNativeFromProxy(proxy->ChildAt(i));
+            if (curNative)
+              [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
+          }
+        }
+        return nativeArray;
+      }
+    } else if (proxy->IsTableRow()) {
+      if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
+        // Count the number of rows before that one to obtain the row index.
+        uint32_t index = 0;
+        for (int32_t i = proxy->IndexInParent() - 1; i >= 0; i--) {
+          if (proxy->ChildAt(i)->IsTableRow()) {
+            index++;
+          }
+        }
+        return [NSNumber numberWithUnsignedInteger:index];
+      }
+    } else if (proxy->IsTableCell()) {
+      if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
+        return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(),
+                                                   proxy->RowExtent())];
+      if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
+        return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(),
+                                                   proxy->ColExtent())];
+      if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
+        nsTArray<ProxyAccessible*> headerCells;
+        proxy->RowHeaderCells(&headerCells);
+        return ConvertToNSArray(headerCells);
+      }
+      if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
+        nsTArray<ProxyAccessible*> headerCells;
+        proxy->ColHeaderCells(&headerCells);
+        return ConvertToNSArray(headerCells);
+      }
     }
   }
 
@@ -496,9 +553,20 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
       // Per the MathML 3 spec, the latter happens iff the linethickness
       // attribute is of the form [zero-float][optional-unit]. In that case we
       // set line thickness to zero and in the other cases we set it to one.
-      nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
       nsAutoString thickness;
-      nsAccUtils::GetAccAttr(attributes, nsGkAtoms::linethickness_, thickness);
+      if (accWrap) {
+        nsCOMPtr<nsIPersistentProperties> attributes = accWrap->Attributes();
+        nsAccUtils::GetAccAttr(attributes, nsGkAtoms::linethickness_, thickness);
+      } else {
+        nsAutoTArray<Attribute, 10> attrs;
+        proxy->Attributes(&attrs);
+        for (size_t i = 0 ; i < attrs.Length() ; i++) {
+          if (attrs.ElementAt(i).Name() == "thickness") {
+            thickness = attrs.ElementAt(i).Value();
+            break;
+          }
+        }
+      }
       double value = 1.0;
       if (!thickness.IsEmpty())
         value = PR_strtod(NS_LossyConvertUTF16toASCII(thickness).get(),
