@@ -129,9 +129,6 @@ private:
         HRTFDatabaseLoader* mLoader;
     };
 
-    static PLDHashOperator shutdownEnumFunc(LoaderByRateEntry *entry,
-                                            void* unused);
-
     // Keeps track of loaders on a per-sample-rate basis.
     static nsTHashtable<LoaderByRateEntry> *s_loaderMap; // singleton
 
