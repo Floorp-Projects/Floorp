@@ -856,7 +856,8 @@ class ScriptMixin(PlatformMixin):
 
     def query_env(self, partial_env=None, replace_dict=None,
                   purge_env=(),
-                  set_self_env=None, log_level=DEBUG):
+                  set_self_env=None, log_level=DEBUG,
+                  avoid_host_env=False):
         """ Environment query/generation method.
         The default, self.query_env(), will look for self.config['env']
         and replace any special strings in there ( %(PATH)s ).
@@ -878,6 +879,9 @@ class ScriptMixin(PlatformMixin):
                 Defaults to True.
             log_level (str, optional): log level name to use on normal operation.
                 Defaults to `DEBUG`.
+            avoid_host_env (boolean, optional): if set to True, we will not use
+                any environment variables set on the host except PATH.
+                Defaults to False.
 
         Returns:
             dict: environment variables names with their values.
@@ -890,7 +894,9 @@ class ScriptMixin(PlatformMixin):
                 partial_env = {}
             if set_self_env is None:
                 set_self_env = True
-        env = os.environ.copy()
+
+        env = {'PATH': os.environ['PATH']} if avoid_host_env else os.environ.copy()
+
         default_replace_dict = self.query_abs_dirs()
         default_replace_dict['PATH'] = os.environ['PATH']
         if not replace_dict:

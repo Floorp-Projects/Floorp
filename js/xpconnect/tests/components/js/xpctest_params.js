@@ -73,7 +73,13 @@ TestParams.prototype = {
   testSizedWstring: f_is,
   testInterfaceIs: f_is,
   testInterfaceIsArray: f_size_and_iid,
-  testOutAString: function(o) { o.value = "out"; }
+  testOutAString: function(o) { o.value = "out"; },
+  testStringArrayOptionalSize: function(arr, size) {
+    if (arr.length != size) { throw "bad size passed to test method"; }
+    var rv = "";
+    arr.forEach((x) => rv += x);
+    return rv;
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);

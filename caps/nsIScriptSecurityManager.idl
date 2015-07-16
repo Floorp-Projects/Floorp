@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(f4c578b8-5bac-4ba1-9582-f1140e09a3b4)]
+[scriptable, uuid(50418f5c-b0d8-42c3-ba5d-efffb6927e1c)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -200,6 +200,20 @@ interface nsIScriptSecurityManager : nsISupports
      */
     [implicit_jscontext]
     nsIPrincipal createNullPrincipal(in jsval originAttributes);
+
+    /**
+     * Creates an expanded principal whose capabilities are the union of the
+     * given principals. An expanded principal has an asymmetric privilege
+     * relationship with its sub-principals (that is to say, it subsumes the
+     * sub-principals, but the sub-principals do not subsume it), even if
+     * there's only one. This presents a legitimate use-case for making an
+     * expanded principal around a single sub-principal, which we do frequently.
+     *
+     * Expanded principals cannot have origin attributes themselves, but rather
+     * have them through their sub-principals - so we don't accept them here.
+     */
+    nsIPrincipal createExpandedPrincipal([array, size_is(aLength)] in nsIPrincipal aPrincipalArray,
+                                         [optional] in unsigned long aLength);
 
     /**
      * Returns OK if aSourceURI and target have the same "origin"

@@ -272,6 +272,11 @@ public:
   nscoord& Width() { return mWritingMode.IsVertical() ? mBSize : mISize; }
   nscoord& Height() { return mWritingMode.IsVertical() ? mISize : mBSize; }
 
+  nsSize PhysicalSize()
+  {
+    return Size(mWritingMode).GetPhysicalSize(mWritingMode);
+  }
+
   void SetBlockStartAscent(nscoord aAscent)
   {
     mBlockStartAscent = aAscent;

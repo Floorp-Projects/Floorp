@@ -46,10 +46,6 @@ public:
   {
     mRegisteredSpeakerManagers.RemoveElement(aSpeakerManager);
   }
-  /**
-   * Shutdown the singleton.
-   */
-  static void Shutdown();
 
 protected:
   SpeakerManagerService();
@@ -59,6 +55,11 @@ protected:
   virtual void Notify();
 
   void TurnOnSpeaker(bool aEnable);
+
+  /**
+   * Shutdown the singleton.
+   */
+  static void Shutdown();
 
   nsTArray<nsRefPtr<SpeakerManager> > mRegisteredSpeakerManagers;
   // Set for remember all the child speaker status

@@ -716,12 +716,15 @@ CHECKSUM_ALGORITHM_PARAM = -d sha512 -d md5 -d sha1
 CHECKSUM_FILE = '$(DIST)/$(PKG_PATH)/$(CHECKSUMS_FILE_BASENAME).checksums'
 CHECKSUM_FILES = $(CHECKSUM_FILE)
 
+# Upload MAR tools only if AB_CD is unset or en_US
+ifeq (,$(AB_CD:en_US=))
 ifeq (WINNT,$(OS_TARGET))
 UPLOAD_EXTRA_FILES += host/bin/mar.exe
 UPLOAD_EXTRA_FILES += host/bin/mbsdiff.exe
 else
 UPLOAD_EXTRA_FILES += host/bin/mar
 UPLOAD_EXTRA_FILES += host/bin/mbsdiff
+endif
 endif
 
 UPLOAD_FILES= \

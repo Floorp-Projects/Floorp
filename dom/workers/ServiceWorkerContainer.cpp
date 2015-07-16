@@ -164,8 +164,13 @@ ServiceWorkerContainer::GetController()
       return nullptr;
     }
 
+    // TODO: What should we do here if the ServiceWorker script fails to load?
+    //       In theory the DOM ServiceWorker object can exist without the worker
+    //       thread running, but it seems our design does not expect that.
     nsCOMPtr<nsISupports> serviceWorker;
-    rv = swm->GetDocumentController(GetOwner(), getter_AddRefs(serviceWorker));
+    rv = swm->GetDocumentController(GetOwner(),
+                                    nullptr, // aLoadFailedRunnable
+                                    getter_AddRefs(serviceWorker));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

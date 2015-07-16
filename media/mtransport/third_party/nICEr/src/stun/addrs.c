@@ -302,6 +302,8 @@ stun_getifaddrs(nr_local_addr addrs[], int maxaddrs, int *count)
                addrs[*count].interface.estimated_speed = wrq.u.bitrate.value / 1000;
             }
 
+            close(s);
+
             if (if_addr->ifa_flags & IFF_POINTOPOINT)
             {
                addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN | NR_INTERFACE_TYPE_VPN;

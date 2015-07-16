@@ -1713,6 +1713,15 @@ TrackBuffersManager::Buffered(TrackInfo::TrackType aTrack)
   return GetTracksData(aTrack).mBufferedRanges;
 }
 
+TimeIntervals
+TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
+{
+  MonitorAutoLock mon(mMonitor);
+  return aTrack == TrackInfo::kVideoTrack
+    ? mVideoBufferedRanges
+    : mAudioBufferedRanges;
+}
+
 const TrackBuffersManager::TrackBuffer&
 TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
 {

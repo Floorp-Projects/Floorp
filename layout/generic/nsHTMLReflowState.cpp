@@ -1265,12 +1265,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
   WritingMode cbwm = cbrs->GetWritingMode();
-  nscoord containerWidth = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
-    ? cbrs->ComputedWidth() +
-      cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm)
-    : containingBlock->GetSize().width;
+  nsSize containerSize = containingBlock->GetStateBits() & NS_FRAME_IN_REFLOW
+    ? cbrs->ComputedSizeAsContainerIfConstrained()
+    : containingBlock->GetSize();
   LogicalPoint placeholderOffset(wm, aPlaceholderFrame->GetOffsetTo(containingBlock),
-                                 containerWidth);
+                                 containerSize);
 
   // XXX hack to correct for lack of LogicalPoint bidi support in vertical mode
   if (wm.IsVertical() && !wm.IsBidiLTR()) {
@@ -1286,7 +1285,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   nsBlockFrame* blockFrame =
     nsLayoutUtils::GetAsBlock(containingBlock->GetContentInsertionFrame());
   if (blockFrame) {
-    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock), 0);
+    // Use a null containerSize to convert a LogicalPoint functioning as a
+    // vector into a physical nsPoint vector.
+    const nsSize nullContainerSize;
+    LogicalPoint blockOffset(wm, blockFrame->GetOffsetTo(containingBlock),
+                             nullContainerSize);
     bool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
     if (!isValid) {
@@ -1302,7 +1305,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // would have been inline-level or block-level
       LogicalRect lineBounds =
         lineBox->GetBounds().ConvertTo(wm, lineBox->mWritingMode,
-                                       lineBox->mContainerWidth);
+                                       lineBox->mContainerSize);
       if (mStyleDisplay->IsOriginalDisplayInlineOutsideStyle()) {
         // Use the block-start of the inline box which the placeholder lives in
         // as the hypothetical box's block-start.
@@ -1415,9 +1418,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
     // scroll, and thus avoid the resulting incremental reflow bugs.
     cbOffset = containingBlock->GetOffsetTo(cbrs->frame);
   }
-  nscoord cbrsWidth = cbrs->ComputedWidth() +
-                        cbrs->ComputedLogicalBorderPadding().LeftRight(cbwm);
-  LogicalPoint logCBOffs(wm, cbOffset, cbrsWidth - containerWidth);
+  nsSize cbrsSize =
+    cbrs->ComputedPhysicalSize() +
+    cbrs->ComputedLogicalBorderPadding().Size(cbwm).GetPhysicalSize(cbwm);
+  LogicalPoint logCBOffs(wm, cbOffset, cbrsSize - containerSize);
   aHypotheticalBox.mIStart += logCBOffs.I(wm);
   aHypotheticalBox.mIEnd += logCBOffs.I(wm);
   aHypotheticalBox.mBStart += logCBOffs.B(wm);
@@ -1941,11 +1945,11 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(
       cbSize.ISize(wm) = aContainingBlockRS->frame->ISize(wm) -
                          computedBorder.IStartEnd(wm);
       NS_ASSERTION(cbSize.ISize(wm) >= 0,
-                   "Negative containing block width!");
+                   "Negative containing block isize!");
       cbSize.BSize(wm) = aContainingBlockRS->frame->BSize(wm) -
                          computedBorder.BStartEnd(wm);
       NS_ASSERTION(cbSize.BSize(wm) >= 0,
-                   "Negative containing block height!");
+                   "Negative containing block bsize!");
     } else {
       // If the ancestor is block-level, the containing block is formed by the
       // padding edge of the ancestor
@@ -2180,11 +2184,12 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
     // this MUST come after we've computed our border and padding.
     ComputeMinMaxValues(cbSize);
 
-    // Calculate the computed width and blockSize. This varies by frame type
+    // Calculate the computed inlineSize and blockSize.
+    // This varies by frame type.
 
     if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType) {
       // Internal table elements. The rules vary depending on the type.
-      // Calculate the computed width
+      // Calculate the computed isize
       bool rowOrRowGroup = false;
       const nsStyleCoord &inlineSize = mStylePosition->ISize(wm);
       nsStyleUnit inlineSizeUnit = inlineSize.GetUnit();
@@ -2207,11 +2212,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
           if (ComputedISize() < 0)
             ComputedISize() = 0;
         }
-        NS_ASSERTION(ComputedISize() >= 0, "Bogus computed width");
+        NS_ASSERTION(ComputedISize() >= 0, "Bogus computed isize");
 
       } else {
         NS_ASSERTION(inlineSizeUnit == inlineSize.GetUnit(),
-                     "unexpected width unit change");
+                     "unexpected inline size unit change");
         ComputedISize() = ComputeISizeValue(cbSize.ISize(wm),
                                             mStylePosition->mBoxSizing,
                                             inlineSize);

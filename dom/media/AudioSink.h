@@ -27,6 +27,9 @@ public:
 
   int64_t GetPosition();
 
+  // Thread-safe. Can be called on any thread.
+  int64_t GetEndTime() const;
+
   // Check whether we've pushed more frames to the audio hardware than it has
   // played.
   bool HasUnplayedFrames();
@@ -90,8 +93,6 @@ private:
   void StartAudioStreamPlaybackIfNeeded();
   void WriteSilence(uint32_t aFrames);
 
-  int64_t GetEndTime();
-
   MediaQueue<AudioData>& AudioQueue();
 
   ReentrantMonitor& GetReentrantMonitor();
@@ -124,7 +125,7 @@ private:
   // stream error.
   int64_t mLastGoodPosition;
 
-  AudioInfo mInfo;
+  const AudioInfo mInfo;
 
   dom::AudioChannel mChannel;
 
@@ -139,23 +140,6 @@ private:
   bool mSetPreservesPitch;
 
   bool mPlaying;
-
-  class OnAudioEndTimeUpdateTask : public nsRunnable {
-  public:
-    explicit OnAudioEndTimeUpdateTask(MediaDecoderStateMachine* aStateMachine);
-
-    NS_IMETHOD Run() override;
-
-    void Dispatch(int64_t aEndTime);
-    void Cancel();
-
-  private:
-    Mutex mMutex;
-    int64_t mEndTime;
-    nsRefPtr<MediaDecoderStateMachine> mStateMachine;
-  };
-
-  nsRefPtr<OnAudioEndTimeUpdateTask> mOnAudioEndTimeUpdateTask;
 };
 
 } // namespace mozilla

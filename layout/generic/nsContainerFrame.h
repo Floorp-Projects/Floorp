@@ -241,7 +241,7 @@ public:
    * If the reflow status after reflowing the child is FULLY_COMPLETE then any
    * next-in-flows are deleted using DeleteNextInFlowChild().
    *
-   * @param aContainerWidth  width of the border-box of the containing frame
+   * @param aContainerSize  size of the border-box of the containing frame
    *
    * Flags:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
@@ -255,7 +255,7 @@ public:
                    const nsHTMLReflowState&       aReflowState,
                    const mozilla::WritingMode&    aWM,
                    const mozilla::LogicalPoint&   aPos,
-                   nscoord                        aContainerWidth,
+                   const nsSize&                  aContainerSize,
                    uint32_t                       aFlags,
                    nsReflowStatus&                aStatus,
                    nsOverflowContinuationTracker* aTracker = nullptr);
@@ -270,7 +270,7 @@ public:
    * - sets the view's visibility, opacity, content transparency, and clip
    * - invoked the DidReflow() function
    *
-   * @param aContainerWidth  width of the border-box of the containing frame
+   * @param aContainerSize  size of the border-box of the containing frame
    *
    * Flags:
    * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aPos is ignored in this
@@ -285,7 +285,7 @@ public:
                                 const nsHTMLReflowState*     aReflowState,
                                 const mozilla::WritingMode&  aWM,
                                 const mozilla::LogicalPoint& aPos,
-                                nscoord                      aContainerWidth,
+                                const nsSize&                aContainerSize,
                                 uint32_t                     aFlags);
 
   //XXX temporary: hold on to a copy of the old physical versions of

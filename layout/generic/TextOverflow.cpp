@@ -263,11 +263,11 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aBlockFrame)
   : mContentArea(aBlockFrame->GetWritingMode(),
                  aBlockFrame->GetContentRectRelativeToSelf(),
-                 aBlockFrame->GetRect().width)
+                 aBlockFrame->GetSize())
   , mBuilder(aBuilder)
   , mBlock(aBlockFrame)
   , mScrollableFrame(nsLayoutUtils::GetScrollableFrameFor(aBlockFrame))
-  , mBlockWidth(aBlockFrame->GetRect().width)
+  , mBlockSize(aBlockFrame->GetSize())
   , mBlockWM(aBlockFrame->GetWritingMode())
   , mAdjustForPixelSnapping(false)
 {
@@ -296,9 +296,12 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       // to pixel snapping behaviour in our scrolling code.
       mAdjustForPixelSnapping = mCanHaveInlineAxisScrollbar;
     }
+    // Use a null containerSize to convert a vector from logical to physical.
+    const nsSize nullContainerSize;
     mContentArea.MoveBy(mBlockWM,
                         LogicalPoint(mBlockWM,
-                                     mScrollableFrame->GetScrollPosition(), 0));
+                                     mScrollableFrame->GetScrollPosition(),
+                                     nullContainerSize));
     nsIFrame* scrollFrame = do_QueryFrame(mScrollableFrame);
     scrollFrame->AddStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
   }
@@ -394,7 +397,7 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
   LogicalRect borderRect(mBlockWM,
                          nsRect(aFrame->GetOffsetTo(mBlock),
                                 aFrame->GetSize()),
-                         mBlockWidth);
+                         mBlockSize);
   nscoord istartOverlap = std::max(
     aInsideMarkersArea.IStart(mBlockWM) - borderRect.IStart(mBlockWM), 0);
   nscoord iendOverlap = std::max(
@@ -468,9 +471,9 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   bool suppressIEnd = mIEnd.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
   if (mCanHaveInlineAxisScrollbar) {
     LogicalPoint pos(mBlockWM, mScrollableFrame->GetScrollPosition(),
-                     mBlockWidth);
+                     mBlockSize);
     LogicalRect scrollRange(mBlockWM, mScrollableFrame->GetScrollRange(),
-                            mBlockWidth);
+                            mBlockSize);
     // No ellipsing when nothing to scroll to on that side (this includes
     // overflow:auto that doesn't trigger a horizontal scrollbar).
     if (pos.I(mBlockWM) <= scrollRange.IStart(mBlockWM)) {
@@ -487,7 +490,7 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   InflateIStart(mBlockWM, &contentArea, scrollAdjust);
   InflateIEnd(mBlockWM, &contentArea, scrollAdjust);
   LogicalRect lineRect(mBlockWM, aLine->GetScrollableOverflowArea(),
-                       mBlockWidth);
+                       mBlockSize);
   const bool istartOverflow =
     !suppressIStart && lineRect.IStart(mBlockWM) < contentArea.IStart(mBlockWM);
   const bool iendOverflow =
@@ -760,8 +763,8 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
       aLine->BStart(), mIStart.mIntrinsicISize, aLine->BSize());
     nsPoint offset = mBuilder->ToReferenceFrame(mBlock);
     nsRect markerRect =
-      markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockWidth) + offset;
-    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockWidth) + offset,
+      markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
+    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
@@ -777,8 +780,8 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
       mIEnd.mIntrinsicISize, aLine->BSize());
     nsPoint offset = mBuilder->ToReferenceFrame(mBlock);
     nsRect markerRect =
-      markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockWidth) + offset;
-    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockWidth) + offset,
+      markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
+    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,

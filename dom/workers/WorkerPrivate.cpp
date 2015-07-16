@@ -2384,6 +2384,9 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   MOZ_ASSERT(!mLoadGroup);
   aOther.mLoadGroup.swap(mLoadGroup);
 
+  MOZ_ASSERT(!mLoadFailedAsyncRunnable);
+  aOther.mLoadFailedAsyncRunnable.swap(mLoadFailedAsyncRunnable);
+
   MOZ_ASSERT(!mInterfaceRequestor);
   aOther.mInterfaceRequestor.swap(mInterfaceRequestor);
 
@@ -3418,7 +3421,7 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
-  static const uint32_t kDoomedCount = 9;
+  static const uint32_t kDoomedCount = 10;
 
   aDoomed.SetCapacity(kDoomedCount);
 
@@ -3430,6 +3433,7 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   SwapToISupportsArray(mLoadInfo.mChannel, aDoomed);
   SwapToISupportsArray(mLoadInfo.mCSP, aDoomed);
   SwapToISupportsArray(mLoadInfo.mLoadGroup, aDoomed);
+  SwapToISupportsArray(mLoadInfo.mLoadFailedAsyncRunnable, aDoomed);
   SwapToISupportsArray(mLoadInfo.mInterfaceRequestor, aDoomed);
   // Before adding anything here update kDoomedCount above!
 
@@ -5464,6 +5468,19 @@ WorkerPrivate::RunBeforeNextEvent(nsIRunnable* aRunnable)
   }
 
   return true;
+}
+
+void
+WorkerPrivate::MaybeDispatchLoadFailedRunnable()
+{
+  AssertIsOnWorkerThread();
+
+  nsCOMPtr<nsIRunnable> runnable = StealLoadFailedAsyncRunnable();
+  if (!runnable) {
+    return;
+  }
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
 }
 
 void

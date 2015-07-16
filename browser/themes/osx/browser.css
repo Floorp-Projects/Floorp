@@ -1067,7 +1067,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   }
 
   :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-badge-container > .toolbarbutton-icon,
+  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-badge-stack > .toolbarbutton-icon,
   :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     width: 18px;
   }
@@ -1090,25 +1090,25 @@ toolbar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutto
 
 /* Help SDK icons fit: */
 toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   width: 16px;
 }
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
   opacity: .4;
 }
 
 @media (-moz-mac-lion-theme) {
   #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
   #main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
   #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
   #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-container > .toolbarbutton-icon,
+  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-stack > .toolbarbutton-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
@@ -1116,7 +1116,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   }
 
   #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+  #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
   #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
     opacity: .25;
   }

@@ -230,6 +230,7 @@ private:
   // This should be set to values in the DriverInitStatus enumeration found in
   // DriverInitCrashDetection.h.
   DECL_GFX_PREF(Live, "gfx.driver-init.status",                DriverInitStatus, int32_t, 0);
+  DECL_GFX_PREF(Once, "gfx.font_rendering.directwrite.enabled", DirectWriteFontRenderingEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.gralloc.fence-with-readpixels",     GrallocFenceWithReadPixels, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, int32_t, 23456);

@@ -514,11 +514,12 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   mHelper.mHasVerticalScrollbar = aAssumeVScroll;
 
   nsReflowStatus status;
-  // No need to pass a container-width to ReflowChild or
+  // No need to pass a true container-size to ReflowChild or
   // FinishReflowChild, because it's only used there when positioning
   // the frame (i.e. if NS_FRAME_NO_MOVE_FRAME isn't set)
+  const nsSize dummyContainerSize;
   ReflowChild(mHelper.mScrolledFrame, presContext, *aMetrics,
-              kidReflowState, wm, LogicalPoint(wm), 0,
+              kidReflowState, wm, LogicalPoint(wm), dummyContainerSize,
               NS_FRAME_NO_MOVE_FRAME, status);
 
   mHelper.mHasHorizontalScrollbar = didHaveHorizontalScrollbar;
@@ -530,7 +531,8 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   // which will usually be different from the scrollport height;
   // invalidating the difference will cause unnecessary repainting.
   FinishReflowChild(mHelper.mScrolledFrame, presContext,
-                    *aMetrics, &kidReflowState, wm, LogicalPoint(wm), 0,
+                    *aMetrics, &kidReflowState, wm, LogicalPoint(wm),
+                    dummyContainerSize,
                     NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
 
   // XXX Some frames (e.g., nsPluginFrame, nsFrameFrame, nsTextFrame) don't bother

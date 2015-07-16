@@ -867,7 +867,8 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         return false;
     }
 
-    if (DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_NORMAL &&
+    if (mCurrentTransaction &&
+        DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_NORMAL &&
         msg->priority() > IPC::Message::PRIORITY_NORMAL)
     {
         // Don't allow sending CPOWs while we're dispatching a sync message.
@@ -877,22 +878,23 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     if (mCurrentTransaction &&
         (msg->priority() < DispatchingSyncMessagePriority() ||
-         mAwaitingSyncReplyPriority > msg->priority() ||
-         DispatchingSyncMessagePriority() == IPC::Message::PRIORITY_URGENT ||
-         DispatchingAsyncMessagePriority() == IPC::Message::PRIORITY_URGENT))
+         mAwaitingSyncReplyPriority > msg->priority()))
     {
         CancelCurrentTransactionInternal();
         mLink->SendMessage(new CancelMessage());
     }
 
     IPC_ASSERT(msg->is_sync(), "can only Send() sync messages here");
-    IPC_ASSERT(msg->priority() >= DispatchingSyncMessagePriority(),
-               "can't send sync message of a lesser priority than what's being dispatched");
-    IPC_ASSERT(AwaitingSyncReplyPriority() <= msg->priority(),
-               "nested sync message sends must be of increasing priority");
 
-    IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
-               "not allowed to send messages while dispatching urgent messages");
+    if (mCurrentTransaction) {
+        IPC_ASSERT(msg->priority() >= DispatchingSyncMessagePriority(),
+                   "can't send sync message of a lesser priority than what's being dispatched");
+        IPC_ASSERT(AwaitingSyncReplyPriority() <= msg->priority(),
+                   "nested sync message sends must be of increasing priority");
+        IPC_ASSERT(DispatchingSyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
+                   "not allowed to send messages while dispatching urgent messages");
+    }
+
     IPC_ASSERT(DispatchingAsyncMessagePriority() != IPC::Message::PRIORITY_URGENT,
                "not allowed to send messages while dispatching urgent messages");
 
@@ -1315,11 +1317,6 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     // no longer blocked.
     MOZ_ASSERT_IF(prio > IPC::Message::PRIORITY_NORMAL, NS_IsMainThread());
     MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
-
-    IPC_ASSERT(prio >= DispatchingSyncMessagePriority(),
-               "priority inversion while dispatching sync message");
-    IPC_ASSERT(prio >= mAwaitingSyncReplyPriority,
-               "dispatching a message of lower priority while waiting for a response");
 
     MessageChannel* dummy;
     MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
@@ -2022,16 +2019,26 @@ MessageChannel::CancelCurrentTransactionInternal()
     // tampered with (by us). If so, they don't reset the variable to the old
     // value.
 
-    MOZ_ASSERT(!mCurrentTransaction);
+    MOZ_ASSERT(mCurrentTransaction);
     mCurrentTransaction = 0;
+
+    mAwaitingSyncReply = false;
+    mAwaitingSyncReplyPriority = 0;
+
+    // We could also zero out mDispatchingSyncMessage here. However, that would
+    // cause a race because mDispatchingSyncMessage is a worker-thread-only
+    // field and we can be called on the I/O thread. Luckily, we can check to
+    // see if mCurrentTransaction is 0 before examining DispatchSyncMessage.
 }
 
 void
 MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
-    CancelCurrentTransactionInternal();
-    mLink->SendMessage(new CancelMessage());
+    if (mCurrentTransaction) {
+        CancelCurrentTransactionInternal();
+        mLink->SendMessage(new CancelMessage());
+    }
 }
 
 void
