@@ -1040,6 +1040,9 @@ protected:
 
   virtual void CallSeek(const SeekTarget& aTarget);
 
+  // Returns true if heuristic dormant is supported.
+  bool IsHeuristicDormantSupported() const;
+
   MediaPromiseRequestHolder<SeekPromise> mSeekRequest;
 
   // True when seeking or otherwise moving the play position around in
