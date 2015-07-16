@@ -12,12 +12,14 @@
 namespace mozilla {
 namespace dom {
 
-class FontFaceSetIterator final : public NonRefcountedDOMObject
+class FontFaceSetIterator final
 {
 public:
   FontFaceSetIterator(mozilla::dom::FontFaceSet* aFontFaceSet,
                       bool aIsKeyAndValue);
-  ~FontFaceSetIterator();
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(FontFaceSetIterator)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FontFaceSetIterator)
 
   bool WrapObject(JSContext* aCx,
                   JS::Handle<JSObject*> aGivenProto,
@@ -28,6 +30,8 @@ public:
             mozilla::ErrorResult& aRv);
 
 private:
+  ~FontFaceSetIterator();
+
   nsRefPtr<FontFaceSet> mFontFaceSet;
   uint32_t mNextIndex;
   bool mIsKeyAndValue;
