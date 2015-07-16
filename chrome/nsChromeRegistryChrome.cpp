@@ -445,7 +445,7 @@ nsChromeRegistryChrome::SendRegisteredChrome(
     mozilla::dom::PContentParent* aParent)
 {
   InfallibleTArray<ChromePackage> packages;
-  InfallibleTArray<ResourceMapping> resources;
+  InfallibleTArray<SubstitutionMapping> resources;
   InfallibleTArray<OverrideMapping> overrides;
 
   EnumerationArgs args = {

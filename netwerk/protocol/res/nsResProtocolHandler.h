@@ -6,46 +6,34 @@
 #ifndef nsResProtocolHandler_h___
 #define nsResProtocolHandler_h___
 
+#include "SubstitutingProtocolHandler.h"
+
 #include "nsIResProtocolHandler.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
 #include "nsStandardURL.h"
 
-class nsIIOService;
-struct ResourceMapping;
-
-// nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
-class nsResURL : public nsStandardURL
+struct SubstitutionMapping;
+class nsResProtocolHandler final : public nsIResProtocolHandler,
+                                   public mozilla::SubstitutingProtocolHandler,
+                                   public nsSupportsWeakReference
 {
 public:
-    nsResURL() : nsStandardURL(true) {}
-    virtual nsStandardURL* StartClone();
-    virtual nsresult EnsureFile();
-    NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
-};
-
-class nsResProtocolHandler final : public nsIResProtocolHandler, public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRESPROTOCOLHANDLER
 
-    nsResProtocolHandler();
+    NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
+    NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
+
+    nsResProtocolHandler()
+      : SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE)
+    {}
 
     nsresult Init();
 
-    void CollectSubstitutions(InfallibleTArray<ResourceMapping>& aResources);
-
-private:
-    virtual ~nsResProtocolHandler();
-
-    nsresult Init(nsIFile *aOmniJar);
-    nsresult AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution);
-    nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
-    nsCOMPtr<nsIIOService> mIOService;
-
-    friend class nsResURL;
+protected:
+    nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
+    virtual ~nsResProtocolHandler() {}
 };
 
 #endif /* nsResProtocolHandler_h___ */
