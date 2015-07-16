@@ -32,7 +32,7 @@ using namespace mozilla;
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
   : mFirstChild(aFrame)
-  , mContainerWidth(-1)
+  , mContainerSize(-1, -1)
   , mBounds(WritingMode()) // mBounds will be initialized with the correct
                            // writing mode when it is set
 // NOTE: memory is already zeroed since we allocate with AllocateByObjectID.
@@ -80,7 +80,7 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
 {
   nsLineBox* newLine = new (aPresShell) nsLineBox(aFrame, aCount, false);
   newLine->NoteFramesMovedFrom(aFromLine);
-  newLine->mContainerWidth = aFromLine->mContainerWidth;
+  newLine->mContainerSize = aFromLine->mContainerSize;
   return newLine;
 }
 
@@ -249,13 +249,13 @@ nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   str += nsPrintfCString("{%d,%d,%d,%d} ",
           bounds.x, bounds.y, bounds.width, bounds.height);
   if (mWritingMode.IsVertical() || !mWritingMode.IsBidiLTR()) {
-    str += nsPrintfCString("{%s-%s: %d,%d,%d,%d; cw=%d} ",
+    str += nsPrintfCString("{%s-%s: %d,%d,%d,%d; cs=%d,%d} ",
                            mWritingMode.IsVertical()
                              ? mWritingMode.IsVerticalLR() ? "vlr" : "vrl"
                              : "htb",
                            mWritingMode.IsBidiLTR() ? "ltr" : "rtl",
                            IStart(), BStart(), ISize(), BSize(),
-                           mContainerWidth);
+                           mContainerSize.width, mContainerSize.height);
   }
   if (mData &&
       (!mData->mOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
@@ -737,13 +737,13 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber,
   nsIFrame* closestFromEnd = nullptr;
 
   WritingMode wm = line->mWritingMode;
-  nscoord cw = line->mContainerWidth;
+  nsSize containerSize = line->mContainerSize;
 
-  LogicalPoint pos(wm, aPos, cw);
+  LogicalPoint pos(wm, aPos, containerSize);
 
   int32_t n = line->GetChildCount();
   while (n--) {
-    LogicalRect rect = frame->GetLogicalRect(wm, cw);
+    LogicalRect rect = frame->GetLogicalRect(wm, containerSize);
     if (rect.ISize(wm) > 0) {
       // If pos.I() is inside this frame - this is it
       if (rect.IStart(wm) <= pos.I(wm) && rect.IEnd(wm) > pos.I(wm)) {
@@ -752,12 +752,14 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber,
       }
       if (rect.IStart(wm) < pos.I(wm)) {
         if (!closestFromStart || 
-            rect.IEnd(wm) > closestFromStart->GetLogicalRect(wm, cw).IEnd(wm))
+            rect.IEnd(wm) > closestFromStart->
+                              GetLogicalRect(wm, containerSize).IEnd(wm))
           closestFromStart = frame;
       }
       else {
         if (!closestFromEnd ||
-            rect.IStart(wm) < closestFromEnd->GetLogicalRect(wm, cw).IStart(wm))
+            rect.IStart(wm) < closestFromEnd->
+                                GetLogicalRect(wm, containerSize).IStart(wm))
           closestFromEnd = frame;
       }
     }
@@ -779,12 +781,15 @@ nsLineIterator::FindFrameAt(int32_t aLineNumber,
     *aFrameFound = closestFromStart;
   }
   else { // we're between two frames
-    nscoord delta = closestFromEnd->GetLogicalRect(wm, cw).IStart(wm) -
-                    closestFromStart->GetLogicalRect(wm, cw).IEnd(wm);
-    if (pos.I(wm) < closestFromStart->GetLogicalRect(wm, cw).IEnd(wm) + delta/2)
+    nscoord delta =
+      closestFromEnd->GetLogicalRect(wm, containerSize).IStart(wm) -
+      closestFromStart->GetLogicalRect(wm, containerSize).IEnd(wm);
+    if (pos.I(wm) < closestFromStart->
+                      GetLogicalRect(wm, containerSize).IEnd(wm) + delta/2) {
       *aFrameFound = closestFromStart;
-    else
+    } else {
       *aFrameFound = closestFromEnd;
+    }
   }
   return NS_OK;
 }

@@ -312,9 +312,9 @@ toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
 
 /* Help SDK buttons fit in. */
 toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-icon,
-toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   height: 32px;
   width: 32px;
 }
@@ -432,10 +432,10 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-icon,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-container,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .customization-palette .toolbarbutton-1 > .toolbarbutton-icon,
-.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-container,
+.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack,
 .panelUI-grid #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .customization-palette #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 .panel-customization-placeholder-child > .toolbarbutton-icon {
@@ -461,8 +461,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 /* above we treat the container as the icon for the margins, that is so the
 /* badge itself is positioned correctly. Here we make sure that the icon itself
 /* has the minimum size we want, but no padding/margin. */
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-container > .toolbarbutton-icon,
-.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-container > .toolbarbutton-icon {
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+.customization-palette .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   width: 32px;
   height: 32px;
   min-width: 32px;

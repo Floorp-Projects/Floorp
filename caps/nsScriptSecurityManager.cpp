@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=4 et sw=4 tw=80: */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1024,6 +1024,21 @@ nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttrib
   nsCOMPtr<nsIPrincipal> prin = nsNullPrincipal::Create(attrs);
   NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
   prin.forget(aPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CreateExpandedPrincipal(nsIPrincipal** aPrincipalArray, uint32_t aLength,
+                                                 nsIPrincipal** aResult)
+{
+  nsTArray<nsCOMPtr<nsIPrincipal>> principals;
+  principals.SetCapacity(aLength);
+  for (uint32_t i = 0; i < aLength; ++i) {
+    principals.AppendElement(aPrincipalArray[i]);
+  }
+
+  nsCOMPtr<nsIPrincipal> p = new nsExpandedPrincipal(principals);
+  p.forget(aResult);
   return NS_OK;
 }
 

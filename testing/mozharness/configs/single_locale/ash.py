@@ -27,9 +27,7 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
     # mar
-    "enable_partials": True,
     "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s",
-    "previous_mar_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central-l10n",
 
     # repositories
     "mozilla_dir": "ash",

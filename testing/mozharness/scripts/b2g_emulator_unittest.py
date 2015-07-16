@@ -143,6 +143,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
         self.installer_url = c.get('installer_url')
         self.installer_path = c.get('installer_path')
         self.test_url = c.get('test_url')
+        self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.busybox_path = None
 

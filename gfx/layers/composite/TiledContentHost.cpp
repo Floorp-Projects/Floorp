@@ -109,27 +109,12 @@ void
 UseTileTexture(CompositableTextureHostRef& aTexture,
                CompositableTextureSourceRef& aTextureSource,
                const IntRect& aUpdateRect,
-               TextureHost* aNewTexture,
                Compositor* aCompositor)
 {
-  MOZ_ASSERT(aNewTexture);
-  if (!aNewTexture) {
+  MOZ_ASSERT(aTexture);
+  if (!aTexture) {
     return;
   }
-
-  if (aTexture) {
-    aTexture->SetCompositor(aCompositor);
-    aNewTexture->SetCompositor(aCompositor);
-
-    if (aTexture->GetFormat() != aNewTexture->GetFormat()) {
-      // Only reuse textures if their format match the new texture's.
-      aTextureSource = nullptr;
-      aTexture = nullptr;
-    }
-  }
-
-  aTexture = aNewTexture;
-
 
   if (aCompositor) {
     aTexture->SetCompositor(aCompositor);
@@ -175,6 +160,83 @@ GetCopyOnWriteLock(const TileLock& ipcLock, TileHost& aTile, ISurfaceAllocator* 
   return true;
 }
 
+void
+TiledLayerBufferComposite::MarkTilesForUnlock()
+{
+  // Tiles without an internal buffer will have internal locks
+  // held by the gpu driver until the previous draw operation has finished.
+  // We don't know when that will be exactly, so wait until we start the
+  // next composite before unlocking.
+  for (TileHost& tile : mRetainedTiles) {
+    // Tile with an internal buffer get unlocked as soon as we've uploaded,
+    // so won't have a lock at this point.
+    if (tile.mTextureHost && tile.mSharedLock) {
+      mDelayedUnlocks.AppendElement(tile.mSharedLock);
+      tile.mSharedLock = nullptr;
+    }
+  }
+}
+
+class TextureSourceRecycler
+{
+public:
+  explicit TextureSourceRecycler(nsTArray<TileHost>&& aTileSet)
+    : mTiles(Move(aTileSet))
+    , mFirstPossibility(0)
+  {}
+
+  // Attempts to recycle a texture source that is already bound to the
+  // texture host for aTile.
+  void RecycleTextureSourceForTile(TileHost& aTile) {
+    for (size_t i = mFirstPossibility; i < mTiles.Length(); i++) {
+      // Skip over existing tiles without a retained texture source
+      // and make sure we don't iterate them in the future.
+      if (!mTiles[i].mTextureSource) {
+        if (i == mFirstPossibility) {
+          mFirstPossibility++;
+        }
+        continue;
+      }
+
+      // If this tile matches, then copy across the retained texture source (if
+      // any).
+      if (aTile.mTextureHost == mTiles[i].mTextureHost) {
+        aTile.mTextureSource = Move(mTiles[i].mTextureSource);
+        if (aTile.mTextureHostOnWhite) {
+          aTile.mTextureSourceOnWhite = Move(mTiles[i].mTextureSourceOnWhite);
+        }
+        break;
+      }
+    }
+  }
+
+  // Attempts to recycle any texture source to avoid needing to allocate
+  // a new one.
+  void RecycleTextureSource(TileHost& aTile) {
+    for (size_t i = mFirstPossibility; i < mTiles.Length(); i++) {
+      if (!mTiles[i].mTextureSource) {
+        if (i == mFirstPossibility) {
+          mFirstPossibility++;
+        }
+        continue;
+      }
+
+      if (mTiles[i].mTextureSource &&
+          mTiles[i].mTextureHost->GetFormat() == aTile.mTextureHost->GetFormat()) {
+        aTile.mTextureSource = Move(mTiles[i].mTextureSource);
+        if (aTile.mTextureHostOnWhite) {
+          aTile.mTextureSourceOnWhite = Move(mTiles[i].mTextureSourceOnWhite);
+        }
+        break;
+      }
+    }
+  }
+
+protected:
+  nsTArray<TileHost> mTiles;
+  size_t mFirstPossibility;
+};
+
 bool
 TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
                                     Compositor* aCompositor,
@@ -195,146 +257,97 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     return false;
   }
 
-  TilesPlacement oldTiles = mTiles;
   TilesPlacement newTiles(aTiles.firstTileX(), aTiles.firstTileY(),
                           aTiles.retainedWidth(), aTiles.retainedHeight());
 
   const InfallibleTArray<TileDescriptor>& tileDescriptors = aTiles.tiles();
 
-  nsTArray<TileHost> oldRetainedTiles;
-  mRetainedTiles.SwapElements(oldRetainedTiles);
+  // Step 1, unlock all the old tiles that haven't been unlocked yet. Any tiles that
+  // exist in both the old and new sets will have been locked again by content, so this
+  // doesn't result in the surface being writeable again.
+  MarkTilesForUnlock();
+
+  TextureSourceRecycler oldRetainedTiles(Move(mRetainedTiles));
   mRetainedTiles.SetLength(tileDescriptors.Length());
 
-  // Step 1, we need to unlock tiles that don't have an internal buffer after the
-  // next frame where they are replaced.
-  // Since we are about to replace the tiles' textures, we need to keep their locks
-  // somewhere (in mPreviousSharedLock) until we composite the layer.
-  for (size_t i = 0; i < oldRetainedTiles.Length(); ++i) {
-    TileHost& tile = oldRetainedTiles[i];
-    // It can happen that we still have a previous lock at this point,
-    // if we changed a tile's front buffer (causing mSharedLock to
-    // go into mPreviousSharedLock, and then did not composite that tile until
-    // the next transaction, either because the tile is offscreen or because the
-    // two transactions happened with no composition in between (over-production).
-    tile.ReadUnlockPrevious();
-
-    if (tile.mTextureHost && !tile.mTextureHost->HasInternalBuffer()) {
-      MOZ_ASSERT(tile.mSharedLock);
-      const TileIntPoint tilePosition = oldTiles.TilePosition(i);
-      if (newTiles.HasTile(tilePosition)) {
-        // This tile still exist in the new buffer
-        tile.mPreviousSharedLock = tile.mSharedLock;
-        tile.mSharedLock = nullptr;
-      } else {
-        // This tile does not exist anymore in the new buffer because the size
-        // changed.
-        tile.ReadUnlock();
-      }
-    }
-
-    // By now we should not have anything in mSharedLock.
-    MOZ_ASSERT(!tile.mSharedLock);
-  }
-
-  // Step 2, move the tiles in mRetainedTiles at places that correspond to where
-  // they should be with the new retained with and height rather than the
-  // old one.
+  // Step 2, deserialize the incoming set of tiles into mRetainedTiles, and attempt
+  // to recycle the TextureSource for any repeated tiles.
+  //
+  // Since we don't have any retained 'tile' object, we have to search for instances
+  // of the same TextureHost in the old tile set. The cost of binding a TextureHost
+  // to a TextureSource for gralloc (binding EGLImage to GL texture) can be really
+  // high, so we avoid this whenever possible.
   for (size_t i = 0; i < tileDescriptors.Length(); i++) {
-    const TileIntPoint tilePosition = newTiles.TilePosition(i);
-    // First, get the already existing tiles to the right place in the array,
-    // and use placeholders where there was no tiles.
-    if (!oldTiles.HasTile(tilePosition)) {
-      mRetainedTiles[i] = GetPlaceholderTile();
-    } else {
-      mRetainedTiles[i] = oldRetainedTiles[oldTiles.TileIndex(tilePosition)];
-      // If we hit this assertion it means we probably mixed something up in the
-      // logic that tries to reuse tiles on the compositor side. It is most likely
-      // benign, but we are missing some fast paths so let's try to make it not happen.
-      MOZ_ASSERT(tilePosition.x == mRetainedTiles[i].x &&
-                 tilePosition.y == mRetainedTiles[i].y);
-    }
-  }
-
-  // It is important to remove the duplicated reference to tiles before calling
-  // TextureHost::PrepareTextureSource, etc. because depending on the textures
-  // ref counts we may or may not get some of the fast paths.
-  oldRetainedTiles.Clear();
-
-  // Step 3, handle the texture updates and release the copy-on-write locks.
-  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
     const TileDescriptor& tileDesc = tileDescriptors[i];
 
     TileHost& tile = mRetainedTiles[i];
 
-    switch (tileDesc.type()) {
-      case TileDescriptor::TTexturedTileDescriptor: {
-        const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
-
-        const TileLock& ipcLock = texturedDesc.sharedLock();
-        if (!GetCopyOnWriteLock(ipcLock, tile, aAllocator)) {
-          return false;
-        }
-
-        RefPtr<TextureHost> textureHost = TextureHost::AsTextureHost(
-          texturedDesc.textureParent()
-        );
-
-        RefPtr<TextureHost> textureOnWhite = nullptr;
-        if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
-          textureOnWhite = TextureHost::AsTextureHost(
-            texturedDesc.textureOnWhite().get_PTextureParent()
-          );
-        }
-
-        UseTileTexture(tile.mTextureHost,
-                       tile.mTextureSource,
-                       texturedDesc.updateRect(),
-                       textureHost,
-                       aCompositor);
-
-        if (textureOnWhite) {
-          UseTileTexture(tile.mTextureHostOnWhite,
-                         tile.mTextureSourceOnWhite,
-                         texturedDesc.updateRect(),
-                         textureOnWhite,
-                         aCompositor);
-        } else {
-          // We could still have component alpha textures from a previous frame.
-          tile.mTextureSourceOnWhite = nullptr;
-          tile.mTextureHostOnWhite = nullptr;
-        }
-
-        if (textureHost->HasInternalBuffer()) {
-          // Now that we did the texture upload (in UseTileTexture), we can release
-          // the lock.
-          tile.ReadUnlock();
-        }
-
-        break;
-      }
-      default:
-        NS_WARNING("Unrecognised tile descriptor type");
-      case TileDescriptor::TPlaceholderTileDescriptor: {
-
-        if (tile.mTextureHost) {
-          tile.mTextureHost->UnbindTextureSource();
-          tile.mTextureSource = nullptr;
-        }
-        if (tile.mTextureHostOnWhite) {
-          tile.mTextureHostOnWhite->UnbindTextureSource();
-          tile.mTextureSourceOnWhite = nullptr;
-        }
-        // we may have a previous lock, and are about to loose our reference to it.
-        // It is okay to unlock it because we just destroyed the texture source.
-        tile.ReadUnlockPrevious();
-        tile = GetPlaceholderTile();
-
-        break;
-      }
+    if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
+      NS_WARN_IF_FALSE(tileDesc.type() == TileDescriptor::TPlaceholderTileDescriptor,
+                       "Unrecognised tile descriptor type");
+      continue;
     }
-    TileIntPoint tilePosition = newTiles.TilePosition(i);
-    tile.x = tilePosition.x;
-    tile.y = tilePosition.y;
+
+    const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
+
+    const TileLock& ipcLock = texturedDesc.sharedLock();
+    if (!GetCopyOnWriteLock(ipcLock, tile, aAllocator)) {
+      return false;
+    }
+
+    tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
+
+    if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
+      tile.mTextureHostOnWhite =
+        TextureHost::AsTextureHost(texturedDesc.textureOnWhite().get_PTextureParent());
+    }
+
+    tile.mTilePosition = newTiles.TilePosition(i);
+
+    // If this same tile texture existed in the old tile set then this will move the texture
+    // source into our new tile.
+    oldRetainedTiles.RecycleTextureSourceForTile(tile);
+  }
+
+  // Step 3, attempt to recycle unused texture sources from the old tile set into new tiles.
+  //
+  // For gralloc, binding a new TextureHost to the existing TextureSource is the fastest way
+  // to ensure that any implicit locking on the old gralloc image is released.
+  for (TileHost& tile : mRetainedTiles) {
+    if (!tile.mTextureHost || tile.mTextureSource) {
+      continue;
+    }
+    oldRetainedTiles.RecycleTextureSource(tile);
+  }
+
+  // Step 4, handle the texture uploads, texture source binding and release the
+  // copy-on-write locks for textures with an internal buffer.
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    TileHost& tile = mRetainedTiles[i];
+    if (!tile.mTextureHost) {
+      continue;
+    }
+
+    const TileDescriptor& tileDesc = tileDescriptors[i];
+    const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
+
+    UseTileTexture(tile.mTextureHost,
+                   tile.mTextureSource,
+                   texturedDesc.updateRect(),
+                   aCompositor);
+
+    if (tile.mTextureHostOnWhite) {
+      UseTileTexture(tile.mTextureHostOnWhite,
+                     tile.mTextureSourceOnWhite,
+                     texturedDesc.updateRect(),
+                     aCompositor);
+    }
+
+    if (tile.mTextureHost->HasInternalBuffer()) {
+      // Now that we did the texture upload (in UseTileTexture), we can release
+      // the lock.
+      tile.ReadUnlock();
+    }
   }
 
   mTiles = newTiles;
@@ -347,17 +360,25 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 }
 
 void
+TiledLayerBufferComposite::ProcessDelayedUnlocks()
+{
+  for (gfxSharedReadLock* lock : mDelayedUnlocks) {
+    lock->ReadUnlock();
+  }
+  mDelayedUnlocks.Clear();
+}
+
+void
 TiledLayerBufferComposite::Clear()
 {
   for (TileHost& tile : mRetainedTiles) {
     tile.ReadUnlock();
-    tile.ReadUnlockPrevious();
   }
   mRetainedTiles.Clear();
+  ProcessDelayedUnlocks();
   mTiles.mFirst = TileIntPoint();
   mTiles.mSize = TileIntSize();
   mValidRegion = nsIntRegion();
-  mPaintedRegion = nsIntRegion();
   mResolution = 1.0;
 }
 
@@ -416,6 +437,8 @@ TiledContentHost::Composite(LayerComposite* aLayer,
                     aFilter, aClipRect, *renderRegion, aTransform);
   RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aFilter,
                     aClipRect, *renderRegion, aTransform);
+  mLowPrecisionTiledBuffer.ProcessDelayedUnlocks();
+  mTiledBuffer.ProcessDelayedUnlocks();
 }
 
 
@@ -479,7 +502,6 @@ TiledContentHost::RenderTile(TileHost& aTile,
   }
   mCompositor->DrawDiagnostics(flags,
                                aScreenRegion, aClipRect, aTransform, mFlashCounter);
-  aTile.ReadUnlockPrevious();
 }
 
 void
@@ -558,7 +580,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
     TileIntPoint tilePosition = aLayerBuffer.GetPlacement().TilePosition(i);
     // A sanity check that catches a lot of mistakes.
-    MOZ_ASSERT(tilePosition.x == tile.x && tilePosition.y == tile.y);
+    MOZ_ASSERT(tilePosition.x == tile.mTilePosition.x && tilePosition.y == tile.mTilePosition.y);
 
     IntPoint tileOffset = aLayerBuffer.GetTileOffset(tilePosition);
     nsIntRegion tileDrawRegion = IntRect(tileOffset, aLayerBuffer.GetScaledTileSize());

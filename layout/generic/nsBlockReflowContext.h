@@ -83,7 +83,8 @@ protected:
   nsIFrame* mFrame;
   mozilla::LogicalRect mSpace;
 
-  nscoord mICoord, mBCoord, mContainerWidth;
+  nscoord mICoord, mBCoord;
+  nsSize mContainerSize;
   mozilla::WritingMode mWritingMode;
   nsHTMLReflowMetrics mMetrics;
   nsCollapsingMargin mBStartMargin;
