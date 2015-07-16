@@ -346,25 +346,17 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
  */
 XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   let prefs = new Preferences(PREF_BRANCH);
-  let types = ["History", "Bookmark", "Openpage", "Typed", "Searches"];
+  let types = ["History", "Bookmark", "Openpage", "Searches"];
 
-  function syncEnabledPref(init = false) {
+  function syncEnabledPref() {
+    loadSyncedPrefs();
+
     let suggestPrefs = [
       PREF_SUGGEST_HISTORY,
       PREF_SUGGEST_BOOKMARK,
       PREF_SUGGEST_OPENPAGE,
       PREF_SUGGEST_SEARCHES,
     ];
-
-    if (init) {
-      // Make sure to initialize the properties when first called with init = true.
-      store.enabled = prefs.get(...PREF_ENABLED);
-      store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
-      store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
-      store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
-      store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
-      store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
-    }
 
     if (store.enabled) {
       // If the autocomplete preference is active, set to default value all suggest
@@ -382,7 +374,26 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     }
   }
 
+  function loadSyncedPrefs () {
+    store.enabled = prefs.get(...PREF_ENABLED);
+    store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
+    store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
+    store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
+    store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
+    store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
+  }
+
   function loadPrefs(subject, topic, data) {
+    if (data) {
+      // Synchronize suggest.* prefs with autocomplete.enabled.
+      if (data == PREF_BRANCH + PREF_ENABLED[0]) {
+        syncEnabledPref();
+      } else if (data.startsWith(PREF_BRANCH + "suggest.")) {
+        loadSyncedPrefs();
+        prefs.set(PREF_ENABLED[0], types.some(type => store["suggest" + type]));
+      }
+    }
+
     store.enabled = prefs.get(...PREF_ENABLED);
     store.autofill = prefs.get(...PREF_AUTOFILL);
     store.autofillTyped = prefs.get(...PREF_AUTOFILL_TYPED);
@@ -410,7 +421,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     if (!store.suggestHistory) {
       store.suggestTyped = false;
     }
-    store.defaultBehavior = types.reduce((memo, type) => {
+    store.defaultBehavior = types.concat("Typed").reduce((memo, type) => {
       let prefValue = store["suggest" + type];
       return memo | (prefValue &&
                      Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()]);
@@ -447,21 +458,23 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       [ store.restrictTypedToken, "typed" ],
       [ store.restrictSearchesToken, "searches" ],
     ]);
-
-    // Synchronize suggest.* prefs with autocomplete.enabled every time
-    // autocomplete.enabled is changed.
-    if (data == PREF_BRANCH + PREF_ENABLED[0]) {
-      syncEnabledPref();
-    }
   }
 
   let store = {
-    observe: loadPrefs,
+    _ignoreNotifications: false,
+    observe(subject, topic, data) {
+      // Avoid re-entrancy when flipping linked preferences.
+      if (this._ignoreNotifications)
+        return;
+      this._ignoreNotifications = true;
+      loadPrefs(subject, topic, data);
+      this._ignoreNotifications = false;
+    },
     QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ])
   };
 
   // Synchronize suggest.* prefs with autocomplete.enabled at initialization
-  syncEnabledPref(true);
+  syncEnabledPref();
 
   loadPrefs();
   prefs.observe("", store);
