@@ -76,7 +76,7 @@ struct ArgumentsData
 // Maximum supported value of arguments.length. This bounds the maximum
 // number of arguments that can be supplied to Function.prototype.apply.
 // This value also bounds the number of elements parsed in an array
-// initialiser.
+// initializer.
 static const unsigned ARGS_LENGTH_MAX = 500 * 1000;
 
 /*
