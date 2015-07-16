@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 import mozfile
 
-from mozlog.structured import (
+from mozlog import (
     commandline,
     reader,
     structuredlog,

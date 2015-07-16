@@ -7,7 +7,7 @@ from setuptools import setup
 PACKAGE_VERSION = '0.26'
 
 deps = ['mozinfo',
-        'mozlog >= 2.11',
+        'mozlog >= 3.0',
         ]
 
 setup(name='moznetwork',

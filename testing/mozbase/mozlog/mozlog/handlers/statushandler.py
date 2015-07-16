@@ -7,7 +7,7 @@ from collections import (
     namedtuple,
 )
 
-from mozlog.structured.structuredlog import log_levels
+from mozlog.structuredlog import log_levels
 
 RunSummary = namedtuple("RunSummary",
                         ("unexpected_statuses",

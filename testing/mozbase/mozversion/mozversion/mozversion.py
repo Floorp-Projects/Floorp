@@ -15,7 +15,6 @@ import zipfile
 import mozdevice
 import mozfile
 import mozlog
-from mozlog import structured
 
 import errors
 
@@ -27,9 +26,9 @@ class Version(object):
 
     def __init__(self):
         self._info = {}
-        self._logger = structured.get_default_logger(component='mozversion')
+        self._logger = mozlog.get_default_logger(component='mozversion')
         if not self._logger:
-            self._logger = mozlog.getLogger('mozversion')
+            self._logger = mozlog.unstructured.getLogger('mozversion')
 
     def get_gecko_info(self, path):
         for type, section in INI_DATA_MAPPING:

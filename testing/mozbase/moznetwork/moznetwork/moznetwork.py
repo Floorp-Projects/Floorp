@@ -12,7 +12,6 @@ import sys
 
 import mozinfo
 import mozlog
-from mozlog import structured
 
 if mozinfo.isLinux:
     import fcntl
@@ -23,9 +22,9 @@ class NetworkError(Exception):
 
 
 def _get_logger():
-    logger = structured.get_default_logger(component='moznetwork')
+    logger = mozlog.get_default_logger(component='moznetwork')
     if not logger:
-        logger = mozlog.getLogger('moznetwork')
+        logger = mozlog.unstructured.getLogger('moznetwork')
     return logger
 
 

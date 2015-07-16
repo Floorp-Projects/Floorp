@@ -55,8 +55,8 @@ from mochitest_options import MochitestArgumentParser, build_obj
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
-from mozlog.structured.formatters import TbplFormatter
-from mozlog.structured import commandline
+from mozlog.formatters import TbplFormatter
+from mozlog import commandline
 from mozrunner.utils import test_environment
 import mozleak
 

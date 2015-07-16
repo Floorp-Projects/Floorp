@@ -1,6 +1,6 @@
 #/usr/bin/env python
 import mozdevice
-import mozlog
+import logging
 import re
 import unittest
 from sut import MockAgent
@@ -36,7 +36,7 @@ class TestGetInfo(unittest.TestCase):
 
         for directive in self.commands.keys():
             m = MockAgent(self, commands=[self.commands[directive]])
-            d = mozdevice.DroidSUT('127.0.0.1', port=m.port, logLevel=mozlog.DEBUG)
+            d = mozdevice.DroidSUT('127.0.0.1', port=m.port, logLevel=logging.DEBUG)
 
             expected = re.sub(r'\ +', ' ', self.commands[directive][1]).split('\n')
             # Account for slightly different return format for 'process'

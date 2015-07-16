@@ -9,9 +9,9 @@ import os
 import tempfile
 
 from droid import DroidADB, DroidSUT
-from mozlog import structured
 from mozprofile import DEFAULT_PORTS
 import mozinfo
+import mozlog
 import moznetwork
 
 
@@ -1188,7 +1188,7 @@ class MochitestArgumentParser(ArgumentParser):
                 group.add_argument(*cli, **kwargs)
 
         self.set_defaults(**defaults)
-        structured.commandline.add_logging_group(self)
+        mozlog.commandline.add_logging_group(self)
 
     @property
     def containers(self):
