@@ -242,9 +242,10 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   nscoord blockSize = (blockEnd == nscoord_MAX) ?
                        nscoord_MAX : (blockEnd - blockStart);
   // convert back from LineLeft/Right to IStart
-  nscoord inlineStart = aWM.IsVertical() || aWM.IsBidiLTR()
+  nscoord inlineStart = aWM.IsBidiLTR()
                         ? lineLeft - mLineLeft
-                        : mLineLeft - lineRight + aContainerSize.width;
+                        : mLineLeft - lineRight +
+                          LogicalSize(aWM, aContainerSize).ISize(aWM);
 
   return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
                         lineRight - lineLeft, blockSize, haveFloats);
