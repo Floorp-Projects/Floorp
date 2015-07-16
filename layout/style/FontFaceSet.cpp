@@ -535,16 +535,18 @@ FontFaceSet::Size()
   return std::min<size_t>(total, INT32_MAX);
 }
 
-FontFaceSetIterator*
+already_AddRefed<FontFaceSetIterator>
 FontFaceSet::Entries()
 {
-  return new FontFaceSetIterator(this, true);
+  nsRefPtr<FontFaceSetIterator> it = new FontFaceSetIterator(this, true);
+  return it.forget();
 }
 
-FontFaceSetIterator*
+already_AddRefed<FontFaceSetIterator>
 FontFaceSet::Values()
 {
-  return new FontFaceSetIterator(this, false);
+  nsRefPtr<FontFaceSetIterator> it = new FontFaceSetIterator(this, false);
+  return it.forget();
 }
 
 void
