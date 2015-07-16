@@ -1100,7 +1100,10 @@ InspectorPanel.prototype = {
     CommandUtils.createRequisition(this._target, {
       environment: CommandUtils.createEnvironment(this, '_target')
     }).then(requisition => {
-      requisition.updateExec("screenshot --selector " + this.selectionCssSelector);
+      // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
+      // passed to screenshot as a single parameter.  More work *might* be needed if
+      // CssSelector could contain escaped single- or double-quotes, backslashes, etc.
+      requisition.updateExec("screenshot --selector '" + this.selectionCssSelector + "'");
     });
   },
 
