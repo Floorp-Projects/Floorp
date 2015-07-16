@@ -346,14 +346,8 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   // get the necessary containerWidth for placing our kids
   bool needToCalcRowBSizes = reflowAllKids || wm.IsVerticalRL();
 
-  nscoord containerWidth = aReflowState.reflowState.ComputedWidth();
-  if (containerWidth == NS_UNCONSTRAINEDSIZE) {
-    containerWidth = 0; // we can't position frames correctly in RTL yet,
-                        // so they will need to be adjusted later
-  } else {
-    containerWidth +=
-      aReflowState.reflowState.ComputedPhysicalBorderPadding().LeftRight();
-  }
+  nscoord containerWidth =
+    aReflowState.reflowState.ComputedSizeAsContainerIfConstrained().width;
 
   nsIFrame *prevKidFrame = nullptr;
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame;

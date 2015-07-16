@@ -447,6 +447,17 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   void SetComputedLogicalOffsets(const LogicalMargin& aOffsets)
     { mComputedOffsets = aOffsets.GetPhysicalMargin(mWritingMode); }
 
+  // Return the state's computed size including border-padding, with
+  // unconstrained dimensions replaced by zero.
+  nsSize ComputedSizeAsContainerIfConstrained() const {
+    const nscoord wd = ComputedWidth();
+    const nscoord ht = ComputedHeight();
+    return nsSize(wd == NS_UNCONSTRAINEDSIZE
+                  ? 0 : wd + ComputedPhysicalBorderPadding().LeftRight(),
+                  ht == NS_UNCONSTRAINEDSIZE
+                  ? 0 : ht + ComputedPhysicalBorderPadding().TopBottom());
+  }
+
 private:
   // the available width in which to reflow the frame. The space
   // represents the amount of room for the frame's margin, border,
