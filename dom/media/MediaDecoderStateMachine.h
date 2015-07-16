@@ -766,7 +766,7 @@ private:
   private:
     MediaDecoderStateMachine* mSelf;
     nsRefPtr<MediaTimer> mMediaTimer;
-    MediaPromiseRequestHolder<mozilla::MediaTimerPromise> mRequest;
+    MozPromiseRequestHolder<mozilla::MediaTimerPromise> mRequest;
     TimeStamp mTarget;
 
   } mDelayedScheduler;
@@ -778,7 +778,7 @@ private:
   public:
     typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
     typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
-    typedef MediaPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
+    typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StartTimeRendezvous);
     StartTimeRendezvous(AbstractThread* aOwnerThread, bool aHasAudio, bool aHasVideo,
@@ -888,7 +888,7 @@ private:
       return aType == MediaData::AUDIO_DATA ? mAudioStartTime : mVideoStartTime;
     }
 
-    MediaPromiseHolder<HaveStartTimePromise> mHaveStartTimePromise;
+    MozPromiseHolder<HaveStartTimePromise> mHaveStartTimePromise;
     nsRefPtr<AbstractThread> mOwnerThread;
     Maybe<int64_t> mAudioStartTime;
     Maybe<int64_t> mVideoStartTime;
@@ -999,7 +999,7 @@ private:
     }
 
     SeekTarget mTarget;
-    MediaPromiseHolder<MediaDecoder::SeekPromise> mPromise;
+    MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
   };
 
   // Queued seek - moves to mPendingSeek when DecodeFirstFrame completes.
@@ -1157,8 +1157,8 @@ private:
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
 
-  MediaPromiseRequestHolder<MediaDecoderReader::AudioDataPromise> mAudioDataRequest;
-  MediaPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mAudioWaitRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::AudioDataPromise> mAudioDataRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mAudioWaitRequest;
   const char* AudioRequestStatus()
   {
     MOZ_ASSERT(OnTaskQueue());
@@ -1171,8 +1171,8 @@ private:
     return "idle";
   }
 
-  MediaPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mVideoWaitRequest;
-  MediaPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mVideoDataRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mVideoWaitRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mVideoDataRequest;
   const char* VideoRequestStatus()
   {
     MOZ_ASSERT(OnTaskQueue());
@@ -1185,7 +1185,7 @@ private:
     return "idle";
   }
 
-  MediaPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise>& WaitRequestRef(MediaData::Type aType)
+  MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise>& WaitRequestRef(MediaData::Type aType)
   {
     MOZ_ASSERT(OnTaskQueue());
     return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
@@ -1261,7 +1261,7 @@ private:
   bool mDecodeToSeekTarget;
 
   // Track the current seek promise made by the reader.
-  MediaPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
 
   // We record the playback position before we seek in order to
   // determine where the seek terminated relative to the playback position
@@ -1269,7 +1269,7 @@ private:
   int64_t mCurrentTimeBeforeSeek;
 
   // Track our request for metadata from the reader.
-  MediaPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.

@@ -189,7 +189,7 @@ destroying the MediaDecoder object.
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "MediaResource.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -274,7 +274,7 @@ public:
     MediaDecoderEventVisibility mEventVisibility;
   };
 
-  typedef MediaPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -986,7 +986,7 @@ protected:
   // Returns true if heuristic dormant is supported.
   bool IsHeuristicDormantSupported() const;
 
-  MediaPromiseRequestHolder<SeekPromise> mSeekRequest;
+  MozPromiseRequestHolder<SeekPromise> mSeekRequest;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set

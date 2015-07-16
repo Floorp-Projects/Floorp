@@ -6,13 +6,13 @@
 #include "gtest/gtest.h"
 #include "nsISupportsImpl.h"
 #include "MediaTaskQueue.h"
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "SharedThreadPool.h"
 #include "VideoUtils.h"
 
 using namespace mozilla;
 
-typedef MediaPromise<int, double, false> TestPromise;
+typedef MozPromise<int, double, false> TestPromise;
 typedef TestPromise::ResolveOrRejectValue RRValue;
 
 class MOZ_STACK_CLASS AutoTaskQueue
@@ -88,7 +88,7 @@ RunOnTaskQueue(MediaTaskQueue* aQueue, FunctionType aFun)
 // std::function can't come soon enough. :-(
 #define DO_FAIL []()->void { EXPECT_TRUE(false); }
 
-TEST(MediaPromise, BasicResolve)
+TEST(MozPromise, BasicResolve)
 {
   AutoTaskQueue atq;
   nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
@@ -99,7 +99,7 @@ TEST(MediaPromise, BasicResolve)
   });
 }
 
-TEST(MediaPromise, BasicReject)
+TEST(MozPromise, BasicReject)
 {
   AutoTaskQueue atq;
   nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
@@ -110,7 +110,7 @@ TEST(MediaPromise, BasicReject)
   });
 }
 
-TEST(MediaPromise, AsyncResolve)
+TEST(MozPromise, AsyncResolve)
 {
   AutoTaskQueue atq;
   nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
@@ -139,7 +139,7 @@ TEST(MediaPromise, AsyncResolve)
   });
 }
 
-TEST(MediaPromise, CompletionPromises)
+TEST(MozPromise, CompletionPromises)
 {
   bool invokedPass = false;
   AutoTaskQueue atq;
@@ -171,7 +171,7 @@ TEST(MediaPromise, CompletionPromises)
   });
 }
 
-TEST(MediaPromise, PromiseAllResolve)
+TEST(MozPromise, PromiseAllResolve)
 {
   AutoTaskQueue atq;
   nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
@@ -195,7 +195,7 @@ TEST(MediaPromise, PromiseAllResolve)
   });
 }
 
-TEST(MediaPromise, PromiseAllReject)
+TEST(MozPromise, PromiseAllReject)
 {
   AutoTaskQueue atq;
   nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();

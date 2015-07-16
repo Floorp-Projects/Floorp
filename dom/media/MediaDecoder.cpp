@@ -121,7 +121,7 @@ public:
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 PRLogModuleInfo* gStateWatchingLog;
-PRLogModuleInfo* gMediaPromiseLog;
+PRLogModuleInfo* gMozPromiseLog;
 PRLogModuleInfo* gMediaTimerLog;
 PRLogModuleInfo* gMediaSampleLog;
 
@@ -134,7 +134,7 @@ MediaDecoder::InitStatics()
 
   // Log modules.
   gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
-  gMediaPromiseLog = PR_NewLogModule("MediaPromise");
+  gMozPromiseLog = PR_NewLogModule("MozPromise");
   gStateWatchingLog = PR_NewLogModule("StateWatching");
   gMediaTimerLog = PR_NewLogModule("MediaTimer");
   gMediaSampleLog = PR_NewLogModule("MediaSample");

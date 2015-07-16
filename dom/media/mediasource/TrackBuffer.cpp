@@ -1093,7 +1093,7 @@ TrackBuffer::AbortAppendData()
     RemoveDecoder(current);
   }
   // The SourceBuffer would have disconnected its promise.
-  // However we must ensure that the MediaPromiseHolder handle all pending
+  // However we must ensure that the MozPromiseHolder handle all pending
   // promises.
   mInitializationPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
 }

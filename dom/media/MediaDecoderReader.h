@@ -9,7 +9,7 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"
 #include "MediaData.h"
-#include "MediaPromise.h"
+#include "MozPromise.h"
 #include "MediaQueue.h"
 #include "MediaTimer.h"
 #include "AudioCompactor.h"
@@ -66,16 +66,16 @@ public:
     CANCELED
   };
 
-  typedef MediaPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
-  typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
-  typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
-  typedef MediaPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
+  typedef MozPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
+  typedef MozPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
+  typedef MozPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
   // so we mark it that way to verify our assumptions. If you have a use-case
   // for multiple WaitForData consumers, feel free to flip the exclusivity here.
-  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue, /* IsExclusive = */ true> WaitForDataPromise;
+  typedef MozPromise<MediaData::Type, WaitForDataRejectValue, /* IsExclusive = */ true> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
@@ -386,7 +386,7 @@ protected:
   Mirror<media::NullableTimeUnit> mDuration;
 
   // State for ThrottledNotifyDataArrived.
-  MediaPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
+  MozPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
   const TimeDuration mThrottleDuration;
   TimeStamp mLastThrottledNotify;
   Maybe<media::Interval<int64_t>> mThrottledInterval;
@@ -420,8 +420,8 @@ protected:
 private:
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
-  MediaPromiseHolder<AudioDataPromise> mBaseAudioPromise;
-  MediaPromiseHolder<VideoDataPromise> mBaseVideoPromise;
+  MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
+  MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
   bool mTaskQueueIsBorrowed;
 
