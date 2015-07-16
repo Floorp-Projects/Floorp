@@ -286,7 +286,7 @@ MediaFormatReader::AsyncReadMetadata()
   nsRefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
 
   mDemuxerInitRequest.Begin(mDemuxer->Init()
-                       ->Then(TaskQueue(), __func__, this,
+                       ->Then(OwnerThread(), __func__, this,
                               &MediaFormatReader::OnDemuxerInitDone,
                               &MediaFormatReader::OnDemuxerInitFailed));
   return p;
@@ -609,7 +609,7 @@ MediaFormatReader::DoDemuxVideo()
 {
   // TODO Use DecodeAhead value rather than 1.
   mVideo.mDemuxRequest.Begin(mVideo.mTrackDemuxer->GetSamples(1)
-                      ->Then(TaskQueue(), __func__, this,
+                      ->Then(OwnerThread(), __func__, this,
                              &MediaFormatReader::OnVideoDemuxCompleted,
                              &MediaFormatReader::OnVideoDemuxFailed));
 }
@@ -666,7 +666,7 @@ MediaFormatReader::DoDemuxAudio()
 {
   // TODO Use DecodeAhead value rather than 1.
   mAudio.mDemuxRequest.Begin(mAudio.mTrackDemuxer->GetSamples(1)
-                      ->Then(TaskQueue(), __func__, this,
+                      ->Then(OwnerThread(), __func__, this,
                              &MediaFormatReader::OnAudioDemuxCompleted,
                              &MediaFormatReader::OnAudioDemuxFailed));
 }
@@ -788,7 +788,7 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
   decoder.mUpdateScheduled = true;
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<TrackType>(this, &MediaFormatReader::Update, aTrack));
-  TaskQueue()->Dispatch(task.forget());
+  OwnerThread()->Dispatch(task.forget());
 }
 
 bool
@@ -921,7 +921,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
         decoder.mTimeThreshold = Some(TimeUnit::FromMicroseconds(sample->mTime));
         nsRefPtr<MediaFormatReader> self = this;
         decoder.mSeekRequest.Begin(decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref())
-                   ->Then(TaskQueue(), __func__,
+                   ->Then(OwnerThread(), __func__,
                           [self, aTrack] (media::TimeUnit aTime) {
                             auto& decoder = self->GetDecoderData(aTrack);
                             decoder.mSeekRequest.Complete();
@@ -1187,7 +1187,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArgs<TrackType, MediaData*>(
       this, &MediaFormatReader::NotifyNewOutput, aTrack, aSample);
-  TaskQueue()->Dispatch(task.forget());
+  OwnerThread()->Dispatch(task.forget());
 }
 
 void
@@ -1196,7 +1196,7 @@ MediaFormatReader::DrainComplete(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyDrainComplete, aTrack);
-  TaskQueue()->Dispatch(task.forget());
+  OwnerThread()->Dispatch(task.forget());
 }
 
 void
@@ -1205,7 +1205,7 @@ MediaFormatReader::InputExhausted(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyInputExhausted, aTrack);
-  TaskQueue()->Dispatch(task.forget());
+  OwnerThread()->Dispatch(task.forget());
 }
 
 void
@@ -1214,7 +1214,7 @@ MediaFormatReader::Error(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyError, aTrack);
-  TaskQueue()->Dispatch(task.forget());
+  OwnerThread()->Dispatch(task.forget());
 }
 
 void
@@ -1251,7 +1251,7 @@ MediaFormatReader::SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold)
   }
 
   mSkipRequest.Begin(mVideo.mTrackDemuxer->SkipToNextRandomAccessPoint(aTimeThreshold)
-                          ->Then(TaskQueue(), __func__, this,
+                          ->Then(OwnerThread(), __func__, this,
                                  &MediaFormatReader::OnVideoSkipCompleted,
                                  &MediaFormatReader::OnVideoSkipFailed));
   return;
@@ -1368,7 +1368,7 @@ MediaFormatReader::DoVideoSeek()
   LOGV("Seeking video to %lld", mPendingSeekTime.ref().ToMicroseconds());
   media::TimeUnit seekTime = mPendingSeekTime.ref();
   mVideo.mSeekRequest.Begin(mVideo.mTrackDemuxer->Seek(seekTime)
-                          ->Then(TaskQueue(), __func__, this,
+                          ->Then(OwnerThread(), __func__, this,
                                  &MediaFormatReader::OnVideoSeekCompleted,
                                  &MediaFormatReader::OnVideoSeekFailed));
 }
@@ -1396,7 +1396,7 @@ MediaFormatReader::DoAudioSeek()
   LOGV("Seeking audio to %lld", mPendingSeekTime.ref().ToMicroseconds());
   media::TimeUnit seekTime = mPendingSeekTime.ref();
   mAudio.mSeekRequest.Begin(mAudio.mTrackDemuxer->Seek(seekTime)
-                         ->Then(TaskQueue(), __func__, this,
+                         ->Then(OwnerThread(), __func__, this,
                                 &MediaFormatReader::OnAudioSeekCompleted,
                                 &MediaFormatReader::OnAudioSeekFailed));
 }

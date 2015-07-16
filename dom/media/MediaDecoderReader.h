@@ -115,7 +115,7 @@ public:
 
   virtual bool OnTaskQueue()
   {
-    return TaskQueue()->IsCurrentThreadIn();
+    return OwnerThread()->IsCurrentThreadIn();
   }
 
   // Resets all state related to decoding, emptying all buffers etc.
@@ -273,7 +273,7 @@ public:
       NS_NewRunnableMethodWithArg<media::Interval<int64_t>>(this, aThrottleUpdates ? &MediaDecoderReader::ThrottledNotifyDataArrived
                                                                                    : &MediaDecoderReader::NotifyDataArrived,
                                                             media::Interval<int64_t>(aOffset, aOffset + aLength));
-    TaskQueue()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+    OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 
   // Notify the reader that data from the resource was evicted (MediaSource only)
@@ -307,10 +307,10 @@ public:
       self->mStartTime.emplace(aStartTime);
       self->UpdateBuffered();
     });
-    TaskQueue()->Dispatch(r.forget());
+    OwnerThread()->Dispatch(r.forget());
   }
 
-  MediaTaskQueue* TaskQueue() {
+  MediaTaskQueue* OwnerThread() {
     return mTaskQueue;
   }
 

@@ -168,7 +168,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
-    TaskQueue()->Dispatch(runnable.forget());
+    OwnerThread()->Dispatch(runnable.forget());
   }
 
   void FinishShutdown();
@@ -208,7 +208,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartBuffering);
-    TaskQueue()->Dispatch(runnable.forget());
+    OwnerThread()->Dispatch(runnable.forget());
   }
 
   // This is called on the state machine thread and audio thread.
@@ -264,7 +264,7 @@ public:
   }
 
   // Returns the state machine task queue.
-  MediaTaskQueue* TaskQueue() const { return mTaskQueue; }
+  MediaTaskQueue* OwnerThread() const { return mTaskQueue; }
 
   // Calls ScheduleStateMachine() after taking the decoder lock. Also
   // notifies the decoder thread in case it's waiting on the decoder lock.
@@ -280,7 +280,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> task =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
-    TaskQueue()->Dispatch(task.forget());
+    OwnerThread()->Dispatch(task.forget());
   }
 
   // Invokes ScheduleStateMachine to run in |aMicroseconds| microseconds,
@@ -305,7 +305,7 @@ public:
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aEndTime] () {
       self->mFragmentEndTime = aEndTime;
     });
-    TaskQueue()->Dispatch(r.forget());
+    OwnerThread()->Dispatch(r.forget());
   }
 
   // Drop reference to decoder.  Only called during shutdown dance.
@@ -359,7 +359,7 @@ public:
       // have the intended effect.
       MOZ_DIAGNOSTIC_ASSERT(self->mPlayState == MediaDecoder::PLAY_STATE_LOADING);
     });
-    TaskQueue()->Dispatch(r.forget());
+    OwnerThread()->Dispatch(r.forget());
   }
 
   void OnAudioDecoded(AudioData* aSample);
@@ -667,7 +667,7 @@ public:
   {
     RefPtr<nsRunnable> r =
       NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::OnPlaybackOffsetUpdate, aPlaybackOffset);
-    TaskQueue()->Dispatch(r.forget());
+    OwnerThread()->Dispatch(r.forget());
   }
 
 private:
@@ -679,7 +679,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete);
-    TaskQueue()->Dispatch(runnable.forget());
+    OwnerThread()->Dispatch(runnable.forget());
   }
 private:
 
@@ -690,7 +690,7 @@ private:
   {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError);
-    TaskQueue()->Dispatch(runnable.forget());
+    OwnerThread()->Dispatch(runnable.forget());
   }
 
   // Return true if the video decoder's decode speed can not catch up the
@@ -751,7 +751,7 @@ private:
       Reset();
       mTarget = aTarget;
       mRequest.Begin(mMediaTimer->WaitUntil(mTarget, __func__)->Then(
-        mSelf->TaskQueue(), __func__, mSelf,
+        mSelf->OwnerThread(), __func__, mSelf,
         &MediaDecoderStateMachine::OnDelayedSchedule,
         &MediaDecoderStateMachine::NotReached));
     }
@@ -920,7 +920,7 @@ private:
   // The task queue in which we run decode tasks. This is referred to as
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
-  MediaTaskQueue* DecodeTaskQueue() const { return mReader->TaskQueue(); }
+  MediaTaskQueue* DecodeTaskQueue() const { return mReader->OwnerThread(); }
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.
