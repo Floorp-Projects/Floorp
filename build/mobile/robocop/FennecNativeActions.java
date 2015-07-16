@@ -23,7 +23,7 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeActions implements Actions {
     private static final String LOGTAG = "FennecNativeActions";
@@ -367,7 +367,7 @@ public class FennecNativeActions implements Actions {
         if (keyCode <= 0 || keyCode > KeyEvent.getMaxKeyCode()) {
             mAsserter.ok(false, "sendKeyCode", "Unknown keyCode " + keyCode);
         }
-        mSolo.sendKey(keyCode);
+        mInstr.sendCharacterSync(keyCode);
     }
 
     @Override

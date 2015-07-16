@@ -15,7 +15,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Browser;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 /**
   * This test covers the Import from Android feature
