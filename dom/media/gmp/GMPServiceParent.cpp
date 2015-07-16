@@ -35,6 +35,7 @@
 #include "nsISimpleEnumerator.h"
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
 #endif
 #include <limits>
 
@@ -400,6 +401,77 @@ GeckoMediaPluginServiceParent::AsyncShutdownComplete(GMPParent* aParent)
     NS_DispatchToMainThread(task);
   }
 }
+
+#ifdef MOZ_CRASHREPORTER
+void
+GeckoMediaPluginServiceParent::SetAsyncShutdownPluginState(GMPParent* aGMPParent,
+                                                           char aId,
+                                                           const nsCString& aState)
+{
+  MutexAutoLock lock(mMutex);
+  mAsyncShutdownPluginStates.Update(aGMPParent->GetDisplayName(),
+                                    nsPrintfCString("%p", aGMPParent),
+                                    aId,
+                                    aState);
+}
+
+void
+GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::Update(const nsCString& aPlugin,
+                                                                 const nsCString& aInstance,
+                                                                 char aId,
+                                                                 const nsCString& aState)
+{
+  nsCString note;
+  StatesByInstance* instances = mStates.LookupOrAdd(aPlugin);
+  if (!instances) { return; }
+  State* state = instances->LookupOrAdd(aInstance);
+  if (!state) { return; }
+  state->mStateSequence += aId;
+  state->mLastStateDescription = aState;
+  note += '{';
+  mStates.EnumerateRead(EnumReadPlugins, &note);
+  note += '}';
+  LOGD(("%s::%s states[%s][%s]='%c'/'%s' -> %s", __CLASS__, __FUNCTION__,
+        aPlugin.get(), aInstance.get(), aId, aState.get(), note.get()));
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("AsyncPluginShutdownStates"),
+    note);
+}
+
+// static
+PLDHashOperator
+GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::EnumReadPlugins(
+  StateInstancesByPlugin::KeyType aKey,
+  StateInstancesByPlugin::UserDataType aData,
+  void* aUserArg)
+{
+  nsCString& note = *static_cast<nsCString*>(aUserArg);
+  if (note.Last() != '{') { note += ','; }
+  note += aKey;
+  note += ":{";
+  aData->EnumerateRead(EnumReadInstances, &note);
+  note += '}';
+  return PL_DHASH_NEXT;
+}
+
+// static
+PLDHashOperator
+GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::EnumReadInstances(
+  StatesByInstance::KeyType aKey,
+  StatesByInstance::UserDataType aData,
+  void* aUserArg)
+{
+  nsCString& note = *static_cast<nsCString*>(aUserArg);
+  if (note.Last() != '{') { note += ','; }
+  note += aKey;
+  note += ":\"";
+  note += aData->mStateSequence;
+  note += '=';
+  note += aData->mLastStateDescription;
+  note += '"';
+  return PL_DHASH_NEXT;
+}
+#endif // MOZ_CRASHREPORTER
 
 void
 GeckoMediaPluginServiceParent::NotifyAsyncShutdownComplete()
