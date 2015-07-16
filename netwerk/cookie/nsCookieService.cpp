@@ -756,6 +756,7 @@ nsCookieService::Init()
   mObserverService->AddObserver(this, "profile-before-change", true);
   mObserverService->AddObserver(this, "profile-do-change", true);
   mObserverService->AddObserver(this, "last-pb-context-exited", true);
+  mObserverService->AddObserver(this, "xpcom-shutdown", true);
 
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
   if (!mPermissionService) {
@@ -1568,6 +1569,8 @@ nsCookieService::Observe(nsISupports     *aSubject,
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Flush all the cookies stored by private browsing contexts
     mPrivateDBState = new DBState();
+  } else if (!strcmp(aTopic, "xpcom-shutdown")) {
+    mObserverService = nullptr;
   }
 
 
