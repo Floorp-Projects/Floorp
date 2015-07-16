@@ -143,6 +143,12 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "browser:universalxss": {
+                             app: DENY_ACTION,
+                             trusted: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            bluetooth: {
                              app: DENY_ACTION,
                              trusted: DENY_ACTION,
