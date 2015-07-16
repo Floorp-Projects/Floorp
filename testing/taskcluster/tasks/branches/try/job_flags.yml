@@ -5,6 +5,11 @@
 $inherits:
   from: tasks/branches/base_job_flags.yml
 
+# Flags specific to this branch
+flags:
+  post-build:
+    - upload-symbols
+
 builds:
   linux64_gecko:
     platforms:
