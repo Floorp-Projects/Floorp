@@ -503,8 +503,7 @@ nsBrowserElement::GetAllowedAudioChannels(
   // If empty, it means that this is the first call of this method.
   if (mBrowserElementAudioChannels.IsEmpty()) {
     nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
-    if (!frameLoader) {
-      aRv.Throw(NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!frameLoader)) {
       return;
     }
 
