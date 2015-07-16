@@ -183,9 +183,7 @@ let PanelFrame = {
       }
     });
 
-    // in overflow, the anchor is a normal toolbarbutton, in toolbar it is a badge button
-    let anchor = aWindow.document.getAnonymousElementByAttribute(anchorBtn, "class", "toolbarbutton-badge-container") ||
-                 aWindow.document.getAnonymousElementByAttribute(anchorBtn, "class", "toolbarbutton-icon");
+    let anchor = aWindow.document.getAnonymousElementByAttribute(anchorBtn, "class", "toolbarbutton-icon");
     // Bug 849216 - open the popup asynchronously so we avoid the auto-rollup
     // handling from preventing it being opened in some cases.
     Services.tm.mainThread.dispatch(function() {

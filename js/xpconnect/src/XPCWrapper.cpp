@@ -32,16 +32,14 @@ UnwrapNW(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   JS::RootedValue v(cx, args[0]);
-  if (!v.isObject() || !js::IsWrapper(&v.toObject())) {
+  if (!v.isObject() || !js::IsCrossCompartmentWrapper(&v.toObject()) ||
+      !WrapperFactory::AllowWaiver(&v.toObject())) {
     args.rval().set(v);
     return true;
   }
 
-  if (AccessCheck::wrapperSubsumes(&v.toObject())) {
-    bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v);
-    NS_ENSURE_TRUE(ok, false);
-  }
-
+  bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v);
+  NS_ENSURE_TRUE(ok, false);
   args.rval().set(v);
   return true;
 }

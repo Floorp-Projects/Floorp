@@ -117,7 +117,7 @@ class TextOverflow {
     return LogicalRect(mBlockWM,
                        aFrame->GetScrollableOverflowRect() +
                          aFrame->GetOffsetTo(mBlock),
-                       mBlockWidth);
+                       mBlockSize);
   }
 
   /**
@@ -210,7 +210,7 @@ class TextOverflow {
   nsIFrame*              mBlock;
   nsIScrollableFrame*    mScrollableFrame;
   nsDisplayList          mMarkerList;
-  nscoord                mBlockWidth;
+  nsSize                 mBlockSize;
   WritingMode            mBlockWM;
   bool                   mCanHaveInlineAxisScrollbar;
   bool                   mAdjustForPixelSnapping;
