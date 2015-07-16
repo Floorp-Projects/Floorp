@@ -596,10 +596,10 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent)
 
   nscoord bSize = BSize(aWM);
   nsIFrame* firstKid = mFrames.FirstChild();
-  nscoord containerWidth = mRect.width;
+  nsSize containerSize = mRect.Size();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has "
                          "an inner cell frame");
-  LogicalRect kidRect = firstKid->GetLogicalRect(aWM, containerWidth);
+  LogicalRect kidRect = firstKid->GetLogicalRect(aWM, containerSize);
   nscoord childBSize = kidRect.BSize(aWM);
 
   // Vertically align the child
@@ -636,7 +636,7 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent)
   }
 
   firstKid->SetPosition(aWM, LogicalPoint(aWM, kidRect.IStart(aWM),
-                                          kidBStart), containerWidth);
+                                          kidBStart), containerSize);
   nsHTMLReflowMetrics desiredSize(aWM);
   desiredSize.SetSize(aWM, GetLogicalSize(aWM));
 
@@ -944,8 +944,8 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     kidReflowState.SetBResize(true);
   }
 
-  nscoord containerWidth =
-    aReflowState.ComputedSizeAsContainerIfConstrained().width;
+  nsSize containerSize =
+    aReflowState.ComputedSizeAsContainerIfConstrained();
 
   LogicalPoint kidOrigin(wm, borderPadding.IStart(wm),
                          borderPadding.BStart(wm));
@@ -954,7 +954,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   bool firstReflow = firstKid->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
-              wm, kidOrigin, containerWidth, 0, aStatus);
+              wm, kidOrigin, containerSize, 0, aStatus);
   if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
     // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
     //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
@@ -984,7 +984,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   // Place the child
   FinishReflowChild(firstKid, aPresContext, kidSize, &kidReflowState,
-                    wm, kidOrigin, containerWidth, 0);
+                    wm, kidOrigin, containerSize, 0);
 
   nsTableFrame::InvalidateTableFrame(firstKid, origRect, origVisualOverflow,
                                      firstReflow);

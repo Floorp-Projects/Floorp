@@ -1466,10 +1466,11 @@ nsBidiPresUtils::RepositionRubyContentFrame(
 
   // When ruby-align is not "start", if the content does not fill this
   // frame, we need to center the children.
+  const nsSize dummyContainerSize;
   for (nsIFrame* child : childList) {
-    LogicalRect rect = child->GetLogicalRect(aFrameWM, 0);
+    LogicalRect rect = child->GetLogicalRect(aFrameWM, dummyContainerSize);
     rect.IStart(aFrameWM) += residualISize / 2;
-    child->SetRect(aFrameWM, rect, 0);
+    child->SetRect(aFrameWM, rect, dummyContainerSize);
   }
 }
 

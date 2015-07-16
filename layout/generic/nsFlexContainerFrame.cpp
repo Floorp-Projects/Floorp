@@ -3824,9 +3824,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                                containerBP.IStart(flexWM),
                                                containerBP.BStart(flexWM));
 
-  nscoord containerWidth = aAxisTracker.IsMainAxisHorizontal() ?
-                             aContentBoxMainSize : contentBoxCrossSize;
-  containerWidth += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  nsSize containerSize;
+  containerSize.width = aAxisTracker.IsMainAxisHorizontal() ?
+                          aContentBoxMainSize : contentBoxCrossSize;
+  containerSize.width +=
+    aReflowState.ComputedPhysicalBorderPadding().LeftRight();
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
@@ -3869,13 +3871,13 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
             // position.
             itemNeedsReflow = false;
             MoveFlexItemToFinalPosition(aReflowState, *item, framePos,
-                                        containerWidth);
+                                        containerSize);
           }
         }
       }
       if (itemNeedsReflow) {
         ReflowFlexItem(aPresContext, aAxisTracker, aReflowState,
-                       *item, framePos, containerWidth);
+                       *item, framePos, containerSize);
       }
 
       // If this is our first child and we haven't established a baseline for
@@ -3960,7 +3962,7 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   const nsHTMLReflowState& aReflowState,
   const FlexItem& aItem,
   LogicalPoint& aFramePos,
-  nscoord aContainerWidth)
+  const nsSize& aContainerSize)
 {
   WritingMode outerWM = aReflowState.GetWritingMode();
 
@@ -3976,8 +3978,8 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   }
   nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
                                               logicalOffsets, &aFramePos,
-                                              aContainerWidth);
-  aItem.Frame()->SetPosition(outerWM, aFramePos, aContainerWidth);
+                                              aContainerSize);
+  aItem.Frame()->SetPosition(outerWM, aFramePos, aContainerSize);
   PositionChildViews(aItem.Frame());
 }
 
@@ -3987,7 +3989,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
                                      const nsHTMLReflowState& aReflowState,
                                      const FlexItem& aItem,
                                      LogicalPoint& aFramePos,
-                                     nscoord aContainerWidth)
+                                     const nsSize& aContainerSize)
 {
   WritingMode outerWM = aReflowState.GetWritingMode();
   WritingMode wm = aItem.Frame()->GetWritingMode();
@@ -4052,7 +4054,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   nsReflowStatus childReflowStatus;
   ReflowChild(aItem.Frame(), aPresContext,
               childDesiredSize, childReflowState,
-              outerWM, aFramePos, aContainerWidth,
+              outerWM, aFramePos, aContainerSize,
               0, childReflowStatus);
 
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
@@ -4067,11 +4069,11 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
     childReflowState.ComputedLogicalOffsets().ConvertTo(outerWM, wm);
   nsHTMLReflowState::ApplyRelativePositioning(aItem.Frame(), outerWM,
                                               offsets, &aFramePos,
-                                              aContainerWidth);
+                                              aContainerSize);
 
   FinishReflowChild(aItem.Frame(), aPresContext,
                     childDesiredSize, &childReflowState,
-                    outerWM, aFramePos, aContainerWidth, 0);
+                    outerWM, aFramePos, aContainerSize, 0);
 
   // Save the first child's ascent; it may establish container's baseline.
   if (aItem.Frame() == mFrames.FirstChild()) {
