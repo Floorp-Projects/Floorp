@@ -86,5 +86,5 @@ fuzzy-if(Android,255,38) == table-caption-bottom-1.html table-caption-bottom-1-r
 == border-collapse-bevels-1a.html border-collapse-bevels-1-ref.html
 fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1b.html border-collapse-bevels-1-ref.html
 fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1c.html border-collapse-bevels-1-ref.html
-fails == border-collapse-bevels-1d.html border-collapse-bevels-1-ref.html # bug 1177690, bug 1180528
-fails == border-collapse-bevels-1e.html border-collapse-bevels-1-ref.html # bug 1177690, bug 1180528
+fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1d.html border-collapse-bevels-1-ref.html
+fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1e.html border-collapse-bevels-1-ref.html

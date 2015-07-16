@@ -75,8 +75,10 @@ struct Packet {
 };
 
 void TransportLayerNSPRAdapter::PacketReceived(const void *data, int32_t len) {
-  input_.push(new Packet());
-  input_.back()->Assign(data, len);
+  if (enabled_) {
+    input_.push(new Packet());
+    input_.back()->Assign(data, len);
+  }
 }
 
 int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
@@ -102,6 +104,11 @@ int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
 }
 
 int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
+  if (!enabled_) {
+    MOZ_MTLOG(ML_WARNING, "Writing to disabled transport layer");
+    return -1;
+  }
+
   TransportResult r = output_->SendPacket(
       static_cast<const unsigned char *>(buf), length);
   if (r >= 0) {
@@ -200,8 +207,12 @@ static PRStatus TransportLayerListen(PRFileDesc *f, int32_t depth) {
 }
 
 static PRStatus TransportLayerShutdown(PRFileDesc *f, int32_t how) {
-  UNIMPLEMENTED;
-  return PR_FAILURE;
+  // This is only called from NSS when we are the server and the client refuses
+  // to provide a certificate.  In this case, the handshake is destined for
+  // failure, so we will just let this pass.
+  TransportLayerNSPRAdapter *io = reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
+  io->SetEnabled(false);
+  return PR_SUCCESS;
 }
 
 // This function does not support peek, or waiting until `to`
@@ -485,7 +496,7 @@ bool TransportLayerDtls::Setup() {
   pr_fd.forget(); // ownership transfered to ssl_fd;
 
   if (role_ == CLIENT) {
-    MOZ_MTLOG(ML_DEBUG, "Setting up DTLS as client");
+    MOZ_MTLOG(ML_INFO, "Setting up DTLS as client");
     rv = SSL_GetClientAuthDataHook(ssl_fd, GetClientAuthDataHook,
                                    this);
     if (rv != SECSuccess) {
@@ -493,7 +504,7 @@ bool TransportLayerDtls::Setup() {
       return false;
     }
   } else {
-    MOZ_MTLOG(ML_DEBUG, "Setting up DTLS as server");
+    MOZ_MTLOG(ML_INFO, "Setting up DTLS as server");
     // Server side
     rv = SSL_ConfigSecureServer(ssl_fd, identity_->cert(),
                                 identity_->privkey(),
@@ -728,7 +739,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   }
 
   for (size_t i = 0; i < PR_ARRAY_SIZE(EnabledCiphers); ++i) {
-    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
     rv = SSL_CipherPrefSet(ssl_fd, EnabledCiphers[i], PR_TRUE);
     if (rv != SECSuccess) {
       MOZ_MTLOG(ML_ERROR, LAYER_INFO <<
@@ -738,7 +749,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   }
 
   for (size_t i = 0; i < PR_ARRAY_SIZE(DisabledCiphers); ++i) {
-    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
+    MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
 
     PRBool enabled = false;
     rv = SSL_CipherPrefGet(ssl_fd, DisabledCiphers[i], &enabled);

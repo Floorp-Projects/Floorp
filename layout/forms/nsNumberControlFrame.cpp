@@ -175,8 +175,12 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                     wrapperMargin.BStart(myWM));
 
     nsReflowStatus childStatus;
+    // We initially reflow the child with a dummy containerSize; positioning
+    // will be fixed later.
+    const nsSize dummyContainerSize;
     ReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
-                wrapperReflowState, myWM, wrapperOffset, 0, 0, childStatus);
+                wrapperReflowState, myWM, wrapperOffset, dummyContainerSize, 0,
+                childStatus);
     MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
                "We gave our child unconstrained available block-size, "
                "so it should be complete");
@@ -208,18 +212,21 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     wrapperOffset.B(myWM) += std::max(0, extraSpace / 2);
 
     // Needed in FinishReflowChild, for logical-to-physical conversion:
-    nscoord borderBoxWidth = myWM.IsVertical() ?
-      borderBoxBSize : borderBoxISize;
+    nsSize borderBoxSize = LogicalSize(myWM, borderBoxISize, borderBoxBSize).
+                           GetPhysicalSize(myWM);
 
     // Place the child
     FinishReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
                       &wrapperReflowState, myWM, wrapperOffset,
-                      borderBoxWidth, 0);
+                      borderBoxSize, 0);
 
+    nsSize contentBoxSize =
+      LogicalSize(myWM, contentBoxISize, contentBoxBSize).
+        GetPhysicalSize(myWM);
     aDesiredSize.SetBlockStartAscent(
        wrappersDesiredSize.BlockStartAscent() +
        outerWrapperFrame->BStart(aReflowState.GetWritingMode(),
-                                 contentBoxISize));
+                                 contentBoxSize));
   }
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);

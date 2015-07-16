@@ -413,10 +413,10 @@ protected:
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDeltaBCoord);
 
-  void UpdateLineContainerWidth(nsLineBox* aLine,
-                                nscoord aNewContainerWidth);
+  void UpdateLineContainerSize(nsLineBox* aLine,
+                               const nsSize& aNewContainerSize);
 
-  // helper for SlideLine and UpdateLineContainerWidth
+  // helper for SlideLine and UpdateLineContainerSize
   void MoveChildFramesOfLine(nsLineBox* aLine, nscoord aDeltaBCoord);
 
   void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
@@ -484,7 +484,7 @@ public:
   static void RecoverFloatsFor(nsIFrame*            aFrame,
                                nsFloatManager&      aFloatManager,
                                mozilla::WritingMode aWM,
-                               nscoord              aContainerWidth);
+                               const nsSize&        aContainerSize);
 
   /**
    * Determine if we have any pushed floats from a previous continuation.
@@ -556,7 +556,7 @@ protected:
    */
   void RecoverFloats(nsFloatManager&      aFloatManager,
                      mozilla::WritingMode aWM,
-                     nscoord              aContainerWidth);
+                     const nsSize&        aContainerSize);
 
   /** Reflow pushed floats
    */

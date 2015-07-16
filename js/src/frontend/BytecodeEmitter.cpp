@@ -4135,28 +4135,48 @@ BytecodeEmitter::emitTemplateString(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isArity(PN_LIST));
 
+    bool pushedString = false;
+
     for (ParseNode* pn2 = pn->pn_head; pn2 != NULL; pn2 = pn2->pn_next) {
-        if (pn2->getKind() != PNK_STRING && pn2->getKind() != PNK_TEMPLATE_STRING) {
+        bool isString = (pn2->getKind() == PNK_STRING || pn2->getKind() == PNK_TEMPLATE_STRING);
+
+        // Skip empty strings. These are very common: a template string like
+        // `${a}${b}` has three empty strings and without this optimization
+        // we'd emit four JSOP_ADD operations instead of just one.
+        if (isString && pn2->pn_atom->empty())
+            continue;
+
+        if (!isString) {
             // We update source notes before emitting the expression
             if (!updateSourceCoordNotes(pn2->pn_pos.begin))
                 return false;
         }
+
         if (!emitTree(pn2))
             return false;
 
-        if (pn2->getKind() != PNK_STRING && pn2->getKind() != PNK_TEMPLATE_STRING) {
+        if (!isString) {
             // We need to convert the expression to a string
             if (!emit1(JSOP_TOSTRING))
                 return false;
         }
 
-        if (pn2 != pn->pn_head) {
+        if (pushedString) {
             // We've pushed two strings onto the stack. Add them together, leaving just one.
             if (!emit1(JSOP_ADD))
                 return false;
+        } else {
+            pushedString = true;
         }
-
     }
+
+    if (!pushedString) {
+        // All strings were empty, this can happen for something like `${""}`.
+        // Just push an empty string.
+        if (!emitAtomOp(cx->names().empty, JSOP_STRING))
+            return false;
+    }
+
     return true;
 }
 

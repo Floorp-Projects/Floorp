@@ -146,6 +146,7 @@ MediaSourceDecoder::Shutdown()
   if (mMediaSource) {
     mMediaSource->Detach();
   }
+  mDemuxer = nullptr;
 
   MediaDecoder::Shutdown();
   // Kick WaitForData out of its slumber.
@@ -292,6 +293,7 @@ void
 MediaSourceDecoder::GetMozDebugReaderData(nsAString& aString)
 {
   if (mIsUsingFormatReader) {
+    mDemuxer->GetMozDebugReaderData(aString);
     return;
   }
   GetReader()->GetMozDebugReaderData(aString);

@@ -188,8 +188,8 @@ test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.htm
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-004.html flexbox-writing-mode-004-ref.html
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html # bug 1131451
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html # bug 1131451
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-007.html flexbox-writing-mode-007-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-008.html flexbox-writing-mode-008-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-009.html flexbox-writing-mode-009-ref.html

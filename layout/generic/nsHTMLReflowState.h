@@ -436,6 +436,11 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
                                                            GetWritingMode());
   }
 
+  nsSize
+  ComputedPhysicalSize() const {
+    return nsSize(ComputedWidth(), ComputedHeight());
+  }
+
   // XXX this will need to change when we make mComputedOffsets logical;
   // we won't be able to return a reference for the physical offsets
   const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
@@ -446,6 +451,17 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
 
   void SetComputedLogicalOffsets(const LogicalMargin& aOffsets)
     { mComputedOffsets = aOffsets.GetPhysicalMargin(mWritingMode); }
+
+  // Return the state's computed size including border-padding, with
+  // unconstrained dimensions replaced by zero.
+  nsSize ComputedSizeAsContainerIfConstrained() const {
+    const nscoord wd = ComputedWidth();
+    const nscoord ht = ComputedHeight();
+    return nsSize(wd == NS_UNCONSTRAINEDSIZE
+                  ? 0 : wd + ComputedPhysicalBorderPadding().LeftRight(),
+                  ht == NS_UNCONSTRAINEDSIZE
+                  ? 0 : ht + ComputedPhysicalBorderPadding().TopBottom());
+  }
 
 private:
   // the available width in which to reflow the frame. The space
@@ -839,27 +855,27 @@ public:
                            mozilla::WritingMode aWritingMode,
                            const mozilla::LogicalMargin& aComputedOffsets,
                            mozilla::LogicalPoint* aPosition,
-                           nscoord aContainerWidth) {
-    // Subtract the width of the frame from the container width that we
+                           const nsSize& aContainerSize) {
+    // Subtract the size of the frame from the container size that we
     // use for converting between the logical and physical origins of
     // the frame. This accounts for the fact that logical origins in RTL
     // coordinate systems are at the top right of the frame instead of
     // the top left.
-    nscoord frameWidth = aFrame->GetSize().width;
+    nsSize frameSize = aFrame->GetSize();
     nsPoint pos = aPosition->GetPhysicalPoint(aWritingMode,
-                                              aContainerWidth - frameWidth);
+                                              aContainerSize - frameSize);
     ApplyRelativePositioning(aFrame,
                              aComputedOffsets.GetPhysicalMargin(aWritingMode),
                              &pos);
     *aPosition = mozilla::LogicalPoint(aWritingMode, pos,
-                                       aContainerWidth - frameWidth);
+                                       aContainerSize - frameSize);
   }
 
   void ApplyRelativePositioning(mozilla::LogicalPoint* aPosition,
-                                nscoord aContainerWidth) const {
+                                const nsSize& aContainerSize) const {
     ApplyRelativePositioning(frame, mWritingMode,
                              ComputedLogicalOffsets(), aPosition,
-                             aContainerWidth);
+                             aContainerSize);
   }
 
 #ifdef DEBUG

@@ -37,6 +37,13 @@ class WrapperFactory {
     static JSObject* CreateXrayWaiver(JSContext* cx, JS::HandleObject obj);
     static JSObject* WaiveXray(JSContext* cx, JSObject* obj);
 
+    // Computes whether we should allow the creation of an Xray waiver from
+    // |target| to |origin|.
+    static bool AllowWaiver(JSCompartment* target, JSCompartment* origin);
+
+    // Convenience method for the above, operating on a wrapper.
+    static bool AllowWaiver(JSObject* wrapper);
+
     // Prepare a given object for wrapping in a new compartment.
     static JSObject* PrepareForWrapping(JSContext* cx,
                                         JS::HandleObject scope,

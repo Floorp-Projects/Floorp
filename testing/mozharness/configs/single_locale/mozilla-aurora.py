@@ -9,9 +9,7 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
 
     # mar
-    "enable_partials": True,
     "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/mar-tools/%(platform)s",
-    "previous_mar_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora-l10n",
 
     # repositories
     "mozilla_dir": "mozilla-aurora",

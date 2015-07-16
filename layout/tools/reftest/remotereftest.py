@@ -16,6 +16,7 @@ from runreftest import ReftestOptions
 from automation import Automation
 import devicemanager
 import droid
+import mozinfo
 import moznetwork
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
@@ -514,6 +515,10 @@ def main(args):
     automation.setRemoteLog(options.remoteLogFile)
     reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
     options = parser.verifyCommonOptions(options, reftest)
+
+    if mozinfo.info['debug']:
+        print "changing timeout for remote debug reftests from %s to 600 seconds" % options.timeout
+        options.timeout = 600
 
     # Hack in a symbolic link for jsreftest
     os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
