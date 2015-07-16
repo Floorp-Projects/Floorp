@@ -323,7 +323,7 @@ loop.shared.views = (function(_, l10n) {
           };
         }
 
-        this.listenTo(this.props.sdk, "exception", this._handleSdkException.bind(this));
+        this.listenTo(this.props.sdk, "exception", this._handleSdkException);
 
         this.listenTo(this.props.model, "session:connected",
                                         this._onSessionConnected);
@@ -425,14 +425,14 @@ loop.shared.views = (function(_, l10n) {
           audio: {enabled: ev.stream.hasAudio},
           video: {enabled: ev.stream.hasVideo}
         });
-      }.bind(this));
+      });
 
       this.listenTo(this.publisher, "streamDestroyed", function() {
         this.setState({
           audio: {enabled: false},
           video: {enabled: false}
         });
-      }.bind(this));
+      });
 
       this.props.model.publish(this.publisher);
     },
@@ -542,7 +542,7 @@ loop.shared.views = (function(_, l10n) {
     componentDidMount: function() {
       this.listenTo(this.props.notifications, "reset add remove", function() {
         this.forceUpdate();
-      }.bind(this));
+      });
     },
 
     componentWillUnmount: function() {

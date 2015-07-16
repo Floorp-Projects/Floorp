@@ -394,9 +394,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @private
      */
     _shouldRenderRemoteLoading: function() {
-      return this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-             !this.state.remoteSrcVideoObject &&
-             !this.state.mediaConnected;
+      return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
+                !this.state.remoteSrcVideoObject &&
+                !this.state.mediaConnected);
     },
 
     /**

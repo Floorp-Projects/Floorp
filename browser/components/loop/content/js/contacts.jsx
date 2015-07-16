@@ -129,7 +129,9 @@ loop.contacts = (function(_, mozL10n) {
       });
       return (
         <div className="contacts-gravatar-promo">
-          <Button additionalClass="button-close" onClick={this.handleCloseButtonClick}/>
+          <Button additionalClass="button-close"
+                  caption=""
+                  onClick={this.handleCloseButtonClick} />
           <p dangerouslySetInnerHTML={{__html: message}}
              onClick={this.handleLinkClick}></p>
           <ButtonGroup>
