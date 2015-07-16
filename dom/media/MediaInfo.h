@@ -339,9 +339,30 @@ public:
     return mVideo.IsValid();
   }
 
+  void EnableVideo()
+  {
+    if (HasVideo()) {
+      return;
+    }
+    // Set dummy values so that HasVideo() will return true;
+    // See VideoInfo::IsValid()
+    mVideo.mDisplay = nsIntSize(1, 1);
+  }
+
   bool HasAudio() const
   {
     return mAudio.IsValid();
+  }
+
+  void EnableAudio()
+  {
+    if (HasAudio()) {
+      return;
+    }
+    // Set dummy values so that HasAudio() will return true;
+    // See AudioInfo::IsValid()
+    mAudio.mChannels = 2;
+    mAudio.mRate = 44100;
   }
 
   bool IsEncrypted() const
