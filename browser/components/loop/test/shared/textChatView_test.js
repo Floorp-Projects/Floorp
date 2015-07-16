@@ -249,7 +249,8 @@ describe("loop.shared.views.TextChatView", function () {
 
     function mountTestComponent(extraProps) {
       var props = _.extend({
-        dispatcher: dispatcher
+        dispatcher: dispatcher,
+        useDesktopPaths: false
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.shared.views.chat.TextChatView, props));
@@ -288,30 +289,16 @@ describe("loop.shared.views.TextChatView", function () {
           .to.eql(2);
     });
 
-    it("should not display anything if no messages and text chat not enabled and showAlways is false", function() {
+    it("should display the view if no messages and text chat not enabled", function() {
       store.setStoreState({ textChatEnabled: false });
 
-      view = mountTestComponent({
-        showAlways: false
-      });
-
-      expect(view.getDOMNode()).eql(null);
-    });
-
-    it("should display the view if no messages and text chat not enabled and showAlways is true", function() {
-      store.setStoreState({ textChatEnabled: false });
-
-      view = mountTestComponent({
-        showAlways: true
-      });
+      view = mountTestComponent();
 
       expect(view.getDOMNode()).not.eql(null);
     });
 
     it("should display the view if text chat is enabled", function() {
-      view = mountTestComponent({
-        showAlways: true
-      });
+      view = mountTestComponent();
 
       expect(view.getDOMNode()).not.eql(null);
     });

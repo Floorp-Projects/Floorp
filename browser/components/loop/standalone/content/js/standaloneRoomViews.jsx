@@ -464,7 +464,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
                 showAlways={true}
-                showRoomName={true} />
+                showRoomName={true}
+                useDesktopPaths={false} />
               <div className="local">
                 <sharedViews.MediaView displayAvatar={this.state.videoMuted}
                   isLoading={this._shouldRenderLocalLoading()}
