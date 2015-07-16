@@ -263,6 +263,9 @@ this.UITour = {
         return element;
       },
     }],
+    ["trackingProtection", {
+      query: "#tracking-protection-icon",
+    }],
     ["urlbar",      {
       query: "#urlbar",
       widgetName: "urlbar-container",
@@ -410,9 +413,6 @@ this.UITour = {
       return false;
     }
 
-    // Do this before bailing if there's no tab, so later we can pick up the pieces:
-    window.gBrowser.tabContainer.addEventListener("TabSelect", this);
-
     switch (action) {
       case "registerPageID": {
         if (typeof data.pageID != "string") {
@@ -503,9 +503,12 @@ this.UITour = {
               if (typeof buttonData == "object" &&
                   typeof buttonData.label == "string" &&
                   typeof buttonData.callbackID == "string") {
+                let callback = buttonData.callbackID;
                 let button = {
                   label: buttonData.label,
-                  callbackID: buttonData.callbackID,
+                  callback: event => {
+                    this.sendPageCallback(messageManager, callback);
+                  },
                 };
 
                 if (typeof buttonData.icon == "string")
@@ -730,16 +733,27 @@ this.UITour = {
       }
     }
 
+    this.initForBrowser(browser);
+
+    return true;
+  },
+
+  initForBrowser(aBrowser) {
+    let window = aBrowser.ownerDocument.defaultView;
+    let gBrowser = window.gBrowser;
+
+    if (gBrowser) {
+        gBrowser.tabContainer.addEventListener("TabSelect", this);
+    }
+
     if (!this.tourBrowsersByWindow.has(window)) {
       this.tourBrowsersByWindow.set(window, new Set());
     }
-    this.tourBrowsersByWindow.get(window).add(browser);
+    this.tourBrowsersByWindow.get(window).add(aBrowser);
 
     Services.obs.addObserver(this, "message-manager-close", false);
 
     window.addEventListener("SSWindowClosing", this);
-
-    return true;
   },
 
   handleEvent: function(aEvent) {
@@ -1400,22 +1414,28 @@ this.UITour = {
         tooltipButtons.firstChild.remove();
 
       for (let button of aButtons) {
-        let el = document.createElement("button");
-        el.setAttribute("label", button.label);
-        if (button.iconURL)
-          el.setAttribute("image", button.iconURL);
+        let isButton = button.style != "text";
+        let el = document.createElement(isButton ? "button" : "label");
+        el.setAttribute(isButton ? "label" : "value", button.label);
 
-        if (button.style == "link")
-          el.setAttribute("class", "button-link");
+        if (isButton) {
+          if (button.iconURL)
+            el.setAttribute("image", button.iconURL);
 
-        if (button.style == "primary")
-          el.setAttribute("class", "button-primary");
+          if (button.style == "link")
+            el.setAttribute("class", "button-link");
 
-        let callbackID = button.callbackID;
-        el.addEventListener("command", event => {
-          tooltip.hidePopup();
-          this.sendPageCallback(aMessageManager, callbackID);
-        });
+          if (button.style == "primary")
+            el.setAttribute("class", "button-primary");
+
+          // Don't close the popup or call the callback for style=text as they
+          // aren't links/buttons.
+          let callback = button.callback;
+          el.addEventListener("command", event => {
+            tooltip.hidePopup();
+            callback(event);
+          });
+        }
 
         tooltipButtons.appendChild(el);
       }
