@@ -369,19 +369,6 @@ var gPrivacyPane = {
 
   // HISTORY
 
-  /**
-   * Update browser.urlbar.autocomplete.enabled when a
-   * browser.urlbar.suggest.* pref is changed from the ui.
-   */
-  writeSuggestionPref() {
-    let getVal = (aPref) => {
-      return document.getElementById("browser.urlbar.suggest." + aPref).value;
-    }
-    // autocomplete.enabled is true if any of the suggestions is true
-    let enabled = ["history", "bookmark", "openpage", "searches"].map(getVal).some(v => v);
-    Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", enabled);
-  },
-
   /*
    * Preferences:
    *
