@@ -646,6 +646,13 @@ public:
   // that will soon be gone.
   bool IsBeingDestroyed();
 
+  IMPL_EVENT_HANDLER(mozinterruptbegin)
+  IMPL_EVENT_HANDLER(mozinterruptend)
+
+  // This is for testing only
+  float ComputedVolume() const;
+  bool ComputedMuted() const;
+
 protected:
   virtual ~HTMLMediaElement();
 
