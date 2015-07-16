@@ -1275,15 +1275,10 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
 
-#ifdef DEBUG
-  if (aTransactionId <= mPendingTransaction) {
-    // Logging added to help diagnose why we're triggering the assert below.
-    // See bug 1145295
-    printf_stderr("CRASH: aTransactionId %" PRIu64 " <= mPendingTransaction %" PRIu64 "\n",
-      aTransactionId, mPendingTransaction);
-  }
-#endif
-  MOZ_ASSERT(aTransactionId > mPendingTransaction);
+  // The transaction ID might get reset to 1 if the page gets reloaded, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
+  // Otherwise, it should be continually increasing.
+  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransaction);
   mPendingTransaction = aTransactionId;
 
   if (root) {
