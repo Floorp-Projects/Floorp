@@ -3075,6 +3075,9 @@ MediaDecoderStateMachine::AudioEndTime() const
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
+  if (mAudioSink) {
+    return mAudioSink->GetEndTime();
+  }
   return mAudioEndTime;
 }
 
