@@ -53,7 +53,7 @@ private:
   bool PreLoadPluginVoucher(const std::string& aPluginPath);
   void PreLoadSandboxVoucher();
 
-  bool GetLibPath(nsACString& aOutLibPath);
+  bool GetUTF8LibPath(nsACString& aOutLibPath);
 
   virtual bool RecvSetNodeId(const nsCString& aNodeId) override;
   virtual bool RecvStartPlugin() override;
@@ -88,7 +88,7 @@ private:
 
   MessageLoop* mGMPMessageLoop;
   std::string mPluginPath;
-  std::string mVoucherPath;
+  std::string mSandboxVoucherPath;
   std::string mNodeId;
   GMPLoader* mGMPLoader;
   nsTArray<uint8_t> mPluginVoucher;
