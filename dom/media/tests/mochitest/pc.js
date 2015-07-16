@@ -1470,6 +1470,10 @@ PeerConnectionWrapper.prototype = {
   waitForMediaElementFlow : function(element) {
     return new Promise(resolve => {
       info("Checking data flow to element: " + element.id);
+      if (element.ended && element.readyState >= element.HAVE_CURRENT_DATA) {
+        resolve();
+        return;
+      }
       var haveEnoughData = false;
       var oncanplay = () => {
         info("Element " + element.id + " saw 'canplay', " +
@@ -1887,10 +1891,10 @@ function createHTML(options) {
 }
 
 function runNetworkTest(testFunction) {
-  return scriptsReady.then(() => {
-    return runTestWhenReady(options => {
+  return scriptsReady.then(() =>
+    runTestWhenReady(options =>
       startNetworkAndTest()
-        .then(() => testFunction(options));
-    });
-  });
+        .then(() => testFunction(options))
+    )
+  );
 }
