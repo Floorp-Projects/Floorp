@@ -52,7 +52,7 @@ public:
   // Calculates the device-bound node id, then activates the sandbox,
   // then loads the GMP library and (if applicable) passes the bound node id
   // to the GMP.
-  virtual bool Load(const char* aLibPath,
+  virtual bool Load(const char* aUTF8LibPath,
                     uint32_t aLibPathLen,
                     char* aOriginSalt,
                     uint32_t aOriginSaltLen,

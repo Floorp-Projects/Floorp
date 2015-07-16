@@ -56,6 +56,13 @@ extern PRLogModuleInfo* GetGMPLog();
 
 namespace gmp {
 
+static bool
+FileExists(nsIFile* aFile)
+{
+  bool exists = false;
+  return aFile && NS_SUCCEEDED(aFile->Exists(&exists)) && exists;
+}
+
 GMPChild::GMPChild()
   : mAsyncShutdown(nullptr)
   , mGMPMessageLoop(MessageLoop::current())
@@ -274,7 +281,7 @@ GMPChild::Init(const std::string& aPluginPath,
 #endif
 
   mPluginPath = aPluginPath;
-  mVoucherPath = aVoucherPath;
+  mSandboxVoucherPath = aVoucherPath;
   return true;
 }
 
@@ -328,6 +335,7 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 
   std::ifstream stream;
 #ifdef _MSC_VER
+  // Must use UTF16 for Windows for paths for non-Latin characters.
   stream.open(static_cast<const wchar_t*>(path.get()));
 #else
   stream.open(NS_ConvertUTF16toUTF8(path).get());
@@ -368,7 +376,7 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 #endif
 
 bool
-GMPChild::GetLibPath(nsACString& aOutLibPath)
+GMPChild::GetUTF8LibPath(nsACString& aOutLibPath)
 {
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   nsAutoCString pluginDirectoryPath, pluginFilePath;
@@ -382,7 +390,17 @@ GMPChild::GetLibPath(nsACString& aOutLibPath)
   if (!GetPluginFile(mPluginPath, libFile)) {
     return false;
   }
-  return NS_SUCCEEDED(libFile->GetNativePath(aOutLibPath));
+
+  if (!FileExists(libFile)) {
+    NS_WARNING("Can't find GMP library file!");
+    return false;
+  }
+
+  nsAutoString path;
+  libFile->GetPath(path);
+  aOutLibPath = NS_ConvertUTF16toUTF8(path);
+
+  return true;
 #endif
 }
 
@@ -394,11 +412,14 @@ GMPChild::RecvStartPlugin()
 #if defined(XP_WIN)
   PreLoadLibraries(mPluginPath);
 #endif
-  PreLoadPluginVoucher(mPluginPath);
+  if (!PreLoadPluginVoucher(mPluginPath)) {
+    NS_WARNING("Plugin voucher failed to load!");
+    return false;
+  }
   PreLoadSandboxVoucher();
 
   nsCString libPath;
-  if (!GetLibPath(libPath)) {
+  if (!GetUTF8LibPath(libPath)) {
     return false;
   }
 
@@ -614,11 +635,20 @@ GMPChild::PreLoadPluginVoucher(const std::string& aPluginPath)
   nsCOMPtr<nsIFile> voucherFile;
   GetPluginVoucherFile(aPluginPath, voucherFile);
 
+  if (!FileExists(voucherFile)) {
+    return true;
+  }
+
   nsString path;
   voucherFile->GetPath(path);
 
   std::ifstream stream;
+  #ifdef _MSC_VER
+  // Must use UTF16 for Windows for paths for non-Latin characters.
+  stream.open(static_cast<const wchar_t*>(path.get()), std::ios::binary);
+  #else
   stream.open(NS_ConvertUTF16toUTF8(path).get(), std::ios::binary);
+  #endif
   if (!stream.good()) {
     return false;
   }
@@ -647,7 +677,15 @@ void
 GMPChild::PreLoadSandboxVoucher()
 {
   std::ifstream stream;
-  stream.open(mVoucherPath.c_str(), std::ios::binary);
+  #ifdef _MSC_VER
+  // Must use UTF16 for Windows for paths for non-Latin characters.
+  nsDependentCString utf8Path(mSandboxVoucherPath.c_str(),
+                              mSandboxVoucherPath.size());
+  NS_ConvertUTF8toUTF16 utf16Path(utf8Path);
+  stream.open(static_cast<const wchar_t*>(utf16Path.get()), std::ios::binary);
+  #else
+  stream.open(mSandboxVoucherPath.c_str(), std::ios::binary);
+  #endif
   if (!stream.good()) {
     NS_WARNING("PreLoadSandboxVoucher can't find sandbox voucher file!");
     return;
