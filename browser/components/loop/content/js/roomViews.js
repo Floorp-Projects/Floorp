@@ -288,8 +288,6 @@ loop.roomViews = (function(mozL10n) {
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
-      // Only used for tests.
-      availableContext: React.PropTypes.object,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       error: React.PropTypes.object,
       mozLoop: React.PropTypes.object.isRequired,
@@ -357,7 +355,7 @@ loop.roomViews = (function(mozL10n) {
       var url = this._getURL();
       return {
         // `availableContext` prop only used in tests.
-        availableContext: this.props.availableContext,
+        availableContext: null,
         show: this.props.show,
         newRoomName: this.props.roomData.roomName || "",
         newRoomURL: url && url.location || "",
@@ -675,9 +673,9 @@ loop.roomViews = (function(mozL10n) {
      * @private
      */
     _shouldRenderRemoteLoading: function() {
-      return this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-             !this.state.remoteSrcVideoObject &&
-             !this.state.mediaConnected;
+      return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
+                !this.state.remoteSrcVideoObject &&
+                !this.state.mediaConnected);
     },
 
     handleAddContextClick: function() {
@@ -705,7 +703,7 @@ loop.roomViews = (function(mozL10n) {
       });
 
       var screenShareData = {
-        state: this.state.screenSharingState,
+        state: this.state.screenSharingState || SCREEN_SHARE_STATES.INACTIVE,
         visible: true
       };
 
