@@ -9,9 +9,10 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TaskQueue.h"
+
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
-#include "TaskQueue.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {

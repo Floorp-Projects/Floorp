@@ -6,8 +6,12 @@
 #ifndef MOZILLA_MEDIASTREAMGRAPH_H_
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
-#include "mozilla/Mutex.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/TaskQueue.h"
+
+#include "mozilla/dom/AudioChannelBinding.h"
+
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
@@ -16,11 +20,9 @@
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
-#include "TaskQueue.h"
 #include "nsAutoRef.h"
 #include "GraphDriver.h"
 #include <speex/speex_resampler.h>
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "DOMMediaStream.h"
 #include "AudioContext.h"
 

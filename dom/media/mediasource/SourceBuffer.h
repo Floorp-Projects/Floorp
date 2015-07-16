@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SourceBuffer_h_
 #define mozilla_dom_SourceBuffer_h_
 
-#include "MozPromise.h"
+#include "mozilla/MozPromise.h"
 #include "MediaSource.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"

@@ -7,14 +7,16 @@
 #ifndef TaskQueue_h_
 #define TaskQueue_h_
 
-#include <queue>
-#include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TaskDispatcher.h"
 #include "mozilla/unused.h"
+
+#include <queue>
+
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
-#include "MozPromise.h"
-#include "TaskDispatcher.h"
 
 class nsIRunnable;
 

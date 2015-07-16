@@ -7,14 +7,16 @@
 #ifndef CDMProxy_h_
 #define CDMProxy_h_
 
+#include "mozilla/CDMCaps.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+
+#include "mozilla/dom/MediaKeys.h"
+
+#include "nsIThread.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
-#include "mozilla/dom/MediaKeys.h"
-#include "mozilla/Monitor.h"
-#include "nsIThread.h"
 #include "GMPDecryptorProxy.h"
-#include "mozilla/CDMCaps.h"
-#include "MozPromise.h"
 
 namespace mozilla {
 class MediaRawData;

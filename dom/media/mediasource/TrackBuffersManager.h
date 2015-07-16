@@ -7,16 +7,17 @@
 #ifndef MOZILLA_TRACKBUFFERSMANAGER_H_
 #define MOZILLA_TRACKBUFFERSMANAGER_H_
 
-#include "SourceBufferContentManager.h"
-#include "MediaDataDemuxer.h"
-#include "MediaSourceDecoder.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Pair.h"
+#include "mozilla/StateMirroring.h"
+
+#include "SourceBufferContentManager.h"
+#include "MediaDataDemuxer.h"
+#include "MediaSourceDecoder.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
-#include "StateMirroring.h"
 
 namespace mozilla {
 

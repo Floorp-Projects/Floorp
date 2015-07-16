@@ -184,21 +184,23 @@ destroying the MediaDecoder object.
 #if !defined(MediaDecoder_h_)
 #define MediaDecoder_h_
 
+#include "mozilla/MozPromise.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/StateMirroring.h"
+#include "mozilla/StateWatching.h"
+
+#include "mozilla/dom/AudioChannelBinding.h"
+
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"
-#include "MozPromise.h"
 #include "MediaResource.h"
-#include "mozilla/dom/AudioChannelBinding.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "MediaDecoderOwner.h"
 #include "MediaStreamGraph.h"
 #include "AbstractMediaDecoder.h"
 #include "DecodedStream.h"
-#include "StateMirroring.h"
-#include "StateWatching.h"
 #include "necko-config.h"
 #ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"

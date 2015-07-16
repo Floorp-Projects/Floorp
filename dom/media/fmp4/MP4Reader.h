@@ -7,15 +7,16 @@
 #if !defined(MP4Reader_h_)
 #define MP4Reader_h_
 
+#include "mozilla/Monitor.h"
+#include "mozilla/TaskQueue.h"
+
 #include "MediaDecoderReader.h"
 #include "nsAutoPtr.h"
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "demuxer/TrackDemuxer.h"
-#include "TaskQueue.h"
 
 #include <deque>
-#include "mozilla/Monitor.h"
 
 namespace mozilla {
 

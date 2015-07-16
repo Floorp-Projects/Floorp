@@ -7,10 +7,11 @@
 #ifndef BUFFER_DECODER_H_
 #define BUFFER_DECODER_H_
 
-#include "AbstractMediaDecoder.h"
-#include "TaskQueue.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/TaskQueue.h"
+
+#include "AbstractMediaDecoder.h"
 
 namespace mozilla {
 
