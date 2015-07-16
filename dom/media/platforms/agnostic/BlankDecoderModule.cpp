@@ -12,7 +12,7 @@
 #include "VideoUtils.h"
 #include "ImageContainer.h"
 #include "MediaInfo.h"
-#include "TaskQueue.h"
+#include "mozilla/TaskQueue.h"
 #include "TimeUnits.h"
 
 namespace mozilla {

@@ -24,12 +24,13 @@
 #include "GMPDecoderModule.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/TaskQueue.h"
+
 #ifdef MOZ_EME
 #include "EMEDecoderModule.h"
 #include "mozilla/CDMProxy.h"
 #endif
 #include "SharedThreadPool.h"
-#include "TaskQueue.h"
 
 #include "MediaInfo.h"
 #include "H264Converter.h"

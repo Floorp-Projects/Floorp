@@ -7,15 +7,14 @@
 #if !defined(MediaTimer_h_)
 #define MediaTimer_h_
 
-#include "MozPromise.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/TimeStamp.h"
 
 #include <queue>
 
 #include "nsITimer.h"
 #include "nsRefPtr.h"
-
-#include "mozilla/Monitor.h"
-#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 

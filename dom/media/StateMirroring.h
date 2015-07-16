@@ -7,12 +7,10 @@
 #if !defined(StateMirroring_h_)
 #define StateMirroring_h_
 
-#include "MozPromise.h"
-
-#include "StateWatching.h"
-#include "TaskDispatcher.h"
-
 #include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/StateWatching.h"
+#include "mozilla/TaskDispatcher.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 

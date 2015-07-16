@@ -7,7 +7,8 @@
 #ifndef SamplesWaitingForKey_h_
 #define SamplesWaitingForKey_h_
 
-#include "TaskQueue.h"
+#include "mozilla/TaskQueue.h"
+
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {

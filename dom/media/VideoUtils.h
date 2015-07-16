@@ -8,12 +8,14 @@
 #define VideoUtils_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RefPtr.h"
+
 #include "nsIThread.h"
 #include "nsSize.h"
 #include "nsRect.h"
-#include "MozPromise.h"
 
 #if !(defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)) || \
     defined(MOZ_ASAN)
@@ -23,7 +25,6 @@
 #include "nsThreadUtils.h"
 #include "prtime.h"
 #include "AudioSampleFormat.h"
-#include "mozilla/RefPtr.h"
 #include "TimeUnits.h"
 
 using mozilla::CheckedInt64;

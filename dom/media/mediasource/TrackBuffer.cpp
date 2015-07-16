@@ -10,7 +10,7 @@
 #include "MediaData.h"
 #include "MediaSourceDecoder.h"
 #include "SharedThreadPool.h"
-#include "TaskQueue.h"
+#include "mozilla/TaskQueue.h"
 #include "SourceBufferDecoder.h"
 #include "SourceBufferResource.h"
 #include "VideoUtils.h"

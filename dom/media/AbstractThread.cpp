@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AbstractThread.h"
-
-#include "TaskQueue.h"
-#include "nsThreadUtils.h"
-#include "TaskDispatcher.h"
-
-#include "nsContentUtils.h"
-#include "nsServiceManagerUtils.h"
+#include "mozilla/AbstractThread.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/TaskDispatcher.h"
 #include "mozilla/unused.h"
+
+#include "nsThreadUtils.h"
+#include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
+
 
 namespace mozilla {
 
