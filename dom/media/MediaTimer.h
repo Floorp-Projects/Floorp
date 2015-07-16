@@ -31,7 +31,7 @@ extern PRLogModuleInfo* gMediaTimerLog;
 typedef MozPromise<bool, bool, /* IsExclusive = */ true> MediaTimerPromise;
 
 // Timers only know how to fire at a given thread, which creates an impedence
-// mismatch with code that operates with MediaTaskQueues. This class solves
+// mismatch with code that operates with TaskQueues. This class solves
 // that mismatch with a dedicated (but shared) thread and a nice MozPromise-y
 // interface.
 class MediaTimer

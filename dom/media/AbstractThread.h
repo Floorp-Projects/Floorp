@@ -17,18 +17,18 @@
 
 namespace mozilla {
 
-class MediaTaskQueue;
+class TaskQueue;
 class TaskDispatcher;
 
 /*
  * We often want to run tasks on a target that guarantees that events will never
  * run in parallel. There are various target types that achieve this - namely
- * nsIThread and MediaTaskQueue. Note that nsIThreadPool (which implements
+ * nsIThread and TaskQueue. Note that nsIThreadPool (which implements
  * nsIEventTarget) does not have this property, so we do not want to use
  * nsIEventTarget for this purpose. This class encapsulates the specifics of
  * the structures we might use here and provides a consistent interface.
  *
- * At present, the supported AbstractThread implementations are MediaTaskQueue
+ * At present, the supported AbstractThread implementations are TaskQueue
  * and AbstractThread::MainThread. If you add support for another thread that is
  * not the MainThread, you'll need to figure out how to make it unique such that
  * comparing AbstractThread pointers is equivalent to comparing nsIThread pointers.
@@ -53,7 +53,7 @@ public:
   virtual bool IsCurrentThreadIn() = 0;
 
   // Returns true if dispatch is generally reliable. This is used to guard
-  // against FlushableMediaTaskQueues, which should go away.
+  // against FlushableTaskQueues, which should go away.
   virtual bool IsDispatchReliable() { return true; }
 
   // Returns a TaskDispatcher that will dispatch its tasks when the currently-
@@ -70,7 +70,7 @@ public:
   // aThread go through the tail dispatcher.
   bool RequiresTailDispatch(AbstractThread* aThread) const;
 
-  virtual MediaTaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
+  virtual TaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
   virtual nsIThread* AsXPCOMThread() { MOZ_CRASH("Not an XPCOM thread!"); }
 
   // Convenience method for getting an AbstractThread for the main thread.

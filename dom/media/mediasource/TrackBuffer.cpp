@@ -10,7 +10,7 @@
 #include "MediaData.h"
 #include "MediaSourceDecoder.h"
 #include "SharedThreadPool.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "SourceBufferDecoder.h"
 #include "SourceBufferResource.h"
 #include "VideoUtils.h"
@@ -51,7 +51,7 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   MOZ_COUNT_CTOR(TrackBuffer);
   mParser = ContainerParser::CreateForMIMEType(aType);
   mTaskQueue =
-    new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK));
+    new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK));
   aParentDecoder->AddTrackBuffer(this);
   mDecoderPerSegment = Preferences::GetBool("media.mediasource.decoder-per-segment", false);
   MSE_DEBUG("TrackBuffer created for parent decoder %p", aParentDecoder);
@@ -112,7 +112,7 @@ TrackBuffer::Shutdown()
   MOZ_ASSERT(mShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
 
-  RefPtr<MediaTaskQueue> queue = mTaskQueue;
+  RefPtr<TaskQueue> queue = mTaskQueue;
   mTaskQueue = nullptr;
   queue->BeginShutdown()
        ->Then(mParentDecoder->GetReader()->OwnerThread(), __func__, this,

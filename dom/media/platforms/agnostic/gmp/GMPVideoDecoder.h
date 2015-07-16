@@ -54,7 +54,7 @@ protected:
   GMPVideoDecoder(const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback,
                   VideoCallbackAdapter* aAdapter)
    : mConfig(aConfig)
@@ -70,7 +70,7 @@ public:
   GMPVideoDecoder(const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
    : mConfig(aConfig)
    , mCallback(aCallback)

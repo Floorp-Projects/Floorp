@@ -11,7 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
@@ -24,7 +24,7 @@ class MediaFormatReader final : public MediaDecoderReader
 public:
   explicit MediaFormatReader(AbstractMediaDecoder* aDecoder,
                              MediaDataDemuxer* aDemuxer,
-                             MediaTaskQueue* aBorrowedTaskQueue = nullptr);
+                             TaskQueue* aBorrowedTaskQueue = nullptr);
 
   virtual ~MediaFormatReader();
 
@@ -213,7 +213,7 @@ private:
     nsRefPtr<MediaDataDecoder> mDecoder;
     // TaskQueue on which decoder can choose to decode.
     // Only non-null up until the decoder is created.
-    nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+    nsRefPtr<FlushableTaskQueue> mTaskQueue;
     // Callback that receives output and error notifications from the decoder.
     nsAutoPtr<DecoderCallback> mCallback;
 

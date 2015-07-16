@@ -185,7 +185,7 @@ private:
   // A task queue using the shared media thread pool.  Used exclusively to
   // initialize (i.e. call ReadMetadata on) decoders as they are created via
   // NewDecoder.
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
 
   // All of the decoders managed by this TrackBuffer.  Access protected by
   // mParentDecoder's monitor.

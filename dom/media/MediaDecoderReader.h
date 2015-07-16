@@ -81,7 +81,7 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTaskQueue = nullptr);
+  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQueue = nullptr);
 
   // Does any spinup that needs to happen on this task queue. This runs on a
   // different thread than Init, and there should not be ordering dependencies
@@ -310,7 +310,7 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  MediaTaskQueue* OwnerThread() {
+  TaskQueue* OwnerThread() {
     return mTaskQueue;
   }
 
@@ -365,7 +365,7 @@ protected:
   AbstractMediaDecoder* mDecoder;
 
   // Decode task queue.
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 
   // State-watching manager.
   WatchManager<MediaDecoderReader> mWatchManager;

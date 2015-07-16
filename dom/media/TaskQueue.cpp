@@ -4,34 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "nsThreadUtils.h"
 #include "SharedThreadPool.h"
 
 namespace mozilla {
 
-MediaTaskQueue::MediaTaskQueue(already_AddRefed<SharedThreadPool> aPool,
+TaskQueue::TaskQueue(already_AddRefed<SharedThreadPool> aPool,
                                bool aRequireTailDispatch)
   : AbstractThread(aRequireTailDispatch)
   , mPool(aPool)
-  , mQueueMonitor("MediaTaskQueue::Queue")
+  , mQueueMonitor("TaskQueue::Queue")
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
   , mIsFlushing(false)
 {
-  MOZ_COUNT_CTOR(MediaTaskQueue);
+  MOZ_COUNT_CTOR(TaskQueue);
 }
 
-MediaTaskQueue::~MediaTaskQueue()
+TaskQueue::~TaskQueue()
 {
   MonitorAutoLock mon(mQueueMonitor);
   MOZ_ASSERT(mIsShutdown);
-  MOZ_COUNT_DTOR(MediaTaskQueue);
+  MOZ_COUNT_DTOR(TaskQueue);
 }
 
 TaskDispatcher&
-MediaTaskQueue::TailDispatcher()
+TaskQueue::TailDispatcher()
 {
   MOZ_ASSERT(IsCurrentThreadIn());
   MOZ_ASSERT(mTailDispatcher);
@@ -39,7 +39,7 @@ MediaTaskQueue::TailDispatcher()
 }
 
 nsresult
-MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
+TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
                                DispatchMode aMode, DispatchFailureHandling aFailureHandling,
                                DispatchReason aReason)
 {
@@ -64,7 +64,7 @@ MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   RefPtr<nsIRunnable> runner(new Runner(this));
   nsresult rv = mPool->Dispatch(runner, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch runnable to run MediaTaskQueue");
+    NS_WARNING("Failed to dispatch runnable to run TaskQueue");
     return rv;
   }
   mIsRunning = true;
@@ -72,11 +72,11 @@ MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   return NS_OK;
 }
 
-class MediaTaskQueueSyncRunnable : public nsRunnable {
+class TaskQueueSyncRunnable : public nsRunnable {
 public:
-  explicit MediaTaskQueueSyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
+  explicit TaskQueueSyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
     : mRunnable(aRunnable)
-    , mMonitor("MediaTaskQueueSyncRunnable")
+    , mMonitor("TaskQueueSyncRunnable")
     , mDone(false)
   {
   }
@@ -104,30 +104,30 @@ private:
 };
 
 void
-MediaTaskQueue::SyncDispatch(already_AddRefed<nsIRunnable> aRunnable) {
-  NS_WARNING("MediaTaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
-  nsRefPtr<MediaTaskQueueSyncRunnable> task(new MediaTaskQueueSyncRunnable(Move(aRunnable)));
+TaskQueue::SyncDispatch(already_AddRefed<nsIRunnable> aRunnable) {
+  NS_WARNING("TaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
+  nsRefPtr<TaskQueueSyncRunnable> task(new TaskQueueSyncRunnable(Move(aRunnable)));
 
   // Tail dispatchers don't interact nicely with sync dispatch. We require that
   // nothing is already in the tail dispatcher, and then sidestep it for this
   // task.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
                 !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
-  nsRefPtr<MediaTaskQueueSyncRunnable> taskRef = task;
+  nsRefPtr<TaskQueueSyncRunnable> taskRef = task;
   Dispatch(taskRef.forget(), AssertDispatchSuccess, TailDispatch);
 
   task->WaitUntilDone();
 }
 
 void
-MediaTaskQueue::AwaitIdle()
+TaskQueue::AwaitIdle()
 {
   MonitorAutoLock mon(mQueueMonitor);
   AwaitIdleLocked();
 }
 
 void
-MediaTaskQueue::AwaitIdleLocked()
+TaskQueue::AwaitIdleLocked()
 {
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
@@ -142,7 +142,7 @@ MediaTaskQueue::AwaitIdleLocked()
 }
 
 void
-MediaTaskQueue::AwaitShutdownAndIdle()
+TaskQueue::AwaitShutdownAndIdle()
 {
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
@@ -157,7 +157,7 @@ MediaTaskQueue::AwaitShutdownAndIdle()
 }
 
 nsRefPtr<ShutdownPromise>
-MediaTaskQueue::BeginShutdown()
+TaskQueue::BeginShutdown()
 {
   // Dispatch any tasks for this queue waiting in the caller's tail dispatcher,
   // since this is the last opportunity to do so.
@@ -174,7 +174,7 @@ MediaTaskQueue::BeginShutdown()
 }
 
 void
-FlushableMediaTaskQueue::Flush()
+FlushableTaskQueue::Flush()
 {
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
@@ -183,7 +183,7 @@ FlushableMediaTaskQueue::Flush()
 }
 
 nsresult
-FlushableMediaTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable)
+FlushableTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnable)
 {
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
@@ -196,7 +196,7 @@ FlushableMediaTaskQueue::FlushAndDispatch(already_AddRefed<nsIRunnable> aRunnabl
 }
 
 void
-FlushableMediaTaskQueue::FlushLocked()
+FlushableTaskQueue::FlushLocked()
 {
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
@@ -207,21 +207,21 @@ FlushableMediaTaskQueue::FlushLocked()
   MOZ_ASSERT(mIsFlushing);
 
   // Clear the tasks. If this strikes you as awful, stop using a
-  // FlushableMediaTaskQueue.
+  // FlushableTaskQueue.
   while (!mTasks.empty()) {
     mTasks.pop();
   }
 }
 
 bool
-MediaTaskQueue::IsEmpty()
+TaskQueue::IsEmpty()
 {
   MonitorAutoLock mon(mQueueMonitor);
   return mTasks.empty();
 }
 
 bool
-MediaTaskQueue::IsCurrentThreadIn()
+TaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
   MOZ_ASSERT(in == (GetCurrent() == this));
@@ -229,7 +229,7 @@ MediaTaskQueue::IsCurrentThreadIn()
 }
 
 nsresult
-MediaTaskQueue::Runner::Run()
+TaskQueue::Runner::Run()
 {
   RefPtr<nsIRunnable> event;
   {

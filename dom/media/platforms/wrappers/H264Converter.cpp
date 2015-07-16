@@ -6,7 +6,7 @@
 
 #include "H264Converter.h"
 #include "ImageContainer.h"
-#include "MediaTaskQueue.h"
+#include "TaskQueue.h"
 #include "MediaInfo.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
@@ -18,7 +18,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const VideoInfo& aConfig,
                              layers::LayersBackend aLayersBackend,
                              layers::ImageContainer* aImageContainer,
-                             FlushableMediaTaskQueue* aVideoTaskQueue,
+                             FlushableTaskQueue* aVideoTaskQueue,
                              MediaDataDecoderCallback* aCallback)
   : mPDM(aPDM)
   , mCurrentConfig(aConfig)
