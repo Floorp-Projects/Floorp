@@ -221,7 +221,7 @@ public:
                             const mozilla::WidgetKeyboardEvent& aEvent,
                             DoCommandCallback aCallback,
                             void* aCallbackData) override { return false; }
-  virtual bool            ComputeShouldAccelerate(bool aDefault);
+  virtual bool            ComputeShouldAccelerate();
   NS_IMETHOD              GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override { return nsIMEUpdatePreference(); }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) override { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -465,8 +465,6 @@ protected:
 
   virtual CompositorChild* GetRemoteRenderer() override;
 
-  virtual void GetPreferredCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aHints);
-
   /**
    * Notify the widget that this window is being used with OMTC.
    */
@@ -503,7 +501,6 @@ protected:
   nsCursor          mCursor;
   bool              mUpdateCursor;
   nsBorderStyle     mBorderStyle;
-  bool              mUseLayersAcceleration;
   bool              mUseAttachedEvents;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
