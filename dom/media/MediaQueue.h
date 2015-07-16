@@ -6,11 +6,12 @@
 #if !defined(MediaQueue_h_)
 #define MediaQueue_h_
 
-#include "nsDeque.h"
-#include "nsTArray.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
-#include "TaskQueue.h"
+#include "mozilla/TaskQueue.h"
+
+#include "nsDeque.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 

@@ -7,8 +7,9 @@
 #ifndef MOZILLA_SOURCEBUFFERCONTENTMANAGER_H_
 #define MOZILLA_SOURCEBUFFERCONTENTMANAGER_H_
 
+#include "mozilla/MozPromise.h"
+
 #include "MediaData.h"
-#include "MozPromise.h"
 #include "MediaSourceDecoder.h"
 #include "SourceBuffer.h"
 #include "TimeUnits.h"

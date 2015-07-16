@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoUtils.h"
+
+#include "mozilla/Preferences.h"
+#include "mozilla/Base64.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
+
 #include "MediaResource.h"
 #include "TimeUnits.h"
 #include "nsMathUtils.h"
@@ -10,12 +16,8 @@
 #include "VorbisUtils.h"
 #include "ImageContainer.h"
 #include "SharedThreadPool.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Base64.h"
-#include "mozilla/Telemetry.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
-#include "TaskQueue.h"
 
 #include <stdint.h>
 

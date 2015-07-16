@@ -7,11 +7,12 @@
 #if !defined(MediaDataDemuxer_h)
 #define MediaDataDemuxer_h
 
+#include "mozilla/MozPromise.h"
+#include "mozilla/UniquePtr.h"
+
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "MozPromise.h"
 #include "TimeUnits.h"
-#include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
 #include "nsRefPtr.h"
 #include "nsTArray.h"

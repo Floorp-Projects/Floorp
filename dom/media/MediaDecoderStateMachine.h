@@ -83,23 +83,24 @@ hardware (via AudioStream).
 #define MediaDecoderStateMachine_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RollingMean.h"
+#include "mozilla/StateMirroring.h"
+
 #include "nsThreadUtils.h"
 #include "MediaDecoder.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaMetadataManager.h"
-#include "mozilla/RollingMean.h"
 #include "MediaTimer.h"
-#include "StateMirroring.h"
 #include "DecodedStream.h"
 #include "ImageContainer.h"
 
 namespace mozilla {
 
 class AudioSegment;
-class TaskQueue;
 class AudioSink;
+class TaskQueue;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 extern PRLogModuleInfo* gMediaSampleLog;
