@@ -737,7 +737,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function() {
         };
 
         let onRejected = aReason => {
-          debug(aReason);
+          debug('Failed to start a transaction: ' + aReason);
           mmsConnection.release();
           cancellable.done(_HTTP_STATUS_FAILED_TO_ROUTE, null);
         };
@@ -745,10 +745,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function() {
         // TODO: |getNetId| will be implemented as a sync call in nsINetworkManager
         //       once Bug 1141903 is landed.
         mmsConnection.ensureRouting(url)
-          .then(() => gNetworkService.getNetId(mmsConnection.networkInterface.name),
-                (aReason) => onRejected('Failed to ensureRouting: ' + aReason))
-          .then((netId) => startTransaction(netId),
-                (aReason) => onRejected('Failed to getNetId: ' + aReason));
+          .then(() => gNetworkService.getNetId(mmsConnection.networkInterface.name))
+          .then((netId) => startTransaction(netId))
+          .catch((aReason) => onRejected(aReason));
       });
 
       return cancellable;
