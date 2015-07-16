@@ -3043,7 +3043,7 @@ public:
                     uint32_t flags,
                     const char* category) override;
 
-    NS_IMETHOD GetStack(JS::MutableHandleValue);
+    NS_IMETHOD GetStack(JS::MutableHandleValue) override;
 
 private:
     virtual ~nsScriptErrorWithStack();
