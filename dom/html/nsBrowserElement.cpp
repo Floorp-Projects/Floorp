@@ -678,4 +678,59 @@ nsBrowserElement::SetNFCFocus(bool aIsFocus,
   }
 }
 
+already_AddRefed<DOMRequest>
+nsBrowserElement::ExecuteScript(const nsAString& aScript,
+                                const BrowserElementExecuteScriptOptions& aOptions,
+                                ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
+
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMElement> ownerElement;
+  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
+  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
+
+  if (!nsContentUtils::IsExactSitePermAllow(principal, "browser:universalxss")) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
+  MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
+  AutoJSAPI jsapi;
+  jsapi.Init(wrappedObj->GetJSObject());
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> options(cx);
+  if (!ToJSValue(cx, aOptions, &options)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  rv = mBrowserElementAPI->ExecuteScript(aScript, options, getter_AddRefs(req));
+
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_INVALID_ARG) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    } else {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
+}
+
 } // namespace mozilla
