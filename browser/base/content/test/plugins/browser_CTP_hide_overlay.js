@@ -29,8 +29,8 @@ add_task(function* () {
   // Work around for delayed PluginBindingAttached
   yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-  // Tests that the overlay can be hidded for disabled plugins using the close icon.
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  // Tests that the overlay can be hidden for plugins using the close icon.
+  let overlayIsVisible = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let doc = content.document;
     let plugin = doc.getElementById("test");
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
@@ -42,14 +42,10 @@ add_task(function* () {
                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
     utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+
+    return overlay.classList.contains("visible");
   });
 
-  let overlayIsVisible = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    let doc = content.document;
-    let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return plugin && overlay.classList.contains("visible");
-  });
   ok(!overlayIsVisible, "overlay should be hidden.");
 });
 
