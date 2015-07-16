@@ -925,6 +925,15 @@ ProxyAccessible::EmbeddedChildAt(size_t aChildIdx)
 }
 
 ProxyAccessible*
+ProxyAccessible::FocusedChild()
+{
+  uint64_t childID = 0;
+  bool ok = false;
+  unused << mDoc->SendFocusedChild(mID, &childID, &ok);
+  return ok ? mDoc->GetAccessible(childID) : nullptr;
+}
+
+ProxyAccessible*
 ProxyAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                               Accessible::EWhichChildAtPoint aWhichChild)
 {

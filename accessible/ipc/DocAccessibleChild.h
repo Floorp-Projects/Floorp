@@ -411,6 +411,10 @@ public:
   virtual bool RecvEmbeddedChildAt(const uint64_t& aID, const uint32_t& aIdx,
                                    uint64_t* aChildID) override final;
 
+  virtual bool RecvFocusedChild(const uint64_t& aID,
+                                uint64_t* aChild,
+                                bool* aOk) override;
+
   virtual bool RecvChildAtPoint(const uint64_t& aID,
                                 const int32_t& aX,
                                 const int32_t& aY,
