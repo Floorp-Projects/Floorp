@@ -593,13 +593,13 @@ menuitem.bookmark-item {
     list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
   }
 
-  #loop-button > .toolbarbutton-badge-container {
+  #loop-button {
     list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver.png)
   }
 }
 
 @media (-moz-windows-theme: luna-silver) and (min-resolution: 1.1dppx) {
-  #loop-button > .toolbarbutton-badge-container {
+  #loop-button {
     list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver@2x.png)
   }
 }
@@ -674,7 +674,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 .findbar-button > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1 > .toolbarbutton-badge-container,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
@@ -687,7 +687,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
 :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])):not(:-moz-any(@nestedButtons@)) > .toolbarbutton-icon,
-:-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-badge-container > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   width: 18px;
@@ -728,7 +728,7 @@ toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbut
   .findbar-button > .toolbarbutton-text,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-text,
-  #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-container,
+  #nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
   #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     background-color: hsla(210,32%,93%,0);
@@ -744,14 +744,14 @@ toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbut
 }
 
 #nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-badge-container,
+#nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   padding: calc(var(--toolbarbutton-vertical-inner-padding) + 1px) 7px;
 }
 
 /* Help SDK icons fit: */
 toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
   width: 16px;
 }
 
@@ -821,7 +821,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-container,
+#nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-stack,
 @conditionalForwardWithUrlbar@ > #forward-button:not([open]):not(:active):not([disabled]):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([buttonover]):not([open]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon {
   background: var(--toolbarbutton-hover-background);
@@ -866,7 +866,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 #nav-bar .toolbarbutton-1[open] > .toolbarbutton-menubutton-dropmarker:not([disabled=true]) > .dropmarker-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
-#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-container {
+#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background: var(--toolbarbutton-active-background);
   border-color: var(--toolbarbutton-active-bordercolor);
   box-shadow: var(--toolbarbutton-active-boxshadow);
@@ -882,7 +882,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   #nav-bar .toolbarbutton-1[open] > .toolbarbutton-menubutton-dropmarker:not([disabled]) > .dropmarker-icon,
   #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon,
   #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
-  #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-container {
+  #nav-bar .toolbarbutton-1:not([disabled]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
     text-shadow: none;
     transition: none;
   }

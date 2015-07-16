@@ -3123,7 +3123,17 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 
   StartupTimeline::Record(StartupTimeline::MAIN);
 
-  if (ChaosMode::isActive(ChaosMode::Any)) {
+  if (PR_GetEnv("MOZ_CHAOSMODE")) {
+    ChaosFeature feature = ChaosFeature::Any;
+    long featureInt = strtol(PR_GetEnv("MOZ_CHAOSMODE"), nullptr, 16);
+    if (featureInt) {
+      // NOTE: MOZ_CHAOSMODE=0 or a non-hex value maps to Any feature.
+      feature = static_cast<ChaosFeature>(featureInt);
+    }
+    ChaosMode::SetChaosFeature(feature);
+  }
+
+  if (ChaosMode::isActive(ChaosFeature::Any)) {
     printf_stderr("*** You are running in chaos test mode. See ChaosMode.h. ***\n");
   }
 

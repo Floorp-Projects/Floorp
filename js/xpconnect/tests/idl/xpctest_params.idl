@@ -15,7 +15,7 @@
 interface nsIXPCTestInterfaceA;
 interface nsIXPCTestInterfaceB;
 
-[scriptable, uuid(fe2b7433-ac3b-49ef-9344-b67228bfdd46)]
+[scriptable, uuid(812145c7-9fcc-425e-a878-36ad1b7730b7)]
 interface nsIXPCTestParams : nsISupports {
 
   // These types correspond to the ones in typelib.py
@@ -84,4 +84,7 @@ interface nsIXPCTestParams : nsISupports {
 
   // Test for out dipper parameters
   void                 testOutAString(out AString o);
+
+  // Test for optional array size_is.
+  ACString             testStringArrayOptionalSize([array, size_is(aLength)] in string a, [optional] in unsigned long aLength);
 };
