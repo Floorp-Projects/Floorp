@@ -3026,7 +3026,7 @@ static void RecordIceStats_s(
     s.mLocalCandidateId.Construct(localCodeword);
     s.mRemoteCandidateId.Construct(remoteCodeword);
     s.mNominated.Construct(p->nominated);
-    s.mMozPriority.Construct(p->priority);
+    s.mPriority.Construct(p->priority);
     s.mSelected.Construct(p->selected);
     s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
     report->mIceCandidatePairStats.Value().AppendElement(s, fallible);

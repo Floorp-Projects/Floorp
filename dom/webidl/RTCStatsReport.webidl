@@ -115,7 +115,7 @@ dictionary RTCIceCandidatePairStats : RTCStats {
   DOMString localCandidateId;
   DOMString remoteCandidateId;
   RTCStatsIceCandidatePairState state;
-  unsigned long long mozPriority;
+  unsigned long long priority;
   boolean readable;
   boolean nominated;
   boolean selected;
