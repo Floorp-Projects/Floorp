@@ -3472,36 +3472,6 @@ nsWindow::HasPendingInputEvent()
  *
  **************************************************************/
 
-struct LayerManagerPrefs {
-  LayerManagerPrefs()
-    : mAccelerateByDefault(true)
-    , mDisableAcceleration(false)
-    , mPreferOpenGL(false)
-    , mPreferD3D9(false)
-  {}
-  bool mAccelerateByDefault;
-  bool mDisableAcceleration;
-  bool mForceAcceleration;
-  bool mPreferOpenGL;
-  bool mPreferD3D9;
-};
-
-static void
-GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
-{
-  aManagerPrefs->mDisableAcceleration = gfxPrefs::LayersAccelerationDisabled();
-  aManagerPrefs->mForceAcceleration = gfxPrefs::LayersAccelerationForceEnabled();
-  aManagerPrefs->mPreferOpenGL = gfxPrefs::LayersPreferOpenGL();
-  aManagerPrefs->mPreferD3D9 = gfxPrefs::LayersPreferD3D9();
-
-  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-  aManagerPrefs->mAccelerateByDefault =
-    aManagerPrefs->mAccelerateByDefault ||
-    (acceleratedEnv && (*acceleratedEnv != '0'));
-  aManagerPrefs->mDisableAcceleration =
-    aManagerPrefs->mDisableAcceleration || gfxPlatform::InSafeMode();
-}
-
 LayerManager*
 nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                           LayersBackend aBackendHint,
@@ -6806,36 +6776,6 @@ nsWindow::ShouldUseOffMainThreadCompositing()
 }
 
 void
-nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
-{
-  LayerManagerPrefs prefs;
-  GetLayerManagerPrefs(&prefs);
-
-  // We don't currently support using an accelerated layer manager with
-  // transparent windows so don't even try. I'm also not sure if we even
-  // want to support this case. See bug 593471
-  if (!(prefs.mDisableAcceleration ||
-        mTransparencyMode == eTransparencyTransparent ||
-        (IsPopup() && gfxWindowsPlatform::GetPlatform()->IsWARP()))) {
-    // See bug 1150376, D3D11 composition can cause issues on some devices
-    // on windows 7 where presentation fails randomly for windows with drop
-    // shadows.
-    if (prefs.mPreferOpenGL) {
-      aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
-    }
-
-    if (!prefs.mPreferD3D9) {
-      aHints.AppendElement(LayersBackend::LAYERS_D3D11);
-    }
-    if (prefs.mPreferD3D9 || !mozilla::IsVistaOrLater()) {
-      // We don't want D3D9 except on Windows XP
-      aHints.AppendElement(LayersBackend::LAYERS_D3D9);
-    }
-  }
-  aHints.AppendElement(LayersBackend::LAYERS_BASIC);
-}
-
-void
 nsWindow::WindowUsesOMTC()
 {
   ULONG_PTR style = ::GetClassLongPtr(mWnd, GCL_STYLE);
@@ -6859,14 +6799,15 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
         gfxWindowsPlatform::RENDER_DIRECT2D ? TRI_TRUE : TRI_FALSE;
     if (!sHasBogusPopupsDropShadowOnMultiMonitor) {
       // Otherwise check if Direct3D 9 may be used.
-      LayerManagerPrefs prefs;
-      GetLayerManagerPrefs(&prefs);
-      if (!prefs.mDisableAcceleration && !prefs.mPreferOpenGL) {
+      if (gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration() &&
+          !gfxPrefs::LayersPreferOpenGL())
+      {
         nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
         if (gfxInfo) {
           int32_t status;
           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
-            if (status == nsIGfxInfo::FEATURE_STATUS_OK || prefs.mForceAcceleration)
+            if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
+                gfxPrefs::LayersAccelerationForceEnabled())
             {
               sHasBogusPopupsDropShadowOnMultiMonitor = TRI_TRUE;
             }
@@ -7821,6 +7762,24 @@ bool nsWindow::PreRender(LayerManagerComposite*)
 void nsWindow::PostRender(LayerManagerComposite*)
 {
   LeaveCriticalSection(&mPresentLock);
+}
+
+bool
+nsWindow::ComputeShouldAccelerate()
+{
+  // We don't currently support using an accelerated layer manager with
+  // transparent windows so don't even try. I'm also not sure if we even
+  // want to support this case. See bug 593471.
+  //
+  // Also see bug 1150376, D3D11 composition can cause issues on some devices
+  // on Windows 7 where presentation fails randomly for windows with drop
+  // shadows.
+  if (mTransparencyMode == eTransparencyTransparent ||
+      (IsPopup() && gfxWindowsPlatform::GetPlatform()->IsWARP()))
+  {
+    return false;
+  }
+  return nsBaseWidget::ComputeShouldAccelerate();
 }
 
 /**************************************************************
