@@ -178,8 +178,8 @@ public:
   bool Delete(FontFace& aFontFace, mozilla::ErrorResult& aRv);
   bool Has(FontFace& aFontFace);
   uint32_t Size();
-  mozilla::dom::FontFaceSetIterator* Entries();
-  mozilla::dom::FontFaceSetIterator* Values();
+  already_AddRefed<mozilla::dom::FontFaceSetIterator> Entries();
+  already_AddRefed<mozilla::dom::FontFaceSetIterator> Values();
   void ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
                JS::Handle<JS::Value> aThisArg,
                mozilla::ErrorResult& aRv);
