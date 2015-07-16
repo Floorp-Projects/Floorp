@@ -6,12 +6,14 @@
 
 XPIDL_SOURCES += [
     'nsIResProtocolHandler.idl',
+    'nsISubstitutingProtocolHandler.idl',
 ]
 
 XPIDL_MODULE = 'necko_res'
 
 SOURCES += [
     'nsResProtocolHandler.cpp',
+    'SubstitutingProtocolHandler.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

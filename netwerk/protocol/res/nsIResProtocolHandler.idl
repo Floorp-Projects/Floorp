@@ -3,43 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIProtocolHandler.idl"
+#include "nsISubstitutingProtocolHandler.idl"
 
 /**
  * Protocol handler interface for the resource:// protocol
  */
-[scriptable, uuid(067ca872-e947-4bd6-8946-a479cb6ba5dd)]
-interface nsIResProtocolHandler : nsIProtocolHandler
+[scriptable, uuid(241d34ac-9ed5-46d7-910c-7a9d914aa0c5)]
+interface nsIResProtocolHandler : nsISubstitutingProtocolHandler
 {
-    /**
-     * Sets the substitution for the root key:
-     *   resource://root/path ==> baseURI.resolve(path)
-     *
-     * A null baseURI removes the specified substitution.
-     *
-     * A root key should always be lowercase; however, this may not be
-     * enforced.
-     */
-    void setSubstitution(in ACString root, in nsIURI baseURI);
-
-    /**
-     * Gets the substitution for the root key.
-     *
-     * @throws NS_ERROR_NOT_AVAILABLE if none exists.
-     */
-    nsIURI getSubstitution(in ACString root);
-
-    /**
-     * Returns TRUE if the substitution exists and FALSE otherwise.
-     */
-    boolean hasSubstitution(in ACString root);
-
-    /**
-     * Utility function to resolve a resource URI.  A resolved URI is not 
-     * guaranteed to reference a resource that exists (ie. opening a channel to
-     * the resolved URI may fail).
-     *
-     * @throws NS_ERROR_NOT_AVAILABLE if resURI.host() is an unknown root key.
-     */
-    AUTF8String resolveURI(in nsIURI resURI);
 };
