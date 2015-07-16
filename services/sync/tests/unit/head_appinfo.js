@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let gSyncProfile;
 
@@ -12,8 +14,8 @@ let fhs = Cc["@mozilla.org/satchel/form-history-startup;1"]
             .getService(Ci.nsIObserver);
 fhs.observe(null, "profile-after-change", null);
 
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+// An app is going to have some prefs set which xpcshell tests don't.
+Services.prefs.setCharPref("identity.sync.tokenserver.uri", "http://token-server");
 
 // Make sure to provide the right OS so crypto loads the right binaries
 let OS = "XPCShell";
@@ -56,7 +58,6 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
 
 // Register resource aliases. Normally done in SyncComponents.manifest.
 function addResourceAlias() {
-  Cu.import("resource://gre/modules/Services.jsm");
   const resProt = Services.io.getProtocolHandler("resource")
                           .QueryInterface(Ci.nsIResProtocolHandler);
   for each (let s in ["common", "sync", "crypto"]) {

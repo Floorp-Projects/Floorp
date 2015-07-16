@@ -268,6 +268,45 @@ add_task(function *testMigration() {
   yield promiseStopServer(server);
 });
 
+// Test our tokenServer URL is set correctly given we've changed the prefname
+// it uses.
+add_task(function* testTokenServerOldPrefName() {
+  let value = "http://custom-token-server/";
+  // Set the pref we used in the past...
+  Services.prefs.setCharPref("services.sync.tokenServerURI", value);
+  // And make sure the new pref the value will be written to has a different
+  // value.
+  Assert.notEqual(Services.prefs.getCharPref("identity.sync.tokenserver.uri"), value);
+
+  let prefs = fxaMigrator._getSentinelPrefs();
+  Assert.equal(prefs["services.sync.tokenServerURI"], value);
+  // check it applies correctly.
+  Services.prefs.clearUserPref("services.sync.tokenServerURI");
+  Assert.ok(!Services.prefs.prefHasUserValue("services.sync.tokenServerURI"));
+  fxaMigrator._applySentinelPrefs(prefs);
+  // We should have written the pref value to the *new* pref name.
+  Assert.equal(Services.prefs.getCharPref("identity.sync.tokenserver.uri"), value);
+  // And the old pref name should remain untouched.
+  Assert.ok(!Services.prefs.prefHasUserValue("services.sync.tokenServerURI"));
+});
+
+add_task(function* testTokenServerNewPrefName() {
+  let value = "http://token-server/";
+  // Set the new pref name we now use.
+  Services.prefs.setCharPref("identity.sync.tokenserver.uri", value);
+
+  let prefs = fxaMigrator._getSentinelPrefs();
+  // It should be written to the sentinel with the *old* pref name.
+  Assert.equal(prefs["services.sync.tokenServerURI"], value);
+  // check it applies correctly.
+  Services.prefs.clearUserPref("services.sync.tokenServerURI");
+  Assert.ok(!Services.prefs.prefHasUserValue("services.sync.tokenServerURI"));
+  fxaMigrator._applySentinelPrefs(prefs);
+  // We should have written the pref value to the new pref name.
+  Assert.equal(Services.prefs.getCharPref("identity.sync.tokenserver.uri"), value);
+  // And the old pref name should remain untouched.
+  Assert.ok(!Services.prefs.prefHasUserValue("services.sync.tokenServerURI"));
+});
 
 function run_test() {
   initTestLogging();

@@ -1864,6 +1864,9 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 // Whether we display profile images in the UI or not.
 pref("identity.fxaccounts.profile_image.enabled", true);
 
+// Token server used by the FxA Sync identity.
+pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
+
 // Migrate any existing Firefox Account data from the default profile to the
 // Developer Edition profile.
 #ifdef MOZ_DEV_EDITION

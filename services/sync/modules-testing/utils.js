@@ -91,7 +91,7 @@ this.makeIdentityConfig = function(overrides) {
         verified: true,
       },
       token: {
-        endpoint: Svc.Prefs.get("tokenServerURI"),
+        endpoint: null,
         duration: 300,
         id: "id",
         key: "key",

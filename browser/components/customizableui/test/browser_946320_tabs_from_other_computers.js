@@ -87,7 +87,7 @@ function configureFxAccountIdentity() {
   };
 
   let token = {
-    endpoint: Weave.Svc.Prefs.get("tokenServerURI"),
+    endpoint: null,
     duration: 300,
     id: "id",
     key: "key",
