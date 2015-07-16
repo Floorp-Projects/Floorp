@@ -642,7 +642,7 @@ public:
 
   // Construct from a writing mode and a physical point, within a given
   // containing rectangle's size (defining the conversion between LTR
-  // and RTL coordinates).
+  // and RTL coordinates, and between TTB and BTT coordinates).
   LogicalPoint(WritingMode aWritingMode,
                const nsPoint& aPoint,
                const nsSize& aContainerSize)
@@ -651,7 +651,8 @@ public:
 #endif
   {
     if (aWritingMode.IsVertical()) {
-      I() = aPoint.y;
+      I() = aWritingMode.IsBidiLTR() ? aPoint.y
+                                     : aContainerSize.height - aPoint.y;
       B() = aWritingMode.IsVerticalLR() ? aPoint.x
                                         : aContainerSize.width - aPoint.x;
     } else {
@@ -701,7 +702,8 @@ public:
     if (aWritingMode.IsVertical()) {
       return nsPoint(aWritingMode.IsVerticalLR()
                      ? B() : aContainerSize.width - B(),
-                     I());
+                     aWritingMode.IsBidiLTR()
+                     ? I() : aContainerSize.height - I());
     } else {
       return nsPoint(aWritingMode.IsBidiLTR()
                      ? I() : aContainerSize.width - I(),
@@ -1379,7 +1381,8 @@ public:
     if (aWritingMode.IsVertical()) {
       mRect.y = aWritingMode.IsVerticalLR()
                 ? aRect.x : aContainerSize.width - aRect.XMost();
-      mRect.x = aRect.y;
+      mRect.x = aWritingMode.IsBidiLTR()
+                ? aRect.y : aContainerSize.height - aRect.YMost();
       mRect.height = aRect.width;
       mRect.width = aRect.height;
     } else {
@@ -1458,23 +1461,23 @@ public:
                    const nsSize& aContainerSize) const
   {
     CHECK_WRITING_MODE(aWritingMode);
-    if (aWritingMode.IsVertical()) {
+    if (aWritingMode.IsBidiLTR()) {
       return IStart();
-    } else {
-      return aWritingMode.IsBidiLTR() ? IStart()
-                                      : aContainerSize.width - IEnd();
     }
+    nscoord containerISize =
+      aWritingMode.IsVertical() ? aContainerSize.height : aContainerSize.width;
+    return containerISize - IEnd();
   }
   nscoord LineRight(WritingMode aWritingMode,
                     const nsSize& aContainerSize) const
   {
     CHECK_WRITING_MODE(aWritingMode);
-    if (aWritingMode.IsVertical()) {
+    if (aWritingMode.IsBidiLTR()) {
       return IEnd();
-    } else {
-      return aWritingMode.IsBidiLTR() ? IEnd()
-                                      : aContainerSize.width - IStart();
     }
+    nscoord containerISize =
+      aWritingMode.IsVertical() ? aContainerSize.height : aContainerSize.width;
+    return containerISize - IStart();
   }
 
   /**
@@ -1496,7 +1499,8 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     if (aWritingMode.IsVertical()) {
-      return mRect.X();
+      return aWritingMode.IsBidiLTR() ? mRect.X()
+                                      : aContainerHeight - mRect.XMost();
     } else {
       return mRect.Y();
     }
@@ -1530,7 +1534,8 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     if (aWritingMode.IsVertical()) {
-      return mRect.XMost();
+      return aWritingMode.IsBidiLTR() ? mRect.XMost()
+                                      : aContainerHeight - mRect.x;
     } else {
       return mRect.YMost();
     }
@@ -1644,7 +1649,8 @@ public:
     if (aWritingMode.IsVertical()) {
       return nsRect(aWritingMode.IsVerticalLR()
                     ? BStart() : aContainerSize.width - BEnd(),
-                    IStart(),
+                    aWritingMode.IsBidiLTR()
+                    ? IStart() : aContainerSize.height - IEnd(),
                     BSize(), ISize());
     } else {
       return nsRect(aWritingMode.IsBidiLTR()

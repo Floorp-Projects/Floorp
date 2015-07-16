@@ -852,16 +852,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   LogicalPoint floatPos(wm);
   bool leftFloat = NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats;
 
-  if (wm.IsVertical()) {
-    // IStart and IEnd should use the ContainerHeight in vertical modes
-    // with rtl direction. Since they don't yet (bug 1131451), we'll
-    // just put left floats at the top of the line and right floats at
-    // bottom.
-    floatPos.I(wm) =
-      leftFloat ? floatAvailableSpace.mRect.Y(wm, ContainerSize().height)
-                : floatAvailableSpace.mRect.YMost(wm, ContainerSize().height) -
-                  floatMarginISize;
-  } else if (leftFloat == wm.IsBidiLTR()) {
+  if (leftFloat == wm.IsBidiLTR()) {
     floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
   }
   else {
