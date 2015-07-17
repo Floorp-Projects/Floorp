@@ -103,6 +103,12 @@ toolkit.jar:
         skin/classic/global/icons/Close.gif                      (icons/Close.gif)
         skin/classic/global/icons/close.png                      (icons/close.png)
         skin/classic/global/icons/close@2x.png                   (icons/close@2x.png)
+        skin/classic/global/icons/close-XPVista7.png             (icons/close-XPVista7.png)
+        skin/classic/global/icons/close-XPVista7@2x.png          (icons/close-XPVista7@2x.png)
+        skin/classic/global/icons/close-inverted.png             (icons/close-inverted.png)
+        skin/classic/global/icons/close-inverted@2x.png          (icons/close-inverted@2x.png)
+        skin/classic/global/icons/close-inverted-XPVista7.png    (icons/close-inverted-XPVista7.png)
+        skin/classic/global/icons/close-inverted-XPVista7@2x.png (icons/close-inverted-XPVista7@2x.png)
         skin/classic/global/icons/collapse.png                   (icons/collapse.png)
         skin/classic/global/icons/Error.png                      (icons/Error.png)
         skin/classic/global/icons/error-16.png                   (icons/error-16.png)
@@ -286,6 +292,11 @@ toolkit.jar:
 % override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-XP.png                osversion<6
 % override chrome://global/skin/tree/twisty-clsd.png              chrome://global/skin/tree/twisty-clsd-XP.png             osversion<6
 % override chrome://global/skin/tree/twisty-open.png              chrome://global/skin/tree/twisty-open-XP.png             osversion<6
+
+% override chrome://global/skin/icons/close.png                   chrome://global/skin/icons/close-XPVista7.png            osversion<=6.1
+% override chrome://global/skin/icons/close@2x.png                chrome://global/skin/icons/close-XPVista7@2x.png         osversion<=6.1
+% override chrome://global/skin/icons/close-inverted.png          chrome://global/skin/icons/close-inverted-XPVista7.png   osversion<=6.1
+% override chrome://global/skin/icons/close-inverted@2x.png       chrome://global/skin/icons/close-inverted-XPVista7@2x.png osversion<=6.1
 #endif
 
 #if MOZ_BUILD_APP == browser
