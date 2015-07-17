@@ -22,7 +22,7 @@ body {
   max-width: 52em;
 }
 
-.container.flex {
+.container.restore-chosen {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
