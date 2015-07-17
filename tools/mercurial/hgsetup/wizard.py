@@ -222,12 +222,13 @@ class MercurialSetupWizard(object):
         try:
             c = MercurialConfig(config_path)
         except ConfigObjError as e:
-            print('Error importing existing Mercurial config!\n')
+            print('Error importing existing Mercurial config: %s\n' % config_path)
             for error in e.errors:
                 print(error.message)
 
             return 1
         except HgIncludeException as e:
+            print('Error importing existing Mercurial config: %s\n' % config_path)
             print(e.message)
 
             return 1
