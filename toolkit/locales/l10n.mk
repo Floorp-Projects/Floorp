@@ -32,12 +32,7 @@ run_for_effects := $(shell if test ! -d $(DIST); then $(NSINSTALL) -D $(DIST); f
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
-LPROJ_ROOT = $(firstword $(subst -, ,$(AB_CD)))
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-ifeq (zh-TW,$(AB_CD))
-LPROJ_ROOT := $(subst -,_,$(AB_CD))
-endif
-endif
+AB = $(firstword $(subst -, ,$(AB_CD)))
 
 # These are defaulted to be compatible with the files the wget-en-US target
 # pulls. You may override them if you provide your own files. You _must_
@@ -121,8 +116,8 @@ endif
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-ifneq (en,$(LPROJ_ROOT))
-	mv $(STAGEDIST)/en.lproj $(STAGEDIST)/$(LPROJ_ROOT).lproj
+ifneq (en,$(AB))
+	mv $(STAGEDIST)/en.lproj $(STAGEDIST)/$(AB).lproj
 endif
 ifdef MOZ_CRASHREPORTER
 # On Mac OS X, the crashreporter.ini file needs to be moved from under the
@@ -143,9 +138,9 @@ ifdef MAKE_COMPLETE_MAR
 	  PACKAGE_BASE_DIR='$(_ABS_DIST)/l10n-stage'
 endif
 # packaging done, undo l10n stuff
-ifneq (en,$(LPROJ_ROOT))
+ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	mv $(STAGEDIST)/$(LPROJ_ROOT).lproj $(STAGEDIST)/en.lproj
+	mv $(STAGEDIST)/$(AB).lproj $(STAGEDIST)/en.lproj
 endif
 endif
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
