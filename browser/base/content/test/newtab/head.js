@@ -722,23 +722,14 @@ function whenPagesUpdated(aCallback = TestRunner.next) {
  */
 function whenSearchInitDone() {
   let deferred = Promise.defer();
-  let searchController = getContentWindow().gSearch._contentSearchController;
-  if (searchController.defaultEngine) {
+  if (getContentWindow().gSearch._initialStateReceived) {
     return Promise.resolve();
   }
   let eventName = "ContentSearchService";
   getContentWindow().addEventListener(eventName, function onEvent(event) {
     if (event.detail.type == "State") {
       getContentWindow().removeEventListener(eventName, onEvent);
-      // Wait for the search controller to receive the event, then resolve.
-      let resolver = function() {
-        if (searchController.defaultEngine) {
-          deferred.resolve();
-          return;
-        }
-        executeSoon(resolver);
-      }
-      executeSoon(resolver);
+      deferred.resolve();
     }
   });
   return deferred.promise;

@@ -30,9 +30,7 @@ add_task(function* test_mozLoop_getSelectedTabMetadata() {
   Assert.strictEqual(metadata.url, null, "URL should be empty for about:home");
   Assert.strictEqual(metadata.favicon, null, "Favicon should be empty for about:home");
   Assert.ok(metadata.title, "Title should be set for about:home");
-  // Filter out null elements in the previews - contentSearchUI adds some img
-  // elements with chrome:// srcs, which show up as null in metadata.previews.
-  Assert.deepEqual(metadata.previews.filter(e => e), [], "No previews available for about:home");
+  Assert.deepEqual(metadata.previews, [], "No previews available for about:home");
 
   gBrowser.removeTab(tab);
 });

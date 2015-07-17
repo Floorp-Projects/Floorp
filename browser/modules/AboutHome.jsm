@@ -100,6 +100,8 @@ let AboutHome = {
     "AboutHome:Sync",
     "AboutHome:Settings",
     "AboutHome:RequestUpdate",
+    "AboutHome:Search",
+    "AboutHome:OpenSearchPanel",
   ],
 
   init: function() {
@@ -107,6 +109,16 @@ let AboutHome = {
 
     for (let msg of this.MESSAGES) {
       mm.addMessageListener(msg, this);
+    }
+
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+  },
+
+  observe: function(aEngine, aTopic, aVerb) {
+    switch (aTopic) {
+      case "browser-search-engine-modified":
+        this.sendAboutHomeData(null);
+        break;
     }
   },
 
@@ -167,6 +179,65 @@ let AboutHome = {
       case "AboutHome:RequestUpdate":
         this.sendAboutHomeData(aMessage.target);
         break;
+
+      case "AboutHome:Search":
+        let data;
+        try {
+          data = JSON.parse(aMessage.data.searchData);
+        } catch(ex) {
+          Cu.reportError(ex);
+          break;
+        }
+
+        Services.search.init(function(status) {
+          if (!Components.isSuccessCode(status)) {
+            return;
+          }
+
+          let engine = Services.search.currentEngine;
+          if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+            window.BrowserSearch.recordSearchInHealthReport(engine, "abouthome", data.selection);
+          }
+
+          // Trigger a search through nsISearchEngine.getSubmission()
+          let submission = engine.getSubmission(data.searchTerms, null, "homepage");
+          let where = window.whereToOpenLink(data.originalEvent);
+
+          // There is a chance that by the time we receive the search message, the
+          // user has switched away from the tab that triggered the search. If,
+          // based on the event, we need to load the search in the same tab that
+          // triggered it (i.e. where == "current"), openUILinkIn will not work
+          // because that tab is no longer the current one. For this case we
+          // manually load the URI in the target browser.
+          if (where == "current") {
+            aMessage.target.loadURIWithFlags(submission.uri.spec,
+                                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+                                             null, null, submission.postData);
+          } else {
+            let params = {
+              postData: submission.postData,
+              inBackground: Services.prefs.getBoolPref("browser.tabs.loadInBackground"),
+            };
+            window.openLinkIn(submission.uri.spec, where, params);
+          }
+          // Used for testing
+          let mm = aMessage.target.messageManager;
+          mm.sendAsyncMessage("AboutHome:SearchTriggered", aMessage.data.searchData);
+        });
+
+        break;
+
+      case "AboutHome:OpenSearchPanel":
+        let panel = window.document.getElementById("abouthome-search-panel");
+        let anchor = aMessage.objects.anchor;
+        panel.hidden = false;
+        panel.openPopup(anchor);
+        anchor.setAttribute("active", "true");
+        panel.addEventListener("popuphidden", function onHidden() {
+          panel.removeEventListener("popuphidden", onHidden);
+          anchor.removeAttribute("active");
+        });
+        break;
     }
   },
 
@@ -179,11 +250,24 @@ let AboutHome = {
     let ss = wrapper.SessionStore;
 
     ss.promiseInitialized.then(function() {
+      let deferred = Promise.defer();
+
+      Services.search.init(function (status){
+        if (!Components.isSuccessCode(status)) {
+          deferred.reject(status);
+        } else {
+          deferred.resolve(Services.search.defaultEngine.name);
+        }
+      });
+
+      return deferred.promise;
+    }).then(function(engineName) {
       let data = {
         showRestoreLastSession: ss.canRestoreLastSession,
         snippetsURL: AboutHomeUtils.snippetsURL,
         showKnowYourRights: AboutHomeUtils.showKnowYourRights,
         snippetsVersion: AboutHomeUtils.snippetsVersion,
+        defaultEngineName: engineName
       };
 
       if (AboutHomeUtils.showKnowYourRights) {
@@ -201,5 +285,14 @@ let AboutHome = {
     }).then(null, function onError(x) {
       Cu.reportError("Error in AboutHome.sendAboutHomeData: " + x);
     });
+  },
+
+  /**
+   * Focuses the search input in the page with the given message manager.
+   * @param  messageManager
+   *         The MessageManager object of the selected browser.
+   */
+  focusInput: function (messageManager) {
+    messageManager.sendAsyncMessage("AboutHome:FocusInput");
   }
 };
