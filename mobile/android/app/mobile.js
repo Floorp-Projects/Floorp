@@ -808,6 +808,8 @@ pref("general.useragent.updates.retry", 86400); // 1 day
 
 // Youtube is broken with Android version in UA string. Bug 1174784.
 pref("general.useragent.override.youtube.com", "Android\\s\\d.+?;#Android;");
+// Gmail sends a busted site with Android version in UA string. Bug 1184320.
+pref("general.useragent.override.mail.google.com", "Android\\s\\d.+?;#Android;");
 
 // When true, phone number linkification is enabled.
 pref("browser.ui.linkify.phone", false);
