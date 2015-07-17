@@ -139,6 +139,8 @@ public:
                   // elements that follow)
     // 0x1549a966 // -> Segment Info
     // 0x1654ae6b // -> One or more Tracks
+
+    // 0x1a45dfa3 // EBML
     if (aData->Length() >= 4 &&
         (*aData)[0] == 0x1a && (*aData)[1] == 0x45 && (*aData)[2] == 0xdf &&
         (*aData)[3] == 0xa3) {
@@ -160,9 +162,17 @@ public:
     // 0x18538067 // Segment (must be "unknown" size)
     // 0x1549a966 // -> Segment Info
     // 0x1654ae6b // -> One or more Tracks
+
+    // 0x1f43b675 // Cluster
     if (aData->Length() >= 4 &&
         (*aData)[0] == 0x1f && (*aData)[1] == 0x43 && (*aData)[2] == 0xb6 &&
         (*aData)[3] == 0x75) {
+      return true;
+    }
+    // 0x1c53bb6b // Cues
+    if (aData->Length() >= 4 &&
+        (*aData)[0] == 0x1c && (*aData)[1] == 0x53 && (*aData)[2] == 0xbb &&
+        (*aData)[3] == 0x6b) {
       return true;
     }
     return false;
@@ -178,6 +188,8 @@ public:
       mOverlappedMapping.Clear();
       mInitData = new MediaByteBuffer();
       mResource = new SourceBufferResource(NS_LITERAL_CSTRING("video/webm"));
+      mCompleteMediaHeaderRange = MediaByteRange();
+      mCompleteMediaSegmentRange = MediaByteRange();
     }
 
     // XXX if it only adds new mappings, overlapped but not available
@@ -218,8 +230,21 @@ public:
       return false;
     }
 
-    // Exclude frames that we don't enough data to cover the end of.
     uint32_t endIdx = mapping.Length() - 1;
+
+    // Calculate media range for first media segment
+    uint32_t segmentEndIdx = endIdx;
+    while (mapping[0].mSyncOffset != mapping[segmentEndIdx].mSyncOffset) {
+      segmentEndIdx -= 1;
+    }
+    if (segmentEndIdx > 0 && mOffset >= mapping[segmentEndIdx].mEndOffset) {
+      mCompleteMediaHeaderRange = MediaByteRange(mParser.mInitEndOffset,
+                                                 mapping[0].mEndOffset);
+      mCompleteMediaSegmentRange = MediaByteRange(mParser.mInitEndOffset,
+                                                  mapping[segmentEndIdx].mEndOffset);
+    }
+
+    // Exclude frames that we don't have enough data to cover the end of.
     while (mOffset < mapping[endIdx].mEndOffset && endIdx > 0) {
       endIdx -= 1;
     }
