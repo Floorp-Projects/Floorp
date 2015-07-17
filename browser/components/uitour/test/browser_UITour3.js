@@ -95,7 +95,7 @@ let tests = [
 
     let buttons = gContentWindow.makeButtons();
 
-    yield showInfoPromise("trackingProtection", "another title", "moar text", "./image.png", buttons);
+    yield showInfoPromise("urlbar", "another title", "moar text", "./image.png", buttons);
 
     is(title.textContent, "another title", "Popup should have correct title");
     is(desc.textContent, "moar text", "Popup should have correct description text");
