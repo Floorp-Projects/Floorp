@@ -5,10 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla += [
+    'AutoGlobalTimelineMarker.h',
     'AutoTimelineMarker.h',
 ]
 
 UNIFIED_SOURCES += [
+    'AutoGlobalTimelineMarker.cpp',
     'AutoTimelineMarker.cpp',
     'TimelineMarker.cpp',
 ]
