@@ -18,7 +18,7 @@ let TEST_URI = TEST_URL_ROOT + "doc_copystyles.html";
 add_task(function*() {
   yield addTab(TEST_URI);
   let { inspector, view } = yield openRuleView();
-
+  let contextmenu = view._contextmenu;
   yield selectNode("#testid", inspector);
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
@@ -27,7 +27,7 @@ add_task(function*() {
     {
       desc: "Test Copy Property Name",
       node: ruleEditor.rule.textProps[0].editor.nameSpan,
-      menuItem: view.menuitemCopyPropertyName,
+      menuItem: contextmenu.menuitemCopyPropertyName,
       expectedPattern: "color",
       hidden: {
         copyLocation: true,
@@ -41,7 +41,7 @@ add_task(function*() {
     {
       desc: "Test Copy Property Value",
       node: ruleEditor.rule.textProps[2].editor.valueSpan,
-      menuItem: view.menuitemCopyPropertyValue,
+      menuItem: contextmenu.menuitemCopyPropertyValue,
       expectedPattern: "12px",
       hidden: {
         copyLocation: true,
@@ -55,7 +55,7 @@ add_task(function*() {
     {
       desc: "Test Copy Property Declaration",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
-      menuItem: view.menuitemCopyPropertyDeclaration,
+      menuItem: contextmenu.menuitemCopyPropertyDeclaration,
       expectedPattern: "font-size: 12px;",
       hidden: {
         copyLocation: true,
@@ -69,7 +69,7 @@ add_task(function*() {
     {
       desc: "Test Copy Rule",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
-      menuItem: view.menuitemCopyRule,
+      menuItem: contextmenu.menuitemCopyRule,
       expectedPattern: "#testid {[\\r\\n]+" +
                        "\tcolor: #F00;[\\r\\n]+" +
                        "\tbackground-color: #00F;[\\r\\n]+" +
@@ -87,7 +87,7 @@ add_task(function*() {
     {
       desc: "Test Copy Selector",
       node: ruleEditor.selectorText,
-      menuItem: view.menuitemCopySelector,
+      menuItem: contextmenu.menuitemCopySelector,
       expectedPattern: "html, body, #testid",
       hidden: {
         copyLocation: true,
@@ -101,7 +101,7 @@ add_task(function*() {
     {
       desc: "Test Copy Location",
       node: ruleEditor.source,
-      menuItem: view.menuitemCopyLocation,
+      menuItem: contextmenu.menuitemCopyLocation,
       expectedPattern: "http://example.com/browser/browser/devtools/" +
                        "styleinspector/test/doc_copystyles.css",
       hidden: {
@@ -119,7 +119,7 @@ add_task(function*() {
       },
       desc: "Test Copy Rule with Disabled Property",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
-      menuItem: view.menuitemCopyRule,
+      menuItem: contextmenu.menuitemCopyRule,
       expectedPattern: "#testid {[\\r\\n]+" +
                        "\t\/\\* color: #F00; \\*\/[\\r\\n]+" +
                        "\tbackground-color: #00F;[\\r\\n]+" +
@@ -137,7 +137,7 @@ add_task(function*() {
     {
       desc: "Test Copy Property Declaration with Disabled Property",
       node: ruleEditor.rule.textProps[0].editor.nameSpan,
-      menuItem: view.menuitemCopyPropertyDeclaration,
+      menuItem: contextmenu.menuitemCopyPropertyDeclaration,
       expectedPattern: "\/\\* color: #F00; \\*\/",
       hidden: {
         copyLocation: true,
@@ -161,41 +161,39 @@ add_task(function*() {
 });
 
 function* checkCopyStyle(view, node, menuItem, expectedPattern, hidden) {
-  let win = view.doc.defaultView;
-
-  let onPopup = once(view._contextmenu, "popupshown");
+  let onPopup = once(view._contextmenu._menupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(node,
-    {button: 2, type: "contextmenu"}, win);
+    {button: 2, type: "contextmenu"}, view.styleWindow);
   yield onPopup;
 
-  is(view.menuitemCopy.hidden, true, "Copy hidden is as expected: true");
+  is(view._contextmenu.menuitemCopy.hidden, true, "Copy hidden is as expected: true");
 
-  is(view.menuitemCopyLocation.hidden,
+  is(view._contextmenu.menuitemCopyLocation.hidden,
      hidden.copyLocation,
      "Copy Location hidden attribute is as expected: " +
      hidden.copyLocation);
 
-  is(view.menuitemCopyPropertyDeclaration.hidden,
+  is(view._contextmenu.menuitemCopyPropertyDeclaration.hidden,
      hidden.copyPropertyDeclaration,
      "Copy Property Declaration hidden attribute is as expected: " +
      hidden.copyPropertyDeclaration);
 
-  is(view.menuitemCopyPropertyName.hidden,
+  is(view._contextmenu.menuitemCopyPropertyName.hidden,
      hidden.copyPropertyName,
      "Copy Property Name hidden attribute is as expected: " +
      hidden.copyPropertyName);
 
-  is(view.menuitemCopyPropertyValue.hidden,
+  is(view._contextmenu.menuitemCopyPropertyValue.hidden,
      hidden.copyPropertyValue,
      "Copy Property Value hidden attribute is as expected: " +
      hidden.copyPropertyValue);
 
-  is(view.menuitemCopySelector.hidden,
+  is(view._contextmenu.menuitemCopySelector.hidden,
      hidden.copySelector,
      "Copy Selector hidden attribute is as expected: " +
      hidden.copySelector);
 
-  is(view.menuitemCopyRule.hidden,
+  is(view._contextmenu.menuitemCopyRule.hidden,
      hidden.copyRule,
      "Copy Rule hidden attribute is as expected: " +
      hidden.copyRule);
@@ -207,7 +205,7 @@ function* checkCopyStyle(view, node, menuItem, expectedPattern, hidden) {
     failedClipboard(expectedPattern);
   }
 
-  view._contextmenu.hidePopup();
+  view._contextmenu._menupopup.hidePopup();
 }
 
 function* disableProperty(view) {

@@ -7,42 +7,45 @@
 #ifndef mozilla_ipc_Ril_h
 #define mozilla_ipc_Ril_h 1
 
-#include <mozilla/dom/workers/Workers.h>
-#include <mozilla/ipc/StreamSocket.h>
-#include <mozilla/ipc/StreamSocketConsumer.h>
+#include "nsAutoPtr.h"
+#include "nsError.h"
+#include "nsTArray.h"
 
 namespace mozilla {
+
+namespace dom {
+namespace workers {
+
+class WorkerCrossThreadDispatcher;
+
+} // namespace workers
+} // namespace dom
+
 namespace ipc {
 
-class RilConsumer final : public StreamSocketConsumer
+class RilConsumer;
+
+class RilWorker final
 {
 public:
   static nsresult Register(
     unsigned int aClientId,
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+
   static void Shutdown();
 
-  void Send(UnixSocketRawData* aRawData);
-
 private:
-  RilConsumer(unsigned long aClientId,
-              mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+  class RegisterConsumerTask;
+  class UnregisterConsumerTask;
 
-  void Close();
+  RilWorker(mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
-  // Methods for |StreamSocketConsumer|
-  //
+  nsresult RegisterConsumer(unsigned int aClientId);
+  void     UnregisterConsumer(unsigned int aClientId);
 
-  void ReceiveSocketData(int aIndex,
-                         nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
-  void OnConnectSuccess(int aIndex) override;
-  void OnConnectError(int aIndex) override;
-  void OnDisconnect(int aIndex) override;
+  static nsTArray<nsAutoPtr<RilWorker>> sRilWorkers;
 
-  nsRefPtr<StreamSocket> mSocket;
   nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
-  nsCString mAddress;
-  bool mShutdown;
 };
 
 } // namespace ipc

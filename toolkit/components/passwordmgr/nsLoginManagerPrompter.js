@@ -973,7 +973,7 @@ LoginManagerPrompter.prototype = {
       secondaryActions,
       {
         timeout: Date.now() + 10000,
-        origin: login.hostname,
+        displayURI: Services.io.newURI(login.hostname, null, null),
         persistWhileVisible: true,
         passwordNotificationType: type,
         eventCallback: function (topic) {

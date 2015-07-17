@@ -253,20 +253,16 @@
   <caption><label>&locationBar.label;</label></caption>
   <label id="locationBarSuggestionLabel">&locbar.suggest.label;</label>
   <checkbox id="historySuggestion" label="&locbar.history.label;"
-            onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.history.accesskey;"
             preference="browser.urlbar.suggest.history"/>
   <checkbox id="bookmarkSuggestion" label="&locbar.bookmarks.label;"
-            onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.bookmarks.accesskey;"
             preference="browser.urlbar.suggest.bookmark"/>
   <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
-            onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.openpage.accesskey;"
             preference="browser.urlbar.suggest.openpage"/>
   <checkbox id="searchesSuggestion" label="&locbar.searches.label;"
             hidden="true"
-            onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.searches.accesskey;"
             preference="browser.urlbar.suggest.searches"/>
 </groupbox>

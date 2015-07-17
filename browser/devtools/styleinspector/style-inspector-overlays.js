@@ -41,7 +41,7 @@ const VIEW_NODE_LOCATION_TYPE = exports.VIEW_NODE_LOCATION_TYPE = 5;
 
 /**
  * Manages all highlighters in the style-inspector.
- * @param {CssRuleView|CssHtmlTree} view Either the rule-view or computed-view
+ * @param {CssRuleView|CssComputedView} view Either the rule-view or computed-view
  * panel
  */
 function HighlightersOverlay(view) {
@@ -231,7 +231,7 @@ HighlightersOverlay.prototype = {
 
 /**
  * Manages all tooltips in the style-inspector.
- * @param {CssRuleView|CssHtmlTree} view Either the rule-view or computed-view
+ * @param {CssRuleView|CssComputedView} view Either the rule-view or computed-view
  * panel
  */
 function TooltipsOverlay(view) {
@@ -268,13 +268,14 @@ TooltipsOverlay.prototype = {
     this.previewTooltip.startTogglingOnHover(this.view.element,
       this._onPreviewTooltipTargetHover.bind(this));
 
+    // MDN CSS help tooltip
+    this.cssDocs = new CssDocsTooltip(this.view.inspector.panelDoc);
+
     if (this.isRuleView) {
       // Color picker tooltip
       this.colorPicker = new SwatchColorPickerTooltip(this.view.inspector.panelDoc);
       // Cubic bezier tooltip
       this.cubicBezier = new SwatchCubicBezierTooltip(this.view.inspector.panelDoc);
-      // MDN CSS help tooltip
-      this.cssDocs = new CssDocsTooltip(this.view.inspector.panelDoc);
       // Filter editor tooltip
       this.filterEditor = new SwatchFilterTooltip(this.view.inspector.panelDoc);
     }

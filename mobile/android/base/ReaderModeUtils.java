@@ -36,6 +36,15 @@ public class ReaderModeUtils {
         return getAboutReaderForUrl(url, -1);
     }
 
+    public static String stripAboutReaderUrl(String url) {
+        if (!AboutPages.isAboutReader(url)) {
+            return url;
+        }
+
+        final String strippedUrl = getUrlFromAboutReader(url);
+        return strippedUrl != null ? strippedUrl : url;
+    }
+
     public static String getAboutReaderForUrl(String url, int tabId) {
         String aboutReaderUrl = AboutPages.READER + "?url=" + Uri.encode(url);
 

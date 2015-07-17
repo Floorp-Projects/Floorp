@@ -67,7 +67,7 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   ok(imageLink, "Background-image link element found");
 
   info("Simulate right click on the background-image URL");
-  let popup = once(view._contextmenu, "popupshown");
+  let popup = once(view._contextmenu._menupopup, "popupshown");
 
   // Cannot rely on synthesizeMouseAtCenter here. The image URL can be displayed on several lines.
   // A click simulated at the exact center may click between the lines and miss the target
@@ -80,18 +80,18 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   yield popup;
 
   info("Context menu is displayed");
-  ok(!view.menuitemCopyImageDataUrl.hidden, "\"Copy Image Data-URL\" menu entry is displayed");
+  ok(!view._contextmenu.menuitemCopyImageDataUrl.hidden, "\"Copy Image Data-URL\" menu entry is displayed");
 
   if (type == "data-uri") {
     info("Click Copy Data URI and wait for clipboard");
-    yield waitForClipboard(() => view.menuitemCopyImageDataUrl.click(), expected);
+    yield waitForClipboard(() => view._contextmenu.menuitemCopyImageDataUrl.click(), expected);
   } else {
     info("Click Copy URL and wait for clipboard");
-    yield waitForClipboard(() => view.menuitemCopyUrl.click(), expected);
+    yield waitForClipboard(() => view._contextmenu.menuitemCopyUrl.click(), expected);
   }
 
   info("Hide context menu");
-  view._contextmenu.hidePopup();
+  view._contextmenu._menupopup.hidePopup();
 }
 
 function getBackgroundImageProperty(view, selector) {

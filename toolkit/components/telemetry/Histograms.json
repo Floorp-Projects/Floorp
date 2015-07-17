@@ -4922,11 +4922,11 @@
     "description": "Time for a URL bar DB search to return (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_STARTUP_GECKOAPP_ACTION": {
+  "FENNEC_GECKOAPP_STARTUP_ACTION": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 4,
-    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
+    "n_values": 10,
+    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, WebApp, Guest)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_STARTUP_TIME_GECKOREADY": {

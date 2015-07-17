@@ -82,12 +82,12 @@ function* testAddProperty(view) {
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(ruleEditor.element, "focus", true);
   let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onValueFocus;
   yield onRuleViewChanged;
 
   // Getting the new value editor after focus
-  editor = inplaceEditor(view.doc.activeElement);
+  editor = inplaceEditor(view.styleDocument.activeElement);
   let textProp = ruleEditor.rule.textProps[0];
 
   is(ruleEditor.rule.textProps.length,  1, "Created a new text property.");

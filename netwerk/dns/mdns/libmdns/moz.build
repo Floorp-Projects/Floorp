@@ -4,8 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXTRA_COMPONENTS += [
+        'nsDNSServiceDiscovery.js',
+        'nsDNSServiceDiscovery.manifest',
+    ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16':
     UNIFIED_SOURCES += [
         'MDNSResponderOperator.cpp',
         'MDNSResponderReply.cpp',

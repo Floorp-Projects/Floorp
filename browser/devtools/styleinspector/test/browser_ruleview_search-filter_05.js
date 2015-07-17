@@ -30,7 +30,7 @@ add_task(function*() {
 function* testAddTextInFilter(inspector, ruleView) {
   info("Setting filter text to \"" + SEARCH + "\"");
 
-  let win = ruleView.doc.defaultView;
+  let win = ruleView.styleWindow;
   let searchField = ruleView.searchField;
   let onRuleViewFilter = inspector.once("ruleview-filtered");
 

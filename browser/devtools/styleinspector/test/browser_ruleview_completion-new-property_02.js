@@ -50,14 +50,14 @@ add_task(function*() {
   yield selectNode("h1", inspector);
 
   info("Focusing a new css property editable property");
-  let brace = view.doc.querySelectorAll(".ruleview-ruleclose")[1];
+  let brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
   let editor = yield focusEditableField(view, brace);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i ++) {
     // Re-define the editor at each iteration, because the focus may have moved
     // from property to value and back
-    editor = inplaceEditor(view.doc.activeElement);
+    editor = inplaceEditor(view.styleDocument.activeElement);
     yield testCompletion(testData[i], editor, view);
   }
 });
@@ -70,7 +70,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor, vie
 
   if (/tab/ig.test(key)) {
     info("Waiting for the new property or value editor to get focused");
-    let brace = view.doc.querySelectorAll(".ruleview-ruleclose")[1];
+    let brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
     onKeyPress = once(brace.parentNode, "focus", true);
   } else if (/(right|back_space|escape|return)/ig.test(key) ||
              (modifiers.accelKey || modifiers.ctrlKey)) {
@@ -82,7 +82,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor, vie
   }
 
   info("Synthesizing key " + key + ", modifiers: " + Object.keys(modifiers));
-  EventUtils.synthesizeKey(key, modifiers, view.doc.defaultView);
+  EventUtils.synthesizeKey(key, modifiers, view.styleWindow);
 
   yield onKeyPress;
   yield wait(1); // Equivalent of executeSoon
@@ -91,7 +91,7 @@ function* testCompletion([key, modifiers, completion, index, total], editor, vie
   if (completion != null) {
     // The key might have been a TAB or shift-TAB, in which case the editor will
     // be a new one
-    editor = inplaceEditor(view.doc.activeElement);
+    editor = inplaceEditor(view.styleDocument.activeElement);
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
   if (total == 0) {

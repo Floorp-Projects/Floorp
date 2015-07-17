@@ -31,7 +31,7 @@ public abstract class AnchoredPopup extends PopupWindow {
     private View mAnchor;
     private OnVisibilityChangeListener onVisibilityChangeListener;
 
-    protected LinearLayout mContent;
+    protected RoundedCornerLayout mContent;
     protected boolean mInflated;
 
     protected final Context mContext;
@@ -61,7 +61,7 @@ public abstract class AnchoredPopup extends PopupWindow {
         final View layout = inflater.inflate(R.layout.anchored_popup, null);
         setContentView(layout);
 
-        mContent = (LinearLayout) layout.findViewById(R.id.content);
+        mContent = (RoundedCornerLayout) layout.findViewById(R.id.content);
 
         mInflated = true;
     }

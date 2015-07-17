@@ -31,3 +31,39 @@ let gTests = [
 function setSearch(aSearch) {
   prefs.setBoolPref("browser.urlbar.autocomplete.enabled", !!aSearch);
 }
+
+add_task(function* test_sync_enabled() {
+  // Initialize unified complete.
+  Cc["@mozilla.org/autocomplete/search;1?name=history"]
+    .getService(Ci.mozIPlacesAutoComplete);
+
+  let types = [ "history", "bookmark", "openpage" ];
+
+  // Test the service keeps browser.urlbar.autocomplete.enabled synchronized
+  // with browser.urlbar.suggest prefs.
+  for (let type of types) {
+    Services.prefs.setBoolPref("browser.urlbar.suggest." + type, true);
+  }
+  Assert.equal(Services.prefs.getBoolPref("browser.urlbar.autocomplete.enabled"), true);
+
+  // Disable autocomplete and check all the suggest prefs are set to false.
+  Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
+  for (let type of types) {
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false);
+  }
+
+  // Setting even a single suggest pref to true should enable autocomplete.
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+  for (let type of types.filter(t => t != "history")) {
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false);
+  }
+  Assert.equal(Services.prefs.getBoolPref("browser.urlbar.autocomplete.enabled"), true);
+
+  // Disable autocoplete again, then re-enable it and check suggest prefs
+  // have been reset.
+  Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
+  Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", true);
+  for (let type of types.filter(t => t != "history")) {
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true);
+  }
+});
