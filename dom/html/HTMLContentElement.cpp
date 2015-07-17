@@ -297,10 +297,12 @@ HTMLContentElement::GetDistributedNodes()
   return list.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION(DistributedContentList, mParent, mDistributedNodes)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DistributedContentList, mParent,
+                                      mDistributedNodes)
 
 NS_INTERFACE_TABLE_HEAD(DistributedContentList)
-  NS_INTERFACE_TABLE(DistributedContentList, nsINodeList)
+  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
+  NS_INTERFACE_TABLE(DistributedContentList, nsINodeList, nsIDOMNodeList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(DistributedContentList)
 NS_INTERFACE_MAP_END
 
