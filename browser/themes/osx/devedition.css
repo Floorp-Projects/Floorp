@@ -92,6 +92,13 @@
   -moz-appearance: none !important;
 }
 
+/* Prevent the hover styling from on the identity icon from overlapping the
+   urlbar border. */
+#identity-box {
+  margin-top: -1px !important;
+  margin-bottom: -1px !important;
+}
+
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[visuallyselected=true]:not(:hover) {
