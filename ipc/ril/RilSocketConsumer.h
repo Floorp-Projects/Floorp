@@ -9,6 +9,8 @@
 
 #include "nsAutoPtr.h"
 
+class JSContext;
+
 namespace mozilla {
 namespace ipc {
 
@@ -21,12 +23,14 @@ class RilSocketConsumer
 {
 public:
   /**
-   * Method to be called whenever data is received. Consumer-thread only.
+   * Method to be called whenever data is received. RIL-worker only.
    *
+   * @param aCx The RIL worker's JS context.
    * @param aIndex The index that has been given to the stream socket.
    * @param aBuffer Data received from the socket.
    */
-  virtual void ReceiveSocketData(int aIndex,
+  virtual void ReceiveSocketData(JSContext* aCx,
+                                 int aIndex,
                                  nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
 
   /**
