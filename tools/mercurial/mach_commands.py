@@ -61,7 +61,7 @@ class VersionControlCommands(object):
         if update_only:
             from hgsetup.update import MercurialUpdater
             updater = MercurialUpdater(self._context.state_dir)
-            result = updater.update_all(map(os.path.expanduser, config_paths))
+            result = updater.update_all()
         else:
             from hgsetup.wizard import MercurialSetupWizard
             wizard = MercurialSetupWizard(self._context.state_dir)
