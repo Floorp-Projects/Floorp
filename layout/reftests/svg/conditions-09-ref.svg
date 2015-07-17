@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
+  <text x="10" y="20">
+    <tspan fill="green">This text should display.</tspan>
+  </text>
+</svg>
