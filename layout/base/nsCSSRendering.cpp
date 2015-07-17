@@ -1515,14 +1515,27 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     nsRect shadowPaintRect = paddingRect;
     shadowPaintRect.Inflate(blurMargin);
 
+    Rect shadowPaintGfxRect = NSRectToRect(shadowPaintRect, twipsPerPixel);
+    shadowPaintGfxRect.RoundOut();
+
+    // Round the spread radius to device pixels (by truncation).
+    // This mostly matches what we do for borders, except that we don't round
+    // up values between zero and one device pixels to one device pixel.
+    // This way of rounding is symmetric around zero, which makes sense for
+    // the spread radius.
+    int32_t spreadDistance = shadowItem->mSpread / twipsPerPixel;
+    nscoord spreadDistanceAppUnits = aPresContext->DevPixelsToAppUnits(spreadDistance);
+
     nsRect shadowClipRect = paddingRect;
     shadowClipRect.MoveBy(shadowItem->mXOffset, shadowItem->mYOffset);
-    shadowClipRect.Deflate(shadowItem->mSpread, shadowItem->mSpread);
+    shadowClipRect.Deflate(spreadDistanceAppUnits, spreadDistanceAppUnits);
+
+    Rect shadowClipGfxRect = NSRectToRect(shadowClipRect, twipsPerPixel);
+    shadowClipGfxRect.Round();
 
     RectCornerRadii clipRectRadii;
     if (hasBorderRadius) {
       // Calculate the radii the inner clipping rect will have
-      Float spreadDistance = shadowItem->mSpread / twipsPerPixel;
       Float borderSizes[4] = {0, 0, 0, 0};
 
       // See PaintBoxShadowOuter and bug 514670
@@ -1597,10 +1610,6 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
     // Fill the surface minus the area within the frame that we should
     // not paint in, and blur and apply it.
-    Rect shadowPaintGfxRect = NSRectToRect(shadowPaintRect, twipsPerPixel);
-    shadowPaintGfxRect.RoundOut();
-    Rect shadowClipGfxRect = NSRectToRect(shadowClipRect, twipsPerPixel);
-    shadowClipGfxRect.Round();
     RefPtr<PathBuilder> builder =
       shadowDT->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
     AppendRectToPath(builder, shadowPaintGfxRect, true);
