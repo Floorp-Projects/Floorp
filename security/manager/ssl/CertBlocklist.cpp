@@ -567,8 +567,6 @@ CertBlocklist::IsCertRevoked(const uint8_t* aIssuer,
 {
   MutexAutoLock lock(mMutex);
 
-  MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-          ("CertBlocklist::IsCertRevoked?"));
   nsresult rv = EnsureBackingFileInitialized(lock);
   if (NS_FAILED(rv)) {
     return rv;
@@ -585,24 +583,9 @@ CertBlocklist::IsCertRevoked(const uint8_t* aIssuer,
 
   CertBlocklistItem issuerSerial(aIssuer, aIssuerLength, aSerial, aSerialLength,
                                  BlockByIssuerAndSerial);
-
-  nsAutoCString encDN;
-  nsAutoCString encOther;
-
-  issuerSerial.ToBase64(encDN, encOther);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-          ("CertBlocklist::IsCertRevoked issuer %s - serial %s",
-           encDN.get(), encOther.get()));
-
   *_retval = mBlocklist.Contains(issuerSerial);
 
   if (*_retval) {
-    MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-            ("certblocklist::IsCertRevoked found by issuer / serial"));
     return NS_OK;
   }
 
@@ -631,20 +614,7 @@ CertBlocklist::IsCertRevoked(const uint8_t* aIssuer,
                                   reinterpret_cast<const uint8_t*>(hashString.get()),
                                   hashString.Length(),
                                   BlockBySubjectAndPubKey);
-
-  rv = subjectPubKey.ToBase64(encDN, encOther);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-          ("CertBlocklist::IsCertRevoked subject %s - pubKey hash %s",
-           encDN.get(), encOther.get()));
   *_retval = mBlocklist.Contains(subjectPubKey);
-
-  MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-          ("CertBlocklist::IsCertRevoked by subject / pubkey? %s",
-           *_retval ? "true" : "false"));
 
   return NS_OK;
 }
