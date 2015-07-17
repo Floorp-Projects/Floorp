@@ -133,8 +133,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     protected TabHistoryController tabHistoryController;
 
     private final Paint shadowPaint;
-    private final int shadowColor;
-    private final int shadowPrivateColor;
     private final int shadowSize;
 
     private final ToolbarPrefs prefs;
@@ -202,9 +200,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
 
         shadowPaint = new Paint();
-        shadowColor = res.getColor(R.color.url_bar_shadow);
-        shadowPrivateColor = res.getColor(R.color.url_bar_shadow_private);
-        shadowPaint.setColor(shadowColor);
+        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
         shadowPaint.setStrokeWidth(0.0f);
 
         setUIMode(UIMode.DISPLAY);
@@ -845,8 +841,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         tabsButton.setPrivateMode(isPrivate);
         menuButton.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
-
-        shadowPaint.setColor(isPrivate ? shadowPrivateColor : shadowColor);
     }
 
     public void show() {

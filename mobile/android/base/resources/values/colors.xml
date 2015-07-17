@@ -27,8 +27,6 @@
   <color name="toolbar_grey">#EBEBF0</color>
   <color name="about_page_header_grey">#F5F5F5</color>
 
-  <color name="url_bar_shadow_private">#7878A5</color>
-
   <!-- Non-palette colors -->
 
   <!-- Synced w/ toolbar_grey -->
