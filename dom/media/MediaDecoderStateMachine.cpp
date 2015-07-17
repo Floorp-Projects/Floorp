@@ -372,13 +372,6 @@ void MediaDecoderStateMachine::SendStreamData()
 
   bool finished = mDecodedStream->SendData(mVolume, mDecoder->IsSameOriginMedia());
 
-  if (mInfo.HasAudio()) {
-    CheckedInt64 playedUsecs = mDecodedStream->AudioEndTime();
-    if (playedUsecs.isValid()) {
-      OnAudioEndTimeUpdate(playedUsecs.value());
-    }
-  }
-
   const auto clockTime = GetClock();
   while (true) {
     const AudioData* a = AudioQueue().PeekFront();
@@ -3080,11 +3073,14 @@ MediaDecoderStateMachine::AudioEndTime() const
   AssertCurrentThreadInMonitor();
   if (mAudioSink) {
     return mAudioSink->GetEndTime();
+  } else if (mAudioCaptured) {
+    return mDecodedStream->AudioEndTime();
   }
   // Don't call this after mAudioSink becomes null since we can't distinguish
-  // "before StartAudioThread" and "after StopAudioThread".
-  MOZ_ASSERT(mAudioCaptured || !mAudioCompleted);
-  return mAudioEndTime;
+  // "before StartAudioThread" and "after StopAudioThread" where mAudioSink
+  // is null in both cases.
+  MOZ_ASSERT(!mAudioCompleted);
+  return -1;
 }
 
 void MediaDecoderStateMachine::OnAudioEndTimeUpdate(int64_t aAudioEndTime)
