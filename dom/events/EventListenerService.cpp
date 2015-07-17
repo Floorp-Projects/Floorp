@@ -24,6 +24,44 @@ namespace mozilla {
 using namespace dom;
 
 /******************************************************************************
+ * mozilla::EventListenerChange
+ ******************************************************************************/
+
+NS_IMPL_ISUPPORTS(EventListenerChange, nsIEventListenerChange)
+
+EventListenerChange::~EventListenerChange()
+{
+}
+
+EventListenerChange::EventListenerChange(dom::EventTarget* aTarget) :
+  mTarget(aTarget)
+{
+  mChangedListenerNames = nsArrayBase::Create();
+}
+
+void
+EventListenerChange::AddChangedListenerName(nsIAtom* aEventName)
+{
+  mChangedListenerNames->AppendElement(aEventName, false);
+}
+
+NS_IMETHODIMP
+EventListenerChange::GetTarget(nsIDOMEventTarget** aTarget)
+{
+  NS_ENSURE_ARG_POINTER(aTarget);
+  NS_ADDREF(*aTarget = mTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EventListenerChange::GetChangedListenerNames(nsIArray** aEventNames)
+{
+  NS_ENSURE_ARG_POINTER(aEventNames);
+  NS_ADDREF(*aEventNames = mChangedListenerNames);
+  return NS_OK;
+}
+
+/******************************************************************************
  * mozilla::EventListenerInfo
  ******************************************************************************/
 
@@ -323,7 +361,8 @@ EventListenerService::RemoveListenerChangeListener(nsIListenerChangeListener* aL
 };
 
 void
-EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget)
+EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget,
+                                                                  nsIAtom* aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mChangeListeners.IsEmpty()) {
@@ -337,10 +376,13 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
     NS_DispatchToCurrentThread(runnable);
   }
 
-  if (!mPendingListenerChangesSet.Get(aTarget)) {
-    mPendingListenerChanges->AppendElement(aTarget, false);
-    mPendingListenerChangesSet.Put(aTarget, true);
+  nsRefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);
+  if (!changes) {
+    changes = new EventListenerChange(aTarget);
+    mPendingListenerChanges->AppendElement(changes, false);
+    mPendingListenerChangesSet.Put(aTarget, changes);
   }
+  changes->AddChangedListenerName(aName);
 }
 
 void
