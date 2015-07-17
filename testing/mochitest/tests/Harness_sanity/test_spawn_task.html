@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mochitest SpawnTask.js sanity</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 1078657</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for sanity  **/
+SimpleTest.waitForExplicitFinish();
+
+var externalGeneratorFunction = function* () {
+  return 8;
+};
+
+var nestedFunction = function* () {
+  return yield function* () {
+    return yield function* () {
+      return yield function* () {
+        return yield Promise.resolve(9);
+      }();
+    }();
+  }();
+}
+
+var variousTests = function* () {
+  var val1 = yield [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)];
+  is(val1.join(""), "123", "Array of promises -> Promise.all");
+  var val2 = yield Promise.resolve(2);
+  is(val2, 2, "Resolved promise yields value.");
+  var val3 = yield function* () { return 3; };
+  is(val3, 3, "Generator functions are spawned.");
+  //var val4 = yield function () { return 4; };
+  //is(val4, 4, "Plain functions run and return.");
+  var val5 = yield (function* () { return 5; }());
+  is(val5, 5, "Generators are spawned.");
+  try {
+    var val6 = yield Promise.reject(Error("error6"));
+    ok(false, "Shouldn't reach this line.");
+  } catch (error) {
+    is(error.message, "error6", "Rejected promise throws error.");
+  }
+  try {
+    var val7 = yield function* () { throw Error("error7"); };
+    ok(false, "Shouldn't reach this line.");
+  } catch (error) {
+    is(error.message, "error7", "Thrown error propagates.");
+  }
+  var val8 = yield externalGeneratorFunction();
+  is(val8, 8, "External generator also spawned.");
+  var val9 = yield nestedFunction();
+  is(val9, 9, "Nested generator functions work.");
+  return 10;
+};
+
+spawnTask(variousTests).then(function(result) {
+  is(result, 10, "spawnTask(...) returns promise");
+  SimpleTest.finish();
+});
+
+
+</script>
+</pre>
+</body>
+</html>
+
