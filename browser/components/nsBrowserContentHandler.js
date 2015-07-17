@@ -761,12 +761,14 @@ nsDefaultCommandLineHandler.prototype = {
             var params = new URLSearchParams(url.query);
             // We don't want to rewrite all Bing URLs coming from external apps. Look
             // for the magic URL parm that's present in searches from the task bar.
-            // (Typed searches use "form=WNSGPH", Cortana voice searches use "FORM=WNSBOX")
+            // (Typed searches use "form=WNSGPH", Cortana voice searches use "FORM=WNSBOX"
+            // for direct results, or "FORM=WNSFC2" for "see more results on
+            // Bing.com")
             var formParam = params.get("form");
             if (!formParam) {
               formParam = params.get("FORM");
             }
-            if (formParam == "WNSGPH" || formParam == "WNSBOX") {
+            if (formParam == "WNSGPH" || formParam == "WNSBOX" || formParam == "WNSFC2") {
               var term = params.get("q");
               var ss = Components.classes["@mozilla.org/browser/search-service;1"]
                                  .getService(nsIBrowserSearchService);
