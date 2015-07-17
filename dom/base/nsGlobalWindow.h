@@ -857,7 +857,9 @@ public:
   {
     return GetDoc();
   }
+  void GetNameOuter(nsAString& aName);
   void GetName(nsAString& aName, mozilla::ErrorResult& aError);
+  void SetNameOuter(const nsAString& aName, mozilla::ErrorResult& aError);
   void SetName(const nsAString& aName, mozilla::ErrorResult& aError);
   nsLocation* GetLocation(mozilla::ErrorResult& aError);
   nsHistory* GetHistory(mozilla::ErrorResult& aError);
@@ -867,13 +869,21 @@ public:
   mozilla::dom::BarProp* GetScrollbars(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetStatusbar(mozilla::ErrorResult& aError);
   mozilla::dom::BarProp* GetToolbar(mozilla::ErrorResult& aError);
+  void GetStatusOuter(nsAString& aStatus);
   void GetStatus(nsAString& aStatus, mozilla::ErrorResult& aError);
+  void SetStatusOuter(const nsAString& aStatus);
   void SetStatus(const nsAString& aStatus, mozilla::ErrorResult& aError);
+  void CloseOuter();
   void Close(mozilla::ErrorResult& aError);
+  bool GetClosedOuter();
   bool GetClosed(mozilla::ErrorResult& aError);
+  void StopOuter(mozilla::ErrorResult& aError);
   void Stop(mozilla::ErrorResult& aError);
+  void FocusOuter(mozilla::ErrorResult& aError);
   void Focus(mozilla::ErrorResult& aError);
+  void BlurOuter();
   void Blur(mozilla::ErrorResult& aError);
+  already_AddRefed<nsIDOMWindow> GetFramesOuter();
   already_AddRefed<nsIDOMWindow> GetFrames(mozilla::ErrorResult& aError);
   uint32_t Length();
   already_AddRefed<nsIDOMWindow> GetTop(mozilla::ErrorResult& aError)
@@ -884,6 +894,7 @@ public:
   }
 protected:
   explicit nsGlobalWindow(nsGlobalWindow *aOuterWindow);
+  nsIDOMWindow* GetOpenerWindowOuter();
   nsIDOMWindow* GetOpenerWindow(mozilla::ErrorResult& aError);
   // Initializes the mWasOffline member variable
   void InitWasOffline();
@@ -893,8 +904,14 @@ public:
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
   using nsIDOMWindow::GetParent;
+  already_AddRefed<nsIDOMWindow> GetParentOuter(mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMWindow> GetParent(mozilla::ErrorResult& aError);
+  mozilla::dom::Element* GetFrameElementOuter();
   mozilla::dom::Element* GetFrameElement(mozilla::ErrorResult& aError);
+  already_AddRefed<nsIDOMWindow> OpenOuter(const nsAString& aUrl,
+                                           const nsAString& aName,
+                                           const nsAString& aOptions,
+                                           mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMWindow> Open(const nsAString& aUrl,
                                       const nsAString& aName,
                                       const nsAString& aOptions,
@@ -921,14 +938,19 @@ protected:
 
 public:
   void Alert(mozilla::ErrorResult& aError);
+  void AlertOuter(const nsAString& aMessage, mozilla::ErrorResult& aError);
   void Alert(const nsAString& aMessage, mozilla::ErrorResult& aError);
   already_AddRefed<mozilla::dom::cache::CacheStorage> GetCaches(mozilla::ErrorResult& aRv);
+  bool ConfirmOuter(const nsAString& aMessage, mozilla::ErrorResult& aError);
   bool Confirm(const nsAString& aMessage, mozilla::ErrorResult& aError);
   already_AddRefed<mozilla::dom::Promise> Fetch(const mozilla::dom::RequestOrUSVString& aInput,
                                                 const mozilla::dom::RequestInit& aInit,
                                                 mozilla::ErrorResult& aRv);
+  void PromptOuter(const nsAString& aMessage, const nsAString& aInitial,
+                   nsAString& aReturn, mozilla::ErrorResult& aError);
   void Prompt(const nsAString& aMessage, const nsAString& aInitial,
               nsAString& aReturn, mozilla::ErrorResult& aError);
+  void PrintOuter(mozilla::ErrorResult& aError);
   void Print(mozilla::ErrorResult& aError);
   void ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
                        JS::Handle<JS::Value> aArgument,
@@ -963,18 +985,24 @@ public:
             mozilla::ErrorResult& aError);
   mozilla::dom::DOMStorage* GetSessionStorage(mozilla::ErrorResult& aError);
   mozilla::dom::DOMStorage* GetLocalStorage(mozilla::ErrorResult& aError);
+  mozilla::dom::Selection* GetSelectionOuter();
   mozilla::dom::Selection* GetSelection(mozilla::ErrorResult& aError);
   mozilla::dom::indexedDB::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                      mozilla::ErrorResult& aError);
+  already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(const nsAString& aQuery);
   already_AddRefed<mozilla::dom::MediaQueryList> MatchMedia(const nsAString& aQuery,
                                                             mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
+  void MoveToOuter(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
   void MoveTo(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
+  void MoveByOuter(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
   void MoveBy(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
+  void ResizeToOuter(int32_t aWidth, int32_t aHeight, mozilla::ErrorResult& aError);
   void ResizeTo(int32_t aWidth, int32_t aHeight,
                 mozilla::ErrorResult& aError);
+  void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif, mozilla::ErrorResult& aError);
   void ResizeBy(int32_t aWidthDif, int32_t aHeightDif,
                 mozilla::ErrorResult& aError);
   void Scroll(double aXScroll, double aYScroll);
@@ -996,11 +1024,13 @@ public:
                      mozilla::ErrorResult& aError);
   void SetInnerHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
                       mozilla::ErrorResult& aError);
+  int32_t GetScrollXOuter();
   int32_t GetScrollX(mozilla::ErrorResult& aError);
   int32_t GetPageXOffset(mozilla::ErrorResult& aError)
   {
     return GetScrollX(aError);
   }
+  int32_t GetScrollYOuter();
   int32_t GetScrollY(mozilla::ErrorResult& aError);
   int32_t GetPageYOffset(mozilla::ErrorResult& aError)
   {
@@ -1047,35 +1077,59 @@ public:
     return CancelAnimationFrame(aHandle, aError);
   }
   int64_t GetMozAnimationStartTime(mozilla::ErrorResult& aError);
+  void SizeToContentOuter(mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::ErrorResult& aError);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
+  nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
+  mozilla::dom::Element* GetRealFrameElementOuter();
   mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
+  float GetMozInnerScreenXOuter();
   float GetMozInnerScreenX(mozilla::ErrorResult& aError);
+  float GetMozInnerScreenYOuter();
   float GetMozInnerScreenY(mozilla::ErrorResult& aError);
+  float GetDevicePixelRatioOuter();
   float GetDevicePixelRatio(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxX(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxY(mozilla::ErrorResult& aError);
+  bool GetFullScreenOuter();
   bool GetFullScreen(mozilla::ErrorResult& aError);
+  void SetFullScreenOuter(bool aFullScreen, mozilla::ErrorResult& aError);
   void SetFullScreen(bool aFullScreen, mozilla::ErrorResult& aError);
+  void BackOuter(mozilla::ErrorResult& aError);
   void Back(mozilla::ErrorResult& aError);
+  void ForwardOuter(mozilla::ErrorResult& aError);
   void Forward(mozilla::ErrorResult& aError);
+  void HomeOuter(mozilla::ErrorResult& aError);
   void Home(mozilla::ErrorResult& aError);
+  bool FindOuter(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
+                 bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
+                 bool aShowDialog, mozilla::ErrorResult& aError);
   bool Find(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
             bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
             bool aShowDialog, mozilla::ErrorResult& aError);
+  uint64_t GetMozPaintCountOuter();
   uint64_t GetMozPaintCount(mozilla::ErrorResult& aError);
 
   bool ShouldResistFingerprinting();
 
   mozilla::dom::MozSelfSupport* GetMozSelfSupport(mozilla::ErrorResult& aError);
 
+  already_AddRefed<nsIDOMWindow> OpenDialogOuter(JSContext* aCx,
+                                                 const nsAString& aUrl,
+                                                 const nsAString& aName,
+                                                 const nsAString& aOptions,
+                                                 const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
+                                                 mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMWindow> OpenDialog(JSContext* aCx,
                                             const nsAString& aUrl,
                                             const nsAString& aName,
                                             const nsAString& aOptions,
                                             const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
                                             mozilla::ErrorResult& aError);
+  void GetContentOuter(JSContext* aCx,
+                       JS::MutableHandle<JSObject*> aRetval,
+                       mozilla::ErrorResult& aError);
   void GetContent(JSContext* aCx,
                   JS::MutableHandle<JSObject*> aRetval,
                   mozilla::ErrorResult& aError);
@@ -1092,12 +1146,15 @@ public:
   // ChromeWindow bits.  Do NOT call these unless your window is in
   // fact an nsGlobalChromeWindow.
   uint16_t WindowState();
+  nsIBrowserDOMWindow* GetBrowserDOMWindowOuter();
   nsIBrowserDOMWindow* GetBrowserDOMWindow(mozilla::ErrorResult& aError);
+  void SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindow);
   void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserWindow,
                            mozilla::ErrorResult& aError);
   void GetAttention(mozilla::ErrorResult& aError);
   void GetAttentionWithCycleCount(int32_t aCycleCount,
                                   mozilla::ErrorResult& aError);
+  void SetCursorOuter(const nsAString& aCursor, mozilla::ErrorResult& aError);
   void SetCursor(const nsAString& aCursor, mozilla::ErrorResult& aError);
   void Maximize(mozilla::ErrorResult& aError);
   void Minimize(mozilla::ErrorResult& aError);
@@ -1111,10 +1168,16 @@ public:
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
 
+  void GetDialogArgumentsOuter(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
+                               mozilla::ErrorResult& aError);
   void GetDialogArguments(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
                           mozilla::ErrorResult& aError);
+  void GetReturnValueOuter(JSContext* aCx, JS::MutableHandle<JS::Value> aReturnValue,
+                           mozilla::ErrorResult& aError);
   void GetReturnValue(JSContext* aCx, JS::MutableHandle<JS::Value> aReturnValue,
                       mozilla::ErrorResult& aError);
+  void SetReturnValueOuter(JSContext* aCx, JS::Handle<JS::Value> aReturnValue,
+                           mozilla::ErrorResult& aError);
   void SetReturnValue(JSContext* aCx, JS::Handle<JS::Value> aReturnValue,
                       mozilla::ErrorResult& aError);
 
@@ -1122,6 +1185,7 @@ public:
                     JS::MutableHandle<JS::Value> aRetval,
                     mozilla::ErrorResult& aError);
 
+  already_AddRefed<nsWindowRoot> GetWindowRootOuter();
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
 protected:
@@ -1147,17 +1211,29 @@ protected:
                                  const char* aPropName,
                                  mozilla::ErrorResult& aError);
   // And the implementations of WindowCoordGetter/WindowCoordSetter.
+  int32_t GetInnerWidthOuter(mozilla::ErrorResult& aError);
   int32_t GetInnerWidth(mozilla::ErrorResult& aError);
+  void SetInnerWidthOuter(int32_t aInnerWidth, mozilla::ErrorResult& aError);
   void SetInnerWidth(int32_t aInnerWidth, mozilla::ErrorResult& aError);
+  int32_t GetInnerHeightOuter(mozilla::ErrorResult& aError);
   int32_t GetInnerHeight(mozilla::ErrorResult& aError);
+  void SetInnerHeightOuter(int32_t aInnerHeight, mozilla::ErrorResult& aError);
   void SetInnerHeight(int32_t aInnerHeight, mozilla::ErrorResult& aError);
+  int32_t GetScreenXOuter(mozilla::ErrorResult& aError);
   int32_t GetScreenX(mozilla::ErrorResult& aError);
+  void SetScreenXOuter(int32_t aScreenX, mozilla::ErrorResult& aError);
   void SetScreenX(int32_t aScreenX, mozilla::ErrorResult& aError);
+  int32_t GetScreenYOuter(mozilla::ErrorResult& aError);
   int32_t GetScreenY(mozilla::ErrorResult& aError);
+  void SetScreenYOuter(int32_t aScreenY, mozilla::ErrorResult& aError);
   void SetScreenY(int32_t aScreenY, mozilla::ErrorResult& aError);
+  int32_t GetOuterWidthOuter(mozilla::ErrorResult& aError);
   int32_t GetOuterWidth(mozilla::ErrorResult& aError);
+  void SetOuterWidthOuter(int32_t aOuterWidth, mozilla::ErrorResult& aError);
   void SetOuterWidth(int32_t aOuterWidth, mozilla::ErrorResult& aError);
+  int32_t GetOuterHeightOuter(mozilla::ErrorResult& aError);
   int32_t GetOuterHeight(mozilla::ErrorResult& aError);
+  void SetOuterHeightOuter(int32_t aOuterHeight, mozilla::ErrorResult& aError);
   void SetOuterHeight(int32_t aOuterHeight, mozilla::ErrorResult& aError);
 
   // Array of idle observers that are notified of idle events.
@@ -1405,6 +1481,7 @@ public:
   // Outer windows only.
   mozilla::CSSIntPoint GetScrollXY(bool aDoFlush);
 
+  void GetScrollMaxXYOuter(int32_t* aScrollMaxX, int32_t* aScrollMaxY);
   void GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY,
                       mozilla::ErrorResult& aError);
 
@@ -1501,6 +1578,10 @@ protected:
 
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
+    GetComputedStyleHelperOuter(mozilla::dom::Element& aElt,
+                                const nsAString& aPseudoElt,
+                                bool aDefaultStylesOnly);
+  already_AddRefed<nsICSSDeclaration>
     GetComputedStyleHelper(mozilla::dom::Element& aElt,
                            const nsAString& aPseudoElt,
                            bool aDefaultStylesOnly,
@@ -1521,10 +1602,18 @@ protected:
 
   nsGlobalWindow* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 
+  void PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                           const nsAString& aTargetOrigin,
+                           JS::Handle<JS::Value> aTransfer,
+                           mozilla::ErrorResult& aError);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       JS::Handle<JS::Value> aTransfer,
                       mozilla::ErrorResult& aError);
+
+  already_AddRefed<nsIVariant>
+    ShowModalDialogOuter(const nsAString& aUrl, nsIVariant* aArgument,
+                         const nsAString& aOptions, mozilla::ErrorResult& aError);
 
   already_AddRefed<nsIVariant>
     ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
