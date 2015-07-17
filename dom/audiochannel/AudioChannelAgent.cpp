@@ -105,14 +105,10 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   if (aWindow) {
     nsCOMPtr<nsIDOMWindow> topWindow;
     aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-    MOZ_ASSERT(topWindow);
-
     mWindow = do_QueryInterface(topWindow);
-    if (!mWindow) {
-      return NS_ERROR_FAILURE;
+    if (mWindow) {
+      mWindow = mWindow->GetOuterWindow();
     }
-
-    mWindow = mWindow->GetOuterWindow();
   }
 
   mAudioChannelType = aChannelType;
