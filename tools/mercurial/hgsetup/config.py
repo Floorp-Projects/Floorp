@@ -30,7 +30,7 @@ def config_file(files):
     return files[0]
 
 
-class HgIncludeException(Exception):
+class ParseException(Exception):
     pass
 
 
@@ -49,8 +49,12 @@ class MercurialConfig(object):
             with codecs.open(path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('%include'):
-                        raise HgIncludeException(
+                        raise ParseException(
                             '%include directive is not supported by MercurialConfig')
+                    if line.startswith(';'):
+                        raise ParseException(
+                            'semicolon (;) comments are not supported; '
+                            'use # instead')
 
         # write_empty_values is necessary to prevent built-in extensions (which
         # have no value) from being dropped on write.
