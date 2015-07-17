@@ -5,15 +5,21 @@
  *   In particular, the tests check that default-src and manifest-src directives are
  *   are respected by the ManifestObtainer.
  */
-/*globals SpecialPowers, requestLongerTimeout, ok, Cu, is, add_task, gBrowser, BrowserTestUtils, ManifestObtainer*/
+/*globals Components*/
 'use strict';
 requestLongerTimeout(10); // e10s tests take time.
-Cu.import('resource://gre/modules/ManifestObtainer.jsm', this); // jshint ignore:line
+const {
+  ManifestObtainer
+} = Components.utils.import('resource://gre/modules/WebManifest.jsm', {});
 const path = '/tests/dom/security/test/csp/';
 const testFile = `file=${path}file_web_manifest.html`;
 const remoteFile = `file=${path}file_web_manifest_remote.html`;
+const httpsManifest = `file=${path}file_web_manifest_https.html`;
+const mixedContent = `file=${path}file_web_manifest_mixed_content.html`;
 const server = 'file_testserver.sjs';
 const defaultURL = `http://example.org${path}${server}`;
+const remoteURL = `http://mochi.test:8888`;
+const secureURL = `https://example.com${path}${server}`;
 const tests = [
   // CSP block everything, so trying to load a manifest
   // will result in a policy violation.
@@ -242,7 +248,7 @@ function NetworkObserver(test) {
   let success = false;
   this.finished = new Promise((resolver) => {
     finishedTest = resolver;
-  });
+  })
   this.observe = function observer(subject, topic) {
     SpecialPowers.removeObserver(this, 'csp-on-violate-policy');
     test.run(topic);
