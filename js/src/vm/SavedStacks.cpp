@@ -912,17 +912,6 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     while (!iter.done()) {
         Activation& activation = *iter.activation();
 
-        if (asyncActivation && asyncActivation != &activation) {
-            // We found an async stack in the previous activation, and we
-            // walked past the oldest frame of that activation, we're done.
-            // However, we only want to use the async parent if it was
-            // explicitly requested; if we got here otherwise, we have
-            // a direct parent, which we prefer.
-            if (asyncActivation->asyncCallIsExplicit())
-                break;
-            asyncActivation = nullptr;
-        }
-
         if (!asyncActivation) {
             asyncStack = activation.asyncStack();
             if (asyncStack) {
@@ -934,6 +923,10 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
                 asyncCause = activation.asyncCause();
                 asyncActivation = &activation;
             }
+        } else if (asyncActivation != &activation) {
+            // We found an async stack in the previous activation, and we
+            // walked past the oldest frame of that activation, we're done.
+            break;
         }
 
         AutoLocationValueRooter location(cx);
