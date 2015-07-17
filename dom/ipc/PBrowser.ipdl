@@ -222,9 +222,11 @@ parent:
      *
      *  contentCache Cache of content
      *  causedByComposition true if the change is caused by composition
+     *  causedBySelectionEvent true if the change is caused by selection event
      */
     prio(urgent) async NotifyIMESelection(ContentCache contentCache,
-                                          bool causedByComposition);
+                                          bool causedByComposition,
+                                          bool causedBySelectionEvent);
 
     /**
      * Notifies chrome of updating its content cache.

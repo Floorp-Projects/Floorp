@@ -676,6 +676,7 @@ struct ParamTraits<mozilla::widget::IMENotification>
         WriteParam(aMsg, aParam.mSelectionChangeData.mWritingMode);
         WriteParam(aMsg, aParam.mSelectionChangeData.mReversed);
         WriteParam(aMsg, aParam.mSelectionChangeData.mCausedByComposition);
+        WriteParam(aMsg, aParam.mSelectionChangeData.mCausedBySelectionEvent);
         return;
       case mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE:
         WriteParam(aMsg, aParam.mTextChangeData.mStartOffset);
@@ -719,7 +720,9 @@ struct ParamTraits<mozilla::widget::IMENotification>
                ReadParam(aMsg, aIter,
                          &aResult->mSelectionChangeData.mReversed) &&
                ReadParam(aMsg, aIter,
-                         &aResult->mSelectionChangeData.mCausedByComposition);
+                         &aResult->mSelectionChangeData.mCausedByComposition) &&
+               ReadParam(aMsg, aIter,
+                         &aResult->mSelectionChangeData.mCausedBySelectionEvent);
       case mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE:
         return ReadParam(aMsg, aIter,
                          &aResult->mTextChangeData.mStartOffset) &&

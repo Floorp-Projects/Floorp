@@ -615,6 +615,7 @@ struct IMENotification
         mSelectionChangeData.mWritingMode = 0;
         mSelectionChangeData.mReversed = false;
         mSelectionChangeData.mCausedByComposition = false;
+        mSelectionChangeData.mCausedBySelectionEvent = false;
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData.Clear();
@@ -659,9 +660,22 @@ struct IMENotification
           aNotification.mSelectionChangeData.mWritingMode;
         mSelectionChangeData.mReversed =
           aNotification.mSelectionChangeData.mReversed;
-        mSelectionChangeData.mCausedByComposition =
-          mSelectionChangeData.mCausedByComposition &&
+        if (!mSelectionChangeData.mCausedByComposition) {
+          mSelectionChangeData.mCausedByComposition =
             aNotification.mSelectionChangeData.mCausedByComposition;
+        } else {
+          mSelectionChangeData.mCausedByComposition =
+            mSelectionChangeData.mCausedByComposition &&
+              aNotification.mSelectionChangeData.mCausedByComposition;
+        }
+        if (!mSelectionChangeData.mCausedBySelectionEvent) {
+          mSelectionChangeData.mCausedBySelectionEvent =
+            aNotification.mSelectionChangeData.mCausedBySelectionEvent;
+        } else {
+          mSelectionChangeData.mCausedBySelectionEvent =
+            mSelectionChangeData.mCausedBySelectionEvent &&
+              aNotification.mSelectionChangeData.mCausedBySelectionEvent;
+        }
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
@@ -690,6 +704,7 @@ struct IMENotification
 
     bool mReversed;
     bool mCausedByComposition;
+    bool mCausedBySelectionEvent;
 
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;

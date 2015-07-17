@@ -132,10 +132,13 @@ private:
     PostTextChangeNotification(aTextChangeData);
     FlushMergeableNotifications();
   }
-  void PostSelectionChangeNotification(bool aCausedByComposition);
-  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
+  void PostSelectionChangeNotification(bool aCausedByComposition,
+                                       bool aCausedBySelectionEvent);
+  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
+                                       bool aCausedBySelectionEvent)
   {
-    PostSelectionChangeNotification(aCausedByComposition);
+    PostSelectionChangeNotification(aCausedByComposition,
+                                    aCausedBySelectionEvent);
     FlushMergeableNotifications();
   }
   void PostPositionChangeNotification();
@@ -239,6 +242,7 @@ private:
   bool mIsFocusEventPending;
   bool mIsSelectionChangeEventPending;
   bool mSelectionChangeCausedOnlyByComposition;
+  bool mSelectionChangeCausedOnlyBySelectionEvent;
   bool mIsPositionChangeEventPending;
   bool mIsFlushingPendingNotifications;
 
@@ -295,15 +299,20 @@ private:
   {
   public:
     SelectionChangeEvent(IMEContentObserver* aIMEContentObserver,
-                         bool aCausedByComposition)
+                         bool aCausedByComposition,
+                         bool aCausedBySelectionEvent)
       : AChangeEvent(eChangeEventType_Selection, aIMEContentObserver)
       , mCausedByComposition(aCausedByComposition)
+      , mCausedBySelectionEvent(aCausedBySelectionEvent)
     {
+      aIMEContentObserver->mSelectionChangeCausedOnlyByComposition = false;
+      aIMEContentObserver->mSelectionChangeCausedOnlyBySelectionEvent = false;
     }
     NS_IMETHOD Run() override;
 
   private:
     bool mCausedByComposition;
+    bool mCausedBySelectionEvent;
   };
 
   class TextChangeEvent : public AChangeEvent
