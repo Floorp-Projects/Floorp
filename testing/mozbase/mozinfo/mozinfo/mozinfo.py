@@ -14,15 +14,9 @@ import os
 import platform
 import re
 import sys
-from distutils.version import LooseVersion
-
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
-
-# StringVersion is our public name
-StringVersion = LooseVersion
-
 
 class unknown(object):
     """marker class for unknown information"""
@@ -81,7 +75,7 @@ else:
     os_version = version = unknown
 
 info['version'] = version
-info['os_version'] = StringVersion(os_version)
+info['os_version'] = os_version
 
 # processor type and bits
 if processor in ["i386", "i686"]:
@@ -200,7 +194,6 @@ __all__ += [
     'choices',
     'update',
     'find_and_update_from_json',
-    'StringVersion',
     ]
 
 def main(args=None):
