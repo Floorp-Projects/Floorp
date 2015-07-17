@@ -809,7 +809,5 @@ FormatUsageAuthority::AddUnpackOption(GLenum unpackFormat, GLenum unpackType,
     MOZ_ALWAYS_TRUE(didInsert);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-
 } // namespace webgl
 } // namespace mozilla
