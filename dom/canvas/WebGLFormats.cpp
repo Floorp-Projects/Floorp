@@ -268,6 +268,16 @@ InitFormatInfoMap()
     // OES_compressed_ETC1_RGB8_texture
     AddFormatInfo(FOO(ETC1_RGB8), 0, UnsizedFormat::RGB, ComponentType::NormUInt);
 
+    // OES_texture_float
+    AddFormatInfo(FOO(Luminance32FAlpha32F), 2, UnsizedFormat::LA, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance32F        ), 1, UnsizedFormat::L , ComponentType::Float);
+    AddFormatInfo(FOO(Alpha32F            ), 1, UnsizedFormat::A , ComponentType::Float);
+
+    // OES_texture_half_float
+    AddFormatInfo(FOO(Luminance16FAlpha16F), 2, UnsizedFormat::LA, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance16F        ), 1, UnsizedFormat::L , ComponentType::Float);
+    AddFormatInfo(FOO(Alpha16F            ), 1, UnsizedFormat::A , ComponentType::Float);
+
 #undef FOO
 }
 
@@ -296,14 +306,24 @@ InitUnpackTupleMap()
     AddUnpackTuple(LOCAL_GL_LUMINANCE      , LOCAL_GL_UNSIGNED_BYTE, EffectiveFormat::Luminance8      );
     AddUnpackTuple(LOCAL_GL_ALPHA          , LOCAL_GL_UNSIGNED_BYTE, EffectiveFormat::Alpha8          );
 
-    AddUnpackTuple(LOCAL_GL_RGB , LOCAL_GL_FLOAT     , EffectiveFormat::RGB32F );
-    AddUnpackTuple(LOCAL_GL_RGBA, LOCAL_GL_FLOAT     , EffectiveFormat::RGBA32F);
-    AddUnpackTuple(LOCAL_GL_RGB , LOCAL_GL_HALF_FLOAT, EffectiveFormat::RGB16F );
-    AddUnpackTuple(LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT, EffectiveFormat::RGBA16F);
+    AddUnpackTuple(LOCAL_GL_RGB            , LOCAL_GL_FLOAT, EffectiveFormat::RGB32F );
+    AddUnpackTuple(LOCAL_GL_RGBA           , LOCAL_GL_FLOAT, EffectiveFormat::RGBA32F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_FLOAT, EffectiveFormat::Luminance32FAlpha32F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE      , LOCAL_GL_FLOAT, EffectiveFormat::Luminance32F);
+    AddUnpackTuple(LOCAL_GL_ALPHA          , LOCAL_GL_FLOAT, EffectiveFormat::Alpha32F);
+
+    AddUnpackTuple(LOCAL_GL_RGB            , LOCAL_GL_HALF_FLOAT, EffectiveFormat::RGB16F );
+    AddUnpackTuple(LOCAL_GL_RGBA           , LOCAL_GL_HALF_FLOAT, EffectiveFormat::RGBA16F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_HALF_FLOAT, EffectiveFormat::Luminance16FAlpha16F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE      , LOCAL_GL_HALF_FLOAT, EffectiveFormat::Luminance16F);
+    AddUnpackTuple(LOCAL_GL_ALPHA          , LOCAL_GL_HALF_FLOAT, EffectiveFormat::Alpha16F);
 
     // Everyone's favorite problem-child:
-    AddUnpackTuple(LOCAL_GL_RGB , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGB16F );
-    AddUnpackTuple(LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGBA16F);
+    AddUnpackTuple(LOCAL_GL_RGB            , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGB16F );
+    AddUnpackTuple(LOCAL_GL_RGBA           , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGBA16F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::Luminance16FAlpha16F);
+    AddUnpackTuple(LOCAL_GL_LUMINANCE      , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::Luminance16F);
+    AddUnpackTuple(LOCAL_GL_ALPHA          , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::Alpha16F);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

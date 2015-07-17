@@ -131,6 +131,16 @@ enum class EffectiveFormat : EffectiveFormatValueT {
     // OES_compressed_ETC1_RGB8_texture
     ETC1_RGB8,
 
+    // OES_texture_float
+    Luminance32FAlpha32F,
+    Luminance32F,
+    Alpha32F,
+
+    // OES_texture_half_float
+    Luminance16FAlpha16F,
+    Luminance16F,
+    Alpha16F,
+
     MAX,
 };
 
