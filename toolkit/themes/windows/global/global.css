@@ -325,34 +325,72 @@ popupnotificationcontent {
 
 .close-icon {
   list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-image-region: rect(0, 20px, 20px, 0);
 }
 
 .close-icon:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  -moz-image-region: rect(0, 40px, 20px, 20px);
 }
 
 .close-icon:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+  -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
 .close-icon > .button-icon,
 .close-icon > .button-box > .button-icon,
 .close-icon > .toolbarbutton-icon {
-  width: 16px;
+  width: 20px;
+}
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  .close-icon {
+    -moz-image-region: rect(0, 16px, 16px, 0);
+  }
+
+  .close-icon:hover {
+    -moz-image-region: rect(0, 32px, 16px, 16px);
+  }
+
+  .close-icon:hover:active {
+    -moz-image-region: rect(0, 48px, 16px, 32px);
+  }
+
+  .close-icon > .button-icon,
+  .close-icon > .button-box > .button-icon,
+  .close-icon > .toolbarbutton-icon {
+    width: 16px;
+  }
 }
 
 @media (min-resolution: 1.1dppx) {
   .close-icon {
     list-style-image: url("chrome://global/skin/icons/close@2x.png");
-    -moz-image-region: rect(0, 32px, 32px, 0);
+    -moz-image-region: rect(0, 40px, 40px, 0);
   }
 
   .close-icon:hover {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
+    -moz-image-region: rect(0, 80px, 40px, 40px);
   }
 
   .close-icon:hover:active {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
+    -moz-image-region: rect(0, 120px, 40px, 80px);
+  }
+
+  @media (-moz-os-version: windows-xp),
+         (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7) {
+    .close-icon {
+      -moz-image-region: rect(0, 32px, 32px, 0);
+    }
+
+    .close-icon:hover {
+      -moz-image-region: rect(0, 64px, 32px, 32px);
+    }
+
+    .close-icon:hover:active {
+      -moz-image-region: rect(0, 96px, 32px, 64px);
+    }
   }
 }

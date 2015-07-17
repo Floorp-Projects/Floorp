@@ -1935,9 +1935,18 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #sidebar-header > .close-icon {
   -moz-appearance: none;
-  padding: 4px 2px;
+  padding: 2px;
   margin: 0;
   border: none;
+}
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  #sidebar-header > .close-icon {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
 }
 
 .browserContainer > findbar {
@@ -2018,14 +2027,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Invert the unhovered close tab icons on bright-text tabs */
 @media not all and (min-resolution: 1.1dppx) {
-  #TabsToolbar[brighttext] .tab-close-button:not(:hover):not([visuallyselected="true"]) {
-    -moz-image-region: rect(0, 64px, 16px, 48px) !important;
+  #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
+    list-style-image: url("chrome://global/skin/icons/close-inverted.png");
   }
 }
 
 @media (min-resolution: 1.1dppx) {
-  #TabsToolbar[brighttext] .tab-close-button:not(:hover):not([visuallyselected="true"]) {
-    -moz-image-region: rect(0, 128px, 32px, 96px) !important;
+  #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
+    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
 }
 
