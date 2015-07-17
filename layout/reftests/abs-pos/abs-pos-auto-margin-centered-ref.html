@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<title> absolutely positioned element should be vertically centered even if the height is bigger than that of the containing block (reference) - bug 812899</title>
+<style>
+body > div {
+    font-size: 16px;
+    position: relative;
+    border: red solid;
+    margin-top: 5em;
+    width: 5em;
+    height: 5em;
+}
+
+body > div > div {
+    position: absolute;
+    border: medium solid blue;
+    margin: -23px auto
+    height: 150%;
+    width: 150%;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+}
+</style>
+
+<body>
+    <div>
+        <div></div>
+    </div>
+</body>
+
+</html>
