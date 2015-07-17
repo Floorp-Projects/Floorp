@@ -477,8 +477,6 @@ public class BrowserApp extends GeckoApp
                 }
 
                 mHideDynamicToolbarOnActionModeEnd = false;
-
-                mProgressView.setPrivateMode(tab.isPrivate());
                 break;
             case START:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
