@@ -46,6 +46,7 @@ NS_INTERFACE_MAP_END
 nsHistory::nsHistory(nsPIDOMWindow* aInnerWindow)
   : mInnerWindow(do_GetWeakReference(aInnerWindow))
 {
+  MOZ_ASSERT(aInnerWindow->IsInnerWindow());
 }
 
 nsHistory::~nsHistory()
