@@ -51,6 +51,37 @@ body,
   margin-top: 2rem;
 }
 
+/* Waiting info offer */
+
+.standalone .empty-room-message {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.standalone .room-waiting-area {
+  display: flex;
+  justify-content: space-between;
+  margin: 3em auto 1em;
+}
+
+.standalone .room-waiting-help {
+  background: transparent url("../shared/img/svg/glyph-help-16x16.svg") no-repeat;
+  display: inline-block;
+  height: 16px;
+  margin-left: 5px;
+  vertical-align: middle;
+  width: 16px;
+}
+
+.standalone .room-waiting-tile {
+  border: 0;
+  border-radius: 5px;
+  /* These sizes are the size of the tile image and title */
+  height: 204px;
+  /* Override the default iframe 300px width with the inherited width */
+  width: 100%;
+}
+
 /*
  * Top/Bottom spacing
  **/

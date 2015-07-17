@@ -129,6 +129,9 @@ body {
   max-width: 120px;
 }
 
+.room-waiting-tile {
+  background-color: grey;
+}
 /* SVG icons showcase */
 
 .svg-icons h3 {
