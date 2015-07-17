@@ -612,7 +612,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
                             const bool& aSizeSpecified,
                             const nsString& aURI,
                             const nsString& aName,
-                            const nsString& aFeatures,
+                            const nsCString& aFeatures,
                             const nsString& aBaseURI,
                             nsresult* aResult,
                             bool* aWindowIsNew,
@@ -737,7 +737,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
 
   *aResult = pwwatch->OpenWindow2(parent, finalURIString.get(),
                                   NS_ConvertUTF16toUTF8(aName).get(),
-                                  NS_ConvertUTF16toUTF8(aFeatures).get(), aCalledFromJS,
+                                  aFeatures.get(), aCalledFromJS,
                                   false, false, this, nullptr, getter_AddRefs(window));
 
   if (NS_WARN_IF(NS_FAILED(*aResult)))
