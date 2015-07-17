@@ -4,17 +4,22 @@
 
 "use strict";
 
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "swm",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
 
-addMessageListener("push", function (aMessage) {
+Services.cpmm.addMessageListener("push", function (aMessage) {
   swm.sendPushEvent(aMessage.data.originAttributes,
                     aMessage.data.scope, aMessage.data.payload);
 });
 
-addMessageListener("pushsubscriptionchange", function (aMessage) {
+Services.cpmm.addMessageListener("pushsubscriptionchange", function (aMessage) {
   swm.sendPushSubscriptionChangeEvent(aMessage.data.originAttributes,
                                       aMessage.data.scope);
 });
