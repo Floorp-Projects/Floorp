@@ -94,7 +94,7 @@ if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
 
       let frame = markers[0].endStack;
       ok(frame.parent.asyncParent !== null, "Parent frame has async parent");
-      is(frame.parent.asyncParent.asyncCause, "promise callback",
+      is(frame.parent.asyncParent.asyncCause, "Promise",
          "Async parent has correct cause");
       is(frame.parent.asyncParent.functionDisplayName, "makePromise",
          "Async parent has correct function name");

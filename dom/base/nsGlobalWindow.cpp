@@ -5555,7 +5555,7 @@ nsGlobalWindow::RequestAnimationFrame(JS::Handle<JS::Value> aCallback,
 
   JS::Rooted<JSObject*> callbackObj(cx, &aCallback.toObject());
   nsRefPtr<FrameRequestCallback> callback =
-    new FrameRequestCallback(cx, callbackObj, GetIncumbentGlobal());
+    new FrameRequestCallback(callbackObj, GetIncumbentGlobal());
 
   ErrorResult rv;
   *aHandle = RequestAnimationFrame(*callback, rv);

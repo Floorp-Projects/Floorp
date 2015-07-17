@@ -943,8 +943,7 @@ CallFunctionWithAsyncStack(JSContext* cx, unsigned argc, jsval* vp)
     RootedObject stack(cx, &args[1].toObject());
     RootedString asyncCause(cx, args[2].toString());
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, asyncCause,
-                                         JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
+    JS::AutoSetAsyncStackForNewCalls sas(cx, stack, asyncCause);
     return Call(cx, UndefinedHandleValue, function,
                 JS::HandleValueArray::empty(), args.rval());
 }

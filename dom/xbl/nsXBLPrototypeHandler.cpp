@@ -316,7 +316,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   NS_ENSURE_TRUE(bound, NS_ERROR_FAILURE);
 
   nsRefPtr<EventHandlerNonNull> handlerCallback =
-    new EventHandlerNonNull(nullptr, bound, /* aIncumbentGlobal = */ nullptr);
+    new EventHandlerNonNull(bound, /* aIncumbentGlobal = */ nullptr);
 
   TypedEventHandler typedHandler(handlerCallback);
 

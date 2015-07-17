@@ -24,10 +24,9 @@ namespace dom {
 class CallbackInterface : public CallbackObject
 {
 public:
-  // See CallbackObject for an explanation of the arguments.
-  explicit CallbackInterface(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+  explicit CallbackInterface(JS::Handle<JSObject*> aCallback,
                              nsIGlobalObject *aIncumbentGlobal)
-    : CallbackObject(aCx, aCallback, aIncumbentGlobal)
+    : CallbackObject(aCallback, aIncumbentGlobal)
   {
   }
 
