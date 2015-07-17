@@ -53,6 +53,8 @@ private:
                         nsIAudioChannelAgentCallback* aCallback,
                         bool aUseWeakRef);
 
+  void Shutdown();
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIAudioChannelAgentCallback> mCallback;
 
