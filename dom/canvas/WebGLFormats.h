@@ -241,11 +241,11 @@ public:
     void AddUnpackOption(GLenum unpackFormat, GLenum unpackType,
                          EffectiveFormat effectiveFormat);
 
-    FormatUsageInfo* GetInfo(EffectiveFormat format);
+    FormatUsageInfo* GetUsage(EffectiveFormat format);
 
-    FormatUsageInfo* GetInfo(const FormatInfo* format)
+    FormatUsageInfo* GetUsage(const FormatInfo* format)
     {
-        return GetInfo(format->effectiveFormat);
+        return GetUsage(format->effectiveFormat);
     }
 };
 
