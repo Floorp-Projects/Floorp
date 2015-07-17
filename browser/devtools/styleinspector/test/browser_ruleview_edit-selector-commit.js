@@ -87,7 +87,7 @@ function* runTestData(inspector, view, data) {
   info("Entering the commit key " + commitKey + " " + modifiers);
   EventUtils.synthesizeKey(commitKey, modifiers);
 
-  let activeElement = view.doc.activeElement;
+  let activeElement = view.styleDocument.activeElement;
 
   if (commitKey === "VK_ESCAPE") {
     is(idRuleEditor.rule.selectorText, expected,

@@ -233,7 +233,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         # Don't do anything when...
 
         # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mercurial-setup'):
+        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'mercurial-setup'):
             return
 
         # We are running in automation.

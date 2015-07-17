@@ -245,16 +245,6 @@ RilObject.prototype = {
     this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
 
     /**
-     * USSD session flag.
-     * Only one USSD session may exist at a time, and the session is assumed
-     * to exist until:
-     *    a) There's a call to cancelUSSD()
-     *    b) The implementation sends a UNSOLICITED_ON_USSD with a type code
-     *       of "0" (USSD-Notify/no further action) or "2" (session terminated)
-     */
-    this._ussdSession = null;
-
-    /**
      * Cell Broadcast Search Lists.
      */
     let cbmmi = this.cellBroadcastConfigs && this.cellBroadcastConfigs.MMI;
@@ -871,60 +861,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Query call waiting status via MMI.
-   */
-  _handleQueryMMICallWaiting: function(options) {
-    let Buf = this.context.Buf;
-
-    function callback(options) {
-      options.length = Buf.readInt32();
-      options.enabled = (Buf.readInt32() === 1);
-      let services = Buf.readInt32();
-      if (options.enabled) {
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED_FOR;
-        let serviceClass = [];
-        for (let serviceClassMask = 1;
-             serviceClassMask <= ICC_SERVICE_CLASS_MAX;
-             serviceClassMask <<= 1) {
-          if ((serviceClassMask & services) !== 0) {
-            serviceClass.push(MMI_KS_SERVICE_CLASS_MAPPING[serviceClassMask]);
-          }
-        }
-        options.additionalInformation = serviceClass;
-      } else {
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-      }
-
-      // Prevent DataCloneError when sending chrome messages.
-      delete options.callback;
-      this.sendChromeMessage(options);
-    }
-
-    options.callback = callback;
-    this.queryCallWaiting(options);
-  },
-
-  /**
-   * Set call waiting status via MMI.
-   */
-  _handleSetMMICallWaiting: function(options) {
-    function callback(options) {
-      if (options.enabled) {
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-      } else {
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-      }
-
-      // Prevent DataCloneError when sending chrome messages.
-      delete options.callback;
-      this.sendChromeMessage(options);
-    }
-
-    options.callback = callback;
-    this.setCallWaiting(options);
-  },
-
-  /**
    * Query call waiting status.
    *
    */
@@ -957,9 +893,6 @@ RilObject.prototype = {
 
   /**
    * Queries current CLIP status.
-   *
-   * (MMI request for code "*#30#")
-   *
    */
   queryCLIP: function(options) {
     this.context.Buf.simpleRequest(REQUEST_QUERY_CLIP, options);
@@ -1239,6 +1172,15 @@ RilObject.prototype = {
   },
 
   getIMEI: function(options) {
+    // A device's IMEI can't change, so we only need to request it once.
+    if (this.IMEI) {
+      if (options && options.rilMessageType) {
+        options.imei = this.IMEI;
+        this.sendChromeMessage(options);
+      }
+      return;
+    }
+
     this.context.Buf.simpleRequest(REQUEST_GET_IMEI, options);
   },
 
@@ -1893,325 +1835,13 @@ RilObject.prototype = {
     this.context.Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE, options);
   },
 
-  sendMMI: function(options) {
-    if (DEBUG) {
-      this.context.debug("SendMMI " + JSON.stringify(options));
-    }
-
-    let _sendMMIError = (function(errorMsg) {
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this);
-
-    // It's neither a valid mmi code nor an ongoing ussd.
-    let mmi = options.mmi;
-    if (!mmi && !this._ussdSession) {
-      _sendMMIError(MMI_ERROR_KS_ERROR);
-      return;
-    }
-
-    function _isValidPINPUKRequest() {
-      // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
-      // is "Registration" (**).
-      if (mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION);
-        return false;
-      }
-
-      if (!mmi.sia || !mmi.sib || !mmi.sic) {
-        _sendMMIError(MMI_ERROR_KS_ERROR);
-        return false;
-      }
-
-      if (mmi.sia.length < 4 || mmi.sia.length > 8 ||
-          mmi.sib.length < 4 || mmi.sib.length > 8 ||
-          mmi.sic.length < 4 || mmi.sic.length > 8) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_PIN);
-        return false;
-      }
-
-      if (mmi.sib != mmi.sic) {
-        _sendMMIError(MMI_ERROR_KS_MISMATCH_PIN);
-        return false;
-      }
-
-      return true;
-    }
-
-    function _isValidChangePasswordRequest() {
-      if (mmi.procedure !== MMI_PROCEDURE_REGISTRATION &&
-          mmi.procedure !== MMI_PROCEDURE_ACTIVATION) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION);
-        return false;
-      }
-
-      if (mmi.sia !== "" && mmi.sia !== MMI_ZZ_BARRING_SERVICE) {
-        _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-        return false;
-      }
-
-      let validPassword = si => /^[0-9]{4}$/.test(si);
-      if (!validPassword(mmi.sib) || !validPassword(mmi.sic) ||
-          !validPassword(mmi.pwd)) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_PASSWORD);
-        return false;
-      }
-
-      if (mmi.sic != mmi.pwd) {
-        _sendMMIError(MMI_ERROR_KS_MISMATCH_PASSWORD);
-        return false;
-      }
-
-      return true;
-    }
-
-    let _isRadioAvailable = (function() {
-      if (this.radioState !== GECKO_RADIOSTATE_ENABLED) {
-        _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-        return false;
-      }
-      return true;
-    }).bind(this);
-
-    // We check if the MMI service code is supported and in that case we
-    // trigger the appropriate RIL request if possible.
-    let sc = mmi.serviceCode;
-    switch (sc) {
-      // Call forwarding
-      case MMI_SC_CFU:
-      case MMI_SC_CF_BUSY:
-      case MMI_SC_CF_NO_REPLY:
-      case MMI_SC_CF_NOT_REACHABLE:
-      case MMI_SC_CF_ALL:
-      case MMI_SC_CF_ALL_CONDITIONAL:
-        if (!_isRadioAvailable()) {
-          return;
-        }
-        // Call forwarding requires at least an action, given by the MMI
-        // procedure, and a reason, given by the MMI service code, but there
-        // is no way that we get this far without a valid procedure or service
-        // code.
-        options.action = MMI_PROC_TO_CF_ACTION[mmi.procedure];
-        options.reason = MMI_SC_TO_CF_REASON[sc];
-        options.number = mmi.sia;
-        options.serviceClass = this._siToServiceClass(mmi.sib);
-        if (options.action == CALL_FORWARD_ACTION_QUERY_STATUS) {
-          this.queryCallForwardStatus(options);
-          return;
-        }
-
-        options.isSetCallForward = true;
-        options.timeSeconds = mmi.sic;
-        this.setCallForward(options);
-        return;
-
-      // Change the current ICC PIN number.
-      case MMI_SC_PIN:
-        // As defined in TS.122.030 6.6.2 to change the ICC PIN we should expect
-        // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
-        // should be entered as the SIA parameter and the new PIN as SIB and
-        // SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPassword = mmi.sib;
-        this.changeICCPIN(options);
-        return;
-
-      // Change the current ICC PIN2 number.
-      case MMI_SC_PIN2:
-        // As defined in TS.122.030 6.6.2 to change the ICC PIN2 we should
-        // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
-        // where the old PIN2 should be entered as the SIA parameter and the
-        // new PIN2 as SIB and SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPassword = mmi.sib;
-        this.changeICCPIN2(options);
-        return;
-
-      // Unblock ICC PIN.
-      case MMI_SC_PUK:
-        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN we should
-        // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
-        // should be entered as the SIA parameter and the new PIN as SIB and
-        // SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPin = mmi.sib;
-        this.enterICCPUK(options);
-        return;
-
-      // Unblock ICC PIN2.
-      case MMI_SC_PUK2:
-        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN2 we should
-        // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
-        // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
-        // and SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPin = mmi.sib;
-        this.enterICCPUK2(options);
-        return;
-
-      // IMEI
-      case MMI_SC_IMEI:
-        // A device's IMEI can't change, so we only need to request it once.
-        if (this.IMEI == null) {
-          this.getIMEI(options);
-          return;
-        }
-        // If we already had the device's IMEI, we just send it to chrome.
-        options.statusMessage = this.IMEI;
-        this.sendChromeMessage(options);
-        return;
-
-      // CLIP
-      case MMI_SC_CLIP:
-        options.procedure = mmi.procedure;
-        if (options.procedure === MMI_PROCEDURE_INTERROGATION) {
-          this.queryCLIP(options);
-        } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-        }
-        return;
-
-      // CLIR (non-temporary ones)
-      // TODO: Both dial() and sendMMI() functions should be unified at some
-      // point in the future. In the mean time we handle temporary CLIR MMI
-      // commands through the dial() function. Please see bug 889737.
-      case MMI_SC_CLIR:
-        options.procedure = mmi.procedure;
-        switch (options.procedure) {
-          case MMI_PROCEDURE_INTERROGATION:
-            this.getCLIR(options);
-            return;
-          case MMI_PROCEDURE_ACTIVATION:
-            options.clirMode = CLIR_INVOCATION;
-            break;
-          case MMI_PROCEDURE_DEACTIVATION:
-            options.clirMode = CLIR_SUPPRESSION;
-            break;
-          default:
-            _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-            return;
-        }
-        options.isSetCLIR = true;
-        this.setCLIR(options);
-        return;
-
-      // Change call barring password
-      case MMI_SC_CHANGE_PASSWORD:
-        if (!_isRadioAvailable() || !_isValidChangePasswordRequest()) {
-          return;
-        }
-
-        options.pin = mmi.sib;
-        options.newPin = mmi.sic;
-        this.changeCallBarringPassword(options);
-        return;
-
-      // Call barring
-      case MMI_SC_BAOC:
-      case MMI_SC_BAOIC:
-      case MMI_SC_BAOICxH:
-      case MMI_SC_BAIC:
-      case MMI_SC_BAICr:
-      case MMI_SC_BA_ALL:
-      case MMI_SC_BA_MO:
-      case MMI_SC_BA_MT:
-        options.password = mmi.sia || "";
-        options.serviceClass = this._siToServiceClass(mmi.sib);
-        options.facility = MMI_SC_TO_CB_FACILITY[sc];
-        options.procedure = mmi.procedure;
-        if (mmi.procedure === MMI_PROCEDURE_INTERROGATION) {
-          this.queryICCFacilityLock(options);
-          return;
-        }
-        if (mmi.procedure === MMI_PROCEDURE_ACTIVATION) {
-          options.enabled = 1;
-        } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
-          options.enabled = 0;
-        } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-          return;
-        }
-        this.setICCFacilityLock(options);
-        return;
-
-      // Call waiting
-      case MMI_SC_CALL_WAITING:
-        if (!_isRadioAvailable()) {
-          return;
-        }
-
-
-        if (mmi.procedure === MMI_PROCEDURE_INTERROGATION) {
-          this._handleQueryMMICallWaiting(options);
-          return;
-        }
-
-        if (mmi.procedure === MMI_PROCEDURE_ACTIVATION) {
-          options.enabled = true;
-        } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
-          options.enabled = false;
-        } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-          return;
-        }
-
-        options.serviceClass = this._siToServiceClass(mmi.sia);
-        this._handleSetMMICallWaiting(options);
-        return;
-    }
-
-    // If the MMI code is not a known code, it is treated as an ussd.
-    if (!_isRadioAvailable()) {
-      return;
-    }
-
-    options.ussd = mmi.fullMMI;
-
-    if (this._ussdSession) {
-      if (DEBUG) this.context.debug("Cancel existing ussd session.");
-      this.cachedUSSDRequest = options;
-      this.cancelUSSD({});
-      return;
-    }
-
-    this.sendUSSD(options, false);
-  },
-
-  /**
-   * Cache the request for send out a new ussd when there is an existing
-   * session. We should do cancelUSSD first.
-   */
-  cachedUSSDRequest : null,
-
   /**
    * Send USSD.
    *
    * @param ussd
    *        String containing the USSD code.
    */
-  sendUSSD: function(options, checkSession = true) {
-    if (checkSession && !this._ussdSession) {
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
+  sendUSSD: function(options) {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SEND_USSD, options);
     Buf.writeString(options.ussd);
@@ -2935,47 +2565,6 @@ RilObject.prototype = {
    */
   _processEnterAndChangeICCResponses: function(length, options) {
     options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
-    if (options.rilMessageType != "sendMMI") {
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    let serviceCode = options.mmi.serviceCode;
-
-    if (!options.errorMsg) {
-      switch (serviceCode) {
-        case MMI_SC_PIN:
-          options.statusMessage = MMI_SM_KS_PIN_CHANGED;
-          break;
-        case MMI_SC_PIN2:
-          options.statusMessage = MMI_SM_KS_PIN2_CHANGED;
-          break;
-        case MMI_SC_PUK:
-          options.statusMessage = MMI_SM_KS_PIN_UNBLOCKED;
-          break;
-        case MMI_SC_PUK2:
-          options.statusMessage = MMI_SM_KS_PIN2_UNBLOCKED;
-          break;
-      }
-    } else {
-      if (options.retryCount <= 0) {
-        if (serviceCode === MMI_SC_PUK) {
-          options.errorMsg = MMI_ERROR_KS_SIM_BLOCKED;
-        } else if (serviceCode === MMI_SC_PIN) {
-          options.errorMsg = MMI_ERROR_KS_NEEDS_PUK;
-        }
-      } else {
-        if (serviceCode === MMI_SC_PIN || serviceCode === MMI_SC_PIN2) {
-          options.errorMsg = MMI_ERROR_KS_BAD_PIN;
-        } else if (serviceCode === MMI_SC_PUK || serviceCode === MMI_SC_PUK2) {
-          options.errorMsg = MMI_ERROR_KS_BAD_PUK;
-        }
-        if (options.retryCount !== undefined) {
-          options.additionalInformation = options.retryCount;
-        }
-      }
-    }
-
     this.sendChromeMessage(options);
   },
 
@@ -3582,44 +3171,6 @@ RilObject.prototype = {
       toa = TOA_INTERNATIONAL;
     }
     return toa;
-  },
-
-  /**
-   * Helper for translating basic service group to call forwarding service class
-   * parameter.
-   */
-  _siToServiceClass: function(si) {
-    if (!si) {
-      return ICC_SERVICE_CLASS_NONE;
-    }
-
-    let serviceCode = parseInt(si, 10);
-    switch (serviceCode) {
-      case 10:
-        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX  + ICC_SERVICE_CLASS_VOICE;
-      case 11:
-        return ICC_SERVICE_CLASS_VOICE;
-      case 12:
-        return ICC_SERVICE_CLASS_SMS + ICC_SERVICE_CLASS_FAX;
-      case 13:
-        return ICC_SERVICE_CLASS_FAX;
-      case 16:
-        return ICC_SERVICE_CLASS_SMS;
-      case 19:
-        return ICC_SERVICE_CLASS_FAX + ICC_SERVICE_CLASS_VOICE;
-      case 21:
-        return ICC_SERVICE_CLASS_PAD + ICC_SERVICE_CLASS_DATA_ASYNC;
-      case 22:
-        return ICC_SERVICE_CLASS_PACKET + ICC_SERVICE_CLASS_DATA_SYNC;
-      case 25:
-        return ICC_SERVICE_CLASS_DATA_ASYNC;
-      case 26:
-        return ICC_SERVICE_CLASS_DATA_SYNC + SERVICE_CLASS_VOICE;
-      case 99:
-        return ICC_SERVICE_CLASS_PACKET;
-      default:
-        return ICC_SERVICE_CLASS_NONE;
-    }
   },
 
   /**
@@ -4745,24 +4296,12 @@ RilObject.prototype[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, opti
   if (DEBUG) {
     this.context.debug("REQUEST_SEND_USSD " + JSON.stringify(options));
   }
-  this._ussdSession = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   if (DEBUG) {
     this.context.debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
   }
-
-  this._ussdSession = !!options.errorMsg;
-
-  // The cancelUSSD is triggered by ril_worker itself.
-  if (this.cachedUSSDRequest) {
-    if (DEBUG) this.context.debug("Send out the cached ussd request");
-    this.sendUSSD(this.cachedUSSDRequest);
-    this.cachedUSSDRequest = null;
-    return;
-  }
-
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
@@ -4781,66 +4320,6 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
 
   options.n = Buf.readInt32(); // Will be TS 27.007 +CLIR parameter 'n'.
   options.m = Buf.readInt32(); // Will be TS 27.007 +CLIR parameter 'm'.
-
-  if (options.rilMessageType === "sendMMI") {
-    // TS 27.007 +CLIR parameter 'm'.
-    switch (options.m) {
-      // CLIR not provisioned.
-      case 0:
-        options.statusMessage = MMI_SM_KS_SERVICE_NOT_PROVISIONED;
-        break;
-      // CLIR provisioned in permanent mode.
-      case 1:
-        options.statusMessage = MMI_SM_KS_CLIR_PERMANENT;
-        break;
-      // Unknown (e.g. no network, etc.).
-      case 2:
-        options.errorMsg = MMI_ERROR_KS_ERROR;
-        break;
-      // CLIR temporary mode presentation restricted.
-      case 3:
-        // TS 27.007 +CLIR parameter 'n'.
-        switch (options.n) {
-          // Default.
-          case 0:
-          // CLIR invocation.
-          case 1:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_ON;
-            break;
-          // CLIR suppression.
-          case 2:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_OFF;
-            break;
-          default:
-            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-            break;
-        }
-        break;
-      // CLIR temporary mode presentation allowed.
-      case 4:
-        // TS 27.007 +CLIR parameter 'n'.
-        switch (options.n) {
-          // Default.
-          case 0:
-          // CLIR suppression.
-          case 2:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_OFF;
-            break;
-          // CLIR invocation.
-          case 1:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_ON;
-            break;
-          default:
-            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-            break;
-        }
-        break;
-      default:
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        break;
-    }
-  }
-
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
@@ -4849,16 +4328,6 @@ RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, option
     return;
   }
 
-  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
-    switch (options.procedure) {
-      case MMI_PROCEDURE_ACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      case MMI_PROCEDURE_DEACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 
@@ -4891,49 +4360,16 @@ RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
     rules[i] = rule;
   }
   options.rules = rules;
-  if (options.rilMessageType === "sendMMI") {
-    options.statusMessage = MMI_SM_KS_SERVICE_INTERROGATED;
-    // MMI query call forwarding options request returns a set of rules that
-    // will be exposed in the form of an array of MozCallForwardingOptions
-    // instances.
-    options.additionalInformation = rules;
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_CALL_FORWARD] =
     function REQUEST_SET_CALL_FORWARD(length, options) {
-  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
-    switch (options.action) {
-      case CALL_FORWARD_ACTION_ENABLE:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      case CALL_FORWARD_ACTION_DISABLE:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-      case CALL_FORWARD_ACTION_REGISTRATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_REGISTERED;
-        break;
-      case CALL_FORWARD_ACTION_ERASURE:
-        options.statusMessage = MMI_SM_KS_SERVICE_ERASED;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
   function REQUEST_QUERY_CALL_WAITING(length, options) {
   if (options.errorMsg) {
-    if (options.callback) {
-      // Prevent DataCloneError when sending chrome messages.
-      delete options.callback;
-    }
-
     this.sendChromeMessage(options);
-    return;
-  }
-
-  if (options.callback) {
-    options.callback.call(this, options);
     return;
   }
 
@@ -4945,37 +4381,23 @@ RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
 };
 
 RilObject.prototype[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, options) {
-  if (options.errorMsg) {
-    if (options.callback) {
-      // Prevent DataCloneError when sending chrome messages.
-      delete options.callback;
-    }
-
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  if (options.callback) {
-    options.callback.call(this, options);
-    return;
-  }
-
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SMS_ACKNOWLEDGE] = null;
 RilObject.prototype[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
   this.IMEI = this.context.Buf.readString();
-  let rilMessageType = options.rilMessageType;
-  // So far we only send the IMEI back to chrome if it was requested via MMI.
-  if (rilMessageType !== "sendMMI") {
-    return;
-  }
 
-  if (!options.errorMsg && this.IMEI == null) {
-    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+  // If the request wasn't made by ril_worker itself, we send the IMEI back to
+  // chrome.
+  if (options.rilMessageType) {
+    if (options.errorMsg) {
+      this.sendChromeMessage(options);
+      return;
+    }
+
+    options.imei = this.IMEI;
+    this.sendChromeMessage(options);
   }
-  options.statusMessage = this.IMEI;
-  this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
   if (options.errorMsg) {
@@ -5003,57 +4425,22 @@ RilObject.prototype[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILI
   }
 
   // Buf.readInt32List()[0] for Call Barring is a bit vector of services.
-  let services = this.context.Buf.readInt32List()[0];
-
+  options.serviceClass = this.context.Buf.readInt32List()[0];
   if (options.queryServiceClass) {
-    options.enabled = (services & options.queryServiceClass) ? true : false;
+    options.enabled = (options.serviceClass & options.queryServiceClass) ? true : false;
     options.serviceClass = options.queryServiceClass;
   } else {
-    options.enabled = services ? true : false;
+    options.enabled = options.serviceClass ? true : false;
   }
 
-  if (options.rilMessageType === "sendMMI") {
-    if (!options.enabled) {
-      options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-    } else {
-      options.statusMessage = MMI_SM_KS_SERVICE_ENABLED_FOR;
-      let serviceClass = [];
-      for (let serviceClassMask = 1;
-           serviceClassMask <= ICC_SERVICE_CLASS_MAX;
-           serviceClassMask <<= 1) {
-        if ((serviceClassMask & services) !== 0) {
-          serviceClass.push(MMI_KS_SERVICE_CLASS_MAPPING[serviceClassMask]);
-        }
-      }
-
-      options.additionalInformation = serviceClass;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, options) {
   options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
-
-  if (!options.errorMsg && (options.rilMessageType === "sendMMI")) {
-    switch (options.procedure) {
-      case MMI_PROCEDURE_ACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      case MMI_PROCEDURE_DEACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CHANGE_BARRING_PASSWORD] =
   function REQUEST_CHANGE_BARRING_PASSWORD(length, options) {
-  if (options.rilMessageType != "sendMMI") {
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  options.statusMessage = MMI_SM_KS_PASSWORD_CHANGED;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
@@ -5129,25 +4516,7 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
     return;
   }
 
-  // options.provisioned informs about the called party receives the calling
-  // party's address information:
-  // 0 for CLIP not provisioned
-  // 1 for CLIP provisioned
-  // 2 for unknown
   options.provisioned = Buf.readInt32();
-  if (options.rilMessageType === "sendMMI") {
-    switch (options.provisioned) {
-      case 0:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-      case 1:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      default:
-        options.errorMsg = MMI_ERROR_KS_ERROR;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
@@ -5721,18 +5090,12 @@ RilObject.prototype[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
     this.context.debug("On USSD. Type Code: " + typeCode + " Message: " + message);
   }
 
-  let oldSession = this._ussdSession;
-
-  // Per ril.h the USSD session is assumed to persist if the type code is "1".
-  this._ussdSession = typeCode == "1";
-
-  if (!oldSession && !this._ussdSession && !message) {
-    return;
-  }
-
   this.sendChromeMessage({rilMessageType: "ussdreceived",
                           message: message,
-                          sessionEnded: !this._ussdSession});
+                          // Per ril.h the USSD session is assumed to persist if
+                          // the type code is "1", otherwise the current session
+                          // (if any) is assumed to have terminated.
+                          sessionEnded: typeCode !== "1"});
 };
 RilObject.prototype[UNSOLICITED_ON_USSD_REQUEST] = null;
 RilObject.prototype[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {

@@ -346,25 +346,17 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
  */
 XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   let prefs = new Preferences(PREF_BRANCH);
-  let types = ["History", "Bookmark", "Openpage", "Typed", "Searches"];
+  let types = ["History", "Bookmark", "Openpage", "Searches"];
 
-  function syncEnabledPref(init = false) {
+  function syncEnabledPref() {
+    loadSyncedPrefs();
+
     let suggestPrefs = [
       PREF_SUGGEST_HISTORY,
       PREF_SUGGEST_BOOKMARK,
       PREF_SUGGEST_OPENPAGE,
       PREF_SUGGEST_SEARCHES,
     ];
-
-    if (init) {
-      // Make sure to initialize the properties when first called with init = true.
-      store.enabled = prefs.get(...PREF_ENABLED);
-      store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
-      store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
-      store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
-      store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
-      store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
-    }
 
     if (store.enabled) {
       // If the autocomplete preference is active, set to default value all suggest
@@ -382,7 +374,26 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     }
   }
 
+  function loadSyncedPrefs () {
+    store.enabled = prefs.get(...PREF_ENABLED);
+    store.suggestHistory = prefs.get(...PREF_SUGGEST_HISTORY);
+    store.suggestBookmark = prefs.get(...PREF_SUGGEST_BOOKMARK);
+    store.suggestOpenpage = prefs.get(...PREF_SUGGEST_OPENPAGE);
+    store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
+    store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
+  }
+
   function loadPrefs(subject, topic, data) {
+    if (data) {
+      // Synchronize suggest.* prefs with autocomplete.enabled.
+      if (data == PREF_BRANCH + PREF_ENABLED[0]) {
+        syncEnabledPref();
+      } else if (data.startsWith(PREF_BRANCH + "suggest.")) {
+        loadSyncedPrefs();
+        prefs.set(PREF_ENABLED[0], types.some(type => store["suggest" + type]));
+      }
+    }
+
     store.enabled = prefs.get(...PREF_ENABLED);
     store.autofill = prefs.get(...PREF_AUTOFILL);
     store.autofillTyped = prefs.get(...PREF_AUTOFILL_TYPED);
@@ -410,7 +421,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     if (!store.suggestHistory) {
       store.suggestTyped = false;
     }
-    store.defaultBehavior = types.reduce((memo, type) => {
+    store.defaultBehavior = types.concat("Typed").reduce((memo, type) => {
       let prefValue = store["suggest" + type];
       return memo | (prefValue &&
                      Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()]);
@@ -447,21 +458,23 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
       [ store.restrictTypedToken, "typed" ],
       [ store.restrictSearchesToken, "searches" ],
     ]);
-
-    // Synchronize suggest.* prefs with autocomplete.enabled every time
-    // autocomplete.enabled is changed.
-    if (data == PREF_BRANCH + PREF_ENABLED[0]) {
-      syncEnabledPref();
-    }
   }
 
   let store = {
-    observe: loadPrefs,
+    _ignoreNotifications: false,
+    observe(subject, topic, data) {
+      // Avoid re-entrancy when flipping linked preferences.
+      if (this._ignoreNotifications)
+        return;
+      this._ignoreNotifications = true;
+      loadPrefs(subject, topic, data);
+      this._ignoreNotifications = false;
+    },
     QueryInterface: XPCOMUtils.generateQI([ Ci.nsIObserver ])
   };
 
   // Synchronize suggest.* prefs with autocomplete.enabled at initialization
-  syncEnabledPref(true);
+  syncEnabledPref();
 
   loadPrefs();
   prefs.observe("", store);
@@ -559,9 +572,33 @@ function makeActionURL(action, params) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Search Class
-//// Manages a single instance of an autocomplete search.
 
+/**
+ * Manages a single instance of an autocomplete search.
+ *
+ * The first three parameters all originate from the similarly named parameters
+ * of nsIAutoCompleteSearch.startSearch().
+ *
+ * @param searchString
+ *        The search string.
+ * @param searchParam
+ *        A space-delimited string of search parameters.  The following
+ *        parameters are supported:
+ *        * enable-actions: Include "actions", such as switch-to-tab and search
+ *          engine aliases, in the results.
+ *        * disable-private-actions: The search is taking place in a private
+ *          window outside of permanent private-browsing mode.  The search
+ *          should exclude privacy-sensitive results as appropriate.
+ *        * private-window: The search is taking place in a private window,
+ *          possibly in permanent private-browsing mode.  The search
+ *          should exclude privacy-sensitive results as appropriate.
+ * @param autocompleteListener
+ *        An nsIAutoCompleteObserver.
+ * @param resultListener
+ *        An nsIAutoCompleteSimpleResultListener.
+ * @param autocompleteSearch
+ *        An nsIAutoCompleteSearch.
+ */
 function Search(searchString, searchParam, autocompleteListener,
                 resultListener, autocompleteSearch) {
   // We want to store the original string for case sensitive searches.
@@ -872,8 +909,9 @@ Search.prototype = {
   }),
 
   *_matchSearchSuggestions() {
-    if (!this.hasBehavior("searches"))
+    if (!this.hasBehavior("searches") || this._inPrivateWindow) {
       return;
+    }
 
     this._searchSuggestionController =
       PlacesSearchAutocompleteProvider.getSuggestionController(

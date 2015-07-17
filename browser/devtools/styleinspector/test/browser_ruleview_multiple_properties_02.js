@@ -32,13 +32,13 @@ function* testMultiValues(inspector, ruleEditor, view) {
   let onMutation = inspector.once("markupmutation");
   let valueEditor = ruleEditor.propertyList.children[0].querySelector("input");
   valueEditor.value = "height: 10px;color:blue"
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onMutation;
 
   is(ruleEditor.rule.textProps.length, 2, "Should have added the changed value.");
   is(ruleEditor.propertyList.children.length, 3, "Should have added the changed value editor.");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
   is(ruleEditor.propertyList.children.length, 2, "Should have removed the value editor.");
 
   is(ruleEditor.rule.textProps[0].name, "width", "Should have correct property name");

@@ -86,7 +86,7 @@ let SilentAssert = {
   }
 };
 
-
+let isShuttingDown = false;
 function monotinicity_tester(source, testName) {
   // In the background, check invariants:
   // - numeric data can only ever increase;
@@ -130,6 +130,10 @@ function monotinicity_tester(source, testName) {
   };
   let iteration = 0;
   let frameCheck = Task.async(function*() {
+    if (isShuttingDown) {
+      window.clearInterval(interval);
+      return;
+    }
     let name = `${testName}: ${iteration++}`;
     let snapshot = yield source();
     if (!snapshot) {
@@ -159,7 +163,10 @@ function monotinicity_tester(source, testName) {
       }
 
       let key = item.groupId;
-      SilentAssert.ok(!map.has(key), "The component hasn't been seen yet.");
+      if (map.has(key)) {
+        let old = map.get(key);
+        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.title||item.addonId||item.name}, previous: ${old.title||old.addonId||old.name}`);
+      }
       map.set(key, item);
     }
     for (let [key, item] of map) {
@@ -236,13 +243,20 @@ add_task(function* test() {
       info("Searching by title, we didn't find the main frame");
       continue;
     }
+    info("Found the main frame");
 
-    if (skipTotalUserTime || parent.jank.totalUserTime > 1000) {
+    if (skipTotalUserTime) {
+      info("Not looking for total user time on this platform, we're done");
+      break;
+    } else if (parent.jank.totalUserTime > 1000) {
+      info("Enough CPU time detected, we're done");
       break;
     } else {
-      info(`Not enough CPU time detected: ${parent.jank.totalUserTime}`)
+      info(`Not enough CPU time detected: ${parent.jank.totalUserTime}`);
+      info(`Details: ${JSON.stringify(parent, null, "\t")}`);
     }
   }
+  isShuttingDown = true;
 
   // Cleanup
   gBrowser.removeTab(newTab);

@@ -5,16 +5,21 @@
 html {
   font: message-box;
   font-size: 12px;
-  font-weight: normal;
+  font-weight: 400;
 }
 
-.panel-item, label, #project-panel-projects, #runtime-panel-projects {
+label,
+.panel-item,
+#project-panel-projects,
+#runtime-panel-projects {
   display: block;
   float: left;
   width: auto;
+  text-align: left;
 }
 
-.project-image, .panel-item span {
+.project-image,
+.panel-item span {
   display: inline-block;
   float: left;
   line-height: 20px;
@@ -29,18 +34,92 @@ html {
   color: #ACACAC;
   text-transform: uppercase;
   line-height: 200%;
-  margin: 5px 0;
-  font-size: 100%;
-  font-weight: bold;
+  margin: 5px 5px 0 5px;
+  font-size: 10%;
+  font-weight: 700;
   width: 100%;
 }
 
-.panel-item {
-  cursor: default;
-  padding: 5px 0;
-  min-width: 130px;
+.panel-header:first-child {
+  margin-top: 0;
 }
 
 .panel-header[hidden] {
   display: none;
 }
+
+#runtime-panel-simulator,
+.panel-item-complex {
+  clear: both;
+  position: relative;
+}
+
+.panel-item {
+  padding: 3%;
+  display: block;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-top: 1px solid #ededed;
+  border-left: 0;
+  width: 94%;
+}
+
+button.panel-item {
+  background-position: 8px 8px;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+  padding-left: 25px;
+  width: 100%;
+}
+
+.panel-item:disabled {
+  background-color: #FFF;
+  color: #5A5A5A;
+  opacity: 0.5;
+}
+
+.panel-item:not(:disabled):hover {
+  background-color: #CCF0FD;
+}
+
+.configure-button {
+  display: inline-block;
+  height: 30px;
+  width: 30px;
+  background-color: transparent;
+  background-image: -moz-image-rect(url("icons.png"), 104, 462, 129, 438);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+}
+
+.configure-button:hover {
+  cursor: pointer;
+}
+
+.project-panel-item-openpackaged  { background-image: -moz-image-rect(url("icons.png"), 260, 438, 286, 412); }
+.runtime-panel-item-simulator     { background-image: -moz-image-rect(url("icons.png"), 0, 438, 26, 412); }
+.runtime-panel-item-other         { background-image: -moz-image-rect(url("icons.png"), 26, 438, 52, 412); }
+#runtime-permissions              { background-image: -moz-image-rect(url("icons.png"), 105, 438, 131, 412); }
+#runtime-screenshot               { background-image: -moz-image-rect(url("icons.png"), 131, 438, 156, 412); }
+
+#runtime-preferences,
+#runtime-settings                 { background-image: -moz-image-rect(url("icons.png"), 105, 464, 131, 438); }
+
+#runtime-panel-nousbdevice,
+#runtime-details                  { background-image: -moz-image-rect(url("icons.png"), 156, 438, 182, 412);  }
+
+.runtime-panel-item-usb,
+#runtime-disconnect               { background-image: -moz-image-rect(url("icons.png"), 52, 438, 78, 412); }
+
+.runtime-panel-item-wifi,
+.project-panel-item-openhosted    { background-image: -moz-image-rect(url("icons.png"), 208, 438, 234, 412); }
+
+.project-panel-item-newapp,
+#runtime-panel-noadbhelper,
+#runtime-panel-installsimulator   { background-image: -moz-image-rect(url("icons.png"), 234, 438, 260, 412); }

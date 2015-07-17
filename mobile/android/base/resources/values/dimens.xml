@@ -103,6 +103,7 @@
     <dimen name="doorhanger_section_padding_medium">20dp</dimen>
     <dimen name="doorhanger_section_padding_large">30dp</dimen>
     <dimen name="doorhanger_icon_size">60dp</dimen>
+    <dimen name="doorhanger_rounded_corner_radius">4dp</dimen>
 
     <dimen name="context_menu_item_horizontal_padding">10dp</dimen>
 

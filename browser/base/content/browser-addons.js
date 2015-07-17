@@ -47,14 +47,9 @@ const gXPInstallObserver = {
 
     // Make notifications persist a minimum of 30 seconds
     var options = {
-      timeout: Date.now() + 30000
+      displayURI: installInfo.originatingURI,
+      timeout: Date.now() + 30000,
     };
-
-    try {
-      options.displayOrigin = installInfo.originatingURI.host;
-    } catch (e) {
-      // originatingURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
-    }
 
     let cancelInstallation = () => {
       if (installInfo) {
@@ -200,14 +195,9 @@ const gXPInstallObserver = {
     var notificationID = aTopic;
     // Make notifications persist a minimum of 30 seconds
     var options = {
-      timeout: Date.now() + 30000
+      displayURI: installInfo.originatingURI,
+      timeout: Date.now() + 30000,
     };
-
-    try {
-      options.displayOrigin = installInfo.originatingURI.host;
-    } catch (e) {
-      // originatingURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
-    }
 
     switch (aTopic) {
     case "addon-install-disabled": {
@@ -292,7 +282,13 @@ const gXPInstallObserver = {
     case "addon-install-failed": {
       // TODO This isn't terribly ideal for the multiple failure case
       for (let install of installInfo.installs) {
-        let host = options.displayOrigin;
+        let host;
+        try {
+          host  = options.displayURI.host;
+        } catch (e) {
+          // displayURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
+        }
+
         if (!host)
           host = (install.sourceURI instanceof Ci.nsIStandardURL) &&
                  install.sourceURI.host;

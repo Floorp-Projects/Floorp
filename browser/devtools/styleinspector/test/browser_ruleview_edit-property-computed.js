@@ -35,7 +35,7 @@ function* editAndCheck(view) {
   let onPropertyChange = waitForComputedStyleProperty("#testid", null, "padding-top", newPaddingValue);
 
   info("Entering a new value");
-  EventUtils.sendString(newPaddingValue, view.doc.defaultView);
+  EventUtils.sendString(newPaddingValue, view.styleWindow);
 
   info("Waiting for the throttled previewValue to apply the changes to document");
   yield onPropertyChange;

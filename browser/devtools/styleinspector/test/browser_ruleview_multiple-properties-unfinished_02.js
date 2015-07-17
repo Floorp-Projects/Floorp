@@ -34,7 +34,7 @@ function* testCreateNewMultiPartialUnfinished(inspector, ruleEditor, view) {
   onMutation = inspector.once("markupmutation");
   let valueEditor = ruleEditor.propertyList.children[1].querySelector("input");
   valueEditor.value = "10px;background:orangered;color: black;";
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
   yield onMutation;
 
   is(ruleEditor.rule.textProps.length, 4, "Should have added the changed value.");

@@ -3116,9 +3116,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (viewsLeft) {
             let notification = this._panel.firstElementChild.notification;
             if (this._notificationType == "passwords" && notification && notification.options &&
-                notification.options.origin) {
+                notification.options.displayURI instanceof Ci.nsIStandardURL) {
               let fxAOrigin = new URL(Services.prefs.getCharPref("identity.fxaccounts.remote.signup.uri")).origin
-              if (notification.options.origin == fxAOrigin) {
+              if (notification.options.displayURI.prePath == fxAOrigin) {
                 // Somewhat gross hack - we don't want to show the sync promo while
                 // the user may be logging into Sync.
                 return;

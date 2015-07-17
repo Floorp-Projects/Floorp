@@ -20,6 +20,7 @@ EXTRA_JS_MODULES += [
     'MatchstickApp.jsm',
     'MediaPlayerApp.jsm',
     'Messaging.jsm',
+    'MulticastDNS.jsm',
     'NetErrorHelper.jsm',
     'Notifications.jsm',
     'OrderedBroadcast.jsm',

@@ -138,12 +138,11 @@ private:
 
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
-        nsIDOMDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
+        nsIDOMDocument *pDocument,
         nsIURI *aFile, bool aReplaceExisting, const nsACString &aFormatType,
         const nsCString &aSaveCharset, uint32_t  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
-    nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
     nsresult SendErrorStatusChange(
         bool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
     nsresult OnWalkDOMNode(nsIDOMNode *aNode);

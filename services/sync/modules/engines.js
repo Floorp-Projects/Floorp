@@ -783,7 +783,11 @@ SyncEngine.prototype = {
     return this._toFetch;
   },
   set toFetch(val) {
-    let cb = (error) => this._log.error(Utils.exceptionStr(error));
+    let cb = (error) => {
+      if (error) {
+        this._log.error("Failed to read JSON records to fetch", error);
+      }
+    }
     // Coerce the array to a string for more efficient comparison.
     if (val + "" == this._toFetch) {
       return;

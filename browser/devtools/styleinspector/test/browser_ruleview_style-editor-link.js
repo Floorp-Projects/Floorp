@@ -146,7 +146,7 @@ function validateStyleEditorSheet(editor, expectedSheetIndex) {
 
 function testRuleViewLinkLabel(view) {
   let link = getRuleViewLinkByIndex(view, 2);
-  let labelElem = link.querySelector(".source-link-label");
+  let labelElem = link.querySelector(".ruleview-rule-source-label");
   let value = labelElem.getAttribute("value");
   let tooltipText = labelElem.getAttribute("tooltiptext");
 
