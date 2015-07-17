@@ -10,8 +10,19 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netdb.h> // For gethostbyname.
+#include "jsfriendapi.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/ipc/StreamSocket.h"
+#include "mozilla/ipc/StreamSocketConsumer.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h" // For NS_IsMainThread.
+#include "RilConnector.h"
 
+#ifdef CHROMIUM_LOG
 #undef CHROMIUM_LOG
+#endif
+
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
 #define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
@@ -19,20 +30,47 @@
 #define CHROMIUM_LOG(args...)  printf(args);
 #endif
 
-#include "jsfriendapi.h"
-#include "mozilla/ArrayUtils.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h" // For NS_IsMainThread.
-#include "RilConnector.h"
-
 USING_WORKERS_NAMESPACE
-using namespace mozilla::ipc;
 
-namespace {
+namespace mozilla {
+namespace ipc {
+
+class RilConsumer;
 
 static const char RIL_SOCKET_NAME[] = "/dev/socket/rilproxy";
 
-static nsTArray<nsAutoPtr<mozilla::ipc::RilConsumer>> sRilConsumers;
+static nsTArray<nsAutoPtr<RilConsumer>> sRilConsumers;
+
+//
+// RilConsumer
+//
+
+class RilConsumer final : public StreamSocketConsumer
+{
+public:
+  friend class RilWorker;
+
+  RilConsumer(unsigned long aClientId,
+              WorkerCrossThreadDispatcher* aDispatcher);
+
+  void Send(UnixSocketRawData* aRawData);
+  void Close();
+
+  // Methods for |StreamSocketConsumer|
+  //
+
+  void ReceiveSocketData(int aIndex,
+                         nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
+  void OnConnectSuccess(int aIndex) override;
+  void OnConnectError(int aIndex) override;
+  void OnDisconnect(int aIndex) override;
+
+private:
+  nsRefPtr<StreamSocket> mSocket;
+  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
+  nsCString mAddress;
+  bool mShutdown;
+};
 
 class ConnectWorkerToRIL final : public WorkerTask
 {
@@ -193,11 +231,6 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
-} // namespace
-
-namespace mozilla {
-namespace ipc {
-
 RilConsumer::RilConsumer(unsigned long aClientId,
                          WorkerCrossThreadDispatcher* aDispatcher)
   : mDispatcher(aDispatcher)
@@ -216,47 +249,6 @@ RilConsumer::RilConsumer(unsigned long aClientId,
 
   mSocket = new StreamSocket(this, aClientId);
   mSocket->Connect(new RilConnector(mAddress, aClientId));
-}
-
-nsresult
-RilConsumer::Register(unsigned int aClientId,
-                      WorkerCrossThreadDispatcher* aDispatcher)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  sRilConsumers.EnsureLengthAtLeast(aClientId + 1);
-
-  if (sRilConsumers[aClientId]) {
-    NS_WARNING("RilConsumer already registered");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
-  if (!aDispatcher->PostTask(connection)) {
-    NS_WARNING("Failed to connect worker to ril");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Now that we're set up, connect ourselves to the RIL thread.
-  sRilConsumers[aClientId] = new RilConsumer(aClientId, aDispatcher);
-  return NS_OK;
-}
-
-void
-RilConsumer::Shutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  for (unsigned long i = 0; i < sRilConsumers.Length(); i++) {
-    nsAutoPtr<RilConsumer> instance(sRilConsumers[i]);
-    if (!instance) {
-      continue;
-    }
-
-    instance->mShutdown = true;
-    instance->Close();
-    instance = nullptr;
-  }
 }
 
 void
@@ -314,6 +306,51 @@ RilConsumer::OnDisconnect(int aIndex)
   }
   mSocket->Connect(new RilConnector(mAddress, aIndex),
                    mSocket->GetSuggestedConnectDelayMs());
+}
+
+//
+// RilWorker
+//
+
+nsresult
+RilWorker::Register(unsigned int aClientId,
+                    WorkerCrossThreadDispatcher* aDispatcher)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  sRilConsumers.EnsureLengthAtLeast(aClientId + 1);
+
+  if (sRilConsumers[aClientId]) {
+    NS_WARNING("RilConsumer already registered");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
+  if (!aDispatcher->PostTask(connection)) {
+    NS_WARNING("Failed to connect worker to ril");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Now that we're set up, connect ourselves to the RIL thread.
+  sRilConsumers[aClientId] = new RilConsumer(aClientId, aDispatcher);
+  return NS_OK;
+}
+
+void
+RilWorker::Shutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (unsigned long i = 0; i < sRilConsumers.Length(); i++) {
+    nsAutoPtr<RilConsumer> instance(sRilConsumers[i]);
+    if (!instance) {
+      continue;
+    }
+
+    instance->mShutdown = true;
+    instance->Close();
+    instance = nullptr;
+  }
 }
 
 } // namespace ipc
