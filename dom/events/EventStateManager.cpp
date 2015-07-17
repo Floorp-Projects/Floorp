@@ -805,18 +805,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_SELECTION_SET:
-    {
-      WidgetSelectionEvent* selectionEvent = aEvent->AsSelectionEvent();
-      if (IsTargetCrossProcess(selectionEvent)) {
-        // Will not be handled locally, remote the event
-        if (GetCrossProcessTarget()->SendSelectionEvent(*selectionEvent)) {
-          selectionEvent->mSucceeded = true;
-        }
-        break;
-      }
-      ContentEventHandler handler(mPresContext);
-      handler.OnSelectionEvent(selectionEvent);
-    }
+    IMEStateManager::HandleSelectionEvent(aPresContext, GetFocusedContent(),
+                                          aEvent->AsSelectionEvent());
     break;
   case NS_CONTENT_COMMAND_CUT:
   case NS_CONTENT_COMMAND_COPY:

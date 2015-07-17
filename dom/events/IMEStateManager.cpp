@@ -149,6 +149,8 @@ GetEventMessageName(uint32_t aMessage)
       return "NS_COMPOSITION_COMMIT_AS_IS";
     case NS_COMPOSITION_COMMIT:
       return "NS_COMPOSITION_COMMIT";
+    case NS_SELECTION_SET:
+      return "NS_SELECTION_SET";
     default:
       return "unacceptable event message";
   }
@@ -1202,6 +1204,56 @@ IMEStateManager::DispatchCompositionEvent(
       sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);
     }
+  }
+}
+
+// static
+nsIContent*
+IMEStateManager::GetRootContent(nsPresContext* aPresContext)
+{
+  nsIDocument* doc = aPresContext->Document();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
+  return doc->GetRootElement();
+}
+
+// static
+void
+IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
+                                      nsIContent* aEventTargetContent,
+                                      WidgetSelectionEvent* aSelectionEvent)
+{
+  nsIContent* eventTargetContent =
+    aEventTargetContent ? aEventTargetContent :
+                          GetRootContent(aPresContext);
+  nsRefPtr<TabParent> tabParent =
+    eventTargetContent ? TabParent::GetFrom(eventTargetContent) : nullptr;
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM: IMEStateManager::HandleSelectionEvent(aPresContext=0x%p, "
+     "aEventTargetContent=0x%p, aSelectionEvent={ message=%s, "
+     "mFlags={ mIsTrusted=%s } }), tabParent=%p",
+     aPresContext, aEventTargetContent,
+     GetEventMessageName(aSelectionEvent->message),
+     GetBoolName(aSelectionEvent->mFlags.mIsTrusted),
+     tabParent.get()));
+
+  if (!aSelectionEvent->mFlags.mIsTrusted) {
+    return;
+  }
+
+  nsRefPtr<TextComposition> composition = sTextCompositions ?
+    sTextCompositions->GetCompositionFor(aSelectionEvent->widget) : nullptr;
+  if (composition) {
+    // When there is a composition, TextComposition should guarantee that the
+    // selection event will be handled in same target as composition events.
+    composition->HandleSelectionEvent(aSelectionEvent);
+  } else {
+    // When there is no composition, the selection event should be handled
+    // in the aPresContext or tabParent.
+    TextComposition::HandleSelectionEvent(aPresContext, tabParent,
+                                          aSelectionEvent);
   }
 }
 
