@@ -163,7 +163,7 @@ parent:
                       bool aSizeSpecified,
                       nsString aURI,
                       nsString aName,
-                      nsString aFeatures,
+                      nsCString aFeatures,
                       nsString aBaseURI)
       returns (nsresult rv,
                bool windowOpened,

@@ -142,7 +142,7 @@ public:
                                   const bool& aSizeSpecified,
                                   const nsString& aURI,
                                   const nsString& aName,
-                                  const nsString& aFeatures,
+                                  const nsCString& aFeatures,
                                   const nsString& aBaseURI,
                                   nsresult* aResult,
                                   bool* aWindowIsNew,
