@@ -1604,7 +1604,7 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     // clear ancestor intrinsics!
     return NS_CombineHint(hint, nsChangeHint_NeedReflow |
         nsChangeHint_ClearAncestorIntrinsics |
-        nsChangeHint_ClearDescendantIntrinsics | nsChangeHint_NeedDirtyReflow |
+        nsChangeHint_ClearDescendantIntrinsics |
         nsChangeHint_ReflowChangesSizeOrPosition);
   }
 
