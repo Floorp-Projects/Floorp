@@ -10,7 +10,7 @@ import socket
 import sys
 import time
 
-from mozlog.structured import get_default_logger, handlers
+from mozlog import get_default_logger, handlers
 
 from wptlogging import LogLevelRewriter
 

@@ -30,15 +30,8 @@ class AnalyserNodeEngine final : public AudioNodeEngine
 
     NS_IMETHOD Run()
     {
-      nsRefPtr<AnalyserNode> node;
-      {
-        // No need to keep holding the lock for the whole duration of this
-        // function, since we're holding a strong reference to it, so if
-        // we can obtain the reference, we will hold the node alive in
-        // this function.
-        MutexAutoLock lock(mStream->Engine()->NodeMutex());
-        node = static_cast<AnalyserNode*>(mStream->Engine()->Node());
-      }
+      nsRefPtr<AnalyserNode> node =
+        static_cast<AnalyserNode*>(mStream->Engine()->NodeMainThread());
       if (node) {
         node->AppendChunk(mChunk);
       }
@@ -64,25 +57,21 @@ public:
   {
     *aOutput = aInput;
 
-    MutexAutoLock lock(NodeMutex());
-
-    if (Node()) {
-      // If the input is silent, we sill need to send a silent buffer
-      if (aOutput->IsNull()) {
-        AllocateAudioBlock(1, aOutput);
-        float* samples = static_cast<float*>(
-            const_cast<void*>(aOutput->mChannelData[0]));
-        PodZero(samples, WEBAUDIO_BLOCK_SIZE);
-      }
-      uint32_t channelCount = aOutput->mChannelData.Length();
-      for (uint32_t channel = 0; channel < channelCount; ++channel) {
-        float* samples = static_cast<float*>(
-            const_cast<void*>(aOutput->mChannelData[channel]));
-        AudioBlockInPlaceScale(samples, aOutput->mVolume);
-      }
-      nsRefPtr<TransferBuffer> transfer = new TransferBuffer(aStream, *aOutput);
-      NS_DispatchToMainThread(transfer);
+    // If the input is silent, we sill need to send a silent buffer
+    if (aOutput->IsNull()) {
+      AllocateAudioBlock(1, aOutput);
+      float* samples =
+        static_cast<float*>(const_cast<void*>(aOutput->mChannelData[0]));
+      PodZero(samples, WEBAUDIO_BLOCK_SIZE);
     }
+    uint32_t channelCount = aOutput->mChannelData.Length();
+    for (uint32_t channel = 0; channel < channelCount; ++channel) {
+      float* samples =
+        static_cast<float*>(const_cast<void*>(aOutput->mChannelData[channel]));
+      AudioBlockInPlaceScale(samples, aOutput->mVolume);
+    }
+    nsRefPtr<TransferBuffer> transfer = new TransferBuffer(aStream, *aOutput);
+    NS_DispatchToMainThread(transfer);
   }
 
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override

@@ -14,6 +14,7 @@
 #include <math.h>
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
@@ -398,7 +399,8 @@ SavedFrame::checkThis(JSContext* cx, CallArgs& args, const char* fnName,
     const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, InformalValueTypeName(thisValue));
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                             InformalValueTypeName(thisValue));
         return false;
     }
 

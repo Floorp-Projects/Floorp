@@ -55,7 +55,7 @@ ToNSString(id aValue)
 
 - (BOOL)accessibilityIsIgnored
 {
-  return ![self getGeckoAccessible];
+  return ![self getGeckoAccessible] && ![self getProxyAccessible];
 }
 
 - (NSArray*)accessibilityAttributeNames

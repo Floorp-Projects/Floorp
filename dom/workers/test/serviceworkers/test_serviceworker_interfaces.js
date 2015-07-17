@@ -52,6 +52,7 @@ var ecmaGlobals =
     "PushMessageData",
     "RangeError",
     "ReferenceError",
+    "Reflect",
     "RegExp",
     "Set",
     {name: "SharedArrayBuffer", nightly: true},

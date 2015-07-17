@@ -1926,7 +1926,7 @@
             }
 
             if (animate) {
-              mozRequestAnimationFrame(function () {
+              requestAnimationFrame(function () {
                 this.tabContainer._handleTabTelemetryStart(t, aURI);
 
                 // kick the animation off

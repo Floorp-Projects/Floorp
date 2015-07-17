@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[CheckPermissions="resourcestats-manage",
+[CheckAnyPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/networkStatsData;1"]
@@ -15,7 +15,7 @@ interface NetworkStatsData
   readonly attribute DOMTimeStamp         timestamp;      // timestamp of the record
 };
 
-[CheckPermissions="resourcestats-manage",
+[CheckAnyPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/powerStatsData;1"]
@@ -25,7 +25,7 @@ interface PowerStatsData
   readonly attribute DOMTimeStamp         timestamp;      // timestamp of the record
 };
 
-[CheckPermissions="resourcestats-manage",
+[CheckAnyPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/resourceStats;1"]

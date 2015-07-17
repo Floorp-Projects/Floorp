@@ -1914,12 +1914,6 @@ gfxWindowsPlatform::CheckD3D11Support() -> D3D11Status
         if (gfxPrefs::LayersD3D11DisableWARP() || GetModuleHandleA("nvdxgiwrap.dll")) {
           return D3D11Status::Blocked;
         }
-
-        if (!IsWin8OrLater()) {
-          // We do not use WARP on Windows 7 or earlier.
-          return D3D11Status::Blocked;
-        }
-
         return D3D11Status::TryWARP;
       }
     }
@@ -1978,10 +1972,6 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>
 bool
 gfxWindowsPlatform::AttemptWARPDeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels)
 {
-  if (gfxPrefs::LayersD3D11DisableWARP()) {
-    return false;
-  }
-
   MOZ_ASSERT(!mD3D11Device);
 
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
@@ -2102,14 +2092,15 @@ gfxWindowsPlatform::InitD3D11Devices()
     }
   }
 
-  if (status == D3D11Status::TryWARP || status == D3D11Status::ForceWARP) {
-    if (!AttemptWARPDeviceCreation(featureLevels)) {
-      // Nothing more we can do.
-      return;
-    }
+  if (IsWin8OrLater() &&
+      !gfxPrefs::LayersD3D11DisableWARP() &&
+      (status == D3D11Status::TryWARP || status == D3D11Status::ForceWARP))
+  {
+    AttemptWARPDeviceCreation(featureLevels);
   }
 
   if (!mD3D11Device) {
+    // We could not get a D3D11 compositor, and there's nothing more we can try.
     return;
   }
 
@@ -2392,4 +2383,29 @@ gfxWindowsPlatform::SupportsApzTouchInput() const
 {
   int value = Preferences::GetInt("dom.w3c_touch_events.enabled", 0);
   return value == 1 || value == 2;
+}
+
+void
+gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
+{
+  if (gfxPrefs::LayersPreferOpenGL()) {
+    aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
+  }
+
+  if (!gfxPrefs::LayersPreferD3D9()) {
+    if (gfxPlatform::CanUseDirect3D11() && GetD3D11Device()) {
+      aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
+    } else {
+      NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
+    }
+  }
+
+  if (gfxPrefs::LayersPreferD3D9() || !IsVistaOrLater()) {
+    // We don't want D3D9 except on Windows XP
+    if (gfxPlatform::CanUseDirect3D9()) {
+      aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
+    } else {
+      NS_WARNING("Direct3D 9-accelerated layers are not supported on this system.");
+    }
+  }
 }

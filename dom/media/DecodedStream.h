@@ -111,7 +111,7 @@ public:
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void Remove(MediaStream* aStream);
   void SetPlaying(bool aPlaying);
-  CheckedInt64 AudioEndTime() const;
+  int64_t AudioEndTime() const;
   int64_t GetPosition() const;
   bool IsFinished() const;
 

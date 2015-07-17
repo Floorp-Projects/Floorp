@@ -478,29 +478,9 @@ nsBrowserElement::SetInputMethodActive(bool aIsActive,
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
 
-  nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
-  if (!frameLoader) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMElement> ownerElement;
-  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
-  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
-  if (!nsContentUtils::IsExactSitePermAllow(principal, "input-manage")) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return nullptr;
-  }
-
   nsCOMPtr<nsIDOMDOMRequest> req;
-  rv = mBrowserElementAPI->SetInputMethodActive(aIsActive,
-                                                getter_AddRefs(req));
+  nsresult rv = mBrowserElementAPI->SetInputMethodActive(aIsActive,
+                                                         getter_AddRefs(req));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (rv == NS_ERROR_INVALID_ARG) {
       aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
@@ -652,30 +632,44 @@ nsBrowserElement::SetNFCFocus(bool aIsFocus,
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
 
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  if (!frameLoader) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  nsCOMPtr<nsIDOMElement> ownerElement;
-  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
-  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
-  if (!nsContentUtils::IsExactSitePermAllow(principal, "nfc-manager")) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-
-  rv = mBrowserElementAPI->SetNFCFocus(aIsFocus);
+  nsresult rv = mBrowserElementAPI->SetNFCFocus(aIsFocus);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
+}
+
+already_AddRefed<DOMRequest>
+nsBrowserElement::ExecuteScript(const nsAString& aScript,
+                                const BrowserElementExecuteScriptOptions& aOptions,
+                                ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
+  MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
+  AutoJSAPI jsapi;
+  jsapi.Init(wrappedObj->GetJSObject());
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> options(cx);
+  if (!ToJSValue(cx, aOptions, &options)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  nsresult rv = mBrowserElementAPI->ExecuteScript(aScript, options, getter_AddRefs(req));
+
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_INVALID_ARG) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    } else {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
 } // namespace mozilla

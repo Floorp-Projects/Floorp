@@ -31,7 +31,7 @@ function test() {
     loadTab(TEST_URI2).then((tab) => {
       tabs.push(tab.tab);
       openConsole().then((hud) => {
-        hud.iframeWindow.mozRequestAnimationFrame(startTest);
+        hud.iframeWindow.requestAnimationFrame(startTest);
       });
     });
   }
@@ -40,7 +40,7 @@ function test() {
   loadTab(TEST_URI1).then((tab) => {
     tabs.push(tab.tab);
     openConsole().then((hud) => {
-      hud.iframeWindow.mozRequestAnimationFrame(() => {
+      hud.iframeWindow.requestAnimationFrame(() => {
         info("iframe1 root height " + hud.ui.rootElement.clientHeight);
 
         openTab();

@@ -615,6 +615,7 @@ struct IMENotification
         mSelectionChangeData.mWritingMode = 0;
         mSelectionChangeData.mReversed = false;
         mSelectionChangeData.mCausedByComposition = false;
+        mSelectionChangeData.mCausedBySelectionEvent = false;
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData.Clear();
@@ -659,9 +660,22 @@ struct IMENotification
           aNotification.mSelectionChangeData.mWritingMode;
         mSelectionChangeData.mReversed =
           aNotification.mSelectionChangeData.mReversed;
-        mSelectionChangeData.mCausedByComposition =
-          mSelectionChangeData.mCausedByComposition &&
+        if (!mSelectionChangeData.mCausedByComposition) {
+          mSelectionChangeData.mCausedByComposition =
             aNotification.mSelectionChangeData.mCausedByComposition;
+        } else {
+          mSelectionChangeData.mCausedByComposition =
+            mSelectionChangeData.mCausedByComposition &&
+              aNotification.mSelectionChangeData.mCausedByComposition;
+        }
+        if (!mSelectionChangeData.mCausedBySelectionEvent) {
+          mSelectionChangeData.mCausedBySelectionEvent =
+            aNotification.mSelectionChangeData.mCausedBySelectionEvent;
+        } else {
+          mSelectionChangeData.mCausedBySelectionEvent =
+            mSelectionChangeData.mCausedBySelectionEvent &&
+              aNotification.mSelectionChangeData.mCausedBySelectionEvent;
+        }
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
@@ -678,6 +692,42 @@ struct IMENotification
 
   IMEMessage mMessage;
 
+  struct Point
+  {
+    int32_t mX;
+    int32_t mY;
+
+    void Set(const nsIntPoint& aPoint)
+    {
+      mX = aPoint.x;
+      mY = aPoint.y;
+    }
+    nsIntPoint AsIntPoint() const
+    {
+      return nsIntPoint(mX, mY);
+    }
+  };
+
+  struct Rect
+  {
+    int32_t mX;
+    int32_t mY;
+    int32_t mWidth;
+    int32_t mHeight;
+
+    void Set(const nsIntRect& aRect)
+    {
+      mX = aRect.x;
+      mY = aRect.y;
+      mWidth = aRect.width;
+      mHeight = aRect.height;
+    }
+    nsIntRect AsIntRect() const
+    {
+      return nsIntRect(mX, mY, mWidth, mHeight);
+    }
+  };
+
   // NOTIFY_IME_OF_SELECTION_CHANGE specific data
   struct SelectionChangeData
   {
@@ -690,6 +740,7 @@ struct IMENotification
 
     bool mReversed;
     bool mCausedByComposition;
+    bool mCausedBySelectionEvent;
 
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
@@ -795,6 +846,23 @@ struct IMENotification
     }
   };
 
+  struct MouseButtonEventData
+  {
+    // The value of WidgetEvent::message
+    uint32_t mEventMessage;
+    // Character offset from the start of the focused editor under the cursor
+    uint32_t mOffset;
+    // Cursor position in pixels relative to the widget
+    Point mCursorPos;
+    // Character rect in pixels under the cursor relative to the widget
+    Rect mCharRect;
+    // The value of WidgetMouseEventBase::button and buttons
+    int16_t mButton;
+    int16_t mButtons;
+    // The value of WidgetInputEvent::modifiers
+    Modifiers mModifiers;
+  };
+
   union
   {
     // NOTIFY_IME_OF_SELECTION_CHANGE specific data
@@ -804,54 +872,7 @@ struct IMENotification
     TextChangeDataBase mTextChangeData;
 
     // NOTIFY_IME_OF_MOUSE_BUTTON_EVENT specific data
-    struct
-    {
-      // The value of WidgetEvent::message
-      uint32_t mEventMessage;
-      // Character offset from the start of the focused editor under the cursor
-      uint32_t mOffset;
-      // Cursor position in pixels relative to the widget
-      struct
-      {
-        int32_t mX;
-        int32_t mY;
-
-        void Set(const nsIntPoint& aPoint)
-        {
-          mX = aPoint.x;
-          mY = aPoint.y;
-        }
-        nsIntPoint AsIntPoint() const
-        {
-          return nsIntPoint(mX, mY);
-        }
-      } mCursorPos;
-      // Character rect in pixels under the cursor relative to the widget
-      struct
-      {
-        int32_t mX;
-        int32_t mY;
-        int32_t mWidth;
-        int32_t mHeight;
-
-        void Set(const nsIntRect& aRect)
-        {
-          mX = aRect.x;
-          mY = aRect.y;
-          mWidth = aRect.width;
-          mHeight = aRect.height;
-        }
-        nsIntRect AsIntRect() const
-        {
-          return nsIntRect(mX, mY, mWidth, mHeight);
-        }
-      } mCharRect;
-      // The value of WidgetMouseEventBase::button and buttons
-      int16_t mButton;
-      int16_t mButtons;
-      // The value of WidgetInputEvent::modifiers
-      Modifiers mModifiers;
-    } mMouseButtonEventData;
+    MouseButtonEventData mMouseButtonEventData;
   };
 
   bool IsCausedByComposition() const

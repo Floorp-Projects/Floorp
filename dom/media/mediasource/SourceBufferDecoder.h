@@ -75,7 +75,7 @@ public:
     return mReader;
   }
 
-  void SetTaskQueue(MediaTaskQueue* aTaskQueue)
+  void SetTaskQueue(TaskQueue* aTaskQueue)
   {
     MOZ_ASSERT((!mTaskQueue && aTaskQueue) || (mTaskQueue && !aTaskQueue));
     mTaskQueue = aTaskQueue;
@@ -138,7 +138,7 @@ private:
   virtual ~SourceBufferDecoder();
 
   // Our TrackBuffer's task queue, this is only non-null during initialization.
-  RefPtr<MediaTaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
 
   nsRefPtr<MediaResource> mResource;
 

@@ -105,7 +105,7 @@ this.BrowserUtils = {
       throw new Error("principalFromOrigin does not support nsNullPrincipal");
     }
 
-    var parts = aOriginString.split('!');
+    var parts = aOriginString.split('^');
     if (parts.length > 2) {
       throw new Error("bad origin string: " + aOriginString);
     }

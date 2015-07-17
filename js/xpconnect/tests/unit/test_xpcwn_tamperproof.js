@@ -73,18 +73,14 @@ function test_tamperproof(realObj, accessObj, {method, constant, attribute}) {
   }
 
   // Reflect.set doesn't work either.
-  if (this.Reflect && this.Reflect.set)
-    throw new Error("Congratulations on implementing Reflect.set! Here are some tests to uncomment.");
-  /*
-    if (method) {
-      do_check_false(Reflect.set({}, method, "bad", accessObj));
-      do_check_eq(realObj[method], originalMethod);
-    }
-    if (attribute) {
-      do_check_false(Reflect.set({}, attribute, "bad", accessObj));
-      do_check_eq(originalAttributeDesc.get, Object.getOwnPropertyDescriptor(realObj, attribute).get);
-    }
-  */
+  if (method) {
+    do_check_false(Reflect.set({}, method, "bad", accessObj));
+    do_check_eq(realObj[method], originalMethod);
+  }
+  if (attribute) {
+    do_check_false(Reflect.set({}, attribute, "bad", accessObj));
+    do_check_eq(originalAttributeDesc.get, Object.getOwnPropertyDescriptor(realObj, attribute).get);
+  }
 
   // Object.defineProperty can't do anything either.
   let names = ["expando"];

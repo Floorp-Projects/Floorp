@@ -14,7 +14,11 @@ var gWaitingForDiscard = false;
 var gScriptedObserver;
 var gClonedRequest;
 
-function ImageDiscardObserver(callback) {
+function ImageObserver(decodeCallback, discardCallback) {
+  this.decodeComplete = function onDecodeComplete(aRequest) {
+    decodeCallback();
+  }
+
   this.discard = function onDiscard(request)
   {
     if (!gWaitingForDiscard) {
@@ -22,7 +26,7 @@ function ImageDiscardObserver(callback) {
     }
 
     this.synchronous = false;
-    callback();
+    discardCallback();
   }
 
   this.synchronous = true;
@@ -37,7 +41,7 @@ function currentRequest() {
 
 function isImgDecoded() {
   let request = currentRequest();
-  return request.imageStatus & Ci.imgIRequest.STATUS_FRAME_COMPLETE ? true : false;
+  return request.imageStatus & Ci.imgIRequest.STATUS_DECODE_COMPLETE ? true : false;
 }
 
 // Ensure that the image is decoded by drawing it to a canvas.
@@ -82,8 +86,10 @@ function test() {
 }
 
 function step2() {
-  // Create the discard observer.
-  var observer = new ImageDiscardObserver(() => runAfterAsyncEvents(step5));
+  // Create the image observer.
+  var observer =
+    new ImageObserver(() => runAfterAsyncEvents(step3),   // DECODE_COMPLETE
+                      () => runAfterAsyncEvents(step5));  // DISCARD
   gScriptedObserver = Cc["@mozilla.org/image/tools;1"]
                         .getService(Ci.imgITools)
                         .createScriptedObserver(observer);
@@ -95,9 +101,8 @@ function step2() {
   // Check that the image is decoded.
   forceDecodeImg();
 
-  // The FRAME_COMPLETE notification is delivered asynchronously, so continue
-  // after we're sure it has been delivered.
-  runAfterAsyncEvents(step3);
+  // The DECODE_COMPLETE notification is delivered asynchronously. ImageObserver will
+  // eventually call step3.
 }
 
 function step3() {
@@ -118,8 +123,8 @@ function step4() {
              .getService(Ci.nsIObserverService);
   os.notifyObservers(null, 'memory-pressure', 'heap-minimize');
 
-  // The DISCARD notification is delivered asynchronously. ImageDiscardObserver
-  // will eventually call step5. (Or else, sadly, the test will time out.)
+  // The DISCARD notification is delivered asynchronously. ImageObserver will
+  // eventually call step5. (Or else, sadly, the test will time out.)
 }
 
 function step5() {

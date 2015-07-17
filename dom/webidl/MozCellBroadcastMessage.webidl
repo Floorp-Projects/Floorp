@@ -12,7 +12,7 @@ enum CellBroadcastEtwsWarningType {"earthquake", "tsunami",
                                    "earthquake-tsunami", "test", "other"};
 
 [Pref="dom.cellbroadcast.enabled",
- CheckPermissions="cellbroadcast",
+ CheckAnyPermissions="cellbroadcast",
  AvailableIn="CertifiedApps"]
 interface MozCellBroadcastMessage
 {
@@ -75,7 +75,7 @@ interface MozCellBroadcastMessage
 };
 
 [Pref="dom.cellbroadcast.enabled",
- CheckPermissions="cellbroadcast",
+ CheckAnyPermissions="cellbroadcast",
  AvailableIn="CertifiedApps"]
 interface MozCellBroadcastEtwsInfo
 {

@@ -1,6 +1,6 @@
 from sut import MockAgent
 import mozdevice
-import mozlog
+import logging
 import unittest
 
 class PullTest(unittest.TestCase):
@@ -20,7 +20,7 @@ class PullTest(unittest.TestCase):
                                             ("isdir /mnt/sdcard", "TRUE")])
 
             d = mozdevice.DroidSUT("127.0.0.1", port=a.port,
-                                   logLevel=mozlog.DEBUG)
+                                   logLevel=logging.DEBUG)
             pulledData = d.pullFile("/mnt/sdcard/cheeseburgers")
             self.assertEqual(pulledData, cheeseburgers)
             d.dirExists('/mnt/sdcard')
@@ -34,7 +34,7 @@ class PullTest(unittest.TestCase):
                                          "%s,15\n%s" % (remoteName,
                                                         "cheeseburgh"))])
         d = mozdevice.DroidSUT("127.0.0.1", port=a.port,
-                               logLevel=mozlog.DEBUG)
+                               logLevel=logging.DEBUG)
         exceptionThrown = False
         try:
             d.pullFile("/mnt/sdcard/cheeseburgers")

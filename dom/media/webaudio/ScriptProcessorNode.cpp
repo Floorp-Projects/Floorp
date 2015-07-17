@@ -247,7 +247,6 @@ public:
                             uint32_t aBufferSize,
                             uint32_t aNumberOfInputChannels)
     : AudioNodeEngine(aNode)
-    , mSharedBuffers(aNode->GetSharedBuffers())
     , mSource(nullptr)
     , mDestination(aDestination->Stream())
     , mBufferSize(aBufferSize)
@@ -261,6 +260,12 @@ public:
   void SetSourceStream(AudioNodeStream* aSource)
   {
     mSource = aSource;
+    mSharedBuffers = new SharedBuffers(mSource->SampleRate());
+  }
+
+  SharedBuffers* GetSharedBuffers() const
+  {
+    return mSharedBuffers;
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
@@ -268,14 +273,6 @@ public:
                             AudioChunk* aOutput,
                             bool* aFinished) override
   {
-    MutexAutoLock lock(NodeMutex());
-
-    // If our node is dead, just output silence.
-    if (!Node()) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
-
     // This node is not connected to anything. Per spec, we don't fire the
     // onaudioprocess event. We also want to clear out the input and output
     // buffer queue, and output a null buffer.
@@ -320,10 +317,10 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
-    // - mSharedBuffers
     // - mSource (probably)
     // - mDestination (probably)
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
+    amount += mSharedBuffers->SizeOfIncludingThis(aMallocSizeOf);
     amount += mInputChannels.SizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < mInputChannels.Length(); i++) {
       amount += mInputChannels[i].SizeOfExcludingThis(aMallocSizeOf);
@@ -441,7 +438,10 @@ private:
         }
 
         // Append it to our output buffer queue
-        node->GetSharedBuffers()->FinishProducingOutputBuffer(output, node->BufferSize());
+        auto engine =
+          static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+        engine->GetSharedBuffers()->
+          FinishProducingOutputBuffer(output, node->BufferSize());
 
         return NS_OK;
       }
@@ -459,7 +459,7 @@ private:
 
   friend class ScriptProcessorNode;
 
-  SharedBuffers* mSharedBuffers;
+  nsAutoPtr<SharedBuffers> mSharedBuffers;
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   InputChannels mInputChannels;
@@ -477,7 +477,6 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
               aNumberOfInputChannels,
               mozilla::dom::ChannelCountMode::Explicit,
               mozilla::dom::ChannelInterpretation::Speakers)
-  , mSharedBuffers(new SharedBuffers(aContext->SampleRate()))
   , mBufferSize(aBufferSize ?
                   aBufferSize : // respect what the web developer requested
                   4096)         // choose our own buffer size -- 4KB for now
@@ -501,7 +500,6 @@ size_t
 ScriptProcessorNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
-  amount += mSharedBuffers->SizeOfIncludingThis(aMallocSizeOf);
   return amount;
 }
 

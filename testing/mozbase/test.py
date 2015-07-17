@@ -17,7 +17,7 @@ import os
 import sys
 import unittest
 
-from mozlog import structured
+import mozlog
 from moztest.results import TestResultCollection
 from moztest.adapters.unit import StructuredTestRunner
 
@@ -51,13 +51,10 @@ def main(args=sys.argv[1:]):
     parser.add_option('--list', dest='list_tests',
                       action='store_true', default=False,
                       help="list paths of tests to be run")
-    structured.commandline.add_logging_group(parser)
+    mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args(args)
-    logger = structured.commandline.setup_logging("mozbase",
-                                                  options,
-                                                  {
-                                                      "tbpl": sys.stdout
-                                                  })
+    logger = mozlog.commandline.setup_logging("mozbase", options,
+                                              {"tbpl": sys.stdout})
 
     # read the manifest
     if args:

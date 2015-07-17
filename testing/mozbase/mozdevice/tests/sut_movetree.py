@@ -6,7 +6,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozdevice
-import mozlog
+import logging
 import unittest
 from sut import MockAgent
 
@@ -21,7 +21,7 @@ class MoveTreeTest(unittest.TestCase):
                     ('ls', 'test1.txt')]
 
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual(None, d.moveTree('/mnt/sdcard/tests/test.txt',
                 '/mnt/sdcard/tests/test1.txt'))
         self.assertFalse(d.fileExists('/mnt/sdcard/tests/test.txt'))
@@ -34,7 +34,7 @@ class MoveTreeTest(unittest.TestCase):
                     ('ls', 'bar')]
 
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual(None, d.moveTree('/mnt/sdcard/tests/foo',
                 '/mnt/sdcard/tests/bar'))
         self.assertTrue(d.fileExists('/mnt/sdcard/tests/bar'))
@@ -51,7 +51,7 @@ class MoveTreeTest(unittest.TestCase):
 
         m = MockAgent(self, commands=commands)
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port,
-                logLevel=mozlog.DEBUG)
+                logLevel=logging.DEBUG)
 
         self.assertTrue(d.dirExists('/mnt/sdcard/tests/foo/bar'))
         self.assertEqual(None, d.moveTree('/mnt/sdcard/tests/foo',

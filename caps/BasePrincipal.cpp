@@ -51,7 +51,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   params->Serialize(value);
   if (!value.IsEmpty()) {
-    aStr.AppendLiteral("!");
+    aStr.AppendLiteral("^");
     aStr.Append(NS_ConvertUTF16toUTF8(value));
   }
 }
@@ -117,7 +117,7 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return true;
   }
 
-  if (aStr[0] != '!') {
+  if (aStr[0] != '^') {
     return false;
   }
 
@@ -134,7 +134,7 @@ OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
 {
   // RFindChar is only available on nsCString.
   nsCString origin(aOrigin);
-  int32_t pos = origin.RFindChar('!');
+  int32_t pos = origin.RFindChar('^');
 
   if (pos == kNotFound) {
     aOriginNoSuffix = origin;
@@ -156,6 +156,15 @@ BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
   nsresult rv = GetOriginInternal(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // OriginAttributes::CreateSuffix asserts against UNKNOWN_APP_ID. It's trivial
+  // to trigger this getter from script on such a principal, so we handle it
+  // here at the API entry point.
+  if (mOriginAttributes.mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    NS_WARNING("Refusing to provide canonical origin string to principal with UNKNOWN_APP_ID");
+    return NS_ERROR_FAILURE;
+  }
+
   nsAutoCString suffix;
   mOriginAttributes.CreateSuffix(suffix);
   aOrigin.Append(suffix);

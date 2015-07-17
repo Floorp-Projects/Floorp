@@ -18,7 +18,7 @@ dictionary TVGetProgramsOptions {
   unsigned long long duration;
 };
 
-[Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
+[Pref="dom.tv.enabled", CheckAnyPermissions="tv", Func="Navigator::HasTVSupport"]
 interface TVChannel : EventTarget {
   [Throws]
   Promise<sequence<TVProgram>> getPrograms(optional TVGetProgramsOptions options);

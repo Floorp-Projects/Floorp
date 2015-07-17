@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoUtils.h"
+
+#include "mozilla/Preferences.h"
+#include "mozilla/Base64.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
+
 #include "MediaResource.h"
 #include "TimeUnits.h"
 #include "nsMathUtils.h"
@@ -10,12 +16,8 @@
 #include "VorbisUtils.h"
 #include "ImageContainer.h"
 #include "SharedThreadPool.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Base64.h"
-#include "mozilla/Telemetry.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
-#include "MediaTaskQueue.h"
 
 #include <stdint.h>
 
@@ -325,10 +327,10 @@ public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
     mTaskQueue =
-      new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
     return NS_OK;
   }
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 };
 
 class CreateFlushableTaskQueueTask : public nsRunnable {
@@ -336,26 +338,26 @@ public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
     mTaskQueue =
-      new FlushableMediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+      new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
     return NS_OK;
   }
-  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
 };
 
-already_AddRefed<MediaTaskQueue>
+already_AddRefed<TaskQueue>
 CreateMediaDecodeTaskQueue()
 {
-  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
+  // We must create the TaskQueue/SharedThreadPool on the main thread.
   nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
   nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return t->mTaskQueue.forget();
 }
 
-already_AddRefed<FlushableMediaTaskQueue>
+already_AddRefed<FlushableTaskQueue>
 CreateFlushableMediaDecodeTaskQueue()
 {
-  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
+  // We must create the TaskQueue/SharedThreadPool on the main thread.
   nsRefPtr<CreateFlushableTaskQueueTask> t(new CreateFlushableTaskQueueTask());
   nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, nullptr);

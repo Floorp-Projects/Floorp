@@ -13,7 +13,7 @@
 namespace mozilla {
 
 class CDMProxy;
-class MediaTaskQueue;
+class TaskQueue;
 
 class EMEVideoCallbackAdapter : public VideoCallbackAdapter {
 public:
@@ -32,7 +32,7 @@ public:
                   const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
    : GMPVideoDecoder(aConfig,
                      aLayersBackend,

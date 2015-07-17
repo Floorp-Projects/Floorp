@@ -2,7 +2,7 @@
 
 import hashlib
 import mozdevice
-import mozlog
+import logging
 import shutil
 import tempfile
 import unittest
@@ -27,14 +27,14 @@ class TestFileMethods(unittest.TestCase):
             commands_valid = [("hash /sdcard/test/file", self.temp_hash)]
 
             m = MockAgent(self, commands=commands_valid)
-            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
             self.assertTrue(d.validateFile('/sdcard/test/file', f.name))
 
             # Test invalid hashes
             commands_invalid = [("hash /sdcard/test/file", "0this0hash0is0completely0invalid")]
 
             m = MockAgent(self, commands=commands_invalid)
-            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
             self.assertFalse(d.validateFile('/sdcard/test/file', f.name))
 
     def test_getFile(self):
@@ -45,7 +45,7 @@ class TestFileMethods(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile() as f:
             m = MockAgent(self, commands=commands)
-            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+            d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
             # No error means success
             self.assertEqual(None, d.getFile(fname, f.name))
 
@@ -62,7 +62,7 @@ class TestFileMethods(unittest.TestCase):
 
         tmpdir = tempfile.mkdtemp()
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
         self.assertEqual(None, d.getDirectory("/mnt/sdcard", tmpdir))
 
         # Cleanup

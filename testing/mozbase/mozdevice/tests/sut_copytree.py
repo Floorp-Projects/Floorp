@@ -6,7 +6,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozdevice
-import mozlog
+import logging
 import unittest
 from sut import MockAgent
 
@@ -18,7 +18,7 @@ class CopyTreeTest(unittest.TestCase):
                     ('ls', 'test.txt\ntest2.txt')]
 
         m = MockAgent(self, commands=commands)
-        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=mozlog.DEBUG)
+        d = mozdevice.DroidSUT("127.0.0.1", port=m.port, logLevel=logging.DEBUG)
 
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/test.txt',
                 '/mnt/sdcard/tests/test2.txt'))
@@ -33,7 +33,7 @@ class CopyTreeTest(unittest.TestCase):
 
         m = MockAgent(self, commands=commands)
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port,
-                logLevel=mozlog.DEBUG)
+                logLevel=logging.DEBUG)
 
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/foo',
                 '/mnt/sdcard/tests/bar'))
@@ -52,7 +52,7 @@ class CopyTreeTest(unittest.TestCase):
 
         m = MockAgent(self, commands=commands)
         d = mozdevice.DroidSUT("127.0.0.1", port=m.port,
-                logLevel=mozlog.DEBUG)
+                logLevel=logging.DEBUG)
 
         self.assertTrue(d.dirExists('/mnt/sdcard/tests/foo/bar'))
         self.assertEqual(None, d.copyTree('/mnt/sdcard/tests/foo',

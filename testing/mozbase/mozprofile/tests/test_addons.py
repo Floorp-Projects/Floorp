@@ -13,7 +13,7 @@ import urllib2
 from manifestparser import ManifestParser
 import mozfile
 import mozhttpd
-import mozlog
+import mozlog.unstructured as mozlog
 import mozprofile
 
 from addon_stubs import generate_addon, generate_manifest

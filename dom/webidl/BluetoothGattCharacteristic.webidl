@@ -16,7 +16,7 @@ dictionary GattCharacteristicProperties
   required boolean extendedProps;
 };
 
-[CheckPermissions="bluetooth"]
+[CheckAnyPermissions="bluetooth"]
 interface BluetoothGattCharacteristic
 {
   readonly attribute BluetoothGattService                   service;

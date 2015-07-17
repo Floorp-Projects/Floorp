@@ -30,6 +30,8 @@ namespace mozilla {
  * TextComposition
  ******************************************************************************/
 
+bool TextComposition::sHandlingSelectionEvent = false;
+
 TextComposition::TextComposition(nsPresContext* aPresContext,
                                  nsINode* aNode,
                                  TabParent* aTabParent,
@@ -372,6 +374,30 @@ TextComposition::DispatchCompositionEvent(
 
   // Notify composition update to widget if possible
   NotityUpdateComposition(aCompositionEvent);
+}
+
+// static
+void
+TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
+                                      TabParent* aTabParent,
+                                      WidgetSelectionEvent* aSelectionEvent)
+{
+  // If the content is a container of TabParent, composition should be in the
+  // remote process.
+  if (aTabParent) {
+    unused << aTabParent->SendSelectionEvent(*aSelectionEvent);
+    aSelectionEvent->mFlags.mPropagationStopped = true;
+    return;
+  }
+
+  ContentEventHandler handler(aPresContext);
+  AutoRestore<bool> saveHandlingSelectionEvent(sHandlingSelectionEvent);
+  sHandlingSelectionEvent = true;
+  // XXX During setting selection, a selection listener may change selection
+  //     again.  In such case, sHandlingSelectionEvent doesn't indicate if
+  //     the selection change is caused by a selection event.  However, it
+  //     must be non-realistic scenario.
+  handler.OnSelectionEvent(aSelectionEvent);
 }
 
 void

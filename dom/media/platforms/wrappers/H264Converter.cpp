@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TaskQueue.h"
+
 #include "H264Converter.h"
 #include "ImageContainer.h"
-#include "MediaTaskQueue.h"
 #include "MediaInfo.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
@@ -18,7 +19,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const VideoInfo& aConfig,
                              layers::LayersBackend aLayersBackend,
                              layers::ImageContainer* aImageContainer,
-                             FlushableMediaTaskQueue* aVideoTaskQueue,
+                             FlushableTaskQueue* aVideoTaskQueue,
                              MediaDataDecoderCallback* aCallback)
   : mPDM(aPDM)
   , mCurrentConfig(aConfig)

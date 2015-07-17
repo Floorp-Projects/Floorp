@@ -1067,18 +1067,6 @@ ObjectGroup::getProperty(unsigned i)
     return propertySet[i];
 }
 
-template <>
-struct GCMethods<const TypeSet::Type>
-{
-    static TypeSet::Type initial() { return TypeSet::UnknownType(); }
-};
-
-template <>
-struct GCMethods<TypeSet::Type>
-{
-    static TypeSet::Type initial() { return TypeSet::UnknownType(); }
-};
-
 } // namespace js
 
 inline js::TypeScript*
