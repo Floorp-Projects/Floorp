@@ -252,11 +252,10 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   }
 }
 
-/* Make the white notication box stick out less and squish it next to the
- * identity box since the border image won't be taking up any space. */
+/* The (white) notification box background color should match the theme */
 #notification-popup-box {
   border-radius: 0;
-  background: transparent;
+  background-color: var(--url-and-searchbar-background-color);
 }
 
 /* Nav bar specific stuff */
