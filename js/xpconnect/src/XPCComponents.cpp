@@ -2824,8 +2824,7 @@ nsXPCComponents_Utils::CallFunctionWithAsyncStack(HandleValue function,
     if (!asyncCauseString)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, asyncCauseString,
-                                         JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
+    JS::AutoSetAsyncStackForNewCalls sas(cx, asyncStackObj, asyncCauseString);
 
     if (!JS_CallFunctionValue(cx, nullptr, function,
                               JS::HandleValueArray::empty(), retval))
