@@ -646,27 +646,6 @@ nsBrowserElement::ExecuteScript(const nsAString& aScript,
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
   NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  if (!frameLoader) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMElement> ownerElement;
-  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
-  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
-
-  if (!nsContentUtils::IsExactSitePermAllow(principal, "browser:universalxss")) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return nullptr;
-  }
-
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
   MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
@@ -679,7 +658,7 @@ nsBrowserElement::ExecuteScript(const nsAString& aScript,
     return nullptr;
   }
 
-  rv = mBrowserElementAPI->ExecuteScript(aScript, options, getter_AddRefs(req));
+  nsresult rv = mBrowserElementAPI->ExecuteScript(aScript, options, getter_AddRefs(req));
 
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_INVALID_ARG) {
