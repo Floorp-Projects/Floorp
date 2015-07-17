@@ -298,7 +298,11 @@ TrackBuffer::AppendDataToCurrentResource(MediaByteBuffer* aData, uint32_t aDurat
 nsRefPtr<TrackBuffer::BufferedRangesUpdatedPromise>
 TrackBuffer::UpdateBufferedRanges(Interval<int64_t> aByteRange, bool aNotifyParent)
 {
-  if (aByteRange.Length()) {
+  if (!mParentDecoder) {
+    return BufferedRangesUpdatedPromise::CreateAndResolve(true, __func__);
+  }
+
+  if (mCurrentDecoder && aByteRange.Length()) {
     mCurrentDecoder->GetReader()->NotifyDataArrived(aByteRange);
   }
 
