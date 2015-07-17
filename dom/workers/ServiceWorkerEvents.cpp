@@ -387,8 +387,15 @@ PushMessageData::~PushMessageData()
 {
 }
 
-NS_IMPL_ISUPPORTS0(PushMessageData);
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(PushMessageData);
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PushMessageData)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PushMessageData)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushMessageData)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 void
 PushMessageData::Json(JSContext* cx, JS::MutableHandle<JSObject*> aRetval)
