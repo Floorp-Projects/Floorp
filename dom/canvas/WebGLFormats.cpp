@@ -747,7 +747,7 @@ FormatUsageAuthority::CreateForWebGL2()
 //////////////////////////////////////////////////////////////////////////////////////////
 
 FormatUsageInfo*
-FormatUsageAuthority::GetInfo(EffectiveFormat format)
+FormatUsageAuthority::GetUsage(EffectiveFormat format)
 {
     auto itr = mInfoMap.find(format);
 
@@ -777,7 +777,7 @@ FormatUsageAuthority::AddUnpackOption(GLenum unpackFormat, GLenum unpackType,
                                       EffectiveFormat effectiveFormat)
 {
     const UnpackTuple unpack = { unpackFormat, unpackType };
-    FormatUsageInfo* usage = GetInfo(effectiveFormat);
+    FormatUsageInfo* usage = GetUsage(effectiveFormat);
     MOZ_RELEASE_ASSERT(usage);
     if (!usage)
         return;
