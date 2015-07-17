@@ -45,9 +45,6 @@ const MAX_SUGGESTIONS = 6;
  *   GetState
  *     Retrieves the current search engine state.
  *     data: null
- *   GetStrings
- *     Retrieves localized search UI strings.
- *     data: null
  *   ManageEngines
  *     Opens the search engine management window.
  *     data: null
@@ -56,7 +53,7 @@ const MAX_SUGGESTIONS = 6;
  *     data: the entry, a string
  *   Search
  *     Performs a search.
- *     data: { engineName, searchString, healthReportKey, searchPurpose }
+ *     data: { engineName, searchString, whence }
  *   SetCurrentEngine
  *     Sets the current engine.
  *     data: the name of the engine
@@ -75,9 +72,6 @@ const MAX_SUGGESTIONS = 6;
  *   State
  *     Sent in reply to GetState.
  *     data: see _currentStateObj
- *   Strings
- *     Sent in reply to GetStrings
- *     data: Object containing string names and values for the current locale.
  *   Suggestions
  *     Sent in reply to GetSuggestions.
  *     data: see _onMessageGetSuggestions
@@ -104,22 +98,7 @@ this.ContentSearch = {
       addMessageListener(INBOUND_MESSAGE, this);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
     Services.obs.addObserver(this, "shutdown-leaks-before-check", false);
-    Services.prefs.addObserver("browser.search.hiddenOneOffs", this, false);
     this._stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
-  },
-
-  get searchSuggestionUIStrings() {
-    if (this._searchSuggestionUIStrings) {
-      return this._searchSuggestionUIStrings;
-    }
-    this._searchSuggestionUIStrings = {};
-    let searchBundle = Services.strings.createBundle("chrome://browser/locale/search.properties");
-    let stringNames = ["searchHeader", "searchPlaceholder", "searchFor",
-                       "searchWith", "searchWithHeader"];
-    for (let name of stringNames) {
-      this._searchSuggestionUIStrings[name] = searchBundle.GetStringFromName(name);
-    }
-    return this._searchSuggestionUIStrings;
   },
 
   destroy: function () {
@@ -174,7 +153,6 @@ this.ContentSearch = {
 
   observe: function (subj, topic, data) {
     switch (topic) {
-    case "nsPref:changed":
     case "browser-search-engine-modified":
       this._eventQueue.push({
         type: "Observe",
@@ -223,19 +201,14 @@ this.ContentSearch = {
     });
   },
 
-  _onMessageGetStrings: function (msg, data) {
-    this._reply(msg, "Strings", this.searchSuggestionUIStrings);
-  },
-
   _onMessageSearch: function (msg, data) {
     this._ensureDataHasProperties(data, [
       "engineName",
       "searchString",
-      "healthReportKey",
-      "searchPurpose",
+      "whence",
     ]);
     let engine = Services.search.getEngineByName(data.engineName);
-    let submission = engine.getSubmission(data.searchString, "", data.searchPurpose);
+    let submission = engine.getSubmission(data.searchString, "", data.whence);
     let browser = msg.target;
     let win;
     try {
@@ -266,7 +239,7 @@ this.ContentSearch = {
       };
       win.openUILinkIn(submission.uri.spec, where, params);
     }
-    win.BrowserSearch.recordSearchInHealthReport(engine, data.healthReportKey,
+    win.BrowserSearch.recordSearchInHealthReport(engine, data.whence,
                                                  data.selection || null);
     return Promise.resolve();
   },
@@ -441,12 +414,7 @@ this.ContentSearch = {
       engines: [],
       currentEngine: yield this._currentEngineObj(),
     };
-    let pref = Services.prefs.getCharPref("browser.search.hiddenOneOffs");
-    let hiddenList = pref ? pref.split(",") : [];
     for (let engine of Services.search.getVisibleEngines()) {
-      if (hiddenList.indexOf(engine.name) != -1) {
-        continue;
-      }
       let uri = engine.getIconURLBySize(16, 16);
       state.engines.push({
         name: engine.name,

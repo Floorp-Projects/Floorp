@@ -5,13 +5,15 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/contentSearchUI.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/searchSuggestionUI.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/newtab/newTab.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/newtab/newTab.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % newTabDTD SYSTEM "chrome://browser/locale/newTab.dtd">
   %newTabDTD;
+  <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd">
+  %searchBarDTD;
   <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
   %browserDTD;
 ]>
@@ -19,6 +21,13 @@
 <xul:window id="newtab-window" xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&newtab.pageTitle;">
+
+  <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
+             noautohide="true" hidden="true">
+    <xul:hbox id="newtab-search-manage">
+      <xul:label>&changeSearchSettings.button;</xul:label>
+    </xul:hbox>
+  </xul:panel>
 
   <div class="newtab-customize-panel-container">
     <div id="newtab-customize-panel" orient="vertical">
@@ -99,13 +108,13 @@
       </div>
 
       <div id="newtab-search-container">
-        <div id="newtab-search-form">
-          <div id="newtab-search-icon"/>
+        <form id="newtab-search-form" name="searchForm">
+          <div id="newtab-search-logo"/>
           <input type="text" name="q" value="" id="newtab-search-text"
-                 aria-label="&contentSearchInput.label;" maxlength="256" dir="auto"/>
-          <input id="newtab-search-submit" type="button" value=""
-                 aria-label="&contentSearchSubmit.label;"/>
-        </div>
+                 maxlength="256" dir="auto"/>
+          <input id="newtab-search-submit" type="submit"
+                 value="&searchEndCap.label;"/>
+        </form>
       </div>
 
       <div id="newtab-horizontal-margin">
@@ -124,7 +133,7 @@
   </div>
 
   <xul:script type="text/javascript;version=1.8"
-              src="chrome://browser/content/contentSearchUI.js"/>
+              src="chrome://browser/content/searchSuggestionUI.js"/>
   <xul:script type="text/javascript;version=1.8"
               src="chrome://browser/content/newtab/newTab.js"/>
 </xul:window>
