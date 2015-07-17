@@ -31,7 +31,9 @@ def config_file(files):
 
 
 class ParseException(Exception):
-    pass
+    def __init__(self, line, msg):
+        self.line = line
+        super(Exception, self).__init__(msg)
 
 
 class MercurialConfig(object):
@@ -47,12 +49,12 @@ class MercurialConfig(object):
         # error saying this.
         if os.path.exists(path):
             with codecs.open(path, 'r', encoding='utf-8') as f:
-                for line in f:
+                for i, line in enumerate(f):
                     if line.startswith('%include'):
-                        raise ParseException(
+                        raise ParseException(i + 1,
                             '%include directive is not supported by MercurialConfig')
                     if line.startswith(';'):
-                        raise ParseException(
+                        raise ParseException(i + 1,
                             'semicolon (;) comments are not supported; '
                             'use # instead')
 
