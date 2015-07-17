@@ -148,7 +148,7 @@ var HarAutomation = Class({
         "defaultFileName");
     }
 
-    this.executeExport(data);
+    return this.executeExport(data);
   },
 
   /**
