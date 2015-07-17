@@ -260,7 +260,7 @@ static gboolean FactoryFilter(GstPluginFeature *aFeature, gpointer)
 
   // NB: We skip filtering parsers here, because adding them to
   // the list can give false decoder positives to canPlayType().
-  if (!strstr(className, "Decoder") && !strstr(className, "Demux") {
+  if (!strstr(className, "Decoder") && !strstr(className, "Demux")) {
     return FALSE;
   }
 
