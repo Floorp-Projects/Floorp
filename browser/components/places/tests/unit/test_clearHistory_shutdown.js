@@ -57,7 +57,6 @@ add_task(function* test_execute() {
   Services.prefs.setBoolPref("privacy.clearOnShutdown.downloads", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.formData", true);
-  Services.prefs.setBoolPref("privacy.clearOnShutdown.passwords", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.sessions", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.siteSettings", true);
 

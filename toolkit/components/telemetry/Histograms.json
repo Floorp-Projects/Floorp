@@ -8135,15 +8135,6 @@
     "extended_statistics_ok": true,
     "description": "Sanitize: Time it takes to sanitize recent downloads (ms)"
   },
-  "FX_SANITIZE_PASSWORDS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": "30000",
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "Sanitize: Time it takes to sanitize saved passwords (ms)"
-  },
   "FX_SANITIZE_SESSIONS": {
     "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
     "expires_in_version": "50",
