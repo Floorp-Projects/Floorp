@@ -27,7 +27,7 @@ public:
 class nsResProtocolHandler final : public nsIResProtocolHandler, public nsSupportsWeakReference
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIRESPROTOCOLHANDLER
 
