@@ -619,7 +619,7 @@ struct FlowLengthProperty {
 };
 
 int32_t nsTextFrame::GetInFlowContentLength() {
-  if (!(mState & NS_FRAME_IS_BIDI)) {
+  if (!PresContext()->BidiEnabled()) {
     return mContent->TextLength() - mContentOffset;
   }
 
