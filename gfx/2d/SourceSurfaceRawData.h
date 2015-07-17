@@ -16,7 +16,7 @@ namespace gfx {
 class SourceSurfaceRawData : public DataSourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRawData)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRawData, override)
   SourceSurfaceRawData()
     : mMapCount(0)
   {}
@@ -26,12 +26,12 @@ public:
     MOZ_ASSERT(mMapCount == 0);
   }
 
-  virtual uint8_t *GetData() { return mRawData; }
-  virtual int32_t Stride() { return mStride; }
+  virtual uint8_t *GetData() override { return mRawData; }
+  virtual int32_t Stride() override { return mStride; }
 
-  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
-  virtual IntSize GetSize() const { return mSize; }
-  virtual SurfaceFormat GetFormat() const { return mFormat; }
+  virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
+  virtual IntSize GetSize() const override { return mSize; }
+  virtual SurfaceFormat GetFormat() const override { return mFormat; }
 
   bool InitWrappingData(unsigned char *aData,
                         const IntSize &aSize,
@@ -39,7 +39,7 @@ public:
                         SurfaceFormat aFormat,
                         bool aOwnData);
 
-  virtual void GuaranteePersistance();
+  virtual void GuaranteePersistance() override;
 
   // Althought Map (and Moz2D in general) isn't normally threadsafe,
   // we want to allow it for SourceSurfaceRawData since it should
@@ -79,7 +79,7 @@ private:
 class SourceSurfaceAlignedRawData : public DataSourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceAlignedRawData)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceAlignedRawData, override)
   SourceSurfaceAlignedRawData()
     : mMapCount(0)
   {}
@@ -88,12 +88,12 @@ public:
     MOZ_ASSERT(mMapCount == 0);
   }
 
-  virtual uint8_t *GetData() { return mArray; }
-  virtual int32_t Stride() { return mStride; }
+  virtual uint8_t *GetData() override { return mArray; }
+  virtual int32_t Stride() override { return mStride; }
 
-  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
-  virtual IntSize GetSize() const { return mSize; }
-  virtual SurfaceFormat GetFormat() const { return mFormat; }
+  virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
+  virtual IntSize GetSize() const override { return mSize; }
+  virtual SurfaceFormat GetFormat() const override { return mFormat; }
 
   bool Init(const IntSize &aSize,
             SurfaceFormat aFormat,
