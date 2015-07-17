@@ -263,8 +263,6 @@ public:
     mReader->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
   }
 
-  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() { return mReader->CanonicalBuffered(); }
-
   // Returns the state machine task queue.
   MediaTaskQueue* TaskQueue() const { return mTaskQueue; }
 
@@ -941,16 +939,7 @@ private:
   // buffering.
   TimeStamp mBufferingStart;
 
-  // The buffered range. Mirrored from the decoder thread.
-  Mirror<media::TimeIntervals> mBuffered;
-
-  // Duration of the media. This is guaranteed to be non-null after we finish
-  // decoding the first frame.
-  Canonical<media::NullableTimeUnit> mDuration;
   media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
-public:
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() { return &mDuration; }
-protected:
 
   // Recomputes the canonical duration from various sources.
   void RecomputeDuration();
@@ -958,20 +947,10 @@ protected:
 
   // FrameID which increments every time a frame is pushed to our queue.
   FrameID mCurrentFrameID;
-  // The duration according to the demuxer's current estimate, mirrored from the main thread.
-  Mirror<media::NullableTimeUnit> mEstimatedDuration;
-
-  // The duration explicitly set by JS, mirrored from the main thread.
-  Mirror<Maybe<double>> mExplicitDuration;
 
   // The highest timestamp that our position has reached. Monotonically
   // increasing.
   Watchable<media::TimeUnit> mObservedDuration;
-
-  // The current play state and next play state, mirrored from the main thread.
-  Mirror<MediaDecoder::PlayState> mPlayState;
-  Mirror<MediaDecoder::PlayState> mNextPlayState;
-  Mirror<bool> mLogicallySeeking;
 
   // Returns true if we're logically playing, that is, if the Play() has
   // been called and Pause() has not or we have not yet reached the end
@@ -984,19 +963,6 @@ protected:
     return mPlayState == MediaDecoder::PLAY_STATE_PLAYING ||
            mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
-
-  // Whether we're currently in or transitioning to shutdown state.
-  Canonical<bool> mIsShutdown;
-public:
-  AbstractCanonical<bool>* CanonicalIsShutdown() { return &mIsShutdown; }
-protected:
-
-  // The status of our next frame. Mirrored on the main thread and used to
-  // compute ready state.
-  Canonical<NextFrameStatus> mNextFrameStatus;
-public:
-  AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() { return &mNextFrameStatus; }
-protected:
 
   struct SeekJob {
     void Steal(SeekJob& aOther)
@@ -1055,13 +1021,6 @@ protected:
   // This is created in the state machine's constructor.
   nsRefPtr<MediaDecoderReader> mReader;
 
-  // The time of the current frame in microseconds, corresponding to the "current
-  // playback position" in HTML5. This is referenced from 0, which is the initial
-  // playback position.
-  Canonical<int64_t> mCurrentPosition;
-public:
-  AbstractCanonical<int64_t>* CanonicalCurrentPosition() { return &mCurrentPosition; }
-protected:
   // The end time of the last audio frame that's been pushed onto the audio sink
   // or DecodedStream in microseconds. This will approximately be the end time
   // of the audio stream, unless another frame is pushed to the hardware.
@@ -1079,19 +1038,8 @@ protected:
   // on decoded video data.
   int64_t mDecodedVideoEndTime;
 
-  // Volume of playback. 0.0 = muted. 1.0 = full volume.
-  Mirror<double> mVolume;
-
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
-  //
-  // The separation between mPlaybackRate and mLogicalPlaybackRate is a kludge
-  // to preserve existing fragile logic while converting this setup to state-
-  // mirroring. Some hero should clean this up.
   double mPlaybackRate;
-  Mirror<double> mLogicalPlaybackRate;
-
-  // Pitch preservation for the playback rate.
-  Mirror<bool> mPreservesPitch;
 
   // Time at which we started decoding. Synchronised via decoder monitor.
   TimeStamp mDecodeStartTime;
@@ -1357,6 +1305,65 @@ protected:
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
   nsRefPtr<DecodedStream> mDecodedStream;
+
+private:
+  // The buffered range. Mirrored from the decoder thread.
+  Mirror<media::TimeIntervals> mBuffered;
+
+  // The duration according to the demuxer's current estimate, mirrored from the main thread.
+  Mirror<media::NullableTimeUnit> mEstimatedDuration;
+
+  // The duration explicitly set by JS, mirrored from the main thread.
+  Mirror<Maybe<double>> mExplicitDuration;
+
+  // The current play state and next play state, mirrored from the main thread.
+  Mirror<MediaDecoder::PlayState> mPlayState;
+  Mirror<MediaDecoder::PlayState> mNextPlayState;
+  Mirror<bool> mLogicallySeeking;
+
+  // Volume of playback. 0.0 = muted. 1.0 = full volume.
+  Mirror<double> mVolume;
+
+  // TODO: The separation between mPlaybackRate and mLogicalPlaybackRate is a
+  // kludge to preserve existing fragile logic while converting this setup to
+  // state-mirroring. Some hero should clean this up.
+  Mirror<double> mLogicalPlaybackRate;
+
+  // Pitch preservation for the playback rate.
+  Mirror<bool> mPreservesPitch;
+
+  // Duration of the media. This is guaranteed to be non-null after we finish
+  // decoding the first frame.
+  Canonical<media::NullableTimeUnit> mDuration;
+
+  // Whether we're currently in or transitioning to shutdown state.
+  Canonical<bool> mIsShutdown;
+
+  // The status of our next frame. Mirrored on the main thread and used to
+  // compute ready state.
+  Canonical<NextFrameStatus> mNextFrameStatus;
+
+  // The time of the current frame in microseconds, corresponding to the "current
+  // playback position" in HTML5. This is referenced from 0, which is the initial
+  // playback position.
+  Canonical<int64_t> mCurrentPosition;
+
+public:
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
+    return mReader->CanonicalBuffered();
+  }
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {
+    return &mDuration;
+  }
+  AbstractCanonical<bool>* CanonicalIsShutdown() {
+    return &mIsShutdown;
+  }
+  AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() {
+    return &mNextFrameStatus;
+  }
+  AbstractCanonical<int64_t>* CanonicalCurrentPosition() {
+    return &mCurrentPosition;
+  }
 };
 
 } // namespace mozilla
