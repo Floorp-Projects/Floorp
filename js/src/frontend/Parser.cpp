@@ -371,7 +371,7 @@ template <typename ParseHandler>
 bool
 ParseContext<ParseHandler>::generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
                                                      LifoAlloc& alloc,
-                                                     MutableHandle<Bindings> bindings) const
+                                                     InternalHandle<Bindings*> bindings) const
 {
     MOZ_ASSERT(sc->isFunctionBox());
     MOZ_ASSERT(args_.length() < ARGNO_LIMIT);
@@ -847,10 +847,10 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
         }
     }
 
-    Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!funpc.generateFunctionBindings(context, tokenStream, alloc, &bindings))
+    InternalHandle<Bindings*> funboxBindings =
+        InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
+    if (!funpc.generateFunctionBindings(context, tokenStream, alloc, funboxBindings))
         return null();
-    funbox->bindings = bindings;
 
     return fn;
 }
@@ -1470,12 +1470,9 @@ Parser<FullParseHandler>::leaveFunction(ParseNode* fn, ParseContext<FullParseHan
         }
     }
 
-    Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!pc->generateFunctionBindings(context, tokenStream, alloc, &bindings))
-        return false;
-    funbox->bindings = bindings;
-
-    return true;
+    InternalHandle<Bindings*> bindings =
+        InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
+    return pc->generateFunctionBindings(context, tokenStream, alloc, bindings);
 }
 
 template <>
@@ -2495,10 +2492,10 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
         }
     }
 
-    Rooted<Bindings> bindings(context, funbox->bindings);
-    if (!pc->generateFunctionBindings(context, tokenStream, alloc, &bindings))
+    InternalHandle<Bindings*> bindings =
+        InternalHandle<Bindings*>::fromMarkedLocation(&funbox->bindings);
+    if (!pc->generateFunctionBindings(context, tokenStream, alloc, bindings))
         return null();
-    funbox->bindings = bindings;
 
     if (!FoldConstants(context, &pn, this))
         return null();
