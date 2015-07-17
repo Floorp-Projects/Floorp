@@ -1414,6 +1414,11 @@ var BrowserApp = {
     }, this);
   },
 
+  // These values come from pref_tracking_protection_entries in arrays.xml.
+  PREF_TRACKING_PROTECTION_ENABLED: "2",
+  PREF_TRACKING_PROTECTION_ENABLED_PB: "1",
+  PREF_TRACKING_PROTECTION_DISABLED: "0",
+
   handlePreferencesRequest: function handlePreferencesRequest(aRequestId,
                                                               aPrefNames,
                                                               aListen) {
@@ -1452,6 +1457,18 @@ var BrowserApp = {
           pref.value = MasterPassword.enabled;
           prefs.push(pref);
           continue;
+        case "privacy.trackingprotection.state": {
+          pref.type = "string";
+          if (Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
+            pref.value = this.PREF_TRACKING_PROTECTION_ENABLED;
+          } else if (Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled")) {
+            pref.value = this.PREF_TRACKING_PROTECTION_ENABLED_PB;
+          } else {
+            pref.value = this.PREF_TRACKING_PROTECTION_DISABLED;
+          }
+          prefs.push(pref);
+          continue;
+        }
         // Crash reporter submit pref must be fetched from nsICrashReporter service.
         case "datareporting.crashreporter.submitEnabled":
           let crashReporterBuilt = "nsICrashReporter" in Ci && Services.appinfo instanceof Ci.nsICrashReporter;
@@ -1534,6 +1551,29 @@ var BrowserApp = {
           MasterPassword.setPassword(json.value);
         return;
 
+      // "privacy.trackingprotection.state" is not a "real" pref name, but it's used in the setting menu.
+      // By default "privacy.trackingprotection.pbmode.enabled" is true,
+      // and "privacy.trackingprotection.enabled" is false.
+      case "privacy.trackingprotection.state": {
+        switch (json.value) {
+          // Tracking protection disabled.
+          case this.PREF_TRACKING_PROTECTION_DISABLED:
+            Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
+            Services.prefs.setBoolPref("privacy.trackingprotection.enabled", false);
+            break;
+          // Tracking protection only in private browsing,
+          case this.PREF_TRACKING_PROTECTION_ENABLED_PB:
+            Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+            Services.prefs.setBoolPref("privacy.trackingprotection.enabled", false);
+            break;
+          // Tracking protection everywhere.
+          case this.PREF_TRACKING_PROTECTION_ENABLED:
+            Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", true);
+            Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
+            break;
+        }
+        return;
+      }
       // Enabling or disabling suggestions will prevent future prompts
       case SearchEngines.PREF_SUGGEST_ENABLED:
         Services.prefs.setBoolPref(SearchEngines.PREF_SUGGEST_PROMPTED, true);
