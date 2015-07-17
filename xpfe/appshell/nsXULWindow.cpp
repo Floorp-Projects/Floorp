@@ -1962,8 +1962,15 @@ void nsXULWindow::PlaceWindowLayersBehind(uint32_t aLowLevel,
 void nsXULWindow::SetContentScrollbarVisibility(bool aVisible)
 {
   nsCOMPtr<nsPIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
+  if (!contentWin) {
+    return;
+  }
+
+  MOZ_ASSERT(contentWin->IsOuterWindow());
+  contentWin = contentWin->GetCurrentInnerWindow();
   if (contentWin) {
     mozilla::ErrorResult rv;
+
     nsRefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(contentWin.get());
     nsRefPtr<mozilla::dom::BarProp> scrollbars = window->GetScrollbars(rv);
     if (scrollbars) {
