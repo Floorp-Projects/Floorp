@@ -22,6 +22,7 @@ mochikit.jar:
   content/static/harness.css (static/harness.css)
   content/tests/SimpleTest/ChromePowers.js (tests/SimpleTest/ChromePowers.js)
   content/tests/SimpleTest/EventUtils.js (tests/SimpleTest/EventUtils.js)
+  content/tests/SimpleTest/SpawnTask.js (tests/SimpleTest/SpawnTask.js)
   content/tests/SimpleTest/AsyncUtilsContent.js (tests/SimpleTest/AsyncUtilsContent.js)
   content/tests/SimpleTest/ChromeUtils.js (tests/SimpleTest/ChromeUtils.js)
   content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
