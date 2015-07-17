@@ -13,6 +13,12 @@
                         android:summary="@string/pref_tracking_protection_summary"
                         android:persistent="false" />
 
+    <ListPreference android:key="privacy.trackingprotection.state"
+                    android:title="@string/pref_tracking_protection_title"
+                    android:entries="@array/pref_tracking_protection_entries"
+                    android:entryValues="@array/pref_tracking_protection_values"
+                    android:persistent="false" />
+
     <org.mozilla.gecko.preferences.AlignRightLinkPreference
             android:key="android.not_a_preference.trackingprotection.learn_more"
             android:title="@string/pref_learn_more"

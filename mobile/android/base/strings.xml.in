@@ -216,6 +216,10 @@
   <string name="pref_donottrack_title">&pref_donottrack_title;</string>
   <string name="pref_donottrack_summary">&pref_donottrack_summary;</string>
 
+  <string name="pref_tracking_protection_enabled">&pref_tracking_protection_enabled;</string>
+  <string name="pref_tracking_protection_enabled_pb">&pref_tracking_protection_enabled_pb;</string>
+  <string name="pref_tracking_protection_disabled">&pref_tracking_protection_disabled;</string>
+
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
