@@ -784,6 +784,15 @@ setReq.onerror = function() {
         for test in tests:
             self.add_test(test)
 
+        # ensure we have only tests files with names starting with 'test_'
+        invalid_tests = \
+            [t['filepath'] for t in self.tests
+             if not os.path.basename(t['filepath']).startswith('test_')]
+        if invalid_tests:
+            raise Exception("Tests file names must starts with 'test_'."
+                            " Invalid test names:\n  %s"
+                            % '\n  '.join(invalid_tests))
+
         version_info = mozversion.get_version(binary=self.bin,
                                               sources=self.sources,
                                               dm_type=os.environ.get('DM_TRANS', 'adb'),
