@@ -103,7 +103,6 @@
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
-#include "nsIDOMJSWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsIImageDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -1376,12 +1375,17 @@ nsHTMLDocument::Open(JSContext* /* unused */,
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
 
-  nsCOMPtr<nsIDOMWindow> window = GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindow> window = GetInnerWindow();
   if (!window) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
-  nsCOMPtr<nsIDOMJSWindow> win = do_QueryInterface(window);
+  window = nsPIDOMWindow::GetOuterFromCurrentInner(window);
+  if (!window) {
+    rv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return nullptr;
+  }
+  nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window.get());
   nsCOMPtr<nsIDOMWindow> newWindow;
   // XXXbz We ignore aReplace for now.
   rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
