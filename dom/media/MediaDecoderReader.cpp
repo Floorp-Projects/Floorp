@@ -192,6 +192,8 @@ MediaDecoderReader::ThrottledNotifyDataArrived(const Interval<int64_t>& aInterva
 
   if (mThrottledInterval.isNothing()) {
     mThrottledInterval.emplace(aInterval);
+  } else if (mThrottledInterval.ref().Contains(aInterval)) {
+    return;
   } else if (!mThrottledInterval.ref().Contiguous(aInterval)) {
     DoThrottledNotify();
     mThrottledInterval.emplace(aInterval);
