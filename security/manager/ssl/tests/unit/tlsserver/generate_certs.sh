@@ -320,7 +320,6 @@ export_cert inadequatekeyusage inadequatekeyusage-ee.der
 make_EE selfsigned-inadequateEKU 'CN=Self-signed Inadequate EKU Test End-entity' unused "selfsigned-inadequateEKU.example.com" "--keyUsage keyEncipherment,dataEncipherment --extKeyUsage serverAuth" "-x"
 
 make_delegated delegatedSigner 'CN=Test Delegated Responder' testCA "--extKeyUsage ocspResponder"
-make_delegated delegatedSHA1Signer 'CN=Test SHA1 Delegated Responder' testCA "--extKeyUsage ocspResponder -Z SHA1"
 make_delegated invalidDelegatedSignerNoExtKeyUsage 'CN=Test Invalid Delegated Responder No extKeyUsage' testCA
 make_delegated invalidDelegatedSignerFromIntermediate 'CN=Test Invalid Delegated Responder From Intermediate' testINT "--extKeyUsage ocspResponder"
 make_delegated invalidDelegatedSignerKeyUsageCrlSigning 'CN=Test Invalid Delegated Responder keyUsage crlSigning' testCA "--keyUsage crlSigning"

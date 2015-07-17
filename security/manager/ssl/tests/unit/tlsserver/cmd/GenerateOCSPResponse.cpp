@@ -35,8 +35,6 @@ struct OCSPResponseName
 
 const static OCSPResponseName kOCSPResponseNameList[] = {
   { "good",            ORTGood },          // the certificate is good
-  { "good-delegated",  ORTDelegatedIncluded}, // the certificate is good, using
-                                           // a delegated signer
   { "revoked",         ORTRevoked},        // the certificate has been revoked
   { "unknown",         ORTUnknown},        // the responder doesn't know if the
                                            //   cert is good
