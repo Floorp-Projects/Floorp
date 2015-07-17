@@ -153,6 +153,15 @@ public:
                 bool aIsSynthesized = false);
 
   /**
+   * All selection events must be handled via HandleSelectionEvent()
+   * because they must be handled by same target as composition events when
+   * there is a composition.
+   */
+  static void HandleSelectionEvent(nsPresContext* aPresContext,
+                                   nsIContent* aEventTargetContent,
+                                   WidgetSelectionEvent* aSelectionEvent);
+
+  /**
    * This is called when PresShell ignores a composition event due to not safe
    * to dispatch events.
    */
@@ -211,6 +220,8 @@ protected:
   static bool IsEditable(nsINode* node);
 
   static bool IsIMEObserverNeeded(const IMEState& aState);
+
+  static nsIContent* GetRootContent(nsPresContext* aPresContext);
 
   static StaticRefPtr<nsIContent> sContent;
   static nsPresContext* sPresContext;

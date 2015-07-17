@@ -285,6 +285,18 @@ private:
                                 bool aIsSynthesized);
 
   /**
+   * HandleSelectionEvent() sends the selection event to ContentEventHandler
+   * or dispatches it to the focused child process.
+   */
+  void HandleSelectionEvent(WidgetSelectionEvent* aSelectionEvent)
+  {
+    HandleSelectionEvent(mPresContext, mTabParent, aSelectionEvent);
+  }
+  static void HandleSelectionEvent(nsPresContext* aPresContext,
+                                   TabParent* aTabParent,
+                                   WidgetSelectionEvent* aSelectionEvent);
+
+  /**
    * MaybeDispatchCompositionUpdate() may dispatch a compositionupdate event
    * if aCompositionEvent changes composition string.
    * @return Returns false if dispatching the compositionupdate event caused

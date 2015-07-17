@@ -374,6 +374,24 @@ TextComposition::DispatchCompositionEvent(
   NotityUpdateComposition(aCompositionEvent);
 }
 
+// static
+void
+TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
+                                      TabParent* aTabParent,
+                                      WidgetSelectionEvent* aSelectionEvent)
+{
+  // If the content is a container of TabParent, composition should be in the
+  // remote process.
+  if (aTabParent) {
+    unused << aTabParent->SendSelectionEvent(*aSelectionEvent);
+    aSelectionEvent->mFlags.mPropagationStopped = true;
+    return;
+  }
+
+  ContentEventHandler handler(aPresContext);
+  handler.OnSelectionEvent(aSelectionEvent);
+}
+
 void
 TextComposition::NotityUpdateComposition(
                    const WidgetCompositionEvent* aCompositionEvent)
