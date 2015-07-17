@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1148593
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1148593</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1148593 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var TESTS;
+
+  function nextTest() {
+    var t = TESTS.pop();
+    if (t) {
+      t();
+    } else {
+      SimpleTest.finish();
+    }
+  }
+
+  function checkStack(functionName) {
+    try {
+      noSuchFunction();
+    } catch (e) {
+      ok(e.stack.indexOf(functionName) >= 0, "stack includes " + functionName);
+    }
+    nextTest();
+  }
+
+  function eventListener() {
+    checkStack("registerEventListener");
+  }
+  function registerEventListener(link) {
+    link.onload = eventListener;
+  }
+  function eventTest() {
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "data:text/css,";
+    registerEventListener(link);
+    document.body.appendChild(link);
+  }
+
+  function xhrListener() {
+    checkStack("xhrTest");
+  }
+  function xhrTest() {
+    var ourFile = location.href;
+    var x = new XMLHttpRequest();
+    x.onload = xhrListener;
+    x.open("get", ourFile, true);
+    x.send();
+  }
+
+  function rafListener() {
+    checkStack("rafTest");
+  }
+  function rafTest() {
+    requestAnimationFrame(rafListener);
+  }
+
+  var intervalId;
+  function intervalHandler() {
+    clearInterval(intervalId);
+    checkStack("intervalTest");
+  }
+  function intervalTest() {
+    intervalId = setInterval(intervalHandler, 5);
+  }
+
+  function postMessageHandler(ev) {
+    ev.stopPropagation();
+    checkStack("postMessageTest");
+  }
+  function postMessageTest() {
+    window.addEventListener("message", postMessageHandler, true);
+    window.postMessage("whatever", "*");
+  }
+
+  function runTests() {
+    TESTS = [postMessageTest, intervalTest, rafTest, xhrTest, eventTest];
+    nextTest();
+  }
+
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv(
+      {"set": [['javascript.options.asyncstack', true]]},
+      runTests);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1148593">Mozilla Bug 1148593</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
