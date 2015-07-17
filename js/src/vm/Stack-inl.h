@@ -923,14 +923,10 @@ InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
     MOZ_ASSERT_IF(entryFrame_->isEvalFrame(), state.script()->isActiveEval());
 
     if (entryMonitor_) {
-        RootedValue stack(cx_);
-        stack.setObjectOrNull(asyncStack_.get());
-        if (!cx_->compartment()->wrap(cx_, &stack))
-            stack.setUndefined();
         if (entryFrame->isFunctionFrame())
-            entryMonitor_->Entry(cx_, entryFrame->fun(), stack, asyncCause_);
+            entryMonitor_->Entry(cx_, entryFrame->fun());
         else
-            entryMonitor_->Entry(cx_, entryFrame->script(), stack, asyncCause_);
+            entryMonitor_->Entry(cx_, entryFrame->script());
     }
 }
 

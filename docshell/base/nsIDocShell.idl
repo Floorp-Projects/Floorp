@@ -46,7 +46,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(9f2babc4-4c2a-4cf7-929f-a1efc325b0df)]
+[scriptable, builtinclass, uuid(97471054-0BC8-4A57-BBFE-6C255BCBBB67)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1034,9 +1034,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStart(in string aReason,
                                                                   in wstring functionName,
                                                                   in wstring fileName,
-                                                                  in unsigned long lineNumber,
-                                                                  in jsval asyncStack,
-                                                                  in jsval asyncCause);
+                                                                  in unsigned long lineNumber);
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
   /**
