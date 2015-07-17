@@ -160,7 +160,7 @@ IMPL_GETSETPROPERTY_AS(Bool, bool)
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::GetPropertyAsAString(const nsAString& aProp,
-                                        nsAString& aResult)
+                                            nsAString& aResult)
 {
   nsIVariant* v = mPropertyHash.GetWeak(aProp);
   if (!v) {
@@ -171,7 +171,7 @@ nsHashPropertyBagBase::GetPropertyAsAString(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::GetPropertyAsACString(const nsAString& aProp,
-                                         nsACString& aResult)
+                                             nsACString& aResult)
 {
   nsIVariant* v = mPropertyHash.GetWeak(aProp);
   if (!v) {
@@ -182,7 +182,7 @@ nsHashPropertyBagBase::GetPropertyAsACString(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::GetPropertyAsAUTF8String(const nsAString& aProp,
-                                            nsACString& aResult)
+                                                nsACString& aResult)
 {
   nsIVariant* v = mPropertyHash.GetWeak(aProp);
   if (!v) {
@@ -193,8 +193,8 @@ nsHashPropertyBagBase::GetPropertyAsAUTF8String(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::GetPropertyAsInterface(const nsAString& aProp,
-                                          const nsIID& aIID,
-                                          void** aResult)
+                                              const nsIID& aIID,
+                                              void** aResult)
 {
   nsIVariant* v = mPropertyHash.GetWeak(aProp);
   if (!v) {
@@ -215,7 +215,7 @@ nsHashPropertyBagBase::GetPropertyAsInterface(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::SetPropertyAsAString(const nsAString& aProp,
-                                        const nsAString& aValue)
+                                            const nsAString& aValue)
 {
   nsCOMPtr<nsIWritableVariant> var = new nsVariant();
   var->SetAsAString(aValue);
@@ -224,7 +224,7 @@ nsHashPropertyBagBase::SetPropertyAsAString(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::SetPropertyAsACString(const nsAString& aProp,
-                                         const nsACString& aValue)
+                                             const nsACString& aValue)
 {
   nsCOMPtr<nsIWritableVariant> var = new nsVariant();
   var->SetAsACString(aValue);
@@ -233,7 +233,7 @@ nsHashPropertyBagBase::SetPropertyAsACString(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::SetPropertyAsAUTF8String(const nsAString& aProp,
-                                            const nsACString& aValue)
+                                                const nsACString& aValue)
 {
   nsCOMPtr<nsIWritableVariant> var = new nsVariant();
   var->SetAsAUTF8String(aValue);
@@ -242,7 +242,7 @@ nsHashPropertyBagBase::SetPropertyAsAUTF8String(const nsAString& aProp,
 
 NS_IMETHODIMP
 nsHashPropertyBagBase::SetPropertyAsInterface(const nsAString& aProp,
-                                          nsISupports* aValue)
+                                              nsISupports* aValue)
 {
   nsCOMPtr<nsIWritableVariant> var = new nsVariant();
   var->SetAsISupports(aValue);
