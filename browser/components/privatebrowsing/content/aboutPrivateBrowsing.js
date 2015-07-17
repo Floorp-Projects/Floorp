@@ -4,10 +4,18 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService)
-                                                         .createBundle("chrome://browser/locale/aboutPrivateBrowsing.properties");
+let stringBundle = Services.strings.createBundle(
+                     "chrome://browser/locale/aboutPrivateBrowsing.properties");
+
+let useTour = false;
+try {
+  useTour = Services.prefs.getBoolPref("privacy.trackingprotection.ui.enabled");
+} catch (ex) {
+  // The preference is not available.
+}
 
 if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
   document.title = stringBundle.GetStringFromName("title.normal");
@@ -18,28 +26,33 @@ if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
 }
 
 function setFavIcon(url) {
-  var icon = document.createElement("link");
+  let icon = document.createElement("link");
   icon.setAttribute("rel", "icon");
   icon.setAttribute("type", "image/png");
   icon.setAttribute("href", url);
-  var head = document.getElementsByTagName("head")[0];
+  let head = document.getElementsByTagName("head")[0];
   head.insertBefore(icon, head.firstChild);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  let formatURLPref = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                        .getService(Ci.nsIURLFormatter).formatURLPref;
+  let learnMoreURL = formatURLPref("app.support.baseURL") + "private-browsing";
+
   if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
+    // Normal browsing window.
     document.body.setAttribute("class", "normal");
+  } else if (!useTour) {
+    // Private browsing window, classic version.
+    document.getElementById("learnMore").setAttribute("href", learnMoreURL);
+  } else {
+    // Private browsing window, Tracking Protection tour version.
+    document.body.setAttribute("class", "tour");
+    let tourURL = formatURLPref("privacy.trackingprotection.introURL");
+    document.getElementById("startTour").setAttribute("href", tourURL);
+    document.getElementById("tourLearnMore").setAttribute("href", learnMoreURL);
   }
 
-  // Set up the help link
-  let learnMoreURL = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
-                     .getService(Ci.nsIURLFormatter)
-                     .formatURLPref("app.support.baseURL");
-  let learnMore = document.getElementById("learnMore");
-  if (learnMore) {
-    learnMore.setAttribute("href", learnMoreURL + "private-browsing");
-  }
-  
   let startPrivateBrowsing = document.getElementById("startPrivateBrowsing");
   if (startPrivateBrowsing) {
     startPrivateBrowsing.addEventListener("command", openPrivateWindow);
