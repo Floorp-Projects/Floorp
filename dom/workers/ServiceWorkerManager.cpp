@@ -4128,11 +4128,8 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
 
   nsCOMPtr<nsPIDOMWindow> w = aDocument->GetWindow();
   MOZ_ASSERT(w);
+  w = w->GetCurrentInnerWindow();
   auto* window = static_cast<nsGlobalWindow*>(w.get());
-  if (NS_WARN_IF(!window)) {
-    NS_WARNING("No valid nsGlobalWindow");
-    return;
-  }
 
   ErrorResult result;
   dom::Navigator* navigator = window->GetNavigator(result);

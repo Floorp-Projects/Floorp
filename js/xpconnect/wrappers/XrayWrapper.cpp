@@ -1414,8 +1414,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsW
         nsGlobalWindow* win = AsWindow(cx, wrapper);
         // Note: As() unwraps outer windows to get to the inner window.
         if (win) {
-            bool unused;
-            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index, unused);
+            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index);
             if (subframe) {
                 nsGlobalWindow* global = static_cast<nsGlobalWindow*>(subframe.get());
                 global->EnsureInnerWindow();
@@ -1561,8 +1560,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper, Handl
         nsGlobalWindow* win = AsWindow(cx, wrapper);
         // Note: As() unwraps outer windows to get to the inner window.
         if (win) {
-            bool unused;
-            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index, unused);
+            nsCOMPtr<nsIDOMWindow> subframe = win->IndexedGetter(index);
             if (subframe) {
                 nsGlobalWindow* global = static_cast<nsGlobalWindow*>(subframe.get());
                 global->EnsureInnerWindow();

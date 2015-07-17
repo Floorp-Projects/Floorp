@@ -5,7 +5,7 @@
 "use strict";
 
 /**
- * JS module implementation of nsIDOMJSWindow.setTimeout and clearTimeout.
+ * JS module implementation of setTimeout and clearTimeout.
  */
 
 this.EXPORTED_SYMBOLS = ["setTimeout", "clearTimeout", "setInterval", "clearInterval"];

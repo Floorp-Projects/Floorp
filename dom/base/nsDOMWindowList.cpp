@@ -83,10 +83,8 @@ nsDOMWindowList::GetLength(uint32_t* aLength)
 }
 
 already_AddRefed<nsIDOMWindow>
-nsDOMWindowList::IndexedGetter(uint32_t aIndex, bool& aFound)
+nsDOMWindowList::IndexedGetter(uint32_t aIndex)
 {
-  aFound = false;
-
   nsCOMPtr<nsIDocShellTreeItem> item = GetDocShellTreeItemAt(aIndex);
   if (!item) {
     return nullptr;
@@ -95,15 +93,13 @@ nsDOMWindowList::IndexedGetter(uint32_t aIndex, bool& aFound)
   nsCOMPtr<nsIDOMWindow> window = item->GetWindow();
   MOZ_ASSERT(window);
 
-  aFound = true;
   return window.forget();
 }
 
 NS_IMETHODIMP 
 nsDOMWindowList::Item(uint32_t aIndex, nsIDOMWindow** aReturn)
 {
-  bool found;
-  nsCOMPtr<nsIDOMWindow> window = IndexedGetter(aIndex, found);
+  nsCOMPtr<nsIDOMWindow> window = IndexedGetter(aIndex);
   window.forget(aReturn);
   return NS_OK;
 }
