@@ -5,7 +5,7 @@
 enum IccType {"sim", "usim", "csim", "ruim"};
 
 [Pref="dom.icc.enabled",
- CheckPermissions="mobileconnection",
+ CheckAnyPermissions="mobileconnection",
  AvailableIn="CertifiedApps"]
 interface MozIccInfo {
   /**
@@ -45,7 +45,7 @@ interface MozIccInfo {
 };
 
 [Pref="dom.icc.enabled",
- CheckPermissions="mobileconnection",
+ CheckAnyPermissions="mobileconnection",
  AvailableIn="CertifiedApps"]
 interface MozGsmIccInfo : MozIccInfo {
   /**
@@ -56,7 +56,7 @@ interface MozGsmIccInfo : MozIccInfo {
 };
 
 [Pref="dom.icc.enabled",
- CheckPermissions="mobileconnection",
+ CheckAnyPermissions="mobileconnection",
  AvailableIn="CertifiedApps"]
 interface MozCdmaIccInfo : MozIccInfo {
   /**

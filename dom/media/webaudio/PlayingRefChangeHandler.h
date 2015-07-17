@@ -25,15 +25,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsRefPtr<AudioNode> node;
-    {
-      // No need to keep holding the lock for the whole duration of this
-      // function, since we're holding a strong reference to it, so if
-      // we can obtain the reference, we will hold the node alive in
-      // this function.
-      MutexAutoLock lock(mStream->Engine()->NodeMutex());
-      node = mStream->Engine()->Node();
-    }
+    nsRefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
     if (node) {
       if (mChange == ADDREF) {
         node->MarkActive();

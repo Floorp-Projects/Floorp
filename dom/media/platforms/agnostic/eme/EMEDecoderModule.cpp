@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-typedef MediaPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
+typedef MozPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
 
 static PLDHashOperator
 DropDecryptPromises(MediaRawData* aKey,
@@ -35,7 +35,7 @@ public:
   EMEDecryptor(MediaDataDecoder* aDecoder,
                MediaDataDecoderCallback* aCallback,
                CDMProxy* aProxy,
-               MediaTaskQueue* aDecodeTaskQueue)
+               TaskQueue* aDecodeTaskQueue)
     : mDecoder(aDecoder)
     , mCallback(aCallback)
     , mTaskQueue(aDecodeTaskQueue)
@@ -141,7 +141,7 @@ private:
 
   nsRefPtr<MediaDataDecoder> mDecoder;
   MediaDataDecoderCallback* mCallback;
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
   nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder> mDecrypts;
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
@@ -150,7 +150,7 @@ private:
 
 class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy {
 public:
-  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
+  EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableTaskQueue* aTaskQueue)
    : MediaDataDecoderProxy(aProxyThread, aCallback)
    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
    , mProxy(aProxy)
@@ -207,7 +207,7 @@ EMEDecoderModule::~EMEDecoderModule()
 }
 
 static already_AddRefed<MediaDataDecoderProxy>
-CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
+CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableTaskQueue* aTaskQueue)
 {
   nsCOMPtr<mozIGeckoMediaPluginService> gmpService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (!gmpService) {
@@ -228,7 +228,7 @@ already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
-                                     FlushableMediaTaskQueue* aVideoTaskQueue,
+                                     FlushableTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo && aConfig.mCrypto.mValid) {
@@ -266,7 +266,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     FlushableMediaTaskQueue* aAudioTaskQueue,
+                                     FlushableTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio && aConfig.mCrypto.mValid) {

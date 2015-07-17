@@ -48,7 +48,7 @@ private:
 class GMPAudioDecoder : public MediaDataDecoder {
 protected:
   GMPAudioDecoder(const AudioInfo& aConfig,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback,
                   AudioCallbackAdapter* aAdapter)
    : mConfig(aConfig)
@@ -60,7 +60,7 @@ protected:
 
 public:
   GMPAudioDecoder(const AudioInfo& aConfig,
-                  MediaTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
    : mConfig(aConfig)
    , mCallback(aCallback)

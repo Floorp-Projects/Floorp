@@ -546,11 +546,17 @@ class Descriptor(DescriptorProvider):
         self._binaryNames.setdefault('__stringifier', 'Stringify')
 
         if not self.interface.isExternal():
-            self.permissions = dict()
+            self.anypermissions = dict()
+            self.allpermissions = dict()
 
             # Adds a permission list to this descriptor and returns the index to use.
-            def addPermissions(ifaceOrMember):
-                checkPermissions = ifaceOrMember.getExtendedAttribute("CheckPermissions")
+            def addPermissions(ifaceOrMember, attribute):
+                if attribute == "CheckAllPermissions":
+                    permissions = self.allpermissions
+                else:
+                    permissions = self.anypermissions
+
+                checkPermissions = ifaceOrMember.getExtendedAttribute(attribute)
                 if checkPermissions is None:
                     return None
 
@@ -560,17 +566,22 @@ class Descriptor(DescriptorProvider):
                 checkPermissions = checkPermissions[0]
                 permissionsList = checkPermissions.split()
                 if len(permissionsList) == 0:
-                    raise TypeError("Need at least one permission name for CheckPermissions")
+                    raise TypeError("Need at least one permission name for %s" % attribute)
 
                 permissionsList = tuple(sorted(set(permissionsList)))
-                return self.permissions.setdefault(permissionsList, len(self.permissions))
+                return permissions.setdefault(permissionsList, len(permissions))
 
-            self.checkPermissionsIndex = addPermissions(self.interface)
-            self.checkPermissionsIndicesForMembers = dict()
+            self.checkAnyPermissionsIndex = addPermissions(self.interface, "CheckAnyPermissions")
+            self.checkAnyPermissionsIndicesForMembers = dict()
+            self.checkAllPermissionsIndex = addPermissions(self.interface, "CheckAllPermissions")
+            self.checkAllPermissionsIndicesForMembers = dict()
             for m in self.interface.members:
-                permissionsIndex = addPermissions(m)
+                permissionsIndex = addPermissions(m, "CheckAnyPermissions")
                 if permissionsIndex is not None:
-                    self.checkPermissionsIndicesForMembers[m.identifier.name] = permissionsIndex
+                    self.checkAnyPermissionsIndicesForMembers[m.identifier.name] = permissionsIndex
+                allpermissionsIndex = addPermissions(m, "CheckAllPermissions")
+                if allpermissionsIndex is not None:
+                    self.checkAllPermissionsIndicesForMembers[m.identifier.name] = allpermissionsIndex
 
             def isTestInterface(iface):
                 return (iface.identifier.name in ["TestInterface",
@@ -579,7 +590,8 @@ class Descriptor(DescriptorProvider):
 
             self.featureDetectibleThings = set()
             if not isTestInterface(self.interface):
-                if (self.interface.getExtendedAttribute("CheckPermissions") or
+                if (self.interface.getExtendedAttribute("CheckAnyPermissions") or
+                    self.interface.getExtendedAttribute("CheckAllPermissions") or
                     self.interface.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
                     if self.interface.getNavigatorProperty():
                         self.featureDetectibleThings.add("Navigator.%s" % self.interface.getNavigatorProperty())
@@ -590,7 +602,8 @@ class Descriptor(DescriptorProvider):
                             self.featureDetectibleThings.add("%s.%s" % (iface, m.identifier.name))
 
                 for m in self.interface.members:
-                    if (m.getExtendedAttribute("CheckPermissions") or
+                    if (m.getExtendedAttribute("CheckAnyPermissions") or
+                        m.getExtendedAttribute("CheckAllPermissions") or
                         m.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
                         self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
 

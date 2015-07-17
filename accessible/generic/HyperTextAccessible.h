@@ -561,6 +561,12 @@ protected:
                         uint32_t* aStartOffset, uint32_t* aEndOffset,
                         nsIPersistentProperties* aAttributes);
 
+  /**
+   * Set xml-roles attributes for MathML elements.
+   * @param aAttributes
+   */
+  void SetMathMLXMLRoles(nsIPersistentProperties* aAttributes);
+
 private:
   /**
    * End text offsets array.

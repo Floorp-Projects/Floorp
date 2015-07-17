@@ -42,7 +42,7 @@ function getPermissionCountForApp(aAppId) {
   while (enumerator.hasMoreElements()) {
     var permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
 
-    if (permission.appId == aAppId || aAppId == -1) {
+    if (permission.principal.appId == aAppId || aAppId == -1) {
       nbPermissions++;
     }
   }

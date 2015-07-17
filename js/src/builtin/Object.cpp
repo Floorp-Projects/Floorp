@@ -390,25 +390,6 @@ js::obj_valueOf(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-// ES6 draft rev27 (2014/08/24) 19.1.2.9 Object.getPrototypeOf(O)
-bool
-js::obj_getPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Steps 1-2. */
-    RootedObject obj(cx, ToObject(cx, args.get(0)));
-    if (!obj)
-        return false;
-
-    /* Step 3. */
-    RootedObject proto(cx);
-    if (!GetPrototype(cx, obj, &proto))
-        return false;
-    args.rval().setObjectOrNull(proto);
-    return true;
-}
-
 static bool
 obj_setPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -711,7 +692,7 @@ js::obj_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 3-4.
     RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.get(1), &id))
+    if (!ToPropertyKey(cx, args.get(1), &id))
         return false;
 
     // Steps 5-7.
@@ -758,11 +739,9 @@ js::IdToStringOrSymbol(JSContext* cx, HandleId id, MutableHandleValue result)
     return true;
 }
 
-namespace js {
-
 /* ES6 draft rev 25 (2014 May 22) 19.1.2.8.1 */
 bool
-GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags)
+js::GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags)
 {
     // Steps 1-2.
     RootedObject obj(cx, ToObject(cx, args.get(0)));
@@ -793,8 +772,6 @@ GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags)
     args.rval().setObject(*aobj);
     return true;
 }
-
-} // namespace js
 
 bool
 js::obj_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
@@ -863,25 +840,6 @@ obj_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 
     /* Steps 3-6. */
     return DefineProperties(cx, obj, props);
-}
-
-// ES6 draft rev27 (2014/08/24) 19.1.2.11 Object.isExtensible(O)
-static bool
-obj_isExtensible(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    bool extensible = false;
-
-    // Step 2.
-    if (args.get(0).isObject()) {
-        RootedObject obj(cx, &args.get(0).toObject());
-        if (!IsExtensible(cx, obj, &extensible))
-            return false;
-    }
-    args.rval().setBoolean(extensible);
-    return true;
 }
 
 // ES6 20141014 draft 19.1.2.15 Object.preventExtensions(O)
@@ -1067,23 +1025,23 @@ static const JSPropertySpec object_properties[] = {
 };
 
 static const JSFunctionSpec object_static_methods[] = {
-    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2,JSPROP_DEFINE_LATE),
-    JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
-    JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2,0),
-    JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
-    JS_FN("keys",                      obj_keys,                    1,0),
-    JS_FN("is",                        obj_is,                      2,0),
-    JS_FN("defineProperty",            obj_defineProperty,          3,0),
-    JS_FN("defineProperties",          obj_defineProperties,        2,0),
-    JS_FN("create",                    obj_create,                  2,0),
-    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
-    JS_FN("getOwnPropertySymbols",     obj_getOwnPropertySymbols,   1,0),
-    JS_FN("isExtensible",              obj_isExtensible,            1,0),
-    JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
-    JS_FN("freeze",                    obj_freeze,                  1,0),
-    JS_FN("isFrozen",                  obj_isFrozen,                1,0),
-    JS_FN("seal",                      obj_seal,                    1,0),
-    JS_FN("isSealed",                  obj_isSealed,                1,0),
+    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2, JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN("getPrototypeOf", "ObjectGetPrototypeOf",     1, JSPROP_DEFINE_LATE),
+    JS_FN("setPrototypeOf",            obj_setPrototypeOf,          2, 0),
+    JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2, 0),
+    JS_FN("keys",                      obj_keys,                    1, 0),
+    JS_FN("is",                        obj_is,                      2, 0),
+    JS_FN("defineProperty",            obj_defineProperty,          3, 0),
+    JS_FN("defineProperties",          obj_defineProperties,        2, 0),
+    JS_FN("create",                    obj_create,                  2, 0),
+    JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1, 0),
+    JS_FN("getOwnPropertySymbols",     obj_getOwnPropertySymbols,   1, 0),
+    JS_SELF_HOSTED_FN("isExtensible",  "ObjectIsExtensible",        1, JSPROP_DEFINE_LATE),
+    JS_FN("preventExtensions",         obj_preventExtensions,       1, 0),
+    JS_FN("freeze",                    obj_freeze,                  1, 0),
+    JS_FN("isFrozen",                  obj_isFrozen,                1, 0),
+    JS_FN("seal",                      obj_seal,                    1, 0),
+    JS_FN("isSealed",                  obj_isSealed,                1, 0),
     JS_FS_END
 };
 

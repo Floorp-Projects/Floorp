@@ -7,15 +7,14 @@
 #if !defined(MediaTimer_h_)
 #define MediaTimer_h_
 
-#include "MediaPromise.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/TimeStamp.h"
 
 #include <queue>
 
 #include "nsITimer.h"
 #include "nsRefPtr.h"
-
-#include "mozilla/Monitor.h"
-#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 
@@ -28,11 +27,11 @@ extern PRLogModuleInfo* gMediaTimerLog;
 
 // This promise type is only exclusive because so far there isn't a reason for
 // it not to be. Feel free to change that.
-typedef MediaPromise<bool, bool, /* IsExclusive = */ true> MediaTimerPromise;
+typedef MozPromise<bool, bool, /* IsExclusive = */ true> MediaTimerPromise;
 
 // Timers only know how to fire at a given thread, which creates an impedence
-// mismatch with code that operates with MediaTaskQueues. This class solves
-// that mismatch with a dedicated (but shared) thread and a nice MediaPromise-y
+// mismatch with code that operates with TaskQueues. This class solves
+// that mismatch with a dedicated (but shared) thread and a nice MozPromise-y
 // interface.
 class MediaTimer
 {

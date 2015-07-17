@@ -471,6 +471,8 @@ nsMathMLmoFrame::ProcessOperatorData()
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::fence_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_FENCE;
+    else
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_FENCE;
   }
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::largeop_, value);
   if (value.EqualsLiteral("false")) {
@@ -482,6 +484,8 @@ nsMathMLmoFrame::ProcessOperatorData()
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::separator_, value);
     if (value.EqualsLiteral("false"))
       mFlags &= ~NS_MATHML_OPERATOR_SEPARATOR;
+    else
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_SEPARATOR;
   }
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::symmetric_, value);
   if (value.EqualsLiteral("false"))

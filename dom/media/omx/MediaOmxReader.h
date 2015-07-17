@@ -44,11 +44,11 @@ class MediaOmxReader : public MediaOmxCommonReader
   // If mIsShutdown is false, and mShutdownMutex is held, then
   // AbstractMediaDecoder::mDecoder will be non-null.
   bool mIsShutdown;
-  MediaPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
-  MediaPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
+  MozPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
+  MozPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
 
-  MediaPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
-  MediaPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
+  MozPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
+  MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
   android::sp<android::MediaExtractor> mExtractor;
@@ -113,7 +113,7 @@ public:
   android::sp<android::MediaSource> GetAudioOffloadTrack();
 
   // This method is intended only for private use but public only for
-  // MediaPromise::InvokeCallbackMethod().
+  // MozPromise::InvokeCallbackMethod().
   void ReleaseDecoder();
 
 private:

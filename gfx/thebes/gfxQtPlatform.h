@@ -82,6 +82,10 @@ public:
 
     virtual int GetScreenDepth() const override;
 
+    bool AccelerateLayersByDefault() override {
+      return true;
+    }
+
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 

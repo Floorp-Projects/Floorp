@@ -268,6 +268,12 @@ public:
     static mozilla::Atomic<size_t> sD3D9SharedTextureUsed;
 
 protected:
+    bool AccelerateLayersByDefault() override {
+      return true;
+    }
+    void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends);
+
+protected:
     RenderMode mRenderMode;
 
     int8_t mUseClearTypeForDownloadableFonts;

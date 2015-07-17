@@ -1807,6 +1807,7 @@ function getCookies(msg) {
       'path': cookie.path,
       'domain': cookie.host,
       'secure': cookie.isSecure,
+      'httpOnly': cookie.httpOnly,
       'expiry': expires
     });
   }

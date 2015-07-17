@@ -140,7 +140,7 @@ dictionary IccCardLockRetryCount
 };
 
 [Pref="dom.icc.enabled",
- CheckPermissions="mobileconnection",
+ CheckAnyPermissions="mobileconnection",
  AvailableIn="CertifiedApps"]
 interface MozIcc : EventTarget
 {

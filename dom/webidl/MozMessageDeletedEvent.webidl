@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.sms.enabled",
- CheckPermissions="sms",
+ CheckAnyPermissions="sms",
  AvailableIn="CertifiedApps",
  Constructor(DOMString type, optional MozMessageDeletedEventInit eventInitDict)]
 interface MozMessageDeletedEvent : Event

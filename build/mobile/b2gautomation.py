@@ -17,7 +17,7 @@ import traceback
 import zipfile
 
 from automation import Automation
-from mozlog.structured import get_default_logger
+from mozlog import get_default_logger
 from mozprocess import ProcessHandlerMixin
 
 

@@ -238,7 +238,7 @@ function clearAllPluginPermissions() {
   while (perms.hasMoreElements()) {
     let perm = perms.getNext();
     if (perm.type.startsWith('plugin')) {
-      info("removing permission:" + perm.host + " " + perm.type + "\n");
+      info("removing permission:" + perm.principal.origin + " " + perm.type + "\n");
       Services.perms.removePermission(perm);
     }
   }

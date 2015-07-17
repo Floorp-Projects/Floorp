@@ -1,26 +1,25 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Mozlog aims to standardize log formatting within Mozilla.
+Mozlog aims to standardize log handling and formatting within Mozilla.
 
-It simply wraps Python's logging_ module and adds a few convenience methods
-for logging test results and events.
+It implements a JSON-based structured logging protocol with convenience
+facilities for recording test results.
 
-The structured submodule takes a different approach and implements a
-JSON-based logging protocol designed for recording test results."""
+The old unstructured module is deprecated. It simply wraps Python's
+logging_ module and adds a few convenience methods for logging test
+results and events.
+"""
 
-from logger import *
-from loglistener import LogMessageServer
-from loggingmixin import LoggingMixin
+import sys
 
-try:
-    import structured
-except ImportError:
-    # Structured logging doesn't work on python 2.6 which is still used on some
-    # legacy test machines; https://bugzilla.mozilla.org/show_bug.cgi?id=864866
-    # Once we move away from Python 2.6, please cleanup devicemanager.py's
-    # exception block
-    pass
+from . import commandline
+from . import structuredlog
+from . import unstructured
+from .structuredlog import get_default_logger, set_default_logger
 
+# Backwards compatibility shim for consumers that use mozlog.structured
+structured = sys.modules[__name__]
+sys.modules['{}.structured'.format(__name__)] = structured

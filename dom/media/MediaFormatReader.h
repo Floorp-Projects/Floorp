@@ -9,9 +9,10 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TaskQueue.h"
+
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
-#include "MediaTaskQueue.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
@@ -24,7 +25,7 @@ class MediaFormatReader final : public MediaDecoderReader
 public:
   explicit MediaFormatReader(AbstractMediaDecoder* aDecoder,
                              MediaDataDemuxer* aDemuxer,
-                             MediaTaskQueue* aBorrowedTaskQueue = nullptr);
+                             TaskQueue* aBorrowedTaskQueue = nullptr);
 
   virtual ~MediaFormatReader();
 
@@ -213,7 +214,7 @@ private:
     nsRefPtr<MediaDataDecoder> mDecoder;
     // TaskQueue on which decoder can choose to decode.
     // Only non-null up until the decoder is created.
-    nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+    nsRefPtr<FlushableTaskQueue> mTaskQueue;
     // Callback that receives output and error notifications from the decoder.
     nsAutoPtr<DecoderCallback> mCallback;
 
@@ -227,12 +228,12 @@ private:
     bool mDiscontinuity;
 
     // Pending seek.
-    MediaPromiseRequestHolder<MediaTrackDemuxer::SeekPromise> mSeekRequest;
+    MozPromiseRequestHolder<MediaTrackDemuxer::SeekPromise> mSeekRequest;
 
     // Queued demux samples waiting to be decoded.
     nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
-    MediaPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
-    MediaPromiseHolder<WaitForDataPromise> mWaitingPromise;
+    MozPromiseRequestHolder<MediaTrackDemuxer::SamplesPromise> mDemuxRequest;
+    MozPromiseHolder<WaitForDataPromise> mWaitingPromise;
     bool HasWaitingPromise()
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
@@ -308,7 +309,7 @@ private:
       DecoderData(aOwner, aType, aDecodeAhead)
     {}
 
-    MediaPromiseHolder<PromiseType> mPromise;
+    MozPromiseHolder<PromiseType> mPromise;
 
     bool HasPromise() override
     {
@@ -335,7 +336,7 @@ private:
   // Demuxer objects.
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
-  MediaPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
+  MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   void OnDemuxFailed(TrackType aTrack, DemuxerFailureReason aFailure);
 
   void DoDemuxVideo();
@@ -353,7 +354,7 @@ private:
   }
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
-  MediaPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
+  MozPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
   void OnVideoSkipCompleted(uint32_t aSkipped);
   void OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailure);
 
@@ -368,7 +369,7 @@ private:
   // Metadata objects
   // True if we've read the streams' metadata.
   bool mInitDone;
-  MediaPromiseHolder<MetadataPromise> mMetadataPromise;
+  MozPromiseHolder<MetadataPromise> mMetadataPromise;
   // Accessed from multiple thread, in particular the MediaDecoderStateMachine,
   // however the value doesn't change after reading the metadata.
   bool mSeekable;
@@ -404,7 +405,7 @@ private:
   }
   // Temporary seek information while we wait for the data
   Maybe<media::TimeUnit> mPendingSeekTime;
-  MediaPromiseHolder<SeekPromise> mSeekPromise;
+  MozPromiseHolder<SeekPromise> mSeekPromise;
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mCDMProxy;

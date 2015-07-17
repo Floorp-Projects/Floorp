@@ -2217,6 +2217,37 @@ gfxPlatform::CanUseDirect3D11ANGLE()
   return gANGLESupportsD3D11;
 }
 
+bool
+gfxPlatform::ShouldUseLayersAcceleration()
+{
+  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+  if (gfxPrefs::LayersAccelerationDisabled() ||
+      InSafeMode() ||
+      (acceleratedEnv && *acceleratedEnv == '0'))
+  {
+    return false;
+  }
+  if (gfxPrefs::LayersAccelerationForceEnabled()) {
+    return true;
+  }
+  if (gfxPlatform::GetPlatform()->AccelerateLayersByDefault()) {
+    return true;
+  }
+  if (acceleratedEnv && *acceleratedEnv != '0') {
+    return true;
+  }
+  return false;
+}
+
+bool
+gfxPlatform::AccelerateLayersByDefault()
+{
+#if defined(MOZ_GL_PROVIDER) || defined(MOZ_WIDGET_UIKIT)
+  return true;
+#else
+  return false;
+#endif
+}
 
 bool
 gfxPlatform::BufferRotationEnabled()
@@ -2364,4 +2395,52 @@ gfxPlatform::UseProgressivePaint()
 gfxPlatform::PerfWarnings()
 {
   return gfxPrefs::PerfWarnings();
+}
+
+void
+gfxPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
+{
+  // Being whitelisted is not enough to accelerate, but not being whitelisted is
+  // enough not to:
+  bool whitelisted = false;
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (gfxInfo) {
+    // bug 655578: on X11 at least, we must always call GetData (even if we don't need that information)
+    // as that's what causes GfxInfo initialization which kills the zombie 'glxtest' process.
+    // initially we relied on the fact that GetFeatureStatus calls GetData for us, but bug 681026 showed
+    // that assumption to be unsafe.
+    gfxInfo->GetData();
+
+    int32_t status;
+    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
+      if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
+        aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
+        whitelisted = true;
+      }
+    }
+  }
+
+  if (!whitelisted) {
+    static int tell_me_once = 0;
+    if (!tell_me_once) {
+      NS_WARNING("OpenGL-accelerated layers are not supported on this system");
+      tell_me_once = 1;
+    }
+#ifdef MOZ_WIDGET_ANDROID
+    NS_RUNTIMEABORT("OpenGL-accelerated layers are a hard requirement on this platform. "
+                    "Cannot continue without support for them");
+#endif
+  }
+}
+
+void
+gfxPlatform::GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends)
+{
+  if (useAcceleration) {
+    GetAcceleratedCompositorBackends(aBackends);
+  }
+  if (SupportsBasicCompositor()) {
+    aBackends.AppendElement(LayersBackend::LAYERS_BASIC);
+  }
 }

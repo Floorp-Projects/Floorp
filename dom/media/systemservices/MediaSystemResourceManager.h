@@ -24,8 +24,8 @@ class MediaSystemResourceManagerChild;
 
 class MediaSystemResourceClient;
 class MediaSystemResourceReservationListener;
-class MediaTaskQueue;
 class ReentrantMonitor;
+class TaskQueue;
 
 /**
  * Manage media system resource allocation requests within a process.

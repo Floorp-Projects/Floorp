@@ -33,23 +33,7 @@ enum DomainSetType{
     SUPER_WHITELIST
 };
 
-class DomainPolicy : public nsIDomainPolicy
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMAINPOLICY
-    DomainPolicy();
-
-private:
-    virtual ~DomainPolicy();
-
-    nsCOMPtr<nsIDomainSet> mBlacklist;
-    nsCOMPtr<nsIDomainSet> mSuperBlacklist;
-    nsCOMPtr<nsIDomainSet> mWhitelist;
-    nsCOMPtr<nsIDomainSet> mSuperWhitelist;
-};
-
-class DomainSet : public nsIDomainSet
+class DomainSet final : public nsIDomainSet
 {
 public:
     NS_DECL_ISUPPORTS
@@ -65,6 +49,22 @@ protected:
     virtual ~DomainSet() {}
     nsTHashtable<nsURIHashKey> mHashTable;
     DomainSetType mType;
+};
+
+class DomainPolicy final : public nsIDomainPolicy
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDOMAINPOLICY
+    DomainPolicy();
+
+private:
+    virtual ~DomainPolicy();
+
+    nsRefPtr<DomainSet> mBlacklist;
+    nsRefPtr<DomainSet> mSuperBlacklist;
+    nsRefPtr<DomainSet> mWhitelist;
+    nsRefPtr<DomainSet> mSuperWhitelist;
 };
 
 } /* namespace mozilla */

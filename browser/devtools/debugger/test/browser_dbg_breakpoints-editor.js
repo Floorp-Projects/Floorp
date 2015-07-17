@@ -224,7 +224,7 @@ function test() {
       "The first source should be currently selected.");
 
     let window = gEditor.container.contentWindow;
-    executeSoon(() => window.mozRequestAnimationFrame(onReadyForClick));
+    executeSoon(() => window.requestAnimationFrame(onReadyForClick));
   }
 
   function onReadyForClick() {

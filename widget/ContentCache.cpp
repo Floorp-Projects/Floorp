@@ -960,15 +960,8 @@ ContentCacheInParent::RequestToCommitComposition(nsIWidget* aWidget,
 
 void
 ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
-                                     IMENotification& aNotification)
+                                     const IMENotification& aNotification)
 {
-  if (aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE) {
-    aNotification.mSelectionChangeData.mOffset = mSelection.StartOffset();
-    aNotification.mSelectionChangeData.mLength = mSelection.Length();
-    aNotification.mSelectionChangeData.mReversed = mSelection.Reversed();
-    aNotification.mSelectionChangeData.SetWritingMode(mSelection.mWritingMode);
-  }
-
   if (!mPendingEventsNeedingAck) {
     IMEStateManager::NotifyIME(aNotification, aWidget, true);
     return;

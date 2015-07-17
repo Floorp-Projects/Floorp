@@ -244,7 +244,6 @@ public:
 
   explicit AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode)
-    , mNodeMutex("AudioNodeEngine::mNodeMutex")
     , mInputCount(aNode ? aNode->NumberOfInputs() : 1)
     , mOutputCount(aNode ? aNode->NumberOfOutputs() : 0)
   {
@@ -344,17 +343,10 @@ public:
     aOutput[0] = aInput[0];
   }
 
-  Mutex& NodeMutex() { return mNodeMutex;}
-
   bool HasNode() const
   {
+    MOZ_ASSERT(NS_IsMainThread());
     return !!mNode;
-  }
-
-  dom::AudioNode* Node() const
-  {
-    mNodeMutex.AssertCurrentThreadOwns();
-    return mNode;
   }
 
   dom::AudioNode* NodeMainThread() const
@@ -367,7 +359,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mNode != nullptr);
-    mNodeMutex.AssertCurrentThreadOwns();
     mNode = nullptr;
   }
 
@@ -397,7 +388,6 @@ public:
 
 private:
   dom::AudioNode* mNode;
-  Mutex mNodeMutex;
   const uint16_t mInputCount;
   const uint16_t mOutputCount;
 };

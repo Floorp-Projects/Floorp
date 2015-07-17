@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaTaskQueue.h"
+#include "mozilla/TaskQueue.h"
+
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "ImageContainer.h"
@@ -23,7 +24,7 @@ namespace mozilla
 {
 
 FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
-  FlushableMediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
+  FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const VideoInfo& aConfig,
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mMimeType))

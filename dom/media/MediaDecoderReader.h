@@ -6,10 +6,11 @@
 #if !defined(MediaDecoderReader_h_)
 #define MediaDecoderReader_h_
 
+#include "mozilla/MozPromise.h"
+
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"
 #include "MediaData.h"
-#include "MediaPromise.h"
 #include "MediaQueue.h"
 #include "MediaTimer.h"
 #include "AudioCompactor.h"
@@ -66,22 +67,22 @@ public:
     CANCELED
   };
 
-  typedef MediaPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
-  typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
-  typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
-  typedef MediaPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
+  typedef MozPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
+  typedef MozPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
+  typedef MozPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
   // But in the current architecture it's only ever used exclusively (by MDSM),
   // so we mark it that way to verify our assumptions. If you have a use-case
   // for multiple WaitForData consumers, feel free to flip the exclusivity here.
-  typedef MediaPromise<MediaData::Type, WaitForDataRejectValue, /* IsExclusive = */ true> WaitForDataPromise;
+  typedef MozPromise<MediaData::Type, WaitForDataRejectValue, /* IsExclusive = */ true> WaitForDataPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, MediaTaskQueue* aBorrowedTaskQueue = nullptr);
+  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQueue = nullptr);
 
   // Does any spinup that needs to happen on this task queue. This runs on a
   // different thread than Init, and there should not be ordering dependencies
@@ -115,7 +116,7 @@ public:
 
   virtual bool OnTaskQueue()
   {
-    return TaskQueue()->IsCurrentThreadIn();
+    return OwnerThread()->IsCurrentThreadIn();
   }
 
   // Resets all state related to decoding, emptying all buffers etc.
@@ -273,7 +274,7 @@ public:
       NS_NewRunnableMethodWithArg<media::Interval<int64_t>>(this, aThrottleUpdates ? &MediaDecoderReader::ThrottledNotifyDataArrived
                                                                                    : &MediaDecoderReader::NotifyDataArrived,
                                                             media::Interval<int64_t>(aOffset, aOffset + aLength));
-    TaskQueue()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+    OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 
   // Notify the reader that data from the resource was evicted (MediaSource only)
@@ -307,10 +308,10 @@ public:
       self->mStartTime.emplace(aStartTime);
       self->UpdateBuffered();
     });
-    TaskQueue()->Dispatch(r.forget());
+    OwnerThread()->Dispatch(r.forget());
   }
 
-  MediaTaskQueue* TaskQueue() {
+  TaskQueue* OwnerThread() {
     return mTaskQueue;
   }
 
@@ -365,7 +366,7 @@ protected:
   AbstractMediaDecoder* mDecoder;
 
   // Decode task queue.
-  nsRefPtr<MediaTaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 
   // State-watching manager.
   WatchManager<MediaDecoderReader> mWatchManager;
@@ -386,7 +387,7 @@ protected:
   Mirror<media::NullableTimeUnit> mDuration;
 
   // State for ThrottledNotifyDataArrived.
-  MediaPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
+  MozPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
   const TimeDuration mThrottleDuration;
   TimeStamp mLastThrottledNotify;
   Maybe<media::Interval<int64_t>> mThrottledInterval;
@@ -420,8 +421,8 @@ protected:
 private:
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
-  MediaPromiseHolder<AudioDataPromise> mBaseAudioPromise;
-  MediaPromiseHolder<VideoDataPromise> mBaseVideoPromise;
+  MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
+  MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
   bool mTaskQueueIsBorrowed;
 

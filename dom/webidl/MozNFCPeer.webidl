@@ -24,7 +24,7 @@ interface MozNFCPeer {
   /**
    * Send file to peer device.
    */
-  [Throws, CheckPermissions="nfc-share", AvailableIn="CertifiedApps"]
+  [Throws, CheckAnyPermissions="nfc-share", AvailableIn="CertifiedApps"]
   Promise<void> sendFile(Blob blob);
 };
 

@@ -19,7 +19,7 @@ dictionary UDPOptions {
 
 [Constructor (optional UDPOptions options),
  Pref="dom.udpsocket.enabled",
- CheckPermissions="udp-socket"]
+ CheckAnyPermissions="udp-socket"]
 interface UDPSocket : EventTarget {
     readonly    attribute DOMString?       localAddress;
     readonly    attribute unsigned short?  localPort;

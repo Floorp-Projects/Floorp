@@ -103,11 +103,11 @@ var tests = [
       sitesFilter.doCommand();
     },
     run: function() {
-      let testSite1 = getSiteItem(TEST_URI_1.host);
+      let testSite1 = getSiteItem(TEST_URI_1.prePath);
       ok(testSite1.collapsed, "test site 1 is collapsed after early filtering");
-      let testSite2 = getSiteItem(TEST_URI_2.host);
+      let testSite2 = getSiteItem(TEST_URI_2.prePath);
       ok(!testSite2.collapsed, "test site 2 is not collapsed after early filtering");
-      let testSite3 = getSiteItem(TEST_URI_3.host);
+      let testSite3 = getSiteItem(TEST_URI_3.prePath);
       ok(testSite3.collapsed, "test site 3 is collapsed after early filtering");
 
       runNextTest();
@@ -119,11 +119,11 @@ var tests = [
       ForgetAboutSite.removeDataFromDomain(TEST_URI_2.host);
     },
     run: function() {
-      let testSite1 = getSiteItem(TEST_URI_1.host);
+      let testSite1 = getSiteItem(TEST_URI_1.prePath);
       ok(testSite1, "test site 1 was not removed from sites list");
-      let testSite2 = getSiteItem(TEST_URI_2.host);
+      let testSite2 = getSiteItem(TEST_URI_2.prePath);
       ok(!testSite2, "test site 2 was pre-removed from sites list");
-      let testSite3 = getSiteItem(TEST_URI_3.host);
+      let testSite3 = getSiteItem(TEST_URI_3.prePath);
       ok(testSite3, "test site 3 was not removed from sites list");
 
       runNextTest();
@@ -131,7 +131,7 @@ var tests = [
   }
 ];
 
-function getSiteItem(aHost) {
+function getSiteItem(aPrePath) {
   return gBrowser.contentDocument.
-                  querySelector(".site[value='" + aHost + "']");
+                  querySelector(".site[value='" + aPrePath + "']");
 }

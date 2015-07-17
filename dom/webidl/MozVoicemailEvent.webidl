@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict),
  Pref="dom.voicemail.enabled",
- CheckPermissions="voicemail",
+ CheckAnyPermissions="voicemail",
  AvailableIn="CertifiedApps"]
 interface MozVoicemailEvent : Event
 {

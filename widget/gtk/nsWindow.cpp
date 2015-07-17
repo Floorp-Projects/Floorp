@@ -25,6 +25,7 @@
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
+#include "nsScreenGtk.h"
 
 #include <gtk/gtk.h>
 #if (MOZ_WIDGET_GTK == 3)
@@ -6329,10 +6330,10 @@ nsWindow::GdkScaleFactor()
     // Available as of GTK 3.10+
     static auto sGdkWindowGetScaleFactorPtr = (gint (*)(GdkWindow*))
         dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
-    if (sGdkWindowGetScaleFactorPtr)
+    if (sGdkWindowGetScaleFactorPtr && mGdkWindow)
         return (*sGdkWindowGetScaleFactorPtr)(mGdkWindow);
 #endif
-    return 1;
+    return nsScreenGtk::GetGtkMonitorScaleFactor();
 }
 
 

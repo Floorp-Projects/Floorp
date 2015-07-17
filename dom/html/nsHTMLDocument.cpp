@@ -103,7 +103,6 @@
 #include "nsIRequest.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsHtml5Parser.h"
-#include "nsIDOMJSWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsIImageDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -1376,12 +1375,17 @@ nsHTMLDocument::Open(JSContext* /* unused */,
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
 
-  nsCOMPtr<nsIDOMWindow> window = GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindow> window = GetInnerWindow();
   if (!window) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
-  nsCOMPtr<nsIDOMJSWindow> win = do_QueryInterface(window);
+  window = nsPIDOMWindow::GetOuterFromCurrentInner(window);
+  if (!window) {
+    rv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return nullptr;
+  }
+  nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window.get());
   nsCOMPtr<nsIDOMWindow> newWindow;
   // XXXbz We ignore aReplace for now.
   rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
@@ -2319,21 +2323,16 @@ nsHTMLDocument::NameIsEnumerable(const nsAString& aName)
   return true;
 }
 
-static PLDHashOperator
-IdentifierMapEntryAddNames(nsIdentifierMapEntry* aEntry, void* aArg)
-{
-  nsTArray<nsString>* aNames = static_cast<nsTArray<nsString>*>(aArg);
-  if (aEntry->HasNameElement() ||
-      aEntry->HasIdElementExposedAsHTMLDocumentProperty()) {
-    aNames->AppendElement(aEntry->GetKey());
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {
-  mIdentifierMap.EnumerateEntries(IdentifierMapEntryAddNames, &aNames);
+  for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
+    nsIdentifierMapEntry* entry = iter.Get();
+    if (entry->HasNameElement() ||
+        entry->HasIdElementExposedAsHTMLDocumentProperty()) {
+      aNames.AppendElement(entry->GetKey());
+    }
+  }
 }
 
 //----------------------------

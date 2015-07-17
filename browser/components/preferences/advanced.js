@@ -9,6 +9,7 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -471,7 +472,7 @@ var gAdvancedPane = {
     var usage = 0;
     for (var i = 0; i < groups.length; i++) {
       var uri = ios.newURI(groups[i], null, null);
-      if (uri.asciiHost == perm.host) {
+      if (perm.matchesURI(uri, true)) {
         var cache = cacheService.getActiveCache(groups[i]);
         usage += cache.usage;
       }
@@ -508,7 +509,7 @@ var gAdvancedPane = {
         var row = document.createElement("listitem");
         row.id = "";
         row.className = "offlineapp";
-        row.setAttribute("host", perm.host);
+        row.setAttribute("origin", perm.principal.origin);
         var converted = DownloadUtils.
                         convertByteUnits(this._getOfflineAppUsage(perm, groups));
         row.setAttribute("usage",
@@ -534,7 +535,8 @@ var gAdvancedPane = {
   {
     var list = document.getElementById("offlineAppsList");
     var item = list.selectedItem;
-    var host = item.getAttribute("host");
+    var origin = item.getAttribute("origin");
+    var principal = BrowserUtils.principalFromOrigin(origin);
 
     var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                             .getService(Components.interfaces.nsIPromptService);
@@ -543,12 +545,17 @@ var gAdvancedPane = {
 
     var bundle = document.getElementById("bundlePreferences");
     var title = bundle.getString("offlineAppRemoveTitle");
-    var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [host]);
+    var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [principal.URI.prePath]);
     var confirm = bundle.getString("offlineAppRemoveConfirm");
     var result = prompts.confirmEx(window, title, prompt, flags, confirm,
                                    null, null, null, {});
     if (result != 0)
       return;
+
+    // get the permission
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(Components.interfaces.nsIPermissionManager);
+    var perm = pm.getPermissionObject(principal, "offline-app");
 
     // clear offline cache entries
     var cacheService = Components.classes["@mozilla.org/network/application-cache-service;1"].
@@ -557,25 +564,14 @@ var gAdvancedPane = {
               getService(Components.interfaces.nsIIOService);
     var groups = cacheService.getGroups();
     for (var i = 0; i < groups.length; i++) {
-        let uri = ios.newURI(groups[i], null, null);
-        if (uri.asciiHost == host) {
+        var uri = ios.newURI(groups[i], null, null);
+        if (perm.matchesURI(uri, true)) {
             var cache = cacheService.getActiveCache(groups[i]);
             cache.discard();
         }
     }
 
-    // remove the permission
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                       .getService(Components.interfaces.nsIPermissionManager);
-    let uri;
-    try {
-      // file:// URIs are stored with their scheme. We try to parse them first, as
-      // URIs like http://file:///foo/bar/baz.html will parse as HTTP URIs.
-      uri = ios.newURI(host, null, null);
-    } catch (e) {
-      uri = ios.newURI("http://" + host, null, null);
-    }
-    pm.remove(uri, "offline-app");
+    pm.removePermission(perm);
 
     list.removeChild(item);
     gAdvancedPane.offlineAppSelected();

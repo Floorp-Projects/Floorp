@@ -1190,8 +1190,11 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   // the current state computed time.
   GraphTime framePosition = IterationEnd() + MillisecondsToMediaTime(CurrentDriver()->IterationDuration());
   if (framePosition > CurrentDriver()->StateComputedTime()) {
-    NS_WARN_IF_FALSE(std::abs(framePosition - CurrentDriver()->StateComputedTime()) <
-                     MillisecondsToMediaTime(5), "Graph thread slowdown?");
+#ifdef DEBUG
+    if (std::abs(framePosition - CurrentDriver()->StateComputedTime()) >= MillisecondsToMediaTime(5)) {
+      STREAM_LOG(LogLevel::Debug, ("Graph thread slowdown?"));
+    }
+#endif
     framePosition = CurrentDriver()->StateComputedTime();
   }
   MOZ_ASSERT(framePosition >= aStream->mBufferStartTime, "frame position before buffer?");
@@ -2667,7 +2670,7 @@ SourceMediaStream::GetEndOfAppendedData(TrackID aID)
 
 void
 SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
-    MediaTaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable)
+    TaskQueue* aSignalQueue, nsIRunnable* aSignalRunnable)
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);

@@ -238,6 +238,7 @@ BrowserElementChild.prototype = {
       "find-all": this._recvFindAll.bind(this),
       "find-next": this._recvFindNext.bind(this),
       "clear-match": this._recvClearMatch.bind(this),
+      "execute-script": this._recvExecuteScript,
       "get-audio-channel-volume": this._recvGetAudioChannelVolume,
       "set-audio-channel-volume": this._recvSetAudioChannelVolume,
       "get-audio-channel-muted": this._recvGetAudioChannelMuted,
@@ -982,6 +983,90 @@ BrowserElementChild.prototype = {
     // anyway.
     Cc['@mozilla.org/message-loop;1'].getService(Ci.nsIMessageLoop).postIdleTask(
       takeScreenshotClosure, maxDelayMS);
+  },
+
+  _recvExecuteScript: function(data) {
+    debug("Received executeScript message: (" + data.json.id + ")");
+
+    let domRequestID = data.json.id;
+
+    let sendError = errorMsg => sendAsyncMsg("execute-script-done", {
+      errorMsg,
+      id: domRequestID
+    });
+
+    let sendSuccess = successRv => sendAsyncMsg("execute-script-done", {
+      successRv,
+      id: domRequestID
+    });
+
+    let isJSON = obj => {
+      try {
+        JSON.stringify(obj);
+      } catch(e) {
+        return false;
+      }
+      return true;
+    }
+
+    let expectedOrigin = data.json.args.options.origin;
+    let expectedUrl = data.json.args.options.url;
+
+    if (expectedOrigin) {
+      if (expectedOrigin != content.location.origin) {
+        sendError("Origin mismatches");
+        return;
+      }
+    }
+
+    if (expectedUrl) {
+      let expectedURI
+      try {
+       expectedURI = Services.io.newURI(expectedUrl, null, null);
+      } catch(e) {
+        sendError("Malformed URL");
+        return;
+      }
+      let currentURI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
+      if (!currentURI.equalsExceptRef(expectedURI)) {
+        sendError("URL mismatches");
+        return;
+      }
+    }
+
+    let sandbox = new Cu.Sandbox([content], {
+      sandboxPrototype: content,
+      sandboxName: "browser-api-execute-script",
+      allowWaivers: false,
+      sameZoneAs: content
+    });
+
+    try {
+      let sandboxRv = Cu.evalInSandbox(data.json.args.script, sandbox, "1.8");
+      if (sandboxRv instanceof Promise) {
+        sandboxRv.then(rv => {
+          if (isJSON(rv)) {
+            sendSuccess(rv);
+          } else {
+            sendError("Value returned (resolve) by promise is not a valid JSON object");
+          }
+        }, error => {
+          if (isJSON(error)) {
+            sendError(error);
+          } else {
+            sendError("Value returned (reject) by promise is not a valid JSON object");
+          }
+        });
+      } else {
+        if (isJSON(sandboxRv)) {
+          sendSuccess(sandboxRv);
+        } else {
+          sendError("Script last expression must be a promise or a JSON object");
+        }
+      }
+    } catch(e) {
+      sendError(e.toString());
+    }
   },
 
   _recvGetContentDimensions: function(data) {

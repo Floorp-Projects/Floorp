@@ -6,6 +6,12 @@ $inherits:
   from: tasks/branches/base_jobs.yml
 
 builds:
+  android-api-11:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_11.yml
   aries-blobfree:
     platforms:
       - b2g
@@ -56,3 +62,11 @@ builds:
         task: tasks/builds/b2g_flame_kk_ota_opt.yml
       debug:
         task: tasks/builds/b2g_flame_kk_ota_debug.yml
+  linux64:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/opt_linux64.yml
+      debug:
+        task: tasks/builds/dbg_linux64.yml

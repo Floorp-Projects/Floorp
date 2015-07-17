@@ -198,8 +198,10 @@ function loadUITourTestPage(callback, host = "https://example.com/") {
 
 function UITourTest() {
   Services.prefs.setBoolPref("browser.uitour.enabled", true);
-  let testUri = Services.io.newURI("http://example.com", null, null);
-  Services.perms.add(testUri, "uitour", Services.perms.ALLOW_ACTION);
+  let testHttpsUri = Services.io.newURI("https://example.com", null, null);
+  let testHttpUri = Services.io.newURI("http://example.com", null, null);
+  Services.perms.add(testHttpsUri, "uitour", Services.perms.ALLOW_ACTION);
+  Services.perms.add(testHttpUri, "uitour", Services.perms.ALLOW_ACTION);
 
   waitForExplicitFinish();
 
@@ -210,7 +212,8 @@ function UITourTest() {
       gBrowser.removeTab(gTestTab);
     delete window.gTestTab;
     Services.prefs.clearUserPref("browser.uitour.enabled", true);
-    Services.perms.remove(testUri, "uitour");
+    Services.perms.remove(testHttpsUri, "uitour");
+    Services.perms.remove(testHttpUri, "uitour");
   });
 
   function done() {

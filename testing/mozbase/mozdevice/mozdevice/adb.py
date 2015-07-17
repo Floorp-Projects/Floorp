@@ -163,8 +163,8 @@ class ADBCommand(object):
     def _get_logger(self, logger_name):
         logger = None
         try:
-            from mozlog import structured
-            logger = structured.get_default_logger(logger_name)
+            import mozlog
+            logger = mozlog.get_default_logger(logger_name)
         except ImportError:
             pass
 
