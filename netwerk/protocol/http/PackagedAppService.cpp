@@ -651,7 +651,8 @@ PackagedAppService::OpenNewPackageInternal(nsIURI *aURI,
   }
 
   nsCOMPtr<nsIStreamListener> mimeConverter;
-  rv = streamconv->AsyncConvertData("multipart/mixed", "*/*", downloader, nullptr,
+  // Passing `this` as context, so nsMultiMixedConv knows this is a packaged app
+  rv = streamconv->AsyncConvertData("multipart/mixed", "*/*", downloader, this,
                                     getter_AddRefs(mimeConverter));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

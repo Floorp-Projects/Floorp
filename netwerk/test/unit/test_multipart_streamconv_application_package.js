@@ -24,6 +24,8 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = null;
+var gPAS = Cc["@mozilla.org/network/packaged-app-service;1"]
+              .getService(Ci.nsIPackagedAppService);
 
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -69,6 +71,13 @@ function contentHandler_chunked_headers(metadata, response)
   });
 }
 
+function contentHandler_type_missing(metadata, response)
+{
+  response.setHeader("Content-Type", 'text/plain');
+  var body = testData.getData();
+  response.bodyOutputStream.write(body, body.length);
+}
+
 var testData = {
   content: [
    { headers: ["Content-Location: /index.html", "Content-Type: text/html"], data: "<html>\r\n  <head>\r\n    <script src=\"/scripts/app.js\"></script>\r\n    ...\r\n  </head>\r\n  ...\r\n</html>\r\n", type: "text/html" },
@@ -92,16 +101,21 @@ var testData = {
   }
 }
 
-function multipartListener(test) {
+function multipartListener(test, badContentType) {
   this._buffer = "";
   this.testNum = 0;
   this.test = test;
   this.numTests = this.test.content.length;
+  // If set to true, that means the package is missing the application/package
+  // content type. If so, resources will have their content type set to
+  // application/octet-stream
+  this.badContentType = badContentType == undefined ? false : badContentType;
 }
 
 multipartListener.prototype.responseHandler = function(request, buffer) {
     equal(buffer, this.test.content[this.testNum].data);
-    equal(request.QueryInterface(Ci.nsIChannel).contentType, this.test.content[this.testNum].type);
+    equal(request.QueryInterface(Ci.nsIChannel).contentType,
+          this.badContentType ? "application/octet-stream" : this.test.content[this.testNum].type);
     if (++this.testNum == this.numTests) {
       run_next_test();
     }
@@ -117,7 +131,7 @@ multipartListener.prototype.QueryInterface = function(iid) {
 
 multipartListener.prototype.onStartRequest = function(request, context) {
   this._buffer = "";
-  this.headerListener = new headerListener(this.test.content[this.testNum].headers);
+  this.headerListener = new headerListener(this.test.content[this.testNum].headers, this.badContentType);
   let headerProvider = request.QueryInterface(Ci.nsIResponseHeadProvider);
   if (headerProvider) {
     headerProvider.visitResponseHeaders(this.headerListener);
@@ -141,8 +155,9 @@ multipartListener.prototype.onStopRequest = function(request, context, status) {
   }
 }
 
-function headerListener(headers) {
+function headerListener(headers, badContentType) {
   this.expectedHeaders = headers;
+  this.badContentType = badContentType;
   this.index = 0;
 }
 
@@ -155,7 +170,8 @@ headerListener.prototype.QueryInterface = function(iid) {
 
 headerListener.prototype.visitHeader = function(header, value) {
   ok(this.index <= this.expectedHeaders.length);
-  equal(header + ": " + value, this.expectedHeaders[this.index]);
+  if (!this.badContentType)
+    equal(header + ": " + value, this.expectedHeaders[this.index]);
   this.index++;
 }
 
@@ -165,7 +181,7 @@ function test_multipart() {
   var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart");
   chan.asyncOpen(conv, null);
@@ -177,7 +193,7 @@ function test_multipart_with_boundary() {
   var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart2");
   chan.asyncOpen(conv, null);
@@ -189,11 +205,27 @@ function test_multipart_chunked_headers() {
   var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart3");
   chan.asyncOpen(conv, null);
 }
+
+function test_multipart_content_type_other() {
+  var streamConv = Cc["@mozilla.org/streamConverters;1"]
+                     .getService(Ci.nsIStreamConverterService);
+
+  // mime types other that multipart/mixed and application/package are only
+  // allowed if an nsIPackagedAppService is passed as context
+  var conv = streamConv.asyncConvertData("multipart/mixed",
+           "*/*",
+           new multipartListener(testData, true),
+           gPAS);
+
+  var chan = make_channel(uri + "/multipart4");
+  chan.asyncOpen(conv, null);
+}
+
 
 function run_test()
 {
@@ -201,6 +233,7 @@ function run_test()
   httpserver.registerPathHandler("/multipart", contentHandler);
   httpserver.registerPathHandler("/multipart2", contentHandler_with_boundary);
   httpserver.registerPathHandler("/multipart3", contentHandler_chunked_headers);
+  httpserver.registerPathHandler("/multipart4", contentHandler_type_missing);
   httpserver.start(-1);
 
   run_next_test();
@@ -209,3 +242,4 @@ function run_test()
 add_test(test_multipart);
 add_test(test_multipart_with_boundary);
 add_test(test_multipart_chunked_headers);
+add_test(test_multipart_content_type_other);

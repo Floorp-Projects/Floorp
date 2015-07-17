@@ -177,6 +177,9 @@ protected:
 
     uint32_t            mCurrentPartID;
 
+    // If true, it means the packaged app had an "application/package" header
+    // Otherwise, we remove "Content-Type" headers from files in the package
+    bool                mHasAppContentType;
     // This is true if the content-type is application/package
     // Streamable packages don't require the boundary in the header
     // as it can be ascertained from the package file.
