@@ -808,14 +808,32 @@ setReq.onerror = function() {
                                  message=test['disabled'])
             self.todo += 1
 
-        counter = self.repeat
-        while counter >=0:
-            round = self.repeat - counter
-            if round > 0:
-                self.logger.info('\nREPEAT %d\n-------' % round)
-            self.run_test_sets()
-            counter -= 1
+        interrupted = None
+        try:
+            counter = self.repeat
+            while counter >=0:
+                round = self.repeat - counter
+                if round > 0:
+                    self.logger.info('\nREPEAT %d\n-------' % round)
+                self.run_test_sets()
+                counter -= 1
+        except KeyboardInterrupt:
+            # in case of KeyboardInterrupt during the test execution
+            # we want to display current test results.
+            # so we keep the exception to raise it later.
+            interrupted = sys.exc_info()
+        try:
+            self._print_summary(tests)
+        except:
+            # raise only the exception if we were not interrupted
+            if not interrupted:
+                raise
+        finally:
+            # reraise previous interruption now
+            if interrupted:
+                raise interrupted[0], interrupted[1], interrupted[2]
 
+    def _print_summary(self, tests):
         self.logger.info('\nSUMMARY\n-------')
         self.logger.info('passed: %d' % self.passed)
         if self.unexpected_successes == 0:
