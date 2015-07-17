@@ -21,6 +21,7 @@ from mozversioncontrol import get_hg_version
 
 from .update import MercurialUpdater
 from .config import (
+    config_file,
     HgIncludeException,
     MercurialConfig,
 )
@@ -216,8 +217,10 @@ class MercurialSetupWizard(object):
                       'up to date.')
                 return 1
 
+        config_path = config_file(config_paths)
+
         try:
-            c = MercurialConfig(config_paths)
+            c = MercurialConfig(config_path)
         except ConfigObjError as e:
             print('Error importing existing Mercurial config!\n')
             for error in e.errors:
