@@ -49,8 +49,12 @@ public:
   // The caller may pass a global object which will act as an override for the
   // incumbent script settings object when the callback is invoked (overriding
   // the entry point computed from aCallback). If no override is required, the
-  // caller should pass null.
-  explicit CallbackObject(JS::Handle<JSObject*> aCallback, nsIGlobalObject *aIncumbentGlobal)
+  // caller should pass null.  |aCx| is used to capture the current
+  // stack, which is later used as an async parent when the callback
+  // is invoked.  aCx can be nullptr, in which case no stack is
+  // captured.
+  explicit CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+                          nsIGlobalObject *aIncumbentGlobal)
   {
     Init(aCallback, aIncumbentGlobal);
   }
