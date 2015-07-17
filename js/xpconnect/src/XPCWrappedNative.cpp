@@ -104,7 +104,10 @@ XPCWrappedNative::Suspect(nsCycleCollectionNoteRootCallback& cb)
                "Suspecting wrapped natives from non-main thread");
 
     // Only record objects that might be part of a cycle as roots, unless
-    // the callback wants all traces (a debug feature).
+    // the callback wants all traces (a debug feature). Do this even if
+    // the XPCWN doesn't own the JS reflector object in case the reflector
+    // keeps alive other C++ things. This is safe because if the reflector
+    // had died the reference from the XPCWN to it would have been cleared.
     JSObject* obj = GetFlatJSObjectPreserveColor();
     if (JS::ObjectIsMarkedGray(obj) || cb.WantAllTraces())
         cb.NoteJSRoot(obj);
