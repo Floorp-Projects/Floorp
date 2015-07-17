@@ -212,7 +212,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentPosition(mTaskQueue, 0, "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
-  mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
   mDecodedVideoEndTime(-1),
@@ -1744,8 +1743,6 @@ MediaDecoderStateMachine::StartAudioThread()
 
   if (HasAudio() && !mAudioSink) {
     auto audioStartTime = GetMediaTime();
-    // The audio end time should always be at least the audio start time.
-    mAudioEndTime = audioStartTime;
     mAudioCompleted = false;
     mAudioSink = new AudioSink(this, audioStartTime,
                                mInfo.mAudio, mDecoder->GetAudioChannel());
@@ -2465,7 +2462,6 @@ MediaDecoderStateMachine::Reset()
 
   mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
-  mAudioEndTime = -1;
   mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
   AudioQueue().Reset();
@@ -3083,14 +3079,6 @@ MediaDecoderStateMachine::AudioEndTime() const
   return -1;
 }
 
-void MediaDecoderStateMachine::OnAudioEndTimeUpdate(int64_t aAudioEndTime)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  MOZ_ASSERT(aAudioEndTime >= AudioEndTime());
-  mAudioEndTime = aAudioEndTime;
-}
-
 void MediaDecoderStateMachine::OnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -3152,9 +3140,6 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
     if (!self->mAudioCaptured) {
       // Stop the audio sink if it's running.
       self->StopAudioThread();
-      // Reset mAudioEndTime which will be updated as we send audio data to
-      // stream. Otherwise it will remain -1 if we don't have audio.
-      self->mAudioEndTime = -1;
       self->mAudioCaptured = true;
       // Start DecodedStream if we are already playing. Otherwise it will be
       // handled in MaybeStartPlayback().
