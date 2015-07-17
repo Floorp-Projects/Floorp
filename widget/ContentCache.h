@@ -348,7 +348,7 @@ public:
    * and flush it later.
    */
   void MaybeNotifyIME(nsIWidget* aWidget,
-                      IMENotification& aNotification);
+                      const IMENotification& aNotification);
 
 private:
   IMENotification mPendingSelectionChange;
