@@ -7760,6 +7760,12 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       break;
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    {
+      if (ShadowRoot::FromNode(adoptedNode)) {
+        rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+        return nullptr;
+      }
+    }
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
     case nsIDOMNode::TEXT_NODE:
