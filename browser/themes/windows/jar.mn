@@ -316,6 +316,8 @@ browser.jar:
         skin/classic/browser/tabbrowser/newtab-XPVista7@2x.png       (tabbrowser/newtab-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
         skin/classic/browser/tabbrowser/newtab-inverted@2x.png       (tabbrowser/newtab-inverted@2x.png)
+        skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.png (tabbrowser/newtab-inverted-XPVista7.png)
+        skin/classic/browser/tabbrowser/newtab-inverted-XPVista7@2x.png (tabbrowser/newtab-inverted-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
@@ -637,8 +639,10 @@ browser.jar:
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab-inverted.png       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.png     os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab-inverted@2x.png    chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7@2x.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png      os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png   os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1
