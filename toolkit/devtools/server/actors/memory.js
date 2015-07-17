@@ -29,7 +29,7 @@ types.addDictType("AllocationsRecordingOptions", {
  * A tab-scoped instance of this actor will measure the memory footprint of its
  * parent tab. A global-scoped instance however, will measure the memory
  * footprint of the chrome window referenced by the root actor.
- * 
+ *
  * This actor wraps the Memory module at toolkit/devtools/shared/memory.js
  * and provides RDP definitions.
  *
@@ -51,18 +51,28 @@ let MemoryActor = exports.MemoryActor = protocol.ActorClass({
       type: "garbage-collection",
       data: Arg(0, "json"),
     },
+
+    // Same data as the data from `getAllocations` -- only fired if
+    // `autoDrain` set during `startRecordingAllocations`.
+    "allocations": {
+      type: "allocations",
+      data: Arg(0, "json"),
+    },
   },
 
   initialize: function(conn, parent, frameCache = new StackFrameCache()) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this._onGarbageCollection = this._onGarbageCollection.bind(this);
+    this._onAllocations = this._onAllocations.bind(this);
     this.bridge = new Memory(parent, frameCache);
     this.bridge.on("garbage-collection", this._onGarbageCollection);
+    this.bridge.on("allocations", this._onAllocations);
   },
 
   destroy: function() {
     this.bridge.off("garbage-collection", this._onGarbageCollection);
+    this.bridge.off("allocations", this._onAllocations);
     this.bridge.destroy();
     protocol.Actor.prototype.destroy.call(this);
   },
@@ -144,6 +154,10 @@ let MemoryActor = exports.MemoryActor = protocol.ActorClass({
 
   _onGarbageCollection: function (data) {
     events.emit(this, "garbage-collection", data);
+  },
+
+  _onAllocations: function (data) {
+    events.emit(this, "allocations", data);
   },
 });
 
