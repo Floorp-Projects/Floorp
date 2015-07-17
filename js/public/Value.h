@@ -1563,12 +1563,12 @@ NumberValue(int32_t i)
     return Int32Value(i);
 }
 
-static inline Value
+static inline JS_VALUE_CONSTEXPR Value
 NumberValue(uint32_t i)
 {
-    Value v;
-    v.setNumber(i);
-    return v;
+    return i <= JSVAL_INT_MAX
+           ? Int32Value(int32_t(i))
+           : CanonicalizedDoubleValue(double(i));
 }
 
 namespace detail {
@@ -1951,14 +1951,6 @@ static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
               "jsval_layout and JS::Value must have identical layouts");
 
 /************************************************************************/
-
-static inline JS_VALUE_CONSTEXPR jsval
-UINT_TO_JSVAL(uint32_t i)
-{
-    return i <= JSVAL_INT_MAX
-           ? JS::Int32Value(int32_t(i))
-           : JS::DoubleValue(double(i));
-}
 
 namespace JS {
 
