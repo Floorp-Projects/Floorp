@@ -10,7 +10,6 @@
 
 #include "ExtendedValidation.h"
 #include "OCSPRequestor.h"
-#include "OCSPVerificationTrustDomain.h"
 #include "certdb.h"
 #include "cert.h"
 #include "mozilla/UniquePtr.h"
@@ -639,17 +638,7 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
 {
   Time thisUpdate(Time::uninitialized);
   Time validThrough(Time::uninitialized);
-
-  // We use a try and fallback approach which first mandates good signature
-  // digest algorithms, then falls back to SHA-1 if this fails. If a delegated
-  // OCSP response signing certificate was issued with a SHA-1 signature,
-  // verification initially fails. We cache the failure and then re-use that
-  // result even when doing fallback (i.e. when weak signature digest algorithms
-  // should succeed). To address this we use an OCSPVerificationTrustDomain
-  // here, rather than using *this, to ensure verification succeeds for all
-  // allowed signature digest algorithms.
-  OCSPVerificationTrustDomain trustDomain(*this);
-  Result rv = VerifyEncodedOCSPResponse(trustDomain, certID, time,
+  Result rv = VerifyEncodedOCSPResponse(*this, certID, time,
                                         maxLifetimeInDays, encodedResponse,
                                         expired, &thisUpdate, &validThrough);
   // If a response was stapled and expired, we don't want to cache it. Return
