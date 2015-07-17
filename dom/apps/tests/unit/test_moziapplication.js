@@ -51,7 +51,7 @@ add_test(() => {
   });
 
   Assert.ok(mozapp.principal, "app principal should exist");
-  let expectedPrincipalOrigin = app.origin + "!appId=" + app.localId;
+  let expectedPrincipalOrigin = app.origin + "^appId=" + app.localId;
   Assert.equal(mozapp.principal.origin, expectedPrincipalOrigin,
                "app principal origin ok");
   Assert.equal(mozapp.principal.appId, app.localId, "app principal appId ok");

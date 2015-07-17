@@ -8,7 +8,7 @@ PACKAGE_VERSION = '1.2'
 
 dependencies = ['mozdevice >= 0.44',
                 'mozfile >= 1.0',
-                'mozlog >= 2.11']
+                'mozlog >= 3.0']
 
 setup(name='mozversion',
       version=PACKAGE_VERSION,

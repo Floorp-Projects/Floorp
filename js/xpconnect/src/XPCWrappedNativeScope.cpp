@@ -497,10 +497,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-            auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-            XPCWrappedNative* wrapper = entry->value;
-            if (wrapper->HasExternalReference())
-                XPCJSRuntime::SuspectWrappedNative(wrapper, cb);
+            static_cast<Native2WrappedNativeMap::Entry*>(i.Get())->value->Suspect(cb);
         }
 
         if (cur->mDOMExpandoSet) {

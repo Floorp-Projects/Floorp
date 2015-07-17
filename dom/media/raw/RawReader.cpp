@@ -260,7 +260,7 @@ RawReader::Seek(int64_t aTime, int64_t aEndTime)
     MOZ_ASSERT(self->OnTaskQueue());
     return self->mVideoQueue.Peek() &&
            self->mVideoQueue.Peek()->GetEndTime() >= aTime;
-  })->Then(TaskQueue(), __func__, [self, p, aTime] () {
+  })->Then(OwnerThread(), __func__, [self, p, aTime] () {
     while (self->mVideoQueue.GetSize() >= 2) {
       nsRefPtr<VideoData> releaseMe = self->mVideoQueue.PopFront();
     }

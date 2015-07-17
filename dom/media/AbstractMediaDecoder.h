@@ -8,7 +8,8 @@
 #define AbstractMediaDecoder_h_
 
 #include "mozilla/Attributes.h"
-#include "StateMirroring.h"
+#include "mozilla/StateMirroring.h"
+
 #include "MediaInfo.h"
 #include "nsISupports.h"
 #include "nsDataHashtable.h"

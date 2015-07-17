@@ -24,9 +24,9 @@ from marionette_driver.errors import (
         MoveTargetOutOfBoundsException, FrameSendNotInitializedError, FrameSendFailureError
         )
 from marionette_driver.marionette import Marionette
-from mozlog.structured.structuredlog import get_default_logger
 from marionette_driver.wait import Wait
 from marionette_driver.expected import element_present, element_not_present
+from mozlog import get_default_logger
 
 
 class SkipTest(Exception):
@@ -376,7 +376,7 @@ class CommonTestCase(unittest.TestCase):
     def id(self):
         # TBPL starring requires that the "test name" field of a failure message
         # not differ over time. The test name to be used is passed to
-        # mozlog.structured via the test id, so this is overriden to maintain
+        # mozlog via the test id, so this is overriden to maintain
         # consistency.
         return self.test_name
 

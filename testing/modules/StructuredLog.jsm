@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [
 
 /**
  * TestLogger: Logger class generating messages compliant with the
- * structured logging protocol for tests exposed by the mozlog.structured
+ * structured logging protocol for tests exposed by mozlog
  *
  * @param name
  *        The name of the logger to instantiate.
@@ -30,8 +30,7 @@ this.StructuredLogger = function (name, dumpFun=dump, mutators=[]) {
 }
 
 /**
- * Log functions producing messages in the format specified by
- * mozlog.structured
+ * Log functions producing messages in the format specified by mozlog
  */
 StructuredLogger.prototype.testStart = function (test) {
   this._runningTests.add(test);

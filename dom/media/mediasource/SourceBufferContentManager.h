@@ -7,8 +7,9 @@
 #ifndef MOZILLA_SOURCEBUFFERCONTENTMANAGER_H_
 #define MOZILLA_SOURCEBUFFERCONTENTMANAGER_H_
 
+#include "mozilla/MozPromise.h"
+
 #include "MediaData.h"
-#include "MediaPromise.h"
 #include "MediaSourceDecoder.h"
 #include "SourceBuffer.h"
 #include "TimeUnits.h"
@@ -23,7 +24,7 @@ class SourceBufferContentManager {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SourceBufferContentManager);
 
-  typedef MediaPromise<bool, nsresult, /* IsExclusive = */ true> AppendPromise;
+  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> AppendPromise;
   typedef AppendPromise RangeRemovalPromise;
 
   static already_AddRefed<SourceBufferContentManager>

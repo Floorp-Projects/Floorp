@@ -140,8 +140,7 @@ GfxFormatToCairoFormat(SurfaceFormat format)
     case SurfaceFormat::R5G6B5:
       return CAIRO_FORMAT_RGB16_565;
     default:
-      gfxWarning() << "Unknown image format";
-      MOZ_ASSERT(false, "Unknown image format");
+      gfxCriticalError() << "Unknown image format " << (int)format;
       return CAIRO_FORMAT_ARGB32;
   }
 }
@@ -159,8 +158,7 @@ GfxFormatToCairoContent(SurfaceFormat format)
     case SurfaceFormat::A8:
       return CAIRO_CONTENT_ALPHA;
     default:
-      gfxWarning() << "Unknown image format";
-      MOZ_ASSERT(false, "Unknown image format");
+      gfxCriticalError() << "Unknown image content format " << (int)format;
       return CAIRO_CONTENT_COLOR_ALPHA;
   }
 }

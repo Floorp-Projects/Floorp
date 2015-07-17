@@ -80,7 +80,7 @@ already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                        layers::LayersBackend aLayersBackend,
                                        layers::ImageContainer* aImageContainer,
-                                       FlushableMediaTaskQueue* aVideoTaskQueue,
+                                       FlushableTaskQueue* aVideoTaskQueue,
                                        MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder;
@@ -106,7 +106,7 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                       FlushableMediaTaskQueue* aAudioTaskQueue,
+                                       FlushableTaskQueue* aAudioTaskQueue,
                                        MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =

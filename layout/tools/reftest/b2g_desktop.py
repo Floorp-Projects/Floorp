@@ -21,7 +21,7 @@ from mozrunner import FirefoxRunner
 import mozinfo
 import mozlog
 
-log = mozlog.getLogger('REFTEST')
+log = mozlog.unstructured.getLogger('REFTEST')
 
 class B2GDesktopReftest(RefTest):
     build_type = "desktop"

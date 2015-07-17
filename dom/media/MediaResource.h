@@ -324,8 +324,17 @@ public:
   // aCount bytes. Otherwise, it returns an owned buffer.
   virtual already_AddRefed<MediaByteBuffer> SilentReadAt(int64_t aOffset, uint32_t aCount)
   {
+    nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer(aCount);
+    bytes->SetLength(aCount);
+    nsresult rv =
+      ReadFromCache(reinterpret_cast<char*>(bytes->Elements()), aOffset, aCount);
+    if (NS_SUCCEEDED(rv)) {
+      return bytes.forget();
+    }
     int64_t pos = Tell();
-    nsRefPtr<MediaByteBuffer> bytes = MediaReadAt(aOffset, aCount);
+    // Free our buffer first to minimize memory usage.
+    bytes = nullptr;
+    bytes = MediaReadAt(aOffset, aCount);
     Seek(nsISeekableStream::NS_SEEK_SET, pos);
     NS_ENSURE_TRUE(bytes && bytes->Length() == aCount, nullptr);
     return bytes.forget();

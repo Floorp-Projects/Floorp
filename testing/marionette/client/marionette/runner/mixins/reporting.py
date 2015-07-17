@@ -11,7 +11,7 @@ import pkg_resources
 import sys
 import time
 
-from mozlog.structured.structuredlog import get_default_logger
+from mozlog import get_default_logger
 import mozversion
 from xmlgen import html
 from xmlgen import raw

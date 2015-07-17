@@ -89,12 +89,16 @@ public:
     virtual bool UseAcceleratedSkiaCanvas() override;
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 
-
 #ifdef MOZ_WIDGET_GONK
     virtual bool IsInGonkEmulator() const { return mIsInGonkEmulator; }
 #endif
 
     virtual bool SupportsApzTouchInput() const override {
+      return true;
+    }
+
+protected:
+    bool AccelerateLayersByDefault() override {
       return true;
     }
 

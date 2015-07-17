@@ -19,7 +19,6 @@ from runtests import MochitestUtilsMixin
 from mochitest_options import MochitestArgumentParser
 from marionette import Marionette
 from mozprofile import Profile, Preferences
-from mozlog import structured
 import mozinfo
 import mozleak
 

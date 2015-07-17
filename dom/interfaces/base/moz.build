@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDOMCrypto.idl',
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMHistory.idl',
-    'nsIDOMJSWindow.idl',
     'nsIDOMLocation.idl',
     'nsIDOMModalContentWindow.idl',
     'nsIDOMNavigator.idl',

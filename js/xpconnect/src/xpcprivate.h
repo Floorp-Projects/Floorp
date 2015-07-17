@@ -580,9 +580,6 @@ public:
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
     inline void AddObjectHolderRoot(XPCJSObjectHolder* holder);
 
-    static void SuspectWrappedNative(XPCWrappedNative* wrapper,
-                                     nsCycleCollectionNoteRootCallback& cb);
-
     void DebugDump(int16_t depth);
 
     void SystemIsBeingShutDown();
@@ -2156,7 +2153,6 @@ public:
                  XPCNativeInterface* Interface,
                  XPCWrappedNative** wrapper);
 
-public:
     static nsresult
     GetUsedOnly(nsISupports* Object,
                 XPCWrappedNativeScope* Scope,
@@ -2181,7 +2177,6 @@ public:
 
     inline bool HasInterfaceNoQI(const nsIID& iid);
 
-    XPCWrappedNativeTearOff* LocateTearOff(XPCNativeInterface* aInterface);
     XPCWrappedNativeTearOff* FindTearOff(XPCNativeInterface* aInterface,
                                          bool needJSObject = false,
                                          nsresult* pError = nullptr);
@@ -2249,6 +2244,7 @@ public:
 
     bool HasExternalReference() const {return mRefCnt > 1;}
 
+    void Suspect(nsCycleCollectionNoteRootCallback& cb);
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
@@ -2274,8 +2270,6 @@ private:
         // Flags bits for mFlatJSObject:
         FLAT_JS_OBJECT_VALID = JS_BIT(0)
     };
-
-private:
 
     bool Init(const XPCNativeScriptableCreateInfo* sci);
     bool FinishInit();

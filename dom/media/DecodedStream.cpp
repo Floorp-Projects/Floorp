@@ -628,13 +628,18 @@ DecodedStream::SendData(double aVolume, bool aIsSameOrigin)
   return finished;
 }
 
-CheckedInt64
+int64_t
 DecodedStream::AudioEndTime() const
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
-  return mStartTime.ref() +
-         FramesToUsecs(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
+  if (mStartTime.isSome() && mInfo.HasAudio()) {
+    CheckedInt64 t = mStartTime.ref() +
+      FramesToUsecs(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
+    if (t.isValid()) {
+      return t.value();
+    }
+  }
+  return -1;
 }
 
 int64_t

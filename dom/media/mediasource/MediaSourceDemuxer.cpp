@@ -24,8 +24,8 @@ using media::TimeIntervals;
 #define EOS_FUZZ_US 125000
 
 MediaSourceDemuxer::MediaSourceDemuxer()
-  : mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                                  /* aSupportsTailDispatch = */ true))
+  : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                             /* aSupportsTailDispatch = */ true))
   , mMonitor("MediaSourceDemuxer")
 {
   MOZ_ASSERT(NS_IsMainThread());

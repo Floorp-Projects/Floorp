@@ -520,15 +520,27 @@ ProxyAccessible::RowExtent()
 }
 
 void
-ProxyAccessible::ColHeaderCells(nsTArray<uint64_t>* aCells)
+ProxyAccessible::ColHeaderCells(nsTArray<ProxyAccessible*>* aCells)
 {
-  unused << mDoc->SendColHeaderCells(mID, aCells);
+  nsTArray<uint64_t> targetIDs;
+  unused << mDoc->SendColHeaderCells(mID, &targetIDs);
+
+  size_t targetCount = targetIDs.Length();
+  for (size_t i = 0; i < targetCount; i++) {
+    aCells->AppendElement(mDoc->GetAccessible(targetIDs[i]));
+  }
 }
 
 void
-ProxyAccessible::RowHeaderCells(nsTArray<uint64_t>* aCells)
+ProxyAccessible::RowHeaderCells(nsTArray<ProxyAccessible*>* aCells)
 {
-  unused << mDoc->SendRowHeaderCells(mID, aCells);
+  nsTArray<uint64_t> targetIDs;
+  unused << mDoc->SendRowHeaderCells(mID, &targetIDs);
+
+  size_t targetCount = targetIDs.Length();
+  for (size_t i = 0; i < targetCount; i++) {
+    aCells->AppendElement(mDoc->GetAccessible(targetIDs[i]));
+  }
 }
 
 bool
@@ -922,6 +934,15 @@ ProxyAccessible::EmbeddedChildAt(size_t aChildIdx)
   uint64_t childID;
   unused << mDoc->SendEmbeddedChildAt(mID, aChildIdx, &childID);
   return mDoc->GetAccessible(childID);
+}
+
+ProxyAccessible*
+ProxyAccessible::FocusedChild()
+{
+  uint64_t childID = 0;
+  bool ok = false;
+  unused << mDoc->SendFocusedChild(mID, &childID, &ok);
+  return ok ? mDoc->GetAccessible(childID) : nullptr;
 }
 
 ProxyAccessible*

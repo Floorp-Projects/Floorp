@@ -7,9 +7,8 @@
 #if !defined(StateWatching_h_)
 #define StateWatching_h_
 
-#include "AbstractThread.h"
-#include "TaskDispatcher.h"
-
+#include "mozilla/AbstractThread.h"
+#include "mozilla/TaskDispatcher.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 

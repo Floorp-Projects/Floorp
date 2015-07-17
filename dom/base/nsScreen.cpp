@@ -25,6 +25,7 @@ using namespace mozilla::dom;
 nsScreen::Create(nsPIDOMWindow* aWindow)
 {
   MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
 
   if (!aWindow->GetDocShell()) {
     return nullptr;

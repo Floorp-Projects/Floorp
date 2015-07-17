@@ -146,10 +146,10 @@ private:
   // mLock
   SeekTarget mSeekTarget;
 
-  // MediaPromise of current seek.
+  // MozPromise of current seek.
   // Used in main thread and offload callback thread, protected by Mutex
   // mLock
-  MediaPromiseHolder<MediaDecoder::SeekPromise> mSeekPromise;
+  MozPromiseHolder<MediaDecoder::SeekPromise> mSeekPromise;
 
   // Positions obtained from offlaoded tracks (DSP)
   // Used in main thread and offload callback thread, protected by Mutex

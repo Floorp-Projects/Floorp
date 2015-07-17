@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-from mozlog.structured import structuredlog
+from mozlog import structuredlog
 
 here = os.path.split(__file__)[0]
 

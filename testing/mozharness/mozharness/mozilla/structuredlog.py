@@ -30,21 +30,21 @@ class StructuredOutputParser(OutputParser):
 
         super(StructuredOutputParser, self).__init__(**kwargs)
 
-        structured = self._get_mozlog_module()
-        self.formatter = structured.formatters.TbplFormatter()
-        self.handler = structured.handlers.StatusHandler()
-        self.log_actions = structured.structuredlog.log_actions()
+        mozlog = self._get_mozlog_module()
+        self.formatter = mozlog.formatters.TbplFormatter()
+        self.handler = mozlog.handlers.StatusHandler()
+        self.log_actions = mozlog.structuredlog.log_actions()
 
         self.worst_log_level = INFO
         self.tbpl_status = TBPL_SUCCESS
 
     def _get_mozlog_module(self):
         try:
-            from mozlog import structured
+            import mozlog
         except ImportError:
             self.fatal("A script class using structured logging must inherit "
                        "from the MozbaseMixin to ensure that mozlog is available.")
-        return structured
+        return mozlog
 
     def _handle_unstructured_output(self, line):
         if self.strict:

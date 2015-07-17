@@ -63,7 +63,7 @@ if os.path.isdir(mozbase):
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice, tags
-from mozlog import structured
+from mozlog import commandline
 import mozcrash
 import mozinfo
 
@@ -558,8 +558,7 @@ class XPCShellTestThread(Thread):
         self.log.info("<<<<<<<")
 
     def report_message(self, message):
-        """Stores or logs a json log message in mozlog.structured
-        format."""
+        """Stores or logs a json log message in mozlog format."""
         if self.verbose:
             self.log_line(message)
         else:
@@ -1542,13 +1541,11 @@ class XPCShellOptions(OptionParser):
 
 def main():
     parser = XPCShellOptions()
-    structured.commandline.add_logging_group(parser)
+    commandline.add_logging_group(parser)
     options, args = parser.parse_args()
 
 
-    log = structured.commandline.setup_logging("XPCShell",
-                                               options,
-                                               {"tbpl": sys.stdout})
+    log = commandline.setup_logging("XPCShell", options, {"tbpl": sys.stdout})
 
     if len(args) < 2 and options.manifest is None or \
        (len(args) < 1 and options.manifest is not None):

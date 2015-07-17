@@ -17,6 +17,7 @@
 #include "XrayWrapper.h"
 
 #include "nsContentUtils.h"
+#include "nsCycleCollectionNoteRootCallback.h"
 
 #include <stdint.h>
 #include "mozilla/DeferredFinalize.h"
@@ -67,7 +68,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse
         NS_IMPL_CYCLE_COLLECTION_DESCRIBE(XPCWrappedNative, tmp->mRefCnt.get())
     }
 
-    if (tmp->mRefCnt.get() > 1) {
+    if (tmp->HasExternalReference()) {
 
         // If our refcount is > 1, our reference to the flat JS object is
         // considered "strong", and we're going to traverse it.
@@ -91,6 +92,25 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse
     tmp->NoteTearoffs(cb);
 
     return NS_OK;
+}
+
+void
+XPCWrappedNative::Suspect(nsCycleCollectionNoteRootCallback& cb)
+{
+    if (!IsValid() || IsWrapperExpired())
+        return;
+
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Suspecting wrapped natives from non-main thread");
+
+    // Only record objects that might be part of a cycle as roots, unless
+    // the callback wants all traces (a debug feature). Do this even if
+    // the XPCWN doesn't own the JS reflector object in case the reflector
+    // keeps alive other C++ things. This is safe because if the reflector
+    // had died the reference from the XPCWN to it would have been cleared.
+    JSObject* obj = GetFlatJSObjectPreserveColor();
+    if (JS::ObjectIsMarkedGray(obj) || cb.WantAllTraces())
+        cb.NoteJSRoot(obj);
 }
 
 void
@@ -1033,20 +1053,6 @@ XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
         mSet = newSet;
     }
     return true;
-}
-
-XPCWrappedNativeTearOff*
-XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
-{
-    for (XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
-         chunk != nullptr;
-         chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* tearOff = &chunk->mTearOff;
-        if (tearOff->GetInterface() == aInterface) {
-            return tearOff;
-        }
-    }
-    return nullptr;
 }
 
 XPCWrappedNativeTearOff*

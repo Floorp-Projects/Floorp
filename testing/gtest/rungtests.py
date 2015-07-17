@@ -15,7 +15,7 @@ import mozinfo
 import mozlog
 import mozprocess
 
-log = mozlog.getLogger('gtest')
+log = mozlog.unstructured.getLogger('gtest')
 
 class GTests(object):
     # Time (seconds) to wait for test process to complete

@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "jsalloc.h"
+#include "jscntxt.h"
 #include "jscompartment.h"
 
 #include "builtin/MapObject.h"

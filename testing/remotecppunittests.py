@@ -12,10 +12,10 @@ import runcppunittests as cppunittests
 import mozcrash
 import mozfile
 import mozinfo
+import mozlog
 import StringIO
 import posixpath
 from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
-from mozlog import structured
 
 try:
     from mozbuild.base import MozbuildObject
@@ -208,7 +208,7 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
 
 def main():
     parser = RemoteCPPUnittestOptions()
-    structured.commandline.add_logging_group(parser)
+    mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
         print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
@@ -249,10 +249,8 @@ def main():
             print "Error: you must provide a device IP to connect to via the --deviceIP option"
             sys.exit(1)
 
-    log = structured.commandline.setup_logging("remotecppunittests",
-                                               options,
-                                               {"tbpl": sys.stdout})
-
+    log = mozlog.commandline.setup_logging("remotecppunittests", options,
+                                           {"tbpl": sys.stdout})
 
     options.xre_path = os.path.abspath(options.xre_path)
     cppunittests.update_mozinfo()

@@ -135,10 +135,7 @@ CompositorD3D11::Initialize()
 
   ScopedGfxFeatureReporter reporter("D3D11 Layers", force);
 
-  if (!gfxPlatform::CanUseDirect3D11()) {
-    NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
-    return false;
-  }
+  MOZ_ASSERT(gfxPlatform::CanUseDirect3D11());
 
   HRESULT hr;
 

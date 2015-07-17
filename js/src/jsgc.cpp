@@ -1390,6 +1390,8 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
     switch (key) {
       case JSGC_MAX_MALLOC_BYTES:
         setMaxMallocBytes(value);
+        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+            zone->setGCMaxMallocBytes(maxMallocBytesAllocated() * 0.9);
         break;
       case JSGC_SLICE_TIME_BUDGET:
         sliceBudget = value ? value : SliceBudget::Unlimited;
@@ -1411,6 +1413,10 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
         break;
       default:
         tunables.setParameter(key, value);
+        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+            zone->threshold.updateAfterGC(zone->usage.gcBytes(), GC_NORMAL, tunables,
+                                         schedulingState);
+        }
     }
 }
 
@@ -2586,15 +2592,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
     // Fixup compartment global pointers as these get accessed during marking.
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         comp->fixupAfterMovingGC();
-
-    // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
-    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
-        // Sweep the wrapper map to update its pointers.
-        comp->sweepCrossCompartmentWrappers();
-
-        // Mark the contents of the map to update each wrapper's cross compartment pointer.
-        comp->markCrossCompartmentWrappers(&trc);
-    }
+    JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
 
     // Iterate through all cells that can contain JSObject pointers to update
     // them. Since updating each cell is independent we try to parallelize this

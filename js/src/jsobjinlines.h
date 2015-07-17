@@ -595,6 +595,19 @@ ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
     return ToPrimitive(cx, obj, preferredType, vp);
 }
 
+/* ES6 draft rev 28 (2014 Oct 14) 7.1.14 */
+inline bool
+ToPropertyKey(JSContext* cx, Value argument, MutableHandleId result)
+{
+    // Steps 1-2.
+    RootedValue key(cx, argument);
+    if (!ToPrimitive(cx, JSTYPE_STRING, &key))
+        return false;
+
+    // Steps 3-4.
+    return ValueToId<CanGC>(cx, key, result);
+}
+
 /*
  * Return true if this is a compiler-created internal function accessed by
  * its own object. Such a function object must not be accessible to script

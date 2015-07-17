@@ -30,7 +30,7 @@ class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   };
 
 public:
-  FFmpegH264Decoder(FlushableMediaTaskQueue* aTaskQueue,
+  FFmpegH264Decoder(FlushableTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
                     const VideoInfo& aConfig,
                     ImageContainer* aImageContainer);

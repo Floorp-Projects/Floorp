@@ -80,7 +80,7 @@ add_task(function* () {
     utils.sendMouseEvent("mousedown", overlayLeft, overlayTop, 0, 1, 0, false, 0, 0);
     utils.sendMouseEvent("mouseup", overlayLeft, overlayTop, 0, 1, 0, false, 0, 0);
 
-    return plugin && !overlay.classList.contains("visible");
+    return overlay.hasAttribute("dismissed") && !overlay.classList.contains("visible");
   });
 
   let notification = PopupNotifications.getNotification("click-to-play-plugins");

@@ -7,14 +7,16 @@
 #ifndef CDMProxy_h_
 #define CDMProxy_h_
 
+#include "mozilla/CDMCaps.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+
+#include "mozilla/dom/MediaKeys.h"
+
+#include "nsIThread.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
-#include "mozilla/dom/MediaKeys.h"
-#include "mozilla/Monitor.h"
-#include "nsIThread.h"
 #include "GMPDecryptorProxy.h"
-#include "mozilla/CDMCaps.h"
-#include "MediaPromise.h"
 
 namespace mozilla {
 class MediaRawData;
@@ -44,7 +46,7 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CDMProxy)
 
-  typedef MediaPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
+  typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
 
   // Main thread only.
   CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem);
@@ -259,7 +261,7 @@ private:
     nsRefPtr<MediaRawData> mSample;
   private:
     ~DecryptJob() {}
-    MediaPromiseHolder<DecryptPromise> mPromise;
+    MozPromiseHolder<DecryptPromise> mPromise;
   };
   // GMP thread only.
   void gmp_Decrypt(nsRefPtr<DecryptJob> aJob);

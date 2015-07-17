@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TaskQueue.h"
+
 #include "gfxPrefs.h"
 #include "MediaSystemResourceManagerChild.h"
-#include "MediaTaskQueue.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 
 #include "MediaSystemResourceManager.h"

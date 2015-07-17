@@ -261,6 +261,8 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_WINDOWS_8;
   else if (os.EqualsLiteral("WINNT 6.3"))
     return DRIVER_OS_WINDOWS_8_1;
+  else if (os.EqualsLiteral("WINNT 10.0"))
+    return DRIVER_OS_WINDOWS_10;
   else if (os.EqualsLiteral("Linux"))
     return DRIVER_OS_LINUX;
   else if (os.EqualsLiteral("Darwin 9"))

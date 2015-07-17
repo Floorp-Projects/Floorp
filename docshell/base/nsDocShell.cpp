@@ -1607,12 +1607,20 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   if (owner && mItemType != typeChrome) {
     nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(owner);
-    if (nsContentUtils::IsSystemOrExpandedPrincipal(ownerPrincipal)) {
+    if (nsContentUtils::IsSystemPrincipal(ownerPrincipal)) {
       if (ownerIsExplicit) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }
       owner = nullptr;
       inheritOwner = true;
+    } else if (nsContentUtils::IsExpandedPrincipal(ownerPrincipal)) {
+      if (ownerIsExplicit) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+      // Don't inherit from the current page.  Just do the safe thing
+      // and pretend that we were loaded by a nullprincipal.
+      owner = nsNullPrincipal::Create();
+      inheritOwner = false;
     }
   }
   if (!owner && !inheritOwner && !ownerIsExplicit) {
@@ -3711,12 +3719,10 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
 static bool
 ItemIsActive(nsIDocShellTreeItem* aItem)
 {
-  nsCOMPtr<nsIDOMWindow> window = aItem->GetWindow();
-
-  if (window) {
-    bool isClosed;
-
-    if (NS_SUCCEEDED(window->GetClosed(&isClosed)) && !isClosed) {
+  if (nsCOMPtr<nsIDOMWindow> window = aItem->GetWindow()) {
+    auto* win = static_cast<nsGlobalWindow*>(window.get());
+    MOZ_ASSERT(win->IsOuterWindow());
+    if (!win->GetClosedOuter()) {
       return true;
     }
   }

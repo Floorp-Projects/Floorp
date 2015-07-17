@@ -12,8 +12,8 @@ import mozprocess
 import mozinfo
 import mozcrash
 import mozfile
+import mozlog
 from contextlib import contextmanager
-from mozlog import structured
 from subprocess import PIPE
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -142,7 +142,7 @@ class CPPUnitTests(object):
         otherwise.
         """
         self.xre_path = xre_path
-        self.log = structured.structuredlog.get_default_logger()
+        self.log = mozlog.get_default_logger()
         self.log.suite_start(programs)
         env = self.build_environment()
         pass_count = 0
@@ -215,7 +215,7 @@ def update_mozinfo():
 
 def main():
     parser = CPPUnittestOptions()
-    structured.commandline.add_logging_group(parser)
+    mozlog.commandline.add_logging_group(parser)
     options, args = parser.parse_args()
     if not args:
         print >>sys.stderr, """Usage: %s <test binary> [<test binary>...]""" % sys.argv[0]
@@ -224,9 +224,8 @@ def main():
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
 
-    log = structured.commandline.setup_logging("cppunittests",
-                                               options,
-                                               {"tbpl": sys.stdout})
+    log = mozlog.commandline.setup_logging("cppunittests", options,
+                                           {"tbpl": sys.stdout})
 
     update_mozinfo()
     progs = extract_unittests_from_args(args, mozinfo.info)

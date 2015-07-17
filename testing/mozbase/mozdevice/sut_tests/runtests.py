@@ -3,12 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from optparse import OptionParser
+import logging
 import os
 import re
 import sys
 import unittest
-
-import mozlog
 
 import dmunit
 import genfiles
@@ -19,7 +18,7 @@ def main(ip, port, heartbeat_port, scripts, directory, isTestDevice, verbose):
     dmunit.port = port
     dmunit.heartbeat_port = heartbeat_port
     if verbose:
-        dmunit.log_level = mozlog.DEBUG
+        dmunit.log_level = logging.DEBUG
 
     suite = unittest.TestSuite()
 

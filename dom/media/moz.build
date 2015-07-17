@@ -96,7 +96,6 @@ XPIDL_MODULE = 'dom_media'
 
 EXPORTS += [
     'AbstractMediaDecoder.h',
-    'AbstractThread.h',
     'AudioBufferUtils.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
@@ -124,13 +123,11 @@ EXPORTS += [
     'MediaFormatReader.h',
     'MediaInfo.h',
     'MediaMetadataManager.h',
-    'MediaPromise.h',
     'MediaQueue.h',
     'MediaRecorder.h',
     'MediaResource.h',
     'MediaSegment.h',
     'MediaStreamGraph.h',
-    'MediaTaskQueue.h',
     'MediaTimer.h',
     'MediaTrack.h',
     'MediaTrackList.h',
@@ -142,10 +139,7 @@ EXPORTS += [
     'SelfRef.h',
     'SharedBuffer.h',
     'SharedThreadPool.h',
-    'StateMirroring.h',
-    'StateWatching.h',
     'StreamBuffer.h',
-    'TaskDispatcher.h',
     'ThreadPoolCOMListener.h',
     'TimeUnits.h',
     'TimeVarying.h',
@@ -157,7 +151,13 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AbstractThread.h',
     'MediaManager.h',
+    'MozPromise.h',
+    'StateMirroring.h',
+    'StateWatching.h',
+    'TaskDispatcher.h',
+    'TaskQueue.h',
 ]
 
 EXPORTS.mozilla.media.webrtc += [
@@ -228,7 +228,6 @@ UNIFIED_SOURCES += [
     'MediaStreamError.cpp',
     'MediaStreamGraph.cpp',
     'MediaStreamTrack.cpp',
-    'MediaTaskQueue.cpp',
     'MediaTimer.cpp',
     'MediaTrack.cpp',
     'MediaTrackList.cpp',
@@ -238,6 +237,7 @@ UNIFIED_SOURCES += [
     'RtspMediaResource.cpp',
     'SharedThreadPool.cpp',
     'StreamBuffer.cpp',
+    'TaskQueue.cpp',
     'TextTrack.cpp',
     'TextTrackCue.cpp',
     'TextTrackCueList.cpp',

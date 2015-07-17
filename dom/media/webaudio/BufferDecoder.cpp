@@ -33,7 +33,7 @@ BufferDecoder::~BufferDecoder()
 }
 
 void
-BufferDecoder::BeginDecoding(MediaTaskQueue* aTaskQueueIdentity)
+BufferDecoder::BeginDecoding(TaskQueue* aTaskQueueIdentity)
 {
   MOZ_ASSERT(!mTaskQueueIdentity && aTaskQueueIdentity);
   mTaskQueueIdentity = aTaskQueueIdentity;

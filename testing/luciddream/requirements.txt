@@ -1,2 +1,2 @@
 marionette-client>=0.8.5
-mozlog
+mozlog>=3.0

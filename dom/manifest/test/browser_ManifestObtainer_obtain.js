@@ -3,7 +3,7 @@
 'use strict';
 const {
   ManifestObtainer
-} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
+} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
 
 requestLongerTimeout(4); // e10s tests take time.
 const defaultURL =

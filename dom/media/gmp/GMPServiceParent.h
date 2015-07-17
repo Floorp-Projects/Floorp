@@ -49,9 +49,11 @@ public:
 
   void AsyncShutdownNeeded(GMPParent* aParent);
   void AsyncShutdownComplete(GMPParent* aParent);
-  void AbortAsyncShutdown();
 
   int32_t AsyncShutdownTimeoutMs();
+#ifdef MOZ_CRASHREPORTER
+  void SetAsyncShutdownPluginState(GMPParent* aGMPParent, char aId, const nsCString& aState);
+#endif // MOZ_CRASHREPORTER
 
 private:
   friend class GMPServiceParent;
@@ -140,6 +142,25 @@ private:
   nsTArray<nsRefPtr<GMPParent>> mPlugins;
   bool mShuttingDown;
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins;
+#ifdef MOZ_CRASHREPORTER
+  class AsyncShutdownPluginStates
+  {
+  public:
+    void Update(const nsCString& aPlugin, const nsCString& aInstance,
+                char aId, const nsCString& aState);
+  private:
+    struct State { nsAutoCString mStateSequence; nsCString mLastStateDescription; };
+    typedef nsClassHashtable<nsCStringHashKey, State> StatesByInstance;
+    typedef nsClassHashtable<nsCStringHashKey, StatesByInstance> StateInstancesByPlugin;
+    static PLDHashOperator EnumReadPlugins(StateInstancesByPlugin::KeyType aKey,
+                                           StateInstancesByPlugin::UserDataType aData,
+                                           void* aUserArg);
+    static PLDHashOperator EnumReadInstances(StatesByInstance::KeyType aKey,
+                                             StatesByInstance::UserDataType aData,
+                                             void* aUserArg);
+    StateInstancesByPlugin mStates;
+  } mAsyncShutdownPluginStates;
+#endif // MOZ_CRASHREPORTER
 
   // True if we've inspected MOZ_GMP_PATH on the GMP thread and loaded any
   // plugins found there into mPlugins.
