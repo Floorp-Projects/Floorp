@@ -10,6 +10,8 @@
 
 <!ENTITY aboutPrivateBrowsing.description      "That includes browsing history, search history, download history, web form history, cookies, and temporary internet files. However, files you download and bookmarks you make will be kept.">
 
+<!ENTITY aboutPrivateBrowsing.shortdescription "&brandShortName; won't remember any history for this window, but will keep any files you download and bookmarks you make. (Please note that your employer or internet service provider can still track the pages you visit.)">
+
 <!ENTITY aboutPrivateBrowsing.notPrivate       "You are currently not in a private window.">
 
 <!ENTITY aboutPrivateBrowsing.moreInfo         "While this computer won't have a record of your browsing history, your employer or internet service provider can still track the pages you visit.">
@@ -17,3 +19,11 @@
 
 <!ENTITY privatebrowsingpage.openPrivateWindow.label "Open a Private Window">
 <!ENTITY privatebrowsingpage.openPrivateWindow.accesskey "P">
+
+<!ENTITY trackingProtection.subtitle           "Now with Tracking Protection">
+
+<!ENTITY trackingProtection.description        "Tracking Protection will block content that tracks your browsing activity so you don't have to worry about it being shared across websites.">
+
+<!ENTITY trackingProtection.showPreferences    "Privacy Preferences">
+
+<!ENTITY trackingProtection.startTour          "See what's new">
