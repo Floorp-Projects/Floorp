@@ -5008,6 +5008,10 @@ pref("reader.parse-node-limit", 3000);
 // is disabled by default.
 pref("reader.parse-on-load.force-enabled", false);
 
+// Whether we include full URLs in browser console errors. This is disabled
+// by default because some platforms will persist these, leading to privacy issues.
+pref("reader.errors.includeURLs", false);
+
 // The default relative font size in reader mode (1-9)
 pref("reader.font_size", 5);
 
