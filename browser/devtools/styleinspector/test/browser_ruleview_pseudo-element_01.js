@@ -52,7 +52,7 @@ function* testTopLeft(inspector, view) {
   info("Make sure that dblclicking on the header container also toggles " +
        "the pseudo elements");
   EventUtils.synthesizeMouseAtCenter(gutters[0], {clickCount: 2},
-                                     view.doc.defaultView);
+                                     view.styleWindow);
   ok(!view.element.firstChild.classList.contains("show-expandable-container"),
      "Pseudo Elements are collapsed by dblclicking");
 

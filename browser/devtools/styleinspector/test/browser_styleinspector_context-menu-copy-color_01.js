@@ -80,25 +80,20 @@ function testIsColorPopupOnAllNodes(view) {
 /**
  * Test result of _isColorPopup with given node.
  * @param object view
- *               A CSSRuleView or CssHtmlTree instance.
+ *               A CSSRuleView or CssComputedView instance.
  * @param Node node
  *             A node to check.
  */
 function testIsColorPopupOnNode(view, node) {
   info("Testing node " + node);
-  if (view.doc) {
-    view.doc.popupNode = node;
-  }
-  else {
-    view.popupNode = node;
-  }
-  view._colorToCopy = "";
+  view.styleDocument.popupNode = node;
+  view._contextmenu._colorToCopy = "";
 
-  let result = view._isColorPopup();
+  let result = view._contextmenu._isColorPopup();
   let correct = isColorValueNode(node);
 
   is(result, correct, "_isColorPopup returned the expected value " + correct);
-  is(view._colorToCopy, (correct) ? TEST_COLOR : "",
+  is(view._contextmenu._colorToCopy, (correct) ? TEST_COLOR : "",
      "_colorToCopy was set to the expected value");
 }
 

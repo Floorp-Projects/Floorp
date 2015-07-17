@@ -207,12 +207,9 @@ this.WebappManager = {
     let app = aData.app;
     let manifest = new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
 
-    let options = {};
-    try {
-      options.displayOrigin = requestingURI.host;
-    } catch(e) {
-      options.displayOrigin = requestingURI.spec;
-    }
+    let options = {
+      displayURI: requestingURI,
+    };
 
     let message = bundle.getFormattedString("webapps.requestInstall2",
                                             [manifest.name]);

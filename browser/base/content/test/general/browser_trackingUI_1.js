@@ -58,7 +58,7 @@ function testBenignPage() {
   ok (hidden("#tracking-blocked"), "labelTrackingBlocked is hidden");
 }
 
-function testTrackingPage() {
+function testTrackingPage(window) {
   info("Tracking content must be blocked");
   ok (!TrackingProtection.container.hidden, "The container is visible");
   is (TrackingProtection.content.getAttribute("state"), "blocked-tracking-content",
@@ -68,7 +68,15 @@ function testTrackingPage() {
 
   ok (!hidden("#tracking-protection-icon"), "icon is visible");
   ok (hidden("#tracking-action-block"), "blockButton is hidden");
-  ok (!hidden("#tracking-action-unblock"), "unblockButton is visible");
+
+
+  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+    ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
+    ok(!hidden("#tracking-action-unblock-private"), "unblockButtonPrivate is visible");
+  } else {
+    ok(!hidden("#tracking-action-unblock"), "unblockButton is visible");
+    ok(hidden("#tracking-action-unblock-private"), "unblockButtonPrivate is hidden");
+  }
 
   // Make sure that the blocked tracking elements message appears
   ok (hidden("#tracking-not-detected"), "labelNoTracking is hidden");
@@ -101,7 +109,7 @@ function* testTrackingProtectionForTab(tab) {
 
   info("Load a test page containing tracking elements");
   yield promiseTabLoadEvent(tab, TRACKING_PAGE);
-  testTrackingPage();
+  testTrackingPage(tab.ownerDocument.defaultView);
 
   info("Disable TP for the page (which reloads the page)");
   let tabReloadPromise = promiseTabLoadEvent(tab);
@@ -113,7 +121,7 @@ function* testTrackingProtectionForTab(tab) {
   tabReloadPromise = promiseTabLoadEvent(tab);
   clickButton("#tracking-action-block");
   yield tabReloadPromise;
-  testTrackingPage();
+  testTrackingPage(tab.ownerDocument.defaultView);
 }
 
 add_task(function* testNormalBrowsing() {

@@ -47,14 +47,14 @@ function* testShowMdnTooltip(view) {
 
   let {nameSpan} = getRuleViewProperty(view, "element", PROPERTYNAME);
 
-  view.doc.popupNode = nameSpan.firstChild;
-  view._contextMenuUpdate();
+  view.styleDocument.popupNode = nameSpan.firstChild;
+  view._contextmenu._updateMenuItems();
 
   let cssDocs = view.tooltips.cssDocs;
 
   info("Showing the MDN docs tooltip");
   let onShown = cssDocs.tooltip.once("shown");
-  view.menuitemShowMdnDocs.click();
+  view._contextmenu.menuitemShowMdnDocs.click();
   yield onShown;
   ok(true, "The MDN docs tooltip was shown");
 }

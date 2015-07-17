@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoThread.LaunchState;
@@ -29,8 +30,10 @@ import org.mozilla.gecko.Tabs;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.SystemClock;
@@ -47,9 +50,9 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.robotium.solo.Condition;
-import com.robotium.solo.Solo;
-import com.robotium.solo.Timeout;
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Timeout;
 
 /**
  *  A convenient base class suitable for most Robocop tests.

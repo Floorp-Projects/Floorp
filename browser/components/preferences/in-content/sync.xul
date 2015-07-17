@@ -345,13 +345,13 @@
       </vbox>
     </groupbox>
     <spacer flex="1"/>
-    <hbox id="tosPP-small">
+    <vbox id="tosPP-small">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;
       </label>
       <label id="tosPP-small-PP" class="text-link">
         &fxaPrivacyNotice.link.label;
       </label>
-    </hbox>
+    </vbox>
   </vbox>
 </deck>

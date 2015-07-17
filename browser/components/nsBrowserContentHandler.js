@@ -742,7 +742,20 @@ nsDefaultCommandLineHandler.prototype = {
         // Searches in the Windows 10 task bar searchbox simply open the default browser
         // with a URL for a search on Bing. Here we extract the search term and use the
         // user's default search engine instead.
-        if (redirectWinSearch && uri.spec.startsWith("https://www.bing.com/search")) {
+        var uriScheme = "", uriHost = "", uriPath = "";
+        try {
+          uriScheme = uri.scheme;
+          uriHost = uri.host;
+          uriPath = uri.path;
+        } catch(e) {
+        }
+
+        // Most Windows searches are "https://www.bing.com/search...", but bug
+        // 1182308 reports a Chinese edition of Windows 10 using
+        // "http://cn.bing.com/search...", so be a bit flexible in what we match.
+        if (redirectWinSearch &&
+            (uriScheme == "http" || uriScheme == "https") &&
+            uriHost.endsWith(".bing.com") && uriPath.startsWith("/search")) {
           try {
             var url = uri.QueryInterface(Components.interfaces.nsIURL);
             var params = new URLSearchParams(url.query);

@@ -66,7 +66,7 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
 
   info("Entering test data " + value);
   let onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.sendString(value, view.doc.defaultView);
+  EventUtils.sendString(value, view.styleWindow);
 
   info("Waiting for focus on the field");
   let onBlur = once(editor.input, "blur");

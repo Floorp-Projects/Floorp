@@ -11,6 +11,7 @@ EXTRA_JS_MODULES.devtools.styleinspector += [
     'computed-view.js',
     'css-parsing-utils.js',
     'rule-view.js',
+    'style-inspector-menu.js',
     'style-inspector-overlays.js',
     'style-inspector.js',
 ]

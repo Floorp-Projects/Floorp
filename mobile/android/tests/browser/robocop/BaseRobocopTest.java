@@ -12,7 +12,7 @@ import android.test.ActivityInstrumentationTestCase2;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.robotium.solo.Solo;
+import com.jayway.android.robotium.solo.Solo;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

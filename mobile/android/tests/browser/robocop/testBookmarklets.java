@@ -10,7 +10,7 @@ import org.mozilla.gecko.home.HomePager;
 import android.database.Cursor;
 import android.widget.ListView;
 
-import com.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Condition;
 
 
 public class testBookmarklets extends AboutHomeTest {

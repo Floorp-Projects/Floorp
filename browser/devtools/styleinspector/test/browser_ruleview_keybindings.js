@@ -15,7 +15,7 @@ add_task(function*() {
   yield selectNode("h1", inspector);
 
   info("Getting the ruleclose brace element");
-  let brace = view.doc.querySelector(".ruleview-ruleclose");
+  let brace = view.styleDocument.querySelector(".ruleview-ruleclose");
 
   info("Clicking on the brace element to focus the new property field");
   let onFocus = once(brace.parentNode, "focus", true);
@@ -51,5 +51,5 @@ add_task(function*() {
 });
 
 function getCurrentInplaceEditor(view) {
-  return inplaceEditor(view.doc.activeElement);
+  return inplaceEditor(view.styleDocument.activeElement);
 }

@@ -26,7 +26,7 @@ add_task(function*() {
   let icon = getRuleViewSelectorHighlighterIcon(view, "body, p, td");
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
-  EventUtils.synthesizeMouseAtCenter(icon, {}, view.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
   let isVisible = yield onToggled;
 
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");

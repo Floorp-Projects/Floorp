@@ -223,6 +223,15 @@
   background-image: url(chrome://browser/skin/controlcenter/conn-secure.svg);
 }
 
+#identity-popup-securityView.weakCipher,
+#identity-popup-securityView.mixedDisplayContent,
+#identity-popup-securityView.mixedDisplayContentLoadedActiveBlocked,
+#identity-popup-security-content.weakCipher,
+#identity-popup-security-content.mixedDisplayContent,
+#identity-popup-security-content.mixedDisplayContentLoadedActiveBlocked {
+  background-image: url(chrome://browser/skin/controlcenter/conn-degraded.svg);
+}
+
 #identity-popup-securityView.mixedActiveContent,
 #identity-popup-security-content.mixedActiveContent {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
@@ -258,13 +267,17 @@
 }
 
 #tracking-action-block,
-#tracking-action-unblock {
+#tracking-action-unblock,
+#tracking-action-unblock-private {
   margin: 1em 0 0;
 }
 
 #tracking-protection-content[state] > #tracking-not-detected,
 #tracking-protection-content:not([state="blocked-tracking-content"]) > #tracking-blocked,
+#main-window[privatebrowsingmode] #tracking-action-unblock,
+#main-window:not([privatebrowsingmode]) #tracking-action-unblock-private,
 #tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock,
+#tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock-private,
 #tracking-protection-content:not([state="loaded-tracking-content"]) > #tracking-loaded,
 #tracking-protection-content:not([state="loaded-tracking-content"]) #tracking-action-block,
 #tracking-protection-content:not([state]) > #tracking-actions {
