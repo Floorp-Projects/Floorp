@@ -86,19 +86,10 @@
 }
 
 @media (-moz-windows-compositor) {
-  /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
-  .titlebar-button {
-    display: none;
-  }
-
-  #main-window[sizemode="maximized"] #titlebar-buttonbox {
-    -moz-margin-end: 3px;
-  }
-
   #main-window {
     -moz-appearance: -moz-win-glass;
-    background: transparent;
   }
+
 
   /* On win10, if we don't set this on the entire browser container including
    * the sidebar, if the sidebar is open the accent color bleeds through in
@@ -107,10 +98,165 @@
     -moz-appearance: -moz-win-exclude-glass;
   }
 
+  @media not all and (-moz-os-version: windows-vista) {
+    @media not all and (-moz-os-version: windows-win7) {
+      @media not all and (-moz-os-version: windows-win8) {
+        @media (-moz-windows-default-theme) {
+          #main-window {
+            background-color: hsl(0, 0%, 78%);
+          }
+        }
+
+        #titlebar-buttonbox,
+        .titlebar-button {
+          -moz-appearance: none !important;
+        }
+
+        .titlebar-button {
+          border: none;
+          margin: 0 !important;
+          padding: 12px 17px;
+        }
+
+        #main-window[sizemode=maximized] .titlebar-button {
+          padding-top: 8px;
+          padding-bottom: 8px;
+        }
+
+        .titlebar-button > .toolbarbutton-icon {
+          width: 12px;
+          height: 12px;
+        }
+
+        #titlebar-min {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
+        }
+
+        #titlebar-max {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
+        }
+
+        #main-window[sizemode="maximized"] #titlebar-max {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+        }
+
+        #titlebar-close {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+        }
+        #titlebar-close:hover {
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highlight);
+        }
+
+        /* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
+         * rounds up to 13px, which makes the icon one pixel too big on 1.25dppx. Fix: */
+        @media (min-resolution: 1.20dppx) and (max-resolution: 1.45dppx) {
+          .titlebar-button > .toolbarbutton-icon {
+            width: 11.5px;
+            height: 11.5px;
+          }
+        }
+
+        /* 175% dpi should result in the same device pixel sizes as 150% dpi. */
+        @media (min-resolution: 1.70dppx) and (max-resolution: 1.95dppx) {
+          .titlebar-button {
+            padding-left: 14.1px;
+            padding-right: 14.1px;
+          }
+
+          .titlebar-button > .toolbarbutton-icon {
+            width: 10.8px;
+            height: 10.8px;
+          }
+        }
+
+        /* 225% dpi should result in the same device pixel sizes as 200% dpi. */
+        @media (min-resolution: 2.20dppx) and (max-resolution: 2.45dppx) {
+          .titlebar-button {
+            padding-left: 15.3333px;
+            padding-right: 15.3333px;
+          }
+
+          .titlebar-button > .toolbarbutton-icon {
+            width: 10.8px;
+            height: 10.8px;
+          }
+        }
+
+        /* 275% dpi should result in the same device pixel sizes as 250% dpi. */
+        @media (min-resolution: 2.70dppx) and (max-resolution: 2.95dppx) {
+          /* NB: todo: this should also change padding on the buttons
+           * themselves, but without a device to test this on, it's
+           * impossible to know by how much. */
+          .titlebar-button > .toolbarbutton-icon {
+            width: 10.8px;
+            height: 10.8px;
+          }
+        }
+
+        @media (-moz-windows-default-theme) {
+          .titlebar-button:hover {
+            background-color: hsla(0, 0%, 0%, .12);
+          }
+
+          .titlebar-button:hover:active {
+            background-color: hsla(0, 0%, 0%, .22);
+          }
+
+          .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
+            opacity: 0.5;
+          }
+
+          #titlebar-close:hover {
+            background-color: hsl(355, 86%, 49%);
+          }
+
+          #titlebar-close:hover:active {
+            background-color: hsl(355, 82%, 69%);
+          }
+        }
+        @media not all and (-moz-windows-default-theme) {
+          .titlebar-button {
+            background-color: -moz-field;
+          }
+          .titlebar-button:hover {
+            background-color: Highlight;
+          }
+
+          #titlebar-min:hover {
+            list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-highlight);
+          }
+
+          #titlebar-max:hover {
+            list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-highlight);
+          }
+
+          #main-window[sizemode="maximized"] #titlebar-max:hover {
+            list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-highlight);
+          }
+
+          #titlebar-close:hover {
+            list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highlight);
+          }
+        }
+      }
+    }
+  }
+
   @media (-moz-os-version: windows-vista),
-         (-moz-os-version: windows-win7) {
+         (-moz-os-version: windows-win7),
+         (-moz-os-version: windows-win8) {
+    #main-window[sizemode="maximized"] #titlebar-buttonbox {
+      -moz-margin-end: 3px;
+    }
+
     #main-window {
+      background-color: transparent;
       -moz-appearance: -moz-win-borderless-glass;
+    }
+
+    /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
+    .titlebar-button {
+      display: none;
     }
 
     /* The borders on the glass frame are ours, and inside #browser, and on
@@ -123,17 +269,17 @@
     #appcontent {
       -moz-appearance: -moz-win-exclude-glass;
     }
-  }
 
+    /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
+     * Not necessary on windows 10+ */
+    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+      border-top: 2px solid;
+      -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
+    }
 
-  /* Artificially draw window borders that are covered by lwtheme, see bug 591930. */
-  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
-    border-top: 2px solid;
-    -moz-border-top-colors: @glassActiveBorderColor@ rgba(255,255,255,.6);
-  }
-
-  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
-    -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
+    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
+      -moz-border-top-colors: @glassInactiveBorderColor@ rgba(255,255,255,.6);
+    }
   }
 
   @media (-moz-windows-default-theme) {
