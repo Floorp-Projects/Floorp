@@ -655,6 +655,20 @@ class MarionetteTestCase(CommonTestCase):
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
+        # since we use imp.load_source to load test modules, if a module
+        # is loaded with the same name as another one the module would just be
+        # reloaded.
+        #
+        # We may end up by finding too many test in a module then since
+        # reload() only update the module dict (so old keys are still there!)
+        # see https://docs.python.org/2/library/functions.html#reload
+        #
+        # we get rid of that by removing the module from sys.modules,
+        # so we ensure that it will be fully loaded by the
+        # imp.load_source call.
+        if mod_name in sys.modules:
+            del sys.modules[mod_name]
+
         test_mod = imp.load_source(mod_name, filepath)
 
         for name in dir(test_mod):
