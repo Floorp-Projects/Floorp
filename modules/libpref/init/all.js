@@ -4106,8 +4106,6 @@ pref("gl.msaa-level", 0);
 #else
 pref("gl.msaa-level", 2);
 #endif
-pref("gl.require-hardware", false);
-
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.disable-angle", false);
@@ -4126,9 +4124,7 @@ pref("webgl.enable-privileged-extensions", false);
 pref("webgl.bypass-shader-validation", false);
 pref("webgl.enable-prototype-webgl2", false);
 pref("webgl.disable-fail-if-major-performance-caveat", false);
-pref("webgl.disable-debug-renderer-info", false);
-pref("webgl.renderer-string-override", "");
-pref("webgl.vendor-string-override", "");
+pref("gl.require-hardware", false);
 
 #ifdef XP_WIN
 pref("webgl.angle.try-d3d11", true);
