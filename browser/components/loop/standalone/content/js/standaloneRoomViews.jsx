@@ -152,6 +152,16 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <p className="empty-room-message">
                 {mozL10n.get("rooms_only_occupant_label")}
               </p>
+              <p className="room-waiting-area">
+                {mozL10n.get("rooms_read_while_wait_offer")}
+                <a href={loop.config.tilesSupportUrl}
+                  onClick={this.recordClick}
+                  rel="noreferrer"
+                  target="_blank">
+                  <i className="room-waiting-help"></i>
+                </a>
+              </p>
+              <iframe className="room-waiting-tile" src={loop.config.tilesIframeUrl} />
             </div>
           );
         }
@@ -461,13 +471,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
         <div className="room-conversation-wrapper standalone-room-wrapper">
           <div className="beta-logo" />
           <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
-          <StandaloneRoomInfoArea activeRoomStore={this.props.activeRoomStore}
-                                  dispatcher={this.props.dispatcher}
-                                  failureReason={this.state.failureReason}
-                                  isFirefox={this.props.isFirefox}
-                                  joinRoom={this.joinRoom}
-                                  roomState={this.state.roomState}
-                                  roomUsed={this.state.used} />
           <sharedViews.MediaLayoutView
             dispatcher={this.props.dispatcher}
             displayScreenShare={displayScreenShare}
@@ -484,7 +487,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
             screenSharePosterUrl={this.props.screenSharePosterUrl}
             screenShareVideoObject={this.state.screenShareVideoObject}
             showContextRoomName={true}
-            useDesktopPaths={false} />
+            useDesktopPaths={false}>
+            <StandaloneRoomInfoArea activeRoomStore={this.props.activeRoomStore}
+              dispatcher={this.props.dispatcher}
+              failureReason={this.state.failureReason}
+              isFirefox={this.props.isFirefox}
+              joinRoom={this.joinRoom}
+              roomState={this.state.roomState}
+              roomUsed={this.state.used} />
+          </sharedViews.MediaLayoutView>
           <sharedViews.ConversationToolbar
             audio={{enabled: !this.state.audioMuted,
                     visible: this._roomIsActive()}}
