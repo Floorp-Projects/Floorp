@@ -1036,20 +1036,6 @@ XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 }
 
 XPCWrappedNativeTearOff*
-XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
-{
-    for (XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
-         chunk != nullptr;
-         chunk = chunk->mNextChunk) {
-        XPCWrappedNativeTearOff* tearOff = &chunk->mTearOff;
-        if (tearOff->GetInterface() == aInterface) {
-            return tearOff;
-        }
-    }
-    return nullptr;
-}
-
-XPCWrappedNativeTearOff*
 XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
                               bool needJSObject /* = false */,
                               nsresult* pError /* = nullptr */)
