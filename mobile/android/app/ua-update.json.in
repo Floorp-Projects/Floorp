@@ -3,5 +3,7 @@
 // Send these sites a custom user-agent. Bugs should be included with an entry.
 {
   // bug 1174784, youtube.com
-  "youtube.com": "Android\\s\\d.+?;#Android;"
+  "youtube.com": "Android\\s\\d.+?;#Android;",
+  // bug 1184320, gmail.com
+  "mail.google.com": "Android\\s\\d.+?;#Android;"
 }
