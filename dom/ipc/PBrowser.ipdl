@@ -182,12 +182,12 @@ parent:
      * Notifies chrome that there is a focus change involving an editable
      * object (input, textarea, document, contentEditable. etc.)
      *
-     *  focus        PR_TRUE if editable object is receiving focus
-     *               PR_FALSE if losing focus
      *  contentCache Cache of content
+     *  notification Whole data of the notification
      *  preference   Native widget preference for IME updates
      */
-    prio(urgent) sync NotifyIMEFocus(bool focus, ContentCache contentCache)
+    prio(urgent) sync NotifyIMEFocus(ContentCache contentCache,
+                                     IMENotification notification)
       returns (nsIMEUpdatePreference preference);
 
     /**
@@ -196,37 +196,28 @@ parent:
      * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
      *
      *  contentCache Cache of content
-     *  offset       Starting offset of the change
-     *  removedEnd   Ending offset of the range deleted
-     *  addedEnd     New ending offset after insertion
-     *  causedByComposition true if the change is caused by composition
-     *
-     *  for insertion, offset == end
-     *  for deletion, offset == newEnd
+     *  notification Whole data of the notification
      */
     prio(urgent) async NotifyIMETextChange(ContentCache contentCache,
-                                           uint32_t offset, uint32_t removedEnd,
-                                           uint32_t addedEnd,
-                                           bool causedByComposition);
+                                           IMENotification notification);
 
     /**
      * Notifies chrome that there is a IME compostion rect updated
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async NotifyIMESelectedCompositionRect(ContentCache contentCache);
+    prio(urgent) async NotifyIMECompositionUpdate(ContentCache contentCache,
+                                                  IMENotification notification);
 
     /**
      * Notifies chrome that there has been a change in selection
      * Only called when NotifyIMEFocus returns PR_TRUE for mWantUpdates
      *
      *  contentCache Cache of content
-     *  causedByComposition true if the change is caused by composition
-     *  causedBySelectionEvent true if the change is caused by selection event
+     *  notification Whole data of the notification
      */
     prio(urgent) async NotifyIMESelection(ContentCache contentCache,
-                                          bool causedByComposition,
-                                          bool causedBySelectionEvent);
+                                          IMENotification notification);
 
     /**
      * Notifies chrome of updating its content cache.
@@ -249,7 +240,8 @@ parent:
      *
      *  contentCache Cache of content
      */
-    prio(urgent) async NotifyIMEPositionChange(ContentCache contentCache);
+    prio(urgent) async NotifyIMEPositionChange(ContentCache contentCache,
+                                               IMENotification notification);
 
     /**
      * Instructs chrome to end any pending composition
