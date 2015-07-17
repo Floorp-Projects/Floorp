@@ -51,6 +51,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == conditions-06.svg pass.svg
 == conditions-07.svg pass.svg
 == conditions-08.svg conditions-08-ref.svg
+== conditions-09.svg conditions-09-ref.svg
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
