@@ -500,7 +500,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
             auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
             XPCWrappedNative* wrapper = entry->value;
             if (wrapper->HasExternalReference())
-                XPCJSRuntime::SuspectWrappedNative(wrapper, cb);
+                wrapper->Suspect(cb);
         }
 
         if (cur->mDOMExpandoSet) {
