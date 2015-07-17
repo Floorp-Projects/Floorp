@@ -869,6 +869,7 @@ this.UITour = {
     // Ensure the menu panel is hidden before calling recreatePopup so popup events occur.
     this.hideMenu(aWindow, "appMenu");
     this.hideMenu(aWindow, "loop");
+    this.hideMenu(aWindow, "controlCenter");
 
     // Clean up panel listeners after calling hideMenu above.
     aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hideAppMenuAnnotations);
@@ -877,6 +878,8 @@ this.UITour = {
     let loopPanel = aWindow.document.getElementById("loop-notification-panel");
     loopPanel.removeEventListener("popuphidden", this.onPanelHidden);
     loopPanel.removeEventListener("popuphiding", this.hideLoopPanelAnnotations);
+    let controlCenterPanel = aWindow.gIdentityHandler._identityPopup;
+    controlCenterPanel.removeEventListener("popuphiding", this.hideControlCenterAnnotations);
 
     this.endUrlbarCapture(aWindow);
     this.resetTheme();
@@ -1556,6 +1559,25 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       openMenuButton(menuBtn);
+    } else if (aMenuName == "controlCenter") {
+      let popup = aWindow.gIdentityHandler._identityPopup;
+
+      // Add the listener even if the panel is already open since it will still
+      // only get registered once even if it was UITour that opened it.
+      popup.addEventListener("popuphiding", this.hideControlCenterAnnotations);
+
+      if (popup.state == "open") {
+        if (aOpenCallback) {
+          aOpenCallback();
+        }
+        return;
+      }
+
+      // Open the control center
+      if (aOpenCallback) {
+        popup.addEventListener("popupshown", onPopupShown);
+      }
+      aWindow.document.getElementById("identity-box").click();
     } else if (aMenuName == "loop") {
       let toolbarButton = aWindow.LoopUI.toolbarButton;
       // It's possible to have a node that isn't placed anywhere
@@ -1640,6 +1662,9 @@ this.UITour = {
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
       closeMenuButton(menuBtn);
+    } else if (aMenuName == "controlCenter") {
+      let panel = aWindow.gIdentityHandler._identityPopup;
+      panel.hidePopup();
     } else if (aMenuName == "loop") {
       let panel = aWindow.document.getElementById("loop-notification-panel");
       panel.hidePopup();
@@ -1681,6 +1706,12 @@ this.UITour = {
   hideLoopPanelAnnotations: function(aEvent) {
     UITour.hideAnnotationsForPanel(aEvent, (aTarget) => {
       return aTarget.targetName.startsWith("loop-") && aTarget.targetName != "loop-selectedRoomButtons";
+    });
+  },
+
+  hideControlCenterAnnotations(aEvent) {
+    UITour.hideAnnotationsForPanel(aEvent, (aTarget) => {
+      return aTarget.targetName.startsWith("controlCenter-");
     });
   },
 
