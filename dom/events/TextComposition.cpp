@@ -30,6 +30,8 @@ namespace mozilla {
  * TextComposition
  ******************************************************************************/
 
+bool TextComposition::sHandlingSelectionEvent = false;
+
 TextComposition::TextComposition(nsPresContext* aPresContext,
                                  nsINode* aNode,
                                  TabParent* aTabParent,
@@ -389,6 +391,12 @@ TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
   }
 
   ContentEventHandler handler(aPresContext);
+  AutoRestore<bool> saveHandlingSelectionEvent(sHandlingSelectionEvent);
+  sHandlingSelectionEvent = true;
+  // XXX During setting selection, a selection listener may change selection
+  //     again.  In such case, sHandlingSelectionEvent doesn't indicate if
+  //     the selection change is caused by a selection event.  However, it
+  //     must be non-realistic scenario.
   handler.OnSelectionEvent(aSelectionEvent);
 }
 

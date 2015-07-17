@@ -95,6 +95,7 @@ IMEContentObserver::IMEContentObserver()
   , mIsFocusEventPending(false)
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
+  , mSelectionChangeCausedOnlyBySelectionEvent(false)
   , mIsPositionChangeEventPending(false)
   , mIsFlushingPendingNotifications(false)
 {
@@ -418,7 +419,9 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
-    MaybeNotifyIMEOfSelectionChange(causedByComposition);
+    bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
+    MaybeNotifyIMEOfSelectionChange(causedByComposition,
+                                    causedBySelectionEvent);
   }
   return NS_OK;
 }
@@ -828,13 +831,21 @@ IMEContentObserver::PostTextChangeNotification(
 }
 
 void
-IMEContentObserver::PostSelectionChangeNotification(bool aCausedByComposition)
+IMEContentObserver::PostSelectionChangeNotification(
+                      bool aCausedByComposition,
+                      bool aCausedBySelectionEvent)
 {
   if (!mIsSelectionChangeEventPending) {
     mSelectionChangeCausedOnlyByComposition = aCausedByComposition;
   } else {
     mSelectionChangeCausedOnlyByComposition =
       mSelectionChangeCausedOnlyByComposition && aCausedByComposition;
+  }
+  if (!mSelectionChangeCausedOnlyBySelectionEvent) {
+    mSelectionChangeCausedOnlyBySelectionEvent = aCausedBySelectionEvent;
+  } else {
+    mSelectionChangeCausedOnlyBySelectionEvent =
+      mSelectionChangeCausedOnlyBySelectionEvent && aCausedBySelectionEvent;
   }
   mIsSelectionChangeEventPending = true;
 }
@@ -939,7 +950,8 @@ IMEContentObserver::FlushMergeableNotifications()
   if (mIsSelectionChangeEventPending) {
     mIsSelectionChangeEventPending = false;
     nsContentUtils::AddScriptRunner(
-      new SelectionChangeEvent(this, mSelectionChangeCausedOnlyByComposition));
+      new SelectionChangeEvent(this, mSelectionChangeCausedOnlyByComposition,
+                               mSelectionChangeCausedOnlyBySelectionEvent));
   }
 
   if (mIsPositionChangeEventPending) {
@@ -1041,7 +1053,8 @@ IMEContentObserver::SelectionChangeEvent::Run()
   }
 
   if (!IsSafeToNotifyIME()) {
-    mIMEContentObserver->PostSelectionChangeNotification(mCausedByComposition);
+    mIMEContentObserver->PostSelectionChangeNotification(
+                           mCausedByComposition, mCausedBySelectionEvent);
     return NS_OK;
   }
 
@@ -1070,6 +1083,8 @@ IMEContentObserver::SelectionChangeEvent::Run()
   notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
   notification.mSelectionChangeData.mCausedByComposition =
     mCausedByComposition;
+  notification.mSelectionChangeData.mCausedBySelectionEvent =
+    mCausedBySelectionEvent;
   IMEStateManager::NotifyIME(notification, mIMEContentObserver->mWidget);
   return NS_OK;
 }

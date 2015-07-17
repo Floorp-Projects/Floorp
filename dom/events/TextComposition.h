@@ -41,6 +41,8 @@ class TextComposition final
 public:
   typedef dom::TabParent TabParent;
 
+  static bool IsHandlingSelectionEvent() { return sHandlingSelectionEvent; }
+
   TextComposition(nsPresContext* aPresContext,
                   nsINode* aNode,
                   TabParent* aTabParent,
@@ -170,6 +172,10 @@ private:
   {
     // WARNING: mPresContext may be destroying, so, be careful if you touch it.
   }
+
+  // sHandlingSelectionEvent is true while TextComposition sends a selection
+  // event to ContentEventHandler.
+  static bool sHandlingSelectionEvent;
 
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to

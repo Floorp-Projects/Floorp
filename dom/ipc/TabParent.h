@@ -173,7 +173,8 @@ public:
                                          const bool& aCausedByComposition) override;
     virtual bool RecvNotifyIMESelectedCompositionRect(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMESelection(const ContentCache& aContentCache,
-                                        const bool& aCausedByComposition) override;
+                                        const bool& aCausedByComposition,
+                                        const bool& aCausedBySelectionEvent) override;
     virtual bool RecvUpdateContentCache(const ContentCache& aContentCache) override;
     virtual bool RecvNotifyIMEMouseButtonEvent(const widget::IMENotification& aEventMessage,
                                                bool* aConsumedByIME) override;
