@@ -83,11 +83,11 @@ function doUpdate() {
   });
 }
 
+let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
+
 // Tests the tracking protection UI in private browsing. By default, tracking protection is
 // enabled in private browsing ("privacy.trackingprotection.pbmode.enabled").
 add_task(function* test_tracking_pb() {
-  let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-
   // Load a blank page
   let browser = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id, isPrivate: true }).browser;
   yield new Promise((resolve, reject) => {
@@ -132,6 +132,35 @@ add_task(function* test_tracking_pb() {
   // Point tab to a test page NOT containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
   Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+
+  // Reset the pref before the next testcase
+  Services.prefs.clearUserPref("privacy.trackingprotection.pbmode.enabled");
+});
+
+add_task(function* test_tracking_not_pb() {
+  // Load a blank page
+  let browser = BrowserApp.addTab("about:blank", { selected: true }).browser;
+  yield new Promise((resolve, reject) => {
+    browser.addEventListener("load", function startTests(event) {
+      browser.removeEventListener("load", startTests, true);
+      Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    }, true);
+  });
+
+  // Point tab to a test page NOT containing tracking elements
+  yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
+  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+
+  // Point tab to a test page containing tracking elements (tracking protection UI *should not* be shown)
+  yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
+  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+
+  // Enable tracking protection in normal tabs
+  Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
+
+  // Point tab to a test page containing tracking elements (tracking protection UI *should* be shown)
+  yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
+  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 });
 
 run_next_test();
