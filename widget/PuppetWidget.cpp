@@ -795,7 +795,8 @@ PuppetWidget::NotifyIMEOfSelectionChange(
     aIMENotification.mSelectionChangeData.GetWritingMode());
 
   mTabChild->SendNotifyIMESelection(
-    mContentCache, aIMENotification.mSelectionChangeData.mCausedByComposition);
+    mContentCache, aIMENotification.mSelectionChangeData.mCausedByComposition,
+    aIMENotification.mSelectionChangeData.mCausedBySelectionEvent);
   return NS_OK;
 }
 
