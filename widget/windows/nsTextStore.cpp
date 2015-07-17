@@ -657,6 +657,24 @@ GetModifiersName(Modifiers aModifiers)
   return names;
 }
 
+class GetWritingModeName : public nsAutoCString
+{
+public:
+  GetWritingModeName(const WritingMode& aWritingMode)
+  {
+    if (!aWritingMode.IsVertical()) {
+      AssignLiteral("Horizontal");
+      return;
+    }
+    if (aWritingMode.IsVerticalLR()) {
+      AssignLiteral("Vertical (LR)");
+      return;
+    }
+    AssignLiteral("Vertical (RL)");
+  }
+  virtual ~GetWritingModeName() {}
+};
+
 /******************************************************************/
 /* InputScopeImpl                                                 */
 /******************************************************************/
@@ -4414,11 +4432,20 @@ nsTextStore::NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange)
 nsresult
 nsTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 {
+  const IMENotification::SelectionChangeData& selectionChangeData =
+    aIMENotification.mSelectionChangeData;
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-         ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), "
-          "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s, "
-          "mComposition.IsComposing()=%s",
-          this, mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
+         ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal("
+          "aIMENotification={ mSelectionChangeData={ mOffset=%lu, mLength=%lu, "
+          "mReversed=%s, mWritingMode=%s, mCausedByComposition=%s, "
+          "mCausedBySelectionEvent=%s } }), mSink=0x%p, mSinkMask=%s, "
+          "mIsRecordingActionsWithoutLock=%s, mComposition.IsComposing()=%s",
+          this, selectionChangeData.mOffset, selectionChangeData.mLength,
+          GetBoolName(selectionChangeData.mReversed),
+          GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
+          GetBoolName(selectionChangeData.mCausedByComposition),
+          GetBoolName(selectionChangeData.mCausedBySelectionEvent),
+          mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mIsRecordingActionsWithoutLock),
           GetBoolName(mComposition.IsComposing())));
 
@@ -4430,20 +4457,28 @@ nsTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
   }
 
   mSelection.SetSelection(
-    aIMENotification.mSelectionChangeData.mOffset,
-    aIMENotification.mSelectionChangeData.mLength,
-    aIMENotification.mSelectionChangeData.mReversed,
-    aIMENotification.mSelectionChangeData.GetWritingMode());
+    selectionChangeData.mOffset,
+    selectionChangeData.mLength,
+    selectionChangeData.mReversed,
+    selectionChangeData.GetWritingMode());
 
-  if (mIsRecordingActionsWithoutLock) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-           ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), putting off "
-            "notifying TSF of selection change...", this));
+  if (!selectionChangeData.mCausedBySelectionEvent) {
+    // Should be notified via MaybeFlushPendingNotifications() for keeping
+    // the order of change notifications.
     mPendingOnSelectionChange = true;
-    return NS_OK;
+    if (mIsRecordingActionsWithoutLock) {
+      MOZ_LOG(sTextStoreLog, LogLevel::Info,
+             ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), putting "
+              "off notifying TSF of selection change...", this));
+      return NS_OK;
+    }
+  } else {
+    // If the selection change is caused by setting selection range, we don't
+    // need to notify that.  Additionally, even if there is pending selection
+    // change notification, we don't need to notify that since the selection
+    // range is changed as expected by TSF or TIP.
+    mPendingOnSelectionChange = false;
   }
-
-  NotifyTSFOfSelectionChange();
 
   // Flush remaining pending notifications here if it's possible.
   MaybeFlushPendingNotifications();
