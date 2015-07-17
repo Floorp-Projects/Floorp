@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
+  <text x="10" y="20">
+    <tspan systemLanguage="xx" fill="red">This text shouldn't display.</tspan>
+    <tspan fill="green">This text should display.</tspan>
+  </text>
+</svg>
