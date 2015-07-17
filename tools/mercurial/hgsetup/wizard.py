@@ -229,7 +229,7 @@ class MercurialSetupWizard(object):
             return 1
         except ParseException as e:
             print('Error importing existing Mercurial config: %s\n' % config_path)
-            print(e.message)
+            print('Line %d: %s' % (e.line, e.message))
 
             return 1
 
