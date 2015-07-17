@@ -1403,10 +1403,8 @@ protected:
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
     RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
-    uint32_t mMaxFramebufferColorAttachments;
-
     GLenum LastColorAttachment() const {
-        return LOCAL_GL_COLOR_ATTACHMENT0 + mMaxFramebufferColorAttachments - 1;
+        return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
     }
 
     bool ValidateFramebufferTarget(GLenum target, const char* const info);
