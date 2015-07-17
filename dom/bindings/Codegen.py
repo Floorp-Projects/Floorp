@@ -5586,7 +5586,7 @@ def convertConstIDLValueToJSVal(value):
                IDLType.Tags.uint16, IDLType.Tags.int32]:
         return "JS::Int32Value(%s)" % (value.value)
     if tag == IDLType.Tags.uint32:
-        return "UINT_TO_JSVAL(%sU)" % (value.value)
+        return "JS::NumberValue(%sU)" % (value.value)
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:
         return "JS::CanonicalizedDoubleValue(%s)" % numericValue(tag, value.value)
     if tag == IDLType.Tags.bool:
