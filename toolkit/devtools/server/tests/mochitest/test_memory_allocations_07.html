@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1132764 - Test controlling the maximum allocations log length over the RDP.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    yield memory.attach();
+
+    var allocs = [];
+    var eventsFired = 0;
+    var intervalId = null;
+    function onAlloc () {
+      eventsFired++;
+    }
+    function startAllocating () {
+      intervalId = setInterval(() => {
+        for (var i = 100000; --i;) {
+          allocs.push(new Object());
+        }
+      }, 1);
+    }
+    function stopAllocating () {
+      clearInterval(intervalId);
+    }
+
+    memory.on("allocations", onAlloc);
+
+    yield memory.startRecordingAllocations({
+      drainAllocationsTimeout: 10
+    });
+
+    yield waitUntil(() => eventsFired > 5);
+    ok(eventsFired > 5, "Some allocation events fired without allocating much via auto drain");
+    yield memory.stopRecordingAllocations();
+
+    // Set a really high auto drain timer so we can test if
+    // it fires on GC
+    eventsFired = 0;
+    var startTime = performance.now();
+    var drainTimer = 1000000;
+    yield memory.startRecordingAllocations({
+      drainAllocationsTimeout: drainTimer
+    });
+
+    startAllocating();
+    yield waitUntil(() => {
+      Cu.forceGC();
+      return eventsFired > 1;
+    });
+    stopAllocating();
+    ok(performance.now() - drainTimer < startTime, "Allocation events fired on GC before timer");
+    yield memory.stopRecordingAllocations();
+
+    memory.off("allocations", onAlloc);
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>
