@@ -180,6 +180,11 @@ bool isIgnoredPathForImplicitCtor(const Decl *decl) {
         begin->compare_lower(StringRef("graphite2")) == 0) {
       return true;
     }
+    if (begin->compare_lower(StringRef("chromium")) == 0) {
+      // Ignore security/sandbox/chromium but not ipc/chromium.
+      ++begin;
+      return begin != end && begin->compare_lower(StringRef("sandbox")) == 0;
+    }
   }
   return false;
 }
