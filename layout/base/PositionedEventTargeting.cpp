@@ -173,21 +173,6 @@ HasTouchListener(nsIContent* aContent)
 }
 
 static bool
-IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor, nsAutoString* aLabelTargetId)
-{
-  for (nsIContent* content = aFrame->GetContent(); content;
-       content = content->GetFlattenedTreeParent()) {
-    if (aLabelTargetId && content->IsHTMLElement(nsGkAtoms::label)) {
-      content->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, *aLabelTargetId);
-    }
-    if (content == aAncestor) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool
 IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr, nsAutoString* aLabelTargetId = nullptr)
 {
   // Input events propagate up the content tree so we'll follow the content
@@ -359,8 +344,8 @@ static bool IsElementPresent(nsTArray<nsIFrame*>& aCandidates, const nsAutoStrin
 static nsIFrame*
 GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
            const nsRect& aTargetRect, const EventRadiusPrefs* aPrefs,
-           nsIFrame* aRestrictToDescendants, nsIContent* aClickableAncestor,
-           nsTArray<nsIFrame*>& aCandidates, int32_t* aElementsInCluster)
+           nsIFrame* aRestrictToDescendants, nsTArray<nsIFrame*>& aCandidates,
+           int32_t* aElementsInCluster)
 {
   nsIFrame* bestTarget = nullptr;
   // Lower is better; distance is in appunits
@@ -388,12 +373,7 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
     }
 
     nsAutoString labelTargetId;
-    if (aClickableAncestor) {
-      if (!IsDescendant(f, aClickableAncestor, &labelTargetId)) {
-        PET_LOG("  candidate %p is not a descendant of required ancestor\n", f);
-        continue;
-      }
-    } else if (!IsElementClickable(f, nsGkAtoms::body, &labelTargetId)) {
+    if (!IsElementClickable(f, nsGkAtoms::body, &labelTargetId)) {
       PET_LOG("  candidate %p was not clickable\n", f);
       continue;
     }
@@ -523,13 +503,12 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
     PET_LOG("Retargeting disabled\n");
     return target;
   }
-  nsIContent* clickableAncestor = nullptr;
   if (target && IsElementClickable(target, nsGkAtoms::body)) {
     if (!IsElementClickableAndReadable(target, aEvent, prefs)) {
       aEvent->AsMouseEventBase()->hitCluster = true;
     }
     PET_LOG("Target %p is clickable\n", target);
-    clickableAncestor = target->GetContent();
+    return target;
   }
 
   // Do not modify targeting for actual mouse hardware; only for mouse
@@ -564,8 +543,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
 
   nsIFrame* closestClickable =
     GetClosest(aRootFrame, aPointRelativeToRootFrame, targetRect, prefs,
-               restrictToDescendants, clickableAncestor, candidates,
-               &elementsInCluster);
+               restrictToDescendants, candidates, &elementsInCluster);
   if (closestClickable) {
     if ((!prefs->mTouchClusterDetectionDisabled && elementsInCluster > 1) ||
         (!IsElementClickableAndReadable(closestClickable, aEvent, prefs))) {
