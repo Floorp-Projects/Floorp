@@ -198,13 +198,15 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   HRESULT hr = decoder->Create(GetMFTGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  if (useDxva) {
-    RefPtr<IMFAttributes> attr(decoder->GetAttributes());
-
-    UINT32 aware = 0;
-    if (attr) {
+  RefPtr<IMFAttributes> attr(decoder->GetAttributes());
+  UINT32 aware = 0;
+  if (attr) {
       attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
-    }
+      attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
+                      WMFDecoderModule::GetNumDecoderThreads());
+  }
+
+  if (useDxva) {
     if (aware) {
       // TODO: Test if I need this anywhere... Maybe on Vista?
       //hr = attr->SetUINT32(CODECAPI_AVDecVideoAcceleration_H264, TRUE);
