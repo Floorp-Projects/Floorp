@@ -17,6 +17,19 @@ HOST_FINGERPRINTS = {
 }
 
 
+def config_file(files):
+    """Select the most appropriate config file from a list."""
+    if not files:
+        return None
+
+    if len(files) > 1:
+        picky = [(os.path.getsize(f), f) for f in files if os.path.isfile(f)]
+        if picky:
+            return max(picky)[1]
+
+    return files[0]
+
+
 class HgIncludeException(Exception):
     pass
 
@@ -24,27 +37,16 @@ class HgIncludeException(Exception):
 class MercurialConfig(object):
     """Interface for manipulating a Mercurial config file."""
 
-    def __init__(self, infiles=None):
+    def __init__(self, path=None):
         """Create a new instance, optionally from an existing hgrc file."""
 
-        if infiles:
-            # If multiple files were specified, figure out which file we're using:
-            if len(infiles) > 1:
-                picky_infiles = filter(os.path.isfile, infiles)
-                if picky_infiles:
-                    picky_infiles = [(os.path.getsize(path), path) for path in picky_infiles]
-                    infiles = [max(picky_infiles)[1]]
-
-            infile = infiles[0]
-            self.config_path = infile
-        else:
-            infile = None
+        self.config_path = path
 
         # Mercurial configuration files allow an %include directive to include
         # other files, this is not supported by ConfigObj, so throw a useful
         # error saying this.
-        if os.path.exists(infile):
-            with codecs.open(infile, 'r', encoding='utf-8') as f:
+        if os.path.exists(path):
+            with codecs.open(path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('%include'):
                         raise HgIncludeException(
@@ -54,7 +56,7 @@ class MercurialConfig(object):
         # have no value) from being dropped on write.
         # list_values aren't needed by Mercurial and disabling them prevents
         # quotes from being added.
-        self._c = ConfigObj(infile=infile, encoding='utf-8',
+        self._c = ConfigObj(infile=path, encoding='utf-8',
             write_empty_values=True, list_values=False)
 
     @property
