@@ -17,6 +17,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += [
     'paint_listener.js',
     'setup.js',
     'SimpleTest.js',
+    'SpawnTask.js',
     'test.css',
     'TestRunner.js',
     'WindowSnapshot.js',
