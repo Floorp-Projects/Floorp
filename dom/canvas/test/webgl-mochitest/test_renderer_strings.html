@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+function AssertError(gl, expected, info) {
+  var actual = gl.getError();
+  while (gl.getError()) {}
+
+  ok(actual == expected,
+     'For ' + info + ', expected 0x' + expected.toString(16) + ', got 0x'
+      + actual.toString(16));
+}
+
+var gl;
+
+var RENDERER_OVERRIDE = 'overridden renderer';
+var VENDOR_OVERRIDE = 'overridden vendor';
+
+function TestExt() {
+  var ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(ext, 'Should have access to \'WEBGL_debug_renderer_info\'.');
+  AssertError(gl, 0, 'start of test');
+
+  var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+  AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
+  ok(renderer,
+     'UNMASKED_RENDERER_WEBGL value should not be empty, was \'' + renderer + '\'');
+
+  var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+  AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
+  ok(vendor, 'UNMASKED_VENDOR_WEBGL value should not be empty, was \'' + vendor + '\'');
+
+  var prefArrArr = [
+    ['webgl.renderer-string-override', RENDERER_OVERRIDE],
+    ['webgl.vendor-string-override', VENDOR_OVERRIDE],
+  ];
+  var prefEnv = {'set': prefArrArr};
+  SpecialPowers.pushPrefEnv(prefEnv, TestOverrides);
+}
+
+function TestOverrides() {
+  var ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(ext, 'Should have access to \'WEBGL_debug_renderer_info\'.');
+  AssertError(gl, 0, 'start of test');
+
+  var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+  AssertError(gl, 0, 'UNMASKED_RENDERER_WEBGL');
+  ok(renderer == RENDERER_OVERRIDE,
+     'UNMASKED_RENDERER_WEBGL value should be \'' + RENDERER_OVERRIDE + '\', was \''
+     + renderer + '\'');
+
+  var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+  AssertError(gl, 0, 'UNMASKED_VENDOR_WEBGL');
+  ok(vendor == VENDOR_OVERRIDE,
+     'UNMASKED_VENDOR_WEBGL value should be \'' + VENDOR_OVERRIDE + '\', was \'' + vendor
+     + '\'');
+
+  var prefArrArr = [
+    ['webgl.disable-debug-renderer-info', true],
+  ];
+  var prefEnv = {'set': prefArrArr};
+  SpecialPowers.pushPrefEnv(prefEnv, TestDisable);
+}
+
+function TestDisable() {
+  var ext = gl.getExtension('WEBGL_debug_renderer_info');
+  ok(!ext, 'Should not have access to \'WEBGL_debug_renderer_info\'.');
+
+  ok(true, 'Test complete.');
+  SimpleTest.finish();
+}
+
+(function() {
+  var canvas = document.createElement('canvas');
+  gl = canvas.getContext('experimental-webgl');
+  if (!gl) {
+    todo(gl, 'Get WebGL working here first.');
+    ok(true, 'Test complete.');
+    return;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  var prefArrArr = [
+    ['webgl.disable-debug-renderer-info', false],
+  ];
+  var prefEnv = {'set': prefArrArr};
+  SpecialPowers.pushPrefEnv(prefEnv, TestExt);
+})();
+
+</script>
+</body>
+</html>
