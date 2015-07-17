@@ -259,8 +259,6 @@ public:
     }
 };
 
-////////////////////////////////////////
-
 } // namespace webgl
 } // namespace mozilla
 
