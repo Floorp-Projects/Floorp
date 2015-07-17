@@ -39,21 +39,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     var t = new TestInterfaceJS();
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = "http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html";
+    var parentFrame = asyncStack ? "Async*@" + ourFile + ":110:1\n" : "";
 
     Promise.all([
       t.testPromiseWithThrowingChromePromiseInit().then(
           ensurePromiseFail.bind(null, 1),
-          checkExn.bind(null, 44, "NS_ERROR_UNEXPECTED", "", undefined,
+          checkExn.bind(null, 45, "NS_ERROR_UNEXPECTED", "", undefined,
                         ourFile, 1,
-                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:44:7\n")),
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:45:7\n" +
+                        parentFrame)),
       t.testPromiseWithThrowingContentPromiseInit(function() {
           thereIsNoSuchContentFunction1();
         }).then(
           ensurePromiseFail.bind(null, 2),
-          checkExn.bind(null, 50, "ReferenceError",
+          checkExn.bind(null, 52, "ReferenceError",
                         "thereIsNoSuchContentFunction1 is not defined",
                         undefined, ourFile, 2,
-                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:50:11\ndoTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:49:7\n")),
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:52:11\ndoTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:51:7\n" +
+                        parentFrame)),
       t.testPromiseWithThrowingChromeThenFunction().then(
           ensurePromiseFail.bind(null, 3),
           checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 3, "")),
@@ -61,10 +64,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           thereIsNoSuchContentFunction2();
         }).then(
           ensurePromiseFail.bind(null, 4),
-          checkExn.bind(null, 61, "ReferenceError",
+          checkExn.bind(null, 64, "ReferenceError",
                         "thereIsNoSuchContentFunction2 is not defined",
                         undefined, ourFile, 4,
-                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\n" + (asyncStack ? "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:60:7\n" : ""))),
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:64:11\n" +
+                        "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:63:7\n" +
+                        parentFrame)),
       t.testPromiseWithThrowingChromeThenable().then(
           ensurePromiseFail.bind(null, 5),
           checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 5, "")),
@@ -72,22 +77,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
             then: function() { thereIsNoSuchContentFunction3(); }
         }).then(
           ensurePromiseFail.bind(null, 6),
-          checkExn.bind(null, 72, "ReferenceError",
+          checkExn.bind(null, 77, "ReferenceError",
                         "thereIsNoSuchContentFunction3 is not defined",
                         undefined, ourFile, 6,
-                        "doTest/<.then@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:72:32\n")),
+                        "doTest/<.then@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:77:32\n")),
       t.testPromiseWithDOMExceptionThrowingPromiseInit().then(
           ensurePromiseFail.bind(null, 7),
-          checkExn.bind(null, 79, "NotFoundError",
+          checkExn.bind(null, 84, "NotFoundError",
                         "We are a second DOMException",
                         DOMException.NOT_FOUND_ERR, ourFile, 7,
-                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:79:7\n")),
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:84:7\n" +
+                        parentFrame)),
       t.testPromiseWithDOMExceptionThrowingThenFunction().then(
           ensurePromiseFail.bind(null, 8),
-          checkExn.bind(null, asyncStack ? 85 : 0, "NetworkError",
+          checkExn.bind(null, asyncStack ? 91 : 0, "NetworkError",
                          "We are a third DOMException",
                         DOMException.NETWORK_ERR, asyncStack ? ourFile : "", 8,
-                        asyncStack ? "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:85:7\n" : "")),
+                        (asyncStack ? "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:91:7\n" +
+                         parentFrame : ""))),
       t.testPromiseWithDOMExceptionThrowingThenable().then(
           ensurePromiseFail.bind(null, 9),
           checkExn.bind(null, 0, "TypeMismatchError",

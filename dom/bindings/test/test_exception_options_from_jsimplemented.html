@@ -15,6 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
   SimpleTest.waitForExplicitFinish();
 
   function doTest() {
+    var file = location.href;
+
     var t = new TestInterfaceJS();
     try {
       t.testThrowError();
@@ -25,12 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.name, "Error", "Should not have an interesting name here");
       is(e.message, "We are an Error", "Should have the right message");
       is(e.stack,
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:20:7\n",
+         `doTest@${file}:22:7\nAsync*@${file}:137:1\n`,
          "Exception stack should still only show our code");
       is(e.fileName,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should have the right file name");
-      is(e.lineNumber, 20, "Should have the right line number");
+      is(e.lineNumber, 22, "Should have the right line number");
       is(e.columnNumber, 7, "Should have the right column number");
     }
 
@@ -45,12 +47,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.code, DOMException.NOT_SUPPORTED_ERR,
          "Should have the right 'code'");
       is(e.stack,
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:38:7\n",
+         `doTest@${file}:40:7\nAsync*@${file}:137:1\n`,
          "Exception stack should still only show our code");
       is(e.filename,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should still have the right file name");
-      is(e.lineNumber, 38, "Should still have the right line number");
+      is(e.lineNumber, 40, "Should still have the right line number");
       todo_isnot(e.columnNumber, 0,
                  "No column number support for DOMException yet");
     }
@@ -65,12 +67,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.message, "We are a TypeError",
          "Should also have the right message (2)");
       is(e.stack,
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:59:7\n",
+         `doTest@${file}:61:7\nAsync*@${file}:137:1\n`,
          "Exception stack for TypeError should only show our code");
       is(e.fileName,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should still have the right file name for TypeError");
-      is(e.lineNumber, 59, "Should still have the right line number for TypeError");
+      is(e.lineNumber, 61, "Should still have the right line number for TypeError");
       is(e.columnNumber, 7, "Should have the right column number for TypeError");
     }
 
@@ -84,14 +86,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.message, "missing argument 0 when calling function Array.indexOf",
          "Should also have the right message (3)");
       is(e.stack,
-         "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:78:45\n" +
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:78:7\n"
-  ,
+         `doTest/<@${file}:80:45\ndoTest@${file}:80:7\nAsync*@${file}:137:1\n`,
          "Exception stack for TypeError should only show our code (3)");
       is(e.fileName,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should still have the right file name for TypeError (3)");
-      is(e.lineNumber, 78, "Should still have the right line number for TypeError (3)");
+      is(e.lineNumber, 80, "Should still have the right line number for TypeError (3)");
       is(e.columnNumber, 45, "Should have the right column number for TypeError (3)");
     }
 
@@ -104,10 +104,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (4)");
       is(e.message, "", "Message should be sanitized (5)");
       is(e.stack,
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:99:7\n",
+         `doTest@${file}:99:7\nAsync*@${file}:137:1\n`,
          "Exception stack for sanitized exception should only show our code (4)");
       is(e.filename,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should still have the right file name for sanitized exception (4)");
       is(e.lineNumber, 99, "Should still have the right line number for sanitized exception (4)");
       todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (4)");
@@ -122,10 +122,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       is(e.name, "NS_ERROR_UNEXPECTED", "Name should be sanitized (5)");
       is(e.message, "", "Message should be sanitized (5)");
       is(e.stack,
-         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:117:7\n",
+         `doTest@${file}:117:7\nAsync*@${file}:137:1\n`,
          "Exception stack for sanitized exception should only show our code (5)");
       is(e.filename,
-         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         file,
          "Should still have the right file name for sanitized exception (5)");
       is(e.lineNumber, 117, "Should still have the right line number for sanitized exception (5)");
       todo_isnot(e.columnNumber, 0, "Should have the right column number for sanitized exception (5)");

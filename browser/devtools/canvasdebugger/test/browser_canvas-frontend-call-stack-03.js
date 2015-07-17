@@ -40,8 +40,10 @@ function* ifTestingSupported() {
     "There should be a stack container available now for the draw call.");
   is($(".call-item-stack", callItem.target).hidden, false,
     "The stack container should now be visible.");
-  is($all(".call-item-stack-fn", callItem.target).length, 4,
-    "There should be 4 functions on the stack for the draw call.");
+  // We may have more than 4 functions, depending on whether async
+  // stacks are available.
+  ok($all(".call-item-stack-fn", callItem.target).length >= 4,
+     "There should be at least 4 functions on the stack for the draw call.");
 
   EventUtils.sendMouseEvent({ type: "dblclick" }, contents, window);
 
@@ -53,8 +55,10 @@ function* ifTestingSupported() {
     "There should still be a stack container available for the draw call.");
   is($(".call-item-stack", callItem.target).hidden, true,
     "The stack container should now be hidden.");
-  is($all(".call-item-stack-fn", callItem.target).length, 4,
-    "There should still be 4 functions on the stack for the draw call.");
+  // We may have more than 4 functions, depending on whether async
+  // stacks are available.
+  ok($all(".call-item-stack-fn", callItem.target).length >= 4,
+     "There should still be at least 4 functions on the stack for the draw call.");
 
   yield teardown(panel);
   finish();

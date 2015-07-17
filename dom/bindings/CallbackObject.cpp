@@ -43,6 +43,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCreationStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mIncumbentJSGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -166,6 +167,16 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
     if (!allowed) {
       return;
+    }
+  }
+
+  mAsyncStack.emplace(cx, aCallback->GetCreationStack());
+  if (*mAsyncStack) {
+    mAsyncCause.emplace(cx, JS_NewStringCopyZ(cx, aExecutionReason));
+    if (*mAsyncCause) {
+      mAsyncStackSetter.emplace(cx, *mAsyncStack, *mAsyncCause);
+    } else {
+      JS_ClearPendingException(cx);
     }
   }
 

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1142577
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1142577 - Async stacks for setTimeout</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1142577">Mozilla Bug 1142577</a>
+  <pre id="stack"></pre>
+  <iframe id="iframe"></iframe>
+  <script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var otherGlobal = document.getElementById("iframe").contentWindow;
+
+  function getFunctionName(frame) {
+    return frame.slice(0, frame.indexOf("@"));
+  }
+
+  function a() { b() }
+  function b() { c() }
+  function c() { otherGlobal.setTimeout(d, 1) }
+  function d() { e() }
+  function e() { f() }
+  function f() { otherGlobal.setTimeout(g, 1) }
+  function g() { h() }
+  function h() { i() }
+  function i() {
+    var stackString = Error().stack;
+    document.getElementById("stack").textContent = stackString;
+
+    var frames = stackString
+            .split("\n")
+            .map(getFunctionName)
+            .filter(function (name) { return !!name; });
+
+    is(frames[0], "i");
+    is(frames[1], "h");
+    is(frames[2], "g");
+    is(frames[3], "setTimeout handler*f");
+    is(frames[4], "e");
+    is(frames[5], "d");
+    is(frames[6], "setTimeout handler*c");
+    is(frames[7], "b");
+    is(frames[8], "a");
+    // One extra frame due to pushPrefEnv.
+    is(frames.length, 10);
+
+    SimpleTest.finish();
+  }
+
+  SpecialPowers.pushPrefEnv(
+    {"set": [['javascript.options.asyncstack', true]]},
+    a);
+  </script>
+</body>
+</html>
