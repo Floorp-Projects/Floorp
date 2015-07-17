@@ -5182,6 +5182,17 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a
     // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
+    if (aIsWithinSVGText) {
+      // SVGTextFrame doesn't handle conditional processing attributes,
+      // so don't create frames for descendants of <text> with failing
+      // attributes.  We need frames not to be created so that text layout
+      // is correct.
+      return &sSuppressData;
+    }
+    // If we're not inside <text>, create an nsSVGContainerFrame (which is a
+    // frame that doesn't render) so that paint servers can still be referenced,
+    // even if they live inside an element with failing conditional processing
+    // attributes.
     return &sContainerData;
   }
 
