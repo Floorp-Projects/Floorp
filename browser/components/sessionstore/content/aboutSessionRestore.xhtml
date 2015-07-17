@@ -27,7 +27,7 @@
 
   <body dir="&locale.dir;">
 
-    <div class="container flex">
+    <div class="container restore-chosen">
 
       <div class="title">
         <h1 class="title-text">&restorepage.errorTitle;</h1>
@@ -43,10 +43,10 @@
           </ul>
         </div>
       </div>
-      <div class="tree-container">
+      <div class="tree-container" available="true">
         <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
               onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
-              available="true" _window_label="&restorepage.windowLabel;">
+              _window_label="&restorepage.windowLabel;">
           <xul:treecols>
             <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
             <xul:splitter class="tree-splitter"/>
