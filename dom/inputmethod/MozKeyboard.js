@@ -740,13 +740,15 @@ MozInputContext.prototype = {
 
   sendKey: function ic_sendKey(keyCode, charCode, modifiers, repeat) {
     let self = this;
+
+    // XXX: modifiers are ignored in this API method.
+
     return this._sendPromise(function(resolverId) {
       cpmmSendAsyncMessageWithKbID(self, 'Keyboard:SendKey', {
         contextId: self._contextId,
         requestId: resolverId,
         keyCode: keyCode,
         charCode: charCode,
-        modifiers: modifiers,
         repeat: repeat
       });
     });
