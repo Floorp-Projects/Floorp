@@ -19,11 +19,16 @@ RemoteCanvas.prototype.load = function(callback) {
   iframe.src = this.url;
   var me = this;
   iframe.addEventListener("load", function() {
+    info("iframe loaded");
     var m = iframe.contentDocument.getElementById("av");
     m.addEventListener("progress", function(aEvent) {
       var v = aEvent.target;
       var b = v.buffered;
+      info("progress event: " + b.length + " buffered ranges, duration is " + v.duration);
+      if (b.length)
+        info("buffer 0 end: " + b.end(0));
       if (b.length == 1 && b.end(0) == v.duration) {
+        info("done");
         m.removeEventListener("progress", arguments.callee, false);
         setTimeout(function() {
           me.remotePageLoaded(callback);
