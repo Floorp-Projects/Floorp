@@ -57,16 +57,16 @@ BEGIN_TEST(testParseJSON_success)
     expected.setInt32(-1);
     CHECK(TryParse(cx, "-1", expected));
 
-    expected = DOUBLE_TO_JSVAL(1);
+    expected.setDouble(1);
     CHECK(TryParse(cx, "1", expected));
 
-    expected = DOUBLE_TO_JSVAL(1.75);
+    expected.setDouble(1.75);
     CHECK(TryParse(cx, "1.75", expected));
 
-    expected = DOUBLE_TO_JSVAL(9e9);
+    expected.setDouble(9e9);
     CHECK(TryParse(cx, "9e9", expected));
 
-    expected = DOUBLE_TO_JSVAL(std::numeric_limits<double>::infinity());
+    expected.setDouble(std::numeric_limits<double>::infinity());
     CHECK(TryParse(cx, "9e99999", expected));
 
     JS::Rooted<JSFlatString*> str(cx);
