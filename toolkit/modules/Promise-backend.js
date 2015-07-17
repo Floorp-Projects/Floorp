@@ -43,6 +43,10 @@
 let Cu = this.require ? require("chrome").Cu : Components.utils;
 let Cc = this.require ? require("chrome").Cc : Components.classes;
 let Ci = this.require ? require("chrome").Ci : Components.interfaces;
+// If we can access Components, then we use it to capture an async
+// parent stack trace; see scheduleWalkerLoop.  However, as it might
+// not be available (see above), users of this must check it first.
+let Components_ = this.require ? require("chrome").components : Components;
 
 // If Cu is defined, use it to lazily define the FinalizationWitnessService.
 if (Cu) {
@@ -737,7 +741,15 @@ this.PromiseWalker = {
     // If Cu is defined, this file is loaded on the main thread. Otherwise, it
     // is loaded on the worker thread.
     if (Cu) {
-      DOMPromise.resolve().then(() => this.walkerLoop());
+      let stack = Components_ ? Components_.stack : null;
+      if (stack) {
+        DOMPromise.resolve().then(() => {
+          Cu.callFunctionWithAsyncStack(this.walkerLoop.bind(this), stack,
+                                        "Promise")
+        });
+      } else {
+        DOMPromise.resolve().then(() => this.walkerLoop());
+      }
     } else {
       setImmediate(this.walkerLoop);
     }
