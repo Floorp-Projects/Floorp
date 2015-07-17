@@ -94,8 +94,7 @@ add_task(function* search() {
   let data = {
     engineName: engine.name,
     searchString: "ContentSearchTest",
-    healthReportKey: "ContentSearchTest",
-    searchPurpose: "ContentSearchTest",
+    whence: "ContentSearchTest",
   };
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
@@ -117,8 +116,7 @@ add_task(function* searchInBackgroundTab() {
   let data = {
     engineName: engine.name,
     searchString: "ContentSearchTest",
-    healthReportKey: "ContentSearchTest",
-    searchPurpose: "ContentSearchTest",
+    whence: "ContentSearchTest",
   };
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
