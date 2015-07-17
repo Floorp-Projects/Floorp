@@ -22,6 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
   var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
                       .getService(Components.interfaces.nsIEventListenerService);
 
+  const Ci = Components.interfaces;
+
   function dummyListener() {}
 
   var runningTest = null;
@@ -35,29 +37,49 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
       d.addEventListener("foo", dummyListener);
       d.addEventListener("foo", dummyListener);
       xhr.addEventListener("foo", dummyListener);
-      tests[0] = [d, xhr];
+      tests[0] = [{target: d, listeners: ["onfoo"]},
+                  {target: xhr, listeners: ["onfoo"]}];
+    },
+    function() {
+      d.addEventListener("bar", dummyListener);
+      d.addEventListener("baz", dummyListener);
+      xhr.addEventListener("bar", dummyListener);
+      xhr.addEventListener("baz", dummyListener);
+      tests[0] = [{target: d, listeners: ["onbaz", "onbar"]},
+                  {target: xhr, listeners: ["onbaz", "onbar"]}];
     },
     function() {
       d.onclick = dummyListener;
       d.onclick = dummyListener;
       xhr.onload = dummyListener;
-      tests[0] = [d, xhr];
+      tests[0] = [{target: d, listeners: ["onclick"]},
+                  {target: xhr, listeners: ["onload"]}];
     },
     function() {
       d.onclick = function() {};
-      tests[0] = [d];
+      tests[0] = [{target: d, listeners: ["onclick"]}];
     },
     function() {
       d.removeEventListener("foo", dummyListener);
       d.removeEventListener("foo", dummyListener);
       xhr.removeEventListener("foo", dummyListener);
-      tests[0] = [d, xhr];
+      tests[0] = [{target: d, listeners: ["onfoo"]},
+                  {target: xhr, listeners: ["onfoo"]}];
+    },
+    function() {
+      d.removeEventListener("bar", dummyListener);
+      d.removeEventListener("baz", dummyListener);
+      xhr.removeEventListener("bar", dummyListener);
+      xhr.removeEventListener("baz", dummyListener);
+      tests[0] = [{target: d, listeners: ["onbar", "onbaz"]},
+                  {target: xhr, listeners: ["onbar", "onbaz"]}];
     },
     function() {
       d.onclick = null;
       d.onclick = null;
       xhr.onload = null;
-      tests[0] = [d, xhr];
+      tests[0] = [{target: d, listeners: ["onclick"]},
+                  {target: xhr, listeners: ["onload"]}];
     },
     function() {
       els.removeListenerChangeListener(changeListener);
@@ -76,29 +98,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
     if (typeof tests[0] == "function") {
       return;
     }
-    var expectedEventTargets = tests[0];
-    var e = array.enumerate();
+    var expectedEventChanges = tests[0];
+    var eventChanges = array.enumerate();
     var i = 0;
-    while (e.hasMoreElements()) {
+    while (eventChanges.hasMoreElements() && i < expectedEventChanges.length) {
       var current;
       try {
-        current = e.getNext();
+        current = eventChanges.getNext().QueryInterface(Ci.nsIEventListenerChange);
+        var expected = expectedEventChanges[i];
+
+        if (current.target == expected.target) {
+          // expected.target.listeners should be a subset of
+          // current.changedListenerNames if all expected listener changes were
+          // sent. We may get random other event listener changes here too, not
+          // just the one from the test.
+          is(current.target, expected.target, current.target + " = " + expected.target);
+
+          var eNames = current.changedListenerNames.enumerate();
+          var listeners = [];
+          while (eNames.hasMoreElements()) {
+            var listenerName = eNames.getNext().QueryInterface(Ci.nsIAtom).toString();
+            listeners.push(listenerName);
+          }
+          var matchAll = expected.listeners.every(function(val)
+                                                { return listeners.indexOf(val) >= 0; });
+          if (!matchAll)
+            return;
+          ++i;
+        }
       } catch(ex) {
         continue;
       }
-      var expected = expectedEventTargets[i];
-      if (current == expected) {
-        is(current, expected, current + " = " + expected);
-        // We may get random other event listener changes here too, not just the one from the
-        // test.
-        ++i
-      }
     }
-    if (expectedEventTargets.length != i) {
+    if (expectedEventChanges.length != i) {
       return;
     }
 
-    is(expectedEventTargets.length, i, "Should have got notification for all the changes.");
+    is(expectedEventChanges.length, i, "Should have got notification for all the changes.");
     tests.shift();
 
     ok(tests.length);
