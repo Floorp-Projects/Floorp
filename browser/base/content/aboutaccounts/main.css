@@ -52,7 +52,20 @@ header h1
   font-size: 24px;
   font-weight: 200;
   line-height: 1em;
+}
+
+#intro header h1 {
   margin: 0 0 32px 0;
+}
+
+#manage header h1 {
+  margin: 0 0 12px 0;
+}
+
+#manage header #email {
+  margin-bottom: 23px;
+  color: rgb(138, 155, 168);
+  font-size: 19px;
 }
 
 .description {

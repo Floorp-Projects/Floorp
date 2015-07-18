@@ -1904,6 +1904,8 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 {
     JS_CHECK_RECURSION(cx, return false);
 
+ restart:
+
     switch (pn->getKind()) {
       // Trivial cases with no side effects.
       case PNK_NEWTARGET:
@@ -2151,6 +2153,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_IF:
       case PNK_CONDITIONAL:
         MOZ_ASSERT(pn->isArity(PN_TERNARY));
         if (!checkSideEffects(pn->pn_kid1, answer))
@@ -2161,22 +2164,8 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
             return false;
         if (*answer)
             return true;
-        return checkSideEffects(pn->pn_kid3, answer);
-
-      case PNK_IF:
-        MOZ_ASSERT(pn->isArity(PN_TERNARY));
-        if (!checkSideEffects(pn->pn_kid1, answer))
-            return false;
-        if (*answer)
-            return true;
-        if (!checkSideEffects(pn->pn_kid2, answer))
-            return false;
-        if (*answer)
-            return true;
-        if (ParseNode* elseNode = pn->pn_kid3) {
-            if (!checkSideEffects(elseNode, answer))
-                return false;
-        }
+        if ((pn = pn->pn_kid3))
+            goto restart;
         return true;
 
       // Function calls can invoke non-local code.
