@@ -12,28 +12,11 @@
 
 namespace mozilla {
 
-void
-AutoGlobalTimelineMarker::PopulateDocShells()
-{
-  const LinkedList<nsDocShell::ObservedDocShell>& docShells =
-    nsDocShell::GetObservedDocShells();
-  MOZ_ASSERT(!docShells.isEmpty());
-
-  for (const nsDocShell::ObservedDocShell* ds = docShells.getFirst();
-       ds;
-       ds = ds->getNext()) {
-    mOk = mDocShells.append(**ds);
-    if (!mOk) {
-      return;
-    }
-  }
-}
-
 AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mOk(true)
+  : mName(aName)
   , mDocShells()
-  , mName(aName)
+  , mDocShellsRetrieved(false)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
@@ -42,8 +25,8 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
     return;
   }
 
-  PopulateDocShells();
-  if (!mOk) {
+  mDocShellsRetrieved = TimelineConsumers::GetKnownDocShells(mDocShells);
+  if (!mDocShellsRetrieved) {
     // If we don't successfully populate our vector with *all* docshells being
     // observed, don't add markers to *any* of them.
     return;
@@ -58,7 +41,7 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
 {
-  if (!mOk) {
+  if (!mDocShellsRetrieved) {
     return;
   }
 
