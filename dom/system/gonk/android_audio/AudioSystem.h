@@ -239,7 +239,7 @@ typedef enum {
 
 #if ANDROID_VERSION < 17
 typedef enum {
-    /* output devices */      
+    /* output devices */
     AUDIO_DEVICE_OUT_EARPIECE                  = 0x1,
     AUDIO_DEVICE_OUT_SPEAKER                   = 0x2,
     AUDIO_DEVICE_OUT_WIRED_HEADSET             = 0x4,
@@ -299,7 +299,7 @@ typedef enum {
     AUDIO_DEVICE_IN_FM_RX                 = 0x20000000,
     AUDIO_DEVICE_IN_FM_RX_A2DP            = 0x40000000,
     AUDIO_DEVICE_IN_DEFAULT               = 0x80000000,
-    
+
     AUDIO_DEVICE_IN_ALL     = (AUDIO_DEVICE_IN_COMMUNICATION |
                                AUDIO_DEVICE_IN_AMBIENT |
                                AUDIO_DEVICE_IN_BUILTIN_MIC |
@@ -550,7 +550,7 @@ typedef uint32_t audio_devices_t;
 typedef enum {
     AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE,
     AUDIO_POLICY_DEVICE_STATE_AVAILABLE,
-    
+
     AUDIO_POLICY_DEVICE_STATE_CNT,
     AUDIO_POLICY_DEVICE_STATE_MAX = AUDIO_POLICY_DEVICE_STATE_CNT - 1,
 } audio_policy_dev_state_t;

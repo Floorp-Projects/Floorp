@@ -27,9 +27,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsJSUtils.h"
-#include "nsIAudioManager.h"
 #include "SpeakerManagerService.h"
-#define NS_AUDIOMANAGER_CONTRACTID "@mozilla.org/telephony/audiomanager;1"
 #endif
 
 #include "mozilla/Preferences.h"
@@ -459,47 +457,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     mWindows.Clear();
     Shutdown();
-  }
-
-#ifdef MOZ_WIDGET_GONK
-  // To process the volume control on each audio channel according to
-  // change of settings
-  else if (!strcmp(aTopic, "mozsettings-changed")) {
-    RootedDictionary<SettingChangeNotification> setting(nsContentUtils::RootingCxForThread());
-    if (!WrappedJSToDictionary(aSubject, setting)) {
-      return NS_OK;
-    }
-    if (!StringBeginsWith(setting.mKey, NS_LITERAL_STRING("audio.volume."))) {
-      return NS_OK;
-    }
-    if (!setting.mValue.isNumber()) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIAudioManager> audioManager = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(audioManager, NS_OK);
-
-    int32_t index = setting.mValue.toNumber();
-    if (setting.mKey.EqualsLiteral("audio.volume.content")) {
-      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Content, index);
-    } else if (setting.mKey.EqualsLiteral("audio.volume.notification")) {
-      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Notification, index);
-    } else if (setting.mKey.EqualsLiteral("audio.volume.alarm")) {
-      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Alarm, index);
-    } else if (setting.mKey.EqualsLiteral("audio.volume.telephony")) {
-      audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Telephony, index);
-    } else if (!setting.mKey.EqualsLiteral("audio.volume.bt_sco")) {
-      // bt_sco is not a valid audio channel so we manipulate it in
-      // AudioManager.cpp. And the others should not be used.
-      // We didn't use MOZ_CRASH or MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE here
-      // because any web content who has permission of mozSettings can set any
-      // names then it can be easy to crash the B2G.
-      NS_WARNING("unexpected audio channel for volume control");
-    }
-  }
-#endif
-
-  else if (!strcmp(aTopic, "outer-window-destroyed")) {
+  } else if (!strcmp(aTopic, "outer-window-destroyed")) {
     nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
     NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
 
@@ -538,9 +496,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       mSpeakerManager[i]->SetAudioChannelActive(active);
     }
 #endif
-  }
-
-  else if (!strcmp(aTopic, "ipc:content-shutdown")) {
+  } else if (!strcmp(aTopic, "ipc:content-shutdown")) {
     nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
     if (!props) {
       NS_WARNING("ipc:content-shutdown message without property bag as subject");
