@@ -27,11 +27,13 @@ class BaseRunner(object):
     output_timeout = None
 
     def __init__(self, app_ctx=None, profile=None, clean_profile=True, env=None,
-                 process_class=None, process_args=None, symbols_path=None, dump_save_path=None):
+                 process_class=None, process_args=None, symbols_path=None,
+                 dump_save_path=None, addons=None):
         self.app_ctx = app_ctx or DefaultContext()
 
         if isinstance(profile, basestring):
-            self.profile = self.app_ctx.profile_class(profile=profile)
+            self.profile = self.app_ctx.profile_class(profile=profile,
+                                                      addons=addons)
         else:
             self.profile = profile or self.app_ctx.profile_class(**getattr(self.app_ctx, 'profile_args', {}))
 

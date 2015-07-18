@@ -32,13 +32,14 @@ class GeckoInstance(object):
                       "focusmanager.testmode": True,
                       "startup.homepage_welcome_url": "about:blank"}
 
-    def __init__(self, host, port, bin, profile=None, app_args=None, symbols_path=None,
-                  gecko_log=None, prefs=None):
+    def __init__(self, host, port, bin, profile=None, addons=None,
+                 app_args=None, symbols_path=None, gecko_log=None, prefs=None):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
         # Check if it is a Profile object or a path to profile
         self.profile = None
+        self.addons = addons
         if isinstance(profile, Profile):
             self.profile = profile
         else:
@@ -77,6 +78,8 @@ class GeckoInstance(object):
                 "devtools.debugger.prompt-connection": False,
                 "marionette.debugging.clicktostart": True,
             })
+        if self.addons:
+            profile_args['addons'] = self.addons
 
         if hasattr(self, "profile_path") and self.profile is None:
             if not self.profile_path:
