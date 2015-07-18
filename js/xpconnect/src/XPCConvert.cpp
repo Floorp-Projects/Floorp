@@ -460,7 +460,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         break;
     }
     case nsXPTType::T_JSVAL :
-        *((jsval*)d) = s;
+        *((Value*)d) = s;
         break;
     case nsXPTType::T_VOID:
         XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
@@ -969,7 +969,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
                                nsISupports* data,
                                nsIException** exceptn,
                                JSContext* cx,
-                               jsval* jsExceptionPtr)
+                               Value* jsExceptionPtr)
 {
     MOZ_ASSERT(!cx == !jsExceptionPtr, "Expected cx and jsExceptionPtr to cooccur.");
 
@@ -1159,7 +1159,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
                                       nullptr, exceptn, cx, s.address());
         else {
             // XXX all this nsISupportsDouble code seems a little redundant
-            // now that we're storing the jsval in the exception...
+            // now that we're storing the Value in the exception...
             nsISupportsDouble* data;
             nsCOMPtr<nsIComponentManager> cm;
             if (NS_FAILED(NS_GetComponentManager(getter_AddRefs(cm))) || !cm ||

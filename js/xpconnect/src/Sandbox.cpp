@@ -110,7 +110,7 @@ xpc::NewSandboxConstructor()
 }
 
 static bool
-SandboxDump(JSContext* cx, unsigned argc, jsval* vp)
+SandboxDump(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -147,7 +147,7 @@ SandboxDump(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-SandboxDebug(JSContext* cx, unsigned argc, jsval* vp)
+SandboxDebug(JSContext* cx, unsigned argc, Value* vp)
 {
 #ifdef DEBUG
     return SandboxDump(cx, argc, vp);
@@ -299,7 +299,7 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     return true;
 }
 
-static bool SandboxFetchPromise(JSContext* cx, unsigned argc, jsval* vp)
+static bool SandboxFetchPromise(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
@@ -323,7 +323,7 @@ SandboxCreateFetch(JSContext* cx, HandleObject obj)
 }
 
 static bool
-SandboxIsProxy(JSContext* cx, unsigned argc, jsval* vp)
+SandboxIsProxy(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
@@ -350,7 +350,7 @@ SandboxIsProxy(JSContext* cx, unsigned argc, jsval* vp)
  *                         [optional] object options)
  */
 static bool
-SandboxExportFunction(JSContext* cx, unsigned argc, jsval* vp)
+SandboxExportFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 2) {
@@ -363,7 +363,7 @@ SandboxExportFunction(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-SandboxCreateObjectIn(JSContext* cx, unsigned argc, jsval* vp)
+SandboxCreateObjectIn(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
@@ -389,7 +389,7 @@ SandboxCreateObjectIn(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-SandboxCloneInto(JSContext* cx, unsigned argc, jsval* vp)
+SandboxCloneInto(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 2) {
