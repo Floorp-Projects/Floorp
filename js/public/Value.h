@@ -1940,13 +1940,6 @@ static_assert(sizeof(LayoutAlignmentTester) == 16,
 
 } // namespace JS
 
-/*
- * JS::Value and jsval are the same type; jsval is the old name, kept around
- * for backwards compatibility along with all the JSVAL_* operations below.
- * jsval_layout is an implementation detail and should not be used externally.
- */
-typedef JS::Value jsval;
-
 static_assert(sizeof(jsval_layout) == sizeof(JS::Value),
               "jsval_layout and JS::Value must have identical layouts");
 

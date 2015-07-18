@@ -63,7 +63,7 @@ static const ValueOperand softfpReturnOperand = ValueOperand(v1, v0);
 
 static Register CallReg = t9;
 static const int defaultShift = 3;
-static_assert(1 << defaultShift == sizeof(jsval), "The defaultShift is wrong");
+static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
 class MacroAssemblerMIPS : public Assembler
 {
