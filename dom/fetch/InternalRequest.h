@@ -34,7 +34,7 @@ namespace dom {
  * beacon            | TYPE_BEACON
  * cspreport         | TYPE_CSP_REPORT
  * download          |
- * embed             | TYPE_OBJECT
+ * embed             | TYPE_INTERNAL_EMBED
  * eventsource       |
  * favicon           |
  * fetch             | TYPE_FETCH
@@ -49,7 +49,7 @@ namespace dom {
  * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
  * location          |
  * manifest          | TYPE_WEB_MANIFEST
- * object            | TYPE_OBJECT
+ * object            | TYPE_INTERNAL_OBJECT
  * ping              | TYPE_PING
  * plugin            | TYPE_OBJECT_SUBREQUEST
  * prefetch          |
@@ -74,7 +74,6 @@ namespace dom {
  * TODO: Add a content type for form
  * TODO: Add a content type for favicon
  * TODO: Add a content type for download
- * TODO: Split TYPE_OBJECT into TYPE_EMBED and TYPE_OBJECT
  */
 
 class Request;
