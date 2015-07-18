@@ -232,12 +232,17 @@ public:
     TraverseDecl(ctx.getTranslationUnitDecl());
   }
 
-  static bool hasCustomAnnotation(const Decl *d, const char *spelling) {
-    AnnotateAttr *attr = d->getAttr<AnnotateAttr>();
-    if (!attr)
-      return false;
+  static bool hasCustomAnnotation(const Decl *D, const char *Spelling) {
+    iterator_range<specific_attr_iterator<AnnotateAttr> > Attrs =
+      D->specific_attrs<AnnotateAttr>();
 
-    return attr->getAnnotation() == spelling;
+    for (AnnotateAttr *Attr : Attrs) {
+      if (Attr->getAnnotation() == Spelling) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void HandleUnusedExprResult(const Stmt *stmt) {
