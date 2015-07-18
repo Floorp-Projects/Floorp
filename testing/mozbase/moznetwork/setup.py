@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.26'
+PACKAGE_VERSION = '0.27'
 
 deps = ['mozinfo',
         'mozlog >= 3.0',

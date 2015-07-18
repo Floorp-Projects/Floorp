@@ -7,7 +7,7 @@ from __future__ import print_function
 import os, re, sys
 from subprocess import Popen, PIPE
 
-from tests import TestCase
+from tests import RefTestCase
 
 
 def split_path_into_dirs(path):
@@ -168,13 +168,13 @@ def _build_manifest_script_entry(script_name, test):
         line.append(test.comment)
     return ' '.join(line)
 
-def _map_prefixes_left(test_list):
+def _map_prefixes_left(test_gen):
     """
     Splits tests into a dictionary keyed on the first component of the test
     path, aggregating tests with a common base path into a list.
     """
     byprefix = {}
-    for t in test_list:
+    for t in test_gen:
         left, sep, remainder = t.path.partition(os.sep)
         if left not in byprefix:
             byprefix[left] = []
@@ -183,14 +183,14 @@ def _map_prefixes_left(test_list):
         byprefix[left].append(t)
     return byprefix
 
-def _emit_manifest_at(location, relative, test_list, depth):
+def _emit_manifest_at(location, relative, test_gen, depth):
     """
     location  - str: absolute path where we want to write the manifest
     relative  - str: relative path from topmost manifest directory to current
-    test_list - [str]: list of all test paths and directorys
+    test_gen  - (str): generator of all test paths and directorys
     depth     - int: number of dirs we are below the topmost manifest dir
     """
-    manifests = _map_prefixes_left(test_list)
+    manifests = _map_prefixes_left(test_gen)
 
     filename = os.path.join(location, 'jstests.list')
     manifest = []
@@ -223,8 +223,8 @@ def _emit_manifest_at(location, relative, test_list, depth):
     finally:
         fp.close()
 
-def make_manifests(location, test_list):
-    _emit_manifest_at(location, '', test_list, 0)
+def make_manifests(location, test_gen):
+    _emit_manifest_at(location, '', test_gen, 0)
 
 def _find_all_js_files(base, location):
     for root, dirs, files in os.walk(location):
@@ -362,7 +362,7 @@ def count_tests(location, requested_paths, excluded_paths):
     return count
 
 
-def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
+def load_reftests(location, requested_paths, excluded_paths, xul_tester, reldir=''):
     """
     Locates all tests by walking the filesystem starting at |location|.
     Uses xul_tester to evaluate any test conditions in the test header.
@@ -379,12 +379,12 @@ def load(location, requested_paths, excluded_paths, xul_tester, reldir=''):
         filename = os.path.join(root, basename)
         if not _is_test_file(root, basename, filename, requested_paths, excluded_paths):
             continue
-        
+
         # Skip empty files.
         fullpath = os.path.join(location, filename)
         statbuf = os.stat(fullpath)
 
-        testcase = TestCase(os.path.join(reldir, filename))
+        testcase = RefTestCase(os.path.join(reldir, filename))
         _apply_external_manifests(filename, testcase, externalManifestEntries,
                                   xul_tester)
         _parse_test_header(fullpath, testcase, xul_tester)
