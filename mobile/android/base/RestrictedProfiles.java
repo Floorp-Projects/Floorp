@@ -64,7 +64,7 @@ public class RestrictedProfiles {
      * Others are specific to us.
      * These constants should be in sync with the ones from toolkit/components/parentalcontrols/nsIParentalControlServices.idl
      */
-    public static enum Restriction {
+    public enum Restriction {
         DISALLOW_DOWNLOADS(1, "no_download_files"),
         DISALLOW_INSTALL_EXTENSION(2, "no_install_extensions"),
         DISALLOW_INSTALL_APPS(3, "no_install_apps"), // UserManager.DISALLOW_INSTALL_APPS
@@ -82,7 +82,7 @@ public class RestrictedProfiles {
         public final int id;
         public final String name;
 
-        private Restriction(final int id, final String name) {
+        Restriction(final int id, final String name) {
             this.id = id;
             this.name = name;
         }
@@ -105,7 +105,8 @@ public class RestrictedProfiles {
     // Restricted profiles will automatically have these restrictions by default
     private static List<Restriction> defaultRestrictionsOfRestrictedProfiles = Arrays.asList(
         Restriction.DISALLOW_TOOLS_MENU,
-        Restriction.DISALLOW_REPORT_SITE_ISSUE
+        Restriction.DISALLOW_REPORT_SITE_ISSUE,
+        Restriction.DISALLOW_IMPORT_SETTINGS
     );
 
     private static Restriction geckoActionToRestriction(int action) {
@@ -138,11 +139,6 @@ public class RestrictedProfiles {
         // so no action can be restricted.
         if (Versions.preJBMR2) {
             return false;
-        }
-
-        // Hardcoded restrictions. Make restrictions configurable and read from UserManager (Bug 1180653)
-        if (isUserRestricted(context) && defaultRestrictionsOfRestrictedProfiles.contains(Restriction.DISALLOW_TOOLS_MENU)) {
-            return true;
         }
 
         return getRestrictions(context).getBoolean(name, false);
@@ -236,6 +232,11 @@ public class RestrictedProfiles {
             }
 
             return !restrictionsOfGuestProfile.contains(restriction);
+        }
+
+        // Hardcoded restrictions. Make restrictions configurable and read from UserManager (Bug 1180653)
+        if (isUserRestricted(context) && defaultRestrictionsOfRestrictedProfiles.contains(restriction)) {
+            return false;
         }
 
         // NOTE: Restrictions hold the opposite intention, so we need to flip it.
