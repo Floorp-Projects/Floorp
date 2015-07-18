@@ -142,7 +142,30 @@ struct TupleImpl<Index, HeadT, TailT...>
     , mHead(Head(aOther)) {}
   TupleImpl(TupleImpl&& aOther)
     : Base(Move(Tail(aOther)))
-    , mHead(Move(Head(aOther))) {}
+    , mHead(Forward<HeadT>(Head(aOther))) {}
+
+  // Assign from a tuple whose elements are convertible to the elements
+  // of this tuple.
+  template <typename... OtherElements,
+            typename = typename EnableIf<
+                sizeof...(OtherElements) == sizeof...(TailT) + 1>::Type>
+  TupleImpl& operator=(const TupleImpl<Index, OtherElements...>& aOther)
+  {
+    typedef TupleImpl<Index, OtherElements...> OtherT;
+    Head(*this) = OtherT::Head(aOther);
+    Tail(*this) = OtherT::Tail(aOther);
+    return *this;
+  }
+  template <typename... OtherElements,
+            typename = typename EnableIf<
+                sizeof...(OtherElements) == sizeof...(TailT) + 1>::Type>
+  TupleImpl& operator=(TupleImpl<Index, OtherElements...>&& aOther)
+  {
+    typedef TupleImpl<Index, OtherElements...> OtherT;
+    Head(*this) = Move(OtherT::Head(aOther));
+    Tail(*this) = Move(OtherT::Tail(aOther));
+    return *this;
+  }
 
   // Copy and move assignment operators.
   TupleImpl& operator=(const TupleImpl& aOther)
@@ -195,6 +218,22 @@ public:
   Tuple(const Tuple& aOther) : Impl(aOther) { }
   Tuple(Tuple&& aOther) : Impl(Move(aOther)) { }
 
+  template <typename... OtherElements,
+            typename = typename EnableIf<
+                sizeof...(OtherElements) == sizeof...(Elements)>::Type>
+  Tuple& operator=(const Tuple<OtherElements...>& aOther)
+  {
+    static_cast<Impl&>(*this) = aOther;
+    return *this;
+  }
+  template <typename... OtherElements,
+            typename = typename EnableIf<
+                sizeof...(OtherElements) == sizeof...(Elements)>::Type>
+  Tuple& operator=(Tuple<OtherElements...>&& aOther)
+  {
+    static_cast<Impl&>(*this) = Move(aOther);
+    return *this;
+  }
   Tuple& operator=(const Tuple& aOther)
   {
     static_cast<Impl&>(*this) = aOther;
@@ -294,6 +333,25 @@ template<typename... Elements>
 Tuple<Elements...> MakeTuple(Elements&&... aElements)
 {
   return Tuple<Elements...>(Forward<Elements>(aElements)...);
+}
+
+/**
+ * A convenience function for constructing a tuple of references to a
+ * sequence of variables. Since assignments to the elements of the tuple
+ * "go through" to the referenced variables, this can be used to "unpack"
+ * a tuple into individual variables.
+ *
+ * Example:
+ *
+ * int i;
+ * float f;
+ * char c;
+ * Tie(i, f, c) = FunctionThatReturnsATuple();
+ */
+template<typename... Elements>
+Tuple<Elements&...> Tie(Elements&... aVariables)
+{
+  return Tuple<Elements&...>(aVariables...);
 }
 
 } // namespace mozilla
