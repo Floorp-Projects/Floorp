@@ -170,7 +170,8 @@ inline uint_fast8_t
 CountLeadingZeroes32(uint32_t aValue)
 {
   unsigned long index;
-  _BitScanReverse(&index, static_cast<unsigned long>(aValue));
+  if (!_BitScanReverse(&index, static_cast<unsigned long>(aValue)))
+      return 32;
   return uint_fast8_t(31 - index);
 }
 
@@ -179,7 +180,8 @@ inline uint_fast8_t
 CountTrailingZeroes32(uint32_t aValue)
 {
   unsigned long index;
-  _BitScanForward(&index, static_cast<unsigned long>(aValue));
+  if (!_BitScanForward(&index, static_cast<unsigned long>(aValue)))
+      return 32;
   return uint_fast8_t(index);
 }
 
@@ -202,7 +204,8 @@ CountLeadingZeroes64(uint64_t aValue)
 {
 #if defined(MOZ_BITSCAN_WINDOWS64)
   unsigned long index;
-  _BitScanReverse64(&index, static_cast<unsigned __int64>(aValue));
+  if (!_BitScanReverse64(&index, static_cast<unsigned __int64>(aValue)))
+      return 64;
   return uint_fast8_t(63 - index);
 #else
   uint32_t hi = uint32_t(aValue >> 32);
@@ -218,7 +221,8 @@ CountTrailingZeroes64(uint64_t aValue)
 {
 #if defined(MOZ_BITSCAN_WINDOWS64)
   unsigned long index;
-  _BitScanForward64(&index, static_cast<unsigned __int64>(aValue));
+  if (!_BitScanForward64(&index, static_cast<unsigned __int64>(aValue)))
+      return 64;
   return uint_fast8_t(index);
 #else
   uint32_t lo = uint32_t(aValue);

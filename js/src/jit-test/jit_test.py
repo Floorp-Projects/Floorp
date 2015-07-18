@@ -209,7 +209,7 @@ def main(argv):
               file=sys.stderr)
         sys.exit(0)
 
-    test_list = [jittests.Test.from_file(_, options) for _ in test_list]
+    test_list = [jittests.JitTest.from_file(_, options) for _ in test_list]
 
     if not options.run_slow:
         test_list = [_ for _ in test_list if not _.slow]
