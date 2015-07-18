@@ -361,7 +361,7 @@ class SIMDObject : public JSObject
   public:
     static const Class class_;
     static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
-    static bool toString(JSContext* cx, unsigned int argc, jsval* vp);
+    static bool toString(JSContext* cx, unsigned int argc, Value* vp);
 };
 
 // These classes exist for use with templates below.

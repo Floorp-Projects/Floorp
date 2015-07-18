@@ -17,7 +17,7 @@ class AtomicsObject : public JSObject
   public:
     static const Class class_;
     static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
-    static bool toString(JSContext* cx, unsigned int argc, jsval* vp);
+    static bool toString(JSContext* cx, unsigned int argc, Value* vp);
 
     // Defined return values for futexWait.
     // The error values must be negative because APIs such as futexWaitOrRequeue

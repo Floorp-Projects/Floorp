@@ -8,7 +8,7 @@
 #include "jsapi-tests/tests.h"
 
 static bool
-constructHook(JSContext* cx, unsigned argc, jsval* vp)
+constructHook(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = CallArgsFromVp(argc, vp);
 

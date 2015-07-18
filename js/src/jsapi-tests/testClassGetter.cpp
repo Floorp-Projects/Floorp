@@ -19,7 +19,7 @@ static bool test_prop_get( JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 }
 
 static bool
-PTest(JSContext* cx, unsigned argc, jsval* vp);
+PTest(JSContext* cx, unsigned argc, JS::Value* vp);
 
 static const JSClass ptestClass = {
     "PTest",
@@ -31,7 +31,7 @@ static const JSClass ptestClass = {
 };
 
 static bool
-PTest(JSContext* cx, unsigned argc, jsval* vp)
+PTest(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     JSObject* obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
@@ -40,7 +40,7 @@ PTest(JSContext* cx, unsigned argc, jsval* vp)
     args.rval().setObject(*obj);
     return true;
 }
-static bool test_fn(JSContext* cx, unsigned argc, jsval* vp)
+static bool test_fn(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     called_test_fn++;
     return true;
