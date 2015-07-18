@@ -1,7 +1,7 @@
-<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <style>
     g {
       stroke: ButtonText;
@@ -21,8 +21,12 @@
       display: initial;
     }
 
-    .highlight > g {
+    [id$="-highlight"] > g {
       stroke: HighlightText;
+    }
+
+    [id$="-white"] > g {
+      stroke: #fff;
     }
   </style>
   <g id="close">
@@ -39,8 +43,13 @@
     <rect x="1.5" y="3.5" width="7" height="7"/>
     <polyline points="3.5,3.5 3.5,1.5 10.5,1.5 10.5,8.5 8.5,8.5"/>
   </g>
-  <use id="close-highlight" class="highlight" xlink:href="#close"/>
-  <use id="maximize-highlight" class="highlight" xlink:href="#maximize"/>
-  <use id="minimize-highlight" class="highlight" xlink:href="#minimize"/>
-  <use id="restore-highlight" class="highlight" xlink:href="#restore"/>
+  <use id="close-highlight" xlink:href="#close"/>
+  <use id="maximize-highlight" xlink:href="#maximize"/>
+  <use id="minimize-highlight" xlink:href="#minimize"/>
+  <use id="restore-highlight" xlink:href="#restore"/>
+
+  <use id="close-white" xlink:href="#close"/>
+  <use id="maximize-white" xlink:href="#maximize"/>
+  <use id="minimize-white" xlink:href="#minimize"/>
+  <use id="restore-white" xlink:href="#restore"/>
 </svg>
