@@ -32,11 +32,10 @@ class MOZ_STACK_CLASS AutoTimelineMarker
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
-  // The name of the marker we are adding.
+  nsRefPtr<nsDocShell> mDocShell;
   const char* mName;
 
-  // The docshell that is associated with this marker.
-  nsRefPtr<nsDocShell> mDocShell;
+  bool DocShellIsRecording(nsDocShell& aDocShell);
 
 public:
   explicit AutoTimelineMarker(nsIDocShell* aDocShell, const char* aName
