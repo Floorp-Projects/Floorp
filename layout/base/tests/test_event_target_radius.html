@@ -38,8 +38,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div class="target" style="left:0; top:210px;" id="t5_below" onmousedown="x=1" hidden></div>
 
   <div class="target" id="t6" onmousedown="x=1" hidden>
-    <div id="t6_inner" style="position:absolute; left:-20px; top:20px; width:60px; height:60px; background:yellow;"></div>
+    <div id="t6_inner" style="position:absolute; left:-40px; top:20px; width:60px; height:60px; background:yellow;"></div>
   </div>
+  <div id="t6_outer" style="position:absolute; left:160px; top:120px; width:60px; height:60px; background:green;" onmousedown="x=1" hidden></div>
 
   <div class="target" id="t7" onmousedown="x=1" hidden></div>
   <div class="target" id="t7_over" hidden></div>
@@ -187,13 +188,20 @@ function test3() {
   // Test behavior of nested elements.
   // The following behaviors are questionable and may need to be changed.
   setShowing("t6", true);
+  setShowing("t6_outer", true);
   testMouseClick("t6_inner", -1, 10, "t6_inner",
     "inner element is clickable because its parent is, even when it sticks outside parent");
-  testMouseClick("t6_inner", 19, -1, "t6_inner",
+  testMouseClick("t6_inner", 39, -1, "t6_inner",
     "when outside both inner and parent, but in range of both, the inner is selected");
-  testMouseClick("t6_inner", 25, -1, "t6",
-    "clicking in clickable parent close to inner activates parent, not inner");
+  testMouseClick("t6_inner", 45, -1, "t6_inner",
+    "clicking in clickable parent close to inner activates inner, not parent");
+  ok(13*mm < 80, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
+  testMouseClick("t6_outer", -40 + 13*mm, -1, "t6",
+    "clicking in clickable container close to outer activates parent, not outer");
+  testMouseClick("t6_outer", 1, 1, "t6_outer",
+    "clicking directly on the outer activates it");
   setShowing("t6", false);
+  setShowing("t6_outer", false);
 
   setShowing("t7", true);
   setShowing("t7_over", true);

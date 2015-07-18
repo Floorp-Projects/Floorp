@@ -13,7 +13,9 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsURLHelper.h"
 #include "nsIStreamConverterService.h"
+#include "nsIPackagedAppService.h"
 #include <algorithm>
+#include "nsHttp.h"
 
 //
 // Helper function for determining the length of data bytes up to
@@ -470,6 +472,11 @@ nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
     //  and OnStopRequest() call combinations. We call of series of these for each sub-part
     //  in the raw stream.
     mFinalListener = aListener;
+
+    nsCOMPtr<nsIPackagedAppService> pas(do_QueryInterface(aCtxt));
+    if (pas) {
+        mPackagedApp = true;
+    }
     return NS_OK;
 }
 
@@ -732,11 +739,15 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-type"), delimiter);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv) && !mPackagedApp) {
+            return rv;
+        }
     } else {
         // try asking the channel directly
         rv = channel->GetContentType(delimiter);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        if (NS_FAILED(rv) && !mPackagedApp) {
+            return NS_ERROR_FAILURE;
+        }
     }
 
     // http://www.w3.org/TR/web-packaging/#streamable-package-format
@@ -745,13 +756,22 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // the content of the file.
     if (delimiter.Find("application/package") != kNotFound) {
         mPackagedApp = true;
+        mHasAppContentType = true;
         mToken.Truncate();
         mTokenLen = 0;
     }
 
     bndry = strstr(delimiter.BeginWriting(), "boundary");
 
-    if (!bndry && mPackagedApp) {
+    bool requestSucceeded = true;
+    if (httpChannel) {
+        httpChannel->GetRequestSucceeded(&requestSucceeded);
+    }
+
+    // If the package has the appropriate content type, or if it is a successful
+    // packaged app request, without the required content type, there's no need
+    // for a boundary to be included in this header.
+    if (!bndry && (mHasAppContentType || (mPackagedApp && requestSucceeded))) {
         return NS_OK;
     }
 
@@ -775,9 +795,9 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     mToken = boundaryString;
     mTokenLen = boundaryString.Length();
 
-   if (mTokenLen == 0 && !mPackagedApp) {
-       return NS_ERROR_FAILURE;
-   }
+    if (mTokenLen == 0 && !mPackagedApp) {
+        return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }
@@ -841,6 +861,7 @@ nsMultiMixedConv::nsMultiMixedConv() :
     mTotalSent          = 0;
     mIsByteRangeRequest = false;
     mPackagedApp        = false;
+    mHasAppContentType  = false;
 }
 
 nsMultiMixedConv::~nsMultiMixedConv() {
@@ -870,7 +891,9 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIStreamListener> partListener(mFinalListener);
-    if (mContentType.IsEmpty()) {
+    // For packaged apps that don't have a content type we want to just
+    // go ahead and serve them with an empty content type
+    if (mContentType.IsEmpty() && !mPackagedApp) {
         mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
         nsCOMPtr<nsIStreamConverterService> serv =
             do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
@@ -1065,6 +1088,17 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             // examine header
             if (headerStr.LowerCaseEqualsLiteral("content-type")) {
                 mContentType = headerVal;
+
+                // If the HTTP channel doesn't have an application/package
+                // content type we still want to serve the resource, but with the
+                // "application/octet-stream" header, so we prevent execution of
+                // unsafe content
+                if (mPackagedApp && !mHasAppContentType) {
+                    mContentType = APPLICATION_OCTET_STREAM;
+                    mResponseHead->SetHeader(mozilla::net::nsHttp::Content_Type,
+                                             mContentType);
+                    mResponseHead->SetContentType(mContentType);
+                }
             } else if (headerStr.LowerCaseEqualsLiteral("content-length")) {
                 mContentLength = nsCRT::atoll(headerVal.get());
             } else if (headerStr.LowerCaseEqualsLiteral("content-disposition")) {

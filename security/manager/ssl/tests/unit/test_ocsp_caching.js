@@ -19,6 +19,16 @@ function respondWithGoodOCSP(request, response) {
   response.write(gGoodOCSPResponse);
 }
 
+function respondWithSHA1OCSP(request, response) {
+  do_print("returning 200 OK with sha-1 delegated response");
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/ocsp-response");
+
+  let args = [ ["good-delegated", "localhostAndExampleCom", "delegatedSHA1Signer" ] ];
+  let responses = generateOCSPResponses(args, "tlsserver");
+  response.write(responses[0]);
+}
+
 function respondWithError(request, response) {
   do_print("returning 500 Internal Server Error");
   response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
@@ -180,6 +190,27 @@ function add_tests() {
                 SEC_ERROR_REVOKED_CERTIFICATE, [],
                 "Stapled Revoked response -> a fetch should not have been" +
                 " attempted");
+
+  //---------------------------------------------------------------------------
+
+  // Ensure OCSP responses from signers with SHA1 certificates are OK. This
+  // is included in the OCSP caching tests since there were OCSP cache-related
+  // regressions when sha-1 telemetry probes were added.
+  add_test(function() {
+    clearOCSPCache();
+    // set security.OCSP.require so that checking the OCSP signature fails
+    Services.prefs.setBoolPref("security.OCSP.require", true);
+    run_next_test();
+  });
+
+  add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
+                [respondWithSHA1OCSP],
+                "signing cert is good (though sha1) - should succeed");
+
+  add_test(function() {
+    Services.prefs.setBoolPref("security.OCSP.require", false);
+    run_next_test();
+  });
 
   //---------------------------------------------------------------------------
 

@@ -45,7 +45,7 @@ def get_jitflags(variant, **kwargs):
         return kwargs['none']
     return JITFLAGS[variant]
 
-class Test(object):
+class RefTest(object):
     """A runnable test."""
     def __init__(self, path):
         self.path = path     # str:  path of JS file relative to tests root dir
@@ -59,19 +59,19 @@ class Test(object):
         if path == '':
             return ['-f', 'shell.js']
         head, base = os.path.split(path)
-        return Test.prefix_command(head) \
+        return RefTest.prefix_command(head) \
             + ['-f', os.path.join(path, 'shell.js')]
 
     def get_command(self, prefix):
         dirname, filename = os.path.split(self.path)
         cmd = prefix + self.jitflags + self.options \
-              + Test.prefix_command(dirname) + ['-f', self.path]
+              + RefTest.prefix_command(dirname) + ['-f', self.path]
         return cmd
 
-class TestCase(Test):
+class RefTestCase(RefTest):
     """A test case consisting of a test and an expected result."""
     def __init__(self, path):
-        Test.__init__(self, path)
+        RefTest.__init__(self, path)
         self.enable = True   # bool: True => run test, False => don't run
         self.expect = True   # bool: expected result, True => pass
         self.random = False  # bool: True => ignore output as 'random'
