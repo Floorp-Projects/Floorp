@@ -21,24 +21,26 @@ TimelineConsumers::GetOrCreateObservedDocShellsList()
 }
 
 void
-TimelineConsumers::AddConsumer(nsDocShell* aDocShell,
-                               UniquePtr<ObservedDocShell>& aObservedPtr)
+TimelineConsumers::AddConsumer(nsDocShell* aDocShell)
 {
-  MOZ_ASSERT(!aObservedPtr);
+  UniquePtr<ObservedDocShell>& observed = aDocShell->mObserved;
+
+  MOZ_ASSERT(!observed);
   sActiveConsumers++;
-  aObservedPtr.reset(new ObservedDocShell(aDocShell));
-  GetOrCreateObservedDocShellsList().insertFront(aObservedPtr.get());
+  observed.reset(new ObservedDocShell(aDocShell));
+  GetOrCreateObservedDocShellsList().insertFront(observed.get());
 }
 
 void
-TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell,
-                                  UniquePtr<ObservedDocShell>& aObservedPtr)
+TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell)
 {
-  MOZ_ASSERT(aObservedPtr);
+  UniquePtr<ObservedDocShell>& observed = aDocShell->mObserved;
+
+  MOZ_ASSERT(observed);
   sActiveConsumers--;
-  aObservedPtr.get()->ClearMarkers();
-  aObservedPtr.get()->remove();
-  aObservedPtr.reset(nullptr);
+  observed.get()->ClearMarkers();
+  observed.get()->remove();
+  observed.reset(nullptr);
 }
 
 bool
@@ -61,6 +63,48 @@ TimelineConsumers::GetKnownDocShells(Vector<nsRefPtr<nsDocShell>>& aStore)
   }
 
   return true;
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
+                                        UniquePtr<TimelineMarker>&& aMarker)
+{
+  if (aDocShell->IsObserved()) {
+    aDocShell->mObserved->AddMarker(Move(aMarker));
+  }
+}
+
+void
+TimelineConsumers::AddMarkerForDocShell(nsDocShell* aDocShell,
+                                        const char* aName, TracingMetadata aMetaData)
+{
+  if (aDocShell->IsObserved()) {
+    aDocShell->mObserved->AddMarker(aName, aMetaData);
+  }
+}
+
+void
+TimelineConsumers::AddMarkerToDocShellsList(Vector<nsRefPtr<nsDocShell>>& aDocShells,
+                                            const char* aName, TracingMetadata aMetaData)
+{
+  for (Vector<nsRefPtr<nsDocShell>>::Range range = aDocShells.all();
+       !range.empty();
+       range.popFront()) {
+    AddMarkerForDocShell(range.front(), aName, aMetaData);
+  }
+}
+
+void
+TimelineConsumers::AddMarkerToAllObservedDocShells(const char* aName, TracingMetadata aMetaData)
+{
+  Vector<nsRefPtr<nsDocShell>> docShells;
+  if (!GetKnownDocShells(docShells)) {
+    // If we don't successfully populate our vector with *all* docshells being
+    // observed, don't add the marker to *any* of them.
+    return;
+  }
+
+  AddMarkerToDocShellsList(docShells, aName, aMetaData);
 }
 
 } // namespace mozilla

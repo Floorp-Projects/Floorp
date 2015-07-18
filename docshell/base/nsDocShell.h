@@ -258,16 +258,22 @@ public:
   // is no longer applied
   void NotifyAsyncPanZoomStopped();
 
-  // Add new profile timeline markers to this docShell. This will only add
-  // markers if the docShell is currently recording profile timeline markers.
-  // See nsIDocShell::recordProfileTimelineMarkers
-  void AddProfileTimelineMarker(const char* aName, TracingMetadata aMetaData);
-  void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>&& aMarker);
-
 private:
   // An observed docshell wrapper is created when recording markers is enabled.
   mozilla::UniquePtr<mozilla::ObservedDocShell> mObserved;
   bool IsObserved() const { return !!mObserved; }
+
+  // It is necessary to allow adding a timeline marker wherever a docshell
+  // instance is available. This operation happens frequently and needs to
+  // be very fast, so instead of using a Map or having to search for some
+  // docshell-specific markers storage, a pointer to an `ObservedDocShell` is
+  // is stored on docshells directly.
+  friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell* aDocShell);
+  friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell);
+  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
+    nsDocShell* aDocShell, UniquePtr<TimelineMarker>&& aMarker);
+  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
+    nsDocShell* aDocShell, const char* aName, TracingMetadata aMetaData);
 
 public:
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
