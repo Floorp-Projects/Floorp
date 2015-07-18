@@ -23,6 +23,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/TimelineConsumers.h"
 
 #include "EventListenerService.h"
 #include "nsCOMArray.h"
@@ -1124,7 +1125,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
           nsCOMPtr<nsIDocShell> docShell;
           bool isTimelineRecording = false;
           if (mIsMainThreadELM &&
-              nsDocShell::gProfileTimelineRecordingsCount > 0 &&
+              !TimelineConsumers::IsEmpty() &&
               listener->mListenerType != Listener::eNativeListener) {
             docShell = GetDocShellForTarget();
             if (docShell) {
