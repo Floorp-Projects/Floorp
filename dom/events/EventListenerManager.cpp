@@ -23,7 +23,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/TimelineConsumers.h"
 
 #include "EventListenerService.h"
 #include "nsCOMArray.h"
@@ -1123,7 +1122,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
           nsCOMPtr<nsIDocShell> docShell;
           bool isTimelineRecording = false;
           if (mIsMainThreadELM &&
-              !TimelineConsumers::IsEmpty() &&
+              nsDocShell::gProfileTimelineRecordingsCount > 0 &&
               listener->mListenerType != Listener::eNativeListener) {
             docShell = GetDocShellForTarget();
             if (docShell) {
@@ -1138,7 +1137,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               mozilla::UniquePtr<TimelineMarker> marker =
                 MakeUnique<EventTimelineMarker>(ds, TRACING_INTERVAL_START,
                                                 phase, typeStr);
-              TimelineConsumers::AddMarkerForDocShell(ds, Move(marker));
+              ds->AddProfileTimelineMarker(Move(marker));
             }
           }
 
@@ -1149,7 +1148,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
           if (isTimelineRecording) {
             nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
-            TimelineConsumers::AddMarkerForDocShell(ds, "DOMEvent", TRACING_INTERVAL_END);
+            ds->AddProfileTimelineMarker("DOMEvent", TRACING_INTERVAL_END);
           }
         }
       }

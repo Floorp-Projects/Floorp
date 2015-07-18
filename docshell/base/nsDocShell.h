@@ -34,8 +34,6 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "timeline/TimelineMarker.h"
-#include "timeline/TimelineConsumers.h"
-#include "timeline/ObservedDocShell.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -258,24 +256,53 @@ public:
   // is no longer applied
   void NotifyAsyncPanZoomStopped();
 
+  // Add new profile timeline markers to this docShell. This will only add
+  // markers if the docShell is currently recording profile timeline markers.
+  // See nsIDocShell::recordProfileTimelineMarkers
+  void AddProfileTimelineMarker(const char* aName, TracingMetadata aMetaData);
+  void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>&& aMarker);
+
+  // Global counter for how many docShells are currently recording profile
+  // timeline markers
+  static unsigned long gProfileTimelineRecordingsCount;
+
+  class ObservedDocShell : public mozilla::LinkedListElement<ObservedDocShell>
+  {
+  public:
+    explicit ObservedDocShell(nsDocShell* aDocShell)
+      : mDocShell(aDocShell)
+    { }
+
+    nsDocShell* operator*() const { return mDocShell.get(); }
+
+  private:
+    nsRefPtr<nsDocShell> mDocShell;
+  };
+
 private:
-  // An observed docshell wrapper is created when recording markers is enabled.
-  mozilla::UniquePtr<mozilla::ObservedDocShell> mObserved;
+  static mozilla::LinkedList<ObservedDocShell>* gObservedDocShells;
+
+  static mozilla::LinkedList<ObservedDocShell>& GetOrCreateObservedDocShells()
+  {
+    if (!gObservedDocShells) {
+      gObservedDocShells = new mozilla::LinkedList<ObservedDocShell>();
+    }
+    return *gObservedDocShells;
+  }
+
+  // Never null if timeline markers are being observed.
+  mozilla::UniquePtr<ObservedDocShell> mObserved;
+
+  // Return true if timeline markers are being observed for this docshell. False
+  // otherwise.
   bool IsObserved() const { return !!mObserved; }
 
-  // It is necessary to allow adding a timeline marker wherever a docshell
-  // instance is available. This operation happens frequently and needs to
-  // be very fast, so instead of using a Map or having to search for some
-  // docshell-specific markers storage, a pointer to an `ObservedDocShell` is
-  // is stored on docshells directly.
-  friend void mozilla::TimelineConsumers::AddConsumer(nsDocShell* aDocShell);
-  friend void mozilla::TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell);
-  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, UniquePtr<TimelineMarker>&& aMarker);
-  friend void mozilla::TimelineConsumers::AddMarkerForDocShell(
-    nsDocShell* aDocShell, const char* aName, TracingMetadata aMetaData);
-
 public:
+  static const mozilla::LinkedList<ObservedDocShell>& GetObservedDocShells()
+  {
+    return GetOrCreateObservedDocShells();
+  }
+
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
   static void CopyFavicon(nsIURI* aOldURI,
                           nsIURI* aNewURI,
@@ -982,6 +1009,11 @@ private:
   // A depth count of how many times NotifyRunToCompletionStart
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
+
+  nsTArray<mozilla::UniquePtr<TimelineMarker>> mProfileTimelineMarkers;
+
+  // Get rid of all the timeline markers accumulated so far
+  void ClearProfileTimelineMarkers();
 
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
