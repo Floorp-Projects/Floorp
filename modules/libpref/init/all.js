@@ -4991,3 +4991,8 @@ pref("memory.report_concurrency", 1);
 // Desktop probably doesn't have swapped-out children like that.
 pref("memory.report_concurrency", 10);
 #endif
+
+// Make <audio>, <video>, NPAPI plugins and webAudio talk to the AudioChannelService.
+pref("media.useAudioChannelService", true);
+// Add Mozilla AudioChannel APIs.
+pref("media.useAudioChannelAPI", false);

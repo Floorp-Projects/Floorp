@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(60da41b4-cdc2-11e2-8a91-10bf48d64bd4)]
+[scriptable, builtinclass, uuid(df31c280-1ef1-11e5-867f-0800200c9a66)]
 interface nsIAudioManager : nsISupports
 {
   /**
@@ -52,8 +52,12 @@ interface nsIAudioManager : nsISupports
   void setForceForUse(in long usage, in long force);
   long getForceForUse(in long usage);
 
-  /* The range of volume index is from 0 to N. Ex: 0 ~ 15 */
-  void setAudioChannelVolume(in long channel, in long index);
-  long getAudioChannelVolume(in long channel);
-  long getMaxAudioChannelVolume(in long channel);
+  /**
+   * These functions would be used when we enable the new volume control API
+   * (mozAudioChannelManager). The range of volume index is from 0 to N.
+   * More details on : https://gist.github.com/evanxd/41d8e2d91c5201a42bfa
+   */
+  void setAudioChannelVolume(in unsigned long channel, in unsigned long index);
+  unsigned long getAudioChannelVolume(in unsigned long channel);
+  unsigned long getMaxAudioChannelVolume(in unsigned long channel);
 };
