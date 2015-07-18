@@ -322,7 +322,7 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
     if (!scriptEval.StartEvaluating(aJSObj))
         return NS_ERROR_FAILURE;
 
-    // Wrap the string in a jsval after the AutoScriptEvaluate, so that the
+    // Wrap the string in a Value after the AutoScriptEvaluate, so that the
     // resulting value ends up in the correct compartment.
     nsStringBuffer* buf;
     RootedValue value(cx);
@@ -943,8 +943,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 const XPTMethodDescriptor* info_,
                                 nsXPTCMiniVariant* nativeParams)
 {
-    jsval* sp = nullptr;
-    jsval* argv = nullptr;
+    Value* sp = nullptr;
+    Value* argv = nullptr;
     uint8_t i;
     nsresult retval = NS_ERROR_FAILURE;
     bool success;
