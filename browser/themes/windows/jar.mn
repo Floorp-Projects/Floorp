@@ -136,8 +136,8 @@ browser.jar:
         skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
         skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
         skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
-        skin/classic/browser/urlbar-arrow.png
-        skin/classic/browser/urlbar-arrow@2x.png
+        skin/classic/browser/urlbar-arrow.png                        (../shared/urlbar-arrow.png)
+        skin/classic/browser/urlbar-arrow@2x.png                     (../shared/urlbar-arrow@2x.png)
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
         skin/classic/browser/urlbar-history-dropmarker@2x.png
@@ -318,6 +318,8 @@ browser.jar:
         skin/classic/browser/tabbrowser/newtab-XPVista7@2x.png       (tabbrowser/newtab-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
         skin/classic/browser/tabbrowser/newtab-inverted@2x.png       (tabbrowser/newtab-inverted@2x.png)
+        skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.png (tabbrowser/newtab-inverted-XPVista7.png)
+        skin/classic/browser/tabbrowser/newtab-inverted-XPVista7@2x.png (tabbrowser/newtab-inverted-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
@@ -365,6 +367,8 @@ browser.jar:
         skin/classic/browser/translation-16@2x.png                  (../shared/translation/translation-16@2x.png)
         skin/classic/browser/devedition/search.svg                  (../shared/devedition/search.svg)
         skin/classic/browser/devedition/urlbar-history-dropmarker.svg            (../shared/devedition/urlbar-history-dropmarker.svg)
+        skin/classic/browser/devedition/urlbar-arrow.png            (../shared/devedition/urlbar-arrow.png)
+        skin/classic/browser/devedition/urlbar-arrow@2x.png         (../shared/devedition/urlbar-arrow@2x.png)
 *       skin/classic/browser/devtools/common.css                    (../shared/devtools/common.css)
 *       skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
 *       skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
@@ -645,8 +649,10 @@ browser.jar:
 % override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab-inverted.png       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.png     os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab-inverted@2x.png    chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7@2x.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png      os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png   os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1

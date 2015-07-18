@@ -78,7 +78,7 @@ def js_quote(quote, s):
 
 os.path.relpath = _relpath
 
-class Test:
+class JitTest:
 
     VALGRIND_CMD = []
     paths = (d for d in os.environ['PATH'].split(os.pathsep))
@@ -122,7 +122,7 @@ class Test:
         self.expect_status = 0 # Exit status to expect from shell
 
     def copy(self):
-        t = Test(self.path)
+        t = JitTest(self.path)
         t.jitflags = self.jitflags[:]
         t.slow = self.slow
         t.allow_oom = self.allow_oom
@@ -255,7 +255,7 @@ class Test:
 
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
-        cmd = prefix + ['--js-cache', Test.CacheDir]
+        cmd = prefix + ['--js-cache', JitTest.CacheDir]
         cmd += list(set(self.jitflags)) + ['-e', expr, '-f', path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
@@ -831,8 +831,8 @@ def run_tests_remote(tests, prefix, options):
     push_progs(options, dm, [prefix[0]])
     dm.chmodDir(options.remote_test_root)
 
-    Test.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-    dm.mkDir(Test.CacheDir)
+    JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
+    dm.mkDir(JitTest.CacheDir)
 
     dm.pushDir(JS_TESTS_DIR, posixpath.join(jit_tests_dir, 'tests'),
                timeout=600)

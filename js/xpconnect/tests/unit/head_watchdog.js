@@ -23,6 +23,7 @@ function isWatchdogEnabled() {
 function setScriptTimeout(seconds) {
   var oldTimeout = gPrefs.getIntPref("dom.max_script_run_time");
   gPrefs.setIntPref("dom.max_script_run_time", seconds);
+  return oldTimeout;
 }
 
 //

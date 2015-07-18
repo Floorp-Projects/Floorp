@@ -2492,20 +2492,6 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
         return NS_OK;
     }
 
-    if (!mPixelStorePremultiplyAlpha && res.mIsPremultiplied) {
-        switch (data->GetFormat()) {
-        case SurfaceFormat::B8G8R8X8:
-            // No alpha, so de-facto premult'd.
-            break;
-        case SurfaceFormat::B8G8R8A8:
-            data = gfxUtils::CreateUnpremultipliedDataSurface(data);
-            break;
-        default:
-            MOZ_ASSERT(false, "Format unsupported.");
-            break;
-        }
-    }
-
     // We disallow loading cross-domain images and videos that have not been validated
     // with CORS as WebGL textures. The reason for doing that is that timing
     // attacks on WebGL shaders are able to retrieve approximations of the

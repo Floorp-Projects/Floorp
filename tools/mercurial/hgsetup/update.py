@@ -26,7 +26,7 @@ class MercurialUpdater(object):
         self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
 
-    def update_all(self, config_paths):
+    def update_all(self):
         try:
             os.makedirs(self.ext_dir)
         except OSError as e:
