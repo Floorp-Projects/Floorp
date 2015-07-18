@@ -1502,9 +1502,12 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  if (aName.EqualsLiteral("acl.version")) {
+  if (StringBeginsWith(aName, NS_LITERAL_STRING("acl.")) &&
+      (aName.EqualsLiteral("acl.version") || CheckPermission("external-app"))) {
     char value[PROPERTY_VALUE_MAX];
-    uint32_t len = property_get("persist.acl.version", value, nullptr);
+    nsCString propertyKey("persist.");
+    propertyKey.Append(NS_ConvertUTF16toUTF8(aName));
+    uint32_t len = property_get(propertyKey.get(), value, nullptr);
     if (len > 0) {
       p->MaybeResolve(NS_ConvertUTF8toUTF16(value));
       return p.forget();
