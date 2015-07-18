@@ -144,7 +144,7 @@
           list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
         }
         #titlebar-close:hover {
-          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-highlight);
+          list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
         }
 
         /* the 12px image renders a 10px icon, and the 10px upscaled gets rounded to 12.5, which
