@@ -151,7 +151,7 @@ FileAsTypedArray(JSContext* cx, const char* pathname)
 }
 
 static bool
-ReadFile(JSContext* cx, unsigned argc, jsval* vp, bool scriptRelative)
+ReadFile(JSContext* cx, unsigned argc, Value* vp, bool scriptRelative)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -199,13 +199,13 @@ ReadFile(JSContext* cx, unsigned argc, jsval* vp, bool scriptRelative)
 }
 
 static bool
-osfile_readFile(JSContext* cx, unsigned argc, jsval* vp)
+osfile_readFile(JSContext* cx, unsigned argc, Value* vp)
 {
     return ReadFile(cx, argc, vp, false);
 }
 
 static bool
-osfile_readRelativeToScript(JSContext* cx, unsigned argc, jsval* vp)
+osfile_readRelativeToScript(JSContext* cx, unsigned argc, Value* vp)
 {
     return ReadFile(cx, argc, vp, true);
 }
@@ -227,7 +227,7 @@ Redirect(JSContext* cx, FILE* fp, HandleString relFilename)
 }
 
 static bool
-osfile_redirect(JSContext* cx, unsigned argc, jsval* vp)
+osfile_redirect(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -371,7 +371,7 @@ ReportSysError(JSContext* cx, const char* prefix)
 }
 
 static bool
-os_system(JSContext* cx, unsigned argc, jsval* vp)
+os_system(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -400,7 +400,7 @@ os_system(JSContext* cx, unsigned argc, jsval* vp)
 
 #ifndef XP_WIN
 static bool
-os_spawn(JSContext* cx, unsigned argc, jsval* vp)
+os_spawn(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

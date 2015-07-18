@@ -30,7 +30,7 @@ static JS::PersistentRootedObject trusted_glob;
 static JS::PersistentRootedObject trusted_fun;
 
 static bool
-CallTrusted(JSContext* cx, unsigned argc, jsval* vp)
+CallTrusted(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 

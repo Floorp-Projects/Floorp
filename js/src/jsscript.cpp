@@ -2364,7 +2364,7 @@ js::FreeScriptData(JSRuntime* rt)
  *
  * IMPORTANT: This layout has two key properties.
  * - It ensures that everything has sufficient alignment; in particular, the
- *   consts() elements need jsval alignment.
+ *   consts() elements need Value alignment.
  * - It ensures there are no gaps between elements, which saves space and makes
  *   manual layout easy. In particular, in the second part, arrays with larger
  *   elements precede arrays with smaller elements.
@@ -2387,12 +2387,12 @@ js::FreeScriptData(JSRuntime* rt)
  */
 
 #define KEEPS_JSVAL_ALIGNMENT(T) \
-    (JS_ALIGNMENT_OF(jsval) % JS_ALIGNMENT_OF(T) == 0 && \
-     sizeof(T) % sizeof(jsval) == 0)
+    (JS_ALIGNMENT_OF(JS::Value) % JS_ALIGNMENT_OF(T) == 0 && \
+     sizeof(T) % sizeof(JS::Value) == 0)
 
 #define HAS_JSVAL_ALIGNMENT(T) \
-    (JS_ALIGNMENT_OF(jsval) == JS_ALIGNMENT_OF(T) && \
-     sizeof(T) == sizeof(jsval))
+    (JS_ALIGNMENT_OF(JS::Value) == JS_ALIGNMENT_OF(T) && \
+     sizeof(T) == sizeof(JS::Value))
 
 #define NO_PADDING_BETWEEN_ENTRIES(T1, T2) \
     (JS_ALIGNMENT_OF(T1) % JS_ALIGNMENT_OF(T2) == 0)
@@ -2400,7 +2400,7 @@ js::FreeScriptData(JSRuntime* rt)
 /*
  * These assertions ensure that there is no padding between the array headers,
  * and also that the consts() elements (which follow immediately afterward) are
- * jsval-aligned.  (There is an assumption that |data| itself is jsval-aligned;
+ * Value-aligned.  (There is an assumption that |data| itself is Value-aligned;
  * we check this below).
  */
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
@@ -2565,7 +2565,7 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     }
 
     if (nconsts != 0) {
-        MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(jsval) == 0);
+        MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(JS::Value) == 0);
         script->consts()->length = nconsts;
         script->consts()->vector = (HeapValue*)cursor;
         cursor += nconsts * sizeof(script->consts()->vector[0]);

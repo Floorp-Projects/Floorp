@@ -8,7 +8,7 @@
 #include "jsapi-tests/tests.h"
 
 static bool
-NativeGetterSetter(JSContext* cx, unsigned argc, jsval* vp)
+NativeGetterSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     return true;
 }
