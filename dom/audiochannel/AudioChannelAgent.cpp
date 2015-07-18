@@ -12,7 +12,18 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION(AudioChannelAgent, mWindow, mCallback)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AudioChannelAgent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioChannelAgent)
+  tmp->Shutdown();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioChannelAgent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioChannelAgent)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgent)
@@ -29,6 +40,12 @@ AudioChannelAgent::AudioChannelAgent()
 }
 
 AudioChannelAgent::~AudioChannelAgent()
+{
+  Shutdown();
+}
+
+void
+AudioChannelAgent::Shutdown()
 {
   if (mIsRegToService) {
     NotifyStoppedPlaying();
@@ -88,14 +105,10 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   if (aWindow) {
     nsCOMPtr<nsIDOMWindow> topWindow;
     aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-    MOZ_ASSERT(topWindow);
-
     mWindow = do_QueryInterface(topWindow);
-    if (!mWindow) {
-      return NS_ERROR_FAILURE;
+    if (mWindow) {
+      mWindow = mWindow->GetOuterWindow();
     }
-
-    mWindow = mWindow->GetOuterWindow();
   }
 
   mAudioChannelType = aChannelType;
