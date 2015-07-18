@@ -215,7 +215,7 @@ class OSXBootstrapper(BaseBootstrapper):
             except subprocess.CalledProcessError as e:
                 # This seems to appear on fresh OS X machines before any Xcode
                 # has been installed. It may only occur on OS X 10.9 and later.
-                if 'unable to get active developer directory' in e.output:
+                if b'unable to get active developer directory' in e.output:
                     print(XCODE_NO_DEVELOPER_DIRECTORY)
                     self._install_xcode_app_store()
                     assert False  # Above should exit.
@@ -225,7 +225,7 @@ class OSXBootstrapper(BaseBootstrapper):
             # This isn't the most robust check in the world. It relies on the
             # default value not being in an application bundle, which seems to
             # hold on at least Mavericks.
-            if '.app/' not in output:
+            if b'.app/' not in output:
                 print(XCODE_REQUIRED)
                 self._install_xcode_app_store()
                 assert False  # Above should exit.
@@ -236,13 +236,13 @@ class OSXBootstrapper(BaseBootstrapper):
             output = self.check_output(['/usr/bin/xcrun', 'clang'],
                                        stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            if 'license' in e.output:
+            if b'license' in e.output:
                 xcodebuild = self.which('xcodebuild')
                 try:
                     subprocess.check_call([xcodebuild, '-license'],
                                           stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as e:
-                    if 'requires admin privileges' in e.output:
+                    if b'requires admin privileges' in e.output:
                         self.run_as_root([xcodebuild, '-license'])
 
         # Even then we're not done! We need to install the Xcode command line tools.
@@ -316,7 +316,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_homebrew_packages(packages)
 
         installed = self.check_output([self.brew, 'list']).split()
-        if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
+        if self.os_version < StrictVersion('10.7') and b'llvm' not in installed:
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
@@ -487,7 +487,7 @@ class OSXBootstrapper(BaseBootstrapper):
                 subprocess.check_output([self.brew, '-v', 'upgrade', package],
                                         stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
-                if 'already installed' not in e.output:
+                if b'already installed' not in e.output:
                     raise
         else:
             assert self.package_manager == 'macports'
