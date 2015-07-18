@@ -11,6 +11,7 @@
 
 using namespace xpc;
 using namespace mozilla;
+using namespace JS;
 
 namespace XPCNativeWrapper {
 
@@ -24,7 +25,7 @@ ThrowException(nsresult ex, JSContext* cx)
 }
 
 static bool
-UnwrapNW(JSContext* cx, unsigned argc, jsval* vp)
+UnwrapNW(JSContext* cx, unsigned argc, Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
@@ -45,7 +46,7 @@ UnwrapNW(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-XrayWrapperConstructor(JSContext* cx, unsigned argc, jsval* vp)
+XrayWrapperConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {

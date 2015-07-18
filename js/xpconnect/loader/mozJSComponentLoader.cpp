@@ -116,7 +116,7 @@ Dump(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-Debug(JSContext* cx, unsigned argc, jsval* vp)
+Debug(JSContext* cx, unsigned argc, Value* vp)
 {
 #ifdef DEBUG
     return Dump(cx, argc, vp);

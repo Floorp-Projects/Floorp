@@ -635,7 +635,7 @@ private:
 
     static const char* const mStrings[IDX_TOTAL_COUNT];
     jsid mStrIDs[IDX_TOTAL_COUNT];
-    jsval mStrJSVals[IDX_TOTAL_COUNT];
+    JS::Value mStrJSVals[IDX_TOTAL_COUNT];
 
     XPCJSContextStack*       mJSContextStack;
     XPCCallContext*          mCallContext;
@@ -798,7 +798,7 @@ public:
     NS_IMETHOD GetCalleeMethodIndex(uint16_t* aResult);
     NS_IMETHOD GetJSContext(JSContext** aResult);
     NS_IMETHOD GetArgc(uint32_t* aResult);
-    NS_IMETHOD GetArgvPtr(jsval** aResult);
+    NS_IMETHOD GetArgvPtr(JS::Value** aResult);
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo** aResult);
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo** aResult);
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext** aResult);
@@ -814,8 +814,8 @@ public:
                    JS::HandleObject funobj = nullptr,
                    JS::HandleId id         = JSID_VOIDHANDLE,
                    unsigned argc           = NO_ARGS,
-                   jsval* argv             = nullptr,
-                   jsval* rval             = nullptr);
+                   JS::Value* argv         = nullptr,
+                   JS::Value* rval         = nullptr);
 
     virtual ~XPCCallContext();
 
@@ -847,8 +847,8 @@ public:
     inline jsid                         GetName() const ;
     inline bool                         GetStaticMemberIsLocal() const ;
     inline unsigned                     GetArgc() const ;
-    inline jsval*                       GetArgv() const ;
-    inline jsval*                       GetRetVal() const ;
+    inline JS::Value*                   GetArgv() const ;
+    inline JS::Value*                   GetRetVal() const ;
 
     inline uint16_t                     GetMethodIndex() const ;
     inline void                         SetMethodIndex(uint16_t index) ;
@@ -859,10 +859,10 @@ public:
     inline XPCWrappedNative* GetResolvingWrapper() const;
     inline XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w);
 
-    inline void SetRetVal(jsval val);
+    inline void SetRetVal(JS::Value val);
 
     void SetName(jsid name);
-    void SetArgsAndResultPtr(unsigned argc, jsval* argv, jsval* rval);
+    void SetArgsAndResultPtr(unsigned argc, JS::Value* argv, JS::Value* rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
                      bool isSetter);
 
@@ -927,8 +927,8 @@ private:
     bool                            mStaticMemberIsLocal;
 
     unsigned                        mArgc;
-    jsval*                          mArgv;
-    jsval*                          mRetVal;
+    JS::Value*                      mArgv;
+    JS::Value*                      mRetVal;
 
     uint16_t                        mMethodIndex;
 };
@@ -956,10 +956,10 @@ extern const js::Class XPC_WN_Tearoff_JSClass;
 extern const js::Class XPC_WN_NoHelper_Proto_JSClass;
 
 extern bool
-XPC_WN_CallMethod(JSContext* cx, unsigned argc, jsval* vp);
+XPC_WN_CallMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
 extern bool
-XPC_WN_GetterSetter(JSContext* cx, unsigned argc, jsval* vp);
+XPC_WN_GetterSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
 extern JSObject*
 XPC_WN_JSOp_ThisObject(JSContext* cx, JS::HandleObject obj);
@@ -1290,13 +1290,13 @@ public:
     uint16_t GetIndex() const {return mIndex;}
 
     bool GetConstantValue(XPCCallContext& ccx, XPCNativeInterface* iface,
-                          jsval* pval)
+                          JS::Value* pval)
         {MOZ_ASSERT(IsConstant(),
                     "Only call this if you're sure this is a constant!");
          return Resolve(ccx, iface, nullptr, pval);}
 
     bool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
-                           JS::HandleObject parent, jsval* pval);
+                           JS::HandleObject parent, JS::Value* pval);
 
     bool IsMethod() const
         {return 0 != (mFlags & METHOD);}
@@ -1342,7 +1342,7 @@ public:
 
 private:
     bool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
-                 JS::HandleObject parent, jsval* vp);
+                 JS::HandleObject parent, JS::Value* vp);
 
     enum {
         METHOD      = 0x01,
@@ -2583,9 +2583,9 @@ public:
     static bool IsMethodReflectable(const XPTMethodDescriptor& info);
 
     /**
-     * Convert a native object into a jsval.
+     * Convert a native object into a JS::Value.
      *
-     * @param d [out] the resulting jsval
+     * @param d [out] the resulting JS::Value
      * @param s the native object we're working with
      * @param type the type of object that s is
      * @param iid the interface of s that we want
@@ -2639,9 +2639,9 @@ public:
     static bool GetISupportsFromJSObject(JSObject* obj, nsISupports** iface);
 
     /**
-     * Convert a native array into a jsval.
+     * Convert a native array into a JS::Value.
      *
-     * @param d [out] the resulting jsval
+     * @param d [out] the resulting JS::Value
      * @param s the native array we're working with
      * @param type the type of objects in the array
      * @param iid the interface of each object in the array that we want
@@ -2689,7 +2689,7 @@ public:
                                        nsISupports* data,
                                        nsIException** exception,
                                        JSContext* cx,
-                                       jsval* jsExceptionPtr);
+                                       JS::Value* jsExceptionPtr);
 
 private:
     XPCConvert(); // not implemented
@@ -3285,21 +3285,21 @@ public:
     // if a given nsIVariant is in fact an XPCVariant.
     NS_DECLARE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
 
-    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, jsval aJSVal);
+    static already_AddRefed<XPCVariant> newVariant(JSContext* cx, JS::Value aJSVal);
 
     /**
-     * This getter clears the gray bit before handing out the jsval if the jsval
+     * This getter clears the gray bit before handing out the Value if the Value
      * represents a JSObject. That means that the object is guaranteed to be
      * kept alive past the next CC.
      */
-    jsval GetJSVal() const {
+    JS::Value GetJSVal() const {
         if (!mJSVal.isPrimitive())
             JS::ExposeObjectToActiveJS(&mJSVal.toObject());
         return mJSVal;
     }
 
     /**
-     * This getter does not change the color of the jsval (if it represents a
+     * This getter does not change the color of the Value (if it represents a
      * JSObject) meaning that the value returned is not guaranteed to be kept
      * alive past the next CC.
      *
@@ -3307,12 +3307,12 @@ public:
      * be passed into a JS API function and that it won't be stored without
      * being rooted (or otherwise signaling the stored value to the CC).
      */
-    jsval GetJSValPreserveColor() const {return mJSVal;}
+    JS::Value GetJSValPreserveColor() const {return mJSVal;}
 
-    XPCVariant(JSContext* cx, jsval aJSVal);
+    XPCVariant(JSContext* cx, JS::Value aJSVal);
 
     /**
-     * Convert a variant into a jsval.
+     * Convert a variant into a JS::Value.
      *
      * @param ccx the context for the whole procedure
      * @param variant the variant to convert
@@ -3357,7 +3357,7 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(JSContext* cx, jsval aJSVal)
+    XPCTraceableVariant(JSContext* cx, JS::Value aJSVal)
         : XPCVariant(cx, aJSVal)
     {
          nsXPConnect::GetRuntimeInstance()->AddVariantRoot(this);
@@ -3390,10 +3390,10 @@ NewAddonId(JSContext* cx, const nsACString& id);
 
 // JSNatives to expose atob and btoa in various non-DOM XPConnect scopes.
 bool
-Atob(JSContext* cx, unsigned argc, jsval* vp);
+Atob(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-Btoa(JSContext* cx, unsigned argc, jsval* vp);
+Btoa(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // Helper function that creates a JSFunction that wraps a native function that
 // forwards the call to the original 'callable'.
