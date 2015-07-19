@@ -114,6 +114,13 @@ struct VariantImplementation<N, T> {
   static void destroy(Variant& aV) {
     aV.template as<T>().~T();
   }
+
+  template<typename Variant>
+  static bool
+  equal(const Variant& aLhs, const Variant& aRhs)
+  {
+      return aLhs.template as<T>() == aRhs.template as<T>();
+  }
 };
 
 // VariantImplementation for some variant type T.
@@ -152,6 +159,16 @@ struct VariantImplementation<N, T, Ts...>
       aV.template as<T>().~T();
     } else {
       Next::destroy(aV);
+    }
+  }
+
+  template<typename Variant>
+  static bool equal(const Variant& aLhs, const Variant& aRhs) {
+    if (aLhs.template is<T>()) {
+      MOZ_ASSERT(aRhs.template is<T>());
+      return aLhs.template as<T>() == aRhs.template as<T>();
+    } else {
+      return Next::equal(aLhs, aRhs);
     }
   }
 };
@@ -312,6 +329,23 @@ public:
     static_assert(detail::IsVariant<T, Ts...>::value,
                   "provided a type not found in this Variant's type list");
     return Impl::template tag<T>() == tag;
+  }
+
+  /**
+   * Operator == overload that defers to the variant type's operator==
+   * implementation if the rhs is tagged as the same type as this one.
+   */
+  bool operator==(const Variant& aRhs) const {
+    return tag == aRhs.tag && Impl::equal(*this, aRhs);
+  }
+
+  /**
+   * Operator != overload that defers to the negation of the variant type's
+   * operator== implementation if the rhs is tagged as the same type as this
+   * one.
+   */
+  bool operator!=(const Variant& aRhs) const {
+    return !(*this == aRhs);
   }
 
   // Accessors for working with the contained variant value.
