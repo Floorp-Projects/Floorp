@@ -52,6 +52,8 @@ public:
 
   virtual void WaitAcquireFenceHandleSyncComplete() override;
 
+  virtual void SetCropRect(nsIntRect aCropRect) override;
+
   bool IsValid() const;
 
   virtual const char* Name() override { return "GrallocTextureHostOGL"; }
