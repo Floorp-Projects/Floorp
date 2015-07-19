@@ -1255,6 +1255,42 @@ GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray)
   return NS_OK;
 }
 
+void
+GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
+{
+  JS::Rooted<JSObject*> obj(aCx);
+
+  gfxWindowsPlatform* platform = gfxWindowsPlatform::GetPlatform();
+
+  gfx::FeatureStatus d3d11 = platform->GetD3D11Status();
+  if (!InitFeatureObject(aCx, aObj, "d3d11", d3d11, &obj)) {
+    return;
+  }
+  if (d3d11 == gfx::FeatureStatus::Available) {
+    JS::Rooted<JS::Value> val(aCx, JS::Int32Value(platform->GetD3D11Version()));
+    JS_SetProperty(aCx, obj, "version", val);
+
+    val = JS::BooleanValue(platform->IsWARP());
+    JS_SetProperty(aCx, obj, "warp", val);
+
+    val = JS::BooleanValue(platform->DoesD3D11TextureSharingWork());
+    JS_SetProperty(aCx, obj, "textureSharing", val);
+  }
+
+  gfx::FeatureStatus d2d = platform->GetD2DStatus();
+  if (!InitFeatureObject(aCx, aObj, "d2d", d2d, &obj)) {
+    return;
+  }
+  {
+    const char* version = "1.0";
+    if (platform->GetD2D1Status() == gfx::FeatureStatus::Available)
+      version = "1.1";
+    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, version));
+    JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
+    JS_SetProperty(aCx, obj, "version", val);
+  }
+}
+
 #ifdef DEBUG
 
 // Implement nsIGfxInfoDebug
