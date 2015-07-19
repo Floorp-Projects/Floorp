@@ -103,7 +103,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   : TextureHost(aFlags)
   , mGrallocHandle(aDescriptor)
   , mSize(0, 0)
-  , mDescriptorSize(aDescriptor.size())
+  , mCropSize(0, 0)
   , mFormat(gfx::SurfaceFormat::UNKNOWN)
   , mEGLImage(EGL_NO_IMAGE)
   , mIsOpaque(aDescriptor.isOpaque())
@@ -116,6 +116,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
       SurfaceFormatForAndroidPixelFormat(graphicBuffer->getPixelFormat(),
                                          aFlags & TextureFlags::RB_SWAPPED);
     mSize = gfx::IntSize(graphicBuffer->getWidth(), graphicBuffer->getHeight());
+    mCropSize = mSize;
   } else {
     printf_stderr("gralloc buffer is nullptr");
   }
@@ -222,7 +223,7 @@ GrallocTextureHostOGL::GetRenderState()
       flags |= LayerRenderStateFlags::FORMAT_RB_SWAP;
     }
     return LayerRenderState(graphicBuffer,
-                            mDescriptorSize,
+                            mCropSize,
                             flags,
                             this);
   }

@@ -38,7 +38,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const;
 
-  virtual gfx::IntSize GetSize() const override { return mDescriptorSize; }
+  virtual gfx::IntSize GetSize() const override { return mCropSize; }
 
   virtual LayerRenderState GetRenderState() override;
 
@@ -68,7 +68,7 @@ private:
   gfx::IntSize mSize;
   // Size reported by TextureClient, can be different in some cases (video?),
   // used by LayerRenderState.
-  gfx::IntSize mDescriptorSize;
+  gfx::IntSize mCropSize;
   gfx::SurfaceFormat mFormat;
   EGLImage mEGLImage;
   bool mIsOpaque;
