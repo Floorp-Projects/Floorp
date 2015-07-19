@@ -93,6 +93,36 @@ testDestructor()
   MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 2); // d is destroyed.
 }
 
+static void
+testEquality()
+{
+  printf("testEquality\n");
+  using V = Variant<char, int>;
+
+  V v0('a');
+  V v1('b');
+  V v2('b');
+  V v3(42);
+  V v4(27);
+  V v5(27);
+  V v6(int('b'));
+
+  MOZ_RELEASE_ASSERT(v0 != v1);
+  MOZ_RELEASE_ASSERT(v1 == v2);
+  MOZ_RELEASE_ASSERT(v2 != v3);
+  MOZ_RELEASE_ASSERT(v3 != v4);
+  MOZ_RELEASE_ASSERT(v4 == v5);
+  MOZ_RELEASE_ASSERT(v1 != v6);
+
+  MOZ_RELEASE_ASSERT(v0 == v0);
+  MOZ_RELEASE_ASSERT(v1 == v1);
+  MOZ_RELEASE_ASSERT(v2 == v2);
+  MOZ_RELEASE_ASSERT(v3 == v3);
+  MOZ_RELEASE_ASSERT(v4 == v4);
+  MOZ_RELEASE_ASSERT(v5 == v5);
+  MOZ_RELEASE_ASSERT(v6 == v6);
+}
+
 int
 main()
 {
@@ -100,6 +130,7 @@ main()
   testCopy();
   testMove();
   testDestructor();
+  testEquality();
 
   printf("TestVariant OK!\n");
   return 0;
