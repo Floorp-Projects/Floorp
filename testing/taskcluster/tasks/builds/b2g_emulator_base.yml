@@ -27,6 +27,6 @@ task:
     # files are located.
     locations:
       build: 'public/build/emulator.tar.gz'
-      tests: 'public/build/b2g-tests.zip'
+      test_packages: 'public/build/test_packages.json'
       symbols: 'public/build/b2g-crashreporter-symbols.zip'
       sources: 'public/build/sources.xml'
