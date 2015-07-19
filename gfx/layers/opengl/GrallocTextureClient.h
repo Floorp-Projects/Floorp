@@ -139,13 +139,6 @@ protected:
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
-  /**
-   * android::GraphicBuffer has a size information. But there are cases
-   * that GraphicBuffer's size and actual video's size are different.
-   * Extra size member is necessary. See Bug 850566.
-   */
-  gfx::IntSize mSize;
-
   android::MediaBuffer* mMediaBuffer;
 
   bool mIsOpaque;

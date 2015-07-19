@@ -84,12 +84,6 @@ struct EGLImageDescriptor {
 
 struct NewSurfaceDescriptorGralloc {
   MaybeMagicGrallocBufferHandle buffer;
-  /**
-   * android::GraphicBuffer has a size information. But there are cases
-   * that GraphicBuffer's size and actual video's size are different.
-   * Extra size member is necessary. See Bug 850566.
-   */
-  IntSize size;
   bool isOpaque;
 };
 
