@@ -1249,7 +1249,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
                                     contentToFocus->OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "FocusedWindowedPluginWhileFullScreen");
-    nsIDocument::ExitFullscreen(contentToFocus->OwnerDoc(), /* async */ true);
+    nsIDocument::AsyncExitFullscreen(contentToFocus->OwnerDoc());
   }
 #endif
 
