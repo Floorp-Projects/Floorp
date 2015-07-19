@@ -33,6 +33,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "gfxPrefs.h"
+#include "gfxPlatform.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -1177,6 +1178,92 @@ GfxInfoBase::GetMonitors(JSContext* aCx, JS::MutableHandleValue aResult)
 
   aResult.setObject(*array);
   return NS_OK;
+}
+
+static const char*
+GetLayersBackendName(layers::LayersBackend aBackend)
+{
+  switch (aBackend) {
+    case layers::LayersBackend::LAYERS_NONE:
+      return "none";
+    case layers::LayersBackend::LAYERS_OPENGL:
+      return "opengl";
+    case layers::LayersBackend::LAYERS_D3D9:
+      return "d3d9";
+    case layers::LayersBackend::LAYERS_D3D11:
+      return "d3d11";
+    case layers::LayersBackend::LAYERS_CLIENT:
+      return "client";
+    case layers::LayersBackend::LAYERS_BASIC:
+      return "basic";
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown layers backend");
+      return "unknown";
+  }
+}
+
+nsresult
+GfxInfoBase::GetFeatures(JSContext* aCx, JS::MutableHandle<JS::Value> aOut)
+{
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+  if (!obj) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aOut.setObject(*obj);
+
+  layers::LayersBackend backend = gfxPlatform::Initialized()
+                                  ? gfxPlatform::GetPlatform()->GetCompositorBackend()
+                                  : layers::LayersBackend::LAYERS_NONE;
+  const char* backendName = GetLayersBackendName(backend);
+  {
+    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, backendName));
+    JS::Rooted<JS::Value> val(aCx, StringValue(str));
+    JS_SetProperty(aCx, obj, "compositor", val);
+  }
+
+  // If graphics isn't initialized yet, just stop now.
+  if (!gfxPlatform::Initialized()) {
+    return NS_OK;
+  }
+
+  DescribeFeatures(aCx, obj);
+  return NS_OK;
+}
+
+void
+GfxInfoBase::DescribeFeatures(JSContext* cx, JS::Handle<JSObject*> aOut)
+{
+}
+
+bool
+GfxInfoBase::InitFeatureObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aContainer,
+                               const char* aName,
+                               mozilla::gfx::FeatureStatus aFeatureStatus,
+                               JS::MutableHandle<JSObject*> aOutObj)
+{
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+  if (!obj) {
+    return false;
+  }
+
+  const char* status = FeatureStatusToString(aFeatureStatus);
+
+  // Set "status".
+  {
+    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status));
+    JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
+    JS_SetProperty(aCx, obj, "status", val);
+  }
+
+  // Add the feature object to the container.
+  {
+    JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*obj));
+    JS_SetProperty(aCx, aContainer, aName, val);
+  }
+
+  aOutObj.set(obj);
+  return true;
 }
 
 GfxInfoCollectorBase::GfxInfoCollectorBase()
