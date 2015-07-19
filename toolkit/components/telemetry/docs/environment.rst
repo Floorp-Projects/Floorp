@@ -145,6 +145,28 @@ Structure::
               },
               ...
             ],
+            features: {
+              compositor: <string>,     // Layers backend for compositing (eg "d3d11", "none", "opengl")
+
+              // Each the following features can have one of the following statuses:
+              //   "unused"      - This feature has not been requested.
+              //   "unavailable" - Safe Mode or OS restriction prevents use.
+              //   "blocked"     - Blocked due to an internal condition such as safe mode.
+              //   "blacklisted" - Blocked due to a blacklist restriction.
+              //   "disabled"    - User explicitly disabled this default feature.
+              //   "failed"      - This feature was attempted but failed to initialize.
+              //   "available"   - User has this feature available.
+              "d3d11" { // This feature is Windows-only.
+                status: <string>,
+                warp: <bool>,           // Software rendering (WARP) mode was chosen.
+                textureSharing: <bool>  // Whether or not texture sharing works.
+                version: <number>,      // The D3D11 device feature level.
+              },
+              "d2d" { // This feature is Windows-only.
+                status: <string>,
+                version: <string>,      // Either "1.0" or "1.1".
+              },
+            },
           },
       },
       addons: {
