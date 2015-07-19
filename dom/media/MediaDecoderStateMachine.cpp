@@ -2456,12 +2456,12 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         AbstractThread::MainThread()->Dispatch(event.forget());
 
         mSentPlaybackEndedEvent = true;
-      }
 
-      // Stop audio sink after call to AudioEndTime() above, otherwise it will
-      // return an incorrect value due to a null mAudioSink.
-      StopAudioThread();
-      mDecodedStream->StopPlayback();
+        // Stop audio sink after call to AudioEndTime() above, otherwise it will
+        // return an incorrect value due to a null mAudioSink.
+        StopAudioThread();
+        mDecodedStream->StopPlayback();
+      }
 
       return NS_OK;
     }
