@@ -345,8 +345,12 @@ GrallocTextureHostOGL::PrepareTextureSource(CompositableTextureSourceRef& aTextu
   }
 
   if (mEGLImage == EGL_NO_IMAGE) {
+    gfx::IntSize cropSize(0, 0);
+    if (mCropSize != mSize) {
+      cropSize = mCropSize;
+    }
     // Should only happen the first time.
-    mEGLImage = EGLImageCreateFromNativeBuffer(gl, graphicBuffer->getNativeBuffer());
+    mEGLImage = EGLImageCreateFromNativeBuffer(gl, graphicBuffer->getNativeBuffer(), cropSize);
   }
 
   GLenum textureTarget = GetTextureTarget(gl, graphicBuffer->getPixelFormat());
@@ -413,6 +417,23 @@ GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
     NS_ERROR("failed to wait native fence sync");
   }
   MOZ_ALWAYS_TRUE( sEGLLibrary.fDestroySync(EGL_DISPLAY(), sync) );
+}
+
+void
+GrallocTextureHostOGL::SetCropRect(nsIntRect aCropRect)
+{
+  MOZ_ASSERT(aCropRect.TopLeft() == IntPoint(0, 0));
+  MOZ_ASSERT(!aCropRect.IsEmpty());
+  MOZ_ASSERT(aCropRect.width <= mSize.width);
+  MOZ_ASSERT(aCropRect.height <= mSize.height);
+
+  gfx::IntSize cropSize(aCropRect.width, aCropRect.height);
+  if (mCropSize == cropSize) {
+    return;
+  }
+
+  mCropSize = cropSize;
+  mGLTextureSource = nullptr;
 }
 
 bool
