@@ -379,6 +379,7 @@ gfxPlatform::gfxPlatform()
   , mTileHeight(-1)
   , mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
+  , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)
 {
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mFallbackUsesCmaps = UNINITIALIZED_VALUE;
@@ -408,6 +409,12 @@ gfxPlatform::GetPlatform()
         Init();
     }
     return gPlatform;
+}
+
+bool
+gfxPlatform::Initialized()
+{
+  return !!gPlatform;
 }
 
 void RecordingPrefChanged(const char *aPrefName, void *aClosure)
@@ -2442,5 +2449,23 @@ gfxPlatform::GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layer
   }
   if (SupportsBasicCompositor()) {
     aBackends.AppendElement(LayersBackend::LAYERS_BASIC);
+  }
+}
+
+void
+gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend)
+{
+  if (mCompositorBackend == aBackend) {
+    return;
+  }
+
+  NS_ASSERTION(mCompositorBackend == LayersBackend::LAYERS_NONE, "Compositor backend changed.");
+
+  // Set the backend before we notify so it's available immediately.
+  mCompositorBackend = aBackend;
+
+  // Notify that we created a compositor, so telemetry can update.
+  if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
+    obsvc->NotifyObservers(nullptr, "compositor:created", nullptr);
   }
 }
