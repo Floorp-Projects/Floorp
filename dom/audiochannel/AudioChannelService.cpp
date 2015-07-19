@@ -521,16 +521,6 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-struct RefreshAgentsVolumeData
-{
-  explicit RefreshAgentsVolumeData(nsPIDOMWindow* aWindow)
-    : mWindow(aWindow)
-  {}
-
-  nsPIDOMWindow* mWindow;
-  nsTArray<nsRefPtr<AudioChannelAgent>> mAgents;
-};
-
 void
 AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
 {
