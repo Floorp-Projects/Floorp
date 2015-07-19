@@ -430,6 +430,9 @@ function checkSystemSection(data) {
     }
   }
 
+  Assert.equal(typeof gfxData.features, "object");
+  Assert.equal(typeof gfxData.features.compositor, "string");
+
   try {
     // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
     // this test.
@@ -439,6 +442,9 @@ function checkSystemSection(data) {
       Assert.equal(GFX_VENDOR_ID, gfxData.adapters[0].vendorID);
       Assert.equal(GFX_DEVICE_ID, gfxData.adapters[0].deviceID);
     }
+
+    let features = gfxInfo.getFeatures();
+    Assert.equal(features.compositor, gfxData.features.compositor);
   }
   catch (e) {}
 }
