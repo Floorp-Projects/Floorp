@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(47eedfa0-f7cb-445b-b5cf-a2ca83600560)]
+[scriptable, uuid(98690931-c9a5-4675-9ab4-90932ec32bf2)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -147,5 +147,31 @@ interface nsIGfxInfo : nsISupports
 
   [implicit_jscontext]
   jsval getInfo();
+
+  // Returns an object containing information about graphics features. It is
+  // intended to be directly included into the Telemetry environment.
+  //
+  //   "layers":
+  //   {
+  //     "compositor": "d3d9", "d3d11", "opengl", "basic", or "none"
+  //                   // ("none" indicates no compositors have been created)
+  //     // Feature is one of "d3d9", "d3d11", "opengl", "basic", or "d2d".
+  //     "<feature>": {
+  //       // Each backend can have one of the following statuses:
+  //       //   "unused"      - This feature has not been requested.
+  //       //   "unavailable" - OS version or restriction prevents use.
+  //       //   "blocked"     - An internal condition (such as safe mode) prevents use.
+  //       //   "blacklisted" - Blocked due to a blacklist restriction.
+  //       //   "disabled"    - User explicitly disabled this default feature.
+  //       //   "failed"      - Feature failed to initialize.
+  //       //   "available"   - User has this feature available by default.
+  //       "status": "<status>",
+  //       "version": "<version>",
+  //       "warp": true|false,           // D3D11 only.
+  //       "textureSharing": true|false, // D3D11 only.
+  //     }
+  //   }
+  [implicit_jscontext]
+  jsval getFeatures();
 };
 
