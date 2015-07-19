@@ -477,6 +477,19 @@ ReplaceNode(ParseNode** pnp, ParseNode* pn)
     *pnp = pn;
 }
 
+static bool
+IsEffectless(ParseNode* node)
+{
+    return node->isKind(PNK_TRUE) ||
+           node->isKind(PNK_FALSE) ||
+           node->isKind(PNK_STRING) ||
+           node->isKind(PNK_TEMPLATE_STRING) ||
+           node->isKind(PNK_NUMBER) ||
+           node->isKind(PNK_NULL) ||
+           node->isKind(PNK_FUNCTION) ||
+           node->isKind(PNK_GENEXP);
+}
+
 enum Truthiness { Truthy, Falsy, Unknown };
 
 static Truthiness
@@ -510,19 +523,7 @@ Boolish(ParseNode* pn)
             pn = pn->pn_kid;
         } while (pn->isKind(PNK_VOID));
 
-        if (pn->isKind(PNK_TRUE) ||
-            pn->isKind(PNK_FALSE) ||
-            pn->isKind(PNK_STRING) ||
-            pn->isKind(PNK_TEMPLATE_STRING) ||
-            pn->isKind(PNK_NUMBER) ||
-            pn->isKind(PNK_NULL) ||
-            pn->isKind(PNK_FUNCTION) ||
-            pn->isKind(PNK_GENEXP))
-        {
-            return Falsy;
-        }
-
-        return Unknown;
+        return IsEffectless(pn) ? Falsy : Unknown;
       }
 
       default:
@@ -611,16 +612,9 @@ FoldDeleteExpr(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& 
     if (!Fold(cx, &expr, parser, inGenexpLambda))
         return false;
 
-    // Expression deletion evaluates the expression, then evaluates to
-    // true.  For trivial expressions, eliminate the expression evaluation.
-    if (expr->isKind(PNK_TRUE) ||
-        expr->isKind(PNK_FALSE) ||
-        expr->isKind(PNK_STRING) ||
-        expr->isKind(PNK_TEMPLATE_STRING) ||
-        expr->isKind(PNK_NUMBER) ||
-        expr->isKind(PNK_NULL) ||
-        expr->isKind(PNK_FUNCTION))
-    {
+    // Expression deletion evaluates the expression, then evaluates to true.
+    // For effectless expressions, eliminate the expression evaluation.
+    if (IsEffectless(expr)) {
         parser.prepareNodeForMutation(node);
         node->setKind(PNK_TRUE);
         node->setArity(PN_NULLARY);
