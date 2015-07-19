@@ -5690,7 +5690,7 @@
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted"
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
@@ -5699,7 +5699,7 @@
                      xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
                      class="tab-text tab-label"
                      role="presentation"/>
-          <xul:image xbl:inherits="soundplaying,pinned"
+          <xul:image xbl:inherits="soundplaying,pinned,muted"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
@@ -5872,6 +5872,23 @@
           tabContainer._hoveredTab = null;
         ]]></body>
       </method>
+
+      <method name="_toggleMuteAudio">
+        <body>
+        <![CDATA[
+          let tabContainer = this.parentNode;
+          let browser = this.linkedBrowser;
+          if (browser.audioMuted) {
+            browser.unmute();
+            this.removeAttribute("muted");
+          } else {
+            browser.mute();
+            this.setAttribute("muted", "true");
+          }
+          tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -5911,6 +5928,19 @@
       </handler>
       <handler event="mouseup">
         this.style.MozUserFocus = '';
+      </handler>
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0) {
+          return;
+        }
+
+        let anonid = event.originalTarget.getAttribute("anonid");
+        if ((anonid == "soundplaying-icon") ||
+            ((anonid == "overlay-icon") && this.hasAttribute("soundplaying"))) {
+          this._toggleMuteAudio();
+        }
+      ]]>
       </handler>
     </handlers>
   </binding>
