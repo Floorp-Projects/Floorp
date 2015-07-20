@@ -326,12 +326,16 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
             raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                         '%s_raw.log' % suite)
+
+            error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
+                                              '%s_errorsummary.log' % suite)
             str_format_values = {
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
                 'abs_app_dir': abs_app_dir,
                 'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
+                'error_summary_file': error_summary_file,
             }
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
