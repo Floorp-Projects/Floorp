@@ -2983,20 +2983,20 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
             return NS_OK;
           }
 
+          // If this is a remote child browser, call NavigateDocument to have
+          // the child process continue the navigation. Return a special error
+          // code to have the caller return early. If the child ends up not
+          // being focusable in some way, the child process will call back
+          // into document navigation again by calling MoveFocus.
+          TabParent* remote = TabParent::GetFrom(currentContent);
+          if (remote) {
+            remote->NavigateByKey(aForward, aForDocumentNavigation);
+            return NS_SUCCESS_DOM_NO_OPERATION;
+          }
+
+          // Next, for document navigation, check if this a non-remote child document.
           bool checkSubDocument = true;
           if (aForDocumentNavigation) {
-            // If this is a remote child browser, call NavigateDocument to have
-            // the child process continue the navigation. Return a special error
-            // code to have the caller return early. If the child ends up not
-            // being focusable in some way, the child process will call back
-            // into document navigation again by calling MoveFocus.
-            TabParent* remote = TabParent::GetFrom(currentContent);
-            if (remote) {
-              remote->NavigateDocument(aForward);
-              return NS_SUCCESS_DOM_NO_OPERATION;
-            }
-
-            // Next, check if this a non-remote child document.
             nsIContent* docRoot = GetRootForChildDocument(currentContent);
             if (docRoot) {
               // If GetRootForChildDocument returned something then call
