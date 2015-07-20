@@ -66,12 +66,11 @@ config = {
         "webapprt": {
             "options": [
                 "--app=%(app_path)s",
+                "--xre-path=%(abs_res_dir)s",
                 "--utility-path=tests/bin",
                 "--extra-profile-file=tests/bin/plugins",
                 "--symbols-path=%(symbols_path)s",
                 "--certificate-path=tests/certs",
-                "--autorun",
-                "--close-when-done",
                 "--console-level=INFO",
                 "--testing-modules-dir=tests/modules",
                 "--quiet"

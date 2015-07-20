@@ -223,6 +223,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
   mDecodedStream(new DecodedStream(mAudioQueue, mVideoQueue)),
+  mResource(aDecoder->GetResource()),
   mBuffered(mTaskQueue, TimeIntervals(),
             "MediaDecoderStateMachine::mBuffered (Mirror)"),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
@@ -1585,8 +1586,6 @@ MediaDecoderStateMachine::InitiateSeek()
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
-
-  mDecoder->StopProgressUpdates();
   mCurrentTimeBeforeSeek = GetMediaTime();
 
   // Stop playback now to ensure that while we're outside the monitor
@@ -1883,6 +1882,8 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mMetadataRequest.Complete();
 
+  // Set mode to PLAYBACK after reading metadata.
+  mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
   mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
   mInfo = aMetadata->mInfo;
   mMetadataTags = aMetadata->mTags.forget();
@@ -1923,8 +1924,6 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
                 mReader->VideoIsHardwareAccelerated(),
                 GetAmpleVideoFrames());
   }
-
-  mDecoder->StartProgressUpdates();
 
   // In general, we wait until we know the duration before notifying the decoder.
   // However, we notify  unconditionally in this case without waiting for the start
@@ -2146,13 +2145,11 @@ MediaDecoderStateMachine::SeekCompleted()
   }
   mPlayDuration = newCurrentTime;
 
-  mDecoder->StartProgressUpdates();
-
   // Change state to DECODING or COMPLETED now. SeekingStopped will
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING
   // if we need to seek again.
 
-  bool isLiveStream = mDecoder->GetResource()->IsLiveStream();
+  bool isLiveStream = mResource->IsLiveStream();
   if (mPendingSeek.Exists()) {
     // A new seek target came in while we were processing the old one. No rest
     // for the seeking.
@@ -2279,7 +2276,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
   mDelayedScheduler.Reset(); // Must happen on state machine task queue.
   mDispatchedStateMachine = false;
 
-  MediaResource* resource = mDecoder->GetResource();
+  MediaResource* resource = mResource;
   NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
 
   switch (mState) {
@@ -2299,6 +2296,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     case DECODER_STATE_DECODING_METADATA: {
       if (!mMetadataRequest.Exists()) {
         DECODER_LOG("Dispatching AsyncReadMetadata");
+        // Set mode to METADATA since we are about to read metadata.
+        mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
         mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                               &MediaDecoderReader::AsyncReadMetadata)
           ->Then(OwnerThread(), __func__, this,

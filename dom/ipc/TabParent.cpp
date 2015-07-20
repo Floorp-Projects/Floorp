@@ -2936,9 +2936,9 @@ TabParent::SetHasContentOpener(bool aHasContentOpener)
 }
 
 NS_IMETHODIMP
-TabParent::NavigateDocument(bool aForward)
+TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
 {
-  unused << SendNavigateDocument(aForward);
+  unused << SendNavigateByKey(aForward, aForDocumentNavigation);
   return NS_OK;
 }
 

@@ -522,15 +522,15 @@ function TypedObjectArrayRedimension(newArrayType) {
 function SimdProtoString(type) {
   switch (type) {
   case JS_SIMDTYPEREPR_INT8:
-    return "int8x16";
+    return "Int8x16";
   case JS_SIMDTYPEREPR_INT16:
-    return "int16x8";
+    return "Int16x8";
   case JS_SIMDTYPEREPR_INT32:
-    return "int32x4";
+    return "Int32x4";
   case JS_SIMDTYPEREPR_FLOAT32:
-    return "float32x4";
+    return "Float32x4";
   case JS_SIMDTYPEREPR_FLOAT64:
-    return "float64x2";
+    return "Float64x2";
   }
 
   assert(false, "Unhandled type constant");
@@ -582,7 +582,7 @@ function SimdToSource() {
           var s14 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 5);
           var s15 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 6);
           var s16 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 7);
-          return `${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8}, ${s9}, ${s10}, ${s11}, ${s12}, ${s13}, ${s14}, ${s15}, ${s16})`;
+          return `SIMD.${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8}, ${s9}, ${s10}, ${s11}, ${s12}, ${s13}, ${s14}, ${s15}, ${s16})`;
       }
       case JS_SIMDTYPEREPR_INT16: {
           var s1 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 0);
@@ -593,26 +593,26 @@ function SimdToSource() {
           var s6 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 5);
           var s7 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 6);
           var s8 = callFunction(std_SIMD_Int16x8_extractLane, null, this, 7);
-          return `${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8})`;
+          return `SIMD.${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8})`;
       }
       case JS_SIMDTYPEREPR_INT32: {
           var x = callFunction(std_SIMD_Int32x4_extractLane, null, this, 0);
           var y = callFunction(std_SIMD_Int32x4_extractLane, null, this, 1);
           var z = callFunction(std_SIMD_Int32x4_extractLane, null, this, 2);
           var w = callFunction(std_SIMD_Int32x4_extractLane, null, this, 3);
-          return `${protoString}(${x}, ${y}, ${z}, ${w})`;
+          return `SIMD.${protoString}(${x}, ${y}, ${z}, ${w})`;
       }
       case JS_SIMDTYPEREPR_FLOAT32: {
           var x = callFunction(std_SIMD_Float32x4_extractLane, null, this, 0);
           var y = callFunction(std_SIMD_Float32x4_extractLane, null, this, 1);
           var z = callFunction(std_SIMD_Float32x4_extractLane, null, this, 2);
           var w = callFunction(std_SIMD_Float32x4_extractLane, null, this, 3);
-          return `${protoString}(${x}, ${y}, ${z}, ${w})`;
+          return `SIMD.${protoString}(${x}, ${y}, ${z}, ${w})`;
       }
       case JS_SIMDTYPEREPR_FLOAT64: {
           var x = callFunction(std_SIMD_Float64x2_extractLane, null, this, 0);
           var y = callFunction(std_SIMD_Float64x2_extractLane, null, this, 1);
-          return `${protoString}(${x}, ${y})`;
+          return `SIMD.${protoString}(${x}, ${y})`;
       }
   }
   assert(false, "unexpected SIMD kind");

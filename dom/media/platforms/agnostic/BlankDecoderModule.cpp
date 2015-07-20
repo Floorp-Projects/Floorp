@@ -246,6 +246,11 @@ public:
     return true;
   }
 
+  virtual bool
+  SupportsSharedDecoders(const VideoInfo& aConfig) const override {
+    return false;
+  }
+
   virtual ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
@@ -254,10 +259,27 @@ public:
 
 };
 
+class AgnosticDecoderModule : public BlankDecoderModule {
+public:
+
+  bool SupportsMimeType(const nsACString& aMimeType) override
+  {
+    // This module does not support any decoders itself,
+    // agnostic decoders are created in PlatformDecoderModule::CreateDecoder
+    return false;
+  }
+};
+
 already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule()
 {
   nsRefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
   return pdm.forget();
+}
+
+already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule()
+{
+  nsRefPtr<PlatformDecoderModule> adm = new AgnosticDecoderModule();
+  return adm.forget();
 }
 
 } // namespace mozilla

@@ -46,10 +46,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace android;
 
-OmxDecoder::OmxDecoder(MediaResource *aResource,
-                       AbstractMediaDecoder *aDecoder) :
+OmxDecoder::OmxDecoder(AbstractMediaDecoder *aDecoder) :
   mDecoder(aDecoder),
-  mResource(aResource),
   mDisplayWidth(0),
   mDisplayHeight(0),
   mVideoWidth(0),
@@ -142,8 +140,6 @@ bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
     NS_WARNING("OMX decoder could not find video or audio tracks");
     return false;
   }
-
-  mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 
   if (videoTrackIndex != -1 && mDecoder->GetImageContainer()) {
     mVideoTrack = extractor->getTrack(videoTrackIndex);

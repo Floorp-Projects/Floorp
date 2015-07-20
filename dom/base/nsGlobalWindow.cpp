@@ -144,7 +144,6 @@
 #include "nsMenuPopupFrame.h"
 #endif
 #include "mozilla/dom/CustomEvent.h"
-#include "nsIFrameRequestCallback.h"
 #include "nsIJARChannel.h"
 
 #include "xpcprivate.h"
@@ -5485,47 +5484,8 @@ nsGlobalWindow::GetMozPaintCount(uint64_t* aResult)
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
-                                         int32_t *aHandle)
-{
-  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback, aHandle), NS_ERROR_UNEXPECTED);
-
-  if (!aCallback) {
-    if (mDoc) {
-      mDoc->WarnOnceAbout(nsIDocument::eMozBeforePaint);
-    }
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  ErrorResult rv;
-  nsIDocument::FrameRequestCallbackHolder holder(aCallback);
-  *aHandle = RequestAnimationFrame(holder, rv);
-
-  return rv.StealNSResult();
-}
-
 int32_t
 nsGlobalWindow::RequestAnimationFrame(FrameRequestCallback& aCallback,
-                                      ErrorResult& aError)
-{
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-
-  nsIDocument::FrameRequestCallbackHolder holder(&aCallback);
-  return RequestAnimationFrame(holder, aError);
-}
-
-int32_t
-nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
-                                         ErrorResult& aError)
-{
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-  nsIDocument::FrameRequestCallbackHolder holder(aCallback);
-  return RequestAnimationFrame(holder, aError);
-}
-
-int32_t
-nsGlobalWindow::RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
                                       ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
@@ -5563,20 +5523,6 @@ nsGlobalWindow::RequestAnimationFrame(JS::Handle<JS::Value> aCallback,
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::MozCancelRequestAnimationFrame(int32_t aHandle)
-{
-  FORWARD_TO_INNER(MozCancelRequestAnimationFrame, (aHandle), NS_ERROR_UNEXPECTED);
-  return CancelAnimationFrame(aHandle);
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::MozCancelAnimationFrame(int32_t aHandle)
-{
-  FORWARD_TO_INNER(MozCancelAnimationFrame, (aHandle), NS_ERROR_UNEXPECTED);
-  return CancelAnimationFrame(aHandle);
-}
-
 void
 nsGlobalWindow::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError)
 {
@@ -5596,34 +5542,6 @@ nsGlobalWindow::CancelAnimationFrame(int32_t aHandle)
 
   ErrorResult rv;
   CancelAnimationFrame(aHandle, rv);
-
-  return rv.StealNSResult();
-}
-
-int64_t
-nsGlobalWindow::GetMozAnimationStartTime(ErrorResult& aError)
-{
-  MOZ_RELEASE_ASSERT(IsInnerWindow());
-
-  if (mDoc) {
-    nsIPresShell* presShell = mDoc->GetShell();
-    if (presShell) {
-      return presShell->GetPresContext()->RefreshDriver()->
-        MostRecentRefreshEpochTime() / PR_USEC_PER_MSEC;
-    }
-  }
-
-  // If all else fails, just be compatible with Date.now()
-  return JS_Now() / PR_USEC_PER_MSEC;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetMozAnimationStartTime(int64_t *aTime)
-{
-  FORWARD_TO_INNER(GetMozAnimationStartTime, (aTime), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  *aTime = GetMozAnimationStartTime(rv);
 
   return rv.StealNSResult();
 }

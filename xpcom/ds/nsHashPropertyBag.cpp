@@ -123,8 +123,8 @@ nsHashPropertyBagBase::GetEnumerator(nsISimpleEnumerator** aResult)
   }
 
   for (auto iter = mPropertyHash.Iter(); !iter.Done(); iter.Next()) {
-    const nsAString& key = iter.GetKey();
-    nsIVariant* data = iter.GetUserData();
+    const nsAString& key = iter.Key();
+    nsIVariant* data = iter.UserData();
     nsSimpleProperty* sprop = new nsSimpleProperty(key, data);
     propertyArray->AppendElement(sprop, false);
   }

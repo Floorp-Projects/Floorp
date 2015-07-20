@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'agnostic/OpusDecoder.h',
+    'agnostic/VorbisDecoder.h',
+    'agnostic/VPXDecoder.h',
     'PlatformDecoderModule.h',
     'SharedDecoderManager.h',
     'wrappers/H264Converter.h'
@@ -12,6 +15,9 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'agnostic/BlankDecoderModule.cpp',
+    'agnostic/OpusDecoder.cpp',
+    'agnostic/VorbisDecoder.cpp',
+    'agnostic/VPXDecoder.cpp',
     'PlatformDecoderModule.cpp',
     'SharedDecoderManager.cpp',
     'wrappers/H264Converter.cpp'

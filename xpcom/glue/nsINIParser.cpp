@@ -303,7 +303,7 @@ nsresult
 nsINIParser::GetSections(INISectionCallback aCB, void* aClosure)
 {
   for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
-    if (!aCB(iter.GetKey(), aClosure)) {
+    if (!aCB(iter.Key(), aClosure)) {
       break;
     }
   }

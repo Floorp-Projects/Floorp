@@ -45,15 +45,23 @@ typedef RootedValueMap::Enum RootEnum;
 // linkage.
 
 void
-MarkBindingsRoot(JSTracer* trc, Bindings* bindings, const char* name)
-{
-    bindings->trace(trc);
-}
-
-void
 MarkPropertyDescriptorRoot(JSTracer* trc, JSPropertyDescriptor* pd, const char* name)
 {
     pd->trace(trc);
+}
+
+// We cannot instantiate (even indirectly) the abstract JS::DynamicTraceable.
+// Instead we cast to a ConcreteTraceable, then upcast before calling trace so
+// that we get the implementation defined dynamically in the vtable.
+struct ConcreteTraceable : public JS::DynamicTraceable
+{
+    void trace(JSTracer* trc) override {}
+};
+
+static void
+MarkDynamicTraceable(JSTracer* trc, ConcreteTraceable* t, const char* name)
+{
+    static_cast<JS::DynamicTraceable*>(t)->trace(trc);
 }
 
 template <typename T>
@@ -87,12 +95,13 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<LazyScript*>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid>(trc, context, "exact-id");
     MarkExactStackRootList<Value>(trc, context, "exact-value");
-    MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
     MarkExactStackRootList<JS::StaticTraceable,
                            js::DispatchWrapper<JS::StaticTraceable>::TraceWrapped>(
         trc, context, "StaticTraceable");
+    MarkExactStackRootList<ConcreteTraceable, MarkDynamicTraceable>(
+        trc, context, "DynamicTraceable");
 }
 
 static void

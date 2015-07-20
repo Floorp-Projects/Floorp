@@ -17,11 +17,15 @@ task:
   scopes:
     - 'docker-worker:cache:build-mulet-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
       build-mulet-linux-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tools/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
 
     env:
       MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
