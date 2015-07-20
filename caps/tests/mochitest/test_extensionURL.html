@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1161831</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1161831 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var aps = SpecialPowers.Cc["@mozilla.org/addons/policy-service;1"]
+                         .getService(SpecialPowers.Ci.nsIAddonPolicyService).wrappedJSObject;
+  var oldLoadCallback = aps.setExtensionURILoadCallback(null);
+  var oldMapCallback = aps.setExtensionURIToAddonIdCallback(null);
+  var resourceHandler = SpecialPowers.Services.io.getProtocolHandler("resource")
+                                     .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
+  var extensionHandler = SpecialPowers.Services.io.getProtocolHandler("moz-extension")
+                                     .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
+
+  SimpleTest.registerCleanupFunction(function() {
+      extensionHandler.setSubstitution('cherise', null);
+      extensionHandler.setSubstitution('liebchen', null);
+      aps.setExtensionURILoadCallback(oldLoadCallback);
+      aps.setExtensionURIToAddonIdCallback(oldMapCallback);
+  });
+
+  addLoadEvent(function() {
+
+    // First, get a file:// URI to something - open to suggestions on how to do
+    //  this more easily.
+    var resURI = SpecialPowers.Services.io.newURI('resource://testing-common/resource_test_file.html', null, null);
+    var filePath = resourceHandler.resolveURI(resURI);
+    ok(filePath.startsWith('file://'), 'resource:// URI resolves where we expect: ' + filePath);
+    var fileURI = SpecialPowers.Services.io.newURI(filePath, null, null);
+
+    // Register a moz-extension:// URI.
+    extensionHandler.setSubstitution('cherise', fileURI);
+
+    // Alias the above.
+    extensionHandler.setSubstitution('liebchen', SpecialPowers.Services.io.newURI('moz-extension://cherise', null, null));
+
+    //
+    // Make sure that non-file:// URIs don't work.
+    //
+
+    // resource://
+    try {
+      extensionHandler.setSubstitution('interdit', resURI);
+      ok(false, "Should have thrown for mapping moz-extension to resource");
+    } catch (e) {
+      ok(true, "Threw correctly: " + e);
+    }
+
+    // chrome://
+    try {
+      var chromeURI = SpecialPowers.Services.io.newURI('chrome://global/content/mozilla.xhtml', null, null);
+      extensionHandler.setSubstitution('verboten', chromeURI);
+      ok(false, "Should have thrown for mapping moz-extension to chrome");
+    } catch (e) {
+      ok(true, "Threw correctly: " + e);
+    }
+
+    function navigateWithLocation(ifr, url) { ifr.contentWindow.location = url; }
+    function navigateWithSrc(ifr, url) { ifr.setAttribute('src', url); }
+    function navigateFromChromeWithLocation(ifr, url) { SpecialPowers.wrap(ifr).contentWindow.location = url; }
+    function navigateFromChromeWithWebNav(ifr, url) {
+      SpecialPowers.wrap(ifr).contentWindow
+                   .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                   .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                   .loadURI(url, 0, null, null, null);
+    }
+
+
+    function setWhitelistCallback(rgxp) {
+      var cb = SpecialPowers.wrapCallback(function(uri) { return rgxp.test(uri.spec); });
+      aps.setExtensionURILoadCallback(cb);
+    }
+
+    aps.setExtensionURIToAddonIdCallback(SpecialPowers.wrapCallback(function (uri) { return 'imaginaryaddon-' + uri.host[0]; }));
+
+    function testLoad(url, navigate, shouldThrow) {
+      var ifr = document.createElement('iframe');
+      var p = new Promise(function(resolve, reject) {
+        ifr.onload = function() {
+          ok(true, 'Loaded ' + url);
+          var prin = SpecialPowers.wrap(ifr.contentWindow).document.nodePrincipal;
+          is(prin.originNoSuffix, url, 'Principal origin is correct: ' + url);
+          is(prin.originAttributes.addonId, 'imaginaryaddon-' + url[url.indexOf('/') + 2], 'addonId is correct');
+          is(SpecialPowers.wrap(ifr.contentWindow).document.title, 'resource test file',
+             'document looks right');
+          ifr.remove();
+          resolve();
+        };
+        document.body.appendChild(ifr);
+
+        var threw = false;
+        try {
+          navigate(ifr, url);
+        } catch (e) {
+          ifr.remove();
+          threw = true;
+          ok(/denied|insecure/.test(e), "exceiton correct: " + e);
+        }
+        is(threw, !!shouldThrow, "Correct throwing behavior for: " + url);
+        !threw || resolve();
+      });
+
+      return p;
+    }
+
+    //
+    // Perform some loads and make sure they work correctly.
+    //
+    testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithLocation)()
+    .then(testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithWebNav))
+    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation, /* shouldThrow = */ true))
+    .then(setWhitelistCallback.bind(null, /cherise/))
+    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation))
+    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation, /* shouldThrow = */ true))
+    .then(setWhitelistCallback.bind(null, /cherise|liebchen/))
+    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation))
+    .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithSrc))
+    .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithSrc))
+    .then(SimpleTest.finish.bind(SimpleTest),
+          function(e) { ok(false, "rejected promise: " + e); SimpleTest.finish() }
+    );
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1161831">Mozilla Bug 1161831</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
