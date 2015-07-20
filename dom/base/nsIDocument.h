@@ -2122,14 +2122,11 @@ public:
 
   virtual mozilla::dom::DocumentTimeline* Timeline() = 0;
 
-  typedef mozilla::dom::CallbackObjectHolder<
-    mozilla::dom::FrameRequestCallback,
-    nsIFrameRequestCallback> FrameRequestCallbackHolder;
-  nsresult ScheduleFrameRequestCallback(const FrameRequestCallbackHolder& aCallback,
+  nsresult ScheduleFrameRequestCallback(mozilla::dom::FrameRequestCallback& aCallback,
                                         int32_t *aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
 
-  typedef nsTArray<FrameRequestCallbackHolder> FrameRequestCallbackList;
+  typedef nsTArray<nsRefPtr<mozilla::dom::FrameRequestCallback>> FrameRequestCallbackList;
   /**
    * Put this document's frame request callbacks into the provided
    * list, and forget about them.

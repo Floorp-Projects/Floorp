@@ -272,7 +272,7 @@ XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& a
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
     aInterfaces.SetCapacity(mWorkingSet.mNameTable.Count());
     for (auto iter = mWorkingSet.mNameTable.Iter(); !iter.Done(); iter.Next()) {
-        xptiInterfaceEntry* entry = iter.GetUserData();
+        xptiInterfaceEntry* entry = iter.UserData();
         if (entry->GetScriptableFlag()) {
             nsCOMPtr<nsIInterfaceInfo> ii = entry->InterfaceInfo();
             aInterfaces.AppendElement(ii);
@@ -292,7 +292,7 @@ XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *pref
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
     uint32_t length = static_cast<uint32_t>(strlen(prefix));
     for (auto iter = mWorkingSet.mNameTable.Iter(); !iter.Done(); iter.Next()) {
-        xptiInterfaceEntry* entry = iter.GetUserData();
+        xptiInterfaceEntry* entry = iter.UserData();
         const char* name = entry->GetTheName();
         if (name != PL_strnstr(name, prefix, length)) {
             continue;

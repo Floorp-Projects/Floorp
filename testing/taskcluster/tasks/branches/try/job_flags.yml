@@ -5,6 +5,11 @@
 $inherits:
   from: tasks/branches/base_job_flags.yml
 
+# Flags specific to this branch
+flags:
+  post-build:
+    - upload-symbols
+
 builds:
   linux64_gecko:
     platforms:
@@ -176,6 +181,14 @@ builds:
         task: tasks/builds/sm_warnaserr.yml
       debug:
         task: tasks/builds/sm_warnaserrdebug.yml
+
+post-build:
+  upload-symbols:
+    allowed_build_tasks:
+      - tasks/builds/opt_linux64.yml
+      - tasks/builds/dbg_linux64.yml
+      - tasks/builds/android_api_11.yml
+    task: tasks/post-builds/upload_symbols.yml
 
 tests:
   cppunit:

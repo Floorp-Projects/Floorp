@@ -350,9 +350,9 @@ CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>&
 
   for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
     // if a category has no entries, we pretend it doesn't exist
-    CategoryNode* aNode = iter.GetUserData();
+    CategoryNode* aNode = iter.UserData();
     if (aNode->Count()) {
-      const char* str = iter.GetKey();
+      const char* str = iter.Key();
       enumObj->mArray[enumObj->mCount++] = str;
     }
   }

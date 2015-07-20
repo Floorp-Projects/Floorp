@@ -5783,13 +5783,13 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 }
 
 void
-nsIFrame::DumpFrameTree()
+nsIFrame::DumpFrameTree() const
 {
   RootFrameList(PresContext(), stderr);
 }
 
 void
-nsIFrame::DumpFrameTreeLimited()
+nsIFrame::DumpFrameTreeLimited() const
 {
   List(stderr);
 }

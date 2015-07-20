@@ -68,6 +68,8 @@ protected:
                                         OperatingSystem* aOS = nullptr);
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo();
 
+  void DescribeFeatures(JSContext* cx, JS::Handle<JSObject*> aOut) override;
+
 private:
 
   void AddCrashReportAnnotations();

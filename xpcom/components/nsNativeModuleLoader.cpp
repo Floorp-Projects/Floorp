@@ -197,13 +197,13 @@ nsNativeModuleLoader::UnloadLibraries()
   MOZ_ASSERT(NS_IsMainThread(), "Shutdown not on main thread?");
 
   for (auto iter = mLibraries.Iter(); !iter.Done(); iter.Next()) {
-    NativeLoadData& loadData = iter.GetData();
+    NativeLoadData& loadData = iter.Data();
     loadData.mModule = nullptr;
   }
 
   for (auto iter = mLibraries.Iter(); !iter.Done(); iter.Next()) {
     if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), LogLevel::Debug)) {
-      nsIHashable* hashedFile = iter.GetKey();
+      nsIHashable* hashedFile = iter.Key();
       nsCOMPtr<nsIFile> file(do_QueryInterface(hashedFile));
 
       nsAutoCString filePath;
@@ -220,7 +220,7 @@ nsNativeModuleLoader::UnloadLibraries()
 #if 0
     // XXXbsmedberg: do this as soon as the static-destructor crash(es)
     // are fixed
-    NativeLoadData& loadData = iter.GetData();
+    NativeLoadData& loadData = iter.Data();
     PRStatus ret = PR_UnloadLibrary(loadData.mLibrary);
     NS_ASSERTION(ret == PR_SUCCESS, "Failed to unload library");
 #endif

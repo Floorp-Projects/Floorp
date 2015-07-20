@@ -390,9 +390,9 @@ public:
   // Return the anchor if there is one.
   nsIContent* GetAnchor() const { return mAnchorContent; }
 
-  // Return the screen coordinates of the popup, or (-1, -1) if anchored.
-  // This position is in CSS pixels.
-  nsIntPoint ScreenPosition() const { return mScreenRect.TopLeft(); }
+  // Return the screen coordinates in CSS pixels of the popup,
+  // or (-1, -1, 0, 0) if anchored.
+  nsIntRect GetScreenAnchorRect() const { return mScreenRect; }
 
   nsIntPoint GetLastClientOffset() const { return mLastClientOffset; }
 

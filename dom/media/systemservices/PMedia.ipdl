@@ -32,9 +32,15 @@ parent:
                bool aPersist);
 
   /**
-   * On clear cookies. Fire and forget.
+   * Clear per-orgin list of persistent deviceIds stored for enumerateDevices
+   * Fire and forget.
+   *
+   * aSinceTime - milliseconds since 1 January 1970 00:00:00 UTC. 0 = clear all
+   *
+   * aOnlyPrivateBrowsing - if true then only purge the separate in-memory
+   *                        per-origin list used in Private Browsing.
    */
-  SanitizeOriginKeys(uint64_t aSinceWhen);
+  SanitizeOriginKeys(uint64_t aSinceWhen, bool aOnlyPrivateBrowsing);
 
 child:
   GetOriginKeyResponse(uint32_t aRequestId, nsCString key);

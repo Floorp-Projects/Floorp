@@ -223,10 +223,10 @@ public:
   // This is an iterator that also allows entry removal. Example usage:
   //
   //   for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
-  //     const KeyType key = iter.GetKey();
-  //     const UserDataType data = iter.GetUserData();
+  //     const KeyType key = iter.Key();
+  //     const UserDataType data = iter.UserData();
   //     // or
-  //     const DataType& data = iter.GetData();
+  //     const DataType& data = iter.Data();
   //     // ... do stuff with |key| and/or |data| ...
   //     // ... possibly call iter.Remove() once ...
   //   }
@@ -240,12 +240,12 @@ public:
     Iterator(Iterator&& aOther) : Base(aOther.mTable) {}
     ~Iterator() {}
 
-    KeyType GetKey() const { return static_cast<EntryType*>(Get())->GetKey(); }
-    UserDataType GetUserData() const
+    KeyType Key() const { return static_cast<EntryType*>(Get())->GetKey(); }
+    UserDataType UserData() const
     {
       return static_cast<EntryType*>(Get())->mData;
     }
-    DataType& GetData() const { return static_cast<EntryType*>(Get())->mData; }
+    DataType& Data() const { return static_cast<EntryType*>(Get())->mData; }
 
   private:
     Iterator() = delete;

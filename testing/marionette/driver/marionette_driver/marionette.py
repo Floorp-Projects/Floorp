@@ -545,7 +545,7 @@ class Marionette(object):
     TIMEOUT_PAGE = 'page load'
 
     def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
-                 profile=None, emulator=None, sdcard=None, emulator_img=None,
+                 profile=None, addons=None, emulator=None, sdcard=None, emulator_img=None,
                  emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
                  gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
                  busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
@@ -555,6 +555,7 @@ class Marionette(object):
         self.port = self.local_port = port
         self.bin = bin
         self.profile = profile
+        self.addons = addons
         self.instance = None
         self.session = None
         self.session_id = None
@@ -597,7 +598,8 @@ class Marionette(object):
             self.instance = instance_class(host=self.host, port=self.port,
                                            bin=self.bin, profile=self.profile,
                                            app_args=app_args, symbols_path=symbols_path,
-                                           gecko_log=gecko_log, prefs=prefs)
+                                           gecko_log=gecko_log, prefs=prefs,
+                                           addons=self.addons)
             self.instance.start()
             assert(self.wait_for_port(timeout=startup_timeout)), "Timed out waiting for port!"
 
@@ -612,6 +614,7 @@ class Marionette(object):
                                             userdata=emulator_img,
                                             resolution=emulator_res,
                                             profile=self.profile,
+                                            addons=self.addons,
                                             adb_path=adb_path,
                                             process_args=process_args)
             self.emulator = self.runner.device

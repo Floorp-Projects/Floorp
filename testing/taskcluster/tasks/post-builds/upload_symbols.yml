@@ -1,0 +1,41 @@
+# This is a sample task for uploading debug symbols to the socorro api
+---
+taskId: {{taskId}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: amiyaguchi@mozilla.com
+    name: '[TC] Upload Symbols'
+    description: 'Upload Symbols'
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: symbol-upload
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+  scopes: ['docker-worker:image:taskclusterprivate/upload_symbols:0.0.3']
+
+  payload:
+    image: 'taskclusterprivate/upload_symbols:0.0.3'
+
+    maxRunTime: 600
+
+    command: ["/bin/bash", "bin/upload.sh"]
+
+    env:
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      ARTIFACT_TASKID: '{{build_slugid}}'
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: us

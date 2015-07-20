@@ -19,8 +19,7 @@ const CANVAS_CONTEXTS = [
 ];
 
 const ANIMATION_GENERATORS = [
-  "requestAnimationFrame",
-  "mozRequestAnimationFrame"
+  "requestAnimationFrame"
 ];
 
 const LOOP_GENERATORS = [

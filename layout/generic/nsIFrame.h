@@ -3237,8 +3237,8 @@ public:
    */
   static void RootFrameList(nsPresContext* aPresContext,
                             FILE* out = stderr, const char* aPrefix = "");
-  virtual void DumpFrameTree();
-  void DumpFrameTreeLimited();
+  virtual void DumpFrameTree() const;
+  void DumpFrameTreeLimited() const;
 
   virtual nsresult  GetFrameName(nsAString& aResult) const = 0;
 #endif
