@@ -29,7 +29,7 @@ static
 bool
 stepFunc(JSContext *aCtx,
          uint32_t,
-         jsval *_vp)
+         JS::Value *_vp)
 {
   nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
@@ -82,7 +82,7 @@ nsresult
 StatementJSHelper::getRow(Statement *aStatement,
                           JSContext *aCtx,
                           JSObject *aScopeObj,
-                          jsval *_row)
+                          JS::Value *_row)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
@@ -126,7 +126,7 @@ nsresult
 StatementJSHelper::getParams(Statement *aStatement,
                              JSContext *aCtx,
                              JSObject *aScopeObj,
-                             jsval *_params)
+                             JS::Value *_params)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
@@ -190,7 +190,7 @@ StatementJSHelper::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                                JSContext *aCtx,
                                JSObject *aScopeObj,
                                jsid aId,
-                               jsval *_result,
+                               JS::Value *_result,
                                bool *_retval)
 {
   if (!JSID_IS_STRING(aId))

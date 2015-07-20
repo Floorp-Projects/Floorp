@@ -387,5 +387,18 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
   return rootedObj;
 }
 
+nsContentPolicyType
+HTMLSharedObjectElement::GetContentPolicyType() const
+{
+  if (mNodeInfo->Equals(nsGkAtoms::applet)) {
+    // We use TYPE_INTERNAL_OBJECT for applet too, since it is not exposed
+    // through RequestContext yet.
+    return nsIContentPolicy::TYPE_INTERNAL_OBJECT;
+  } else {
+    MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::embed));
+    return nsIContentPolicy::TYPE_INTERNAL_EMBED;
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

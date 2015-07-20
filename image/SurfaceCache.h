@@ -230,6 +230,7 @@ struct SurfaceCache
   /**
    * Insert a surface into the cache. If a surface with the same ImageKey and
    * SurfaceKey is already in the cache, Insert returns FAILURE_ALREADY_PRESENT.
+   * If a matching placeholder is already present, the placeholder is removed.
    *
    * Each surface in the cache has a lifetime, either Transient or Persistent.
    * Transient surfaces can expire from the cache at any time. Persistent
@@ -279,6 +280,33 @@ struct SurfaceCache
                               const ImageKey    aImageKey,
                               const SurfaceKey& aSurfaceKey,
                               Lifetime          aLifetime);
+
+  /**
+   * Insert a placeholder for a surface into the cache. If a surface with the
+   * same ImageKey and SurfaceKey is already in the cache, InsertPlaceholder()
+   * returns FAILURE_ALREADY_PRESENT.
+   *
+   * Placeholders exist to allow lazy allocation of surfaces. The Lookup*()
+   * methods will report whether a placeholder for an exactly matching surface
+   * existed by returning a MatchType of PENDING or SUBSTITUTE_BECAUSE_PENDING,
+   * but they will never return a placeholder directly. (They couldn't, since
+   * placeholders don't have an associated surface.)
+   *
+   * Once inserted, placeholders can be removed using RemoveSurface() or
+   * RemoveImage(), just like a surface.  They're automatically removed when a
+   * real surface that matches the placeholder is inserted with Insert().
+   *
+   * @param aImageKey    Key data identifying which image the placeholder
+   *                     belongs to.
+   * @param aSurfaceKey  Key data which uniquely identifies the surface the
+   *                     placeholder stands in for.
+   * @return SUCCESS if the placeholder was inserted successfully.
+   *         FAILURE if the placeholder could not be inserted for some reason.
+   *         FAILURE_ALREADY_PRESENT if a surface with the same ImageKey and
+   *           SurfaceKey already exists in the cache.
+   */
+  static InsertOutcome InsertPlaceholder(const ImageKey    aImageKey,
+                                         const SurfaceKey& aSurfaceKey);
 
   /**
    * Checks if a surface of a given size could possibly be stored in the cache.
@@ -362,8 +390,8 @@ struct SurfaceCache
   static void UnlockSurfaces(const ImageKey aImageKey);
 
   /**
-   * Removes a surface from the cache, if it's present. If it's not present,
-   * RemoveSurface() has no effect.
+   * Removes a surface or placeholder from the cache, if it's present. If it's
+   * not present, RemoveSurface() has no effect.
    *
    * Use this function to remove individual surfaces that have become invalid.
    * Prefer RemoveImage() or DiscardAll() when they're applicable, as they have
@@ -378,8 +406,9 @@ struct SurfaceCache
                             const SurfaceKey& aSurfaceKey);
 
   /**
-   * Removes all cached surfaces associated with the given image from the cache.
-   * If the image is locked, it is automatically unlocked.
+   * Removes all cached surfaces and placeholders associated with the given
+   * image from the cache.  If the image is locked, it is automatically
+   * unlocked.
    *
    * This MUST be called, at a minimum, when an Image which could be storing
    * surfaces in the surface cache is destroyed. If another image were allocated

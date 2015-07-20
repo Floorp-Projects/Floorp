@@ -3212,7 +3212,7 @@ nsDOMWindowUtils::ExitFullscreen()
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsIDocument::ExitFullscreen(doc, /* async */ false);
+  nsIDocument::ExitFullscreenInDocTree(doc);
   return NS_OK;
 }
 

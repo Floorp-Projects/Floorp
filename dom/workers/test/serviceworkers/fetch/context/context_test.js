@@ -46,8 +46,7 @@ self.addEventListener("fetch", function(event) {
       event.respondWith(fetch("context_test.js"));
     }
   } else if (event.request.url.indexOf("frame") >= 0) {
-    // FIXME: Bug 1148044: This should be "frame".
-    if (event.request.context == "iframe") {
+    if (event.request.context == "frame") {
       event.respondWith(fetch("context_test.js"));
     }
   } else if (event.request.url.indexOf("newwindow") >= 0) {

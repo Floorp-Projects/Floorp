@@ -34,10 +34,12 @@ function contentHandler(request, response)
 function finish_test(request, buffer)
 {
   do_check_eq(buffer, responseBody);
-  let chan = request.QueryInterface(Ci.nsIRedirectHistory);
-  do_check_eq(numRedirects - 1, chan.redirects.length);
+  let chan = request.QueryInterface(Ci.nsIChannel);
+  let redirectChain = chan.loadInfo.redirectChain;
+
+  do_check_eq(numRedirects - 1, redirectChain.length);
   for (let i = 0; i < numRedirects - 1; ++i) {
-    let principal = chan.redirects.queryElementAt(i, Ci.nsIPrincipal);
+    let principal = redirectChain[i];
     do_check_eq(URL + redirects[i], principal.URI.spec);
   }
   httpServer.stop(do_test_finished);

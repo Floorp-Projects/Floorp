@@ -669,10 +669,10 @@ IsConstructor(const Value& v)
 
 class JSValueArray {
   public:
-    const jsval* array;
+    const js::Value* array;
     size_t length;
 
-    JSValueArray(const jsval* v, size_t c) : array(v), length(c) {}
+    JSValueArray(const js::Value* v, size_t c) : array(v), length(c) {}
 };
 
 class ValueArray {
