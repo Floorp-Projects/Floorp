@@ -1144,5 +1144,5 @@ std::ostream& operator<<(std::ostream& stream, const nsRegion& m) {
 
 nsCString
 nsRegion::ToString() const {
-  return nsCString(mozilla::ToString(this).c_str());
+  return nsCString(mozilla::ToString(*this).c_str());
 }
