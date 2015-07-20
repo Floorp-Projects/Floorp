@@ -1,0 +1,15 @@
+<html>
+<head>
+  <title>CSP inline script tests</title>
+</head>
+<body onload="window.parent.postMessage('body-onload-fired', '*')">
+  <script type="text/javascript">
+    window.parent.postMessage("text-node-fired", "*");
+  </script>
+
+  <iframe src='javascript:window.parent.parent.postMessage("javascript-uri-fired", "*")'></iframe>
+
+  <a id='anchortoclick' href='javascript:window.parent.postMessage("javascript-uri-anchor-fired", "*")'>testlink</a>
+
+</body>
+</html>
