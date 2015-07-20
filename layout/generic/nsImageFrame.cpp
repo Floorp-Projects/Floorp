@@ -718,7 +718,7 @@ nsImageFrame::MaybeDecodeForPredictedSize()
   nsIPresShell* presShell = PresContext()->GetPresShell();
   LayoutDeviceToScreenScale2D resolutionToScreen(
       presShell->GetCumulativeResolution()
-    * nsLayoutUtils::GetTransformToAncestorScale(this));
+    * nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(this));
 
   // ...and this frame's content box...
   const nsPoint offset =

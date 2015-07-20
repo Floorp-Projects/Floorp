@@ -15,6 +15,7 @@
 #include "nsColor.h"
 #include "nsCSSValue.h"
 
+class nsIFrame;
 class nsStyleContext;
 class gfx3DMatrix;
 
@@ -316,6 +317,9 @@ public:
     uint32_t len = NS_strlen(GetBufferValue(mValue.mString));
     mValue.mString->ToString(len, aBuffer);
   }
+
+  /// @return the scale for this value, calculated with reference to @aForFrame.
+  gfxSize GetScaleValue(const nsIFrame* aForFrame) const;
 
   explicit StyleAnimationValue(Unit aUnit = eUnit_Null) : mUnit(aUnit) {
     NS_ASSERTION(aUnit == eUnit_Null || aUnit == eUnit_Normal ||
