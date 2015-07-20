@@ -1066,18 +1066,6 @@ public:
     GetDefaultComputedStyle(mozilla::dom::Element& aElt,
                             const nsAString& aPseudoElt,
                             mozilla::ErrorResult& aError);
-  int32_t MozRequestAnimationFrame(nsIFrameRequestCallback* aRequestCallback,
-                                   mozilla::ErrorResult& aError);
-  void MozCancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError)
-  {
-    return CancelAnimationFrame(aHandle, aError);
-  }
-  void MozCancelRequestAnimationFrame(int32_t aHandle,
-                                      mozilla::ErrorResult& aError)
-  {
-    return CancelAnimationFrame(aHandle, aError);
-  }
-  int64_t GetMozAnimationStartTime(mozilla::ErrorResult& aError);
   void SizeToContentOuter(mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::ErrorResult& aError);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
@@ -1597,9 +1585,6 @@ protected:
 
   // Returns device pixels.  Outer windows only.
   nsIntPoint GetScreenXY(mozilla::ErrorResult& aError);
-
-  int32_t RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
-                                mozilla::ErrorResult& aError);
 
   nsGlobalWindow* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 

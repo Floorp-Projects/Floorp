@@ -49,7 +49,6 @@
 #include "RestyleManager.h"
 #include "Layers.h"
 #include "imgIContainer.h"
-#include "nsIFrameRequestCallback.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsDocShell.h"
 #include "nsISimpleEnumerator.h"
@@ -1552,7 +1551,6 @@ nsRefreshDriver::RunFrameRequestCallbacks(int64_t aNowEpoch, TimeStamp aNowTime)
 
   if (!frameRequestCallbacks.IsEmpty()) {
     profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_START);
-    int64_t eventTime = aNowEpoch / PR_USEC_PER_MSEC;
     for (const DocumentFrameCallbacks& docCallbacks : frameRequestCallbacks) {
       // XXXbz Bug 863140: GetInnerWindow can return the outer
       // window in some cases.
@@ -1565,15 +1563,10 @@ nsRefreshDriver::RunFrameRequestCallbacks(int64_t aNowEpoch, TimeStamp aNowTime)
         }
         // else window is partially torn down already
       }
-      for (const nsIDocument::FrameRequestCallbackHolder& holder :
-           docCallbacks.mCallbacks) {
-        nsAutoMicroTask mt;
-        if (holder.HasWebIDLCallback()) {
-          ErrorResult ignored;
-          holder.GetWebIDLCallback()->Call(timeStamp, ignored);
-        } else {
-          holder.GetXPCOMCallback()->Sample(eventTime);
-        }
+      for (auto& callback : docCallbacks.mCallbacks) {
+        ErrorResult ignored;
+        callback->Call(timeStamp, ignored);
+        ignored.SuppressException();
       }
     }
     profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_END);

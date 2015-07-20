@@ -5,7 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIFrameRequestCallback;
 interface nsIControllers;
 interface nsIDOMBlob;
 interface nsIDOMLocation;
@@ -23,7 +22,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(8146f3fc-9fc1-47c5-85ef-95d686e4ca6d)]
+[scriptable, uuid(7e26f1bd-a694-4b65-8d9d-9eead0645fe3)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -457,9 +456,6 @@ interface nsIDOMWindow : nsISupports
    *
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
-  // Argument is optional only so we can warn when it's null
-  long
-    mozRequestAnimationFrame([optional] in nsIFrameRequestCallback aCallback);
   // jsval because we want a WebIDL callback here
   [implicit_jscontext]
   long requestAnimationFrame(in jsval aCallback);
@@ -467,15 +463,7 @@ interface nsIDOMWindow : nsISupports
   /**
    * Cancel a refresh callback.
    */
-  void mozCancelAnimationFrame(in long aHandle);
-  // Backwards-compat shim for now to make Google maps work
-  void mozCancelRequestAnimationFrame(in long aHandle);
   void cancelAnimationFrame(in long aHandle);
-
-  /**
-   * The current animation start time in milliseconds since the epoch.
-   */
-  readonly attribute long long mozAnimationStartTime;
 
   /**
    * Console API

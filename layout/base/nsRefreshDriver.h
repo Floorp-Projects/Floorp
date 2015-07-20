@@ -215,12 +215,12 @@ public:
   }
 
   /**
-   * Add a document for which we have nsIFrameRequestCallbacks
+   * Add a document for which we have FrameRequestCallbacks
    */
   void ScheduleFrameRequestCallbacks(nsIDocument* aDocument);
 
   /**
-   * Remove a document for which we have nsIFrameRequestCallbacks
+   * Remove a document for which we have FrameRequestCallbacks
    */
   void RevokeFrameRequestCallbacks(nsIDocument* aDocument);
 
