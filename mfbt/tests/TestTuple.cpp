@@ -18,6 +18,7 @@ using mozilla::IsSame;
 using mozilla::MakeTuple;
 using mozilla::MakeUnique;
 using mozilla::Move;
+using mozilla::Tie;
 using mozilla::Tuple;
 using mozilla::UniquePtr;
 using mozilla::unused;
@@ -36,7 +37,7 @@ using mozilla::unused;
 
 struct ConvertibleToInt
 {
-  operator int() { return 42; }
+  operator int() const { return 42; }
 };
 
 static void
@@ -136,6 +137,27 @@ TestMakeTuple()
   return true;
 }
 
+static bool
+TestTie()
+{
+  int i;
+  float f;
+  char c;
+  Tuple<int, float, char> rhs1(42, 0.5f, 'c');
+  Tie(i, f, c) = rhs1;
+  CHECK(i == Get<0>(rhs1));
+  CHECK(f == Get<1>(rhs1));
+  CHECK(c == Get<2>(rhs1));
+  // Test conversions
+  Tuple<ConvertibleToInt, double, unsigned char> rhs2(ConvertibleToInt(),
+      0.7f, 'd');
+  Tie(i, f, c) = rhs2;
+  CHECK(i == Get<0>(rhs2));
+  CHECK(f == Get<1>(rhs2));
+  CHECK(c == Get<2>(rhs2));
+  return true;
+}
+
 int
 main()
 {
@@ -143,5 +165,6 @@ main()
   TestAssignment();
   TestGet();
   TestMakeTuple();
+  TestTie();
   return 0;
 }

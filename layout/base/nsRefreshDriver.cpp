@@ -63,6 +63,7 @@
 #include "mozilla/VsyncDispatcher.h"
 #include "nsThreadUtils.h"
 #include "mozilla/unused.h"
+#include "mozilla/TimelineConsumers.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
@@ -992,7 +993,7 @@ RefreshDriverTimer*
 nsRefreshDriver::ChooseTimer() const
 {
   if (mThrottled) {
-    if (!sThrottledRateTimer) 
+    if (!sThrottledRateTimer)
       sThrottledRateTimer = new InactiveRefreshDriverTimer(GetThrottledTimerInterval(),
                                                            DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS * 1000.0);
     return sThrottledRateTimer;
@@ -1050,7 +1051,7 @@ nsRefreshDriver::~nsRefreshDriver()
   MOZ_ASSERT(ObserverCount() == 0,
              "observers should have unregistered");
   MOZ_ASSERT(!mActiveTimer, "timer should be gone");
-  
+
   if (mRootRefresh) {
     mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
     mRootRefresh = nullptr;
@@ -1435,7 +1436,7 @@ HasPendingAnimations(nsIPresShell* aShell)
 static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
                                            nsTArray<nsDocShell*>& aShells)
 {
-  if (!aRootDocShell || nsDocShell::gProfileTimelineRecordingsCount == 0) {
+  if (!aRootDocShell || TimelineConsumers::IsEmpty()) {
     return;
   }
 
