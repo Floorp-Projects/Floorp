@@ -316,6 +316,7 @@ public:
       mReader->BreakCycles();
     }
     mDecodedStream->DestroyData();
+    mResource = nullptr;
     mDecoder = nullptr;
   }
 
@@ -1306,6 +1307,9 @@ private:
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
   nsRefPtr<DecodedStream> mDecodedStream;
+
+  // Media data resource from the decoder.
+  nsRefPtr<MediaResource> mResource;
 
 private:
   // The buffered range. Mirrored from the decoder thread.
