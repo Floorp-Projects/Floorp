@@ -121,6 +121,12 @@ function waitForPopupAtAnchor(popup, anchorNode, nextTest, msg) {
                    "Timeout waiting for popup at anchor: " + msg);
 }
 
+function getConfigurationPromise(configName) {
+  return new Promise(resolve => {
+    gContentAPI.getConfiguration(configName, data => resolve(data));
+  });
+}
+
 function hideInfoPromise(...args) {
   let popup = document.getElementById("UITourTooltip");
   gContentAPI.hideInfo.apply(gContentAPI, args);
@@ -153,12 +159,13 @@ function promisePanelShown(win) {
 function promisePanelElementEvent(win, aPanel, aEvent) {
   let deferred = Promise.defer();
   let timeoutId = win.setTimeout(() => {
-    deferred.reject("Panel did not show within 5 seconds.");
+    deferred.reject("Event did not happen within 5 seconds.");
   }, 5000);
   aPanel.addEventListener(aEvent, function onPanelEvent(e) {
     aPanel.removeEventListener(aEvent, onPanelEvent);
     win.clearTimeout(timeoutId);
-    deferred.resolve();
+    // Wait one tick to let UITour.jsm process the event as well.
+    executeSoon(deferred.resolve);
   });
   return deferred.promise;
 }
@@ -176,7 +183,7 @@ function is_element_hidden(element, msg) {
   ok(is_hidden(element), msg);
 }
 
-function loadUITourTestPage(callback, host = "https://example.com/") {
+function loadUITourTestPage(callback, host = "https://example.org/") {
   if (gTestTab)
     gBrowser.removeTab(gTestTab);
 
@@ -198,8 +205,8 @@ function loadUITourTestPage(callback, host = "https://example.com/") {
 
 function UITourTest() {
   Services.prefs.setBoolPref("browser.uitour.enabled", true);
-  let testHttpsUri = Services.io.newURI("https://example.com", null, null);
-  let testHttpUri = Services.io.newURI("http://example.com", null, null);
+  let testHttpsUri = Services.io.newURI("https://example.org", null, null);
+  let testHttpUri = Services.io.newURI("http://example.org", null, null);
   Services.perms.add(testHttpsUri, "uitour", Services.perms.ALLOW_ACTION);
   Services.perms.add(testHttpUri, "uitour", Services.perms.ALLOW_ACTION);
 

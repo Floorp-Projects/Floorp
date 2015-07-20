@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
   "resource://gre/modules/Metrics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
@@ -120,6 +122,20 @@ this.UITour = {
       widgetName: "urlbar-container",
     }],
     ["bookmarks",   {query: "#bookmarks-menu-button"}],
+    ["controlCenter-trackingUnblock", {
+      infoPanelPosition: "rightcenter topleft",
+      query(aDocument) {
+        let popup = aDocument.defaultView.gIdentityHandler._identityPopup;
+        if (popup.state != "open") {
+          return null;
+        }
+        let buttonId =
+            PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView) ?
+            "tracking-action-unblock-private" : "tracking-action-unblock";
+        let element = aDocument.getElementById(buttonId);
+        return UITour.isElementVisible(element) ? element : null;
+      },
+    }],
     ["customize",   {
       query: (aDocument) => {
         let customizeButton = aDocument.getElementById("PanelUI-customize");
@@ -1725,7 +1741,7 @@ this.UITour = {
   onPanelHidden: function(aEvent) {
     aEvent.target.removeAttribute("noautohide");
     UITour.recreatePopup(aEvent.target);
-    this.availableTargetsCache.clear();
+    UITour.availableTargetsCache.clear();
   },
 
   recreatePopup: function(aPanel) {

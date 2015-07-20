@@ -787,7 +787,6 @@ loop.roomViews = (function(mozL10n) {
               </div>
               <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
-                showAlways={false}
                 showRoomName={false}
                 useDesktopPaths={true} />
             </div>
