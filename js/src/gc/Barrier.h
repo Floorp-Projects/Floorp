@@ -407,7 +407,7 @@ class HeapPtr : public BarrieredBase<T>
 #ifdef DEBUG
     ~HeapPtr() {
         // No prebarrier necessary as this only happens when we are sweeping or
-        // before the containing object becomes part of the GC graph.
+        // before the containing obect becomes part of the GC graph.
         MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
     }
 #endif
