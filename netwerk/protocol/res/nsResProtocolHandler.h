@@ -26,7 +26,8 @@ public:
     NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
 
     nsResProtocolHandler()
-      : SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE)
+      : SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE,
+                                    /* aEnforceFileOrJar = */ false)
     {}
 
     nsresult Init();

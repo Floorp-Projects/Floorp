@@ -81,10 +81,12 @@ SubstitutingURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
   return NS_OK;
 }
 
-SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags)
+SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags,
+                                                         bool aEnforceFileOrJar)
   : mScheme(aScheme)
   , mFlags(aFlags)
   , mSubstitutions(16)
+  , mEnforceFileOrJar(aEnforceFileOrJar)
 {
   nsresult rv;
   mIOService = do_GetIOService(&rv);
@@ -287,6 +289,11 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
   nsresult rv = baseURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!scheme.Equals(mScheme)) {
+    if (mEnforceFileOrJar && !scheme.EqualsLiteral("file") && !scheme.EqualsLiteral("jar")) {
+      NS_WARNING("Refusing to create substituting URI to non-file:// target");
+      return NS_ERROR_INVALID_ARG;
+    }
+
     mSubstitutions.Put(root, baseURI);
     SendSubstitution(root, baseURI);
     return NS_OK;
