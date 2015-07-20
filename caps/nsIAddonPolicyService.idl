@@ -11,7 +11,7 @@
  * This interface allows the security manager to query custom per-addon security
  * policy.
  */
-[scriptable,uuid(3ec203f8-2bd0-4f4c-8f99-f9f056221231)]
+[scriptable,uuid(8a034ef9-9d14-4c5d-8319-06c1ab574baa)]
 interface nsIAddonPolicyService : nsISupports
 {
   /**
@@ -24,4 +24,9 @@ interface nsIAddonPolicyService : nsISupports
    * Returns true if a given extension:// URI is web-accessible.
    */
   boolean extensionURILoadableByAnyone(in nsIURI aURI);
+
+  /**
+   * Maps an extension URI to the ID of the addon it belongs to.
+   */
+  AString extensionURIToAddonId(in nsIURI aURI);
 };
