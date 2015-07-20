@@ -1,6 +1,7 @@
 #filter slashslash
 // Everything after the first // on a line will be removed by the preproccesor.
 // Send these sites a custom user-agent. Bugs should be included with an entry.
+// NOTE: trailing commas are not valid JSON and will prevent the CDN from syncing.
 {
   // bug 1174784, youtube.com
   "youtube.com": "Android\\s\\d.+?;#Android;",
@@ -24,5 +25,5 @@
   // bug 1177298, uniqlo.com
   "uniqlo.com": "\\)\\s#) Mobile Safari ",
   // bug 1177298, mixi.jp
-  "mixi.jp": "\\)\\s#) Mobile Safari ",
+  "mixi.jp": "\\)\\s#) Mobile Safari "
 }
