@@ -507,7 +507,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
               ), 
               React.createElement(sharedViews.chat.TextChatView, {
                 dispatcher: this.props.dispatcher, 
-                showAlways: true, 
                 showRoomName: true, 
                 useDesktopPaths: false}), 
               React.createElement("div", {className: "local"}, 

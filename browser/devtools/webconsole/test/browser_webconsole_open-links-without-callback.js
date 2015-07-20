@@ -10,7 +10,8 @@
 function test() {
   function* runner() {
     const TEST_EVAL_STRING = "document";
-    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/" +
+                          "webconsole/test/test-console.html";
     const {tab} = yield loadTab(TEST_PAGE_URI);
     const hud = yield openConsole(tab);
 
@@ -40,7 +41,7 @@ function test() {
       if (aLink == TEST_PAGE_URI) {
         linkOpened = true;
       }
-    }
+    };
 
     EventUtils.synthesizeMouseAtCenter(urlNode, {}, hud.iframeWindow);
 

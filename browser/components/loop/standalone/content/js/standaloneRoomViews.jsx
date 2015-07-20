@@ -507,7 +507,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
               </div>
               <sharedViews.chat.TextChatView
                 dispatcher={this.props.dispatcher}
-                showAlways={true}
                 showRoomName={true}
                 useDesktopPaths={false} />
               <div className="local">

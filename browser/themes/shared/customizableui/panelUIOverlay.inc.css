@@ -642,8 +642,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer-fxa[fxastatus="migrate-signup"] > #PanelUI-fxa-status > #PanelUI-fxa-label,
 #PanelUI-footer-fxa[fxastatus="migrate-verify"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
-  list-style-image: url(chrome://browser/skin/warning16.png);
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  list-style-image: url(chrome://browser/skin/warning.svg);
+  -moz-image-region: auto;
 }
 
 #PanelUI-customize {
@@ -1507,12 +1507,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-footer-fxa[syncstatus="active"] > #PanelUI-fxa-icon {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
-  }
-
-  #PanelUI-footer-fxa[fxastatus="migrate-signup"] > #PanelUI-fxa-status > #PanelUI-fxa-label,
-  #PanelUI-footer-fxa[fxastatus="migrate-verify"] > #PanelUI-fxa-status > #PanelUI-fxa-label {
-    list-style-image: url(chrome://browser/skin/warning16@2x.png);
-    -moz-image-region: rect(0, 64px, 32px, 32px);
   }
 
   #PanelUI-customize {
