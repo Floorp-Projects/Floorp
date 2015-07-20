@@ -80,12 +80,6 @@
                     tooltiptext="&options.stylesheetAutocompletion.tooltip;"
                     data-pref="devtools.styleeditor.autocompletion-enabled"/>
         </vbox>
-        <label>&options.profiler.label;</label>
-        <vbox id="profiler-options" class="options-groupbox">
-          <checkbox label="&options.showPlatformData.label;"
-                    tooltiptext="&options.showPlatformData.tooltip;"
-                    data-pref="devtools.performance.ui.show-platform-data"/>
-        </vbox>
       </vbox>
 
       <vbox id="sourceeditor-box" class="options-vertical-pane" flex="1">
@@ -138,6 +132,10 @@
         </vbox>
         <label>&options.context.advancedSettings;</label>
         <vbox id="context-options" class="options-groupbox">
+          <checkbox id="devtools-show-gecko-data"
+                    label="&options.showPlatformData.label;"
+                    tooltiptext="&options.showPlatformData.tooltip;"
+                    data-pref="devtools.performance.ui.show-platform-data"/>
           <checkbox id="devtools-disable-cache"
                     label="&options.disableCache.label2;"
                     tooltiptext="&options.disableCache.tooltip2;"

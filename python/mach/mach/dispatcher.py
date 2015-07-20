@@ -105,10 +105,10 @@ class CommandAction(argparse.Action):
                     # -- is in command arguments
                     if '-h' in args[:args.index('--')] or '--help' in args[:args.index('--')]:
                         # Honor -h or --help only if it appears before --
-                        self._handle_main_help(parser, command)
+                        self._handle_command_help(parser, command)
                         sys.exit(0)
                 else:
-                    self._handle_main_help(parser, command)
+                    self._handle_command_help(parser, command)
                     sys.exit(0)
 
 

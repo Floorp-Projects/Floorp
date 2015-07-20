@@ -55,16 +55,30 @@ let tests = [
     is(icon.src, imageURL,  "Popup should have correct icon shown");
 
     buttons = document.getElementById("UITourTooltipButtons");
-    is(buttons.childElementCount, 2, "Popup should have two buttons");
+    is(buttons.childElementCount, 4, "Popup should have four buttons");
 
-    is(buttons.childNodes[0].getAttribute("label"), "Button 1", "First button should have correct label");
-    is(buttons.childNodes[0].getAttribute("image"), "", "First button should have no image");
+    is(buttons.childNodes[0].nodeName, "label", "Text label should be a <label>");
+    is(buttons.childNodes[0].getAttribute("value"), "Regular text", "Text label should have correct value");
+    is(buttons.childNodes[0].getAttribute("image"), "", "Text should have no image");
+    is(buttons.childNodes[0].className, "", "Text should have no class");
 
-    is(buttons.childNodes[1].getAttribute("label"), "Button 2", "Second button should have correct label");
-    is(buttons.childNodes[1].getAttribute("image"), imageURL, "Second button should have correct image");
+    is(buttons.childNodes[1].nodeName, "button", "Link should be a <button>");
+    is(buttons.childNodes[1].getAttribute("label"), "Link", "Link should have correct label");
+    is(buttons.childNodes[1].getAttribute("image"), "", "Link should have no image");
+    is(buttons.childNodes[1].className, "button-link", "Check link class");
+
+    is(buttons.childNodes[2].nodeName, "button", "Button 1 should be a <button>");
+    is(buttons.childNodes[2].getAttribute("label"), "Button 1", "First button should have correct label");
+    is(buttons.childNodes[2].getAttribute("image"), "", "First button should have no image");
+    is(buttons.childNodes[2].className, "", "Button 1 should have no class");
+
+    is(buttons.childNodes[3].nodeName, "button", "Button 2 should be a <button>");
+    is(buttons.childNodes[3].getAttribute("label"), "Button 2", "Second button should have correct label");
+    is(buttons.childNodes[3].getAttribute("image"), imageURL, "Second button should have correct image");
+    is(buttons.childNodes[3].className, "button-primary", "Check button 2 class");
 
     let promiseHidden = promisePanelElementHidden(window, popup);
-    EventUtils.synthesizeMouseAtCenter(buttons.childNodes[0], {}, window);
+    EventUtils.synthesizeMouseAtCenter(buttons.childNodes[2], {}, window);
     yield promiseHidden;
 
     ok(true, "Popup should close automatically");
@@ -91,16 +105,20 @@ let tests = [
     is(icon.src, imageURL,  "Popup should have correct icon shown");
 
     buttons = document.getElementById("UITourTooltipButtons");
-    is(buttons.childElementCount, 2, "Popup should have two buttons");
+    is(buttons.childElementCount, 4, "Popup should have four buttons");
 
-    is(buttons.childNodes[0].getAttribute("label"), "Button 1", "First button should have correct label");
-    is(buttons.childNodes[0].getAttribute("image"), "", "First button should have no image");
+    is(buttons.childNodes[1].getAttribute("label"), "Link", "Link should have correct label");
+    is(buttons.childNodes[1].getAttribute("image"), "", "Link should have no image");
+    ok(buttons.childNodes[1].classList.contains("button-link"), "Link should have button-link class");
 
-    is(buttons.childNodes[1].getAttribute("label"), "Button 2", "Second button should have correct label");
-    is(buttons.childNodes[1].getAttribute("image"), imageURL, "Second button should have correct image");
+    is(buttons.childNodes[2].getAttribute("label"), "Button 1", "First button should have correct label");
+    is(buttons.childNodes[2].getAttribute("image"), "", "First button should have no image");
+
+    is(buttons.childNodes[3].getAttribute("label"), "Button 2", "Second button should have correct label");
+    is(buttons.childNodes[3].getAttribute("image"), imageURL, "Second button should have correct image");
 
     let promiseHidden = promisePanelElementHidden(window, popup);
-    EventUtils.synthesizeMouseAtCenter(buttons.childNodes[1], {}, window);
+    EventUtils.synthesizeMouseAtCenter(buttons.childNodes[3], {}, window);
     yield promiseHidden;
 
     ok(true, "Popup should close automatically");

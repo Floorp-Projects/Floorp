@@ -61,6 +61,7 @@ let tests = [
         "readerMode-urlBar",
         "search",
         "searchIcon",
+        "trackingProtection",
         "urlbar",
         ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
@@ -93,6 +94,7 @@ let tests = [
         "readerMode-urlBar",
         "search",
         "searchIcon",
+        "trackingProtection",
         "urlbar",
         ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
@@ -128,6 +130,7 @@ let tests = [
         "privateWindow",
         "quit",
         "readerMode-urlBar",
+        "trackingProtection",
         "urlbar",
         ...(hasWebIDE ? ["webide"] : [])
       ]);
