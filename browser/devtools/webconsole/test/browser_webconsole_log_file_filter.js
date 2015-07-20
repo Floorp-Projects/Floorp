@@ -5,11 +5,12 @@
 // Tests that the text filter box works to filter based on filenames
 // where the logs were generated.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug_923281_console_log_filter.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-bug_923281_console_log_filter.html";
 
 let hud;
-
-"use strict";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
@@ -32,7 +33,7 @@ function consoleOpened() {
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG
     }],
-  })
+  });
 }
 
 function testLiveFilteringOnSearchStrings() {
@@ -74,9 +75,8 @@ function countMessageNodes() {
   return displayedMessageNodes;
 }
 
-function setStringFilter(aValue)
-{
-  hud.ui.filterBox.value = aValue;
+function setStringFilter(value) {
+  hud.ui.filterBox.value = value;
   hud.ui.adjustVisibilityOnSearchStringChange();
 }
 

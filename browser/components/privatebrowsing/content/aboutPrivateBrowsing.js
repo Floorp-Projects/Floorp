@@ -6,6 +6,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let stringBundle = Services.strings.createBundle(
                      "chrome://browser/locale/aboutPrivateBrowsing.properties");
@@ -24,6 +25,20 @@ if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
   document.title = stringBundle.GetStringFromName("title");
   setFavIcon("chrome://browser/skin/Privacy-16.png");
 }
+
+let prefBranch = Services.prefs.getBranch("privacy.trackingprotection.pbmode.");
+let prefObserver = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+  observe: function () {
+    if (prefBranch.getBoolPref("enabled")) {
+      document.body.setAttribute("tpEnabled", "true");
+    } else {
+      document.body.removeAttribute("tpEnabled");
+    }
+  },
+};
+prefBranch.addObserver("enabled", prefObserver, true);
 
 function setFavIcon(url) {
   let icon = document.createElement("link");
@@ -51,16 +66,26 @@ document.addEventListener("DOMContentLoaded", function () {
     let tourURL = formatURLPref("privacy.trackingprotection.introURL");
     document.getElementById("startTour").setAttribute("href", tourURL);
     document.getElementById("tourLearnMore").setAttribute("href", learnMoreURL);
+    // Update state that depends on preferences.
+    prefObserver.observe();
   }
 
-  let startPrivateBrowsing = document.getElementById("startPrivateBrowsing");
-  if (startPrivateBrowsing) {
-    startPrivateBrowsing.addEventListener("command", openPrivateWindow);
-  }
+  document.getElementById("startPrivateBrowsing")
+          .addEventListener("command", openPrivateWindow);
+
+  document.getElementById("enableTrackingProtection")
+          .addEventListener("command", enableTrackingProtection);
 }, false);
 
 function openPrivateWindow() {
   // Ask chrome to open a private window
   document.dispatchEvent(
     new CustomEvent("AboutPrivateBrowsingOpenWindow", {bubbles:true}));
+}
+
+function enableTrackingProtection() {
+  // Ask chrome to enable tracking protection
+  document.dispatchEvent(
+    new CustomEvent("AboutPrivateBrowsingEnableTrackingProtection",
+                    {bubbles:true}));
 }

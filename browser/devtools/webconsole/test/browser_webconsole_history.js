@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const HISTORY_BACK = -1;
@@ -23,29 +24,29 @@ let test = asyncTest(function*() {
 
   let executeList = ["document", "window", "window.location"];
 
-  for (var item of executeList) {
+  for (let item of executeList) {
     input.value = item;
     yield jsterm.execute();
   }
 
-  for (var i = executeList.length - 1; i != -1; i--) {
+  for (let x = executeList.length - 1; x != -1; x--) {
     jsterm.historyPeruse(HISTORY_BACK);
-    is (input.value, executeList[i], "check history previous idx:" + i);
+    is(input.value, executeList[x], "check history previous idx:" + x);
   }
 
   jsterm.historyPeruse(HISTORY_BACK);
-  is (input.value, executeList[0], "test that item is still index 0");
+  is(input.value, executeList[0], "test that item is still index 0");
 
   jsterm.historyPeruse(HISTORY_BACK);
-  is (input.value, executeList[0], "test that item is still still index 0");
+  is(input.value, executeList[0], "test that item is still still index 0");
 
-  for (var i = 1; i < executeList.length; i++) {
+  for (let i = 1; i < executeList.length; i++) {
     jsterm.historyPeruse(HISTORY_FORWARD);
-    is (input.value, executeList[i], "check history next idx:" + i);
+    is(input.value, executeList[i], "check history next idx:" + i);
   }
 
   jsterm.historyPeruse(HISTORY_FORWARD);
-  is (input.value, "", "check input is empty again");
+  is(input.value, "", "check input is empty again");
 
   // Simulate pressing Arrow_Down a few times and then if Arrow_Up shows
   // the previous item from history again.
@@ -53,9 +54,9 @@ let test = asyncTest(function*() {
   jsterm.historyPeruse(HISTORY_FORWARD);
   jsterm.historyPeruse(HISTORY_FORWARD);
 
-  is (input.value, "", "check input is still empty");
+  is(input.value, "", "check input is still empty");
 
   let idxLast = executeList.length - 1;
   jsterm.historyPeruse(HISTORY_BACK);
-  is (input.value, executeList[idxLast], "check history next idx:" + idxLast);
+  is(input.value, executeList[idxLast], "check history next idx:" + idxLast);
 });

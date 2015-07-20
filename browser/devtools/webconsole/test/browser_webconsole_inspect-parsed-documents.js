@@ -5,7 +5,7 @@
 // Test that dynamically created (HTML|XML|SVG)Documents can be inspected by
 // clicking on the object in console (bug 1035198).
 
-"use strict;"
+"use strict";
 
 const TEST_CASES = [
   {
@@ -28,7 +28,7 @@ const TEST_CASES = [
 const TEST_URI = "data:text/html;charset=utf8," +
   "browser_webconsole_inspect-parsed-documents.js";
 add_task(function* () {
-    let {tab} = yield loadTab(TEST_URI);
-    let hud = yield openConsole(tab);
-    yield checkOutputForInputs(hud, TEST_CASES);
+  let {tab} = yield loadTab(TEST_URI);
+  let hud = yield openConsole(tab);
+  yield checkOutputForInputs(hud, TEST_CASES);
 });

@@ -3,17 +3,18 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-///////////////////
-//
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejections should be fixed.
-//
+
+"use strict";
+
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed(null);
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.toolbox is null");
 
 // Test the webconsole output for various types of DOM Nodes.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-dom-elements.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-output-dom-elements.html";
 
 let inputTests = [
   {
@@ -36,7 +37,7 @@ let inputTests = [
 
   {
     input: "testDocument()",
-    output: 'HTMLDocument \u2192 ' + TEST_URI,
+    output: "HTMLDocument \u2192 " + TEST_URI,
     printOutput: "[object HTMLDocument]",
     inspectable: true,
     noClick: true,
@@ -54,7 +55,9 @@ let inputTests = [
 
   {
     input: "testNodeList()",
-    output: 'NodeList [ <html>, <head>, <meta>, <title>, <body#body-id.body-class>, <p>, <iframe>, <div.some.classname.here.with.more.classnames.here>, <script> ]',
+    output: "NodeList [ <html>, <head>, <meta>, <title>, " +
+            "<body#body-id.body-class>, <p>, <iframe>, " +
+            "<div.some.classname.here.with.more.classnames.here>, <script> ]",
     printOutput: "[object NodeList]",
     inspectable: true,
     noClick: true,
@@ -63,7 +66,7 @@ let inputTests = [
 
   {
     input: "testNodeInIframe()",
-    output: '<p>',
+    output: "<p>",
     printOutput: "[object HTMLParagraphElement]",
     inspectable: true,
     noClick: true,
@@ -72,7 +75,7 @@ let inputTests = [
 
   {
     input: "testDocumentFragment()",
-    output: 'DocumentFragment [ <span.foo>, <div#fragdiv> ]',
+    output: "DocumentFragment [ <span.foo>, <div#fragdiv> ]",
     printOutput: "[object DocumentFragment]",
     inspectable: true,
     noClick: true,

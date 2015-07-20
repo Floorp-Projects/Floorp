@@ -9,7 +9,8 @@
 function test() {
   let hud;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-api-stackframe.html";
+  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/test-console-api-stackframe.html";
   const TEST_FILE = TEST_URI.substr(TEST_URI.lastIndexOf("/"));
 
   Task.spawn(runner).then(finishTest);
@@ -21,7 +22,8 @@ function test() {
     const stack = [{
       file: TEST_FILE,
       fn: "thirdCall",
-      line: /\b2[123]\b/, // 21,22,23
+      // 21,22,23
+      line: /\b2[123]\b/,
     }, {
       file: TEST_FILE,
       fn: "secondCall",

@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+ "use strict";
+
 function test() {
   info("Test various cases where the escape key should hide the split console.");
 
@@ -15,7 +17,8 @@ function test() {
   Task.spawn(runner).then(finish);
 
   function* runner() {
-    let {tab} = yield loadTab("data:text/html;charset=utf-8,<p>Web Console test for splitting");
+    let {tab} = yield loadTab("data:text/html;charset=utf-8,<p>Web Console " +
+                              "test for splitting");
     let target = TargetFactory.forTab(tab);
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
@@ -49,15 +52,6 @@ function test() {
     let contentWindow = toolbox.frame.contentWindow;
     contentWindow.focus();
     EventUtils.sendKey("ESCAPE", contentWindow);
-
-    return result;
-  }
-
-  function testShowSplitConsoleAfterEscape() {
-    let result = toolbox.once("split-console", () => {
-      ok(toolbox.splitConsole, "Split console is shown.");
-    });
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
 
     return result;
   }
