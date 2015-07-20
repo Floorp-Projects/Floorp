@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test iframe referrer policy attribute for Bug 1175736</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that iframe referrer attribute is honoured correctly
+  * regular loads
+  * regression tests that meta referrer is still working even if attribute referrers are enabled
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1175736
+  -->
+
+  <script type="application/javascript;version=1.7">
+
+  const SJS = "/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY"];
+
+  const testCases = [
+    {ACTION: ["generate-iframe-policy-test"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'unsafe-url-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "unsafe-url (iframe) with origin in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NAME: 'origin-with-unsafe-url-in-meta',
+         META_POLICY: 'unsafe-url',
+         DESC: "origin (iframe) with unsafe-url in meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'no-referrer',
+         NAME: 'no-referrer-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "no-referrer (iframe) with origin in meta",
+         RESULT: 'none'},
+        {NAME: 'no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         DESC: "no-referrer in meta",
+         RESULT: 'none'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NAME: 'origin-with-no-meta',
+         META_POLICY: '',
+         DESC: "origin (iframe) with no meta",
+         RESULT: 'origin'}]}
+  ];
+  </script>
+  <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>

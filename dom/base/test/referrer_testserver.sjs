@@ -15,6 +15,40 @@ function createTestUrl(aPolicy, aAction, aName, aType) {
          'type=' + aType;
 }
 
+// test page using iframe referrer attribute
+function createIframeTestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttributePolicy, aName, aChangingMethod) {
+  var metaString = "";
+  if (aMetaPolicy) {
+    metaString = '<meta name="referrer" content="' + aMetaPolicy + '">';
+  }
+  var changeString = '';
+  if (aChangingMethod === 'setAttribute') {
+    changeString = `document.getElementById("myframe").setAttribute("referrer", "${aNewAttributePolicy}")`;
+  } else if (aChangingMethod === 'property') {
+    changeString = `document.getElementById("myframe").referrer = "${aNewAttributePolicy}"`;
+  }
+  var iFrameString = `<iframe src="" id="myframe" ${aAttributePolicy ? ` referrer='${aAttributePolicy}'` : ""}>iframe</iframe>`;
+
+  return `<!DOCTYPE HTML>
+           <html>
+             <head>
+             ${metaString}
+             </head>
+             <body>
+               ${iFrameString}
+               <script>
+                 window.addEventListener("load", function() {
+                   ${changeString}
+                   document.getElementById("myframe").onload = function(){
+                    parent.postMessage("childLoadComplete", "http://mochi.test:8888");
+                   };
+                   document.getElementById("myframe").src = "${createTestUrl(aAttributePolicy, 'test', aName, 'iframe')}";
+                 }.bind(window), false);
+               </script>
+             </body>
+           </html>`;
+}
+
 function buildAnchorString(aMetaPolicy, aReferrerPolicy, aName, aRelString){
   if (aReferrerPolicy) {
     return `<a href="${createTestUrl(aReferrerPolicy, 'test', aName, 'link')}" referrer="${aReferrerPolicy}" id="link" ${aRelString}>${aReferrerPolicy}</a>`;
@@ -123,7 +157,10 @@ function handleRequest(request, response) {
 
     setSharedState(SHARED_KEY, JSON.stringify(result));
 
-    if (type === "link") {
+    if (type === "iframe") {
+      // return iframe page
+      response.write("<html><body>I am the iframe</body></html>");
+    } else if (type === "link") {
       // forward link click to redirect URL to finish test
       var loc = "http://" + BASE_URL + "?ACTION=redirect";
       response.setStatusLine('1.1', 302, 'Found');
@@ -167,6 +204,23 @@ function handleRequest(request, response) {
   }
   if (action === 'generate-area-changing-policy-test-property') {
     response.write(_getAreaPage('property'));
+    return;
+  }
+
+  // iframe
+  _getPage = createIframeTestPageUsingRefferer.bind(null, metaPolicy, attributePolicy, newAttributePolicy, name);
+
+  // aMetaPolicy, aAttributePolicy, aNewAttributePolicy, aName, aChangingMethod
+  if (action === 'generate-iframe-policy-test') {
+    response.write(_getPage());
+    return;
+  }
+  if (action === 'generate-iframe-changing-policy-test-set-attribute') {
+    response.write(_getPage('setAttribute'));
+    return;
+  }
+  if (action === 'generate-iframe-changing-policy-test-property') {
+    response.write(_getPage('property'));
     return;
   }
 
