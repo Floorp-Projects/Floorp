@@ -5,6 +5,7 @@
 #include "ActiveLayerTracker.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/Matrix.h"
 #include "nsExpirationTracker.h"
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
@@ -12,10 +13,13 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsAnimationManager.h"
+#include "nsStyleTransformMatrix.h"
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 
 namespace mozilla {
+
+using namespace gfx;
 
 /**
  * This tracks the state of a frame that may need active layers due to
@@ -34,6 +38,7 @@ public:
     , mContent(nullptr)
     , mOpacityRestyleCount(0)
     , mTransformRestyleCount(0)
+    , mScaleRestyleCount(0)
     , mLeftRestyleCount(0)
     , mTopRestyleCount(0)
     , mRightRestyleCount(0)
@@ -71,9 +76,14 @@ public:
   nsIContent* mContent;
 
   nsExpirationState mState;
+
+  // Previous scale due to the CSS transform property.
+  Maybe<gfxSize> mPreviousTransformScale;
+
   // Number of restyle operations detected
   uint8_t mOpacityRestyleCount;
   uint8_t mTransformRestyleCount;
+  uint8_t mScaleRestyleCount;
   uint8_t mLeftRestyleCount;
   uint8_t mTopRestyleCount;
   uint8_t mRightRestyleCount;
@@ -206,12 +216,54 @@ ActiveLayerTracker::TransferActivityToFrame(nsIContent* aContent, nsIFrame* aFra
   aFrame->Properties().Set(LayerActivityProperty(), layerActivity);
 }
 
+static void
+IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
+{
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
+  if (!display->mSpecifiedTransform) {
+    // The transform was removed.
+    aActivity->mPreviousTransformScale = Nothing();
+    IncrementMutationCount(&aActivity->mScaleRestyleCount);
+    return;
+  }
+
+  // Compute the new scale due to the CSS transform property.
+  nsPresContext* presContext = aFrame->PresContext();
+  RuleNodeCacheConditions dummy;
+  nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
+  Matrix4x4 transform = ToMatrix4x4(
+    nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
+                                           aFrame->StyleContext(),
+                                           presContext,
+                                           dummy, refBox,
+                                           presContext->AppUnitsPerCSSPixel()));
+  Matrix transform2D;
+  if (!transform.Is2D(&transform2D)) {
+    // We don't attempt to handle 3D transforms; just assume the scale changed.
+    aActivity->mPreviousTransformScale = Nothing();
+    IncrementMutationCount(&aActivity->mScaleRestyleCount);
+    return;
+  }
+
+  gfxSize scale = ThebesMatrix(transform2D).ScaleFactors(true);
+  if (aActivity->mPreviousTransformScale == Some(scale)) {
+    return;  // Nothing changed.
+  }
+
+  aActivity->mPreviousTransformScale = Some(scale);
+  IncrementMutationCount(&aActivity->mScaleRestyleCount);
+}
+
 /* static */ void
 ActiveLayerTracker::NotifyRestyle(nsIFrame* aFrame, nsCSSProperty aProperty)
 {
   LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
   uint8_t& mutationCount = layerActivity->RestyleCountForProperty(aProperty);
   IncrementMutationCount(&mutationCount);
+
+  if (aProperty == eCSSProperty_transform) {
+    IncrementScaleRestyleCountIfNeeded(aFrame, layerActivity);
+  }
 }
 
 /* static */ void
