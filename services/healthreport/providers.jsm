@@ -60,7 +60,6 @@ const DAILY_LAST_TEXT_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_TEXT};
 const DAILY_COUNTER_FIELD = {type: Metrics.Storage.FIELD_DAILY_COUNTER};
 
 const TELEMETRY_PREF = "toolkit.telemetry.enabled";
-const SEARCH_COHORT_PREF = "browser.search.cohort";
 
 function isTelemetryEnabled(prefs) {
   return prefs.get(TELEMETRY_PREF, false);
@@ -1631,11 +1630,10 @@ SearchEnginesMeasurement1.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "engines",
-  version: 2,
+  version: 1,
 
   fields: {
     default: DAILY_LAST_TEXT_FIELD,
-    cohort: DAILY_LAST_TEXT_FIELD,
   },
 });
 
@@ -1690,9 +1688,6 @@ this.SearchesProvider.prototype = Object.freeze({
       }
 
       yield m.setDailyLastText("default", name);
-
-      if (Services.prefs.prefHasUserValue(SEARCH_COHORT_PREF))
-        yield m.setDailyLastText("cohort", Services.prefs.getCharPref(SEARCH_COHORT_PREF));
     }.bind(this));
   },
 
