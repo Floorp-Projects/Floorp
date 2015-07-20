@@ -351,7 +351,7 @@ HTMLBreadcrumbs.prototype = {
 
     this.outer.addEventListener("click", this, true);
     this.outer.addEventListener("mouseover", this, true);
-    this.outer.addEventListener("mouseleave", this, true);
+    this.outer.addEventListener("mouseout", this, true);
     this.outer.addEventListener("focus", this, true);
 
     this.shortcuts = new KeyShortcuts({ window: this.chromeWin, target: this.outer });
@@ -482,7 +482,7 @@ HTMLBreadcrumbs.prototype = {
       this.handleClick(event);
     } else if (event.type == "mouseover") {
       this.handleMouseOver(event);
-    } else if (event.type == "mouseleave") {
+    } else if (event.type == "mouseout") {
       this.handleMouseLeave(event);
     } else if (event.type == "focus") {
       this.handleFocus(event);
@@ -533,10 +533,10 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * On mouse leave, make sure to unhighlight.
+   * On mouse out, make sure to unhighlight.
    * @param {DOMEvent} event.
    */
-  handleMouseLeave: function (event) {
+  handleMouseOut: function (event) {
     this.inspector.toolbox.highlighterUtils.unhighlight();
   },
 
@@ -593,7 +593,7 @@ HTMLBreadcrumbs.prototype = {
 
     this.container.removeEventListener("click", this, true);
     this.container.removeEventListener("mouseover", this, true);
-    this.container.removeEventListener("mouseleave", this, true);
+    this.container.removeEventListener("mouseout", this, true);
     this.container.removeEventListener("focus", this, true);
     this.shortcuts.destroy();
 
