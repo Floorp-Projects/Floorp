@@ -7,6 +7,7 @@
 #include "mozilla/LoadInfo.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsFrameLoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
@@ -89,7 +90,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aUpgradeInsecureRequests,
                    uint64_t aInnerWindowID,
                    uint64_t aOuterWindowID,
-                   uint64_t aParentOuterWindowID)
+                   uint64_t aParentOuterWindowID,
+                   nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mSecurityFlags(aSecurityFlags)
@@ -101,6 +103,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+
+  mRedirectChain.SwapElements(aRedirectChain);
 }
 
 LoadInfo::~LoadInfo()
@@ -228,6 +232,29 @@ LoadInfo::GetParentOuterWindowID(uint64_t* aResult)
 {
   *aResult = mParentOuterWindowID;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::AppendRedirectedPrincipal(nsIPrincipal* aPrincipal)
+{
+  NS_ENSURE_ARG(aPrincipal);
+  mRedirectChain.AppendElement(aPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetRedirectChain(JSContext* aCx, JS::MutableHandle<JS::Value> aChain)
+{
+  if (!ToJSValue(aCx, mRedirectChain, aChain)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+const nsTArray<nsCOMPtr<nsIPrincipal>>&
+LoadInfo::RedirectChain()
+{
+  return mRedirectChain;
 }
 
 } // namespace mozilla
