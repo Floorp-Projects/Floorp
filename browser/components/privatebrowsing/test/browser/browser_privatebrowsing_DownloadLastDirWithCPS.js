@@ -7,6 +7,7 @@ let gTests;
 function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
+  requestCompleteLog();
   gTests = runTest();
   gTests.next();
 }
