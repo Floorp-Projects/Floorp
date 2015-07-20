@@ -205,6 +205,7 @@ private:
       , mNumSamplesInput(0)
       , mNumSamplesOutput(0)
       , mSizeOfQueue(0)
+      , mIsHardwareAccelerated(false)
       , mLastStreamSourceID(UINT32_MAX)
     {}
 
@@ -290,6 +291,9 @@ private:
 
     // Used by the MDSM for logging purposes.
     Atomic<size_t> mSizeOfQueue;
+    // Used by the MDSM to determine if video decoding is hardware accelerated.
+    // This value is updated after a frame is successfully decoded.
+    Atomic<bool> mIsHardwareAccelerated;
     // Sample format monitoring.
     uint32_t mLastStreamSourceID;
     media::TimeIntervals mTimeRanges;
