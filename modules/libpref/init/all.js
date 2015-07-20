@@ -480,6 +480,11 @@ pref("media.mediasource.format-reader.mp4", true);
 // Enable new MediaFormatReader architecture for plain mp4.
 pref("media.format-reader.mp4", true);
 
+// Enable new MediaFormatReader architecture for webm in MSE
+pref("media.mediasource.format-reader.webm", false);
+// Enable new MediaFormatReader architecture for plain webm.
+pref("media.format-reader.webm", false);
+
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
 pref("media.webspeech.synth.enabled", false);

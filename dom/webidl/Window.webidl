@@ -17,7 +17,6 @@
 
 interface ApplicationCache;
 interface IID;
-interface MozFrameRequestCallback;
 interface nsIBrowserDOMWindow;
 interface nsIMessageBroadcaster;
 interface nsIDOMCrypto;
@@ -275,20 +274,6 @@ readonly attribute CacheStorage caches;
 partial interface Window {
   //[NewObject, Throws] CSSStyleDeclaration getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
   [NewObject, Throws] CSSStyleDeclaration? getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
-
-  [Throws] long mozRequestAnimationFrame(MozFrameRequestCallback aCallback);
-
-  /**
-   * Cancel a refresh callback.
-   */
-  [Throws] void mozCancelAnimationFrame(long aHandle);
-  // Backwards-compat shim for now to make Google maps work
-  [Throws] void mozCancelRequestAnimationFrame(long aHandle);
-
-  /**
-   * The current animation start time in milliseconds since the epoch.
-   */
-  [Throws] readonly attribute long long mozAnimationStartTime;
 
   // Mozilla extensions
   /**

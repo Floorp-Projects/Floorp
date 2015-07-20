@@ -28,7 +28,7 @@ already_AddRefed<Pledge<nsCString>>
 GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing, bool aPersist);
 
 void
-SanitizeOriginKeys(const uint64_t& aSinceWhen);
+SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing);
 
 class Child : public PMediaChild
 {

@@ -93,6 +93,10 @@ public:
   // to be extended
   virtual bool SupportsMimeType(const nsACString& aMimeType);
 
+  // MimeType can be decoded with shipped decoders if no platform decoders exist
+  static bool AgnosticMimeType(const nsACString& aMimeType);
+
+
   enum ConversionRequired {
     kNeedNone,
     kNeedAVCC,
@@ -107,7 +111,7 @@ public:
   virtual void DisableHardwareAcceleration() {}
 
   virtual bool SupportsSharedDecoders(const VideoInfo& aConfig) const {
-    return true;
+    return !AgnosticMimeType(aConfig.mMimeType);
   }
 
 protected:

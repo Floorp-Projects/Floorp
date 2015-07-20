@@ -370,6 +370,7 @@ MSG_DEF(JSMSG_CANT_SET_NW_NC,          0, JSEXN_TYPEERR, "proxy can't successful
 MSG_DEF(JSMSG_CANT_SET_WO_SETTER,      0, JSEXN_TYPEERR, "proxy can't succesfully set an accessor property without a setter")
 MSG_DEF(JSMSG_CANT_SKIP_NC,            0, JSEXN_TYPEERR, "proxy can't skip a non-configurable property")
 MSG_DEF(JSMSG_INVALID_TRAP_RESULT,     2, JSEXN_TYPEERR, "trap {1} for {0} returned an invalid result")
+MSG_DEF(JSMSG_ONWKEYS_STR_SYM,         0, JSEXN_TYPEERR,  "proxy [[OwnPropertyKeys]] must return an array with only string and symbol elements")
 MSG_DEF(JSMSG_MUST_REPORT_SAME_VALUE,  0, JSEXN_TYPEERR, "proxy must report the same value for a non-writable, non-configurable property")
 MSG_DEF(JSMSG_MUST_REPORT_UNDEFINED,   0, JSEXN_TYPEERR, "proxy must report undefined for a non-configurable accessor property without a getter")
 MSG_DEF(JSMSG_OBJECT_ACCESS_DENIED,    0, JSEXN_ERR, "Permission denied to access object")

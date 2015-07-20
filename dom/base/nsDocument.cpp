@@ -1519,15 +1519,15 @@ void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
 
 struct nsIDocument::FrameRequest
 {
-  FrameRequest(const FrameRequestCallbackHolder& aCallback,
+  FrameRequest(FrameRequestCallback& aCallback,
                int32_t aHandle) :
-    mCallback(aCallback),
+    mCallback(&aCallback),
     mHandle(aHandle)
   {}
 
   // Conversion operator so that we can append these to a
   // FrameRequestCallbackList
-  operator const FrameRequestCallbackHolder& () const {
+  operator const nsRefPtr<FrameRequestCallback>& () const {
     return mCallback;
   }
 
@@ -1540,7 +1540,7 @@ struct nsIDocument::FrameRequest
     return mHandle < aHandle;
   }
 
-  FrameRequestCallbackHolder mCallback;
+  nsRefPtr<FrameRequestCallback> mCallback;
   int32_t mHandle;
 };
 
@@ -2006,7 +2006,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameRequestCallbacks[i]");
-    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i].mCallback.GetISupports());
+    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i].mCallback);
   }
 
   // Traverse animation components
@@ -10335,7 +10335,7 @@ nsIDocument::UnlinkOriginalDocumentIfStatic()
 }
 
 nsresult
-nsIDocument::ScheduleFrameRequestCallback(const FrameRequestCallbackHolder& aCallback,
+nsIDocument::ScheduleFrameRequestCallback(FrameRequestCallback& aCallback,
                                           int32_t *aHandle)
 {
   if (mFrameRequestCallbackCounter == INT32_MAX) {

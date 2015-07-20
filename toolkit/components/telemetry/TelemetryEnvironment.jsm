@@ -157,6 +157,7 @@ const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
+const COMPOSITOR_CREATED_TOPIC = "compositor:created";
 
 /**
  * Get the current browser.
@@ -809,12 +810,14 @@ EnvironmentCache.prototype = {
     // Watch the search engine change and service topics.
     Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC, false);
     Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC, false);
+    Services.obs.addObserver(this, COMPOSITOR_CREATED_TOPIC, false);
   },
 
   _removeObservers: function () {
     // Remove the search engine change and service observers.
     Services.obs.removeObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
     Services.obs.removeObserver(this, SEARCH_SERVICE_TOPIC);
+    Services.obs.removeObserver(this, COMPOSITOR_CREATED_TOPIC);
   },
 
   observe: function (aSubject, aTopic, aData) {
@@ -833,6 +836,12 @@ EnvironmentCache.prototype = {
         }
         // Now that the search engine init is complete, record the default search choice.
         this._updateSearchEngine();
+        break;
+      case COMPOSITOR_CREATED_TOPIC:
+        // Full graphics information is not available until we have created at
+        // least one off-main-thread-composited window. Thus we wait for the
+        // first compositor to be created and then query nsIGfxInfo again.
+        this._onCompositorCreated();
         break;
     }
   },
@@ -894,6 +903,19 @@ EnvironmentCache.prototype = {
     let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
     this._updateSearchEngine();
     this._onEnvironmentChange("search-engine-changed", oldEnvironment);
+  },
+
+  /**
+   * Update the graphics features object.
+   */
+  _onCompositorCreated: function () {
+    let gfxData = this._currentEnvironment.system.gfx;
+    try {
+      let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+      gfxData.features = gfxInfo.getFeatures();
+    } catch (e) {
+      this._log.error("nsIGfxInfo.getFeatures() caught error", e);
+    }
   },
 
   /**
@@ -1128,6 +1150,7 @@ EnvironmentCache.prototype = {
       //DWriteVersion: getGfxField("DWriteVersion", null),
       adapters: [],
       monitors: [],
+      features: {},
     };
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GTK)
@@ -1138,6 +1161,13 @@ EnvironmentCache.prototype = {
       this._log.error("nsIGfxInfo.getMonitors() caught error", e);
     }
 #endif
+
+    try {
+      let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
+      gfxData.features = gfxInfo.getFeatures();
+    } catch (e) {
+      this._log.error("nsIGfxInfo.getFeatures() caught error", e);
+    }
 
     // GfxInfo does not yet expose a way to iterate through all the adapters.
     gfxData.adapters.push(getGfxAdapter(""));

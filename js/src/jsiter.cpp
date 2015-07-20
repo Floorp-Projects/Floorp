@@ -101,7 +101,12 @@ static inline bool
 Enumerate(JSContext* cx, HandleObject pobj, jsid id,
           bool enumerable, unsigned flags, Maybe<IdSet>& ht, AutoIdVector* props)
 {
-    if (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() || pobj->getOps()->enumerate) {
+    // Allow duplicate properties from Proxy's [[OwnPropertyKeys]].
+    bool proxyOwnProperty = pobj->is<ProxyObject>() && (flags & JSITER_OWNONLY);
+
+    if (!proxyOwnProperty && (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() ||
+        pobj->getOps()->enumerate))
+    {
         if (!ht) {
             ht.emplace(cx);
             // Most of the time there are only a handful of entries.

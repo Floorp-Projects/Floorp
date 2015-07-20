@@ -83,6 +83,9 @@ static bool sHaveSetTimeoutPrefCache = false;
 
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   : mShuttingDown(false)
+#ifdef MOZ_CRASHREPORTER
+  , mAsyncShutdownPluginStatesMutex("GeckoMediaPluginService::mAsyncShutdownPluginStatesMutex")
+#endif
   , mScannedPluginOnDisk(false)
   , mWaitingForPluginsSyncShutdown(false)
 {
@@ -402,7 +405,7 @@ GeckoMediaPluginServiceParent::SetAsyncShutdownPluginState(GMPParent* aGMPParent
                                                            char aId,
                                                            const nsCString& aState)
 {
-  MutexAutoLock lock(mMutex);
+  MutexAutoLock lock(mAsyncShutdownPluginStatesMutex);
   mAsyncShutdownPluginStates.Update(aGMPParent->GetDisplayName(),
                                     nsPrintfCString("%p", aGMPParent),
                                     aId,
@@ -426,16 +429,16 @@ GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::Update(const nsCString
   bool firstPlugin = true;
   for (auto pluginIt = mStates.ConstIter(); !pluginIt.Done(); pluginIt.Next()) {
     if (!firstPlugin) { note += ','; } else { firstPlugin = false; }
-    note += pluginIt.GetKey();
+    note += pluginIt.Key();
     note += ":{";
     bool firstInstance = true;
-    for (auto instanceIt = pluginIt.GetData()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
+    for (auto instanceIt = pluginIt.Data()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
       if (!firstInstance) { note += ','; } else { firstInstance = false; }
-      note += instanceIt.GetKey();
+      note += instanceIt.Key();
       note += ":\"";
-      note += instanceIt.GetData()->mStateSequence;
+      note += instanceIt.Data()->mStateSequence;
       note += '=';
-      note += instanceIt.GetData()->mLastStateDescription;
+      note += instanceIt.Data()->mLastStateDescription;
       note += '"';
     }
     note += '}';

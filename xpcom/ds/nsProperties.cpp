@@ -77,7 +77,7 @@ nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
   uint32_t j = 0;
 
   for (auto iter = this->Iter(); !iter.Done(); iter.Next()) {
-    const char* key = iter.GetKey();
+    const char* key = iter.Key();
     keys[j] = strdup(key);
 
     if (!keys[j]) {

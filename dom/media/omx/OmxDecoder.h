@@ -11,7 +11,6 @@
 #include "MP3FrameParser.h"
 #include "MPAPI.h"
 #include "MediaOmxCommonReader.h"
-#include "MediaResource.h"
 #include "AbstractMediaDecoder.h"
 #include "OMXCodecProxy.h"
 
@@ -42,7 +41,6 @@ class OmxDecoder : public OMXCodecProxy::CodecResourceListener {
   };
 
   AbstractMediaDecoder *mDecoder;
-  nsRefPtr<MediaResource> mResource;
   sp<GonkNativeWindow> mNativeWindow;
   sp<GonkNativeWindowClient> mNativeWindowClient;
   sp<MediaSource> mVideoTrack;
@@ -141,7 +139,7 @@ class OmxDecoder : public OMXCodecProxy::CodecResourceListener {
   bool mVideoPaused;
 
 public:
-  OmxDecoder(MediaResource *aResource, AbstractMediaDecoder *aDecoder);
+  explicit OmxDecoder(AbstractMediaDecoder *aDecoder);
   ~OmxDecoder();
 
   // OMXCodecProxy::CodecResourceListener
@@ -198,10 +196,6 @@ public:
                  bool aKeyframeSkip = false,
                  bool aDoSeek = false);
   bool ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs);
-
-  MediaResource *GetResource() {
-    return mResource;
-  }
 
   //Change decoder into a playing state
   nsresult Play();

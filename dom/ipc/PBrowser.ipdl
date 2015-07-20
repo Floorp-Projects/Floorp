@@ -698,9 +698,9 @@ child:
     SetIsDocShellActive(bool aIsActive);
 
     /**
-     * Navigate by document.
+     * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
      */
-    NavigateDocument(bool aForward);
+    NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
     /**
      * The parent (chrome thread) requests that the child inform it when
