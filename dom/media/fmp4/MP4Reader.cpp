@@ -752,6 +752,10 @@ MP4Reader::Update(TrackType aTrack)
     if (decoder.HasPromise()) {
       needOutput = true;
       if (!decoder.mOutput.IsEmpty()) {
+        if (aTrack == TrackType::kVideoTrack) {
+          mVideo.mIsHardwareAccelerated =
+            mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
+        }
         nsRefPtr<MediaData> output = decoder.mOutput[0];
         decoder.mOutput.RemoveElementAt(0);
         ReturnOutput(output, aTrack);
@@ -1163,7 +1167,7 @@ MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 bool
 MP4Reader::VideoIsHardwareAccelerated() const
 {
-  return mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
+  return mVideo.mIsHardwareAccelerated;
 }
 
 void
