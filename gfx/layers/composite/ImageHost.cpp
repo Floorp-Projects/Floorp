@@ -95,6 +95,9 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
       img.mTextureSource = mImages.LastElement().mTextureSource;
       mImages.RemoveElementAt(mImages.Length() - 1);
     }
+    // SetCropRect() affects only on a specific platform.
+    // If it is not implemented, it does nothing.
+    img.mFrontBuffer->SetCropRect(img.mPictureRect);
     img.mFrontBuffer->Updated();
     img.mFrontBuffer->PrepareTextureSource(img.mTextureSource);
   }

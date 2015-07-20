@@ -1165,24 +1165,29 @@ public:
   virtual void SetApprovedForFullscreen(bool aIsApproved) = 0;
 
   /**
-   * Exits documents out of DOM fullscreen mode.
+   * Synchronously cleans up the fullscreen state on the given document.
    *
-   * If aDocument is null, all fullscreen documents in all browser windows
-   * exit fullscreen.
+   * Calling this without performing fullscreen transition could lead
+   * to undesired effect (the transition happens after document state
+   * flips), hence it should only be called either by nsGlobalWindow
+   * when we have performed the transition, or when it is necessary to
+   * clean up the state immediately. Otherwise, AsyncExitFullscreen()
+   * should be called instead.
    *
-   * If aDocument is non null, all documents from aDocument's fullscreen root
-   * to the fullscreen leaf exit fullscreen.
-   *
-   * Note that the fullscreen leaf is the bottom-most document which is
-   * fullscreen, it may have non-fullscreen child documents. The fullscreen
-   * root is normally the chrome document.
-   *
-   * If aRunAsync is true, fullscreen is executed asynchronously.
-   *
-   * Note if aDocument is not fullscreen this function has no effect, even if
-   * aDocument has fullscreen ancestors.
+   * aDocument must not be null.
    */
-  static void ExitFullscreen(nsIDocument* aDocument, bool aRunAsync);
+  static void ExitFullscreenInDocTree(nsIDocument* aDocument);
+
+  /**
+   * Ask the document to exit fullscreen state asynchronously.
+   *
+   * Different from ExitFullscreenInDocTree(), this allows the window
+   * to perform fullscreen transition first if any.
+   *
+   * If aDocument is null, it will exit fullscreen from all documents
+   * in all windows.
+   */
+  static void AsyncExitFullscreen(nsIDocument* aDocument);
 
   /**
    * Handles one single fullscreen request, updates `aHandled` if the request

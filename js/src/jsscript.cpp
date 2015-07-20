@@ -61,25 +61,24 @@ using mozilla::PodZero;
 using mozilla::RotateLeft;
 
 /* static */ BindingIter
-Bindings::argumentsBinding(ExclusiveContext* cx, HandleScript script)
+Bindings::argumentsBinding(ExclusiveContext* cx, InternalBindingsHandle bindings)
 {
     HandlePropertyName arguments = cx->names().arguments;
-    BindingIter bi(script);
+    BindingIter bi(bindings);
     while (bi->name() != arguments)
         bi++;
     return bi;
 }
 
 bool
-Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings> self,
+Bindings::initWithTemporaryStorage(ExclusiveContext* cx, InternalBindingsHandle self,
                                    uint32_t numArgs, uint32_t numVars,
                                    uint32_t numBodyLevelLexicals, uint32_t numBlockScoped,
                                    uint32_t numUnaliasedVars, uint32_t numUnaliasedBodyLevelLexicals,
-                                   const Binding* bindingArray)
+                                   Binding* bindingArray)
 {
-    MOZ_ASSERT(!self.callObjShape());
-    MOZ_ASSERT(self.bindingArrayUsingTemporaryStorage());
-    MOZ_ASSERT(!self.bindingArray());
+    MOZ_ASSERT(!self->callObjShape_);
+    MOZ_ASSERT(self->bindingArrayAndFlag_ == TEMPORARY_STORAGE_BIT);
     MOZ_ASSERT(!(uintptr_t(bindingArray) & TEMPORARY_STORAGE_BIT));
     MOZ_ASSERT(numArgs <= ARGC_LIMIT);
     MOZ_ASSERT(numVars <= LOCALNO_LIMIT);
@@ -94,13 +93,13 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
     MOZ_ASSERT(numUnaliasedVars <= numVars);
     MOZ_ASSERT(numUnaliasedBodyLevelLexicals <= numBodyLevelLexicals);
 
-    self.setBindingArray(bindingArray, TEMPORARY_STORAGE_BIT);
-    self.setNumArgs(numArgs);
-    self.setNumVars(numVars);
-    self.setNumBodyLevelLexicals(numBodyLevelLexicals);
-    self.setNumBlockScoped(numBlockScoped);
-    self.setNumUnaliasedVars(numUnaliasedVars);
-    self.setNumUnaliasedBodyLevelLexicals(numUnaliasedBodyLevelLexicals);
+    self->bindingArrayAndFlag_ = uintptr_t(bindingArray) | TEMPORARY_STORAGE_BIT;
+    self->numArgs_ = numArgs;
+    self->numVars_ = numVars;
+    self->numBodyLevelLexicals_ = numBodyLevelLexicals;
+    self->numBlockScoped_ = numBlockScoped;
+    self->numUnaliasedVars_ = numUnaliasedVars;
+    self->numUnaliasedBodyLevelLexicals_ = numUnaliasedBodyLevelLexicals;
 
     // Get the initial shape to use when creating CallObjects for this script.
     // After creation, a CallObject's shape may change completely (via direct eval() or
@@ -135,7 +134,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
             nslots++;
         }
     }
-    self.setAliasedBodyLevelLexicalBegin(aliasedBodyLevelLexicalBegin);
+    self->aliasedBodyLevelLexicalBegin_ = aliasedBodyLevelLexicalBegin;
 
     // Put as many of nslots inline into the object header as possible.
     uint32_t nfixed = gc::GetGCKindSlots(gc::GetGCObjectKind(nslots));
@@ -191,7 +190,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
     MOZ_ASSERT(slot == nslots);
 
     MOZ_ASSERT(!shape->inDictionary());
-    self.setCallObjShape(shape);
+    self->callObjShape_.init(shape);
     return true;
 }
 
@@ -219,12 +218,12 @@ Bindings::switchToScriptStorage(Binding* newBindingArray)
     return reinterpret_cast<uint8_t*>(newBindingArray + count());
 }
 
-/* static */ bool
-Bindings::clone(JSContext* cx, MutableHandle<Bindings> self,
+bool
+Bindings::clone(JSContext* cx, InternalBindingsHandle self,
                 uint8_t* dstScriptData, HandleScript srcScript)
 {
     /* The clone has the same bindingArray_ offset as 'src'. */
-    Handle<Bindings> src = Handle<Bindings>::fromMarkedLocation(&srcScript->bindings);
+    Bindings& src = srcScript->bindings;
     ptrdiff_t off = (uint8_t*)src.bindingArray() - srcScript->data;
     MOZ_ASSERT(off >= 0);
     MOZ_ASSERT(size_t(off) <= srcScript->dataSize());
@@ -244,8 +243,14 @@ Bindings::clone(JSContext* cx, MutableHandle<Bindings> self,
         return false;
     }
 
-    self.switchToScriptStorage(dstPackedBindings);
+    self->switchToScriptStorage(dstPackedBindings);
     return true;
+}
+
+/* static */ Bindings
+GCMethods<Bindings>::initial()
+{
+    return Bindings();
 }
 
 template<XDRMode mode>
@@ -297,15 +302,14 @@ XDRScriptBindings(XDRState<mode>* xdr, LifoAllocScope& las, uint16_t numArgs, ui
             bindingArray[i] = Binding(name, kind, aliased);
         }
 
-        Rooted<Bindings> bindings(cx, script->bindings);
-        if (!Bindings::initWithTemporaryStorage(cx, &bindings, numArgs, numVars,
+        InternalBindingsHandle bindings(script, &script->bindings);
+        if (!Bindings::initWithTemporaryStorage(cx, bindings, numArgs, numVars,
                                                 numBodyLevelLexicals, numBlockScoped,
                                                 numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                                 bindingArray))
         {
             return false;
         }
-        script->bindings = bindings;
     }
 
     return true;
@@ -2360,7 +2364,7 @@ js::FreeScriptData(JSRuntime* rt)
  *
  * IMPORTANT: This layout has two key properties.
  * - It ensures that everything has sufficient alignment; in particular, the
- *   consts() elements need jsval alignment.
+ *   consts() elements need Value alignment.
  * - It ensures there are no gaps between elements, which saves space and makes
  *   manual layout easy. In particular, in the second part, arrays with larger
  *   elements precede arrays with smaller elements.
@@ -2383,12 +2387,12 @@ js::FreeScriptData(JSRuntime* rt)
  */
 
 #define KEEPS_JSVAL_ALIGNMENT(T) \
-    (JS_ALIGNMENT_OF(jsval) % JS_ALIGNMENT_OF(T) == 0 && \
-     sizeof(T) % sizeof(jsval) == 0)
+    (JS_ALIGNMENT_OF(JS::Value) % JS_ALIGNMENT_OF(T) == 0 && \
+     sizeof(T) % sizeof(JS::Value) == 0)
 
 #define HAS_JSVAL_ALIGNMENT(T) \
-    (JS_ALIGNMENT_OF(jsval) == JS_ALIGNMENT_OF(T) && \
-     sizeof(T) == sizeof(jsval))
+    (JS_ALIGNMENT_OF(JS::Value) == JS_ALIGNMENT_OF(T) && \
+     sizeof(T) == sizeof(JS::Value))
 
 #define NO_PADDING_BETWEEN_ENTRIES(T1, T2) \
     (JS_ALIGNMENT_OF(T1) % JS_ALIGNMENT_OF(T2) == 0)
@@ -2396,7 +2400,7 @@ js::FreeScriptData(JSRuntime* rt)
 /*
  * These assertions ensure that there is no padding between the array headers,
  * and also that the consts() elements (which follow immediately afterward) are
- * jsval-aligned.  (There is an assumption that |data| itself is jsval-aligned;
+ * Value-aligned.  (There is an assumption that |data| itself is Value-aligned;
  * we check this below).
  */
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
@@ -2561,7 +2565,7 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     }
 
     if (nconsts != 0) {
-        MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(jsval) == 0);
+        MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(JS::Value) == 0);
         script->consts()->length = nconsts;
         script->consts()->vector = (HeapValue*)cursor;
         cursor += nconsts * sizeof(script->consts()->vector[0]);
@@ -3121,7 +3125,9 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     /* Bindings */
 
     Rooted<Bindings> bindings(cx);
-    if (!Bindings::clone(cx, &bindings, data, src))
+    InternalHandle<Bindings*> bindingsHandle =
+        InternalHandle<Bindings*>::fromMarkedLocation(bindings.address());
+    if (!Bindings::clone(cx, bindingsHandle, data, src))
         return false;
 
     /* Objects */
@@ -3706,7 +3712,8 @@ js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
      * object. Note that 'arguments' may have already been overwritten.
      */
 
-    BindingIter bi = Bindings::argumentsBinding(cx, script);
+    InternalBindingsHandle bindings(script, &script->bindings);
+    BindingIter bi = Bindings::argumentsBinding(cx, bindings);
 
     if (script->bindingIsAliased(bi)) {
         /*

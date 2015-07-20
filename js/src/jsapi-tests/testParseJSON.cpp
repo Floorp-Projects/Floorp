@@ -327,7 +327,7 @@ ReportJSONError(JSContext* cx, const char* message, JSErrorReport* report)
 END_TEST(testParseJSON_error)
 
 static bool
-Censor(JSContext* cx, unsigned argc, jsval* vp)
+Censor(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     MOZ_RELEASE_ASSERT(args.length() == 2);

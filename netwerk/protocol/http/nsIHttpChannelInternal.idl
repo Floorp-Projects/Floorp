@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(c025c35a-dda3-4a1d-9e6c-e02d7149ac79)]
+[scriptable, uuid(4c9e681e-efd8-4ed2-b57f-20d48c9b3c3b)]
 
 interface nsIHttpChannelInternal : nsISupports
 {
@@ -212,12 +212,6 @@ interface nsIHttpChannelInternal : nsISupports
      * The network.http.altsvc.enabled preference is still a pre-requisite.
      */
     attribute boolean allowAltSvc;
-
-    /**
-     * Add a new nsIPrincipal to the redirect chain. This is the only way to
-     * write to nsIRedirectHistory.redirects.
-     */
-    void addRedirect(in nsIPrincipal aPrincipal);
 
     readonly attribute PRTime lastModifiedTime;
 

@@ -1485,8 +1485,10 @@ nsObjectLoadingContent::CheckLoadPolicy(int16_t *aContentPolicy)
 
   nsIDocument* doc = thisContent->OwnerDoc();
 
+  nsContentPolicyType contentPolicyType = GetContentPolicyType();
+
   *aContentPolicy = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
+  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                           mURI,
                                           doc->NodePrincipal(),
                                           thisContent,
@@ -1532,7 +1534,7 @@ nsObjectLoadingContent::CheckProcessPolicy(int16_t *aContentPolicy)
       objectType = nsIContentPolicy::TYPE_DOCUMENT;
       break;
     case eType_Plugin:
-      objectType = nsIContentPolicy::TYPE_OBJECT;
+      objectType = GetContentPolicyType();
       break;
     default:
       NS_NOTREACHED("Calling checkProcessPolicy with a unloadable type");
@@ -2485,11 +2487,13 @@ nsObjectLoadingContent::OpenChannel()
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
+  nsContentPolicyType contentPolicyType = GetContentPolicyType();
+
   rv = NS_NewChannel(getter_AddRefs(chan),
                      mURI,
                      thisContent,
                      securityFlags,
-                     nsIContentPolicy::TYPE_OBJECT,
+                     contentPolicyType,
                      group, // aLoadGroup
                      shim,  // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |

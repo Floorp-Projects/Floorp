@@ -15,6 +15,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIPackagedAppService.h"
 #include <algorithm>
+#include "nsContentSecurityManager.h"
 #include "nsHttp.h"
 
 //
@@ -205,10 +206,28 @@ nsPartChannel::Open(nsIInputStream **result)
 }
 
 NS_IMETHODIMP
+nsPartChannel::Open2(nsIInputStream** aStream)
+{
+    nsCOMPtr<nsIStreamListener> listener;
+    nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return Open(aStream);
+}
+
+NS_IMETHODIMP
 nsPartChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     // This channel cannot be opened!
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPartChannel::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 NS_IMETHODIMP

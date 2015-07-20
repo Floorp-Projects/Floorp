@@ -1299,7 +1299,7 @@ class MOZ_STACK_CLASS CallMethodHelper
     uint8_t mJSContextIndex; // TODO make const
     uint8_t mOptArgcIndex; // TODO make const
 
-    jsval* const mArgv;
+    Value* const mArgv;
     const uint32_t mArgc;
 
     MOZ_ALWAYS_INLINE bool
@@ -1559,7 +1559,7 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
     if (paramInfo.IsOut() && !paramInfo.IsRetval()) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
-        jsval arg = paramIndex < mArgc ? mArgv[paramIndex] : JS::NullValue();
+        Value arg = paramIndex < mArgc ? mArgv[paramIndex] : JS::NullValue();
         if (paramIndex < mArgc) {
             RootedObject obj(mCallContext);
             if (!arg.isPrimitive())
@@ -2040,7 +2040,7 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
 
     switch (type.TagPart()) {
         case nsXPTType::T_JSVAL:
-            js::RemoveRawValueRoot(mCallContext, (jsval*)&param.val);
+            js::RemoveRawValueRoot(mCallContext, (Value*)&param.val);
             break;
         case nsXPTType::T_INTERFACE:
         case nsXPTType::T_INTERFACE_IS:

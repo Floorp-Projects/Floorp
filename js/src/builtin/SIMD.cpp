@@ -416,11 +416,12 @@ static bool
 FillLanes(JSContext* cx, Handle<TypedObject*> result, const CallArgs& args)
 {
     typedef typename T::Elem Elem;
+    InternalHandle<Elem*> mem(result, reinterpret_cast<Elem*>(result->typedMem()));
     Elem tmp;
     for (unsigned i = 0; i < T::lanes; i++) {
         if (!T::toType(cx, args.get(i), &tmp))
             return false;
-        reinterpret_cast<Elem*>(result->typedMem())[i] = tmp;
+        mem.get()[i] = tmp;
     }
     args.rval().setObject(*result);
     return true;

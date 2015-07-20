@@ -207,6 +207,8 @@ private:
            nsGkAtoms::src;
   }
 
+  nsContentPolicyType GetContentPolicyType() const override;
+
   // mIsDoneAddingChildren is only really used for <applet>.  This boolean is
   // always true for <embed>, per the documentation in nsIContent.h.
   bool mIsDoneAddingChildren;

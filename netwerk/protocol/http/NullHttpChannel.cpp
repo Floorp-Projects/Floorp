@@ -4,6 +4,7 @@
 
 #include "NullHttpChannel.h"
 #include "nsContentUtils.h"
+#include "nsContentSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
 
 namespace mozilla {
@@ -303,9 +304,27 @@ NullHttpChannel::Open(nsIInputStream * *_retval)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
+}
+
+NS_IMETHODIMP
 NullHttpChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 NS_IMETHODIMP

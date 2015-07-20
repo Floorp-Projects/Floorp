@@ -6308,11 +6308,9 @@ FinishDOMFullscreenChange(nsIDocument* aDoc, bool aInDOMFullscreen)
     // Ask the document to handle any pending DOM fullscreen change.
     nsIDocument::HandlePendingFullscreenRequests(aDoc);
   } else {
-    // Force exit from DOM full-screen mode. This is so that if we're in
-    // DOM full-screen mode and the user exits full-screen mode with
-    // the browser full-screen mode toggle keyboard-shortcut, we'll detect
-    // that and leave DOM API full-screen mode too.
-    nsIDocument::ExitFullscreen(aDoc, /* async */ false);
+    // If the window is leaving fullscreen state, also ask the document
+    // to exit from DOM Fullscreen.
+    nsIDocument::ExitFullscreenInDocTree(aDoc);
   }
 }
 
