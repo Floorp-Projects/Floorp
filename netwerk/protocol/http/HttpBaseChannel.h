@@ -20,7 +20,6 @@
 #include "nsHttpHandler.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIForcePendingChannel.h"
-#include "nsIRedirectHistory.h"
 #include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsIProgressEventSink.h"
@@ -62,7 +61,6 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIEncodedChannel
                       , public nsIHttpChannel
                       , public nsIHttpChannelInternal
-                      , public nsIRedirectHistory
                       , public nsIUploadChannel
                       , public nsIUploadChannel2
                       , public nsISupportsPriority
@@ -82,7 +80,6 @@ public:
   NS_DECL_NSIUPLOADCHANNEL2
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSITIMEDCHANNEL
-  NS_DECL_NSIREDIRECTHISTORY
 
   HttpBaseChannel();
 
@@ -188,7 +185,6 @@ public:
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable) override;
   NS_IMETHOD GetNetworkInterfaceId(nsACString& aNetworkInterfaceId) override;
   NS_IMETHOD SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId) override;
-  NS_IMETHOD AddRedirect(nsIPrincipal *aRedirect) override;
   NS_IMETHOD ForcePending(bool aForcePending) override;
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) override;
   NS_IMETHOD ForceNoIntercept() override;
@@ -387,8 +383,6 @@ protected:
 
   nsCOMPtr<nsIURI>                  mAPIRedirectToURI;
   nsAutoPtr<nsTArray<nsCString> >   mRedirectedCachekeys;
-  // Redirects added by previous channels.
-  nsCOMArray<nsIPrincipal>          mRedirects;
 
   uint32_t                          mProxyResolveFlags;
   nsCOMPtr<nsIURI>                  mProxyURI;
