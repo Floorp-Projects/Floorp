@@ -322,46 +322,20 @@ GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength)
   return NS_OK;
 }
 
-class CreateTaskQueueTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-    return NS_OK;
-  }
-  nsRefPtr<TaskQueue> mTaskQueue;
-};
-
-class CreateFlushableTaskQueueTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue =
-      new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-    return NS_OK;
-  }
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
-};
-
 already_AddRefed<TaskQueue>
 CreateMediaDecodeTaskQueue()
 {
-  // We must create the TaskQueue/SharedThreadPool on the main thread.
-  nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
-  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return t->mTaskQueue.forget();
+  nsRefPtr<TaskQueue> queue = new TaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  return queue.forget();
 }
 
 already_AddRefed<FlushableTaskQueue>
 CreateFlushableMediaDecodeTaskQueue()
 {
-  // We must create the TaskQueue/SharedThreadPool on the main thread.
-  nsRefPtr<CreateFlushableTaskQueueTask> t(new CreateFlushableTaskQueueTask());
-  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return t->mTaskQueue.forget();
+  nsRefPtr<FlushableTaskQueue> queue = new FlushableTaskQueue(
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
+  return queue.forget();
 }
 
 } // end namespace mozilla
