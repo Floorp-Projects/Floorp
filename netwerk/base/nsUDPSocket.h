@@ -14,6 +14,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
+#include "nsProxyRelease.h"
 #endif
 
 //-----------------------------------------------------------------------------
