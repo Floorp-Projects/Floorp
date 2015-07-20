@@ -6,6 +6,7 @@
 
 #include "mozilla/AutoGlobalTimelineMarker.h"
 
+#include "mozilla/TimelineConsumers.h"
 #include "MainThreadUtils.h"
 #include "nsDocShell.h"
 
@@ -37,7 +38,7 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (nsDocShell::gProfileTimelineRecordingsCount == 0) {
+  if (TimelineConsumers::IsEmpty()) {
     return;
   }
 

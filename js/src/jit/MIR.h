@@ -6888,13 +6888,7 @@ class MPhi final
     // Appends a new input to the input vector. May perform reallocation.
     // Prefer reserveLength() and addInput() instead, where possible.
     bool addInputSlow(MDefinition* ins) {
-        // Use growByUninitialized and placement-new instead of just append,
-        // similar to what addInput does.
-        if (!inputs_.growByUninitialized(1))
-            return false;
-
-        new (&inputs_.back()) MUse(ins, this);
-        return true;
+        return inputs_.emplaceBack(ins, this);
     }
 
     // Update the type of this phi after adding |ins| as an input. Set
