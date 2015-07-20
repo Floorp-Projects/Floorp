@@ -132,25 +132,47 @@ class ReftestResolver(object):
                 "crashtest": "crashtests.list",
                 "jstestbrowser": "jstests.list"}[suite]
 
-    def findManifest(self, suite, test_file):
+    def directoryManifest(self, suite, path):
+        return os.path.join(path, self.defaultManifest(suite))
+
+    def findManifest(self, suite, test_file, subdirs=True):
         """Return a tuple of (manifest-path, filter-string) for running test_file.
 
         test_file is a path to a test or a manifest file
         """
+        rv = []
+        default_manifest = self.defaultManifest(suite)
         if not os.path.isabs(test_file):
             test_file = self.absManifestPath(test_file)
 
         if os.path.isdir(test_file):
-            return os.path.join(test_file, self.defaultManifest(suite)), None
+            for dirpath, dirnames, filenames in os.walk(test_file):
+                if default_manifest in filenames:
+                    rv.append((os.path.join(dirpath, default_manifest), None))
+                    # We keep recursing into subdirectories which means that in the case
+                    # of include directives we get the same manifest multiple times.
+                    # However reftest.js will only read each manifest once
 
-        if test_file.endswith('.list'):
-            return test_file, None
+        elif test_file.endswith('.list'):
+            if os.path.exists(test_file):
+                rv = [(test_file, None)]
+        else:
+            dirname, pathname = os.path.split(test_file)
+            found = True
+            while not os.path.exists(os.path.join(dirname, default_manifest)):
+                dirname, suffix = os.path.split(dirname)
+                pathname = os.path.join(suffix, pathname)
+                if os.path.dirname(dirname) == dirname:
+                    found = False
+                    break
+            if found:
+                rv = [(os.path.join(dirname, default_manifest),
+                       r".*(?:/|\\)%s$" % pathname)]
 
-        return (self.findManifest(suite, os.path.dirname(test_file))[0],
-                r".*(?:/|\\)%s$" % os.path.basename(test_file))
+        return rv
 
     def absManifestPath(self, path):
-        return os.path.abspath(path)
+        return os.path.normpath(os.path.abspath(path))
 
     def manifestURL(self, options, path):
         return "file://%s" % path
@@ -159,19 +181,20 @@ class ReftestResolver(object):
         suite = options.suite
         manifests = {}
         for testPath in tests:
-            manifest, filter_str = self.findManifest(suite, testPath)
-            manifest = self.manifestURL(options, manifest)
-            if manifest not in manifests:
-                manifests[manifest] = set()
-            if filter_str is not None:
+            for manifest, filter_str in self.findManifest(suite, testPath):
+                manifest = self.manifestURL(options, manifest)
+                if manifest not in manifests:
+                    manifests[manifest] = set()
                 manifests[manifest].add(filter_str)
 
         for key in manifests.iterkeys():
             if os.path.split(key)[1] != self.defaultManifest(suite):
                 print >> sys.stderr, "Invalid manifest for suite %s, %s" %(options.suite, key)
                 sys.exit(1)
-            manifests[key] = sorted(list(manifests[key]))
-
+            if None in manifests[key]:
+                manifests[key] = None
+            else:
+                manifests[key] = "|".join(list(manifests[key]))
         return manifests
 
 class RefTest(object):
