@@ -4,7 +4,10 @@
 
 // Test that console.count() counts as expected. See bug 922208.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-count.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-count.html";
 
 function test() {
   Task.spawn(runner).then(finishTest);
@@ -25,7 +28,7 @@ function test() {
       "console.count() testcounter: 3",
       "console.count() testcounter: 4",
       "end"
-    ].forEach(function (msg) {
+    ].forEach(function(msg) {
       messages.push({
         text: msg,
         category: CATEGORY_WEBDEV,
@@ -55,7 +58,7 @@ function test() {
       "console.count() testcounter: 5",
       "console.count() testcounter: 6",
       "end"
-    ].forEach(function (msg) {
+    ].forEach(function(msg) {
       messages.push({
         text: msg,
         category: CATEGORY_WEBDEV,

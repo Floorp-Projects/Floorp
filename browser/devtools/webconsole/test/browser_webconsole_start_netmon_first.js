@@ -5,14 +5,13 @@
 // Check that the webconsole works if the network monitor is first opened, then
 // the user switches to the webconsole. See bug 970914.
 
+"use strict";
+
 function test() {
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
     const {tab} = yield loadTab("data:text/html;charset=utf8,<p>hello");
-
-    const target = TargetFactory.forTab(tab);
-    const toolbox = yield gDevTools.showToolbox(target, "netmonitor");
 
     const hud = yield openConsole(tab);
 
@@ -29,7 +28,8 @@ function test() {
     });
 
     let text = hud.outputNode.textContent;
-    isnot(text.indexOf("foobar bug970914"), -1, "console.log message confirmed");
+    isnot(text.indexOf("foobar bug970914"), -1,
+          "console.log message confirmed");
     ok(!/logging API|disabled by a script/i.test(text),
        "no warning about disabled console API");
   }

@@ -773,10 +773,16 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingProtection.detectedBlocked2 "&brandShortName; is blocking attempts to track your browsing.">
 <!ENTITY trackingProtection.detectedNotBlocked2 "This site includes content that tracks your browsing. You have disabled protection.">
 <!ENTITY trackingProtection.notDetected2 "This site doesn’t include any content that tracks your browsing.">
+<!-- LOCALIZATION NOTE (trackingProtection.unblock.label, trackingProtection.unblock.accesskey):
+     The associated button with this label and accesskey is only shown when opening the control
+     center while looking at a site with trackers in NON-private browsing mode. -->
 <!ENTITY trackingProtection.unblock.label "Disable protection for this site">
 <!ENTITY trackingProtection.unblock.accesskey "D">
-<!-- LOCALIZATION NOTE (trackingProtection.unblockPrivate.label): Uses trackingProtection.unblock.accesskey as its accesskey. -->
+<!-- LOCALIZATION NOTE (trackingProtection.unblockPrivate.label, trackingProtection.unblockPrivate.accesskey):
+     The associated button with this label and accesskey is only shown when opening the control
+     center while looking at a site with trackers in PRIVATE browsing mode. -->
 <!ENTITY trackingProtection.unblockPrivate.label "Disable protection for this session">
+<!ENTITY trackingProtection.unblockPrivate.accesskey "D">
 <!ENTITY trackingProtection.block2.label "Enable protection">
 <!ENTITY trackingProtection.block2.accesskey "E">
 

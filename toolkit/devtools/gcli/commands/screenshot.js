@@ -55,7 +55,6 @@ const standardParams = {
     },
     {
       name: "imgur",
-      hidden: true, // Hidden because it fails with "Could not reach imgur API"
       type: "boolean",
       description: l10n.lookup("screenshotImgurDesc"),
       manual: l10n.lookup("screenshotImgurManual")

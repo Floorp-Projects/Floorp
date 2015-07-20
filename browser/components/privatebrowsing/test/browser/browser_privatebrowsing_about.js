@@ -97,3 +97,43 @@ add_task(function* test_tourActions() {
 
   yield BrowserTestUtils.closeWindow(win);
 });
+
+/**
+ * Tests the action to re-enable Tracking Protection in "about:privatebrowsing"
+ * when it has been disabled from the preferences.
+ */
+add_task(function* test_enableTrackingProtection() {
+  // Use tour version but disable Tracking Protection.
+  Services.prefs.setBoolPref("privacy.trackingprotection.ui.enabled", true);
+  Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled",
+                             false);
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("privacy.trackingprotection.pbmode.enabled");
+    Services.prefs.clearUserPref("privacy.trackingprotection.ui.enabled");
+  });
+
+  let { win, tab } = yield openAboutPrivateBrowsing();
+
+  // Set up the observer for the preference change before triggering the action.
+  let prefBranch =
+      Services.prefs.getBranch("privacy.trackingprotection.pbmode.");
+  let promisePrefChanged = new Promise(resolve => {
+    let prefObserver = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+      observe: function () {
+        prefBranch.removeObserver("enabled", prefObserver);
+        resolve();
+      },
+    };
+    prefBranch.addObserver("enabled", prefObserver, false);
+  });
+
+  yield ContentTask.spawn(tab, {}, function* () {
+    content.document.getElementById("enableTrackingProtection").click();
+  });
+
+  yield promisePrefChanged;
+  ok(prefBranch.getBoolPref("enabled"), "Tracking Protection is enabled.");
+
+  yield BrowserTestUtils.closeWindow(win);
+});

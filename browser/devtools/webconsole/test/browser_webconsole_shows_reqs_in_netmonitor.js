@@ -3,13 +3,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,Test that the web console " +
                  "displays requests that have been recorded in the " +
                  "netmonitor, even if the console hadn't opened yet.";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/browser/devtools/webconsole/test/" +
-                 TEST_FILE;
+const TEST_PATH = "http://example.com/browser/browser/devtools/webconsole/" +
+                  "test/" + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.networkinfo";
 Services.prefs.setBoolPref(NET_PREF, true);
@@ -46,7 +48,6 @@ add_task(function* () {
     ]
   });
 });
-
 
 function loadDocument(browser) {
   let deferred = promise.defer();

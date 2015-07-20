@@ -4,9 +4,10 @@
 
 // Tests that console.table() works as intended.
 
- "use strict";
+"use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-table.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-table.html";
 
 const TEST_DATA = [
   {
@@ -63,19 +64,26 @@ const TEST_DATA = [
   {
     command: "console.table(family)",
     data: [
-      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"", age: "32" },
-      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"", age: "33" },
-      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"", age: "5" },
+      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"",
+        age: "32" },
+      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"",
+        age: "33" },
+      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"",
+        age: "5" },
       { _index: "son", firstName: "\"Mike\"", lastName: "\"Doyle\"", age: "8" },
     ],
-    columns: { _index: "(index)", firstName: "firstName", lastName: "lastName", age: "age" }
+    columns: { _index: "(index)", firstName: "firstName", lastName: "lastName",
+               age: "age" }
   },
   {
     command: "console.table(family, [])",
     data: [
-      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"", age: "32" },
-      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"", age: "33" },
-      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"", age: "5" },
+      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"",
+        age: "32" },
+      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"",
+        age: "33" },
+      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"",
+        age: "5" },
       { _index: "son", firstName: "\"Mike\"", lastName: "\"Doyle\"", age: "8" },
     ],
     columns: { _index: "(index)" }
@@ -83,9 +91,12 @@ const TEST_DATA = [
   {
     command: "console.table(family, ['firstName', 'lastName'])",
     data: [
-      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"", age: "32" },
-      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"", age: "33" },
-      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"", age: "5" },
+      { _index: "mother", firstName: "\"Susan\"", lastName: "\"Doyle\"",
+        age: "32" },
+      { _index: "father", firstName: "\"John\"", lastName: "\"Doyle\"",
+        age: "33" },
+      { _index: "daughter", firstName: "\"Lily\"", lastName: "\"Doyle\"",
+        age: "5" },
       { _index: "son", firstName: "\"Mike\"", lastName: "\"Doyle\"", age: "8" },
     ],
     columns: { _index: "(index)", firstName: "firstName", lastName: "lastName" }
@@ -104,7 +115,8 @@ const TEST_DATA = [
   {
     command: "console.table(myMap)",
     data: [
-      { _index: 0, _key: "\"a string\"", _value: "\"value associated with 'a string'\"" },
+      { _index: 0, _key: "\"a string\"",
+        _value: "\"value associated with 'a string'\"" },
       { _index: 1, _key: "5", _value: "\"value associated with 5\"" },
     ],
     columns: { _index: "(iteration index)", _key: "Key", _value: "Values" }
@@ -141,18 +153,19 @@ add_task(function*() {
     ok(obj._data, "found table data object");
 
     let data = obj._data.map(entries => {
-      let result = {};
+      let entryResult = {};
 
       for (let key of Object.keys(entries)) {
-        result[key] = entries[key] instanceof HTMLElement ?
+        entryResult[key] = entries[key] instanceof HTMLElement ?
           entries[key].textContent : entries[key];
       }
 
-      return result;
+      return entryResult;
     });
 
     is(data.toSource(), testdata.data.toSource(), "table data is correct");
     ok(obj._columns, "found table column object");
-    is(obj._columns.toSource(), testdata.columns.toSource(), "table column is correct");
+    is(obj._columns.toSource(), testdata.columns.toSource(),
+       "table column is correct");
   }
 });

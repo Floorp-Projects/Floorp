@@ -3,12 +3,14 @@
 
 // Tests that the filter button context menu logic works correctly.
 
+"use strict";
+
 const TEST_URI = "http://example.com/";
 
 function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then(testFilterButtons);
-  })
+  });
 }
 
 function testFilterButtons(aHud) {
@@ -32,21 +34,21 @@ function testRightClick(aCategory, hudBox, aHud) {
 
   function verifyContextMenuIsClosed() {
     info("verify the context menu is closed");
-    is(button.getAttribute("open"), false, "The context menu for the \"" + aCategory +
-      "\" button is closed");
+    is(button.getAttribute("open"), false, "The context menu for the \"" +
+       aCategory + "\" button is closed");
   }
 
   function verifyOriginalCheckedState() {
     info("verify the button has the original checked state");
     is(button.getAttribute("aria-pressed"), origCheckedState,
-      "The button state should not have changed");
-  };
+       "The button state should not have changed");
+  }
 
   function verifyNewCheckedState() {
     info("verify the button's checked state has changed");
     isnot(button.getAttribute("aria-pressed"), origCheckedState,
-      "The button state should have changed");
-  };
+          "The button state should have changed");
+  }
 
   function leftClickToClose() {
     info("left click the button to close the contextMenu");

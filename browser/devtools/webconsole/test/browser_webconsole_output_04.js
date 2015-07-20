@@ -3,16 +3,18 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-///////////////////
-//
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
 //
+
+"use strict";
+
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("null");
 
 // Test the webconsole output for various types of objects.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-04.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-output-04.html";
 
 let inputTests = [
   // 0
@@ -36,7 +38,7 @@ let inputTests = [
   // 2
   {
     input: "testDocumentFragment()",
-    output: 'DocumentFragment [ <div#foo1.bar>, <div#foo3> ]',
+    output: "DocumentFragment [ <div#foo1.bar>, <div#foo3> ]",
     printOutput: "[object DocumentFragment]",
     inspectable: true,
     variablesViewLabel: "DocumentFragment[2]",
@@ -56,7 +58,8 @@ let inputTests = [
   // 4
   {
     input: "testDOMException()",
-    output: 'DOMException [SyntaxError: "An invalid or illegal string was specified"',
+    output: 'DOMException [SyntaxError: "An invalid or illegal string was ' +
+            'specified"',
     printOutput: '"SyntaxError: An invalid or illegal string was specified"',
     inspectable: true,
     variablesViewLabel: "SyntaxError",
