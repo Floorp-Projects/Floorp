@@ -227,38 +227,49 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
     // when the click was over the anchor. This way, clicking on a menu doesn't
     // reopen the menu.
     if ((consumeResult == ConsumeOutsideClicks_ParentOnly || noRollupOnAnchor) && pos) {
-      nsCOMPtr<nsIContent> anchor = item->Frame()->GetAnchor();
+      nsMenuPopupFrame* popupFrame = item->Frame();
+      nsIntRect anchorRect;
+      if (popupFrame->IsAnchored()) {
+        // Check if the popup has a screen anchor rectangle. If not, get the rectangle
+        // from the anchor element.
+        anchorRect = popupFrame->GetScreenAnchorRect();
+        if (anchorRect.x == -1 || anchorRect.y == -1) {
+          nsCOMPtr<nsIContent> anchor = popupFrame->GetAnchor();
 
-      // Check if the anchor has indicated another node to use for checking
-      // for roll-up. That way, we can anchor a popup on anonymous content or
-      // an individual icon, while clicking elsewhere within a button or other
-      // container doesn't result in us re-opening the popup.
-      if (anchor) {
-        nsAutoString consumeAnchor;
-        anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::consumeanchor,
-                        consumeAnchor);
-        if (!consumeAnchor.IsEmpty()) {
-          nsIDocument* doc = anchor->GetOwnerDocument();
-          nsIContent* newAnchor = doc->GetElementById(consumeAnchor);
-          if (newAnchor) {
-            anchor = newAnchor;
+          // Check if the anchor has indicated another node to use for checking
+          // for roll-up. That way, we can anchor a popup on anonymous content or
+          // an individual icon, while clicking elsewhere within a button or other
+          // container doesn't result in us re-opening the popup.
+          if (anchor) {
+            nsAutoString consumeAnchor;
+            anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::consumeanchor,
+                            consumeAnchor);
+            if (!consumeAnchor.IsEmpty()) {
+              nsIDocument* doc = anchor->GetOwnerDocument();
+              nsIContent* newAnchor = doc->GetElementById(consumeAnchor);
+              if (newAnchor) {
+                anchor = newAnchor;
+              }
+            }
+          }
+
+          if (anchor && anchor->GetPrimaryFrame()) {
+            anchorRect = anchor->GetPrimaryFrame()->GetScreenRect();
           }
         }
       }
 
-      if (anchor && anchor->GetPrimaryFrame()) {
-        // It's possible that some other element is above the anchor at the same
-        // position, but the only thing that would happen is that the mouse
-        // event will get consumed, so here only a quick coordinates check is
-        // done rather than a slower complete check of what is at that location.
-        if (anchor->GetPrimaryFrame()->GetScreenRect().Contains(*pos)) {
-          if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
-            consume = true;
-          }
+      // It's possible that some other element is above the anchor at the same
+      // position, but the only thing that would happen is that the mouse
+      // event will get consumed, so here only a quick coordinates check is
+      // done rather than a slower complete check of what is at that location.
+      if (anchorRect.Contains(*pos)) {
+        if (consumeResult == ConsumeOutsideClicks_ParentOnly) {
+          consume = true;
+        }
 
-          if (noRollupOnAnchor) {
-            rollup = false;
-          }
+        if (noRollupOnAnchor) {
+          rollup = false;
         }
       }
     }
