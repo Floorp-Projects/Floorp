@@ -567,20 +567,26 @@ protected:
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
-  // Ensures a to decode audio has been dispatched to the decode task queue.
+  // Ensures a task to decode audio has been dispatched to the decode task queue.
   // If a task to decode has already been dispatched, this does nothing,
   // otherwise this dispatches a task to do the decode.
   // This is called on the state machine or decode threads.
   // The decoder monitor must be held.
   nsresult EnsureAudioDecodeTaskQueued();
+  // Start a task to decode audio.
+  // The decoder monitor must be held.
+  void RequestAudioData();
 
   nsresult DispatchVideoDecodeTaskIfNeeded();
 
-  // Ensures a to decode video has been dispatched to the decode task queue.
+  // Ensures a task to decode video has been dispatched to the decode task queue.
   // If a task to decode has already been dispatched, this does nothing,
   // otherwise this dispatches a task to do the decode.
   // The decoder monitor must be held.
   nsresult EnsureVideoDecodeTaskQueued();
+  // Start a task to decode video.
+  // The decoder monitor must be held.
+  void RequestVideoData();
 
   // Re-evaluates the state and determines whether we need to dispatch
   // events to run the decode, or if not whether we should set the reader
