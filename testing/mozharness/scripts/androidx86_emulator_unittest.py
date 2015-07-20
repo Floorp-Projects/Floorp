@@ -419,6 +419,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
         raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                     '%s_raw.log' % suite_name)
+        error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
+                                          '%s_errorsummary.log' % suite_name)
         str_format_values = {
             'app': self._query_package_name(),
             'remote_webserver': c['remote_webserver'],
@@ -433,6 +435,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'modules_dir': dirs['abs_modules_dir'],
             'installer_path': self.installer_path,
             'raw_log_file': raw_log_file,
+            'error_summary_file': error_summary_file,
             'dm_trans': c['device_manager'],
         }
         if self.config["device_manager"] == "sut":

@@ -262,6 +262,8 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
 
         raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                     '%s_raw.log' % suite)
+        error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
+                                          '%s_errorsummary.log' % suite)
         emulator_type = 'x86' if os.path.isdir(os.path.join(dirs['abs_b2g-distro_dir'],
                         'out', 'target', 'product', 'generic_x86')) else 'arm'
         self.info("The emulator type: %s" % emulator_type)
@@ -281,6 +283,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
             'test_path': self.config.get('test_path'),
             'certificate_path': dirs['abs_certs_dir'],
             'raw_log_file': raw_log_file,
+            'error_summary_file': error_summary_file,
         }
 
         missing_key = True
