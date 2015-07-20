@@ -558,6 +558,7 @@ loop.roomViews = (function(mozL10n) {
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
       mozLoop: React.PropTypes.object.isRequired,
+      onCallTerminated: React.PropTypes.func.isRequired,
       remotePosterUrl: React.PropTypes.string,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
@@ -693,6 +694,14 @@ loop.roomViews = (function(mozL10n) {
       this.setState({ showEditContext: false });
     },
 
+    componentDidUpdate: function(prevProps, prevState) {
+      // Handle timestamp and window closing only when the call has terminated.
+      if (prevState.roomState === ROOM_STATES.ENDED &&
+          this.state.roomState === ROOM_STATES.ENDED) {
+        this.props.onCallTerminated();
+      }
+    },
+
     render: function() {
       if (this.state.roomName) {
         this.setTitle(this.state.roomName);
@@ -726,10 +735,9 @@ loop.roomViews = (function(mozL10n) {
           );
         }
         case ROOM_STATES.ENDED: {
-          return (
-            React.createElement(sharedViews.FeedbackView, {
-              onAfterFeedbackReceived: this.closeWindow})
-          );
+          // When conversation ended we either display a feedback form or
+          // close the window. This is decided in the AppControllerView.
+          return null;
         }
         default: {
 
