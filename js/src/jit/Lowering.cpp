@@ -2386,12 +2386,24 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes* ins)
 void
 LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier* ins)
 {
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
+
+    // LPostWriteBarrier assumes that if it has a constant object then that
+    // object is tenured, and does not need to be tested for being in the
+    // nursery. Ensure that assumption holds by lowering constant nursery
+    // objects to a register.
+    bool useConstantObject =
+        ins->object()->isConstant() &&
+        !IsInsideNursery(&ins->object()->toConstant()->value().toObject());
+
     switch (ins->value()->type()) {
       case MIRType_Object:
       case MIRType_ObjectOrNull: {
         LDefinition tmp = needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
         LPostWriteBarrierO* lir =
-            new(alloc()) LPostWriteBarrierO(useRegisterOrConstant(ins->object()),
+            new(alloc()) LPostWriteBarrierO(useConstantObject
+                                            ? useOrConstant(ins->object())
+                                            : useRegister(ins->object()),
                                             useRegister(ins->value()), tmp);
         add(lir, ins);
         assignSafepoint(lir, ins);
@@ -2400,7 +2412,10 @@ LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier* ins)
       case MIRType_Value: {
         LDefinition tmp = needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
         LPostWriteBarrierV* lir =
-            new(alloc()) LPostWriteBarrierV(useRegisterOrConstant(ins->object()), tmp);
+            new(alloc()) LPostWriteBarrierV(useConstantObject
+                                            ? useOrConstant(ins->object())
+                                            : useRegister(ins->object()),
+                                            tmp);
         useBox(lir, LPostWriteBarrierV::Input, ins->value());
         add(lir, ins);
         assignSafepoint(lir, ins);

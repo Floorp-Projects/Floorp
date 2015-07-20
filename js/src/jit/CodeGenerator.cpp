@@ -2740,6 +2740,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO* lir)
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
+        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteBarrier.
         MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
@@ -2760,9 +2761,8 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV* lir)
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
     if (lir->object()->isConstant()) {
-#ifdef DEBUG
+        // Constant nursery objects cannot appear here, see LIRGenerator::visitPostWriteBarrier.
         MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
-#endif
     } else {
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
                                      ool->rejoin());
