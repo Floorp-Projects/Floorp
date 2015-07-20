@@ -298,6 +298,32 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.symbols_url = symbols_url
         return self.symbols_url
 
+    def get_webapprt_path(self, res_dir, mochitest_dir):
+        """Get the path to the webapp runtime binary.
+        On Mac, we copy the stub from the resources dir to the test app bundle,
+        since we have to run it from the executable directory of a bundle
+        in order for its windows to appear.  Ideally, the build system would do
+        this for us at build time, and we should find a way for it to do that.
+        """
+        exe_suffix = self.config.get('exe_suffix', '')
+        app_name = 'webapprt-stub' + exe_suffix
+        app_path = os.path.join(res_dir, app_name)
+        if self._is_darwin():
+            mac_dir_name = os.path.join(
+                mochitest_dir,
+                'webapprtChrome',
+                'webapprt',
+                'test',
+                'chrome',
+                'TestApp.app',
+                'Contents',
+                'MacOS')
+            mac_app_name = 'webapprt' + exe_suffix
+            mac_app_path = os.path.join(mac_dir_name, mac_app_name)
+            self.copyfile(app_path, mac_app_path, copystat=True)
+            return mac_app_path
+        return app_path
+
     def _query_abs_base_cmd(self, suite_category, suite):
         if self.binary_path:
             c = self.config
@@ -308,11 +334,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             abs_app_dir = self.query_abs_app_dir()
             abs_res_dir = self.query_abs_res_dir()
 
-            webapprt_path = os.path.join(os.path.dirname(self.binary_path),
-                                         'webapprt-stub')
-            if c.get('exe_suffix'):
-                webapprt_path += c['exe_suffix']
-
             raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                         '%s_raw.log' % suite)
 
@@ -322,7 +343,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
                 'abs_app_dir': abs_app_dir,
-                'app_path': webapprt_path,
+                'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
                 'error_summary_file': error_summary_file,
                 'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
@@ -333,6 +354,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
                 str_format_values['symbols_path'] = self.symbols_path
+
+            if suite_category == 'webapprt':
+                str_format_values['app_path'] = self.get_webapprt_path(abs_res_dir, dirs['abs_mochitest_dir'])
 
             if c['e10s']:
                 base_cmd.append('--e10s')
