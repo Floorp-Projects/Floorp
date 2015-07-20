@@ -69,6 +69,7 @@ var gCanvas1, gCanvas2;
 // RecordResult.
 var gCurrentCanvas = null;
 var gURLs;
+var gManifestsLoaded = {};
 // Map from URI spec to the number of times it remains to be used
 var gURIUseCounts;
 // Map from URI spec to the canvas rendered for that URI
@@ -489,11 +490,14 @@ function StartTests()
     try {
         var globalFilter = manifests.hasOwnProperty("") ? new RegExp(manifests[""]) : null;
         var manifestURLs = Object.keys(manifests);
-        manifestURLs.sort();
+
+        // Ensure we read manifests from higher up the directory tree first so that we
+        // process includes before reading the included manifest again
+        manifestURLs.sort(function(a,b) {return a.length - b.length})
         manifestURLs.forEach(function(manifestURL) {
             gDumpLog("Readings manifest" + manifestURL + "\n");
-            var pathFilters = manifests[manifestURL].map(function(x) {return new RegExp(x)});
-            ReadTopManifest(manifestURL, [globalFilter, pathFilters]);
+            var filter = manifests[manifestURL] ? new RegExp(manifests[manifestURL]) : null;
+            ReadTopManifest(manifestURL, [globalFilter, filter, false]);
         });
         BuildUseCounts();
 
@@ -747,22 +751,25 @@ function AddPrefSettings(aWhere, aPrefName, aPrefValExpression, aSandbox, aTestP
     return true;
 }
 
-function ReadTopManifest(aFileURL, aFilters)
+function ReadTopManifest(aFileURL, aFilter)
 {
     var url = gIOService.newURI(aFileURL, null, null);
     if (!url)
         throw "Expected a file or http URL for the manifest.";
-    ReadManifest(url, EXPECTED_PASS, aFilters);
+    ReadManifest(url, EXPECTED_PASS, aFilter);
 }
 
-function AddTestItem(aTest, aFilters)
+function AddTestItem(aTest, aFilter)
 {
-    if (!aFilters)
-        aFilters = [null, []];
+    if (!aFilter)
+        aFilter = [null, [], false];
 
-    if ((aFilters[0] && !aFilters[0].test(aTest.url1.spec)) ||
-        (aFilters[1].length > 0 &&
-         !aFilters[1].some(function(filter) {return filter.test(aTest.url1.spec)})))
+    globalFilter = aFilter[0];
+    manifestFilter = aFilter[1];
+    invertManifest = aFilter[2];
+    if ((globalFilter && !globalFilter.test(aTest.url1.spec)) ||
+        (manifestFilter &&
+         !(invertManifest ^ manifestFilter.test(aTest.url1.spec))))
         return;
     if (gFocusFilterMode == FOCUS_FILTER_NEEDS_FOCUS_TESTS &&
         !aTest.needsFocus)
@@ -775,8 +782,19 @@ function AddTestItem(aTest, aFilters)
 
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
-function ReadManifest(aURL, inherited_status, aFilters)
+function ReadManifest(aURL, inherited_status, aFilter)
 {
+    // Ensure each manifest is only read once. This assumes that manifests that are
+    // included with an unusual inherited_status or filters will be read via their
+    // include before they are read directly in the case of a duplicate
+    if (gManifestsLoaded.hasOwnProperty(aURL.spec)) {
+        if (gManifestsLoaded[aURL.spec] === null)
+            return;
+        else
+            aFilter = [aFilter[0], aFilter[1], true];
+    }
+    gManifestsLoaded[aURL.spec] = aFilter[1];
+
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
 
@@ -992,7 +1010,7 @@ function ReadManifest(aURL, inherited_status, aFilters)
             var incURI = gIOService.newURI(items[1], null, listURL);
             secMan.checkLoadURIWithPrincipal(principal, incURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            ReadManifest(incURI, expected_status, aFilters);
+            ReadManifest(incURI, expected_status, aFilter);
         } else if (items[0] == TYPE_LOAD) {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to load";
@@ -1022,7 +1040,7 @@ function ReadManifest(aURL, inherited_status, aFilters)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null,
-                          chaosMode: chaosMode }, aFilters);
+                          chaosMode: chaosMode }, aFilter);
         } else if (items[0] == TYPE_SCRIPT) {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to script";
@@ -1049,7 +1067,7 @@ function ReadManifest(aURL, inherited_status, aFilters)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: null,
-                          chaosMode: chaosMode }, aFilters);
+                          chaosMode: chaosMode }, aFilter);
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to " + items[0];
@@ -1079,7 +1097,7 @@ function ReadManifest(aURL, inherited_status, aFilters)
                           fuzzyMaxPixels: fuzzy_max_pixels,
                           url1: testURI,
                           url2: refURI,
-                          chaosMode: chaosMode }, aFilters);
+                          chaosMode: chaosMode }, aFilter);
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unknown test type " + items[0];
         }
