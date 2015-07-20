@@ -15,6 +15,7 @@
 #include "MediaTaskQueue.h"
 
 #include <deque>
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 
 namespace mozilla {
@@ -187,6 +188,7 @@ private:
       , mDemuxEOS(false)
       , mDrainComplete(false)
       , mDiscontinuity(false)
+      , mIsHardwareAccelerated(false)
     {
     }
 
@@ -224,6 +226,9 @@ private:
     bool mDemuxEOS;
     bool mDrainComplete;
     bool mDiscontinuity;
+    // Used by the MDSM to determine if video decoding is hardware accelerated.
+    // This value is updated after a frame is successfully decoded.
+    Atomic<bool> mIsHardwareAccelerated;
   };
 
   template<typename PromiseType>
