@@ -5,6 +5,15 @@
 
 <resources>
 
+    <!-- Bug 1147265: to prevent tap jacking, we should set
+         filterTouchesWhenObscured=true for all activities. This theme
+         should be used when there is no other relevant theme for the
+         Activity. Note: it may be helpful to inherit from a base
+         Android theme (i.e. what GeckoBase inherits from). -->
+    <style name="FilteredTouches">
+        <item name="android:filterTouchesWhenObscured">true</item>
+    </style>
+
     <!--
         Base application theme. This could be overridden by GeckoBaseTheme
         in other res/values-XXX/themes.xml.
@@ -17,6 +26,7 @@
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:filterTouchesWhenObscured">true</item>
     </style>
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
@@ -30,6 +40,8 @@
         to a particular API level can go here.
     -->
     <style name="Gecko" parent="GeckoBase">
+        <item name="android:filterTouchesWhenObscured">true</item>
+
         <!-- Default colors -->
         <item name="android:textColorPrimary">@color/primary_text</item>
         <item name="android:textColorSecondary">@color/secondary_text</item>
@@ -100,6 +112,7 @@
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
+        <item name="android:filterTouchesWhenObscured">true</item>
         <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
     </style>
 
@@ -117,5 +130,10 @@
         <!-- We display the overlay on top of other Activities so show their status bar. -->
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay">
+        <item name="android:filterTouchesWhenObscured">true</item>
+    </style>
+
 
 </resources>

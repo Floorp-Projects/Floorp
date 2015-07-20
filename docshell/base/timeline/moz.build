@@ -7,11 +7,13 @@
 EXPORTS.mozilla += [
     'AutoGlobalTimelineMarker.h',
     'AutoTimelineMarker.h',
+    'TimelineConsumers.h',
 ]
 
 UNIFIED_SOURCES += [
     'AutoGlobalTimelineMarker.cpp',
     'AutoTimelineMarker.cpp',
+    'TimelineConsumers.cpp',
     'TimelineMarker.cpp',
 ]
 

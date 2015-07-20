@@ -34,6 +34,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "timeline/TimelineMarker.h"
+#include "timeline/TimelineConsumers.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -261,10 +262,6 @@ public:
   // See nsIDocShell::recordProfileTimelineMarkers
   void AddProfileTimelineMarker(const char* aName, TracingMetadata aMetaData);
   void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>&& aMarker);
-
-  // Global counter for how many docShells are currently recording profile
-  // timeline markers
-  static unsigned long gProfileTimelineRecordingsCount;
 
   class ObservedDocShell : public mozilla::LinkedListElement<ObservedDocShell>
   {

@@ -548,6 +548,24 @@ nsBrowserContentHandler.prototype = {
     if (overridePage == "about:blank")
       overridePage = "";
 
+    // Temporary override page for users who are running Firefox on Windows 10 for their first time.
+    let platformVersion = Services.sysinfo.getProperty("version");
+    if (AppConstants.platform == "win" &&
+        Services.vc.compare(platformVersion, "10") == 0 &&
+        Services.prefs.getPrefType("browser.usedOnWindows10") == Services.prefs.PREF_BOOL &&
+        !Services.prefs.getBoolPref("browser.usedOnWindows10")) {
+      Services.prefs.setBoolPref("browser.usedOnWindows10", true);
+      let firstUseOnWindows10URL = Services.urlFormatter.formatURL("https://www.mozilla.org/%LOCALE%/firefox/windows10/");
+
+      if (firstUseOnWindows10URL && firstUseOnWindows10URL.length) {
+        if (overridePage) {
+          overridePage += "|" + firstUseOnWindows10URL;
+        } else {
+          overridePage = firstUseOnWindows10URL;
+        }
+      }
+    }
+
     var startPage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
