@@ -58,6 +58,10 @@ const PENDING_PINGS_QUOTA_BYTES_MOBILE = 1024 * 1024; // 1 MB
 // This special value is submitted when the archive is outside of the quota.
 const ARCHIVE_SIZE_PROBE_SPECIAL_VALUE = 300;
 
+// This special value is submitted when the pending pings is outside of the quota, as
+// we don't know the size of the pings above the quota.
+const PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE = 17;
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -715,7 +719,7 @@ let TelemetryStorageImpl = {
    */
   _enforceArchiveQuota: Task.async(function*() {
     this._log.trace("_enforceArchiveQuota");
-    const startTimeStamp = Policy.now().getTime();
+    let startTimeStamp = Policy.now().getTime();
 
     // Build an ordered list, from newer to older, of archived pings.
     let pingList = [for (p of this._archivedPings) {
@@ -781,6 +785,7 @@ let TelemetryStorageImpl = {
     this._log.info("_enforceArchiveQuota - archive size: " + archiveSizeInBytes + "bytes"
                    + ", safety quota: " + SAFE_QUOTA + "bytes");
 
+    startTimeStamp = Policy.now().getTime();
     let pingsToPurge = pingList.slice(lastPingIndexToKeep + 1);
 
     // Remove all the pings older than the last one which we are safe to keep.
@@ -847,6 +852,7 @@ let TelemetryStorageImpl = {
    */
   _enforcePendingPingsQuota: Task.async(function*() {
     this._log.trace("_enforcePendingPingsQuota");
+    let startTimeStamp = Policy.now().getTime();
 
     // Build an ordered list, from newer to older, of pending pings.
     let pingList = [for (p of this._pendingPings) {
@@ -890,14 +896,26 @@ let TelemetryStorageImpl = {
       }
     }
 
+    // Save the time it takes to check if the pending pings are over-quota.
+    Telemetry.getHistogramById("TELEMETRY_PENDING_CHECKING_OVER_QUOTA_MS")
+             .add(Math.round(Policy.now().getTime() - startTimeStamp));
+
+    let recordHistograms = (sizeInMB, evictedPings, elapsedMs) => {
+      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").add(sizeInMB);
+      Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").add(evictedPings);
+      Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").add(elapsedMs);
+    };
+
     // Check if we're using too much space. If not, bail out.
     if (pendingPingsSizeInBytes < Policy.getPendingPingsQuota()) {
+      recordHistograms(Math.round(pendingPingsSizeInBytes / 1024 / 1024), 0, 0);
       return;
     }
 
     this._log.info("_enforcePendingPingsQuota - size: " + pendingPingsSizeInBytes + "bytes"
                    + ", safety quota: " + SAFE_QUOTA + "bytes");
 
+    startTimeStamp = Policy.now().getTime();
     let pingsToPurge = pingList.slice(lastPingIndexToKeep + 1);
 
     // Remove all the pings older than the last one which we are safe to keep.
@@ -911,6 +929,13 @@ let TelemetryStorageImpl = {
       // beginning (oldest).
       yield this.removePendingPing(ping.id);
     }
+
+    const endTimeStamp = Policy.now().getTime();
+    // We don't know the size of the pending pings directory if we are above the quota,
+    // since we stop scanning once we reach the quota. We use a special value to show
+    // this condition.
+    recordHistograms(PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE, pingsToPurge.length,
+                 Math.ceil(endTimeStamp - startTimeStamp));
   }),
 
   /**
