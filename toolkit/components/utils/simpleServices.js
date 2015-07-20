@@ -67,6 +67,21 @@ AddonPolicyService.prototype = {
   },
 
   /*
+   * Invokes a callback (if any) to determine if an extension URI should be
+   * web-accessible.
+   *
+   * @see nsIAddonPolicyService.extensionURILoadableByAnyone
+   */
+  extensionURILoadableByAnyone(aURI) {
+    if (aURI.scheme != "moz-extension") {
+      throw new TypeError("non-extension URI passed");
+    }
+
+    let cb = this.extensionURILoadCallback;
+    return cb ? cb(aURI) : false;
+  },
+
+  /*
    * Sets the callbacks used in addonMayLoadURI above. Not accessible over
    * XPCOM - callers should use .wrappedJSObject on the service to call it
    * directly.
@@ -74,6 +89,17 @@ AddonPolicyService.prototype = {
   setAddonLoadURICallback(aAddonId, aCallback) {
     this.mayLoadURICallbacks[aAddonId] = aCallback;
   },
+
+  /*
+   * Sets the callback used in extensionURILoadableByAnyone above. Not
+   * accessible over XPCOM - callers should use .wrappedJSObject on the
+   * service to call it directly.
+   */
+  setExtensionURILoadCallback(aCallback) {
+    var old = this.extensionURILoadCallback;
+    this.extensionURILoadCallback = aCallback;
+    return old;
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteTagServiceService, AddonPolicyService]);

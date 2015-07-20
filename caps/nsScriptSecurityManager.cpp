@@ -745,6 +745,16 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     // the methods that work on chains of nested URIs and they will only look
     // at the flags for our one URI.
 
+    // Special case: moz-extension has a whitelist of URIs that are loadable by
+    // anyone.
+    if (targetScheme.EqualsLiteral("moz-extension") && GetAddonPolicyService()) {
+      bool loadable = false;
+      rv = GetAddonPolicyService()->ExtensionURILoadableByAnyone(targetBaseURI, &loadable);
+      if (NS_SUCCEEDED(rv) && loadable) {
+        return NS_OK;
+      }
+    }
+
     // Check for system target URI
     rv = DenyAccessIfURIHasFlags(targetBaseURI,
                                  nsIProtocolHandler::URI_DANGEROUS_TO_LOAD);
