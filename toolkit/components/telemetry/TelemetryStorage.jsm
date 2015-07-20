@@ -173,6 +173,13 @@ this.TelemetryStorage = {
   },
 
   /**
+   * Test method that allows waiting on the pending pings quota task to finish.
+   */
+  testPendingQuotaTaskPromise: function() {
+    return (TelemetryStorageImpl._enforcePendingPingsQuotaTask || Promise.resolve());
+  },
+
+  /**
    * Save a pending - outgoing - ping to disk and track it.
    *
    * @param {Object} ping The ping data.
@@ -1104,7 +1111,8 @@ let TelemetryStorageImpl = {
     this._log.trace("loadPendingPing - id: " + id);
     let info = this._pendingPings.get(id);
     if (!info) {
-      return;
+      this._log.trace("loadPendingPing - unknown id " + id);
+      return Promise.reject(new Error("TelemetryStorage.loadPendingPing - no ping with id " + id));
     }
 
     return this.loadPingFile(info.path, false);
