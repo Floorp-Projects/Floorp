@@ -1019,6 +1019,8 @@ class ICStubCompiler
 #elif defined(JS_CODEGEN_MIPS)
         MOZ_ASSERT(!regs.has(ICTailCallReg));
         MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
+#elif defined(JS_CODEGEN_ARM64)
+        MOZ_ASSERT(!regs.has(ICTailCallReg));
 #endif
         regs.take(BaselineFrameReg);
         regs.take(ICStubReg);
