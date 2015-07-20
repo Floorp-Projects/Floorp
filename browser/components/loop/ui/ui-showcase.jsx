@@ -32,13 +32,12 @@
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
-  var FeedbackView = loop.shared.views.FeedbackView;
+  var FeedbackView = loop.feedbackViews.FeedbackView;
   var Checkbox = loop.shared.views.Checkbox;
   var TextChatView = loop.shared.views.chat.TextChatView;
 
   // Store constants
   var ROOM_STATES = loop.store.ROOM_STATES;
-  var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
 
   // Local helpers
@@ -75,14 +74,6 @@
   loop.shared.mixins.setRootObject(rootObject);
 
   var dispatcher = new loop.Dispatcher();
-
-  // Feedback API client configured to send data to the stage input server,
-  // which is available at https://input.allizom.org
-  var stageFeedbackApiClient = new loop.FeedbackAPIClient(
-    "https://input.allizom.org/api/v1/feedback", {
-      product: "Loop"
-    }
-  );
 
   var mockSDK = _.extend({
     sendTextChatMessage: function(message) {
@@ -281,9 +272,6 @@
     activeRoomStore: desktopRemoteFaceMuteActiveRoomStore
   });
 
-  var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
-    feedbackClient: stageFeedbackApiClient
-  });
   var conversationStore = new loop.store.ConversationStore(dispatcher, {
     client: {},
     mozLoop: navigator.mozLoop,
@@ -354,7 +342,6 @@
   loop.store.StoreMixin.register({
     activeRoomStore: activeRoomStore,
     conversationStore: conversationStore,
-    feedbackStore: feedbackStore,
     textChatStore: textChatStore
   });
 
@@ -862,23 +849,12 @@
 
           <Section name="FeedbackView">
             <p className="note">
-              <strong>Note:</strong> For the useable demo, you can access submitted data at&nbsp;
-              <a href="https://input.allizom.org/">input.allizom.org</a>.
             </p>
             <Example dashed={true}
                      style={{width: "300px", height: "272px"}}
                      summary="Default (useable demo)">
-              <FeedbackView feedbackStore={feedbackStore} />
-            </Example>
-            <Example dashed={true}
-                     style={{width: "300px", height: "272px"}}
-                     summary="Detailed form">
-              <FeedbackView feedbackState={FEEDBACK_STATES.DETAILS} feedbackStore={feedbackStore} />
-            </Example>
-            <Example dashed={true}
-                     style={{width: "300px", height: "272px"}}
-                     summary="Thank you!">
-              <FeedbackView feedbackState={FEEDBACK_STATES.SENT} feedbackStore={feedbackStore}/>
+              <FeedbackView mozLoop={{}}
+                            onAfterFeedbackReceived={function() {}} />
             </Example>
           </Section>
 
@@ -926,6 +902,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
                   roomState={ROOM_STATES.INIT}
                   roomStore={invitationRoomStore} />
               </div>
@@ -943,6 +920,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={desktopRoomStoreLoading} />
@@ -956,6 +934,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={roomStore} />
@@ -970,6 +949,7 @@
                 <DesktopRoomConversationView
                   dispatcher={dispatcher}
                   mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomStore={desktopLocalFaceMuteRoomStore} />
               </div>
@@ -983,6 +963,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
                   roomStore={desktopRemoteFaceMuteRoomStore} />
               </div>
             </FramedExample>
@@ -1174,20 +1155,6 @@
             <FramedExample cssClass="standalone"
                            dashed={true}
                            height={483}
-                           summary="Standalone room conversation (feedback)"
-                           width={644}>
-              <div className="standalone">
-                <StandaloneRoomView
-                  activeRoomStore={endedRoomStore}
-                  dispatcher={dispatcher}
-                  feedbackStore={feedbackStore}
-                  isFirefox={false} />
-              </div>
-            </FramedExample>
-
-            <FramedExample cssClass="standalone"
-                           dashed={true}
-                           height={483}
                            summary="Standalone room conversation (failed)"
                            width={644} >
               <div className="standalone">
@@ -1315,7 +1282,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 24;
+      var expectedWarningsCount = 23;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +

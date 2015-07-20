@@ -22,7 +22,6 @@ loop.shared.mixins = (function() {
    * @param {Object}
    */
   function setRootObject(obj) {
-    // console.log("loop.shared.mixins: rootObject set to " + obj);
     rootObject = obj;
   }
 

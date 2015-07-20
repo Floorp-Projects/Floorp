@@ -6,14 +6,12 @@ var loop = loop || {};
 loop.conversation = (function(mozL10n) {
   "use strict";
 
-  var sharedViews = loop.shared.views;
   var sharedMixins = loop.shared.mixins;
-  var sharedModels = loop.shared.models;
   var sharedActions = loop.shared.actions;
 
   var CallControllerView = loop.conversationViews.CallControllerView;
-  var CallIdentifierView = loop.conversationViews.CallIdentifierView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
+  var FeedbackView = loop.feedbackViews.FeedbackView;
   var GenericFailureView = loop.conversationViews.GenericFailureView;
 
   /**
@@ -24,6 +22,7 @@ loop.conversation = (function(mozL10n) {
     mixins: [
       Backbone.Events,
       loop.store.StoreMixin("conversationAppStore"),
+      sharedMixins.DocumentTitleMixin,
       sharedMixins.WindowCloseMixin
     ],
 
@@ -37,19 +36,51 @@ loop.conversation = (function(mozL10n) {
       return this.getStoreState();
     },
 
+    _renderFeedbackForm: function() {
+      this.setTitle(mozL10n.get("conversation_has_ended"));
+
+      return (<FeedbackView
+        mozLoop={this.props.mozLoop}
+        onAfterFeedbackReceived={this.closeWindow} />);
+    },
+
+    /**
+     * We only show the feedback for once every 6 months, otherwise close
+     * the window.
+     */
+    handleCallTerminated: function() {
+      var delta = new Date() - new Date(this.state.feedbackTimestamp);
+
+      // Show timestamp if feedback period (6 months) passed.
+      // 0 is default value for pref. Always show feedback form on first use.
+      if (this.state.feedbackTimestamp === 0 ||
+          delta >= this.state.feedbackPeriod) {
+        this.props.dispatcher.dispatch(new sharedActions.ShowFeedbackForm());
+        return;
+      }
+
+      this.closeWindow();
+    },
+
     render: function() {
+      if (this.state.showFeedbackForm) {
+        return this._renderFeedbackForm();
+      }
+
       switch(this.state.windowType) {
         // CallControllerView is used for both.
         case "incoming":
         case "outgoing": {
           return (<CallControllerView
             dispatcher={this.props.dispatcher}
-            mozLoop={this.props.mozLoop} />);
+            mozLoop={this.props.mozLoop}
+            onCallTerminated={this.handleCallTerminated} />);
         }
         case "room": {
           return (<DesktopRoomConversationView
             dispatcher={this.props.dispatcher}
             mozLoop={this.props.mozLoop}
+            onCallTerminated={this.handleCallTerminated}
             roomStore={this.props.roomStore} />);
         }
         case "failed": {
@@ -102,15 +133,6 @@ loop.conversation = (function(mozL10n) {
     // expose for functional tests
     loop.conversation._sdkDriver = sdkDriver;
 
-    var appVersionInfo = navigator.mozLoop.appVersionInfo;
-    var feedbackClient = new loop.FeedbackAPIClient(
-      navigator.mozLoop.getLoopPref("feedback.baseUrl"), {
-      product: navigator.mozLoop.getLoopPref("feedback.product"),
-      platform: appVersionInfo.OS,
-      channel: appVersionInfo.channel,
-      version: appVersionInfo.version
-    });
-
     // Create the stores.
     var conversationAppStore = new loop.store.ConversationAppStore({
       dispatcher: dispatcher,
@@ -131,9 +153,6 @@ loop.conversation = (function(mozL10n) {
       mozLoop: navigator.mozLoop,
       activeRoomStore: activeRoomStore
     });
-    var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
-      feedbackClient: feedbackClient
-    });
     var textChatStore = new loop.store.TextChatStore(dispatcher, {
       sdkDriver: sdkDriver
     });
@@ -141,7 +160,6 @@ loop.conversation = (function(mozL10n) {
     loop.store.StoreMixin.register({
       conversationAppStore: conversationAppStore,
       conversationStore: conversationStore,
-      feedbackStore: feedbackStore,
       textChatStore: textChatStore
     });
 
