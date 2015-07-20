@@ -41,8 +41,8 @@ GMPSharedMemManager::MgrAllocShmem(GMPSharedMem::GMPMemoryClasses aClass, size_t
   aSize = (aSize + (pagesize-1)) & ~(pagesize-1); // round up to page size
   bool retval = Alloc(aSize, aType, aMem);
   // The allocator (or NeedsShmem call) should never return less than we ask for...
-  MOZ_ASSERT(aMem->Size<uint8_t>() >= aSize);
   if (retval) {
+    MOZ_ASSERT(aMem->Size<uint8_t>() >= aSize);
     mData->mGmpAllocated[aClass]++;
   }
   return retval;
