@@ -8,15 +8,19 @@
 "use strict";
 
 function test() {
-  let originalNetPref = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
+  let originalNetPref = Services.prefs
+    .getBoolPref("devtools.webconsole.filter.networkinfo");
   registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", originalNetPref);
+    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo",
+                               originalNetPref);
   });
   Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
-    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html" + "?_uniq=" + Date.now();
+    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/" +
+                          "webconsole/test/test-console.html" + "?_uniq=" +
+                          Date.now();
 
     const {tab} = yield loadTab("data:text/html;charset=utf8,<p>hello</p>");
     const hud = yield openConsole(tab);
@@ -43,7 +47,8 @@ function test() {
       deferred.resolve();
     });
 
-    EventUtils.synthesizeMouseAtCenter(urlNode, {clickCount: 2}, hud.iframeWindow);
+    EventUtils.synthesizeMouseAtCenter(urlNode, {clickCount: 2},
+                                       hud.iframeWindow);
 
     yield deferred.promise;
   }

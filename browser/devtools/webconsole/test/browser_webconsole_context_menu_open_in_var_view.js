@@ -30,8 +30,8 @@ let test = asyncTest(function*() {
   let [msgWithText, msgWithObj] = [...result.matched];
   ok(msgWithText && msgWithObj, "Two messages should have appeared");
 
-  let contextMenu = hud.iframeWindow.
-    document.getElementById("output-contextmenu");
+  let contextMenu = hud.iframeWindow.document
+                                    .getElementById("output-contextmenu");
   let openInVarViewItem = contextMenu.querySelector("#menu_openInVarView");
   let obj = msgWithObj.querySelector(".cm-variable");
   let text = msgWithText.querySelector(".console-string");

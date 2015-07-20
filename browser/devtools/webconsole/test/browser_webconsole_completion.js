@@ -5,6 +5,8 @@
 
 // Tests that code completion works properly.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,<p>test code completion";
 
 let jsterm;
@@ -49,19 +51,22 @@ let test = asyncTest(function* () {
   yield complete(jsterm.COMPLETE_FORWARD);
 
   is(input.value, "document.getElem", "'document.getElem' completion");
-  is(jsterm.completeNode.value, "                entsByTagNameNS", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "                entsByTagNameNS",
+     "'document.getElem' completion");
 
   // Test pressing tab another time.
   yield jsterm.complete(jsterm.COMPLETE_FORWARD);
 
   is(input.value, "document.getElem", "'document.getElem' completion");
-  is(jsterm.completeNode.value, "                entsByTagName", "'document.getElem' another tab completion");
+  is(jsterm.completeNode.value, "                entsByTagName",
+     "'document.getElem' another tab completion");
 
   // Test pressing shift_tab.
   complete(jsterm.COMPLETE_BACKWARD);
 
   is(input.value, "document.getElem", "'document.getElem' untab completion");
-  is(jsterm.completeNode.value, "                entsByTagNameNS", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "                entsByTagNameNS",
+     "'document.getElem' completion");
 
   jsterm.clearOutput();
 
@@ -73,10 +78,11 @@ let test = asyncTest(function* () {
   is(jsterm.completeNode.value, "", "clear completion on execute()");
 
   // Test multi-line completion works
-  input.value =                 "console.log('one');\nconsol";
+  input.value = "console.log('one');\nconsol";
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  is(jsterm.completeNode.value, "                   \n      e", "multi-line completion");
+  is(jsterm.completeNode.value, "                   \n      e",
+     "multi-line completion");
 
   // Test non-object autocompletion.
   input.value = "Object.name.sl";
@@ -92,7 +98,6 @@ let test = asyncTest(function* () {
 
   jsterm = null;
 });
-
 
 function complete(type) {
   let updated = jsterm.once("autocomplete-updated");
