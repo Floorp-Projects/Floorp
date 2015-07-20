@@ -178,19 +178,30 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
 bool
 DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID)
 {
+  // One document should never directly be the child of another.
+  // We should always have at least an outer doc accessible in between.
+  MOZ_ASSERT(aID);
+  if (!aID)
+    return false;
+
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
-  DebugOnly<bool> result = AddChildDoc(childDoc, aID, false);
+  bool result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
-  return true;
+  return result;
 }
 
 bool
 DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
                                  uint64_t aParentID, bool aCreating)
 {
-  ProxyAccessible* outerDoc = mAccessibles.GetEntry(aParentID)->mProxy;
-  if (!outerDoc)
+  // We do not use GetAccessible here because we want to be sure to not get the
+  // document it self.
+  ProxyEntry* e = mAccessibles.GetEntry(aParentID);
+  if (!e)
     return false;
+
+  ProxyAccessible* outerDoc = e->mProxy;
+  MOZ_ASSERT(outerDoc);
 
   aChildDoc->mParent = outerDoc;
   outerDoc->SetChildDoc(aChildDoc);
