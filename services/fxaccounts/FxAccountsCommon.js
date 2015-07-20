@@ -66,6 +66,7 @@ exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 
 exports.DATA_FORMAT_VERSION = 1;
 exports.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
+exports.DEFAULT_OAUTH_TOKENS_FILENAME = "signedInUserOAuthTokens.json";
 
 // Token life times.
 // Having this parameter be short has limited security value and can cause
@@ -216,8 +217,7 @@ exports.ERROR_MSG_METHOD_NOT_ALLOWED         = "METHOD_NOT_ALLOWED";
 // The fields we save in the plaintext JSON.
 // See bug 1013064 comments 23-25 for why the sessionToken is "safe"
 exports.FXA_PWDMGR_PLAINTEXT_FIELDS = ["email", "verified", "authAt",
-                                       "sessionToken", "uid", "oauthTokens",
-                                       "profile"];
+                                       "sessionToken", "uid"];
 // The pseudo-host we use in the login manager
 exports.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
 // The realm we use in the login manager.
