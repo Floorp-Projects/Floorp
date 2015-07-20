@@ -7830,23 +7830,23 @@ class CGJsonifierMethod(CGSpecializedMethod):
             }
             """)
 
-        jsonInterfaces = []
-        interface = self.descriptor.interface
+        jsonDescriptors = [ self.descriptor ]
+        interface = self.descriptor.interface.parent
         while interface:
             descriptor = self.descriptor.getDescriptor(interface.identifier.name)
             if descriptor.operations['Jsonifier']:
-                jsonInterfaces.append(interface)
+                jsonDescriptors.append(descriptor)
             interface = interface.parent
 
         # Iterate the array in reverse: oldest ancestor first
-        for interface in jsonInterfaces[::-1]:
+        for descriptor in jsonDescriptors[::-1]:
             ret += fill(
                 """
                 if (!${parentclass}::JsonifyAttributes(cx, obj, self, result)) {
                   return false;
                 }
                 """,
-                parentclass=toBindingNamespace(interface.identifier.name)
+                parentclass=toBindingNamespace(descriptor.name)
                 )
         ret += ('args.rval().setObject(*result);\n'
                 'return true;\n')
