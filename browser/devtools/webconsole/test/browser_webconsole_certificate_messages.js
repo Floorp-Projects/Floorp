@@ -4,8 +4,12 @@
 
 // Tests that the Web Console shows weak crypto warnings (SHA-1 Certificate, SSLv3, and RC4)
 
-const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto warnings test";
-const TEST_URI_PATH = "/browser/browser/devtools/webconsole/test/test-certificate-messages.html";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto " +
+                 "warnings test";
+const TEST_URI_PATH = "/browser/browser/devtools/webconsole/test/" +
+                      "test-certificate-messages.html";
 
 let gWebconsoleTests = [
   {url: "https://sha1ee.example.com" + TEST_URI_PATH,
@@ -29,7 +33,7 @@ let gHud = undefined, gContentBrowser;
 let gCurrentTest;
 
 function test() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gHud = gContentBrowser = null;
   });
 
@@ -60,9 +64,8 @@ function runTestLoop(theHud) {
   }
 }
 
-function onLoad(aEvent) {
+function onLoad() {
   gContentBrowser.removeEventListener("load", onLoad, true);
-  let aOutputNode = gHud.outputNode;
 
   waitForSuccess({
       name: gCurrentTest.name,

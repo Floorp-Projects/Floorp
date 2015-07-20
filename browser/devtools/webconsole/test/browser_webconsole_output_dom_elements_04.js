@@ -6,13 +6,16 @@
 // Test that inspector links in the webconsole output for DOM Nodes do not try
 // to highlight or select nodes once they have been detached
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-dom-elements.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-output-dom-elements.html";
 
 const TEST_DATA = [
   {
     // The first test shouldn't be returning the body element as this is the
-    // default selected node, so re-selecting it won't fire the inspector-updated
-    // event
+    // default selected node, so re-selecting it won't fire the
+    // inspector-updated event
     input: "testNode()",
     output: '<p some-attribute="some-value">'
   },
@@ -22,7 +25,7 @@ const TEST_DATA = [
   },
   {
     input: "testNodeInIframe()",
-    output: '<p>'
+    output: "<p>"
   },
   {
     input: "testDocumentElement()",

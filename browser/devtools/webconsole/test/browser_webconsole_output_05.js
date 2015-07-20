@@ -5,8 +5,11 @@
 
 // Test the webconsole output for various types of objects.
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf8,test for console output - 05";
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
+  Ci.nsIPrefLocalizedString).data;
 
 let dateNow = Date.now();
 
@@ -99,17 +102,21 @@ let inputTests = [
 
   // 10
   {
-    input: "(function () { var p = new Promise(function () {}); p.foo = 1; return p; }())",
+    input: "(function () { var p = new Promise(function () {}); " +
+           "p.foo = 1; return p; }())",
     output: 'Promise { <state>: "pending", foo: 1 }',
     printOutput: "[object Promise]",
     inspectable: true,
     variablesViewLabel: "Promise"
   },
 
-  //11
+  // 11
   {
-    input: "new Object({1: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery\\nlong\\nstring\\n,shown\\non\\na\\nsingle\\nline', 2: 'a shorter string', 3: 100})",
-    output: 'Object { 1: "this is supposed to be a very long ' + ELLIPSIS + '", 2: "a shorter string", 3: 100 }',
+    input: "new Object({1: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery" +
+           "\\nlong\\nstring\\n,shown\\non\\na\\nsingle\\nline', " +
+           "2: 'a shorter string', 3: 100})",
+    output: 'Object { 1: "this is supposed to be a very long ' + ELLIPSIS +
+            '", 2: "a shorter string", 3: 100 }',
     printOutput: "[object Object]",
     inspectable: false,
   }

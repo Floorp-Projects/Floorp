@@ -9,7 +9,8 @@ const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
                  "test/test-bug-846918-hsts-invalid-headers.html";
 const HSTS_INVALID_HEADER_MSG = "The site specified an invalid " +
                                 "Strict-Transport-Security header.";
-const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
+                       "HTTP_Strict_Transport_Security";
 
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);

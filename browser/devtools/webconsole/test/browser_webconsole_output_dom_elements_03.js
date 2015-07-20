@@ -6,7 +6,10 @@
 // Test that inspector links in webconsole outputs for DOM Nodes highlight
 // the actual DOM Nodes on hover
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-dom-elements.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-output-dom-elements.html";
 
 function test() {
   Task.spawn(function*() {
@@ -17,7 +20,7 @@ function test() {
     // Loading the inspector panel at first, to make it possible to listen for
     // new node selections
     yield toolbox.loadTool("inspector");
-    let inspector = toolbox.getPanel("inspector");
+    toolbox.getPanel("inspector");
 
     info("Executing 'testNode()' in the web console to output a DOM Node");
     let [result] = yield jsEval("testNode()", hud, {
