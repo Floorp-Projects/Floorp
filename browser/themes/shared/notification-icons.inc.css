@@ -102,14 +102,14 @@
 }
 
 .notification-anchor-icon {
+%ifdef MOZ_WIDGET_GTK
+  list-style-image: url(moz-icon://stock/gtk-dialog-info?size=16);
+%else
+  list-style-image: url(chrome://global/skin/icons/information-16.png);
+%endif
   width: 16px;
   height: 16px;
   margin: 0 2px;
-}
-
-.default-notification-icon,
-#default-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
 
 .identity-notification-icon,
@@ -286,6 +286,14 @@
     border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
   }
 
+  .notification-anchor-icon {
+%ifdef MOZ_WIDGET_GTK
+    list-style-image: url(moz-icon://stock/gtk-dialog-info?size=dialog);
+%else
+    list-style-image: url(chrome://global/skin/icons/information-32.png);
+%endif
+  }
+
   .webRTC-shareDevices-notification-icon,
   #webRTC-shareDevices-notification-icon {
     list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
@@ -333,11 +341,6 @@
 
 %ifdef XP_MACOSX
 /* OSX only until we have icons for Windows and Linux */
-  .default-notification-icon,
-  #default-notification-icon {
-    list-style-image: url(chrome://global/skin/icons/information-32.png);
-  }
-
   .geo-notification-icon,
   #geo-notification-icon {
     list-style-image: url(chrome://browser/skin/Geolocation-16@2x.png);
