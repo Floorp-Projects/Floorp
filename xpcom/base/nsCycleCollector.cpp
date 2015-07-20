@@ -182,7 +182,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "mozilla/AutoTimelineMarker.h"
+#include "mozilla/AutoGlobalTimelineMarker.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Telemetry.h"

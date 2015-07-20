@@ -96,6 +96,10 @@ static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
     ++(*buf);
   }
   namelen = (*buf - name);
+  /* must ensure that namelen is valid */
+  if (namelen < 0) {
+    return -1;
+  }
   /* consume null byte */
   if (*buf == buf_end)
     return -1;

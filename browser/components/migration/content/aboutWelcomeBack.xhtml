@@ -15,7 +15,7 @@
   %restorepageDTD;
 ]>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <title>&restorepage.tabtitle;</title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
@@ -52,29 +52,31 @@
             <label class="radioRestoreLabel" for="radioRestoreChoose">&welcomeback2.label.restoreSome;</label>
           </div>
         </div>
-
-        <tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-              id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
-              onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
-              _window_label="&restorepage.windowLabel;">
-          <treecols>
-            <treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
-            <splitter class="tree-splitter"/>
-            <treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
-          </treecols>
-          <treechildren flex="1"/>
-        </tree>
-
-        <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="button-container">
-          <button class="primary"
-                  id="errorTryAgain"
-                  label="&welcomeback2.restoreButton;"
-                  accesskey="&welcomeback2.restoreButton.access;"
-                  oncommand="restoreSession();"/>
-        </hbox>
-
-        <input type="text" id="sessionData" style="display: none;"/>
       </div>
+
+      <div class="tree-container">
+        <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
+                  onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
+                  _window_label="&restorepage.windowLabel;">
+          <xul:treecols>
+            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:splitter class="tree-splitter"/>
+            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+          </xul:treecols>
+          <xul:treechildren flex="1"/>
+        </xul:tree>
+      </div>
+
+      <div class="button-container">
+        <xul:button class="primary"
+                    id="errorTryAgain"
+                    label="&welcomeback2.restoreButton;"
+                    accesskey="&welcomeback2.restoreButton.access;"
+                    oncommand="restoreSession();"/>
+      </div>
+
+      <input type="text" id="sessionData" style="display: none;"/>
+
     </div>
   </body>
 </html>

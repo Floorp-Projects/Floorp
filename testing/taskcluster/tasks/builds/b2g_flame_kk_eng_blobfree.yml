@@ -1,10 +1,9 @@
 $inherits:
-  from: 'tasks/builds/b2g_phone_base.yml'
+  from: 'tasks/builds/b2g_phone_eng_base.yml'
   variables:
     build_name: 'flame-kk-eng-blobfree'
     build_type: 'opt'
 task:
-  workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-flame-kk-eng-blobfree'
   metadata:
@@ -15,16 +14,7 @@ task:
       build-flame-kk-eng-blobfree: /home/worker/workspace
     env:
       TARGET: 'flame-kk'
-      DEBUG: 0
-      VARIANT: eng
-      GAIA_OPTIMIZE: '1'
-      B2G_SYSTEM_APPS: '1'
       MOZHARNESS_CONFIG: b2g/taskcluster-phone-blobfree.py
-    command:
-      - >
-        checkout-gecko workspace &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
     treeherderEnv:
       - staging

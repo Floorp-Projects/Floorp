@@ -54,7 +54,7 @@ window.onload = function() {
 };
 
 function isTreeViewVisible() {
-  let tabList = document.getElementById("tabList");
+  let tabList = document.querySelector(".tree-container");
   return tabList.hasAttribute("available");
 }
 
@@ -99,11 +99,14 @@ function initTreeView() {
 
 // User actions
 function updateTabListVisibility() {
-  let tabList = document.getElementById("tabList");
+  let tabList = document.querySelector(".tree-container");
+  let container = document.querySelector(".container");
   if (document.getElementById("radioRestoreChoose").checked) {
     tabList.setAttribute("available", "true");
+    container.classList.add("restore-chosen");
   } else {
     tabList.removeAttribute("available");
+    container.classList.remove("restore-chosen");
   }
   initTreeView();
 }

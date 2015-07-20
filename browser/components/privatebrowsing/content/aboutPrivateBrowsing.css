@@ -8,6 +8,7 @@
 
 body {
   display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   min-height: 100vh;
   padding: 0 48px;
@@ -15,9 +16,17 @@ body {
   justify-content: center;
 }
 
+body.tour {
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
 body.normal .showPrivate,
-body.private .showNormal {
-  display: none;
+body.private .showNormal,
+body.tour #pageContainer,
+body:not(.tour) .showTour {
+  display: none !important;
 }
 
 #pageContainer {
@@ -58,4 +67,74 @@ a {
 button {
   margin-top: 1.2em;
   -moz-margin-start: 0;
+}
+
+/* TRACKING PROTECTION TOUR */
+
+#tourTop,
+#tourBottom,
+#tourFooter {
+  text-align: center;
+  padding: 0 31px;
+}
+
+#tourTop,
+#tourBottom {
+  flex: 1;
+}
+
+#tourTop {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-color: rgb(108,192,65);
+  color: white;
+  font-style: italic;
+}
+
+#tourTitle {
+  margin: 16px 0 0;
+  background: url("chrome://browser/skin/mask-and-shield.svg") top no-repeat;
+  background-size: 179px 88px;
+  padding-top: 114px;
+  font-size: 38px;
+}
+
+#tourSubtitle {
+  margin: 12px 0 32px;
+  font-size: 24px;
+}
+
+#tourDescription,
+#tourFooter {
+  margin: 16px auto;
+  max-width: 550px;
+}
+
+#startTour {
+  display: inline-block;
+  width: 255px;
+  border-radius: 2px;
+  background-color: var(--in-content-primary-button-background);
+  color: var(--in-content-selected-text);
+  padding: 2px 5px;
+  line-height: 36px;
+  text-decoration: none;
+}
+
+#startTour:hover {
+  background-color: var(--in-content-primary-button-background-hover);
+}
+
+#tourFooter {
+  margin: 16px auto;
+}
+
+#tourFooter,
+#tourLearnMore {
+  font-size: 12px;
+}
+
+#tourFooterText {
+  opacity: 0.6;
 }

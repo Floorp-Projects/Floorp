@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TimelineMarker_h__
-#define TimelineMarker_h__
+#ifndef TimelineMarker_h_
+#define TimelineMarker_h_
 
 #include "nsString.h"
 #include "GeckoProfiler.h"
@@ -96,4 +96,4 @@ private:
   JS::PersistentRooted<JSObject*> mStackTrace;
 };
 
-#endif /* TimelineMarker_h__ */
+#endif /* TimelineMarker_h_ */

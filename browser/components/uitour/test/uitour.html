@@ -17,8 +17,11 @@
       // Defined in content to avoid weird issues when crossing between chrome/content.
       function makeButtons() {
         return [
+          {label: "Regular text", style: "text"},
+          {label: "Link", callback: makeCallback("link"), style: "link"},
           {label: "Button 1", callback: makeCallback("button1")},
-          {label: "Button 2", callback: makeCallback("button2"), icon: "image.png"}
+          {label: "Button 2", callback: makeCallback("button2"), icon: "image.png",
+           style: "primary"}
         ];
       }
 

@@ -10,8 +10,11 @@ const { Class } = require("sdk/core/heritage");
 const { expectState } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "EventTarget", "sdk/event/target", true);
+loader.lazyRequireGetter(this, "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm", true);
 loader.lazyRequireGetter(this, "StackFrameCache",
-                         "devtools/server/actors/utils/stack", true);
+  "devtools/server/actors/utils/stack", true);
+
 /**
  * A class that returns memory data for a parent actor's window.
  * Using a tab-scoped actor with this instance will measure the memory footprint of its
@@ -37,6 +40,7 @@ let Memory = exports.Memory = Class({
     this._frameCache = frameCache;
 
     this._onGarbageCollection = this._onGarbageCollection.bind(this);
+    this._emitAllocations = this._emitAllocations.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
 
     events.on(this.parent, "window-ready", this._onWindowReady);
@@ -119,13 +123,6 @@ let Memory = exports.Memory = Class({
   },
 
   /**
-   * Handler for GC events on the Debugger.Memory instance.
-   */
-  _onGarbageCollection: function (data) {
-    events.emit(this, "garbage-collection", data);
-  },
-
-  /**
    * Take a census of the heap. See js/src/doc/Debugger/Debugger.Memory.md for
    * more information.
    */
@@ -136,8 +133,17 @@ let Memory = exports.Memory = Class({
   /**
    * Start recording allocation sites.
    *
-   * @param AllocationsRecordingOptions options
-   *        See the protocol.js definition of AllocationsRecordingOptions above.
+   * @param {number} options.probability
+   *                 The probability we sample any given allocation when recording allocations.
+   *                 Must be between 0 and 1 -- defaults to 1.
+   * @param {number} options.maxLogLength
+   *                 The maximum number of allocation events to keep in the
+   *                 log. If new allocs occur while at capacity, oldest allocs are lost.
+   *                 Must fit in a 32 bit signed integer.
+   * @param {number} options.drainAllocationsTimeout
+   *                 A number in milliseconds of how often, at least, an `allocation` event
+   *                 gets emitted (and drained), and also emits and drains on every GC event,
+   *                 resetting the timer.
    */
   startRecordingAllocations: expectState("attached", function(options = {}) {
     if (this.dbg.memory.trackingAllocationSites) {
@@ -149,6 +155,17 @@ let Memory = exports.Memory = Class({
     this.dbg.memory.allocationSamplingProbability = options.probability != null
       ? options.probability
       : 1.0;
+
+    this.drainAllocationsTimeoutTimer = typeof options.drainAllocationsTimeout === "number" ? options.drainAllocationsTimeout : null;
+
+    if (this.drainAllocationsTimeoutTimer != null) {
+      if (this._poller) {
+        this._poller.disarm();
+      }
+      this._poller = new DeferredTask(this._emitAllocations, this.drainAllocationsTimeoutTimer);
+      this._poller.arm();
+    }
+
     if (options.maxLogLength != null) {
       this.dbg.memory.maxAllocationsLogLength = options.maxLogLength;
     }
@@ -163,6 +180,11 @@ let Memory = exports.Memory = Class({
   stopRecordingAllocations: expectState("attached", function() {
     this.dbg.memory.trackingAllocationSites = false;
     this._clearFrames();
+
+    if (this._poller) {
+      this._poller.disarm();
+      this._poller = null;
+    }
 
     return Date.now();
   }, `stopping recording allocations`),
@@ -332,5 +354,30 @@ let Memory = exports.Memory = Class({
 
   residentUnique: function () {
     return this._mgr.residentUnique;
-  }
+  },
+
+  /**
+   * Handler for GC events on the Debugger.Memory instance.
+   */
+  _onGarbageCollection: function (data) {
+    events.emit(this, "garbage-collection", data);
+
+    // If `drainAllocationsTimeout` set, fire an allocations event with the drained log,
+    // which will restart the timer.
+    if (this._poller) {
+      this._poller.disarm();
+      this._emitAllocations();
+    }
+  },
+
+
+  /**
+   * Called on `drainAllocationsTimeoutTimer` interval if and only if set during `startRecordingAllocations`,
+   * or on a garbage collection event if drainAllocationsTimeout was set.
+   * Drains allocation log and emits as an event and restarts the timer.
+   */
+  _emitAllocations: function () {
+    events.emit(this, "allocations", this.getAllocations());
+    this._poller.arm();
+  },
 });
