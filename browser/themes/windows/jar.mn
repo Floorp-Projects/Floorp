@@ -101,6 +101,8 @@ browser.jar:
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/browser/reload-stop-go.png
         skin/classic/browser/reload-stop-go@2x.png
+        skin/classic/browser/reload-stop-go-preWin10.png
+        skin/classic/browser/reload-stop-go-preWin10@2x.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/searchbar-dropdown-arrow-XP.png
@@ -140,6 +142,8 @@ browser.jar:
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
         skin/classic/browser/urlbar-history-dropmarker@2x.png
+        skin/classic/browser/urlbar-history-dropmarker-preWin10.png
+        skin/classic/browser/urlbar-history-dropmarker-preWin10@2x.png
         skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
         skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
         skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
@@ -669,4 +673,9 @@ browser.jar:
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6.1
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-xp.png                 os=WINNT osversion<6
+
+% override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-preWin10.png                 os=WINNT osversion<=6.3
+% override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-preWin10@2x.png              os=WINNT osversion<=6.3
+% override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-preWin10.png      os=WINNT osversion<=6.3
+% override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-preWin10@2x.png   os=WINNT osversion<=6.3
 
