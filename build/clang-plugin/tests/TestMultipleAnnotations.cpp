@@ -13,5 +13,5 @@ TestClass f()
 
 void g()
 {
-  f(); // expected-error {{Unused MOZ_MUST_USE value of type 'TestClass'}}
+  f(); // expected-error {{Unused value of must-use type 'TestClass'}}
 }
