@@ -7,8 +7,7 @@
        hidden="true"
        onpopupshown="gIdentityHandler.onPopupShown(event);"
        onpopuphidden="gIdentityHandler.onPopupHidden(event);"
-       orient="vertical"
-       level="top">
+       orient="vertical">
 
   <broadcasterset>
     <broadcaster id="identity-popup-content-host" value=""/>
