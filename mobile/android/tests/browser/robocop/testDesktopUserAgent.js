@@ -9,14 +9,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-function ok(passed, text) {
-  do_report_result(passed, text, Components.stack.caller, false);
-}
-
-function is(lhs, rhs, text) {
-  do_report_result(lhs === rhs, text, Components.stack.caller, false);
-}
-
 function promiseBrowserEvent(browser, eventType) {
   return new Promise((resolve) => {
     function handle(event) {
