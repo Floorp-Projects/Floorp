@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
@@ -29,6 +30,8 @@ let test = asyncTest(function*() {
 
   let inputNode = [...input.matched][0];
   let outputNode = [...output.matched][0];
-  is(inputNode.getAttribute("category"), "input", "input node category is correct");
-  is(outputNode.getAttribute("category"), "output", "output node category is correct");
+  is(inputNode.getAttribute("category"), "input",
+     "input node category is correct");
+  is(outputNode.getAttribute("category"), "output",
+     "output node category is correct");
 });

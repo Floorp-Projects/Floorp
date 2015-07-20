@@ -6,9 +6,13 @@
 
 // Ensure non-toplevel security errors are displayed
 
-const TEST_URI = "data:text/html;charset=utf8,Web Console subresource STS warning test";
-const TEST_DOC = "https://example.com/browser/browser/devtools/webconsole/test/test_bug1092055_shouldwarn.html";
-const SAMPLE_MSG = 'invalid Strict-Transport-Security header'
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf8,Web Console subresource STS " +
+                 "warning test";
+const TEST_DOC = "https://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test_bug1092055_shouldwarn.html";
+const SAMPLE_MSG = "invalid Strict-Transport-Security header";
 
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);

@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let jsterm;
 
@@ -12,7 +15,7 @@ let test = asyncTest(function* () {
   let hud = yield openConsole();
   jsterm = hud.jsterm;
   yield testJSTerm(hud);
-  jsterm  = null;
+  jsterm = null;
 });
 
 function checkResult(msg, desc) {
@@ -28,8 +31,7 @@ function checkResult(msg, desc) {
     if (typeof msg == "string") {
       is(node.textContent.trim(), msg,
         "correct message shown for " + desc);
-    }
-    else if (typeof msg == "function") {
+    } else if (typeof msg == "function") {
       ok(msg(node), "correct message shown for " + desc);
     }
 
@@ -38,9 +40,9 @@ function checkResult(msg, desc) {
   return def.promise;
 }
 
-function* testJSTerm(hud)
-{
-  const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
+function* testJSTerm(hud) {
+  const HELP_URL = "https://developer.mozilla.org/docs/Tools/" +
+                   "Web_Console/Helpers";
 
   jsterm.clearOutput();
   yield jsterm.execute("$('#header').getAttribute('id')");
@@ -59,8 +61,7 @@ function* testJSTerm(hud)
 
   yield waitForSuccess({
     name: "clear() worked",
-    validator: function()
-    {
+    validator: function() {
       return jsterm.outputNode.childNodes.length == 0;
     }
   });

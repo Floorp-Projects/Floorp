@@ -5,7 +5,10 @@
 
 // Test the webconsole output for various types of objects.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-02.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-output-02.html";
 
 let inputTests = [
   // 0 - native named function
@@ -64,8 +67,8 @@ let inputTests = [
   // 6 - array with objects
   {
     input: "window.array2",
-    output: 'Array [ "a", HTMLDocument \u2192 test-console-output-02.html, <body>, ' +
-            "DOMStringMap[0], DOMTokenList[0] ]",
+    output: 'Array [ "a", HTMLDocument \u2192 test-console-output-02.html, ' +
+            "<body>, DOMStringMap[0], DOMTokenList[0] ]",
     printOutput: '"a,[object HTMLDocument],[object HTMLBodyElement],' +
                  '[object DOMStringMap],"',
     inspectable: true,
@@ -75,8 +78,9 @@ let inputTests = [
   // 7 - array with more than 10 elements
   {
     input: "window.array3",
-    output: 'Array [ 1, Window \u2192 test-console-output-02.html, null, "a", "b", ' +
-            'undefined, false, "", -Infinity, testfn3DisplayName(), 3 more\u2026 ]',
+    output: 'Array [ 1, Window \u2192 test-console-output-02.html, null, ' +
+            '"a", "b", undefined, false, "", -Infinity, ' +
+            'testfn3DisplayName(), 3 more\u2026 ]',
     printOutput: '"1,[object Window],,a,b,,false,,-Infinity,' +
                  'function testfn3() { return 42; },[object Object],foo,bar"',
     inspectable: true,
@@ -104,7 +108,8 @@ let inputTests = [
   // 10 - Set with cyclic reference
   {
     input: "window.set1",
-    output: 'Set [ 1, 2, null, Array[13], "a", "b", undefined, <head>, Set[9] ]',
+    output: 'Set [ 1, 2, null, Array[13], "a", "b", undefined, <head>, ' +
+            'Set[9] ]',
     printOutput: "[object Set]",
     inspectable: true,
     variablesViewLabel: "Set[9]",
@@ -113,8 +118,8 @@ let inputTests = [
   // 11 - Object with cyclic reference and a getter
   {
     input: "window.testobj2",
-    output: 'Object { a: "b", c: "d", e: 1, f: "2", foo: Object, bar: Object, ' +
-            "getterTest: Getter }",
+    output: 'Object { a: "b", c: "d", e: 1, f: "2", foo: Object, ' +
+            "bar: Object, getterTest: Getter }",
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -123,8 +128,9 @@ let inputTests = [
   // 12 - Object with more than 10 properties
   {
     input: "window.testobj3",
-    output: 'Object { a: "b", c: "d", e: 1, f: "2", g: true, h: null, i: undefined, ' +
-            'j: "", k: StyleSheetList[0], l: NodeList[5], 2 more\u2026 }',
+    output: 'Object { a: "b", c: "d", e: 1, f: "2", g: true, h: null, ' +
+            'i: undefined, j: "", k: StyleSheetList[0], l: NodeList[5], ' +
+            '2 more\u2026 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",

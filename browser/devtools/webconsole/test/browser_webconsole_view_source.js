@@ -4,7 +4,10 @@
 // Tests that source URLs in the Web Console can be clicked to display the
 // standard View Source window.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-error.html";
 
 let getItemForAttachment;
 let Sources;

@@ -3,11 +3,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+ "use strict";
+
 function test() {
   info("Test that the split console state is persisted");
 
   let toolbox;
-  let TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
+  let TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
+                 "splitting</p>";
 
   Task.spawn(runner).then(finish);
 
@@ -19,14 +22,14 @@ function test() {
 
     ok(!toolbox.splitConsole, "Split console is hidden by default");
 
-    info ("Focusing the search box before opening the split console");
+    info("Focusing the search box before opening the split console");
     let inspector = toolbox.getPanel("inspector");
     inspector.searchBox.focus();
 
     // Use the binding element since inspector.searchBox is a XUL element.
     let activeElement = getActiveElement(inspector.panelDoc);
     activeElement = activeElement.ownerDocument.getBindingParent(activeElement);
-    is (activeElement, inspector.searchBox, "Search box is focused");
+    is(activeElement, inspector.searchBox, "Search box is focused");
 
     yield toolbox.openSplitConsole();
 
@@ -40,11 +43,12 @@ function test() {
 
     yield toolbox.closeSplitConsole();
 
-    info ("Making sure that the search box is refocused after closing the split console");
+    info("Making sure that the search box is refocused after closing the " +
+         "split console");
     // Use the binding element since inspector.searchBox is a XUL element.
     activeElement = getActiveElement(inspector.panelDoc);
     activeElement = activeElement.ownerDocument.getBindingParent(activeElement);
-    is (activeElement, inspector.searchBox, "Search box is focused");
+    is(activeElement, inspector.searchBox, "Search box is focused");
 
     yield toolbox.destroy();
   }
@@ -55,14 +59,6 @@ function test() {
       activeElement = activeElement.contentDocument.activeElement;
     }
     return activeElement;
-  }
-
-  function toggleSplitConsoleWithEscape() {
-    let onceSplitConsole = toolbox.once("split-console");
-    let contentWindow = toolbox.frame.contentWindow;
-    contentWindow.focus();
-    EventUtils.sendKey("ESCAPE", contentWindow);
-    return onceSplitConsole;
   }
 
   function finish() {

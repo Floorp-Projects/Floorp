@@ -7,7 +7,10 @@
 // output anything in the web console and they do not throw any exceptions.
 // See bug 614350.
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-extras.html";
+"use strict";
+
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console-extras.html";
 
 function test() {
   loadTab(TEST_URI).then(() => {

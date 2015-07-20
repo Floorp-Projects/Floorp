@@ -14,8 +14,8 @@ let test = asyncTest(function*() {
   let hud = yield openConsole();
   hud.jsterm.clearOutput();
 
-  let controller = top.document.commandDispatcher.
-                   getControllerForCommand("cmd_copy");
+  let controller = top.document.commandDispatcher
+                   .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), false, "cmd_copy is disabled");
 
   content.console.log("Hello world! bug916997a");
@@ -38,17 +38,20 @@ let test = asyncTest(function*() {
   hud.outputNode.focus();
 
   goUpdateCommand("cmd_copy");
-  controller = top.document.commandDispatcher.getControllerForCommand("cmd_copy");
+  controller = top.document.commandDispatcher
+               .getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
 
   let selection = hud.iframeWindow.getSelection() + "";
   info("selection '" + selection + "'");
 
   waitForClipboard((str) => {
-      clipboardValue = str;
-      return str.indexOf("bug916997a") > -1 && str.indexOf("bug916997b") > -1;
+    clipboardValue = str;
+    return str.indexOf("bug916997a") > -1 && str.indexOf("bug916997b") > -1;
+  },
+    () => {
+      goDoCommand("cmd_copy");
     },
-    () => { goDoCommand("cmd_copy"); },
     () => {
       info("clipboard value '" + clipboardValue + "'");
       let lines = clipboardValue.trim().split("\n");

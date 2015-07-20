@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-console.html";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);
@@ -23,8 +24,7 @@ let test = asyncTest(function*() {
   let length = input.value.length;
   input.selectionEnd = length;
   input.selectionStart = length;
-  function getHeight()
-  {
+  function getHeight() {
     return input.clientHeight;
   }
   let initialHeight = getHeight();
