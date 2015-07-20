@@ -259,42 +259,30 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
     MakeContextCurrent();
 
     switch (pname) {
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-        {
-            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].buf.get(), rv);
-        }
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+        return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].buf.get(), rv);
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-        {
-            return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
-        }
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-        {
-            if (!mBoundVertexArray->mAttribs[index].enabled)
-                return JS::Int32Value(4);
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
+        if (!mBoundVertexArray->mAttribs[index].enabled)
+            return JS::Int32Value(4);
 
-            return JS::Int32Value(mBoundVertexArray->mAttribs[index].size);
-        }
+        return JS::Int32Value(mBoundVertexArray->mAttribs[index].size);
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        {
-            if (!mBoundVertexArray->mAttribs[index].enabled)
-                return JS::NumberValue(uint32_t(LOCAL_GL_FLOAT));
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
+        if (!mBoundVertexArray->mAttribs[index].enabled)
+            return JS::NumberValue(uint32_t(LOCAL_GL_FLOAT));
 
-            return JS::NumberValue(uint32_t(mBoundVertexArray->mAttribs[index].type));
-        }
+        return JS::NumberValue(uint32_t(mBoundVertexArray->mAttribs[index].type));
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
-        {
-            if (IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays))
-            {
-                return JS::Int32Value(mBoundVertexArray->mAttribs[index].divisor);
-            }
-            break;
-        }
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
+        if (IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays))
+            return JS::Int32Value(mBoundVertexArray->mAttribs[index].divisor);
+        break;
 
-        case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
+    case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
         {
             GLfloat vec[4] = {0, 0, 0, 1};
             if (index) {
@@ -312,18 +300,14 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
             return JS::ObjectOrNullValue(obj);
         }
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        {
-            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].enabled);
-        }
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].enabled);
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-        {
-            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].normalized);
-        }
+    case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+        return JS::BooleanValue(mBoundVertexArray->mAttribs[index].normalized);
 
-        default:
-            break;
+    default:
+        break;
     }
 
     ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
