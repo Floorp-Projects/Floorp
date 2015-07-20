@@ -407,9 +407,6 @@ private: // data
   // The number of frames this image has.
   uint32_t                   mFrameCount;
 
-  // The number of times we've retried decoding this image.
-  uint8_t                    mRetryCount;
-
   // Boolean flags (clustered together to conserve space):
   bool                       mHasSize:1;       // Has SetSize() been called?
   bool                       mTransient:1;     // Is the image short-lived?
