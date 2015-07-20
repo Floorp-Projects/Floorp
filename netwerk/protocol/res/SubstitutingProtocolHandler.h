@@ -26,7 +26,7 @@ namespace mozilla {
 class SubstitutingProtocolHandler
 {
 public:
-  SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags);
+  SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags, bool aEnforceFileOrJar = true);
 
   NS_INLINE_DECL_REFCOUNTING(SubstitutingProtocolHandler);
   NS_DECL_NON_VIRTUAL_NSIPROTOCOLHANDLER;
@@ -54,6 +54,18 @@ private:
   uint32_t mFlags;
   nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
+
+  // In general, we expect the principal of a document loaded from a
+  // substituting URI to be a codebase principal for that URI (rather than
+  // a principal for whatever is underneath). However, this only works if
+  // the protocol handler for the underlying URI doesn't set an explicit
+  // owner (which chrome:// does, for example). So we want to require that
+  // substituting URIs only map to other URIs of the same type, or to
+  // file:// and jar:// URIs.
+  //
+  // Enforcing this for ye olde resource:// URIs could carry compat risks, so
+  // we just try to enforce it on new protocols going forward.
+  bool mEnforceFileOrJar;
 };
 
 // SubstitutingURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
