@@ -787,7 +787,6 @@ loop.roomViews = (function(mozL10n) {
               ), 
               React.createElement(sharedViews.chat.TextChatView, {
                 dispatcher: this.props.dispatcher, 
-                showAlways: false, 
                 showRoomName: false, 
                 useDesktopPaths: true})
             )

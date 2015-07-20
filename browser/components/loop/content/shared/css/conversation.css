@@ -1451,6 +1451,10 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
   min-height: 60px;
 }
 
+.fx-embedded .text-chat-view > .text-chat-entries-empty {
+  display: none;
+}
+
 .text-chat-box {
   flex: 0 0 auto;
   max-height: 40px;
