@@ -505,6 +505,7 @@ nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
                             MediaDecoder* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mResource, "Can't load without a MediaResource");
 
   nsresult rv = OpenResource(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1221,9 +1222,6 @@ void MediaDecoder::StopProgressUpdates()
   MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeTaskQueue());
   GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = true;
-  if (mResource) {
-    mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-  }
 }
 
 void MediaDecoder::StartProgressUpdates()
@@ -1231,9 +1229,6 @@ void MediaDecoder::StartProgressUpdates()
   MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeTaskQueue());
   GetReentrantMonitor().AssertCurrentThreadIn();
   mIgnoreProgressData = false;
-  if (mResource) {
-    mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
-  }
 }
 
 void MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
