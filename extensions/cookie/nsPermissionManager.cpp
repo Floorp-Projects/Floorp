@@ -197,9 +197,9 @@ NS_IMPL_ISUPPORTS(AppClearDataObserver, nsIObserver)
 
 class MOZ_STACK_CLASS UpgradeHostToOriginHelper {
 public:
-  virtual nsresult Insert(nsIPrincipal* aPrincipal, const nsAFlatCString& aType,
-                      uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
-                      int64_t aModificationTime) = 0;
+  virtual nsresult Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
+                          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
+                          int64_t aModificationTime) = 0;
 };
 
 class UpgradeHostToOriginDBMigration final : public UpgradeHostToOriginHelper {
@@ -210,67 +210,46 @@ public:
     mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_hosts_new "
       "(id, origin, type, permission, expireType, expireTime, modificationTime) "
-      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(mInsertStmt));
-
-    mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id FROM moz_hosts_new WHERE origin = ?1"),
-                             getter_AddRefs(mLookupStmt));
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(mStmt));
   }
 
   nsresult
-  Insert(nsIPrincipal* aPrincipal, const nsAFlatCString& aType,
+  Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
          int64_t aModificationTime) final
   {
-    nsAutoCString origin;
-    nsresult rv = aPrincipal->GetOrigin(origin);
+    nsresult rv = mStmt->BindInt64ByIndex(0, *mID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mLookupStmt->Reset();
+    rv = mStmt->BindUTF8StringByIndex(1, aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mLookupStmt->BindUTF8StringByIndex(0, origin);
+    rv = mStmt->BindUTF8StringByIndex(2, aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Check to see if the origin already exists in the database
-    bool hasResult = false;
-    if (NS_SUCCEEDED(mLookupStmt->ExecuteStep(&hasResult)) && hasResult) {
-      mLookupStmt->Reset();
-      return NS_OK;
-    }
-
-    rv = mInsertStmt->BindInt64ByIndex(0, *mID);
+    rv = mStmt->BindInt32ByIndex(3, aPermission);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mInsertStmt->BindUTF8StringByIndex(1, origin);
+    rv = mStmt->BindInt32ByIndex(4, aExpireType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mInsertStmt->BindUTF8StringByIndex(2, aType);
+    rv = mStmt->BindInt64ByIndex(5, aExpireTime);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mInsertStmt->BindInt32ByIndex(3, aPermission);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mInsertStmt->BindInt32ByIndex(4, aExpireType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mInsertStmt->BindInt64ByIndex(5, aExpireTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mInsertStmt->BindInt64ByIndex(6, aModificationTime);
+    rv = mStmt->BindInt64ByIndex(6, aModificationTime);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Increment the working identifier, as we are about to use this one
     (*mID)++;
 
-    rv = mInsertStmt->Execute();
+    rv = mStmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<mozIStorageStatement> mLookupStmt;
-  nsCOMPtr<mozIStorageStatement> mInsertStmt;
+  nsCOMPtr<mozIStorageStatement> mStmt;
   nsCOMPtr<mozIStorageConnection> mDBConn;
   int64_t* mID;
 };
@@ -285,12 +264,15 @@ public:
   {}
 
   nsresult
-  Insert(nsIPrincipal* aPrincipal, const nsAFlatCString& aType,
+  Insert(const nsACString& aOrigin, const nsAFlatCString& aType,
          uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
          int64_t aModificationTime) final
   {
-    // AddInternal won't do anything if the permission already exists
-    return mPm->AddInternal(aPrincipal, aType, aPermission, mID,
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = GetPrincipalFromOrigin(aOrigin, getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return mPm->AddInternal(principal, aType, aPermission, mID,
                             aExpireType, aExpireTime, aModificationTime,
                             nsPermissionManager::eDontNotify, mOperation);
   }
@@ -331,7 +313,11 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
     rv = GetPrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return aHelper->Insert(principal, aType, aPermission,
+    nsAutoCString origin;
+    rv = principal->GetOrigin(origin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return aHelper->Insert(origin, aType, aPermission,
                            aExpireType, aExpireTime, aModificationTime);
     return NS_OK;
   }
@@ -388,6 +374,7 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
     rv = histResultContainer->GetChildCount(&childCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsTHashtable<nsCStringHashKey> insertedOrigins;
     for (uint32_t i = 0; i < childCount; i++) {
       nsCOMPtr<nsINavHistoryResultNode> child;
       histResultContainer->GetChild(i, getter_AddRefs(child));
@@ -418,11 +405,20 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
       rv = GetPrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
       if (NS_FAILED(rv)) continue;
 
-      // Insert it! (The backend should be able to deal with us inserting the same origin repeatedly)
+      nsAutoCString origin;
+      rv = principal->GetOrigin(origin);
+      if (NS_FAILED(rv)) continue;
+
+      // Ensure that we don't insert the same origin repeatedly
+      if (insertedOrigins.Contains(origin)) {
+        continue;
+      }
+
       foundHistory = true;
-      rv = aHelper->Insert(principal, aType, aPermission,
+      rv = aHelper->Insert(origin, aType, aPermission,
                            aExpireType, aExpireTime, aModificationTime);
       NS_WARN_IF(NS_FAILED(rv));
+      insertedOrigins.PutEntry(origin);
     }
 
     rv = histResultContainer->SetContainerOpen(false);
@@ -440,7 +436,11 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
       rv = GetPrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aHelper->Insert(principal, aType, aPermission,
+      nsAutoCString origin;
+      rv = principal->GetOrigin(origin);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      aHelper->Insert(origin, aType, aPermission,
                       aExpireType, aExpireTime, aModificationTime);
     }
     rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("https://") + aHost);
@@ -449,7 +449,11 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
       rv = GetPrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      aHelper->Insert(principal, aType, aPermission,
+      nsAutoCString origin;
+      rv = principal->GetOrigin(origin);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      aHelper->Insert(origin, aType, aPermission,
                       aExpireType, aExpireTime, aModificationTime);
     }
   }
@@ -876,6 +880,9 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         bool isInBrowserElement;
         bool hasResult;
 
+        rv = mDBConn->BeginTransaction();
+        NS_ENSURE_SUCCESS(rv, rv);
+
         while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
           // Read in the old row
           rv = stmt->GetUTF8String(0, host);
@@ -906,6 +913,9 @@ nsPermissionManager::InitDB(bool aRemoveFile)
             NS_WARNING("Unexpected failure when upgrading migrating permission from host to origin");
           }
         }
+
+        rv = mDBConn->CommitTransaction();
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // We rename the old table to moz_hosts_v4 instead of dropping it, such that if
         // we discover that there was a problem with our migration code in the future, we have information
