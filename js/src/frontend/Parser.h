@@ -213,7 +213,7 @@ struct ParseContext : public GenericParseContext
      */
     bool generateFunctionBindings(ExclusiveContext* cx, TokenStream& ts,
                                   LifoAlloc& alloc,
-                                  MutableHandle<Bindings> bindings) const;
+                                  InternalHandle<Bindings*> bindings) const;
 
   private:
     ParseContext**  parserPC;     /* this points to the Parser's active pc

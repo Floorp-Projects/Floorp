@@ -246,7 +246,12 @@ private:
    * value. This is used to know the default tabindex value.
    */
   bool IsFocusableForTabIndex();
-  
+
+  nsContentPolicyType GetContentPolicyType() const override
+  {
+    return nsIContentPolicy::TYPE_INTERNAL_OBJECT;
+  }
+
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
 

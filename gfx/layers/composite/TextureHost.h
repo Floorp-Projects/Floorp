@@ -418,6 +418,11 @@ public:
   virtual gfx::IntSize GetSize() const = 0;
 
   /**
+   * Should be overridden if TextureHost supports crop rect.
+   */
+  virtual void SetCropRect(nsIntRect aCropRect) {}
+
+  /**
    * Debug facility.
    * XXX - cool kids use Moz2D. See bug 882113.
    */

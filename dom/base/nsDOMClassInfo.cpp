@@ -902,7 +902,7 @@ nsDOMClassInfo::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, jsval *vp,
+                            JSObject *obj, jsid id, JS::Value *vp,
                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::GetProperty Don't call me!");
@@ -912,7 +912,7 @@ nsDOMClassInfo::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, jsid id, jsval *vp,
+                            JSObject *obj, jsid id, JS::Value *vp,
                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::SetProperty Don't call me!");
@@ -1339,7 +1339,7 @@ public:
                      bool *_retval);
 
   nsresult HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JS::Handle<JSObject*> obj, const jsval &val, bool *bp,
+                       JS::Handle<JSObject*> obj, const JS::Value &val, bool *bp,
                        bool *_retval);
 
   nsresult ResolveInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj);
@@ -1499,7 +1499,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 nsresult
 nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
                               JSContext * cx, JS::Handle<JSObject*> obj,
-                              const jsval &v, bool *bp, bool *_retval)
+                              const JS::Value &v, bool *bp, bool *_retval)
 
 {
   // No need to look these up in the hash.

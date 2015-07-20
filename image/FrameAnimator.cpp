@@ -273,8 +273,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
-    return LookupResult(mCompositingFrame->DrawableRef(),
-                        /* aIsExactMatch = */ true);
+    return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only

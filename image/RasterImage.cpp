@@ -526,8 +526,12 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     return DrawableFrameRef();
   }
 
-  if (!result || !result.IsExactMatch()) {
-    // The OS threw this frame away. We need to redecode if we can.
+  if (result.Type() == MatchType::NOT_FOUND ||
+      result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
+      ((aFlags & FLAG_SYNC_DECODE) && !result)) {
+    // We don't have a copy of this frame, and there's no decoder working on
+    // one. (Or we're sync decoding and the existing decoder hasn't even started
+    // yet.) Trigger decoding so it'll be available next time.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
     Decode(Some(requestedSize), aFlags);
@@ -1497,6 +1501,19 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
 
   if (NS_FAILED(decoder->GetDecoderError())) {
     return nullptr;
+  }
+
+  if (aSize) {
+    // Add a placeholder for the first frame to the SurfaceCache so we won't
+    // trigger any more decoders with the same parameters.
+    InsertOutcome outcome =
+      SurfaceCache::InsertPlaceholder(ImageKey(this),
+                                      RasterSurfaceKey(*aSize,
+                                                       decoder->GetDecodeFlags(),
+                                                       /* aFrameNum = */ 0));
+    if (outcome != InsertOutcome::SUCCESS) {
+      return nullptr;
+    }
   }
 
   if (!aSize) {

@@ -68,7 +68,7 @@ ToStringGuts(XPCCallContext& ccx)
 /***************************************************************************/
 
 static bool
-XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -84,7 +84,7 @@ XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-XPC_WN_Shared_ToSource(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_Shared_ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     static const char empty[] = "({})";
@@ -136,7 +136,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
 // double wrapped JSObjects.
 
 static bool
-XPC_WN_DoubleWrappedGetter(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_DoubleWrappedGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -778,7 +778,7 @@ XPC_WN_Helper_SetProperty(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static bool
-XPC_WN_Helper_Call(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_Helper_Call(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     // N.B. we want obj to be the callee, not JS_THIS(cx, vp)
@@ -795,7 +795,7 @@ XPC_WN_Helper_Call(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-XPC_WN_Helper_Construct(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_Helper_Construct(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     RootedObject obj(cx, &args.callee());
@@ -1119,7 +1119,7 @@ FixUpThisIfBroken(JSObject* obj, JSObject* funobj)
 }
 
 bool
-XPC_WN_CallMethod(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_CallMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
@@ -1145,7 +1145,7 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 bool
-XPC_WN_GetterSetter(JSContext* cx, unsigned argc, jsval* vp)
+XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");

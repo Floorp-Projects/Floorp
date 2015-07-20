@@ -13,7 +13,7 @@ BEGIN_TEST(testContexts_IsRunning)
         return true;
     }
 
-    static bool chk(JSContext* cx, unsigned argc, jsval* vp)
+    static bool chk(JSContext* cx, unsigned argc, JS::Value* vp)
     {
         JSRuntime* rt = JS_GetRuntime(cx);
         JSContext* acx = JS_NewContext(rt, 8192);

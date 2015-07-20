@@ -22,8 +22,8 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                HandleObject funobj /* = nullptr               */,
                                HandleId name       /* = JSID_VOID             */,
                                unsigned argc       /* = NO_ARGS               */,
-                               jsval* argv         /* = nullptr               */,
-                               jsval* rval         /* = nullptr               */)
+                               Value* argv         /* = nullptr               */,
+                               Value* rval         /* = nullptr               */)
     :   mAr(cx),
         mState(INIT_FAILED),
         mXPC(nsXPConnect::XPConnect()),
@@ -166,8 +166,8 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
 
 void
 XPCCallContext::SetArgsAndResultPtr(unsigned argc,
-                                    jsval* argv,
-                                    jsval* rval)
+                                    Value* argv,
+                                    Value* rval)
 {
     CHECK_STATE(HAVE_OBJECT);
 
@@ -287,7 +287,7 @@ XPCCallContext::GetArgc(uint32_t* aArgc)
 
 /* readonly attribute JSValPtr ArgvPtr; */
 NS_IMETHODIMP
-XPCCallContext::GetArgvPtr(jsval * *aArgvPtr)
+XPCCallContext::GetArgvPtr(Value** aArgvPtr)
 {
     *aArgvPtr = mArgv;
     return NS_OK;

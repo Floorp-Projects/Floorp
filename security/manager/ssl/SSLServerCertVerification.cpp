@@ -31,7 +31,7 @@
 // transport service thread, we must always call the CERT_*Verify* cert
 // functions on another thread. To accomplish this, our auth cert hook
 // dispatches a SSLServerCertVerificationJob to a pool of background threads,
-// and then immediatley return SECWouldBlock to libssl. These jobs are where
+// and then immediately returns SECWouldBlock to libssl. These jobs are where
 // the CERT_*Verify* functions are actually called.
 //
 // When our auth cert hook returns SECWouldBlock, libssl will carry on the

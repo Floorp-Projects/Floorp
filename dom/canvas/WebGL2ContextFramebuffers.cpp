@@ -498,31 +498,38 @@ WebGL2Context::ReadBuffer(GLenum mode)
     if (IsContextLost())
         return;
 
-    MakeContextCurrent();
+    const bool isColorAttachment = (mode >= LOCAL_GL_COLOR_ATTACHMENT0 &&
+                                    mode <= LastColorAttachment());
+
+    if (mode != LOCAL_GL_NONE && mode != LOCAL_GL_BACK && !isColorAttachment) {
+        ErrorInvalidEnum("readBuffer: `mode` must be one of NONE, BACK, or "
+                         "COLOR_ATTACHMENTi. Was %s",
+                         EnumName(mode));
+        return;
+    }
 
     if (mBoundReadFramebuffer) {
-        bool isColorAttachment = (mode >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-                                  mode <= LastColorAttachment());
         if (mode != LOCAL_GL_NONE &&
             !isColorAttachment)
         {
-            ErrorInvalidEnumInfo("readBuffer: If READ_FRAMEBUFFER is non-null,"
-                                 " `mode` must be COLOR_ATTACHMENTN or NONE."
-                                 " Was:", mode);
+            ErrorInvalidOperation("readBuffer: If READ_FRAMEBUFFER is non-null, `mode` "
+                                  "must be COLOR_ATTACHMENTi or NONE. Was %s",
+                                  EnumName(mode));
             return;
         }
 
+        MakeContextCurrent();
         gl->fReadBuffer(mode);
         return;
     }
 
     // Operating on the default framebuffer.
-
     if (mode != LOCAL_GL_NONE &&
         mode != LOCAL_GL_BACK)
     {
-        ErrorInvalidEnumInfo("readBuffer: If READ_FRAMEBUFFER is null, `mode`"
-                             " must be BACK or NONE. Was:", mode);
+        ErrorInvalidOperation("readBuffer: If READ_FRAMEBUFFER is null, `mode`"
+                              " must be BACK or NONE. Was %s",
+                              EnumName(mode));
         return;
     }
 

@@ -29,7 +29,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(1bc48693-c45d-45f4-8ab1-46e323037fe1)]
+[scriptable, uuid(cc3bff29-324e-4704-9eeb-1b8a62c4a9dc)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -147,6 +147,11 @@ interface nsIChannel : nsIRequest
     nsIInputStream open();
 
     /**
+     * Performs content security check and calls open()
+     */
+    nsIInputStream open2();
+
+    /**
      * Asynchronously open this channel.  Data is fed to the specified stream
      * listener as it becomes available.  The stream listener's methods are
      * called on the thread that calls asyncOpen and are not called until
@@ -178,6 +183,11 @@ interface nsIChannel : nsIRequest
      * @see nsIChannelEventSink for onChannelRedirect
      */
     void asyncOpen(in nsIStreamListener aListener, in nsISupports aContext);
+
+    /**
+     * Performs content security check and calls asyncOpen().
+     */
+    void asyncOpen2(in nsIStreamListener aListener);
 
     /**************************************************************************
      * Channel specific load flags:

@@ -26,6 +26,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsProxyRelease.h"
+#include "nsContentSecurityManager.h"
 
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT
@@ -198,6 +199,15 @@ nsIconChannel::Open(nsIInputStream** _retval)
   return MakeInputStream(_retval, false);
 }
 
+NS_IMETHODIMP
+nsIconChannel::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
+}
+
 nsresult
 nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile,
                         uint32_t* aDesiredImageSize, nsCString& aContentType,
@@ -251,6 +261,15 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsIconChannel::AsyncOpen2(nsIStreamListener* aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 static DWORD

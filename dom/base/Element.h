@@ -1301,7 +1301,7 @@ public:
   explicit DestinationInsertionPointList(Element* aElement);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(DestinationInsertionPointList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DestinationInsertionPointList)
 
   // nsIDOMNodeList
   NS_DECL_NSIDOMNODELIST

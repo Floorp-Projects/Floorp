@@ -34,22 +34,22 @@ namespace dom {
  * beacon            | TYPE_BEACON
  * cspreport         | TYPE_CSP_REPORT
  * download          |
- * embed             | TYPE_OBJECT
+ * embed             | TYPE_INTERNAL_EMBED
  * eventsource       |
  * favicon           |
  * fetch             | TYPE_FETCH
  * font              | TYPE_FONT
  * form              |
- * frame             | TYPE_SUBDOCUMENT
+ * frame             | TYPE_INTERNAL_FRAME
  * hyperlink         |
- * iframe            | TYPE_SUBDOCUMENT
+ * iframe            | TYPE_INTERNAL_IFRAME
  * image             | TYPE_IMAGE
  * imageset          | TYPE_IMAGESET
  * import            | Not supported by Gecko
  * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
  * location          |
  * manifest          | TYPE_WEB_MANIFEST
- * object            | TYPE_OBJECT
+ * object            | TYPE_INTERNAL_OBJECT
  * ping              | TYPE_PING
  * plugin            | TYPE_OBJECT_SUBREQUEST
  * prefetch          |
@@ -67,7 +67,6 @@ namespace dom {
  * TODO: Figure out if TYPE_DTD maps to anything useful
  * TODO: Split TYPE_XMLHTTPREQUEST and TYPE_DATAREQUEST for EventSource
  * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
- * TODO: Differentiate between frame and iframe
  * TODO: Add a content type for prefetch
  * TODO: Use the content type for manifest when it becomes available
  * TODO: Add a content type for location
@@ -75,7 +74,6 @@ namespace dom {
  * TODO: Add a content type for form
  * TODO: Add a content type for favicon
  * TODO: Add a content type for download
- * TODO: Split TYPE_OBJECT into TYPE_EMBED and TYPE_OBJECT
  */
 
 class Request;

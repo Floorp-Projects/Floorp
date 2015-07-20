@@ -24,7 +24,7 @@ namespace jit {
 
 static Register CallReg = ip;
 static const int defaultShift = 3;
-JS_STATIC_ASSERT(1 << defaultShift == sizeof(jsval));
+JS_STATIC_ASSERT(1 << defaultShift == sizeof(JS::Value));
 
 // MacroAssemblerARM is inheriting form Assembler defined in
 // Assembler-arm.{h,cpp}
