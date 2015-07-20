@@ -365,6 +365,76 @@ ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
   return false;
 }
 
+// A helper function for IsScaleSubjectToAnimation which returns true if the
+// given AnimationCollection contains a current effect that animates scale.
+static bool
+ContainsAnimatedScale(AnimationCollection* aCollection, nsIFrame* aFrame)
+{
+  if (!aCollection) {
+    return false;
+  }
+
+  for (dom::Animation* anim : aCollection->mAnimations) {
+    if (!anim->HasCurrentEffect()) {
+      continue;
+    }
+    KeyframeEffectReadOnly* effect = anim->GetEffect();
+    for (const AnimationProperty& prop : effect->Properties()) {
+      if (prop.mProperty != eCSSProperty_transform) {
+        continue;
+      }
+      for (AnimationPropertySegment segment : prop.mSegments) {
+        gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
+        if (from != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+        gfxSize to = segment.mToValue.GetScaleValue(aFrame);
+        if (to != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/* static */ bool
+ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame)
+{
+  // Check whether JavaScript is animating this frame's scale.
+  LayerActivity* layerActivity = GetLayerActivity(aFrame);
+  if (layerActivity && layerActivity->mScaleRestyleCount >= 2) {
+    return true;
+  }
+
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsElement()) {
+    return false;
+  }
+
+  nsCSSPseudoElements::Type pseudoType =
+    aFrame->StyleContext()->GetPseudoType();
+
+  // Check if any transitions associated with this frame may animate its scale.
+  AnimationCollection* transitions =
+    aFrame->PresContext()->TransitionManager()->GetAnimations(
+      content->AsElement(), pseudoType, false /* don't create */);
+  if (ContainsAnimatedScale(transitions, aFrame)) {
+    return true;
+  }
+
+  // Check if any animations associated with this frame may animate its scale.
+  AnimationCollection* animations =
+    aFrame->PresContext()->AnimationManager()->GetAnimations(
+      content->AsElement(), pseudoType, false /* don't create */);
+  if (ContainsAnimatedScale(animations, aFrame)) {
+    return true;
+  }
+
+  return false;
+}
+
 /* static */ void
 ActiveLayerTracker::NotifyContentChange(nsIFrame* aFrame)
 {
