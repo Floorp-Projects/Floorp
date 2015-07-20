@@ -15,7 +15,7 @@ bool
 AutoTimelineMarker::DocShellIsRecording(nsDocShell& aDocShell)
 {
   bool isRecording = false;
-  if (nsDocShell::gProfileTimelineRecordingsCount > 0) {
+  if (!TimelineConsumers::IsEmpty()) {
     aDocShell.GetRecordProfileTimelineMarkers(&isRecording);
   }
   return isRecording;
