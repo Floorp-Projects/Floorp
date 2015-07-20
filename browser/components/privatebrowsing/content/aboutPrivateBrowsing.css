@@ -25,7 +25,9 @@ body.tour {
 body.normal .showPrivate,
 body.private .showNormal,
 body.tour #pageContainer,
-body:not(.tour) .showTour {
+body:not(.tour) .showTour,
+body[tpEnabled] .showTpDisabled,
+body:not([tpEnabled]) .showTpEnabled {
   display: none !important;
 }
 
@@ -64,7 +66,7 @@ a {
   font-size: 1rem;
 }
 
-button {
+#startPrivateBrowsing {
   margin-top: 1.2em;
   -moz-margin-start: 0;
 }
@@ -124,6 +126,14 @@ button {
 
 #startTour:hover {
   background-color: var(--in-content-primary-button-background-hover);
+}
+
+#tourTpDisabled {
+  font-size: 14px;
+}
+
+#enableTrackingProtection {
+  height: 40px;
 }
 
 #tourFooter {

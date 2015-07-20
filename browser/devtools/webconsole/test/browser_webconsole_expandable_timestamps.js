@@ -4,8 +4,10 @@
 // Test for the message timestamps option: check if the preference toggles the
 // display of messages in the console output. See bug 722267.
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 722267 - " +
-               "preference for toggling timestamps in messages";
+"use strict";
+
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "bug 722267 - preference for toggling timestamps in messages";
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 let hud;
 
@@ -22,8 +24,7 @@ let test = asyncTest(function* () {
   hud = null;
 });
 
-function consoleOpened()
-{
+function consoleOpened() {
   info("console opened");
   let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
   ok(!prefValue, "messages have no timestamp by default (pref check)");
@@ -34,8 +35,7 @@ function consoleOpened()
   return toolbox.selectTool("options");
 }
 
-function onOptionsPanelSelected(panel)
-{
+function onOptionsPanelSelected(panel) {
   info("options panel opened");
 
   let prefChanged = gDevTools.once("pref-changed", onPrefChanged);
@@ -46,8 +46,7 @@ function onOptionsPanelSelected(panel)
   return prefChanged;
 }
 
-function onPrefChanged()
-{
+function onPrefChanged() {
   info("pref changed");
   let prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
   ok(prefValue, "messages have timestamps (pref check)");

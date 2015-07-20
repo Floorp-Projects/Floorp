@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 function test() {
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug_939783_console_trace_duplicates.html";
+  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+                   "test/test-bug_939783_console_trace_duplicates.html";
 
   Task.spawn(runner).then(finishTest);
 
