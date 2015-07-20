@@ -12,12 +12,18 @@ interface nsINode;
 interface nsIPrincipal;
 interface nsIURI;
 
+%{C++
+#include "nsTArray.h"
+%}
+
+[ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
+
 typedef unsigned long nsSecurityFlags;
 
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(6b7f8798-3c28-44fc-8b1a-cd613eb826c5)]
+[scriptable, builtinclass, uuid(5c724690-7ba9-49c4-af9c-c9c4f6776871)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -258,5 +264,30 @@ interface nsILoadInfo : nsISupports
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
-  %}
+%}
+
+  /**
+   * Whenever a channel gets redirected, append the principal of the
+   * channel [before the channels got redirected] to the loadinfo,
+   * so that at every point this array lets us reason about all the
+   * redirects this channel went through.
+   */
+  void appendRedirectedPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
+   * An array of nsIPrincipal that store the redirects associated with this
+   * channel. This array is filled whether or not the channel has ever been
+   * opened. The last element of the array is associated with the most recent
+   * channel.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval redirectChain;
+
+  /**
+   * A C++-friendly version of redirectChain.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
+  const_nsIPrincipalArray binaryRedirectChain();
 };
