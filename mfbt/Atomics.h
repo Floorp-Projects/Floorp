@@ -28,7 +28,9 @@
  * does not have <atomic>.  So be sure to check for <atomic> support
  * along with C++0x support.
  */
-#if defined(__clang__) || defined(__GNUC__)
+#if defined(_MSC_VER)
+#  define MOZ_HAVE_CXX11_ATOMICS
+#elif defined(__clang__) || defined(__GNUC__)
    /*
     * Clang doesn't like <atomic> from libstdc++ before 4.7 due to the
     * loose typing of the atomic builtins. GCC 4.5 and 4.6 lacks inline
@@ -42,8 +44,6 @@
 #  elif MOZ_USING_LIBCXX && defined(__clang__)
 #    define MOZ_HAVE_CXX11_ATOMICS
 #  endif
-#elif defined(_MSC_VER)
-#  define MOZ_HAVE_CXX11_ATOMICS
 #endif
 
 namespace mozilla {
