@@ -6,13 +6,15 @@ describe("loop.conversation", function() {
   "use strict";
 
   var expect = chai.expect;
+  var FeedbackView = loop.feedbackViews.FeedbackView;
   var TestUtils = React.addons.TestUtils;
-  var sharedModels = loop.shared.models,
-      fakeWindow,
-      sandbox;
+  var sharedActions = loop.shared.actions;
+  var sharedModels = loop.shared.models;
+  var fakeWindow, sandbox, getLoopPrefStub, setLoopPrefStub, mozL10nGet;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    setLoopPrefStub = sandbox.stub();
 
     navigator.mozLoop = {
       doNotDisturb: true,
@@ -22,7 +24,7 @@ describe("loop.conversation", function() {
       get locale() {
         return "en-US";
       },
-      setLoopPref: sinon.stub(),
+      setLoopPref: setLoopPrefStub,
       getLoopPref: function(prefName) {
         if (prefName == "debug.sdk") {
           return false;
@@ -63,7 +65,7 @@ describe("loop.conversation", function() {
 
     // XXX These stubs should be hoisted in a common file
     // Bug 1040968
-    sandbox.stub(document.mozL10n, "get", function(x) {
+    mozL10nGet = sandbox.stub(document.mozL10n, "get", function(x) {
       return x;
     });
     document.mozL10n.initialize(navigator.mozLoop);
@@ -132,7 +134,7 @@ describe("loop.conversation", function() {
 
   describe("AppControllerView", function() {
     var conversationStore, client, ccView, dispatcher;
-    var conversationAppStore, roomStore;
+    var conversationAppStore, roomStore, feedbackPeriodMs = 15770000000;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -214,6 +216,98 @@ describe("loop.conversation", function() {
 
       TestUtils.findRenderedComponentWithType(ccView,
         loop.conversationViews.GenericFailureView);
+    });
+
+    it("should set the correct title when rendering feedback view", function() {
+      conversationAppStore.setStoreState({showFeedbackForm: true});
+
+      ccView = mountTestComponent();
+
+      sinon.assert.calledWithExactly(mozL10nGet, "conversation_has_ended");
+    });
+
+    it("should render FeedbackView if showFeedbackForm state is true",
+       function() {
+         conversationAppStore.setStoreState({showFeedbackForm: true});
+
+         ccView = mountTestComponent();
+
+         TestUtils.findRenderedComponentWithType(ccView, FeedbackView);
+       });
+
+    it("should dispatch a ShowFeedbackForm action if timestamp is 0",
+       function() {
+         conversationAppStore.setStoreState({feedbackTimestamp: 0});
+         sandbox.stub(dispatcher, "dispatch");
+
+         ccView = mountTestComponent();
+
+         ccView.handleCallTerminated();
+
+         sinon.assert.calledOnce(dispatcher.dispatch);
+         sinon.assert.calledWithExactly(dispatcher.dispatch,
+                                        new sharedActions.ShowFeedbackForm());
+       });
+
+    it("should set feedback timestamp if delta is > feedback period",
+       function() {
+         var feedbackTimestamp = new Date() - feedbackPeriodMs;
+         conversationAppStore.setStoreState({
+           feedbackTimestamp: feedbackTimestamp,
+           feedbackPeriod: feedbackPeriodMs
+         });
+
+         ccView = mountTestComponent();
+
+         ccView.handleCallTerminated();
+
+         sinon.assert.calledOnce(setLoopPrefStub);
+       });
+
+    it("should dispatch a ShowFeedbackForm action if delta > feedback period",
+       function() {
+         var feedbackTimestamp = new Date() - feedbackPeriodMs;
+         conversationAppStore.setStoreState({
+           feedbackTimestamp: feedbackTimestamp,
+           feedbackPeriod: feedbackPeriodMs
+         });
+         sandbox.stub(dispatcher, "dispatch");
+
+         ccView = mountTestComponent();
+
+         ccView.handleCallTerminated();
+
+         sinon.assert.calledOnce(dispatcher.dispatch);
+         sinon.assert.calledWithExactly(dispatcher.dispatch,
+                                        new sharedActions.ShowFeedbackForm());
+       });
+
+    it("should close the window if delta < feedback period", function() {
+      var feedbackTimestamp = new Date().getTime();
+      conversationAppStore.setStoreState({
+        feedbackTimestamp: feedbackTimestamp,
+        feedbackPeriod: feedbackPeriodMs
+      });
+
+      ccView = mountTestComponent();
+      var closeWindowStub = sandbox.stub(ccView, "closeWindow");
+      ccView.handleCallTerminated();
+
+      sinon.assert.calledOnce(closeWindowStub);
+    });
+
+    it("should set the correct timestamp for dateLastSeenSec", function() {
+      var feedbackTimestamp = new Date().getTime();
+      conversationAppStore.setStoreState({
+        feedbackTimestamp: feedbackTimestamp,
+        feedbackPeriod: feedbackPeriodMs
+      });
+
+      ccView = mountTestComponent();
+      var closeWindowStub = sandbox.stub(ccView, "closeWindow");
+      ccView.handleCallTerminated();
+
+      sinon.assert.calledOnce(closeWindowStub);
     });
   });
 });

@@ -152,15 +152,11 @@ class Test1BrowserCall(MarionetteTestCase):
         self.switch_to_standalone()
         self.check_video(".screen-share-video")
 
-    def remote_leave_room_and_verify_feedback(self):
+    def remote_leave_room(self):
         self.switch_to_standalone()
         button = self.marionette.find_element(By.CLASS_NAME, "btn-hangup")
 
         button.click()
-
-        # check that the feedback form is displayed
-        feedback_form = self.wait_for_element_displayed(By.CLASS_NAME, "faces")
-        self.assertEqual(feedback_form.tag_name, "div", "expect feedback form")
 
         self.switch_to_chatbox()
         # check that the local view reverts to the preview mode
@@ -260,7 +256,7 @@ class Test1BrowserCall(MarionetteTestCase):
         # which means that the local_check_connection_length below
         # verifies that the connection is noted at the time the remote media
         # drops, rather than waiting until the window closes.
-        self.remote_leave_room_and_verify_feedback()
+        self.remote_leave_room()
 
         self.local_check_connection_length_noted()
 

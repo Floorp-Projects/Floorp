@@ -15,7 +15,7 @@ describe("loop.standaloneRoomViews", function() {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
 
-  var sandbox, dispatcher, activeRoomStore, feedbackStore, dispatch;
+  var sandbox, dispatcher, activeRoomStore, dispatch;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -28,12 +28,8 @@ describe("loop.standaloneRoomViews", function() {
     var textChatStore = new loop.store.TextChatStore(dispatcher, {
       sdkDriver: {}
     });
-    feedbackStore = new loop.store.FeedbackStore(dispatcher, {
-      feedbackClient: {}
-    });
     loop.store.StoreMixin.register({
       activeRoomStore: activeRoomStore,
-      feedbackStore: feedbackStore,
       textChatStore: textChatStore
     });
 
@@ -499,38 +495,6 @@ describe("loop.standaloneRoomViews", function() {
           sinon.assert.calledOnce(dispatch);
           sinon.assert.calledWithExactly(dispatch, new sharedActions.LeaveRoom());
         });
-      });
-
-      describe("Feedback", function() {
-        beforeEach(function() {
-          activeRoomStore.setStoreState({
-            roomState: ROOM_STATES.ENDED,
-            used: true
-          });
-        });
-
-        it("should display a feedback form when the user leaves the room",
-          function() {
-            expect(view.getDOMNode().querySelector(".faces")).not.eql(null);
-          });
-
-        it("should dispatch a `FeedbackComplete` action after feedback is sent",
-          function() {
-            feedbackStore.setStoreState({feedbackState: FEEDBACK_STATES.SENT});
-
-            sandbox.clock.tick(
-              loop.shared.views.WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS * 1000 + 1000);
-
-            sinon.assert.calledOnce(dispatch);
-            sinon.assert.calledWithExactly(dispatch, new sharedActions.FeedbackComplete());
-          });
-
-        it("should NOT display a feedback form if the room has not been used",
-          function() {
-            activeRoomStore.setStoreState({used: false});
-            expect(view.getDOMNode().querySelector(".faces")).eql(null);
-          });
-
       });
 
       describe("Mute", function() {

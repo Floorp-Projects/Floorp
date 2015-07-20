@@ -423,56 +423,47 @@
 }
 
 /* Feedback form */
-
-.feedback {
-  padding: 14px;
-}
-
-.feedback p {
-  margin: 0px;
-}
-
-.feedback h3 {
-  color: #666;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  margin: 0 0 1em 0;
-}
-
-.feedback .faces {
+.feedback-view-container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  flex-wrap: nowrap;
   justify-content: center;
-  padding: 20px 0;
+  align-content: center;
+  align-items: flex-start;
+  height: 100%;
 }
 
-.feedback .face {
-  border: 1px solid transparent;
-  box-shadow: 0 1px 2px #CCC;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0 10px;
-  width: 80px;
-  height: 80px;
-  background-color: #fbfbfb;
-  background-size: 60px auto;
-  background-position: center center;
+.feedback-heading {
+  margin: 1em 0;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.feedback-hello-logo {
+  background-image: url("../img/helloicon.svg");
+  background-position: center;
+  background-size: contain;
   background-repeat: no-repeat;
+  flex: 2 1 auto;
+  width: 100%;
+  margin: 30px 0;
 }
 
-.feedback .face:hover {
-  border: 1px solid #DDD;
-  background-color: #FEFEFE;
+.feedback-button-container {
+  flex: 0 1 auto;
+  margin: 30px;
+  align-self: center;
 }
 
-.feedback .face.face-happy {
-  background-image: url("../img/happy.png");
-}
-
-.feedback .face.face-sad {
-  background-image: url("../img/sad.png");
+.feedback-button-container button {
+  margin: 0 30px;
+  padding: .5em 2em;
+  border: none;
+  background: #4E92DF;
+  color: #fff;
+  cursor: pointer;
 }
 
 .fx-embedded-btn-back {
@@ -1547,7 +1538,6 @@ html[dir="rtl"] .text-chat-entry.received > p {
   color: #aaa;
   font-style: italic;
   font-size: .8em;
-  order: 0;
   flex: 0 1 auto;
   align-self: center;
 }
@@ -1559,10 +1549,6 @@ html[dir="rtl"] .text-chat-entry.received > p {
 
 .received > .text-chat-entry-timestamp {
   order: 2;
-}
-
-.sent > .text-chat-entry-timestamp {
-  order: 0;
 }
 
 /* Pseudo element used to cover part between chat bubble and chat arrow. */
@@ -1631,7 +1617,6 @@ html[dir="rtl"] .text-chat-entry.received > p:after {
   margin-right: -9px;
   height: 10px;
   background-image: url("../img/chatbubble-arrow-left.svg");
-  order: 0;
   align-self: auto;
 }
 
