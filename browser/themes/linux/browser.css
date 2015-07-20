@@ -1048,11 +1048,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   outline: 1px dotted -moz-DialogText;
 }
 
-.default-notification-icon,
-#default-notification-icon {
-  list-style-image: url(moz-icon://stock/gtk-dialog-info?size=16);
-}
-
 .indexedDB-notification-icon,
 #indexedDB-notification-icon {
   list-style-image: url(moz-icon://stock/gtk-dialog-question?size=16);
