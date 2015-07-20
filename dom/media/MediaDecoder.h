@@ -545,15 +545,6 @@ public:
   // outlined in the specification.
   void FireTimeUpdate();
 
-  // Stop updating the bytes downloaded for progress notifications. Called
-  // when seeking to prevent wild changes to the progress notification.
-  // Must be called with the decoder monitor held.
-  virtual void StopProgressUpdates();
-
-  // Allow updating the bytes downloaded for progress notifications. Must
-  // be called with the decoder monitor held.
-  virtual void StartProgressUpdates();
-
   // Something has changed that could affect the computed playback rate,
   // so recompute it. The monitor must be held.
   virtual void UpdatePlaybackRate();
@@ -649,6 +640,14 @@ public:
     mLogicallySeeking = false;
   }
   void OnSeekResolved(SeekResolveValue aVal);
+
+  void SeekingChanged()
+  {
+    // Stop updating the bytes downloaded for progress notifications when
+    // seeking to prevent wild changes to the progress notification.
+    MOZ_ASSERT(NS_IsMainThread());
+    mIgnoreProgressData = mLogicallySeeking;
+  }
 
   // Seeking has started. Inform the element on the main
   // thread.
@@ -993,8 +992,7 @@ protected:
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set
   // during seek and duration operations to prevent the progress indicator
-  // from jumping around. Read/Write from any thread. Must have decode monitor
-  // locked before accessing.
+  // from jumping around. Read/Write on the main thread only.
   bool mIgnoreProgressData;
 
   // True if the stream is infinite (e.g. a webradio).
