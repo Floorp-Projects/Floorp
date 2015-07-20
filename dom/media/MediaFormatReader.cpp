@@ -998,6 +998,10 @@ MediaFormatReader::Update(TrackType aTrack)
     needOutput = true;
     if (!decoder.mOutput.IsEmpty()) {
       // We have a decoded sample ready to be returned.
+      if (aTrack == TrackType::kVideoTrack) {
+        mVideo.mIsHardwareAccelerated =
+          mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
+      }
       nsRefPtr<MediaData> output = decoder.mOutput[0];
       decoder.mOutput.RemoveElementAt(0);
       decoder.mSizeOfQueue -= 1;
@@ -1477,7 +1481,7 @@ MediaFormatReader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 bool
 MediaFormatReader::VideoIsHardwareAccelerated() const
 {
-  return mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated();
+  return mVideo.mIsHardwareAccelerated;
 }
 
 void
