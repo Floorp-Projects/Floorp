@@ -67,7 +67,7 @@ using namespace mozilla::dom::bluetooth;
 static void BinderDeadCallback(status_t aErr);
 static void InternalSetAudioRoutes(SwitchState aState);
 // Refer AudioService.java from Android
-static uint32_t sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
+static const uint32_t sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
   5,   // voice call
   15,  // system
   15,  // ring
@@ -94,7 +94,7 @@ static bool sA2dpSwitchDone = true;
 namespace mozilla {
 namespace dom {
 namespace gonk {
-static VolumeData gVolumeData[VOLUME_TOTAL_NUMBER] = {
+static const VolumeData gVolumeData[VOLUME_TOTAL_NUMBER] = {
   {"audio.volume.content",      VOLUME_MEDIA},
   {"audio.volume.notification", VOLUME_NOTIFICATION},
   {"audio.volume.alarm",        VOLUME_ALARM},
@@ -763,7 +763,7 @@ nsresult
 AudioManager::ValidateVolumeIndex(uint32_t aCategory, uint32_t aIndex) const
 {
   uint32_t maxIndex = GetMaxVolumeByCategory(aCategory);
-  if (aIndex < 0 || aIndex > maxIndex) {
+  if (aIndex > maxIndex) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -947,7 +947,7 @@ AudioManager::GetMaxAudioChannelVolume(uint32_t aChannel, uint32_t* aMaxIndex)
 
 nsresult
 AudioManager::SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex) {
-  if (aIndex < 0 || aIndex > sMaxStreamVolumeTbl[aStream]) {
+  if (aIndex > sMaxStreamVolumeTbl[aStream]) {
     return NS_ERROR_INVALID_ARG;
   }
   mCurrentStreamVolumeTbl[aStream] = aIndex;
@@ -1122,7 +1122,7 @@ AudioManager::UpdateProfileState(AudioOutputProfiles aProfile, bool aActive)
   // are other profiles. The bluetooth and headset have the same priotity.
   uint32_t profilesNum = mAudioProfiles.Length();
   MOZ_ASSERT(profilesNum == DEVICE_TOTAL_NUMBER, "Error profile numbers!");
-  for (uint32_t idx = profilesNum - 1; idx >= 0; --idx) {
+  for (int32_t idx = profilesNum - 1; idx >= 0; --idx) {
     if (mAudioProfiles[idx]->GetActive()) {
       mPresentProfile = static_cast<AudioOutputProfiles>(idx);
       break;
