@@ -29,8 +29,10 @@
 
         // window.navigator.doNotTrack "yes" is for old versions of FF
         // window.navigator.doNotTrack "1" is for current versions of FF + Chrome + Opera
-        // window.doNotTrack is safari
-        // window.navigator.msDoNotTrack
+        // window.doNotTrack is Safari + IE11
+        // window.navigator.msDoNotTrack for IE9 and IE10
+        // See also
+        // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/doNotTrack#Browser_compatibility
         if (window.navigator.doNotTrack !== "yes" &&
             window.navigator.doNotTrack !== "1" &&
             window.doNotTrack !== "1" &&

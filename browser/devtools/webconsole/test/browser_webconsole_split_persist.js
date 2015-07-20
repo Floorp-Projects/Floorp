@@ -3,11 +3,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+ "use strict";
+
 function test() {
   info("Test that the split console state is persisted");
 
   let toolbox;
-  let TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
+  let TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
+                 "splitting</p>";
 
   Task.spawn(runner).then(finish);
 
@@ -18,25 +21,29 @@ function test() {
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(!toolbox.splitConsole, "Split console is hidden by default.");
-    ok(!isCommandButtonChecked(), "Split console button is unchecked by default.");
+    ok(!isCommandButtonChecked(), "Split console button is unchecked by " +
+                                  "default.");
     yield toggleSplitConsoleWithEscape();
     ok(toolbox.splitConsole, "Split console is now visible.");
     ok(isCommandButtonChecked(), "Split console button is now checked.");
     ok(getVisiblePrefValue(), "Visibility pref is true");
 
-    is(getHeightPrefValue(), toolbox.webconsolePanel.height, "Panel height matches the pref");
+    is(getHeightPrefValue(), toolbox.webconsolePanel.height,
+       "Panel height matches the pref");
     toolbox.webconsolePanel.height = 200;
 
     yield toolbox.destroy();
 
-    info("Opening a tab while there is a true user setting on split console pref");
+    info("Opening a tab while there is a true user setting on split console " +
+         "pref");
     ({tab} = yield loadTab(TEST_URI));
     target = TargetFactory.forTab(tab);
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(toolbox.splitConsole, "Split console is visible by default.");
     ok(isCommandButtonChecked(), "Split console button is checked by default.");
-    is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
+    is(getHeightPrefValue(), 200, "Height is set based on panel height after " +
+                                  "closing");
 
     // Use the binding element since jsterm.inputNode is a XUL textarea element.
     let activeElement = getActiveElement(toolbox.doc);
@@ -45,12 +52,12 @@ function test() {
     is(activeElement, inputNode, "Split console input is focused by default");
 
     toolbox.webconsolePanel.height = 1;
-    ok (toolbox.webconsolePanel.clientHeight > 1,
-        "The actual height of the console is bound with a min height");
+    ok(toolbox.webconsolePanel.clientHeight > 1,
+       "The actual height of the console is bound with a min height");
 
     toolbox.webconsolePanel.height = 10000;
-    ok (toolbox.webconsolePanel.clientHeight < 10000,
-        "The actual height of the console is bound with a max height");
+    ok(toolbox.webconsolePanel.clientHeight < 10000,
+       "The actual height of the console is bound with a max height");
 
     yield toggleSplitConsoleWithEscape();
     ok(!toolbox.splitConsole, "Split console is now hidden.");
@@ -59,10 +66,11 @@ function test() {
 
     yield toolbox.destroy();
 
-    is(getHeightPrefValue(), 10000, "Height is set based on panel height after closing");
+    is(getHeightPrefValue(), 10000,
+       "Height is set based on panel height after closing");
 
-
-    info("Opening a tab while there is a false user setting on split console pref");
+    info("Opening a tab while there is a false user setting on split " +
+         "console pref");
     ({tab} = yield loadTab(TEST_URI));
     target = TargetFactory.forTab(tab);
     toolbox = yield gDevTools.showToolbox(target, "inspector");
@@ -90,8 +98,8 @@ function test() {
   }
 
   function isCommandButtonChecked() {
-    return toolbox.doc.querySelector("#command-button-splitconsole").
-      hasAttribute("checked");
+    return toolbox.doc.querySelector("#command-button-splitconsole")
+      .hasAttribute("checked");
   }
 
   function toggleSplitConsoleWithEscape() {

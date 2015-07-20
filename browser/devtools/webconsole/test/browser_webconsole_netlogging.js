@@ -12,11 +12,16 @@
 
 // Tests that network log messages bring up the network panel.
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console network logging tests";
+"use strict";
 
-const TEST_NETWORK_REQUEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network-request.html";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console network " +
+                 "logging tests";
 
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/test/test-image.png";
+const TEST_NETWORK_REQUEST_URI = "http://example.com/browser/browser/" +
+                 "devtools/webconsole/test/test-network-request.html";
+
+const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
+                 "test/test-image.png";
 
 const TEST_DATA_JSON_CONTENT =
   '{ id: "test JSON data", myArray: [ "foo", "bar", "baz", "biff" ] }';
@@ -25,8 +30,7 @@ let lastRequest = null;
 let requestCallback = null;
 let browser, hud;
 
-function test()
-{
+function test() {
   loadTab(TEST_URI).then((tab) => {
     browser = tab.browser;
 
@@ -40,9 +44,8 @@ function test()
   });
 }
 
-function requestCallbackWrapper(aRequest)
-{
-  lastRequest = aRequest;
+function requestCallbackWrapper(request) {
+  lastRequest = request;
 
   hud.ui.webConsoleClient.getResponseContent(lastRequest.actor,
     function(aResponse) {
@@ -50,9 +53,9 @@ function requestCallbackWrapper(aRequest)
       lastRequest.discardResponseBody = aResponse.contentDiscarded;
 
       hud.ui.webConsoleClient.getRequestPostData(lastRequest.actor,
-        function(aResponse) {
-          lastRequest.request.postData = aResponse.postData;
-          lastRequest.discardRequestBody = aResponse.postDataDiscarded;
+        function(response) {
+          lastRequest.request.postData = response.postData;
+          lastRequest.discardRequestBody = response.postDataDiscarded;
 
           if (requestCallback) {
             requestCallback();
@@ -61,8 +64,7 @@ function requestCallbackWrapper(aRequest)
     });
 }
 
-function testPageLoad()
-{
+function testPageLoad() {
   requestCallback = function() {
     // Check if page load was logged correctly.
     ok(lastRequest, "Page load was logged");
@@ -84,8 +86,7 @@ function testPageLoad()
   content.location = TEST_NETWORK_REQUEST_URI;
 }
 
-function testPageLoadBody()
-{
+function testPageLoadBody() {
   // Turn on logging of request bodies and check again.
   hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
     ok(hud.ui._saveRequestAndResponseBodies,
@@ -95,8 +96,7 @@ function testPageLoadBody()
   });
 }
 
-function testPageLoadBodyAfterSettingUpdate()
-{
+function testPageLoadBodyAfterSettingUpdate() {
   let loaded = false;
   let requestCallbackInvoked = false;
 
@@ -127,8 +127,7 @@ function testPageLoadBodyAfterSettingUpdate()
   content.location.reload();
 }
 
-function testXhrGet()
-{
+function testXhrGet() {
   requestCallback = function() {
     ok(lastRequest, "testXhrGet() was logged");
     is(lastRequest.request.method, "GET", "Method is correct");
@@ -146,8 +145,7 @@ function testXhrGet()
   content.wrappedJSObject.testXhrGet();
 }
 
-function testXhrPost()
-{
+function testXhrPost() {
   requestCallback = function() {
     ok(lastRequest, "testXhrPost() was logged");
     is(lastRequest.request.method, "POST", "Method is correct");
@@ -165,20 +163,19 @@ function testXhrPost()
   content.wrappedJSObject.testXhrPost();
 }
 
-function testFormSubmission()
-{
+function testFormSubmission() {
   // Start the form submission test. As the form is submitted, the page is
   // loaded again. Bind to the load event to catch when this is done.
   requestCallback = function() {
     ok(lastRequest, "testFormSubmission() was logged");
     is(lastRequest.request.method, "POST", "Method is correct");
-    isnot(lastRequest.request.postData.text.
-      indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
+    isnot(lastRequest.request.postData.text
+      .indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
       "Content-Type is correct");
-    isnot(lastRequest.request.postData.text.
-      indexOf("Content-Length: 20"), -1, "Content-length is correct");
-    isnot(lastRequest.request.postData.text.
-      indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
+    isnot(lastRequest.request.postData.text
+      .indexOf("Content-Length: 20"), -1, "Content-length is correct");
+    isnot(lastRequest.request.postData.text
+      .indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
     is(lastRequest.response.content.text.indexOf("<!DOCTYPE HTML>"), 0,
       "Response body's beginning is okay");
 
@@ -191,9 +188,7 @@ function testFormSubmission()
   }`);
 }
 
-
-function testNetworkPanel()
-{
+function testNetworkPanel() {
   // Open the NetworkPanel. The functionality of the NetworkPanel is tested
   // within separate test files.
   let networkPanel = hud.ui.openNetworkPanel(hud.ui.filterBox, lastRequest);
@@ -213,4 +208,3 @@ function testNetworkPanel()
     executeSoon(finishTest);
   }, true);
 }
-

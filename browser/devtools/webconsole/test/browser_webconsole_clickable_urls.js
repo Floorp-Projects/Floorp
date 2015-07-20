@@ -3,8 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// When strings containing URLs are entered into the webconsole,
-// check its output and ensure that the output can be clicked to open those URLs.
+// When strings containing URLs are entered into the webconsole, check
+// its output and ensure that the output can be clicked to open those URLs.
 
 "use strict";
 
@@ -42,23 +42,23 @@ let inputTests = [
 
   // 4: URL opens page when clicked, even when surrounded by non-URL tokens.
   {
-  	input: "'foo http://example.com bar'",
-  	output: "foo http://example.com bar",
-  	expectedTab: "http://example.com/",
+    input: "'foo http://example.com bar'",
+    output: "foo http://example.com bar",
+    expectedTab: "http://example.com/",
   },
 
   // 5: URL opens page when clicked, and whitespace is be preserved.
   {
-  	input: "'foo\\nhttp://example.com\\nbar'",
-  	output: "foo\nhttp://example.com\nbar",
-  	expectedTab: "http://example.com/",
+    input: "'foo\\nhttp://example.com\\nbar'",
+    output: "foo\nhttp://example.com\nbar",
+    expectedTab: "http://example.com/",
   },
 
   // 6: URL opens page when clicked when multiple links are present.
   {
-  	input: "'http://example.com http://example.com'",
-  	output: "http://example.com http://example.com",
-  	expectedTab: "http://example.com/",
+    input: "'http://example.com http://example.com'",
+    output: "http://example.com http://example.com",
+    expectedTab: "http://example.com/",
   },
 
   // 7: URL without scheme does not open page when clicked.

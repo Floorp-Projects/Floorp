@@ -1040,3 +1040,8 @@ button.button-link:not([disabled="true"]):active:hover {
 #signing-dev-info {
   font-style: italic;
 }
+
+#detail-findUpdates-btn[hidden] {
+  display: -moz-box;
+  visibility: hidden;
+}

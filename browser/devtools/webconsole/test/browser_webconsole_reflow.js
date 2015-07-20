@@ -5,14 +5,15 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for reflow activity";
+const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
+                 "reflow activity";
 
 let test = asyncTest(function* () {
   let { browser } = yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
 
-  function onReflowListenersReady(aType, aPacket) {
+  function onReflowListenersReady() {
     browser.contentDocument.body.style.display = "none";
     browser.contentDocument.body.clientTop;
   }
@@ -28,5 +29,5 @@ let test = asyncTest(function* () {
       category: CATEGORY_CSS,
       severity: SEVERITY_LOG,
     }],
-  })
+  });
 });
