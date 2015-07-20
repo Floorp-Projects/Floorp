@@ -564,6 +564,18 @@ public:
    */
   template<typename U> bool append(U&& aU);
 
+  /**
+   * Construct a T in-place as a new entry at the end of this vector.
+   */
+  template<typename... Args>
+  bool emplaceBack(Args&&... aArgs)
+  {
+    if (!growByUninitialized(1))
+      return false;
+    new (&back()) T(Forward<Args>(aArgs)...);
+    return true;
+  }
+
   template<typename U, size_t O, class BP, class UV>
   bool appendAll(const VectorBase<U, O, BP, UV>& aU);
   bool appendN(const T& aT, size_t aN);
