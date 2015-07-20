@@ -637,6 +637,14 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+#define NS_EXTENSIONPROTOCOLHANDLER_CID              \
+{ /* aea16cd0-f020-4138-b068-0716c4a15b5a */         \
+    0xaea16cd0,                                      \
+    0xf020,                                          \
+    0x4138,                                          \
+    {0xb0, 0x68, 0x07, 0x16, 0xc4, 0xa1, 0x5b, 0x5a} \
+}
+
 #define NS_SUBSTITUTINGURL_CID                       \
 { 0xdea9657c,                                        \
   0x18cf,                                            \

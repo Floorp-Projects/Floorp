@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'necko_res'
 
 SOURCES += [
+    'ExtensionProtocolHandler.cpp',
     'nsResProtocolHandler.cpp',
     'SubstitutingProtocolHandler.cpp',
 ]
