@@ -18,15 +18,3 @@ $(DEFFILE): sqlite.def
 	@$(call py_action,preprocessor,$(DEFINES) $(XULPPFLAGS) \
 	  $(srcdir)/sqlite.def -o $(DEFFILE))
 endif
-
-# XXX Force -O2 optimisation on Mac because using the default -O3 causes
-# crashes. See bug 676499.
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-MODULE_OPTIMIZE_FLAGS = -O2
-endif
-
-# Force /O2 optimisation on Windows because using the default /O1 causes
-# crashes with MSVC2005 and PGO. See bug 719584.
-ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O2
-endif
