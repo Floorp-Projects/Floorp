@@ -759,7 +759,6 @@ PopupNotifications.prototype = {
       if (anchorElement.classList.contains("notification-anchor-icon")) {
         // remove previous icon classes
         let className = anchorElement.className.replace(/([-\w]+-notification-icon\s?)/g,"")
-        className = "default-notification-icon " + className;
         if (notifications.length > 0) {
           // Find the first notification this anchor used for.
           let notification = notifications[0];
