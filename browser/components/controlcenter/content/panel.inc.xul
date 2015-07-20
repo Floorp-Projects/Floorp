@@ -60,7 +60,7 @@
           <button id="tracking-action-unblock-private"
                   label="&trackingProtection.unblockPrivate.label;"
                   class="identity-popup-button"
-                  accesskey="&trackingProtection.unblock.accesskey;"
+                  accesskey="&trackingProtection.unblockPrivate.accesskey;"
                   oncommand="TrackingProtection.disableForCurrentPage();" />
           <button id="tracking-action-block"
                   label="&trackingProtection.block2.label;"
