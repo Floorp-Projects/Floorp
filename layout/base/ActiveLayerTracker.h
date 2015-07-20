@@ -72,6 +72,14 @@ public:
    * as being animated for constructing active layers.
    */
   static bool IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame);
+
+  /**
+   * Return true if aFrame either has an animated scale now, or is likely to
+   * have one in the future because it has a CSS animation or transition
+   * (which may not be playing right now) that affects its scale.
+   */
+  static bool IsScaleSubjectToAnimation(nsIFrame* aFrame);
+
   /**
    * Transfer the LayerActivity property to the frame's content node when the
    * frame is about to be destroyed so that layer activity can be tracked
