@@ -22,8 +22,8 @@ namespace Library
 {
   static void Finalize(JSFreeOp* fop, JSObject* obj);
 
-  static bool Close(JSContext* cx, unsigned argc, jsval* vp);
-  static bool Declare(JSContext* cx, unsigned argc, jsval* vp);
+  static bool Close(JSContext* cx, unsigned argc, Value* vp);
+  static bool Declare(JSContext* cx, unsigned argc, Value* vp);
 } // namespace Library
 
 /*******************************************************************************
@@ -49,7 +49,7 @@ static const JSFunctionSpec sLibraryFunctions[] = {
 };
 
 bool
-Library::Name(JSContext* cx, unsigned argc, jsval* vp)
+Library::Name(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
@@ -81,7 +81,7 @@ Library::Name(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 JSObject*
-Library::Create(JSContext* cx, jsval path_, const JSCTypesCallbacks* callbacks)
+Library::Create(JSContext* cx, Value path_, const JSCTypesCallbacks* callbacks)
 {
   RootedValue path(cx, path_);
   RootedObject libraryObj(cx, JS_NewObject(cx, &sLibraryClass));
@@ -182,7 +182,7 @@ Library::GetLibrary(JSObject* obj)
 {
   MOZ_ASSERT(IsLibrary(obj));
 
-  jsval slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
+  Value slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
   return static_cast<PRLibrary*>(slot.toPrivate());
 }
 
@@ -201,7 +201,7 @@ Library::Finalize(JSFreeOp* fop, JSObject* obj)
 }
 
 bool
-Library::Open(JSContext* cx, unsigned argc, jsval* vp)
+Library::Open(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   JSObject* ctypesObj = JS_THIS_OBJECT(cx, vp);
@@ -226,7 +226,7 @@ Library::Open(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 bool
-Library::Close(JSContext* cx, unsigned argc, jsval* vp)
+Library::Close(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
@@ -251,7 +251,7 @@ Library::Close(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 bool
-Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
+Library::Declare(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));

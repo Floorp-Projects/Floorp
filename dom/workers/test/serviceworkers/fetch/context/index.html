@@ -128,8 +128,7 @@
       document.documentElement.appendChild(embed);
       navigator.serviceWorker.addEventListener("message", function onMessage(e) {
         if (e.data.data == "embed") {
-          // FIXME: Bug 1148030: This should be "embed".
-          is(e.data.context, "object", "Expected the object context on an embed");
+          is(e.data.context, "embed", "Expected the object context on an embed");
           navigator.serviceWorker.removeEventListener("message", onMessage);
           resolve();
         }

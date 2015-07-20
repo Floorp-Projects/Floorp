@@ -12,18 +12,82 @@ interface nsINode;
 interface nsIPrincipal;
 interface nsIURI;
 
+%{C++
+#include "nsTArray.h"
+%}
+
+[ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
+
 typedef unsigned long nsSecurityFlags;
 
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(6b7f8798-3c28-44fc-8b1a-cd613eb826c5)]
+[scriptable, builtinclass, uuid(cc51498e-f8f8-469d-85ba-6dcba17027e4)]
 interface nsILoadInfo : nsISupports
 {
   /**
    * No special security flags:
    */
   const unsigned long SEC_NORMAL = 0;
+
+  /**
+   * The following five flags determine the security mode and hence what kind of
+   * security checks should be performed throughout the lifetime of the channel.
+   *
+   *    * SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS
+   *    * SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+   *    * SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS
+   *    * SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+   *    * SEC_REQUIRE_CORS_DATA_INHERITS
+   *
+   * Exactly one of these flags are required to be set in order to allow
+   * the channel to perform the correct security checks (SOP, CORS, ...) and
+   * return the correct result principal. If none or more than one of these
+   * flags are set AsyncOpen2 will fail.
+   */
+
+  /*
+   * Enforce the same origin policy where data: loads inherit
+   * the principal.
+   */
+  const unsigned long SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS = (1<<0);
+
+  /*
+   * Enforce the same origin policy but data: loads are blocked.
+   */
+  const unsigned long SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED = (1<<1);
+
+  /**
+   * Allow loads from other origins. Loads from data: will inherit
+   * the principal of the origin that triggered the load.
+   * Commonly used by plain <img>, <video>, <link rel=stylesheet> etc.
+   */
+   const unsigned long SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS = (1<<2);
+
+  /**
+   * Allow loads from other origins. Loads from data: will be allowed,
+   * but the resulting resource will get a null principal.
+   * Used in blink/webkit for <iframe>s. Likely also the mode
+   * that should be used by most Chrome code.
+   */
+  const unsigned long SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL = (1<<3);
+
+  /**
+   * Allow loads from any origin, but require CORS for cross-origin
+   * loads. Loads from data: are allowed and the result will inherit
+   * the principal of the origin that triggered the load.
+   * Commonly used by <img crossorigin>, <video crossorigin>,
+   * XHR, fetch(), etc.
+   */
+  const unsigned long SEC_REQUIRE_CORS_DATA_INHERITS = (1<<4);
+
+  /**
+   * Use this flag in addition to SEC_REQUIRE_CORS_DATA_INHERITS
+   * to make cross-origin CORS loads happen with credentials
+   * (such as cookies and client side certs).
+   */
+  const unsigned long SEC_REQUIRE_CORS_WITH_CREDENTIALS = (1<<5);
 
   /**
    * Force inheriting of the Principal. The resulting resource will use the
@@ -40,7 +104,7 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_SANDBOXED.
    */
-  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = 0x01;
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<6);
 
   /**
    * Sandbox the load. The resulting resource will use a freshly created
@@ -52,7 +116,12 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_FORCE_INHERIT_PRINCIPAL.
    */
-  const unsigned long SEC_SANDBOXED = 0x02;
+  const unsigned long SEC_SANDBOXED = (1<<7);
+
+  /**
+   * Inherit the Principal for about:blank.
+   */
+  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<8);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -138,6 +207,17 @@ interface nsILoadInfo : nsISupports
 %}
 
   /**
+   * Allows to query only the security mode bits from above.
+   */
+  [infallible] readonly attribute unsigned long securityMode;
+
+  /**
+   * Determines whether credentials are sent with CORS requests.
+   * Using this flag requires SEC_REQUIRE_CORS_DATA_INHERITS also to be set.
+   */
+  [infallible] readonly attribute boolean requireCorsWithCredentials;
+
+  /**
    * If forceInheritPrincipal is true, the data coming from the channel should
    * use loadingPrincipal for its principal, even when the data is loaded over
    * http:// or another protocol that would normally use a URI-based principal.
@@ -151,6 +231,12 @@ interface nsILoadInfo : nsISupports
    * hence should use a NullPrincipal.
    */
   [infallible] readonly attribute boolean loadingSandboxed;
+
+  /**
+   * If aboutBlankInherits is true, then about:blank should inherit
+   * the principal.
+   */
+  [infallible] readonly attribute boolean aboutBlankInherits;
 
   /**
    * The external contentPolicyType of the channel, used for security checks
@@ -258,5 +344,80 @@ interface nsILoadInfo : nsISupports
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
-  %}
+%}
+
+  /**
+   * Whenever a channel is openend by asyncOpen2() [or also open2()],
+   * lets set this flag so that redirects of such channels are also
+   * openend using asyncOpen2() [open2()].
+   *
+   * Please note, once the flag is set to true it must remain true
+   * throughout the lifetime of the channel. Trying to set it
+   * to anything else than true will be discareded.
+   *
+   */
+  attribute bool enforceSecurity;
+
+%{ C++
+  inline bool GetEnforceSecurity()
+  {
+    bool result;
+    mozilla::DebugOnly<nsresult> rv = GetEnforceSecurity(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
+  /**
+   * Whenever a channel is evaluated by the ContentSecurityManager
+   * the first time, we set this flag to true to indicate that
+   * subsequent calls of AsyncOpen2() do not have to enforce all
+   * security checks again. E.g., after a redirect there is no
+   * need to set up CORS again. We need this separate flag
+   * because the redirectChain might also contain internal
+   * redirects which might pollute the redirectChain so we can't
+   * rely on the size of the redirectChain-array to query whether
+   * a channel got redirected or not.
+   *
+   * Please note, once the flag is set to true it must remain true
+   * throughout the lifetime of the channel. Trying to set it
+   * to anything else than true will be discareded.
+   *
+   */
+  attribute bool initialSecurityCheckDone;
+
+%{ C++
+  inline bool GetInitialSecurityCheckDone()
+  {
+    bool result;
+    mozilla::DebugOnly<nsresult> rv = GetInitialSecurityCheckDone(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
+  /**
+   * Whenever a channel gets redirected, append the principal of the
+   * channel [before the channels got redirected] to the loadinfo,
+   * so that at every point this array lets us reason about all the
+   * redirects this channel went through.
+   */
+  void appendRedirectedPrincipal(in nsIPrincipal aPrincipal);
+
+  /**
+   * An array of nsIPrincipal that store the redirects associated with this
+   * channel. This array is filled whether or not the channel has ever been
+   * opened. The last element of the array is associated with the most recent
+   * channel.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval redirectChain;
+
+  /**
+   * A C++-friendly version of redirectChain.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
+  const_nsIPrincipalArray binaryRedirectChain();
 };

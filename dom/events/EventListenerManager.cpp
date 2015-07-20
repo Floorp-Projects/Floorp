@@ -398,7 +398,8 @@ EventListenerManager::AddEventListenerInternal(
   }
 
   if (mIsMainThreadELM && mTarget) {
-    EventListenerService::NotifyAboutMainThreadListenerChange(mTarget);
+    EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
+                                                              aTypeAtom);
   }
 }
 
@@ -518,7 +519,8 @@ EventListenerManager::RemoveEventListenerInternal(
           mTarget->EventListenerRemoved(aUserType);
         }
         if (mIsMainThreadELM && mTarget) {
-          EventListenerService::NotifyAboutMainThreadListenerChange(mTarget);
+          EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
+                                                                    aUserType);
         }
 
         if (!deviceType
@@ -654,7 +656,7 @@ EventListenerManager::SetEventHandlerInternal(
       mTarget->EventListenerAdded(aName);
     }
     if (mIsMainThreadELM && mTarget) {
-      EventListenerService::NotifyAboutMainThreadListenerChange(mTarget);
+      EventListenerService::NotifyAboutMainThreadListenerChange(mTarget, aName);
     }
   }
 
@@ -784,7 +786,7 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
       mTarget->EventListenerRemoved(aName);
     }
     if (mIsMainThreadELM && mTarget) {
-      EventListenerService::NotifyAboutMainThreadListenerChange(mTarget);
+      EventListenerService::NotifyAboutMainThreadListenerChange(mTarget, aName);
     }
   }
 }

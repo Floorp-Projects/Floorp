@@ -25,6 +25,7 @@
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
 #include "gfx2DGlue.h"
 
 using namespace mozilla;
@@ -3524,6 +3525,32 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
       NS_NOTREACHED("shouldn't use on non-animatable properties");
   }
   return false;
+}
+
+gfxSize
+StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
+{
+  MOZ_ASSERT(aForFrame);
+  MOZ_ASSERT(GetUnit() == StyleAnimationValue::eUnit_Transform);
+
+  nsCSSValueSharedList* list = GetCSSValueSharedListValue();
+  MOZ_ASSERT(list->mHead);
+
+  RuleNodeCacheConditions dontCare;
+  nsStyleTransformMatrix::TransformReferenceBox refBox(aForFrame);
+  gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
+                            list->mHead,
+                            aForFrame->StyleContext(),
+                            aForFrame->PresContext(), dontCare, refBox,
+                            aForFrame->PresContext()->AppUnitsPerDevPixel());
+
+  gfxMatrix transform2d;
+  bool canDraw2D = transform.CanDraw2D(&transform2d);
+  if (!canDraw2D) {
+    return gfxSize();
+  }
+
+  return transform2d.ScaleFactors(true);
 }
 
 StyleAnimationValue::StyleAnimationValue(int32_t aInt, Unit aUnit,

@@ -39,6 +39,7 @@ public:
   NS_IMETHOD GetContentType(nsACString & aContentType) override final;
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener,
                        nsISupports *aContext) override final;
+  NS_IMETHOD AsyncOpen2(nsIStreamListener *listener) override final;
 
   // nsBaseChannel::nsIStreamListener::nsIRequestObserver
   NS_IMETHOD OnStartRequest(nsIRequest *aRequest,

@@ -36,22 +36,10 @@ function getIntPref(prefName, def) {
   }
 }
 
-function visibilityChangeHandler(e) {
-  // The visibilitychange event's target is the document.
-  let win = e.target.defaultView;
-
-  if (!win._browserElementParents) {
-    return;
-  }
-
-  let beps = Cu.nondeterministicGetWeakMapKeys(win._browserElementParents);
-  if (beps.length == 0) {
-    win.removeEventListener('visibilitychange', visibilityChangeHandler);
-    return;
-  }
-
-  for (let i = 0; i < beps.length; i++) {
-    beps[i]._ownerVisibilityChange();
+function handleWindowEvent(e) {
+  if (this._browserElementParents) {
+    let beps = Cu.nondeterministicGetWeakMapKeys(this._browserElementParents);
+    beps.forEach(bep => bep._handleOwnerEvent(e));
   }
 }
 
@@ -119,10 +107,14 @@ BrowserElementParent.prototype = {
     // BrowserElementParents.
     if (!this._window._browserElementParents) {
       this._window._browserElementParents = new WeakMap();
-      this._window.addEventListener('visibilitychange',
-                                    visibilityChangeHandler,
-                                    /* useCapture = */ false,
-                                    /* wantsUntrusted = */ false);
+      let handler = handleWindowEvent.bind(this._window);
+      let windowEvents = ['visibilitychange', 'mozfullscreenchange'];
+      let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                  .getService(Ci.nsIEventListenerService);
+      for (let event of windowEvents) {
+        els.addSystemEventListener(this._window, event, handler,
+                                   /* useCapture = */ true);
+      }
     }
 
     this._window._browserElementParents.set(this, null);
@@ -131,11 +123,6 @@ BrowserElementParent.prototype = {
     BrowserElementPromptService.mapFrameToBrowserElementParent(this._frameElement, this);
     this._setupMessageListener();
     this._registerAppManifest();
-
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
-    els.addSystemEventListener(this._window.document, "mozfullscreenchange",
-                               this._fullscreenChange.bind(this), true);
   },
 
   _runPendingAPICall: function() {
@@ -1056,14 +1043,19 @@ BrowserElementParent.prototype = {
     this._windowUtils.remoteFrameFullscreenReverted();
   },
 
-  _fullscreenChange: function(evt) {
-    if (this._isAlive() && evt.target == this._window.document) {
-      if (!this._window.document.mozFullScreen) {
-        this._sendAsyncMsg("exit-fullscreen");
-      } else if (this._pendingDOMFullscreen) {
-        this._pendingDOMFullscreen = false;
-        this._sendAsyncMsg("entered-fullscreen");
-      }
+  _handleOwnerEvent: function(evt) {
+    switch (evt.type) {
+      case 'visibilitychange':
+        this._ownerVisibilityChange();
+        break;
+      case 'mozfullscreenchange':
+        if (!this._window.document.mozFullScreen) {
+          this._sendAsyncMsg('exit-fullscreen');
+        } else if (this._pendingDOMFullscreen) {
+          this._pendingDOMFullscreen = false;
+          this._sendAsyncMsg('entered-fullscreen');
+        }
+        break;
     }
   },
 

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RtspChannelParent.h"
+#include "nsContentSecurityManager.h"
 
 using namespace mozilla::ipc;
 
@@ -68,6 +69,12 @@ RtspChannelParent::GetContentType(nsACString& aContentType)
 
 NS_IMETHODIMP
 RtspChannelParent::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RtspChannelParent::AsyncOpen2(nsIStreamListener *aListener)
 {
   return NS_OK;
 }

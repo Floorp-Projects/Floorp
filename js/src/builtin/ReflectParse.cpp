@@ -3621,7 +3621,7 @@ ASTSerializer::functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst
 }
 
 static bool
-reflect_parse(JSContext* cx, uint32_t argc, jsval* vp)
+reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

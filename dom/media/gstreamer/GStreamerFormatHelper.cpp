@@ -258,8 +258,9 @@ static gboolean FactoryFilter(GstPluginFeature *aFeature, gpointer)
   const gchar *className =
     gst_element_factory_get_klass(GST_ELEMENT_FACTORY_CAST(aFeature));
 
-  if (!strstr(className, "Decoder") && !strstr(className, "Demux") &&
-      !strstr(className, "Parser")) {
+  // NB: We skip filtering parsers here, because adding them to
+  // the list can give false decoder positives to canPlayType().
+  if (!strstr(className, "Decoder") && !strstr(className, "Demux")) {
     return FALSE;
   }
 
