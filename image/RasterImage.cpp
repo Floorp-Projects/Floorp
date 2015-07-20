@@ -526,8 +526,9 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     return DrawableFrameRef();
   }
 
-  if (!result || !result.IsExactMatch()) {
-    // The OS threw this frame away. We need to redecode if we can.
+  if (!result || result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND) {
+    // We don't have a copy of this frame, and there's no decoder working on
+    // one. Trigger decoding so it'll be available next time.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
     Decode(Some(requestedSize), aFlags);

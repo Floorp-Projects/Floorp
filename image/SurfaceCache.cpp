@@ -550,12 +550,14 @@ public:
   {
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
-      return LookupResult();  // No cached surfaces for this image.
+      // No cached surfaces for this image.
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     nsRefPtr<CachedSurface> surface = cache->Lookup(aSurfaceKey);
     if (!surface) {
-      return LookupResult();  // Lookup in the per-image cache missed.
+      // Lookup in the per-image cache missed.
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     DrawableFrameRef ref = surface->DrawableRef();
@@ -563,14 +565,16 @@ public:
       // The surface was released by the operating system. Remove the cache
       // entry as well.
       Remove(surface);
-      return LookupResult();
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     if (aMarkUsed) {
       MarkUsed(surface, cache);
     }
 
-    return LookupResult(Move(ref), /* aIsExactMatch = */ true);
+    MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
+               "Lookup() not returning an exact match?");
+    return LookupResult(Move(ref), MatchType::EXACT);
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
@@ -579,7 +583,8 @@ public:
   {
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
-      return LookupResult();  // No cached surfaces for this image.
+      // No cached surfaces for this image.
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     // Repeatedly look up the best match, trying again if the resulting surface
@@ -593,7 +598,8 @@ public:
     while (true) {
       surface = cache->LookupBestMatch(aSurfaceKey, aAlternateFlags);
       if (!surface) {
-        return LookupResult();  // Lookup in the per-image cache missed.
+        // Lookup in the per-image cache missed.
+        return LookupResult(MatchType::NOT_FOUND);
       }
 
       ref = surface->DrawableRef();
@@ -619,7 +625,9 @@ public:
       MarkUsed(surface, cache);
     }
 
-    return LookupResult(Move(ref), isExactMatch);
+    MatchType matchType = isExactMatch ? MatchType::EXACT
+                                       : MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND;
+    return LookupResult(Move(ref), matchType);
   }
 
   void RemoveSurface(const ImageKey    aImageKey,
@@ -992,7 +1000,7 @@ SurfaceCache::Lookup(const ImageKey         aImageKey,
                      const Maybe<uint32_t>& aAlternateFlags /* = Nothing() */)
 {
   if (!sInstance) {
-    return LookupResult();
+    return LookupResult(MatchType::NOT_FOUND);
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
@@ -1013,7 +1021,7 @@ SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
                                 /* = Nothing() */)
 {
   if (!sInstance) {
-    return LookupResult();
+    return LookupResult(MatchType::NOT_FOUND);
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
