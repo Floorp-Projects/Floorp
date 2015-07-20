@@ -203,18 +203,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case OBJU32HASHMAP: {
-        AutoObjectUnsigned32HashMap* self = static_cast<AutoObjectUnsigned32HashMap*>(this);
-        AutoObjectUnsigned32HashMap::HashMapImpl& map = self->map;
-        for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
-            JSObject* key = e.front().key();
-            TraceRoot(trc, &key, "AutoObjectUnsignedHashMap key");
-            if (key != e.front().key())
-                e.rekeyFront(key);
-        }
-        return;
-      }
-
       case HASHABLEVALUE: {
         AutoHashableValueRooter* rooter = static_cast<AutoHashableValueRooter*>(this);
         rooter->trace(trc);
