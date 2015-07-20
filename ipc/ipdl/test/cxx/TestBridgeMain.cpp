@@ -133,7 +133,7 @@ TestBridgeSubParent::Main()
 bool
 TestBridgeSubParent::RecvBridgeEm()
 {
-    if (!PTestBridgeMainSub::Bridge(gBridgeMainChild, this))
+    if (NS_FAILED(PTestBridgeMainSub::Bridge(gBridgeMainChild, this)))
         fail("bridging Main and Sub");
     return true;
 }
