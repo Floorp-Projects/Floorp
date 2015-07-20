@@ -72,6 +72,7 @@ browser.jar:
   skin/classic/browser/magnifier@2x.png                     (../shared/magnifier@2x.png)
   skin/classic/browser/mask.png                             (../shared/mask.png)
   skin/classic/browser/mask@2x.png                          (../shared/mask@2x.png)
+  skin/classic/browser/mask-and-shield.svg                  (../shared/mask-and-shield.svg)
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel@2x.png
   skin/classic/browser/menuPanel-customize.png

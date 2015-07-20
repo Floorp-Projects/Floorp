@@ -58,3 +58,10 @@ function waitForTime(ms) {
     setTimeout(resolve, ms);
   });
 }
+
+function waitUntil(predicate) {
+  if (predicate()) {
+    return Promise.resolve(true);
+  }
+  return new Promise(resolve => setTimeout(() => waitUntil(predicate).then(() => resolve(true)), 10));
+}
