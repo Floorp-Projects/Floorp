@@ -1030,7 +1030,7 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityIsBlacklistedForE10S(bool* aResult)
 {
-  *aResult = false;
+  *aResult = true;
 #if defined(ACCESSIBILITY)
 #if defined(XP_WIN)
   if (GetAccService() && mozilla::a11y::Compatibility::IsBlacklistedForE10S()) {
