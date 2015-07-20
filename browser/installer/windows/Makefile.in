@@ -35,12 +35,6 @@ BRANDING_FILES = \
 	wizWatermark.bmp \
 	$(NULL)
 
-DEFINES += \
-	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-	-DMOZ_APP_DISPLAYNAME='${MOZ_APP_DISPLAYNAME}' \
-	-DMOZILLA_VERSION=${MOZILLA_VERSION} \
-	$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 ifdef LOCALE_MERGEDIR
