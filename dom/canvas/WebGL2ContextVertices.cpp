@@ -10,25 +10,9 @@
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
+#include "mozilla/Casting.h"
+
 namespace mozilla {
-
-typedef union { GLint i; GLfloat f; GLuint u; } fi_t;
-
-static inline
-GLfloat PuntToFloat(GLint i)
-{
-   fi_t tmp;
-   tmp.i = i;
-   return tmp.f;
-}
-
-static inline
-GLfloat PuntToFloat(GLuint u)
-{
-   fi_t tmp;
-   tmp.u = u;
-   return tmp.f;
-}
 
 bool
 WebGL2Context::ValidateAttribPointerType(bool integerMode, GLenum type,
@@ -97,7 +81,6 @@ WebGL2Context::VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsiz
   InvalidateBufferFetching();
 
   WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-
   vd.buf = mBoundArrayBuffer;
   vd.stride = stride;
   vd.size = size;
@@ -116,31 +99,41 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
   if (IsContextLost())
     return;
 
+  if (!ValidateAttribIndex(index, "vertexAttribI4i"))
+    return;
+
+  mVertexAttribType[index] = LOCAL_GL_INT;
+
   if (index || gl->IsGLES()) {
     MakeContextCurrent();
     gl->fVertexAttribI4i(index, x, y, z, w);
   } else {
-    mVertexAttrib0Vector[0] = PuntToFloat(x);
-    mVertexAttrib0Vector[1] = PuntToFloat(y);
-    mVertexAttrib0Vector[2] = PuntToFloat(z);
-    mVertexAttrib0Vector[3] = PuntToFloat(w);
+    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
+    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
+    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
+    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
   }
 }
 
 void
 WebGL2Context::VertexAttribI4iv(GLuint index, size_t length, const GLint* v)
 {
+  if (!ValidateAttribIndex(index, "vertexAttribI4iv"))
+    return;
+
   if (!ValidateAttribArraySetter("vertexAttribI4iv", 4, length))
     return;
+
+  mVertexAttribType[index] = LOCAL_GL_INT;
 
   if (index || gl->IsGLES()) {
     MakeContextCurrent();
     gl->fVertexAttribI4iv(index, v);
   } else {
-    mVertexAttrib0Vector[0] = PuntToFloat(v[0]);
-    mVertexAttrib0Vector[1] = PuntToFloat(v[1]);
-    mVertexAttrib0Vector[2] = PuntToFloat(v[2]);
-    mVertexAttrib0Vector[3] = PuntToFloat(v[3]);
+    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(v[0]);
+    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(v[1]);
+    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(v[2]);
+    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(v[3]);
   }
 }
 
@@ -156,14 +149,19 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
   if (IsContextLost())
     return;
 
+  if (!ValidateAttribIndex(index, "vertexAttribI4ui"))
+    return;
+
+  mVertexAttribType[index] = LOCAL_GL_UNSIGNED_INT;
+
   if (index || gl->IsGLES()) {
     MakeContextCurrent();
     gl->fVertexAttribI4ui(index, x, y, z, w);
   } else {
-    mVertexAttrib0Vector[0] = PuntToFloat(x);
-    mVertexAttrib0Vector[1] = PuntToFloat(y);
-    mVertexAttrib0Vector[2] = PuntToFloat(z);
-    mVertexAttrib0Vector[3] = PuntToFloat(w);
+    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
+    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
+    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
+    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
   }
 }
 
@@ -173,14 +171,22 @@ WebGL2Context::VertexAttribI4uiv(GLuint index, size_t length, const GLuint* v)
   if (IsContextLost())
     return;
 
+  if (!ValidateAttribIndex(index, "vertexAttribI4uiv"))
+    return;
+
+  if (!ValidateAttribIndex(index, "vertexAttribI4uiv"))
+    return;
+
+  mVertexAttribType[index] = LOCAL_GL_UNSIGNED_INT;
+
   if (index || gl->IsGLES()) {
     MakeContextCurrent();
     gl->fVertexAttribI4uiv(index, v);
   } else {
-    mVertexAttrib0Vector[0] = PuntToFloat(v[0]);
-    mVertexAttrib0Vector[1] = PuntToFloat(v[1]);
-    mVertexAttrib0Vector[2] = PuntToFloat(v[2]);
-    mVertexAttrib0Vector[3] = PuntToFloat(v[3]);
+    mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(v[0]);
+    mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(v[1]);
+    mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(v[2]);
+    mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(v[3]);
   }
 }
 
