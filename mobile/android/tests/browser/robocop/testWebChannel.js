@@ -17,18 +17,6 @@ const HTTP_ENDPOINT = "/tests/robocop/testWebChannel.html";
 const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
 let BrowserApp = gChromeWin.BrowserApp;
 
-/**
- * Robocop test helpers.
- */
-function ok(passed, text) {
-  do_report_result(passed, text, Components.stack.caller, false);
-}
-
-function is(lhs, rhs, text) {
-  do_report_result(lhs === rhs, "[ " + lhs + " === " + rhs + " ] " + text,
-    Components.stack.caller, false);
-}
-
 // Keep this synced with /browser/base/content/test/general/browser_web_channel.js
 // as much as possible.  (We only have this since we can't run browser chrome
 // tests on Android.  Yet?)
