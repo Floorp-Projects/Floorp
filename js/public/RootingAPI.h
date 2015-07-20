@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jspubtd.h"
@@ -643,7 +644,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 
     /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
     template <typename CX>
-    void init(CX* cx) {
+    void registerWithRootLists(CX* cx) {
         js::ThingRootKind kind = js::RootKind<T>::rootKind();
         this->stack = &cx->roots.stackRoots_[kind];
         this->prev = *stack;
@@ -656,15 +657,16 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(js::ContextFriendFields::get(cx));
+        registerWithRootLists(js::ContextFriendFields::get(cx));
     }
 
-    Rooted(JSContext* cx, const T& initial
+    template <typename S>
+    Rooted(JSContext* cx, S&& initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
+      : ptr(mozilla::Forward<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(js::ContextFriendFields::get(cx));
+        registerWithRootLists(js::ContextFriendFields::get(cx));
     }
 
     explicit Rooted(js::ContextFriendFields* cx
@@ -672,15 +674,16 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(cx);
+        registerWithRootLists(cx);
     }
 
-    Rooted(js::ContextFriendFields* cx, const T& initial
+    template <typename S>
+    Rooted(js::ContextFriendFields* cx, S&& initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
+      : ptr(mozilla::Forward<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(cx);
+        registerWithRootLists(cx);
     }
 
     explicit Rooted(js::PerThreadDataFriendFields* pt
@@ -688,15 +691,16 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
+        registerWithRootLists(pt);
     }
 
-    Rooted(js::PerThreadDataFriendFields* pt, const T& initial
+    template <typename S>
+    Rooted(js::PerThreadDataFriendFields* pt, S&& initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
+      : ptr(mozilla::Forward<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
+        registerWithRootLists(pt);
     }
 
     explicit Rooted(JSRuntime* rt
@@ -704,15 +708,16 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
       : ptr(js::GCMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(js::PerThreadDataFriendFields::getMainThread(rt));
+        registerWithRootLists(js::PerThreadDataFriendFields::getMainThread(rt));
     }
 
-    Rooted(JSRuntime* rt, const T& initial
+    template <typename S>
+    Rooted(JSRuntime* rt, S&& initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(initial)
+      : ptr(mozilla::Forward<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(js::PerThreadDataFriendFields::getMainThread(rt));
+        registerWithRootLists(js::PerThreadDataFriendFields::getMainThread(rt));
     }
 
     ~Rooted() {
