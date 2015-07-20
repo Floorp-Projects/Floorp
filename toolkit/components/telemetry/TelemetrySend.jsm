@@ -81,16 +81,8 @@ const SEND_TICK_DELAY = 1 * MS_IN_A_MINUTE;
 // This exponential backoff will be reset by external ping submissions & idle-daily.
 const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 
-// Files that have been lying around for longer than MAX_PING_FILE_AGE are
-// deleted without being loaded.
-const MAX_PING_FILE_AGE = 14 * 24 * 60 * MS_IN_A_MINUTE; // 2 weeks
-
-// Files that are older than OVERDUE_PING_FILE_AGE, but younger than
-// MAX_PING_FILE_AGE indicate that we need to send all of our pings ASAP.
+// The age of a pending ping to be considered overdue (in milliseconds).
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
-
-// Maximum number of pings to save.
-const MAX_LRU_PINGS = 50;
 
 /**
  * This is a policy object used to override behavior within this module.
@@ -156,25 +148,12 @@ function gzipCompressString(string) {
 
 
 this.TelemetrySend = {
-  /**
-   * Maximum age in ms of a pending ping file before it gets evicted.
-   */
-  get MAX_PING_FILE_AGE() {
-    return MAX_PING_FILE_AGE;
-  },
 
   /**
    * Age in ms of a pending ping to be considered overdue.
    */
   get OVERDUE_PING_FILE_AGE() {
     return OVERDUE_PING_FILE_AGE;
-  },
-
-  /**
-   * The maximum number of pending pings we keep in the backlog.
-   */
-  get MAX_LRU_PINGS() {
-    return MAX_LRU_PINGS;
   },
 
   get pendingPingCount() {
@@ -212,13 +191,6 @@ this.TelemetrySend = {
    */
   submitPing: function(ping) {
     return TelemetrySendImpl.submitPing(ping);
-  },
-
-  /**
-   * Count of pending pings that were discarded at startup due to being too old.
-   */
-  get discardedPingsCount() {
-    return TelemetrySendImpl.discardedPingsCount;
   },
 
   /**
@@ -542,8 +514,6 @@ let TelemetrySendImpl = {
   // This holds pings that we currently try and haven't persisted yet.
   _currentPings: new Map(),
 
-  // Count of pending pings we discarded for age on startup.
-  _discardedPingsCount: 0,
   // Count of pending pings that were overdue.
   _overduePingCount: 0,
 
@@ -557,10 +527,6 @@ let TelemetrySendImpl = {
     }
 
     return this._logger;
-  },
-
-  get discardedPingsCount() {
-    return this._discardedPingsCount;
   },
 
   get overduePingsCount() {
@@ -585,8 +551,6 @@ let TelemetrySendImpl = {
     this._testMode = testing;
     this._sendingEnabled = true;
 
-    this._discardedPingsCount = 0;
-
     Services.obs.addObserver(this, TOPIC_IDLE_DAILY, false);
 
     this._server = Preferences.get(PREF_SERVER, undefined);
@@ -597,6 +561,10 @@ let TelemetrySendImpl = {
     } catch (ex) {
       this._log.error("setup - _checkPendingPings rejected", ex);
     }
+
+    // Enforce the pending pings storage quota. It could take a while so don't
+    // block on it.
+    TelemetryStorage.runEnforcePendingPingsQuotaTask();
 
     // Start sending pings, but don't block on this.
     SendScheduler.triggerSendingPings(true);
@@ -615,40 +583,7 @@ let TelemetrySendImpl = {
       return;
     }
 
-    // Remove old pings that we haven't been able to send yet.
     const now = new Date();
-    const tooOld = (info) => (now.getTime() - info.lastModificationDate) > MAX_PING_FILE_AGE;
-
-    const oldPings = infos.filter((info) => tooOld(info));
-    infos = infos.filter((info) => !tooOld(info));
-    this._log.info("_checkPendingPings - clearing out " + oldPings.length + " old pings");
-
-    for (let info of oldPings) {
-      try {
-        yield TelemetryStorage.removePendingPing(info.id);
-        ++this._discardedPingsCount;
-      } catch(ex) {
-        this._log.error("_checkPendingPings - failed to remove old ping", ex);
-      }
-    }
-
-    // Keep only the last MAX_LRU_PINGS entries to avoid that the backlog overgrows.
-    const shouldEvict = infos.splice(MAX_LRU_PINGS, infos.length);
-    let evictedCount = 0;
-    this._log.info("_checkPendingPings - evicting " + shouldEvict.length + " pings to " +
-                   "avoid overgrowing the backlog");
-
-    for (let info of shouldEvict) {
-      try {
-        yield TelemetryStorage.removePendingPing(info.id);
-        ++evictedCount;
-      } catch(ex) {
-        this._log.error("_checkPendingPings - failed to evict ping", ex);
-      }
-    }
-
-    Services.telemetry.getHistogramById('TELEMETRY_FILES_EVICTED')
-                      .add(evictedCount);
 
     // Check for overdue pings.
     const overduePings = infos.filter((info) =>
@@ -687,11 +622,9 @@ let TelemetrySendImpl = {
     this._currentPings = new Map();
 
     this._overduePingCount = 0;
-    this._discardedPingsCount = 0;
 
     const histograms = [
       "TELEMETRY_SUCCESS",
-      "TELEMETRY_FILES_EVICTED",
       "TELEMETRY_SEND",
       "TELEMETRY_PING",
     ];
