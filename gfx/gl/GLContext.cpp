@@ -1261,6 +1261,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         if (IsSupported(GLFeature::gpu_shader4)) {
             SymLoadStruct gpuShader4Symbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetVertexAttribIiv, { "GetVertexAttribIiv", "GetVertexAttribIivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetVertexAttribIuiv, { "GetVertexAttribIuiv", "GetVertexAttribIuivEXT", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", "VertexAttribI4iEXT", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv","VertexAttribI4ivEXT", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", "VertexAttribI4uiEXT", nullptr } },
