@@ -28,7 +28,7 @@ let tests = [
   function test_testing_host(done) {
     // Add two testing origins intentionally surrounded by whitespace to be ignored.
     Services.prefs.setCharPref("browser.uitour.testingOrigins",
-                               "https://test1.example.com, https://test2.example.com:443 ");
+                               "https://test1.example.org, https://test2.example.org:443 ");
 
     registerCleanupFunction(() => {
       Services.prefs.clearUserPref("browser.uitour.testingOrigins");
@@ -40,7 +40,7 @@ let tests = [
 
     loadUITourTestPage(function() {
       gContentAPI.getConfiguration("appinfo", callback);
-    }, "https://test2.example.com/");
+    }, "https://test2.example.org/");
   },
   function test_unsecure_host(done) {
     loadUITourTestPage(function() {
@@ -51,7 +51,7 @@ let tests = [
       is(bookmarksMenu.open, false, "Bookmark menu should not open on a unsecure host");
 
       done();
-    }, "http://example.com/");
+    }, "http://example.org/");
   },
   function test_unsecure_host_override(done) {
     Services.prefs.setBoolPref("browser.uitour.requireSecure", false);
@@ -63,7 +63,7 @@ let tests = [
       waitForElementToBeVisible(highlight, done, "Highlight should be shown on a unsecure host when override pref is set");
 
       Services.prefs.setBoolPref("browser.uitour.requireSecure", true);
-    }, "http://example.com/");
+    }, "http://example.org/");
   },
   function test_disabled(done) {
     Services.prefs.setBoolPref("browser.uitour.enabled", false);

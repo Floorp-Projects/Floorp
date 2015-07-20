@@ -31,7 +31,7 @@ let tests = [
     is(desc.textContent, "some text", "Popup should have correct description text");
 
     let imageURL = getRootDirectory(gTestPath) + "image.png";
-    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.com/");
+    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
     is(icon.src, imageURL,  "Popup should have correct icon shown");
 
     is(buttons.hasChildNodes(), false, "Popup should have no buttons");
@@ -51,7 +51,7 @@ let tests = [
     is(desc.textContent, "moar text", "Popup should have correct description text");
 
     let imageURL = getRootDirectory(gTestPath) + "image.png";
-    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.com/");
+    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
     is(icon.src, imageURL,  "Popup should have correct icon shown");
 
     buttons = document.getElementById("UITourTooltipButtons");
@@ -101,7 +101,7 @@ let tests = [
     is(desc.textContent, "moar text", "Popup should have correct description text");
 
     let imageURL = getRootDirectory(gTestPath) + "image.png";
-    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.com/");
+    imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
     is(icon.src, imageURL,  "Popup should have correct icon shown");
 
     buttons = document.getElementById("UITourTooltipButtons");
