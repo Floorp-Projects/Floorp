@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .getService(Ci.nsISupports)
           .wrappedJSObject);
 
+const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+
 // We increment TelemetryStorage's MAX_PING_FILE_AGE and
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
 // those points in time, even taking into account file system imprecision.
@@ -404,6 +406,24 @@ add_task(function* test_pendingPingsQuota() {
     pingsSizeInBytes += pingSize;
   }
 
+  // We need to test the pending pings size before we hit the quota, otherwise a special
+  // value is recorded.
+  Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").clear();
+  Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").clear();
+  Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").clear();
+
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+
+  // Check that the correct values for quota probes are reported when no quota is hit.
+  let h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.sum, Math.round(pingsSizeInBytes / 1024 / 1024),
+               "Telemetry must report the correct pending pings directory size.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report 0 evictions if quota is not hit.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report a null elapsed time if quota is not hit.");
+
   // Set the quota to 80% of the space.
   const testQuotaInBytes = pingsSizeInBytes * 0.8;
   fakePendingPingsQuota(testQuotaInBytes);
@@ -431,6 +451,12 @@ add_task(function* test_pendingPingsQuota() {
   yield TelemetryController.reset();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
   yield checkPendingPings();
+
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, pingsOutsideQuota.length,
+               "Telemetry must correctly report the over quota pings evicted from the pending pings directory.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.sum, 17, "Pending pings quota was hit, a special size must be reported.");
 
   // Trigger a cleanup again and make sure we're not removing anything.
   yield TelemetryController.reset();
