@@ -1603,6 +1603,15 @@ default
    In other words, search engines without an ``.identifier``
    are prefixed with ``other-``.
 
+Version 2
+^^^^^^^^^
+
+Starting with Firefox 40, there is an additional optional value:
+
+cohort
+  Daily cohort string identifier, recorded if the user is part of
+  search defaults A/B testing.
+
 org.mozilla.sync.sync
 ---------------------
 
