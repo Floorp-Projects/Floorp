@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(A10D887D-7FC2-48A2-ABC6-A2027423860C)]
+[scriptable, uuid(CE6F563B-BD77-4EF2-9D7C-A94C587353E4)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -28,10 +28,13 @@ interface nsITabParent : nsISupports
   readonly attribute uint64_t tabId;
 
   /**
-   * If aForward is true, navigate to the first focusable document.
-   * If aForward is false, navigate to the last focusable document.
+   * Navigate by key. If aForDocumentNavigation is true, navigate by document.
+   * If aForDocumentNavigation is false, navigate by element.
+   *
+   * If aForward is true, navigate to the first focusable element or document.
+   * If aForward is false, navigate to the last focusable element or document.
    */
-  void navigateDocument(in bool aForward);
+  void navigateByKey(in bool aForward, in bool aForDocumentNavigation);
 
   readonly attribute boolean hasContentOpener;
 };
