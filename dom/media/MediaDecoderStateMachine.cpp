@@ -1586,8 +1586,6 @@ MediaDecoderStateMachine::InitiateSeek()
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
-
-  mDecoder->StopProgressUpdates();
   mCurrentTimeBeforeSeek = GetMediaTime();
 
   // Stop playback now to ensure that while we're outside the monitor
@@ -1927,8 +1925,6 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
                 GetAmpleVideoFrames());
   }
 
-  mDecoder->StartProgressUpdates();
-
   // In general, we wait until we know the duration before notifying the decoder.
   // However, we notify  unconditionally in this case without waiting for the start
   // time, since the caller might be waiting on metadataloaded to be fired before
@@ -2148,8 +2144,6 @@ MediaDecoderStateMachine::SeekCompleted()
     newCurrentTime = video ? video->mTime : seekTime;
   }
   mPlayDuration = newCurrentTime;
-
-  mDecoder->StartProgressUpdates();
 
   // Change state to DECODING or COMPLETED now. SeekingStopped will
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING

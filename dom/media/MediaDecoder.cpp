@@ -432,6 +432,9 @@ MediaDecoder::MediaDecoder() :
   mWatchManager.Watch(mCurrentPosition, &MediaDecoder::UpdateLogicalPosition);
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateLogicalPosition);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoder::UpdateLogicalPosition);
+
+  // mIgnoreProgressData
+  mWatchManager.Watch(mLogicallySeeking, &MediaDecoder::SeekingChanged);
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
@@ -973,15 +976,13 @@ void MediaDecoder::NotifyPrincipalChanged()
 void MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mShuttingDown) {
+  MOZ_ASSERT(mDecoderStateMachine);
+
+  if (mShuttingDown || mIgnoreProgressData) {
     return;
   }
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT(mDecoderStateMachine);
-  if (mIgnoreProgressData) {
-    return;
-  }
   if (aOffset >= mDecoderPosition) {
     mPlaybackStatistics->AddBytes(aBytes);
   }
@@ -1215,20 +1216,6 @@ void MediaDecoder::Resume(bool aForceBuffering)
       mDecoderStateMachine->DispatchStartBuffering();
     }
   }
-}
-
-void MediaDecoder::StopProgressUpdates()
-{
-  MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeTaskQueue());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  mIgnoreProgressData = true;
-}
-
-void MediaDecoder::StartProgressUpdates()
-{
-  MOZ_ASSERT(OnStateMachineTaskQueue() || OnDecodeTaskQueue());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  mIgnoreProgressData = false;
 }
 
 void MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
