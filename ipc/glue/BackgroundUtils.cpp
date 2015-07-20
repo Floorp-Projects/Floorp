@@ -261,6 +261,8 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetInnerWindowID(),
       aLoadInfo->GetOuterWindowID(),
       aLoadInfo->GetParentOuterWindowID(),
+      aLoadInfo->GetEnforceSecurity(),
+      aLoadInfo->GetInitialSecurityCheckDone(),
       redirectChain);
 
   return NS_OK;
@@ -303,6 +305,8 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.innerWindowID(),
                           loadInfoArgs.outerWindowID(),
                           loadInfoArgs.parentOuterWindowID(),
+                          loadInfoArgs.enforceSecurity(),
+                          loadInfoArgs.initialSecurityCheckDone(),
                           redirectChain);
 
    loadInfo.forget(outLoadInfo);

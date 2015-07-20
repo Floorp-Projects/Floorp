@@ -64,6 +64,8 @@ private:
            uint64_t aInnerWindowID,
            uint64_t aOuterWindowID,
            uint64_t aParentOuterWindowID,
+           bool aEnforceSecurity,
+           bool aInitialSecurityCheckDone,
            nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain);
 
   friend nsresult
@@ -73,16 +75,18 @@ private:
 
   ~LoadInfo();
 
-  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-  nsWeakPtr              mLoadingContext;
-  nsSecurityFlags        mSecurityFlags;
-  nsContentPolicyType    mContentPolicyType;
-  nsCOMPtr<nsIURI>       mBaseURI;
-  bool                   mUpgradeInsecureRequests;
-  uint64_t               mInnerWindowID;
-  uint64_t               mOuterWindowID;
-  uint64_t               mParentOuterWindowID;
+  nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
+  nsWeakPtr                        mLoadingContext;
+  nsSecurityFlags                  mSecurityFlags;
+  nsContentPolicyType              mContentPolicyType;
+  nsCOMPtr<nsIURI>                 mBaseURI;
+  bool                             mUpgradeInsecureRequests;
+  uint64_t                         mInnerWindowID;
+  uint64_t                         mOuterWindowID;
+  uint64_t                         mParentOuterWindowID;
+  bool                             mEnforceSecurity;
+  bool                             mInitialSecurityCheckDone;
   nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChain;
 };
 
