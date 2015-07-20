@@ -32,7 +32,7 @@ XPTInterfaceInfoManager::xptiWorkingSet::InvalidateInterfaceInfos()
 {
     ReentrantMonitorAutoEnter monitor(mTableReentrantMonitor);
     for (auto iter = mNameTable.Iter(); !iter.Done(); iter.Next()) {
-        xptiInterfaceEntry* entry = iter.GetUserData();
+        xptiInterfaceEntry* entry = iter.UserData();
         entry->LockedInvalidateInterfaceInfo();
     }
 }

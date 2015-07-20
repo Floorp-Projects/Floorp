@@ -132,7 +132,7 @@ nsThreadManager::Shutdown()
   {
     OffTheBooksMutexAutoLock lock(mLock);
     for (auto iter = mThreadsByPRThread.Iter(); !iter.Done(); iter.Next()) {
-      nsRefPtr<nsThread>& thread = iter.GetData();
+      nsRefPtr<nsThread>& thread = iter.Data();
       threads.AppendElement(thread);
       iter.Remove();
     }

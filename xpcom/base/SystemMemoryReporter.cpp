@@ -222,8 +222,8 @@ private:
     void Report(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
     {
       for (auto iter = mTagged.Iter(); !iter.Done(); iter.Next()) {
-        nsCStringHashKey::KeyType key = iter.GetKey();
-        size_t amount = iter.GetUserData();
+        nsCStringHashKey::KeyType key = iter.Key();
+        size_t amount = iter.UserData();
 
         nsAutoCString path("processes/");
         path.Append(key);
