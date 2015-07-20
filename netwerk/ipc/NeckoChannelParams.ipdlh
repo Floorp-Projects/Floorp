@@ -34,6 +34,8 @@ struct LoadInfoArgs
   uint64_t        innerWindowID;
   uint64_t        outerWindowID;
   uint64_t        parentOuterWindowID;
+  bool            enforceSecurity;
+  bool            initialSecurityCheckDone;
   PrincipalInfo[] redirectChain;
 };
 
