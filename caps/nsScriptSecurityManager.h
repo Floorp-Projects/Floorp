@@ -120,6 +120,9 @@ private:
     inline void
     AddSitesToFileURIWhitelist(const nsCString& aSiteList);
 
+    // If aURI is a moz-extension:// URI, set mAddonId to the associated addon.
+    nsresult MaybeSetAddonIdFromURI(mozilla::OriginAttributes& aAttrs, nsIURI* aURI);
+
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
