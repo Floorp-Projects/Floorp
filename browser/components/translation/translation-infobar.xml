@@ -127,12 +127,17 @@
               <xul:menuitem oncommand="openPreferences('paneContent');"
                             label="&translation.options.preferences.label;"
                             accesskey="&translation.options.preferences.accesskey;"/>
-              <xul:menuitem class="translation-attribution subviewbutton panel-subview-footer"
+              <xul:menuitem class="subviewbutton panel-subview-footer"
                             oncommand="document.getBindingParent(this).openProviderAttribution();">
-                <xul:label>&translation.options.attribution.beforeLogo;</xul:label>
-                <xul:image src="chrome://browser/content/microsoft-translator-attribution.png"
-                           aria-label="Microsoft Translator"/>
-                <xul:label>&translation.options.attribution.afterLogo;</xul:label>
+                <xul:deck anonid="translationEngine" selectedIndex="0">
+                  <xul:hbox class="translation-attribution">
+                    <xul:label>&translation.options.attribution.beforeLogo;</xul:label>
+                    <xul:image src="chrome://browser/content/microsoft-translator-attribution.png"
+                               aria-label="Microsoft Translator"/>
+                    <xul:label>&translation.options.attribution.afterLogo;</xul:label>
+                  </xul:hbox>
+                  <xul:label class="translation-attribution">&translation.options.attribution.yandexTranslate;</xul:label>
+                </xul:deck>
               </xul:menuitem>
             </xul:menupopup>
           </xul:button>
@@ -214,6 +219,13 @@
 
             if (aTranslation.state)
               this.state = aTranslation.state;
+
+            // Show attribution for the preferred translator.
+            let engineIndex = Object.keys(Translation.supportedEngines)
+              .indexOf(Translation.translationEngine);
+            if (engineIndex != -1) {
+              this._getAnonElt('translationEngine').selectedIndex = engineIndex;
+            }
 
             const kWelcomePref = "browser.translation.ui.welcomeMessageShown";
             if (Services.prefs.prefHasUserValue(kWelcomePref) ||
