@@ -454,25 +454,24 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 class NotifyDNSResolution: public nsRunnable
 {
 public:
-    NotifyDNSResolution(nsMainThreadPtrHandle<nsIObserverService> &aObs,
-                        const nsACString &aHostname)
-        : mObs(aObs)
-        , mHostname(aHostname)
+    explicit NotifyDNSResolution(const nsACString &aHostname)
+        : mHostname(aHostname)
     {
-        MOZ_ASSERT(mObs);
     }
 
     NS_IMETHOD Run()
     {
         MOZ_ASSERT(NS_IsMainThread());
-        mObs->NotifyObservers(nullptr,
-                              "dns-resolution-request",
-                              NS_ConvertUTF8toUTF16(mHostname).get());
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+        if (obs) {
+            obs->NotifyObservers(nullptr,
+                                 "dns-resolution-request",
+                                 NS_ConvertUTF8toUTF16(mHostname).get());
+        }
         return NS_OK;
     }
 
 private:
-    nsMainThreadPtrHandle<nsIObserverService> mObs;
     nsCString                                 mHostname;
 };
 
@@ -606,8 +605,6 @@ nsDNSService::Init()
 
     nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
 
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-
     nsRefPtr<nsHostResolver> res;
     nsresult rv = nsHostResolver::Create(maxCacheEntries,
                                          defaultCacheLifetime,
@@ -635,10 +632,6 @@ nsDNSService::Init()
             }
         }
         mNotifyResolution = notifyResolution;
-        if (mNotifyResolution) {
-            mObserverService =
-              new nsMainThreadPtrHolder<nsIObserverService>(obs);
-        }
     }
 
 #if !defined(MOZILLA_XPCOMRT_API)
@@ -760,8 +753,7 @@ nsDNSService::AsyncResolveExtended(const nsACString  &aHostname,
     }
 
     if (mNotifyResolution) {
-        NS_DispatchToMainThread(new NotifyDNSResolution(mObserverService,
-                                                        aHostname));
+        NS_DispatchToMainThread(new NotifyDNSResolution(aHostname));
     }
 
     if (!res)
@@ -874,8 +866,7 @@ nsDNSService::Resolve(const nsACString &aHostname,
     }
 
     if (mNotifyResolution) {
-        NS_DispatchToMainThread(new NotifyDNSResolution(mObserverService,
-                                                        aHostname));
+        NS_DispatchToMainThread(new NotifyDNSResolution(aHostname));
     }
 
     NS_ENSURE_TRUE(res, NS_ERROR_OFFLINE);
