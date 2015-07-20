@@ -9,10 +9,21 @@ interface nsIDOMEventListener;
 interface nsIDOMEventTarget;
 interface nsIArray;
 
-[scriptable, function, uuid(8d5b5a6b-dec0-473d-86c4-591801dfaac1)]
+/**
+ * Contains an event target along with an array of nsIAtom in form "oneventname"
+ * representing changed event listener names.
+ */
+[scriptable, uuid(07222b02-da12-4cf4-b2f7-761da007a8d8)]
+interface nsIEventListenerChange : nsISupports
+{
+  readonly attribute nsIDOMEventTarget target;
+  readonly attribute nsIArray changedListenerNames;
+};
+
+[scriptable, function, uuid(aa7c95f6-d3b5-44b3-9597-1d9f19b9c5f2)]
 interface nsIListenerChangeListener : nsISupports
 {
-  void listenersChanged(in nsIArray aEventTargets);
+  void listenersChanged(in nsIArray aEventListenerChanges);
 };
 
 /**

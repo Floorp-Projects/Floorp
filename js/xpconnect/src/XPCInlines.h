@@ -187,14 +187,14 @@ XPCCallContext::GetArgc() const
     return mArgc;
 }
 
-inline jsval*
+inline JS::Value*
 XPCCallContext::GetArgv() const
 {
     CHECK_STATE(READY_TO_CALL);
     return mArgv;
 }
 
-inline jsval*
+inline JS::Value*
 XPCCallContext::GetRetVal() const
 {
     CHECK_STATE(READY_TO_CALL);
@@ -202,7 +202,7 @@ XPCCallContext::GetRetVal() const
 }
 
 inline void
-XPCCallContext::SetRetVal(jsval val)
+XPCCallContext::SetRetVal(JS::Value val)
 {
     CHECK_STATE(HAVE_ARGS);
     if (mRetVal)

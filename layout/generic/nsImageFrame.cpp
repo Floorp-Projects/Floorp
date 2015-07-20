@@ -577,6 +577,10 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
         presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
       }
+    } else {
+      // We've already gotten the initial reflow, and our size hasn't changed,
+      // so we're ready to request a decode.
+      MaybeDecodeForPredictedSize();
     }
   }
 
@@ -682,10 +686,91 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
         presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
       }
+    } else {
+      // We've already gotten the initial reflow, and our size hasn't changed,
+      // so we're ready to request a decode.
+      MaybeDecodeForPredictedSize();
     }
     // Update border+content to account for image change
     InvalidateFrame();
   }
+}
+
+void
+nsImageFrame::MaybeDecodeForPredictedSize()
+{
+  // Check that we're ready to decode.
+  if (!mImage) {
+    return;  // Nothing to do yet.
+  }
+
+  if (mComputedSize.IsEmpty()) {
+    return;  // We won't draw anything, so no point in decoding.
+  }
+
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  MOZ_ASSERT(imageLoader);
+  if (imageLoader->GetVisibleCount() == 0) {
+    return;  // We're not visible, so don't decode.
+  }
+
+  // OK, we're ready to decode. Compute the scale to the screen...
+  nsIPresShell* presShell = PresContext()->GetPresShell();
+  LayoutDeviceToScreenScale2D resolutionToScreen(
+      presShell->GetCumulativeResolution()
+    * nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(this));
+
+  // ...and this frame's content box...
+  const nsPoint offset =
+    GetOffsetToCrossDoc(nsLayoutUtils::GetReferenceFrame(this));
+  const nsRect frameContentBox = GetInnerArea() + offset;
+
+  // ...and our predicted dest rect...
+  const int32_t factor = PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect =
+    LayoutDeviceRect::FromAppUnits(PredictedDestRect(frameContentBox), factor);
+
+  // ...and use them to compute our predicted size in screen pixels.
+  const ScreenSize predictedScreenSize = destRect.Size() * resolutionToScreen;
+  const ScreenIntSize predictedScreenIntSize = RoundedToInt(predictedScreenSize);
+  if (predictedScreenIntSize.IsEmpty()) {
+    return;
+  }
+
+  // Determine the optimal image size to use.
+  uint32_t flags = imgIContainer::FLAG_HIGH_QUALITY_SCALING
+                 | imgIContainer::FLAG_ASYNC_NOTIFY;
+  GraphicsFilter filter = nsLayoutUtils::GetGraphicsFilterForFrame(this);
+  gfxSize gfxPredictedScreenSize = gfxSize(predictedScreenIntSize.width,
+                                           predictedScreenIntSize.height);
+  nsIntSize predictedImageSize =
+    mImage->OptimalImageSizeForDest(gfxPredictedScreenSize,
+                                    imgIContainer::FRAME_CURRENT,
+                                    filter, flags);
+
+  // Request a decode.
+  mImage->RequestDecodeForSize(predictedImageSize, flags);
+}
+
+nsRect
+nsImageFrame::PredictedDestRect(const nsRect& aFrameContentBox)
+{
+  // What is the rect painted by the image?  It's the image's "dest rect" (the
+  // rect where a full copy of the image is mapped), clipped to the container's
+  // content box.  So, we intersect those rects.
+
+  // Note: To get the "dest rect", we have to provide the "constraint rect"
+  // (which is the content-box, with the effects of fragmentation undone).
+  nsRect constraintRect(aFrameContentBox.TopLeft(), mComputedSize);
+  constraintRect.y -= GetContinuationOffset();
+
+  const nsRect destRect =
+    nsLayoutUtils::ComputeObjectDestRect(constraintRect,
+                                         mIntrinsicSize,
+                                         mIntrinsicRatio,
+                                         StylePosition());
+
+  return destRect.Intersect(aFrameContentBox);
 }
 
 void
@@ -935,6 +1020,10 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     static_assert(eOverflowType_LENGTH == 2, "Unknown overflow types?");
     nsRect& visualOverflow = aMetrics.VisualOverflow();
     visualOverflow.UnionRect(visualOverflow, altFeedbackSize);
+  } else {
+    // We've just reflowed and we should have an accurate size, so we're ready
+    // to request a decode.
+    MaybeDecodeForPredictedSize();
   }
   FinishAndStoreOverflow(&aMetrics);
 
@@ -1475,30 +1564,14 @@ nsDisplayImage::GetContainer(LayerManager* aManager,
 nsRect
 nsDisplayImage::GetDestRect(bool* aSnap)
 {
-  // OK, we want to return the entire region painted by the image. But what is
-  // that region? It's the image's "dest rect" (the rect where a full copy of
-  // the image is mapped), clipped to the container's content box (which is what
-  // GetBounds() returns). So, we grab those rects and intersect them.
   bool snap = true;
   const nsRect frameContentBox = GetBounds(&snap);
   if (aSnap) {
     *aSnap = snap;
   }
 
-  // Note: To get the "dest rect", we have to provide the "constraint rect"
-  // (which is the content-box, with the effects of fragmentation undone).
   nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
-  nsRect constraintRect(frameContentBox.TopLeft(),
-                        imageFrame->mComputedSize);
-  constraintRect.y -= imageFrame->GetContinuationOffset();
-
-  const nsRect destRect =
-    nsLayoutUtils::ComputeObjectDestRect(constraintRect,
-                                         imageFrame->mIntrinsicSize,
-                                         imageFrame->mIntrinsicRatio,
-                                         imageFrame->StylePosition());
-
-  return destRect.Intersect(frameContentBox);
+  return imageFrame->PredictedDestRect(frameContentBox);
 }
 
 LayerState

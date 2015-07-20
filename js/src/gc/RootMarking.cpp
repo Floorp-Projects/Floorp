@@ -45,41 +45,28 @@ typedef RootedValueMap::Enum RootEnum;
 // linkage.
 
 void
+MarkBindingsRoot(JSTracer* trc, Bindings* bindings, const char* name)
+{
+    bindings->trace(trc);
+}
+
+void
 MarkPropertyDescriptorRoot(JSTracer* trc, JSPropertyDescriptor* pd, const char* name)
 {
     pd->trace(trc);
 }
 
-template <class T>
-static inline bool
-IgnoreExactRoot(T* thingp)
-{
-    return false;
-}
+template <typename T>
+using TraceFunction = void (*)(JSTracer* trc, T* ref, const char* name);
 
-template <class T>
-inline bool
-IgnoreExactRoot(T** thingp)
-{
-    return IsNullTaggedPointer(*thingp);
-}
-
-template <>
-inline bool
-IgnoreExactRoot(JSObject** thingp)
-{
-    return IsNullTaggedPointer(*thingp) || *thingp == TaggedProto::LazyProto;
-}
-
-template <class T, void MarkFunc(JSTracer* trc, T* ref, const char* name), class Source>
+template <class T, TraceFunction<T> TraceFn = TraceNullableRoot, class Source>
 static inline void
 MarkExactStackRootList(JSTracer* trc, Source* s, const char* name)
 {
     Rooted<T>* rooter = s->roots.template gcRooters<T>();
     while (rooter) {
         T* addr = rooter->address();
-        if (!IgnoreExactRoot(addr))
-            MarkFunc(trc, addr, name);
+        TraceFn(trc, addr, name);
         rooter = rooter->previous();
     }
 }
@@ -88,18 +75,19 @@ template<class T>
 static void
 MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
 {
-    MarkExactStackRootList<JSObject*, TraceRoot>(trc, context, "exact-object");
-    MarkExactStackRootList<Shape*, TraceRoot>(trc, context, "exact-shape");
-    MarkExactStackRootList<BaseShape*, TraceRoot>(trc, context, "exact-baseshape");
-    MarkExactStackRootList<ObjectGroup*, TraceRoot>(
+    MarkExactStackRootList<JSObject*>(trc, context, "exact-object");
+    MarkExactStackRootList<Shape*>(trc, context, "exact-shape");
+    MarkExactStackRootList<BaseShape*>(trc, context, "exact-baseshape");
+    MarkExactStackRootList<ObjectGroup*>(
         trc, context, "exact-objectgroup");
-    MarkExactStackRootList<JSString*, TraceRoot>(trc, context, "exact-string");
-    MarkExactStackRootList<JS::Symbol*, TraceRoot>(trc, context, "exact-symbol");
-    MarkExactStackRootList<jit::JitCode*, TraceRoot>(trc, context, "exact-jitcode");
-    MarkExactStackRootList<JSScript*, TraceRoot>(trc, context, "exact-script");
-    MarkExactStackRootList<LazyScript*, TraceRoot>(trc, context, "exact-lazy-script");
-    MarkExactStackRootList<jsid, TraceRoot>(trc, context, "exact-id");
-    MarkExactStackRootList<Value, TraceRoot>(trc, context, "exact-value");
+    MarkExactStackRootList<JSString*>(trc, context, "exact-string");
+    MarkExactStackRootList<JS::Symbol*>(trc, context, "exact-symbol");
+    MarkExactStackRootList<jit::JitCode*>(trc, context, "exact-jitcode");
+    MarkExactStackRootList<JSScript*>(trc, context, "exact-script");
+    MarkExactStackRootList<LazyScript*>(trc, context, "exact-lazy-script");
+    MarkExactStackRootList<jsid>(trc, context, "exact-id");
+    MarkExactStackRootList<Value>(trc, context, "exact-value");
+    MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
     MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
         trc, context, "JSPropertyDescriptor");
     MarkExactStackRootList<JS::StaticTraceable,
@@ -334,19 +322,10 @@ struct PersistentRootedMarker
     typedef void (*MarkFunc)(JSTracer* trc, T* ref, const char* name);
 
     static void
-    markChainIfNotNull(JSTracer* trc, List& list, const char* name)
-    {
-        for (Element* r = list.getFirst(); r; r = r->getNext()) {
-            if (r->get())
-                TraceRoot(trc, r->address(), name);
-        }
-    }
-
-    static void
     markChain(JSTracer* trc, List& list, const char* name)
     {
         for (Element* r = list.getFirst(); r; r = r->getNext())
-            TraceRoot(trc, r->address(), name);
+            TraceNullableRoot(trc, r->address(), name);
     }
 };
 
@@ -358,17 +337,14 @@ js::gc::MarkPersistentRootedChains(JSTracer* trc)
 {
     JSRuntime* rt = trc->runtime();
 
-    // Mark the PersistentRooted chains of types that may be null.
-    PersistentRootedMarker<JSFunction*>::markChainIfNotNull(trc, rt->functionPersistentRooteds,
-                                                            "PersistentRooted<JSFunction*>");
-    PersistentRootedMarker<JSObject*>::markChainIfNotNull(trc, rt->objectPersistentRooteds,
-                                                          "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChainIfNotNull(trc, rt->scriptPersistentRooteds,
-                                                          "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChainIfNotNull(trc, rt->stringPersistentRooteds,
-                                                          "PersistentRooted<JSString*>");
-
-    // Mark the PersistentRooted chains of types that are never null.
+    PersistentRootedMarker<JSFunction*>::markChain(trc, rt->functionPersistentRooteds,
+                                                   "PersistentRooted<JSFunction*>");
+    PersistentRootedMarker<JSObject*>::markChain(trc, rt->objectPersistentRooteds,
+                                                 "PersistentRooted<JSObject*>");
+    PersistentRootedMarker<JSScript*>::markChain(trc, rt->scriptPersistentRooteds,
+                                                 "PersistentRooted<JSScript*>");
+    PersistentRootedMarker<JSString*>::markChain(trc, rt->stringPersistentRooteds,
+                                                 "PersistentRooted<JSString*>");
     PersistentRootedMarker<jsid>::markChain(trc, rt->idPersistentRooteds,
                                             "PersistentRooted<jsid>");
     PersistentRootedMarker<Value>::markChain(trc, rt->valuePersistentRooteds,

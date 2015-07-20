@@ -451,6 +451,15 @@ js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
 
 template <typename T>
 void
+js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
+{
+    AssertRootMarkingPhase(trc);
+    if (InternalGCMethods<T>::isMarkableTaggedPointer(*thingp))
+        DispatchToTracer(trc, ConvertToBase(thingp), name);
+}
+
+template <typename T>
+void
 js::TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name)
 {
     JS::AutoTracingIndex index(trc);
@@ -479,6 +488,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
     template void js::TraceEdge<type>(JSTracer*, BarrieredBase<type>*, const char*); \
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceRoot<type>(JSTracer*, type*, const char*); \
+    template void js::TraceNullableRoot<type>(JSTracer*, type*, const char*); \
     template void js::TraceRange<type>(JSTracer*, size_t, BarrieredBase<type>*, const char*); \
     template void js::TraceRootRange<type>(JSTracer*, size_t, type*, const char*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
