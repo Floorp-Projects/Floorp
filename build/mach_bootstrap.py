@@ -245,7 +245,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             return
 
         # The environment is likely a machine invocation.
-        if not sys.stdin.isatty():
+        if sys.stdin.closed or not sys.stdin.isatty():
             return
 
         # Mercurial isn't managing this source checkout.
