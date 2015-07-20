@@ -128,14 +128,20 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_STYLESHEET:
     context = RequestContext::Style;
     break;
-  case nsIContentPolicy::TYPE_OBJECT:
+  case nsIContentPolicy::TYPE_INTERNAL_OBJECT:
     context = RequestContext::Object;
+    break;
+  case nsIContentPolicy::TYPE_INTERNAL_EMBED:
+    context = RequestContext::Embed;
     break;
   case nsIContentPolicy::TYPE_DOCUMENT:
     context = RequestContext::Internal;
     break;
-  case nsIContentPolicy::TYPE_SUBDOCUMENT:
+  case nsIContentPolicy::TYPE_INTERNAL_IFRAME:
     context = RequestContext::Iframe;
+    break;
+  case nsIContentPolicy::TYPE_INTERNAL_FRAME:
+    context = RequestContext::Frame;
     break;
   case nsIContentPolicy::TYPE_REFRESH:
     context = RequestContext::Internal;

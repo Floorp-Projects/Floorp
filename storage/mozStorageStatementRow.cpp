@@ -44,7 +44,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
                           JSContext *aCtx,
                           JSObject *aScopeObj,
                           jsid aId,
-                          jsval *_vp,
+                          JS::Value *_vp,
                           bool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);

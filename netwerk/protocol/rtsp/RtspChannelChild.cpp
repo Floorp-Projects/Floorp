@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsContentSecurityManager.h"
 #include "RtspChannelChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -133,6 +134,15 @@ RtspChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     new CallListenerOnStartRequestEvent(mListener, this, mListenerContext));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+RtspChannelChild::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 //-----------------------------------------------------------------------------

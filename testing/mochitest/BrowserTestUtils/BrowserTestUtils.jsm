@@ -189,6 +189,21 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Waits for the next browser window to open and be fully loaded.
+   *
+   * @return {Promise}
+   *         A Promise which resolves the next time that a DOM window
+   *         opens and the delayed startup observer notification fires.
+   */
+  waitForNewWindow: Task.async(function* (delayedStartup=true) {
+    let win = yield this.domWindowOpened();
+
+    yield TestUtils.topicObserved("browser-delayed-startup-finished",
+                                   subject => subject == win);
+    return win;
+  }),
+
+  /**
    * Loads a new URI in the given browser and waits until we really started
    * loading. In e10s browser.loadURI() can be an asynchronous operation due
    * to having to switch the browser's remoteness and keep its shistory data.

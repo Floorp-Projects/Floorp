@@ -229,7 +229,7 @@ struct RequiredStringArg {
 };
 
 static bool
-StartProfiling(JSContext* cx, unsigned argc, jsval* vp)
+StartProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -256,7 +256,7 @@ StartProfiling(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-StopProfiling(JSContext* cx, unsigned argc, jsval* vp)
+StopProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -272,7 +272,7 @@ StopProfiling(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-PauseProfilers(JSContext* cx, unsigned argc, jsval* vp)
+PauseProfilers(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -288,7 +288,7 @@ PauseProfilers(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-ResumeProfilers(JSContext* cx, unsigned argc, jsval* vp)
+ResumeProfilers(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -305,7 +305,7 @@ ResumeProfilers(JSContext* cx, unsigned argc, jsval* vp)
 
 /* Usage: DumpProfile([filename[, profileName]]) */
 static bool
-DumpProfile(JSContext* cx, unsigned argc, jsval* vp)
+DumpProfile(JSContext* cx, unsigned argc, Value* vp)
 {
     bool ret;
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -332,7 +332,7 @@ DumpProfile(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-GetMaxGCPauseSinceClear(JSContext* cx, unsigned argc, jsval* vp)
+GetMaxGCPauseSinceClear(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.getMaxGCPauseSinceClear()));
@@ -340,7 +340,7 @@ GetMaxGCPauseSinceClear(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, jsval* vp)
+ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator()));
@@ -350,7 +350,7 @@ ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, jsval* vp)
 #if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
 
 static bool
-IgnoreAndReturnTrue(JSContext* cx, unsigned argc, jsval* vp)
+IgnoreAndReturnTrue(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(true);
@@ -361,7 +361,7 @@ IgnoreAndReturnTrue(JSContext* cx, unsigned argc, jsval* vp)
 
 #ifdef MOZ_CALLGRIND
 static bool
-StartCallgrind(JSContext* cx, unsigned argc, jsval* vp)
+StartCallgrind(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(js_StartCallgrind());
@@ -369,7 +369,7 @@ StartCallgrind(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-StopCallgrind(JSContext* cx, unsigned argc, jsval* vp)
+StopCallgrind(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(js_StopCallgrind());
@@ -377,7 +377,7 @@ StopCallgrind(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-DumpCallgrind(JSContext* cx, unsigned argc, jsval* vp)
+DumpCallgrind(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {

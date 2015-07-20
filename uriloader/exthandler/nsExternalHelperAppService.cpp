@@ -21,7 +21,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIChannel.h"
-#include "nsIRedirectHistory.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
@@ -1986,14 +1985,20 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
     mSaver = nullptr;
 
     // Save the redirect information.
-    nsCOMPtr<nsIRedirectHistory> history = do_QueryInterface(mRequest);
-    if (history) {
-      (void)history->GetRedirects(getter_AddRefs(mRedirects));
-      uint32_t length = 0;
-      mRedirects->GetLength(&length);
-      LOG(("nsExternalAppHandler: Got %u redirects\n", length));
-    } else {
-      LOG(("nsExternalAppHandler: No redirects\n"));
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
+    if (channel) {
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+      if (loadInfo) {
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIMutableArray> redirectChain =
+          do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        LOG(("nsExternalAppHandler: Got %u redirects\n", loadInfo->RedirectChain().Length()));
+        for (nsIPrincipal* principal : loadInfo->RedirectChain()) {
+          redirectChain->AppendElement(principal, false);
+        }
+        mRedirects = redirectChain;
+      }
     }
 
     if (NS_FAILED(aStatus)) {
@@ -2006,7 +2011,6 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
       // for us, we'll fall back to using the prompt service if we absolutely
       // have to.
       if (!mTransfer) {
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
         // We don't care if this fails.
         CreateFailedTransfer(channel && NS_UsePrivateBrowsing(channel));
       }

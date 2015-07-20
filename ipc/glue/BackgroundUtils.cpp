@@ -16,6 +16,7 @@
 #include "nsNullPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace net {
@@ -244,6 +245,12 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
   rv = PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
                                 &triggeringPrincipalInfo);
 
+  nsTArray<PrincipalInfo> redirectChain;
+  for (const nsCOMPtr<nsIPrincipal>& principal : aLoadInfo->RedirectChain()) {
+    rv = PrincipalToPrincipalInfo(principal, redirectChain.AppendElement());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   *aOptionalLoadInfoArgs =
     LoadInfoArgs(
       requestingPrincipalInfo,
@@ -253,7 +260,10 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetUpgradeInsecureRequests(),
       aLoadInfo->GetInnerWindowID(),
       aLoadInfo->GetOuterWindowID(),
-      aLoadInfo->GetParentOuterWindowID());
+      aLoadInfo->GetParentOuterWindowID(),
+      aLoadInfo->GetEnforceSecurity(),
+      aLoadInfo->GetInitialSecurityCheckDone(),
+      redirectChain);
 
   return NS_OK;
 }
@@ -278,6 +288,14 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     PrincipalInfoToPrincipal(loadInfoArgs.triggeringPrincipalInfo(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsTArray<nsCOMPtr<nsIPrincipal>> redirectChain;
+  for (const PrincipalInfo& principalInfo : loadInfoArgs.redirectChain()) {
+    nsCOMPtr<nsIPrincipal> redirectedPrincipal =
+      PrincipalInfoToPrincipal(principalInfo, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    redirectChain.AppendElement(redirectedPrincipal.forget());
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(requestingPrincipal,
                           triggeringPrincipal,
@@ -286,7 +304,10 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.upgradeInsecureRequests(),
                           loadInfoArgs.innerWindowID(),
                           loadInfoArgs.outerWindowID(),
-                          loadInfoArgs.parentOuterWindowID());
+                          loadInfoArgs.parentOuterWindowID(),
+                          loadInfoArgs.enforceSecurity(),
+                          loadInfoArgs.initialSecurityCheckDone(),
+                          redirectChain);
 
    loadInfo.forget(outLoadInfo);
    return NS_OK;

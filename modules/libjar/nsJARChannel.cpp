@@ -15,6 +15,7 @@
 #include "nsIViewSourceChannel.h"
 #include "nsContentUtils.h"
 #include "nsProxyRelease.h"
+#include "nsContentSecurityManager.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -861,6 +862,15 @@ nsJARChannel::Open(nsIInputStream **stream)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJARChannel::Open2(nsIInputStream** aStream)
+{
+    nsCOMPtr<nsIStreamListener> listener;
+    nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return Open(aStream);
+}
+
 bool
 nsJARChannel::ShouldIntercept()
 {
@@ -977,6 +987,20 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     return ContinueAsyncOpen();
 }
 
+NS_IMETHODIMP
+nsJARChannel::AsyncOpen2(nsIStreamListener *aListener)
+{
+  if (!mLoadInfo) {
+    MOZ_ASSERT(mLoadInfo, "can not enforce security without loadInfo");
+    return NS_ERROR_UNEXPECTED;
+  }
+  // setting the flag on the loadInfo indicates that the underlying
+  // channel will be openend using AsyncOpen2() and hence performs
+  // the necessary security checks.
+  mLoadInfo->SetEnforceSecurity(true);
+  return AsyncOpen(aListener, nullptr);
+}
+
 nsresult
 nsJARChannel::ContinueAsyncOpen()
 {
@@ -995,8 +1019,6 @@ nsJARChannel::ContinueAsyncOpen()
         // Not a local file...
         // kick off an async download of the base URI...
         nsCOMPtr<nsIStreamListener> downloader = new MemoryDownloader(this);
-        // Since we might not have a loadinfo on all channels yet
-        // we have to provide default arguments in case mLoadInfo is null;
         uint32_t loadFlags =
             mLoadFlags & ~(LOAD_DOCUMENT_URI | LOAD_CALL_CONTENT_SNIFFERS);
         rv = NS_NewChannelInternal(getter_AddRefs(channel),
@@ -1011,7 +1033,12 @@ nsJARChannel::ContinueAsyncOpen()
             mListener = nullptr;
             return rv;
         }
-        rv = channel->AsyncOpen(downloader, nullptr);
+        if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
+            rv = channel->AsyncOpen2(downloader);
+        }
+        else {
+            rv = channel->AsyncOpen(downloader, nullptr);
+        }
     } else if (mOpeningRemote) {
         // nothing to do: already asked parent to open file.
     } else {

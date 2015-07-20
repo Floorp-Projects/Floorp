@@ -46,7 +46,8 @@ this.SelectContentHelper.prototype = {
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       rect: rect,
       options: this._buildOptionList(),
-      selectedIndex: this.element.selectedIndex
+      selectedIndex: this.element.selectedIndex,
+      direction: getComputedDirection(this.element)
     });
   },
 
@@ -87,9 +88,12 @@ this.SelectContentHelper.prototype = {
 
 }
 
+function getComputedDirection(element) {
+  return element.ownerDocument.defaultView.getComputedStyle(element).getPropertyValue("direction");
+}
+
 function buildOptionListForChildren(node) {
   let result = [];
-  let win = node.ownerDocument.defaultView;
 
   for (let child of node.children) {
     let tagName = child.tagName.toUpperCase();
@@ -111,7 +115,8 @@ function buildOptionListForChildren(node) {
         disabled: child.disabled,
         // We need to do this for every option element as each one can have
         // an individual style set for direction
-        textDirection: win.getComputedStyle(child).getPropertyValue("direction"),
+        textDirection: getComputedDirection(child),
+        tooltip: child.title,
         // XXX this uses a highlight color when this is the selected element.
         // We need to suppress such highlighting in the content process to get
         // the option's correct unhighlighted color here.

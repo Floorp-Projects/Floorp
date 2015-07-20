@@ -784,6 +784,15 @@ setReq.onerror = function() {
         for test in tests:
             self.add_test(test)
 
+        # ensure we have only tests files with names starting with 'test_'
+        invalid_tests = \
+            [t['filepath'] for t in self.tests
+             if not os.path.basename(t['filepath']).startswith('test_')]
+        if invalid_tests:
+            raise Exception("Tests file names must starts with 'test_'."
+                            " Invalid test names:\n  %s"
+                            % '\n  '.join(invalid_tests))
+
         version_info = mozversion.get_version(binary=self.bin,
                                               sources=self.sources,
                                               dm_type=os.environ.get('DM_TRANS', 'adb'),
@@ -808,14 +817,32 @@ setReq.onerror = function() {
                                  message=test['disabled'])
             self.todo += 1
 
-        counter = self.repeat
-        while counter >=0:
-            round = self.repeat - counter
-            if round > 0:
-                self.logger.info('\nREPEAT %d\n-------' % round)
-            self.run_test_sets()
-            counter -= 1
+        interrupted = None
+        try:
+            counter = self.repeat
+            while counter >=0:
+                round = self.repeat - counter
+                if round > 0:
+                    self.logger.info('\nREPEAT %d\n-------' % round)
+                self.run_test_sets()
+                counter -= 1
+        except KeyboardInterrupt:
+            # in case of KeyboardInterrupt during the test execution
+            # we want to display current test results.
+            # so we keep the exception to raise it later.
+            interrupted = sys.exc_info()
+        try:
+            self._print_summary(tests)
+        except:
+            # raise only the exception if we were not interrupted
+            if not interrupted:
+                raise
+        finally:
+            # reraise previous interruption now
+            if interrupted:
+                raise interrupted[0], interrupted[1], interrupted[2]
 
+    def _print_summary(self, tests):
         self.logger.info('\nSUMMARY\n-------')
         self.logger.info('passed: %d' % self.passed)
         if self.unexpected_successes == 0:

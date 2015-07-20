@@ -717,7 +717,7 @@ CHECKSUM_FILE = '$(DIST)/$(PKG_PATH)/$(CHECKSUMS_FILE_BASENAME).checksums'
 CHECKSUM_FILES = $(CHECKSUM_FILE)
 
 # Upload MAR tools only if AB_CD is unset or en_US
-ifeq (,$(AB_CD:en_US=))
+ifeq (,$(AB_CD:en-US=))
 ifeq (WINNT,$(OS_TARGET))
 UPLOAD_EXTRA_FILES += host/bin/mar.exe
 UPLOAD_EXTRA_FILES += host/bin/mbsdiff.exe

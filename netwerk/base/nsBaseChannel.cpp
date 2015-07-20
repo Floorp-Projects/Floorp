@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsBaseChannel.h"
+#include "nsContentUtils.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
 #include "nsMimeTypes.h"
 #include "nsIContentSniffer.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpEventSink.h"
 #include "nsIHttpChannel.h"
@@ -18,6 +20,7 @@
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsProxyRelease.h"
 #include "nsXULAppAPI.h"
+#include "nsContentSecurityManager.h"
 
 static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
@@ -151,9 +154,23 @@ nsBaseChannel::ContinueRedirect()
   // with the redirect.
 
   if (mOpenRedirectChannel) {
-    nsresult rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
-    if (NS_FAILED(rv))
-      return rv;
+    nsresult rv = NS_OK;
+    if (mLoadInfo && mLoadInfo->GetEnforceSecurity()) {
+      MOZ_ASSERT(!mListenerContext, "mListenerContext should be null!");
+      rv = mRedirectChannel->AsyncOpen2(mListener);
+    }
+    else {
+      rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Append the initial uri of the channel to the redirectChain
+    // after the channel got openend successfully.
+    if (mLoadInfo) {
+      nsCOMPtr<nsIPrincipal> uriPrincipal;
+      nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
+      sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
+      mLoadInfo->AppendRedirectedPrincipal(uriPrincipal);
+    }
   }
 
   mRedirectChannel = nullptr;
@@ -598,6 +615,15 @@ nsBaseChannel::Open(nsIInputStream **result)
 }
 
 NS_IMETHODIMP
+nsBaseChannel::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
+}
+
+NS_IMETHODIMP
 nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
@@ -642,6 +668,15 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   ClassifyURI();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 //-----------------------------------------------------------------------------

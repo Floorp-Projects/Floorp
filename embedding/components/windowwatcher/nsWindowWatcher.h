@@ -96,6 +96,7 @@ protected:
                                        bool aDialog,
                                        bool aChromeURL,
                                        bool aHasChromeParent,
+                                       bool aCalledFromJS,
                                        bool aOpenedFromRemoteTab);
   static int32_t WinHasOption(const char* aOptions, const char* aName,
                               int32_t aDefault, bool* aPresenceFlag);
