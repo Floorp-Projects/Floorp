@@ -5,7 +5,7 @@ MOZ_AUTOMATION_L10N_CHECK=0
 ac_add_options --enable-debug
 ac_add_options --enable-dmd
 ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
-ac_add_options --enable-signmar
+ac_add_options --enable-verify-mar
 ac_add_options --enable-require-all-d3dc-versions
 
 if [ -f /c/builds/google-oauth-api.key ]; then

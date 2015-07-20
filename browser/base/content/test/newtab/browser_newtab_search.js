@@ -76,13 +76,6 @@ let runTaskifiedTests = Task.async(function* () {
   info("Adding search event listener");
   getContentWindow().addEventListener(SERVICE_EVENT_NAME, searchEventListener);
 
-  let panel = searchPanel();
-  is(panel.state, "closed", "Search panel should be closed initially");
-
-  // The panel's animation often is not finished when the test clicks on panel
-  // children, which makes the test click the wrong children, so disable it.
-  panel.setAttribute("animate", "false");
-
   // Add the engine without any logos and switch to it.
   let noLogoEngine = yield promiseNewSearchEngine(ENGINE_NO_LOGO);
   Services.search.currentEngine = noLogoEngine;
@@ -113,19 +106,6 @@ let runTaskifiedTests = Task.async(function* () {
   yield promiseSearchEvents(["CurrentEngine"]);
   yield checkCurrentEngine(ENGINE_1X_2X_LOGO);
 
-  // Click the logo to open the search panel.
-  yield Promise.all([
-    promisePanelShown(panel),
-    promiseClick(logoImg()),
-  ]);
-
-  let manageBox = $("manage");
-  ok(!!manageBox, "The Manage Engines box should be present in the document");
-  is(panel.childNodes.length, 1, "Search panel should only contain the Manage Engines entry");
-  is(panel.childNodes[0], manageBox, "Search panel should contain the Manage Engines entry");
-
-  panel.hidePopup();
-
   // Add the engine that provides search suggestions and switch to it.
   let suggestionEngine = yield promiseNewSearchEngine(ENGINE_SUGGESTIONS);
   Services.search.currentEngine = suggestionEngine;
@@ -133,7 +113,7 @@ let runTaskifiedTests = Task.async(function* () {
   yield checkCurrentEngine(ENGINE_SUGGESTIONS);
 
   // Avoid intermittent failures.
-  gSearch()._suggestionController.remoteTimeout = 5000;
+  gSearch().remoteTimeout = 5000;
 
   // Type an X in the search input.  This is only a smoke test.  See
   // browser_searchSuggestionUI.js for comprehensive content search suggestion
@@ -309,20 +289,9 @@ let checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, lo
      " basename=" + basename);
 
   // gSearch.currentEngineName
-  is(gSearch().currentEngineName, engine.name,
+  is(gSearch().defaultEngine.name, engine.name,
      "currentEngineName: " + engine.name);
 });
-
-function promisePanelShown(panel) {
-  let deferred = Promise.defer();
-  info("Waiting for popupshown");
-  panel.addEventListener("popupshown", function onEvent() {
-    panel.removeEventListener("popupshown", onEvent);
-    is(panel.state, "open", "Panel state");
-    deferred.resolve();
-  });
-  return deferred.promise;
-}
 
 function promiseClick(node) {
   let deferred = Promise.defer();
@@ -334,16 +303,12 @@ function promiseClick(node) {
   return deferred.promise;
 }
 
-function searchPanel() {
-  return $("panel");
-}
-
 function logoImg() {
   return $("logo");
 }
 
 function gSearch() {
-  return getContentWindow().gSearch;
+  return getContentWindow().gSearch._contentSearchController;
 }
 
 /**
