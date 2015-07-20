@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'TestIntervalSet.cpp',
     'TestMozPromise.cpp',
     'TestMP3Demuxer.cpp',
+    'TestMP4Demuxer.cpp',
     # 'TestMP4Reader.cpp', disabled so we can turn check tests back on (bug 1175752)
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
