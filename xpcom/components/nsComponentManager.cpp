@@ -1248,7 +1248,7 @@ nsComponentManagerImpl::FreeServices()
   }
 
   for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    nsFactoryEntry* entry = iter.GetUserData();
+    nsFactoryEntry* entry = iter.UserData();
     entry->mFactory = nullptr;
     entry->mServiceObject = nullptr;
   }
@@ -1764,7 +1764,7 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsCOMArray<nsISupports> array;
   for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    const nsID& id = iter.GetKey();
+    const nsID& id = iter.Key();
     nsCOMPtr<nsISupportsID> wrapper = new nsSupportsIDImpl();
     wrapper->SetData(&id);
     array.AppendObject(wrapper);
@@ -1777,7 +1777,7 @@ nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator** aEnumerator)
 {
   nsTArray<nsCString>* array = new nsTArray<nsCString>;
   for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& contract = iter.GetKey();
+    const nsACString& contract = iter.Key();
     array->AppendElement(contract);
   }
 

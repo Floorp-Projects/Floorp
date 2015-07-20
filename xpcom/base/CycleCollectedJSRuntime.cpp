@@ -466,8 +466,8 @@ void
 CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
 {
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
-    void* holder = iter.GetKey();
-    nsScriptObjectTracer*& tracer = iter.GetData();
+    void* holder = iter.Key();
+    nsScriptObjectTracer*& tracer = iter.Data();
     tracer->CanSkip(holder, true);
   }
 }
@@ -648,8 +648,8 @@ CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& 
   TraverseAdditionalNativeRoots(aCb);
 
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
-    void* holder = iter.GetKey();
-    nsScriptObjectTracer*& tracer = iter.GetData();
+    void* holder = iter.Key();
+    nsScriptObjectTracer*& tracer = iter.Data();
 
     bool noteRoot = false;
     if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
@@ -802,8 +802,8 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
   TraceAdditionalNativeGrayRoots(aTracer);
 
   for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
-    void* holder = iter.GetKey();
-    nsScriptObjectTracer*& tracer = iter.GetData();
+    void* holder = iter.Key();
+    nsScriptObjectTracer*& tracer = iter.Data();
     tracer->Trace(holder, JsGcTracer(), aTracer);
   }
 }
@@ -1023,8 +1023,8 @@ IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime
   , mReleasing(false)
 {
   for (auto iter = aFinalizers.Iter(); !iter.Done(); iter.Next()) {
-    DeferredFinalizeFunction& function = iter.GetKey();
-    void*& data = iter.GetData();
+    DeferredFinalizeFunction& function = iter.Key();
+    void*& data = iter.Data();
 
     DeferredFinalizeFunctionHolder* holder =
       mDeferredFinalizeFunctions.AppendElement();

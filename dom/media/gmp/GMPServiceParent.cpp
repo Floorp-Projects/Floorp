@@ -429,16 +429,16 @@ GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::Update(const nsCString
   bool firstPlugin = true;
   for (auto pluginIt = mStates.ConstIter(); !pluginIt.Done(); pluginIt.Next()) {
     if (!firstPlugin) { note += ','; } else { firstPlugin = false; }
-    note += pluginIt.GetKey();
+    note += pluginIt.Key();
     note += ":{";
     bool firstInstance = true;
-    for (auto instanceIt = pluginIt.GetData()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
+    for (auto instanceIt = pluginIt.Data()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
       if (!firstInstance) { note += ','; } else { firstInstance = false; }
-      note += instanceIt.GetKey();
+      note += instanceIt.Key();
       note += ":\"";
-      note += instanceIt.GetData()->mStateSequence;
+      note += instanceIt.Data()->mStateSequence;
       note += '=';
-      note += instanceIt.GetData()->mLastStateDescription;
+      note += instanceIt.Data()->mLastStateDescription;
       note += '"';
     }
     note += '}';

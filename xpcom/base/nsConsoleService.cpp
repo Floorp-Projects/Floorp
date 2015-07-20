@@ -340,7 +340,7 @@ nsConsoleService::CollectCurrentListeners(
 {
   MutexAutoLock lock(mLock);
   for (auto iter = mListeners.Iter(); !iter.Done(); iter.Next()) {
-    nsIConsoleListener* value = iter.GetUserData();
+    nsIConsoleListener* value = iter.UserData();
     aListeners.AppendObject(value);
   }
 }
