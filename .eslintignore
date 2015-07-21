@@ -240,6 +240,7 @@ dom/mathml/**
 dom/media/**
 !dom/media/*.js*
 dom/messagechannel/**
+dom/midi/**
 dom/network/**
 dom/notification/Notification*.*
 dom/notification/test/browser/**
