@@ -12553,7 +12553,7 @@ Database::AllocPBackgroundIDBTransactionParent(
       }
     }
 
-    const uint32_t oldLength = fallibleObjectStores.Length();
+    DebugOnly<const uint32_t> oldLength = fallibleObjectStores.Length();
 
     for (auto iter = objectStores.ConstIter(); !iter.Done(); iter.Next()) {
       auto value = iter.Data();
