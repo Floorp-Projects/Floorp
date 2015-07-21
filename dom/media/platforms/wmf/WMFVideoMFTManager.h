@@ -8,6 +8,7 @@
 #define WMFVideoMFTManager_h_
 
 #include "WMF.h"
+#include "MP4Reader.h"
 #include "MFTDecoder.h"
 #include "nsRect.h"
 #include "WMFMediaDataDecoder.h"

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP4Decoder.h"
+#include "MP4Reader.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MP4Demuxer.h"
@@ -41,7 +42,11 @@ MP4Decoder::MP4Decoder()
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  MediaDecoderReader* reader = new MediaFormatReader(this, new MP4Demuxer(GetResource()));
+  bool useFormatDecoder =
+    Preferences::GetBool("media.format-reader.mp4", true);
+  nsRefPtr<MediaDecoderReader> reader = useFormatDecoder ?
+    static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new MP4Demuxer(GetResource()))) :
+    static_cast<MediaDecoderReader*>(new MP4Reader(this));
 
   return new MediaDecoderStateMachine(this, reader);
 }
@@ -53,8 +58,8 @@ MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
   nsresult rv = MediaDecoder::SetCDMProxy(aProxy);
   NS_ENSURE_SUCCESS(rv, rv);
   if (aProxy) {
-    // The MediaFormatReader can't decrypt EME content until it has a CDMProxy,
-    // and the CDMProxy knows the capabilities of the CDM. The MediaFormatReader
+    // The MP4Reader can't decrypt EME content until it has a CDMProxy,
+    // and the CDMProxy knows the capabilities of the CDM. The MP4Reader
     // remains in "waiting for resources" state until then.
     CDMCaps::AutoLock caps(aProxy->Capabilites());
     nsCOMPtr<nsIRunnable> task(
