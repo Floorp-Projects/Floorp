@@ -29,13 +29,21 @@ class DecoderTraits {
 public:
   // Returns the CanPlayStatus indicating if we can handle this
   // MIME type. The MIME type should not include the codecs parameter.
-  // That parameter should be passed in aCodecs, and will only be
+  // That parameter should be passed in aRequestedCodecs, and will only be
   // used if whether a given MIME type being handled depends on the
   // codec that will be used.  If the codecs parameter has not been
   // specified, pass false in aHaveRequestedCodecs.
   static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
                                           bool aHaveRequestedCodecs,
                                           const nsAString& aRequestedCodecs);
+
+  // Returns the CanPlayStatus indicating if we can handle this MIME type and
+  // codecs type natively, excluding any plugins-based reader (such as
+  // GStreamer)
+  // The MIME type should not include the codecs parameter.
+  // That parameter is passed in aRequestedCodecs.
+  static CanPlayStatus CanHandleCodecsType(const char* aMIMEType,
+                                           const nsAString& aRequestedCodecs);
 
   // Returns true if we should handle this MIME type when it appears
   // as an <object> or as a toplevel page. If, in practice, our support
@@ -63,6 +71,7 @@ public:
   static bool DecoderWaitsForOnConnected(const nsACString& aType);
 
   static bool IsWebMType(const nsACString& aType);
+  static bool IsMP4Type(const nsACString& aType);
 };
 
 } // namespace mozilla
