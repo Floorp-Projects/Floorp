@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -42,6 +43,7 @@
 #include "nsIConsoleService.h"
 #include "nsINavHistoryService.h"
 #include "nsToolkitCompsCID.h"
+#include "nsIObserverService.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -589,7 +591,8 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 /* static */ void
 nsPermissionManager::AppClearDataObserverInit()
 {
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
   observerService->AddObserver(new AppClearDataObserver(), "webapps-clear-data", /* holdsWeak= */ false);
 }
 
@@ -651,22 +654,20 @@ nsPermissionManager::GetXPCOMSingleton()
 nsresult
 nsPermissionManager::Init()
 {
-  nsresult rv;
-
   // If the 'permissions.memory_only' pref is set to true, then don't write any
   // permission settings to disk, but keep them in a memory-only database.
   mMemoryOnlyDB = mozilla::Preferences::GetBool("permissions.memory_only", false);
 
-  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    mObserverService->AddObserver(this, "profile-before-change", true);
-    mObserverService->AddObserver(this, "profile-do-change", true);
-    mObserverService->AddObserver(this, "xpcom-shutdown", true);
-  }
-
   if (IsChildProcess()) {
     // Stop here; we don't need the DB in the child process
     return FetchPermissions();
+  }
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, "profile-before-change", true);
+    observerService->AddObserver(this, "profile-do-change", true);
   }
 
   // ignore failure here, since it's non-fatal (we can run fine without
@@ -1772,11 +1773,6 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
-  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
-    mObserverService = nullptr;
-    return NS_OK;
-  }
-
   ENSURE_NOT_CHILD_PROCESS;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
@@ -2060,10 +2056,12 @@ void
 nsPermissionManager::NotifyObservers(nsIPermission   *aPermission,
                                      const char16_t *aData)
 {
-  if (mObserverService)
-    mObserverService->NotifyObservers(aPermission,
-                                      kPermissionChangeNotification,
-                                      aData);
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService)
+    observerService->NotifyObservers(aPermission,
+                                     kPermissionChangeNotification,
+                                     aData);
 }
 
 nsresult
