@@ -2925,6 +2925,13 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   if (!str.IsEmpty()) {
     OnUpdateIMEComposition([aAttrString string]);
 
+    // Set temprary range for Apple Japanese IME with e10s because
+    // SelectedRange may return invalid range until OnSelectionChange is
+    // called from content process.
+    // This value will be updated by OnSelectionChange soon.
+    mSelectedRange.location = aSelectedRange.location + mMarkedRange.location;
+    mSelectedRange.length = aSelectedRange.length;
+
     DispatchCompositionChangeEvent(str, aAttrString, aSelectedRange);
     if (Destroyed()) {
       MOZ_LOG(gLog, LogLevel::Info,
