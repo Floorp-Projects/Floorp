@@ -415,41 +415,21 @@ this.Utils = { // jshint ignore:line
   },
 
   getLandmarkName: function getLandmarkName(aAccessible) {
-    return this.matchRoles(aAccessible, [
+    const landmarks = [
       'banner',
       'complementary',
       'contentinfo',
       'main',
       'navigation',
       'search'
-    ]);
-  },
-
-  getMathRole: function getMathRole(aAccessible) {
-    return this.matchRoles(aAccessible, [
-      'base',
-      'close-fence',
-      'denominator',
-      'numerator',
-      'open-fence',
-      'overscript',
-      'presubscript',
-      'presuperscript',
-      'root-index',
-      'subscript',
-      'superscript',
-      'underscript'
-    ]);
-  },
-
-  matchRoles: function matchRoles(aAccessible, aRoles) {
+    ];
     let roles = this.getAttributes(aAccessible)['xml-roles'];
     if (!roles) {
       return;
     }
 
-    // Looking up a role that would match any in the provided roles.
-    return this.matchAttributeValue(roles, aRoles);
+    // Looking up a role that would match a landmark.
+    return this.matchAttributeValue(roles, landmarks);
   },
 
   getEmbeddedControl: function getEmbeddedControl(aLabel) {
@@ -904,12 +884,8 @@ PivotContext.prototype = {
       if (!aAccessible) {
         return null;
       }
-      if ([
-            Roles.CELL,
-            Roles.COLUMNHEADER,
-            Roles.ROWHEADER,
-            Roles.MATHML_CELL
-          ].indexOf(aAccessible.role) < 0) {
+      if ([Roles.CELL, Roles.COLUMNHEADER, Roles.ROWHEADER].indexOf(
+        aAccessible.role) < 0) {
           return null;
       }
       try {
@@ -974,9 +950,7 @@ PivotContext.prototype = {
         cellInfo.current.columnHeaderCells))];
     }
     cellInfo.rowHeaders = [];
-    if (cellInfo.rowChanged &&
-        (cellInfo.current.role === Roles.CELL ||
-         cellInfo.current.role === Roles.MATHML_CELL)) {
+    if (cellInfo.rowChanged && cellInfo.current.role === Roles.CELL) {
       cellInfo.rowHeaders = [headers for (headers of getHeaders( // jshint ignore:line
         cellInfo.current.rowHeaderCells))];
     }
