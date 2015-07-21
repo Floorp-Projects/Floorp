@@ -185,23 +185,23 @@ BestCapacity(uint32_t aLength, uint32_t* aCapacityOut,
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = (aLength * 4 + (3 - 1)) / 3; // == ceil(aLength * 4 / 3)
-  if (capacity < PL_DHASH_MIN_CAPACITY) {
-    capacity = PL_DHASH_MIN_CAPACITY;
+  if (capacity < PLDHashTable::kMinCapacity) {
+    capacity = PLDHashTable::kMinCapacity;
   }
 
   // Round up capacity to next power-of-two.
   uint32_t log2 = CeilingLog2(capacity);
   capacity = 1u << log2;
-  MOZ_ASSERT(capacity <= PL_DHASH_MAX_CAPACITY);
+  MOZ_ASSERT(capacity <= PLDHashTable::kMaxCapacity);
 
   *aCapacityOut = capacity;
   *aLog2CapacityOut = log2;
 }
 
-static MOZ_ALWAYS_INLINE uint32_t
-HashShift(uint32_t aEntrySize, uint32_t aLength)
+/* static */ MOZ_ALWAYS_INLINE uint32_t
+PLDHashTable::HashShift(uint32_t aEntrySize, uint32_t aLength)
 {
-  if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
+  if (aLength > kMaxInitialLength) {
     MOZ_CRASH("Initial length is too large");
   }
 
@@ -214,7 +214,7 @@ HashShift(uint32_t aEntrySize, uint32_t aLength)
   }
 
   // Compute the hashShift value.
-  return PL_DHASH_BITS - log2;
+  return kHashBits - log2;
 }
 
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -347,7 +347,7 @@ PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 void
 PLDHashTable::Clear()
 {
-  ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH);
+  ClearAndPrepareForLength(kDefaultInitialLength);
 }
 
 // If |IsAdd| is true, the return value is always non-null and it may be a
@@ -380,7 +380,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
   }
 
   /* Collision: double hash. */
-  int sizeLog2 = PL_DHASH_BITS - mHashShift;
+  int sizeLog2 = kHashBits - mHashShift;
   PLDHashNumber hash2 = HASH2(aKeyHash, sizeLog2, mHashShift);
   uint32_t sizeMask = (1u << sizeLog2) - 1;
 
@@ -447,7 +447,7 @@ PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
   }
 
   /* Collision: double hash. */
-  int sizeLog2 = PL_DHASH_BITS - mHashShift;
+  int sizeLog2 = kHashBits - mHashShift;
   PLDHashNumber hash2 = HASH2(aKeyHash, sizeLog2, mHashShift);
   uint32_t sizeMask = (1u << sizeLog2) - 1;
 
@@ -475,10 +475,10 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   MOZ_ASSERT(mEntryStore);
 
   /* Look, but don't touch, until we succeed in getting new entry store. */
-  int32_t oldLog2 = PL_DHASH_BITS - mHashShift;
+  int32_t oldLog2 = kHashBits - mHashShift;
   int32_t newLog2 = oldLog2 + aDeltaLog2;
   uint32_t newCapacity = 1u << newLog2;
-  if (newCapacity > PL_DHASH_MAX_CAPACITY) {
+  if (newCapacity > kMaxCapacity) {
     return false;
   }
 
@@ -493,7 +493,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   }
 
   /* We can't fail from here on, so update table parameters. */
-  mHashShift = PL_DHASH_BITS - newLog2;
+  mHashShift = kHashBits - newLog2;
   mRemovedCount = 0;
   mGeneration++;
 
@@ -529,7 +529,7 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
   MOZ_ASSERT(mEntryStore);
 
   PLDHashNumber keyHash = mOps->hashKey(this, aKey);
-  keyHash *= PL_DHASH_GOLDEN_RATIO;
+  keyHash *= kGoldenRatio;
 
   /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
   ENSURE_LIVE_KEYHASH(keyHash);
@@ -657,7 +657,7 @@ PLDHashTable::Remove(const void* aKey)
 
     /* Shrink if alpha is <= .25 and the table isn't too small already. */
     uint32_t capacity = Capacity();
-    if (capacity > PL_DHASH_MIN_CAPACITY &&
+    if (capacity > kMinCapacity &&
         mEntryCount <= MinLoad(capacity)) {
       (void) ChangeTable(-1);
     }
@@ -727,11 +727,11 @@ PLDHashTable::ShrinkIfAppropriate()
 {
   uint32_t capacity = Capacity();
   if (mRemovedCount >= capacity >> 2 ||
-      (capacity > PL_DHASH_MIN_CAPACITY && mEntryCount <= MinLoad(capacity))) {
+      (capacity > kMinCapacity && mEntryCount <= MinLoad(capacity))) {
     uint32_t log2;
     BestCapacity(mEntryCount, &capacity, &log2);
 
-    int32_t deltaLog2 = log2 - (PL_DHASH_BITS - mHashShift);
+    int32_t deltaLog2 = log2 - (kHashBits - mHashShift);
     MOZ_ASSERT(deltaLog2 <= 0);
 
     (void) ChangeTable(deltaLog2);
