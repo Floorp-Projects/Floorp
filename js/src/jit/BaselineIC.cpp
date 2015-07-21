@@ -5642,7 +5642,7 @@ ICInNativeCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(ICStubReg, ICIn_NativePrototype::offsetOfHolderShape()),
                      scratch);
         masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failurePopR0Scratch);
-        masm.addPtr(Imm32(sizeof(size_t)), StackPointer);
+        masm.addToStackPtr(Imm32(sizeof(size_t)));
     }
 
     masm.moveValue(BooleanValue(true), R0);

@@ -2695,7 +2695,7 @@ MacroAssembler::Push(JSValueType type, Register reg)
 void
 MacroAssembler::PushValue(const Address& addr)
 {
-    MOZ_ASSERT(addr.base != StackPointer);
+    MOZ_ASSERT(addr.base != getStackPointer());
     pushValue(addr);
     framePushed_ += sizeof(Value);
 }
