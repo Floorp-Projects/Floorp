@@ -192,18 +192,14 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId)
         case 0x01:
         {
           nsCOMPtr<nsIRunnable> r1(new AddPortRunnable(mStateTestInputPort));
-          nsCOMPtr<nsIRunnable> r2(new AddPortRunnable(mStateTestOutputPort));
           mBackgroundThread->Dispatch(r1, NS_DISPATCH_NORMAL);
-          mBackgroundThread->Dispatch(r2, NS_DISPATCH_NORMAL);
           break;
         }
         // Cause control test ports to disconnect
         case 0x02:
         {
           nsCOMPtr<nsIRunnable> r1(new RemovePortRunnable(mStateTestInputPort));
-          nsCOMPtr<nsIRunnable> r2(new RemovePortRunnable(mStateTestOutputPort));
           mBackgroundThread->Dispatch(r1, NS_DISPATCH_NORMAL);
-          mBackgroundThread->Dispatch(r2, NS_DISPATCH_NORMAL);
           break;
         }
         // Test for packet timing
@@ -224,7 +220,7 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId)
             // we're sorting correctly.
             newMsgs.AppendElement(
               MIDIMessage(msg, currentTime -
-                          TimeDuration::FromMilliseconds(i)));
+                          TimeDuration::FromMilliseconds(i * 2)));
           }
           nsCOMPtr<nsIRunnable> r(new QueueMessagesRunnable(aPortId, newMsgs));
           mBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);

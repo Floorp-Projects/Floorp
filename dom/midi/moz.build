@@ -60,6 +60,4 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
-# TEST_DIRS += [
-#     'test',
-# ]
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
