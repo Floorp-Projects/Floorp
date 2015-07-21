@@ -1574,6 +1574,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
   -moz-image-region: rect(0, 16px, 11px, 0);
   padding: 0 3px;
+  width: 22px;
+  height: 11px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+    list-style-image: url("chrome://browser/skin/actionicon-tab@2x.png");
+    -moz-image-region: rect(0, 32px, 22px, 0);
+  }
 }
 
 @media not all and (-moz-os-version: windows-vista),
@@ -1582,6 +1591,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
          not all and (-moz-windows-default-theme) {
     richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
       -moz-image-region: rect(11px, 16px, 22px, 0);
+    }
+
+    @media (min-resolution: 1.1dppx) {
+      richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
+        -moz-image-region: rect(22px, 32px, 44px, 0);
+      }
     }
 
     .ac-comment[selected="true"],
