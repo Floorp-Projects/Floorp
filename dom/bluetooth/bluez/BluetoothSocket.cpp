@@ -9,6 +9,7 @@
 #include "BluetoothSocketObserver.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
@@ -146,12 +147,16 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
 {
   MOZ_ASSERT(mConsumer);
   MOZ_ASSERT(mConnector);
+
+  MOZ_COUNT_CTOR_INHERITED(BluetoothSocketIO, DataSocketIO);
 }
 
 BluetoothSocket::BluetoothSocketIO::~BluetoothSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
   MOZ_ASSERT(IsShutdownOnConsumerThread());
+
+  MOZ_COUNT_DTOR_INHERITED(BluetoothSocketIO, DataSocketIO);
 }
 
 void
@@ -562,11 +567,15 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   , mIO(nullptr)
 {
   MOZ_ASSERT(aObserver);
+
+  MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 BluetoothSocket::~BluetoothSocket()
 {
   MOZ_ASSERT(!mIO);
+
+  MOZ_COUNT_DTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 nsresult

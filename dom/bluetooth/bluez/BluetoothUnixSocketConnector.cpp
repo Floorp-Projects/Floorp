@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 using namespace mozilla::ipc;
@@ -52,10 +53,14 @@ BluetoothUnixSocketConnector::BluetoothUnixSocketConnector(
   , mChannel(aChannel)
   , mAuth(aAuth)
   , mEncrypt(aEncrypt)
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(BluetoothUnixSocketConnector, UnixSocketConnector);
+}
 
 BluetoothUnixSocketConnector::~BluetoothUnixSocketConnector()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(BluetoothUnixSocketConnector, UnixSocketConnector);
+}
 
 nsresult
 BluetoothUnixSocketConnector::CreateSocket(int& aFd) const
