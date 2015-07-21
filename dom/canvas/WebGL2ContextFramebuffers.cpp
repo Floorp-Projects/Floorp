@@ -333,13 +333,13 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
 void
 WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("framebufferTextureLayer: Not Implemented.");
 }
 
 void
 WebGL2Context::GetInternalformatParameter(JSContext*, GLenum target, GLenum internalformat, GLenum pname, JS::MutableHandleValue retval)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("getInternalformatParameter: Not Implemented.");
 }
 
 // Map attachments intended for the default buffer, to attachments for a non-
