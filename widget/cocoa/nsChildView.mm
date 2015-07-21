@@ -1635,7 +1635,7 @@ nsChildView::NotifyIMEInternal(const IMENotification& aIMENotification)
       return NS_OK;
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-      mTextInputHandler->OnSelectionChange();
+      mTextInputHandler->OnSelectionChange(aIMENotification);
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
