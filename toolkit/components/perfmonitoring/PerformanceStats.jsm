@@ -683,33 +683,24 @@ function Snapshot({xpcom, childProcesses, probes}) {
  * Communication with other processes
  */
 let Process = {
-  // `true` once communications have been initialized
-  _initialized: false,
-
-  // the message manager
-  _loader: null,
-
   // a counter used to match responses to requests
   _idcounter: 0,
-
+  _loader: null,
   /**
    * If we are in a child process, return `null`.
    * Otherwise, return the global parent process message manager
    * and load the script to connect to children processes.
    */
   get loader() {
-    if (this._initialized) {
-      return this._loader;
-    }
-    this._initialized = true;
-    this._loader = Services.ppmm;
-    if (!this._loader) {
-      // We are in a child process.
+    if (isContent) {
       return null;
     }
-    this._loader.loadProcessScript("resource://gre/modules/PerformanceStats-content.js",
+    if (this._loader) {
+      return this._loader;
+    }
+    Services.ppmm.loadProcessScript("resource://gre/modules/PerformanceStats-content.js",
       true/*including future processes*/);
-    return this._loader;
+    return this._loader = Services.ppmm;
   },
 
   /**
@@ -751,21 +742,12 @@ let Process = {
     let collected = [];
     let deferred = PromiseUtils.defer();
 
-    // The content script may be loaded more than once (bug 1184115).
-    // To avoid double-responses, we keep track of who has already responded.
-    // Note that we could it on the other end, at the expense of implementing
-    // an additional .jsm just for that purpose.
-    let responders = new Set();
     let observer = function({data, target}) {
       if (data.id != id) {
         // Collision between two collections,
         // ignore the other one.
         return;
       }
-      if (responders.has(target)) {
-        return;
-      }
-      responders.add(target);
       if (data.data) {
         collected.push(data.data)
       }

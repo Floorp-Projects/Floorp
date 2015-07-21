@@ -23,8 +23,7 @@ add_task(function* test_mozLoop_getSelectedTabMetadata() {
   Assert.strictEqual(metadata.title, "", "Title should be empty for about:blank");
   Assert.deepEqual(metadata.previews, [], "No previews available for about:blank");
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  yield promiseTabLoadEvent(tab, "about:home");
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
   metadata = yield promiseGetMetadata();
 
   Assert.strictEqual(metadata.url, null, "URL should be empty for about:home");
@@ -34,12 +33,11 @@ add_task(function* test_mozLoop_getSelectedTabMetadata() {
   // elements with chrome:// srcs, which show up as null in metadata.previews.
   Assert.deepEqual(metadata.previews.filter(e => e), [], "No previews available for about:home");
 
-  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function* test_mozLoop_getSelectedTabMetadata_defaultIcon() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  yield promiseTabLoadEvent(tab, "http://example.com/");
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   let metadata = yield promiseGetMetadata();
 
   Assert.strictEqual(metadata.url, "http://example.com/", "URL should match");
@@ -47,5 +45,5 @@ add_task(function* test_mozLoop_getSelectedTabMetadata_defaultIcon() {
   Assert.ok(metadata.title, "Title should be set");
   Assert.deepEqual(metadata.previews, [], "No previews available");
 
-  gBrowser.removeTab(tab);
+  yield BrowserTestUtils.removeTab(tab);
 });

@@ -191,8 +191,6 @@ public class HomePager extends ViewPager {
                     setCurrentItem(index, true);
                 }
             });
-        } else if (child instanceof HomePagerTabStrip) {
-            mTabStrip = child;
         }
 
         super.addView(child, index, params);

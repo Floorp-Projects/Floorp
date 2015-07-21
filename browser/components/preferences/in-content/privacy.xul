@@ -89,8 +89,8 @@
   <vbox>
     <hbox align="center">
       <checkbox id="privacyDoNotTrackCheckbox"
-                label="&dntTrackingNotOkay.label2;"
-                accesskey="&dntTrackingNotOkay.accesskey;"
+                label="&dntTrackingNotOkay2.label;"
+                accesskey="&dntTrackingNotOkay2.accesskey;"
                 preference="privacy.donottrackheader.enabled"/>
       <label id="doNotTrackInfo"
              class="text-link"
@@ -103,8 +103,8 @@
     <hbox align="center">
       <checkbox id="trackingProtection"
                 preference="privacy.trackingprotection.enabled"
-                accesskey="&trackingProtection.accesskey;"
-                label="&trackingProtection.label;" />
+                accesskey="&trackingProtection2.accesskey;"
+                label="&trackingProtection2.label;" />
       <label id="trackingProtectionLearnMore"
              class="text-link"
              value="&trackingProtectionLearnMore.label;"/>
@@ -114,8 +114,8 @@
     <hbox align="center">
       <checkbox id="trackingProtectionPBM"
                 preference="privacy.trackingprotection.pbmode.enabled"
-                accesskey="&trackingProtectionPBM.accesskey;"
-                label="&trackingProtectionPBM.label;" />
+                accesskey="&trackingProtectionPBM2.accesskey;"
+                label="&trackingProtectionPBM2.label;" />
       <label id="trackingProtectionPBMLearnMore"
              class="text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>

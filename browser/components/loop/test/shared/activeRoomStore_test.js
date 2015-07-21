@@ -566,30 +566,6 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
-  describe("#feedbackComplete", function() {
-    it("should set the room state to READY", function() {
-      store.setStoreState({
-        roomState: ROOM_STATES.ENDED,
-        used: true
-      });
-
-      store.feedbackComplete(new sharedActions.FeedbackComplete());
-
-      expect(store.getStoreState().roomState).eql(ROOM_STATES.READY);
-    });
-
-    it("should reset the 'used' state", function() {
-      store.setStoreState({
-        roomState: ROOM_STATES.ENDED,
-        used: true
-      });
-
-      store.feedbackComplete(new sharedActions.FeedbackComplete());
-
-      expect(store.getStoreState().used).eql(false);
-    });
-  });
-
   describe("#videoDimensionsChanged", function() {
     it("should not contain any video dimensions at the very start", function() {
       expect(store.getStoreState()).eql(store.getInitialStoreState());
