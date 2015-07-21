@@ -39,7 +39,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
     return true;
   }
 
-  uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
+  DebugOnly<uint32_t> consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
   MOZ_ASSERT(consumed == aData.NewTree().Length());
 #ifdef DEBUG
   for (uint32_t i = 0; i < consumed; i++) {
