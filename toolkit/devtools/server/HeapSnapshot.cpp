@@ -19,6 +19,8 @@
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
@@ -550,6 +552,8 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                         const HeapSnapshotBoundaries& boundaries,
                                         ErrorResult& rv)
 {
+  auto start = TimeStamp::Now();
+
   bool wantNames = true;
   ZoneSet zones;
   Maybe<AutoCheckCannotGC> maybeNoGC;
@@ -587,12 +591,15 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                       wantNames,
                       zones.initialized() ? &zones : nullptr,
                       maybeNoGC.ref()))
-    {
-      rv.Throw(zeroCopyStream.failed()
-               ? zeroCopyStream.result()
-               : NS_ERROR_UNEXPECTED);
-      return;
-    }
+  {
+    rv.Throw(zeroCopyStream.failed()
+             ? zeroCopyStream.result()
+             : NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_SAVE_HEAP_SNAPSHOT_MS,
+                                 start);
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
