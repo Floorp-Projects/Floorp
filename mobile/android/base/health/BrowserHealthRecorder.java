@@ -263,12 +263,6 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
      */
     @Override
     public synchronized void onEnvironmentChanged(final boolean startNewSession, final String sessionEndReason) {
-        if (!(state == State.INITIALIZING ||
-              state == State.INITIALIZED)) {
-            Log.w(LOG_TAG, "Not initialized. Ignoring environment change. State is " + state);
-            return;
-        }
-
         final int previousEnv = this.env;
         this.env = -1;
         try {
@@ -301,7 +295,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
     protected synchronized int ensureEnvironment() {
         if (!(state == State.INITIALIZING ||
               state == State.INITIALIZED)) {
-            throw new IllegalStateException("Not initialized. State is " + state);
+            throw new IllegalStateException("Not initialized.");
         }
 
         if (this.env != -1) {
@@ -572,18 +566,10 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
                 try {
                     profileCache.completeInitialization();
 
-                    synchronized (BrowserHealthRecorder.this) {
-                        switch (state) {
-                            case State.INITIALIZING:
-                                initializeStorage();
-                                break;
-                            case State.INITIALIZED:
-                                onEnvironmentChanged();
-                                break;
-                            default:
-                                Log.e(LOG_TAG, "Unexpected state " + state + " when handling late distribution.");
-                                return;
-                        }
+                    if (state == State.INITIALIZING) {
+                        initializeStorage();
+                    } else {
+                        onEnvironmentChanged();
                     }
                 } catch (Exception e) {
                     // Well, we tried.
