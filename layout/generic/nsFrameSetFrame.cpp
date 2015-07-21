@@ -108,7 +108,7 @@ public:
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus) override;
 
-  bool GetVisibility() { return mVisibility || mVisibilityOverride; }
+  bool GetVisibility() { return mVisibility; }
   void SetVisibility(bool aVisibility);
   void SetColor(nscolor aColor);
 
@@ -128,7 +128,6 @@ protected:
   int32_t mWidth;
   bool mVertical;
   bool mVisibility;
-  bool mVisibilityOverride;
   bool mCanResize;
   friend class nsHTMLFramesetFrame;
 };
@@ -1176,7 +1175,6 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   for (verX = 0; verX < mNumCols-1; verX++) {
     if (mVerBorders[verX]) {
       mVerBorders[verX]->mCanResize = true;
-      mVerBorders[verX]->mVisibilityOverride = false;
       SetBorderResize(mVerBorders[verX]);
     }
   }
@@ -1184,7 +1182,6 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   for (horX = 0; horX < mNumRows-1; horX++) {
     if (mHorBorders[horX]) {
       mHorBorders[horX]->mCanResize = true;
-      mHorBorders[horX]->mVisibilityOverride = false;
       SetBorderResize(mHorBorders[horX]);
     }
   }
@@ -1346,7 +1343,6 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      bool    aVisibility)
   : nsLeafFrame(aContext), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
-   mVisibilityOverride = false;
    mCanResize    = true;
    mColor        = NO_COLOR;
    mPrevNeighbor = 0;
@@ -1467,7 +1463,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(DrawTarget* aDrawTarget,
                                        NS_RGB(128, 128, 128))));
 
   ColorPattern color(ToDeviceColor(NS_RGB(255, 255, 255))); // default to white
-  if (mVisibility || mVisibilityOverride) {
+  if (mVisibility) {
     color = (NO_COLOR == mColor) ? bgColor :
                                    ColorPattern(ToDeviceColor(mColor));
   }
@@ -1496,7 +1492,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(DrawTarget* aDrawTarget,
     }
   }
 
-  if (!mVisibility && !mVisibilityOverride)
+  if (!mVisibility)
     return;
 
   if (widthInPixels >= 5) {
