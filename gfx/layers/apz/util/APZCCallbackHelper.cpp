@@ -266,36 +266,6 @@ APZCCallbackHelper::GetOrCreateScrollIdentifiers(nsIContent* aContent,
     return false;
 }
 
-void
-APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
-{
-  // Create a view-id and set a zero-margin displayport for the root element
-  // of the root document in the chrome process. This ensures that the scroll
-  // frame for this element gets an APZC, which in turn ensures that all content
-  // in the chrome processes is covered by an APZC.
-  // The displayport is zero-margin because this element is generally not
-  // actually scrollable (if it is, APZC will set proper margins when it's
-  // scrolled).
-  if (!aPresShell) {
-    return;
-  }
-
-  MOZ_ASSERT(aPresShell->GetDocument());
-  nsIContent* content = aPresShell->GetDocument()->GetDocumentElement();
-  if (!content) {
-    return;
-  }
-
-  uint32_t presShellId;
-  FrameMetrics::ViewID viewId;
-  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
-    // Note that the base rect that goes with these margins is set in
-    // nsRootBoxFrame::BuildDisplayList.
-    nsLayoutUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(), 0,
-        nsLayoutUtils::RepaintMode::DoNotRepaint);
-  }
-}
-
 class FlingSnapEvent : public nsRunnable
 {
     typedef mozilla::layers::FrameMetrics::ViewID ViewID;

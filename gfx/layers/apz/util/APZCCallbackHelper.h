@@ -68,10 +68,6 @@ public:
                                              uint32_t* aPresShellIdOut,
                                              FrameMetrics::ViewID* aViewIdOut);
 
-    /* Initialize a zero-margin displayport on the root document element of the
-       given presShell. */
-    static void InitializeRootDisplayport(nsIPresShell* aPresShell);
-
     /* Tell layout to perform scroll snapping for the scrollable frame with the
      * given scroll id. aDestination specifies the expected landing position of
      * a current fling or scrolling animation that should be used to select
