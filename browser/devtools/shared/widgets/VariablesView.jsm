@@ -550,11 +550,22 @@ VariablesView.prototype = {
    */
   _doSearch: function(aToken) {
     if (this.controller.supportsSearch()) {
-      this.empty();
-      let scope = this.addScope(aToken);
-      scope.expanded = true; // Expand the scope by default.
-      scope.locked = true; // Prevent collapsing the scope.
+      // Retrieve the main Scope in which we add attributes
+      let scope = this._store[0]._store.get("");
+      if (!aToken) {
+        // Prune the view from old previous content
+        // so that we delete the intermediate search results
+        // we created in previous searches
+        for (let property of scope._store.values()) {
+          property.remove();
+        }
+      }
+      // Retrieve new attributes eventually hidden in splits
       this.controller.performSearch(scope, aToken);
+      // Filter already displayed attributes
+      if (aToken) {
+        scope._performSearch(aToken.toLowerCase());
+      }
       return;
     }
     for (let scope of this._store) {
@@ -1288,7 +1299,7 @@ Scope.prototype = {
    */
   addItem: function(aName = "", aDescriptor = {}, aRelaxed = false) {
     if (this._store.has(aName) && !aRelaxed) {
-      return null;
+      return this._store.get(aName);
     }
 
     let child = this._createChild(aName, aDescriptor);
