@@ -7085,6 +7085,13 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took to save a heap snapshot in mozilla::devtools::ChromeUtils::SaveHeapSnapshot."
   },
+  "DEVTOOLS_READ_HEAP_SNAPSHOT_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took to read a heap snapshot in mozilla::devtools::ChromeUtils::ReadHeapSnapshot."
+  },
   "BROWSER_IS_USER_DEFAULT": {
     "expires_in_version": "never",
     "kind": "boolean",
