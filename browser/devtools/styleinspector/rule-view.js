@@ -1161,7 +1161,6 @@ function CssRuleView(inspector, document, aStore, aPageStyle) {
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
 
-  this._editorsExpandedForFilter = [];
   this._outputParser = new OutputParser();
 
   this._onKeypress = this._onKeypress.bind(this);
@@ -1587,7 +1586,7 @@ CssRuleView.prototype = {
       this.searchPropertyValue = this.searchPropertyMatch ?
                                  this.searchPropertyMatch[2] : this.searchValue;
 
-      this._clearHighlights();
+      this._clearHighlight(this.element);
       this._clearRules();
       this._createEditors();
 
@@ -1649,7 +1648,6 @@ CssRuleView.prototype = {
     this._prefObserver.destroy();
 
     this._outputParser = null;
-    this._editorsExpandedForFilter = null;
 
     // Remove context menu
     if (this._contextmenu) {
@@ -2057,19 +2055,8 @@ CssRuleView.prototype = {
 
     // Highlight search matches in the rule properties
     for (let textProp of rule.textProps) {
-      let editor = textProp.editor;
-      let isPropertyHighlighted = this._highlightRuleProperty(editor);
-      let isComputedHighlighted = this._highlightComputedProperty(editor);
-
-      if (isPropertyHighlighted || isComputedHighlighted) {
+      if (this._highlightProperty(textProp.editor)) {
         isHighlighted = true;
-      }
-
-      // Expand the computed list if a computed property is highlighted and the
-      // property rule is not highlighted
-      if (!isPropertyHighlighted && isComputedHighlighted &&
-          !editor.computed.hasAttribute("user-open")) {
-        this._expandComputedListForFilter(editor);
       }
     }
 
@@ -2122,6 +2109,49 @@ CssRuleView.prototype = {
     }
 
     return isStyleSheetHighlighted;
+  },
+
+  /**
+   * Highlights the rule properties and computed properties that match the
+   * filter search value and returns a boolean indicating whether or not the
+   * property or computed property was highlighted.
+   *
+   * @param  {TextPropertyEditor} editor
+   *         The rule property TextPropertyEditor object.
+   * @return {bool} true if the property or computed property was highlighted,
+   *         false otherwise.
+   */
+  _highlightProperty: function(editor) {
+    let isPropertyHighlighted = this._highlightRuleProperty(editor);
+    let isComputedHighlighted = this._highlightComputedProperty(editor);
+
+    // Expand the computed list if a computed property is highlighted and the
+    // property rule is not highlighted
+    if (!isPropertyHighlighted && isComputedHighlighted &&
+        !editor.computed.hasAttribute("user-open")) {
+      editor.expandForFilter();
+    }
+
+    return isPropertyHighlighted || isComputedHighlighted;
+  },
+
+  /**
+   * Called when TextPropertyEditor is updated and updates the rule property
+   * highlight.
+   *
+   * @param  {TextPropertyEditor} editor
+   *         The rule property TextPropertyEditor object.
+   */
+  _updatePropertyHighlight: function(editor) {
+    if (!this.searchValue) {
+      return;
+    }
+
+    this._clearHighlight(editor.element);
+
+    if (this._highlightProperty(editor)) {
+      this.searchField.classList.remove("devtools-style-searchbox-no-match");
+    }
   },
 
   /**
@@ -2183,18 +2213,6 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Expand the rule property's computed list. This is triggered when a computed
-   * property matches the filter search value and no rule property is matched.
-   *
-   * @param  {TextPropertyEditor} editor
-   *         The rule property TextPropertyEditor object.
-   */
-  _expandComputedListForFilter: function(editor) {
-    editor.expandForFilter();
-    this._editorsExpandedForFilter.push(editor);
-  },
-
-  /**
    * Helper function for highlightRules that carries out highlighting the given
    * element if the provided search terms match the property, and returns
    * a boolean indicating whether or not the search terms match.
@@ -2242,16 +2260,15 @@ CssRuleView.prototype = {
    * Clear all search filter highlights in the panel, and close the computed
    * list if toggled opened
    */
-  _clearHighlights: function() {
-    for (let element of this.element.querySelectorAll(".ruleview-highlight")) {
-      element.classList.remove("ruleview-highlight");
+  _clearHighlight: function(element) {
+    for (let el of element.querySelectorAll(".ruleview-highlight")) {
+      el.classList.remove("ruleview-highlight");
     }
 
-    for (let editor of this._editorsExpandedForFilter) {
-      editor.collapseForFilter();
+    for (let computed of element.querySelectorAll(
+          ".ruleview-computedlist[filter-open]")) {
+      computed.parentNode._textPropertyEditor.collapseForFilter();
     }
-
-    this._editorsExpandedForFilter = [];
   },
 
   /**
@@ -2789,6 +2806,7 @@ RuleEditor.prototype = {
  */
 function TextPropertyEditor(aRuleEditor, aProperty) {
   this.ruleEditor = aRuleEditor;
+  this.ruleView = this.ruleEditor.ruleView;
   this.doc = this.ruleEditor.doc;
   this.popup = this.ruleEditor.ruleView.popup;
   this.prop = aProperty;
@@ -2823,6 +2841,7 @@ TextPropertyEditor.prototype = {
   _create: function() {
     this.element = this.doc.createElementNS(HTML_NS, "li");
     this.element.classList.add("ruleview-property");
+    this.element._textPropertyEditor = this;
 
     this.container = createChild(this.element, "div", {
       class: "ruleview-propertycontainer"
@@ -3112,6 +3131,9 @@ TextPropertyEditor.prototype = {
 
     // Populate the computed styles.
     this._updateComputed();
+
+    // Update the rule property highlight.
+    this.ruleView._updatePropertyHighlight(this);
   },
 
   _onStartEditing: function() {
