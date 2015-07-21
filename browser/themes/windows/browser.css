@@ -308,15 +308,22 @@
 }
 
 #nav-bar {
-  border-top: 1px solid @toolbarShadowColor@ !important;
   background-clip: padding-box;
   background-image: linear-gradient(@toolbarHighlight@, transparent);
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
 }
 
-@media not all and (-moz-windows-compositor) {
-  #TabsToolbar[collapsed="true"] + #nav-bar {
-    border-top-style: none !important;
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
+  #nav-bar {
+    border-top: 1px solid @toolbarShadowColor@ !important;
+  }
+  @media not all and (-moz-windows-compositor) {
+    #TabsToolbar[collapsed="true"] + #nav-bar {
+      border-top-style: none !important;
+    }
   }
 }
 
@@ -2022,6 +2029,30 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   .tab-background-end[visuallyselected=true]:-moz-locale-dir(ltr)::after,
   .tab-background-start[visuallyselected=true]:-moz-locale-dir(rtl)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
+  }
+}
+
+/* Remove border between tab strip and navigation toolbar on Windows 10+ */
+@media not all and (-moz-os-version: windows-xp) {
+  @media not all and (-moz-os-version: windows-vista) {
+    @media not all and (-moz-os-version: windows-win7) {
+      @media not all and (-moz-os-version: windows-win8) {
+        .tab-background-end[visuallyselected=true]::after,
+        .tab-background-start[visuallyselected=true]::after {
+          content: none;
+        }
+
+        .tab-background-middle[visuallyselected=true] {
+          /* Setting background-size to "0 0" for the first
+             background-image to remove the stroke. */
+          background-size: 0 0, auto 100%, auto 100%;
+        }
+
+        :root {
+          --tab-toolbar-navbar-overlap: 0;
+        }
+      }
+    }
   }
 }
 
