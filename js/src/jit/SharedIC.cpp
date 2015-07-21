@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/SharedIC.h"
-
 #include "mozilla/SizePrintfMacros.h"
 
 #include "jstypes.h"
 
+#include "jit/BaselineIC.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"

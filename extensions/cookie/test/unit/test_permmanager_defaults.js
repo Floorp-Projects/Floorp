@@ -234,7 +234,7 @@ function findCapabilityViaDB(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let connection = storage.openDatabase(file);
 
   let query = connection.createStatement(
-      "SELECT permission FROM moz_hosts WHERE origin = :origin AND type = :type");
+      "SELECT permission FROM moz_perms WHERE origin = :origin AND type = :type");
   query.bindByName("origin", originStr);
   query.bindByName("type", type);
 
