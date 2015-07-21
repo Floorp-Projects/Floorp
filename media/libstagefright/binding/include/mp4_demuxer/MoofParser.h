@@ -5,16 +5,13 @@
 #ifndef MOOF_PARSER_H_
 #define MOOF_PARSER_H_
 
-#include "mozilla/Monitor.h"
 #include "mp4_demuxer/Atom.h"
 #include "mp4_demuxer/AtomType.h"
+#include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/SinfParser.h"
-#include "mp4_demuxer/Interval.h"
 #include "MediaResource.h"
 
 namespace mp4_demuxer {
-using mozilla::Monitor;
-typedef int64_t Microseconds;
 
 class Stream;
 class Box;

@@ -9,6 +9,7 @@
 
 #include "PlatformDecoderModule.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "MP4Reader.h"
 #include "MP4Decoder.h"
 #include "nsIThread.h"
 #include "ReorderQueue.h"
