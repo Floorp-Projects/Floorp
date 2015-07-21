@@ -289,7 +289,6 @@ pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
 
 #ifdef MOZ_WMF
-pref("media.windows-media-foundation.enabled", true);
 pref("media.wmf.decoder.thread-count", -1);
 #endif
 #ifdef MOZ_DIRECTSHOW
