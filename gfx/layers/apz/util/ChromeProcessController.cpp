@@ -38,7 +38,32 @@ ChromeProcessController::ChromeProcessController(nsIWidget* aWidget,
 void
 ChromeProcessController::InitializeRoot()
 {
-  APZCCallbackHelper::InitializeRootDisplayport(GetPresShell());
+  // Create a view-id and set a zero-margin displayport for the root element
+  // of the root document in the chrome process. This ensures that the scroll
+  // frame for this element gets an APZC, which in turn ensures that all content
+  // in the chrome processes is covered by an APZC.
+  // The displayport is zero-margin because this element is generally not
+  // actually scrollable (if it is, APZC will set proper margins when it's
+  // scrolled).
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return;
+  }
+
+  MOZ_ASSERT(presShell->GetDocument());
+  nsIContent* content = presShell->GetDocument()->GetDocumentElement();
+  if (!content) {
+    return;
+  }
+
+  uint32_t presShellId;
+  FrameMetrics::ViewID viewId;
+  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
+    // Note that the base rect that goes with these margins is set in
+    // nsRootBoxFrame::BuildDisplayList.
+    nsLayoutUtils::SetDisplayPortMargins(content, presShell, ScreenMargin(), 0,
+        nsLayoutUtils::RepaintMode::DoNotRepaint);
+  }
 }
 
 void
