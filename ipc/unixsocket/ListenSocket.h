@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_listensocket_h
-#define mozilla_ipc_listensocket_h
+#ifndef mozilla_ipc_ListenSocket_h
+#define mozilla_ipc_ListenSocket_h
 
-#include "nsString.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "nsString.h"
 
 class MessageLoop;
 
@@ -90,4 +90,4 @@ private:
 } // namespace ipc
 } // namepsace mozilla
 
-#endif // mozilla_ipc_listensocket_h
+#endif // mozilla_ipc_ListenSocket_h

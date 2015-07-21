@@ -9,10 +9,6 @@ const { interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AndroidLog.jsm");
 
-function ok(passed, text) {
-  do_report_result(passed, text, Components.stack.caller, false);
-}
-
 const LOGIN_FIELDS = {
   hostname: "http://example.org/tests/robocop/robocop_blank_01.html",
   formSubmitUrl: "",

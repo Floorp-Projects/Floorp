@@ -502,7 +502,7 @@ protected:
     virtual bool RecvDestroy() override;
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) override;
     virtual bool RecvSetIsDocShellActive(const bool& aIsActive) override;
-    virtual bool RecvNavigateByKey(const bool& aForward, const bool& aForDocumentNavigation) override;
+    virtual bool RecvNavigateDocument(const bool& aForward) override;
 
     virtual bool RecvRequestNotifyAfterRemotePaint() override;
 
