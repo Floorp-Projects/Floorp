@@ -1244,6 +1244,11 @@ CssRuleView.prototype = {
   // Used for cancelling timeouts in the style filter.
   _filterChangedTimeout: null,
 
+  // Get the filter search value.
+  get searchValue() {
+    return this.searchField.value.toLowerCase();
+  },
+
   /**
    * Get an instance of SelectorHighlighter (used to highlight nodes that match
    * selectors in the rule-view). A new instance is only created the first time
@@ -1562,9 +1567,9 @@ CssRuleView.prototype = {
       clearTimeout(this._filterChangedTimeout);
     }
 
-    let filterTimeout = (this.searchField.value.length > 0)
-      ? FILTER_CHANGED_TIMEOUT : 0;
-    this.searchClearButton.hidden = this.searchField.value.length === 0;
+    let filterTimeout = (this.searchValue.length > 0) ?
+                        FILTER_CHANGED_TIMEOUT : 0;
+    this.searchClearButton.hidden = this.searchValue.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {
       if (this.searchField.value.length > 0) {
@@ -1572,6 +1577,15 @@ CssRuleView.prototype = {
       } else {
         this.searchField.removeAttribute("filled");
       }
+
+      // Parse search value as a single property line and extract the property
+      // name and value. Otherwise, use the search value as both the name and
+      // value.
+      this.searchPropertyMatch = FILTER_PROP_RE.exec(this.searchValue);
+      this.searchPropertyName = this.searchPropertyMatch ?
+                                this.searchPropertyMatch[1] : this.searchValue;
+      this.searchPropertyValue = this.searchPropertyMatch ?
+                                 this.searchPropertyMatch[2] : this.searchValue;
 
       this._clearHighlights();
       this._clearRules();
@@ -1959,8 +1973,6 @@ CssRuleView.prototype = {
     let seenNormalElement = false;
     let seenSearchTerm = false;
     let container = null;
-    let searchTerm = this.searchField.value.toLowerCase();
-    let isValidSearchTerm = searchTerm.trim().length > 0;
 
     if (!this._elementStyle.rules) {
       return;
@@ -1977,8 +1989,8 @@ CssRuleView.prototype = {
       }
 
       // Filter the rules and highlight any matches if there is a search input
-      if (isValidSearchTerm) {
-        if (this.highlightRules(rule, searchTerm)) {
+      if (this.searchValue) {
+        if (this.highlightRule(rule)) {
           seenSearchTerm = true;
         } else if (rule.domRule.type !== ELEMENT_STYLE) {
           continue;
@@ -2022,7 +2034,7 @@ CssRuleView.prototype = {
       }
     }
 
-    if (searchTerm && !seenSearchTerm) {
+    if (this.searchValue && !seenSearchTerm) {
       this.searchField.classList.add("devtools-style-searchbox-no-match");
     } else {
       this.searchField.classList.remove("devtools-style-searchbox-no-match");
@@ -2030,96 +2042,34 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Highlight rules that matches the given search value and returns a boolean
-   * indicating whether or not rules were highlighted.
+   * Highlight rules that matches the filter search value and returns a
+   * boolean indicating whether or not rules were highlighted.
    *
-   * @param {Rule} aRule
-   *        The rule object we're highlighting if its rule selectors or property
-   *        values match the search value.
-   * @param {String} aValue
-   *        The search value.
+   * @param  {Rule} rule
+   *         The rule object we're highlighting if its rule selectors or
+   *         property values match the search value.
+   * @return {bool} true if the rule was highlighted, false otherwise.
    */
-  highlightRules: function(aRule, aValue) {
-    let isHighlighted = false;
-
-    let selectorNodes = [...aRule.editor.selectorText.childNodes];
-    if (aRule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
-      selectorNodes = [aRule.editor.selectorText];
-    } else if (aRule.domRule.type === ELEMENT_STYLE) {
-      selectorNodes = [];
-    }
-
-    aValue = aValue.trim();
-
-    // Highlight search matches in the rule selectors
-    for (let selectorNode of selectorNodes) {
-      if (selectorNode.textContent.toLowerCase().includes(aValue)) {
-        selectorNode.classList.add("ruleview-highlight");
-        isHighlighted = true;
-      }
-    }
-
-    // Parse search value as a single property line and extract the property
-    // name and value. Otherwise, use the search value as both the name and
-    // value.
-    let propertyMatch = FILTER_PROP_RE.exec(aValue);
-    let name = propertyMatch ? propertyMatch[1] : aValue;
-    let value = propertyMatch ? propertyMatch[2] : aValue;
+  highlightRule: function(rule) {
+    let isRuleSelectorHighlighted = this._highlightRuleSelector(rule);
+    let isStyleSheetHighlighted = this._highlightStyleSheet(rule);
+    let isHighlighted = isRuleSelectorHighlighted || isStyleSheetHighlighted;
 
     // Highlight search matches in the rule properties
-    for (let textProp of aRule.textProps) {
-      // Get the actual property value displayed in the rule view
-      let propertyValue = textProp.editor.valueSpan.textContent.toLowerCase();
-      let propertyName = textProp.name.toLowerCase();
-      let styleSheetSource = textProp.rule.title.toLowerCase();
-
+    for (let textProp of rule.textProps) {
       let editor = textProp.editor;
-      let source = editor.ruleEditor.source;
+      let isPropertyHighlighted = this._highlightRuleProperty(editor);
+      let isComputedHighlighted = this._highlightComputedProperty(editor);
 
-      let isPropertyHighlighted = this._highlightMatches(editor.container, {
-        searchName: name,
-        searchValue: value,
-        propertyName: propertyName,
-        propertyValue: propertyValue,
-        propertyMatch: propertyMatch
-      });
-
-      let isComputedHighlighted = false;
-
-      // Highlight search matches in the computed list of properties
-      for (let computed of textProp.computed) {
-        if (computed.element) {
-          // Get the actual property value displayed in the computed list
-          let computedValue = computed.parsedValue.toLowerCase();
-          let computedName = computed.name.toLowerCase();
-
-          isComputedHighlighted = this._highlightMatches(computed.element, {
-            searchName: name,
-            searchValue: value,
-            propertyName: computedName,
-            propertyValue: computedValue,
-            propertyMatch: propertyMatch
-          }) ? true : isComputedHighlighted;
-        }
-      }
-
-      // Highlight search matches in the stylesheet source
-      let isStyleSheetHighlighted = styleSheetSource.includes(aValue);
-      if (isStyleSheetHighlighted) {
-        source.classList.add("ruleview-highlight");
-      }
-
-      if (isPropertyHighlighted || isComputedHighlighted ||
-          isStyleSheetHighlighted) {
+      if (isPropertyHighlighted || isComputedHighlighted) {
         isHighlighted = true;
       }
 
-      // Expand the computed list if a computed rule is highlighted and the
+      // Expand the computed list if a computed property is highlighted and the
       // property rule is not highlighted
       if (!isPropertyHighlighted && isComputedHighlighted &&
           !editor.computed.hasAttribute("user-open")) {
-        editor.expandForFilter();
-        this._editorsExpandedForFilter.push(editor);
+        this._expandComputedListForFilter(editor);
       }
     }
 
@@ -2127,25 +2077,145 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Highlights the rule selector that matches the filter search value and
+   * returns a boolean indicating whether or not the selector was highlighted.
+   *
+   * @param  {Rule} rule
+   *         The Rule object.
+   * @return {bool} true if the rule selector was highlighted, false otherwise.
+   */
+  _highlightRuleSelector: function(rule) {
+    let isSelectorHighlighted = false;
+
+    let selectorNodes = [...rule.editor.selectorText.childNodes];
+    if (rule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
+      selectorNodes = [rule.editor.selectorText];
+    } else if (rule.domRule.type === ELEMENT_STYLE) {
+      selectorNodes = [];
+    }
+
+    // Highlight search matches in the rule selectors
+    for (let selectorNode of selectorNodes) {
+      if (selectorNode.textContent.toLowerCase().includes(this.searchValue)) {
+        selectorNode.classList.add("ruleview-highlight");
+        isSelectorHighlighted = true;
+      }
+    }
+
+    return isSelectorHighlighted;
+  },
+
+  /**
+   * Highlights the stylesheet source that matches the filter search value and
+   * returns a boolean indicating whether or not the stylesheet source was
+   * highlighted.
+   *
+   * @return {bool} true if the stylesheet source was highlighted, false
+   *         otherwise.
+   */
+  _highlightStyleSheet: function(rule) {
+    let styleSheetSource = rule.title.toLowerCase();
+    let isStyleSheetHighlighted = styleSheetSource.includes(this.searchValue);
+
+    if (isStyleSheetHighlighted) {
+      rule.editor.source.classList.add("ruleview-highlight");
+    }
+
+    return isStyleSheetHighlighted;
+  },
+
+  /**
+   * Highlights the rule property that matches the filter search value
+   * and returns a boolean indicating whether or not the property was
+   * highlighted.
+   *
+   * @param  {TextPropertyEditor} editor
+   *         The rule property TextPropertyEditor object.
+   * @return {bool} true if the rule property was highlighted, false otherwise.
+   */
+  _highlightRuleProperty: function(editor) {
+    // Get the actual property value displayed in the rule view
+    let propertyName = editor.prop.name.toLowerCase();
+    let propertyValue = editor.valueSpan.textContent.toLowerCase();
+
+    let isPropertyHighlighted = this._highlightMatches(editor.container, {
+      searchName: this.searchPropertyName,
+      searchValue: this.searchPropertyValue,
+      propertyName: propertyName,
+      propertyValue: propertyValue,
+      propertyMatch: this.searchPropertyMatch
+    });
+
+    return isPropertyHighlighted;
+  },
+
+  /**
+   * Highlights the computed property that matches the filter search value and
+   * returns a boolean indicating whether or not the computed property was
+   * highlighted.
+   *
+   * @param  {TextPropertyEditor} editor
+   *         The rule property TextPropertyEditor object.
+   * @return {bool} true if the computed property was highlighted, false
+   *         otherwise.
+   */
+  _highlightComputedProperty: function(editor) {
+    let isComputedHighlighted = false;
+
+    // Highlight search matches in the computed list of properties
+    for (let computed of editor.prop.computed) {
+      if (computed.element) {
+        // Get the actual property value displayed in the computed list
+        let computedName = computed.name.toLowerCase();
+        let computedValue = computed.parsedValue.toLowerCase();
+
+        isComputedHighlighted = this._highlightMatches(computed.element, {
+          searchName: this.searchPropertyName,
+          searchValue: this.searchPropertyValue,
+          propertyName: computedName,
+          propertyValue: computedValue,
+          propertyMatch: this.searchPropertyMatch
+        }) ? true : isComputedHighlighted;
+      }
+    }
+
+    return isComputedHighlighted;
+  },
+
+  /**
+   * Expand the rule property's computed list. This is triggered when a computed
+   * property matches the filter search value and no rule property is matched.
+   *
+   * @param  {TextPropertyEditor} editor
+   *         The rule property TextPropertyEditor object.
+   */
+  _expandComputedListForFilter: function(editor) {
+    editor.expandForFilter();
+    this._editorsExpandedForFilter.push(editor);
+  },
+
+  /**
    * Helper function for highlightRules that carries out highlighting the given
    * element if the provided search terms match the property, and returns
    * a boolean indicating whether or not the search terms match.
    *
-   * @param {DOMNode} aElement
-   *        The node to highlight if search terms match
-   * @param {String} searchName
-   *        The parsed search name
-   * @param {String} searchValue
-   *        The parsed search value
-   * @param {String} propertyName
-   *        The property name of a rule
-   * @param {String} propertyValue
-   *        The property value of a rule
-   * @param {Boolean} propertyMatch
-   *        Whether or not the search term matches a property line like
-   *        `font-family: arial`
+   * @param  {DOMNode} element
+   *         The node to highlight if search terms match
+   * @param  {String} searchName
+   *         The parsed search name
+   * @param  {String} searchValue
+   *         The parsed search value
+   * @param  {String} propertyName
+   *         The property name of a rule
+   * @param  {String} propertyValue
+   *         The property value of a rule
+   * @param  {Boolean} propertyMatch
+   *         Whether or not the search term matches a property line like
+   *         `font-family: arial`
+   * @return {bool} true if the given search terms match the property, false
+   *         otherwise.
    */
-  _highlightMatches: function(aElement, { searchName, searchValue, propertyName,
+  _highlightMatches: function(element, { searchName, searchValue, propertyName,
       propertyValue, propertyMatch }) {
     let matches = false;
 
@@ -2162,7 +2232,7 @@ CssRuleView.prototype = {
     }
 
     if (matches) {
-      aElement.classList.add("ruleview-highlight");
+      element.classList.add("ruleview-highlight");
     }
 
     return matches;
