@@ -417,7 +417,19 @@ private:
 
   static uint32_t HashShift(uint32_t aEntrySize, uint32_t aLength);
 
+  static const PLDHashNumber kCollisionFlag = 1;
+
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
+  static bool EntryIsRemoved(PLDHashEntryHdr* aEntry);
+  static bool EntryIsLive(PLDHashEntryHdr* aEntry);
+  static void MarkEntryFree(PLDHashEntryHdr* aEntry);
+  static void MarkEntryRemoved(PLDHashEntryHdr* aEntry);
+
+  PLDHashNumber Hash1(PLDHashNumber aHash0);
+  void Hash2(PLDHashNumber aHash, uint32_t& aHash2Out, uint32_t& aSizeMaskOut);
+
+  static bool MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aHash);
+  PLDHashEntryHdr* AddressEntry(uint32_t aIndex);
 
   // We store mHashShift rather than sizeLog2 to optimize the collision-free
   // case in SearchTable.
