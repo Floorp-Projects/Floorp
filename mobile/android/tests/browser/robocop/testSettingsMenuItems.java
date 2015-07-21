@@ -229,7 +229,7 @@ public class testSettingsMenuItems extends PixelTest {
         }
 
         // Voice input
-        if (AppConstants.NIGHTLY_BUILD && InputOptionsUtils.supportsVoiceRecognizer(this.getActivity().getApplicationContext(), this.getActivity().getResources().getString(R.string.voicesearch_prompt))) {
+        if (InputOptionsUtils.supportsVoiceRecognizer(this.getActivity().getApplicationContext(), this.getActivity().getResources().getString(R.string.voicesearch_prompt))) {
             String[] voiceInputUi = { mStringHelper.VOICE_INPUT_TITLE_LABEL, mStringHelper.VOICE_INPUT_SUMMARY_LABEL };
             settingsMap.get(PATH_DISPLAY).add(voiceInputUi);
         }
