@@ -218,10 +218,6 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     private boolean voiceIsEnabled(Context context, String prompt) {
-        // Voice input is enabled for nightly only
-        if(!AppConstants.NIGHTLY_BUILD) {
-            return false;
-        }
         final boolean voiceIsSupported = InputOptionsUtils.supportsVoiceRecognizer(context, prompt);
         if (!voiceIsSupported) {
             return false;
