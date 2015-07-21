@@ -185,23 +185,23 @@ BestCapacity(uint32_t aLength, uint32_t* aCapacityOut,
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
   uint32_t capacity = (aLength * 4 + (3 - 1)) / 3; // == ceil(aLength * 4 / 3)
-  if (capacity < PL_DHASH_MIN_CAPACITY) {
-    capacity = PL_DHASH_MIN_CAPACITY;
+  if (capacity < PLDHashTable::kMinCapacity) {
+    capacity = PLDHashTable::kMinCapacity;
   }
 
   // Round up capacity to next power-of-two.
   uint32_t log2 = CeilingLog2(capacity);
   capacity = 1u << log2;
-  MOZ_ASSERT(capacity <= PL_DHASH_MAX_CAPACITY);
+  MOZ_ASSERT(capacity <= PLDHashTable::kMaxCapacity);
 
   *aCapacityOut = capacity;
   *aLog2CapacityOut = log2;
 }
 
-static MOZ_ALWAYS_INLINE uint32_t
-HashShift(uint32_t aEntrySize, uint32_t aLength)
+/* static */ MOZ_ALWAYS_INLINE uint32_t
+PLDHashTable::HashShift(uint32_t aEntrySize, uint32_t aLength)
 {
-  if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
+  if (aLength > kMaxInitialLength) {
     MOZ_CRASH("Initial length is too large");
   }
 
@@ -214,7 +214,7 @@ HashShift(uint32_t aEntrySize, uint32_t aLength)
   }
 
   // Compute the hashShift value.
-  return PL_DHASH_BITS - log2;
+  return kHashBits - log2;
 }
 
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -271,12 +271,22 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
   return *this;
 }
 
-/*
- * Double hashing needs the second hash code to be relatively prime to table
- * size, so we simply make hash2 odd.
- */
-#define HASH1(hash0, shift)         ((hash0) >> (shift))
-#define HASH2(hash0,log2,shift)     ((((hash0) << (log2)) >> (shift)) | 1)
+PLDHashNumber
+PLDHashTable::Hash1(PLDHashNumber aHash0)
+{
+  return aHash0 >> mHashShift;
+}
+
+// Double hashing needs the second hash code to be relatively prime to table
+// size, so we simply make hash2 odd.
+void
+PLDHashTable::Hash2(PLDHashNumber aHash,
+                    uint32_t& aHash2Out, uint32_t& aSizeMaskOut)
+{
+  uint32_t sizeLog2 = kHashBits - mHashShift;
+  aHash2Out = ((aHash << sizeLog2) >> mHashShift) | 1;
+  aSizeMaskOut = (PLDHashNumber(1) << sizeLog2) - 1;
+}
 
 /*
  * Reserve mKeyHash 0 for free entries and 1 for removed-entry sentinels.  Note
@@ -286,25 +296,46 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
  * uses the high order bits of mKeyHash, so this least-significant reservation
  * should not hurt the hash function's effectiveness much.
  */
-#define COLLISION_FLAG              ((PLDHashNumber) 1)
-#define MARK_ENTRY_FREE(entry)      ((entry)->mKeyHash = 0)
-#define MARK_ENTRY_REMOVED(entry)   ((entry)->mKeyHash = 1)
-#define ENTRY_IS_REMOVED(entry)     ((entry)->mKeyHash == 1)
-#define ENTRY_IS_LIVE(entry)        ((entry)->mKeyHash >= 2)
-#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else (void)0
-
-/* Match an entry's mKeyHash against an unstored one computed from a key. */
-#define MATCH_ENTRY_KEYHASH(entry,hash0) \
-    (((entry)->mKeyHash & ~COLLISION_FLAG) == (hash0))
-
-/* Compute the address of the indexed entry in table. */
-#define ADDRESS_ENTRY(table, index) \
-    ((PLDHashEntryHdr *)((table)->mEntryStore + (index) * (table)->mEntrySize))
 
 /* static */ MOZ_ALWAYS_INLINE bool
 PLDHashTable::EntryIsFree(PLDHashEntryHdr* aEntry)
 {
   return aEntry->mKeyHash == 0;
+}
+/* static */ MOZ_ALWAYS_INLINE bool
+PLDHashTable::EntryIsRemoved(PLDHashEntryHdr* aEntry)
+{
+  return aEntry->mKeyHash == 1;
+}
+/* static */ MOZ_ALWAYS_INLINE bool
+PLDHashTable::EntryIsLive(PLDHashEntryHdr* aEntry)
+{
+  return aEntry->mKeyHash >= 2;
+}
+
+/* static */ MOZ_ALWAYS_INLINE void
+PLDHashTable::MarkEntryFree(PLDHashEntryHdr* aEntry)
+{
+  aEntry->mKeyHash = 0;
+}
+/* static */ MOZ_ALWAYS_INLINE void
+PLDHashTable::MarkEntryRemoved(PLDHashEntryHdr* aEntry)
+{
+  aEntry->mKeyHash = 1;
+}
+
+/* Match an entry's mKeyHash against an unstored one computed from a key. */
+/* static */ bool
+PLDHashTable::MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aKeyHash)
+{
+  return (aEntry->mKeyHash & ~kCollisionFlag) == aKeyHash;
+}
+
+/* Compute the address of the indexed entry in table. */
+PLDHashEntryHdr*
+PLDHashTable::AddressEntry(uint32_t aIndex)
+{
+  return reinterpret_cast<PLDHashEntryHdr*>(mEntryStore + aIndex * mEntrySize);
 }
 
 PLDHashTable::~PLDHashTable()
@@ -322,7 +353,7 @@ PLDHashTable::~PLDHashTable()
   char* entryLimit = entryAddr + Capacity() * mEntrySize;
   while (entryAddr < entryLimit) {
     PLDHashEntryHdr* entry = (PLDHashEntryHdr*)entryAddr;
-    if (ENTRY_IS_LIVE(entry)) {
+    if (EntryIsLive(entry)) {
       mOps->clearEntry(this, entry);
     }
     entryAddr += mEntrySize;
@@ -347,7 +378,7 @@ PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 void
 PLDHashTable::Clear()
 {
-  ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH);
+  ClearAndPrepareForLength(kDefaultInitialLength);
 }
 
 // If |IsAdd| is true, the return value is always non-null and it may be a
@@ -360,12 +391,12 @@ PLDHashEntryHdr* PL_DHASH_FASTCALL
 PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 {
   MOZ_ASSERT(mEntryStore);
-  NS_ASSERTION(!(aKeyHash & COLLISION_FLAG),
-               "!(aKeyHash & COLLISION_FLAG)");
+  NS_ASSERTION(!(aKeyHash & kCollisionFlag),
+               "!(aKeyHash & kCollisionFlag)");
 
   /* Compute the primary hash address. */
-  PLDHashNumber hash1 = HASH1(aKeyHash, mHashShift);
-  PLDHashEntryHdr* entry = ADDRESS_ENTRY(this, hash1);
+  PLDHashNumber hash1 = Hash1(aKeyHash);
+  PLDHashEntryHdr* entry = AddressEntry(hash1);
 
   /* Miss: return space for a new entry. */
   if (EntryIsFree(entry)) {
@@ -374,15 +405,15 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 
   /* Hit: return entry. */
   PLDHashMatchEntry matchEntry = mOps->matchEntry;
-  if (MATCH_ENTRY_KEYHASH(entry, aKeyHash) &&
+  if (MatchEntryKeyhash(entry, aKeyHash) &&
       matchEntry(this, entry, aKey)) {
     return entry;
   }
 
   /* Collision: double hash. */
-  int sizeLog2 = PL_DHASH_BITS - mHashShift;
-  PLDHashNumber hash2 = HASH2(aKeyHash, sizeLog2, mHashShift);
-  uint32_t sizeMask = (1u << sizeLog2) - 1;
+  PLDHashNumber hash2;
+  uint32_t sizeMask;
+  Hash2(aKeyHash, hash2, sizeMask);
 
   /*
    * Save the first removed entry pointer so Add() can recycle it. (Only used
@@ -392,25 +423,25 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 
   for (;;) {
     if (Reason == ForAdd) {
-      if (MOZ_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
+      if (MOZ_UNLIKELY(EntryIsRemoved(entry))) {
         if (!firstRemoved) {
           firstRemoved = entry;
         }
       } else {
-        entry->mKeyHash |= COLLISION_FLAG;
+        entry->mKeyHash |= kCollisionFlag;
       }
     }
 
     hash1 -= hash2;
     hash1 &= sizeMask;
 
-    entry = ADDRESS_ENTRY(this, hash1);
+    entry = AddressEntry(hash1);
     if (EntryIsFree(entry)) {
       return (Reason == ForAdd) ? (firstRemoved ? firstRemoved : entry)
                                 : nullptr;
     }
 
-    if (MATCH_ENTRY_KEYHASH(entry, aKeyHash) &&
+    if (MatchEntryKeyhash(entry, aKeyHash) &&
         matchEntry(this, entry, aKey)) {
       return entry;
     }
@@ -434,12 +465,12 @@ PLDHashEntryHdr* PL_DHASH_FASTCALL
 PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
 {
   MOZ_ASSERT(mEntryStore);
-  NS_ASSERTION(!(aKeyHash & COLLISION_FLAG),
-               "!(aKeyHash & COLLISION_FLAG)");
+  NS_ASSERTION(!(aKeyHash & kCollisionFlag),
+               "!(aKeyHash & kCollisionFlag)");
 
   /* Compute the primary hash address. */
-  PLDHashNumber hash1 = HASH1(aKeyHash, mHashShift);
-  PLDHashEntryHdr* entry = ADDRESS_ENTRY(this, hash1);
+  PLDHashNumber hash1 = Hash1(aKeyHash);
+  PLDHashEntryHdr* entry = AddressEntry(hash1);
 
   /* Miss: return space for a new entry. */
   if (EntryIsFree(entry)) {
@@ -447,19 +478,19 @@ PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
   }
 
   /* Collision: double hash. */
-  int sizeLog2 = PL_DHASH_BITS - mHashShift;
-  PLDHashNumber hash2 = HASH2(aKeyHash, sizeLog2, mHashShift);
-  uint32_t sizeMask = (1u << sizeLog2) - 1;
+  PLDHashNumber hash2;
+  uint32_t sizeMask;
+  Hash2(aKeyHash, hash2, sizeMask);
 
   for (;;) {
-    NS_ASSERTION(!ENTRY_IS_REMOVED(entry),
-                 "!ENTRY_IS_REMOVED(entry)");
-    entry->mKeyHash |= COLLISION_FLAG;
+    NS_ASSERTION(!EntryIsRemoved(entry),
+                 "!EntryIsRemoved(entry)");
+    entry->mKeyHash |= kCollisionFlag;
 
     hash1 -= hash2;
     hash1 &= sizeMask;
 
-    entry = ADDRESS_ENTRY(this, hash1);
+    entry = AddressEntry(hash1);
     if (EntryIsFree(entry)) {
       return entry;
     }
@@ -475,10 +506,10 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   MOZ_ASSERT(mEntryStore);
 
   /* Look, but don't touch, until we succeed in getting new entry store. */
-  int32_t oldLog2 = PL_DHASH_BITS - mHashShift;
+  int32_t oldLog2 = kHashBits - mHashShift;
   int32_t newLog2 = oldLog2 + aDeltaLog2;
   uint32_t newCapacity = 1u << newLog2;
-  if (newCapacity > PL_DHASH_MAX_CAPACITY) {
+  if (newCapacity > kMaxCapacity) {
     return false;
   }
 
@@ -493,7 +524,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   }
 
   /* We can't fail from here on, so update table parameters. */
-  mHashShift = PL_DHASH_BITS - newLog2;
+  mHashShift = kHashBits - newLog2;
   mRemovedCount = 0;
   mGeneration++;
 
@@ -509,8 +540,8 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   uint32_t oldCapacity = 1u << oldLog2;
   for (uint32_t i = 0; i < oldCapacity; ++i) {
     PLDHashEntryHdr* oldEntry = (PLDHashEntryHdr*)oldEntryAddr;
-    if (ENTRY_IS_LIVE(oldEntry)) {
-      oldEntry->mKeyHash &= ~COLLISION_FLAG;
+    if (EntryIsLive(oldEntry)) {
+      oldEntry->mKeyHash &= ~kCollisionFlag;
       PLDHashEntryHdr* newEntry = FindFreeEntry(oldEntry->mKeyHash);
       NS_ASSERTION(EntryIsFree(newEntry), "EntryIsFree(newEntry)");
       moveEntry(this, oldEntry, newEntry);
@@ -529,11 +560,13 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
   MOZ_ASSERT(mEntryStore);
 
   PLDHashNumber keyHash = mOps->hashKey(this, aKey);
-  keyHash *= PL_DHASH_GOLDEN_RATIO;
+  keyHash *= kGoldenRatio;
 
   /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
-  ENSURE_LIVE_KEYHASH(keyHash);
-  keyHash &= ~COLLISION_FLAG;
+  if (keyHash < 2) {
+    keyHash -= 2;
+  }
+  keyHash &= ~kCollisionFlag;
 
   return keyHash;
 }
@@ -604,11 +637,11 @@ PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
    */
   PLDHashNumber keyHash = ComputeKeyHash(aKey);
   PLDHashEntryHdr* entry = SearchTable<ForAdd>(aKey, keyHash);
-  if (!ENTRY_IS_LIVE(entry)) {
+  if (!EntryIsLive(entry)) {
     /* Initialize the entry, indicating that it's no longer free. */
-    if (ENTRY_IS_REMOVED(entry)) {
+    if (EntryIsRemoved(entry)) {
       mRemovedCount--;
-      keyHash |= COLLISION_FLAG;
+      keyHash |= kCollisionFlag;
     }
     if (mOps->initEntry) {
       mOps->initEntry(entry, aKey);
@@ -657,7 +690,7 @@ PLDHashTable::Remove(const void* aKey)
 
     /* Shrink if alpha is <= .25 and the table isn't too small already. */
     uint32_t capacity = Capacity();
-    if (capacity > PL_DHASH_MIN_CAPACITY &&
+    if (capacity > kMinCapacity &&
         mEntryCount <= MinLoad(capacity)) {
       (void) ChangeTable(-1);
     }
@@ -699,16 +732,16 @@ PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 
   MOZ_ASSERT(mEntryStore);
 
-  NS_ASSERTION(ENTRY_IS_LIVE(aEntry), "ENTRY_IS_LIVE(aEntry)");
+  NS_ASSERTION(EntryIsLive(aEntry), "EntryIsLive(aEntry)");
 
   /* Load keyHash first in case clearEntry() goofs it. */
   PLDHashNumber keyHash = aEntry->mKeyHash;
   mOps->clearEntry(this, aEntry);
-  if (keyHash & COLLISION_FLAG) {
-    MARK_ENTRY_REMOVED(aEntry);
+  if (keyHash & kCollisionFlag) {
+    MarkEntryRemoved(aEntry);
     mRemovedCount++;
   } else {
-    MARK_ENTRY_FREE(aEntry);
+    MarkEntryFree(aEntry);
   }
   mEntryCount--;
 }
@@ -727,11 +760,11 @@ PLDHashTable::ShrinkIfAppropriate()
 {
   uint32_t capacity = Capacity();
   if (mRemovedCount >= capacity >> 2 ||
-      (capacity > PL_DHASH_MIN_CAPACITY && mEntryCount <= MinLoad(capacity))) {
+      (capacity > kMinCapacity && mEntryCount <= MinLoad(capacity))) {
     uint32_t log2;
     BestCapacity(mEntryCount, &capacity, &log2);
 
-    int32_t deltaLog2 = log2 - (PL_DHASH_BITS - mHashShift);
+    int32_t deltaLog2 = log2 - (kHashBits - mHashShift);
     MOZ_ASSERT(deltaLog2 <= 0);
 
     (void) ChangeTable(deltaLog2);
@@ -860,7 +893,7 @@ MOZ_ALWAYS_INLINE bool
 PLDHashTable::Iterator::IsOnNonLiveEntry() const
 {
   MOZ_ASSERT(!Done());
-  return !ENTRY_IS_LIVE(reinterpret_cast<PLDHashEntryHdr*>(mCurrent));
+  return !EntryIsLive(reinterpret_cast<PLDHashEntryHdr*>(mCurrent));
 }
 
 MOZ_ALWAYS_INLINE void
@@ -878,7 +911,7 @@ PLDHashTable::Iterator::Get() const
   MOZ_ASSERT(!Done());
 
   PLDHashEntryHdr* entry = reinterpret_cast<PLDHashEntryHdr*>(mCurrent);
-  MOZ_ASSERT(ENTRY_IS_LIVE(entry));
+  MOZ_ASSERT(EntryIsLive(entry));
   return entry;
 }
 

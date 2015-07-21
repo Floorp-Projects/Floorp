@@ -668,7 +668,7 @@ MessagePort::MessagesReceived(nsTArray<MessagePortMessage>& aMessages)
   RemoveDocFromBFCache();
 
   FallibleTArray<nsRefPtr<SharedMessagePortMessage>> data;
-  if (!NS_WARN_IF(SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
+  if (NS_WARN_IF(!SharedMessagePortMessage::FromMessagesToSharedChild(aMessages,
                                                                       data))) {
     // OOM, We cannot continue.
     return;

@@ -149,18 +149,6 @@ nsFaviconService::ExpireAllFavicons()
 ////////////////////////////////////////////////////////////////////////////////
 //// nsITimerCallback
 
-static PLDHashOperator
-ExpireNonrecentUnassociatedIconsEnumerator(
-  UnassociatedIconHashKey* aIconKey,
-  void* aNow)
-{
-  PRTime now = *(reinterpret_cast<PRTime*>(aNow));
-  if (now - aIconKey->created >= UNASSOCIATED_ICON_EXPIRY_INTERVAL) {
-    return PL_DHASH_REMOVE;
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsFaviconService::Notify(nsITimer* timer)
 {
@@ -169,8 +157,13 @@ nsFaviconService::Notify(nsITimer* timer)
   }
 
   PRTime now = PR_Now();
-  mUnassociatedIcons.EnumerateEntries(
-    ExpireNonrecentUnassociatedIconsEnumerator, &now);
+  for (auto iter = mUnassociatedIcons.Iter(); !iter.Done(); iter.Next()) {
+    UnassociatedIconHashKey* iconKey = iter.Get();
+    if (now - iconKey->created >= UNASSOCIATED_ICON_EXPIRY_INTERVAL) {
+      iter.Remove();
+    }
+  }
+
   // Re-init the expiry timer if the cache isn't empty.
   if (mUnassociatedIcons.Count() > 0) {
     mExpireUnassociatedIconsTimer->InitWithCallback(

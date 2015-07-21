@@ -937,30 +937,26 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   }
 
   // get document wide referrer policy
-  mozilla::net::ReferrerPolicy referrerPolicy = aDocument->GetReferrerPolicy();
-  bool referrerAttributeEnabled = Preferences::GetBool("network.http.enablePerElementReferrer", false);
   // if referrer attributes are enabled in preferences, load img referrer attribute
-  nsresult rv;
-  if (referrerAttributeEnabled) {
-    mozilla::net::ReferrerPolicy imgReferrerPolicy = GetImageReferrerPolicy();
-    // if the image does not provide a referrer attribute, ignore this
-    if (imgReferrerPolicy != mozilla::net::RP_Unset) {
-      referrerPolicy = imgReferrerPolicy;
-    }
+  // if the image does not provide a referrer attribute, ignore this
+  net::ReferrerPolicy referrerPolicy = aDocument->GetReferrerPolicy();
+  net::ReferrerPolicy imgReferrerPolicy = GetImageReferrerPolicy();
+  if (imgReferrerPolicy != net::RP_Unset) {
+    referrerPolicy = imgReferrerPolicy;
   }
 
   // Not blocked. Do the load.
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  rv = nsContentUtils::LoadImage(aNewURI, aDocument,
-                                 aDocument->NodePrincipal(),
-                                 aDocument->GetDocumentURI(),
-                                 referrerPolicy,
-                                 this, loadFlags,
-                                 content->LocalName(),
-                                 getter_AddRefs(req),
-                                 policyType);
+  nsresult rv = nsContentUtils::LoadImage(aNewURI, aDocument,
+                                          aDocument->NodePrincipal(),
+                                          aDocument->GetDocumentURI(),
+                                          referrerPolicy,
+                                          this, loadFlags,
+                                          content->LocalName(),
+                                          getter_AddRefs(req),
+                                          policyType);
 
   // Tell the document to forget about the image preload, if any, for
   // this URI, now that we might have another imgRequestProxy for it.
