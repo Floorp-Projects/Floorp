@@ -48,60 +48,56 @@ PendingAnimationTracker::IsWaiting(const dom::Animation& aAnimation,
   return aSet.Contains(const_cast<dom::Animation*>(&aAnimation));
 }
 
-PLDHashOperator
-TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
-                    void* aReadyTime)
-{
-  dom::Animation* animation = aKey->GetKey();
-  dom::AnimationTimeline* timeline = animation->GetTimeline();
-
-  // If the animation does not have a timeline, just drop it from the map.
-  // The animation will detect that it is not being tracked and will trigger
-  // itself on the next tick where it has a timeline.
-  if (!timeline) {
-    return PL_DHASH_REMOVE;
-  }
-
-  // When the timeline's refresh driver is under test control, its values
-  // have no correspondance to wallclock times so we shouldn't try to convert
-  // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
-  // animation will be started/paused when the refresh driver is next
-  // advanced since this will trigger a call to TriggerPendingAnimationsNow.
-  if (!timeline->TracksWallclockTime()) {
-    return PL_DHASH_NEXT;
-  }
-
-  Nullable<TimeDuration> readyTime =
-    timeline->ToTimelineTime(*static_cast<const TimeStamp*>(aReadyTime));
-  animation->TriggerOnNextTick(readyTime);
-
-  return PL_DHASH_REMOVE;
-}
-
 void
 PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(const TimeStamp&
                                                         aReadyTime)
 {
-  mPlayPendingSet.EnumerateEntries(TriggerAnimationAtTime,
-                                   const_cast<TimeStamp*>(&aReadyTime));
-  mPausePendingSet.EnumerateEntries(TriggerAnimationAtTime,
-                                    const_cast<TimeStamp*>(&aReadyTime));
-}
+  auto triggerAnimationsAtReadyTime = [aReadyTime](AnimationSet& aAnimationSet)
+  {
+    for (auto iter = aAnimationSet.Iter(); !iter.Done(); iter.Next()) {
+      dom::Animation* animation = iter.Get()->GetKey();
+      dom::AnimationTimeline* timeline = animation->GetTimeline();
 
-PLDHashOperator
-TriggerAnimationNow(nsRefPtrHashKey<dom::Animation>* aKey, void*)
-{
-  aKey->GetKey()->TriggerNow();
-  return PL_DHASH_NEXT;
+      // If the animation does not have a timeline, just drop it from the map.
+      // The animation will detect that it is not being tracked and will trigger
+      // itself on the next tick where it has a timeline.
+      if (!timeline) {
+        iter.Remove();
+      }
+
+      // When the timeline's refresh driver is under test control, its values
+      // have no correspondance to wallclock times so we shouldn't try to
+      // convert aReadyTime (which is a wallclock time) to a timeline value.
+      // Instead, the animation will be started/paused when the refresh driver
+      // is next advanced since this will trigger a call to
+      // TriggerPendingAnimationsNow.
+      if (!timeline->TracksWallclockTime()) {
+        continue;
+      }
+
+      Nullable<TimeDuration> readyTime = timeline->ToTimelineTime(aReadyTime);
+      animation->TriggerOnNextTick(readyTime);
+
+      iter.Remove();
+    }
+  };
+
+  triggerAnimationsAtReadyTime(mPlayPendingSet);
+  triggerAnimationsAtReadyTime(mPausePendingSet);
 }
 
 void
 PendingAnimationTracker::TriggerPendingAnimationsNow()
 {
-  mPlayPendingSet.EnumerateEntries(TriggerAnimationNow, nullptr);
-  mPlayPendingSet.Clear();
-  mPausePendingSet.EnumerateEntries(TriggerAnimationNow, nullptr);
-  mPausePendingSet.Clear();
+  auto triggerAndClearAnimations = [](AnimationSet& aAnimationSet) {
+    for (auto iter = aAnimationSet.Iter(); !iter.Done(); iter.Next()) {
+      iter.Get()->GetKey()->TriggerNow();
+    }
+    aAnimationSet.Clear();
+  };
+
+  triggerAndClearAnimations(mPlayPendingSet);
+  triggerAndClearAnimations(mPausePendingSet);
 }
 
 void
