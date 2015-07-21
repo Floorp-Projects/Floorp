@@ -71,9 +71,26 @@ interface nsIChannel;
  *           to set the cookie.
  * data   :  the referrer, or "?" if unknown
  */
-[scriptable, uuid(2aaa897a-293c-4d2b-a657-8c9b7136996d)]
+[scriptable, uuid(f5807c53-de48-461a-8117-bd156bc2dcf0)]
 interface nsICookieService : nsISupports
 {
+  /*
+   * Possible values for the "network.cookie.cookieBehavior" preference.
+   */
+  const uint32_t BEHAVIOR_ACCEPT         = 0; // allow all cookies
+  const uint32_t BEHAVIOR_REJECT_FOREIGN = 1; // reject all third-party cookies
+  const uint32_t BEHAVIOR_REJECT         = 2; // reject all cookies
+  const uint32_t BEHAVIOR_LIMIT_FOREIGN  = 3; // reject third-party cookies unless the
+                                              // eTLD already has at least one cookie
+
+  /*
+   * Possible values for the "network.cookie.lifetimePolicy" preference.
+   */
+  const uint32_t ACCEPT_NORMALLY   = 0; // accept normally
+  const uint32_t ASK_BEFORE_ACCEPT = 1; // ask before accepting
+  const uint32_t ACCEPT_SESSION    = 2; // downgrade to session
+  const uint32_t ACCEPT_FOR_N_DAYS = 3; // limit lifetime to N days
+
   /*
    * Get the complete cookie string associated with the URI.
    *

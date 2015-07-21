@@ -40,12 +40,12 @@ function check_mp4(v, enabled) {
 
   // H.264 Constrained Baseline Profile Level 3.0, mp3
   check("video/mp4; codecs=\"avc1.42E01E, mp3\"", "probably");
-  
+
   check("video/mp4; codecs=\"avc1.42001E, mp4a.40.2\"", "probably");
   check("video/mp4; codecs=\"avc1.58A01E, mp4a.40.2\"", "probably");
-  
+
   const ProbablyIfNotLinux = !IsLinuxGStreamer() ? "probably" : "";
-  
+
   // H.264 Main Profile Level 3.0, AAC-LC
   check("video/mp4; codecs=\"avc1.4D401E, mp4a.40.2\"", "probably");
   // H.264 Main Profile Level 3.1, AAC-LC
@@ -74,7 +74,7 @@ function check_mp4(v, enabled) {
   check("audio/mp4; codecs=mp4a.40.5", ProbablyIfNotLinux);
   check("audio/x-m4a; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
   check("audio/x-m4a; codecs=mp4a.40.5", ProbablyIfNotLinux);
-  
+
 }
 
 function check_mp3(v, enabled) {
@@ -134,12 +134,12 @@ function IsMP4ReaderAvailable() {
   return prefs && (IsWindowsVistaOrLater() || IsMacOSSnowLeopardOrLater() || IsJellyBeanOrLater());
 }
 
-var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
-               getPref("media.omx.enabled") ||
-               getPref("media.gstreamer.enabled") ||
-               IsMP4ReaderAvailable();
+var haveMp4 = IsWindowsVistaOrLater() ||
+              getPref("media.omx.enabled") ||
+              getPref("media.gstreamer.enabled") ||
+              IsMP4ReaderAvailable();
 // TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
-             
+
 check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||

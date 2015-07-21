@@ -45,6 +45,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
 #include "CaptivePortalService.h"
+#include "ReferrerPolicy.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -1688,6 +1689,16 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
         *aHadCharset = false;
     }
     return NS_OK;
+}
+
+// parse policyString to policy enum value (see ReferrerPolicy.h)
+NS_IMETHODIMP
+nsIOService::ParseAttributePolicyString(const nsAString& policyString,
+                                                uint32_t *outPolicyEnum)
+{
+  NS_ENSURE_ARG(outPolicyEnum);
+  *outPolicyEnum = (uint32_t)mozilla::net::AttributeReferrerPolicyFromString(policyString);
+  return NS_OK;
 }
 
 // nsISpeculativeConnect
