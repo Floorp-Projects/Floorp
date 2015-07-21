@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/JSObjectHolder.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -21,6 +20,7 @@
 class nsIConsoleAPIStorage;
 class nsIPrincipal;
 class nsIProfiler;
+class nsIXPConnectJSObjectHolder;
 
 namespace mozilla {
 namespace dom {
@@ -199,12 +199,12 @@ private:
   bool
   ShouldIncludeStackTrace(MethodName aMethodName);
 
-  JSObject*
+  nsIXPConnectJSObjectHolder*
   GetOrCreateSandbox(JSContext* aCx, nsIPrincipal* aPrincipal);
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
-  nsRefPtr<JSObjectHolder> mSandbox;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mSandbox;
 #ifdef MOZ_ENABLE_PROFILER_SPS
   nsCOMPtr<nsIProfiler> mProfiler;
 #endif
