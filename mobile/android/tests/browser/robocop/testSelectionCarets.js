@@ -25,18 +25,6 @@ const TAB_STOP_EVENT = "STOP";
 const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
 
 /**
- * Robocop test helpers.
- */
-function ok(passed, text) {
-  do_report_result(passed, text, Components.stack.caller, false);
-}
-
-function is(lhs, rhs, text) {
-  do_report_result(lhs === rhs, "[ " + lhs + " === " + rhs + " ] " + text,
-    Components.stack.caller, false);
-}
-
-/**
  * Wait for and return, when an expected tab change event occurs.
  *
  * @param tabId, The id of the target tab we're observing.

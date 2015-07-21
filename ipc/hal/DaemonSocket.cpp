@@ -7,6 +7,7 @@
 #include "DaemonSocket.h"
 #include "mozilla/ipc/DaemonSocketConsumer.h"
 #include "mozilla/ipc/DaemonSocketPDU.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
 #ifdef CHROMIUM_LOG
 #undef CHROMIUM_LOG
@@ -37,6 +38,8 @@ public:
                  UnixSocketConnector* aConnector,
                  DaemonSocket* aConnection,
                  DaemonSocketIOConsumer* aConsumer);
+
+  ~DaemonSocketIO();
 
   // Methods for |DataSocketIO|
   //
@@ -82,6 +85,13 @@ DaemonSocketIO::DaemonSocketIO(
 {
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(mConsumer);
+
+  MOZ_COUNT_CTOR_INHERITED(DaemonSocketIO, ConnectionOrientedSocketIO);
+}
+
+DaemonSocketIO::~DaemonSocketIO()
+{
+  MOZ_COUNT_DTOR_INHERITED(DaemonSocketIO, ConnectionOrientedSocketIO);
 }
 
 // |DataSocketIO|
@@ -169,10 +179,14 @@ DaemonSocket::DaemonSocket(
   , mIndex(aIndex)
 {
   MOZ_ASSERT(mConsumer);
+
+  MOZ_COUNT_CTOR_INHERITED(DaemonSocket, ConnectionOrientedSocket);
 }
 
 DaemonSocket::~DaemonSocket()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(DaemonSocket, ConnectionOrientedSocket);
+}
 
 // |ConnectionOrientedSocket|
 

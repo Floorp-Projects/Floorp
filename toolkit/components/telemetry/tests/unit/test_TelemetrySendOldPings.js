@@ -3,11 +3,8 @@
 
 /**
  * This test case populates the profile with some fake stored
- * pings, and checks that:
- *
- * 1) Pings that are considered "expired" are deleted and never sent.
- * 2) Pings that are considered "overdue" trigger a send of all
- *    overdue and recent pings.
+ * pings, and checks that pending pings are immediatlely sent
+ * after delayed init.
  */
 
 "use strict"
@@ -27,20 +24,19 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .getService(Ci.nsISupports)
           .wrappedJSObject);
 
+const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+
 // We increment TelemetryStorage's MAX_PING_FILE_AGE and
 // OVERDUE_PING_FILE_AGE by 1 minute so that our test pings exceed
 // those points in time, even taking into account file system imprecision.
 const ONE_MINUTE_MS = 60 * 1000;
-const EXPIRED_PING_FILE_AGE = TelemetrySend.MAX_PING_FILE_AGE + ONE_MINUTE_MS;
 const OVERDUE_PING_FILE_AGE = TelemetrySend.OVERDUE_PING_FILE_AGE + ONE_MINUTE_MS;
 
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const PING_TIMEOUT_LENGTH = 5000;
-const EXPIRED_PINGS = 5;
 const OVERDUE_PINGS = 6;
 const OLD_FORMAT_PINGS = 4;
 const RECENT_PINGS = 4;
-const LRU_PINGS = TelemetrySend.MAX_LRU_PINGS;
 
 const TOTAL_EXPECTED_PINGS = OVERDUE_PINGS + RECENT_PINGS + OLD_FORMAT_PINGS;
 
@@ -93,6 +89,15 @@ let clearPings = Task.async(function* (aPingIds) {
     yield TelemetryStorage.removePendingPing(pingId);
   }
 });
+
+/**
+ * Fakes the pending pings storage quota.
+ * @param {Integer} aPendingQuota The new quota, in bytes.
+ */
+function fakePendingPingsQuota(aPendingQuota) {
+  let storage = Cu.import("resource://gre/modules/TelemetryStorage.jsm");
+  storage.Policy.getPendingPingsQuota = () => aPendingQuota;
+}
 
 /**
  * Returns a handle for the file that a ping should be
@@ -154,14 +159,6 @@ let clearPendingPings = Task.async(function*() {
   }
 });
 
-/**
- * Creates and returns a TelemetryController instance in "testing"
- * mode.
- */
-function startTelemetry() {
-  return TelemetryController.setup();
-}
-
 function run_test() {
   PingServer.start();
   PingServer.registerPingHandler(pingHandler);
@@ -193,21 +190,6 @@ add_task(function* setupEnvironment() {
 });
 
 /**
- * Test that pings that are considered too old are just chucked out
- * immediately and never sent.
- */
-add_task(function* test_expired_pings_are_deleted() {
-  let pingTypes = [{ num: EXPIRED_PINGS, age: EXPIRED_PING_FILE_AGE }];
-  let expiredPings = yield createSavedPings(pingTypes);
-
-  yield TelemetryController.reset();
-  assertReceivedPings(0);
-  yield assertNotSaved(expiredPings);
-
-  yield clearPendingPings();
-});
-
-/**
  * Test that really recent pings are sent on Telemetry initialization.
  */
 add_task(function* test_recent_pings_sent() {
@@ -218,36 +200,6 @@ add_task(function* test_recent_pings_sent() {
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(RECENT_PINGS);
 
-  yield clearPendingPings();
-});
-
-/**
- * Test that only the most recent LRU_PINGS pings are kept at startup.
- */
-add_task(function* test_most_recent_pings_kept() {
-  let pingTypes = [
-    { num: LRU_PINGS },
-    { num: 3, age: ONE_MINUTE_MS },
-  ];
-  let pings = yield createSavedPings(pingTypes);
-  let head = pings.slice(0, LRU_PINGS);
-  let tail = pings.slice(-3);
-
-  const evictedHistogram = Services.telemetry.getHistogramById('TELEMETRY_FILES_EVICTED');
-  evictedHistogram.clear();
-
-  yield TelemetryController.reset();
-  const pending = yield TelemetryStorage.loadPendingPingList();
-
-  for (let id of tail) {
-    const found = pending.some(p => p.id == id);
-    Assert.ok(!found, "Should have discarded the oldest pings");
-  }
-
-  assertNotSaved(tail);
-  Assert.equal(evictedHistogram.snapshot().sum, tail.length,
-               "Should have tracked the evicted ping count");
-  yield TelemetrySend.shutdown();
   yield clearPendingPings();
 });
 
@@ -322,19 +274,15 @@ add_task(function* test_overdue_old_format() {
 });
 
 /**
- * Create some recent, expired and overdue pings. The overdue pings should
- * trigger a send of all recent and overdue pings, but the expired pings
- * should just be deleted.
+ * Create some recent and overdue pings and verify that they get sent.
  */
 add_task(function* test_overdue_pings_trigger_send() {
   let pingTypes = [
     { num: RECENT_PINGS },
-    { num: EXPIRED_PINGS, age: EXPIRED_PING_FILE_AGE },
     { num: OVERDUE_PINGS, age: OVERDUE_PING_FILE_AGE },
   ];
   let pings = yield createSavedPings(pingTypes);
   let recentPings = pings.slice(0, RECENT_PINGS);
-  let expiredPings = pings.slice(RECENT_PINGS, RECENT_PINGS + EXPIRED_PINGS);
   let overduePings = pings.slice(-OVERDUE_PINGS);
 
   yield TelemetryController.reset();
@@ -342,13 +290,10 @@ add_task(function* test_overdue_pings_trigger_send() {
   assertReceivedPings(TOTAL_EXPECTED_PINGS);
 
   yield assertNotSaved(recentPings);
-  yield assertNotSaved(expiredPings);
   yield assertNotSaved(overduePings);
 
   Assert.equal(TelemetrySend.overduePingsCount, overduePings.length,
                "Should have tracked the correct amount of overdue pings");
-  Assert.equal(TelemetrySend.discardedPingsCount, expiredPings.length,
-               "Should have tracked the correct amount of expired pings");
 
   yield clearPendingPings();
 });
@@ -401,6 +346,124 @@ add_task(function* test_overdue_old_format() {
   Assert.equal(receivedPings, 1, "We must receive a ping in the old format.");
 
   yield clearPendingPings();
+  PingServer.resetPingHandler();
+});
+
+add_task(function* test_pendingPingsQuota() {
+  const PING_TYPE = "foo";
+  const PREF_FHR_UPLOAD = "datareporting.healthreport.uploadEnabled";
+
+  // Disable upload so pings don't get sent and removed from the pending pings directory.
+  Services.prefs.setBoolPref(PREF_FHR_UPLOAD, false);
+
+  // Remove all the pending pings then startup and wait for the cleanup task to complete.
+  // There should be nothing to remove.
+  yield clearPendingPings();
+  yield TelemetryController.reset();
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+
+  // Remove the pending deletion ping generated when flipping FHR upload off.
+  yield clearPendingPings();
+
+  let expectedPrunedPings = [];
+  let expectedNotPrunedPings = [];
+
+  let checkPendingPings = Task.async(function*() {
+    // Check that the pruned pings are not on disk anymore.
+    for (let prunedPingId of expectedPrunedPings) {
+      yield Assert.rejects(TelemetryStorage.loadPendingPing(prunedPingId),
+                           "Ping " + prunedPingId + " should have been pruned.");
+      const pingPath = getSavePathForPingId(prunedPingId);
+      Assert.ok(!(yield OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
+    }
+
+    // Check that the expected pings are there.
+    for (let expectedPingId of expectedNotPrunedPings) {
+      Assert.ok((yield TelemetryStorage.loadPendingPing(expectedPingId)),
+                "Ping" + expectedPingId + " should be among the pending pings.");
+    }
+  });
+
+  let pendingPingsInfo = [];
+  let pingsSizeInBytes = 0;
+
+  // Create 10 pings to test the pending pings quota.
+  for (let days = 1; days < 11; days++) {
+    const date = fakeNow(2010, 1, days, 1, 1, 0);
+    const pingId = yield TelemetryController.addPendingPing(PING_TYPE, {}, {});
+
+    // Find the size of the ping.
+    const pingFilePath = getSavePathForPingId(pingId);
+    const pingSize = (yield OS.File.stat(pingFilePath)).size;
+    // Add the info at the beginning of the array, so that most recent pings come first.
+    pendingPingsInfo.unshift({id: pingId, size: pingSize, timestamp: date.getTime() });
+
+    // Set the last modification date.
+    yield OS.File.setDates(pingFilePath, null, date.getTime());
+
+    // Add it to the pending ping directory size.
+    pingsSizeInBytes += pingSize;
+  }
+
+  // We need to test the pending pings size before we hit the quota, otherwise a special
+  // value is recorded.
+  Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").clear();
+  Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").clear();
+  Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").clear();
+
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+
+  // Check that the correct values for quota probes are reported when no quota is hit.
+  let h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.sum, Math.round(pingsSizeInBytes / 1024 / 1024),
+               "Telemetry must report the correct pending pings directory size.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report 0 evictions if quota is not hit.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report a null elapsed time if quota is not hit.");
+
+  // Set the quota to 80% of the space.
+  const testQuotaInBytes = pingsSizeInBytes * 0.8;
+  fakePendingPingsQuota(testQuotaInBytes);
+
+  // The storage prunes pending pings until we reach 90% of the requested storage quota.
+  // Based on that, find how many pings should be kept.
+  const safeQuotaSize = Math.round(testQuotaInBytes * 0.9);
+  let sizeInBytes = 0;
+  let pingsWithinQuota = [];
+  let pingsOutsideQuota = [];
+
+  for (let pingInfo of pendingPingsInfo) {
+    sizeInBytes += pingInfo.size;
+    if (sizeInBytes >= safeQuotaSize) {
+      pingsOutsideQuota.push(pingInfo.id);
+      continue;
+    }
+    pingsWithinQuota.push(pingInfo.id);
+  }
+
+  expectedNotPrunedPings = pingsWithinQuota;
+  expectedPrunedPings = pingsOutsideQuota;
+
+  // Reset TelemetryController to start the pending pings cleanup.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+  yield checkPendingPings();
+
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, pingsOutsideQuota.length,
+               "Telemetry must correctly report the over quota pings evicted from the pending pings directory.");
+  h = Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_SIZE_MB").snapshot();
+  Assert.equal(h.sum, 17, "Pending pings quota was hit, a special size must be reported.");
+
+  // Trigger a cleanup again and make sure we're not removing anything.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testPendingQuotaTaskPromise();
+  yield checkPendingPings();
+
+  Services.prefs.setBoolPref(PREF_FHR_UPLOAD, true);
 });
 
 add_task(function* teardown() {

@@ -6,12 +6,10 @@
 
 let Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
-let tmp = {};
-Cu.import("resource://gre/modules/FxAccounts.jsm", tmp);
-Cu.import("resource://gre/modules/FxAccountsCommon.js", tmp);
-Cu.import("resource://services-sync/browserid_identity.js", tmp);
-let {FxAccounts, BrowserIDManager, DATA_FORMAT_VERSION, CERT_LIFETIME} = tmp;
-let fxaSyncIsEnabled = Weave.Service.identity instanceof BrowserIDManager;
+const {FxAccounts, AccountState} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+
+// FxA logs can be gotten at via this pref which helps debugging.
+Preferences.set("services.sync.log.appender.dump", "Debug");
 
 add_task(function() {
   yield PanelUI.show({type: "command"});
@@ -47,35 +45,56 @@ add_task(function() {
   PanelUI.toggle({type: "command"});
   yield hiddenPanelPromise;
 
-  if (fxaSyncIsEnabled) {
-    yield fxAccounts.signOut();
-  }
+  yield fxAccounts.signOut(/*localOnly = */true);
 });
 
 function configureIdentity() {
-  // do the FxAccounts thang...
+  // do the FxAccounts thang and wait for Sync to initialize the identity.
   configureFxAccountIdentity();
-
-  if (fxaSyncIsEnabled) {
-    return Weave.Service.identity.initializeWithCurrentIdentity().then(() => {
-      // need to wait until this identity manager is readyToAuthenticate.
-      return Weave.Service.identity.whenReadyToAuthenticate.promise;
-    });
-  }
-
-  Weave.Service.createAccount("john@doe.com", "mysecretpw",
-                              "challenge", "response");
-  Weave.Service.identity.account = "john@doe.com";
-  Weave.Service.identity.basicPassword = "mysecretpw";
-  Weave.Service.identity.syncKey = Weave.Utils.generatePassphrase();
-  Weave.Svc.Prefs.set("firstSync", "newAccount");
-  Weave.Service.persistLogin();
-  return Promise.resolve();
+  return Weave.Service.identity.initializeWithCurrentIdentity().then(() => {
+    // need to wait until this identity manager is readyToAuthenticate.
+    return Weave.Service.identity.whenReadyToAuthenticate.promise;
+  });
 }
 
-// Configure an instance of an FxAccount identity provider with the specified
-// config (or the default config if not specified).
+// Configure an instance of an FxAccount identity provider.
 function configureFxAccountIdentity() {
+  // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
+  function MockFxaStorageManager() {
+  }
+
+  MockFxaStorageManager.prototype = {
+    promiseInitialized: Promise.resolve(),
+
+    initialize(accountData) {
+      this.accountData = accountData;
+    },
+
+    finalize() {
+      return Promise.resolve();
+    },
+
+    getAccountData() {
+      return Promise.resolve(this.accountData);
+    },
+
+    updateAccountData(updatedFields) {
+      for (let [name, value] of Iterator(updatedFields)) {
+        if (value == null) {
+          delete this.accountData[name];
+        } else {
+          this.accountData[name] = value;
+        }
+      }
+      return Promise.resolve();
+    },
+
+    deleteAccountData() {
+      this.accountData = null;
+      return Promise.resolve();
+    }
+  }
+
   let user = {
     assertion: "assertion",
     email: "email",
@@ -94,7 +113,25 @@ function configureFxAccountIdentity() {
     // uid will be set to the username.
   };
 
-  let MockInternal = {};
+  let MockInternal = {
+    newAccountState(credentials) {
+      isnot(credentials, "not expecting credentials");
+      let storageManager = new MockFxaStorageManager();
+      // and init storage with our user.
+      storageManager.initialize(user);
+      return new AccountState(this, storageManager);
+    },
+    getCertificate(data, keyPair, mustBeValidUntil) {
+      this.cert = {
+        validUntil: this.now() + 10000,
+        cert: "certificate",
+      };
+      return Promise.resolve(this.cert.cert);
+    },
+    getCertificateSigned() {
+      return Promise.resolve();
+    },
+  };
   let mockTSC = { // TokenServerClient
     getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
       token.uid = "username";
@@ -102,23 +139,10 @@ function configureFxAccountIdentity() {
     },
   };
 
-  let authService = Weave.Service.identity;
-  authService._fxaService = new FxAccounts(MockInternal);
-
-  authService._fxaService.internal.currentAccountState.signedInUser = {
-    version: DATA_FORMAT_VERSION,
-    accountData: user
-  }
-  authService._fxaService.internal.currentAccountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
-    this.cert = {
-      validUntil: authService._fxaService.internal.now() + CERT_LIFETIME,
-      cert: "certificate",
-    };
-    return Promise.resolve(this.cert.cert);
-  };
-
-  authService._tokenServerClient = mockTSC;
+  let fxa = new FxAccounts(MockInternal);
+  Weave.Service.identity._fxaService = fxa;
+  Weave.Service.identity._tokenServerClient = mockTSC;
   // Set the "account" of the browserId manager to be the "email" of the
   // logged in user of the mockFXA service.
-  authService._account = user.email;
+  Weave.Service.identity._account = user.email;
 }

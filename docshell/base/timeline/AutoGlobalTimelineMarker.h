@@ -34,21 +34,18 @@ class MOZ_STACK_CLASS AutoGlobalTimelineMarker
 {
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
-  // True as long as no operation has failed, eg due to OOM.
-  bool mOk;
-
-  // The set of docshells that are being observed and will get markers.
-  mozilla::Vector<nsRefPtr<nsDocShell>> mDocShells;
-
   // The name of the marker we are adding.
   const char* mName;
 
-  void PopulateDocShells();
+  // The set of docshells that will get the marker.
+  Vector<nsRefPtr<nsDocShell>> mDocShells;
+
+  // True as long as no operation has failed, eg due to OOM.
+  bool mDocShellsRetrieved;
 
 public:
   explicit AutoGlobalTimelineMarker(const char* aName
                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
   ~AutoGlobalTimelineMarker();
 
   AutoGlobalTimelineMarker(const AutoGlobalTimelineMarker& aOther) = delete;

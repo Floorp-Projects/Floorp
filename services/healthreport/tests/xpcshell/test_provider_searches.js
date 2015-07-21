@@ -146,7 +146,7 @@ add_task(function* test_default_search_engine() {
   let provider = new SearchesProvider();
   yield provider.init(storage);
 
-  let m = provider.getMeasurement("engines", 1);
+  let m = provider.getMeasurement("engines", 2);
 
   let now = new Date();
   yield provider.collectDailyData();
@@ -173,6 +173,15 @@ add_task(function* test_default_search_engine() {
   yield provider.collectDailyData();
   data = yield m.getValues();
   Assert.equal(data.days.getDay(now).get("default"), "other-testdefault");
+
+  // If no cohort identifier is set, we shouldn't report a cohort.
+  Assert.equal(data.days.getDay(now).get("cohort"), undefined);
+
+  // Set a cohort identifier and verify we record it.
+  Services.prefs.setCharPref("browser.search.cohort", "testcohort");
+  yield provider.collectDailyData();
+  data = yield m.getValues();
+  Assert.equal(data.days.getDay(now).get("cohort"), "testcohort");
 
   yield storage.close();
 });

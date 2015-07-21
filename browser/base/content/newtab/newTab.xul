@@ -49,28 +49,20 @@
 
   <div id="newtab-intro-mask">
     <div id="newtab-intro-modal">
-      <div id="newtab-intro-progress">
-        <div id="newtab-intro-numerical-progress"/>
-        <div id="newtab-intro-graphical-progress">
-          <span id="indicator"/>
-        </div>
-      </div>
       <div id="newtab-intro-header"/>
       <div id="newtab-intro-body">
         <div id="newtab-intro-content">
-          <div id="newtab-intro-image"/>
           <div id="newtab-intro-text">
             <p/><p/>
           </div>
         </div>
         <div id="newtab-intro-buttons">
-          <input type="button" onclick="gIntro._back()"/>
-          <input type="button" default="true" onclick="gIntro._next()"/>
+          <input id="newtab-intro-button" type="button" default="true" onclick="gIntro._exitIntro()"/>
         </div>
       </div>
       <div id="newtab-intro-footer">
         <ul>
-          <li/><li/>
+          <li id="newtab-intro-link"/>
         </ul>
       </div>
     </div>

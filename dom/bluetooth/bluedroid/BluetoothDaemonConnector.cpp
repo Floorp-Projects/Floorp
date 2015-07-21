@@ -8,6 +8,7 @@
 #include "BluetoothDaemonConnector.h"
 #include <fcntl.h>
 #include <sys/un.h>
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -15,10 +16,14 @@ BEGIN_BLUETOOTH_NAMESPACE
 BluetoothDaemonConnector::BluetoothDaemonConnector(
   const nsACString& aSocketName)
   : mSocketName(aSocketName)
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(BluetoothDaemonConnector, UnixSocketConnector);
+}
 
 BluetoothDaemonConnector::~BluetoothDaemonConnector()
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(BluetoothDaemonConnector, UnixSocketConnector);
+}
 
 nsresult
 BluetoothDaemonConnector::CreateSocket(int& aFd) const
