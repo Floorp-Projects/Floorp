@@ -424,7 +424,153 @@ private:
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
   Monitor mMonitor;
 };
-#endif
+#endif // MOZ_FMP4
+
+#ifdef MOZ_FMP4
+class ADTSContainerParser : public ContainerParser {
+public:
+  explicit ADTSContainerParser(const nsACString& aType)
+    : ContainerParser(aType)
+  {}
+
+  typedef struct {
+    size_t header_length; // Length of just the initialization data.
+    size_t frame_length;  // Includes header_length;
+    uint8_t aac_frames;   // Number of AAC frames in the ADTS frame.
+    bool have_crc;
+  } Header;
+
+  /// Helper to parse the ADTS header, returning data we care about.
+  /// Returns true if the header is parsed successfully.
+  /// Returns false if the header is invalid or incomplete,
+  /// without modifying the passed-in Header object.
+  bool Parse(MediaByteBuffer* aData, Header& header)
+  {
+    MOZ_ASSERT(aData);
+
+    // ADTS initialization segments are just the packet header.
+    if (aData->Length() < 7) {
+      MSE_DEBUG(ADTSContainerParser, "buffer too short for header.");
+      return false;
+    }
+    // Check 0xfffx sync word plus layer 0.
+    if (((*aData)[0] != 0xff) || (((*aData)[1] & 0xf6) != 0xf0)) {
+      MSE_DEBUG(ADTSContainerParser, "no syncword.");
+      return false;
+    }
+    bool have_crc = !((*aData)[1] & 0x01);
+    if (have_crc && aData->Length() < 9) {
+      MSE_DEBUG(ADTSContainerParser, "buffer too short for header with crc.");
+      return false;
+    }
+    uint8_t frequency_index = ((*aData)[2] & 0x3c) >> 2;
+    MOZ_ASSERT(frequency_index < 16);
+    if (frequency_index == 15) {
+      MSE_DEBUG(ADTSContainerParser, "explicit frequency disallowed.");
+      return false;
+    }
+    size_t header_length = have_crc ? 9 : 7;
+    size_t data_length = (((*aData)[3] & 0x03) << 11) ||
+                         (((*aData)[4] & 0xff) << 3) ||
+                         (((*aData)[5] & 0xe0) >> 5);
+    uint8_t frames = ((*aData)[6] & 0x03) + 1;
+    MOZ_ASSERT(frames > 0);
+    MOZ_ASSERT(frames < 4);
+
+    // Return successfully parsed data.
+    header.header_length = header_length;
+    header.frame_length = header_length + data_length;
+    header.aac_frames = frames;
+    header.have_crc = have_crc;
+    return true;
+  }
+
+  bool IsInitSegmentPresent(MediaByteBuffer* aData) override
+  {
+    // Call superclass for logging.
+    ContainerParser::IsInitSegmentPresent(aData);
+
+    Header header;
+    if (!Parse(aData, header)) {
+      return false;
+    }
+
+    MSE_DEBUGV(ADTSContainerParser, "%llu byte frame %d aac frames%s",
+        (unsigned long long)header.frame_length, (int)header.aac_frames,
+        header.have_crc ? " crc" : "");
+
+    return true;
+  }
+
+  bool IsMediaSegmentPresent(MediaByteBuffer* aData) override
+  {
+    // Call superclass for logging.
+    ContainerParser::IsMediaSegmentPresent(aData);
+
+    // Make sure we have a header so we know how long the frame is.
+    // NB this assumes the media segment buffer starts with an
+    // initialization segment. Since every frame has an ADTS header
+    // this is a normal place to divide packets, but we can re-parse
+    // mInitData if we need to handle separate media segments.
+    Header header;
+    if (!Parse(aData, header)) {
+      return false;
+    }
+    // We're supposed to return true as long as aData contains the
+    // start of a media segment, whether or not it's complete. So
+    // return true if we have any data beyond the header.
+    if (aData->Length() <= header.header_length) {
+      return false;
+    }
+
+    // We should have at least a partial frame.
+    return true;
+  }
+
+  bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
+                                  int64_t& aStart, int64_t& aEnd) override
+  {
+    // ADTS header.
+    Header header;
+    if (!Parse(aData, header)) {
+      return false;
+    }
+    mHasInitData = true;
+    mCompleteInitSegmentRange = MediaByteRange(0, header.header_length);
+
+    // Cache raw header in case the caller wants a copy.
+    mInitData = new MediaByteBuffer(header.header_length);
+    mInitData->AppendElements(aData->Elements(), header.header_length);
+
+    // Check that we have enough data for the frame body.
+    if (aData->Length() < header.frame_length) {
+      MSE_DEBUGV(ADTSContainerParser, "Not enough data for %llu byte frame"
+          " in %llu byte buffer.",
+          (unsigned long long)header.frame_length,
+          (unsigned long long)(aData->Length()));
+      return false;
+    }
+    mCompleteMediaSegmentRange = MediaByteRange(header.header_length,
+                                                header.frame_length);
+    // The ADTS MediaSource Byte Stream Format document doesn't
+    // define media header. Just treat it the same as the whole
+    // media segment.
+    mCompleteMediaHeaderRange = mCompleteMediaSegmentRange;
+
+    MSE_DEBUG(ADTSContainerParser, "[%lld, %lld]",
+              aStart, aEnd);
+    // We don't update timestamps, regardless.
+    return false;
+  }
+
+  // Audio shouldn't have gaps.
+  // Especially when we generate the timestamps ourselves.
+  int64_t GetRoundingError() override
+  {
+    return 0;
+  }
+};
+#endif // MOZ_FMP4
 
 /*static*/ ContainerParser*
 ContainerParser::CreateForMIMEType(const nsACString& aType)
