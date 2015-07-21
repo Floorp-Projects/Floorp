@@ -271,7 +271,7 @@ NeckoParent::AllocPFTPChannelParent(const PBrowserOrId& aBrowser,
     return nullptr;
   }
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(aSerialized);
-  FTPChannelParent *p = new FTPChannelParent(loadContext, overrideStatus);
+  FTPChannelParent *p = new FTPChannelParent(aBrowser, loadContext, overrideStatus);
   p->AddRef();
   return p;
 }
