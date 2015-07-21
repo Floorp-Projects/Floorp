@@ -32,33 +32,29 @@ namespace serviceWorkerScriptCache {
 
 namespace {
 
+// XXX A sandbox nsIGlobalObject does not preserve its reflector, so |aSandbox|
+// must be kept alive as long as the CacheStorage if you want to ensure that
+// the CacheStorage will continue to work. Failures will manifest as errors
+// like "JavaScript error: , line 0: TypeError: The expression cannot be
+// converted to return the specified type."
 already_AddRefed<CacheStorage>
-CreateCacheStorage(nsIPrincipal* aPrincipal, ErrorResult& aRv,
-                   nsIXPConnectJSObjectHolder** aHolder = nullptr)
+CreateCacheStorage(JSContext* aCx, nsIPrincipal* aPrincipal, ErrorResult& aRv,
+                   JS::MutableHandle<JSObject*> aSandbox)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   MOZ_ASSERT(xpc, "This should never be null!");
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  nsCOMPtr<nsIXPConnectJSObjectHolder> sandbox;
-  aRv = xpc->CreateSandbox(jsapi.cx(), aPrincipal, getter_AddRefs(sandbox));
+  aRv = xpc->CreateSandbox(aCx, aPrincipal, aSandbox.address());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> sandboxGlobalObject =
-    xpc::NativeGlobal(sandbox->GetJSObject());
+  nsCOMPtr<nsIGlobalObject> sandboxGlobalObject = xpc::NativeGlobal(aSandbox);
   if (!sandboxGlobalObject) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
-  }
-
-  if (aHolder) {
-    sandbox.forget(aHolder);
   }
 
   // We assume private browsing is not enabled here.  The ScriptLoader
@@ -321,8 +317,11 @@ public:
 
     // Always create a CacheStorage since we want to write the network entry to
     // the cache even if there isn't an existing one.
+    AutoJSAPI jsapi;
+    jsapi.Init();
     ErrorResult result;
-    mCacheStorage = CreateCacheStorage(aPrincipal, result, getter_AddRefs(mSandbox));
+    mSandbox.init(jsapi.cx());
+    mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result, &mSandbox);
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       return result.StealNSResult();
@@ -623,7 +622,7 @@ private:
   }
 
   nsRefPtr<CompareCallback> mCallback;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mSandbox;
+  JS::PersistentRooted<JSObject*> mSandbox;
   nsRefPtr<CacheStorage> mCacheStorage;
 
   nsRefPtr<CompareNetwork> mCN;
@@ -959,8 +958,11 @@ PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName)
     return NS_OK;
   }
 
+  AutoJSAPI jsapi;
+  jsapi.Init();
   ErrorResult rv;
-  nsRefPtr<CacheStorage> cacheStorage = CreateCacheStorage(aPrincipal, rv);
+  JS::Rooted<JSObject*> sandboxObject(jsapi.cx());
+  nsRefPtr<CacheStorage> cacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, rv, &sandboxObject);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
