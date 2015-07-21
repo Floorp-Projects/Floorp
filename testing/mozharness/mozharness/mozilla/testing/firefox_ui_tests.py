@@ -18,10 +18,9 @@ from mozharness.base.python import (
     virtualenv_config_options,
 )
 from mozharness.mozilla.vcstools import VCSToolsScript
-from mozharness.mozilla.purge import PurgeMixin
 
 
-class FirefoxUITests(VCSToolsScript, VirtualenvMixin, PurgeMixin):
+class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
     config_options = [
         [['--firefox-ui-repo'], {
             'dest': 'firefox_ui_repo',
@@ -34,22 +33,13 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin, PurgeMixin):
         }],
     ] + copy.deepcopy(virtualenv_config_options)
 
-    def __init__(self,
-                 config={},
-                 config_options=[],
-                 all_actions=[],
-                 **kwargs):
-        default_config = {
-            'purge_minsize': 2,
-        }
-        default_config.update(config)
 
+    def __init__(self, config_options=[], all_actions=[], **kwargs):
         self.config_options += config_options
 
         if all_actions is None:
             # Default actions
             all_actions = [
-                'purge-builds',
                 'clobber',
                 'checkout',
                 'create-virtualenv',
@@ -58,21 +48,17 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin, PurgeMixin):
 
         super(FirefoxUITests, self).__init__(
             config_options=self.config_options,
-            require_config_file=True,
-            config=default_config,
             all_actions=all_actions,
             **kwargs
         )
 
         self.firefox_ui_repo = self.config['firefox_ui_repo']
+        self.firefox_ui_branch = self.config.get('firefox_ui_branch')
 
-        if 'checkout' in self.actions:
-            try:
-                self.firefox_ui_branch = self.config['firefox_ui_branch']
-            except:
-                self.fatal(
-                    'Please specify --firefox-ui-branch. Valid values can be found '
-                    'in here https://github.com/mozilla/firefox-ui-tests/branches')
+        if not self.firefox_ui_branch:
+            self.fatal(
+                'Please specify --firefox-ui-branch. Valid values can be found '
+                'in here https://github.com/mozilla/firefox-ui-tests/branches')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
