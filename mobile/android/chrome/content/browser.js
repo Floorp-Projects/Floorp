@@ -7025,7 +7025,7 @@ var IdentityHandler = {
   // Loaded active mixed content. Yellow triangle icon is shown.
   MIXED_MODE_CONTENT_LOADED: "mixed_content_loaded",
 
-  // The following tracking content modes are only used if "privacy.trackingprotection.enabled"
+  // The following tracking content modes are only used if tracking protection
   // is enabled. Our Java frontend coalesces them into one indicator.
 
   // No tracking content information. No tracking content icon is shown.
@@ -7103,15 +7103,18 @@ var IdentityHandler = {
     return this.MIXED_MODE_UNKNOWN;
   },
 
-  getTrackingMode: function getTrackingMode(aState) {
+  getTrackingMode: function getTrackingMode(aState, aBrowser) {
     if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
       Telemetry.addData("TRACKING_PROTECTION_SHIELD", 2);
       return this.TRACKING_MODE_CONTENT_BLOCKED;
     }
 
     // Only show an indicator for loaded tracking content if the pref to block it is enabled
-    if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) &&
-         Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
+    let tpEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") ||
+                    (Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled") &&
+                     PrivateBrowsingUtils.isBrowserPrivate(aBrowser));
+
+    if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) && tpEnabled) {
       Telemetry.addData("TRACKING_PROTECTION_SHIELD", 1);
       return this.TRACKING_MODE_CONTENT_LOADED;
     }
@@ -7148,7 +7151,7 @@ var IdentityHandler = {
 
     let identityMode = this.getIdentityMode(aState);
     let mixedMode = this.getMixedMode(aState);
-    let trackingMode = this.getTrackingMode(aState);
+    let trackingMode = this.getTrackingMode(aState, aBrowser);
     let result = {
       origin: locationObj.origin,
       mode: {

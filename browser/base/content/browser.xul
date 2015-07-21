@@ -716,6 +716,7 @@
                      autocompletesearchparam="enable-actions"
                      autocompletepopup="PopupAutoCompleteRichResult"
                      completeselectedindex="true"
+                     shrinkdelay="250"
                      tabscrolling="true"
                      showcommentcolumn="true"
                      showimagecolumn="true"

@@ -34,7 +34,6 @@
       <preference id="privacy.clearOnShutdown.history"               name="privacy.clearOnShutdown.history"               type="bool"
                   onchange="return gSanitizeDialog.onClearHistoryChanged();"/>
       <preference id="privacy.clearOnShutdown.formdata"              name="privacy.clearOnShutdown.formdata"              type="bool"/>
-      <preference id="privacy.clearOnShutdown.passwords"             name="privacy.clearOnShutdown.passwords"             type="bool"/>
       <preference id="privacy.clearOnShutdown.downloads"             name="privacy.clearOnShutdown.downloads"             type="bool"/>
       <preference id="privacy.clearOnShutdown.cookies"               name="privacy.clearOnShutdown.cookies"               type="bool"/>
       <preference id="privacy.clearOnShutdown.cache"                 name="privacy.clearOnShutdown.cache"                 type="bool"/>
@@ -88,17 +87,12 @@
         </columns>
         <rows>
           <row>
-            <checkbox label="&itemPasswords.label;"
-                      accesskey="&itemPasswords.accesskey;"
-                      preference="privacy.clearOnShutdown.passwords"/>
-            <checkbox label="&itemOfflineApps.label;"
-                      accesskey="&itemOfflineApps.accesskey;"
-                      preference="privacy.clearOnShutdown.offlineApps"/>
-          </row>
-          <row>
             <checkbox label="&itemSitePreferences.label;"
                       accesskey="&itemSitePreferences.accesskey;"
                       preference="privacy.clearOnShutdown.siteSettings"/>
+            <checkbox label="&itemOfflineApps.label;"
+                      accesskey="&itemOfflineApps.accesskey;"
+                      preference="privacy.clearOnShutdown.offlineApps"/>
           </row>
         </rows>
       </grid>
