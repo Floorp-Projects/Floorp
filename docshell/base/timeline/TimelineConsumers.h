@@ -7,24 +7,29 @@
 #ifndef mozilla_TimelineConsumers_h_
 #define mozilla_TimelineConsumers_h_
 
+#include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
+#include "timeline/ObservedDocShell.h"
+
 class nsDocShell;
 
 namespace mozilla {
 
-// # TimelineConsumers
-//
-// A class to trace how many frontends are interested in markers. Whenever
-// interest is expressed in markers, these fields will keep track of that.
 class TimelineConsumers
 {
 private:
   // Counter for how many timelines are currently interested in markers.
   static unsigned long sActiveConsumers;
+  static LinkedList<ObservedDocShell>* sObservedDocShells;
+  static LinkedList<ObservedDocShell>& GetOrCreateObservedDocShellsList();
 
 public:
-  static void AddConsumer();
-  static void RemoveConsumer();
+  static void AddConsumer(nsDocShell* aDocShell,
+                          UniquePtr<ObservedDocShell>& aObservedPtr);
+  static void RemoveConsumer(nsDocShell* aDocShell,
+                             UniquePtr<ObservedDocShell>& aObservedPtr);
   static bool IsEmpty();
+  static bool GetKnownDocShells(Vector<nsRefPtr<nsDocShell>>& aStore);
 };
 
 } // namespace mozilla
