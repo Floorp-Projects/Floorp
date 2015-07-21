@@ -343,7 +343,7 @@ private:
     uint32_t count = GetChildCount();
     mFlags.mHasHashedFrames = 1;
     uint32_t minLength = std::max(kMinChildCountForHashtable,
-                                  uint32_t(PL_DHASH_DEFAULT_INITIAL_LENGTH));
+                                  uint32_t(PLDHashTable::kDefaultInitialLength));
     mFrames = new nsTHashtable< nsPtrHashKey<nsIFrame> >(std::max(count, minLength));
     for (nsIFrame* f = mFirstChild; count-- > 0; f = f->GetNextSibling()) {
       mFrames->PutEntry(f);
