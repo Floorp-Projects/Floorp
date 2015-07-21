@@ -16,6 +16,8 @@ this.EXPORTED_SYMBOLS = [
   "waitForZeroTimer",
   "Promise", // from a module import
   "add_identity_test",
+  "MockFxaStorageManager",
+  "AccountState", // from a module import
 ];
 
 const {utils: Cu} = Components;
@@ -31,6 +33,45 @@ Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Promise.jsm");
+
+// and grab non-exported stuff via a backstage pass.
+const {AccountState} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+
+// A mock "storage manager" for FxAccounts that doesn't actually write anywhere.
+function MockFxaStorageManager() {
+}
+
+MockFxaStorageManager.prototype = {
+  promiseInitialized: Promise.resolve(),
+
+  initialize(accountData) {
+    this.accountData = accountData;
+  },
+
+  finalize() {
+    return Promise.resolve();
+  },
+
+  getAccountData() {
+    return Promise.resolve(this.accountData);
+  },
+
+  updateAccountData(updatedFields) {
+    for (let [name, value] of Iterator(updatedFields)) {
+      if (value == null) {
+        delete this.accountData[name];
+      } else {
+        this.accountData[name] = value;
+      }
+    }
+    return Promise.resolve();
+  },
+
+  deleteAccountData() {
+    this.accountData = null;
+    return Promise.resolve();
+  }
+}
 
 /**
  * First wait >100ms (nsITimers can take up to that much time to fire, so
@@ -126,23 +167,33 @@ this.makeIdentityConfig = function(overrides) {
 // config (or the default config if not specified).
 this.configureFxAccountIdentity = function(authService,
                                            config = makeIdentityConfig()) {
-  let MockInternal = {};
-  let fxa = new FxAccounts(MockInternal);
-
   // until we get better test infrastructure for bid_identity, we set the
   // signedin user's "email" to the username, simply as many tests rely on this.
   config.fxaccount.user.email = config.username;
-  fxa.internal.currentAccountState.signedInUser = {
-    version: DATA_FORMAT_VERSION,
-    accountData: config.fxaccount.user
+
+  let fxa;
+  let MockInternal = {
+    newAccountState(credentials) {
+      // We only expect this to be called with null indicating the (mock)
+      // storage should be read.
+      if (credentials) {
+        throw new Error("Not expecting to have credentials passed");
+      }
+      let storageManager = new MockFxaStorageManager();
+      storageManager.initialize(config.fxaccount.user);
+      let accountState = new AccountState(this, storageManager);
+      // mock getCertificate
+      accountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
+        accountState.cert = {
+          validUntil: fxa.internal.now() + CERT_LIFETIME,
+          cert: "certificate",
+        };
+        return Promise.resolve(this.cert.cert);
+      }
+      return accountState;
+    }
   };
-  fxa.internal.currentAccountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
-    this.cert = {
-      validUntil: fxa.internal.now() + CERT_LIFETIME,
-      cert: "certificate",
-    };
-    return Promise.resolve(this.cert.cert);
-  };
+  fxa = new FxAccounts(MockInternal);
 
   let mockTSC = { // TokenServerClient
     getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
@@ -154,7 +205,7 @@ this.configureFxAccountIdentity = function(authService,
   authService._tokenServerClient = mockTSC;
   // Set the "account" of the browserId manager to be the "email" of the
   // logged in user of the mockFXA service.
-  authService._signedInUser = fxa.internal.currentAccountState.signedInUser.accountData;
+  authService._signedInUser = config.fxaccount.user;
   authService._account = config.fxaccount.user.email;
 }
 
