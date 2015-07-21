@@ -264,8 +264,8 @@ add_task(function test_ensureLoggedIn() {
 
   // arrange for no logged in user.
   let fxa = browseridManager._fxaService
-  let signedInUser = fxa.internal.currentAccountState.signedInUser;
-  fxa.internal.currentAccountState.signedInUser = null;
+  let signedInUser = fxa.internal.currentAccountState.storageManager.accountData;
+  fxa.internal.currentAccountState.storageManager.accountData = null;
   browseridManager.initializeWithCurrentIdentity();
   Assert.ok(!browseridManager._shouldHaveSyncKeyBundle,
             "_shouldHaveSyncKeyBundle should be false so we know we are testing what we think we are.");
@@ -273,7 +273,8 @@ add_task(function test_ensureLoggedIn() {
   yield Assert.rejects(browseridManager.ensureLoggedIn(), "expecting rejection due to no user");
   Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
             "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
-  fxa.internal.currentAccountState.signedInUser = signedInUser;
+  // Restore the logged in user to what it was.
+  fxa.internal.currentAccountState.storageManager.accountData = signedInUser;
   Status.login = LOGIN_FAILED_LOGIN_REJECTED;
   yield Assert.rejects(browseridManager.ensureLoggedIn(),
                        "LOGIN_FAILED_LOGIN_REJECTED should have caused immediate rejection");
@@ -585,7 +586,17 @@ add_task(function test_getKeysMissing() {
     fetchAndUnwrapKeys: function () {
       return Promise.resolve({});
     },
-    fxAccountsClient: new MockFxAccountsClient()
+    fxAccountsClient: new MockFxAccountsClient(),
+    newAccountState(credentials) {
+      // We only expect this to be called with null indicating the (mock)
+      // storage should be read.
+      if (credentials) {
+        throw new Error("Not expecting to have credentials passed");
+      }
+      let storageManager = new MockFxaStorageManager();
+      storageManager.initialize(identityConfig.fxaccount.user);
+      return new AccountState(this, storageManager);
+    },
   });
 
   // Add a mock to the currentAccountState object.
@@ -596,9 +607,6 @@ add_task(function test_getKeysMissing() {
     };
     return Promise.resolve(this.cert.cert);
   };
-
-  // Ensure the new FxAccounts mock has a signed-in user.
-  fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
 
   browseridManager._fxaService = fxa;
 
@@ -658,11 +666,18 @@ function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
   fxaClient.hawk = new MockedHawkClient();
   let internal = {
     fxAccountsClient: fxaClient,
+    newAccountState(credentials) {
+      // We only expect this to be called with null indicating the (mock)
+      // storage should be read.
+      if (credentials) {
+        throw new Error("Not expecting to have credentials passed");
+      }
+      let storageManager = new MockFxaStorageManager();
+      storageManager.initialize(config.fxaccount.user);
+      return new AccountState(this, storageManager);
+    },
   }
   let fxa = new FxAccounts(internal);
-  fxa.internal.currentAccountState.signedInUser = {
-      accountData: config.fxaccount.user,
-  };
 
   browseridManager._fxaService = fxa;
   browseridManager._signedInUser = null;
