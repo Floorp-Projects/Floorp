@@ -28,10 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         SimpleTest.waitForExplicitFinish();
 
-        // Grant "fullscreen" permission on the test domain. This means fullscreen will be
-        // automatically approved, so pointer lock in the tests will be too.
-        SpecialPowers.setFullscreenAllowed(document);
-
         SpecialPowers.pushPrefEnv({"set": [
           ["full-screen-api.enabled", true],
           ["full-screen-api.allow-trusted-requests-only", false],
@@ -43,7 +39,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         // normally run in an iframe, which by default will not have the
         // allowfullscreen attribute set, so full-screen won't work.
         var gTestFiles = [
-          "file_approval.html",
           "file_screenClientXYConst.html",
           "file_childIframe.html",
           "file_doubleLock.html",
@@ -72,11 +67,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         var gTestWindow = null;
         var gTestIndex = 0;
 
-        function finish() {
-          SpecialPowers.removeFullscreenAllowed(document)
-          SimpleTest.finish();
-        }
-
         function nextTest() {
           if (gTestWindow) {
             gTestWindow.close();
@@ -103,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
               nextTest();
             }
           } else {
-            finish();
+            SimpleTest.finish();
           }
         }
       </script>

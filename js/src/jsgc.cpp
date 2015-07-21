@@ -5519,7 +5519,6 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
     runtime(rt),
     prevState(rt->heapState_)
 {
-    MOZ_ASSERT(rt->gc.isAllocAllowed());
     MOZ_ASSERT(rt->heapState_ == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
     MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery.isEmpty());
@@ -6124,10 +6123,12 @@ GCRuntime::collect(bool incremental, SliceBudget budget, JS::gcreason::Reason re
     JS_AbortIfWrongThread(rt);
 
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
-    MOZ_ALWAYS_TRUE(!rt->isHeapBusy());
+    MOZ_RELEASE_ASSERT(!rt->isHeapBusy());
 
     /* The engine never locks across anything that could GC. */
     MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
+
+    MOZ_ASSERT(isAllocAllowed());
 
     if (rt->mainThread.suppressGC)
         return;
@@ -6262,7 +6263,7 @@ GCRuntime::abortGC()
 {
     JS_AbortIfWrongThread(rt);
 
-    MOZ_ALWAYS_TRUE(!rt->isHeapBusy());
+    MOZ_RELEASE_ASSERT(!rt->isHeapBusy());
     MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
     MOZ_ASSERT(!rt->mainThread.suppressGC);
 

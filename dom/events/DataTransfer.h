@@ -19,6 +19,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/Promise.h"
 
 class nsINode;
 class nsITransferable;
@@ -145,6 +146,9 @@ public:
   void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
                  mozilla::ErrorResult& aRv);
   FileList* GetFiles(mozilla::ErrorResult& aRv);
+
+  already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
+
   void AddElement(Element& aElement, mozilla::ErrorResult& aRv);
   uint32_t MozItemCount()
   {

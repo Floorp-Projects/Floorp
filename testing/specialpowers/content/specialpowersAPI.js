@@ -1820,16 +1820,6 @@ SpecialPowersAPI.prototype = {
                                   .messageManager);
   },
 
-  setFullscreenAllowed: function(document) {
-    Services.perms.addFromPrincipal(document.nodePrincipal, "fullscreen",
-				     Ci.nsIPermissionManager.ALLOW_ACTION);
-    Services.obs.notifyObservers(document, "fullscreen-approved", null);
-  },
-
-  removeFullscreenAllowed: function(document) {
-    Services.perms.removeFromPrincipal(document.nodePrincipal, "fullscreen");
-  },
-
   _getInfoFromPermissionArg: function(arg) {
     let url = "";
     let appId = Ci.nsIScriptSecurityManager.NO_APP_ID;
