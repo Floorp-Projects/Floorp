@@ -25,33 +25,6 @@
 #define PL_DHASH_FASTCALL
 #endif
 
-/*
- * Table capacity limit; do not exceed.  The max capacity used to be 1<<23 but
- * that occasionally that wasn't enough.  Making it much bigger than 1<<26
- * probably isn't worthwhile -- tables that big are kind of ridiculous.  Also,
- * the growth operation will (deliberately) fail if |capacity * mEntrySize|
- * overflows a uint32_t, and mEntrySize is always at least 8 bytes.
- */
-#define PL_DHASH_MAX_CAPACITY           ((uint32_t)1 << 26)
-
-#define PL_DHASH_MIN_CAPACITY           8
-
-/*
- * Making this half of the max capacity ensures it'll fit. Nobody should need
- * an initial length anywhere nearly this large, anyway.
- */
-#define PL_DHASH_MAX_INITIAL_LENGTH     (PL_DHASH_MAX_CAPACITY / 2)
-
-/* This gives a default initial capacity of 8. */
-#define PL_DHASH_DEFAULT_INITIAL_LENGTH 4
-
-/*
- * Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,
- * expressed as a fixed-point 32-bit fraction.
- */
-#define PL_DHASH_BITS           32
-#define PL_DHASH_GOLDEN_RATIO   0x9E3779B9U
-
 typedef uint32_t PLDHashNumber;
 
 class PLDHashTable;
@@ -70,10 +43,10 @@ struct PLDHashTableOps;
  *
  * Each hash table sub-type should make its entry type a subclass of
  * PLDHashEntryHdr. The mKeyHash member contains the result of multiplying the
- * hash code returned from the hashKey callback (see below) by
- * PL_DHASH_GOLDEN_RATIO, then constraining the result to avoid the magic 0 and
- * 1 values. The stored mKeyHash value is table size invariant, and it is
- * maintained automatically -- users need never access it.
+ * hash code returned from the hashKey callback (see below) by kGoldenRatio,
+ * then constraining the result to avoid the magic 0 and 1 values. The stored
+ * mKeyHash value is table size invariant, and it is maintained automatically
+ * -- users need never access it.
  */
 struct PLDHashEntryHdr
 {
@@ -264,6 +237,23 @@ private:
 #endif
 
 public:
+  // Table capacity limit; do not exceed. The max capacity used to be 1<<23 but
+  // that occasionally that wasn't enough. Making it much bigger than 1<<26
+  // probably isn't worthwhile -- tables that big are kind of ridiculous.
+  // Also, the growth operation will (deliberately) fail if |capacity *
+  // mEntrySize| overflows a uint32_t, and mEntrySize is always at least 8
+  // bytes.
+  static const uint32_t kMaxCapacity = ((uint32_t)1 << 26);
+
+  static const uint32_t kMinCapacity = 8;
+
+  // Making this half of kMaxCapacity ensures it'll fit. Nobody should need an
+  // initial length anywhere nearly this large, anyway.
+  static const uint32_t kMaxInitialLength = kMaxCapacity / 2;
+
+  // This gives a default initial capacity of 8.
+  static const uint32_t kDefaultInitialLength = 4;
+
   // Initialize the table with |aOps| and |aEntrySize|. The table's initial
   // capacity is chosen such that |aLength| elements can be inserted without
   // rehashing; if |aLength| is a power-of-two, this capacity will be
@@ -273,7 +263,7 @@ public:
   //
   // This will crash if |aEntrySize| and/or |aLength| are too large.
   PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-               uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+               uint32_t aLength = kDefaultInitialLength);
 
   PLDHashTable(PLDHashTable&& aOther)
       // These two fields are |const|. Initialize them here because the
@@ -319,7 +309,7 @@ public:
   void RawRemove(PLDHashEntryHdr* aEntry);
 
   // This function is equivalent to
-  // ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH).
+  // ClearAndPrepareForLength(kDefaultInitialLength).
   void Clear();
 
   // This function clears the table's contents and frees its entry storage,
@@ -420,13 +410,32 @@ public:
   }
 
 private:
+  // Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,
+  // expressed as a fixed-point 32-bit fraction.
+  static const uint32_t kHashBits = 32;
+  static const uint32_t kGoldenRatio = 0x9E3779B9U;
+
+  static uint32_t HashShift(uint32_t aEntrySize, uint32_t aLength);
+
+  static const PLDHashNumber kCollisionFlag = 1;
+
   static bool EntryIsFree(PLDHashEntryHdr* aEntry);
+  static bool EntryIsRemoved(PLDHashEntryHdr* aEntry);
+  static bool EntryIsLive(PLDHashEntryHdr* aEntry);
+  static void MarkEntryFree(PLDHashEntryHdr* aEntry);
+  static void MarkEntryRemoved(PLDHashEntryHdr* aEntry);
+
+  PLDHashNumber Hash1(PLDHashNumber aHash0);
+  void Hash2(PLDHashNumber aHash, uint32_t& aHash2Out, uint32_t& aSizeMaskOut);
+
+  static bool MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aHash);
+  PLDHashEntryHdr* AddressEntry(uint32_t aIndex);
 
   // We store mHashShift rather than sizeLog2 to optimize the collision-free
   // case in SearchTable.
   uint32_t CapacityFromHashShift() const
   {
-    return ((uint32_t)1 << (PL_DHASH_BITS - mHashShift));
+    return ((uint32_t)1 << (kHashBits - mHashShift));
   }
 
   PLDHashNumber ComputeKeyHash(const void* aKey);

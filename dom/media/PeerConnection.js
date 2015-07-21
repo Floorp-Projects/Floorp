@@ -628,6 +628,7 @@ RTCPeerConnection.prototype = {
   },
 
   createOffer: function(optionsOrOnSuccess, onError, options) {
+    // This entry-point handles both new and legacy call sig. Decipher which one
     let onSuccess;
     if (typeof optionsOrOnSuccess == "function") {
       onSuccess = optionsOrOnSuccess;
@@ -694,7 +695,14 @@ RTCPeerConnection.prototype = {
     });
   },
 
-  createAnswer: function(onSuccess, onError) {
+  createAnswer: function(optionsOrOnSuccess, onError) {
+    // This entry-point handles both new and legacy call sig. Decipher which one
+    let onSuccess, options;
+    if (typeof optionsOrOnSuccess == "function") {
+      onSuccess = optionsOrOnSuccess;
+    } else {
+      options = optionsOrOnSuccess;
+    }
     return this._legacyCatch(onSuccess, onError, () => {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
       return this._chain(() => {
