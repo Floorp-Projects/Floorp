@@ -455,31 +455,31 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_CHECK_STATS(test) {
-    return test.pcLocal.getStats(null).then(stats => {
+    return test.pcLocal.getStats().then(stats => {
       test.pcLocal.checkStats(stats, test.steeplechase);
     });
   },
 
   function PC_REMOTE_CHECK_STATS(test) {
-    test.pcRemote.getStats(null).then(stats => {
+    test.pcRemote.getStats().then(stats => {
       test.pcRemote.checkStats(stats, test.steeplechase);
     });
   },
 
   function PC_LOCAL_CHECK_ICE_CONNECTION_TYPE(test) {
-    test.pcLocal.getStats(null).then(stats => {
+    test.pcLocal.getStats().then(stats => {
       test.pcLocal.checkStatsIceConnectionType(stats);
     });
   },
 
   function PC_REMOTE_CHECK_ICE_CONNECTION_TYPE(test) {
-    test.pcRemote.getStats(null).then(stats => {
+    test.pcRemote.getStats().then(stats => {
       test.pcRemote.checkStatsIceConnectionType(stats);
     });
   },
 
   function PC_LOCAL_CHECK_ICE_CONNECTIONS(test) {
-    test.pcLocal.getStats(null).then(stats => {
+    test.pcLocal.getStats().then(stats => {
       test.pcLocal.checkStatsIceConnections(stats,
                                             test._offer_constraints,
                                             test._offer_options,
@@ -488,7 +488,7 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_REMOTE_CHECK_ICE_CONNECTIONS(test) {
-    test.pcRemote.getStats(null).then(stats => {
+    test.pcRemote.getStats().then(stats => {
       test.pcRemote.checkStatsIceConnections(stats,
                                              test._offer_constraints,
                                              test._offer_options,
