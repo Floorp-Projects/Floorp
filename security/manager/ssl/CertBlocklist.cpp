@@ -363,15 +363,6 @@ CertBlocklist::AddRevokedCertInternal(const nsACString& aEncodedDN,
   return NS_OK;
 }
 
-// Data needed for writing blocklist items out to the revocations file
-struct BlocklistSaveInfo
-{
-  IssuerTable issuerTable;
-  BlocklistStringSet issuers;
-  nsCOMPtr<nsIOutputStream> outputStream;
-  bool success;
-};
-
 // Write a line for a given string in the output stream
 nsresult
 WriteLine(nsIOutputStream* outputStream, const nsACString& string)
@@ -428,15 +419,18 @@ CertBlocklist::SaveEntries()
     return NS_OK;
   }
 
-  BlocklistSaveInfo saveInfo;
-  saveInfo.success = true;
-  rv = NS_NewAtomicFileOutputStream(getter_AddRefs(saveInfo.outputStream),
+  // Data needed for writing blocklist items out to the revocations file
+  IssuerTable issuerTable;
+  BlocklistStringSet issuers;
+  nsCOMPtr<nsIOutputStream> outputStream;
+
+  rv = NS_NewAtomicFileOutputStream(getter_AddRefs(outputStream),
                                     mBackingFile, -1, -1, 0);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = WriteLine(saveInfo.outputStream,
+  rv = WriteLine(outputStream,
                  NS_LITERAL_CSTRING("# Auto generated contents. Do not edit."));
   if (NS_FAILED(rv)) {
     return rv;
@@ -454,67 +448,51 @@ CertBlocklist::SaveEntries()
 
     nsresult rv = item.ToBase64(encDN, encOther);
     if (NS_FAILED(rv)) {
-      saveInfo.success = false;
-      break;
+      MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
+             ("CertBlocklist::SaveEntries writing revocation data failed"));
+      return NS_ERROR_FAILURE;
     }
 
     // If it's a subject / public key block, write it straight out
     if (item.mItemMechanism == BlockBySubjectAndPubKey) {
-      WriteLine(saveInfo.outputStream, encDN);
-      WriteLine(saveInfo.outputStream, NS_LITERAL_CSTRING("\t") + encOther);
+      WriteLine(outputStream, encDN);
+      WriteLine(outputStream, NS_LITERAL_CSTRING("\t") + encOther);
       continue;
     }
 
     // Otherwise, we have to group entries by issuer
-    saveInfo.issuers.PutEntry(encDN);
-    BlocklistStringSet* issuerSet = saveInfo.issuerTable.Get(encDN);
+    issuers.PutEntry(encDN);
+    BlocklistStringSet* issuerSet = issuerTable.Get(encDN);
     if (!issuerSet) {
       issuerSet = new BlocklistStringSet();
-      saveInfo.issuerTable.Put(encDN, issuerSet);
+      issuerTable.Put(encDN, issuerSet);
     }
     issuerSet->PutEntry(encOther);
   }
 
-  if (!saveInfo.success) {
-    MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-           ("CertBlocklist::SaveEntries writing revocation data failed"));
-    return NS_ERROR_FAILURE;
-  }
-
-  for (auto iter = saveInfo.issuers.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = issuers.Iter(); !iter.Done(); iter.Next()) {
     nsCStringHashKey* hashKey = iter.Get();
     nsAutoPtr<BlocklistStringSet> issuerSet;
-    saveInfo.issuerTable.RemoveAndForget(hashKey->GetKey(), issuerSet);
+    issuerTable.RemoveAndForget(hashKey->GetKey(), issuerSet);
 
-    nsresult rv = WriteLine(saveInfo.outputStream, hashKey->GetKey());
+    nsresult rv = WriteLine(outputStream, hashKey->GetKey());
     if (NS_FAILED(rv)) {
       break;
     }
 
     // Write serial data to the output stream
     for (auto iter = issuerSet->Iter(); !iter.Done(); iter.Next()) {
-      nsresult rv = WriteLine(saveInfo.outputStream,
+      nsresult rv = WriteLine(outputStream,
                               NS_LITERAL_CSTRING(" ") + iter.Get()->GetKey());
       if (NS_FAILED(rv)) {
-        saveInfo.success = false;
-        break;
+        MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
+               ("CertBlocklist::SaveEntries writing revocation data failed"));
+        return NS_ERROR_FAILURE;
       }
     }
-
-    if (!saveInfo.success) {
-      saveInfo.success = false;
-      break;
-    }
   }
 
-  if (!saveInfo.success) {
-    MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
-           ("CertBlocklist::SaveEntries writing revocation data failed"));
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsISafeOutputStream> safeStream =
-      do_QueryInterface(saveInfo.outputStream);
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outputStream);
   NS_ASSERTION(safeStream, "expected a safe output stream!");
   if (!safeStream) {
     return NS_ERROR_FAILURE;
