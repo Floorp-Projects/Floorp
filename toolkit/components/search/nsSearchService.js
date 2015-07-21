@@ -4910,7 +4910,7 @@ SearchService.prototype = {
       // For privacy, we only collect the submission URL for engines
       // from the application or distribution folder...
       let sendSubmissionURL =
-        /^(?:jar:|\[app\]|\[distribution\])/.test(result.loadPath);
+        /^(?:jar:)?(?:\[app\]|\[distribution\])/.test(result.loadPath);
 
       // ... or engines sorted by default near the top of the list.
       if (!sendSubmissionURL) {
