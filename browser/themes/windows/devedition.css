@@ -240,4 +240,18 @@
     padding-left: 15px;
     padding-right: 15px;
   }
+
+  /* Force white caption buttons for the dark theme on Windows 10 */
+  :root[devtoolstheme="dark"] #titlebar-min {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-white);
+  }
+  :root[devtoolstheme="dark"] #titlebar-max {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-white);
+  }
+  #main-window[devtoolstheme="dark"][sizemode="maximized"] #titlebar-max {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-white);
+  }
+  :root[devtoolstheme="dark"] #titlebar-close {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+  }
 }

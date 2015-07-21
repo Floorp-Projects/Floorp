@@ -751,7 +751,7 @@ nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
 
 NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext* cx, nsIPrincipal* principal,
-                           nsIXPConnectJSObjectHolder** _retval)
+                           JSObject** _retval)
 {
     *_retval = nullptr;
 
@@ -762,9 +762,7 @@ nsXPConnect::CreateSandbox(JSContext* cx, nsIPrincipal* principal,
                "Bad return value from xpc_CreateSandboxObject()!");
 
     if (NS_SUCCEEDED(rv) && !rval.isPrimitive()) {
-        JSObject* obj = rval.toObjectOrNull();
-        nsRefPtr<XPCJSObjectHolder> rval = new XPCJSObjectHolder(obj);
-        rval.forget(_retval);
+        *_retval = rval.toObjectOrNull();
     }
 
     return rv;

@@ -27,14 +27,26 @@ loop.store.ConversationAppStore = (function() {
 
     this._dispatcher = options.dispatcher;
     this._mozLoop = options.mozLoop;
-    this._storeState = {};
+    this._storeState = this.getInitialStoreState();
 
     this._dispatcher.register(this, [
-      "getWindowData"
+      "getWindowData",
+      "showFeedbackForm"
     ]);
   };
 
   ConversationAppStore.prototype = _.extend({
+    getInitialStoreState: function() {
+      return {
+        // How often to display the form. Convert seconds to ms.
+        feedbackPeriod: this._mozLoop.getLoopPref("feedback.periodSec") * 1000,
+        // Date when the feedback form was last presented. Convert to ms.
+        feedbackTimestamp: this._mozLoop
+                               .getLoopPref("feedback.dateLastSeenSec") * 1000,
+        showFeedbackForm: false
+      };
+    },
+
     /**
      * Retrieves current store state.
      *
@@ -52,6 +64,20 @@ loop.store.ConversationAppStore = (function() {
     setStoreState: function(state) {
       this._storeState = state;
       this.trigger("change");
+    },
+
+    /**
+     * Sets store state which will result in the feedback form rendered.
+     * Saves a timestamp of when the feedback was last rendered.
+     */
+    showFeedbackForm: function() {
+      var timestamp = Math.floor(new Date().getTime() / 1000);
+
+      this._mozLoop.setLoopPref("feedback.dateLastSeenSec", timestamp);
+
+      this.setStoreState({
+        showFeedbackForm: true
+      });
     },
 
     /**

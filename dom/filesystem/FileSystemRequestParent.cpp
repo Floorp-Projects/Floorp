@@ -58,7 +58,7 @@ FileSystemRequestParent::Dispatch(ContentParent* aParent,
     return false;
   }
 
-  if (!mFileSystem->IsTesting()) {
+  if (mFileSystem->RequiresPermissionChecks()) {
     // Check the content process permission.
 
     nsCString access;

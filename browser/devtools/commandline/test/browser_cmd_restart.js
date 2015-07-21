@@ -16,6 +16,7 @@ function test() {
           status: 'VALID',
           args: {
             nocache: { value: false },
+            safemode: { value: false },
           }
         },
       },
@@ -27,6 +28,31 @@ function test() {
           status: 'VALID',
           args: {
             nocache: { value: true },
+            safemode: { value: false },
+          }
+        },
+      },
+      {
+        setup: 'restart --safemode',
+        check: {
+          input:  'restart --safemode',
+          markup: 'VVVVVVVVVVVVVVVVVV',
+          status: 'VALID',
+          args: {
+            nocache: { value: false },
+            safemode: { value: true },
+          }
+        },
+      },
+      {
+        setup: 'restart --safemode --nocache',
+        check: {
+          input:  'restart --safemode --nocache',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID',
+          args: {
+            nocache: { value: true },
+            safemode: { value: true },
           }
         },
       },

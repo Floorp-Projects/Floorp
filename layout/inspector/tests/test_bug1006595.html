@@ -32,6 +32,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   arraysEqual(displaySubProps, [ "color" ],
               "'color' subproperties");
 
+  var varProps = utils.getSubpropertiesForCSSProperty("--foo");
+  arraysEqual(varProps, ["--foo"], "'--foo' subproperties");
+
   ok(utils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
   ok(!utils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
 

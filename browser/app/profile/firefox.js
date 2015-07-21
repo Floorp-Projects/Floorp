@@ -1701,11 +1701,6 @@ pref("browser.newtabpage.directory.ping", "https://tiles.services.mozilla.com/v3
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
-// True if the fullscreen API requires approval upon a domain entering fullscreen.
-// Domains that have already had fullscreen permission granted won't re-request
-// approval.
-pref("full-screen-api.approval-required", true);
-
 // Startup Crash Tracking
 // number of startup crashes that can occur before starting into safe mode automatically
 // (this pref has no effect if more than 6 hours have passed since the last crash)
@@ -1763,6 +1758,9 @@ pref("loop.debug.dispatcher", false);
 pref("loop.debug.websocket", false);
 pref("loop.debug.sdk", false);
 pref("loop.debug.twoWayMediaTelemetry", false);
+pref("loop.feedback.dateLastSeenSec", 0);
+pref("loop.feedback.periodSec", 15770000); // 6 months.
+pref("loop.feedback.formURL", "http://www.surveygizmo.com/s3/2227372/Firefox-Hello-Product-Survey");
 #ifdef DEBUG
 pref("loop.CSP", "default-src 'self' about: file: chrome: http://localhost:*; img-src * data:; font-src 'none'; connect-src wss://*.tokbox.com https://*.opentok.com https://*.tokbox.com wss://*.mozilla.com https://*.mozilla.org wss://*.mozaws.net http://localhost:* ws://localhost:*; media-src blob:");
 #else

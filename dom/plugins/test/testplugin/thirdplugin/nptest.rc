@@ -1,0 +1,42 @@
+#include<winver.h>
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "mozilla.org"
+            VALUE "FileDescription", L"Third plug-in for testing purposes."
+            VALUE "FileExtents", "ts2"
+            VALUE "FileOpenName", "Third test type"
+            VALUE "FileVersion", "1.0"
+            VALUE "InternalName", "npthirdtest"
+            VALUE "MIMEType", "application/x-Third-Test"
+            VALUE "OriginalFilename", "npthirdtest.dll"
+            VALUE "ProductName", "Third Test Plug-in"
+            VALUE "ProductVersion", "1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END

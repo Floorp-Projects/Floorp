@@ -67,49 +67,6 @@ using std::min;
 // used for statistics.
 static int32_t sMaxDecodeCount = 0;
 
-/* We define our own error checking macros here for 2 reasons:
- *
- * 1) Most of the failures we encounter here will (hopefully) be
- * the result of decoding failures (ie, bad data) and not code
- * failures. As such, we don't want to clutter up debug consoles
- * with spurious messages about NS_ENSURE_SUCCESS failures.
- *
- * 2) We want to set the internal error flag, shutdown properly,
- * and end up in an error state.
- *
- * So this macro should be called when the desired failure behavior
- * is to put the container into an error state and return failure.
- * It goes without saying that macro won't compile outside of a
- * non-static RasterImage method.
- */
-#define LOG_CONTAINER_ERROR                      \
-  PR_BEGIN_MACRO                                 \
-  MOZ_LOG (GetImgLog(), LogLevel::Error,             \
-          ("RasterImage: [this=%p] Error "      \
-           "detected at line %u for image of "   \
-           "type %s\n", this, __LINE__,          \
-           mSourceDataMimeType.get()));          \
-  PR_END_MACRO
-
-#define CONTAINER_ENSURE_SUCCESS(status)      \
-  PR_BEGIN_MACRO                              \
-  nsresult _status = status; /* eval once */  \
-  if (NS_FAILED(_status)) {                   \
-    LOG_CONTAINER_ERROR;                      \
-    DoError();                                \
-    return _status;                           \
-  }                                           \
- PR_END_MACRO
-
-#define CONTAINER_ENSURE_TRUE(arg, rv)  \
-  PR_BEGIN_MACRO                        \
-  if (!(arg)) {                         \
-    LOG_CONTAINER_ERROR;                \
-    DoError();                          \
-    return rv;                          \
-  }                                     \
-  PR_END_MACRO
-
 class ScaleRunner : public nsRunnable
 {
   enum ScaleState
@@ -304,8 +261,6 @@ RasterImage::Init(const char* aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ENSURE_ARG_POINTER(aMimeType);
-
   // We want to avoid redecodes for transient images.
   MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
                (!(aFlags & INIT_FLAG_DISCARDABLE) &&
@@ -313,7 +268,6 @@ RasterImage::Init(const char* aMimeType,
              "Illegal init flags for transient image");
 
   // Store initialization data
-  mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mWantFullDecode = !!(aFlags & INIT_FLAG_DECODE_IMMEDIATELY);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
@@ -325,20 +279,21 @@ RasterImage::Init(const char* aMimeType,
   mDownscaleDuringDecode = false;
 #endif
 
+  // Use the MIME type to select a decoder type, and make sure there *is* a
+  // decoder for this MIME type.
+  NS_ENSURE_ARG_POINTER(aMimeType);
+  mDecoderType = GetDecoderType(aMimeType);
+  if (mDecoderType == eDecoderType_unknown) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Lock this image's surfaces in the SurfaceCache if we're not discardable.
   if (!mDiscardable) {
     mLockCount++;
     SurfaceCache::LockImage(ImageKey(this));
   }
 
-  if (mSyncLoad) {
-    // We'll create a sync size decoder in OnImageDataComplete. For now, just
-    // verify that we *could* create such a decoder.
-    eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
-    if (type == eDecoderType_unknown) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
+  if (!mSyncLoad) {
     // Create an async size decoder and verify that we succeed in doing so.
     nsresult rv = Decode(Nothing(), DECODE_FLAGS_DEFAULT);
     if (NS_FAILED(rv)) {
@@ -1384,15 +1339,9 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
     MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
   }
 
-  // Figure out which decoder we want.
-  eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
-  if (type == eDecoderType_unknown) {
-    return nullptr;
-  }
-
   // Instantiate the appropriate decoder.
   nsRefPtr<Decoder> decoder;
-  switch (type) {
+  switch (mDecoderType) {
     case eDecoderType_png:
       decoder = new nsPNGDecoder(this);
       break;
@@ -1990,8 +1939,8 @@ RasterImage::DoError()
   // Invalidate to get rid of any partially-drawn image content.
   NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
 
-  // Log our error
-  LOG_CONTAINER_ERROR;
+  MOZ_LOG(GetImgLog(), LogLevel::Error,
+          ("RasterImage: [this=%p] Error detected for image\n", this));
 }
 
 /* static */ void

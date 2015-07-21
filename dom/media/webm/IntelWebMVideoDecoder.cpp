@@ -24,8 +24,6 @@
 PRLogModuleInfo* GetDemuxerLog();
 #define LOG(...) MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-using namespace mp4_demuxer;
-
 namespace mozilla {
 
 using layers::Image;
