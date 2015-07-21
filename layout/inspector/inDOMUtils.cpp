@@ -623,12 +623,17 @@ inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
   nsCSSProperty propertyID =
     nsCSSProps::LookupProperty(aProperty, nsCSSProps::eEnabledForAllContent);
 
-  if (propertyID == eCSSProperty_UNKNOWN ||
-      propertyID == eCSSPropertyExtra_variable) {
+  if (propertyID == eCSSProperty_UNKNOWN) {
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<nsString> array;
+  if (propertyID == eCSSPropertyExtra_variable) {
+    *aValues = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t*)));
+    (*aValues)[0] = ToNewUnicode(aProperty);
+    *aLength = 1;
+    return NS_OK;
+  }
+
   if (!nsCSSProps::IsShorthand(propertyID)) {
     *aValues = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t*)));
     (*aValues)[0] = ToNewUnicode(nsCSSProps::GetStringValue(propertyID));

@@ -86,20 +86,10 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             remoteTabsEntry = null;
         }
 
-        // On tablets, we go [...|History|Recent Tabs|Synced Tabs].
-        // On phones, we go [Synced Tabs|Recent Tabs|History|...].
-        if (HardwareUtils.isTablet()) {
-            panelConfigs.add(historyEntry);
-            panelConfigs.add(recentTabsEntry);
-            if (remoteTabsEntry != null) {
-                panelConfigs.add(remoteTabsEntry);
-            }
-        } else {
-            panelConfigs.add(0, historyEntry);
-            panelConfigs.add(0, recentTabsEntry);
-            if (remoteTabsEntry != null) {
-                panelConfigs.add(0, remoteTabsEntry);
-            }
+        panelConfigs.add(historyEntry);
+        panelConfigs.add(recentTabsEntry);
+        if (remoteTabsEntry != null) {
+            panelConfigs.add(remoteTabsEntry);
         }
 
         return new State(panelConfigs, true);
