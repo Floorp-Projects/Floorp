@@ -76,11 +76,15 @@ using namespace mozilla::dom;
 static nsresult
 GetDOMEventTarget(nsWebBrowser* aInBrowser, EventTarget** aTarget)
 {
-  NS_ENSURE_ARG_POINTER(aInBrowser);
+  if (!aInBrowser) {
+    return NS_ERROR_INVALID_POINTER;
+  }
 
   nsCOMPtr<nsIDOMWindow> domWindow;
   aInBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+  if (!domWindow) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
