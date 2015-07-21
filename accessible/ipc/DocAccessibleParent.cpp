@@ -30,13 +30,13 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
   // required show events.
   if (!parent) {
     NS_ERROR("adding child to unknown accessible");
-    return false;
+    return true;
   }
 
   uint32_t newChildIdx = aData.Idx();
   if (newChildIdx > parent->ChildrenCount()) {
     NS_ERROR("invalid index to add child at");
-    return false;
+    return true;
   }
 
   uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
@@ -48,7 +48,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
   }
 #endif
 
-  return consumed != 0;
+  return true;
 }
 
 uint32_t
@@ -140,8 +140,10 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
                                           const bool& aEnabled)
 {
   ProxyAccessible* target = GetAccessible(aID);
-  if (!target)
-    return false;
+  if (!target) {
+    NS_ERROR("we don't know about the target of a state change event!");
+    return true;
+  }
 
   ProxyStateChangeEvent(target, aState, aEnabled);
   return true;
@@ -151,8 +153,10 @@ bool
 DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
 {
   ProxyAccessible* proxy = GetAccessible(aID);
-  if (!proxy)
-    return false;
+  if (!proxy) {
+    NS_ERROR("unknown caret move event target!");
+    return true;
+  }
 
   ProxyCaretMoveEvent(proxy, aOffset);
   return true;
@@ -167,8 +171,10 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
                                          const bool& aFromUser)
 {
   ProxyAccessible* target = GetAccessible(aID);
-  if (!target)
-  return false;
+  if (!target) {
+    NS_ERROR("text change event target is unknown!");
+    return true;
+  }
 
   ProxyTextChangeEvent(target, aStr, aStart, aLen, aIsInsert, aFromUser);
 
