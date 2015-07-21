@@ -9616,27 +9616,16 @@ UpdateRefcountFunction::WillCommit()
                  "DatabaseConnection::UpdateRefcountFunction::WillCommit",
                  js::ProfileEntry::Category::STORAGE);
 
-  struct Helper final
-  {
-    static PLDHashOperator
-    Update(const uint64_t& aKey, FileInfoEntry* aValue, void* aUserArg)
-    {
-      MOZ_ASSERT(aValue);
-
-      auto* function = static_cast<DatabaseUpdateFunction*>(aUserArg);
-      MOZ_ASSERT(function);
-
-      if (aValue->mDelta && !function->Update(aKey, aValue->mDelta)) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   DatabaseUpdateFunction function(this);
+  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    auto key = iter.Key();
+    FileInfoEntry* value = iter.Data();
+    MOZ_ASSERT(value);
 
-  mFileInfoEntries.EnumerateRead(Helper::Update, &function);
+    if (value->mDelta && !function.Update(key, value->mDelta)) {
+      break;
+    }
+  }
 
   nsresult rv = function.ErrorCode();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9662,22 +9651,15 @@ UpdateRefcountFunction::DidCommit()
                  "DatabaseConnection::UpdateRefcountFunction::DidCommit",
                  js::ProfileEntry::Category::STORAGE);
 
-  struct Helper final
-  {
-    static PLDHashOperator
-    Update(const uint64_t& aKey, FileInfoEntry* aValue, void* /* aUserArg */)
-    {
-      MOZ_ASSERT(aValue);
+  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    auto value = iter.Data();
 
-      if (aValue->mDelta) {
-        aValue->mFileInfo->UpdateDBRefs(aValue->mDelta);
-      }
+    MOZ_ASSERT(value);
 
-      return PL_DHASH_NEXT;
+    if (value->mDelta) {
+      value->mFileInfo->UpdateDBRefs(value->mDelta);
     }
-  };
-
-  mFileInfoEntries.EnumerateRead(Helper::Update, nullptr);
+  }
 
   if (NS_FAILED(RemoveJournals(mJournalsToRemoveAfterCommit))) {
     NS_WARNING("RemoveJournals failed!");
@@ -9733,20 +9715,11 @@ UpdateRefcountFunction::RollbackSavepoint()
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mInSavepoint);
 
-  struct Helper
-  {
-    static PLDHashOperator
-    Rollback(const uint64_t& aKey, FileInfoEntry* aValue, void* /* aUserArg */)
-    {
-      MOZ_ASSERT(!IsOnBackgroundThread());
-      MOZ_ASSERT(aValue);
-
-      aValue->mDelta -= aValue->mSavepointDelta;
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  mSavepointEntriesIndex.EnumerateRead(Helper::Rollback, nullptr);
+  for (auto iter = mSavepointEntriesIndex.ConstIter();
+       !iter.Done(); iter.Next()) {
+    auto value = iter.Data();
+    value->mDelta -= value->mSavepointDelta;
+  }
 
   mInSavepoint = false;
   mSavepointEntriesIndex.Clear();
@@ -11716,117 +11689,19 @@ FullObjectStoreMetadata::HasLiveIndexes() const
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static bool
-    HasLiveIndexes(const FullObjectStoreMetadata* aMetadata)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aMetadata);
-
-      bool hasLiveIndexes = false;
-      aMetadata->mIndexes.EnumerateRead(&Enumerate, &hasLiveIndexes);
-
-      return hasLiveIndexes;
+  for (auto iter = mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
+    if (!iter.Data()->mDeleted) {
+      return true;
     }
+  }
 
-  private:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* result = static_cast<bool*>(aClosure);
-      MOZ_ASSERT(result);
-
-      if (!aValue->mDeleted) {
-        *result = true;
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  return Helper::HasLiveIndexes(this);
+  return false;
 }
 
 already_AddRefed<FullDatabaseMetadata>
 FullDatabaseMetadata::Duplicate() const
 {
   AssertIsOnBackgroundThread();
-
-  class MOZ_STACK_CLASS IndexClosure final
-  {
-    FullObjectStoreMetadata& mNew;
-
-  public:
-    explicit IndexClosure(FullObjectStoreMetadata& aNew)
-      : mNew(aNew)
-    { }
-
-    static PLDHashOperator
-    Copy(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
-
-      auto* closure = static_cast<IndexClosure*>(aClosure);
-
-      nsRefPtr<FullIndexMetadata> newMetadata = new FullIndexMetadata();
-
-      newMetadata->mCommonMetadata = aValue->mCommonMetadata;
-
-      if (NS_WARN_IF(!closure->mNew.mIndexes.Put(aKey, newMetadata,
-                                                 fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  class MOZ_STACK_CLASS ObjectStoreClosure final
-  {
-    FullDatabaseMetadata& mNew;
-
-  public:
-    explicit ObjectStoreClosure(FullDatabaseMetadata& aNew)
-      : mNew(aNew)
-    { }
-
-    static PLDHashOperator
-    Copy(const uint64_t& aKey, FullObjectStoreMetadata* aValue, void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
-
-      auto* objClosure = static_cast<ObjectStoreClosure*>(aClosure);
-
-      nsRefPtr<FullObjectStoreMetadata> newMetadata =
-        new FullObjectStoreMetadata();
-
-      newMetadata->mCommonMetadata = aValue->mCommonMetadata;
-      newMetadata->mNextAutoIncrementId = aValue->mNextAutoIncrementId;
-      newMetadata->mComittedAutoIncrementId = aValue->mComittedAutoIncrementId;
-
-      IndexClosure idxClosure(*newMetadata);
-      aValue->mIndexes.EnumerateRead(IndexClosure::Copy, &idxClosure);
-
-      if (NS_WARN_IF(aValue->mIndexes.Count() !=
-                     newMetadata->mIndexes.Count())) {
-        return PL_DHASH_STOP;
-      }
-
-      if (NS_WARN_IF(!objClosure->mNew.mObjectStores.Put(aKey, newMetadata,
-                                                         fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
 
   // FullDatabaseMetadata contains two hash tables of pointers that we need to
   // duplicate so we can't just use the copy constructor.
@@ -11838,13 +11713,40 @@ FullDatabaseMetadata::Duplicate() const
   newMetadata->mNextObjectStoreId = mNextObjectStoreId;
   newMetadata->mNextIndexId = mNextIndexId;
 
-  ObjectStoreClosure closure(*newMetadata);
-  mObjectStores.EnumerateRead(ObjectStoreClosure::Copy, &closure);
+  for (auto iter = mObjectStores.ConstIter(); !iter.Done(); iter.Next()) {
+    auto key = iter.Key();
+    auto value = iter.Data();
 
-  if (NS_WARN_IF(mObjectStores.Count() !=
-                 newMetadata->mObjectStores.Count())) {
-    return nullptr;
+    nsRefPtr<FullObjectStoreMetadata> newOSMetadata =
+      new FullObjectStoreMetadata();
+
+    newOSMetadata->mCommonMetadata = value->mCommonMetadata;
+    newOSMetadata->mNextAutoIncrementId = value->mNextAutoIncrementId;
+    newOSMetadata->mComittedAutoIncrementId = value->mComittedAutoIncrementId;
+
+    for (auto iter = value->mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
+      auto key = iter.Key();
+      auto value = iter.Data();
+
+      nsRefPtr<FullIndexMetadata> newIndexMetadata = new FullIndexMetadata();
+
+      newIndexMetadata->mCommonMetadata = value->mCommonMetadata;
+
+      if (NS_WARN_IF(!newOSMetadata->mIndexes.Put(key, newIndexMetadata,
+                                                  fallible))) {
+        return nullptr;
+      }
+    }
+
+    MOZ_ASSERT(value->mIndexes.Count() == newOSMetadata->mIndexes.Count());
+
+    if (NS_WARN_IF(!newMetadata->mObjectStores.Put(key, newOSMetadata,
+                                                   fallible))) {
+      return nullptr;
+    }
   }
+
+  MOZ_ASSERT(mObjectStores.Count() == newMetadata->mObjectStores.Count());
 
   return newMetadata.forget();
 }
@@ -12598,39 +12500,6 @@ Database::AllocPBackgroundIDBTransactionParent(
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Closure final
-  {
-    const nsString& mName;
-    FallibleTArray<nsRefPtr<FullObjectStoreMetadata>>& mObjectStores;
-
-  public:
-    Closure(const nsString& aName,
-            FallibleTArray<nsRefPtr<FullObjectStoreMetadata>>& aObjectStores)
-      : mName(aName)
-      , mObjectStores(aObjectStores)
-    { }
-
-    static PLDHashOperator
-    Find(const uint64_t& aKey,
-         FullObjectStoreMetadata* aValue,
-         void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
-
-      auto* closure = static_cast<Closure*>(aClosure);
-
-      if (closure->mName == aValue->mCommonMetadata.name() &&
-          !aValue->mDeleted) {
-        MOZ_ALWAYS_TRUE(closure->mObjectStores.AppendElement(aValue, fallible));
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   // Once a database is closed it must not try to open new transactions.
   if (NS_WARN_IF(mClosed)) {
     if (!mInvalidated) {
@@ -12686,12 +12555,19 @@ Database::AllocPBackgroundIDBTransactionParent(
 
     const uint32_t oldLength = fallibleObjectStores.Length();
 
-    Closure closure(name, fallibleObjectStores);
-    objectStores.EnumerateRead(Closure::Find, &closure);
+    for (auto iter = objectStores.ConstIter(); !iter.Done(); iter.Next()) {
+      auto value = iter.Data();
+      MOZ_ASSERT(iter.Key());
 
-    if (NS_WARN_IF((oldLength + 1) != fallibleObjectStores.Length())) {
-      return nullptr;
+      if (name == value->mCommonMetadata.name() && !value->mDeleted) {
+        if (NS_WARN_IF(!fallibleObjectStores.AppendElement(value, fallible))) {
+          return nullptr;
+        }
+        break;
+      }
     }
+
+    MOZ_ASSERT((oldLength + 1) == fallibleObjectStores.Length());
   }
 
   nsTArray<nsRefPtr<FullObjectStoreMetadata>> infallibleObjectStores;

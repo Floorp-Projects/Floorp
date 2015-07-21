@@ -753,24 +753,15 @@ IndexedDatabaseManager::InvalidateAllFileManagers()
 {
   AssertIsOnIOThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    Enumerate(const nsACString& aKey,
-              FileManagerInfo* aValue,
-              void* aUserArg)
-    {
-      AssertIsOnIOThread();
-      MOZ_ASSERT(!aKey.IsEmpty());
-      MOZ_ASSERT(aValue);
+  for (auto iter = mFileManagerInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    const nsACString& key = iter.Key();
+    auto value = iter.Data();
+    MOZ_ASSERT(!key.IsEmpty());
+    MOZ_ASSERT(value);
 
-      aValue->InvalidateAllFileManagers();
-      return PL_DHASH_NEXT;
-    }
-  };
+    value->InvalidateAllFileManagers();
+  }
 
-  mFileManagerInfos.EnumerateRead(Helper::Enumerate, nullptr);
   mFileManagerInfos.Clear();
 }
 
@@ -1003,29 +994,19 @@ IndexedDatabaseManager::Notify(nsITimer* aTimer)
   MOZ_ASSERT(IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    CreateAndDispatchRunnables(FileManager* aFileManager,
-                               nsTArray<int64_t>* aValue,
-                               void* aClosure)
-    {
-      MOZ_ASSERT(!aValue->IsEmpty());
+  for (auto iter = mPendingDeleteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    auto key = iter.Key();
+    auto value = iter.Data();
+    MOZ_ASSERT(!value->IsEmpty());
 
-      nsRefPtr<DeleteFilesRunnable> runnable =
-        new DeleteFilesRunnable(aFileManager, *aValue);
+    nsRefPtr<DeleteFilesRunnable> runnable =
+      new DeleteFilesRunnable(key, *value);
 
-      MOZ_ASSERT(aValue->IsEmpty());
+    MOZ_ASSERT(value->IsEmpty());
 
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+  }
 
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  mPendingDeleteInfos.EnumerateRead(Helper::CreateAndDispatchRunnables,
-                                    nullptr);
   mPendingDeleteInfos.Clear();
 
   return NS_OK;
