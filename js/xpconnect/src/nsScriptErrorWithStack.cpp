@@ -43,6 +43,7 @@ nsScriptErrorWithStack::nsScriptErrorWithStack(JS::HandleObject aStack)
     :  nsScriptError(),
        mStack(aStack)
 {
+    MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
     mozilla::HoldJSObjects(this);
 }
 
