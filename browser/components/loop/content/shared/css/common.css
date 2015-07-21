@@ -536,7 +536,7 @@ html[dir="rtl"] .context-content {
   width: 16px;
   max-height: 16px;
   margin-right: .8em;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
 }
 
 html[dir="rtl"] .context-wrapper > .context-preview {
