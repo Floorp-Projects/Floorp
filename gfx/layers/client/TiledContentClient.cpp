@@ -877,6 +877,7 @@ ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
 void
 ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                    const nsIntRegion& aPaintRegion,
+                                   const nsIntRegion& aDirtyRegion,
                                    LayerManager::DrawPaintedLayerCallback aCallback,
                                    void* aCallbackData)
 {
@@ -929,7 +930,8 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferDraw",
       js::ProfileEntry::Category::GRAPHICS);
 
-    mCallback(mPaintedLayer, ctxt, aPaintRegion, DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
+    mCallback(mPaintedLayer, ctxt, aPaintRegion, aDirtyRegion,
+              DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -1063,7 +1065,8 @@ ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion)
     ctx->SetMatrix(
       ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
 
-    mCallback(mPaintedLayer, ctx, aPaintRegion, DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+    mCallback(mPaintedLayer, ctx, aPaintRegion, aPaintRegion,
+              DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
     mMoz2DTiles.clear();
     // Reset:
     mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
@@ -1640,7 +1643,8 @@ ClientTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
     validOrStale.Or(aValidRegion, aOldValidRegion);
 
     // Paint the computed region and subtract it from the invalid region.
-    PaintThebes(validOrStale, regionToPaint, aCallback, aCallbackData);
+    PaintThebes(validOrStale, regionToPaint, aInvalidRegion,
+                aCallback, aCallbackData);
     aInvalidRegion.Sub(aInvalidRegion, regionToPaint);
   } while (repeat);
 
