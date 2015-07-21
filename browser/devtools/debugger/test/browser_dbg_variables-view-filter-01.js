@@ -96,8 +96,9 @@ function testVariablesAndPropertiesFiltering() {
   }
 
   function firstFilter() {
+    let expanded = once(gVariables, "fetched");
     typeText(gSearchBox, "constructor");
-    testFiltered();
+    return expanded.then(testFiltered);
   }
 
   function secondFilter() {
@@ -128,13 +129,13 @@ function testVariablesAndPropertiesFiltering() {
     is(constr2Var.expanded, false,
       "The constr2Var should not be expanded.");
 
+    let expanded = once(gVariables, "fetched");
     clearText(gSearchBox);
     typeText(gSearchBox, "constructor");
-    testFiltered();
+    expanded.then(testFiltered);
   }
 
-  firstFilter();
-  secondFilter();
+  firstFilter().then(secondFilter);
 }
 
 function prepareVariablesAndProperties() {
