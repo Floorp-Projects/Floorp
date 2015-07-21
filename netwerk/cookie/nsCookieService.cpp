@@ -109,6 +109,13 @@ static const uint32_t kMaxCookiesPerHost  = 150;
 static const uint32_t kMaxBytesPerCookie  = 4096;
 static const uint32_t kMaxBytesPerPath    = 1024;
 
+// behavior pref constants
+static const uint32_t BEHAVIOR_ACCEPT        = 0; // allow all cookies
+static const uint32_t BEHAVIOR_REJECTFOREIGN = 1; // reject all third-party cookies
+static const uint32_t BEHAVIOR_REJECT        = 2; // reject all cookies
+static const uint32_t BEHAVIOR_LIMITFOREIGN  = 3; // reject third-party cookies unless the
+                                                  // eTLD already has at least one cookie
+
 // pref string constants
 static const char kPrefCookieBehavior[]     = "network.cookie.cookieBehavior";
 static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
@@ -704,7 +711,7 @@ NS_IMPL_ISUPPORTS(nsCookieService,
 
 nsCookieService::nsCookieService()
  : mDBState(nullptr)
- , mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT)
+ , mCookieBehavior(BEHAVIOR_ACCEPT)
  , mThirdPartySession(false)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
@@ -3483,22 +3490,22 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
   }
 
   // check default prefs
-  if (mCookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+  if (mCookieBehavior == BEHAVIOR_REJECT) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are disabled");
     return STATUS_REJECTED;
   }
 
   // check if cookie is foreign
   if (aIsForeign) {
-    if (mCookieBehavior == nsICookieService::BEHAVIOR_ACCEPT && mThirdPartySession)
+    if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
       return STATUS_ACCEPT_SESSION;
 
-    if (mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
+    if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
       return STATUS_REJECTED;
     }
 
-    if (mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
+    if (mCookieBehavior == BEHAVIOR_LIMITFOREIGN) {
       uint32_t priorCookieCount = 0;
       nsAutoCString hostFromURI;
       aHostURI->GetHost(hostFromURI);
