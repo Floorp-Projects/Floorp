@@ -13,6 +13,7 @@
 #include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
@@ -78,11 +79,15 @@ public:
     , mConsumer(aConsumer)
     , mShuttingDownOnIOThread(false)
     , mConnectionStatus(SOCKET_IS_DISCONNECTED)
-  { }
+  {
+    MOZ_COUNT_CTOR_INHERITED(DroidSocketImpl, DataSocketIO);
+  }
 
   ~DroidSocketImpl()
   {
     MOZ_ASSERT(IsConsumerThread());
+
+    MOZ_COUNT_DTOR_INHERITED(DroidSocketImpl, DataSocketIO);
   }
 
   void Send(UnixSocketIOBuffer* aBuffer)
@@ -109,7 +114,7 @@ public:
 
   BluetoothSocket* GetBluetoothSocket()
   {
-    return mConsumer.get();
+    return mConsumer;
   }
 
   DataSocket* GetDataSocket()
@@ -118,11 +123,11 @@ public:
   }
 
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mImpl as container.
    */
-  RefPtr<BluetoothSocket> mConsumer;
+  BluetoothSocket* mConsumer;
 
   // Methods for |DataSocket|
   //
@@ -582,8 +587,15 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
 {
   MOZ_ASSERT(aObserver);
 
+  MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
+
   EnsureBluetoothSocketHalLoad();
   mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+}
+
+BluetoothSocket::~BluetoothSocket()
+{
+  MOZ_COUNT_DTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 class ConnectSocketResultHandler final : public BluetoothSocketResultHandler

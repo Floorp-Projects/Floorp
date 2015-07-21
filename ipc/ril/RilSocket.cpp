@@ -9,6 +9,7 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "RilSocketConsumer.h"
 
@@ -108,12 +109,16 @@ RilSocketIO::RilSocketIO(WorkerCrossThreadDispatcher* aDispatcher,
 {
   MOZ_ASSERT(mDispatcher);
   MOZ_ASSERT(mRilSocket);
+
+  MOZ_COUNT_CTOR_INHERITED(RilSocketIO, ConnectionOrientedSocketIO);
 }
 
 RilSocketIO::~RilSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
   MOZ_ASSERT(IsShutdownOnConsumerThread());
+
+  MOZ_COUNT_DTOR_INHERITED(RilSocketIO, ConnectionOrientedSocketIO);
 }
 
 RilSocket*
@@ -324,11 +329,15 @@ RilSocket::RilSocket(WorkerCrossThreadDispatcher* aDispatcher,
 {
   MOZ_ASSERT(mDispatcher);
   MOZ_ASSERT(mConsumer);
+
+  MOZ_COUNT_CTOR_INHERITED(RilSocket, ConnectionOrientedSocket);
 }
 
 RilSocket::~RilSocket()
 {
   MOZ_ASSERT(!mIO);
+
+  MOZ_COUNT_DTOR_INHERITED(RilSocket, ConnectionOrientedSocket);
 }
 
 void
