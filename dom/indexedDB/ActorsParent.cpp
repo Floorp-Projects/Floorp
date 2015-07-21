@@ -10815,31 +10815,6 @@ ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId)
 {
   AssertIsOnOwningThread();
 
-  struct Helper
-  {
-    static PLDHashOperator
-    MaybeScheduleTransaction(nsPtrHashKey<TransactionInfo>* aKey,
-                             void* aClosure)
-    {
-      AssertIsOnBackgroundThread();
-
-      TransactionInfo* transactionInfo = aKey->GetKey();
-      MOZ_ASSERT(transactionInfo);
-
-      TransactionInfo* finishedInfo = static_cast<TransactionInfo*>(aClosure);
-      MOZ_ASSERT(finishedInfo);
-
-      MOZ_ASSERT(transactionInfo->mBlockedOn.Contains(finishedInfo));
-
-      transactionInfo->mBlockedOn.RemoveEntry(finishedInfo);
-      if (!transactionInfo->mBlockedOn.Count()) {
-        transactionInfo->Schedule();
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   PROFILER_LABEL("IndexedDB",
                  "ConnectionPool::NoteFinishedTransaction",
                  js::ProfileEntry::Category::STORAGE);
@@ -10894,8 +10869,18 @@ ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId)
     blockInfo->mLastBlockingWrites.RemoveElement(transactionInfo);
   }
 
-  transactionInfo->mBlocking.EnumerateEntries(Helper::MaybeScheduleTransaction,
-                                              transactionInfo);
+  for (auto iter = transactionInfo->mBlocking.Iter();
+       !iter.Done();
+       iter.Next()) {
+    TransactionInfo* blockedInfo = iter.Get()->GetKey();
+    MOZ_ASSERT(blockedInfo);
+    MOZ_ASSERT(blockedInfo->mBlockedOn.Contains(transactionInfo));
+
+    blockedInfo->mBlockedOn.RemoveEntry(transactionInfo);
+    if (!blockedInfo->mBlockedOn.Count()) {
+      blockedInfo->Schedule();
+    }
+  }
 
   if (transactionInfo->mIsWriteTransaction) {
     MOZ_ASSERT(dbInfo->mWriteTransactionCount);
@@ -12357,10 +12342,11 @@ Database::Invalidate()
         return false;
       }
 
-      aTable.EnumerateEntries(Collect, &transactions);
-
-      if (NS_WARN_IF(transactions.Length() != count)) {
-        return false;
+      for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
+        if (NS_WARN_IF(!transactions.AppendElement(iter.Get()->GetKey(),
+                                                   fallible))) {
+          return false;
+        }
       }
 
       if (count) {
@@ -12375,23 +12361,6 @@ Database::Invalidate()
       }
 
       return true;
-    }
-
-  private:
-    static PLDHashOperator
-    Collect(nsPtrHashKey<TransactionBase>* aEntry, void* aUserData)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aUserData);
-
-      auto* array =
-        static_cast<FallibleTArray<nsRefPtr<TransactionBase>>*>(aUserData);
-
-      if (NS_WARN_IF(!array->AppendElement(aEntry->GetKey(), fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
     }
   };
 
