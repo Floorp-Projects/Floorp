@@ -505,7 +505,6 @@ function runTest(testNum) {
             openContextMenuFor(dom_full_screen, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
-        SpecialPowers.setBoolPref("full-screen-api.approval-required", false);
         SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
         SpecialPowers.setCharPref("full-screen-api.transition-duration.enter", "0 0");
         SpecialPowers.setCharPref("full-screen-api.transition-duration.leave", "0 0");
@@ -534,8 +533,9 @@ function runTest(testNum) {
         var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
         var openPagemenu = function() {
             subwindow.removeEventListener("mozfullscreenchange", openPagemenu, false);
-            SpecialPowers.clearUserPref("full-screen-api.approval-required");
             SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
+            SpecialPowers.clearUserPref("full-screen-api.transition-duration.enter", "0 0");
+            SpecialPowers.clearUserPref("full-screen-api.transition-duration.leave", "0 0");
             openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
         }
         subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
