@@ -3,6 +3,7 @@
   "globals": {
     // General test items.
     "add_task": false,
+    "BrowserTestUtils": true,
     "Cc": true,
     "Ci": true,
     "Cr": true,
