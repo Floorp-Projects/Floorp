@@ -12553,8 +12553,6 @@ Database::AllocPBackgroundIDBTransactionParent(
       }
     }
 
-    DebugOnly<const uint32_t> oldLength = fallibleObjectStores.Length();
-
     for (auto iter = objectStores.ConstIter(); !iter.Done(); iter.Next()) {
       auto value = iter.Data();
       MOZ_ASSERT(iter.Key());
@@ -12566,8 +12564,6 @@ Database::AllocPBackgroundIDBTransactionParent(
         break;
       }
     }
-
-    MOZ_ASSERT((oldLength + 1) == fallibleObjectStores.Length());
   }
 
   nsTArray<nsRefPtr<FullObjectStoreMetadata>> infallibleObjectStores;
