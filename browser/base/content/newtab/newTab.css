@@ -655,7 +655,7 @@ input[type=button] {
 
 #newtab-intro-modal {
   font-family: "Helvetica";
-  height: 512px;
+  max-height: 800px;
   position: fixed;
   left: 0;
   right: 0;
@@ -665,7 +665,6 @@ input[type=button] {
   background: linear-gradient(#FFFFFF, #F9F9F9);
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.7);
   border-radius: 8px 8px 0px 0px;
-  min-width: 715px;
   position: relative;
   display: inline-block;
   top: 50%;
@@ -676,14 +675,14 @@ input[type=button] {
   font-size: 28px;
   color: #737980;
   text-align: center;
-  top: 50px;
+  top: 30px;
   position: relative;
   border-bottom: 2px solid #E0DFE0;
   padding-bottom: 10px;
   display: block;
-  margin: 0px auto;
+  margin: 0px 50px;
   font-weight: 100;
-  padding: 0px 15px;
+  padding: 0px 15px 10px;
 }
 
 #newtab-intro-header .bold {
@@ -697,7 +696,6 @@ input[type=button] {
   margin: 0px auto;
   display: block;
   position: absolute;
-  bottom: 0px;
   background-color: white;
   box-shadow: 0 -1px 4px -1px #EBEBEB;
   text-align: center;
@@ -722,20 +720,10 @@ input[type=button] {
   color: #4A90E2;
 }
 
-#newtab-intro-footer > ul > li > a:visited {
-  color: #171F26;
-}
-
-#newtab-intro-footer > ul > :first-child {
-  border-right: solid 1px #C1C1C1;
-}
-
 #newtab-intro-body {
-  height: 330px;
   position: relative;
   display: block;
-  top: 50px;
-  margin: 25px 50px 30px;
+  margin: 55px 50px 38px;
 }
 
 #newtab-intro-content > * {
@@ -743,14 +731,12 @@ input[type=button] {
 }
 
 #newtab-intro-content {
-  height: 210px;
   position: relative;
 }
 
 #newtab-intro-buttons {
   text-align: center;
   vertical-align: middle;
-  position: absolute;
   display: block;
   bottom: 0px;
   width: 100%;
@@ -764,53 +750,19 @@ input[type=button] {
 #newtab-intro-text {
   text-align: left;
   right: 0px;
-  width: 270px;
-}
-
-#newtab-intro-text,
-#newtab-intro-image {
   height: 100%;
-  right: 0px;
   font-size: 14px;
   line-height: 20px;
-  min-width: 270px;
-}
-
-#newtab-intro-image {
-  left: 0px;
-  right: auto;
-  float: left;
-  margin-right: 40px;
-}
-
-.newtab-intro-image-customize {
-  box-shadow: 3px 3px 5px #888;
-  margin-top: 0px;
-  background-color: #FFF;
-  float: left;
-  z-index: 101;
-  margin-top: -5px;
-  min-width: 270px;
-  padding: 0;
-}
-
-.newtab-intro-image-customize #newtab-customize-title {
-  display: block;
-  max-height: 40px;
-}
-
-.newtab-intro-image-customize #newtab-customize-panel-anchor {
-  display: none;
-}
-
-.newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {
-  background-color: inherit;
-  color: #7A7A7A;
-  background: none;
+  width: 460px;
 }
 
 #newtab-intro-text > p {
-  margin: 0 0 1em 0;
+  margin: 0 0 30px;
+}
+
+#newtab-intro-text > p > a {
+  text-decoration: none;
+  color: #4A90E2;
 }
 
 #newtab-intro-text .newtab-control {
@@ -820,10 +772,11 @@ input[type=button] {
   vertical-align: middle;
   opacity: 1;
   position: inherit;
+  pointer-events: none;
 }
 
 #newtab-intro-buttons > input {
-  min-width: 150px;
+  min-width: 120px;
   height: 50px;
   margin: 0px 5px;
   vertical-align: bottom;
@@ -843,52 +796,4 @@ input[type=button] {
 #newtab-intro-buttons > input:hover {
   background-color: #2C72E2;
   color: #FFFFFF;
-}
-
-#newtab-intro-progress {
-  position: absolute;
-  width: 100%;
-}
-
-#newtab-intro-numerical-progress {
-  text-align: center;
-  top: 15px;
-  position: relative;
-  font-size: 12px;
-  color: #424F5A;
-}
-
-#newtab-intro-graphical-progress {
-  text-align: left;
-  border-radius: 1.5px;
-  overflow: hidden;
-  position: relative;
-  margin: 10px auto 0px;
-  height: 3px;
-  top: 8px;
-  width: 35px;
-  background-color: #DCDCDC;
-}
-
-#indicator {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  display: inline-block;
-  width: 0%;
-  height: 4px;
-  background: none repeat scroll 0% 0% #FF9500;
-  transition: width 0.3s ease-in-out 0s;
-}
-
-#newtab-intro-numerical-progress[page="0"] + #newtab-intro-graphical-progress > #indicator {
-  width: 33%;
-}
-
-#newtab-intro-numerical-progress[page="1"] + #newtab-intro-graphical-progress > #indicator {
-  width: 66%;
-}
-
-#newtab-intro-numerical-progress[page="2"] + #newtab-intro-graphical-progress > #indicator {
-  width: 100%;
 }
