@@ -375,8 +375,8 @@ private: // data
   // Image locking.
   uint32_t                   mLockCount;
 
-  // Source data members
-  nsCString                  mSourceDataMimeType;
+  // The type of decoder this image needs. Computed from the MIME type in Init().
+  eDecoderType               mDecoderType;
 
   // How many times we've decoded this image.
   // This is currently only used for statistics
