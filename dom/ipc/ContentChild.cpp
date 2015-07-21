@@ -2613,6 +2613,18 @@ ContentChild::RecvStopProfiler()
 }
 
 bool
+ContentChild::RecvPauseProfiler(const bool& aPause)
+{
+    if (aPause) {
+        profiler_pause();
+    } else {
+        profiler_resume();
+    }
+
+    return true;
+}
+
+bool
 ContentChild::RecvGatherProfile()
 {
     nsCString profileCString;

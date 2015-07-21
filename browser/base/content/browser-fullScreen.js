@@ -334,68 +334,18 @@ var FullScreen = {
 
     this.warningBox.setAttribute("hidden", true);
     this.warningBox.removeAttribute("fade-warning-out");
-    this.warningBox.removeAttribute("obscure-browser");
     this.warningBox = null;
-  },
-
-  setFullscreenAllowed: function(isApproved) {
-    // The "remember decision" checkbox is hidden when showing for documents that
-    // the permission manager can't handle (documents with URIs without a host).
-    // We simply require those to be approved every time instead.
-    let rememberCheckbox = document.getElementById("full-screen-remember-decision");
-    let uri = BrowserUtils.makeURI(this.fullscreenOrigin);
-    if (!rememberCheckbox.hidden) {
-      if (rememberCheckbox.checked)
-        Services.perms.add(uri,
-                           "fullscreen",
-                           isApproved ? Services.perms.ALLOW_ACTION : Services.perms.DENY_ACTION,
-                           Services.perms.EXPIRE_NEVER);
-      else if (isApproved) {
-        // The user has only temporarily approved fullscren for this fullscreen
-        // session only. Add the permission (so Gecko knows to approve any further
-        // fullscreen requests for this host in this fullscreen session) but add
-        // a listener to revoke the permission when the chrome document exits
-        // fullscreen.
-        Services.perms.add(uri,
-                           "fullscreen",
-                           Services.perms.ALLOW_ACTION,
-                           Services.perms.EXPIRE_SESSION);
-        var onFullscreenchange = function onFullscreenchange(event) {
-          if (event.target == document && document.mozFullScreenElement == null) {
-            // The chrome document has left fullscreen. Remove the temporary permission grant.
-            Services.perms.remove(uri, "fullscreen");
-            document.removeEventListener("mozfullscreenchange", onFullscreenchange);
-          }
-        }
-        document.addEventListener("mozfullscreenchange", onFullscreenchange);
-      }
-    }
-    if (this.warningBox)
-      this.warningBox.setAttribute("fade-warning-out", "true");
-    // If the document has been granted fullscreen, notify Gecko so it can resume
-    // any pending pointer lock requests, otherwise exit fullscreen; the user denied
-    // the fullscreen request.
-    if (isApproved) {
-      gBrowser.selectedBrowser
-              .messageManager
-              .sendAsyncMessage("DOMFullscreen:Approved");
-    } else {
-      document.mozCancelFullScreen();
-    }
   },
 
   warningBox: null,
   warningFadeOutTimeout: null,
 
-  // Shows the fullscreen approval UI, or if the domain has already been approved
-  // for fullscreen, shows a warning that the site has entered fullscreen for a short
-  // duration.
+  // Shows a warning that the site has entered fullscreen for a short duration.
   showWarning: function(aOrigin) {
-    if (!document.mozFullScreen ||
-        !gPrefService.getBoolPref("full-screen-api.approval-required"))
+    if (!document.mozFullScreen)
       return;
 
-    // Set the strings on the fullscreen approval UI.
+    // Set the strings on the fullscreen warning UI.
     this.fullscreenOrigin = aOrigin;
     let uri = BrowserUtils.makeURI(aOrigin);
     let host = null;
@@ -403,8 +353,6 @@ var FullScreen = {
       host = uri.host;
     } catch (e) { }
     let hostLabel = document.getElementById("full-screen-domain-text");
-    let rememberCheckbox = document.getElementById("full-screen-remember-decision");
-    let isApproved = false;
     if (host) {
       // Document's principal's URI has a host. Display a warning including the hostname and
       // show UI to enable the user to permanently grant this host permission to enter fullscreen.
@@ -415,17 +363,8 @@ var FullScreen = {
 
       hostLabel.textContent = bundle.formatStringFromName("fullscreen.entered", [displayHost], 1);
       hostLabel.removeAttribute("hidden");
-
-      rememberCheckbox.label = bundle.formatStringFromName("fullscreen.rememberDecision", [displayHost], 1);
-      rememberCheckbox.checked = false;
-      rememberCheckbox.removeAttribute("hidden");
-
-      // Note we only allow documents whose principal's URI has a host to
-      // store permission grants.
-      isApproved = Services.perms.testPermission(uri, "fullscreen") == Services.perms.ALLOW_ACTION;
     } else {
       hostLabel.setAttribute("hidden", "true");
-      rememberCheckbox.setAttribute("hidden", "true");
     }
 
     // Note: the warning box can be non-null if the warning box from the previous request
@@ -443,32 +382,12 @@ var FullScreen = {
       this.warningBox.removeAttribute("fade-warning-out");
     }
 
-    // If fullscreen mode has not yet been approved for the fullscreen
-    // document's domain, show the approval UI and don't auto fade out the
-    // fullscreen warning box. Otherwise, we're just notifying of entry into
-    // fullscreen mode. Note if the resource's host is null, we must be
-    // showing a local file or a local data URI, and we require explicit
-    // approval every time.
-    let authUI = document.getElementById("full-screen-approval-pane");
-    if (isApproved) {
-      authUI.setAttribute("hidden", "true");
-      this.warningBox.removeAttribute("obscure-browser");
-    } else {
-      // Partially obscure the <browser> element underneath the approval UI.
-      this.warningBox.setAttribute("obscure-browser", "true");
-      authUI.removeAttribute("hidden");
-    }
-
-    // If we're not showing the fullscreen approval UI, we're just notifying the user
-    // of the transition, so set a timeout to fade the warning out after a few moments.
-    if (isApproved)
-      this.warningFadeOutTimeout =
-        setTimeout(
-          function() {
-            if (this.warningBox)
-              this.warningBox.setAttribute("fade-warning-out", "true");
-          }.bind(this),
-          3000);
+    // Set a timeout to fade the warning out after a few moments.
+    this.warningFadeOutTimeout = setTimeout(() => {
+      if (this.warningBox) {
+        this.warningBox.setAttribute("fade-warning-out", "true");
+      }
+    }, 3000);
   },
 
   showNavToolbox: function(trackMouse = true) {
