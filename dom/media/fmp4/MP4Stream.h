@@ -7,7 +7,7 @@
 #ifndef MP4_STREAM_H_
 #define MP4_STREAM_H_
 
-#include "mp4_demuxer/mp4_demuxer.h"
+#include "mp4_demuxer/Stream.h"
 
 #include "MediaResource.h"
 

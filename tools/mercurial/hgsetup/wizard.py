@@ -8,6 +8,7 @@ import difflib
 import errno
 import os
 import shutil
+import stat
 import sys
 import which
 import subprocess
@@ -53,11 +54,15 @@ MISSING_USERNAME = '''
 You don't have a username defined in your Mercurial config file. In order to
 send patches to Mozilla, you'll need to attach a name and email address. If you
 aren't comfortable giving us your full name, pseudonames are acceptable.
+
+(Relevant config option: ui.username)
 '''.strip()
 
 BAD_DIFF_SETTINGS = '''
 Mozilla developers produce patches in a standard format, but your Mercurial is
 not configured to produce patches in that format.
+
+(Relevant config options: diff.git, diff.showfunc, diff.unified)
 '''.strip()
 
 MQ_INFO = '''
@@ -66,6 +71,8 @@ alternative to the recommended bookmark-based development workflow.
 
 If you are a newcomer to Mercurial or are coming from Git, it is
 recommended to avoid mq.
+
+(Relevant config option: extensions.mq)
 
 Would you like to activate the mq extension
 '''.strip()
@@ -76,6 +83,8 @@ bzexport that makes it easy to upload patches from the command line via the
 |hg bzexport| command. More info is available at
 https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/bzexport/README
 
+(Relevant config option: extensions.bzexport)
+
 Would you like to activate bzexport
 '''.strip()
 
@@ -83,6 +92,8 @@ MQEXT_INFO = '''
 The mqext extension adds a number of features, including automatically committing
 changes to your mq patch queue. More info is available at
 https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mqext/README.txt
+
+(Relevant config option: extensions.mqext)
 
 Would you like to activate mqext
 '''.strip()
@@ -92,6 +103,8 @@ The qimportbz extension
 (https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/qimportbz/README) makes it possible to
 import patches from Bugzilla using a friendly bz:// URL handler. e.g.
 |hg qimport bz://123456|.
+
+(Relevant config option: extensions.qimportbz)
 
 Would you like to activate qimportbz
 '''.strip()
@@ -123,8 +136,12 @@ Various extensions make use of your Bugzilla credentials to interface with
 Bugzilla to enrich your development experience.
 
 Bugzilla credentials are optional. If you do not provide them, associated
-functionality will not be enabled or you will be prompted for your
-Bugzilla credentials when they are needed.
+functionality will not be enabled, we will attempt to find a Bugzilla cookie
+from a Firefox profile, or you will be prompted for your Bugzilla credentials
+when they are needed.
+
+Your Bugzilla credentials will be stored in *PLAIN TEXT* in your hgrc config
+file. If this is not wanted, do not enter your credentials.
 '''.lstrip()
 
 BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
@@ -132,6 +149,8 @@ BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
 BZPOST_INFO = '''
 The bzpost extension automatically records the URLs of pushed commits to
 referenced Bugzilla bugs after push.
+
+(Relevant config option: extensions.bzpost)
 
 Would you like to activate bzpost
 '''.strip()
@@ -157,6 +176,8 @@ The firefoxtree extension is *strongly* recommended if you:
 a) aggregate multiple Firefox repositories into a single local repo
 b) perform head/bookmark-based development (as opposed to mq)
 
+(Relevant config option: extensions.firefoxtree)
+
 Would you like to activate firefoxtree
 '''.strip()
 
@@ -168,6 +189,8 @@ try syntax and pushes it to the try server. The extension is intended
 to be used in concert with other tools generating try syntax so that
 they can push to try without depending on mq or other workarounds.
 
+(Relevant config option: extensions.push-to-try)
+
 Would you like to activate push-to-try
 '''.strip()
 
@@ -178,9 +201,17 @@ The bundleclone extension makes cloning faster and saves server resources.
 
 We highly recommend you activate this extension.
 
+(Relevant config option: extensions.bundleclone)
+
 Would you like to activate bundleclone
 '''.strip()
 
+FILE_PERMISSIONS_WARNING = '''
+Your hgrc file is currently readable by others.
+
+Sensitive information such as your Bugzilla credentials could be
+stolen if others have access to this file/machine.
+'''.strip()
 
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
@@ -272,8 +303,10 @@ class MercurialSetupWizard(object):
                 print('Fixed patch settings.')
                 print('')
 
-        self.prompt_native_extension(c, 'progress',
-            'Would you like to see progress bars during Mercurial operations')
+        # Progress is built into core and enabled by default in Mercurial 3.5.
+        if hg_version < LooseVersion('3.5'):
+            self.prompt_native_extension(c, 'progress',
+                'Would you like to see progress bars during Mercurial operations')
 
         self.prompt_native_extension(c, 'color',
             'Would you like Mercurial to colorize output to your terminal')
@@ -289,8 +322,6 @@ class MercurialSetupWizard(object):
 
         self.prompt_native_extension(c, 'mq', MQ_INFO)
 
-        self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
-
         if 'reviewboard' not in c.extensions:
             if hg_version < REVIEWBOARD_MINIMUM_VERSION:
                 print(REVIEWBOARD_INCOMPATIBLE % REVIEWBOARD_MINIMUM_VERSION)
@@ -302,6 +333,8 @@ class MercurialSetupWizard(object):
                     'you can easily initiate code reviews against Mozilla '
                     'projects',
                     path=p)
+
+        self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
 
         if hg_version >= BZPOST_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'bzpost', BZPOST_INFO)
@@ -335,17 +368,18 @@ class MercurialSetupWizard(object):
                     print('')
 
         if 'reviewboard' in c.extensions or 'bzpost' in c.extensions:
-            bzuser, bzpass = c.get_bugzilla_credentials()
+            bzuser, bzpass, bzuserid, bzcookie = c.get_bugzilla_credentials()
 
-            if not bzuser or not bzpass:
+            if (not bzuser or not bzpass) and (not bzuserid or not bzcookie):
                 print(MISSING_BUGZILLA_CREDENTIALS)
 
-            if not bzuser:
-                bzuser = self._prompt('What is your Bugzilla email address?',
+            # Don't prompt for username if cookie is set.
+            if not bzuser and not bzuserid:
+                bzuser = self._prompt('What is your Bugzilla email address? (optional)',
                     allow_empty=True)
 
             if bzuser and not bzpass:
-                bzpass = self._prompt('What is your Bugzilla password?',
+                bzpass = self._prompt('What is your Bugzilla password? (optional)',
                     allow_empty=True)
 
             if bzuser or bzpass:
@@ -401,6 +435,19 @@ class MercurialSetupWizard(object):
                     'written the following:\n')
                 c.write(sys.stdout)
                 return 1
+
+        # Config file may contain sensitive content, such as passwords.
+        # Prompt to remove global permissions.
+        mode = os.stat(config_path).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            print(FILE_PERMISSIONS_WARNING)
+            if self._prompt_yn('Remove permissions for others to read '
+                               'your hgrc file'):
+                # We don't care about sticky and set UID bits because this is
+                # a regular file.
+                mode = mode & stat.S_IRWXU
+                print('Changing permissions of %s' % config_path)
+                os.chmod(config_path, mode)
 
         print(FINISHED)
         return 0

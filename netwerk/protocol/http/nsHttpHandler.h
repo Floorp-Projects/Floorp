@@ -24,7 +24,6 @@ class nsIPrefBranch;
 class nsICancelable;
 class nsICookieService;
 class nsIIOService;
-class nsIObserverService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsITimer;
@@ -361,7 +360,6 @@ private:
     // cached services
     nsMainThreadPtrHandle<nsIIOService>              mIOService;
     nsMainThreadPtrHandle<nsIStreamConverterService> mStreamConvSvc;
-    nsMainThreadPtrHandle<nsIObserverService>        mObserverService;
     nsMainThreadPtrHandle<nsICookieService>          mCookieService;
     nsMainThreadPtrHandle<nsISiteSecurityService>    mSSService;
 

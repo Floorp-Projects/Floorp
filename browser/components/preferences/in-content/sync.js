@@ -131,7 +131,6 @@ let gSyncPane = {
 
   _toggleComputerNameControls: function(editMode) {
     let textbox = document.getElementById("fxaSyncComputerName");
-    textbox.className = editMode ? "" : "plain";
     textbox.disabled = !editMode;
     document.getElementById("fxaChangeDeviceName").hidden = editMode;
     document.getElementById("fxaCancelChangeDeviceName").hidden = !editMode;
