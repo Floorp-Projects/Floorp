@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -435,21 +436,6 @@ ProcessBlocklistEntry(BlocklistItemKey* aHashKey, void* aUserArg)
   return PL_DHASH_NEXT;
 }
 
-// write serial data to the output stream
-PLDHashOperator
-WriteSerial(nsCStringHashKey* aHashKey, void* aUserArg)
-{
-  BlocklistSaveInfo* saveInfo = reinterpret_cast<BlocklistSaveInfo*>(aUserArg);
-
-  nsresult rv = WriteLine(saveInfo->outputStream,
-                          NS_LITERAL_CSTRING(" ") + aHashKey->GetKey());
-  if (NS_FAILED(rv)) {
-    saveInfo->success = false;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
 // Write issuer data to the output stream
 PLDHashOperator
 WriteIssuer(nsCStringHashKey* aHashKey, void* aUserArg)
@@ -464,7 +450,16 @@ WriteIssuer(nsCStringHashKey* aHashKey, void* aUserArg)
     return PL_DHASH_STOP;
   }
 
-  issuerSet->EnumerateEntries(WriteSerial, saveInfo);
+  // Write serial data to the output stream
+  for (auto iter = issuerSet->Iter(); !iter.Done(); iter.Next()) {
+    nsresult rv = WriteLine(saveInfo->outputStream,
+                            NS_LITERAL_CSTRING(" ") + iter.Get()->GetKey());
+    if (NS_FAILED(rv)) {
+      saveInfo->success = false;
+      break;
+    }
+  }
+
   if (!saveInfo->success) {
     saveInfo->success = false;
     return PL_DHASH_STOP;
