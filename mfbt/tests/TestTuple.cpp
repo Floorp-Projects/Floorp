@@ -132,7 +132,7 @@ TestMakeTuple()
   auto tuple = MakeTuple(42, 0.5f, 'c');
   CHECK_TYPE(tuple, Tuple<int, float, char>);
   CHECK(Get<0>(tuple) == 42);
-  CHECK(Get<1>(tuple) == 1.0f);
+  CHECK(Get<1>(tuple) == 0.5f);
   CHECK(Get<2>(tuple) == 'c');
   return true;
 }
