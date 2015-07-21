@@ -261,8 +261,6 @@ RasterImage::Init(const char* aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ENSURE_ARG_POINTER(aMimeType);
-
   // We want to avoid redecodes for transient images.
   MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
                (!(aFlags & INIT_FLAG_DISCARDABLE) &&
@@ -270,7 +268,6 @@ RasterImage::Init(const char* aMimeType,
              "Illegal init flags for transient image");
 
   // Store initialization data
-  mSourceDataMimeType.Assign(aMimeType);
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mWantFullDecode = !!(aFlags & INIT_FLAG_DECODE_IMMEDIATELY);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
@@ -282,20 +279,21 @@ RasterImage::Init(const char* aMimeType,
   mDownscaleDuringDecode = false;
 #endif
 
+  // Use the MIME type to select a decoder type, and make sure there *is* a
+  // decoder for this MIME type.
+  NS_ENSURE_ARG_POINTER(aMimeType);
+  mDecoderType = GetDecoderType(aMimeType);
+  if (mDecoderType == eDecoderType_unknown) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Lock this image's surfaces in the SurfaceCache if we're not discardable.
   if (!mDiscardable) {
     mLockCount++;
     SurfaceCache::LockImage(ImageKey(this));
   }
 
-  if (mSyncLoad) {
-    // We'll create a sync size decoder in OnImageDataComplete. For now, just
-    // verify that we *could* create such a decoder.
-    eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
-    if (type == eDecoderType_unknown) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
+  if (!mSyncLoad) {
     // Create an async size decoder and verify that we succeed in doing so.
     nsresult rv = Decode(Nothing(), DECODE_FLAGS_DEFAULT);
     if (NS_FAILED(rv)) {
@@ -1341,15 +1339,9 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
     MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
   }
 
-  // Figure out which decoder we want.
-  eDecoderType type = GetDecoderType(mSourceDataMimeType.get());
-  if (type == eDecoderType_unknown) {
-    return nullptr;
-  }
-
   // Instantiate the appropriate decoder.
   nsRefPtr<Decoder> decoder;
-  switch (type) {
+  switch (mDecoderType) {
     case eDecoderType_png:
       decoder = new nsPNGDecoder(this);
       break;
