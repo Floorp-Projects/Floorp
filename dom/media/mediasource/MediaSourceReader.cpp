@@ -20,7 +20,6 @@
 #include "SharedDecoderManager.h"
 #include "MP4Decoder.h"
 #include "MP4Demuxer.h"
-#include "MP4Reader.h"
 #endif
 
 #ifdef MOZ_WEBM
@@ -701,18 +700,15 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder,
                     TaskQueue* aBorrowedTaskQueue)
 {
 #ifdef MOZ_FMP4
-  // The MP4Reader that supports fragmented MP4 and uses
+  // The MediaFormatReader that supports fragmented MP4 and uses
   // PlatformDecoderModules is hidden behind prefs for regular video
   // elements, but we always want to use it for MSE, so instantiate it
   // directly here.
   if ((aType.LowerCaseEqualsLiteral("video/mp4") ||
        aType.LowerCaseEqualsLiteral("audio/mp4")) &&
       MP4Decoder::IsEnabled() && aDecoder) {
-    bool useFormatDecoder =
-      Preferences::GetBool("media.mediasource.format-reader.mp4", true);
-    MediaDecoderReader* reader = useFormatDecoder ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()), aBorrowedTaskQueue)) :
-      static_cast<MediaDecoderReader*>(new MP4Reader(aDecoder, aBorrowedTaskQueue));
+    MediaDecoderReader* reader =
+      new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()), aBorrowedTaskQueue);
     return reader;
   }
 #endif

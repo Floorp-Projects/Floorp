@@ -8,7 +8,6 @@
 #define WMFAudioOutputSource_h_
 
 #include "WMF.h"
-#include "MP4Reader.h"
 #include "MFTDecoder.h"
 #include "mozilla/RefPtr.h"
 #include "WMFMediaDataDecoder.h"
