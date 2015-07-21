@@ -513,25 +513,28 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 #else // #ifdef MOZ_WIDGET_GONK
   MOZ_ASSERT(mNativeKeyCommandsValid);
 
-  nsTArray<mozilla::CommandInt>& commands = mSingleLineCommands;
+  const nsTArray<mozilla::CommandInt>* commands = nullptr;
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
-      commands = mSingleLineCommands;
+      commands = &mSingleLineCommands;
       break;
     case nsIWidget::NativeKeyBindingsForMultiLineEditor:
-      commands = mMultiLineCommands;
+      commands = &mMultiLineCommands;
       break;
     case nsIWidget::NativeKeyBindingsForRichTextEditor:
-      commands = mRichTextCommands;
+      commands = &mRichTextCommands;
+      break;
+    default:
+      MOZ_CRASH("Invalid type");
       break;
   }
 
-  if (commands.IsEmpty()) {
+  if (commands->IsEmpty()) {
     return false;
   }
 
-  for (uint32_t i = 0; i < commands.Length(); i++) {
-    aCallback(static_cast<mozilla::Command>(commands[i]), aCallbackData);
+  for (uint32_t i = 0; i < commands->Length(); i++) {
+    aCallback(static_cast<mozilla::Command>((*commands)[i]), aCallbackData);
   }
   return true;
 #endif

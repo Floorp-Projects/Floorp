@@ -116,9 +116,6 @@
 .pref-icon[type="plugins"] {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
 }
-.pref-icon[type="fullscreen"] {
-  list-style-image: url(chrome://global/skin/icons/question-64.png);
-}
 .pref-icon[type="camera"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }

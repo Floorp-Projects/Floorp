@@ -122,7 +122,7 @@ FileSystemPermissionRequest::Run()
     return NS_OK;
   }
 
-  if (filesystem->IsTesting()) {
+  if (!filesystem->RequiresPermissionChecks()) {
     Allow(JS::UndefinedHandleValue);
     return NS_OK;
   }
