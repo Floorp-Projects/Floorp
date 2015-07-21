@@ -23,11 +23,6 @@ describe("loop.webapp", function() {
     sandbox = sinon.sandbox.create();
     dispatcher = new loop.Dispatcher();
     notifications = new sharedModels.NotificationCollection();
-    loop.store.StoreMixin.register({
-      feedbackStore: new loop.store.FeedbackStore(dispatcher, {
-        feedbackClient: {}
-      })
-    });
 
     stubGetPermsAndCacheMedia = sandbox.stub(
       loop.standaloneMedia._MultiplexGum.prototype, "getPermsAndCacheMedia");
@@ -54,7 +49,6 @@ describe("loop.webapp", function() {
   describe("#init", function() {
     beforeEach(function() {
       sandbox.stub(React, "render");
-      loop.config.feedbackApiUrl = "http://fake.invalid";
       sandbox.stub(loop.Dispatcher.prototype, "dispatch");
     });
 
@@ -1076,10 +1070,6 @@ describe("loop.webapp", function() {
 
     it("should render a ConversationView", function() {
       TestUtils.findRenderedComponentWithType(view, sharedViews.ConversationView);
-    });
-
-    it("should render a FeedbackView", function() {
-      TestUtils.findRenderedComponentWithType(view, sharedViews.FeedbackView);
     });
   });
 

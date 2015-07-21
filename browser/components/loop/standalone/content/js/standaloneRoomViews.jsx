@@ -90,13 +90,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
       roomUsed: React.PropTypes.bool.isRequired
     },
 
-    onFeedbackSent: function() {
-      // We pass a tick to prevent React warnings regarding nested updates.
-      setTimeout(function() {
-        this.props.activeRoomStore.dispatchAction(new sharedActions.FeedbackComplete());
-      }.bind(this));
-    },
-
     _renderCallToActionLink: function() {
       if (this.props.isFirefox) {
         return (
@@ -118,8 +111,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     render: function() {
       switch(this.props.roomState) {
+        case ROOM_STATES.ENDED:
         case ROOM_STATES.READY: {
-          // XXX: In ENDED state, we should rather display the feedback form.
           return (
             <div className="room-inner-info-area">
               <button className="btn btn-join btn-info"
@@ -171,22 +164,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <p>{this._renderCallToActionLink()}</p>
             </div>
           );
-        }
-        case ROOM_STATES.ENDED: {
-          if (this.props.roomUsed) {
-            return (
-              <div className="ended-conversation">
-                <sharedViews.FeedbackView
-                  noCloseText={true}
-                  onAfterFeedbackReceived={this.onFeedbackSent} />
-              </div>
-            );
-          }
-
-          // In case the room was not used (no one was here), we
-          // bypass the feedback form.
-          this.onFeedbackSent();
-          return null;
         }
         case ROOM_STATES.FAILED: {
           return (

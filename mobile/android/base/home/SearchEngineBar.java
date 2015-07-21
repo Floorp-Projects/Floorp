@@ -102,15 +102,24 @@ public class SearchEngineBar extends TwoWayView
         final int searchEngineCount = adapter.getCount() - 1;
 
         if (searchEngineCount > 0) {
-            final float availableWidthPerContainer = (getMeasuredWidth() - labelContainerWidth) / searchEngineCount;
+            final int availableWidth = getMeasuredWidth() - labelContainerWidth;
+            final double searchEnginesToDisplay;
 
-            final int desiredIconContainerSize = (int) Math.max(
-                    availableWidthPerContainer,
-                    minIconContainerWidth
-            );
+            if (searchEngineCount * minIconContainerWidth <= availableWidth) {
+                // All search engines fit int: So let's just display all.
+                searchEnginesToDisplay = searchEngineCount;
+            } else {
+                // If only (n) search engines fit into the available space then display (n - 0.5): The last search
+                // engine will be cut-off to show ability to scroll this view
 
-            if (desiredIconContainerSize != iconContainerWidth) {
-                iconContainerWidth = desiredIconContainerSize;
+                searchEnginesToDisplay = Math.floor(availableWidth / minIconContainerWidth) - 0.5;
+            }
+
+            // Use all available width and spread search engine icons
+            final int availableWidthPerContainer = (int) (availableWidth / searchEnginesToDisplay);
+
+            if (availableWidthPerContainer != iconContainerWidth) {
+                iconContainerWidth = availableWidthPerContainer;
                 adapter.notifyDataSetChanged();
             }
         }
