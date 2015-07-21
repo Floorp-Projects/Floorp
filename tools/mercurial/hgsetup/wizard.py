@@ -123,8 +123,12 @@ Various extensions make use of your Bugzilla credentials to interface with
 Bugzilla to enrich your development experience.
 
 Bugzilla credentials are optional. If you do not provide them, associated
-functionality will not be enabled or you will be prompted for your
-Bugzilla credentials when they are needed.
+functionality will not be enabled, we will attempt to find a Bugzilla cookie
+from a Firefox profile, or you will be prompted for your Bugzilla credentials
+when they are needed.
+
+Your Bugzilla credentials will be stored in *PLAIN TEXT* in your hgrc config
+file. If this is not wanted, do not enter your credentials.
 '''.lstrip()
 
 BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
@@ -341,11 +345,11 @@ class MercurialSetupWizard(object):
                 print(MISSING_BUGZILLA_CREDENTIALS)
 
             if not bzuser:
-                bzuser = self._prompt('What is your Bugzilla email address?',
+                bzuser = self._prompt('What is your Bugzilla email address? (optional)',
                     allow_empty=True)
 
             if bzuser and not bzpass:
-                bzpass = self._prompt('What is your Bugzilla password?',
+                bzpass = self._prompt('What is your Bugzilla password? (optional)',
                     allow_empty=True)
 
             if bzuser or bzpass:
