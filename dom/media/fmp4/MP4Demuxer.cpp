@@ -20,6 +20,14 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 
+PRLogModuleInfo* GetDemuxerLog() {
+  static PRLogModuleInfo* log = nullptr;
+  if (!log) {
+    log = PR_NewLogModule("MP4Demuxer");
+  }
+  return log;
+}
+
 namespace mozilla {
 
 // Returns true if no SPS was found and search for it should continue.
