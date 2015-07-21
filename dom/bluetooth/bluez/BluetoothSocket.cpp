@@ -94,11 +94,11 @@ private:
   void FireSocketError();
 
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<BluetoothSocket> mConsumer;
+  BluetoothSocket* mConsumer;
 
   /**
    * Connector object used to create the connection we are currently using.
@@ -183,7 +183,7 @@ BluetoothSocket::BluetoothSocketIO::GetSocketAddr(nsAString& aAddrStr) const
 BluetoothSocket*
 BluetoothSocket::BluetoothSocketIO::GetBluetoothSocket()
 {
-  return mConsumer.get();
+  return mConsumer;
 }
 
 DataSocket*
