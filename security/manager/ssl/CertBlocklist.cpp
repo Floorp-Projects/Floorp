@@ -398,44 +398,6 @@ WriteLine(nsIOutputStream* outputStream, const nsACString& string)
   return rv;
 }
 
-// sort blocklist items into lists of serials for each issuer
-PLDHashOperator
-ProcessBlocklistEntry(BlocklistItemKey* aHashKey, void* aUserArg)
-{
-  BlocklistSaveInfo* saveInfo = reinterpret_cast<BlocklistSaveInfo*>(aUserArg);
-  CertBlocklistItem item = aHashKey->GetKey();
-
-  if (!item.mIsCurrent) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsAutoCString encDN;
-  nsAutoCString encOther;
-
-  nsresult rv = item.ToBase64(encDN, encOther);
-  if (NS_FAILED(rv)) {
-    saveInfo->success = false;
-    return PL_DHASH_STOP;
-  }
-
-  // If it's a subject / public key block, write it straight out
-  if (item.mItemMechanism == BlockBySubjectAndPubKey) {
-    WriteLine(saveInfo->outputStream, encDN);
-    WriteLine(saveInfo->outputStream, NS_LITERAL_CSTRING("\t") + encOther);
-    return PL_DHASH_NEXT;
-  }
-
-  // Otherwise, we have to group entries by issuer
-  saveInfo->issuers.PutEntry(encDN);
-  BlocklistStringSet* issuerSet = saveInfo->issuerTable.Get(encDN);
-  if (!issuerSet) {
-    issuerSet = new BlocklistStringSet();
-    saveInfo->issuerTable.Put(encDN, issuerSet);
-  }
-  issuerSet->PutEntry(encOther);
-  return PL_DHASH_NEXT;
-}
-
 // Write issuer data to the output stream
 PLDHashOperator
 WriteIssuer(nsCStringHashKey* aHashKey, void* aUserArg)
@@ -511,7 +473,39 @@ CertBlocklist::SaveEntries()
     return rv;
   }
 
-  mBlocklist.EnumerateEntries(ProcessBlocklistEntry, &saveInfo);
+  // Sort blocklist items into lists of serials for each issuer
+  for (auto iter = mBlocklist.Iter(); !iter.Done(); iter.Next()) {
+    CertBlocklistItem item = iter.Get()->GetKey();
+    if (!item.mIsCurrent) {
+      continue;
+    }
+
+    nsAutoCString encDN;
+    nsAutoCString encOther;
+
+    nsresult rv = item.ToBase64(encDN, encOther);
+    if (NS_FAILED(rv)) {
+      saveInfo.success = false;
+      break;
+    }
+
+    // If it's a subject / public key block, write it straight out
+    if (item.mItemMechanism == BlockBySubjectAndPubKey) {
+      WriteLine(saveInfo.outputStream, encDN);
+      WriteLine(saveInfo.outputStream, NS_LITERAL_CSTRING("\t") + encOther);
+      continue;
+    }
+
+    // Otherwise, we have to group entries by issuer
+    saveInfo.issuers.PutEntry(encDN);
+    BlocklistStringSet* issuerSet = saveInfo.issuerTable.Get(encDN);
+    if (!issuerSet) {
+      issuerSet = new BlocklistStringSet();
+      saveInfo.issuerTable.Put(encDN, issuerSet);
+    }
+    issuerSet->PutEntry(encOther);
+  }
+
   if (!saveInfo.success) {
     MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,
            ("CertBlocklist::SaveEntries writing revocation data failed"));
