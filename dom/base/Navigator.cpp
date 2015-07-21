@@ -372,11 +372,22 @@ Navigator::GetUserAgent(nsAString& aUserAgent)
   nsCOMPtr<nsIURI> codebaseURI;
   nsCOMPtr<nsPIDOMWindow> window;
 
-  if (mWindow && mWindow->GetDocShell()) {
+  if (mWindow) {
     window = mWindow;
-    nsIDocument* doc = mWindow->GetExtantDoc();
-    if (doc) {
-      doc->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+    nsIDocShell* docshell = window->GetDocShell();
+    nsString customUserAgent;
+    if (docshell) {
+      docshell->GetCustomUserAgent(customUserAgent);
+
+      if (!customUserAgent.IsEmpty()) {
+        aUserAgent = customUserAgent;
+        return NS_OK;
+      }
+
+      nsIDocument* doc = mWindow->GetExtantDoc();
+      if (doc) {
+        doc->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+      }
     }
   }
 
@@ -2739,6 +2750,12 @@ Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue)
   }
 
   aAppName.AssignLiteral("Netscape");
+}
+
+void
+Navigator::ClearUserAgentCache()
+{
+  NavigatorBinding::ClearCachedUserAgentValue(this);
 }
 
 nsresult
