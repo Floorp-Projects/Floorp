@@ -1367,7 +1367,8 @@ public:
     mXScale(1.f), mYScale(1.f),
     mAppUnitsPerDevPixel(0),
     mTranslation(0, 0),
-    mAnimatedGeometryRootPosition(0, 0) {}
+    mAnimatedGeometryRootPosition(0, 0),
+    mNeedsRecomputeVisibility(false) {}
 
   /**
    * Record the number of clips in the PaintedLayer's mask layer.
@@ -1438,6 +1439,11 @@ public:
 
   nsRefPtr<ColorLayer> mColorLayer;
   nsRefPtr<ImageLayer> mImageLayer;
+
+  // True if the display items for this layer have changed and we need a call
+  // to RecomputeVisibilityForItems before painting them. This can be false
+  // during the latter iterations of progressive painting.
+  bool mNeedsRecomputeVisibility;
 };
 
 /*
@@ -2274,6 +2280,8 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
   aLayer->SetBaseTransform(Matrix4x4::From2D(matrix));
 
   ComputeAndSetIgnoreInvalidationRect(aLayer, aData, aAnimatedGeometryRoot, mBuilder, pixOffset);
+
+  aData->mNeedsRecomputeVisibility = true;
 
   // FIXME: Temporary workaround for bug 681192 and bug 724786.
 #ifndef MOZ_WIDGET_ANDROID
@@ -5535,6 +5543,7 @@ private:
 FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
                                    gfxContext* aContext,
                                    const nsIntRegion& aRegionToDraw,
+                                   const nsIntRegion& aDirtyRegion,
                                    DrawRegionClip aClip,
                                    const nsIntRegion& aRegionToInvalidate,
                                    void* aCallbackData)
@@ -5587,14 +5596,16 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
   nsIntPoint offset = GetTranslationForPaintedLayer(aLayer);
   nsPresContext* presContext = entry->mContainerLayerFrame->PresContext();
 
-  if (!layerBuilder->GetContainingPaintedLayerData()) {
+  if (userData->mNeedsRecomputeVisibility &&
+      !layerBuilder->GetContainingPaintedLayerData()) {
     // Recompute visibility of items in our PaintedLayer. Note that this
     // recomputes visibility for all descendants of our display items too,
     // so there's no need to do this for the items in inactive PaintedLayers.
     int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-    RecomputeVisibilityForItems(entry->mItems, builder, aRegionToDraw,
+    RecomputeVisibilityForItems(entry->mItems, builder, aDirtyRegion,
                                 offset, appUnitsPerDevPixel,
                                 userData->mXScale, userData->mYScale);
+    userData->mNeedsRecomputeVisibility = false;
   }
 
   nsRenderingContext rc(aContext);
