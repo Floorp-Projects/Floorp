@@ -293,12 +293,11 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   , mBackgroundColor(gfxRGBA(1, 1, 1))
   , mAsyncPanZoomEnabled(false)
 {
+  *aId = 0;
   *aSuccess = false;
   if (!mFrameLoader) {
     return;
   }
-
-  *aId = 0;
 
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
 
