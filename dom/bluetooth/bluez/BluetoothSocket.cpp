@@ -9,6 +9,7 @@
 #include "BluetoothSocketObserver.h"
 #include "BluetoothUnixSocketConnector.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
@@ -93,11 +94,11 @@ private:
   void FireSocketError();
 
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<BluetoothSocket> mConsumer;
+  BluetoothSocket* mConsumer;
 
   /**
    * Connector object used to create the connection we are currently using.
@@ -146,12 +147,16 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
 {
   MOZ_ASSERT(mConsumer);
   MOZ_ASSERT(mConnector);
+
+  MOZ_COUNT_CTOR_INHERITED(BluetoothSocketIO, DataSocketIO);
 }
 
 BluetoothSocket::BluetoothSocketIO::~BluetoothSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
   MOZ_ASSERT(IsShutdownOnConsumerThread());
+
+  MOZ_COUNT_DTOR_INHERITED(BluetoothSocketIO, DataSocketIO);
 }
 
 void
@@ -178,7 +183,7 @@ BluetoothSocket::BluetoothSocketIO::GetSocketAddr(nsAString& aAddrStr) const
 BluetoothSocket*
 BluetoothSocket::BluetoothSocketIO::GetBluetoothSocket()
 {
-  return mConsumer.get();
+  return mConsumer;
 }
 
 DataSocket*
@@ -562,11 +567,15 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   , mIO(nullptr)
 {
   MOZ_ASSERT(aObserver);
+
+  MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 BluetoothSocket::~BluetoothSocket()
 {
   MOZ_ASSERT(!mIO);
+
+  MOZ_COUNT_DTOR_INHERITED(BluetoothSocket, DataSocket);
 }
 
 nsresult

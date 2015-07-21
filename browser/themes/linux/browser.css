@@ -963,6 +963,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   color: GrayText;
 }
 
+#PopupAutoCompleteRichResult > richlistbox {
+  transition: height 100ms;
+}
+
 #search-container {
   min-width: calc(54px + 11ch);
 }

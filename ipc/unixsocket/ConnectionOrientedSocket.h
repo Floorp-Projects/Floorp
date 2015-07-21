@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_ipc_connectionorientedsocket_h
-#define mozilla_ipc_connectionorientedsocket_h
+#ifndef mozilla_ipc_ConnectionOrientedSocket_h
+#define mozilla_ipc_ConnectionOrientedSocket_h
 
 #include <sys/socket.h>
 #include "DataSocket.h"
@@ -112,10 +112,11 @@ public:
                                  ConnectionOrientedSocketIO*& aIO) = 0;
 
 protected:
+  ConnectionOrientedSocket();
   virtual ~ConnectionOrientedSocket();
 };
 
 }
 }
 
-#endif
+#endif // mozilla_ipc_ConnectionOrientedSocket

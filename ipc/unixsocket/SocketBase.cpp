@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
 namespace mozilla {
 namespace ipc {
@@ -23,10 +24,14 @@ UnixSocketBuffer::UnixSocketBuffer()
   , mOffset(0)
   , mAvailableSpace(0)
   , mData(nullptr)
-{ }
+{
+  MOZ_COUNT_CTOR(UnixSocketBuffer);
+}
 
 UnixSocketBuffer::~UnixSocketBuffer()
 {
+  MOZ_COUNT_DTOR(UnixSocketBuffer);
+
   // Make sure that the caller released the buffer's memory.
   MOZ_ASSERT(!GetBuffer());
 }
@@ -96,8 +101,15 @@ UnixSocketBuffer::CleanupLeadingSpace()
 // UnixSocketIOBuffer
 //
 
+UnixSocketIOBuffer::UnixSocketIOBuffer()
+{
+  MOZ_COUNT_CTOR_INHERITED(UnixSocketIOBuffer, UnixSocketBuffer);
+}
+
 UnixSocketIOBuffer::~UnixSocketIOBuffer()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(UnixSocketIOBuffer, UnixSocketBuffer);
+}
 
 //
 // UnixSocketRawData
@@ -107,17 +119,23 @@ UnixSocketRawData::UnixSocketRawData(const void* aData, size_t aSize)
 {
   MOZ_ASSERT(aData || !aSize);
 
+  MOZ_COUNT_CTOR_INHERITED(UnixSocketRawData, UnixSocketIOBuffer);
+
   ResetBuffer(static_cast<uint8_t*>(memcpy(new uint8_t[aSize], aData, aSize)),
               0, aSize, aSize);
 }
 
 UnixSocketRawData::UnixSocketRawData(size_t aSize)
 {
+  MOZ_COUNT_CTOR_INHERITED(UnixSocketRawData, UnixSocketIOBuffer);
+
   ResetBuffer(new uint8_t[aSize], 0, 0, aSize);
 }
 
 UnixSocketRawData::~UnixSocketRawData()
 {
+  MOZ_COUNT_DTOR_INHERITED(UnixSocketRawData, UnixSocketIOBuffer);
+
   nsAutoArrayPtr<uint8_t> data(GetBuffer());
   ResetBuffer(nullptr, 0, 0, 0);
 }
@@ -237,11 +255,15 @@ SocketBase::SocketBase()
 : mConnectionStatus(SOCKET_DISCONNECTED)
 , mConnectTimestamp(0)
 , mConnectDelayMs(0)
-{ }
+{
+  MOZ_COUNT_CTOR(SocketBase);
+}
 
 SocketBase::~SocketBase()
 {
   MOZ_ASSERT(mConnectionStatus == SOCKET_DISCONNECTED);
+
+  MOZ_COUNT_DTOR(SocketBase);
 }
 
 void
@@ -258,10 +280,14 @@ SocketIOBase::SocketIOBase(MessageLoop* aConsumerLoop)
   : mConsumerLoop(aConsumerLoop)
 {
   MOZ_ASSERT(mConsumerLoop);
+
+  MOZ_COUNT_CTOR(SocketIOBase);
 }
 
 SocketIOBase::~SocketIOBase()
-{ }
+{
+  MOZ_COUNT_DTOR(SocketIOBase);
+}
 
 MessageLoop*
 SocketIOBase::GetConsumerThread() const
@@ -282,7 +308,14 @@ SocketIOBase::IsConsumerThread() const
 SocketEventTask::SocketEventTask(SocketIOBase* aIO, SocketEvent aEvent)
   : SocketTask<SocketIOBase>(aIO)
   , mEvent(aEvent)
-{ }
+{
+  MOZ_COUNT_CTOR(SocketEventTask);
+}
+
+SocketEventTask::~SocketEventTask()
+{
+  MOZ_COUNT_DTOR(SocketEventTask);
+}
 
 void
 SocketEventTask::Run()
@@ -313,10 +346,16 @@ SocketEventTask::Run()
 // SocketRequestClosingTask
 //
 
-SocketRequestClosingTask::SocketRequestClosingTask(
-  SocketIOBase* aIO)
+SocketRequestClosingTask::SocketRequestClosingTask(SocketIOBase* aIO)
   : SocketTask<SocketIOBase>(aIO)
-{ }
+{
+  MOZ_COUNT_CTOR(SocketRequestClosingTask);
+}
+
+SocketRequestClosingTask::~SocketRequestClosingTask()
+{
+  MOZ_COUNT_DTOR(SocketRequestClosingTask);
+}
 
 void
 SocketRequestClosingTask::Run()
@@ -341,10 +380,16 @@ SocketRequestClosingTask::Run()
 // SocketDeleteInstanceTask
 //
 
-SocketDeleteInstanceTask::SocketDeleteInstanceTask(
-  SocketIOBase* aIO)
+SocketDeleteInstanceTask::SocketDeleteInstanceTask(SocketIOBase* aIO)
   : mIO(aIO)
-{ }
+{
+  MOZ_COUNT_CTOR(SocketDeleteInstanceTask);
+}
+
+SocketDeleteInstanceTask::~SocketDeleteInstanceTask()
+{
+  MOZ_COUNT_DTOR(SocketDeleteInstanceTask);
+}
 
 void
 SocketDeleteInstanceTask::Run()
@@ -358,7 +403,14 @@ SocketDeleteInstanceTask::Run()
 
 SocketIOShutdownTask::SocketIOShutdownTask(SocketIOBase* aIO)
   : SocketIOTask<SocketIOBase>(aIO)
-{ }
+{
+  MOZ_COUNT_CTOR(SocketIOShutdownTask);
+}
+
+SocketIOShutdownTask::~SocketIOShutdownTask()
+{
+  MOZ_COUNT_DTOR(SocketIOShutdownTask);
+}
 
 void
 SocketIOShutdownTask::Run()

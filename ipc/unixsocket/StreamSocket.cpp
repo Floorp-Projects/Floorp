@@ -7,6 +7,7 @@
 #include "StreamSocket.h"
 #include <fcntl.h>
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "StreamSocketConsumer.h"
 #include "UnixSocketConnector.h"
@@ -68,11 +69,11 @@ public:
 
 private:
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<StreamSocket> mStreamSocket;
+  StreamSocket* mStreamSocket;
 
   /**
    * If true, do not requeue whatever task we're running
@@ -101,6 +102,8 @@ StreamSocketIO::StreamSocketIO(MessageLoop* aConsumerLoop,
   , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
+
+  MOZ_COUNT_CTOR_INHERITED(StreamSocketIO, ConnectionOrientedSocketIO);
 }
 
 StreamSocketIO::StreamSocketIO(MessageLoop* aConsumerLoop,
@@ -118,24 +121,28 @@ StreamSocketIO::StreamSocketIO(MessageLoop* aConsumerLoop,
   , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
+
+  MOZ_COUNT_CTOR_INHERITED(StreamSocketIO, ConnectionOrientedSocketIO);
 }
 
 StreamSocketIO::~StreamSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
   MOZ_ASSERT(IsShutdownOnConsumerThread());
+
+  MOZ_COUNT_DTOR_INHERITED(StreamSocketIO, ConnectionOrientedSocketIO);
 }
 
 StreamSocket*
 StreamSocketIO::GetStreamSocket()
 {
-  return mStreamSocket.get();
+  return mStreamSocket;
 }
 
 DataSocket*
 StreamSocketIO::GetDataSocket()
 {
-  return mStreamSocket.get();
+  return GetStreamSocket();
 }
 
 void
@@ -192,7 +199,14 @@ public:
   ReceiveTask(StreamSocketIO* aIO, UnixSocketBuffer* aBuffer)
     : SocketTask<StreamSocketIO>(aIO)
     , mBuffer(aBuffer)
-  { }
+  {
+    MOZ_COUNT_CTOR(ReceiveTask);
+  }
+
+  ~ReceiveTask()
+  {
+    MOZ_COUNT_DTOR(ReceiveTask);
+  }
 
   void Run() override
   {
@@ -274,13 +288,19 @@ StreamSocketIO::ShutdownOnIOThread()
 // Socket tasks
 //
 
-class StreamSocketIO::ConnectTask final
-  : public SocketIOTask<StreamSocketIO>
+class StreamSocketIO::ConnectTask final : public SocketIOTask<StreamSocketIO>
 {
 public:
   ConnectTask(StreamSocketIO* aIO)
-  : SocketIOTask<StreamSocketIO>(aIO)
-  { }
+    : SocketIOTask<StreamSocketIO>(aIO)
+  {
+    MOZ_COUNT_CTOR(ReceiveTask);
+  }
+
+  ~ConnectTask()
+  {
+    MOZ_COUNT_DTOR(ReceiveTask);
+  }
 
   void Run() override
   {
@@ -297,7 +317,14 @@ class StreamSocketIO::DelayedConnectTask final
 public:
   DelayedConnectTask(StreamSocketIO* aIO)
     : SocketIOTask<StreamSocketIO>(aIO)
-  { }
+  {
+    MOZ_COUNT_CTOR(DelayedConnectTask);
+  }
+
+  ~DelayedConnectTask()
+  {
+    MOZ_COUNT_DTOR(DelayedConnectTask);
+  }
 
   void Run() override
   {
@@ -327,11 +354,15 @@ StreamSocket::StreamSocket(StreamSocketConsumer* aConsumer, int aIndex)
   , mIndex(aIndex)
 {
   MOZ_ASSERT(mConsumer);
+
+  MOZ_COUNT_CTOR_INHERITED(StreamSocket, ConnectionOrientedSocket);
 }
 
 StreamSocket::~StreamSocket()
 {
   MOZ_ASSERT(!mIO);
+
+  MOZ_COUNT_DTOR_INHERITED(StreamSocket, ConnectionOrientedSocket);
 }
 
 void

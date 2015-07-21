@@ -1504,6 +1504,7 @@ try {
     prefs.setCharPref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
     prefs.setCharPref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
     prefs.setCharPref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
+    prefs.setCharPref("browser.search.geoip.url", "https://%(server)s/geoip-dummy");
   }
 } catch (e) { }
 

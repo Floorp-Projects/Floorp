@@ -148,6 +148,10 @@
       <property name="searchCount" readonly="true"
                 onget="this.initSearchNames(); return this.mSearchNames.length;"/>
 
+      <field name="shrinkDelay" readonly="true">
+        parseInt(this.getAttribute("shrinkdelay")) || 0
+      </field>
+
       <field name="PrivateBrowsingUtils" readonly="true">
         let utils = {};
         Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", utils);
@@ -1005,6 +1009,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
       <field name="_rowHeight">0</field>
+      <field name="_rlbAnimated">false</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -1073,23 +1078,30 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_invalidate">
         <body>
           <![CDATA[
+          // To get a fixed height for the popup, instead of the default
+          // behavior that grows and shrinks it on result change, a consumer
+          // can set the height attribute. In such a case, instead of adjusting
+          // the richlistbox height, we just need to collapse unused items.
           if (!this.hasAttribute("height")) {
             // collapsed if no matches
             this.richlistbox.collapsed = (this._matchCount == 0);
 
-            // Dynamically update height until richlistbox.rows works (bug 401939)
-            // Adjust the height immediately and after the row contents update
-            this.adjustHeight();
-            setTimeout(function(self) self.adjustHeight(), 0, this);
+            // Update the richlistbox height.
+            if (this._adjustHeightTimeout) {
+              clearTimeout(this._adjustHeightTimeout);
+            }
+            if (this._shrinkTimeout) {
+              clearTimeout(this._shrinkTimeout);
+            }
+            this._adjustHeightTimeout = setTimeout(() => this.adjustHeight(), 0);
+          } else {
+            this._collapseUnusedItems();
           }
 
-          // make sure to collapse any existing richlistitems
-          // that aren't going to be used
-          var existingItemsCount = this.richlistbox.childNodes.length;
-          for (var i = this._matchCount; i < existingItemsCount; i++)
-            this.richlistbox.childNodes[i].collapsed = true;
-
           this._currentIndex = 0;
+          if (this._appendResultTimeout) {
+            clearTimeout(this._appendResultTimeout);
+          }
           this._appendCurrentResult();
         ]]>
         </body>
@@ -1113,6 +1125,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </getter>
       </property>
 
+      <method name="_collapseUnusedItems">
+        <body>
+          <![CDATA[
+            let existingItemsCount = this.richlistbox.childNodes.length;
+            for (let i = this._matchCount; i < existingItemsCount; ++i) {
+              this.richlistbox.childNodes[i].collapsed = true;
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="adjustHeight">
         <body>
           <![CDATA[
@@ -1126,16 +1149,35 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             if (!this._rowHeight) {
               let firstRowRect = rows[0].getBoundingClientRect();
               this._rowHeight = firstRowRect.height;
+              this._rlbAnimated = !!window.getComputedStyle(this.richlistbox).transitionProperty;
+
+              // Set a fixed max-height to avoid flicker when growing the panel.
+              this.richlistbox.style.maxHeight = (this._rowHeight * this.maxRows) + "px";
             }
 
             // Calculate the height to have the first row to last row shown
             height = this._rowHeight * numRows;
           }
 
-          // Only update the height if we have a non-zero height and if it
-          // changed (the richlistbox is collapsed if there are no results)
-          if (height && height != this.richlistbox.height)
-            this.richlistbox.height = height;
+          let currentHeight = this.richlistbox.getBoundingClientRect().height;
+          if (height > currentHeight) {
+            // Grow immediately.
+            this.richlistbox.style.height = height + "px";
+          } else {
+            // Delay shrinking to avoid flicker.
+            this._shrinkTimeout = setTimeout(() => {
+              this.richlistbox.style.height = height + "px";
+              if (this._rlbAnimated) {
+                let onTransitionEnd = () => {
+                  this.removeEventListener("transitionend", onTransitionEnd, true);
+                  this._collapseUnusedItems();
+                };
+                this.addEventListener("transitionend", onTransitionEnd, true);
+              } else {
+                this._collapseUnusedItems();
+              }
+            }, this.mInput.shrinkDelay);
+          }
           ]]>
         </body>
       </method>
@@ -1227,7 +1269,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           if (this._currentIndex < matchCount) {
             // yield after each batch of items so that typing the url bar is
             // responsive
-            setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
+            this._appendResultTimeout = setTimeout(() => this._appendCurrentResult(), 0);
           }
         ]]>
         </body>

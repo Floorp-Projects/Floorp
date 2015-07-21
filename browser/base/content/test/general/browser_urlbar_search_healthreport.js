@@ -69,7 +69,7 @@ add_task(function* test_healthreport_search_recording() {
   let oldTelemetry = Services.prefs.getBoolPref("toolkit.telemetry.enabled");
   Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
 
-  m = provider.getMeasurement("engines", 1);
+  m = provider.getMeasurement("engines", 2);
   yield provider.collectDailyData();
   data = yield m.getValues();
 

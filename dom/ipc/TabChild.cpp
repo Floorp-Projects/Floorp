@@ -2512,7 +2512,7 @@ TabChild::RecvSetIsDocShellActive(const bool& aIsActive)
 }
 
 bool
-TabChild::RecvNavigateByKey(const bool& aForward, const bool& aForDocumentNavigation)
+TabChild::RecvNavigateDocument(const bool& aForward)
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
@@ -2520,20 +2520,9 @@ TabChild::RecvNavigateByKey(const bool& aForward, const bool& aForDocumentNaviga
     nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(WebNavigation());
 
     // Move to the first or last document.
-    uint32_t type = aForward ?
-      (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FIRSTDOC) :
-                                static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_ROOT)) :
-      (aForDocumentNavigation ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_LASTDOC) :
-                                static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_LAST));
-    fm->MoveFocus(window, nullptr, type,
+    fm->MoveFocus(window, nullptr, aForward ? nsIFocusManager::MOVEFOCUS_FIRSTDOC :
+                                              nsIFocusManager::MOVEFOCUS_LASTDOC,
                   nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));
-
-    // No valid root element was found, so move to the first focusable element.
-    if (!result && aForward && !aForDocumentNavigation) {
-      fm->MoveFocus(window, nullptr, nsIFocusManager::MOVEFOCUS_FIRST,
-                  nsIFocusManager::FLAG_BYKEY, getter_AddRefs(result));
-    }
-
     SendRequestFocus(false);
   }
 

@@ -266,3 +266,8 @@ The object contains:
   For privacy, we don't record this for user-installed engines.
 
 ``loadPath`` and ``submissionURL`` are not present if ``name`` is ``NONE``.
+
+searchCohort
+~~~~~~~~~~~~
+
+If the user has been enrolled into a search default change experiment, this contains the string identifying the experiment the user is taking part in. Most user profiles will never be part of any search default change experiment, and will not send this value.

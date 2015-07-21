@@ -153,6 +153,7 @@ const PREF_PARTNER_ID = "mozilla.partner.id";
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_UPDATE_ENABLED = "app.update.enabled";
 const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
+const PREF_SEARCH_COHORT = "browser.search.cohort";
 
 const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
@@ -891,6 +892,10 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings.defaultSearchEngine = this._getDefaultSearchEngine();
     this._currentEnvironment.settings.defaultSearchEngineData =
       Services.search.getDefaultEngineInfo();
+
+    // Record the cohort identifier used for search defaults A/B testing.
+    if (Services.prefs.prefHasUserValue(PREF_SEARCH_COHORT))
+      this._currentEnvironment.settings.searchCohort = Services.prefs.getCharPref(PREF_SEARCH_COHORT);
   },
 
   /**

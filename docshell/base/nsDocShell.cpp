@@ -2926,26 +2926,17 @@ nsDocShell::HistoryTransactionRemoved(int32_t aIndex)
   return NS_OK;
 }
 
-mozilla::LinkedList<nsDocShell::ObservedDocShell>* nsDocShell::gObservedDocShells = nullptr;
-
 NS_IMETHODIMP
 nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 {
   bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
   if (currentValue != aValue) {
     if (aValue) {
-      TimelineConsumers::AddConsumer();
+      TimelineConsumers::AddConsumer(this, mObserved);
       UseEntryScriptProfiling();
-
-      MOZ_ASSERT(!mObserved);
-      mObserved.reset(new ObservedDocShell(this));
-      GetOrCreateObservedDocShells().insertFront(mObserved.get());
     } else {
-      TimelineConsumers::RemoveConsumer();
+      TimelineConsumers::RemoveConsumer(this, mObserved);
       UnuseEntryScriptProfiling();
-
-      mObserved.reset(nullptr);
-
       ClearProfileTimelineMarkers();
     }
   }

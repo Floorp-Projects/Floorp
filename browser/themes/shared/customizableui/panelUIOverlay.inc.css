@@ -515,6 +515,17 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
+#PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status::after {
+  content: url(chrome://browser/skin/warning.svg);
+  filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
+  width: 47px;
+  padding-top: 1px;
+  display: block;
+  text-align: center;
+  position: relative;
+  top: 25%;
+}
+
 #PanelUI-fxa-status {
   display: flex;
   flex: 1 1 0%;
@@ -755,16 +766,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] {
-  background-color: rgb(255, 236, 158);
-  border-top: 1px solid rgb(254, 212, 21);
+  background-color: hsla(42, 94%, 88%, 1.0);
+  border-top: 1px solid hsla(42, 94%, 70%, 1.0);
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover {
-  background-color: #F9E79A;
+  background-color: hsla(42, 94%, 85%, 1.0);
 }
 
 #PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover:active {
-  background-color: #ECDB92;
+  background-color: hsla(42, 94%, 82%, 1.0);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 

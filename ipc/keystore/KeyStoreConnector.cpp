@@ -10,6 +10,7 @@
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 #ifdef MOZ_WIDGET_GONK
@@ -26,10 +27,14 @@ static const char KEYSTORE_SOCKET_PATH[] = "/dev/socket/keystore";
 
 KeyStoreConnector::KeyStoreConnector(const char** const aAllowedUsers)
   : mAllowedUsers(aAllowedUsers)
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(KeyStoreConnector, UnixSocketConnector);
+}
 
 KeyStoreConnector::~KeyStoreConnector()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(KeyStoreConnector, UnixSocketConnector);
+}
 
 nsresult
 KeyStoreConnector::CreateSocket(int& aFd) const
