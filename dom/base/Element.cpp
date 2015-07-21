@@ -2328,7 +2328,11 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   }
 
   if (aNotify) {
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType);
+    // Don't pass aOldValue to AttributeChanged since it may not be reliable.
+    // Callers only compute aOldValue under certain conditions which may not
+    // be triggered by all nsIMutationObservers.
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, aModType,
+        oldValue == &aParsedValue ? &aParsedValue : nullptr);
   }
 
   if (aFireMutation) {
@@ -2540,8 +2544,10 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   if (aNotify) {
+    // We can always pass oldValue here since there is no new value which could
+    // have corrupted it.
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                  nsIDOMMutationEvent::REMOVAL);
+                                  nsIDOMMutationEvent::REMOVAL, &oldValue);
   }
 
   rv = AfterSetAttr(aNameSpaceID, aName, nullptr, aNotify);

@@ -61,12 +61,16 @@ public:
    * @param aNameSpaceID  Namespace of changed attribute
    * @param aAttribute    Local-name of changed attribute
    * @param aModType      Type of change (add/change/removal)
+   * @param aOldValue     If the old value was StoresOwnData() (or absent),
+   *                      that value, otherwise null
    * @see nsIMutationObserver::AttributeChanged
    */
   static void AttributeChanged(mozilla::dom::Element* aElement,
                                int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
-                               int32_t aModType);
+                               int32_t aModType,
+                               const nsAttrValue* aOldValue);
+
   /**
    * Send AttributeSetToCurrentValue notifications to nsIMutationObservers.
    * @param aElement      Element whose data changed
