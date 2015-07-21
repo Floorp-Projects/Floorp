@@ -302,8 +302,6 @@ class MercurialSetupWizard(object):
 
         self.prompt_native_extension(c, 'mq', MQ_INFO)
 
-        self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
-
         if 'reviewboard' not in c.extensions:
             if hg_version < REVIEWBOARD_MINIMUM_VERSION:
                 print(REVIEWBOARD_INCOMPATIBLE % REVIEWBOARD_MINIMUM_VERSION)
@@ -315,6 +313,8 @@ class MercurialSetupWizard(object):
                     'you can easily initiate code reviews against Mozilla '
                     'projects',
                     path=p)
+
+        self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
 
         if hg_version >= BZPOST_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'bzpost', BZPOST_INFO)
