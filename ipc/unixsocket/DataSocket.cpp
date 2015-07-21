@@ -6,10 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "mozilla/ipc/DataSocket.h"
+#include "DataSocket.h"
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 #endif
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;
@@ -23,7 +24,9 @@ namespace ipc {
 //
 
 DataSocketIO::~DataSocketIO()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(DataSocketIO, SocketIOBase);
+}
 
 void
 DataSocketIO::EnqueueData(UnixSocketIOBuffer* aBuffer)
@@ -111,14 +114,23 @@ DataSocketIO::SendPendingData(int aFd)
 
 DataSocketIO::DataSocketIO(MessageLoop* aConsumerLoop)
   : SocketIOBase(aConsumerLoop)
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(DataSocketIO, SocketIOBase);
+}
 
 //
 // DataSocket
 //
 
+DataSocket::DataSocket()
+{
+  MOZ_COUNT_CTOR_INHERITED(DataSocket, SocketBase);
+}
+
 DataSocket::~DataSocket()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(DataSocket, SocketBase);
+}
 
 }
 }

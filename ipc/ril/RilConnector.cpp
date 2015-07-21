@@ -8,6 +8,7 @@
 #include "RilConnector.h"
 #include <fcntl.h>
 #include <sys/socket.h>
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 #ifdef AF_INET
@@ -27,10 +28,14 @@ RilConnector::RilConnector(const nsACString& aAddressString,
                            unsigned long aClientId)
   : mAddressString(aAddressString)
   , mClientId(aClientId)
-{ }
+{
+  MOZ_COUNT_CTOR_INHERITED(RilConnector, UnixSocketConnector);
+}
 
 RilConnector::~RilConnector()
-{ }
+{
+  MOZ_COUNT_DTOR_INHERITED(RilConnector, UnixSocketConnector);
+}
 
 nsresult
 RilConnector::CreateSocket(int aDomain, int& aFd) const

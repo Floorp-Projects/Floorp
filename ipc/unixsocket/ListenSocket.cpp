@@ -10,6 +10,7 @@
 #include "DataSocket.h"
 #include "ListenSocketConsumer.h"
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "UnixSocketConnector.h"
 
@@ -66,11 +67,11 @@ private:
   void FireSocketError();
 
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<ListenSocket> mListenSocket;
+  ListenSocket* mListenSocket;
 
   /**
    * Connector object used to create the connection we are currently using.
@@ -109,12 +110,16 @@ ListenSocketIO::ListenSocketIO(MessageLoop* aConsumerLoop,
 {
   MOZ_ASSERT(mListenSocket);
   MOZ_ASSERT(mConnector);
+
+  MOZ_COUNT_CTOR_INHERITED(ListenSocketIO, SocketIOBase);
 }
 
 ListenSocketIO::~ListenSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
   MOZ_ASSERT(IsShutdownOnConsumerThread());
+
+  MOZ_COUNT_DTOR_INHERITED(ListenSocketIO, SocketIOBase);
 }
 
 UnixSocketConnector*
@@ -226,7 +231,7 @@ ListenSocketIO::OnSocketCanAcceptWithoutBlocking()
 SocketBase*
 ListenSocketIO::GetSocketBase()
 {
-  return mListenSocket.get();
+  return mListenSocket;
 }
 
 bool
@@ -266,15 +271,21 @@ ListenSocketIO::ShutdownOnIOThread()
 // Socket tasks
 //
 
-class ListenSocketIO::ListenTask final
-  : public SocketIOTask<ListenSocketIO>
+class ListenSocketIO::ListenTask final : public SocketIOTask<ListenSocketIO>
 {
 public:
   ListenTask(ListenSocketIO* aIO, ConnectionOrientedSocketIO* aCOSocketIO)
-  : SocketIOTask<ListenSocketIO>(aIO)
-  , mCOSocketIO(aCOSocketIO)
+    : SocketIOTask<ListenSocketIO>(aIO)
+    , mCOSocketIO(aCOSocketIO)
   {
     MOZ_ASSERT(mCOSocketIO);
+
+    MOZ_COUNT_CTOR(ListenTask);
+  }
+
+  ~ListenTask()
+  {
+    MOZ_COUNT_DTOR(ListenTask);
   }
 
   void Run() override
@@ -291,7 +302,7 @@ private:
 };
 
 //
-// UnixSocketConsumer
+// ListenSocket
 //
 
 ListenSocket::ListenSocket(ListenSocketConsumer* aConsumer, int aIndex)
@@ -300,11 +311,15 @@ ListenSocket::ListenSocket(ListenSocketConsumer* aConsumer, int aIndex)
   , mIndex(aIndex)
 {
   MOZ_ASSERT(mConsumer);
+
+  MOZ_COUNT_CTOR_INHERITED(ListenSocket, SocketBase);
 }
 
 ListenSocket::~ListenSocket()
 {
   MOZ_ASSERT(!mIO);
+
+  MOZ_COUNT_DTOR_INHERITED(ListenSocket, SocketBase);
 }
 
 nsresult
