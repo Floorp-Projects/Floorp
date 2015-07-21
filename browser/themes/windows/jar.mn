@@ -22,6 +22,8 @@ browser.jar:
 #endif
         skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
         skin/classic/browser/actionicon-tab.png
+        skin/classic/browser/actionicon-tab@2x.png
+        skin/classic/browser/actionicon-tab-XPVista7.png
         skin/classic/browser/addons/addon-install-blocked.svg        (../shared/addons/addon-install-blocked.svg)
         skin/classic/browser/addons/addon-install-confirm.svg        (../shared/addons/addon-install-confirm.svg)
         skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
@@ -634,6 +636,7 @@ browser.jar:
 % override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
 % override chrome://browser/skin/tabbrowser/tab-separator.png         chrome://browser/skin/tabbrowser/tab-separator-XP.png             os=WINNT osversion<6
 
+% override chrome://browser/skin/actionicon-tab.png                   chrome://browser/skin/actionicon-tab-XPVista7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar@2x.png            chrome://browser/skin/sync-horizontalbar-XPVista7@2x.png          os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
