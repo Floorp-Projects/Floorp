@@ -380,11 +380,11 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
     for (uint32_t i = 0; i < childCount; i++) {
       nsCOMPtr<nsINavHistoryResultNode> child;
       histResultContainer->GetChild(i, getter_AddRefs(child));
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       uint32_t type;
       rv = child->GetType(&type);
-      if (NS_FAILED(rv) || type != nsINavHistoryResultNode::RESULT_TYPE_URI) {
+      if (NS_WARN_IF(NS_FAILED(rv)) || type != nsINavHistoryResultNode::RESULT_TYPE_URI) {
         NS_WARNING("Unexpected non-RESULT_TYPE_URI node in "
                    "UpgradeHostToOriginAndInsert()");
         continue;
@@ -392,24 +392,24 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
 
       nsAutoCString uriSpec;
       rv = child->GetUri(uriSpec);
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       nsCOMPtr<nsIURI> uri;
       rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       // Use the provided host - this URI may be for a subdomain, rather than the host we care about.
       rv = uri->SetHost(aHost);
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       // We now have a URI which we can make a nsIPrincipal out of
       nsCOMPtr<nsIPrincipal> principal;
       rv = GetPrincipal(uri, aAppId, aIsInBrowserElement, getter_AddRefs(principal));
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       nsAutoCString origin;
       rv = principal->GetOrigin(origin);
-      if (NS_FAILED(rv)) continue;
+      if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       // Ensure that we don't insert the same origin repeatedly
       if (insertedOrigins.Contains(origin)) {
@@ -419,7 +419,7 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
       foundHistory = true;
       rv = aHelper->Insert(origin, aType, aPermission,
                            aExpireType, aExpireTime, aModificationTime);
-      NS_WARN_IF(NS_FAILED(rv));
+      NS_WARN_IF(NS_WARN_IF(NS_FAILED(rv)));
       insertedOrigins.PutEntry(origin);
     }
 
