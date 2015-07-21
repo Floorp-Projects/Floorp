@@ -1,8 +1,8 @@
 /*
  * common functionality for iframe, anchor, and area referrer attribute tests
  */
-const GET_RESULT = sjs + 'action=get-test-results';
-const RESET_STATE = sjs + 'action=resetState';
+const GET_RESULT = SJS + 'ACTION=get-test-results';
+const RESET_STATE = SJS + 'ACTION=resetState';
 
 SimpleTest.waitForExplicitFinish();
 var advance = function() { tests.next(); };
@@ -80,14 +80,14 @@ var tests = (function() {
       for (var i = 0; i < tests.length; i++) {
         yield resetState();
         var searchParams = new URLSearchParams();
-        searchParams.append(ACTION, actionString);
-        searchParams.append(NAME, tests[i].NAME);
+        searchParams.append("ACTION", actionString);
+        searchParams.append("NAME", tests[i].NAME);
         for (var l of PARAMS) {
           if (tests[i][l]) {
-            searchParams.append(window[l], tests[i][l]);
+            searchParams.append(l, tests[i][l]);
           }
         }
-        yield iframe.src = sjs + searchParams.toString();
+        yield iframe.src = SJS + searchParams.toString();
         yield checkIndividualResults(tests[i].DESC, tests[i].RESULT, tests[i].NAME);
       };
     };
