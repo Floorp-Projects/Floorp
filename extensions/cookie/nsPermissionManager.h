@@ -8,7 +8,6 @@
 
 #include "nsIPermissionManager.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
@@ -265,7 +264,6 @@ private:
   nsresult
   FetchPermissions();
 
-  nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIIDNService>      mIDNService;
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
