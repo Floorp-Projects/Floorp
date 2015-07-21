@@ -360,7 +360,10 @@ nsWebBrowser::SetParentURIContentListener(
 NS_IMETHODIMP
 nsWebBrowser::GetContentDOMWindow(nsIDOMWindow** aResult)
 {
-  NS_ENSURE_STATE(mDocShell);
+  if (!mDocShell) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsCOMPtr<nsIDOMWindow> retval = mDocShell->GetWindow();
   retval.forget(aResult);
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
