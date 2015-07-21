@@ -139,10 +139,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// 7f0ae6b1-5fa1-4ba7-885e-a93e17d72cd2
+// 4f512d0b-c58c-4fc9-ae42-8aa6d992e7ae
 #define NS_IPRESSHELL_IID \
-{ 0x7f0ae6b1, 0x5fa1, 0x4ba7, \
-  { 0x88, 0x5e, 0xa9, 0x3e, 0x17, 0xd7, 0x2c, 0xd2 } }
+{ 0x4f512d0b, 0xc58c, 0x4fc9, \
+  { 0xae, 0x42, 0x8a, 0xa6, 0xd9, 0x92, 0xe7, 0xae } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -410,6 +410,11 @@ public:
    * ResizeReflow() calls are ignored after ResizeReflowOverride().
    */
   virtual nsresult ResizeReflowOverride(nscoord aWidth, nscoord aHeight) = 0;
+  /**
+   * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
+   * called previously.
+   */
+  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Returns true if ResizeReflowOverride has been called.
