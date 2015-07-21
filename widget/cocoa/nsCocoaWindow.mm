@@ -1,5 +1,4 @@
 /* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +33,6 @@
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIPresShell.h"
-#include "nsScreenCocoa.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -1265,104 +1263,6 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-class FullscreenTransitionData : public nsISupports
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  CGDirectDisplayID mDisplay;
-  CGGammaValue mRedMin;
-  CGGammaValue mRedMax;
-  CGGammaValue mRedGamma;
-  CGGammaValue mGreenMin;
-  CGGammaValue mGreenMax;
-  CGGammaValue mGreenGamma;
-  CGGammaValue mBlueMin;
-  CGGammaValue mBlueMax;
-  CGGammaValue mBlueGamma;
-
-private:
-  virtual ~FullscreenTransitionData() {}
-};
-
-NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
-
-@interface FullscreenTransitionThread : NSThread
-
-@property nsIWidget::FullscreenTransitionStage stage;
-@property uint16_t duration; // ms
-@property FullscreenTransitionData* data;
-@property nsIRunnable* callback;
-
-- (void)main;
-
-@end
-
-@implementation FullscreenTransitionThread
-- (void)main
-{
-  static const useconds_t kSleepTime = useconds_t(1.0 / 60.0 * 1000000);
-  int steps = std::max(1u, _duration * 1000 / kSleepTime);
-
-  // see https://developer.apple.com/library/mac/documentation/
-  // GraphicsImaging/Conceptual/QuartzDisplayServicesConceptual/
-  // Articles/FadeEffects.html#//apple_ref/doc/uid/TP40004232-SW5
-  for (int step = 0; step < steps; step++) {
-    double fade = _stage == nsIWidget::eBeforeFullscreenToggle ?
-      1.0 - (step / double(steps)) : step / double(steps);
-    CGSetDisplayTransferByFormula(_data->mDisplay,
-      _data->mRedMin, fade * _data->mRedMax, _data->mRedGamma,
-      _data->mGreenMin, fade * _data->mGreenMax, _data->mGreenGamma,
-      _data->mBlueMin, fade * _data->mBlueMax, _data->mBlueGamma);
-    usleep(kSleepTime);
-  }
-
-  if (_stage == nsIWidget::eAfterFullscreenToggle) {
-    // Ensure we restore the original color settings.
-    CGDisplayRestoreColorSyncSettings();
-  }
-  // The caller should have added ref for us.
-  NS_DispatchToMainThread(already_AddRefed<nsIRunnable>(_callback));
-}
-@end
-
-/* virtual */ bool
-nsCocoaWindow::PrepareForFullscreenTransition(nsISupports** aData)
-{
-  auto data = new FullscreenTransitionData();
-
-  nsCOMPtr<nsIScreen> widgetScreen = GetWidgetScreen();
-  nsScreenCocoa* screen = static_cast<nsScreenCocoa*>(widgetScreen.get());
-  NSScreen* cocoaScreen = screen->CocoaScreen();
-  NSNumber* displayId = cocoaScreen.deviceDescription[@"NSScreenNumber"];
-  data->mDisplay = [displayId unsignedIntValue];
-
-  CGGetDisplayTransferByFormula(
-    data->mDisplay,
-    &data->mRedMin, &data->mRedMax, &data->mRedGamma,
-    &data->mGreenMin, &data->mGreenMax, &data->mGreenGamma,
-    &data->mBlueMin, &data->mBlueMax, &data->mBlueGamma);
-
-  *aData = data;
-  NS_ADDREF(data);
-  return true;
-}
-
-/* virtual */ void
-nsCocoaWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
-                                           uint16_t aDuration,
-                                           nsISupports* aData,
-                                           nsIRunnable* aCallback)
-{
-  auto thread = [[FullscreenTransitionThread alloc] init];
-  thread.stage = aStage;
-  thread.duration = aDuration;
-  thread.data = static_cast<FullscreenTransitionData*>(aData);
-  nsCOMPtr<nsIRunnable> callback = aCallback;
-  thread.callback = callback.forget().take();
-  [thread start];
 }
 
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode)
