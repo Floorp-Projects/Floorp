@@ -67,49 +67,6 @@ using std::min;
 // used for statistics.
 static int32_t sMaxDecodeCount = 0;
 
-/* We define our own error checking macros here for 2 reasons:
- *
- * 1) Most of the failures we encounter here will (hopefully) be
- * the result of decoding failures (ie, bad data) and not code
- * failures. As such, we don't want to clutter up debug consoles
- * with spurious messages about NS_ENSURE_SUCCESS failures.
- *
- * 2) We want to set the internal error flag, shutdown properly,
- * and end up in an error state.
- *
- * So this macro should be called when the desired failure behavior
- * is to put the container into an error state and return failure.
- * It goes without saying that macro won't compile outside of a
- * non-static RasterImage method.
- */
-#define LOG_CONTAINER_ERROR                      \
-  PR_BEGIN_MACRO                                 \
-  MOZ_LOG (GetImgLog(), LogLevel::Error,             \
-          ("RasterImage: [this=%p] Error "      \
-           "detected at line %u for image of "   \
-           "type %s\n", this, __LINE__,          \
-           mSourceDataMimeType.get()));          \
-  PR_END_MACRO
-
-#define CONTAINER_ENSURE_SUCCESS(status)      \
-  PR_BEGIN_MACRO                              \
-  nsresult _status = status; /* eval once */  \
-  if (NS_FAILED(_status)) {                   \
-    LOG_CONTAINER_ERROR;                      \
-    DoError();                                \
-    return _status;                           \
-  }                                           \
- PR_END_MACRO
-
-#define CONTAINER_ENSURE_TRUE(arg, rv)  \
-  PR_BEGIN_MACRO                        \
-  if (!(arg)) {                         \
-    LOG_CONTAINER_ERROR;                \
-    DoError();                          \
-    return rv;                          \
-  }                                     \
-  PR_END_MACRO
-
 class ScaleRunner : public nsRunnable
 {
   enum ScaleState
@@ -1990,8 +1947,8 @@ RasterImage::DoError()
   // Invalidate to get rid of any partially-drawn image content.
   NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
 
-  // Log our error
-  LOG_CONTAINER_ERROR;
+  MOZ_LOG(GetImgLog(), LogLevel::Error,
+          ("RasterImage: [this=%p] Error detected for image\n", this));
 }
 
 /* static */ void
