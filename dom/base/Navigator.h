@@ -182,6 +182,10 @@ public:
                                bool aIsCallerChrome,
                                nsAString& aUserAgent);
 
+  // Clears the user agent cache by calling:
+  // NavigatorBinding::ClearCachedUserAgentValue(this);
+  void ClearUserAgentCache();
+
   already_AddRefed<Promise> GetDataStores(const nsAString& aName,
                                           const nsAString& aOwner,
                                           ErrorResult& aRv);
