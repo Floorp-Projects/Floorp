@@ -187,8 +187,6 @@ protected:
   
   void SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame);
 
-  static void FrameResizePrefCallback(const char* aPref, void* aClosure);
-
   nsFramesetDrag   mDrag;
   nsBorderColor    mEdgeColors;
   nsHTMLFramesetBorderFrame* mDragger;
@@ -212,7 +210,6 @@ protected:
   int32_t          mNextNeighborOrigSize;
   int32_t          mMinDrag;
   int32_t          mChildCount;
-  bool             mForceFrameResizability;
 };
 
 #endif

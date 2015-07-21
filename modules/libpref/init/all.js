@@ -2182,9 +2182,6 @@ pref("layout.word_select.stop_at_punctuation", true);
 // Windows default is 1 for word delete behavior, the rest as for 2.
 pref("layout.selection.caret_style", 0);
 
-// pref to force frames to be resizable
-pref("layout.frames.force_resizability", false);
-
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
