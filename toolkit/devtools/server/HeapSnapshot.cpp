@@ -608,6 +608,8 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
                                         const nsAString& filePath,
                                         ErrorResult& rv)
 {
+  auto start = TimeStamp::Now();
+
   UniquePtr<char[]> path(ToNewCString(filePath));
   if (!path) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -619,9 +621,15 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   if (rv.Failed())
     return nullptr;
 
-  return HeapSnapshot::Create(cx, global,
-                              reinterpret_cast<const uint8_t*>(mm.address()),
-                              mm.size(), rv);
+  auto snapshot = HeapSnapshot::Create(cx, global,
+                                       reinterpret_cast<const uint8_t*>(mm.address()),
+                                       mm.size(), rv);
+
+  if (!rv.Failed())
+    Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_READ_HEAP_SNAPSHOT_MS,
+                                   start);
+
+  return snapshot;
 }
 
 } // namespace dom
