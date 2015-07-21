@@ -754,7 +754,7 @@ IndexedDatabaseManager::InvalidateAllFileManagers()
   AssertIsOnIOThread();
 
   for (auto iter = mFileManagerInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsACString& key = iter.Key();
+    DebugOnly<const nsACString&> key = iter.Key();
     auto value = iter.Data();
     MOZ_ASSERT(!key.IsEmpty());
     MOZ_ASSERT(value);
