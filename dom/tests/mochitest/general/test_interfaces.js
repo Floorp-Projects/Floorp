@@ -665,6 +665,22 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MessagePort", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIAccess", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIConnectionEvent", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIInputMap", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIInput", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIMessageEvent", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIOutputMap", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIOutput", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MIDIPort", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MimeType", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "MimeTypeArray", insecureContext: true},
