@@ -3708,6 +3708,28 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
   ::CFRelease(langList);
 }
 
+void
+IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
+{
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p IMEInputHandler::OnSelectionChange", this));
+
+  if (aIMENotification.mSelectionChangeData.mOffset == UINT32_MAX) {
+    mSelectedRange.location = NSNotFound;
+    mSelectedRange.length = 0;
+    mRangeForWritingMode.location = NSNotFound;
+    mRangeForWritingMode.length = 0;
+    return;
+  }
+
+  mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
+  mRangeForWritingMode =
+    NSMakeRange(aIMENotification.mSelectionChangeData.mOffset,
+                aIMENotification.mSelectionChangeData.mLength);
+  if (mIMEHasFocus) {
+    mSelectedRange = mRangeForWritingMode;
+  }
+}
 
 #pragma mark -
 
