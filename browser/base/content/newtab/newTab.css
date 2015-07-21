@@ -465,8 +465,6 @@ input[type=button] {
   position: absolute;
   top: 100%;
   right: -25px;
-  background-color: white;
-  border-radius: 6px;
   filter: drop-shadow(0 0 1px rgba(0,0,0,0.4)) drop-shadow(0 3px 4px rgba(0,0,0,0.4));
   transition: all 200ms ease-in-out;
   transform-origin: top right;
@@ -510,6 +508,12 @@ input[type=button] {
   overflow: hidden;
   display: table-cell;
   border-top: none;
+}
+
+#newtab-customize-panel-inner-wrapper {
+  background-color: #FFFFFF;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 #newtab-customize-title > label {
