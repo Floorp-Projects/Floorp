@@ -49,7 +49,6 @@
   <script src="../../content/shared/js/models.js"></script>
   <script src="../../content/shared/js/mixins.js"></script>
   <script src="../../content/shared/js/websocket.js"></script>
-  <script src="../../content/shared/js/feedbackApiClient.js"></script>
   <script src="../../content/shared/js/actions.js"></script>
   <script src="../../content/shared/js/validate.js"></script>
   <script src="../../content/shared/js/dispatcher.js"></script>
@@ -57,11 +56,9 @@
   <script src="../../content/shared/js/roomStates.js"></script>
   <script src="../../content/shared/js/fxOSActiveRoomStore.js"></script>
   <script src="../../content/shared/js/activeRoomStore.js"></script>
-  <script src="../../content/shared/js/feedbackStore.js"></script>
   <script src="../../content/shared/js/views.js"></script>
   <script src="../../content/shared/js/textChatStore.js"></script>
   <script src="../../content/shared/js/textChatView.js"></script>
-  <script src="../../content/shared/js/feedbackViews.js"></script>
   <script src="../../content/shared/js/otSdkDriver.js"></script>
   <script src="../../standalone/content/js/multiplexGum.js"></script>
   <script src="../../standalone/content/js/standaloneAppStore.js"></script>
@@ -88,7 +85,7 @@
 
     describe("Unexpected Warnings Check", function() {
       it("should long only the warnings we expect", function() {
-        chai.expect(caughtWarnings.length).to.eql(15);
+        chai.expect(caughtWarnings.length).to.eql(11);
       });
     });
 
