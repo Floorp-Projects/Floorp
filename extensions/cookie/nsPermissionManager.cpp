@@ -337,8 +337,22 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsAFlatCString& aTyp
     rv = histSrv->GetNewQuery(getter_AddRefs(histQuery));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // We want to only find history items for this particular host, and subdomains
-    rv = histQuery->SetDomain(aHost);
+    // Get the eTLD+1 of the domain
+    nsAutoCString eTLD1;
+    nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    MOZ_ASSERT(tldService); // We should always have a tldService
+    if (tldService) {
+      rv = tldService->GetBaseDomainFromHost(aHost, 0, eTLD1);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // We should never hit this branch, but we produce a fake eTLD1
+      // to avoid crashing in a release build in case we hit this branch
+      eTLD1 = aHost;
+    }
+
+    // We want to only find history items for this particular eTLD+1, and subdomains
+    rv = histQuery->SetDomain(eTLD1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = histQuery->SetDomainIsHost(false);
