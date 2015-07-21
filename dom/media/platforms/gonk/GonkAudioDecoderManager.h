@@ -43,6 +43,8 @@ private:
 
   void ReleaseAudioBuffer();
 
+  int64_t mLastDecodedTime;
+
   uint32_t mAudioChannels;
   uint32_t mAudioRate;
   const uint32_t mAudioProfile;

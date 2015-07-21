@@ -28,6 +28,8 @@ interface HTMLAreaElement : HTMLElement {
            attribute DOMString ping;
            [SetterThrows]
            attribute DOMString rel;
+           [SetterThrows, Pref="network.http.enablePerElementReferrer"]
+           attribute DOMString referrer;
   readonly attribute DOMTokenList relList;
 
   // not implemented.

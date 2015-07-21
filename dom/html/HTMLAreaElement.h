@@ -128,6 +128,15 @@ public:
   } 
   nsDOMTokenList* RelList();
 
+  void SetReferrer(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::referrer, aValue, rv);
+  }
+  void GetReferrer(nsAString& aReferrer)
+  {
+    GetHTMLAttr(nsGkAtoms::referrer, aReferrer);
+  }
+
   // The Link::GetOrigin is OK for us
 
   using Link::GetProtocol;
