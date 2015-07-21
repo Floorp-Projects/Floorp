@@ -28,6 +28,11 @@ interface DataTransfer {
   readonly attribute FileList? files;
 };
 
+partial interface DataTransfer {
+  [Throws, Pref="dom.input.dirpicker"]
+  Promise<sequence<(File or Directory)>> getFilesAndDirectories();
+};
+
 // Mozilla specific stuff
 partial interface DataTransfer {
   /*

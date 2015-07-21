@@ -186,8 +186,6 @@ let gPermissionObject = {
 
   "indexedDB": {},
 
-  "fullscreen": {},
-
   "pointerLock": {
     exactHostMatch: true
   },

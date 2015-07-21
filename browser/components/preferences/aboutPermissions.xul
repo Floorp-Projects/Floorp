@@ -235,27 +235,6 @@
           </vbox>
         </hbox>
 
-        <!-- Fullscreen -->
-        <hbox id="fullscreen-pref-item"
-              class="pref-item" align="top">
-          <image class="pref-icon" type="fullscreen"/>
-          <vbox>
-            <label class="pref-title" value="&fullscreen.label;"/>
-            <hbox align="center">
-              <menulist id="fullscreen-menulist"
-                        class="pref-menulist"
-                        type="fullscreen"
-                        oncommand="AboutPermissions.onPermissionCommand(event);">
-                <menupopup>
-                  <menuitem id="fullscreen-0" value="0" label="&permission.alwaysAsk;"/>
-                  <menuitem id="fullscreen-1" value="1" label="&permission.allow;"/>
-                  <menuitem id="fullscreen-2" value="2" label="&permission.block;"/>
-                </menupopup>
-              </menulist>
-            </hbox>
-          </vbox>
-        </hbox>
-
         <!-- Push Notifications -->
         <hbox id="push-pref-item"
               class="pref-item" align="top">

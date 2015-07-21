@@ -20,6 +20,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIConsoleListener.h"
 #include "nsPrintfCString.h"
+#include "nsProxyRelease.h"
 #include "nsIScriptError.h"
 
 #include "mozilla/Preferences.h"
@@ -71,6 +72,8 @@ nsConsoleService::nsConsoleService()
 NS_IMETHODIMP
 nsConsoleService::ClearMessagesForWindowID(const uint64_t innerID)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   // Remove the messages related to this window
   for (uint32_t i = 0; i < mBufferSize && mMessages[i]; i++) {
     // Only messages implementing nsIScriptError interface exposes the inner window ID
@@ -108,6 +111,8 @@ nsConsoleService::ClearMessagesForWindowID(const uint64_t innerID)
 
 nsConsoleService::~nsConsoleService()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   uint32_t i = 0;
   while (i < mBufferSize && mMessages[i]) {
     NS_RELEASE(mMessages[i]);
@@ -207,6 +212,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage* aMessage)
   return LogMessageWithMode(aMessage, OutputToLog);
 }
 
+// This can be called off the main thread.
 nsresult
 nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
                                      nsConsoleService::OutputMode aOutputMode)
@@ -320,7 +326,10 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
   }
 
   if (retiredMessage) {
-    NS_RELEASE(retiredMessage);
+    // Release |retiredMessage| on the main thread in case it is an instance of
+    // a mainthread-only class like nsScriptErrorWithStack and we're off the
+    // main thread.
+    NS_ReleaseOnMainThread(retiredMessage);
   }
 
   if (r) {
@@ -360,6 +369,8 @@ NS_IMETHODIMP
 nsConsoleService::GetMessageArray(uint32_t* aCount,
                                   nsIConsoleMessage*** aMessages)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   nsIConsoleMessage** messageArray;
 
   /*
@@ -456,6 +467,8 @@ nsConsoleService::UnregisterListener(nsIConsoleListener* aListener)
 NS_IMETHODIMP
 nsConsoleService::Reset()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   /*
    * Make sure nobody trips into the buffer while it's being reset
    */
