@@ -3,6 +3,7 @@
   "globals": {
     // General test items.
     "add_task": false,
+    "BrowserTestUtils": true,
     "Cc": true,
     "Ci": true,
     "Cr": true,
@@ -24,7 +25,6 @@
     "promiseOAuthGetRegistration": false,
     "promiseOAuthParamsSetup": false,
     "promiseObserverNotified": false,
-    "promiseTabLoadEvent": false,
     "promiseWaitForCondition": false,
     "resetFxA": true,
     // Loop specific items
