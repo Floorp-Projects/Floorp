@@ -36,6 +36,9 @@ public:
    * @param aBuffer Data to be sent to socket
    */
   virtual void SendSocketData(UnixSocketIOBuffer* aBuffer) = 0;
+
+protected:
+  DataSocket();
 };
 
 //
