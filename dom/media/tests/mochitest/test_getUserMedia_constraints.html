@@ -95,7 +95,7 @@ runTest(function() {
 
   var unexpected = supported.filter(key => !mustSupport.includes(key));
   is(unexpected.length, 0,
-     "Unexpected support (please update test): " + unexpected);
+     "Unanticipated support (please update test): " + unexpected);
 
   // Run constraint tests
 
