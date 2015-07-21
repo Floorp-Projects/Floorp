@@ -1704,11 +1704,6 @@ pref("browser.newtabpage.directory.ping", "https://tiles.services.mozilla.com/v3
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 
-// True if the fullscreen API requires approval upon a domain entering fullscreen.
-// Domains that have already had fullscreen permission granted won't re-request
-// approval.
-pref("full-screen-api.approval-required", true);
-
 // Startup Crash Tracking
 // number of startup crashes that can occur before starting into safe mode automatically
 // (this pref has no effect if more than 6 hours have passed since the last crash)
