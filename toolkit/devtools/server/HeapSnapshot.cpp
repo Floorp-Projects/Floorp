@@ -19,8 +19,6 @@
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
@@ -461,10 +459,6 @@ class MOZ_STACK_CLASS HeapSnapshotHandler
   JS::ZoneSet*    zones;
 
 public:
-  // For telemetry.
-  uint32_t nodeCount;
-  uint32_t edgeCount;
-
   HeapSnapshotHandler(CoreDumpWriter& writer,
                       JS::ZoneSet* zones)
     : writer(writer),
@@ -481,8 +475,6 @@ public:
                    NodeData*,
                    bool first)
   {
-    edgeCount++;
-
     // We're only interested in the first time we reach edge.referent, not in
     // every edge arriving at that node. "But, don't we want to serialize every
     // edge in the heap graph?" you ask. Don't worry! This edge is still
@@ -491,8 +483,6 @@ public:
     // visited and serialized the origin node and its edges.
     if (!first)
       return true;
-
-    nodeCount++;
 
     const JS::ubi::Node& referent = edge.referent;
 
@@ -542,17 +532,8 @@ WriteHeapGraph(JSContext* cx,
     return false;
   traversal.wantNames = wantNames;
 
-  bool ok = traversal.addStartVisited(node) &&
-            traversal.traverse();
-
-  if (ok) {
-    Telemetry::Accumulate(Telemetry::DEVTOOLS_HEAP_SNAPSHOT_NODE_COUNT,
-                          handler.nodeCount);
-    Telemetry::Accumulate(Telemetry::DEVTOOLS_HEAP_SNAPSHOT_EDGE_COUNT,
-                          handler.edgeCount);
-  }
-
-  return ok;
+  return traversal.addStartVisited(node) &&
+    traversal.traverse();
 }
 
 } // namespace devtools
@@ -569,8 +550,6 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                         const HeapSnapshotBoundaries& boundaries,
                                         ErrorResult& rv)
 {
-  auto start = TimeStamp::Now();
-
   bool wantNames = true;
   ZoneSet zones;
   Maybe<AutoCheckCannotGC> maybeNoGC;
@@ -608,15 +587,12 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                       wantNames,
                       zones.initialized() ? &zones : nullptr,
                       maybeNoGC.ref()))
-  {
-    rv.Throw(zeroCopyStream.failed()
-             ? zeroCopyStream.result()
-             : NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_SAVE_HEAP_SNAPSHOT_MS,
-                                 start);
+    {
+      rv.Throw(zeroCopyStream.failed()
+               ? zeroCopyStream.result()
+               : NS_ERROR_UNEXPECTED);
+      return;
+    }
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
@@ -625,8 +601,6 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
                                         const nsAString& filePath,
                                         ErrorResult& rv)
 {
-  auto start = TimeStamp::Now();
-
   UniquePtr<char[]> path(ToNewCString(filePath));
   if (!path) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -638,15 +612,9 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   if (rv.Failed())
     return nullptr;
 
-  auto snapshot = HeapSnapshot::Create(cx, global,
-                                       reinterpret_cast<const uint8_t*>(mm.address()),
-                                       mm.size(), rv);
-
-  if (!rv.Failed())
-    Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_READ_HEAP_SNAPSHOT_MS,
-                                   start);
-
-  return snapshot;
+  return HeapSnapshot::Create(cx, global,
+                              reinterpret_cast<const uint8_t*>(mm.address()),
+                              mm.size(), rv);
 }
 
 } // namespace dom
