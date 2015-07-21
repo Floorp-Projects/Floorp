@@ -393,15 +393,17 @@ function unregisterObserver() {
 
 function run_test_real() {
   tests.forEach(add_test);
-  do_get_profile()
-  predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
-
-  registerObserver();
+  do_get_profile();
 
   Services.prefs.setBoolPref("network.predictor.enabled", true);
   Services.prefs.setBoolPref("network.predictor.cleaned-up", true);
   Services.prefs.setBoolPref("browser.cache.use_new_backend_temp", true);
   Services.prefs.setIntPref("browser.cache.use_new_backend", 1);
+
+  predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
+
+  registerObserver();
+
   do_register_cleanup(() => {
     Services.prefs.clearUserPref("network.predictor.preconnect-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enabled");
