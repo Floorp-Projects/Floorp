@@ -679,7 +679,6 @@ function Snapshot({xpcom, childProcesses, probes}) {
   this.processData = new PerformanceData({xpcom: xpcom.getProcessData(), probes});
 }
 
-let isContent = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 /**
  * Communication with other processes
  */
