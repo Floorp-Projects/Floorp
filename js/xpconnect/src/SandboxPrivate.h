@@ -15,8 +15,6 @@
 
 #include "js/RootingAPI.h"
 
-// This interface is public only because it is used in jsd.
-// Once jsd is gone this file should be moved back to xpconnect/src.
 
 class SandboxPrivate : public nsIGlobalObject,
                        public nsIScriptObjectPrincipal,

@@ -432,27 +432,12 @@ IDBDatabase::RefreshSpec(bool aMayDelete)
 {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    RefreshTransactionsSpec(nsPtrHashKey<IDBTransaction>* aTransaction,
-                            void* aClosure)
-    {
-      MOZ_ASSERT(aTransaction);
-      aTransaction->GetKey()->AssertIsOnOwningThread();
-      MOZ_ASSERT(aClosure);
-
-      bool mayDelete = *static_cast<bool*>(aClosure);
-
-      nsRefPtr<IDBTransaction> transaction = aTransaction->GetKey();
-      transaction->RefreshSpec(mayDelete);
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  mTransactions.EnumerateEntries(Helper::RefreshTransactionsSpec, &aMayDelete);
+  for (auto iter = mTransactions.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<IDBTransaction> transaction = iter.Get()->GetKey();
+    MOZ_ASSERT(transaction);
+    transaction->AssertIsOnOwningThread();
+    transaction->RefreshSpec(aMayDelete);
+  }
 }
 
 nsPIDOMWindow*
@@ -916,7 +901,19 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
       StrongTransactionArray transactionsToAbort;
       transactionsToAbort.SetCapacity(transactionTable.Count());
 
-      transactionTable.EnumerateEntries(Collect, &transactionsToAbort);
+      for (auto iter = transactionTable.Iter(); !iter.Done(); iter.Next()) {
+        IDBTransaction* transaction = iter.Get()->GetKey();
+        MOZ_ASSERT(transaction);
+
+        transaction->AssertIsOnOwningThread();
+
+        // Transactions that are already done can simply be ignored. Otherwise
+        // there is a race here and it's possible that the transaction has not
+        // been successfully committed yet so we will warn the user.
+        if (!transaction->IsDone()) {
+          transactionsToAbort.AppendElement(transaction);
+        }
+      }
       MOZ_ASSERT(transactionsToAbort.Length() <= transactionTable.Count());
 
       if (transactionsToAbort.IsEmpty()) {
@@ -967,29 +964,6 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 
         aDatabase->LogWarning(kWarningMessage, filename, lineNo);
       }
-    }
-
-  private:
-    static PLDHashOperator
-    Collect(nsPtrHashKey<IDBTransaction>* aTransactionKey, void* aClosure)
-    {
-      MOZ_ASSERT(aTransactionKey);
-      MOZ_ASSERT(aClosure);
-
-      IDBTransaction* transaction = aTransactionKey->GetKey();
-      MOZ_ASSERT(transaction);
-
-      transaction->AssertIsOnOwningThread();
-
-      // Transactions that are already done can simply be ignored. Otherwise
-      // there is a race here and it's possible that the transaction has not
-      // been successfully committed yet so we will warn the user.
-      if (!transaction->IsDone()) {
-        auto* array = static_cast<StrongTransactionArray*>(aClosure);
-        array->AppendElement(transaction);
-      }
-
-      return PL_DHASH_NEXT;
     }
   };
 
@@ -1254,27 +1228,6 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
 
       return PL_DHASH_NEXT;
     }
-
-    static PLDHashOperator
-    MaybeExpireReceivedBlobs(nsISupportsHashKey* aKey,
-                             void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(!aClosure);
-
-      nsISupports* key = aKey->GetKey();
-      MOZ_ASSERT(key);
-
-      nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(key);
-      MOZ_ASSERT(weakRef);
-
-      nsCOMPtr<nsISupports> referent = do_QueryReferent(weakRef);
-      if (!referent) {
-        return PL_DHASH_REMOVE;
-      }
-
-      return PL_DHASH_NEXT;
-    }
   };
 
   if (mBackgroundActor && mFileActors.Count()) {
@@ -1290,8 +1243,18 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
     if (aExpireAll) {
       mReceivedBlobs.Clear();
     } else {
-      mReceivedBlobs.EnumerateEntries(&Helper::MaybeExpireReceivedBlobs,
-                                      nullptr);
+      for (auto iter = mReceivedBlobs.Iter(); !iter.Done(); iter.Next()) {
+        nsISupports* key = iter.Get()->GetKey();
+        MOZ_ASSERT(key);
+
+        nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(key);
+        MOZ_ASSERT(weakRef);
+
+        nsCOMPtr<nsISupports> referent = do_QueryReferent(weakRef);
+        if (!referent) {
+          iter.Remove();
+        }
+      }
     }
   }
 }

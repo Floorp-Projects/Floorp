@@ -123,6 +123,14 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::rel, aValue, rv);
   }
+  void SetReferrer(const nsAString& aValue, mozilla::ErrorResult& rv)
+  {
+    SetHTMLAttr(nsGkAtoms::referrer, aValue, rv);
+  }
+  void GetReferrer(nsAString& aReferrer)
+  {
+    GetHTMLAttr(nsGkAtoms::referrer, aReferrer);
+  }
   nsDOMTokenList* RelList();
   void GetHreflang(DOMString& aValue)
   {

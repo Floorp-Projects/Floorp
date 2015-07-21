@@ -197,6 +197,7 @@ private:
 class UnixSocketIOBuffer : public UnixSocketBuffer
 {
 public:
+  UnixSocketIOBuffer();
   virtual ~UnixSocketIOBuffer();
 
   /**
@@ -439,6 +440,7 @@ public:
   };
 
   SocketEventTask(SocketIOBase* aIO, SocketEvent aEvent);
+  ~SocketEventTask();
 
   void Run() override;
 
@@ -454,6 +456,7 @@ class SocketRequestClosingTask final : public SocketTask<SocketIOBase>
 {
 public:
   SocketRequestClosingTask(SocketIOBase* aIO);
+  ~SocketRequestClosingTask();
 
   void Run() override;
 };
@@ -465,6 +468,7 @@ class SocketDeleteInstanceTask final : public Task
 {
 public:
   SocketDeleteInstanceTask(SocketIOBase* aIO);
+  ~SocketDeleteInstanceTask();
 
   void Run() override;
 
@@ -520,6 +524,7 @@ class SocketIOShutdownTask final : public SocketIOTask<SocketIOBase>
 {
 public:
   SocketIOShutdownTask(SocketIOBase* aIO);
+  ~SocketIOShutdownTask();
 
   void Run() override;
 };
