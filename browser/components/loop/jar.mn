@@ -20,6 +20,7 @@ browser.jar:
   content/browser/loop/js/conversationViews.js      (content/js/conversationViews.js)
   content/browser/loop/js/roomStore.js              (content/js/roomStore.js)
   content/browser/loop/js/roomViews.js              (content/js/roomViews.js)
+  content/browser/loop/js/feedbackViews.js          (content/js/feedbackViews.js)
 
   # Desktop styles
   content/browser/loop/css/contacts.css             (content/css/contacts.css)
@@ -31,8 +32,7 @@ browser.jar:
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
 
   # Shared images
-  content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
-  content/browser/loop/shared/img/sad.png                       (content/shared/img/sad.png)
+  content/browser/loop/shared/img/helloicon.svg                 (content/shared/img/helloicon.svg)
   content/browser/loop/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
   content/browser/loop/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
   content/browser/loop/shared/img/spinner.svg                   (content/shared/img/spinner.svg)
@@ -81,14 +81,11 @@ browser.jar:
   content/browser/loop/shared/js/roomStates.js          (content/shared/js/roomStates.js)
   content/browser/loop/shared/js/fxOSActiveRoomStore.js (content/shared/js/fxOSActiveRoomStore.js)
   content/browser/loop/shared/js/activeRoomStore.js     (content/shared/js/activeRoomStore.js)
-  content/browser/loop/shared/js/feedbackStore.js       (content/shared/js/feedbackStore.js)
   content/browser/loop/shared/js/dispatcher.js          (content/shared/js/dispatcher.js)
-  content/browser/loop/shared/js/feedbackApiClient.js   (content/shared/js/feedbackApiClient.js)
   content/browser/loop/shared/js/models.js              (content/shared/js/models.js)
   content/browser/loop/shared/js/mixins.js              (content/shared/js/mixins.js)
   content/browser/loop/shared/js/otSdkDriver.js         (content/shared/js/otSdkDriver.js)
   content/browser/loop/shared/js/views.js               (content/shared/js/views.js)
-  content/browser/loop/shared/js/feedbackViews.js       (content/shared/js/feedbackViews.js)
   content/browser/loop/shared/js/textChatStore.js       (content/shared/js/textChatStore.js)
   content/browser/loop/shared/js/textChatView.js        (content/shared/js/textChatView.js)
   content/browser/loop/shared/js/utils.js               (content/shared/js/utils.js)

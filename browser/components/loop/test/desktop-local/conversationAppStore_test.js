@@ -32,7 +32,8 @@ describe("loop.store.ConversationAppStore", function () {
   });
 
   describe("#getWindowData", function() {
-    var fakeWindowData, fakeGetWindowData, fakeMozLoop, store;
+    var fakeWindowData, fakeGetWindowData, fakeMozLoop, store, getLoopPrefStub;
+    var setLoopPrefStub;
 
     beforeEach(function() {
       fakeWindowData = {
@@ -44,13 +45,18 @@ describe("loop.store.ConversationAppStore", function () {
         windowId: "42"
       };
 
+      getLoopPrefStub = sandbox.stub();
+      setLoopPrefStub = sandbox.stub();
+
       fakeMozLoop = {
         getConversationWindowData: function(windowId) {
           if (windowId === "42") {
             return fakeWindowData;
           }
           return null;
-        }
+        },
+        getLoopPref: getLoopPrefStub,
+        setLoopPref: setLoopPrefStub
       };
 
       store = new loop.store.ConversationAppStore({
@@ -59,12 +65,62 @@ describe("loop.store.ConversationAppStore", function () {
       });
     });
 
+    afterEach(function() {
+      sandbox.restore();
+    });
+
     it("should fetch the window type from the mozLoop API", function() {
       dispatcher.dispatch(new sharedActions.GetWindowData(fakeGetWindowData));
 
       expect(store.getStoreState()).eql({
         windowType: "incoming"
       });
+    });
+
+    it("should have the feedback period in initial state", function() {
+      getLoopPrefStub.returns(42);
+
+      // Expect ms.
+      expect(store.getInitialStoreState().feedbackPeriod).to.eql(42 * 1000);
+    });
+
+    it("should have the dateLastSeen in initial state", function() {
+      getLoopPrefStub.returns(42);
+
+      // Expect ms.
+      expect(store.getInitialStoreState().feedbackTimestamp).to.eql(42 * 1000);
+    });
+
+    it("should fetch the correct pref for feedback period", function() {
+      store.getInitialStoreState();
+
+      sinon.assert.calledWithExactly(getLoopPrefStub, "feedback.periodSec");
+    });
+
+    it("should fetch the correct pref for feedback period", function() {
+      store.getInitialStoreState();
+
+      sinon.assert.calledWithExactly(getLoopPrefStub,
+                                     "feedback.dateLastSeenSec");
+    });
+
+    it("should set showFeedbackForm to true when action is triggered", function() {
+      var showFeedbackFormStub = sandbox.stub(store, "showFeedbackForm");
+
+      dispatcher.dispatch(new sharedActions.ShowFeedbackForm());
+
+      sinon.assert.calledOnce(showFeedbackFormStub);
+    });
+
+    it("should set feedback timestamp on ShowFeedbackForm action", function() {
+      var clock = sandbox.useFakeTimers();
+      // Make sure we round down the value.
+      clock.tick(1001);
+      dispatcher.dispatch(new sharedActions.ShowFeedbackForm());
+
+      sinon.assert.calledOnce(setLoopPrefStub);
+      sinon.assert.calledWithExactly(setLoopPrefStub,
+                                     "feedback.dateLastSeenSec", 1);
     });
 
     it("should dispatch a SetupWindowData action with the data from the mozLoop API",
@@ -80,5 +136,4 @@ describe("loop.store.ConversationAppStore", function () {
           }, fakeWindowData)));
       });
   });
-
 });

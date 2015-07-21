@@ -41,7 +41,8 @@ describe("loop.roomViews", function () {
         }),
         update: sinon.stub().callsArgWith(2, null)
       },
-      telemetryAddValue: sinon.stub()
+      telemetryAddValue: sinon.stub(),
+      setLoopPref: sandbox.stub()
     };
 
     fakeWindow = {
@@ -201,8 +202,7 @@ describe("loop.roomViews", function () {
         });
       });
 
-      it("should dispatch a CopyRoomUrl action when the copy button is " +
-        "pressed", function() {
+      it("should dispatch a CopyRoomUrl action when the copy button is pressed", function() {
           var copyBtn = view.getDOMNode().querySelector(".btn-copy");
 
           React.addons.TestUtils.Simulate.click(copyBtn);
@@ -290,14 +290,9 @@ describe("loop.roomViews", function () {
   });
 
   describe("DesktopRoomConversationView", function() {
-    var view;
+    var view, onCallTerminatedStub;
 
     beforeEach(function() {
-      loop.store.StoreMixin.register({
-        feedbackStore: new loop.store.FeedbackStore(dispatcher, {
-          feedbackClient: {}
-        })
-      });
       sandbox.stub(dispatcher, "dispatch");
       fakeMozLoop.getLoopPref = function(prefName) {
         if (prefName == "contextInConversations.enabled") {
@@ -305,15 +300,18 @@ describe("loop.roomViews", function () {
         }
         return "test";
       };
+      onCallTerminatedStub = sandbox.stub();
     });
 
-    function mountTestComponent() {
+    function mountTestComponent(props) {
+      props = _.extend({
+        dispatcher: dispatcher,
+        roomStore: roomStore,
+        mozLoop: fakeMozLoop,
+        onCallTerminated: onCallTerminatedStub
+      }, props);
       return TestUtils.renderIntoDocument(
-        React.createElement(loop.roomViews.DesktopRoomConversationView, {
-          dispatcher: dispatcher,
-          roomStore: roomStore,
-          mozLoop: fakeMozLoop
-        }));
+        React.createElement(loop.roomViews.DesktopRoomConversationView, props));
     }
 
     it("should dispatch a setMute action when the audio mute button is pressed",
@@ -372,8 +370,7 @@ describe("loop.roomViews", function () {
       expect(muteBtn.classList.contains("muted")).eql(true);
     });
 
-    it("should dispatch a `StartScreenShare` action when sharing is not active " +
-       "and the screen share button is pressed", function() {
+    it("should dispatch a `StartScreenShare` action when sharing is not active and the screen share button is pressed", function() {
       view = mountTestComponent();
 
       view.setState({screenSharingState: SCREEN_SHARE_STATES.INACTIVE});
@@ -419,8 +416,7 @@ describe("loop.roomViews", function () {
           sinon.match.instanceOf(sharedActions.SetupStreamElements));
       }
 
-      it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
-        "is entered", function() {
+      it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state is entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
           var component = mountTestComponent();
 
@@ -429,8 +425,7 @@ describe("loop.roomViews", function () {
           expectActionDispatched(component);
         });
 
-      it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is " +
-        "re-entered", function() {
+      it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is re-entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
           var component = mountTestComponent();
 
@@ -489,18 +484,18 @@ describe("loop.roomViews", function () {
             loop.roomViews.DesktopRoomConversationView);
         });
 
-      it("should render the FeedbackView if roomState is `ENDED`",
-        function() {
-          activeRoomStore.setStoreState({
-            roomState: ROOM_STATES.ENDED,
-            used: true
-          });
-
-          view = mountTestComponent();
-
-          TestUtils.findRenderedComponentWithType(view,
-            loop.shared.views.FeedbackView);
+      it("should call onCallTerminated when the call ended", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.ENDED,
+          used: true
         });
+
+        view = mountTestComponent();
+        // Force a state change so that it triggers componentDidUpdate
+        view.setState({ foo: "bar" });
+
+        sinon.assert.calledOnce(onCallTerminatedStub);
+      });
 
       it("should display loading spinner when localSrcVideoObject is null",
          function() {
