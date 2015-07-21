@@ -6,15 +6,10 @@
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 const BASE_URL = 'example.com/tests/dom/base/test/referrer_testserver.sjs';
 const SHARED_KEY = 'referrer_testserver.sjs';
-const ATTRIBUTE_POLICY = 'attributePolicy';
-const NEW_ATTRIBUTE_POLICY = 'newAttributePolicy';
-const NAME = 'name';
-const META_POLICY = 'metaPolicy';
-const REL = 'rel';
 
 function createTestUrl(aPolicy, aAction, aName, aType) {
   return 'http://' + BASE_URL + '?' +
-         'action=' + aAction + '&' +
+         'ACTION=' + aAction + '&' +
          'policy=' + aPolicy + '&' +
          'name=' + aName + '&' +
          'type=' + aType;
@@ -75,7 +70,7 @@ function createAETestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttrib
 
 function handleRequest(request, response) {
   var params = new URLSearchParams(request.queryString);
-  var action = params.get('action');
+  var action = params.get('ACTION');
 
   response.setHeader('Cache-Control', 'no-cache', false);
   response.setHeader('Content-Type', 'text/html; charset=utf-8', false);
@@ -130,7 +125,7 @@ function handleRequest(request, response) {
 
     if (type === "link") {
       // forward link click to redirect URL to finish test
-      var loc = "http://" + BASE_URL + "?action=redirect";
+      var loc = "http://" + BASE_URL + "?ACTION=redirect";
       response.setStatusLine('1.1', 302, 'Found');
       response.setHeader('Location', loc, false);
     }
@@ -138,11 +133,11 @@ function handleRequest(request, response) {
   }
 
   // parse test arguments and start test
-  var attributePolicy = params.get(ATTRIBUTE_POLICY) || '';
-  var newAttributePolicy = params.get(NEW_ATTRIBUTE_POLICY) || '';
-  var metaPolicy = params.get(META_POLICY) || '';
-  var rel = params.get(REL) || '';
-  var name = params.get(NAME);
+  var attributePolicy = params.get("ATTRIBUTE_POLICY") || '';
+  var newAttributePolicy = params.get("NEW_ATTRIBUTE_POLICY") || '';
+  var metaPolicy = params.get("META_POLICY") || '';
+  var rel = params.get("REL") || '';
+  var name = params.get("NAME");
 
   // anchor & area
   var _getPage = createAETestPageUsingRefferer.bind(null, metaPolicy, attributePolicy, newAttributePolicy, name, rel);
