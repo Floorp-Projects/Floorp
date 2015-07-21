@@ -984,9 +984,12 @@ PresShell::Init(nsIDocument* aDocument,
   if (mPresContext->IsRootContentDocument()) {
     mZoomConstraintsClient = new ZoomConstraintsClient();
     mZoomConstraintsClient->Init(this, mDocument);
+#ifndef MOZ_WIDGET_ANDROID
+    // Fennec will need some work to use this code; see bug 1180267.
     if (gfxPrefs::MetaViewportEnabled()) {
       mMobileViewportManager = new MobileViewportManager(this, mDocument);
     }
+#endif
   }
 }
 
