@@ -724,6 +724,10 @@ input[type=button] {
   color: #4A90E2;
 }
 
+#newtab-intro-footer > ul > li > a:hover {
+  color: #000000;
+}
+
 #newtab-intro-body {
   position: relative;
   display: block;
