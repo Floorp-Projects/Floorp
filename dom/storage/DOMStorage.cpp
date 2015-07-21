@@ -13,7 +13,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsICookiePermission.h"
-#include "nsICookieService.h"
 
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -229,6 +228,10 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
   NS_DispatchToMainThread(r);
 }
 
+static const uint32_t ASK_BEFORE_ACCEPT = 1;
+static const uint32_t ACCEPT_SESSION = 2;
+static const uint32_t BEHAVIOR_REJECT = 2;
+
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
 static const char kCookiesBehavior[] = "network.cookie.cookieBehavior";
@@ -279,12 +282,11 @@ DOMStorage::CanUseStorage(DOMStorage* aStorage)
     uint32_t lifetimePolicy = Preferences::GetUint(kCookiesLifetimePolicy);
 
     // Treat "ask every time" as "reject always".
-    if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT ||
-        lifetimePolicy == nsICookieService::ASK_BEFORE_ACCEPT) {
+    if ((cookieBehavior == BEHAVIOR_REJECT || lifetimePolicy == ASK_BEFORE_ACCEPT)) {
       return false;
     }
 
-    if (lifetimePolicy == nsICookieService::ACCEPT_SESSION && aStorage) {
+    if (lifetimePolicy == ACCEPT_SESSION && aStorage) {
       aStorage->mIsSessionOnly = true;
     }
   }
