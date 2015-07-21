@@ -327,8 +327,12 @@ public:
    */
   static void InitInputEvent(mozilla::WidgetInputEvent &aInputEvent,
                              NSEvent* aNativeEvent);
-  static void InitInputEvent(mozilla::WidgetInputEvent &aInputEvent,
-                             NSUInteger aModifiers);
+
+  /**
+   * Converts the native modifiers from aNativeEvent into WidgetMouseEvent
+   * Modifiers. aNativeEvent can be null.
+   */
+  static mozilla::Modifiers ModifiersForEvent(NSEvent* aNativeEvent);
 
   /**
    * ConvertToCarbonModifier() returns carbon modifier flags for the cocoa
