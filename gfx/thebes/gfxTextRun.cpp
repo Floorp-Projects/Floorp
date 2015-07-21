@@ -1889,6 +1889,9 @@ gfxFontGroup::GetDefaultFont()
                                                              needsBold);
             if (fe) {
                 mDefaultFont = fe->FindOrMakeFont(&mStyle, needsBold);
+                if (mDefaultFont) {
+                    break;
+                }
             }
         }
     }
