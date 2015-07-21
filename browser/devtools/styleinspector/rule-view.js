@@ -2808,7 +2808,7 @@ function TextPropertyEditor(aRuleEditor, aProperty) {
   this.ruleEditor = aRuleEditor;
   this.ruleView = this.ruleEditor.ruleView;
   this.doc = this.ruleEditor.doc;
-  this.popup = this.ruleEditor.ruleView.popup;
+  this.popup = this.ruleView.popup;
   this.prop = aProperty;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
@@ -2832,7 +2832,7 @@ TextPropertyEditor.prototype = {
    */
   get editing() {
     return !!(this.nameSpan.inplaceEditor || this.valueSpan.inplaceEditor ||
-      this.ruleEditor.ruleView.tooltips.isEditing) || this.popup.isOpen;
+      this.ruleView.tooltips.isEditing) || this.popup.isOpen;
   },
 
   /**
@@ -2896,7 +2896,7 @@ TextPropertyEditor.prototype = {
     // so that colors can be coerced into the default color type. This prevents
     // us from thinking that when colors are coerced they have been changed by
     // the user.
-    let outputParser = this.ruleEditor.ruleView._outputParser;
+    let outputParser = this.ruleView._outputParser;
     let frag = outputParser.parseCssProperty(this.prop.name, this.prop.value);
     let parsedValue = frag.textContent;
 
@@ -3024,7 +3024,7 @@ TextPropertyEditor.prototype = {
    * Populate the span based on changes to the TextProperty.
    */
   update: function() {
-    if (this.ruleEditor.ruleView.isDestroyed) {
+    if (this.ruleView.isDestroyed) {
       return;
     }
 
@@ -3069,7 +3069,7 @@ TextPropertyEditor.prototype = {
     const bezierSwatchClass = "ruleview-bezierswatch";
     const filterSwatchClass = "ruleview-filterswatch";
 
-    let outputParser = this.ruleEditor.ruleView._outputParser;
+    let outputParser = this.ruleView._outputParser;
     let parserOptions = {
       colorSwatchClass: sharedSwatchClass + colorSwatchClass,
       colorClass: "ruleview-color",
@@ -3092,7 +3092,7 @@ TextPropertyEditor.prototype = {
       for (let span of this._colorSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
-        this.ruleEditor.ruleView.tooltips.colorPicker.addSwatch(span, {
+        this.ruleView.tooltips.colorPicker.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
           onRevert: () => this._onValueDone(undefined, false)
@@ -3107,7 +3107,7 @@ TextPropertyEditor.prototype = {
       for (let span of this._bezierSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
-        this.ruleEditor.ruleView.tooltips.cubicBezier.addSwatch(span, {
+        this.ruleView.tooltips.cubicBezier.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
           onRevert: () => this._onValueDone(undefined, false)
@@ -3121,7 +3121,7 @@ TextPropertyEditor.prototype = {
       if (span) {
         parserOptions.filterSwatch = true;
 
-        this.ruleEditor.ruleView.tooltips.filterEditor.addSwatch(span, {
+        this.ruleView.tooltips.filterEditor.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._onValueDone(this.valueSpan.textContent, true),
           onRevert: () => this._onValueDone(undefined, false)
@@ -3174,7 +3174,7 @@ TextPropertyEditor.prototype = {
       });
       appendText(li, ": ");
 
-      let outputParser = this.ruleEditor.ruleView._outputParser;
+      let outputParser = this.ruleView._outputParser;
       let frag = outputParser.parseCssProperty(
         computed.name, computed.value, {
           colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
@@ -3303,7 +3303,7 @@ TextPropertyEditor.prototype = {
   remove: function() {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (let span of this._colorSwatchSpans) {
-        this.ruleEditor.ruleView.tooltips.colorPicker.removeSwatch(span);
+        this.ruleView.tooltips.colorPicker.removeSwatch(span);
       }
     }
 
