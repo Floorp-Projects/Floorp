@@ -69,11 +69,11 @@ public:
 
 private:
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<StreamSocket> mStreamSocket;
+  StreamSocket* mStreamSocket;
 
   /**
    * If true, do not requeue whatever task we're running
@@ -136,13 +136,13 @@ StreamSocketIO::~StreamSocketIO()
 StreamSocket*
 StreamSocketIO::GetStreamSocket()
 {
-  return mStreamSocket.get();
+  return mStreamSocket;
 }
 
 DataSocket*
 StreamSocketIO::GetDataSocket()
 {
-  return mStreamSocket.get();
+  return GetStreamSocket();
 }
 
 void

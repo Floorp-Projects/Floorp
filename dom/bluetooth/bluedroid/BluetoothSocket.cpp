@@ -114,7 +114,7 @@ public:
 
   BluetoothSocket* GetBluetoothSocket()
   {
-    return mConsumer.get();
+    return mConsumer;
   }
 
   DataSocket* GetDataSocket()
@@ -123,11 +123,11 @@ public:
   }
 
   /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * Consumer pointer. Non-thread-safe pointer, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mImpl as container.
    */
-  RefPtr<BluetoothSocket> mConsumer;
+  BluetoothSocket* mConsumer;
 
   // Methods for |DataSocket|
   //
