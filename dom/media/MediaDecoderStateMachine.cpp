@@ -1663,16 +1663,38 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
     return NS_OK;
   }
 
+  RequestAudioData();
+  return NS_OK;
+}
+
+void
+MediaDecoderStateMachine::RequestAudioData()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  AssertCurrentThreadInMonitor();
+
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
-  mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                         __func__, &MediaDecoderReader::RequestAudioData)
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::OnAudioDecoded,
-           &MediaDecoderStateMachine::OnAudioNotDecoded));
-
-  return NS_OK;
+  if (mSentFirstFrameLoadedEvent) {
+    mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
+                                           __func__, &MediaDecoderReader::RequestAudioData)
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnAudioDecoded,
+             &MediaDecoderStateMachine::OnAudioNotDecoded));
+  } else {
+    mAudioDataRequest.Begin(
+      ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                     &MediaDecoderReader::RequestAudioData)
+      ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
+             &StartTimeRendezvous::ProcessFirstSample<AudioDataPromise>,
+             &StartTimeRendezvous::FirstSampleRejected<AudioData>)
+      ->CompletionPromise()
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnAudioDecoded,
+             &MediaDecoderStateMachine::OnAudioNotDecoded)
+    );
+  }
 }
 
 nsresult
@@ -1713,26 +1735,52 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
     return NS_OK;
   }
 
-  bool skipToNextKeyFrame = NeedToSkipToNextKeyframe();
-  int64_t currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
-  bool forceDecodeAhead = static_cast<uint32_t>(VideoQueue().GetSize()) <= SCARCE_VIDEO_QUEUE_SIZE;
+  RequestVideoData();
+  return NS_OK;
+}
+
+void
+MediaDecoderStateMachine::RequestVideoData()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  AssertCurrentThreadInMonitor();
 
   // Time the video decode, so that if it's slow, we can increase our low
   // audio threshold to reduce the chance of an audio underrun while we're
   // waiting for a video decode to complete.
   mVideoDecodeStartTime = TimeStamp::Now();
 
+  bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
+    NeedToSkipToNextKeyframe();
+  int64_t currentTime = mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime();
+  bool forceDecodeAhead = mSentFirstFrameLoadedEvent &&
+    static_cast<uint32_t>(VideoQueue().GetSize()) <= SCARCE_VIDEO_QUEUE_SIZE;
+
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
              currentTime);
 
-  mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                                         &MediaDecoderReader::RequestVideoData,
-                                         skipToNextKeyFrame, currentTime, forceDecodeAhead)
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::OnVideoDecoded,
-           &MediaDecoderStateMachine::OnVideoNotDecoded));
-  return NS_OK;
+  if (mSentFirstFrameLoadedEvent) {
+    mVideoDataRequest.Begin(
+      ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                     &MediaDecoderReader::RequestVideoData,
+                     skipToNextKeyFrame, currentTime, forceDecodeAhead)
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnVideoDecoded,
+             &MediaDecoderStateMachine::OnVideoNotDecoded));
+  } else {
+    mVideoDataRequest.Begin(
+      ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                     &MediaDecoderReader::RequestVideoData,
+                     skipToNextKeyFrame, currentTime, forceDecodeAhead)
+      ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
+             &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise>,
+             &StartTimeRendezvous::FirstSampleRejected<VideoData>)
+      ->CompletionPromise()
+      ->Then(OwnerThread(), __func__, this,
+             &MediaDecoderStateMachine::OnVideoDecoded,
+             &MediaDecoderStateMachine::OnVideoNotDecoded));
+  }
 }
 
 nsresult
@@ -2028,30 +2076,10 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     NS_ENSURE_SUCCESS(res, res);
   } else {
     if (HasAudio()) {
-      mAudioDataRequest.Begin(
-        ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestAudioData)
-        ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
-               &StartTimeRendezvous::ProcessFirstSample<AudioDataPromise>,
-               &StartTimeRendezvous::FirstSampleRejected<AudioData>)
-        ->CompletionPromise()
-        ->Then(OwnerThread(), __func__, this,
-               &MediaDecoderStateMachine::OnAudioDecoded,
-               &MediaDecoderStateMachine::OnAudioNotDecoded)
-      );
+      RequestAudioData();
     }
     if (HasVideo()) {
-      mVideoDecodeStartTime = TimeStamp::Now();
-      mVideoDataRequest.Begin(
-        ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                       &MediaDecoderReader::RequestVideoData, false, int64_t(0), false)
-        ->Then(OwnerThread(), __func__, mStartTimeRendezvous.get(),
-               &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise>,
-               &StartTimeRendezvous::FirstSampleRejected<VideoData>)
-        ->CompletionPromise()
-        ->Then(OwnerThread(), __func__, this,
-               &MediaDecoderStateMachine::OnVideoDecoded,
-               &MediaDecoderStateMachine::OnVideoNotDecoded));
+      RequestVideoData();
     }
   }
 

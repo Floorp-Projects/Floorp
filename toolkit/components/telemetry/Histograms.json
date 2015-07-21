@@ -4655,18 +4655,51 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for evicting over-quota pings"
   },
+  "TELEMETRY_PENDING_PINGS_SIZE_MB": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "17",
+    "n_buckets": 16,
+    "description": "The size of the Telemetry pending pings directory (MB). The special value 17 is used to indicate over quota pings."
+  },
+  "TELEMETRY_PENDING_PINGS_AGE": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "365",
+    "n_buckets": 30,
+    "description": "The age, in days, of the pending pings."
+  },
+  "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 100,
+    "description": "Number of Telemetry pings evicted from the pending pings directory during cleanup, because they were over the quota"
+  },
+  "TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes for evicting over-quota pending pings"
+  },
+  "TELEMETRY_PENDING_CHECKING_OVER_QUOTA_MS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes for checking if the pending pings are over-quota"
+  },
   "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count of discarded content payloads."
-  },
-  "TELEMETRY_FILES_EVICTED": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "rvitillo@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 30,
-    "description": "Number of telemetry pings evicted at startup"
   },
   "TELEMETRY_COMPRESS": {
     "expires_in_version": "never",
@@ -8134,15 +8167,6 @@
     "n_buckets": 20,
     "extended_statistics_ok": true,
     "description": "Sanitize: Time it takes to sanitize recent downloads (ms)"
-  },
-  "FX_SANITIZE_PASSWORDS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": "30000",
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
-    "description": "Sanitize: Time it takes to sanitize saved passwords (ms)"
   },
   "FX_SANITIZE_SESSIONS": {
     "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],

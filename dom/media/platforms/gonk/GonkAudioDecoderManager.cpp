@@ -34,7 +34,8 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 namespace mozilla {
 
 GonkAudioDecoderManager::GonkAudioDecoderManager(const AudioInfo& aConfig)
-  : mAudioChannels(aConfig.mChannels)
+  : mLastDecodedTime(0)
+  , mAudioChannels(aConfig.mChannels)
   , mAudioRate(aConfig.mRate)
   , mAudioProfile(aConfig.mProfile)
   , mAudioBuffer(nullptr)
@@ -164,6 +165,14 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (mLastDecodedTime > timeUs) {
+    ReleaseAudioBuffer();
+    GADM_LOG("Output decoded sample time is revert. time=%lld", timeUs);
+    MOZ_ASSERT(false);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  mLastDecodedTime = timeUs;
+
   const uint8_t *data = static_cast<const uint8_t*>(mAudioBuffer->data());
   size_t dataOffset = mAudioBuffer->range_offset();
   size_t size = mAudioBuffer->range_length();
@@ -195,6 +204,8 @@ GonkAudioDecoderManager::Flush()
     MonitorAutoLock mon(mMonitor);
     mQueueSample.Clear();
   }
+
+  mLastDecodedTime = 0;
 
   if (mDecoder->flush() != OK) {
     return NS_ERROR_FAILURE;

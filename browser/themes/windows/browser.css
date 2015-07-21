@@ -1403,6 +1403,10 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: GrayText;
 }
 
+#PopupAutoCompleteRichResult > richlistbox {
+  transition: height 100ms;
+}
+
 #search-container {
   min-width: calc(54px + 11ch);
 }

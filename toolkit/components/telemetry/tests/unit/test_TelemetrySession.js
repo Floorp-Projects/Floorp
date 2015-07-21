@@ -1104,21 +1104,6 @@ add_task(function* test_environmentChange() {
   Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
 });
 
-// Checks that an expired histogram file is deleted when loaded.
-add_task(function* test_pruneOldPingFile() {
-  const id = generateUUID();
-  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
-  yield OS.File.writeAtomic(path, "{}", {noOverwrite: false});
-
-  // fake a time 14 days & 1m earlier
-  const now = new Date().getTime();
-  const fakeMtime = now - (14 * 24 * 60 * 60 * 1000 + 60000);
-  OS.File.setDates(path, null, fakeMtime);
-
-  yield TelemetryController.reset();
-  Assert.ok(!(yield OS.File.exists(path)), "File should have been removed.");
-});
-
 add_task(function* test_savedPingsOnShutdown() {
   // On desktop, we expect both "saved-session" and "shutdown" pings. We only expect
   // the former on Android.
