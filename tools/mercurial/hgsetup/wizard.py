@@ -346,12 +346,13 @@ class MercurialSetupWizard(object):
                     print('')
 
         if 'reviewboard' in c.extensions or 'bzpost' in c.extensions:
-            bzuser, bzpass = c.get_bugzilla_credentials()
+            bzuser, bzpass, bzuserid, bzcookie = c.get_bugzilla_credentials()
 
-            if not bzuser or not bzpass:
+            if (not bzuser or not bzpass) and (not bzuserid or not bzcookie):
                 print(MISSING_BUGZILLA_CREDENTIALS)
 
-            if not bzuser:
+            # Don't prompt for username if cookie is set.
+            if not bzuser and not bzuserid:
                 bzuser = self._prompt('What is your Bugzilla email address? (optional)',
                     allow_empty=True)
 
