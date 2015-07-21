@@ -2568,21 +2568,12 @@ notification[value="loop-sharing-notification"] .messageImage {
   box-shadow: 0 0 2px white;
 }
 
-#full-screen-warning-container[obscure-browser] {
-  background-color: rgba(0,0,0,0.3);
-}
-
 .full-screen-description {
   font-size: 150%;
 }
 
 #full-screen-domain-text {
   font-size: 300%;
-}
-
-.full-screen-approval-button,
-#full-screen-remember-decision {
-  font-size: 120%;
 }
 
 %include ../shared/devtools/responsivedesign.inc.css
