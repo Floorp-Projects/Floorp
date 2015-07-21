@@ -67,4 +67,8 @@ class VersionControlCommands(object):
             wizard = MercurialSetupWizard(self._context.state_dir)
             result = wizard.run(map(os.path.expanduser, config_paths))
 
+        if result:
+            print('(despite the failure, mach will not nag you to run '
+                  '`mach mercurial-setup`)')
+
         return result
