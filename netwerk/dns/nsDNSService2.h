@@ -16,8 +16,6 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-#include "nsIObserverService.h"
-#include "nsProxyRelease.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
@@ -61,7 +59,6 @@ private:
     bool                                      mOffline;
     bool                                      mNotifyResolution;
     bool                                      mOfflineLocalhost;
-    nsMainThreadPtrHandle<nsIObserverService> mObserverService;
     nsTHashtable<nsCStringHashKey>            mLocalDomains;
 };
 

@@ -7,10 +7,17 @@
 FAIL_ON_WARNINGS = True
 
 SOURCES += [
+    '../../chromium/base/strings/safe_sprintf.cc',
+    '../SandboxLogging.cpp',
     'SandboxCrash.cpp',
 ]
 
+# Avoid Chromium logging dependency, because this is going into
+# libxul.  See also the comment in SandboxLogging.h.
+SOURCES['../../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
+
 LOCAL_INCLUDES += [
+    '/security/sandbox/chromium',
     '/security/sandbox/linux',
 ]
 
