@@ -35,7 +35,7 @@ const nsTArray<int>& FakeHugeArray()
 }
 #endif
 
-TEST(TArray, assign)
+TEST(TArray, Assign)
 {
   nsTArray<int> array;
   array.Assign(DummyArray());
@@ -52,6 +52,17 @@ TEST(TArray, assign)
   array2.Assign(Move(array));
   ASSERT_TRUE(array.IsEmpty());
   ASSERT_EQ(DummyArray(), array2);
+}
+
+TEST(TArray, AssignmentOperatorSelfAssignment)
+{
+  nsTArray<int> array;
+  array = DummyArray();
+
+  array = array;
+  ASSERT_EQ(DummyArray(), array);
+  array = Move(array);
+  ASSERT_EQ(DummyArray(), array);
 }
 
 } // namespace TestTArray
