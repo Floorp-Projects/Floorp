@@ -112,7 +112,6 @@ UNIFIED_SOURCES += [
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
     'MaskLayerImageCache.cpp',
-    'MobileViewportManager.cpp',
     'nsBidi.cpp',
     'nsBidiPresUtils.cpp',
     'nsCaret.cpp',

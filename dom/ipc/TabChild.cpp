@@ -165,7 +165,8 @@ NS_IMPL_ISUPPORTS(TabChild::DelayedFireContextMenuEvent,
                   nsITimerCallback)
 
 TabChildBase::TabChildBase()
-  : mTabChildGlobal(nullptr)
+  : mContentDocumentIsDisplayed(false)
+  , mTabChildGlobal(nullptr)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -204,6 +205,280 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TabChildBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TabChildBase)
+
+// For the root frame, Screen and ParentLayer pixels are interchangeable.
+// nsViewportInfo stores zoom values as CSSToScreenScale (because it's a
+// data structure specific to the root frame), while FrameMetrics and
+// ZoomConstraints store zoom values as CSSToParentLayerScale (because they
+// are not specific to the root frame). We define convenience functions for
+// converting between the two. As the name suggests, they should only be used
+// when dealing with the root frame!
+CSSToScreenScale ConvertScaleForRoot(CSSToParentLayerScale aScale)
+{
+  return ViewTargetAs<ScreenPixel>(aScale, PixelCastJustification::ScreenIsParentLayerForRoot);
+}
+CSSToParentLayerScale ConvertScaleForRoot(CSSToScreenScale aScale)
+{
+  return ViewTargetAs<ParentLayerPixel>(aScale, PixelCastJustification::ScreenIsParentLayerForRoot);
+}
+
+// Calculate the scale needed to fit the given viewport into the given display.
+CSSToScreenScale CalculateIntrinsicScale(const ScreenIntSize& aDisplaySize, const CSSSize& aViewportSize)
+{
+  return MaxScaleRatio(ScreenSize(aDisplaySize), aViewportSize);
+}
+
+void
+TabChildBase::InitializeRootMetrics()
+{
+  // Calculate a really simple resolution that we probably won't
+  // be keeping, as well as putting the scroll offset back to
+  // the top-left of the page.
+  mLastRootMetrics.SetViewport(CSSRect(CSSPoint(), kDefaultViewportSize));
+  mLastRootMetrics.SetCompositionBounds(ParentLayerRect(
+      ParentLayerPoint(),
+      ParentLayerSize(
+        ViewAs<ParentLayerPixel>(GetInnerSize(),
+                                 PixelCastJustification::ScreenIsParentLayerForRoot))));
+  mLastRootMetrics.SetZoom(CSSToParentLayerScale2D(
+      ConvertScaleForRoot(CalculateIntrinsicScale(GetInnerSize(), kDefaultViewportSize))));
+  mLastRootMetrics.SetDevPixelsPerCSSPixel(WebWidget()->GetDefaultScale());
+  // We use ParentLayerToLayerScale(1) below in order to turn the
+  // async zoom amount into the gecko zoom amount.
+  mLastRootMetrics.SetCumulativeResolution(mLastRootMetrics.GetZoom() / mLastRootMetrics.GetDevPixelsPerCSSPixel() * ParentLayerToLayerScale(1));
+  // This is the root layer, so the cumulative resolution is the same
+  // as the resolution.
+  mLastRootMetrics.SetPresShellResolution(mLastRootMetrics.GetCumulativeResolution().ToScaleFactor().scale);
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (shell && shell->GetRootScrollFrameAsScrollable()) {
+    // The session history code might restore a scroll position when navigating
+    // back or forward, and we don't want to clobber that.
+    nsPoint pos = shell->GetRootScrollFrameAsScrollable()->GetScrollPosition();
+    mLastRootMetrics.SetScrollOffset(CSSPoint::FromAppUnits(pos));
+  } else {
+    mLastRootMetrics.SetScrollOffset(CSSPoint(0, 0));
+  }
+
+  TABC_LOG("After InitializeRootMetrics, mLastRootMetrics is %s\n",
+    Stringify(mLastRootMetrics).c_str());
+}
+
+void
+TabChildBase::SetCSSViewport(const CSSSize& aSize)
+{
+  mOldViewportSize = aSize;
+  TABC_LOG("Setting CSS viewport to %s\n", Stringify(aSize).c_str());
+
+  if (mContentDocumentIsDisplayed) {
+    if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
+      nsLayoutUtils::SetCSSViewport(shell, aSize);
+    }
+  }
+}
+
+CSSSize
+TabChildBase::GetPageSize(nsCOMPtr<nsIDocument> aDocument, const CSSSize& aViewport)
+{
+  nsCOMPtr<Element> htmlDOMElement = aDocument->GetHtmlElement();
+  HTMLBodyElement* bodyDOMElement = aDocument->GetBodyElement();
+
+  if (!htmlDOMElement && !bodyDOMElement) {
+    // For non-HTML content (e.g. SVG), just assume page size == viewport size.
+    return aViewport;
+  }
+
+  int32_t htmlWidth = 0, htmlHeight = 0;
+  if (htmlDOMElement) {
+    htmlWidth = htmlDOMElement->ScrollWidth();
+    htmlHeight = htmlDOMElement->ScrollHeight();
+  }
+  int32_t bodyWidth = 0, bodyHeight = 0;
+  if (bodyDOMElement) {
+    bodyWidth = bodyDOMElement->ScrollWidth();
+    bodyHeight = bodyDOMElement->ScrollHeight();
+  }
+  return CSSSize(std::max(htmlWidth, bodyWidth),
+                 std::max(htmlHeight, bodyHeight));
+}
+
+bool
+TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
+{
+  PuppetWidget* widget = WebWidget();
+  if (!widget || !widget->AsyncPanZoomEnabled()) {
+    return false;
+  }
+
+  TABC_LOG("HandlePossibleViewportChange aOldScreenSize=%s mInnerSize=%s\n",
+    Stringify(aOldScreenSize).c_str(), Stringify(GetInnerSize()).c_str());
+
+  nsCOMPtr<nsIDocument> document(GetDocument());
+  if (!document) {
+    return false;
+  }
+
+  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, GetInnerSize());
+  uint32_t presShellId = 0;
+  mozilla::layers::FrameMetrics::ViewID viewId = FrameMetrics::NULL_SCROLL_ID;
+  APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+        document->GetDocumentElement(), &presShellId, &viewId);
+
+  float screenW = GetInnerSize().width;
+  float screenH = GetInnerSize().height;
+  CSSSize viewport(viewportInfo.GetSize());
+
+  // We're not being displayed in any way; don't bother doing anything because
+  // that will just confuse future adjustments.
+  if (!screenW || !screenH) {
+    return false;
+  }
+
+  TABC_LOG("HandlePossibleViewportChange mOldViewportSize=%s viewport=%s\n",
+    Stringify(mOldViewportSize).c_str(), Stringify(viewport).c_str());
+  CSSSize oldBrowserSize = mOldViewportSize;
+  mLastRootMetrics.SetViewport(CSSRect(
+    mLastRootMetrics.GetViewport().TopLeft(), viewport));
+  if (oldBrowserSize == CSSSize()) {
+    oldBrowserSize = kDefaultViewportSize;
+  }
+  SetCSSViewport(viewport);
+
+  // If this page has not been painted yet, then this must be getting run
+  // because a meta-viewport element was added (via the DOMMetaAdded handler).
+  // in this case, we should not do anything that forces a reflow (see bug
+  // 759678) such as requesting the page size or sending a viewport update. this
+  // code will get run again in the before-first-paint handler and that point we
+  // will run though all of it. the reason we even bother executing up to this
+  // point on the DOMMetaAdded handler is so that scripts that use
+  // window.innerWidth before they are painted have a correct value (bug
+  // 771575).
+  if (!mContentDocumentIsDisplayed) {
+    return false;
+  }
+
+  ScreenIntSize oldScreenSize = aOldScreenSize;
+  if (oldScreenSize == ScreenIntSize()) {
+    oldScreenSize = GetInnerSize();
+  }
+
+  FrameMetrics metrics(mLastRootMetrics);
+  metrics.SetViewport(CSSRect(CSSPoint(), viewport));
+
+  // Calculate the composition bounds based on the inner size, excluding the sizes
+  // of the scrollbars if they are not overlay scrollbars.
+  ScreenSize compositionSize(GetInnerSize());
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (shell) {
+    nsMargin scrollbarsAppUnits =
+        nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(shell->GetRootScrollFrame());
+    // Scrollbars are not subject to scaling, so CSS pixels = screen pixels for them.
+    ScreenMargin scrollbars = CSSMargin::FromAppUnits(scrollbarsAppUnits)
+                            * CSSToScreenScale(1.0f);
+    compositionSize.width -= scrollbars.LeftRight();
+    compositionSize.height -= scrollbars.TopBottom();
+  }
+
+  metrics.SetCompositionBounds(ParentLayerRect(
+      ParentLayerPoint(),
+      ParentLayerSize(
+        ViewAs<ParentLayerPixel>(GetInnerSize(),
+                                 PixelCastJustification::ScreenIsParentLayerForRoot))));
+  metrics.SetRootCompositionSize(
+      ScreenSize(compositionSize) * ScreenToLayoutDeviceScale(1.0f) / metrics.GetDevPixelsPerCSSPixel());
+
+  // This change to the zoom accounts for all types of changes I can conceive:
+  // 1. screen size changes, CSS viewport does not (pages with no meta viewport
+  //    or a fixed size viewport)
+  // 2. screen size changes, CSS viewport also does (pages with a device-width
+  //    viewport)
+  // 3. screen size remains constant, but CSS viewport changes (meta viewport
+  //    tag is added or removed)
+  // 4. neither screen size nor CSS viewport changes
+  //
+  // In all of these cases, we maintain how much actual content is visible
+  // within the screen width. Note that "actual content" may be different with
+  // respect to CSS pixels because of the CSS viewport size changing.
+  CSSToScreenScale oldIntrinsicScale = CalculateIntrinsicScale(oldScreenSize, oldBrowserSize);
+  CSSToScreenScale newIntrinsicScale = CalculateIntrinsicScale(GetInnerSize(), viewport);
+  metrics.ZoomBy(newIntrinsicScale.scale / oldIntrinsicScale.scale);
+
+  // Changing the zoom when we're not doing a first paint will get ignored
+  // by AsyncPanZoomController and causes a blurry flash.
+  bool isFirstPaint = true;
+  if (shell) {
+    isFirstPaint = shell->GetIsFirstPaint();
+  }
+  if (isFirstPaint) {
+    // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
+    // 0.0 to mean "did not calculate a zoom".  In that case, we default
+    // it to the intrinsic scale.
+    if (viewportInfo.GetDefaultZoom().scale < 0.01f) {
+      viewportInfo.SetDefaultZoom(newIntrinsicScale);
+    }
+
+    CSSToScreenScale defaultZoom = viewportInfo.GetDefaultZoom();
+    MOZ_ASSERT(viewportInfo.GetMinZoom() <= defaultZoom &&
+               defaultZoom <= viewportInfo.GetMaxZoom());
+    metrics.SetZoom(CSSToParentLayerScale2D(ConvertScaleForRoot(defaultZoom)));
+
+    metrics.SetPresShellId(presShellId);
+    metrics.SetScrollId(viewId);
+  }
+
+  if (shell) {
+    if (nsPresContext* context = shell->GetPresContext()) {
+      metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
+        (float)nsPresContext::AppUnitsPerCSSPixel() / context->AppUnitsPerDevPixel()));
+    }
+  }
+
+  metrics.SetCumulativeResolution(metrics.GetZoom()
+                                / metrics.GetDevPixelsPerCSSPixel()
+                                * ParentLayerToLayerScale(1));
+  // This is the root layer, so the cumulative resolution is the same
+  // as the resolution.
+  metrics.SetPresShellResolution(metrics.GetCumulativeResolution().ToScaleFactor().scale);
+  if (shell) {
+    nsLayoutUtils::SetResolutionAndScaleTo(shell, metrics.GetPresShellResolution());
+    nsLayoutUtils::SetScrollPositionClampingScrollPortSize(shell,
+        metrics.CalculateCompositedSizeInCssPixels());
+  }
+
+  // The call to GetPageSize forces a resize event to content, so we need to
+  // make sure that we have the right CSS viewport and
+  // scrollPositionClampingScrollPortSize set up before that happens.
+
+  CSSSize pageSize = GetPageSize(document, viewport);
+  if (!pageSize.width) {
+    // Return early rather than divide by 0.
+    return false;
+  }
+  metrics.SetScrollableRect(CSSRect(CSSPoint(), pageSize));
+
+  // Calculate a display port _after_ having a scrollable rect because the
+  // display port is clamped to the scrollable rect.
+  metrics.SetDisplayPortMargins(APZCTreeManager::CalculatePendingDisplayPort(
+    // The page must have been refreshed in some way such as a new document or
+    // new CSS viewport, so we know that there's no velocity, acceleration, and
+    // we have no idea how long painting will take.
+    metrics, ParentLayerPoint(0.0f, 0.0f), 0.0));
+  metrics.SetUseDisplayPortMargins();
+
+  // Force a repaint with these metrics. This, among other things, sets the
+  // displayport, so we start with async painting.
+  mLastRootMetrics = ProcessUpdateFrame(metrics);
+
+  return true;
+}
+
+already_AddRefed<nsIDOMWindowUtils>
+TabChildBase::GetDOMWindowUtils()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(WebNavigation());
+  nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
+  return utils.forget();
+}
 
 already_AddRefed<nsIDocument>
 TabChildBase::GetDocument() const
@@ -260,7 +535,7 @@ TabChildBase::UpdateFrameHandler(const FrameMetrics& aFrameMetrics)
       // Guard against stale updates (updates meant for a pres shell which
       // has since been torn down and destroyed).
       if (aFrameMetrics.GetPresShellId() == shell->GetPresShellId()) {
-        ProcessUpdateFrame(aFrameMetrics);
+        mLastRootMetrics = ProcessUpdateFrame(aFrameMetrics);
         return true;
       }
     }
@@ -274,11 +549,11 @@ TabChildBase::UpdateFrameHandler(const FrameMetrics& aFrameMetrics)
   return true;
 }
 
-void
+FrameMetrics
 TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 {
     if (!mGlobal || !mTabChildGlobal) {
-        return;
+        return aFrameMetrics;
     }
 
     FrameMetrics newMetrics = aFrameMetrics;
@@ -316,6 +591,7 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     data.AppendLiteral(" }");
 
     DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
+    return newMetrics;
 }
 
 NS_IMETHODIMP
@@ -634,6 +910,22 @@ TabChild::TabChild(nsIContentChild* aManager,
 }
 
 NS_IMETHODIMP
+TabChild::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+  if (eventType.EqualsLiteral("DOMMetaAdded")) {
+    // This meta data may or may not have been a meta viewport tag. If it was,
+    // we should handle it immediately.
+    HandlePossibleViewportChange(GetInnerSize());
+  } else if (eventType.EqualsLiteral("FullZoomChange")) {
+    HandlePossibleViewportChange(GetInnerSize());
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const char16_t *aData)
@@ -665,7 +957,19 @@ TabChild::Observe(nsISupports *aSubject,
           shell->SetIsFirstPaint(true);
         }
 
-        APZCCallbackHelper::InitializeRootDisplayport(shell);
+        mContentDocumentIsDisplayed = true;
+
+        // In some cases before-first-paint gets called before
+        // RecvUpdateDimensions is called and therefore before we have an
+        // inner size value set. In such cases defer initializing the viewport
+        // until we we get an inner size.
+        if (HasValidInnerSize()) {
+          InitializeRootMetrics();
+          if (shell) {
+            nsLayoutUtils::SetResolutionAndScaleTo(shell, mLastRootMetrics.GetPresShellResolution());
+          }
+          HandlePossibleViewportChange(GetInnerSize());
+        }
       }
     }
   }
@@ -720,6 +1024,100 @@ TabChild::Observe(nsISupports *aSubject,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnStateChange(nsIWebProgress* aWebProgress,
+                        nsIRequest* aRequest,
+                        uint32_t aStateFlags,
+                        nsresult aStatus)
+{
+  NS_NOTREACHED("not implemented in TabChild");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnProgressChange(nsIWebProgress* aWebProgress,
+                           nsIRequest* aRequest,
+                           int32_t aCurSelfProgress,
+                           int32_t aMaxSelfProgress,
+                           int32_t aCurTotalProgress,
+                           int32_t aMaxTotalProgress)
+{
+  NS_NOTREACHED("not implemented in TabChild");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnLocationChange(nsIWebProgress* aWebProgress,
+                           nsIRequest* aRequest,
+                           nsIURI *aLocation,
+                           uint32_t aFlags)
+{
+  if (!AsyncPanZoomEnabled()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window;
+  aWebProgress->GetDOMWindow(getter_AddRefs(window));
+  if (!window) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDocument> progressDoc;
+  window->GetDocument(getter_AddRefs(progressDoc));
+  if (!progressDoc) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  WebNavigation()->GetDocument(getter_AddRefs(domDoc));
+  if (!domDoc || !SameCOMIdentity(domDoc, progressDoc)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+  if (!urifixup) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> exposableURI;
+  urifixup->CreateExposableURI(aLocation, getter_AddRefs(exposableURI));
+  if (!exposableURI) {
+    return NS_OK;
+  }
+
+  if (!(aFlags & nsIWebProgressListener::LOCATION_CHANGE_SAME_DOCUMENT)) {
+    mContentDocumentIsDisplayed = false;
+  } else if (mLastURI != nullptr) {
+    bool exposableEqualsLast, exposableEqualsNew;
+    exposableURI->Equals(mLastURI.get(), &exposableEqualsLast);
+    exposableURI->Equals(aLocation, &exposableEqualsNew);
+    if (exposableEqualsLast && !exposableEqualsNew) {
+      mContentDocumentIsDisplayed = false;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnStatusChange(nsIWebProgress* aWebProgress,
+                         nsIRequest* aRequest,
+                         nsresult aStatus,
+                         const char16_t* aMessage)
+{
+  NS_NOTREACHED("not implemented in TabChild");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::OnSecurityChange(nsIWebProgress* aWebProgress,
+                           nsIRequest* aRequest,
+                           uint32_t aState)
+{
+  NS_NOTREACHED("not implemented in TabChild");
   return NS_OK;
 }
 
@@ -803,6 +1201,10 @@ TabChild::Init()
   loadContext->SetRemoteTabs(
       mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
 
+  nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+  NS_ENSURE_TRUE(webProgress, NS_ERROR_FAILURE);
+  webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_LOCATION);
+
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
   // Then this chrome event handler, will be inherited to inner windows.
@@ -847,6 +1249,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsITabChild)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -1245,6 +1649,12 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
   nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
   win.forget(aReturn);
   return NS_OK;
+}
+
+bool
+TabChild::HasValidInnerSize()
+{
+  return mHasValidInnerSize;
 }
 
 void
@@ -1706,25 +2116,40 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
     mUnscaledOuterRect = rect;
     mChromeDisp = chromeDisp;
 
+    bool initialSizing = !HasValidInnerSize()
+                      && (size.width != 0 && size.height != 0);
+
     mOrientation = orientation;
+    ScreenIntSize oldScreenSize = GetInnerSize();
     SetUnscaledInnerSize(size);
-    if (!mHasValidInnerSize && size.width != 0 && size.height != 0) {
+    ScreenIntSize screenSize = GetInnerSize();
+    bool sizeChanged = true;
+    if (initialSizing) {
       mHasValidInnerSize = true;
+    } else if (screenSize == oldScreenSize) {
+      sizeChanged = false;
     }
 
-    ScreenIntSize screenSize = GetInnerSize();
     ScreenIntRect screenRect = GetOuterRect();
+    mPuppetWidget->Resize(screenRect.x + chromeDisp.x,
+                          screenRect.y + chromeDisp.y,
+                          screenSize.width, screenSize.height, true);
 
-    // Set the size on the document viewer before we update the widget and
-    // trigger a reflow. Otherwise the MobileViewportManager reads the stale
-    // size from the content viewer when it computes a new CSS viewport.
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(WebNavigation());
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 true);
 
-    mPuppetWidget->Resize(screenRect.x + chromeDisp.x,
-                          screenRect.y + chromeDisp.y,
-                          screenSize.width, screenSize.height, true);
+    if (initialSizing && mContentDocumentIsDisplayed) {
+      // If this is the first time we're getting a valid inner size, and the
+      // before-first-paint event has already been handled, then we need to set
+      // up our default viewport here. See the corresponding call to
+      // InitializeRootMetrics in the before-first-paint handler.
+      InitializeRootMetrics();
+    }
+
+    if (sizeChanged) {
+      HandlePossibleViewportChange(oldScreenSize);
+    }
 
     return true;
 }
@@ -2576,6 +3001,9 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
     NS_ENSURE_TRUE(root, false);
     root->SetParentTarget(scope);
+
+    chromeHandler->AddEventListener(NS_LITERAL_STRING("DOMMetaAdded"), this, false);
+    chromeHandler->AddEventListener(NS_LITERAL_STRING("FullZoomChange"), this, false);
   }
 
   if (aScriptLoading != DONT_LOAD_SCRIPTS && !mTriedBrowserInit) {
