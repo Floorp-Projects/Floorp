@@ -24,7 +24,6 @@
     "promiseOAuthGetRegistration": false,
     "promiseOAuthParamsSetup": false,
     "promiseObserverNotified": false,
-    "promiseTabLoadEvent": false,
     "promiseWaitForCondition": false,
     "resetFxA": true,
     // Loop specific items
