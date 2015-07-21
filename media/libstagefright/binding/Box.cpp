@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mp4_demuxer/Box.h"
-#include "mp4_demuxer/Stream.h"
+#include "mp4_demuxer/mp4_demuxer.h"
 #include "mozilla/Endian.h"
 #include <algorithm>
 
