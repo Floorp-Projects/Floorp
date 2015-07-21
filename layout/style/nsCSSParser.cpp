@@ -3736,8 +3736,16 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
     return false;
   }
 
-  if (!ExpectEndProperty())
-    return false;
+  // Expect termination by ;, }, or EOF.
+  if (GetToken(true)) {
+    if (!mToken.IsSymbol(';') &&
+        !mToken.IsSymbol('}')) {
+      UngetToken();
+      REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+      return false;
+    }
+    UngetToken();
+  }
 
   aRule->SetDesc(descID, value);
   return true;
