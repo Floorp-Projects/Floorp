@@ -12,6 +12,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TypeTraits.h"
 
 #include <string.h>
 
@@ -141,10 +142,15 @@ struct CStringHashPolicy
 #define ZERO_SIZE(tabKind, servoKind, mSize)        mSize(0),
 #define COPY_OTHER_SIZE(tabKind, servoKind, mSize)  mSize(other.mSize),
 #define ADD_OTHER_SIZE(tabKind, servoKind, mSize)   mSize += other.mSize;
-#define SUB_OTHER_SIZE(tabKind, servoKind, mSize)   MOZ_ASSERT(mSize >= other.mSize); \
-                                                    mSize -= other.mSize;
+#define SUB_OTHER_SIZE(tabKind, servoKind, mSize) \
+    MOZ_ASSERT(mSize >= other.mSize); \
+    mSize -= other.mSize;
 #define ADD_SIZE_TO_N(tabKind, servoKind, mSize)                  n += mSize;
-#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(tabKind, servoKind, mSize) n += (ServoSizes::servoKind == ServoSizes::GCHeapUsed) ? mSize : 0;
+#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(tabKind, servoKind, mSize) \
+    /* Avoid self-comparison warnings by comparing enums indirectly. */ \
+    n += (mozilla::IsSame<int[ServoSizes::servoKind], int[ServoSizes::GCHeapUsed]>::value) \
+         ? mSize \
+         : 0;
 #define ADD_TO_TAB_SIZES(tabKind, servoKind, mSize)               sizes->add(JS::TabSizes::tabKind, mSize);
 #define ADD_TO_SERVO_SIZES(tabKind, servoKind, mSize)             sizes->add(JS::ServoSizes::servoKind, mSize);
 

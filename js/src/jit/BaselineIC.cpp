@@ -5732,7 +5732,7 @@ ICInNativeDoesNotExistCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(ICStubReg, shapeOffset), scratch);
         masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratch, &failurePopR0Scratch);
     }
-    masm.addPtr(Imm32(sizeof(size_t)), StackPointer);
+    masm.addToStackPtr(Imm32(sizeof(size_t)));
 
     // Shape and type checks succeeded, ok to proceed.
     masm.moveValue(BooleanValue(false), R0);
