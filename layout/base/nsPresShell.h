@@ -36,6 +36,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
+#include "MobileViewportManager.h"
 #include "ZoomConstraintsClient.h"
 
 class nsRange;
@@ -105,6 +106,7 @@ public:
   virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) override;
   virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight) override;
   virtual nsresult ResizeReflowOverride(nscoord aWidth, nscoord aHeight) override;
+  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight) override;
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   virtual nsCanvasFrame* GetCanvasFrame() const override;
   virtual nsIFrame* GetRealPrimaryFrameFor(nsIContent* aContent) const override;
@@ -356,7 +358,9 @@ public:
 
   virtual nsresult SetIsActive(bool aIsActive) override;
 
-  virtual bool GetIsViewportOverridden() override { return mViewportOverridden; }
+  virtual bool GetIsViewportOverridden() override {
+    return mViewportOverridden || (mMobileViewportManager != nullptr);
+  }
 
   virtual bool IsLayoutFlushObserver() override
   {
@@ -447,9 +451,6 @@ protected:
   // MaybeScheduleReflow and the reflow timer ScheduleReflowOffTimer
   // sets up.
   void     ScheduleReflow();
-
-  // Reflow regardless of whether the override bit has been set.
-  nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight);
 
   // DoReflow returns whether the reflow finished without interruption
   bool DoReflow(nsIFrame* aFrame, bool aInterruptible);
@@ -818,6 +819,7 @@ protected:
   TouchManager              mTouchManager;
 
   nsRefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
+  nsRefPtr<MobileViewportManager> mMobileViewportManager;
 
   // TouchCaret
   nsRefPtr<mozilla::TouchCaret> mTouchCaret;
