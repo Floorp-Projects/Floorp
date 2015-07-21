@@ -597,7 +597,7 @@ nsPermissionManager::AppClearDataObserverInit()
 // nsPermissionManager Implementation
 
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 5
+#define HOSTS_SCHEMA_VERSION 6
 
 #define HOSTPERM_FILE_NAME "hostperm.1"
 
@@ -773,11 +773,14 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   LogToConsole(NS_LITERAL_STRING("Get a connection to permissions.sqlite."));
 
   bool tableExists = false;
-  mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
+  mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"), &tableExists);
+  if (!tableExists) {
+    mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
+  }
   if (!tableExists) {
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
-    LogToConsole(NS_LITERAL_STRING("DB table(moz_hosts) is created!"));
+    LogToConsole(NS_LITERAL_STRING("DB table(moz_perms) is created!"));
   } else {
     // table already exists; check the schema version before reading
     int32_t dbSchemaVersion;
@@ -920,11 +923,77 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         // We rename the old table to moz_hosts_v4 instead of dropping it, such that if
         // we discover that there was a problem with our migration code in the future, we have information
         // to roll-back with.
-        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ALTER TABLE moz_hosts RENAME TO moz_hosts_v4"));
-        NS_ENSURE_SUCCESS(rv, rv);
+        bool v4TableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v4"), &v4TableExists);
+        if (!v4TableExists) {
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ALTER TABLE moz_hosts RENAME TO moz_hosts_v4"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          NS_WARNING("moz_hosts was not renamed to moz_hosts_v4, as a moz_hosts_v4 table already exists");
+
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ALTER TABLE moz_hosts_new RENAME TO moz_hosts"));
         NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // fall through to the next upgrade
+
+    // Version 5->6 is the renaming of moz_hosts to moz_perms, and moz_hosts_v4 to moz_hosts
+    //
+    // In version 5, we performed the modifications to the permissions database
+    // in place, this meant that if you upgraded to a version which used V5, and
+    // then downgraded to a version which used v4 or earlier, the fallback path
+    // would drop the table, and your permissions data would be lost.
+    // This migration undoes that mistake, by restoring the old moz_hosts table
+    // (if it was present), and instead using the new table moz_perms for the
+    // new permissions schema.
+    // NOTE: If you downgrade, store new permissions, and then upgrade again,
+    // these new permissions won't be migrated or reflected in the updated
+    // database. This migration only occurs once, as if moz_perms exists, it
+    // will skip creating it. In addition, permissions added after the migration
+    // will not be visible in previous versions of firefox.
+    case 5:
+      {
+        bool permsTableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_perms"), &permsTableExists);
+        if (!permsTableExists) {
+          // Move the upgraded database to moz_perms
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ALTER TABLE moz_hosts RENAME TO moz_perms"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          NS_WARNING("moz_hosts was not renamed to moz_perms, as a moz_perms table already exists");
+
+          // In the situation where a moz_perms table already exists, but the schema is lower than 6,
+          // a migration has already previously occured to V6, but a downgrade has caused the moz_hosts
+          // table to be dropped. This should only occur in the case of a downgrade to a V5 database,
+          // which was only present in a few day's nightlies. As that version was likely used only on
+          // a very temporary basis, we assume that the database from the previous V6 has the permissions
+          // which the user actually wants to use.
+          // We have to get rid of moz_hosts such that moz_hosts_v4 can be moved into its place if it exists.
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+#ifdef DEBUG
+        // The moz_hosts table shouldn't exist anymore
+        bool hostsTableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &hostsTableExists);
+        MOZ_ASSERT(!hostsTableExists);
+#endif
+
+        // Rename moz_hosts_v4 back to it's original location, if it exists
+        bool v4TableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v4"), &v4TableExists);
+        if (v4TableExists) {
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ALTER TABLE moz_hosts_v4 RENAME TO moz_hosts"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -945,13 +1014,13 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         // check if all the expected columns exist
         nsCOMPtr<mozIStorageStatement> stmt;
         rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT origin, type, permission, expireType, expireTime, modificationTime FROM moz_hosts"),
+          "SELECT origin, type, permission, expireType, expireTime, modificationTime FROM moz_perms"),
           getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv))
           break;
 
         // our columns aren't there - drop the table!
-        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_perms"));
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = CreateTable();
@@ -963,18 +1032,18 @@ nsPermissionManager::InitDB(bool aRemoveFile)
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO moz_hosts "
+    "INSERT INTO moz_perms "
     "(id, origin, type, permission, expireType, expireTime, modificationTime) "
     "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(mStmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_hosts "
+    "DELETE FROM moz_perms "
     "WHERE id = ?1"), getter_AddRefs(mStmtDelete));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_hosts "
+    "UPDATE moz_perms "
     "SET permission = ?2, expireType= ?3, expireTime = ?4, modificationTime = ?5 WHERE id = ?1"),
     getter_AddRefs(mStmtUpdate));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -988,7 +1057,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   return Import();
 }
 
-// sets the schema version and creates the moz_hosts table.
+// sets the schema version and creates the moz_perms table.
 nsresult
 nsPermissionManager::CreateTable()
 {
@@ -998,9 +1067,9 @@ nsPermissionManager::CreateTable()
 
   // create the table
   // SQL also lives in automation.py.in. If you change this SQL change that
-  // one too.
+  // one too
   return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE moz_hosts ("
+    "CREATE TABLE moz_perms ("
       " id INTEGER PRIMARY KEY"
       ",origin TEXT"
       ",type TEXT"
@@ -1459,7 +1528,7 @@ nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
     nsCOMPtr<mozIStorageAsyncStatement> removeStmt;
     nsresult rv = mDBConn->
       CreateAsyncStatement(NS_LITERAL_CSTRING(
-         "DELETE FROM moz_hosts"
+         "DELETE FROM moz_perms"
       ), getter_AddRefs(removeStmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     if (!removeStmt) {
@@ -1869,7 +1938,7 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
   // it is dangerous.
 
   nsAutoCString sql;
-  sql.AppendLiteral("DELETE FROM moz_hosts WHERE appId=");
+  sql.AppendLiteral("DELETE FROM moz_perms WHERE appId=");
   sql.AppendInt(aAppId);
 
   if (aBrowserOnly) {
@@ -2078,7 +2147,7 @@ nsPermissionManager::Read()
     // this deletion has its own scope so the write lock is released when done.
     nsCOMPtr<mozIStorageStatement> stmtDeleteExpired;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "DELETE FROM moz_hosts WHERE expireType = ?1 AND expireTime <= ?2"),
+          "DELETE FROM moz_perms WHERE expireType = ?1 AND expireTime <= ?2"),
           getter_AddRefs(stmtDeleteExpired));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2096,7 +2165,7 @@ nsPermissionManager::Read()
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, origin, type, permission, expireType, expireTime, modificationTime "
-    "FROM moz_hosts"), getter_AddRefs(stmt));
+    "FROM moz_perms"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t id;
