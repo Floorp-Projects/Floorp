@@ -453,7 +453,7 @@ VariablesView.prototype = {
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
     searchbox.setAttribute("type", "search");
     searchbox.setAttribute("flex", "1");
-    searchbox.addEventListener("input", this._onSearchboxInput, false);
+    searchbox.addEventListener("command", this._onSearchboxInput, false);
     searchbox.addEventListener("keypress", this._onSearchboxKeyPress, false);
 
     container.appendChild(searchbox);
@@ -470,7 +470,7 @@ VariablesView.prototype = {
       return;
     }
     this._searchboxContainer.remove();
-    this._searchboxNode.removeEventListener("input", this._onSearchboxInput, false);
+    this._searchboxNode.removeEventListener("command", this._onSearchboxInput, false);
     this._searchboxNode.removeEventListener("keypress", this._onSearchboxKeyPress, false);
 
     this._searchboxContainer = null;
