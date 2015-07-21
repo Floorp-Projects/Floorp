@@ -169,6 +169,7 @@
 
     <declare-styleable name="TabMenuStrip">
         <attr name="strip" format="reference"/>
+        <attr name="tabContentStart" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="TabPanelBackButton">

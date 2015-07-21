@@ -17,7 +17,7 @@ content/js/conversation.js
 content/js/conversationViews.js
 content/js/panel.js
 content/js/roomViews.js
-content/shared/js/feedbackViews.js
+content/js/feedbackViews.js
 content/shared/js/textChatView.js
 content/shared/js/views.js
 standalone/content/js/fxOSMarketplace.js

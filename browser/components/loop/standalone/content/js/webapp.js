@@ -591,8 +591,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
                                     currentStatus: mozL10n.get("status_conversation_ended")});
       return (
         React.createElement("div", {className: "ended-conversation"}, 
-          React.createElement(sharedViews.FeedbackView, {
-            onAfterFeedbackReceived: this.props.onAfterFeedbackReceived}), 
           React.createElement(sharedViews.ConversationView, {
             audio: {enabled: false, visible: false}, 
             dispatcher: this.props.dispatcher, 
@@ -684,7 +682,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     resetCallStatus: function() {
-      this.props.dispatcher.dispatch(new sharedActions.FeedbackComplete());
       return function() {
         this.setState({callStatus: "start"});
       }.bind(this);
@@ -1024,13 +1021,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
     // Older non-flux based items.
     var notifications = new sharedModels.NotificationCollection();
 
-    var feedbackApiClient = new loop.FeedbackAPIClient(
-      loop.config.feedbackApiUrl, {
-        product: loop.config.feedbackProductName,
-        user_agent: navigator.userAgent,
-        url: document.location.origin
-      });
-
     // New flux items.
     var dispatcher = new loop.Dispatcher();
     var client = new loop.StandaloneClient({
@@ -1067,21 +1057,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
         sdkDriver: sdkDriver
     });
 
-    var feedbackClient = new loop.FeedbackAPIClient(
-      loop.config.feedbackApiUrl, {
-      product: loop.config.feedbackProductName,
-      user_agent: navigator.userAgent,
-      url: document.location.origin
-    });
-
     // Stores
     var standaloneAppStore = new loop.store.StandaloneAppStore({
       conversation: conversation,
       dispatcher: dispatcher,
       sdk: OT
-    });
-    var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
-      feedbackClient: feedbackClient
     });
     var standaloneMetricsStore = new loop.store.StandaloneMetricsStore(dispatcher, {
       activeRoomStore: activeRoomStore
@@ -1092,7 +1072,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     loop.store.StoreMixin.register({
       activeRoomStore: activeRoomStore,
-      feedbackStore: feedbackStore,
       // This isn't used in any views, but is saved here to ensure it
       // is kept alive.
       standaloneMetricsStore: standaloneMetricsStore,

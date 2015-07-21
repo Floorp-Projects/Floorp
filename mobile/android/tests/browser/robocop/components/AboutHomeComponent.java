@@ -8,6 +8,7 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
@@ -15,7 +16,6 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
-import org.mozilla.gecko.util.HardwareUtils;
 
 import android.os.Build;
 import android.support.v4.view.ViewPager;
@@ -31,26 +31,14 @@ import com.jayway.android.robotium.solo.Solo;
 public class AboutHomeComponent extends BaseComponent {
     private static final String LOGTAG = AboutHomeComponent.class.getSimpleName();
 
-    // TODO: Having a specific ordering of panels is prone to fail and thus temporary.
-    // Hopefully the work in bug 940565 will alleviate the need for these enums.
-    // Explicit ordering of HomePager panels on a phone.
-    private static final PanelType[] PANEL_ORDERING_PHONE = {
-            PanelType.REMOTE_TABS,
-            PanelType.RECENT_TABS,
-            PanelType.HISTORY,
-            PanelType.TOP_SITES,
-            PanelType.BOOKMARKS,
-            PanelType.READING_LIST,
-    };
-
-    private static final PanelType[] PANEL_ORDERING_TABLET = {
+    private static final List<PanelType> PANEL_ORDERING = Arrays.asList(
             PanelType.TOP_SITES,
             PanelType.BOOKMARKS,
             PanelType.READING_LIST,
             PanelType.HISTORY,
             PanelType.RECENT_TABS,
-            PanelType.REMOTE_TABS,
-    };
+            PanelType.REMOTE_TABS
+    );
 
     // The percentage of the panel to swipe between 0 and 1. This value was set through
     // testing: 0.55f was tested on try and fails on armv6 devices.
@@ -78,7 +66,7 @@ public class AboutHomeComponent extends BaseComponent {
     public AboutHomeComponent assertCurrentPanel(final PanelType expectedPanel) {
         assertVisible();
 
-        final int expectedPanelIndex = getPanelIndexForDevice(expectedPanel);
+        final int expectedPanelIndex = PANEL_ORDERING.indexOf(expectedPanel);
         fAssertEquals("The current HomePager panel is " + expectedPanel,
                      expectedPanelIndex, getHomePagerView().getCurrentItem());
         return this;
@@ -172,15 +160,14 @@ public class AboutHomeComponent extends BaseComponent {
 
         // The panel on the left is a lower index and vice versa.
         final int unboundedPanelIndex = panelIndex + (panelDirection == Solo.LEFT ? -1 : 1);
-        final int panelCount = getPanelOrderingForDevice().length;
-        final int maxPanelIndex = panelCount - 1;
+        final int maxPanelIndex = PANEL_ORDERING.size() - 1;
         final int expectedPanelIndex = Math.min(Math.max(0, unboundedPanelIndex), maxPanelIndex);
 
         waitForPanelIndex(expectedPanelIndex);
     }
 
     private void waitForPanelIndex(final int expectedIndex) {
-        final String panelName = getPanelOrderingForDevice()[expectedIndex].name();
+        final String panelName = PANEL_ORDERING.get(expectedIndex).name();
 
         WaitHelper.waitFor("HomePager " + panelName + " panel", new Condition() {
             @Override
@@ -188,23 +175,6 @@ public class AboutHomeComponent extends BaseComponent {
                 return (getHomePagerView().getCurrentItem() == expectedIndex);
             }
         });
-    }
-
-    /**
-     * Get the expected panel index for the given PanelType on this device. Different panel
-     * orderings are expected on tables vs. phones.
-     */
-    private int getPanelIndexForDevice(final PanelType panelType) {
-        PanelType[] panelOrdering = getPanelOrderingForDevice();
-
-        return Arrays.asList(panelOrdering).indexOf(panelType);
-    }
-
-    /**
-     * Get an array of PanelType objects ordered as we want the panels to be ordered on this device.
-     */
-    public static PanelType[] getPanelOrderingForDevice() {
-        return HardwareUtils.isTablet() ? PANEL_ORDERING_TABLET : PANEL_ORDERING_PHONE;
     }
 
     /**
@@ -219,7 +189,7 @@ public class AboutHomeComponent extends BaseComponent {
      */
     public AboutHomeComponent navigateToBuiltinPanelType(PanelType panelType) throws IllegalArgumentException {
         Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(panelType));
-        final int expectedPanelIndex = getPanelIndexForDevice(panelType);
+        final int expectedPanelIndex = PANEL_ORDERING.indexOf(panelType);
         waitForPanelIndex(expectedPanelIndex);
         return this;
     }
