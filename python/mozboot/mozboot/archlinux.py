@@ -30,6 +30,7 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         'dbus-glib',
         'desktop-file-utils',
         'gtk2',
+        'gtk3',
         'hicolor-icon-theme',
         'hunspell',
         'icu',

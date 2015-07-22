@@ -39,6 +39,7 @@ class CentOSBootstrapper(BaseBootstrapper):
             'gstreamer-devel',
             'gstreamer-plugins-base-devel',
             'gtk2-devel',
+            'gtk3-devel',
             'libstdc++-static',
             'libXt-devel',
             'mesa-libGL-devel',
