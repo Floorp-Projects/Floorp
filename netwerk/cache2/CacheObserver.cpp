@@ -65,11 +65,11 @@ bool CacheObserver::sSmartCacheSizeEnabled = kDefaultSmartCacheSizeEnabled;
 static uint32_t const kDefaultPreloadChunkCount = 4;
 uint32_t CacheObserver::sPreloadChunkCount = kDefaultPreloadChunkCount;
 
-static uint32_t const kDefaultMaxMemoryEntrySize = 4 * 1024; // 4 MB
-uint32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
+static int32_t const kDefaultMaxMemoryEntrySize = 4 * 1024; // 4 MB
+int32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
 
-static uint32_t const kDefaultMaxDiskEntrySize = 50 * 1024; // 50 MB
-uint32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
+static int32_t const kDefaultMaxDiskEntrySize = 50 * 1024; // 50 MB
+int32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
 
 static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 10 * 1024; // 10MB
 uint32_t CacheObserver::sMaxDiskChunksMemoryUsage = kDefaultMaxDiskChunksMemoryUsage;
@@ -170,9 +170,9 @@ CacheObserver::AttachToPreferences()
   mozilla::Preferences::AddUintVarCache(
     &sPreloadChunkCount, "browser.cache.disk.preload_chunk_count", kDefaultPreloadChunkCount);
 
-  mozilla::Preferences::AddUintVarCache(
+  mozilla::Preferences::AddIntVarCache(
     &sMaxDiskEntrySize, "browser.cache.disk.max_entry_size", kDefaultMaxDiskEntrySize);
-  mozilla::Preferences::AddUintVarCache(
+  mozilla::Preferences::AddIntVarCache(
     &sMaxMemoryEntrySize, "browser.cache.memory.max_entry_size", kDefaultMaxMemoryEntrySize);
 
   mozilla::Preferences::AddUintVarCache(
@@ -472,9 +472,12 @@ CacheStorageEvictHelper::ClearStorage(bool const aPrivate,
 bool const CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk)
 {
   // If custom limit is set, check it.
-  int64_t preferredLimit = aUsingDisk
-    ? static_cast<int64_t>(sMaxDiskEntrySize) << 10
-    : static_cast<int64_t>(sMaxMemoryEntrySize) << 10;
+  int64_t preferredLimit = aUsingDisk ? sMaxDiskEntrySize : sMaxMemoryEntrySize;
+
+  // do not convert to bytes when the limit is -1, which means no limit
+  if (preferredLimit > 0) {
+    preferredLimit <<= 10;
+  }
 
   if (preferredLimit != -1 && aSize > preferredLimit)
     return true;
