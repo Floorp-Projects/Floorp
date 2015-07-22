@@ -14,11 +14,16 @@ add_task(function*() {
   yield promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
-  const modifier = (content.navigator.platform.indexOf("Mac") >= 0) ?
+  const modifier = (navigator.platform.indexOf("Mac") >= 0) ?
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
                    Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
 
-  let results = yield ContentTask.spawn(browser, { modifier: modifier },
+  // On windows, HTML clipboard includes extra data.
+  // The values are from widget/windows/nsDataObj.cpp.
+  const htmlPrefix = (navigator.platform.indexOf("Win") >= 0) ? "<html><body>\n<!--StartFragment-->" : "";
+  const htmlPostfix = (navigator.platform.indexOf("Win") >= 0) ? "<!--EndFragment-->\n</body>\n</html>" : "";
+
+  let results = yield ContentTask.spawn(browser, { modifier: modifier, htmlPrefix: htmlPrefix, htmlPostfix: htmlPostfix },
                                         function* (arg) {
     var doc = content.document;
     var main = doc.getElementById("main");
@@ -71,7 +76,7 @@ add_task(function*() {
         is(clipboardData.types.length, 2, "Two types on clipboard");
         is(clipboardData.types[0], "text/html", "text/html on clipboard");
         is(clipboardData.types[1], "text/plain", "text/plain on clipboard");
-        is(clipboardData.getData("text/html"), "t <b>Bold</b>", "text/html value");
+        is(clipboardData.getData("text/html"), arg.htmlPrefix + "t <b>Bold</b>" + arg.htmlPostfix, "text/html value");
         is(clipboardData.getData("text/plain"), "t Bold", "text/plain value");
         resolve();
       }, true)
@@ -106,7 +111,7 @@ add_task(function*() {
         is(clipboardData.types.length, 2, "Two types on clipboard 2");
         is(clipboardData.types[0], "text/html", "text/html on clipboard 2");
         is(clipboardData.types[1], "text/plain", "text/plain on clipboard 2");
-        is(clipboardData.getData("text/html"), "<i>Italic</i> ", "text/html value 2");
+        is(clipboardData.getData("text/html"), arg.htmlPrefix + "<i>Italic</i> " + arg.htmlPostfix, "text/html value 2");
         is(clipboardData.getData("text/plain"), "Some text", "text/plain value 2");
         resolve();
       }, true)
@@ -140,7 +145,7 @@ add_task(function*() {
   // Focus the content again
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
-  let expectedContent = yield ContentTask.spawn(browser, { modifier: modifier },
+  let expectedContent = yield ContentTask.spawn(browser, { modifier: modifier, htmlPrefix: htmlPrefix, htmlPostfix: htmlPostfix },
                                                 function* (arg) {
     var doc = content.document;
     var main = doc.getElementById("main");
@@ -153,9 +158,10 @@ add_task(function*() {
 
         // DataTransfer doesn't support the image types yet, so only text/html
         // will be present.
-        if (clipboardData.getData("text/html") !=
-            '<img id="img" tabindex="1" src="http://example.org/browser/browser/base/content/test/general/moz.png">') {
-          reject();
+        if (clipboardData.getData("text/html") !== arg.htmlPrefix +
+            '<img id="img" tabindex="1" src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
+            arg.htmlPostfix) {
+          reject('Clipboard Data did not contain an image, was ' + clipboardData.getData("text/html"));
         }
         resolve();
       }, true)
