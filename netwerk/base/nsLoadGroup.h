@@ -54,6 +54,7 @@ public:
 
 protected:
     nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
+    nsresult MergeDefaultLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
 
 private:
     void TelemetryReport();

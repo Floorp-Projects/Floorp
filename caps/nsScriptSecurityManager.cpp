@@ -360,6 +360,20 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     return GetChannelURIPrincipal(aChannel, aPrincipal);
 }
 
+nsresult
+nsScriptSecurityManager::MaybeSetAddonIdFromURI(OriginAttributes& aAttrs, nsIURI* aURI)
+{
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (scheme.EqualsLiteral("moz-extension") && GetAddonPolicyService()) {
+    rv = GetAddonPolicyService()->ExtensionURIToAddonId(aURI, aAttrs.mAddonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 /* The principal of the URI that this channel is loading. This is never
  * affected by things like sandboxed loads, or loads where we forcefully
  * inherit the principal.  Think of this as the principal of the server
@@ -391,6 +405,8 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
     }
 
     OriginAttributes attrs(UNKNOWN_APP_ID, false);
+    rv = MaybeSetAddonIdFromURI(attrs, uri);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     prin.forget(aPrincipal);
     return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -745,6 +761,16 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     // the methods that work on chains of nested URIs and they will only look
     // at the flags for our one URI.
 
+    // Special case: moz-extension has a whitelist of URIs that are loadable by
+    // anyone.
+    if (targetScheme.EqualsLiteral("moz-extension") && GetAddonPolicyService()) {
+      bool loadable = false;
+      rv = GetAddonPolicyService()->ExtensionURILoadableByAnyone(targetBaseURI, &loadable);
+      if (NS_SUCCEEDED(rv) && loadable) {
+        return NS_OK;
+      }
+    }
+
     // Check for system target URI
     rv = DenyAccessIfURIHasFlags(targetBaseURI,
                                  nsIProtocolHandler::URI_DANGEROUS_TO_LOAD);
@@ -1087,6 +1113,8 @@ nsScriptSecurityManager::
   OriginAttributes attrs;
   aLoadContext->GetAppId(&attrs.mAppId);
   aLoadContext->GetIsInBrowserElement(&attrs.mInBrowser);
+  nsresult rv = MaybeSetAddonIdFromURI(attrs, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -1099,6 +1127,8 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
 {
   // XXXbholley - Make this more general in bug 1165466.
   OriginAttributes attrs(aDocShell->GetAppId(), aDocShell->GetIsInBrowserElement());
+  nsresult rv = MaybeSetAddonIdFromURI(attrs, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;

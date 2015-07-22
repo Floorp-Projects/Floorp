@@ -29,8 +29,6 @@ config = {
     },
     "title": socket.gethostname().split('.')[0],
     "results_url": "http://graphs.mozilla.org/server/collect.cgi",
-    "datazilla_urls": ["https://datazilla.mozilla.org/talos"],
-    "datazilla_authfile": os.path.join(os.getcwd(), "oauth.txt"),
     "default_actions": [
         "clobber",
         "read-buildbot-config",
