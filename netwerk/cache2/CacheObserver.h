@@ -90,8 +90,8 @@ private:
   static uint32_t sDiskFreeSpaceHardLimit;
   static bool sSmartCacheSizeEnabled;
   static uint32_t sPreloadChunkCount;
-  static uint32_t sMaxMemoryEntrySize;
-  static uint32_t sMaxDiskEntrySize;
+  static int32_t sMaxMemoryEntrySize;
+  static int32_t sMaxDiskEntrySize;
   static uint32_t sMaxDiskChunksMemoryUsage;
   static uint32_t sMaxDiskPriorityChunksMemoryUsage;
   static uint32_t sCompressionLevel;
