@@ -500,16 +500,33 @@ nsSMILAnimationController::DoMilestoneSamples()
     // before that. Any other milestones will be dealt with in a subsequent
     // sample.
     nsSMILMilestone nextMilestone(GetCurrentTime() + 1, true);
-    mChildContainerTable.EnumerateEntries(GetNextMilestone, &nextMilestone);
+    for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
+      nsSMILTimeContainer* container = iter.Get()->GetKey();
+      if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN)) {
+        continue;
+      }
+      nsSMILMilestone thisMilestone;
+      bool didGetMilestone =
+        container->GetNextMilestoneInParentTime(thisMilestone);
+      if (didGetMilestone && thisMilestone < nextMilestone) {
+        nextMilestone = thisMilestone;
+      }
+    }
 
     if (nextMilestone.mTime > GetCurrentTime()) {
       break;
     }
 
-    GetMilestoneElementsParams params;
-    params.mMilestone = nextMilestone;
-    mChildContainerTable.EnumerateEntries(GetMilestoneElements, &params);
-    uint32_t length = params.mElements.Length();
+    nsTArray<nsRefPtr<mozilla::dom::SVGAnimationElement>> elements;
+    for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
+      nsSMILTimeContainer* container = iter.Get()->GetKey();
+      if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN)) {
+        continue;
+      }
+      container->PopMilestoneElementsAtMilestone(nextMilestone, elements);
+    }
+
+    uint32_t length = elements.Length();
 
     // During the course of a sampling we don't want to actually go backwards.
     // Due to negative offsets, early ends and the like, a timed element might
@@ -523,7 +540,7 @@ nsSMILAnimationController::DoMilestoneSamples()
     sampleTime = std::max(nextMilestone.mTime, sampleTime);
 
     for (uint32_t i = 0; i < length; ++i) {
-      SVGAnimationElement* elem = params.mElements[i].get();
+      SVGAnimationElement* elem = elements[i].get();
       MOZ_ASSERT(elem, "nullptr animation element in list");
       nsSMILTimeContainer* container = elem->GetTimeContainer();
       if (!container)
@@ -546,53 +563,6 @@ nsSMILAnimationController::DoMilestoneSamples()
       }
     }
   }
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::GetNextMilestone(TimeContainerPtrKey* aKey,
-                                            void* aData)
-{
-  MOZ_ASSERT(aKey, "Null hash key for time container hash table");
-  MOZ_ASSERT(aKey->GetKey(), "Null time container key in hash table");
-  MOZ_ASSERT(aData,
-             "Null data pointer during time container enumeration");
-
-  nsSMILMilestone* nextMilestone = static_cast<nsSMILMilestone*>(aData);
-
-  nsSMILTimeContainer* container = aKey->GetKey();
-  if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
-    return PL_DHASH_NEXT;
-
-  nsSMILMilestone thisMilestone;
-  bool didGetMilestone =
-    container->GetNextMilestoneInParentTime(thisMilestone);
-  if (didGetMilestone && thisMilestone < *nextMilestone) {
-    *nextMilestone = thisMilestone;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::GetMilestoneElements(TimeContainerPtrKey* aKey,
-                                                void* aData)
-{
-  MOZ_ASSERT(aKey, "Null hash key for time container hash table");
-  MOZ_ASSERT(aKey->GetKey(), "Null time container key in hash table");
-  MOZ_ASSERT(aData,
-             "Null data pointer during time container enumeration");
-
-  GetMilestoneElementsParams* params =
-    static_cast<GetMilestoneElementsParams*>(aData);
-
-  nsSMILTimeContainer* container = aKey->GetKey();
-  if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
-    return PL_DHASH_NEXT;
-
-  container->PopMilestoneElementsAtMilestone(params->mMilestone,
-                                             params->mElements);
-
-  return PL_DHASH_NEXT;
 }
 
 /*static*/ void
@@ -731,34 +701,26 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   return true;
 }
 
-/*static*/ PLDHashOperator
-nsSMILAnimationController::AddStyleUpdate(AnimationElementPtrKey* aKey,
-                                          void* aData)
-{
-  SVGAnimationElement* animElement = aKey->GetKey();
-  RestyleTracker* restyleTracker = static_cast<RestyleTracker*>(aData);
-
-  nsSMILTargetIdentifier key;
-  if (!GetTargetIdentifierForAnimation(animElement, key)) {
-    // Something's wrong/missing about animation's target; skip this animation
-    return PL_DHASH_NEXT;
-  }
-
-  // mIsCSS true means that the rules are the ones returned from
-  // Element::GetSMILOverrideStyleRule (via nsSMILCSSProperty objects),
-  // and mIsCSS false means the rules are nsSMILMappedAttribute objects
-  // returned from nsSVGElement::GetAnimatedContentStyleRule.
-  nsRestyleHint rshint = key.mIsCSS ? eRestyle_StyleAttribute_Animations
-                                    : eRestyle_SVGAttrAnimations;
-  restyleTracker->AddPendingRestyle(key.mElement, rshint, nsChangeHint(0));
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
-  mAnimationElementTable.EnumerateEntries(AddStyleUpdate, &aTracker);
+  for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
+    SVGAnimationElement* animElement = iter.Get()->GetKey();
+
+    nsSMILTargetIdentifier key;
+    if (!GetTargetIdentifierForAnimation(animElement, key)) {
+      // Something's wrong/missing about animation's target; skip this animation
+      continue;
+    }
+
+    // mIsCSS true means that the rules are the ones returned from
+    // Element::GetSMILOverrideStyleRule (via nsSMILCSSProperty objects),
+    // and mIsCSS false means the rules are nsSMILMappedAttribute objects
+    // returned from nsSVGElement::GetAnimatedContentStyleRule.
+    nsRestyleHint rshint = key.mIsCSS ? eRestyle_StyleAttribute_Animations
+                                      : eRestyle_SVGAttrAnimations;
+    aTracker.AddPendingRestyle(key.mElement, rshint, nsChangeHint(0));
+  }
 }
 
 //----------------------------------------------------------------------

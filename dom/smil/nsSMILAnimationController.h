@@ -118,12 +118,6 @@ protected:
   typedef nsPtrHashKey<mozilla::dom::SVGAnimationElement> AnimationElementPtrKey;
   typedef nsTHashtable<AnimationElementPtrKey> AnimationElementHashtable;
 
-  struct GetMilestoneElementsParams
-  {
-    nsTArray<nsRefPtr<mozilla::dom::SVGAnimationElement> > mElements;
-    nsSMILMilestone                                        mMilestone;
-  };
-
   // Returns mDocument's refresh driver, if it's got one.
   nsRefreshDriver* GetRefreshDriver();
 
@@ -141,10 +135,6 @@ protected:
   void RewindElements();
 
   void DoMilestoneSamples();
-  static PLDHashOperator GetNextMilestone(
-      TimeContainerPtrKey* aKey, void* aData);
-  static PLDHashOperator GetMilestoneElements(
-      TimeContainerPtrKey* aKey, void* aData);
 
   static void SampleTimedElement(mozilla::dom::SVGAnimationElement* aElement,
                                  TimeContainerHashtable* aActiveContainers);
@@ -152,9 +142,6 @@ protected:
     mozilla::dom::SVGAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable);
   static bool GetTargetIdentifierForAnimation(
       mozilla::dom::SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
-
-  static PLDHashOperator
-    AddStyleUpdate(AnimationElementPtrKey* aKey, void* aData);
 
   // Methods for adding/removing time containers
   virtual nsresult AddChild(nsSMILTimeContainer& aChild) override;
