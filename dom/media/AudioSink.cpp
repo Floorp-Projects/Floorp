@@ -86,7 +86,7 @@ AudioSink::HasUnplayedFrames()
 }
 
 void
-AudioSink::PrepareToShutdown()
+AudioSink::Shutdown()
 {
   AssertCurrentThreadInMonitor();
   mStopAudioThread = true;
@@ -94,11 +94,8 @@ AudioSink::PrepareToShutdown()
     mAudioStream->Cancel();
   }
   GetReentrantMonitor().NotifyAll();
-}
 
-void
-AudioSink::Shutdown()
-{
+  ReentrantMonitorAutoExit exit(GetReentrantMonitor());
   mThread->Shutdown();
   mThread = nullptr;
   if (mAudioStream) {
