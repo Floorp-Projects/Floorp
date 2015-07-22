@@ -121,8 +121,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x22b4504e, 0xddba, 0x4211, \
-  { 0xa1, 0x49, 0x6e, 0x11, 0x73, 0xc4, 0x11, 0x45 } }
+{ 0x483BF75C, 0xF909, 0x45C3, \
+  { 0x95, 0xBE, 0x41, 0x89, 0xDB, 0xCE, 0x2E, 0x13 } };
 
 /*
  * Window shadow styles
@@ -599,11 +599,21 @@ enum IMEMessage : IMEMessageType
   REQUEST_TO_CANCEL_COMPOSITION
 };
 
-struct IMENotification
+struct IMENotification final
 {
   IMENotification()
     : mMessage(NOTIFY_IME_OF_NOTHING)
   {}
+
+  IMENotification(const IMENotification& aOther)
+  {
+    Assign(aOther);
+  }
+
+  ~IMENotification()
+  {
+    Clear();
+  }
 
   MOZ_IMPLICIT IMENotification(IMEMessage aMessage)
     : mMessage(aMessage)
@@ -611,7 +621,7 @@ struct IMENotification
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
         mSelectionChangeData.mOffset = UINT32_MAX;
-        mSelectionChangeData.mLength = 0;
+        mSelectionChangeData.mString = new nsString();
         mSelectionChangeData.mWritingMode = 0;
         mSelectionChangeData.mReversed = false;
         mSelectionChangeData.mCausedByComposition = false;
@@ -633,8 +643,41 @@ struct IMENotification
     }
   }
 
+  void Assign(const IMENotification& aOther)
+  {
+    Clear();
+    mMessage = aOther.mMessage;
+    switch (mMessage) {
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        mSelectionChangeData = aOther.mSelectionChangeData;
+        // mString should be different instance because of ownership issue.
+        mSelectionChangeData.mString =
+          new nsString(aOther.mSelectionChangeData.String());
+        break;
+      case NOTIFY_IME_OF_TEXT_CHANGE:
+        mTextChangeData = aOther.mTextChangeData;
+        break;
+      case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+        mMouseButtonEventData = aOther.mMouseButtonEventData;
+        break;
+      default:
+        break;
+    }
+  }
+
+  IMENotification& operator=(const IMENotification& aOther)
+  {
+    Assign(aOther);
+    return *this;
+  }
+
   void Clear()
   {
+    if (mMessage == NOTIFY_IME_OF_SELECTION_CHANGE) {
+      MOZ_ASSERT(mSelectionChangeData.mString);
+      delete mSelectionChangeData.mString;
+      mSelectionChangeData.mString = nullptr;
+    }
     mMessage = NOTIFY_IME_OF_NOTHING;
   }
 
@@ -648,14 +691,14 @@ struct IMENotification
     switch (mMessage) {
       case NOTIFY_IME_OF_NOTHING:
         MOZ_ASSERT(aNotification.mMessage != NOTIFY_IME_OF_NOTHING);
-        *this = aNotification;
+        Assign(aNotification);
         break;
       case NOTIFY_IME_OF_SELECTION_CHANGE:
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
         mSelectionChangeData.mOffset =
           aNotification.mSelectionChangeData.mOffset;
-        mSelectionChangeData.mLength =
-          aNotification.mSelectionChangeData.mLength;
+        *mSelectionChangeData.mString =
+          aNotification.mSelectionChangeData.String();
         mSelectionChangeData.mWritingMode =
           aNotification.mSelectionChangeData.mWritingMode;
         mSelectionChangeData.mReversed =
@@ -681,8 +724,9 @@ struct IMENotification
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
         mTextChangeData += aNotification.mTextChangeData;
         break;
+      case NOTIFY_IME_OF_POSITION_CHANGE:
       case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-        MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_COMPOSITION_UPDATE);
+        MOZ_ASSERT(aNotification.mMessage == mMessage);
         break;
       default:
         MOZ_CRASH("Merging notification isn't supported");
@@ -733,7 +777,9 @@ struct IMENotification
   {
     // Selection range.
     uint32_t mOffset;
-    uint32_t mLength;
+
+    // Selected string
+    nsString* mString;
 
     // Writing mode at the selection.
     uint8_t mWritingMode;
@@ -747,15 +793,23 @@ struct IMENotification
 
     uint32_t StartOffset() const
     {
-      return mOffset + (mReversed ? mLength : 0);
+      return mOffset + (mReversed ? Length() : 0);
     }
     uint32_t EndOffset() const
     {
-      return mOffset + (mReversed ? 0 : mLength);
+      return mOffset + (mReversed ? 0 : Length());
+    }
+    const nsString& String() const
+    {
+      return *mString;
+    }
+    uint32_t Length() const
+    {
+      return mString->Length();
     }
     bool IsInInt32Range() const
     {
-      return mOffset + mLength <= INT32_MAX;
+      return mOffset + Length() <= INT32_MAX;
     }
   };
 
@@ -1075,6 +1129,8 @@ class nsIWidget : public nsISupports {
      */
     virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
     virtual nsIWidgetListener* GetAttachedWidgetListener() = 0;
+    virtual void SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) = 0;
+    virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() = 0;
 
     /**
      * Accessor functions to get and set the listener which handles various

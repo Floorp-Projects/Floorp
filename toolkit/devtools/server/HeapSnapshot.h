@@ -162,7 +162,22 @@ WriteHeapGraph(JSContext* cx,
                CoreDumpWriter& writer,
                bool wantNames,
                JS::ZoneSet* zones,
-               JS::AutoCheckCannotGC& noGC);
+               JS::AutoCheckCannotGC& noGC,
+               uint32_t& outNodeCount,
+               uint32_t& outEdgeCount);
+inline bool
+WriteHeapGraph(JSContext* cx,
+               const JS::ubi::Node& node,
+               CoreDumpWriter& writer,
+               bool wantNames,
+               JS::ZoneSet* zones,
+               JS::AutoCheckCannotGC& noGC)
+{
+  uint32_t ignoreNodeCount;
+  uint32_t ignoreEdgeCount;
+  return WriteHeapGraph(cx, node, writer, wantNames, zones, noGC,
+                        ignoreNodeCount, ignoreEdgeCount);
+}
 
 } // namespace devtools
 } // namespace mozilla

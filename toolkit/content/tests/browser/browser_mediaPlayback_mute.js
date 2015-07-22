@@ -50,6 +50,30 @@ function* test_on_browser(url, browser) {
   is(result.computedMuted, true, "Audio is muted");
 }
 
+function* test_visibility(url, browser) {
+  browser.loadURI(url);
+  yield wait_for_event(browser, "DOMMediaPlaybackStarted");
+
+  var result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  is(result.computedVolume, 1, "Audio volume is 1");
+  is(result.computedMuted, false, "Audio is not muted");
+
+  ok(!browser.audioMuted, "Audio should not be muted by default");
+  browser.mute();
+  ok(browser.audioMuted, "Audio should be muted now");
+
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "about:blank",
+  }, function() {});
+
+  yield wait_for_event(browser, "DOMMediaPlaybackStopped");
+
+  result = yield ContentTask.spawn(browser, null, test_audio_in_browser);
+  is(result.computedVolume, 0, "Audio volume is 0 when muted");
+  is(result.computedMuted, true, "Audio is muted");
+}
+
 add_task(function*() {
   yield new Promise((resolve) => {
     SpecialPowers.pushPrefEnv({"set": [
@@ -71,4 +95,11 @@ add_task(function* test_frame() {
     gBrowser,
     url: "about:blank",
   }, test_on_browser.bind(undefined, FRAME));
+});
+
+add_task(function* test_frame() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: "about:blank",
+  }, test_visibility.bind(undefined, PAGE));
 });

@@ -524,13 +524,14 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     }
 
     nsLoadFlags flags;
-    // if the request is the default load request or if the default
-    // load request is null, then the load group should inherit its
-    // load flags from the request.
-    if (mDefaultLoadRequest == request || !mDefaultLoadRequest)
-        rv = request->GetLoadFlags(&flags);
-    else
+    // if the request is the default load request or if the default load
+    // request is null, then the load group should inherit its load flags from
+    // the request, but also we need to enforce defaultLoadFlags.
+    if (mDefaultLoadRequest == request || !mDefaultLoadRequest) {
+        rv = MergeDefaultLoadFlags(request, flags);
+    } else {
         rv = MergeLoadFlags(request, flags);
+    }
     if (NS_FAILED(rv)) return rv;
     
     //
@@ -1058,14 +1059,16 @@ nsLoadGroup::TelemetryReportChannel(nsITimedChannel *aTimedChannel,
 #undef HTTP_REQUEST_HISTOGRAMS
 }
 
-nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags)
+nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest,
+                                     nsLoadFlags& outFlags)
 {
     nsresult rv;
     nsLoadFlags flags, oldFlags;
 
     rv = aRequest->GetLoadFlags(&flags);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     oldFlags = flags;
 
@@ -1080,9 +1083,32 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
     // ... and force the default flags.
     flags |= mDefaultLoadFlags;
 
-    if (flags != oldFlags)
+    if (flags != oldFlags) {
         rv = aRequest->SetLoadFlags(flags);
+    }
 
+    outFlags = flags;
+    return rv;
+}
+
+nsresult nsLoadGroup::MergeDefaultLoadFlags(nsIRequest *aRequest,
+                                            nsLoadFlags& outFlags)
+{
+    nsresult rv;
+    nsLoadFlags flags, oldFlags;
+
+    rv = aRequest->GetLoadFlags(&flags);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    oldFlags = flags;
+    // ... and force the default flags.
+    flags |= mDefaultLoadFlags;
+
+    if (flags != oldFlags) {
+        rv = aRequest->SetLoadFlags(flags);
+    }
     outFlags = flags;
     return rv;
 }

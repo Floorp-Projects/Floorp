@@ -272,7 +272,6 @@ class JS_PUBLIC_API(AutoGCRooter)
         IONMASM =     -19, /* js::jit::MacroAssembler */
         WRAPVECTOR =  -20, /* js::AutoWrapperVector */
         WRAPPER =     -21, /* js::AutoWrapperRooter */
-        OBJU32HASHMAP=-23, /* js::AutoObjectUnsigned32HashMap */
         JSONPARSER =  -25, /* js::JSONParser */
         CUSTOM =      -26  /* js::CustomAutoRooter */
     };
@@ -325,8 +324,6 @@ enum ThingRootKind
     THING_ROOT_LAZY_SCRIPT,
     THING_ROOT_ID,
     THING_ROOT_VALUE,
-    THING_ROOT_PROPERTY_DESCRIPTOR,
-    THING_ROOT_PROP_DESC,
     THING_ROOT_STATIC_TRACEABLE,
     THING_ROOT_DYNAMIC_TRACEABLE,
     THING_ROOT_LIMIT
