@@ -47,6 +47,10 @@
 #include "nsQueryObject.h"
 #include <algorithm>
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -2194,6 +2198,10 @@ nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
     mPrincipal(aPrincipal)
 {
   if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncMessageOOM"),
+                                       NS_ConvertUTF16toUTF8(aMessage));
+#endif
     NS_ABORT_OOM(aData.mDataLength);
   }
   mClosure = aData.mClosure;
