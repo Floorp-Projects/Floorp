@@ -9,11 +9,5 @@ ifndef MOZ_JEMALLOC3
 # broken when compiling without optimization, while avoiding to add yet another
 # configure test.
 MOZ_OPTIMIZE = 1
-
-ifeq ($(OS_ARCH),SunOS)
-ifndef GNU_CC
-MODULE_OPTIMIZE_FLAGS = -xO5
-endif
-endif
 endif
 

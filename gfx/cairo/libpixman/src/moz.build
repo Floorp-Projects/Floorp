@@ -145,3 +145,7 @@ if CONFIG['GNU_CC']:
             '-Wno-tautological-compare',
             '-Wno-tautological-constant-out-of-range-compare',
         ]
+
+# See bug 386897.
+if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
+    CFLAGS += ['-O2']
