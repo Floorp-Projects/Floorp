@@ -583,7 +583,11 @@ ContainerParser::CreateForMIMEType(const nsACString& aType)
   if (aType.LowerCaseEqualsLiteral("video/mp4") || aType.LowerCaseEqualsLiteral("audio/mp4")) {
     return new MP4ContainerParser(aType);
   }
+  if (aType.LowerCaseEqualsLiteral("audio/aac")) {
+    return new ADTSContainerParser(aType);
+  }
 #endif
+
   return new ContainerParser(aType);
 }
 
