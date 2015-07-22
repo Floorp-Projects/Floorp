@@ -99,8 +99,7 @@ private:
   bool mLowDiskSpace;
   bool IsLowDiskSpace() const { return mLowDiskSpace; };
 
-  static PLDHashOperator ClearCacheEnumerator(DOMStorageCacheHashKey* aCache,
-                                              void* aClosure);
+  void ClearCaches(uint32_t aUnloadFlags, const nsACString& aKeyPrefix);
 
 protected:
   // Keeps usage cache objects for eTLD+1 scopes we have touched.
