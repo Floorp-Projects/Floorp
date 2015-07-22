@@ -143,6 +143,10 @@ config = {
             "category": "mochitest",
             "extra_args": ["--total-chunks=16", "--this-chunk=16"],
         },
+        "mochitest-chrome": {
+            "category": "mochitest",
+            "extra_args": ["--chrome"],
+        },
         "mochitest-gl-1": {
             "category": "mochitest-gl",
             "extra_args": ["--this-chunk=1"],
