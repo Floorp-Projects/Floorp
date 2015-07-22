@@ -11,7 +11,6 @@
 
 #include "MediaData.h"
 #include "MediaSourceDecoder.h"
-#include "SourceBuffer.h"
 #include "TimeUnits.h"
 #include "nsString.h"
 
@@ -19,6 +18,10 @@ namespace mozilla {
 
 using media::TimeUnit;
 using media::TimeIntervals;
+
+namespace dom {
+class SourceBuffer;
+}
 
 class SourceBufferContentManager {
 public:
