@@ -195,6 +195,14 @@ treecol {
   -moz-margin-end: 8px !important;
 }
 
+/* Privacy pane */
+
+#doNotTrackInfo,
+#trackingProtectionPBMLearnMore,
+#trackingProtectionLearnMore {
+  margin-top: 0;
+}
+
 /* Collapse the non-active vboxes in decks to use only the height the
    active vbox needs */
 #historyPane:not([selectedIndex="1"]) > #historyDontRememberPane,
