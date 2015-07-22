@@ -263,7 +263,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.createElement("div", {className: classes}, 
-            React.createElement("img", {src: this.props.roomContextUrl.thumbnail}), 
+          React.createElement("img", {src: this.props.roomContextUrl.thumbnail || "shared/img/icons-16x16.svg#globe"}), 
           React.createElement("div", {className: "standalone-context-url-description-wrapper"}, 
             this.props.roomContextUrl.description, 
             React.createElement("br", null), React.createElement("a", {href: locationInfo.location, 

@@ -294,6 +294,19 @@ describe("loop.roomViews", function () {
         expect(view.getDOMNode().querySelector(".room-context-url").textContent)
           .eql("hostname");
       });
+
+      it("should show a default favicon when none is available", function() {
+        fakeContextURL.thumbnail = null;
+        view = mountTestComponent({
+          showContext: true,
+          roomData: {
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        expect(view.getDOMNode().querySelector(".room-context-thumbnail").src)
+          .to.match(/loop\/shared\/img\/icons-16x16.svg#globe$/);
+      });
     });
   });
 

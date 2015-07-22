@@ -151,13 +151,12 @@
 
   var SVGIcon = React.createClass({displayName: "SVGIcon",
     render: function() {
-      var sizeUnit = this.props.size.split("x")[0] + "px";
+      var sizeUnit = this.props.size.split("x");
       return (
-        React.createElement("span", {className: "svg-icon", style: {
-          "backgroundImage": "url(../content/shared/img/icons-" + this.props.size +
-                              ".svg#" + this.props.shapeId + ")",
-          "backgroundSize": sizeUnit + " " + sizeUnit
-        }})
+        React.createElement("img", {className: "svg-icon", 
+             src: "../content/shared/img/icons-" + this.props.size + ".svg#" + this.props.shapeId, 
+             width: sizeUnit[0], 
+             height: sizeUnit[1]})
       );
     }
   });
@@ -179,7 +178,7 @@
       ],
       "16x16": ["add", "add-hover", "add-active", "audio", "audio-hover", "audio-active",
         "block", "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
-        "contacts-active", "copy", "checkmark", "google", "google-hover", "google-active",
+        "contacts-active", "copy", "checkmark", "globe", "google", "google-hover", "google-active",
         "history", "history-hover", "history-active", "leave", "precall", "precall-hover",
         "precall-active", "screen-white", "screenmute-white", "settings",
         "settings-hover", "settings-active", "share-darkgrey", "tag", "tag-hover",

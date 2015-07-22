@@ -505,9 +505,8 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="room-entry-context-item">
-          <a href={roomUrl.location} onClick={this.handleClick}>
-            <img title={roomUrl.description}
-                 src={roomUrl.thumbnail} />
+          <a href={roomUrl.location} title={roomUrl.description} onClick={this.handleClick}>
+            <img src={roomUrl.thumbnail || "loop/shared/img/icons-16x16.svg#globe"} />
           </a>
         </div>
       );
@@ -771,6 +770,7 @@ loop.panel = (function(_, mozL10n) {
         hide: !hostname ||
           !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
       });
+      var thumbnail = this.state.previewImage || "loop/shared/img/icons-16x16.svg#globe";
 
       return (
         <div className="new-room-view">
@@ -778,7 +778,7 @@ loop.panel = (function(_, mozL10n) {
             <Checkbox label={mozL10n.get("context_inroom_label")}
                       onChange={this.onCheckboxChange} />
             <div className="context-content">
-              <img className="context-preview" src={this.state.previewImage}/>
+              <img className="context-preview" src={thumbnail} />
               <span className="context-description">
                 {this.state.description}
                 <span className="context-url">{hostname}</span>
