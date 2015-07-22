@@ -341,6 +341,11 @@
                 <toolbarbutton id="toggle-pause-exceptions"
                                class="devtools-toolbarbutton"
                                command="togglePauseOnExceptionsCommand"/>
+                <toolbarbutton id="toggle-promise-debugger"
+                               class="devtools-toolbarbutton"
+                               tooltiptext="&debuggerUI.sources.togglePromiseDebugger;"
+                               command="togglePromiseDebuggerCommand"
+                               hidden="true"/>
               </toolbar>
             </tabpanel>
             <tabpanel id="callstack-tabpanel">
@@ -351,46 +356,56 @@
       </vbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
-      <deck id="editor-deck" flex="1" class="devtools-main-content">
-        <vbox id="editor"/>
-        <vbox id="black-boxed-message"
-              align="center"
-              pack="center">
-          <description id="black-boxed-message-label">
-            &debuggerUI.blackBoxMessage.label;
-          </description>
-          <button id="black-boxed-message-button"
-                  class="devtools-toolbarbutton"
-                  label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                  command="unBlackBoxCommand"/>
-        </vbox>
-        <html:div id="source-progress-container"
-                  align="center">
-          <html:div id="hbox">
-            <html:progress id="source-progress"></html:progress>
-          </html:div>
-        </html:div>
-      </deck>
-      <splitter id="editor-and-instruments-splitter"
-                class="devtools-side-splitter"/>
-      <tabbox id="instruments-pane"
-              class="devtools-sidebar-tabs"
+      <vbox id="debugger-content" flex="1">
+        <hbox id="editor-and-instruments-pane" flex="1">
+          <deck id="editor-deck" flex="1" class="devtools-main-content">
+            <vbox id="editor"/>
+            <vbox id="black-boxed-message"
+                  align="center"
+                  pack="center">
+              <description id="black-boxed-message-label">
+                &debuggerUI.blackBoxMessage.label;
+              </description>
+              <button id="black-boxed-message-button"
+                      class="devtools-toolbarbutton"
+                      label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
+                      command="unBlackBoxCommand"/>
+            </vbox>
+            <html:div id="source-progress-container"
+                      align="center">
+              <html:div id="hbox">
+                <html:progress id="source-progress"></html:progress>
+              </html:div>
+            </html:div>
+          </deck>
+          <splitter id="editor-and-instruments-splitter"
+                    class="devtools-side-splitter"/>
+          <tabbox id="instruments-pane"
+                  class="devtools-sidebar-tabs"
+                  hidden="true">
+            <tabs>
+              <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
+              <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
+            </tabs>
+            <tabpanels flex="1">
+              <tabpanel id="variables-tabpanel">
+                <vbox id="expressions"/>
+                <splitter class="devtools-horizontal-splitter"/>
+                <vbox id="variables" flex="1"/>
+              </tabpanel>
+              <tabpanel id="events-tabpanel">
+                <vbox id="event-listeners" flex="1"/>
+              </tabpanel>
+            </tabpanels>
+          </tabbox>
+        </hbox>
+        <splitter id="editor-and-promise-splitter"
+                class="devtools-horizontal-splitter"/>
+        <vbox id="promise-debugger-pane"
+              flex="1"
               hidden="true">
-        <tabs>
-          <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
-          <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
-        </tabs>
-        <tabpanels flex="1">
-          <tabpanel id="variables-tabpanel">
-            <vbox id="expressions"/>
-            <splitter class="devtools-horizontal-splitter"/>
-            <vbox id="variables" flex="1"/>
-          </tabpanel>
-          <tabpanel id="events-tabpanel">
-            <vbox id="event-listeners" flex="1"/>
-          </tabpanel>
-        </tabpanels>
-      </tabbox>
+        </vbox>
+      </vbox>
       <splitter id="vertical-layout-splitter"
                 class="devtools-horizontal-splitter"/>
       <hbox id="vertical-layout-panes-container">
