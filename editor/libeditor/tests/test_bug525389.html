@@ -26,7 +26,13 @@ function runTest() {
   function verifyContent(s) {
     var e = document.getElementById('i1');
     var doc = e.contentDocument;
-    is(doc.body.innerHTML, s, "");
+    if (navigator.platform.indexOf("Win") >= 0) {
+      // On Windows ignore \n which got left over from the removal of the fragment tags
+      // <html><body>\n<!--StartFragment--> and <!--EndFragment-->\n</body>\n</html>.
+      is(doc.body.innerHTML.replace(/\n/g, ""), s, "");
+    } else {
+      is(doc.body.innerHTML, s, "");
+    }
   }
 
   function pasteInto(trans, html, target_id) {

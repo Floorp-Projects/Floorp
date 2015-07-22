@@ -102,7 +102,8 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   else if (strcmp(aMimeStr, kFileMime) == 0 ||
            strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
-  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
+  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0 ||
+           strcmp(aMimeStr, kHTMLMime) == 0)
     format = CF_HTML;
   else
     format = ::RegisterClipboardFormatW(NS_ConvertASCIItoUTF16(aMimeStr).get());
@@ -624,12 +625,30 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
               genericDataWrapper = do_QueryInterface(file);
             free(data);
           }
-        else if ( strcmp(flavorStr, kNativeHTMLMime) == 0) {
+        else if ( strcmp(flavorStr, kNativeHTMLMime) == 0 ) {
+          uint32_t dummy;
           // the editor folks want CF_HTML exactly as it's on the clipboard, no conversions,
           // no fancy stuff. Pull it off the clipboard, stuff it into a wrapper and hand
           // it back to them.
-          if ( FindPlatformHTML(aDataObject, anIndex, &data, &dataLen) )
+          if ( FindPlatformHTML(aDataObject, anIndex, &data, &dummy, &dataLen) )
             nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          else
+          {
+            free(data);
+            continue;     // something wrong with this flavor, keep looking for other data
+          }
+          free(data);
+        }
+        else if ( strcmp(flavorStr, kHTMLMime) == 0 ) {
+          uint32_t startOfData = 0;
+          // The JS folks want CF_HTML exactly as it is on the clipboard, but
+          // minus the CF_HTML header index information.
+          // It also needs to be converted to UTF16 and have linebreaks changed.
+          if ( FindPlatformHTML(aDataObject, anIndex, &data, &startOfData, &dataLen) ) {
+            dataLen -= startOfData;
+            nsPrimitiveHelpers::CreatePrimitiveForCFHTML ( static_cast<char*>(data) + startOfData,
+                                                           &dataLen, getter_AddRefs(genericDataWrapper) );
+          }
           else
           {
             free(data);
@@ -678,7 +697,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 // Someone asked for the OS CF_HTML flavor. We give it back to them exactly as-is.
 //
 bool
-nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, uint32_t* outDataLen )
+nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex,
+                                  void** outData, uint32_t* outStartOfData,
+                                  uint32_t* outDataLen )
 {
   // Reference: MSDN doc entitled "HTML Clipboard Format"
   // http://msdn.microsoft.com/en-us/library/aa767917(VS.85).aspx#unknown_854
@@ -721,6 +742,10 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
   // We want to return the buffer not offset by startOfData because it will be 
   // parsed out later (probably by nsHTMLEditor::ParseCFHTML) when it is still
   // in CF_HTML format.
+
+  // We return the byte offset from the start of the data buffer to where the
+  // HTML data starts. The caller might want to extract the HTML only.
+  *outStartOfData = startOfData;
   *outDataLen = endOfData;
   return true;
 }

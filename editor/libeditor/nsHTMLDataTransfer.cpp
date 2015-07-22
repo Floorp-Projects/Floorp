@@ -812,8 +812,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareTransferable(nsITransferable **transferable)
 }
 
 nsresult
-nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransferable,
-                                      bool aHavePrivFlavor)
+nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransferable)
 {
   // Create generic Transferable for getting the data
   nsresult rv = CallCreateInstance("@mozilla.org/widget/transferable;1", aTransferable);
@@ -831,10 +830,7 @@ nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransferable,
     // This should only happen in html editors, not plaintext
     if (!IsPlaintextEditor())
     {
-      if (!aHavePrivFlavor)
-      {
-        (*aTransferable)->AddDataFlavor(kNativeHTMLMime);
-      }
+      (*aTransferable)->AddDataFlavor(kNativeHTMLMime);
       (*aTransferable)->AddDataFlavor(kHTMLMime);
       (*aTransferable)->AddDataFlavor(kFileMime);
 
@@ -1095,6 +1091,7 @@ nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable,
                                      nsIDOMDocument *aSourceDoc,
                                      const nsAString & aContextStr,
                                      const nsAString & aInfoStr,
+                                     bool havePrivateHTMLFlavor,
                                      nsIDOMNode *aDestinationNode,
                                      int32_t aDestOffset,
                                      bool aDoDeleteSelection)
@@ -1134,12 +1131,24 @@ nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable,
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
           nsAutoEditBatch beginBatching(this);
-          rv = DoInsertHTMLWithContext(cffragment,
-                                       cfcontext, cfselection, flavor,
-                                       aSourceDoc,
-                                       aDestinationNode, aDestOffset,
-                                       aDoDeleteSelection,
-                                       isSafe);
+          // If we have our private HTML flavor, we will only use the fragment
+          // from the CF_HTML. The rest comes from the clipboard.
+          if (havePrivateHTMLFlavor) {
+            rv = DoInsertHTMLWithContext(cffragment,
+                                         aContextStr, aInfoStr, flavor,
+                                         aSourceDoc,
+                                         aDestinationNode, aDestOffset,
+                                         aDoDeleteSelection,
+                                         isSafe);
+          } else {
+            rv = DoInsertHTMLWithContext(cffragment,
+                                         cfcontext, cfselection, flavor,
+                                         aSourceDoc,
+                                         aDestinationNode, aDestOffset,
+                                         aDoDeleteSelection,
+                                         isSafe);
+
+          }
         } else {
           // In some platforms (like Linux), the clipboard might return data
           // requested for unknown flavors (for example:
@@ -1241,9 +1250,10 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
                               aSourceDoc, aDestinationNode, aDestOffset, aDoDeleteSelection);
         }
       }
-      else if (!hasPrivateHTMLFlavor && type.EqualsLiteral(kNativeHTMLMime)) {
+      else if (type.EqualsLiteral(kNativeHTMLMime)) {
+        // Windows only clipboard parsing.
         nsAutoString text;
-        GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kNativeHTMLMime), aIndex, text);
+        GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
         NS_ConvertUTF16toUTF8 cfhtml(text);
 
         nsXPIDLString cfcontext, cffragment, cfselection; // cfselection left emtpy for now
@@ -1252,12 +1262,28 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
           nsAutoEditBatch beginBatching(this);
-          return DoInsertHTMLWithContext(cffragment,
-                                         cfcontext, cfselection, type,
-                                         aSourceDoc,
-                                         aDestinationNode, aDestOffset,
-                                         aDoDeleteSelection,
-                                         isSafe);
+
+          if (hasPrivateHTMLFlavor) {
+            // If we have our private HTML flavor, we will only use the fragment
+            // from the CF_HTML. The rest comes from the clipboard.
+            nsAutoString contextString, infoString;
+            GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
+            GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
+            return DoInsertHTMLWithContext(cffragment,
+                                           contextString, infoString, type,
+                                           aSourceDoc,
+                                           aDestinationNode, aDestOffset,
+                                           aDoDeleteSelection,
+                                           isSafe);
+          }
+          else {
+            return DoInsertHTMLWithContext(cffragment,
+                                           cfcontext, cfselection, type,
+                                           aSourceDoc,
+                                           aDestinationNode, aDestOffset,
+                                           aDoDeleteSelection,
+                                           isSafe);
+          }
         }
       }
       else if (type.EqualsLiteral(kHTMLMime)) {
@@ -1321,13 +1347,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste(int32_t aSelectionType)
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // find out if we have our internal html flavor on the clipboard.  We don't want to mess
-  // around with cfhtml if we do.
-  bool bHavePrivateHTMLFlavor = HavePrivateHTMLFlavor(clipboard);
-
   // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> trans;
-  rv = PrepareHTMLTransferable(getter_AddRefs(trans), bHavePrivateHTMLFlavor);
+  rv = PrepareHTMLTransferable(getter_AddRefs(trans));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
   // Get the Data from the clipboard
@@ -1340,7 +1362,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste(int32_t aSelectionType)
   // also get additional html copy hints, if present
   nsAutoString contextStr, infoStr;
 
-  // also get additional html copy hints, if present
+  // If we have our internal html flavor on the clipboard, there is special
+  // context to use instead of cfhtml context.
+  bool bHavePrivateHTMLFlavor = HavePrivateHTMLFlavor(clipboard);
   if (bHavePrivateHTMLFlavor)
   {
     nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
@@ -1388,7 +1412,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(int32_t aSelectionType)
   if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
     return NS_OK;
 
-  return InsertFromTransferable(trans, nullptr, contextStr, infoStr,
+  return InsertFromTransferable(trans, nullptr, contextStr, infoStr, bHavePrivateHTMLFlavor,
                                 nullptr, 0, true);
 }
 
@@ -1406,7 +1430,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
     return NS_OK;
 
   nsAutoString contextStr, infoStr;
-  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
+  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr, false,
                                 nullptr, 0, true);
 }
 
@@ -1436,7 +1460,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(int32_t aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       const nsAFlatString& empty = EmptyString();
-      rv = InsertFromTransferable(trans, nullptr, empty, empty, nullptr, 0,
+      rv = InsertFromTransferable(trans, nullptr, empty, empty, false, nullptr, 0,
                                   true);
     }
   }
