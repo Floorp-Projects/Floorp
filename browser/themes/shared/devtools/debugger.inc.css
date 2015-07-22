@@ -122,6 +122,10 @@
   }
 }
 
+#toggle-promise-debugger {
+  /* TODO Bug 1186119: Add a toggle promise debugger image */
+}
+
 #sources-toolbar .devtools-toolbarbutton:not([label]) {
   -moz-image-region: rect(0px,16px,16px,0px);
 }
