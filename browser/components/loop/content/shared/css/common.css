@@ -549,6 +549,9 @@ html[dir="rtl"] .context-wrapper > .context-preview {
   flex: 0 1 auto;
   display: block;
   color: black;
+  /* 16px for the preview, plus its .8em margin */
+  max-width: calc(100% - 16px - .8em);
+  word-wrap: break-word;
 }
 
 .context-wrapper > .context-description > .context-url {
