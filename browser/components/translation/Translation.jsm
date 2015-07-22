@@ -84,10 +84,34 @@ this.Translation = {
   },
 
   openProviderAttribution: function() {
+    let attribution = this.supportedEngines[this.translationEngine];
     Cu.import("resource:///modules/RecentWindow.jsm");
-    RecentWindow.getMostRecentBrowserWindow().openUILinkIn(
-      "http://aka.ms/MicrosoftTranslatorAttribution", "tab");
-  }
+    RecentWindow.getMostRecentBrowserWindow().openUILinkIn(attribution, "tab");
+  },
+
+  /**
+   * The list of translation engines and their attributions.
+   */
+  supportedEngines: {
+    "bing"    : "http://aka.ms/MicrosoftTranslatorAttribution",
+    "yandex"  : "http://translate.yandex.com/"
+  },
+
+  /**
+   * Fallback engine (currently Bing Translator) if the preferences seem
+   * confusing.
+   */
+  get defaultEngine() {
+    return this.supportedEngines.keys[0];
+  },
+
+  /**
+   * Returns the name of the preferred translation engine.
+   */
+  get translationEngine() {
+    let engine = Services.prefs.getCharPref("browser.translation.engine");
+    return Object.keys(this.supportedEngines).includes(engine) ? engine : this.defaultEngine;
+  },
 };
 
 /* TranslationUI objects keep the information related to translation for

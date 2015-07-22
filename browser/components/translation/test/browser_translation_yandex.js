@@ -8,18 +8,22 @@
 
 const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
+const kShowUIPref = "browser.translation.ui.show";
 
 const {YandexTranslator} = Cu.import("resource:///modules/translation/YandexTranslator.jsm", {});
 const {TranslationDocument} = Cu.import("resource:///modules/translation/TranslationDocument.jsm", {});
 const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {Translation} = Cu.import("resource:///modules/translation/Translation.jsm", {});
 
 add_task(function* setup() {
   Services.prefs.setCharPref(kEnginePref, "yandex");
   Services.prefs.setCharPref(kApiKeyPref, "yandexValidKey");
+  Services.prefs.setBoolPref(kShowUIPref, true);
 
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref(kEnginePref);
     Services.prefs.clearUserPref(kApiKeyPref);
+    Services.prefs.clearUserPref(kShowUIPref);
   });
 });
 
@@ -43,6 +47,38 @@ add_task(function* test_yandex_translation() {
   Assert.ok(result, "There should be a result.");
 
   gBrowser.removeTab(tab);
+});
+
+/**
+ * Ensure that Yandex.Translate is propertly attributed.
+ */
+add_task(function* test_yandex_attribution() {
+  // Loading the fixture page.
+  let url = constructFixtureURL("bug1022725-fr.html");
+  let tab = yield promiseTestPageLoad(url);
+
+  info("Show an info bar saying the current page is in French");
+  let notif = showTranslationUI(tab, "fr");
+  let attribution = notif._getAnonElt("translationEngine").selectedIndex;
+  Assert.equal(attribution, 1, "Yandex attribution should be shown.");
+
+  gBrowser.removeTab(tab);
+});
+
+
+add_task(function* test_preference_attribution() {
+
+    let prefUrl = "about:preferences#content";
+    let tab = yield promiseTestPageLoad(prefUrl);
+
+    let browser = gBrowser.getBrowserForTab(tab);
+    let win = browser.contentWindow;
+    let bingAttribution = win.document.getElementById("bingAttribution");
+    ok(bingAttribution, "Bing attribution should exist.");
+    ok(bingAttribution.hidden, "Bing attribution should be hidden.");
+
+    gBrowser.removeTab(tab);
+
 });
 
 /**
@@ -78,4 +114,13 @@ function promiseTestPageLoad(url) {
     deferred.resolve(tab);
   }, true);
   return deferred.promise;
+}
+
+function showTranslationUI(tab, aDetectedLanguage) {
+  let browser = gBrowser.selectedBrowser;
+  Translation.documentStateReceived(browser, {state: Translation.STATE_OFFER,
+                                              originalShown: true,
+                                              detectedLanguage: aDetectedLanguage});
+  let ui = browser.translationUI;
+  return ui.notificationBox.getNotificationWithValue("translation");
 }
