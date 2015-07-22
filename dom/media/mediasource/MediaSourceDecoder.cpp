@@ -215,12 +215,6 @@ MediaSourceDecoder::Ended(bool aEnded)
   mon.NotifyAll();
 }
 
-bool
-MediaSourceDecoder::IsExpectingMoreData()
-{
-  return !mEnded;
-}
-
 void
 MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
 {
