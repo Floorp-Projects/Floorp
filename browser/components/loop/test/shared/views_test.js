@@ -50,7 +50,6 @@ describe("loop.shared.views", function() {
   });
 
   afterEach(function() {
-    $("#fixtures").empty();
     sandbox.restore();
   });
 
