@@ -25,6 +25,7 @@
   { 0X87, 0XE2, 0X5D, 0X1D, 0XBA, 0XCA, 0X90, 0X48 } }
 
 class mozPersonalDictionaryLoader;
+class mozPersonalDictionarySave;
 
 class mozPersonalDictionary final : public mozIPersonalDictionary,
                                     public nsIObserver,
@@ -43,14 +44,15 @@ public:
 protected:
   virtual ~mozPersonalDictionary();
 
-  /* has the dictionary been modified */
-  bool mDirty;
-
   /* true if the dictionary has been loaded from disk */
   bool mIsLoaded;
 
+  /* true if a dictionary save is pending */
+  bool mSavePending;
+
   nsCOMPtr<nsIFile> mFile;
   mozilla::Monitor mMonitor;
+  mozilla::Monitor mMonitorSave;
   nsTHashtable<nsUnicharPtrHashKey> mDictionaryTable;
   nsTHashtable<nsUnicharPtrHashKey> mIgnoreTable;
 
@@ -71,7 +73,11 @@ private:
   /* perform a synchronous load of the dictionary from disk */
   void SyncLoadInternal();
 
+  /* wait for the asynchronous save of the dictionary to be completed */
+  void WaitForSave();
+
   friend class mozPersonalDictionaryLoader;
+  friend class mozPersonalDictionarySave;
 };
 
 #endif
