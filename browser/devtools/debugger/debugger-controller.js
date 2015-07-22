@@ -2186,7 +2186,8 @@ let Prefs = new ViewHelpers.Prefs("devtools", {
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   workersEnabled: ["Bool", "debugger.workers"],
   editorTabSize: ["Int", "editor.tabsize"],
-  autoBlackBox: ["Bool", "debugger.auto-black-box"]
+  autoBlackBox: ["Bool", "debugger.auto-black-box"],
+  promiseDebuggerEnabled: ["Bool", "debugger.promise"]
 });
 
 /**

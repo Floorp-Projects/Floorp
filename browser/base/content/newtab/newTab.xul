@@ -23,11 +23,12 @@
   <div class="newtab-customize-panel-container">
     <div id="newtab-customize-panel" orient="vertical">
         <div id="newtab-customize-panel-anchor"></div>
-        <div id="newtab-customize-title" class="newtab-customize-panel-item">
+        <div id="newtab-customize-panel-inner-wrapper">
+          <div id="newtab-customize-title" class="newtab-customize-panel-item">
             <label>&newtab.customize.cog.title2;</label>
-        </div>
+          </div>
 
-        <div class="newtab-customize-complex-option">
+          <div class="newtab-customize-complex-option">
             <div id="newtab-customize-classic" class="newtab-customize-panel-superitem newtab-customize-panel-item selectable">
                 <label>&newtab.customize.classic;</label>
             </div>
@@ -35,12 +36,13 @@
                 <label class="checkbox"></label>
                 <label>&newtab.customize.cog.enhanced;</label>
             </div>
-        </div>
-        <div id="newtab-customize-blank" class="newtab-customize-panel-item selectable">
+          </div>
+          <div id="newtab-customize-blank" class="newtab-customize-panel-item selectable">
             <label>&newtab.customize.blank2;</label>
-        </div>
-        <div id="newtab-customize-learn" class="newtab-customize-panel-item">
+          </div>
+          <div id="newtab-customize-learn" class="newtab-customize-panel-item">
             <label>&newtab.customize.cog.learn;</label>
+          </div>
         </div>
     </div>
   </div>

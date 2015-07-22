@@ -151,6 +151,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       prettyPrintCommand: () => this.togglePrettyPrint(),
       toggleBreakpointsCommand: () =>this.toggleBreakpoints(),
       togglePauseOnExceptionsCommand: () => this.togglePauseOnExceptions(),
+      togglePromiseDebuggerCommand: () => this.togglePromiseDebugger(),
       nextSourceCommand: () => this.selectNextItem(),
       prevSourceCommand: () => this.selectPrevItem()
     });
@@ -657,6 +658,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     this._togglePauseOnExceptionsButton.setAttribute("tooltiptext", tooltip);
     this._togglePauseOnExceptionsButton.setAttribute("state", state);
+  },
+
+  togglePromiseDebugger: function() {
+    if (Prefs.promiseDebuggerEnabled) {
+      let promisePane = this.DebuggerView._promisePane;
+      promisePane.hidden = !promisePane.hidden;
+    }
   },
 
   hidePrettyPrinting: function() {
