@@ -921,23 +921,6 @@ nsWindowMemoryReporter::KillCheckTimer()
 }
 
 #ifdef DEBUG
-static PLDHashOperator
-UnlinkGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void *)
-{
-  nsGlobalWindow::WindowByIdTable* windowsById =
-    nsGlobalWindow::GetWindowsTable();
-  if (!windowsById) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsRefPtr<nsGlobalWindow> window = windowsById->Get(aIDHashKey->GetKey());
-  if (window) {
-    window->RiskyUnlink();
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 /* static */ void
 nsWindowMemoryReporter::UnlinkGhostWindows()
 {
@@ -959,6 +942,17 @@ nsWindowMemoryReporter::UnlinkGhostWindows()
   // Get the IDs of all the "ghost" windows, and unlink them all.
   nsTHashtable<nsUint64HashKey> ghostWindows;
   sWindowReporter->CheckForGhostWindows(&ghostWindows);
-  ghostWindows.EnumerateEntries(UnlinkGhostWindowsEnumerator, nullptr);
+  for (auto iter = ghostWindows.ConstIter(); !iter.Done(); iter.Next()) {
+    nsGlobalWindow::WindowByIdTable* windowsById =
+      nsGlobalWindow::GetWindowsTable();
+    if (!windowsById) {
+      continue;
+    }
+
+    nsRefPtr<nsGlobalWindow> window = windowsById->Get(iter.Get()->GetKey());
+    if (window) {
+      window->RiskyUnlink();
+    }
+  }
 }
 #endif
