@@ -159,11 +159,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                                               'run-tests',
                                               ])
         kwargs.setdefault('config', {})
-        kwargs['config'].setdefault(
-            'virtualenv_modules', ["mozinstall", "mozdevice", "pyyaml", "mozversion", "datazilla",
-                                   "mozcrash", "mozhttpd", "mozprofile", "mozfile", "mozinfo",
-                                   "moznetwork", "mozprocess", "httplib2"]
-        )
         super(Talos, self).__init__(**kwargs)
 
         self.workdir = self.query_abs_dirs()['abs_work_dir']  # convenience
@@ -536,7 +531,16 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         talos from its source, we have to wrap that method here."""
         # XXX This method could likely be replaced with a PreScriptAction hook.
         if self.has_cloned_talos:
-            virtualenv_modules = list(self.config.get('virtualenv_modules', []))
+            requirements = self.read_from_file(
+                os.path.join(self.talos_path, 'requirements.txt'),
+                verbose=False
+            )
+            # talos in harness requires mozinstall
+            virtualenv_modules = ['mozinstall']
+            for requirement in requirements.splitlines():
+                requirement = requirement.strip()
+                if requirement:
+                    virtualenv_modules.append(requirement)
 
             # Bug 900015 - Silent warnings on osx when libyaml is not found
             pyyaml_module = {
