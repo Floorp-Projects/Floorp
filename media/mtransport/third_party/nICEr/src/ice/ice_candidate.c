@@ -555,7 +555,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
 
         if(cand->stun_server->type == NR_ICE_STUN_SERVER_TYPE_ADDR) {
           if(cand->base.ip_version != cand->stun_server->u.addr.ip_version) {
-            r_log(LOG_ICE, LOG_INFO, "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate with different IP version (%d) than STUN/TURN server (%d).", cand->label,cand->base.ip_version,cand->stun_server->u.addr.ip_version);
+            r_log(LOG_ICE, LOG_INFO, "ICE-CANDIDATE(%s): Skipping srflx/relayed candidate with different IP version (%u) than STUN/TURN server (%u).", cand->label,cand->base.ip_version,cand->stun_server->u.addr.ip_version);
             ABORT(R_NOT_FOUND); /* Same error code when DNS lookup fails */
           }
 
