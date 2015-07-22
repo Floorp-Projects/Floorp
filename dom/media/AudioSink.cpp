@@ -101,7 +101,10 @@ AudioSink::Shutdown()
 {
   mThread->Shutdown();
   mThread = nullptr;
-  MOZ_ASSERT(!mAudioStream);
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+  }
 }
 
 void
@@ -235,12 +238,10 @@ void
 AudioSink::Cleanup()
 {
   AssertCurrentThreadInMonitor();
-  nsRefPtr<AudioStream> audioStream;
-  audioStream.swap(mAudioStream);
   mEndPromise.Resolve(true, __func__);
-
-  ReentrantMonitorAutoExit exit(GetReentrantMonitor());
-  audioStream->Shutdown();
+  // Since the promise if resolved asynchronously, we don't shutdown
+  // AudioStream here so MDSM::ResyncAudioClock can get the correct
+  // audio position.
 }
 
 bool
