@@ -25,6 +25,7 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "prio.h"
+#include "mozilla/Move.h"
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 
@@ -59,7 +60,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     mDict->SyncLoad();
 
@@ -82,10 +83,92 @@ private:
   nsRefPtr<mozPersonalDictionary> mDict;
 };
 
+class mozPersonalDictionarySave final : public nsRunnable
+{
+public:
+  explicit mozPersonalDictionarySave(mozPersonalDictionary *aDict,
+                                     nsCOMPtr<nsIFile> aFile,
+                                     nsTArray<nsString> &&aDictWords)
+    : mDictWords(aDictWords),
+      mFile(aFile),
+      mDict(aDict)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    nsresult res;
+
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    {
+      mozilla::MonitorAutoLock mon(mDict->mMonitorSave);
+
+      nsCOMPtr<nsIOutputStream> outStream;
+      NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStream), mFile,
+                                      PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                      0664);
+
+      // Get a buffered output stream 4096 bytes big, to optimize writes.
+      nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+      res = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
+                                       outStream, 4096);
+      if (NS_FAILED(res)) {
+        return res;
+      }
+
+      uint32_t bytesWritten;
+      nsAutoCString utf8Key;
+      for (uint32_t i = 0; i < mDictWords.Length(); ++i) {
+        CopyUTF16toUTF8(mDictWords[i], utf8Key);
+
+        bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(),
+                                    &bytesWritten);
+        bufferedOutputStream->Write("\n", 1, &bytesWritten);
+      }
+      nsCOMPtr<nsISafeOutputStream> safeStream =
+        do_QueryInterface(bufferedOutputStream);
+      NS_ASSERTION(safeStream, "expected a safe output stream!");
+      if (safeStream) {
+        res = safeStream->Finish();
+        if (NS_FAILED(res)) {
+          NS_WARNING("failed to save personal dictionary file! possible data loss");
+        }
+      }
+
+      // Save is done, reset the state variable and notify those who are waiting.
+      mDict->mSavePending = false;
+      mon.Notify();
+
+      // Leaving the block where 'mon' was declared will call the destructor
+      // and unlock.
+    }
+
+    // Release the dictionary on the main thread.
+    mozPersonalDictionary *dict;
+    mDict.forget(&dict);
+
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    if (mainThread) {
+      NS_ProxyRelease(mainThread, static_cast<mozIPersonalDictionary *>(dict));
+    } else {
+      // It's better to leak the dictionary than to release it on a wrong thread.
+      NS_WARNING("Cannot get main thread, leaking mozPersonalDictionary.");
+    }
+    return NS_OK;
+  }
+
+private:
+  nsTArray<nsString> mDictWords;
+  nsCOMPtr<nsIFile> mFile;
+  nsRefPtr<mozPersonalDictionary> mDict;
+};
+
 mozPersonalDictionary::mozPersonalDictionary()
- : mDirty(false),
-   mIsLoaded(false),
-   mMonitor("mozPersonalDictionary::mMonitor")
+ : mIsLoaded(false),
+   mSavePending(false),
+   mMonitor("mozPersonalDictionary::mMonitor"),
+   mMonitorSave("mozPersonalDictionary::mMonitorSave")
 {
 }
 
@@ -117,12 +200,20 @@ nsresult mozPersonalDictionary::Init()
 
 void mozPersonalDictionary::WaitForLoad()
 {
+  // If the dictionary is already loaded, we return straight away.
   if (mIsLoaded) {
     return;
   }
 
+  // If the dictionary hasn't been loaded, we try to lock the same monitor
+  // that the thread uses that does the load. This way the main thread will 
+  // be suspended until the monitor becomes available.
   mozilla::MonitorAutoLock mon(mMonitor);
 
+  // The monitor has become available. This can have two reasons:
+  // 1: The thread that does the load has finished.
+  // 2: The thread that does the load hasn't even started.
+  //    In this case we need to wait.
   if (!mIsLoaded) {
     mon.Wait();
   }
@@ -239,17 +330,37 @@ void mozPersonalDictionary::SyncLoadInternal()
       mDictionaryTable.PutEntry(word.get());
     }
   } while(!done);
-  mDirty = false;
 }
 
-/* void Save (); */
+void mozPersonalDictionary::WaitForSave()
+{
+  // If no save is pending, we return straight away.
+  if (!mSavePending) {
+    return;
+  }
+
+  // If a save is pending, we try to lock the same monitor that the thread uses
+  // that does the save. This way the main thread will be suspended until the
+  // monitor becomes available.
+  mozilla::MonitorAutoLock mon(mMonitorSave);
+
+  // The monitor has become available. This can have two reasons:
+  // 1: The thread that does the save has finished.
+  // 2: The thread that does the save hasn't even started.
+  //    In this case we need to wait.
+  if (mSavePending) {
+    mon.Wait();
+  }
+}
+
 NS_IMETHODIMP mozPersonalDictionary::Save()
 {
   nsCOMPtr<nsIFile> theFile;
   nsresult res;
 
-  WaitForLoad();
-  if(!mDirty) return NS_OK;
+  WaitForSave();
+
+  mSavePending = true;
 
   //FIXME Deinst  -- get dictionary name from prefs;
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(theFile));
@@ -258,34 +369,22 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   res = theFile->Append(NS_LITERAL_STRING(MOZ_PERSONAL_DICT_NAME));
   if(NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIOutputStream> outStream;
-  NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStream), theFile, PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE ,0664);
-
-  // get a buffered output stream 4096 bytes big, to optimize writes
-  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  res = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), outStream, 4096);
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIEventTarget> target =
+    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &res);
+  if (NS_WARN_IF(NS_FAILED(res))) {
+    return res;
+  }
 
   nsTArray<nsString> array(mDictionaryTable.Count());
   for (auto iter = mDictionaryTable.Iter(); !iter.Done(); iter.Next()) {
     array.AppendElement(nsDependentString(iter.Get()->GetKey()));
   }
 
-  uint32_t bytesWritten;
-  nsAutoCString utf8Key;
-  for (uint32_t i = 0; i < array.Length(); ++i ) {
-    CopyUTF16toUTF8(array[i], utf8Key);
-
-    bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(), &bytesWritten);
-    bufferedOutputStream->Write("\n", 1, &bytesWritten);
-  }
-  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOutputStream);
-  NS_ASSERTION(safeStream, "expected a safe output stream!");
-  if (safeStream) {
-    res = safeStream->Finish();
-    if (NS_FAILED(res)) {
-      NS_WARNING("failed to save personal dictionary file! possible data loss");
-    }
+  nsCOMPtr<nsIRunnable> runnable =
+    new mozPersonalDictionarySave(this, theFile, mozilla::Move(array));
+  res = target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(res))) {
+    return res;
   }
   return res;
 }
@@ -323,21 +422,23 @@ NS_IMETHODIMP mozPersonalDictionary::Check(const char16_t *aWord, const char16_t
 /* void AddWord (in wstring word); */
 NS_IMETHODIMP mozPersonalDictionary::AddWord(const char16_t *aWord, const char16_t *aLang)
 {
+  nsresult res;
   WaitForLoad();
 
   mDictionaryTable.PutEntry(aWord);
-  mDirty = true;
-  return NS_OK;
+  res = Save();
+  return res;
 }
 
 /* void RemoveWord (in wstring word); */
 NS_IMETHODIMP mozPersonalDictionary::RemoveWord(const char16_t *aWord, const char16_t *aLang)
 {
+  nsresult res;
   WaitForLoad();
 
   mDictionaryTable.RemoveEntry(aWord);
-  mDirty = true;
-  return NS_OK;
+  res = Save();
+  return res;
 }
 
 /* void IgnoreWord (in wstring word); */
@@ -354,7 +455,7 @@ NS_IMETHODIMP mozPersonalDictionary::EndSession()
 {
   WaitForLoad();
 
-  Save(); // save any custom words at the end of a spell check session
+  WaitForSave();
   mIgnoreTable.Clear();
   return NS_OK;
 }
@@ -387,7 +488,7 @@ NS_IMETHODIMP mozPersonalDictionary::Observe(nsISupports *aSubject, const char *
     mIsLoaded = false;
     Load(); // load automatically clears out the existing dictionary table
   } else if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    Save();
+    WaitForSave();
   }
 
   return NS_OK;
