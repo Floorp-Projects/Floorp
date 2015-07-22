@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for cloning FileList</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var iframeScriptURL;
+
+var url = SimpleTest.getTestFileURL("script_cloning_fileList.js");
+var script = SpecialPowers.loadChromeScript(url);
+script.addMessageListener("file.opened", onOpened);
+
+function onOpened(message) {
+  var fileList = document.getElementById('fileList');
+  SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+
+  // Just a simple test
+  var domFile = fileList.files[0];
+  is(domFile.name, "prefs.js", "fileName should be prefs.js");
+
+  var ifr = document.createElement('iframe');
+  ifr.src = iframeScriptURL;
+  ifr.onload = function() {
+    ifr.contentWindow.postMessage(fileList.files, "*");
+  }
+  document.body.appendChild(ifr);
+}
+
+function runTest() {
+  script.sendAsyncMessage("file.open");
+}
+
+onmessage = function(e) {
+  var fileList = document.getElementById('fileList');
+
+  ok(true, "Message received");
+  ok(e.data instanceof FileList, "The object is a FileList");
+  ok(e.data != fileList.files, "The object has been cloned!");
+  is(e.data.length, fileList.files.length, "The length matches");
+  is(e.data.length, 1, "1 element found!");
+  is(e.data[0].name, "prefs.js", "fileName should be prefs.js");
+
+  next();
+}
+
+var tests = [
+  function() {
+    // Same origin
+    iframeScriptURL = 'iframe_cloning_fileList.html';
+    runTest();
+  },
+
+  function() {
+    // Cross Origin
+    iframeScriptURL = 'http://example.com/tests/dom/base/test/iframe_cloning_fileList.html';
+    runTest();
+  }
+];
+
+function next() {
+  if (!tests.length) {
+    script.destroy();
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</pre>
+</body>
+</html>
