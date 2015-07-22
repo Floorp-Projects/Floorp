@@ -176,6 +176,11 @@ enum nsChangeHint {
    */
   nsChangeHint_ReflowChangesSizeOrPosition = 0x800000,
 
+  /**
+   * Indicates that the style changes the computed BSize --- e.g. 'height'.
+   */
+  nsChangeHint_UpdateComputedBSize = 0x1000000,
+
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
   // add them to RestyleManager::ChangeHintToString.
@@ -283,7 +288,8 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_BorderStyleNoneChange | \
           nsChangeHint_NeedReflow | \
           nsChangeHint_ReflowChangesSizeOrPosition | \
-          nsChangeHint_ClearAncestorIntrinsics)
+          nsChangeHint_ClearAncestorIntrinsics | \
+          nsChangeHint_UpdateComputedBSize)
 
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
   nsChangeHint result = nsChangeHint(aChangeHint & (
@@ -297,7 +303,8 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_ChildrenOnlyTransform |
     nsChangeHint_RecomputePosition |
     nsChangeHint_AddOrRemoveTransform |
-    nsChangeHint_BorderStyleNoneChange));
+    nsChangeHint_BorderStyleNoneChange |
+    nsChangeHint_UpdateComputedBSize));
 
   if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint)) {
     if (NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
