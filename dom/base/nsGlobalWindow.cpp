@@ -3778,10 +3778,10 @@ nsGlobalWindow::GetParent(ErrorResult& aError)
 NS_IMETHODIMP
 nsGlobalWindow::GetScriptableParent(nsIDOMWindow** aParent)
 {
-  FORWARD_TO_INNER(GetScriptableParent, (aParent), NS_ERROR_UNEXPECTED);
+  FORWARD_TO_OUTER(GetScriptableParent, (aParent), NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
-  nsCOMPtr<nsIDOMWindow> parent = GetParent(rv);
+  nsCOMPtr<nsIDOMWindow> parent = GetParentOuter(rv);
   parent.forget(aParent);
 
   return rv.StealNSResult();

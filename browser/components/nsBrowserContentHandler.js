@@ -552,10 +552,9 @@ nsBrowserContentHandler.prototype = {
     let platformVersion = Services.sysinfo.getProperty("version");
     if (AppConstants.platform == "win" &&
         Services.vc.compare(platformVersion, "10") == 0 &&
-        Services.prefs.getPrefType("browser.usedOnWindows10") == Services.prefs.PREF_BOOL &&
         !Services.prefs.getBoolPref("browser.usedOnWindows10")) {
       Services.prefs.setBoolPref("browser.usedOnWindows10", true);
-      let firstUseOnWindows10URL = Services.urlFormatter.formatURL("https://www.mozilla.org/%LOCALE%/firefox/windows10/");
+      let firstUseOnWindows10URL = Services.urlFormatter.formatURLPref("browser.usedOnWindows10.introURL");
 
       if (firstUseOnWindows10URL && firstUseOnWindows10URL.length) {
         if (overridePage) {

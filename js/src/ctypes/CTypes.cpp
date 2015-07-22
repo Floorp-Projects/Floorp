@@ -4042,18 +4042,6 @@ CType::Finalize(JSFreeOp* fop, JSObject* obj)
 }
 
 void
-TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields)
-{
-  for (FieldInfoHash::Enum e(*fields); !e.empty(); e.popFront()) {
-    JSString* key = e.front().key();
-    JS_CallUnbarrieredStringTracer(trc, &key, "fieldName");
-    if (key != e.front().key())
-      e.rekeyFront(JS_ASSERT_STRING_IS_FLAT(key));
-    JS_CallObjectTracer(trc, &e.front().value().mType, "fieldType");
-  }
-}
-
-void
 CType::Trace(JSTracer* trc, JSObject* obj)
 {
   // Make sure our TypeCode slot is legit. If it's not, bail.
@@ -4069,7 +4057,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
       return;
 
     FieldInfoHash* fields = static_cast<FieldInfoHash*>(slot.toPrivate());
-    TraceFieldInfoHash(trc, fields);
+    fields->trace(trc);
     break;
   }
   case TYPE_function: {
@@ -5478,31 +5466,6 @@ PostBarrierCallback(JSTracer* trc, JSString* key, void* data)
     table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
 }
 
-// Holds a pointer to a FieldInfoHash while it is being constructed, tracing it
-// on GC and destroying it when it dies unless release() has been called first.
-class FieldInfoHolder : public JS::CustomAutoRooter
-{
-  public:
-    FieldInfoHolder(JSContext* cx, FieldInfoHash* fields)
-      : CustomAutoRooter(cx), fields_(fields) {}
-    ~FieldInfoHolder() {
-      delete fields_;
-    }
-    virtual void trace(JSTracer* trc) override {
-      if (fields_)
-        TraceFieldInfoHash(trc, fields_);
-    }
-    FieldInfoHash* operator->() { return fields_; }
-    operator FieldInfoHash*() { return fields_; }
-    FieldInfoHash* release() {
-      FieldInfoHash* result = fields_;
-      fields_ = nullptr;
-      return result;
-    }
-  private:
-    FieldInfoHash* fields_;
-};
-
 bool
 StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsObj_)
 {
@@ -5529,12 +5492,9 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
                          JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
 
-  // Create a FieldInfoHash to stash on the type object, and an array to root
-  // its constituents. (We cannot simply stash the hash in a reserved slot now
-  // to get GC safety for free, since if anything in this function fails we
-  // do not want to mutate 'typeObj'.)
-  FieldInfoHolder fields(cx, cx->new_<FieldInfoHash>());
-  if (!fields || !fields->init(len)) {
+  // Create a FieldInfoHash to stash on the type object.
+  Rooted<FieldInfoHash> fields(cx);
+  if (!fields.init(len)) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
@@ -5556,7 +5516,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
         return false;
 
       // Make sure each field name is unique
-      FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
+      FieldInfoHash::AddPtr entryPtr = fields.lookupForAdd(name);
       if (entryPtr) {
         JS_ReportError(cx, "struct fields must have unique names");
         return false;
@@ -5606,8 +5566,8 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       info.mType = fieldType;
       info.mIndex = i;
       info.mOffset = fieldOffset;
-      ASSERT_OK(fields->add(entryPtr, name, info));
-      JS_StoreStringPostBarrierCallback(cx, PostBarrierCallback, name, fields);
+      ASSERT_OK(fields.add(entryPtr, name, info));
+      JS_StoreStringPostBarrierCallback(cx, PostBarrierCallback, name, fields.address());
 
       structSize = fieldOffset + fieldSize;
 
@@ -5636,7 +5596,14 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   if (!SizeTojsval(cx, structSize, &sizeVal))
     return false;
 
-  JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PrivateValue(fields.release()));
+  // Move the field hash to the heap and store it in the typeObj.
+  FieldInfoHash *heapHash = cx->new_<FieldInfoHash>(mozilla::Move(fields.get()));
+  if (!heapHash) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+  MOZ_ASSERT(heapHash->initialized());
+  JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PrivateValue(heapHash));
 
   JS_SetReservedSlot(typeObj, SLOT_SIZE, sizeVal);
   JS_SetReservedSlot(typeObj, SLOT_ALIGN, Int32Value(structAlign));

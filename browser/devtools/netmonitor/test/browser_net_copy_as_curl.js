@@ -21,7 +21,9 @@ function test() {
       "-H 'X-Custom-Header-2: 8.8.8.8'",
       "-H 'X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT'",
       "-H 'Referer: " + CURL_URL + "'",
-      "-H 'Connection: keep-alive'"
+      "-H 'Connection: keep-alive'",
+      "-H 'Pragma: no-cache'",
+      "-H 'Cache-Control: no-cache'"
     ].join(" ");
 
     const EXPECTED_WIN_RESULT = [
@@ -36,7 +38,9 @@ function test() {
       '-H "X-Custom-Header-2: 8.8.8.8"',
       '-H "X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT"',
       '-H "Referer: ' + CURL_URL + '"',
-      '-H "Connection: keep-alive"'
+      '-H "Connection: keep-alive"',
+      '-H "Pragma: no-cache"', 
+      '-H "Cache-Control: no-cache"'
     ].join(" ");
 
     const EXPECTED_RESULT = Services.appinfo.OS == "WINNT"

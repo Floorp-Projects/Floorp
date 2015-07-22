@@ -83,46 +83,41 @@ IsTypeSupported(const nsAString& aType)
   nsAutoString mimeType;
   nsresult rv = parser.GetType(mimeType);
   if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
-  bool found = false;
+  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
+
+  nsAutoString codecs;
+  bool hasCodecs = NS_SUCCEEDED(parser.GetParameter("codecs", codecs));
+
   for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
-      if ((mimeType.EqualsASCII("video/mp4") ||
-           mimeType.EqualsASCII("audio/mp4")) &&
-          (!Preferences::GetBool("media.mediasource.mp4.enabled", false)
-#ifdef MOZ_WIDGET_ANDROID
-          // MP4 won't work unless we have JellyBean+
-          || AndroidBridge::Bridge()->GetAPIVersion() < 16
-#endif
-          )) {
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
+      if (DecoderTraits::IsMP4Type(mimeTypeUTF8)) {
+        if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        }
+        if (hasCodecs &&
+            DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
+                                               codecs) == CANPLAY_NO) {
+          return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+        return NS_OK;
+      } else if (DecoderTraits::IsWebMType(mimeTypeUTF8)) {
+        if (!Preferences::GetBool("media.mediasource.webm.enabled", false) ||
+            Preferences::GetBool("media.mediasource.format-reader", false)) {
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        }
+        if (hasCodecs &&
+            DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
+                                               codecs) == CANPLAY_NO) {
+          return NS_ERROR_DOM_INVALID_STATE_ERR;
+        }
+        return NS_OK;
       }
-      if ((mimeType.EqualsASCII("video/webm") ||
-           mimeType.EqualsASCII("audio/webm")) &&
-          !Preferences::GetBool("media.mediasource.webm.enabled", false)) {
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
-      }
-      found = true;
-      break;
     }
   }
-  if (!found) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-  // Check aType against HTMLMediaElement list of MIME types.  Since we've
-  // already restricted the container format, this acts as a specific check
-  // of any specified "codecs" parameter of aType.
-  if (dom::HTMLMediaElement::GetCanPlay(aType) == CANPLAY_NO) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
-  if (Preferences::GetBool("media.mediasource.format-reader", false) &&
-      !mimeType.EqualsASCII("video/mp4") && !mimeType.EqualsASCII("audio/mp4")) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return NS_OK;
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 namespace dom {
