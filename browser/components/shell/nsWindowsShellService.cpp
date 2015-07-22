@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsWindowsShellService.h"
+
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
@@ -16,7 +18,6 @@
 #include "nsIStringBundle.h"
 #include "nsNetUtil.h"
 #include "nsShellService.h"
-#include "nsWindowsShellService.h"
 #include "nsIProcess.h"
 #include "nsICategoryManager.h"
 #include "nsBrowserCompsCID.h"
@@ -82,6 +83,38 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
   }
 
   return NS_OK;
+}
+
+static bool
+GetPrefString(const nsCString& aPrefName, nsAString& aValue)
+{
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs) {
+    return false;
+  }
+
+  nsAutoCString prefCStr;
+  nsresult rv = prefs->GetCharPref(aPrefName.get(),
+                                   getter_Copies(prefCStr));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  CopyUTF8toUTF16(prefCStr, aValue);
+
+  return true;
+}
+
+static bool
+SetPrefString(const nsCString& aPrefName, const nsString& aValue)
+{
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs) {
+    return false;
+  }
+
+  nsresult rv = prefs->SetCharPref(aPrefName.get(),
+                                   NS_ConvertUTF16toUTF8(aValue).get());
+  return NS_SUCCEEDED(rv);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -321,38 +354,219 @@ nsWindowsShellService::ShortcutMaintenance()
 }
 
 static bool
-IsAARDefaultHTTP(IApplicationAssociationRegistration* pAAR,
-                 bool* aIsDefaultBrowser)
+IsAARDefault(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+             LPCWSTR aClassName)
 {
   // Make sure the Prog ID matches what we have
   LPWSTR registeredApp;
-  HRESULT hr = pAAR->QueryCurrentDefault(L"http", AT_URLPROTOCOL, AL_EFFECTIVE,
+  bool isProtocol = *aClassName != L'.';
+  ASSOCIATIONTYPE queryType = isProtocol ? AT_URLPROTOCOL : AT_FILEEXTENSION;
+  HRESULT hr = pAAR->QueryCurrentDefault(aClassName, queryType, AL_EFFECTIVE,
                                          &registeredApp);
-  if (SUCCEEDED(hr)) {
-    LPCWSTR firefoxHTTPProgID = L"FirefoxURL";
-    *aIsDefaultBrowser = !wcsicmp(registeredApp, firefoxHTTPProgID);
-    CoTaskMemFree(registeredApp);
-  } else {
-    *aIsDefaultBrowser = false;
+  if (FAILED(hr)) {
+    return false;
   }
-  return SUCCEEDED(hr);
+
+  LPCWSTR progID = isProtocol ? L"FirefoxURL" : L"FirefoxHTML";
+  bool isDefault = !wcsicmp(registeredApp, progID);
+  CoTaskMemFree(registeredApp);
+
+  return isDefault;
+}
+
+static void
+GetUserChoiceKeyName(LPCWSTR aClassName, bool aIsProtocol,
+                     nsAString& aKeyName)
+{
+  aKeyName.AssignLiteral(aIsProtocol
+    ? "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\"
+    : "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\");
+  aKeyName.Append(aClassName);
+  aKeyName.AppendLiteral("\\UserChoice");
+}
+
+static void
+GetHashPrefName(LPCWSTR aClassName, nsACString& aPrefName)
+{
+  aPrefName.AssignLiteral("browser.shell.associationHash.");
+  aPrefName.Append(NS_ConvertUTF16toUTF8(*aClassName == L'.' ? aClassName + 1
+                                                             : aClassName));
 }
 
 static bool
-IsAARDefaultHTML(IApplicationAssociationRegistration* pAAR,
-                 bool* aIsDefaultBrowser)
+SaveWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+                     LPCWSTR aClassName)
 {
-  LPWSTR registeredApp;
-  HRESULT hr = pAAR->QueryCurrentDefault(L".html", AT_FILEEXTENSION, AL_EFFECTIVE,
-                                         &registeredApp);
-  if (SUCCEEDED(hr)) {
-    LPCWSTR firefoxHTMLProgID = L"FirefoxHTML";
-    *aIsDefaultBrowser = !wcsicmp(registeredApp, firefoxHTMLProgID);
-    CoTaskMemFree(registeredApp);
-  } else {
-    *aIsDefaultBrowser = false;
+  bool isProtocol = *aClassName != L'.';
+  bool isDefault = IsAARDefault(pAAR, aClassName);
+  // We can save the value only if Firefox is the default.
+  if (!isDefault) {
+    return isDefault;
   }
-  return SUCCEEDED(hr);
+
+  nsAutoString keyName;
+  GetUserChoiceKeyName(aClassName, isProtocol, keyName);
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!regKey) {
+    return isDefault;
+  }
+
+  nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                             keyName, nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
+    return isDefault;
+  }
+
+  nsAutoString hash;
+  rv = regKey->ReadStringValue(NS_LITERAL_STRING("Hash"), hash);
+  if (NS_FAILED(rv)) {
+    return isDefault;
+  }
+
+  nsAutoCString prefName;
+  GetHashPrefName(aClassName, prefName);
+  SetPrefString(prefName, hash);
+
+  return isDefault;
+}
+
+static bool
+RestoreWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+                        LPCWSTR aClassName)
+{
+  nsAutoCString prefName;
+  GetHashPrefName(aClassName, prefName);
+  nsAutoString hash;
+  if (!GetPrefString(prefName, hash)) {
+    return false;
+  }
+
+  bool isProtocol = *aClassName != L'.';
+  nsString progId = isProtocol ? NS_LITERAL_STRING("FirefoxURL")
+                               : NS_LITERAL_STRING("FirefoxHTML");
+
+  nsAutoString keyName;
+  GetUserChoiceKeyName(aClassName, isProtocol, keyName);
+
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!regKey) {
+    return false;
+  }
+
+  nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                             keyName, nsIWindowsRegKey::ACCESS_READ);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString currValue;
+    if (NS_SUCCEEDED(regKey->ReadStringValue(NS_LITERAL_STRING("Hash"),
+                                             currValue)) &&
+        currValue.Equals(hash) &&
+        NS_SUCCEEDED(regKey->ReadStringValue(NS_LITERAL_STRING("ProgId"),
+                                             currValue)) &&
+        currValue.Equals(progId)) {
+      // The value is already set.
+      return true;
+    }
+    // We need to close this explicitly because nsIWindowsRegKey::SetKey
+    // does not close the old key.
+    regKey->Close();
+  }
+
+  // We have to use the registry function directly because
+  // nsIWindowsRegKey::Create will only return NS_ERROR_FAILURE
+  // on failure.
+  HKEY theKey;
+  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, keyName.get(), 0,
+                              KEY_READ | KEY_SET_VALUE, &theKey);
+  if (REG_FAILED(res)) {
+    if (res != ERROR_ACCESS_DENIED && res != ERROR_FILE_NOT_FOUND) {
+      return false;
+    }
+    if (res == ERROR_ACCESS_DENIED) {
+      res = ::RegDeleteKeyW(HKEY_CURRENT_USER, keyName.get());
+      if (REG_FAILED(res)) {
+        return false;
+      }
+    }
+    res = ::RegCreateKeyExW(HKEY_CURRENT_USER, keyName.get(), 0,
+                            nullptr, 0, KEY_READ | KEY_SET_VALUE,
+                            nullptr, &theKey, nullptr);
+    if (REG_FAILED(res)) {
+      return false;
+    }
+  }
+  regKey->SetKey(theKey);
+
+  rv = regKey->WriteStringValue(NS_LITERAL_STRING("Hash"), hash);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = regKey->WriteStringValue(NS_LITERAL_STRING("ProgId"), progId);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return IsAARDefault(pAAR, aClassName);
+}
+
+static void
+SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
+{
+  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
+                                nullptr,
+                                CLSCTX_INPROC,
+                                IID_IApplicationAssociationRegistration,
+                                getter_AddRefs(pAAR));
+  if (FAILED(hr)) {
+    return;
+  }
+
+  bool res = SaveWin8RegistryHash(pAAR, L"http");
+  if (*aIsDefaultBrowser) {
+    *aIsDefaultBrowser = res;
+  }
+  SaveWin8RegistryHash(pAAR, L"https");
+  SaveWin8RegistryHash(pAAR, L"ftp");
+  res = SaveWin8RegistryHash(pAAR, L".html");
+  if (*aIsDefaultBrowser && aCheckAllTypes) {
+    *aIsDefaultBrowser = res;
+  }
+  SaveWin8RegistryHash(pAAR, L".htm");
+  SaveWin8RegistryHash(pAAR, L".shtml");
+  SaveWin8RegistryHash(pAAR, L".xhtml");
+  SaveWin8RegistryHash(pAAR, L".xht");
+}
+
+static bool
+RestoreWin8RegistryHashes(bool aClaimAllTypes)
+{
+  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
+                                nullptr,
+                                CLSCTX_INPROC,
+                                IID_IApplicationAssociationRegistration,
+                                getter_AddRefs(pAAR));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  bool res = RestoreWin8RegistryHash(pAAR, L"http");
+  res = RestoreWin8RegistryHash(pAAR, L"https") && res;
+  RestoreWin8RegistryHash(pAAR, L"ftp");
+  bool res2 = RestoreWin8RegistryHash(pAAR, L".html");
+  res2 = RestoreWin8RegistryHash(pAAR, L".htm") && res2;
+  if (aClaimAllTypes) {
+    res = res && res2;
+  }
+  RestoreWin8RegistryHash(pAAR, L".shtml");
+  RestoreWin8RegistryHash(pAAR, L".xhtml");
+  RestoreWin8RegistryHash(pAAR, L".xht");
+
+  return res;
 }
 
 /*
@@ -365,37 +579,27 @@ bool
 nsWindowsShellService::IsDefaultBrowserVista(bool aCheckAllTypes,
                                              bool* aIsDefaultBrowser)
 {
-  IApplicationAssociationRegistration* pAAR;
+  nsRefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
                                 IID_IApplicationAssociationRegistration,
-                                (void**)&pAAR);
-
-  if (SUCCEEDED(hr)) {
-    if (aCheckAllTypes) {
-      BOOL res;
-      hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
-                                      APP_REG_NAME,
-                                      &res);
-      *aIsDefaultBrowser = res;
-
-      // If we have all defaults, let's make sure that our ProgID
-      // is explicitly returned as well. Needed only for Windows 8.
-      if (*aIsDefaultBrowser && IsWin8OrLater()) {
-        IsAARDefaultHTTP(pAAR, aIsDefaultBrowser);
-        if (*aIsDefaultBrowser) {
-          IsAARDefaultHTML(pAAR, aIsDefaultBrowser);
-        }
-      }
-    } else {
-      IsAARDefaultHTTP(pAAR, aIsDefaultBrowser);
-    }
-
-    pAAR->Release();
-    return true;
+                                getter_AddRefs(pAAR));
+  if (FAILED(hr)) {
+    return false;
   }
-  return false;
+
+  if (aCheckAllTypes) {
+    BOOL res;
+    hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
+                                    APP_REG_NAME,
+                                    &res);
+    *aIsDefaultBrowser = res;
+  } else if (!IsWin8OrLater()) {
+    *aIsDefaultBrowser = IsAARDefault(pAAR, L"http");
+  }
+
+  return true;
 }
 
 NS_IMETHODIMP
@@ -495,6 +699,9 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
   // previous checks show that Firefox is the default browser.
   if (*aIsDefaultBrowser) {
     IsDefaultBrowserVista(aForAllTypes, aIsDefaultBrowser);
+    if (IsWin8OrLater()) {
+      SaveWin8RegistryHashes(aForAllTypes, aIsDefaultBrowser);
+    }
   }
 
   // To handle the case where DDE isn't disabled due for a user because there
@@ -729,7 +936,8 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
   }
 
   nsresult rv = LaunchHelper(appHelperPath);
-  if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
+  if (NS_SUCCEEDED(rv) && IsWin8OrLater() &&
+      !RestoreWin8RegistryHashes(aClaimAllTypes)) {
     if (aClaimAllTypes) {
       if (IsWin10OrLater()) {
         rv = LaunchModernSettingsDialogDefaultApps();
@@ -759,6 +967,8 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
       if (NS_FAILED(rv)) {
         rv = LaunchControlPanelDefaultsSelectionUI();
       }
+      bool isDefault;
+      SaveWin8RegistryHashes(aClaimAllTypes, &isDefault);
     }
   }
 
