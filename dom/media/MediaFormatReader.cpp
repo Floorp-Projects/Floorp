@@ -1449,10 +1449,14 @@ MediaFormatReader::GetBuffered()
     return intervals;
   }
   int64_t startTime;
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
+  if (!ForceZeroStartTime()) {
+    if (!HaveStartTime()) {
+      return intervals;
+    }
     startTime = StartTime();
+  } else {
+    // MSE, start time is assumed to be 0 we can proceeed with what we have.
+    startTime = 0;
   }
   // Ensure we have up to date buffered time range.
   if (HasVideo()) {
