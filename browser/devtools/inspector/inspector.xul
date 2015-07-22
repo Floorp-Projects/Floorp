@@ -106,9 +106,9 @@
         oncommand="inspector.deleteNode()"/>
       <menuseparator id="node-menu-link-separator"/>
       <menuitem id="node-menu-link-follow"
-        oncommand="inspector.followAttributeLink()"/>
+        oncommand="inspector.onFollowLink()"/>
       <menuitem id="node-menu-link-copy"
-        oncommand="inspector.copyAttributeLink()"/>
+        oncommand="inspector.onCopyLink()"/>
       <menuseparator/>
       <menuitem id="node-menu-pseudo-hover"
         label=":hover" type="checkbox"

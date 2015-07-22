@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1171917</title>
+    <script type="application/javascript;version=1.7">
+
+function ok(aCondition, aMessage) {
+  if (aCondition) {
+    alert("OK: " + aMessage);
+  } else {
+    alert("KO: " + aMessage);
+  }
+}
+
+function done() {
+  alert("DONE");
+}
+
+function testFrame(src) {
+  return new Promise((resolve) => {
+    var iframe = document.createElement("iframe");
+    iframe.src = src;
+    window.onmessage = function(e) {
+      if (e.data.status == "callback") {
+        window.onmessage = null;
+        var result = e.data.data;
+        document.body.removeChild(iframe);
+        iframe.src = "about:blank";
+        iframe = null;
+        resolve(result);
+      }
+    };
+    document.body.appendChild(iframe);
+  });
+}
+
+function registerServiceWorker() {
+  return navigator.serviceWorker.register("sw.sjs", {scope: "."});
+}
+
+function runTests() {
+  var lastSeenVersion;
+  return Promise.resolve()
+    .then(() => {
+      // Check whether the service worker is already registered and save its
+      // version.
+      return navigator.serviceWorker.getRegistration(".").then((swr) => {
+        if (!swr) {
+          lastSeenVersion = 0;
+          return registerServiceWorker();
+        }
+        return testFrame("version.html").then((body) => {
+          lastSeenVersion = parseInt(body);
+          return Promise.resolve();
+        });
+      });
+    })
+    .then(() => {
+      // Wait until the service worker starts controlling the client.
+      return testFrame("client.html");
+    })
+    .then(() => {
+      return new Promise((resolve) => {
+        testFrame("wait_for_update.html").then(() => {
+          // Fetch current version. It should be greater than the last seen version.
+          testFrame("version.html").then((body) => {
+            var currentVersion = parseInt(body);
+            ok(lastSeenVersion < currentVersion, "New service worker version seen");
+            resolve();
+          });
+        });
+      });
+    })
+    .then(done)
+    .catch((e) => {
+      dump("Unexpected error " + e);
+    });
+}
+
+    </script>
+  </head>
+  <body onload="runTests()">
+  </body>
+</html>

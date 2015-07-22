@@ -160,12 +160,14 @@
                 label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
                 onsyncfrompreference="return gContentPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
-      <label>&translation.options.attribution.beforeLogo;</label>
-      <separator orient="vertical" class="thin"/>
-      <image id="translationAttributionImage" aria-label="Microsoft Translator"
-             src="chrome://browser/content/microsoft-translator-attribution.png"/>
-      <separator orient="vertical" class="thin"/>
-      <label>&translation.options.attribution.afterLogo;</label>
+      <hbox id="bingAttribution" hidden="true">
+        <label>&translation.options.attribution.beforeLogo;</label>
+        <separator orient="vertical" class="thin"/>
+        <image id="translationAttributionImage" aria-label="Microsoft Translator"
+               src="chrome://browser/content/microsoft-translator-attribution.png"/>
+        <separator orient="vertical" class="thin"/>
+        <label>&translation.options.attribution.afterLogo;</label>
+      </hbox>
     </hbox>
     <button id="translateButton" label="&translateExceptions.label;"
             accesskey="&translateExceptions.accesskey;"/>
