@@ -33,7 +33,7 @@ loop.conversationViews = (function(mozL10n) {
     if (!contact.email || contact.email.length === 0) {
       return { value: "" };
     }
-    return contact.email.find(e => e.pref) || contact.email[0];
+    return contact.email.find(function find(e) { return e.pref; }) || contact.email[0];
   }
 
   function _getContactDisplayName(contact) {

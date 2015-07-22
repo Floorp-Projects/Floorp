@@ -522,38 +522,38 @@ let LoopUI;
      *                             has been fetched.
      */
     getFavicon: function(callback) {
-      let favicon = gBrowser.getIcon(gBrowser.selectedTab);
-      // If the tab image's url starts with http(s), fetch icon from favicon
-      // service via the moz-anno protocol.
-      if (/^https?:/.test(favicon)) {
-        let faviconURI = makeURI(favicon);
-        favicon = this.favIconService.getFaviconLinkForIcon(faviconURI).spec;
-      }
-      if (!favicon) {
-        callback(new Error("No favicon found"));
+      let pageURI = gBrowser.selectedTab.linkedBrowser.currentURI.spec;
+      // If the tab page’s url starts with http(s), fetch icon.
+      if (!/^https?:/.test(pageURI)) {
+        callback();
         return;
       }
-      favicon = this.PlacesUtils.getImageURLForResolution(window, favicon);
 
-      // We XHR the favicon to get a File object, which we can pass to the FileReader
-      // object. The FileReader turns the File object into a data-uri.
-      let xhr = new XMLHttpRequest();
-      xhr.open("get", favicon, true);
-      xhr.responseType = "blob";
-      xhr.overrideMimeType("image/x-icon");
-      xhr.onload = () => {
-        if (xhr.status != 200) {
-          callback(new Error("Invalid status code received for favicon XHR: " + xhr.status));
-          return;
-        }
+      this.PlacesUtils.promiseFaviconLinkUrl(pageURI).then(uri => {
+        uri = this.PlacesUtils.getImageURLForResolution(window, uri.spec);
 
-        let reader = new FileReader();
-        reader.onload = () => callback(null, reader.result);
-        reader.onerror = callback;
-        reader.readAsDataURL(xhr.response);
-      };
-      xhr.onerror = callback;
-      xhr.send();
+        // We XHR the favicon to get a File object, which we can pass to the FileReader
+        // object. The FileReader turns the File object into a data-uri.
+        let xhr = new XMLHttpRequest();
+        xhr.open("get", uri, true);
+        xhr.responseType = "blob";
+        xhr.overrideMimeType("image/x-icon");
+        xhr.onload = () => {
+          if (xhr.status != 200) {
+            callback(new Error("Invalid status code received for favicon XHR: " + xhr.status));
+            return;
+          }
+
+          let reader = new FileReader();
+          reader.onload = reader.onload = () => callback(null, reader.result);
+          reader.onerror = callback;
+          reader.readAsDataURL(xhr.response);
+        };
+        xhr.onerror = callback;
+        xhr.send();
+      }).catch(err => {
+        callback(err || new Error("No favicon found"));
+      });
     }
   };
 })();
@@ -563,5 +563,3 @@ XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopRooms", "resource:///modules/loop
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(LoopUI, "favIconService",
-  "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");

@@ -269,10 +269,6 @@ body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
   float: left;
 }
 
-.new-room-view > .context > .context-content > .context-preview[src=""] {
-  display: none;
-}
-
 .new-room-view > .context > .context-content > .context-description {
   flex: 0 1 auto;
   display: block;
