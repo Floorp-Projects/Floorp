@@ -574,16 +574,20 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
                              nsIAtom* aAttribute,
                              int32_t aModType,
                              bool aAttrHasChanged,
+                             const nsAttrValue* aOtherValue,
                              TreeMatchContext& aTreeMatchContext)
     : ElementDependentRuleProcessorData(aPresContext, aElement, nullptr,
                                         aTreeMatchContext),
       mAttribute(aAttribute),
+      mOtherValue(aOtherValue),
       mModType(aModType),
       mAttrHasChanged(aAttrHasChanged)
   {
     NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
+  // non-null if we have the value.
+  const nsAttrValue* mOtherValue;
   int32_t mModType;    // The type of modification (see nsIDOMMutationEvent).
   bool mAttrHasChanged; // Whether the attribute has already changed.
 };
