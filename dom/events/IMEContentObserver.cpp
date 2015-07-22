@@ -1074,10 +1074,8 @@ IMEContentObserver::SelectionChangeEvent::Run()
   }
 
   IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-  notification.mSelectionChangeData.mOffset =
-    selection.mReply.mOffset;
-  notification.mSelectionChangeData.mLength =
-    selection.mReply.mString.Length();
+  notification.mSelectionChangeData.mOffset = selection.mReply.mOffset;
+  *notification.mSelectionChangeData.mString = selection.mReply.mString;
   notification.mSelectionChangeData.SetWritingMode(
                                       selection.GetWritingMode());
   notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;

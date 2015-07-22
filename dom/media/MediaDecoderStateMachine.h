@@ -517,7 +517,7 @@ protected:
 
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
-  nsresult StartAudioThread();
+  void StartAudioThread();
 
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
@@ -679,27 +679,12 @@ public:
   }
 
 private:
-  // Called by the AudioSink to signal that all outstanding work is complete
+  // Resolved by the AudioSink to signal that all outstanding work is complete
   // and the sink is shutting down.
   void OnAudioSinkComplete();
-public:
-  void DispatchOnAudioSinkComplete()
-  {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete);
-    OwnerThread()->Dispatch(runnable.forget());
-  }
-private:
 
-  // Called by the AudioSink to signal errors.
+  // Rejected by the AudioSink to signal errors.
   void OnAudioSinkError();
-
-  void DispatchOnAudioSinkError()
-  {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError);
-    OwnerThread()->Dispatch(runnable.forget());
-  }
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -1316,6 +1301,8 @@ private:
 
   // Media data resource from the decoder.
   nsRefPtr<MediaResource> mResource;
+
+  MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
 
 private:
   // The buffered range. Mirrored from the decoder thread.

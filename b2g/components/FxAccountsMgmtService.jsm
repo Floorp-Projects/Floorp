@@ -93,12 +93,19 @@ this.FxAccountsMgmtService = {
       delete data.accountId;
     }
 
+    // XXX dirty hack because Gaia is sending getAccounts.
+    if (data.method == "getAccounts") {
+      data.method = "getAccount";
+    }
+
     switch(data.method) {
-      case "getAccounts":
-        FxAccountsManager.getAccount().then(
-          account => {
-            // We only expose the email and verification status so far.
-            self._onFulfill(msg.id, account);
+      case "getAccount":
+      case "getKeys":
+        FxAccountsManager[data.method]().then(
+          result => {
+            // For the getAccounts case, we only expose the email and
+            // verification status so far.
+            self._onFulfill(msg.id, result);
           },
           reason => {
             self._onReject(msg.id, reason);

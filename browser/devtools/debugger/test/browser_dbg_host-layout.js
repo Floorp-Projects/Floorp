@@ -73,27 +73,45 @@ function testHost(aTab, aPanel, aHostType, aLayoutType) {
   if (aLayoutType == "horizontal") {
     is(gView._workersAndSourcesPane.parentNode.id, "debugger-widgets",
       "The workers and sources pane's parent is correct for the horizontal layout.");
-    is(gView._instrumentsPane.parentNode.id, "debugger-widgets",
+    is(gView._instrumentsPane.parentNode.id, "editor-and-instruments-pane",
       "The instruments pane's parent is correct for the horizontal layout.");
+    is(gDebugger.document.getElementById("promise-debugger-pane").parentNode.id,
+      "debugger-content",
+      "The promise pane's parent is correct for the horizontal layout.");
   } else {
     is(gView._workersAndSourcesPane.parentNode.id, "vertical-layout-panes-container",
       "The workers and sources pane's parent is correct for the vertical layout.");
     is(gView._instrumentsPane.parentNode.id, "vertical-layout-panes-container",
       "The instruments pane's parent is correct for the vertical layout.");
+    is(gDebugger.document.getElementById("promise-debugger-pane").parentNode.id,
+      "debugger-content",
+      "The promise pane's parent is correct for the horizontal layout.");
   }
 
   let widgets = gDebugger.document.getElementById("debugger-widgets").childNodes;
-  let panes = gDebugger.document.getElementById("vertical-layout-panes-container").childNodes;
+  let content = gDebugger.document.getElementById("debugger-content").childNodes;
+  let editorPane =
+    gDebugger.document.getElementById("editor-and-instruments-pane").childNodes;
+  let verticalPane =
+    gDebugger.document.getElementById("vertical-layout-panes-container").childNodes;
 
   if (aLayoutType == "horizontal") {
-    is(widgets.length, 7, // 2 panes, 1 editor, 3 splitters and a phantom box.
+    is(widgets.length, 5, // 1 pane, 1 content box, 2 splitters and a phantom box.
       "Found the correct number of debugger widgets.");
-    is(panes.length, 1, // 1 lonely splitter in the phantom box.
+    is(content.length, 3, // 2 panes, 1 splitter.
+      "Found the correct number of debugger content.");
+    is(editorPane.length, 3, // 2 panes, 1 splitter
+      "Found the correct number of debugger panes.");
+    is(verticalPane.length, 1, // 1 lonely splitter in the phantom box.
       "Found the correct number of debugger panes.");
   } else {
-    is(widgets.length, 5, // 1 editor, 3 splitters and a phantom box.
+    is(widgets.length, 4, // 1 content box, 2 splitters and a phantom box.
       "Found the correct number of debugger widgets.");
-    is(panes.length, 3, // 2 panes and 1 splitter in the phantom box.
+    is(content.length, 3, // 2 panes, 1 splitter.
+      "Found the correct number of debugger content.");
+    is(editorPane.length, 2, // 1 pane, 1 splitter
+      "Found the correct number of debugger panes.");
+    is(verticalPane.length, 3, // 2 panes and 1 splitter in the phantom box.
       "Found the correct number of debugger panes.");
   }
 }

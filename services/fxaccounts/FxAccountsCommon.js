@@ -176,6 +176,7 @@ exports.ERROR_OFFLINE                        = "OFFLINE";
 exports.ERROR_PERMISSION_DENIED              = "PERMISSION_DENIED";
 exports.ERROR_REQUEST_BODY_TOO_LARGE         = "REQUEST_BODY_TOO_LARGE";
 exports.ERROR_SERVER_ERROR                   = "SERVER_ERROR";
+exports.ERROR_SYNC_DISABLED                  = "SYNC_DISABLED";
 exports.ERROR_TOO_MANY_CLIENT_REQUESTS       = "TOO_MANY_CLIENT_REQUESTS";
 exports.ERROR_SERVICE_TEMP_UNAVAILABLE       = "SERVICE_TEMPORARY_UNAVAILABLE";
 exports.ERROR_UI_ERROR                       = "UI_ERROR";

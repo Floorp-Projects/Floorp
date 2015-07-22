@@ -3613,7 +3613,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
                     continue;
 
                 Label skip;
-                Address addr(StackPointer, ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value)));
+                Address addr(masm.getStackPointer(), ArgToStackOffset((i - info.startArgSlot()) * sizeof(Value)));
                 masm.branchTestObject(Assembler::NotEqual, addr, &skip);
                 Register obj = masm.extractObject(addr, temp);
                 masm.guardTypeSetMightBeIncomplete(types, obj, temp, &success);

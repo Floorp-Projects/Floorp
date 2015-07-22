@@ -315,14 +315,14 @@ public:
   void OnSelectionEvent(const WidgetSelectionEvent& aSelectionEvent);
 
   /**
-   * OnEventNeedingAckReceived() should be called when the child process
-   * receives a sent event which needs acknowledging.
+   * OnEventNeedingAckHandled() should be called after the child process
+   * handles a sent event which needs acknowledging.
    *
    * WARNING: This may send notifications to IME.  That might cause destroying
    *          TabParent or aWidget.  Therefore, the caller must not destroy
    *          this instance during a call of this method.
    */
-  void OnEventNeedingAckReceived(nsIWidget* aWidget, uint32_t aMessage);
+  void OnEventNeedingAckHandled(nsIWidget* aWidget, uint32_t aMessage);
 
   /**
    * RequestToCommitComposition() requests to commit or cancel composition to
@@ -353,6 +353,7 @@ public:
 private:
   IMENotification mPendingSelectionChange;
   IMENotification mPendingTextChange;
+  IMENotification mPendingLayoutChange;
   IMENotification mPendingCompositionUpdate;
 
   // This is commit string which is caused by our request.
