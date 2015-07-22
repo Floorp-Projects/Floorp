@@ -620,6 +620,16 @@ JitRuntime::Mark(JSTracer* trc)
     }
 }
 
+/* static */ void
+JitRuntime::MarkJitcodeGlobalTableUnconditionally(JSTracer* trc)
+{
+    if (trc->runtime()->hasJitRuntime() &&
+        trc->runtime()->jitRuntime()->hasJitcodeGlobalTable())
+    {
+        trc->runtime()->jitRuntime()->getJitcodeGlobalTable()->markUnconditionally(trc);
+    }
+}
+
 /* static */ bool
 JitRuntime::MarkJitcodeGlobalTableIteratively(JSTracer* trc)
 {
