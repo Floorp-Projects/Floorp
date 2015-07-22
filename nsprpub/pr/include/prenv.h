@@ -113,6 +113,36 @@ NSPR_API(char*) PR_GetEnv(const char *var);
 */
 NSPR_API(PRStatus) PR_SetEnv(const char *string);
 
+/*
+** PR_DuplicateEnvironment() -- Obtain a copy of the environment.
+**
+** Description:
+** PR_DuplicateEnvironment() copies the environment so that it can be
+** modified without changing the current process's environment, and
+** then passed to interfaces such as POSIX execve().  In particular,
+** this avoids needing to allocate memory or take locks in the child
+** after a fork(); neither of these is allowed by POSIX after a
+** multithreaded process calls fork(), and PR_SetEnv does both.
+**
+** Inputs:
+**   none
+**
+** Returns:
+**   A pointer to a null-terminated array of null-terminated strings,
+**   like the traditional global variable "environ".  The array and
+**   the strings are allocated with PR_Malloc(), and it is the
+**   caller's responsibility to free them.
+**
+**   In case of memory allocation failure, or if the operating system
+**   doesn't support reading the entire environment through the global
+**   variable "environ" or similar, returns NULL instead.
+**
+** Restrictions:
+**   Similarly to PR_GetEnv(), this function may not interoperate as
+**   expected with the operating system's native environment accessors.
+*/
+NSPR_API(char **) PR_DuplicateEnvironment(void);
+
 PR_END_EXTERN_C
 
 #endif /* prenv_h___ */
