@@ -362,6 +362,33 @@ class StructuredLogger(object):
 
         self._log_data("crash", data)
 
+    @log_action(Unicode("process"),
+                Unicode("command", default=None, optional=True))
+    def process_start(self, data):
+        """Log start event of a process.
+
+        :param process: A unique identifier for the process producing the
+                        output (typically the pid)
+        :param command: A string representing the full command line used to
+                        start the process.
+        """
+        self._log_data("process_start", data)
+
+    @log_action(Unicode("process"),
+                Int("exitcode"),
+                Unicode("command", default=None, optional=True))
+    def process_exit(self, data):
+        """Log exit event of a process.
+
+        :param process: A unique identifier for the process producing the
+                        output (typically the pid)
+        :param exitcode: the exit code
+        :param command: A string representing the full command line used to
+                        start the process.
+        """
+        self._log_data("process_exit", data)
+
+
 def _log_func(level_name):
     @log_action(Unicode("message"),
                 Any("exc_info", default=False))
