@@ -54,8 +54,12 @@ const kAllSettingsWritePermission      = "settings" + kSettingsWriteSuffix;
 // will be allowed depends on the exact permissions the app has.
 const kSomeSettingsReadPermission      = "settings-api" + kSettingsReadSuffix;
 const kSomeSettingsWritePermission     = "settings-api" + kSettingsWriteSuffix;
+
 // Time, in seconds, to consider the API is starting to jam
-const kSoftLockupDelta                 = 30;
+let kSoftLockupDelta = 30;
+try {
+  kSoftLockupDelta = Services.prefs.getIntPref("dom.mozSettings.softLockupDelta");
+} catch (ex) { }
 
 XPCOMUtils.defineLazyServiceGetter(this, "mrm",
                                    "@mozilla.org/memory-reporter-manager;1",
