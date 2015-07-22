@@ -40,14 +40,7 @@ window.onload = function() {
         // Dropping the touch slop to 0 makes the tests easier to write because
         // we can just do a one-pixel drag to get over the pan threshold rather
         // than having to hard-code some larger value.
-        ["apz.touch_start_tolerance", "0.0"],
-
-        // The B2G emulator is hella slow, and needs more than 300ms to run the
-        // main-thread code that deals with layerizing subframes and running
-        // touch listeners. In my local runs this needs to be at least 1000.
-        // On try this sometimes needs to be as long as 8 seconds (bug 1176798)
-        // so we make it 15 seconds just to be extra safe.
-        ["apz.content_response_timeout", "15000"]
+        ["apz.touch_start_tolerance", "0.0"]
       ]
     }, testDone);
 };
