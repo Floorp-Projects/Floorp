@@ -2489,7 +2489,7 @@ test -n "$target_alias" &&
 
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=8
+MOD_PATCH_VERSION=9
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -2666,6 +2666,19 @@ fi
 
 if test -n "$gonkdir" ; then
 
+        if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
     $as_echo "#define ANDROID 1" >>confdefs.h
 
 else
@@ -2749,6 +2762,19 @@ $as_echo "$android_platform" >&6; }
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
+
+        if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
 
     $as_echo "#define ANDROID 1" >>confdefs.h
 
@@ -4595,6 +4621,12 @@ test -n "$HOST_CC" || HOST_CC=""""
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HOST_CC" >&5
 $as_echo "$HOST_CC" >&6; }
+    if test -z "$HOST_CFLAGS"; then
+        HOST_CFLAGS="$CFLAGS"
+    fi
+    if test -z "$HOST_LDFLAGS"; then
+        HOST_LDFLAGS="$LDFLAGS"
+    fi
 
     CC="$HOST_CC"
     CFLAGS="$HOST_CFLAGS"
@@ -6552,6 +6584,7 @@ fi
     fi
     ac_fn_c_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
 if test "x$ac_cv_header_crt_externs_h" = xyes; then :
+  $as_echo "#define HAVE_CRT_EXTERNS_H 1" >>confdefs.h
 
 fi
 
@@ -7283,6 +7316,8 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
     $as_echo "#define NETBSD 1" >>confdefs.h
 
     $as_echo "#define HAVE_BSD_FLOCK 1" >>confdefs.h
+
+    $as_echo "#define HAVE_SOCKLEN_T 1" >>confdefs.h
 
     if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
