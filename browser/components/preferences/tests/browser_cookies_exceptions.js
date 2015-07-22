@@ -16,6 +16,8 @@ var testRunner = {
           params.url.value = "test.com";
           params.btnAllow.doCommand();
           is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
+          is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
+                                          "origin name should be set correctly");
           is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
                                           "permission text should be set correctly");
           params.btnApplyChanges.doCommand();
@@ -27,6 +29,8 @@ var testRunner = {
         test: function(params) {
           params.url.value = "test.com";
           params.btnBlock.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
+                                          "origin name should be set correctly");
           is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
                                           "permission should change to deny in UI");
           params.btnApplyChanges.doCommand();
@@ -38,6 +42,8 @@ var testRunner = {
         test: function(params) {
           params.url.value = "test.com";
           params.btnAllow.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
+                                          "origin name should be set correctly");
           is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
                                           "permission should revert back to allow");
           params.btnApplyChanges.doCommand();
@@ -67,6 +73,55 @@ var testRunner = {
           let uri = params.ioService.newURI("http://test.com", null, null);
           params.pm.remove(uri, "popup");
         },
+      },
+      {
+        test: function(params) {
+          params.url.value = "https://test.com:12345";
+          params.btnAllow.doCommand();
+          is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
+          is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
+                                          "permission text should be set correctly");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "https://test.com:12345", data: "added",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "https://test.com:12345";
+          params.btnBlock.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.denyText,
+                                          "permission should change to deny in UI");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
+                        capability: Ci.nsIPermissionManager.DENY_ACTION  }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "https://test.com:12345";
+          params.btnAllow.doCommand();
+          is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
+                                          "origin name should be set correctly");
+          is(params.tree.view.getCellText(0, params.statusCol), params.allowText,
+                                          "permission should revert back to allow");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
+      },
+      {
+        test: function(params) {
+          params.url.value = "https://test.com:12345";
+          params.btnRemove.doCommand();
+          is(params.tree.view.rowCount, 0, "exception should be removed");
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "https://test.com:12345", data: "deleted" }],
       },
     ],
 
@@ -127,6 +182,7 @@ var testRunner = {
           let params = {
             doc: event.target,
             tree: event.target.getElementById("permissionsTree"),
+            nameCol: event.target.getElementById("permissionsTree").treeBoxObject.columns.getColumnAt(0),
             statusCol: event.target.getElementById("permissionsTree").treeBoxObject.columns.getColumnAt(1),
             url: event.target.getElementById("url"),
             btnAllow: event.target.getElementById("btnAllow"),

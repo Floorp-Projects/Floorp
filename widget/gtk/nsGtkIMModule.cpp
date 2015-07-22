@@ -788,11 +788,11 @@ nsGtkIMModule::OnSelectionChange(nsWindow* aCaller,
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GtkIMModule(%p): OnSelectionChange(aCaller=0x%p, aIMENotification={ "
-         "mSelectionChangeData={ mOffset=%u, mLength=%u, mReversed=%s, "
+         "mSelectionChangeData={ mOffset=%u, Length()=%u, mReversed=%s, "
          "mWritingMode=%s, mCausedByComposition=%s, mCausedBySelectionEvent=%s "
          "} }), mCompositionState=%s, mIsDeletingSurrounding=%s",
          this, aCaller, selectionChangeData.mOffset,
-         selectionChangeData.mLength,
+         selectionChangeData.Length(),
          GetBoolName(selectionChangeData.mReversed),
          GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
          GetBoolName(selectionChangeData.mCausedByComposition),
@@ -1854,7 +1854,7 @@ nsGtkIMModule::Selection::Assign(const IMENotification& aIMENotification)
 {
     MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE);
     mOffset = aIMENotification.mSelectionChangeData.mOffset;
-    mLength = aIMENotification.mSelectionChangeData.mLength;
+    mLength = aIMENotification.mSelectionChangeData.Length();
     mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
 }
 

@@ -127,7 +127,15 @@ this.FxAccountsManager = {
             user: this._user
           });
         }
-        return client[aMethod](aEmail, aPassword);
+        let syncEnabled = false;
+        try {
+          syncEnabled = Services.prefs.getBoolPref("services.sync.enabled");
+        } catch(e) {
+          dump(e + "\n");
+        }
+        // XXX Refetch FxA credentials if services.sync.enabled preference
+        //     changes. Bug 1183103
+        return client[aMethod](aEmail, aPassword, syncEnabled);
       }
     ).then(
       user => {
@@ -577,8 +585,37 @@ this.FxAccountsManager = {
         return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience, principal);
       }
     );
-  }
+  },
 
+  getKeys: function() {
+    let syncEnabled = false;
+    try {
+      syncEnabled = Services.prefs.getBoolPref("services.sync.enabled");
+    } catch(e) {
+      dump("Sync is disabled, so you won't get the keys. " + e + "\n");
+    }
+
+    if (!syncEnabled) {
+      return Promise.reject(ERROR_SYNC_DISABLED);
+    }
+
+    return this.getAccount().then(
+      user => {
+        if (!user) {
+          log.debug("No signed in user");
+          return Promise.resolve(null);
+        }
+
+        if (!user.verified) {
+          return this._error(ERROR_UNVERIFIED_ACCOUNT, {
+            user: user
+          });
+        }
+
+        return this._fxAccounts.getKeys();
+      }
+    );
+  }
 };
 
 FxAccountsManager.init();

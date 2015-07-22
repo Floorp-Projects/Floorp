@@ -707,8 +707,9 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeData>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    MOZ_RELEASE_ASSERT(aParam.mString);
     WriteParam(aMsg, aParam.mOffset);
-    WriteParam(aMsg, aParam.mLength);
+    WriteParam(aMsg, *aParam.mString);
     WriteParam(aMsg, aParam.mWritingMode);
     WriteParam(aMsg, aParam.mReversed);
     WriteParam(aMsg, aParam.mCausedByComposition);
@@ -717,8 +718,9 @@ struct ParamTraits<mozilla::widget::IMENotification::SelectionChangeData>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    aResult->mString = new nsString();
     return ReadParam(aMsg, aIter, &aResult->mOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mLength) &&
+           ReadParam(aMsg, aIter, aResult->mString) &&
            ReadParam(aMsg, aIter, &aResult->mWritingMode) &&
            ReadParam(aMsg, aIter, &aResult->mReversed) &&
            ReadParam(aMsg, aIter, &aResult->mCausedByComposition) &&

@@ -1138,6 +1138,10 @@ MediaFormatReader::WaitForData(MediaData::Type aType)
   TrackType trackType = aType == MediaData::VIDEO_DATA ?
     TrackType::kVideoTrack : TrackType::kAudioTrack;
   auto& decoder = GetDecoderData(trackType);
+  if (!decoder.mWaitingForData) {
+    // We aren't waiting for data any longer.
+    return WaitForDataPromise::CreateAndResolve(decoder.mType, __func__);
+  }
   nsRefPtr<WaitForDataPromise> p = decoder.mWaitingPromise.Ensure(__func__);
   ScheduleUpdate(trackType);
   return p;

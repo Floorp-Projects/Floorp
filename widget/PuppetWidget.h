@@ -274,6 +274,8 @@ private:
   bool GetCaretRect(mozilla::LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset);
   uint32_t GetCaretOffset();
 
+  nsIWidgetListener* GetCurrentWidgetListener();
+
   class PaintTask : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE

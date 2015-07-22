@@ -3725,7 +3725,7 @@ IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
   mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
   mRangeForWritingMode =
     NSMakeRange(aIMENotification.mSelectionChangeData.mOffset,
-                aIMENotification.mSelectionChangeData.mLength);
+                aIMENotification.mSelectionChangeData.Length());
   if (mIMEHasFocus) {
     mSelectedRange = mRangeForWritingMode;
   }

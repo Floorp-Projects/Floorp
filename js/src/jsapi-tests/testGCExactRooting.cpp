@@ -5,6 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/RootingAPI.h"
+#include "js/TraceableHashTable.h"
+
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testGCExactRooting)
@@ -152,3 +155,78 @@ BEGIN_TEST(testGCRootedDynamicStructInternalStackStorageAugmented)
     return true;
 }
 END_TEST(testGCRootedDynamicStructInternalStackStorageAugmented)
+
+using MyHashMap = js::TraceableHashMap<js::Shape*, JSObject*>;
+
+BEGIN_TEST(testGCRootedHashMap)
+{
+    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx));
+    CHECK(map.init(15));
+    CHECK(map.initialized());
+
+    for (size_t i = 0; i < 10; ++i) {
+        RootedObject obj(cx, JS_NewObject(cx, nullptr));
+        RootedValue val(cx, UndefinedValue());
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        CHECK(JS_SetProperty(cx, obj, buffer, val));
+        CHECK(map.putNew(obj->as<NativeObject>().lastProperty(), obj));
+    }
+
+    JS_GC(rt);
+    JS_GC(rt);
+
+    for (auto r = map.all(); !r.empty(); r.popFront()) {
+        RootedObject obj(cx, r.front().value());
+        CHECK(obj->as<NativeObject>().lastProperty() == r.front().key());
+    }
+
+    return true;
+}
+END_TEST(testGCRootedHashMap)
+
+static bool
+FillMyHashMap(JSContext* cx, MutableHandle<MyHashMap> map)
+{
+    for (size_t i = 0; i < 10; ++i) {
+        RootedObject obj(cx, JS_NewObject(cx, nullptr));
+        RootedValue val(cx, UndefinedValue());
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        if (!JS_SetProperty(cx, obj, buffer, val))
+            return false;
+        if (!map.putNew(obj->as<NativeObject>().lastProperty(), obj))
+            return false;
+    }
+    return true;
+}
+
+static bool
+CheckMyHashMap(JSContext* cx, Handle<MyHashMap> map)
+{
+    for (auto r = map.all(); !r.empty(); r.popFront()) {
+        RootedObject obj(cx, r.front().value());
+        if (obj->as<NativeObject>().lastProperty() != r.front().key())
+            return false;
+    }
+    return true;
+}
+
+BEGIN_TEST(testGCHandleHashMap)
+{
+    JS::Rooted<MyHashMap> map(cx, MyHashMap(cx));
+    CHECK(map.init(15));
+    CHECK(map.initialized());
+
+    CHECK(FillMyHashMap(cx, &map));
+
+    JS_GC(rt);
+    JS_GC(rt);
+
+    CHECK(CheckMyHashMap(cx, map));
+
+    return true;
+}
+END_TEST(testGCHandleHashMap)

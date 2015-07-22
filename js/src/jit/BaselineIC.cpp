@@ -3956,7 +3956,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadUnboxedProperty(BaseIndex(objReg, scratchReg, TimesOne), unboxedType_,
                                  TypedOrValueRegister(R0));
         if (popR1)
-            masm.addPtr(ImmWord(sizeof(size_t)), BaselineStackReg);
+            masm.addToStackPtr(ImmWord(sizeof(size_t)));
     } else {
         MOZ_ASSERT(acctype_ == ICGetElemNativeStub::NativeGetter ||
                    acctype_ == ICGetElemNativeStub::ScriptedGetter);
@@ -5642,7 +5642,7 @@ ICInNativeCompiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(ICStubReg, ICIn_NativePrototype::offsetOfHolderShape()),
                      scratch);
         masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failurePopR0Scratch);
-        masm.addPtr(Imm32(sizeof(size_t)), StackPointer);
+        masm.addToStackPtr(Imm32(sizeof(size_t)));
     }
 
     masm.moveValue(BooleanValue(true), R0);
