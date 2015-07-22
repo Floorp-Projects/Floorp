@@ -17,6 +17,7 @@ class GentooBootstrapper(BaseBootstrapper):
 
     def install_browser_packages(self):
         self.run_as_root(['emerge', '--onlydeps', '--quiet', 'firefox'])
+        self.run_as_root(['emerge', '--quiet', 'gtk+'])
 
     def _update_package_manager(self):
         self.run_as_root(['emerge', '--sync'])

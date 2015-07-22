@@ -23,6 +23,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'dbus-glib',
             'gstreamer-plugins',
             'gtk2',
+            'gtk3',
             'libGL',
             'pulseaudio',
             'v4l_compat',
