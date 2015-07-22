@@ -401,7 +401,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _shouldRenderLocalLoading: function () {
+    _isLocalLoading: function () {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
              !this.state.localSrcVideoObject;
     },
@@ -413,7 +413,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _shouldRenderRemoteLoading: function() {
+    _isRemoteLoading: function() {
       return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
                 !this.state.remoteSrcVideoObject &&
                 !this.state.mediaConnected);
@@ -426,31 +426,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _shouldRenderScreenShareLoading: function() {
+    _isScreenShareLoading: function() {
       return this.state.receivingScreenShare &&
              !this.state.screenShareVideoObject;
     },
 
     render: function() {
-      var displayScreenShare = this.state.receivingScreenShare ||
-        this.props.screenSharePosterUrl;
-
-      var remoteStreamClasses = React.addons.classSet({
-        "remote": true,
-        "focus-stream": !displayScreenShare
-      });
-
-      var screenShareStreamClasses = React.addons.classSet({
-        "screen": true,
-        "focus-stream": displayScreenShare
-      });
-
-      var mediaWrapperClasses = React.addons.classSet({
-        "media-wrapper": true,
-        "receiving-screen-share": displayScreenShare,
-        "showing-local-streams": this.state.localSrcVideoObject ||
-          this.props.localPosterUrl
-      });
+      var displayScreenShare = !!(this.state.receivingScreenShare ||
+        this.props.screenSharePosterUrl);
 
       return (
         React.createElement("div", {className: "room-conversation-wrapper standalone-room-wrapper"}, 
@@ -463,38 +446,22 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   joinRoom: this.joinRoom, 
                                   roomState: this.state.roomState, 
                                   roomUsed: this.state.used}), 
-          React.createElement("div", {className: "media-layout"}, 
-            React.createElement("div", {className: mediaWrapperClasses}, 
-              React.createElement("span", {className: "self-view-hidden-message"}, 
-                mozL10n.get("self_view_hidden_message")
-              ), 
-              React.createElement("div", {className: remoteStreamClasses}, 
-                React.createElement(sharedViews.MediaView, {displayAvatar: !this.shouldRenderRemoteVideo(), 
-                  isLoading: this._shouldRenderRemoteLoading(), 
-                  mediaType: "remote", 
-                  posterUrl: this.props.remotePosterUrl, 
-                  srcVideoObject: this.state.remoteSrcVideoObject})
-              ), 
-              React.createElement("div", {className: screenShareStreamClasses}, 
-                React.createElement(sharedViews.MediaView, {displayAvatar: false, 
-                  isLoading: this._shouldRenderScreenShareLoading(), 
-                  mediaType: "screen-share", 
-                  posterUrl: this.props.screenSharePosterUrl, 
-                  srcVideoObject: this.state.screenShareVideoObject})
-              ), 
-              React.createElement(sharedViews.chat.TextChatView, {
-                dispatcher: this.props.dispatcher, 
-                showRoomName: true, 
-                useDesktopPaths: false}), 
-              React.createElement("div", {className: "local"}, 
-                React.createElement(sharedViews.MediaView, {displayAvatar: this.state.videoMuted, 
-                  isLoading: this._shouldRenderLocalLoading(), 
-                  mediaType: "local", 
-                  posterUrl: this.props.localPosterUrl, 
-                  srcVideoObject: this.state.localSrcVideoObject})
-              )
-            )
-          ), 
+          React.createElement(sharedViews.MediaLayoutView, {
+            dispatcher: this.props.dispatcher, 
+            displayScreenShare: displayScreenShare, 
+            isLocalLoading: this._isLocalLoading(), 
+            isRemoteLoading: this._isRemoteLoading(), 
+            isScreenShareLoading: this._isScreenShareLoading(), 
+            localPosterUrl: this.props.localPosterUrl, 
+            localSrcVideoObject: this.state.localSrcVideoObject, 
+            localVideoMuted: this.state.videoMuted, 
+            remotePosterUrl: this.props.remotePosterUrl, 
+            remoteSrcVideoObject: this.state.remoteSrcVideoObject, 
+            renderRemoteVideo: this.shouldRenderRemoteVideo(), 
+            screenSharePosterUrl: this.props.screenSharePosterUrl, 
+            screenShareVideoObject: this.state.screenShareVideoObject, 
+            showContextRoomName: true, 
+            useDesktopPaths: false}), 
           React.createElement(sharedViews.ConversationToolbar, {
             audio: {enabled: !this.state.audioMuted,
                     visible: this._roomIsActive()}, 
