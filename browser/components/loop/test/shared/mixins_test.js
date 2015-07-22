@@ -180,7 +180,8 @@ describe("loop.shared.mixins", function() {
 
         comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
-        sinon.assert.calledOnce(onDocumentVisibleStub);
+        // Twice, because it's also called when the component was mounted.
+        sinon.assert.calledTwice(onDocumentVisibleStub);
       });
 
     it("should call onDocumentVisible when document visibility changes to hidden",

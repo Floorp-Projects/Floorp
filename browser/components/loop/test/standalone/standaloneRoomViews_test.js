@@ -144,6 +144,20 @@ describe("loop.standaloneRoomViews", function() {
           linkInfo: "Shared URL"
         }));
     });
+
+    it("should display the default favicon when no thumbnail is available", function() {
+      var view = mountTestComponent({
+        roomName: "Mike's room",
+        roomContextUrls: [{
+          description: "Mark's super page",
+          location: "http://invalid.com",
+          thumbnail: ""
+        }]
+      });
+
+      expect(view.getDOMNode().querySelector(".standalone-context-url > img").src)
+        .to.match(/shared\/img\/icons-16x16.svg#globe$/);
+    });
   });
 
   describe("StandaloneRoomHeader", function() {

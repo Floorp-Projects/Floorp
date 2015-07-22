@@ -1002,10 +1002,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   flex: 0 1 auto;
 }
 
-.room-context-thumbnail[src=""] {
-  display: none;
-}
-
 .room-context > .error-display-area.error {
   display: block;
   background-color: rgba(215,67,69,.8);
@@ -1242,9 +1238,8 @@ body[dir=rtl] .room-context-btn-edit {
 
 .standalone-context-url > img {
   margin: 1em auto;
-  max-width: 50%;
-  /* allows 20% for the description wrapper plus the margins */
-  max-height: calc(80% - 2em);
+  width: 16px;
+  height: 16px;
 }
 
 .standalone-context-url-description-wrapper {

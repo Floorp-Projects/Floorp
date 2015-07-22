@@ -198,10 +198,6 @@ body {
 
 .svg-icon {
   display: inline-block;
-  width:  16px;
-  height: 16px;
   margin-left: .5rem;
-  background-repeat: no-repeat;
-  background-size: 16px 16px;
-  background-position: center;
+  border: 0;
 }
