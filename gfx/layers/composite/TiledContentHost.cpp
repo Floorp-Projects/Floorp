@@ -296,6 +296,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     }
 
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
+    tile.mTextureHost->SetCompositor(aCompositor);
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
       tile.mTextureHostOnWhite =
