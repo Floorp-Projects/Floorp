@@ -159,6 +159,20 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         return gl->IsExtensionSupported(gl::GLContext::EXT_texture_compression_dxt1) &&
                gl->IsExtensionSupported(gl::GLContext::ANGLE_texture_compression_dxt3) &&
                gl->IsExtensionSupported(gl::GLContext::ANGLE_texture_compression_dxt5);
+
+    case WebGLExtensionID::WEBGL_debug_renderer_info:
+        {
+            bool isEnabled = true;
+
+#ifdef RELEASE_BUILD
+            // Keep this disabled on Release and Beta for now. (see bug 1171228)
+            isEnabled = false;
+#endif
+            if (Preferences::GetBool("webgl.disable-debug-renderer-info", false))
+                isEnabled = false;
+
+            return isEnabled;
+        }
     case WebGLExtensionID::WEBGL_depth_texture:
         // WEBGL_depth_texture supports DEPTH_STENCIL textures
         if (!gl->IsSupported(gl::GLFeature::packed_depth_stencil))
