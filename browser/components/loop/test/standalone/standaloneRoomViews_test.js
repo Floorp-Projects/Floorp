@@ -431,7 +431,7 @@ describe("loop.standaloneRoomViews", function() {
           "remoteSrcVideoObject is false, mediaConnected is true", function() {
           activeRoomStore.setStoreState({
             roomState: ROOM_STATES.HAS_PARTICIPANTS,
-            remoteSrcVideoObject: false,
+            remoteSrcVideoObject: null,
             remoteVideoEnabled: false,
             mediaConnected: true
           });
