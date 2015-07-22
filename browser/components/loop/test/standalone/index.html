@@ -90,7 +90,10 @@
     });
 
     mocha.run(function () {
-      $("#mocha").append("<p id='complete'>Complete.</p>");
+      var completeNode = document.createElement("p");
+      completeNode.setAttribute("id", "complete");
+      completeNode.appendChild(document.createTextNode("Complete"));
+      document.getElementById("mocha").appendChild(completeNode);
     });
 </script>
 </body>
