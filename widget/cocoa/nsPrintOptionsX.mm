@@ -146,11 +146,10 @@ nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
   NSString* printerName = nsCocoaUtils::ToNSString(data.printerName());
   if (printerName) {
     NSPrinter* printer = [NSPrinter printerWithName: printerName];
-    if (NS_WARN_IF(!printer)) {
-      return NS_ERROR_FAILURE;
+    if (printer) {
+      [newPrintInfoDict setObject: printer forKey: NSPrintPrinter];
+      [newPrintInfoDict setObject: printerName forKey: NSPrintPrinterName];
     }
-    [newPrintInfoDict setObject: printer forKey: NSPrintPrinter];
-    [newPrintInfoDict setObject: printerName forKey: NSPrintPrinterName];
   }
 
   [newPrintInfoDict setObject: [NSNumber numberWithInt: data.numCopies()]
