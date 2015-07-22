@@ -125,7 +125,8 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
        (aOperation == eOperation_RemoveProperty && cssRule))) {
     nsNodeUtils::AttributeWillChange(mElement, kNameSpaceID_None,
                                      nsGkAtoms::style,
-                                     nsIDOMMutationEvent::MODIFICATION);
+                                     nsIDOMMutationEvent::MODIFICATION,
+                                     nullptr);
   }
 
   if (cssRule) {
