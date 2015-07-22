@@ -4436,11 +4436,12 @@ nsTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
     aIMENotification.mSelectionChangeData;
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal("
-          "aIMENotification={ mSelectionChangeData={ mOffset=%lu, mLength=%lu, "
-          "mReversed=%s, mWritingMode=%s, mCausedByComposition=%s, "
-          "mCausedBySelectionEvent=%s } }), mSink=0x%p, mSinkMask=%s, "
-          "mIsRecordingActionsWithoutLock=%s, mComposition.IsComposing()=%s",
-          this, selectionChangeData.mOffset, selectionChangeData.mLength,
+          "aIMENotification={ mSelectionChangeData={ mOffset=%lu, "
+          "Length()=%lu, mReversed=%s, mWritingMode=%s, "
+          "mCausedByComposition=%s, mCausedBySelectionEvent=%s } }), "
+          "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s, "
+          "mComposition.IsComposing()=%s",
+          this, selectionChangeData.mOffset, selectionChangeData.Length(),
           GetBoolName(selectionChangeData.mReversed),
           GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
           GetBoolName(selectionChangeData.mCausedByComposition),
@@ -4458,7 +4459,7 @@ nsTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 
   mSelection.SetSelection(
     selectionChangeData.mOffset,
-    selectionChangeData.mLength,
+    selectionChangeData.Length(),
     selectionChangeData.mReversed,
     selectionChangeData.GetWritingMode());
 
