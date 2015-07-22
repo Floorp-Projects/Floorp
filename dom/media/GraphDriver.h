@@ -75,10 +75,6 @@ public:
   explicit GraphDriver(MediaStreamGraphImpl* aGraphImpl);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GraphDriver);
-  /* When the graph wakes up to do an iteration, this returns the range of time
-   * that will be processed. */
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) = 0;
   /* For real-time graphs, this waits until it's time to process more data. For
    * offline graphs, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
@@ -265,6 +261,10 @@ public:
 
   virtual bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
 
+  /* When the graph wakes up to do an iteration, implementations return the
+   * range of time that will be processed. */
+  virtual void GetIntervalForIteration(GraphTime& aFrom,
+                                       GraphTime& aTo) = 0;
 protected:
   nsCOMPtr<nsIThread> mThread;
 };
@@ -360,8 +360,6 @@ public:
   virtual void Stop() override;
   virtual void Resume() override;
   virtual void Revive() override;
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
