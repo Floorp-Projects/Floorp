@@ -6,6 +6,7 @@ import os
 import StringIO
 import sys
 import unittest
+import signal
 import xml.etree.ElementTree as ET
 
 import mozfile
@@ -291,6 +292,17 @@ class TestStructuredLog(BaseStructuredTest):
         self.assert_log_equals({"action": "process_output",
                                 "process": "1234",
                                 "data": "test output"})
+
+    def test_process_start(self):
+        self.logger.process_start(1234)
+        self.assert_log_equals({"action": "process_start",
+                                "process": "1234"})
+
+    def test_process_exit(self):
+        self.logger.process_exit(1234, 0)
+        self.assert_log_equals({"action": "process_exit",
+                                "process": "1234",
+                                "exitcode": 0})
 
     def test_log(self):
         for level in ["critical", "error", "warning", "info", "debug"]:
@@ -589,6 +601,16 @@ class TestTBPLFormatter(FormatterTest):
             self.assertNotEqual("", line, "No blank line should be present in: %s" %
                                 self.loglines)
 
+    def test_process_exit(self):
+        self.logger.process_exit(1234, 0)
+        self.assertIn('TEST-INFO | 1234: exit 0', self.loglines)
+
+    @unittest.skipUnless(os.name == 'posix', 'posix only')
+    def test_process_exit_with_sig(self):
+        # subprocess return code is negative when process
+        # has been killed by signal on posix.
+        self.logger.process_exit(1234, -signal.SIGTERM)
+        self.assertIn,('TEST-INFO | 1234: killed by SIGTERM', self.loglines)
 
 class TestMachFormatter(FormatterTest):
 
@@ -655,6 +677,25 @@ class TestMachFormatter(FormatterTest):
         self.assertIn("OK", self.loglines)
         self.assertIn("Expected results: 5", self.loglines)
         self.assertIn("Unexpected results: 0", self.loglines)
+
+    def test_process_start(self):
+        self.logger.process_start(1234)
+        self.assertIn("Started process `1234`", self.loglines[0])
+
+    def test_process_start_with_command(self):
+        self.logger.process_start(1234, command='test cmd')
+        self.assertIn("Started process `1234` (test cmd)", self.loglines[0])
+
+    def test_process_exit(self):
+        self.logger.process_exit(1234, 0)
+        self.assertIn('1234: exit 0', self.loglines[0])
+
+    @unittest.skipUnless(os.name == 'posix', 'posix only')
+    def test_process_exit_with_sig(self):
+        # subprocess return code is negative when process
+        # has been killed by signal on posix.
+        self.logger.process_exit(1234, -signal.SIGTERM)
+        self.assertIn('1234: killed by SIGTERM', self.loglines[0])
 
 
 class TestXUnitFormatter(FormatterTest):
