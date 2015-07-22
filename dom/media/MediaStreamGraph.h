@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/AudioChannelBinding.h"
 
+#include "AudioSegment.h"
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
@@ -21,7 +22,6 @@
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
 #include "nsAutoRef.h"
-#include "GraphDriver.h"
 #include <speex/speex_resampler.h>
 #include "DOMMediaStream.h"
 #include "AudioContext.h"
