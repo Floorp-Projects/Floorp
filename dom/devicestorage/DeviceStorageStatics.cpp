@@ -421,14 +421,13 @@ DeviceStorageStatics::RemoveListener(nsDOMDeviceStorage* aListener)
   uint32_t i = sInstance->mListeners.Length();
   while (i > 0) {
     --i;
-    if (sInstance->mListeners[i]->mDeviceStorage.get() == aListener) {
+    if (sInstance->mListeners[i]->Equals(aListener)) {
       sInstance->mListeners.RemoveElementAt(i);
       removed = true;
       break;
     }
   }
 
-  MOZ_ASSERT(removed);
   if (removed && sInstance->mListeners.IsEmpty()) {
     NS_DispatchToMainThread(
       NS_NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Deregister));
@@ -747,42 +746,70 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
 }
 
 DeviceStorageStatics::ListenerWrapper::ListenerWrapper(nsDOMDeviceStorage* aListener)
-  : mDeviceStorage(aListener)
+  : mListener(do_GetWeakReference(static_cast<DOMEventTargetHelper*>(aListener)))
+  , mOwningThread(NS_GetCurrentThread())
 {
 }
 
 DeviceStorageStatics::ListenerWrapper::~ListenerWrapper()
 {
+  // Even weak pointers are not thread safe
+  NS_ProxyRelease(mOwningThread, mListener);
+}
+
+bool
+DeviceStorageStatics::ListenerWrapper::Equals(nsDOMDeviceStorage* aListener)
+{
+  bool current = false;
+  mOwningThread->IsOnCurrentThread(&current);
+  if (current) {
+    // It is only safe to acquire the reference on the owning thread
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(mListener);
+    return listener.get() == aListener;
+  }
+  return false;
 }
 
 void
 DeviceStorageStatics::ListenerWrapper::OnFileWatcherUpdate(const nsCString& aData,
-                                                           DeviceStorageFile* aFile)
+                                                                 DeviceStorageFile* aFile)
 {
   nsRefPtr<ListenerWrapper> self = this;
   nsCString data = aData;
   nsRefPtr<DeviceStorageFile> file = aFile;
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self, data, file] () -> void {
-    self->mDeviceStorage->OnFileWatcherUpdate(data, file);
-  }));
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, data, file] () -> void {
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    if (listener) {
+      listener->OnFileWatcherUpdate(data, file);
+    }
+  });
+  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 void
 DeviceStorageStatics::ListenerWrapper::OnDiskSpaceWatcher(bool aLowDiskSpace)
 {
   nsRefPtr<ListenerWrapper> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self, aLowDiskSpace] () -> void {
-    self->mDeviceStorage->OnDiskSpaceWatcher(aLowDiskSpace);
-  }));
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aLowDiskSpace] () -> void {
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    if (listener) {
+      listener->OnDiskSpaceWatcher(aLowDiskSpace);
+    }
+  });
+  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 void
 DeviceStorageStatics::ListenerWrapper::OnWritableNameChanged()
 {
   nsRefPtr<ListenerWrapper> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self] () -> void {
-    self->mDeviceStorage->OnWritableNameChanged();
-  }));
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void {
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    if (listener) {
+      listener->OnWritableNameChanged();
+    }
+  });
+  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -791,9 +818,13 @@ DeviceStorageStatics::ListenerWrapper::OnVolumeStateChanged(nsIVolume* aVolume)
 {
   nsRefPtr<ListenerWrapper> self = this;
   nsCOMPtr<nsIVolume> volume = aVolume;
-  NS_DispatchToMainThread(NS_NewRunnableFunction([self, volume] () -> void {
-    self->mDeviceStorage->OnVolumeStateChanged(volume);
-  }));
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, volume] () -> void {
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    if (listener) {
+      listener->OnVolumeStateChanged(volume);
+    }
+  });
+  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 #endif
 
