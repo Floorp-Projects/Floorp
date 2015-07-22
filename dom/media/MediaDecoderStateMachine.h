@@ -138,7 +138,6 @@ public:
     DECODER_STATE_DECODING_METADATA,
     DECODER_STATE_WAIT_FOR_RESOURCES,
     DECODER_STATE_WAIT_FOR_CDM,
-    DECODER_STATE_DECODING_FIRSTFRAME,
     DECODER_STATE_DORMANT,
     DECODER_STATE_DECODING,
     DECODER_STATE_SEEKING,
@@ -407,6 +406,7 @@ protected:
   MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
+  bool IsDecodingFirstFrame();
   nsresult FinishDecodeFirstFrame();
 
   // True if our buffers of decoded audio are not full, and we should
@@ -1261,6 +1261,10 @@ private:
   mozilla::MediaMetadataManager mMetadataManager;
 
   mozilla::RollingMean<uint32_t, uint32_t> mCorruptFrames;
+
+  // True if we need to call FinishDecodeFirstFrame() upon frame decoding
+  // successeeding.
+  bool mDecodingFirstFrame;
 
   bool mDisabledHardwareAcceleration;
 
