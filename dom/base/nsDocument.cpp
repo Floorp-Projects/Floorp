@@ -10186,27 +10186,17 @@ nsIDocument::UnregisterActivityObserver(nsISupports* aSupports)
   return true;
 }
 
-struct EnumerateActivityObserversData {
-  nsIDocument::ActivityObserverEnumerator mEnumerator;
-  void* mData;
-};
-
-static PLDHashOperator
-EnumerateObservers(nsPtrHashKey<nsISupports>* aEntry, void* aData)
-{
-  EnumerateActivityObserversData* data = static_cast<EnumerateActivityObserversData*>(aData);
-  data->mEnumerator(aEntry->GetKey(), data->mData);
-  return PL_DHASH_NEXT;
-}
-
 void
 nsIDocument::EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
                                         void* aData)
 {
   if (!mActivityObservers)
     return;
-  EnumerateActivityObserversData data = { aEnumerator, aData };
-  mActivityObservers->EnumerateEntries(EnumerateObservers, &data);
+
+  for (auto iter = mActivityObservers->ConstIter(); !iter.Done();
+       iter.Next()) {
+    aEnumerator(iter.Get()->GetKey(), aData);
+  }
 }
 
 void
