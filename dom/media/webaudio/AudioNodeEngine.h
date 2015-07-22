@@ -114,7 +114,8 @@ private:
 };
 
 /**
- * Allocates an AudioChunk with fresh buffers of WEBAUDIO_BLOCK_SIZE float samples.
+ * Allocates, if necessary, aChannelCount buffers of WEBAUDIO_BLOCK_SIZE float
+ * samples for writing to an AudioChunk.
  */
 void AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk);
 

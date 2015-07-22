@@ -15,6 +15,15 @@ namespace mozilla {
 void
 AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
 {
+  if (aChunk->mBuffer && !aChunk->mBuffer->IsShared() &&
+      aChunk->ChannelCount() == aChannelCount) {
+    MOZ_ASSERT(aChunk->mBufferFormat == AUDIO_FORMAT_FLOAT32);
+    MOZ_ASSERT(aChunk->mDuration == WEBAUDIO_BLOCK_SIZE);
+    // No need to allocate again.
+    aChunk->mVolume = 1.0f;
+    return;
+  }
+
   CheckedInt<size_t> size = WEBAUDIO_BLOCK_SIZE;
   size *= aChannelCount;
   size *= sizeof(float);
