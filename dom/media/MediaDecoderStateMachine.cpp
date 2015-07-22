@@ -2367,7 +2367,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
               elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
               (mQuickBuffering ? HasLowDecodedData(mQuickBufferingLowDataThresholdUsecs)
                                : HasLowUndecodedData(mBufferingWait * USECS_PER_S)) &&
-              mDecoder->IsExpectingMoreData())
+              mResource->IsExpectingMoreData())
         {
           DECODER_LOG("Buffering: wait %ds, timeout in %.3lfs %s",
                       mBufferingWait, mBufferingWait - elapsed.ToSeconds(),
@@ -2727,7 +2727,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   // If we don't, switch to buffering mode.
   if (mState == DECODER_STATE_DECODING &&
       mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-      mDecoder->IsExpectingMoreData()) {
+      mResource->IsExpectingMoreData()) {
     bool shouldBuffer;
     if (mReader->UseBufferingHeuristics()) {
       shouldBuffer = HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
