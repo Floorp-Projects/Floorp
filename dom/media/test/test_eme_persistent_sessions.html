@@ -154,8 +154,12 @@ function beginTest() {
   manager.runTests(gEMETests.filter(t => t.sessionCount === 1), startTest);
 }
 
-SimpleTest.waitForExplicitFinish();
-SetupEMEPref(beginTest);
+if (!IsMacOSSnowLeopardOrEarlier()) {
+  SimpleTest.waitForExplicitFinish();
+  SetupEMEPref(beginTest);
+} else {
+  todo(false, "Test disabled on this platform.");
+}
 </script>
 </pre>
 </body>

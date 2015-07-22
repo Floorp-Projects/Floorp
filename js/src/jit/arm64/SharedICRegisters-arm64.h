@@ -16,9 +16,8 @@ namespace jit {
 static constexpr Register BaselineFrameReg = r23;
 static constexpr ARMRegister BaselineFrameReg64 = { BaselineFrameReg, 64 };
 
-// The BaselineStackReg cannot be sp, because that register is treated
-// as xzr/wzr during load/store operations.
-static constexpr Register BaselineStackReg = PseudoStackPointer;
+// BaselineStackReg is intentionally undefined on ARM64.
+// Refer to the comment next to the definition of RealStackPointer.
 
 // ValueOperands R0, R1, and R2.
 // R0 == JSReturnReg, and R2 uses registers not preserved across calls.

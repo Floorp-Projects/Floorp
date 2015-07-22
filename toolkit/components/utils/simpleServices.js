@@ -67,6 +67,38 @@ AddonPolicyService.prototype = {
   },
 
   /*
+   * Invokes a callback (if any) to determine if an extension URI should be
+   * web-accessible.
+   *
+   * @see nsIAddonPolicyService.extensionURILoadableByAnyone
+   */
+  extensionURILoadableByAnyone(aURI) {
+    if (aURI.scheme != "moz-extension") {
+      throw new TypeError("non-extension URI passed");
+    }
+
+    let cb = this.extensionURILoadCallback;
+    return cb ? cb(aURI) : false;
+  },
+
+  /*
+   * Maps an extension URI to an addon ID.
+   *
+   * @see nsIAddonPolicyService.extensionURIToAddonId
+   */
+  extensionURIToAddonId(aURI) {
+    if (aURI.scheme != "moz-extension") {
+      throw new TypeError("non-extension URI passed");
+    }
+
+    let cb = this.extensionURIToAddonIdCallback;
+    if (!cb) {
+      throw new Error("no callback set to map extension URIs to addon Ids");
+    }
+    return cb(aURI);
+  },
+
+  /*
    * Sets the callbacks used in addonMayLoadURI above. Not accessible over
    * XPCOM - callers should use .wrappedJSObject on the service to call it
    * directly.
@@ -74,6 +106,28 @@ AddonPolicyService.prototype = {
   setAddonLoadURICallback(aAddonId, aCallback) {
     this.mayLoadURICallbacks[aAddonId] = aCallback;
   },
+
+  /*
+   * Sets the callback used in extensionURILoadableByAnyone above. Not
+   * accessible over XPCOM - callers should use .wrappedJSObject on the
+   * service to call it directly.
+   */
+  setExtensionURILoadCallback(aCallback) {
+    var old = this.extensionURILoadCallback;
+    this.extensionURILoadCallback = aCallback;
+    return old;
+  },
+
+  /*
+   * Sets the callback used in extensionURIToAddonId above. Not accessible over
+   * XPCOM - callers should use .wrappedJSObject on the service to call it
+   * directly.
+   */
+  setExtensionURIToAddonIdCallback(aCallback) {
+    var old = this.extensionURIToAddonIdCallback;
+    this.extensionURIToAddonIdCallback = aCallback;
+    return old;
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteTagServiceService, AddonPolicyService]);

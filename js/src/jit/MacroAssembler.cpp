@@ -1633,7 +1633,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
     {
         // Prepare a register set for use in this case.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-        MOZ_ASSERT(!regs.has(BaselineStackReg));
+        MOZ_ASSERT(!regs.has(getStackPointer()));
         regs.take(bailoutInfo);
 
         // Reset SP to the point where clobbering starts.
@@ -1654,7 +1654,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             subPtr(Imm32(4), copyCur);
             subFromStackPtr(Imm32(4));
             load32(Address(copyCur, 0), temp);
-            store32(temp, Address(BaselineStackReg, 0));
+            store32(temp, Address(getStackPointer(), 0));
             jump(&copyLoop);
             bind(&endOfCopy);
         }
@@ -2695,7 +2695,7 @@ MacroAssembler::Push(JSValueType type, Register reg)
 void
 MacroAssembler::PushValue(const Address& addr)
 {
-    MOZ_ASSERT(addr.base != StackPointer);
+    MOZ_ASSERT(addr.base != getStackPointer());
     pushValue(addr);
     framePushed_ += sizeof(Value);
 }

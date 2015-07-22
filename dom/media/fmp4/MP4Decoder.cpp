@@ -71,8 +71,9 @@ IsSupportedAudioCodec(const nsAString& aCodec,
                       bool& aOutContainsMP3)
 {
   // AAC-LC or HE-AAC in M4A.
-  aOutContainsAAC = aCodec.EqualsASCII("mp4a.40.2") ||
-                    aCodec.EqualsASCII("mp4a.40.5");
+  aOutContainsAAC = aCodec.EqualsASCII("mp4a.40.2")     // MPEG4 AAC-LC
+                    || aCodec.EqualsASCII("mp4a.40.5")  // MPEG4 HE-AAC
+                    || aCodec.EqualsASCII("mp4a.67");   // MPEG2 AAC-LC
   if (aOutContainsAAC) {
     return true;
   }

@@ -1086,8 +1086,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   SetPlayStartTime(TimeStamp::Now());
   MOZ_ASSERT(IsPlaying());
 
-  nsresult rv = StartAudioThread();
-  NS_ENSURE_SUCCESS_VOID(rv);
+  StartAudioThread();
 
   // Tell DecodedStream to start playback with specified start time and media
   // info. This is consistent with how we create AudioSink in StartAudioThread().
@@ -1481,6 +1480,7 @@ void MediaDecoderStateMachine::StopAudioThread()
     }
     mAudioSink = nullptr;
   }
+  mAudioSinkPromise.DisconnectIfExists();
 }
 
 nsresult
@@ -1783,31 +1783,31 @@ MediaDecoderStateMachine::RequestVideoData()
   }
 }
 
-nsresult
+void
 MediaDecoderStateMachine::StartAudioThread()
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   if (mAudioCaptured) {
     MOZ_ASSERT(!mAudioSink);
-    return NS_OK;
+    return;
   }
 
   if (HasAudio() && !mAudioSink) {
-    auto audioStartTime = GetMediaTime();
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(this, audioStartTime,
+    mAudioSink = new AudioSink(this, GetMediaTime(),
                                mInfo.mAudio, mDecoder->GetAudioChannel());
-    // OnAudioSinkError() will be called before Init() returns if an error
-    // occurs during initialization.
-    nsresult rv = mAudioSink->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    mAudioSinkPromise.Begin(
+      mAudioSink->Init()->Then(
+        OwnerThread(), __func__, this,
+        &MediaDecoderStateMachine::OnAudioSinkComplete,
+        &MediaDecoderStateMachine::OnAudioSinkError));
 
     mAudioSink->SetVolume(mVolume);
     mAudioSink->SetPlaybackRate(mPlaybackRate);
     mAudioSink->SetPreservesPitch(mPreservesPitch);
   }
-  return NS_OK;
 }
 
 int64_t MediaDecoderStateMachine::AudioDecodedUsecs()
@@ -2456,12 +2456,12 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         AbstractThread::MainThread()->Dispatch(event.forget());
 
         mSentPlaybackEndedEvent = true;
-      }
 
-      // Stop audio sink after call to AudioEndTime() above, otherwise it will
-      // return an incorrect value due to a null mAudioSink.
-      StopAudioThread();
-      mDecodedStream->StopPlayback();
+        // Stop audio sink after call to AudioEndTime() above, otherwise it will
+        // return an incorrect value due to a null mAudioSink.
+        StopAudioThread();
+        mDecodedStream->StopPlayback();
+      }
 
       return NS_OK;
     }
@@ -3122,11 +3122,12 @@ void MediaDecoderStateMachine::OnAudioSinkComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mAudioCaptured) {
-    return;
-  }
+  MOZ_ASSERT(!mAudioCaptured, "Should be disconnected when capturing audio.");
+
+  mAudioSinkPromise.Complete();
   ResyncAudioClock();
   mAudioCompleted = true;
+
   // Kick the decode thread; it may be sleeping waiting for this to finish.
   mDecoder->GetReentrantMonitor().NotifyAll();
 }
@@ -3135,11 +3136,9 @@ void MediaDecoderStateMachine::OnAudioSinkError()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  // AudioSink not used with captured streams, so ignore errors in this case.
-  if (mAudioCaptured) {
-    return;
-  }
+  MOZ_ASSERT(!mAudioCaptured, "Should be disconnected when capturing audio.");
 
+  mAudioSinkPromise.Complete();
   ResyncAudioClock();
   mAudioCompleted = true;
 

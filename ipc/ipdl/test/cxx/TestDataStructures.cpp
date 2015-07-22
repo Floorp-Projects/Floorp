@@ -971,7 +971,7 @@ TestDataStructuresChild::Test18()
     ra.SetCapacity(nelements);
     for (int i = 0; i < nelements; ++i) {
         nsIntRegion r;
-        r = r.Or(nsIntRect(0, 0, 10, 10), nsIntRect(10, 10, 10, 10));
+        r.Or(nsIntRect(0, 0, 10, 10), nsIntRect(10, 10, 10, 10));
         ra.AppendElement(r);
     }
 
