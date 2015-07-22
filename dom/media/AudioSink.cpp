@@ -38,26 +38,27 @@ AudioSink::AudioSink(MediaDecoderStateMachine* aStateMachine,
 {
 }
 
-nsresult
+nsRefPtr<GenericPromise>
 AudioSink::Init()
 {
+  nsRefPtr<GenericPromise> p = mEndPromise.Ensure(__func__);
   nsresult rv = NS_NewNamedThread("Media Audio",
                                   getter_AddRefs(mThread),
                                   nullptr,
                                   MEDIA_THREAD_STACK_SIZE);
   if (NS_FAILED(rv)) {
-    mStateMachine->OnAudioSinkError();
-    return rv;
+    mEndPromise.Reject(rv, __func__);
+    return p;
   }
 
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &AudioSink::AudioLoop);
   rv =  mThread->Dispatch(event, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
-    mStateMachine->OnAudioSinkError();
-    return rv;
+    mEndPromise.Reject(rv, __func__);
+    return p;
   }
 
-  return NS_OK;
+  return p;
 }
 
 int64_t
@@ -100,7 +101,10 @@ AudioSink::Shutdown()
 {
   mThread->Shutdown();
   mThread = nullptr;
-  MOZ_ASSERT(!mAudioStream);
+  if (mAudioStream) {
+    mAudioStream->Shutdown();
+    mAudioStream = nullptr;
+  }
 }
 
 void
@@ -142,9 +146,10 @@ AudioSink::AudioLoop()
   AssertOnAudioThread();
   SINK_LOG("AudioLoop started");
 
-  if (NS_FAILED(InitializeAudioStream())) {
+  nsresult rv = InitializeAudioStream();
+  if (NS_FAILED(rv)) {
     NS_WARNING("Initializing AudioStream failed.");
-    mStateMachine->DispatchOnAudioSinkError();
+    mEndPromise.Reject(rv, __func__);
     return;
   }
 
@@ -233,16 +238,10 @@ void
 AudioSink::Cleanup()
 {
   AssertCurrentThreadInMonitor();
-  nsRefPtr<AudioStream> audioStream;
-  audioStream.swap(mAudioStream);
-  // Suppress the callback when the stop is requested by MediaDecoderStateMachine.
-  // See Bug 115334.
-  if (!mStopAudioThread) {
-    mStateMachine->DispatchOnAudioSinkComplete();
-  }
-
-  ReentrantMonitorAutoExit exit(GetReentrantMonitor());
-  audioStream->Shutdown();
+  mEndPromise.Resolve(true, __func__);
+  // Since the promise if resolved asynchronously, we don't shutdown
+  // AudioStream here so MDSM::ResyncAudioClock can get the correct
+  // audio position.
 }
 
 bool

@@ -620,6 +620,10 @@ struct GLContextSymbols
     PFNGLUNIFORMBLOCKBINDINGPROC fUniformBlockBinding;
 
     // EXT_gpu_shader4
+    typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBIIVPROC) (GLuint index, GLenum pname, GLint* params);
+    PFNGLGETVERTEXATTRIBIIVPROC fGetVertexAttribIiv;
+    typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBIUIVPROC) (GLuint index, GLenum pname, GLuint* params);
+    PFNGLGETVERTEXATTRIBIUIVPROC fGetVertexAttribIuiv;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IPROC) (GLuint index, GLint x, GLint y, GLint z, GLint w);
     PFNGLVERTEXATTRIBI4IPROC fVertexAttribI4i;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IVPROC) (GLuint index, const GLint* v);

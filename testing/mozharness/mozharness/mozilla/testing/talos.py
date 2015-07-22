@@ -444,13 +444,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             kw_options['activeTests'] = tests
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
-        # add datazilla results urls
-        for url in self.config.get('datazilla_urls', []):
-            options.extend(['--datazilla-url', url])
-        # add datazilla authfile
-        authfile = self.config.get('datazilla_authfile')
-        if authfile:
-            options.extend(['--authfile', authfile])
         # configure profiling options
         options.extend(self.query_sps_profile_options())
         # extra arguments

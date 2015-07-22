@@ -13,6 +13,7 @@
 #include "KeyboardLayout.h"
 #include <algorithm>
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
@@ -26,6 +27,12 @@ using namespace mozilla::widget;
 static nsIMM32Handler* gIMM32Handler = nullptr;
 
 PRLogModuleInfo* gIMM32Log = nullptr;
+
+static const char*
+GetBoolName(bool aBool)
+{
+  return aBool ? "true" : "false";
+}
 
 static void
 HandleSeparator(nsACString& aDesc)
@@ -137,6 +144,7 @@ UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
 DWORD nsIMM32Handler::sIMEUIProperty = 0;
 bool nsIMM32Handler::sAssumeVerticalWritingModeNotSupported = false;
+bool nsIMM32Handler::sHasFocus = false;
 
 /* static */ void
 nsIMM32Handler::EnsureHandlerInstance()
@@ -407,6 +415,20 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
 
 // static
 void
+nsIMM32Handler::OnFocusChange(bool aFocus, nsWindow* aWindow)
+{
+  MOZ_LOG(gIMM32Log, LogLevel::Info,
+    ("IMM32: OnFocusChange(aFocus=%s, aWindow=%p), sHasFocus=%s",
+     GetBoolName(aFocus), aWindow, GetBoolName(sHasFocus)));
+
+  if (gIMM32Handler) {
+    gIMM32Handler->mSelection.Clear();
+  }
+  sHasFocus = aFocus;
+}
+
+// static
+void
 nsIMM32Handler::OnUpdateComposition(nsWindow* aWindow)
 {
   if (!gIMM32Handler) {
@@ -424,13 +446,19 @@ nsIMM32Handler::OnUpdateComposition(nsWindow* aWindow)
 // static
 void
 nsIMM32Handler::OnSelectionChange(nsWindow* aWindow,
-                                  const IMENotification& aIMENotification)
+                                  const IMENotification& aIMENotification,
+                                  bool aIsIMMActive)
 {
-  if (aIMENotification.mSelectionChangeData.mCausedByComposition) {
-    return;
+  if (!aIMENotification.mSelectionChangeData.mCausedByComposition &&
+      aIsIMMActive) {
+    MaybeAdjustCompositionFont(aWindow,
+      aIMENotification.mSelectionChangeData.GetWritingMode());
   }
-  MaybeAdjustCompositionFont(aWindow,
-    aIMENotification.mSelectionChangeData.GetWritingMode());
+  // MaybeAdjustCompositionFont() may create gIMM32Handler.  So, check it
+  // after a call of MaybeAdjustCompositionFont().
+  if (gIMM32Handler) {
+    gIMM32Handler->mSelection.Update(aIMENotification);
+  }
 }
 
 // static
@@ -1134,21 +1162,20 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   NS_PRECONDITION(!aWindow->PluginHasFocus(),
     "HandleStartComposition should not be called when a plug-in has focus");
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
-  nsIntPoint point(0, 0);
-  aWindow->InitEvent(selection, &point);
-  aWindow->DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded) {
-    MOZ_LOG(gIMM32Log, LogLevel::Info,
-      ("IMM32: HandleStartComposition, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
+  Selection& selection = GetSelection();
+  if (!selection.EnsureValidSelection(aWindow)) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: HandleStartComposition, FAILED, due to "
+       "Selection::EnsureValidSelection() failure"));
     return;
   }
 
-  AdjustCompositionFont(aIMEContext, selection.GetWritingMode());
+  AdjustCompositionFont(aIMEContext, selection.mWritingMode);
 
-  mCompositionStart = selection.mReply.mOffset;
+  mCompositionStart = selection.mOffset;
 
   WidgetCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
+  nsIntPoint point(0, 0);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
 
@@ -1458,17 +1485,15 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
   *oResult = 0;
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
-  nsIntPoint point(0, 0);
-  aWindow->InitEvent(selection, &point);
-  aWindow->DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded) {
-    MOZ_LOG(gIMM32Log, LogLevel::Info,
-      ("IMM32: HandleReconvert, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
+  Selection& selection = GetSelection();
+  if (!selection.EnsureValidSelection(aWindow)) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: HandleReconvert, FAILED, due to "
+       "Selection::EnsureValidSelection() failure"));
     return false;
   }
 
-  uint32_t len = selection.mReply.mString.Length();
+  uint32_t len = selection.Length();
   uint32_t needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
 
   if (!pReconv) {
@@ -1504,7 +1529,7 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
   pReconv->dwTargetStrOffset = 0;
 
   ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
-               selection.mReply.mString.get(), len * sizeof(WCHAR));
+               selection.mString.get(), len * sizeof(WCHAR));
 
   MOZ_LOG(gIMM32Log, LogLevel::Info,
     ("IMM32: HandleReconvert, SUCCEEDED result=%ld\n",
@@ -1614,16 +1639,15 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
 
   int32_t targetOffset, targetLength;
   if (!hasCompositionString) {
-    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
-    aWindow->InitEvent(selection, &point);
-    aWindow->DispatchWindowEvent(&selection);
-    if (!selection.mSucceeded) {
-      MOZ_LOG(gIMM32Log, LogLevel::Info,
-        ("IMM32: HandleDocumentFeed, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
+    Selection& selection = GetSelection();
+    if (!selection.EnsureValidSelection(aWindow)) {
+      MOZ_LOG(gIMM32Log, LogLevel::Error,
+        ("IMM32: HandleDocumentFeed, FAILED, due to "
+         "Selection::EnsureValidSelection() failure"));
       return false;
     }
-    targetOffset = int32_t(selection.mReply.mOffset);
-    targetLength = int32_t(selection.mReply.mString.Length());
+    targetOffset = int32_t(selection.mOffset);
+    targetLength = int32_t(selection.Length());
   } else {
     targetOffset = int32_t(mCompositionStart);
     targetLength = int32_t(mCompositionString.Length());
@@ -1999,18 +2023,16 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
 {
   nsIntPoint point(0, 0);
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
-  aWindow->InitEvent(selection, &point);
-  aWindow->DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded) {
-    MOZ_LOG(gIMM32Log, LogLevel::Info,
-      ("IMM32: GetCharacterRectOfSelectedTextAt, aOffset=%lu, FAILED (NS_QUERY_SELECTED_TEXT)\n",
-       aOffset));
+  Selection& selection = GetSelection();
+  if (!selection.EnsureValidSelection(aWindow)) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: GetCharacterRectOfSelectedTextAt, FAILED, due to "
+       "Selection::EnsureValidSelection() failure"));
     return false;
   }
 
-  uint32_t offset = selection.mReply.mOffset + aOffset;
-  bool useCaretRect = selection.mReply.mString.IsEmpty();
+  uint32_t offset = selection.mOffset + aOffset;
+  bool useCaretRect = selection.mString.IsEmpty();
   if (useCaretRect && ShouldDrawCompositionStringOurselves() &&
       mIsComposing && !mCompositionString.IsEmpty()) {
     // There is not a normal selection, but we have composition string.
@@ -2058,19 +2080,16 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow,
 {
   nsIntPoint point(0, 0);
 
-  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
-  aWindow->InitEvent(selection, &point);
-  aWindow->DispatchWindowEvent(&selection);
-  if (!selection.mSucceeded) {
-    MOZ_LOG(gIMM32Log, LogLevel::Info,
-      ("IMM32: GetCaretRect,  FAILED (NS_QUERY_SELECTED_TEXT)\n"));
+  Selection& selection = GetSelection();
+  if (!selection.EnsureValidSelection(aWindow)) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: GetCaretRect, FAILED, due to "
+       "Selection::EnsureValidSelection() failure"));
     return false;
   }
 
-  uint32_t offset = selection.mReply.mOffset;
-
   WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWindow);
-  caretRect.InitForQueryCaretRect(offset);
+  caretRect.InitForQueryCaretRect(selection.mOffset);
   aWindow->InitEvent(caretRect, &point);
   aWindow->DispatchWindowEvent(&caretRect);
   if (!caretRect.mSucceeded) {
@@ -2571,4 +2590,92 @@ nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
     default:
       return false;
   }
+}
+
+/******************************************************************************
+ * nsIMM32Handler::Selection
+ ******************************************************************************/
+
+bool
+nsIMM32Handler::Selection::IsValid() const
+{
+  if (!mIsValid || NS_WARN_IF(mOffset == UINT32_MAX)) {
+    return false;
+  }
+  CheckedInt<uint32_t> endOffset =
+    CheckedInt<uint32_t>(mOffset) + Length();
+  return endOffset.isValid();
+}
+
+bool
+nsIMM32Handler::Selection::Update(const IMENotification& aIMENotification)
+{
+  mOffset = aIMENotification.mSelectionChangeData.mOffset;
+  mString = aIMENotification.mSelectionChangeData.String();
+  mWritingMode = aIMENotification.mSelectionChangeData.GetWritingMode();
+  mIsValid = true;
+
+  MOZ_LOG(gIMM32Log, LogLevel::Info,
+    ("IMM32: Selection::Update, aIMENotification={ mSelectionChangeData={ "
+     "mOffset=%u, mLength=%u, GetWritingMode()=%s } }",
+     mOffset, mString.Length(), GetWritingModeName(mWritingMode).get()));
+
+  if (!IsValid()) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: Selection::Update, FAILED, due to invalid range"));
+    Clear();
+    return false;
+  }
+  return true;
+}
+
+bool
+nsIMM32Handler::Selection::Init(nsWindow* aWindow)
+{
+  Clear();
+
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  nsIntPoint point(0, 0);
+  aWindow->InitEvent(selection, &point);
+  aWindow->DispatchWindowEvent(&selection);
+  if (NS_WARN_IF(!selection.mSucceeded)) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: Selection::Init, FAILED, due to NS_QUERY_SELECTED_TEXT "
+       "failure"));
+    return false;
+  }
+  // If the window is destroyed during querying selected text, we shouldn't
+  // do anymore.
+  if (aWindow->Destroyed()) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: Selection::Init, FAILED, due to the widget destroyed"));
+    return false;
+  }
+
+  mOffset = selection.mReply.mOffset;
+  mString = selection.mReply.mString;
+  mWritingMode = selection.GetWritingMode();
+  mIsValid = true;
+
+  MOZ_LOG(gIMM32Log, LogLevel::Info,
+    ("IMM32: Selection::Init, selection={ mReply={ mOffset=%u, "
+     "mString.Length()=%u, mWritingMode=%s } }",
+     mOffset, mString.Length(), GetWritingModeName(mWritingMode).get()));
+
+  if (!IsValid()) {
+    MOZ_LOG(gIMM32Log, LogLevel::Error,
+      ("IMM32: Selection::Init, FAILED, due to invalid range"));
+    Clear();
+    return false;
+  }
+  return true;
+}
+
+bool
+nsIMM32Handler::Selection::EnsureValidSelection(nsWindow* aWindow)
+{
+  if (IsValid()) {
+    return true;
+  }
+  return Init(aWindow);
 }

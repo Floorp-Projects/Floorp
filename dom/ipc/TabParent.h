@@ -177,7 +177,7 @@ public:
                                                bool* aConsumedByIME) override;
     virtual bool RecvNotifyIMEPositionChange(const ContentCache& aContentCache,
                                              const widget::IMENotification& aEventMessage) override;
-    virtual bool RecvOnEventNeedingAckReceived(const uint32_t& aMessage) override;
+    virtual bool RecvOnEventNeedingAckHandled(const uint32_t& aMessage) override;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        bool* aNoCompositionEvent,
                                        nsString* aComposition) override;

@@ -71,7 +71,7 @@ include "mozilla/dom/indexedDB/SerializationHelpers.h";
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
-using struct ResourceMapping from "mozilla/chrome/RegistryMessageUtils.h";
+using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
 using base::ChildPrivileges from "base/process_util.h";
 using base::ProcessId from "base/process.h";
@@ -94,7 +94,7 @@ union ChromeRegistryItem
 {
     ChromePackage;
     OverrideMapping;
-    ResourceMapping;
+    SubstitutionMapping;
 };
 
 namespace mozilla {
@@ -521,7 +521,7 @@ child:
 
     PTestShell();
 
-    RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
+    RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                    OverrideMapping[] overrides, nsCString locale, bool reset);
     RegisterChromeItem(ChromeRegistryItem item);
 

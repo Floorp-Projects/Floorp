@@ -1012,15 +1012,20 @@ class ICStubCompiler
 
     inline AllocatableGeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-        MOZ_ASSERT(!regs.has(BaselineStackReg));
 #if defined(JS_CODEGEN_ARM)
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
         MOZ_ASSERT(!regs.has(ICTailCallReg));
         regs.take(BaselineSecondScratchReg);
 #elif defined(JS_CODEGEN_MIPS)
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
         MOZ_ASSERT(!regs.has(ICTailCallReg));
         MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
 #elif defined(JS_CODEGEN_ARM64)
+        MOZ_ASSERT(!regs.has(PseudoStackPointer));
+        MOZ_ASSERT(!regs.has(RealStackPointer));
         MOZ_ASSERT(!regs.has(ICTailCallReg));
+#else
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
 #endif
         regs.take(BaselineFrameReg);
         regs.take(ICStubReg);

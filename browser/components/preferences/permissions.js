@@ -88,7 +88,7 @@ var gPermissionManager = {
       // If the uri doesn't successfully parse, try adding a http:// and parsing again
       let uri;
       try {
-        let uri = Services.io.newURI(input_url, null, null);
+        uri = Services.io.newURI(input_url, null, null);
       } catch(ex) {
         uri = Services.io.newURI("http://" + input_url, null, null);
       }

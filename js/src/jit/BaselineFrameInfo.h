@@ -228,7 +228,7 @@ class FrameInfo
         StackValue* popped = &stack[spIndex];
 
         if (adjust == AdjustStack && popped->kind() == StackValue::Stack)
-            masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
+            masm.addToStackPtr(Imm32(sizeof(Value)));
 
         // Assert when anything uses this value.
         popped->reset();
@@ -241,7 +241,7 @@ class FrameInfo
             pop(DontAdjustStack);
         }
         if (adjust == AdjustStack && poppedStack > 0)
-            masm.addPtr(Imm32(sizeof(Value) * poppedStack), BaselineStackReg);
+            masm.addToStackPtr(Imm32(sizeof(Value) * poppedStack));
     }
     inline void push(const Value& val) {
         StackValue* sv = rawPush();

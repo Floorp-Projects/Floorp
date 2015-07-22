@@ -143,9 +143,11 @@ public:
   // the composition on uexpected window.
   static void CommitComposition(nsWindow* aWindow, bool aForce = false);
   static void CancelComposition(nsWindow* aWindow, bool aForce = false);
+  static void OnFocusChange(bool aFocus, nsWindow* aWindow);
   static void OnUpdateComposition(nsWindow* aWindow);
   static void OnSelectionChange(nsWindow* aWindow,
-                                const IMENotification& aIMENotification);
+                                const IMENotification& aIMENotification,
+                                bool aIsIMMActive);
 
   static nsIMEUpdatePreference GetIMEUpdatePreference();
 
@@ -387,6 +389,36 @@ protected:
   int32_t mCursorPosition;
   uint32_t mCompositionStart;
 
+  struct Selection
+  {
+    nsString mString;
+    uint32_t mOffset;
+    mozilla::WritingMode mWritingMode;
+    bool mIsValid;
+
+    Selection()
+      : mOffset(UINT32_MAX)
+      , mIsValid(false)
+    {
+    }
+
+    void Clear()
+    {
+      mOffset = UINT32_MAX;
+      mIsValid = false;
+    }
+    uint32_t Length() const { return mString.Length(); }
+
+    bool IsValid() const;
+    bool Update(const IMENotification& aIMENotification);
+    bool Init(nsWindow* aWindow);
+    bool EnsureValidSelection(nsWindow* aWindow);
+  };
+  Selection mSelection;
+  // mSelection stores the latest selection data only when sHasFocus it true.
+  // Therefore, if sHasFocus is false, temporary instance should be used.
+  Selection GetSelection() { return sHasFocus ? mSelection : Selection(); }
+
   bool mIsComposing;
   bool mIsComposingOnPlugin;
   bool mNativeCaretIsCreated;
@@ -397,6 +429,7 @@ protected:
   static DWORD sIMEProperty;
   static DWORD sIMEUIProperty;
   static bool sAssumeVerticalWritingModeNotSupported;
+  static bool sHasFocus;
 };
 
 #endif // nsIMM32Handler_h__

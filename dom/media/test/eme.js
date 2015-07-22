@@ -1,5 +1,16 @@
 const KEYSYSTEM_TYPE = "org.w3.clearkey";
 
+function IsMacOSSnowLeopardOrEarlier() {
+  var re = /Mac OS X (\d+)\.(\d+)/;
+  var ver = navigator.userAgent.match(re);
+  if (!ver || ver.length != 3) {
+    return false;
+  }
+  var major = ver[1] | 0;
+  var minor = ver[2] | 0;
+  return major == 10 && minor <= 6;
+}
+
 function bail(message)
 {
   return function(err) {
