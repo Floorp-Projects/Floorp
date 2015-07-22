@@ -40,6 +40,7 @@ namespace mozilla {
 
 using media::TimeIntervals;
 using media::Interval;
+using media::TimeUnit;
 
 TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& aType)
   : mParentDecoder(aParentDecoder)
