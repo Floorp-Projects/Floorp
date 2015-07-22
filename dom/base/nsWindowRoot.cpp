@@ -400,26 +400,18 @@ nsWindowRoot::RemoveBrowser(mozilla::dom::TabParent* aBrowser)
   mWeakBrowsers.RemoveEntry(weakBrowser);
 }
 
-static PLDHashOperator
-WeakBrowserEnumFunc(nsRefPtrHashKey<nsIWeakReference>* aKey, void* aArg)
-{
-  nsTArray<nsRefPtr<TabParent>>* tabParents =
-    static_cast<nsTArray<nsRefPtr<TabParent>>*>(aArg);
-  nsCOMPtr<nsITabParent> tabParent(do_QueryReferent((*aKey).GetKey()));
-  TabParent* tab = TabParent::GetFrom(tabParent);
-  if (tab) {
-    tabParents->AppendElement(tab);
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg)
 {
   // Collect strong references to all browsers in a separate array in
   // case aEnumFunc alters mWeakBrowsers.
   nsTArray<nsRefPtr<TabParent>> tabParents;
-  mWeakBrowsers.EnumerateEntries(WeakBrowserEnumFunc, &tabParents);
+  for (auto iter = mWeakBrowsers.ConstIter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsITabParent> tabParent(do_QueryReferent(iter.Get()->GetKey()));
+    if (TabParent* tab = TabParent::GetFrom(tabParent)) {
+      tabParents.AppendElement(tab);
+    }
+  }
 
   for (uint32_t i = 0; i < tabParents.Length(); ++i) {
     aEnumFunc(tabParents[i], aArg);
