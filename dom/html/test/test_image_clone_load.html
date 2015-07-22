@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for image clones doing their load</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var t = async_test("The clone of an image should do the load of the same image, and do it synchronously");
+t.step(function() {
+  var img = new Image();
+  img.onload = t.step_func(function() {
+    var clone = img.cloneNode();
+    assert_not_equals(img.naturalWidth, 0, "Should have a width");
+    assert_equals(clone.naturalWidth, img.naturalWidth,
+                  "Clone should have a width too");
+    // And make sure the clone fires onload too, which happens async.
+    clone.onload = function() { t.done() }
+  });
+  img.src = "image.png";
+});
+</script>
