@@ -1090,7 +1090,8 @@ protected:
    * @param aOldValue     previous value of attribute. Only needed if
    *                      aFireMutation is true or if the element is a
    *                      custom element (in web components).
-   * @param aParsedValue  parsed new value of attribute
+   * @param aParsedValue  parsed new value of attribute. Replaced by the
+   *                      old value of the attribute.
    * @param aModType      nsIDOMMutationEvent::MODIFICATION or ADDITION.  Only
    *                      needed if aFireMutation or aNotify is true.
    * @param aFireMutation should mutation-events be fired?
