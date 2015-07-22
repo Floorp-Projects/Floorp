@@ -929,6 +929,9 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
       ABORT(r);
     if(r=nr_transport_addr_get_port(&cand->addr,&port))
       ABORT(r);
+    /* https://tools.ietf.org/html/rfc6544#section-4.5 */
+    if (cand->base.protocol==IPPROTO_TCP && cand->tcp_type==TCP_TYPE_ACTIVE)
+      port=9;
     snprintf(attr,maxlen,"candidate:%s %d %s %u %s %d typ %s",
       cand->foundation, cand->component_id, cand->addr.protocol==IPPROTO_UDP?"UDP":"TCP",cand->priority, addr, port,
       nr_ctype_name(cand->type));
