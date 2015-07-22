@@ -56,7 +56,7 @@ public:
   // channels.  aOutputChunk must have already been allocated with at least as
   // many channels as were in any of the blocks passed to Write().
   void ReadChannel(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                   const AudioChunk* aOutputChunk, uint32_t aChannel,
+                   AudioChunk* aOutputChunk, uint32_t aChannel,
                    ChannelInterpretation aChannelInterpretation);
 
   // Advance the buffer pointer
@@ -80,7 +80,7 @@ public:
 
 private:
   void ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                    const AudioChunk* aOutputChunk,
+                    AudioChunk* aOutputChunk,
                     uint32_t aFirstChannel, uint32_t aNumChannelsToRead,
                     ChannelInterpretation aChannelInterpretation);
   bool EnsureBuffer();

@@ -232,7 +232,7 @@ public:
       float* scaledSample = (float *)(aInput.mChannelData[i]);
       AudioBlockInPlaceScale(scaledSample, aInput.mVolume);
       const float* inputBuffer = static_cast<const float*>(scaledSample);
-      float* outputBuffer = const_cast<float*> (static_cast<const float*>(aOutput->mChannelData[i]));
+      float* outputBuffer = aOutput->ChannelFloatsForWrite(i);
       float* sampleBuffer;
 
       switch (mType) {
