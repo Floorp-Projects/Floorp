@@ -31,7 +31,16 @@
   <input id='o' type="file" accept=".test">
   <input id='p' type="file" accept="image/gif,.csv">
   <input id='q' type="file" accept="image/gif,.gif">
+  <input id='r' type="file" accept=".prefix,.prefixPlusSomething">
+  <input id='s' type="file" accept=".xls,.xlsx">
+  <input id='t' type="file" accept=".mp3,.wav,.flac">
+  <input id='u' type="file" accept=".xls, .xlsx">
+  <input id='v' type="file" accept=".xlsx,  .xls">
+  <input id='w' type="file" accept=".xlsx;  .xls">
+  <input id='x' type="file" accept=".xls,  .xlsx">
+  <input id='y' type="file" accept=".xlsx, .xls">
   <input id='z' type='file' accept="i/am,a,pathological,;,,,,test/case">
+  <input id='A' type="file" accept=".xlsx, .xls*">
   <input id='mix-ref' type="file" accept="image/jpeg">
   <input id='mix' type="file" accept="image/jpeg,.jpg">
   <input id='hidden' hidden type='file'>
@@ -91,7 +100,16 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["o", 1, "*.test", 1],
                 ["p", 3, "*.gif; *.csv", 1],
                 ["q", 1, "*.gif", 1],
+                ["r", 3, "*.prefix; *.prefixPlusSomething", 1],
+                ["s", 3, "*.xls; *.xlsx", 1],
+                ["t", 4, "*.mp3; *.wav; *.flac", 1],
+                ["u", 3, "*.xls; *.xlsx", 1],
+                ["v", 3, "*.xlsx; *.xls", 1],
+                ["w", 0, undefined, 0],
+                ["x", 3, "*.xls; *.xlsx", 1],
+                ["y", 3, "*.xlsx; *.xls", 1],
                 ["z", 0, undefined, 0],
+                ["A", 1, "*.xlsx", 1],
                 // Note: mix and mix-ref tests extension lists are checked differently: see SimpleTest.executeSoon below
                 ["mix-ref", undefined, undefined, undefined],
                 ["mix", 1, undefined, 1],

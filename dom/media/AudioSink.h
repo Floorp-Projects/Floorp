@@ -37,12 +37,8 @@ public:
   // played.
   bool HasUnplayedFrames();
 
-  // Tell the AudioSink to stop processing and initiate shutdown.  Must be
-  // called with the decoder monitor held.
-  void PrepareToShutdown();
-
-  // Shut down the AudioSink's resources.  The decoder monitor must not be
-  // held during this call, as it may block processing thread event queues.
+  // Shut down the AudioSink's resources.
+  // Must be called with the decoder monitor held.
   void Shutdown();
 
   void SetVolume(double aVolume);

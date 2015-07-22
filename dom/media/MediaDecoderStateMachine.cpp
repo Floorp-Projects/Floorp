@@ -1282,9 +1282,6 @@ void MediaDecoderStateMachine::Shutdown()
   // threads can start exiting cleanly during the Shutdown call.
   ScheduleStateMachine();
   SetState(DECODER_STATE_SHUTDOWN);
-  if (mAudioSink) {
-    mAudioSink->PrepareToShutdown();
-  }
 
   mQueuedSeek.RejectIfExists(__func__);
   mPendingSeek.RejectIfExists(__func__);
@@ -1473,11 +1470,7 @@ void MediaDecoderStateMachine::StopAudioThread()
 
   if (mAudioSink) {
     DECODER_LOG("Shutdown audio thread");
-    mAudioSink->PrepareToShutdown();
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      mAudioSink->Shutdown();
-    }
+    mAudioSink->Shutdown();
     mAudioSink = nullptr;
   }
   mAudioSinkPromise.DisconnectIfExists();
@@ -2374,7 +2367,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
               elapsed < TimeDuration::FromSeconds(mBufferingWait * mPlaybackRate) &&
               (mQuickBuffering ? HasLowDecodedData(mQuickBufferingLowDataThresholdUsecs)
                                : HasLowUndecodedData(mBufferingWait * USECS_PER_S)) &&
-              mDecoder->IsExpectingMoreData())
+              mResource->IsExpectingMoreData())
         {
           DECODER_LOG("Buffering: wait %ds, timeout in %.3lfs %s",
                       mBufferingWait, mBufferingWait - elapsed.ToSeconds(),
@@ -2734,7 +2727,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   // If we don't, switch to buffering mode.
   if (mState == DECODER_STATE_DECODING &&
       mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-      mDecoder->IsExpectingMoreData()) {
+      mResource->IsExpectingMoreData()) {
     bool shouldBuffer;
     if (mReader->UseBufferingHeuristics()) {
       shouldBuffer = HasLowDecodedData(remainingTime + EXHAUSTED_DATA_MARGIN_USECS) &&
