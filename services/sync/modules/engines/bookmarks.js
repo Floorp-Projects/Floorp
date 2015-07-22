@@ -269,11 +269,24 @@ BookmarksEngine.prototype = {
               id, SMART_BOOKMARKS_ANNO);
           } catch(ex) {}
 
-          if (queryId)
+          if (queryId) {
             key = "q" + queryId;
-          else
-            key = "b" + PlacesUtils.bookmarks.getBookmarkURI(id).spec + ":" +
-                  PlacesUtils.bookmarks.getItemTitle(id);
+          } else {
+            let uri;
+            try {
+              uri = PlacesUtils.bookmarks.getBookmarkURI(id);
+            } catch (ex) {
+              // Bug 1182366 - NS_ERROR_MALFORMED_URI here stops bookmarks sync.
+              this._log.warn("Deleting bookmark with invalid URI. id: " + id);
+              try {
+                PlacesUtils.bookmarks.removeItem(id);
+              } catch (ex) {
+                this._log.warn("Failed to delete invalid bookmark", ex);
+              }
+              continue;
+            }
+            key = "b" + uri.spec + ":" + PlacesUtils.bookmarks.getItemTitle(id);
+          }
           break;
         case PlacesUtils.bookmarks.TYPE_FOLDER:
           key = "f" + PlacesUtils.bookmarks.getItemTitle(id);
