@@ -309,6 +309,7 @@ class BuildOptionParser(object):
     # platform/bits
     build_variants = {
         'asan': 'builds/releng_sub_%s_configs/%s_asan.py',
+        'tsan': 'builds/releng_sub_%s_configs/%s_tsan.py',
         'b2g-debug': 'b2g/releng_sub_%s_configs/%s_debug.py',
         'debug': 'builds/releng_sub_%s_configs/%s_debug.py',
         'asan-and-debug': 'builds/releng_sub_%s_configs/%s_asan_and_debug.py',
