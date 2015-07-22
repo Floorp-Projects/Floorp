@@ -110,6 +110,7 @@ let DebuggerView = {
     this._workersAndSourcesPane = document.getElementById("workers-and-sources-pane");
     this._instrumentsPane = document.getElementById("instruments-pane");
     this._instrumentsPaneToggleButton = document.getElementById("instruments-pane-toggle");
+    this._promisePane = document.getElementById("promise-debugger-pane");
 
     this.showEditor = this.showEditor.bind(this);
     this.showBlackBoxMessage = this.showBlackBoxMessage.bind(this);
@@ -146,6 +147,7 @@ let DebuggerView = {
     this._workersAndSourcesPane = null;
     this._instrumentsPane = null;
     this._instrumentsPaneToggleButton = null;
+    this._promisePane = null;
   },
 
   /**
@@ -601,7 +603,6 @@ let DebuggerView = {
    * Switches the debugger widgets to a horizontal layout.
    */
   _enterVerticalLayout: function() {
-    let normContainer = document.getElementById("debugger-widgets");
     let vertContainer = document.getElementById("vertical-layout-panes-container");
 
     // Move the soruces and instruments panes in a different container.
@@ -620,13 +621,13 @@ let DebuggerView = {
    */
   _enterHorizontalLayout: function() {
     let normContainer = document.getElementById("debugger-widgets");
-    let vertContainer = document.getElementById("vertical-layout-panes-container");
+    let editorPane = document.getElementById("editor-and-instruments-pane");
 
     // The sources and instruments pane need to be inserted at their
     // previous locations in their normal container.
     let splitter = document.getElementById("sources-and-editor-splitter");
     normContainer.insertBefore(this._workersAndSourcesPane, splitter);
-    normContainer.appendChild(this._instrumentsPane);
+    editorPane.appendChild(this._instrumentsPane);
 
     // Revert to the preferred sources and instruments widths, because
     // they flexed in the vertical layout.
