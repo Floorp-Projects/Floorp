@@ -7212,8 +7212,12 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
                                       getter_Copies(extensionListStr));
     } else if (token.First() == '.') {
+      if (token.FindChar(';') >= 0  || token.FindChar('*') >= 0) {
+        // Ignore this filter as it contains reserved characters
+        continue;
+      }
       extensionListStr = NS_LITERAL_STRING("*") + token;
-      filterName = extensionListStr + NS_LITERAL_STRING("; ");
+      filterName = extensionListStr;
       atLeastOneFileExtensionFilter = true;
     } else {
       //... if no image/audio/video filter is found, check mime types filters
@@ -7291,7 +7295,14 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
       if (i == j) {
         continue;
       }
-      if (FindInReadable(filterToCheck.mFilter, filtersCopy[j].mFilter)) {
+      // Check if this filter's extension list is a substring of the other one.
+      // e.g. if filters are "*.jpeg" and "*.jpeg; *.jpg" the first one should
+      // be removed.
+      // Add an extra "; " to be sure the check will work and avoid cases like
+      // "*.xls" being a subtring of "*.xslx" while those are two differents
+      // filters and none should be removed.
+      if (FindInReadable(filterToCheck.mFilter + NS_LITERAL_STRING(";"),
+                         filtersCopy[j].mFilter + NS_LITERAL_STRING(";"))) {
         // We already have a similar, less restrictive filter (i.e.
         // filterToCheck extensionList is just a subset of another filter
         // extension list): remove this one

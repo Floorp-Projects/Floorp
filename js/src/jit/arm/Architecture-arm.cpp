@@ -50,7 +50,7 @@ ParseARMCpuFeatures(const char* features, bool override = false)
     uint32_t flags = 0;
 
     for (;;) {
-        char  ch = *features;
+        char ch = *features;
         if (!ch) {
             // End of string.
             break;
