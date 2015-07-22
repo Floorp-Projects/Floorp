@@ -1878,15 +1878,6 @@ BoxObjectTraverser(nsIContent* key, nsPIBoxObject* boxObject, void* userArg)
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  aEntry->Traverse(cb);
-  return PL_DHASH_NEXT;
-}
-
 static const char* kNSURIs[] = {
   "([none])",
   "(xmlns)",
@@ -1935,7 +1926,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-  tmp->mIdentifierMap.EnumerateEntries(IdentifierMapEntryTraverse, &cb);
+  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done();
+       iter.Next()) {
+    iter.Get()->Traverse(&cb);
+  }
 
   tmp->mExternalResourceMap.Traverse(&cb);
 
@@ -9469,15 +9463,6 @@ nsDocument::DestroyElementMaps()
   ++mExpandoAndGeneration.generation;
 }
 
-static
-PLDHashOperator
-EnumerateStyledLinks(nsPtrHashKey<Link>* aEntry, void* aArray)
-{
-  LinkArray* array = static_cast<LinkArray*>(aArray);
-  (void)array->AppendElement(aEntry->GetKey());
-  return PL_DHASH_NEXT;
-}
-
 void
 nsDocument::RefreshLinkHrefs()
 {
@@ -9485,7 +9470,9 @@ nsDocument::RefreshLinkHrefs()
   // remove them from the document, so we need a copy of what is in the
   // hashtable.
   LinkArray linksToNotify(mStyledLinks.Count());
-  (void)mStyledLinks.EnumerateEntries(EnumerateStyledLinks, &linksToNotify);
+  for (auto iter = mStyledLinks.ConstIter(); !iter.Done(); iter.Next()) {
+    linksToNotify.AppendElement(iter.Get()->GetKey());
+  }
 
   // Reset all of our styled links.
   nsAutoScriptBlocker scriptBlocker;
@@ -10217,13 +10204,6 @@ nsIDocument::UnregisterPendingLinkUpdate(Link* aLink)
   mLinksToUpdate.RemoveEntry(aLink);
 }
 
-static PLDHashOperator
-EnumeratePendingLinkUpdates(nsPtrHashKey<Link>* aEntry, void* aData)
-{
-  aEntry->GetKey()->GetElement()->UpdateLinkState(aEntry->GetKey()->LinkState());
-  return PL_DHASH_NEXT;
-}
-
 void
 nsIDocument::FlushPendingLinkUpdates()
 {
@@ -10235,7 +10215,10 @@ nsIDocument::FlushPendingLinkUpdates()
   AutoRestore<bool> saved(mIsLinkUpdateRegistrationsForbidden);
   mIsLinkUpdateRegistrationsForbidden = true;
 #endif
-  mLinksToUpdate.EnumerateEntries(EnumeratePendingLinkUpdates, nullptr);
+  for (auto iter = mLinksToUpdate.ConstIter(); !iter.Done(); iter.Next()) {
+    Link* link = iter.Get()->GetKey();
+    link->GetElement()->UpdateLinkState(link->LinkState());
+  }
   mLinksToUpdate.Clear();
   mHasLinksToUpdate = false;
 }
@@ -10607,21 +10590,13 @@ AllSubDocumentPluginEnum(nsIDocument* aDocument, void* userArg)
   return true;
 }
 
-static PLDHashOperator
-AllPluginEnum(nsPtrHashKey<nsIObjectLoadingContent>* aPlugin, void* userArg)
-{
-  nsTArray<nsIObjectLoadingContent*>* allPlugins =
-    reinterpret_cast< nsTArray<nsIObjectLoadingContent*>* >(userArg);
-  MOZ_ASSERT(allPlugins);
-  allPlugins->AppendElement(aPlugin->GetKey());
-  return PL_DHASH_NEXT;
-}
-
 void
 nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
 {
   aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
-  mPlugins.EnumerateEntries(AllPluginEnum, &aPlugins);
+  for (auto iter = mPlugins.ConstIter(); !iter.Done(); iter.Next()) {
+    aPlugins.AppendElement(iter.Get()->GetKey());
+  }
   EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
 }
 
@@ -10641,20 +10616,17 @@ nsDocument::RemoveResponsiveContent(nsIContent* aContent)
   mResponsiveContent.RemoveEntry(aContent);
 }
 
-static PLDHashOperator
-NotifyMediaFeatureEnum(nsPtrHashKey<nsIContent>* aContent, void* userArg)
-{
-  nsCOMPtr<nsIContent> content = aContent->GetKey();
-  if (content->IsHTMLElement(nsGkAtoms::img)) {
-    static_cast<HTMLImageElement*>(content.get())->MediaFeatureValuesChanged();
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsDocument::NotifyMediaFeatureValuesChanged()
 {
-  mResponsiveContent.EnumerateEntries(NotifyMediaFeatureEnum, nullptr);
+  for (auto iter = mResponsiveContent.ConstIter(); !iter.Done();
+       iter.Next()) {
+    nsCOMPtr<nsIContent> content = iter.Get()->GetKey();
+    if (content->IsHTMLElement(nsGkAtoms::img)) {
+      auto* imageElement = static_cast<HTMLImageElement*>(content.get());
+      imageElement->MediaFeatureValuesChanged();
+    }
+  }
 }
 
 PLDHashOperator LockEnumerator(imgIRequest* aKey,
