@@ -1226,7 +1226,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
     #urlbar:not(:-moz-lwtheme):hover,
     .searchbar-textbox:not(:-moz-lwtheme):hover {
       border-color: hsl(0,0%,80%);
-      box-shadow: 0 0 0 1px hsl(0,0%,80%) inset;
     }
 
     #urlbar:not(:-moz-lwtheme)[focused],
