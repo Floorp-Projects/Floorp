@@ -139,7 +139,7 @@
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="15a9b66de9b7d84c7ea63df3a834f095bca9e493"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="8d7676dfb68ee0cd069affedd5d1e97316a184ba"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="2a1ded216a91bf62a72b1640cf01ab4998f37028"/>
-  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="37293646f6f0cbfd4fb631536984e056bef0fd2a"/>
+  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="4a83e04c3fecffbcab75cd59bad2ae5f342778b7"/>
   <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="9883ea57b0668d8f60dba025d4522dfa69a1fbfa"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="a558dc844bf5144fc38603fd8f4df8d9557052a5"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="57ee1320ed7b4a1a1274d8f3f6c177cd6b9becb2"/>
