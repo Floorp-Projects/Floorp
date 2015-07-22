@@ -1449,22 +1449,18 @@ FindOptimizableSubtreeRoot(nsINode* aNode)
 
 StaticAutoPtr<nsTHashtable<nsPtrHashKey<nsINode>>> gCCBlackMarkedNodes;
 
-static PLDHashOperator
-VisitBlackMarkedNode(nsPtrHashKey<nsINode>* aEntry, void*)
-{
-  nsINode* n = aEntry->GetKey();
-  n->SetCCMarkedRoot(false);
-  n->SetInCCBlackTree(false);
-  return PL_DHASH_NEXT;
-}
-
 static void
 ClearBlackMarkedNodes()
 {
   if (!gCCBlackMarkedNodes) {
     return;
   }
-  gCCBlackMarkedNodes->EnumerateEntries(VisitBlackMarkedNode, nullptr);
+  for (auto iter = gCCBlackMarkedNodes->ConstIter(); !iter.Done();
+       iter.Next()) {
+    nsINode* n = iter.Get()->GetKey();
+    n->SetCCMarkedRoot(false);
+    n->SetInCCBlackTree(false);
+  }
   gCCBlackMarkedNodes = nullptr;
 }
 
