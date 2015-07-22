@@ -1933,6 +1933,15 @@ MarkupContainer.prototype = {
       event.preventDefault();
     }
 
+    let isMiddleClick = event.button === 1;
+    let isMetaClick = event.button === 0 && (event.metaKey || event.ctrlKey);
+
+    if (isMiddleClick || isMetaClick) {
+      let link = target.dataset.link;
+      let type = target.dataset.type;
+      this.markup._inspector.followAttributeLink(type, link);
+    }
+
     // Start dragging the container after a delay.
     this.markup._dragStartEl = target;
     setTimeout(() => {

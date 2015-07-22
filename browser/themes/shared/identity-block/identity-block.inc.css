@@ -48,6 +48,9 @@
   background-size: 1px;
   background-repeat: no-repeat;
   background-image: var(--identity-box-background-image);
+  font-size: .9em;
+  padding: 2px 5px;
+  margin-inline-end: 4px;
 }
 
 #identity-box:-moz-locale-dir(rtl) {
@@ -69,11 +72,52 @@
   background-image: var(--identity-box-chrome-background-image);
 }
 
+#identity-icon-labels {
+  padding-inline-start: 2px;
+}
+
+#notification-popup-box:not([hidden]) + #identity-box {
+  -moz-padding-start: 10px;
+  border-radius: 0;
+}
+
+@conditionalForwardWithUrlbar@ > #urlbar > #identity-box {
+  border-radius: 0;
+}
+
+@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar > #identity-box {
+  transition: padding-left, padding-right;
+}
+
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px);
+}
+
+@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+  padding-right: calc(var(--backbutton-urlbar-overlap) + 4px);
+}
+
+@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
+  /* forward button hiding is delayed when hovered */
+  transition-delay: 100s;
+}
+
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
+  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 4.01px);
+}
+
+@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
+  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
+  padding-right: calc(var(--backbutton-urlbar-overlap) + 4.01px);
+}
+
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {
   width: 16px;
   height: 16px;
+  margin-inline-end: 2px;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
 }
 

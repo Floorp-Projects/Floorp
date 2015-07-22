@@ -22,7 +22,7 @@ add_task(function*() {
 
   info("Follow the link and wait for the style-editor to open");
   let onStyleEditorReady = toolbox.once("styleeditor-ready");
-  inspector.followAttributeLink();
+  inspector.onFollowLink();
   yield onStyleEditorReady;
 
   // No real need to test that the editor opened on the right file here as this
@@ -42,7 +42,7 @@ add_task(function*() {
 
   info("Follow the link and wait for the debugger to open");
   let onDebuggerReady = toolbox.once("jsdebugger-ready");
-  inspector.followAttributeLink();
+  inspector.onFollowLink();
   yield onDebuggerReady;
 
   // No real need to test that the debugger opened on the right file here as

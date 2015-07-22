@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gServiceWorkerManager",
                                   "nsIServiceWorkerManager");
 
 function debug(aMsg) {
-  // dump("AboutServiceWorkers - " + aMsg + "\n");
+  dump("AboutServiceWorkers - " + aMsg + "\n");
 }
 
 function serializeServiceWorkerInfo(aServiceWorkerInfo) {

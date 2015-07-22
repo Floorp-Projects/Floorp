@@ -9,6 +9,8 @@
 
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "SerializedLoadContext.h"
@@ -16,6 +18,33 @@
 using namespace mozilla::ipc;
 using mozilla::dom::PContentParent;
 using mozilla::net::NeckoParent;
+
+namespace {
+
+bool
+CreateDummyChannel(nsIURI* aHostURI, bool aIsPrivate, nsIChannel **aChannel)
+{
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsresult rv = ssm->GetNoAppCodebasePrincipal(aHostURI, getter_AddRefs(principal));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_NewChannel(getter_AddRefs(dummyChannel), aHostURI, principal,
+                nsILoadInfo::SEC_NORMAL, nsIContentPolicy::TYPE_INVALID);
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(dummyChannel);
+  if (!pbChannel) {
+    return false;
+  }
+
+  pbChannel->SetPrivate(aIsPrivate);
+  dummyChannel.forget(aChannel);
+  return true;
+}
+
+}
 
 namespace mozilla {
 namespace net {
@@ -126,11 +155,22 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
     return false;
   }
 
+  // This is a gross hack. We've already computed everything we need to know
+  // for whether to set this cookie or not, but we need to communicate all of
+  // this information through to nsICookiePermission, which indirectly
+  // computes the information from the channel. We only care about the
+  // aIsPrivate argument as nsCookieService::SetCookieStringInternal deals
+  // with aIsForeign before we have to worry about nsCookiePermission trying
+  // to use the channel to inspect it.
+  nsCOMPtr<nsIChannel> dummyChannel;
+  if (!CreateDummyChannel(hostURI, isPrivate, getter_AddRefs(dummyChannel))) {
+    return false;
+  }
+
   nsDependentCString cookieString(aCookieString, 0);
-  //TODO: bug 812475, pass a real channel object
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
                                           aServerTime, aFromHttp, appId,
-                                          isInBrowserElement, isPrivate, nullptr);
+                                          isInBrowserElement, isPrivate, dummyChannel);
   return true;
 }
 

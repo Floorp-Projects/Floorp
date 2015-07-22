@@ -8,13 +8,13 @@ package org.mozilla.gecko.favicons;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.http.AndroidHttpClient;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import android.text.TextUtils;
 import android.util.Log;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.Header;
+import ch.boye.httpclientandroidlib.HttpEntity;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
@@ -72,7 +72,7 @@ public class LoadFaviconTask {
     private LinkedList<LoadFaviconTask> chainees;
     private boolean isChaining;
 
-    static AndroidHttpClient httpClient = AndroidHttpClient.newInstance(GeckoAppShell.getGeckoInterface().getDefaultUAString());
+    static DefaultHttpClient httpClient = new DefaultHttpClient();
 
     public LoadFaviconTask(Context context, String pageURL, String faviconURL, int flags, OnFaviconLoadedListener listener) {
         this(context, pageURL, faviconURL, flags, listener, -1, false);
@@ -128,6 +128,7 @@ public class LoadFaviconTask {
         }
 
         HttpGet request = new HttpGet(faviconURI);
+        request.setHeader("User-Agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
         HttpResponse response = httpClient.execute(request);
         if (response == null) {
             return null;

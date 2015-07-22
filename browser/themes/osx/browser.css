@@ -18,8 +18,10 @@
 
 :root {
   --space-above-tabbar: 9px;
-
   --tabs-toolbar-color: #333;
+
+  --backbutton-urlbar-overlap: 6px;
+
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
   --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
@@ -1633,7 +1635,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 @conditionalForwardWithUrlbar@ {
   clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
-  -moz-margin-start: -6px;
+  margin-inline-start: calc(-1 * var(--backbutton-urlbar-overlap));
 }
 
 @conditionalForwardWithUrlbar@:-moz-locale-dir(rtl),
@@ -1646,24 +1648,19 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-box-direction: reverse;
 }
 
-#identity-box {
-  margin: 0;
-  -moz-margin-end: 3px;
-  padding: 1px 4px;
-  font-size: .9em;
-}
-
 #urlbar:not([focused="true"]) > #identity-box {
-  margin: -1px 0;
-  -moz-margin-end: 3px;
-  padding: 2px 4px;
+  margin-top: -1px;
+  margin-bottom: -1px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 @media (-moz-mac-yosemite-theme) {
   #urlbar:not([focused="true"]):not(:-moz-window-inactive) > #identity-box {
-    margin: -2px 0;
-    -moz-margin-end: 3px;
-    padding: 3px 4px;
+    margin-top: -2px;
+    margin-bottom: -2px;
+    padding-top: 4px;
+    padding-bottom: 4px;
   }
   #identity-box {
     --identity-box-selected-background-color: rgb(240,237,237);
@@ -1680,49 +1677,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   border-bottom-right-radius: 2px;
 }
 
-#notification-popup-box:not([hidden]) + #identity-box {
-  -moz-padding-start: 10px !important;
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar > #identity-box {
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar > #identity-box {
-  transition: padding-left, padding-right;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
-  padding-left: 10px;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  padding-right: 10px;
-}
-
-@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
-  /* forward button hiding is delayed when hovered */
-  transition-delay: 100s;
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
-  padding-left: 10.01px;
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  padding-right: 10.01px;
-}
-
 #identity-box:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
               0 0 2px 2px -moz-mac-focusring;
   -moz-border-end-style: none;
   -moz-padding-end: 5px;
-}
-
-#identity-icon-labels {
-  -moz-margin-start: 4px;
 }
 
 .urlbar-input-box {
@@ -1806,11 +1765,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 %include ../shared/identity-block/identity-block.inc.css
-
-#page-proxy-favicon {
-  margin: 0px;
-  padding: 0px;
-}
 
 #wrapper-urlbar-container[place="palette"] {
   max-width: 20em;
