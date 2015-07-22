@@ -32,6 +32,9 @@ namespace net {
 // Initial elements buffer size.
 #define kInitialBufSize 64
 
+// Max size of elements in bytes.
+#define kMaxElementsSize 64*1024
+
 #define kCacheEntryVersion 1
 
 #define NOW_SECONDS() (uint32_t(PR_Now() / PR_USEC_PER_SEC))
@@ -236,6 +239,17 @@ CacheFileMetadata::ReadMetadata(CacheFileMetadataListener *aListener)
   return NS_OK;
 }
 
+uint32_t
+CacheFileMetadata::CalcMetadataSize(uint32_t aElementsSize, uint32_t aHashCount)
+{
+  return sizeof(uint32_t) +                         // hash of the metadata
+         aHashCount * sizeof(CacheHash::Hash16_t) + // array of chunk hashes
+         sizeof(CacheFileMetadataHeader) +          // metadata header
+         mKey.Length() + 1 +                        // key with trailing null
+         aElementsSize +                            // elements
+         sizeof(uint32_t);                          // offset
+}
+
 nsresult
 CacheFileMetadata::WriteMetadata(uint32_t aOffset,
                                  CacheFileMetadataListener *aListener)
@@ -250,10 +264,11 @@ CacheFileMetadata::WriteMetadata(uint32_t aOffset,
 
   mIsDirty = false;
 
-  mWriteBuf = static_cast<char *>(moz_xmalloc(sizeof(uint32_t) +
-                mHashCount * sizeof(CacheHash::Hash16_t) +
-                sizeof(CacheFileMetadataHeader) + mKey.Length() + 1 +
-                mElementsSize + sizeof(uint32_t)));
+  mWriteBuf = static_cast<char *>(malloc(CalcMetadataSize(mElementsSize,
+                                                          mHashCount)));
+  if (!mWriteBuf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   char *p = mWriteBuf + sizeof(uint32_t);
   memcpy(p, mHashArray, mHashCount * sizeof(CacheHash::Hash16_t));
@@ -406,6 +421,8 @@ CacheFileMetadata::SetElement(const char *aKey, const char *aValue)
 
   MarkDirty();
 
+  nsresult rv;
+
   const uint32_t keySize = strlen(aKey) + 1;
   char *pos = const_cast<char *>(GetElement(aKey));
 
@@ -431,7 +448,10 @@ CacheFileMetadata::SetElement(const char *aKey, const char *aValue)
 
     // Update the value in place
     newSize -= oldValueSize;
-    EnsureBuffer(newSize);
+    rv = EnsureBuffer(newSize);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     // Move the remainder to the right place
     pos = mBuf + offset;
@@ -439,7 +459,10 @@ CacheFileMetadata::SetElement(const char *aKey, const char *aValue)
   } else {
     // allocate new meta data element
     newSize += keySize;
-    EnsureBuffer(newSize);
+    rv = EnsureBuffer(newSize);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     // Add after last element
     pos = mBuf + mElementsSize;
@@ -665,8 +688,23 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
 
   if (realOffset >= size) {
     LOG(("CacheFileMetadata::OnDataRead() - Invalid realOffset, creating "
-         "empty metadata. [this=%p, realOffset=%d, size=%lld]", this,
+         "empty metadata. [this=%p, realOffset=%u, size=%lld]", this,
          realOffset, size));
+
+    InitEmptyMetadata();
+
+    mListener.swap(listener);
+    listener->OnMetadataRead(NS_OK);
+    return NS_OK;
+  }
+
+  uint32_t maxHashCount = size / kChunkSize;
+  uint32_t maxMetadataSize = CalcMetadataSize(kMaxElementsSize, maxHashCount);
+  if (size - realOffset > maxMetadataSize) {
+    LOG(("CacheFileMetadata::OnDataRead() - Invalid realOffset, metadata would "
+         "be too big, creating empty metadata. [this=%p, realOffset=%u, "
+         "maxMetadataSize=%u, size=%lld]", this, realOffset, maxMetadataSize,
+         size));
 
     InitEmptyMetadata();
 
@@ -932,9 +970,13 @@ CacheFileMetadata::CheckElements(const char *aBuf, uint32_t aSize)
   return NS_OK;
 }
 
-void
+nsresult
 CacheFileMetadata::EnsureBuffer(uint32_t aSize)
 {
+  if (aSize > kMaxElementsSize) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (mBufSize < aSize) {
     if (mAllocExactSize) {
       // If this is not the only allocation, use power of two for following
@@ -955,11 +997,17 @@ CacheFileMetadata::EnsureBuffer(uint32_t aSize)
       aSize = kInitialBufSize;
     }
 
+    char *newBuf = static_cast<char *>(realloc(mBuf, aSize));
+    if (!newBuf) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     mBufSize = aSize;
-    mBuf = static_cast<char *>(moz_xrealloc(mBuf, mBufSize));
+    mBuf = newBuf;
 
     DoMemoryReport(MemoryUsage());
   }
+
+  return NS_OK;
 }
 
 nsresult

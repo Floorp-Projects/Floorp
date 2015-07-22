@@ -472,34 +472,18 @@ DOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
   return CreateStorage(nullptr, aPrincipal, aDocumentURI, aPrivate, aRetval);
 }
 
-namespace {
-
-class ClearCacheEnumeratorData
+void
+DOMStorageManager::ClearCaches(uint32_t aUnloadFlags,
+                               const nsACString& aKeyPrefix)
 {
-public:
-  explicit ClearCacheEnumeratorData(uint32_t aFlags)
-    : mUnloadFlags(aFlags)
-  {}
+  for (auto iter = mCaches.Iter(); !iter.Done(); iter.Next()) {
+    DOMStorageCache* cache = iter.Get()->cache();
+    nsCString& key = const_cast<nsCString&>(cache->Scope());
 
-  uint32_t mUnloadFlags;
-  nsCString mKeyPrefix;
-};
-
-} // namespace
-
-PLDHashOperator
-DOMStorageManager::ClearCacheEnumerator(DOMStorageCacheHashKey* aEntry, void* aClosure)
-{
-  DOMStorageCache* cache = aEntry->cache();
-  nsCString& key = const_cast<nsCString&>(cache->Scope());
-
-  ClearCacheEnumeratorData* data = static_cast<ClearCacheEnumeratorData*>(aClosure);
-
-  if (data->mKeyPrefix.IsEmpty() || StringBeginsWith(key, data->mKeyPrefix)) {
-    cache->UnloadItems(data->mUnloadFlags);
+    if (aKeyPrefix.IsEmpty() || StringBeginsWith(key, aKeyPrefix)) {
+      cache->UnloadItems(aUnloadFlags);
+    }
   }
-
-  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -507,37 +491,27 @@ DOMStorageManager::Observe(const char* aTopic, const nsACString& aScopePrefix)
 {
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-cleared")) {
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadComplete);
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadComplete, EmptyCString());
     return NS_OK;
   }
 
   // Clear from caches everything that has been stored
   // while in session-only mode
   if (!strcmp(aTopic, "session-only-cleared")) {
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadSession);
-    data.mKeyPrefix = aScopePrefix;
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadSession, aScopePrefix);
     return NS_OK;
   }
 
   // Clear everything (including so and pb data) from caches and database
   // for the gived domain and subdomains.
   if (!strcmp(aTopic, "domain-data-cleared")) {
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadComplete);
-    data.mKeyPrefix = aScopePrefix;
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadComplete, aScopePrefix);
     return NS_OK;
   }
 
   // Clear all private-browsing caches
   if (!strcmp(aTopic, "private-browsing-data-cleared")) {
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadPrivate);
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadPrivate, EmptyCString());
     return NS_OK;
   }
 
@@ -549,18 +523,13 @@ DOMStorageManager::Observe(const char* aTopic, const nsACString& aScopePrefix)
       return NS_OK;
     }
 
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadComplete);
-    data.mKeyPrefix = aScopePrefix;
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadComplete, aScopePrefix);
     return NS_OK;
   }
 
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
-    ClearCacheEnumeratorData data(DOMStorageCache::kUnloadComplete);
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
-
+    ClearCaches(DOMStorageCache::kUnloadComplete, EmptyCString());
     mCaches.Clear();
     return NS_OK;
   }
@@ -588,8 +557,7 @@ DOMStorageManager::Observe(const char* aTopic, const nsACString& aScopePrefix)
     }
 
     // This immediately completely reloads all caches from the database.
-    ClearCacheEnumeratorData data(DOMStorageCache::kTestReload);
-    mCaches.EnumerateEntries(ClearCacheEnumerator, &data);
+    ClearCaches(DOMStorageCache::kTestReload, EmptyCString());
     return NS_OK;
   }
 
