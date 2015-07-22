@@ -974,6 +974,9 @@ ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
     case NOTIFY_IME_OF_TEXT_CHANGE:
       mPendingTextChange.MergeWith(aNotification);
       break;
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      mPendingLayoutChange.MergeWith(aNotification);
+      break;
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       mPendingCompositionUpdate.MergeWith(aNotification);
       break;
@@ -1013,6 +1016,16 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
     }
   }
 
+  // Layout change notification should be notified after selection change
+  // notification because IME may want to query position of new caret position.
+  if (mPendingLayoutChange.HasNotification()) {
+    IMENotification notification(mPendingLayoutChange);
+    if (!aWidget->Destroyed()) {
+      mPendingLayoutChange.Clear();
+      IMEStateManager::NotifyIME(notification, aWidget, true);
+    }
+  }
+
   // Finally, send composition update notification because it notifies IME of
   // finishing handling whole sending events.
   if (mPendingCompositionUpdate.HasNotification()) {
@@ -1026,6 +1039,7 @@ ContentCacheInParent::FlushPendingNotifications(nsIWidget* aWidget)
   if (!--mPendingEventsNeedingAck && !aWidget->Destroyed() &&
       (mPendingTextChange.HasNotification() ||
        mPendingSelectionChange.HasNotification() ||
+       mPendingLayoutChange.HasNotification() ||
        mPendingCompositionUpdate.HasNotification())) {
     FlushPendingNotifications(aWidget);
   }
