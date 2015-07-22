@@ -148,7 +148,7 @@ struct AudioChunk {
     return true;
   }
 
-  int ChannelCount() const { return mChannelData.Length(); }
+  size_t ChannelCount() const { return mChannelData.Length(); }
 
   float* ChannelFloatsForWrite(size_t aChannel)
   {
