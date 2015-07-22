@@ -11,7 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Pair.h"
-#include "mozilla/StateMirroring.h"
+#include "mozilla/dom/SourceBufferBinding.h"
 
 #include "SourceBufferContentManager.h"
 #include "MediaDataDemuxer.h"
@@ -31,7 +31,6 @@ class SourceBufferResource;
 using media::TimeUnit;
 using media::TimeInterval;
 using media::TimeIntervals;
-using dom::SourceBufferAppendMode;
 
 class TrackBuffersManager : public SourceBufferContentManager {
 public:

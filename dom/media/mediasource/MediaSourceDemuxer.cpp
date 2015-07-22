@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "MediaSourceDemuxer.h"
+#include "MediaSourceUtils.h"
 #include "SourceBufferList.h"
 #include "nsPrintfCString.h"
 
