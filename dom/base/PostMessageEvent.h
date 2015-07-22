@@ -39,8 +39,7 @@ public:
                    bool aTrustedCaller);
 
   bool Write(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-             JS::Handle<JS::Value> aTransfer, bool aSubsumes,
-             nsPIDOMWindow* aWindow);
+             JS::Handle<JS::Value> aTransfer, nsPIDOMWindow* aWindow);
 
 private:
   ~PostMessageEvent();

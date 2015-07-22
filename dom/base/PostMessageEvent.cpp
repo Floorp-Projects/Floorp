@@ -26,7 +26,6 @@ namespace {
 struct StructuredCloneInfo
 {
   PostMessageEvent* event;
-  bool subsumes;
   nsPIDOMWindow* window;
 
   // This hashtable contains the transferred ports - used to avoid duplicates.
@@ -117,7 +116,7 @@ PostMessageEvent::WriteStructuredClone(JSContext* cx,
   // See if this is a File/Blob object.
   {
     Blob* blob = nullptr;
-    if (scInfo->subsumes && NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
       BlobImpl* blobImpl = blob->Impl();
       if (JS_WriteUint32Pair(writer, SCTAG_DOM_BLOB, 0) &&
           JS_WriteBytes(writer, &blobImpl, sizeof(blobImpl))) {
@@ -135,7 +134,7 @@ PostMessageEvent::WriteStructuredClone(JSContext* cx,
     nsISupports* supports = wrappedNative->Native();
 
     nsCOMPtr<nsIDOMFileList> list = do_QueryInterface(supports);
-    if (list && scInfo->subsumes)
+    if (list)
       scTag = SCTAG_DOM_FILELIST;
 
     if (scTag)
@@ -379,15 +378,13 @@ PostMessageEvent::Run()
 
 bool
 PostMessageEvent::Write(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                        JS::Handle<JS::Value> aTransfer, bool aSubsumes,
-                        nsPIDOMWindow* aWindow)
+                        JS::Handle<JS::Value> aTransfer, nsPIDOMWindow* aWindow)
 {
   // We *must* clone the data here, or the JS::Value could be modified
   // by script
   StructuredCloneInfo scInfo;
   scInfo.event = this;
   scInfo.window = aWindow;
-  scInfo.subsumes = aSubsumes;
 
   return mBuffer.write(aCx, aMessage, aTransfer, &sPostMessageCallbacks,
                        &scInfo);
