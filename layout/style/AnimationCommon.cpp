@@ -536,6 +536,18 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
       }
       return false;
     }
+    // Note that testing BackfaceIsHidden() is not a sufficient test for
+    // what we need for animating backface-visibility correctly if we
+    // remove the above test for Preserves3DChildren(); that would require
+    // looking at backface-visibility on descendants as well.
+    if (frame->StyleDisplay()->BackfaceIsHidden()) {
+      if (shouldLog) {
+        nsCString message;
+        message.AppendLiteral("Gecko bug: Async animation of 'backface-visibility: hidden' transforms is not supported.  See bug 1186204.");
+        LogAsyncAnimationFailure(message, aElement);
+      }
+      return false;
+    }
     if (frame->IsSVGTransformed()) {
       if (shouldLog) {
         nsCString message;
