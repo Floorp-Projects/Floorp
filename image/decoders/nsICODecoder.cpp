@@ -125,7 +125,7 @@ nsICODecoder::FillBitmapFileHeaderBuffer(int8_t* bfh)
   bfh[1] = 'M';
   int32_t dataOffset = 0;
   int32_t fileSize = 0;
-  dataOffset = BFH_LENGTH + BITMAPINFOSIZE;
+  dataOffset = BMPFILEHEADER::LENGTH + BITMAPINFOSIZE;
 
   // The color table is present only if BPP is <= 8
   if (mDirEntry.mBitCount <= 8) {

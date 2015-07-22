@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 
 using namespace mozilla;
+using namespace mozilla::image;
 
 NS_IMPL_ISUPPORTS(nsBMPEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
@@ -484,9 +485,9 @@ nsBMPEncoder::InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
   mBMPFileHeader.signature[1] = 'M';
 
   if (aVersion == VERSION_3) {
-    mBMPFileHeader.dataoffset = WIN_V3_HEADER_LENGTH;
+    mBMPFileHeader.dataoffset = BMP_HEADER_LENGTH::WIN_V3;
   } else { // aVersion == 5
-    mBMPFileHeader.dataoffset = WIN_V5_HEADER_LENGTH;
+    mBMPFileHeader.dataoffset = BMP_HEADER_LENGTH::WIN_V5;
   }
 
   // The color table is present only if BPP is <= 8
@@ -502,9 +503,9 @@ nsBMPEncoder::InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
   mBMPFileHeader.reserved = 0;
 
   if (aVersion == VERSION_3) {
-    mBMPFileHeader.bihsize = WIN_V3_BIH_LENGTH;
+    mBMPFileHeader.bihsize = BIH_LENGTH::WIN_V3;
   } else { // aVersion == VERSION_5
-    mBMPFileHeader.bihsize = WIN_V5_BIH_LENGTH;
+    mBMPFileHeader.bihsize = BIH_LENGTH::WIN_V5;
   }
 }
 
@@ -538,7 +539,7 @@ nsBMPEncoder::InitInfoHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
       mBMPInfoHeader.green_mask = 0x0000FF00;
       mBMPInfoHeader.blue_mask  = 0x00FF0000;
       mBMPInfoHeader.alpha_mask = 0xFF000000;
-      mBMPInfoHeader.color_space = LCS_sRGB;
+      mBMPInfoHeader.color_space = BITMAPV5HEADER::COLOR_SPACE_LCS_SRGB;
       mBMPInfoHeader.white_point.r.x = 0;
       mBMPInfoHeader.white_point.r.y = 0;
       mBMPInfoHeader.white_point.r.z = 0;
@@ -612,7 +613,7 @@ nsBMPEncoder::EncodeInfoHeader()
   NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.profile_offset, 1);
   NativeEndian::swapToLittleEndianInPlace(&littleEndianmBIH.profile_size, 1);
 
-  if (mBMPFileHeader.bihsize == OS2_BIH_LENGTH) {
+  if (mBMPFileHeader.bihsize == BIH_LENGTH::OS2) {
       uint16_t width = (uint16_t) littleEndianmBIH.width;
       ENCODE(&mImageBufferCurr, width);
       uint16_t height = (uint16_t) littleEndianmBIH.width;
@@ -625,7 +626,7 @@ nsBMPEncoder::EncodeInfoHeader()
   ENCODE(&mImageBufferCurr, littleEndianmBIH.planes);
   ENCODE(&mImageBufferCurr, littleEndianmBIH.bpp);
 
-  if (mBMPFileHeader.bihsize > OS2_BIH_LENGTH) {
+  if (mBMPFileHeader.bihsize > BIH_LENGTH::OS2) {
     ENCODE(&mImageBufferCurr, littleEndianmBIH.compression);
     ENCODE(&mImageBufferCurr, littleEndianmBIH.image_size);
     ENCODE(&mImageBufferCurr, littleEndianmBIH.xppm);
@@ -634,7 +635,7 @@ nsBMPEncoder::EncodeInfoHeader()
     ENCODE(&mImageBufferCurr, littleEndianmBIH.important_colors);
   }
 
-  if (mBMPFileHeader.bihsize > WIN_V3_BIH_LENGTH) {
+  if (mBMPFileHeader.bihsize > BIH_LENGTH::WIN_V3) {
     ENCODE(&mImageBufferCurr, littleEndianmBIH.red_mask);
     ENCODE(&mImageBufferCurr, littleEndianmBIH.green_mask);
     ENCODE(&mImageBufferCurr, littleEndianmBIH.blue_mask);
