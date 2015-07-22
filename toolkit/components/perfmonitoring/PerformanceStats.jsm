@@ -146,16 +146,6 @@ Probe.prototype = {
     return this._impl.subtract(a, b);
   },
 
-  importChildren: function(parent, children) {
-    if (!Array.isArray(children)) {
-      throw new TypeError();
-    }
-    if (!parent || !(parent instanceof PerformanceData)) {
-      throw new TypeError();
-    }
-    return this._impl.importChildren(parent, children);
-  },
-
   /**
    * The name of the probe.
    */
@@ -238,8 +228,7 @@ let Probes = {
       }
       result.longestDuration = lastNonZero(result.durations);
       return result;
-    },
-    importChildren: function() { /* nothing to do */ },
+    }
   }),
 
   /**
@@ -269,8 +258,7 @@ let Probes = {
       return {
         totalCPOWTime: a.totalCPOWTime - b.totalCPOWTime
       };
-    },
-    importChildren: function() { /* nothing to do */ },
+    }
   }),
 
   /**
@@ -299,8 +287,7 @@ let Probes = {
       return {
         ticks: a.ticks - b.ticks
       };
-    },
-    importChildren: function() { /* nothing to do */ },
+    }
   }),
 
   "jank-content": new Probe("jank-content", {
@@ -312,6 +299,7 @@ let Probes = {
       } else {
         Process.broadcast("release", ["jank"]);
       }
+    },
     get isActive() {
       return this._isActive;
     },
@@ -335,6 +323,7 @@ let Probes = {
       } else {
         Process.broadcast("release", ["cpow"]);
       }
+    },
     get isActive() {
       return this._isActive;
     },
@@ -350,16 +339,11 @@ let Probes = {
   }),
 
   "ticks-content": new Probe("ticks-content", {
-    _isActive: false,
     set isActive(x) {
-      this._isActive = x;
-      if (x) {
-        Process.broadcast("acquire", ["ticks"]);
-      } else {
-        Process.broadcast("release", ["ticks"]);
-      }
+      // Ignore: This probe is always active.
+    },
     get isActive() {
-      return this._isActive;
+      return true;
     },
     extract: function(xpcom) {
       return {};
@@ -371,27 +355,6 @@ let Probes = {
       return null;
     }
   }),
-
-  compartments: new Probe("compartments", {
-    set isActive(x) {
-      performanceStatsService.isMonitoringPerCompartment = x;
-    },
-    get isActive() {
-      return performanceStatsService.isMonitoringPerCompartment;
-    },
-    extract: function(xpcom) {
-      return null;
-    },
-    isEqual: function(a, b) {
-      return true;
-    },
-    subtract: function(a, b) {
-      return true;
-    },
-    importChildren: function(parent, children) {
-      parent.children = children;
-    },
-  })
 };
 
 
@@ -694,32 +657,16 @@ function PerformanceDiff(current, old = null) {
 function Snapshot({xpcom, childProcesses, probes}) {
   this.componentsData = [];
 
-  // Current process
+  // Parent process
   if (xpcom) {
-    let children = new Map();
     let enumeration = xpcom.getComponentsData().enumerate();
     while (enumeration.hasMoreElements()) {
       let xpcom = enumeration.getNext().QueryInterface(Ci.nsIPerformanceStats);
-      let stat = new PerformanceData({xpcom, probes});
-      if (!stat.parentId) {
-        this.componentsData.push(stat);
-      } else {
-        let siblings = children.get(stat.parentId);
-        if (!siblings) {
-          children.set(stat.parentId, (siblings = []));
-        }
-        siblings.push(stat);
-      }
-    }
-
-    for (let parent of this.componentsData) {
-      for (let probe of probes) {
-        probe.importChildren(parent, children.get(parent.groupId) || []);
-      }
+      this.componentsData.push(new PerformanceData({xpcom, probes}));
     }
   }
 
-  // Child processes
+  // Content processes
   if (childProcesses) {
     for (let {componentsData} of childProcesses) {
       // We are only interested in `componentsData` for the time being.
