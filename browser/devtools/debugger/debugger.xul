@@ -341,6 +341,11 @@
                 <toolbarbutton id="toggle-pause-exceptions"
                                class="devtools-toolbarbutton"
                                command="togglePauseOnExceptionsCommand"/>
+                <toolbarbutton id="toggle-promise-debugger"
+                               class="devtools-toolbarbutton"
+                               tooltiptext="&debuggerUI.sources.togglePromiseDebugger;"
+                               command="togglePromiseDebuggerCommand"
+                               hidden="true"/>
               </toolbar>
             </tabpanel>
             <tabpanel id="callstack-tabpanel">
@@ -397,7 +402,7 @@
         <splitter id="editor-and-promise-splitter"
                 class="devtools-horizontal-splitter"/>
         <vbox id="promise-debugger-pane"
-              flex="0"
+              flex="1"
               hidden="true">
         </vbox>
       </vbox>
