@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from .base import BaseFormatter
+from .process import strstatus
 
 class TbplFormatter(BaseFormatter):
     """Formatter that formats logs in the legacy formatting format used by TBPL
@@ -29,6 +30,16 @@ class TbplFormatter(BaseFormatter):
 
     def process_output(self, data):
         return "PROCESS | %(process)s | %(data)s\n" % data
+
+    def process_start(self, data):
+        msg = "TEST-INFO | started process %s" % data['process']
+        if 'command' in data:
+            msg = '%s (%s)' % (msg, data['command'])
+        return msg + '\n'
+
+    def process_exit(self, data):
+        return "TEST-INFO | %s: %s\n" % (data['process'],
+                                         strstatus(data['exitcode']))
 
     def crash(self, data):
         id = self.id_str(data["test"]) if "test" in data else "pid: %s" % data["process"]
