@@ -72,6 +72,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private TextView mSecurityState;
     private TextView mMixedContentActivity;
     private TextView mOwner;
+    private TextView mOwnerSupplemental;
     private TextView mVerifier;
     private TextView mSiteSettingsLink;
 
@@ -113,6 +114,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mMixedContentActivity = (TextView) mIdentity.findViewById(R.id.mixed_content_activity);
 
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
+        mOwnerSupplemental = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_supplemental);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
         mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
 
@@ -321,15 +323,19 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         String owner = siteIdentity.getOwner();
         if (owner == null) {
             mOwner.setVisibility(View.GONE);
+            mOwnerSupplemental.setVisibility(View.GONE);
         } else {
             mOwner.setVisibility(View.VISIBLE);
+            mOwner.setText(owner);
 
             // Supplemental data is optional.
             final String supplemental = siteIdentity.getSupplemental();
             if (!TextUtils.isEmpty(supplemental)) {
-                owner += "\n" + supplemental;
+                mOwnerSupplemental.setText(supplemental);
+                mOwnerSupplemental.setVisibility(View.VISIBLE);
+            } else {
+                mOwnerSupplemental.setVisibility(View.GONE);
             }
-            mOwner.setText(owner);
         }
 
         final String verifier = siteIdentity.getVerifier();
