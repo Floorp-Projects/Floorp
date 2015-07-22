@@ -5409,7 +5409,7 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp)
 
 namespace js {
 
-class AutoStopwatch;
+struct AutoStopwatch;
 
 // Container for performance data
 // All values are monotonic.
@@ -5540,30 +5540,21 @@ private:
 };
 
 //
-// Each PerformanceGroupHolder handles:
-// - a reference-counted indirection towards a PerformanceGroup shared
-//   by several compartments
-// - a owned PerformanceGroup representing the performance of a single
-//   compartment.
+// Indirection towards a PerformanceGroup.
+// This structure handles reference counting for instances of PerformanceGroup.
 //
 struct PerformanceGroupHolder {
-    // Get the shared group.
+    // Get the group.
     // On first call, this causes a single Hashtable lookup.
     // Successive calls do not require further lookups.
-    js::PerformanceGroup* getSharedGroup(JSContext*);
+    js::PerformanceGroup* getGroup(JSContext*);
 
-    // Get the own group.
-    js::PerformanceGroup* getOwnGroup(JSContext*);
-
-    // `true` if the this holder is currently associated to a shared
+    // `true` if the this holder is currently associated to a
     // PerformanceGroup, `false` otherwise. Use this method to avoid
     // instantiating a PerformanceGroup if you only need to get
     // available performance data.
-    inline bool hasSharedGroup() const {
-        return sharedGroup_ != nullptr;
-    }
-    inline bool hasOwnGroup() const {
-        return ownGroup_ != nullptr;
+    inline bool isLinked() const {
+        return group_ != nullptr;
     }
 
     // Remove the link to the PerformanceGroup. This method is designed
@@ -5573,12 +5564,10 @@ struct PerformanceGroupHolder {
 
     explicit PerformanceGroupHolder(JSRuntime* runtime)
       : runtime_(runtime)
-      , sharedGroup_(nullptr)
-      , ownGroup_(nullptr)
+      , group_(nullptr)
     {   }
     ~PerformanceGroupHolder();
-
-  private:
+private:
     // Return the key representing this PerformanceGroup in
     // Runtime::Stopwatch.
     // Do not deallocate the key.
@@ -5586,11 +5575,10 @@ struct PerformanceGroupHolder {
 
     JSRuntime *runtime_;
 
-    // The PerformanceGroups held by this object.
-    // Initially set to `nullptr` until the first call to `getGroup`.
+    // The PerformanceGroup held by this object.
+    // Initially set to `nullptr` until the first cal to `getGroup`.
     // May be reset to `nullptr` by a call to `unlink`.
-    js::PerformanceGroup* sharedGroup_;
-    js::PerformanceGroup* ownGroup_;
+    js::PerformanceGroup* group_;
 };
 
 /**
@@ -5616,10 +5604,6 @@ extern JS_PUBLIC_API(bool)
 SetStopwatchIsMonitoringJank(JSRuntime*, bool);
 extern JS_PUBLIC_API(bool)
 GetStopwatchIsMonitoringJank(JSRuntime*);
-extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringPerCompartment(JSRuntime*, bool);
-extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringPerCompartment(JSRuntime*);
 
 extern JS_PUBLIC_API(bool)
 IsStopwatchActive(JSRuntime*);
@@ -5631,9 +5615,7 @@ extern JS_PUBLIC_API(PerformanceData*)
 GetPerformanceData(JSRuntime*);
 
 typedef bool
-(PerformanceStatsWalker)(JSContext* cx,
-                         const PerformanceData& stats, uint64_t uid,
-                         const uint64_t* parentId, void* closure);
+(PerformanceStatsWalker)(JSContext* cx, const PerformanceData& stats, uint64_t uid, void* closure);
 
 /**
  * Extract the performance statistics.
