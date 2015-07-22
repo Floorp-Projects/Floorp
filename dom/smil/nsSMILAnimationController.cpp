@@ -447,50 +447,28 @@ void
 nsSMILAnimationController::RewindElements()
 {
   bool rewindNeeded = false;
-  mChildContainerTable.EnumerateEntries(RewindNeeded, &rewindNeeded);
+  for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
+    nsSMILTimeContainer* container = iter.Get()->GetKey();
+    if (container->NeedsRewind()) {
+      rewindNeeded = true;
+      break;
+    }
+  }
+
   if (!rewindNeeded)
     return;
 
-  mAnimationElementTable.EnumerateEntries(RewindAnimation, nullptr);
-  mChildContainerTable.EnumerateEntries(ClearRewindNeeded, nullptr);
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::RewindNeeded(TimeContainerPtrKey* aKey,
-                                        void* aData)
-{
-  MOZ_ASSERT(aData,
-             "Null data pointer during time container enumeration");
-  bool* rewindNeeded = static_cast<bool*>(aData);
-
-  nsSMILTimeContainer* container = aKey->GetKey();
-  if (container->NeedsRewind()) {
-    *rewindNeeded = true;
-    return PL_DHASH_STOP;
+  for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
+    SVGAnimationElement* animElem = iter.Get()->GetKey();
+    nsSMILTimeContainer* timeContainer = animElem->GetTimeContainer();
+    if (timeContainer && timeContainer->NeedsRewind()) {
+      animElem->TimedElement().Rewind();
+    }
   }
 
-  return PL_DHASH_NEXT;
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::RewindAnimation(AnimationElementPtrKey* aKey,
-                                           void* aData)
-{
-  SVGAnimationElement* animElem = aKey->GetKey();
-  nsSMILTimeContainer* timeContainer = animElem->GetTimeContainer();
-  if (timeContainer && timeContainer->NeedsRewind()) {
-    animElem->TimedElement().Rewind();
+  for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->ClearNeedsRewind();
   }
-
-  return PL_DHASH_NEXT;
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::ClearRewindNeeded(TimeContainerPtrKey* aKey,
-                                             void* aData)
-{
-  aKey->GetKey()->ClearNeedsRewind();
-  return PL_DHASH_NEXT;
 }
 
 void
