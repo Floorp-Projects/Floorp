@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
-loop.Client = (function($) {
+loop.Client = (function() {
   "use strict";
 
   // THe expected properties to be returned from the POST /calls request.
@@ -116,4 +116,4 @@ loop.Client = (function($) {
   };
 
   return Client;
-})(jQuery);
+})();
