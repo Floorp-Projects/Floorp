@@ -13,7 +13,29 @@
 namespace mozilla {
 namespace dom {
 
+class BlobImpls;
 class File;
+
+class FileListClonedData final : public nsISupports
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit FileListClonedData(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls)
+    : mBlobImpls(aBlobImpls)
+  {}
+
+  const nsTArray<nsRefPtr<BlobImpl>>& BlobImpls() const
+  {
+    return mBlobImpls;
+  }
+
+private:
+  ~FileListClonedData()
+  {}
+
+  const nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+};
 
 class FileList final : public nsIDOMFileList,
                        public nsWrapperCache
@@ -27,6 +49,9 @@ public:
   explicit FileList(nsISupports* aParent)
     : mParent(aParent)
   {}
+
+  static already_AddRefed<FileList>
+  Create(nsISupports* aParent, FileListClonedData* aData);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -88,6 +113,9 @@ public:
   {
     return mFiles.Length();
   }
+
+  // Useful for cloning
+  already_AddRefed<FileListClonedData> CreateClonedData() const;
 
 private:
   ~FileList() {}
