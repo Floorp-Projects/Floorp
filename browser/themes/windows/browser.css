@@ -20,6 +20,8 @@
 :root {
   --space-above-tabbar: 15px;
 
+  --backbutton-urlbar-overlap: 5px;
+
   --toolbarbutton-vertical-inner-padding: 2px;
   --toolbarbutton-vertical-outer-padding: 8px;
 
@@ -1303,13 +1305,16 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 @conditionalForwardWithUrlbar@ {
   clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
-  -moz-margin-start: -5px;
+  margin-inline-start: calc(-1 * var(--backbutton-urlbar-overlap));
 }
 
 @media (-moz-os-version: windows-win10) {
   @conditionalForwardWithUrlbar@ {
     clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path-win10");
-    -moz-margin-start: -8px;
+  }
+
+  :root {
+    --backbutton-urlbar-overlap: 8px;
   }
 }
 
@@ -1419,12 +1424,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 /* identity box */
 
-#identity-box {
-  padding: 2px;
-  font-size: .9em;
-  -moz-margin-end: 4px;
-}
-
 #identity-box:-moz-locale-dir(ltr) {
   border-top-left-radius: 1.5px;
   border-bottom-left-radius: 1.5px;
@@ -1435,42 +1434,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   border-bottom-right-radius: 1.5px;
 }
 
-#notification-popup-box:not([hidden]) + #identity-box {
-  -moz-padding-start: 10px;
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@ > #urlbar > #identity-box {
-  border-radius: 0;
-}
-
-@conditionalForwardWithUrlbar@:not([switchingtabs]) > #urlbar > #identity-box {
-  transition: padding-left, padding-right;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
-  padding-left: 5px;
-}
-
-@conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  padding-right: 5px;
-}
-
-@conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
-  /* forward button hiding is delayed when hovered */
-  transition-delay: 100s;
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
-  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
-  padding-left: 5.01px;
-}
-
-@conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
-  /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
-  padding-right: 5.01px;
-}
-
 #identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
   background-color: var(--verified-identity-box-backgroundcolor);
 }
@@ -1478,11 +1441,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 #identity-box:-moz-focusring {
   outline: 1px dotted #000;
   outline-offset: -3px;
-}
-
-#identity-icon-labels {
-  -moz-padding-start: 2px;
-  -moz-padding-end: 5px;
 }
 
 /* Location bar dropmarker */
@@ -1531,19 +1489,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 /* page proxy icon */
 
 %include ../shared/identity-block/identity-block.inc.css
-
-#page-proxy-favicon {
-  margin-top: 1px;
-  margin-bottom: 1px;
-  -moz-margin-start: 3px;
-  -moz-margin-end: 1px;
-}
-
-@media (-moz-os-version: windows-win10) {
-  #page-proxy-favicon {
-    -moz-margin-start: 6px;
-  }
-}
 
 /* autocomplete */
 

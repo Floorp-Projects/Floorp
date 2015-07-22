@@ -7,11 +7,6 @@
   padding: 1px;
 }
 
-.searchbar-textbox {
-  min-height: 22px;
-  background-color: -moz-field;
-}
-
 .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
@@ -81,6 +76,8 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 .searchbar-search-button {
   list-style-image: url("chrome://browser/skin/search-indicator.png");
   -moz-image-region: rect(0, 20px, 20px, 0);
+  margin-top: 1px;
+  margin-bottom: 1px;
   -moz-margin-start: 2px;
 }
 
