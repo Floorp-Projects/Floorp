@@ -285,7 +285,8 @@ class nsStyleSet final
   nsRestyleHint HasAttributeDependentStyle(mozilla::dom::Element* aElement,
                                            nsIAtom*       aAttribute,
                                            int32_t        aModType,
-                                           bool           aAttrHasChanged);
+                                           bool           aAttrHasChanged,
+                                           const nsAttrValue* aOtherValue);
 
   /*
    * Do any processing that needs to happen as a result of a change in
