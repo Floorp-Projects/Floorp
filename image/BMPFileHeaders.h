@@ -5,8 +5,29 @@
 #ifndef mozilla_image_BMPFileHeaders_h
 #define mozilla_image_BMPFileHeaders_h
 
+#include <stddef.h>
+#include <stdint.h>
+
 namespace mozilla {
 namespace image {
+
+// This is the real BIH size (as contained in the bihsize field of
+// BMPFILEHEADER).
+struct BIH_LENGTH {
+  enum {
+    OS2 = 12,
+    WIN_V3 = 40,
+    WIN_V5 = 124
+  };
+};
+
+struct BIH_INTERNAL_LENGTH {
+  enum {
+    OS2 = 8,
+    WIN_V3 = 36,
+    WIN_V5 = 120
+  };
+};
 
 struct BMPFILEHEADER {
   char signature[2];   // String "BM"
@@ -15,32 +36,22 @@ struct BMPFILEHEADER {
   uint32_t dataoffset; // Offset to raster data
 
   uint32_t bihsize;
+
+  // The length of the bitmap file header as defined in the BMP spec.
+  static const size_t LENGTH = 14;
+
+  // Internally we store the bitmap file header with an additional 4 bytes which
+  // is used to store the bitmap information header size.
+  static const size_t INTERNAL_LENGTH = 18;
 };
 
-// The length of the bitmap file header as defined in the BMP spec.
-#define BFH_LENGTH 14
-// Internally we store the bitmap file header with an additional 4 bytes which
-// is used to store the bitmap information header size.
-#define BFH_INTERNAL_LENGTH 18
-
-#define OS2_INTERNAL_BIH_LENGTH 8
-#define WIN_V3_INTERNAL_BIH_LENGTH 36
-#define WIN_V5_INTERNAL_BIH_LENGTH 120
-
-#define OS2_BIH_LENGTH 12     // This is the real BIH size (as contained in the
-                              // bihsize field of BMPFILEHEADER)
-#define WIN_V3_BIH_LENGTH 40  // This is the real BIH size (as contained in the
-                              // bihsize field of BMPFILEHEADER)
-#define WIN_V5_BIH_LENGTH 124 // This is the real BIH size (as contained in the
-                              // bihsize field of BMPFILEHEADER)
-
-#define OS2_HEADER_LENGTH (BFH_INTERNAL_LENGTH + OS2_INTERNAL_BIH_LENGTH)
-#define WIN_V3_HEADER_LENGTH (BFH_INTERNAL_LENGTH + WIN_V3_INTERNAL_BIH_LENGTH)
-#define WIN_V5_HEADER_LENGTH (BFH_INTERNAL_LENGTH + WIN_V5_INTERNAL_BIH_LENGTH)
-
-#ifndef LCS_sRGB
-#define LCS_sRGB 0x73524742
-#endif
+struct BMP_HEADER_LENGTH {
+  enum {
+    OS2 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::OS2,
+    WIN_V3 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V3,
+    WIN_V5 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V5
+  };
+};
 
 struct xyz {
   int32_t x, y, z;
@@ -78,6 +89,8 @@ struct BITMAPV5HEADER {
   uint32_t profile_offset;   // Offset to profile data in bytes
   uint32_t profile_size;     // Size of profile data in bytes
   uint32_t reserved;         // =0
+
+  static const uint32_t COLOR_SPACE_LCS_SRGB = 0x73524742;
 };
 
 struct colorTable {
@@ -96,38 +109,34 @@ struct bitFields {
   uint8_t greenRightShift;
   uint8_t blueLeftShift;
   uint8_t blueRightShift;
+
+  // Length of the bitfields structure in the BMP file.
+  static const size_t LENGTH = 12;
 };
 
-} // namespace image
-} // namespace mozilla
+struct BMPINFOHEADER {
+  // BMPINFOHEADER.compression definitions.
+  enum {
+    RGB = 0,
+    RLE8 = 1,
+    RLE4 = 2,
+    BITFIELDS = 3,
 
-#define BITFIELD_LENGTH 12 // Length of the bitfields structure in the bmp file
-#define USE_RGB
+    // ALPHABITFIELDS means no compression and specifies alpha bits. Valid only
+    // for 32bpp and 16bpp.
+    ALPHABITFIELDS = 4
+  };
+};
 
-// BMPINFOHEADER.compression defines
-#ifndef BI_RGB
-#define BI_RGB 0
-#endif
-#ifndef BI_RLE8
-#define BI_RLE8 1
-#endif
-#ifndef BI_RLE4
-#define BI_RLE4 2
-#endif
-#ifndef BI_BITFIELDS
-#define BI_BITFIELDS 3
-#endif
-// BI_ALPHABITFIELDS  means no compression and specifies alpha bits
-// valid only for 32bpp and 16bpp
-#ifndef BI_ALPHABITFIELDS
-#define BI_ALPHABITFIELDS 4
-#endif
-
-// RLE Escape codes
-#define RLE_ESCAPE       0
-#define RLE_ESCAPE_EOL   0
-#define RLE_ESCAPE_EOF   1
-#define RLE_ESCAPE_DELTA 2
+// RLE escape codes.
+struct RLE {
+  enum {
+    ESCAPE = 0,
+    ESCAPE_EOL = 0,
+    ESCAPE_EOF = 1,
+    ESCAPE_DELTA = 2
+  };
+};
 
 /// enums for mState
 enum ERLEState {
@@ -140,5 +149,8 @@ enum ERLEState {
   eRLEStateAbsoluteModePadded ///< As above, but another byte of data has to
                               ///< be read as padding
 };
+
+} // namespace image
+} // namespace mozilla
 
 #endif // mozilla_image_BMPFileHeaders_h
