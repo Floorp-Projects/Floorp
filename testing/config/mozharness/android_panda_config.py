@@ -80,7 +80,6 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--quiet",
                 "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
                 "--screenshot-on-fail",
             ],
             "run_filename": "runtestsremote.py",
@@ -130,8 +129,7 @@ config = {
                 "--apk=../%(apk_name)s",
                 "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
+                "--log-raw=%(raw_log_file)s"
             ],
             "run_filename": "remotexpcshelltests.py",
             "testsdir": "xpcshell"

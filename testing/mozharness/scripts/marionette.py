@@ -342,8 +342,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                     'marionette_raw.log')
-        error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
-                                          'marionette_errorsummary.log')
         config_fmt_args = {
             'type': self.config.get('test_type'),
             # emulator builds require a longer timeout
@@ -359,7 +357,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             'binary': self.binary_path,
             'address': self.config.get('marionette_address'),
             'raw_log_file': raw_log_file,
-            'error_summary_file': error_summary_file,
             'gecko_log': dirs["abs_blob_upload_dir"],
             'this_chunk': self.config.get('this_chunk', 1),
             'total_chunks': self.config.get('total_chunks', 1)

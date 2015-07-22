@@ -147,8 +147,6 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
 
         raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                     '%s_raw.log' % suite)
-        error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
-                                          '%s_errorsummary.log' % suite)
         str_format_values = {
             'application': self.binary_path,
             'test_manifest': self.test_manifest,
@@ -160,7 +158,6 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
             'cert_path': dirs['abs_certs_dir'],
             'browser_arg': self.config.get('browser_arg'),
             'raw_log_file': raw_log_file,
-            'error_summary_file': error_summary_file,
         }
 
         missing_key = True
