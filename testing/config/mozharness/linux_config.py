@@ -27,7 +27,6 @@ config = {
             "options": [
                 "--startup-timeout=300",
                 "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
                 "--browser-path=%(browser_path)s",
                 "--b2gpath=%(emulator_path)s",
                 "%(test_manifest)s"
@@ -37,7 +36,6 @@ config = {
             "options": [
                 "--startup-timeout=300",
                 "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
                 "--browser-path=%(browser_path)s",
                 "--b2g-desktop-path=%(fxos_desktop_path)s",
                 "--gaia-profile=%(gaia_profile)s",
@@ -54,7 +52,6 @@ config = {
                 "--setpref=webgl.force-enabled=true",
                 "--quiet",
                 "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
                 "--use-test-media-devices",
                 "--screenshot-on-fail",
             ],
@@ -106,7 +103,6 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--test-plugin-path=%(test_plugin_path)s",
                 "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",
             ],
             "run_filename": "runxpcshelltests.py",
