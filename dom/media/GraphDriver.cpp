@@ -692,12 +692,6 @@ AudioCallbackDriver::Revive()
   }
 }
 
-void
-AudioCallbackDriver::GetIntervalForIteration(GraphTime& aFrom,
-                                             GraphTime& aTo)
-{
-}
-
 void AudioCallbackDriver::WaitForNextIteration()
 {
 }
