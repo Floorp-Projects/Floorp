@@ -21,7 +21,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMBlob.h"
-#include "nsIDOMFileList.h"
 #include "nsIFile.h"
 #include "nsIMutable.h"
 #include "nsIXMLHttpRequest.h"
@@ -974,78 +973,6 @@ private:
   bool mWholeFile;
   bool mStoredFile;
   bool mIsTemporary;
-};
-
-class FileList final : public nsIDOMFileList,
-                       public nsWrapperCache
-{
-  ~FileList() {}
-
-public:
-  explicit FileList(nsISupports *aParent) : mParent(aParent)
-  {
-  }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileList)
-
-  NS_DECL_NSIDOMFILELIST
-
-  virtual JSObject* WrapObject(JSContext *cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
-  nsISupports* GetParentObject()
-  {
-    return mParent;
-  }
-
-  bool Append(File *aFile) { return mFiles.AppendElement(aFile); }
-
-  bool Remove(uint32_t aIndex) {
-    if (aIndex < mFiles.Length()) {
-      mFiles.RemoveElementAt(aIndex);
-      return true;
-    }
-
-    return false;
-  }
-
-  void Clear() { return mFiles.Clear(); }
-
-  static FileList* FromSupports(nsISupports* aSupports)
-  {
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMFileList> list_qi = do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMFileList pointer as the nsISupports
-      // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(list_qi == static_cast<nsIDOMFileList*>(aSupports),
-                   "Uh, fix QI!");
-    }
-#endif
-
-    return static_cast<FileList*>(aSupports);
-  }
-
-  File* Item(uint32_t aIndex)
-  {
-    return mFiles.SafeElementAt(aIndex);
-  }
-  File* IndexedGetter(uint32_t aIndex, bool& aFound)
-  {
-    aFound = aIndex < mFiles.Length();
-    return aFound ? mFiles.ElementAt(aIndex) : nullptr;
-  }
-  uint32_t Length()
-  {
-    return mFiles.Length();
-  }
-
-private:
-  nsTArray<nsRefPtr<File>> mFiles;
-  nsCOMPtr<nsISupports> mParent;
 };
 
 } // namespace dom

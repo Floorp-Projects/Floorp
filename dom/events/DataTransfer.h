@@ -34,6 +34,7 @@ namespace dom {
 
 class DOMStringList;
 class Element;
+class FileList;
 template<typename T> class Optional;
 
 /**
