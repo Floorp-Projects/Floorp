@@ -407,8 +407,9 @@ public:
   // an appendBuffer call on a MediaSource element.
   virtual bool IsExpectingMoreData()
   {
-    // TODO: return a sensible value for all sub-classes in next patch.
-    return false;
+    // MediaDecoder::mDecoderPosition is roughly the same as Tell() which
+    // returns a position updated by latest Read() or ReadAt().
+    return !IsDataCachedToEndOfResource(Tell()) && !IsSuspended();
   }
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
