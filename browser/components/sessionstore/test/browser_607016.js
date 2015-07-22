@@ -40,33 +40,29 @@ add_task(function* () {
     // Now we'll set a new unique value on 1 of the tabs
     let newUniq = r();
     ss.setTabValue(gBrowser.tabs[1], "uniq", newUniq);
-    yield promiseRemoveTab(gBrowser.tabs[1]);
-    let closedTabData = (JSON.parse(ss.getClosedTabData(window)))[0];
-    is(closedTabData.state.extData.uniq, newUniq,
+    let tabState = JSON.parse(ss.getTabState(gBrowser.tabs[1]));
+    is(tabState.extData.uniq, newUniq,
        "(overwriting) new data is stored in extData");
 
     // hide the next tab before closing it
-    gBrowser.hideTab(gBrowser.tabs[1]);
-    yield promiseRemoveTab(gBrowser.tabs[1]);
-    closedTabData = (JSON.parse(ss.getClosedTabData(window)))[0];
-    ok(closedTabData.state.hidden, "(hiding) tab data has hidden == true");
+    gBrowser.hideTab(gBrowser.tabs[2]);
+    tabState = JSON.parse(ss.getTabState(gBrowser.tabs[2]));
+    ok(tabState.hidden, "(hiding) tab data has hidden == true");
 
     // set data that's not in a conflicting key
     let stillUniq = r();
-    ss.setTabValue(gBrowser.tabs[1], "stillUniq", stillUniq);
-    yield promiseRemoveTab(gBrowser.tabs[1]);
-    closedTabData = (JSON.parse(ss.getClosedTabData(window)))[0];
-    is(closedTabData.state.extData.stillUniq, stillUniq,
+    ss.setTabValue(gBrowser.tabs[3], "stillUniq", stillUniq);
+    tabState = JSON.parse(ss.getTabState(gBrowser.tabs[3]));
+    is(tabState.extData.stillUniq, stillUniq,
        "(adding) new data is stored in extData");
 
     // remove the uniq value and make sure it's not there in the closed data
-    ss.deleteTabValue(gBrowser.tabs[1], "uniq");
-    yield promiseRemoveTab(gBrowser.tabs[1]);
-    closedTabData = (JSON.parse(ss.getClosedTabData(window)))[0];
+    ss.deleteTabValue(gBrowser.tabs[4], "uniq");
+    tabState = JSON.parse(ss.getTabState(gBrowser.tabs[4]));
     // Since Panorama might have put data in, first check if there is extData.
     // If there is explicitly check that "uniq" isn't in it. Otherwise, we're ok
-    if ("extData" in closedTabData.state) {
-      ok(!("uniq" in closedTabData.state.extData),
+    if ("extData" in tabState) {
+      ok(!("uniq" in tabState.extData),
          "(deleting) uniq not in existing extData");
     }
     else {
@@ -75,11 +71,14 @@ add_task(function* () {
 
     // set unique data on the tab that never had any set, make sure that's saved
     let newUniq2 = r();
-    ss.setTabValue(gBrowser.tabs[1], "uniq", newUniq2);
-    yield promiseRemoveTab(gBrowser.tabs[1]);
-    closedTabData = (JSON.parse(ss.getClosedTabData(window)))[0];
-    is(closedTabData.state.extData.uniq, newUniq2,
+    ss.setTabValue(gBrowser.tabs[5], "uniq", newUniq2);
+    tabState = JSON.parse(ss.getTabState(gBrowser.tabs[5]));
+    is(tabState.extData.uniq, newUniq2,
        "(creating) new data is stored in extData where there was none");
+
+    while (gBrowser.tabs.length > 1) {
+      yield promiseRemoveTab(gBrowser.tabs[1]);
+    }
   }
 
   // Set the test state.
