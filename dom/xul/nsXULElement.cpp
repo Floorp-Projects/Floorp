@@ -404,10 +404,10 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
         }
 
         if (originalName->IsAtom()) {
-           rv = element->mAttrsAndChildren.SetAndTakeAttr(originalName->Atom(),
+           rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->Atom(),
                                                           attrValue);
         } else {
-            rv = element->mAttrsAndChildren.SetAndTakeAttr(originalName->NodeInfo(),
+            rv = element->mAttrsAndChildren.SetAndSwapAttr(originalName->NodeInfo(),
                                                            attrValue);
         }
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1896,10 +1896,10 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
 
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         if (protoattr->mName.IsAtom()) {
-            rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.Atom(), attrValue);
+            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.Atom(), attrValue);
         }
         else {
-            rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.NodeInfo(),
+            rv = mAttrsAndChildren.SetAndSwapAttr(protoattr->mName.NodeInfo(),
                                                   attrValue);
         }
         NS_ENSURE_SUCCESS(rv, rv);

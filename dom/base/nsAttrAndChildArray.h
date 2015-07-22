@@ -88,8 +88,8 @@ public:
   const nsAttrValue* GetAttr(const nsAString& aName,
                              nsCaseTreatment aCaseSensitive) const;
   const nsAttrValue* AttrAt(uint32_t aPos) const;
-  nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
-  nsresult SetAndTakeAttr(mozilla::dom::NodeInfo* aName, nsAttrValue& aValue);
+  nsresult SetAndSwapAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
+  nsresult SetAndSwapAttr(mozilla::dom::NodeInfo* aName, nsAttrValue& aValue);
 
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.
