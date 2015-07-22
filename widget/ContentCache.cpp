@@ -914,14 +914,14 @@ ContentCacheInParent::OnSelectionEvent(
 }
 
 void
-ContentCacheInParent::OnEventNeedingAckReceived(nsIWidget* aWidget,
+ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
                                                 uint32_t aMessage)
 {
   // This is called when the child process receives WidgetCompositionEvent or
   // WidgetSelectionEvent.
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
-    ("ContentCacheInParent: 0x%p OnEventNeedingAckReceived(aWidget=0x%p, "
+    ("ContentCacheInParent: 0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
      "aMessage=%s), mPendingEventsNeedingAck=%u",
      this, aWidget, GetEventMessageName(aMessage), mPendingEventsNeedingAck));
 
