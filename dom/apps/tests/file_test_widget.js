@@ -158,9 +158,7 @@ function loadFrameScript(mm) {
   checkWidget(widget); \
 }; \
   request.onerror = onError; \
-  var win = content.window.open("about:blank"); /*test mozbrowseropenwindow*/ \
-  /*Close new window to avoid mochitest "unable to restore focus" failures.*/ \
-  win.close(); \
+  content.window.open("about:blank"); /*test mozbrowseropenwindow*/ \
   content.window.scrollTo(4000, 4000); /*test mozbrowser(async)scroll*/ \
   ';
   mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
