@@ -517,7 +517,7 @@ protected:
 
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
-  nsresult StartAudioThread();
+  void StartAudioThread();
 
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
@@ -1316,6 +1316,8 @@ private:
 
   // Media data resource from the decoder.
   nsRefPtr<MediaResource> mResource;
+
+  MozPromiseRequestHolder<GenericPromise> mAudioSinkPromise;
 
 private:
   // The buffered range. Mirrored from the decoder thread.
