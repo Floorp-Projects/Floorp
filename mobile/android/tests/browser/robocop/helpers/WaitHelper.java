@@ -129,7 +129,7 @@ public final class WaitHelper {
      * returned from hasStateChanged, indicating this change of status.
      */
     private interface ChangeVerifier {
-        public String getLogTag();
+        String getLogTag();
 
         /**
          * Stores the initial state of the system. This system state is used to diff against
@@ -137,8 +137,8 @@ public final class WaitHelper {
          * (with a timeout), this method could potentially store state inconsistent with
          * what is visible to the user.
          */
-        public void storeState();
-        public boolean hasStateChanged();
+        void storeState();
+        boolean hasStateChanged();
     }
 
     private static class ToolbarTitleTextChangeVerifier implements ChangeVerifier {
