@@ -4,16 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
-#include "WebGLContextUtils.h"
-#include "WebGLBuffer.h"
-#include "WebGLShader.h"
-#include "WebGLProgram.h"
-#include "WebGLFramebuffer.h"
-#include "WebGLRenderbuffer.h"
-#include "WebGLTexture.h"
-#include "WebGLVertexArray.h"
+
 #include "GLContext.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Preferences.h"
+#include "nsString.h"
+#include "WebGLBuffer.h"
+#include "WebGLContextUtils.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLProgram.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLShader.h"
+#include "WebGLTexture.h"
+#include "WebGLVertexArray.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -56,6 +59,18 @@ WebGLContext::Enable(GLenum cap)
 
     MakeContextCurrent();
     gl->fEnable(cap);
+}
+
+static JS::Value
+StringValue(JSContext* cx, const nsAString& str, ErrorResult& rv)
+{
+    JSString* jsStr = JS_NewUCStringCopyN(cx, str.BeginReading(), str.Length());
+    if (!jsStr) {
+        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return JS::NullValue();
+    }
+
+    return JS::StringValue(jsStr);
 }
 
 bool
@@ -177,19 +192,47 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    // Privileged string params exposed by WEBGL_debug_renderer_info:
+    // Privileged string params exposed by WEBGL_debug_renderer_info.
+    // The privilege check is done in WebGLContext::IsExtensionSupported.
+    // So here we just have to check that the extension is enabled.
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_debug_renderer_info)) {
         switch (pname) {
         case UNMASKED_VENDOR_WEBGL:
         case UNMASKED_RENDERER_WEBGL:
-            GLenum glstringname = LOCAL_GL_NONE;
-            if (pname == UNMASKED_VENDOR_WEBGL) {
-                glstringname = LOCAL_GL_VENDOR;
-            } else if (pname == UNMASKED_RENDERER_WEBGL) {
-                glstringname = LOCAL_GL_RENDERER;
+            {
+                const char* overridePref = nullptr;
+                GLenum driverEnum = LOCAL_GL_NONE;
+
+                switch (pname) {
+                case UNMASKED_RENDERER_WEBGL:
+                    overridePref = "webgl.renderer-string-override";
+                    driverEnum = LOCAL_GL_RENDERER;
+                    break;
+                case UNMASKED_VENDOR_WEBGL:
+                    overridePref = "webgl.vendor-string-override";
+                    driverEnum = LOCAL_GL_VENDOR;
+                    break;
+                default:
+                    MOZ_CRASH("bad `pname`");
+                }
+
+                bool hasRetVal = false;
+
+                nsAutoString ret;
+                if (overridePref) {
+                    nsresult res = Preferences::GetString(overridePref, &ret);
+                    if (NS_SUCCEEDED(res) && ret.Length() > 0)
+                        hasRetVal = true;
+                }
+
+                if (!hasRetVal) {
+                    const char* chars = reinterpret_cast<const char*>(gl->fGetString(driverEnum));
+                    ret = NS_ConvertASCIItoUTF16(chars);
+                    hasRetVal = true;
+                }
+
+                return StringValue(cx, ret, rv);
             }
-            const GLchar* string = (const GLchar*) gl->fGetString(glstringname);
-            return StringValue(cx, string, rv);
         }
     }
 
