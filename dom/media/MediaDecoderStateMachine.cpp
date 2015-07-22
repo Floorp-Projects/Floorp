@@ -1282,9 +1282,6 @@ void MediaDecoderStateMachine::Shutdown()
   // threads can start exiting cleanly during the Shutdown call.
   ScheduleStateMachine();
   SetState(DECODER_STATE_SHUTDOWN);
-  if (mAudioSink) {
-    mAudioSink->PrepareToShutdown();
-  }
 
   mQueuedSeek.RejectIfExists(__func__);
   mPendingSeek.RejectIfExists(__func__);
@@ -1473,11 +1470,7 @@ void MediaDecoderStateMachine::StopAudioThread()
 
   if (mAudioSink) {
     DECODER_LOG("Shutdown audio thread");
-    mAudioSink->PrepareToShutdown();
-    {
-      ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      mAudioSink->Shutdown();
-    }
+    mAudioSink->Shutdown();
     mAudioSink = nullptr;
   }
   mAudioSinkPromise.DisconnectIfExists();
