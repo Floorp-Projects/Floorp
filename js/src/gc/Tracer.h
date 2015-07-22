@@ -10,6 +10,7 @@
 #include "jsfriendapi.h"
 
 #include "gc/Barrier.h"
+#include "js/TraceableHashTable.h"
 
 namespace js {
 
@@ -129,6 +130,22 @@ void
 TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group);
 
 } // namespace gc
+
+template <typename T>
+struct DefaultTracer<T*>
+{
+    static void trace(JSTracer* trc, T** t, const char* name) {
+        TraceManuallyBarrieredEdge(trc, t, name);
+    }
+};
+
+template <typename T>
+struct DefaultTracer<RelocatablePtr<T*>>
+{
+    static void trace(JSTracer* trc, RelocatablePtr<T*> t, const char* name) {
+        TraceEdge(trc, t, name);
+    }
+};
 
 } // namespace js
 

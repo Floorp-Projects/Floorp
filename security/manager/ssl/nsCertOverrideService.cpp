@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -163,26 +163,18 @@ nsCertOverrideService::RemoveAllFromMemory()
   mSettingsTable.Clear();
 }
 
-static PLDHashOperator
-RemoveTemporariesCallback(nsCertOverrideEntry *aEntry,
-                          void *aArg)
-{
-  if (aEntry && aEntry->mSettings.mIsTemporary) {
-    aEntry->mSettings.mCert = nullptr;
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsCertOverrideService::RemoveAllTemporaryOverrides()
 {
-  {
-    ReentrantMonitorAutoEnter lock(monitor);
-    mSettingsTable.EnumerateEntries(RemoveTemporariesCallback, nullptr);
-    // no need to write, as temporaries are never written to disk
+  ReentrantMonitorAutoEnter lock(monitor);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    nsCertOverrideEntry *entry = iter.Get();
+    if (entry->mSettings.mIsTemporary) {
+      entry->mSettings.mCert = nullptr;
+      iter.Remove();
+    }
   }
+  // no need to write, as temporaries are never written to disk
 }
 
 nsresult
@@ -270,44 +262,6 @@ nsCertOverrideService::Read()
   return NS_OK;
 }
 
-static PLDHashOperator
-WriteEntryCallback(nsCertOverrideEntry *aEntry,
-                   void *aArg)
-{
-  static const char kTab[] = "\t";
-
-  nsIOutputStream *rawStreamPtr = (nsIOutputStream *)aArg;
-
-  uint32_t unused;
-
-  if (rawStreamPtr && aEntry)
-  {
-    const nsCertOverride &settings = aEntry->mSettings;
-    if (settings.mIsTemporary)
-      return PL_DHASH_NEXT;
-
-    nsAutoCString bits_string;
-    nsCertOverride::convertBitsToString(settings.mOverrideBits, 
-                                            bits_string);
-
-    rawStreamPtr->Write(aEntry->mHostWithPort.get(), aEntry->mHostWithPort.Length(), &unused);
-    rawStreamPtr->Write(kTab, sizeof(kTab) - 1, &unused);
-    rawStreamPtr->Write(settings.mFingerprintAlgOID.get(), 
-                        settings.mFingerprintAlgOID.Length(), &unused);
-    rawStreamPtr->Write(kTab, sizeof(kTab) - 1, &unused);
-    rawStreamPtr->Write(settings.mFingerprint.get(), 
-                        settings.mFingerprint.Length(), &unused);
-    rawStreamPtr->Write(kTab, sizeof(kTab) - 1, &unused);
-    rawStreamPtr->Write(bits_string.get(), 
-                        bits_string.Length(), &unused);
-    rawStreamPtr->Write(kTab, sizeof(kTab) - 1, &unused);
-    rawStreamPtr->Write(settings.mDBKey.get(), settings.mDBKey.Length(), &unused);
-    rawStreamPtr->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &unused);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsCertOverrideService::Write()
 {
@@ -345,8 +299,34 @@ nsCertOverrideService::Write()
   uint32_t unused;
   bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &unused);
 
-  nsIOutputStream *rawStreamPtr = bufferedOutputStream;
-  mSettingsTable.EnumerateEntries(WriteEntryCallback, rawStreamPtr);
+  static const char kTab[] = "\t";
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    nsCertOverrideEntry *entry = iter.Get();
+
+    const nsCertOverride &settings = entry->mSettings;
+    if (settings.mIsTemporary) {
+      continue;
+    }
+
+    nsAutoCString bits_string;
+    nsCertOverride::convertBitsToString(settings.mOverrideBits, bits_string);
+
+    bufferedOutputStream->Write(entry->mHostWithPort.get(),
+                                entry->mHostWithPort.Length(), &unused);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &unused);
+    bufferedOutputStream->Write(settings.mFingerprintAlgOID.get(),
+                                settings.mFingerprintAlgOID.Length(), &unused);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &unused);
+    bufferedOutputStream->Write(settings.mFingerprint.get(),
+                                settings.mFingerprint.Length(), &unused);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &unused);
+    bufferedOutputStream->Write(bits_string.get(),
+                                bits_string.Length(), &unused);
+    bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &unused);
+    bufferedOutputStream->Write(settings.mDBKey.get(),
+                                settings.mDBKey.Length(), &unused);
+    bufferedOutputStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &unused);
+  }
 
   // All went ok. Maybe except for problems in Write(), but the stream detects
   // that for us
@@ -604,25 +584,16 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
   return NS_OK;
 }
 
-static PLDHashOperator
-CountPermanentEntriesCallback(nsCertOverrideEntry* aEntry, void* aArg)
-{
-  uint32_t* overrideCount = reinterpret_cast<uint32_t*>(aArg);
-  if (aEntry && !aEntry->mSettings.mIsTemporary) {
-    *overrideCount = *overrideCount + 1;
-    return PL_DHASH_NEXT;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsCertOverrideService::CountPermanentOverrideTelemetry()
 {
   ReentrantMonitorAutoEnter lock(monitor);
   uint32_t overrideCount = 0;
-  mSettingsTable.EnumerateEntries(CountPermanentEntriesCallback,
-                                  &overrideCount);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    if (!iter.Get()->mSettings.mIsTemporary) {
+      overrideCount++;
+    }
+  }
   Telemetry::Accumulate(Telemetry::SSL_PERMANENT_CERT_ERROR_OVERRIDES,
                         overrideCount);
 }
@@ -675,51 +646,6 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
   return !found_mismatch;
 }
 
-struct nsCertAndBoolsAndInt
-{
-  nsIX509Cert *cert;
-  bool aCheckTemporaries;
-  bool aCheckPermanents;
-  uint32_t counter;
-
-  SECOidTag mOidTagForStoringNewHashes;
-  nsCString mDottedOidForStoringNewHashes;
-};
-
-static PLDHashOperator
-FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
-                         void *aArg)
-{
-  nsCertAndBoolsAndInt *cai = (nsCertAndBoolsAndInt *)aArg;
-
-  if (cai && aEntry)
-  {
-    const nsCertOverride &settings = aEntry->mSettings;
-    bool still_ok = true;
-
-    if ((settings.mIsTemporary && !cai->aCheckTemporaries)
-        ||
-        (!settings.mIsTemporary && !cai->aCheckPermanents)) {
-      still_ok = false;
-    }
-
-    if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {
-      nsAutoCString cert_fingerprint;
-      nsresult rv = NS_ERROR_UNEXPECTED;
-      if (settings.mFingerprintAlgOID.Equals(cai->mDottedOidForStoringNewHashes)) {
-        rv = GetCertFingerprintByOidTag(cai->cert,
-               cai->mOidTagForStoringNewHashes, cert_fingerprint);
-      }
-      if (NS_SUCCEEDED(rv) &&
-          settings.mFingerprint.Equals(cert_fingerprint)) {
-        cai->counter++;
-      }
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert, 
                                               bool aCheckTemporaries,
@@ -729,79 +655,61 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert,
   NS_ENSURE_ARG(aCert);
   NS_ENSURE_ARG(_retval);
 
-  nsCertAndBoolsAndInt cai;
-  cai.cert = aCert;
-  cai.aCheckTemporaries = aCheckTemporaries;
-  cai.aCheckPermanents = aCheckPermanents;
-  cai.counter = 0;
-  cai.mOidTagForStoringNewHashes = mOidTagForStoringNewHashes;
-  cai.mDottedOidForStoringNewHashes = mDottedOidForStoringNewHashes;
-
+  uint32_t counter = 0;
   {
     ReentrantMonitorAutoEnter lock(monitor);
-    mSettingsTable.EnumerateEntries(FindMatchingCertCallback, &cai);
-  }
-  *_retval = cai.counter;
-  return NS_OK;
-}
+    for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+      const nsCertOverride &settings = iter.Get()->mSettings;
+      bool still_ok = true;
 
-struct nsCertAndPointerAndCallback
-{
-  nsIX509Cert *cert;
-  void *userdata;
-  nsCertOverrideService::CertOverrideEnumerator enumerator;
+      if (( settings.mIsTemporary && !aCheckTemporaries) ||
+          (!settings.mIsTemporary && !aCheckPermanents)) {
+        still_ok = false;
+      }
 
-  SECOidTag mOidTagForStoringNewHashes;
-  nsCString mDottedOidForStoringNewHashes;
-};
-
-static PLDHashOperator
-EnumerateCertOverridesCallback(nsCertOverrideEntry *aEntry,
-                               void *aArg)
-{
-  nsCertAndPointerAndCallback *capac = (nsCertAndPointerAndCallback *)aArg;
-
-  if (capac && aEntry)
-  {
-    const nsCertOverride &settings = aEntry->mSettings;
-
-    if (!capac->cert) {
-      (*capac->enumerator)(settings, capac->userdata);
-    }
-    else {
-      if (matchesDBKey(capac->cert, settings.mDBKey.get())) {
+      if (still_ok && matchesDBKey(aCert, settings.mDBKey.get())) {
         nsAutoCString cert_fingerprint;
         nsresult rv = NS_ERROR_UNEXPECTED;
-        if (settings.mFingerprintAlgOID.Equals(capac->mDottedOidForStoringNewHashes)) {
-          rv = GetCertFingerprintByOidTag(capac->cert,
-                 capac->mOidTagForStoringNewHashes, cert_fingerprint);
+        if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {
+          rv = GetCertFingerprintByOidTag(aCert,
+                 mOidTagForStoringNewHashes, cert_fingerprint);
         }
         if (NS_SUCCEEDED(rv) &&
             settings.mFingerprint.Equals(cert_fingerprint)) {
-          (*capac->enumerator)(settings, capac->userdata);
+          counter++;
         }
       }
     }
   }
-
-  return PL_DHASH_NEXT;
+  *_retval = counter;
+  return NS_OK;
 }
 
-nsresult 
+nsresult
 nsCertOverrideService::EnumerateCertOverrides(nsIX509Cert *aCert,
-                         CertOverrideEnumerator enumerator,
+                         CertOverrideEnumerator aEnumerator,
                          void *aUserData)
 {
-  nsCertAndPointerAndCallback capac;
-  capac.cert = aCert;
-  capac.userdata = aUserData;
-  capac.enumerator = enumerator;
-  capac.mOidTagForStoringNewHashes = mOidTagForStoringNewHashes;
-  capac.mDottedOidForStoringNewHashes = mDottedOidForStoringNewHashes;
+  ReentrantMonitorAutoEnter lock(monitor);
+  for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
+    const nsCertOverride &settings = iter.Get()->mSettings;
 
-  {
-    ReentrantMonitorAutoEnter lock(monitor);
-    mSettingsTable.EnumerateEntries(EnumerateCertOverridesCallback, &capac);
+    if (!aCert) {
+      aEnumerator(settings, aUserData);
+    } else {
+      if (matchesDBKey(aCert, settings.mDBKey.get())) {
+        nsAutoCString cert_fingerprint;
+        nsresult rv = NS_ERROR_UNEXPECTED;
+        if (settings.mFingerprintAlgOID.Equals(mDottedOidForStoringNewHashes)) {
+          rv = GetCertFingerprintByOidTag(aCert,
+                 mOidTagForStoringNewHashes, cert_fingerprint);
+        }
+        if (NS_SUCCEEDED(rv) &&
+            settings.mFingerprint.Equals(cert_fingerprint)) {
+          aEnumerator(settings, aUserData);
+        }
+      }
+    }
   }
   return NS_OK;
 }

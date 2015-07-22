@@ -40,16 +40,6 @@ typedef RootedValueMap::Range RootRange;
 typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
 
-// Note: the following two functions cannot be static as long as we are using
-// GCC 4.4, since it requires template function parameters to have external
-// linkage.
-
-void
-MarkPropertyDescriptorRoot(JSTracer* trc, JSPropertyDescriptor* pd, const char* name)
-{
-    pd->trace(trc);
-}
-
 // We cannot instantiate (even indirectly) the abstract JS::DynamicTraceable.
 // Instead we cast to a ConcreteTraceable, then upcast before calling trace so
 // that we get the implementation defined dynamically in the vtable.
@@ -95,8 +85,6 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<LazyScript*>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid>(trc, context, "exact-id");
     MarkExactStackRootList<Value>(trc, context, "exact-value");
-    MarkExactStackRootList<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(
-        trc, context, "JSPropertyDescriptor");
     MarkExactStackRootList<JS::StaticTraceable,
                            js::DispatchWrapper<JS::StaticTraceable>::TraceWrapped>(
         trc, context, "StaticTraceable");
@@ -200,18 +188,6 @@ AutoGCRooter::trace(JSTracer* trc)
       case SCRIPTVECTOR: {
         AutoScriptVector::VectorImpl& vector = static_cast<AutoScriptVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
-        return;
-      }
-
-      case OBJU32HASHMAP: {
-        AutoObjectUnsigned32HashMap* self = static_cast<AutoObjectUnsigned32HashMap*>(this);
-        AutoObjectUnsigned32HashMap::HashMapImpl& map = self->map;
-        for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
-            JSObject* key = e.front().key();
-            TraceRoot(trc, &key, "AutoObjectUnsignedHashMap key");
-            if (key != e.front().key())
-                e.rekeyFront(key);
-        }
         return;
       }
 

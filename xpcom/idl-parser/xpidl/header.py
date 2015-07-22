@@ -62,10 +62,10 @@ def attributeParamlist(a, getter):
     return ", ".join(l)
 
 
-def attributeAsNative(a, getter):
+def attributeAsNative(a, getter, declType = 'NS_IMETHOD'):
         deprecated = a.deprecated and "NS_DEPRECATED " or ""
         params = {'deprecated': deprecated,
-                  'returntype': attributeReturnType(a, 'NS_IMETHOD'),
+                  'returntype': attributeReturnType(a, declType),
                   'binaryname': attributeNativeName(a, getter),
                   'paramlist': attributeParamlist(a, getter)}
         return "%(deprecated)s%(returntype)s %(binaryname)s(%(paramlist)s)" % params
@@ -88,8 +88,8 @@ def methodReturnType(m, macro):
         return macro
 
 
-def methodAsNative(m):
-    return "%s %s(%s)" % (methodReturnType(m, 'NS_IMETHOD'),
+def methodAsNative(m, declType = 'NS_IMETHOD'):
+    return "%s %s(%s)" % (methodReturnType(m, declType),
                           methodNativeName(m),
                           paramlistAsNative(m))
 
@@ -255,6 +255,11 @@ iface_epilog = """};
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_%(macroname)s """
 
+iface_nonvirtual = """
+
+/* Use this macro when declaring the members of this interface when the
+   class doesn't implement the interface. This is useful for forwarding. */
+#define NS_DECL_NON_VIRTUAL_%(macroname)s """
 
 iface_forward = """
 
@@ -420,20 +425,26 @@ def write_interface(iface, fd):
 
     fd.write(iface_epilog % names)
 
-    for member in iface.members:
-        if isinstance(member, xpidl.Attribute):
-            if member.infallible:
-                fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
-            fd.write("\\\n  %s override; " % attributeAsNative(member, True))
-            if not member.readonly:
-                fd.write("\\\n  %s override; " % attributeAsNative(member, False))
-        elif isinstance(member, xpidl.Method):
-            fd.write("\\\n  %s override; " % methodAsNative(member))
-    if len(iface.members) == 0:
-        fd.write('\\\n  /* no methods! */')
-    elif not member.kind in ('attribute', 'method'):
-        fd.write('\\')
+    def writeDeclaration(fd, iface, virtual):
+        declType = "NS_IMETHOD" if virtual else "NS_METHOD"
+        suffix = " override" if virtual else ""
+        for member in iface.members:
+            if isinstance(member, xpidl.Attribute):
+                if member.infallible:
+                    fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
+                fd.write("\\\n  %s%s; " % (attributeAsNative(member, True, declType), suffix))
+                if not member.readonly:
+                    fd.write("\\\n  %s%s; " % (attributeAsNative(member, False, declType), suffix))
+            elif isinstance(member, xpidl.Method):
+                fd.write("\\\n  %s%s; " % (methodAsNative(member, declType), suffix))
+        if len(iface.members) == 0:
+            fd.write('\\\n  /* no methods! */')
+        elif not member.kind in ('attribute', 'method'):
+            fd.write('\\')
 
+    writeDeclaration(fd, iface, True);
+    fd.write(iface_nonvirtual % names)
+    writeDeclaration(fd, iface, False);
     fd.write(iface_forward % names)
 
     def emitTemplate(forward_infallible, tmpl, tmpl_notxpcom=None):

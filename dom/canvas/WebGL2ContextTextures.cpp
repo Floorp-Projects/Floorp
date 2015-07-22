@@ -431,7 +431,7 @@ WebGL2Context::TexSubImage3D(GLenum target, GLint level,
                              GLenum format, GLenum type, dom::ImageData* data,
                              ErrorResult& rv)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("texSubImage3D: Not implemented.");
 }
 
 void
@@ -439,7 +439,7 @@ WebGL2Context::CopyTexSubImage3D(GLenum target, GLint level,
                                  GLint xoffset, GLint yoffset, GLint zoffset,
                                  GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("copyTexSubImage3D: Not implemented.");
 }
 
 void
@@ -447,7 +447,7 @@ WebGL2Context::CompressedTexImage3D(GLenum target, GLint level, GLenum internalf
                                     GLsizei width, GLsizei height, GLsizei depth,
                                     GLint border, GLsizei imageSize, const dom::ArrayBufferView& data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("compressedTexImage3D: Not implemented.");
 }
 
 void
@@ -455,7 +455,7 @@ WebGL2Context::CompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset
                                        GLsizei width, GLsizei height, GLsizei depth,
                                        GLenum format, GLsizei imageSize, const dom::ArrayBufferView& data)
 {
-    MOZ_CRASH("Not Implemented.");
+    GenerateWarning("compressedTexSubImage3D: Not implemented.");
 }
 
 JS::Value

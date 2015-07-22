@@ -14,7 +14,7 @@
 #include "prlink.h"
 
 #include "ctypes/typedefs.h"
-#include "js/HashTable.h"
+#include "js/TraceableHashTable.h"
 #include "js/Vector.h"
 #include "vm/String.h"
 
@@ -279,7 +279,8 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
   }
 };
 
-typedef HashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy> FieldInfoHash;
+typedef TraceableHashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy>
+    FieldInfoHash;
 
 void
 TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields);
@@ -533,6 +534,13 @@ namespace UInt64 {
 } // namespace UInt64
 
 } // namespace ctypes
+
+template <> struct DefaultTracer<ctypes::FieldInfo> {
+    static void trace(JSTracer* trc, ctypes::FieldInfo* t, const char* name) {
+        JS_CallObjectTracer(trc, &t->mType, "fieldType");
+    }
+};
+
 } // namespace js
 
 #endif /* ctypes_CTypes_h */

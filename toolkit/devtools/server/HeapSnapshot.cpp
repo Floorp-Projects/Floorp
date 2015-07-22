@@ -19,6 +19,8 @@
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
@@ -459,6 +461,10 @@ class MOZ_STACK_CLASS HeapSnapshotHandler
   JS::ZoneSet*    zones;
 
 public:
+  // For telemetry.
+  uint32_t nodeCount;
+  uint32_t edgeCount;
+
   HeapSnapshotHandler(CoreDumpWriter& writer,
                       JS::ZoneSet* zones)
     : writer(writer),
@@ -475,6 +481,8 @@ public:
                    NodeData*,
                    bool first)
   {
+    edgeCount++;
+
     // We're only interested in the first time we reach edge.referent, not in
     // every edge arriving at that node. "But, don't we want to serialize every
     // edge in the heap graph?" you ask. Don't worry! This edge is still
@@ -483,6 +491,8 @@ public:
     // visited and serialized the origin node and its edges.
     if (!first)
       return true;
+
+    nodeCount++;
 
     const JS::ubi::Node& referent = edge.referent;
 
@@ -515,7 +525,9 @@ WriteHeapGraph(JSContext* cx,
                CoreDumpWriter& writer,
                bool wantNames,
                JS::ZoneSet* zones,
-               JS::AutoCheckCannotGC& noGC)
+               JS::AutoCheckCannotGC& noGC,
+               uint32_t& outNodeCount,
+               uint32_t& outEdgeCount)
 {
   // Serialize the starting node to the core dump.
 
@@ -532,8 +544,15 @@ WriteHeapGraph(JSContext* cx,
     return false;
   traversal.wantNames = wantNames;
 
-  return traversal.addStartVisited(node) &&
-    traversal.traverse();
+  bool ok = traversal.addStartVisited(node) &&
+            traversal.traverse();
+
+  if (ok) {
+    outNodeCount = handler.nodeCount;
+    outEdgeCount = handler.edgeCount;
+  }
+
+  return ok;
 }
 
 } // namespace devtools
@@ -550,15 +569,12 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                         const HeapSnapshotBoundaries& boundaries,
                                         ErrorResult& rv)
 {
+  auto start = TimeStamp::Now();
+
   bool wantNames = true;
   ZoneSet zones;
-  Maybe<AutoCheckCannotGC> maybeNoGC;
-  ubi::RootList rootList(cx, maybeNoGC, wantNames);
-  if (!EstablishBoundaries(cx, rv, boundaries, rootList, zones))
-    return;
-
-  MOZ_ASSERT(maybeNoGC.isSome());
-  ubi::Node roots(&rootList);
+  uint32_t nodeCount = 0;
+  uint32_t edgeCount = 0;
 
   nsCOMPtr<nsIFile> file;
   rv = NS_NewLocalFile(filePath, false, getter_AddRefs(file));
@@ -577,22 +593,41 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
 
   StreamWriter writer(cx, gzipStream, wantNames);
 
-  // Serialize the initial heap snapshot metadata to the core dump.
-  if (!writer.writeMetadata(PR_Now()) ||
-      // Serialize the heap graph to the core dump, starting from our list of
-      // roots.
-      !WriteHeapGraph(cx,
-                      roots,
-                      writer,
-                      wantNames,
-                      zones.initialized() ? &zones : nullptr,
-                      maybeNoGC.ref()))
+  {
+    Maybe<AutoCheckCannotGC> maybeNoGC;
+    ubi::RootList rootList(cx, maybeNoGC, wantNames);
+    if (!EstablishBoundaries(cx, rv, boundaries, rootList, zones))
+      return;
+
+    MOZ_ASSERT(maybeNoGC.isSome());
+    ubi::Node roots(&rootList);
+
+    // Serialize the initial heap snapshot metadata to the core dump.
+    if (!writer.writeMetadata(PR_Now()) ||
+        // Serialize the heap graph to the core dump, starting from our list of
+        // roots.
+        !WriteHeapGraph(cx,
+                        roots,
+                        writer,
+                        wantNames,
+                        zones.initialized() ? &zones : nullptr,
+                        maybeNoGC.ref(),
+                        nodeCount,
+                        edgeCount))
     {
       rv.Throw(zeroCopyStream.failed()
                ? zeroCopyStream.result()
                : NS_ERROR_UNEXPECTED);
       return;
     }
+  }
+
+  Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_SAVE_HEAP_SNAPSHOT_MS,
+                                 start);
+  Telemetry::Accumulate(Telemetry::DEVTOOLS_HEAP_SNAPSHOT_NODE_COUNT,
+                        nodeCount);
+  Telemetry::Accumulate(Telemetry::DEVTOOLS_HEAP_SNAPSHOT_EDGE_COUNT,
+                        edgeCount);
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
@@ -601,6 +636,8 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
                                         const nsAString& filePath,
                                         ErrorResult& rv)
 {
+  auto start = TimeStamp::Now();
+
   UniquePtr<char[]> path(ToNewCString(filePath));
   if (!path) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -612,9 +649,15 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   if (rv.Failed())
     return nullptr;
 
-  return HeapSnapshot::Create(cx, global,
-                              reinterpret_cast<const uint8_t*>(mm.address()),
-                              mm.size(), rv);
+  auto snapshot = HeapSnapshot::Create(cx, global,
+                                       reinterpret_cast<const uint8_t*>(mm.address()),
+                                       mm.size(), rv);
+
+  if (!rv.Failed())
+    Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_READ_HEAP_SNAPSHOT_MS,
+                                   start);
+
+  return snapshot;
 }
 
 } // namespace dom
