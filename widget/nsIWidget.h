@@ -724,8 +724,9 @@ struct IMENotification final
         MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE);
         mTextChangeData += aNotification.mTextChangeData;
         break;
+      case NOTIFY_IME_OF_POSITION_CHANGE:
       case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-        MOZ_ASSERT(aNotification.mMessage == NOTIFY_IME_OF_COMPOSITION_UPDATE);
+        MOZ_ASSERT(aNotification.mMessage == mMessage);
         break;
       default:
         MOZ_CRASH("Merging notification isn't supported");
