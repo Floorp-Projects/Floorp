@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait reftest-no-flush">
+<title>Testcase, bug 1186061</title>
+<style>
+
+html { overflow: hidden }
+
+body { padding: 50px }
+
+@keyframes flip {
+  0%, 85% { transform: rotateX(170deg); }
+  90%, 100% { transform: rotateX(10deg); }
+}
+
+#test {
+  background: blue;
+  height: 200px; width: 200px;
+  backface-visibility: hidden;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: flip 100s -99.9s linear 2;
+}
+
+</style>
+
+<div id="test">
+</div>
+
+<script>
+
+document.getElementById("test").addEventListener("animationiteration", IterationListener, false);
+
+function IterationListener(event) {
+  setTimeout(RemoveReftestWait, 0);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>
