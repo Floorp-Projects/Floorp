@@ -8497,7 +8497,7 @@ CheckComparison(FunctionBuilder& f, ParseNode* comp, Type* type)
     }
 
     I32 stmt;
-    if (lhsType.isSigned()) {
+    if (lhsType.isSigned() && rhsType.isSigned()) {
         switch (comp->getOp()) {
           case JSOP_EQ: stmt = I32::EqI32;  break;
           case JSOP_NE: stmt = I32::NeI32;  break;
@@ -8507,7 +8507,7 @@ CheckComparison(FunctionBuilder& f, ParseNode* comp, Type* type)
           case JSOP_GE: stmt = I32::SGeI32; break;
           default: MOZ_CRASH("unexpected comparison op");
         }
-    } else if (lhsType.isUnsigned()) {
+    } else if (lhsType.isUnsigned() && rhsType.isUnsigned()) {
         switch (comp->getOp()) {
           case JSOP_EQ: stmt = I32::EqI32;  break;
           case JSOP_NE: stmt = I32::NeI32;  break;
