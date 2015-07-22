@@ -300,48 +300,6 @@ nsSMILAnimationController::MaybeStartSampling(nsRefreshDriver* aRefreshDriver)
 //----------------------------------------------------------------------
 // Sample-related methods and callbacks
 
-PLDHashOperator
-TransferCachedBaseValue(nsSMILCompositor* aCompositor,
-                        void* aData)
-{
-  nsSMILCompositorTable* lastCompositorTable =
-    static_cast<nsSMILCompositorTable*>(aData);
-  nsSMILCompositor* lastCompositor =
-    lastCompositorTable->GetEntry(aCompositor->GetKey());
-
-  if (lastCompositor) {
-    aCompositor->StealCachedBaseValue(lastCompositor);
-  }
-
-  return PL_DHASH_NEXT;  
-}
-
-PLDHashOperator
-RemoveCompositorFromTable(nsSMILCompositor* aCompositor,
-                          void* aData)
-{
-  nsSMILCompositorTable* lastCompositorTable =
-    static_cast<nsSMILCompositorTable*>(aData);
-  lastCompositorTable->RemoveEntry(aCompositor->GetKey());
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-DoClearAnimationEffects(nsSMILCompositor* aCompositor,
-                        void* /*aData*/)
-{
-  aCompositor->ClearAnimationEffects();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-DoComposeAttribute(nsSMILCompositor* aCompositor,
-                   void* /*aData*/)
-{
-  aCompositor->ComposeAttribute();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsSMILAnimationController::DoSample()
 {
@@ -416,29 +374,44 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   nsAutoPtr<nsSMILCompositorTable>
     currentCompositorTable(new nsSMILCompositorTable(0));
 
-  SampleAnimationParams saParams = { &activeContainers,
-                                     currentCompositorTable };
-  mAnimationElementTable.EnumerateEntries(SampleAnimation,
-                                          &saParams);
+  for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
+    SVGAnimationElement* animElem = iter.Get()->GetKey();
+    SampleTimedElement(animElem, &activeContainers);
+    AddAnimationToCompositorTable(animElem, currentCompositorTable);
+  }
   activeContainers.Clear();
 
   // STEP 4: Compare previous sample's compositors against this sample's.
-  // (Transfer cached base values across, & remove animation effects from 
+  // (Transfer cached base values across, & remove animation effects from
   // no-longer-animated targets.)
   if (mLastCompositorTable) {
     // * Transfer over cached base values, from last sample's compositors
-    currentCompositorTable->EnumerateEntries(TransferCachedBaseValue,
-                                             mLastCompositorTable);
+    for (auto iter = currentCompositorTable->Iter();
+         !iter.Done();
+         iter.Next()) {
+      nsSMILCompositor* compositor = iter.Get();
+      nsSMILCompositor* lastCompositor =
+        mLastCompositorTable->GetEntry(compositor->GetKey());
+
+      if (lastCompositor) {
+        compositor->StealCachedBaseValue(lastCompositor);
+      }
+    }
 
     // * For each compositor in current sample's hash table, remove entry from
     // prev sample's hash table -- we don't need to clear animation
     // effects of those compositors, since they're still being animated.
-    currentCompositorTable->EnumerateEntries(RemoveCompositorFromTable,
-                                             mLastCompositorTable);
+    for (auto iter = currentCompositorTable->Iter();
+         !iter.Done();
+         iter.Next()) {
+      mLastCompositorTable->RemoveEntry(iter.Get()->GetKey());
+    }
 
     // * For each entry that remains in prev sample's hash table (i.e. for
     // every target that's no longer animated), clear animation effects.
-    mLastCompositorTable->EnumerateEntries(DoClearAnimationEffects, nullptr);
+    for (auto iter = mLastCompositorTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.Get()->ClearAnimationEffects();
+    }
   }
 
   // return early if there are no active animations to avoid a style flush
@@ -460,7 +433,9 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   // random order. For animation from/to 'inherit' values to work correctly
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
-  currentCompositorTable->EnumerateEntries(DoComposeAttribute, nullptr);
+  for (auto iter = currentCompositorTable->Iter(); !iter.Done(); iter.Next()) {
+    iter.Get()->ComposeAttribute();
+  }
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();
@@ -638,23 +613,6 @@ nsSMILAnimationController::GetMilestoneElements(TimeContainerPtrKey* aKey,
 
   container->PopMilestoneElementsAtMilestone(params->mMilestone,
                                              params->mElements);
-
-  return PL_DHASH_NEXT;
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::SampleAnimation(AnimationElementPtrKey* aKey,
-                                           void* aData)
-{
-  NS_ENSURE_TRUE(aKey, PL_DHASH_NEXT);
-  NS_ENSURE_TRUE(aKey->GetKey(), PL_DHASH_NEXT);
-  NS_ENSURE_TRUE(aData, PL_DHASH_NEXT);
-
-  SVGAnimationElement* animElem = aKey->GetKey();
-  SampleAnimationParams* params = static_cast<SampleAnimationParams*>(aData);
-
-  SampleTimedElement(animElem, params->mActiveContainers);
-  AddAnimationToCompositorTable(animElem, params->mCompositorTable);
 
   return PL_DHASH_NEXT;
 }
