@@ -120,7 +120,9 @@ Prompt.prototype = {
     return this._addInput({
       type: aOptions.type || "date",
       value: aOptions.value,
-      id: aOptions.id
+      id: aOptions.id,
+      max: aOptions.max,
+      min: aOptions.min
     });
   },
 
