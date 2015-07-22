@@ -502,8 +502,9 @@ DOMHighResTimeStamp
 nsPerformance::Now() const
 {
   double nowTimeMs = GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
-  // Round down to the nearest 0.005ms (5us), because if the timer is too
-  // accurate people can do nasty timing attacks with it.
+  // Round down to the nearest 5us, because if the timer is too accurate people
+  // can do nasty timing attacks with it.  See similar code in the worker
+  // Performance implementation.
   const double maxResolutionMs = 0.005;
   return floor(nowTimeMs / maxResolutionMs) * maxResolutionMs;
 }
