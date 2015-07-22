@@ -79,13 +79,15 @@ public:
   void AttributeWillChange(Element* aElement,
                            int32_t  aNameSpaceID,
                            nsIAtom* aAttribute,
-                           int32_t  aModType);
+                           int32_t  aModType,
+                           const nsAttrValue* aNewValue);
   // Forwarded nsIMutationObserver method, to handle restyling (and
   // passing the notification to the frame).
   void AttributeChanged(Element* aElement,
                         int32_t  aNameSpaceID,
                         nsIAtom* aAttribute,
-                        int32_t  aModType);
+                        int32_t  aModType,
+                        const nsAttrValue* aOldValue);
 
   // Get an integer that increments every time there is a style change
   // as a result of a change to the :hover content state.

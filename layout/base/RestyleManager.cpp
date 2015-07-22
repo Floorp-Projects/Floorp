@@ -1161,13 +1161,15 @@ void
 RestyleManager::AttributeWillChange(Element* aElement,
                                     int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t aModType)
+                                    int32_t aModType,
+                                    const nsAttrValue* aNewValue)
 {
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
-                                                         false);
+                                                         false,
+                                                         aNewValue);
   PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE);
 }
 
@@ -1177,7 +1179,8 @@ void
 RestyleManager::AttributeChanged(Element* aElement,
                                  int32_t aNameSpaceID,
                                  nsIAtom* aAttribute,
-                                 int32_t aModType)
+                                 int32_t aModType,
+                                 const nsAttrValue* aOldValue)
 {
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
@@ -1254,7 +1257,8 @@ RestyleManager::AttributeChanged(Element* aElement,
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
                                                          aAttribute,
                                                          aModType,
-                                                         true);
+                                                         true,
+                                                         aOldValue);
 
   PostRestyleEvent(aElement, rshint, hint);
 }

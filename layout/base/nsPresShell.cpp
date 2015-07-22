@@ -4248,7 +4248,8 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mPresContext->RestyleManager()->AttributeWillChange(aElement, aNameSpaceID,
-                                                        aAttribute, aModType);
+                                                        aAttribute, aModType,
+                                                        aNewValue);
     VERIFY_STYLE_TREE;
   }
 }
@@ -4270,7 +4271,8 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mPresContext->RestyleManager()->AttributeChanged(aElement, aNameSpaceID,
-                                                     aAttribute, aModType);
+                                                     aAttribute, aModType,
+                                                     aOldValue);
     VERIFY_STYLE_TREE;
   }
 }
