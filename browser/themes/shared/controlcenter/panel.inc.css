@@ -140,9 +140,10 @@
 
 .identity-popup-expander[panel-multiview-anchor] {
   transition: background-color 250ms ease-in;
-  background-color: #0069d9;
+  background-color: Highlight;
   background-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted.png"),
                     linear-gradient(rgba(255,255,255,0.3), transparent);
+  color: HighlightText;
 }
 
 @media (min-resolution: 1.1dppx) {
