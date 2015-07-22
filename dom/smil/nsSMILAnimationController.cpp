@@ -212,20 +212,11 @@ nsSMILAnimationController::Traverse(
 {
   // Traverse last compositor table
   if (mLastCompositorTable) {
-    mLastCompositorTable->EnumerateEntries(CompositorTableEntryTraverse,
-                                           aCallback);
+    for (auto iter = mLastCompositorTable->Iter(); !iter.Done(); iter.Next()) {
+      nsSMILCompositor* compositor = iter.Get();
+      compositor->Traverse(aCallback);
+    }
   }
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::CompositorTableEntryTraverse(
-                                      nsSMILCompositor* aCompositor,
-                                      void* aArg)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  aCompositor->Traverse(cb);
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -386,9 +377,20 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   // When we sample the child time containers they will simply record the sample
   // time in document time.
   TimeContainerHashtable activeContainers(mChildContainerTable.Count());
-  SampleTimeContainerParams tcParams = { &activeContainers,
-                                         aSkipUnchangedContainers };
-  mChildContainerTable.EnumerateEntries(SampleTimeContainer, &tcParams);
+  for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
+    nsSMILTimeContainer* container = iter.Get()->GetKey();
+    if (!container) {
+      continue;
+    }
+
+    if (!container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN) &&
+        (container->NeedsSample() || !aSkipUnchangedContainers)) {
+      container->ClearMilestones();
+      container->Sample();
+      container->MarkSeekFinished();
+      activeContainers.PutEntry(container);
+    }
+  }
 
   // STEP 3: (i)  Sample the timed elements AND
   //         (ii) Create a table of compositors
@@ -636,29 +638,6 @@ nsSMILAnimationController::GetMilestoneElements(TimeContainerPtrKey* aKey,
 
   container->PopMilestoneElementsAtMilestone(params->mMilestone,
                                              params->mElements);
-
-  return PL_DHASH_NEXT;
-}
-
-/*static*/ PLDHashOperator
-nsSMILAnimationController::SampleTimeContainer(TimeContainerPtrKey* aKey,
-                                               void* aData)
-{
-  NS_ENSURE_TRUE(aKey, PL_DHASH_NEXT);
-  NS_ENSURE_TRUE(aKey->GetKey(), PL_DHASH_NEXT);
-  NS_ENSURE_TRUE(aData, PL_DHASH_NEXT);
-
-  SampleTimeContainerParams* params =
-    static_cast<SampleTimeContainerParams*>(aData);
-
-  nsSMILTimeContainer* container = aKey->GetKey();
-  if (!container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN) &&
-      (container->NeedsSample() || !params->mSkipUnchangedContainers)) {
-    container->ClearMilestones();
-    container->Sample();
-    container->MarkSeekFinished();
-    params->mActiveContainers->PutEntry(container);
-  }
 
   return PL_DHASH_NEXT;
 }
