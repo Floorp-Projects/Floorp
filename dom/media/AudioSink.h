@@ -10,6 +10,7 @@
 #include "MediaDecoderReader.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 
@@ -23,7 +24,9 @@ public:
   AudioSink(MediaDecoderStateMachine* aStateMachine,
             int64_t aStartTime, AudioInfo aInfo, dom::AudioChannel aChannel);
 
-  nsresult Init();
+  // Return a promise which will be resolved when AudioSink finishes playing,
+  // or rejected if any error.
+  nsRefPtr<GenericPromise> Init();
 
   int64_t GetPosition();
 
@@ -140,6 +143,8 @@ private:
   bool mSetPreservesPitch;
 
   bool mPlaying;
+
+  MozPromiseHolder<GenericPromise> mEndPromise;
 };
 
 } // namespace mozilla
