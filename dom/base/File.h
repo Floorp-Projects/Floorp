@@ -32,7 +32,7 @@
 class nsIFile;
 class nsIInputStream;
 
-#define FILEIMPL_IID \
+#define BLOBIMPL_IID \
   { 0xbccb3275, 0x6778, 0x4ac5, \
     { 0xaf, 0x03, 0x90, 0xed, 0x37, 0xad, 0xdf, 0x5d } }
 
@@ -300,7 +300,7 @@ private:
 class BlobImpl : public nsISupports
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(FILEIMPL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(BLOBIMPL_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
 
   BlobImpl() {}
@@ -405,7 +405,7 @@ protected:
   virtual ~BlobImpl() {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(BlobImpl, FILEIMPL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(BlobImpl, BLOBIMPL_IID)
 
 class BlobImplBase : public BlobImpl
 {
