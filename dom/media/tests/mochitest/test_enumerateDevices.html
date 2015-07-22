@@ -11,7 +11,11 @@ createHTML({ title: "Run enumerateDevices code", bug: "1046245" });
   Tests covering enumerateDevices API. Exercise code.
 */
 
-runTest(() => navigator.mediaDevices.enumerateDevices()
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+
+runTest(() =>
+  pushPrefs(["media.navigator.streams.fake", true])
+  .then(() => navigator.mediaDevices.enumerateDevices())
   .then(devices => {
     ok(devices.length > 0, "At least one device found");
     devices.forEach(d => {
@@ -20,7 +24,12 @@ runTest(() => navigator.mediaDevices.enumerateDevices()
       ok(d.label.length !== undefined, "Device label: " + d.label);
       is(d.groupId, "", "Don't support groupId yet");
     });
-  }));
+  })
+  // Check the special case of no devices found (these prefs override fake).
+  .then(() => pushPrefs(["media.audio_loopback_dev", "none"],
+                        ["media.video_loopback_dev", "none"]))
+  .then(() => navigator.mediaDevices.enumerateDevices())
+  .then(devices => ok(devices.length === 0, "No devices found")));
 
 </script>
 </pre>
