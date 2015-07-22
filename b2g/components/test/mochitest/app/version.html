@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test app for bug 1171917</title>
+    <script type="application/javascript;version=1.7">
+
+function onLoad() {
+  fetch("get-sw-version").then(function(r) {
+    return r.text();
+  }).then(function(body) {
+    parent.postMessage({status: "callback", data: body}, "*");
+  });
+}
+
+    </script>
+  </head>
+  <body onload="onLoad()">
+  </body>
+</html>

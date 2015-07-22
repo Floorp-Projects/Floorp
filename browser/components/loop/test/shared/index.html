@@ -30,7 +30,6 @@
 
   <!-- libs -->
   <script src="../../content/shared/libs/react-0.12.2.js"></script>
-  <script src="../../content/shared/libs/jquery-2.1.4.js"></script>
   <script src="../../content/shared/libs/lodash-3.9.3.js"></script>
   <script src="../../content/shared/libs/backbone-1.2.1.js"></script>
   <script src="../../standalone/content/libs/l10n-gaia-02ca67948fe8.js"></script>
@@ -95,7 +94,10 @@
     });
 
     mocha.run(function () {
-      $("#mocha").append("<p id='complete'>Complete.</p>");
+      var completeNode = document.createElement("p");
+      completeNode.setAttribute("id", "complete");
+      completeNode.appendChild(document.createTextNode("Complete"));
+      document.getElementById("mocha").appendChild(completeNode);
     });
   </script>
 </body>
