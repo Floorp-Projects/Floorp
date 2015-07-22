@@ -39,6 +39,8 @@ public class PromptInput {
     protected final String mType;
     protected final String mId;
     protected final String mValue;
+    protected final String mMinValue;
+    protected final String mMaxValue;
     protected OnChangeListener mListener;
     protected View mView;
     public static final String LOGTAG = "GeckoPromptInput";
@@ -178,7 +180,7 @@ public class PromptInput {
             if (mType.equals("date")) {
                 try {
                     DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd", mValue,
-                                                              DateTimePicker.PickersState.DATE);
+                                                              DateTimePicker.PickersState.DATE, mMinValue, mMaxValue);
                     input.toggleCalendar(true);
                     mView = (View)input;
                 } catch (UnsupportedOperationException ex) {
@@ -200,7 +202,7 @@ public class PromptInput {
                 }
             } else if (mType.equals("week")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-'W'ww", mValue,
-                                                          DateTimePicker.PickersState.WEEK);
+                                                          DateTimePicker.PickersState.WEEK, mMinValue, mMaxValue);
                 mView = (View)input;
             } else if (mType.equals("time")) {
                 TimePicker input = new TimePicker(context);
@@ -217,12 +219,13 @@ public class PromptInput {
                 mView = (View)input;
             } else if (mType.equals("datetime-local") || mType.equals("datetime")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM-dd HH:mm", mValue.replace("T"," ").replace("Z", ""),
-                                                          DateTimePicker.PickersState.DATETIME);
+                                                          DateTimePicker.PickersState.DATETIME, 
+                                                          mMinValue.replace("T"," ").replace("Z",""), mMaxValue.replace("T"," ").replace("Z", ""));
                 input.toggleCalendar(true);
                 mView = (View)input;
             } else if (mType.equals("month")) {
                 DateTimePicker input = new DateTimePicker(context, "yyyy-MM", mValue,
-                                                          DateTimePicker.PickersState.MONTH);
+                                                          DateTimePicker.PickersState.MONTH, mMinValue, mMaxValue);
                 mView = (View)input;
             }
             return mView;
@@ -343,6 +346,8 @@ public class PromptInput {
         String id = obj.optString("id");
         mId = TextUtils.isEmpty(id) ? mType : id;
         mValue = obj.optString("value");
+        mMaxValue = obj.optString("max");
+        mMinValue = obj.optString("min");
     }
 
     public static PromptInput getInput(JSONObject obj) {
