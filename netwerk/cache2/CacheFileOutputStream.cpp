@@ -103,6 +103,18 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
     return NS_ERROR_FILE_TOO_BIG;
   }
 
+  // We use 64-bit offset when accessing the file, unfortunatelly we use 32-bit
+  // metadata offset, so we cannot handle data bigger than 4GB.
+  if (mPos + aCount > PR_UINT32_MAX) {
+    LOG(("CacheFileOutputStream::Write() - Entry's size exceeds 4GB while it "
+         "isn't too big according to CacheObserver::EntryIsTooBig(). Failing "
+         "and dooming the entry. [this=%p]", this));
+
+    mFile->DoomLocked(nullptr);
+    CloseWithStatusLocked(NS_ERROR_FILE_TOO_BIG);
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
   *_retval = aCount;
 
   while (aCount) {

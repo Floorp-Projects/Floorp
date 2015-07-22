@@ -121,6 +121,7 @@ public:
   nsresult GetKey(nsACString &_retval);
 
   nsresult ReadMetadata(CacheFileMetadataListener *aListener);
+  uint32_t CalcMetadataSize(uint32_t aElementsSize, uint32_t aHashCount);
   nsresult WriteMetadata(uint32_t aOffset,
                          CacheFileMetadataListener *aListener);
   nsresult SyncReadMetadata(nsIFile *aFile);
@@ -171,7 +172,7 @@ private:
   void     InitEmptyMetadata();
   nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset, bool aHaveKey);
   nsresult CheckElements(const char *aBuf, uint32_t aSize);
-  void     EnsureBuffer(uint32_t aSize);
+  nsresult EnsureBuffer(uint32_t aSize);
   nsresult ParseKey(const nsACString &aKey);
 
   nsRefPtr<CacheFileHandle>           mHandle;
