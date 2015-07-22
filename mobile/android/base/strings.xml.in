@@ -460,14 +460,11 @@
   <string name="bookmarkdefaults_url_marketplace">https://marketplace.firefox.com/</string>
 
   <!-- Site identity popup -->
-  <string name="identity_connected_to">&identity_connected_to;</string>
-  <string name="identity_run_by">&identity_run_by;</string>
-  <string name="identity_no_info">&identity_no_info;</string>
-  <string name="identity_not_encrypted">&identity_not_encrypted;</string>
-  <string name="identity_encrypted">&identity_encrypted;</string>
-  <string name="loaded_mixed_content_message">&loaded_mixed_content_message;</string>
-  <string name="blocked_mixed_content_message_top">&blocked_mixed_content_message_top;</string>
-  <string name="blocked_mixed_content_message_bottom">&blocked_mixed_content_message_bottom;</string>
+  <string name="identity_connection_secure">&identity_connection_secure;</string>
+  <string name="identity_connection_insecure">&identity_connection_insecure;</string>
+
+  <string name="mixed_content_blocked_all">&mixed_content_blocked_all;</string>
+  <string name="mixed_content_protection_disabled">&mixed_content_protection_disabled;</string>
 
   <string name="doorhanger_tracking_title">&doorhanger_tracking_title;</string>
   <string name="doorhanger_tracking_state_enabled">&doorhanger_tracking_state_enabled;</string>

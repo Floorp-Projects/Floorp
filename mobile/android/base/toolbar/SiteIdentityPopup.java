@@ -10,6 +10,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.widget.ImageView;
 import android.widget.Toast;
 import org.json.JSONException;
@@ -53,9 +54,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
-    private static final String MIXED_CONTENT_SUPPORT_URL =
-        "https://support.mozilla.org/kb/how-does-insecure-content-affect-safety-android";
-
     private static final String TRACKING_CONTENT_SUPPORT_URL =
         "https://support.mozilla.org/kb/firefox-android-tracking-protection";
 
@@ -68,20 +66,17 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private LinearLayout mIdentity;
 
     private LinearLayout mIdentityKnownContainer;
-    private LinearLayout mIdentityUnknownContainer;
 
     private ImageView mIcon;
     private TextView mTitle;
-    private TextView mEncrypted;
-    private TextView mHost;
-    private TextView mOwnerLabel;
+    private TextView mSecurityState;
+    private TextView mMixedContentActivity;
     private TextView mOwner;
     private TextView mVerifier;
     private TextView mSiteSettingsLink;
 
     private View mDivider;
 
-    private DoorHanger mMixedContentNotification;
     private DoorHanger mTrackingContentNotification;
     private DoorHanger mSelectLoginDoorhanger;
 
@@ -111,15 +106,12 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         mIdentityKnownContainer =
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_known_container);
-        mIdentityUnknownContainer =
-                (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
-
 
         mIcon = (ImageView) mIdentity.findViewById(R.id.site_identity_icon);
         mTitle = (TextView) mIdentity.findViewById(R.id.site_identity_title);
-        mEncrypted = (TextView) mIdentityKnownContainer.findViewById(R.id.site_identity_encrypted);
-        mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
-        mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
+        mSecurityState = (TextView) mIdentity.findViewById(R.id.site_identity_state);
+        mMixedContentActivity = (TextView) mIdentity.findViewById(R.id.mixed_content_activity);
+
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
         mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
@@ -133,6 +125,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         }
 
         final boolean isIdentityKnown = (siteIdentity.getSecurityMode() != SecurityMode.UNKNOWN);
+        updateConnectionState(siteIdentity);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
 
         if (isIdentityKnown) {
@@ -286,32 +279,49 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     private void toggleIdentityKnownContainerVisibility(final boolean isIdentityKnown) {
-        if (isIdentityKnown) {
-            mIdentityKnownContainer.setVisibility(View.VISIBLE);
-            mIdentityUnknownContainer.setVisibility(View.GONE);
+        final int identityInfoVisibility = isIdentityKnown ? View.VISIBLE : View.GONE;
+        mIdentityKnownContainer.setVisibility(identityInfoVisibility);
+    }
+
+    private void updateConnectionState(final SiteIdentity siteIdentity) {
+        if (siteIdentity.getEncrypted()) {
+            mIcon.setImageResource(R.drawable.lock_secure);
+
+            mSecurityState.setTextColor(mResources.getColor(R.color.affirmative_green));
+            final Drawable stateIcon = ContextCompat.getDrawable(mContext, R.drawable.img_check);
+            stateIcon.setBounds(0, 0, stateIcon.getIntrinsicWidth()/2, stateIcon.getIntrinsicHeight()/2);
+            mSecurityState.setCompoundDrawables(stateIcon, null, null, null);
+            mSecurityState.setCompoundDrawablePadding((int) mResources.getDimension(R.dimen.doorhanger_drawable_padding));
+            mSecurityState.setText(R.string.identity_connection_secure);
+
+            if (siteIdentity.getMixedMode() == MixedMode.MIXED_CONTENT_BLOCKED) {
+                mMixedContentActivity.setVisibility(View.VISIBLE);
+                mMixedContentActivity.setText(R.string.mixed_content_blocked_all);
+            } else {
+                mMixedContentActivity.setVisibility(View.GONE);
+            }
         } else {
-            mIcon.setImageResource(R.drawable.globe_light);
-            mIdentityKnownContainer.setVisibility(View.GONE);
-            mIdentityUnknownContainer.setVisibility(View.VISIBLE);
+            if (siteIdentity.getMixedMode() == MixedMode.MIXED_CONTENT_LOADED) {
+                mIcon.setImageResource(R.drawable.lock_disabled);
+                mMixedContentActivity.setVisibility(View.VISIBLE);
+                mMixedContentActivity.setText(R.string.mixed_content_protection_disabled);
+            } else {
+                mIcon.setImageResource(R.drawable.globe_light);
+                mMixedContentActivity.setVisibility(View.GONE);
+            }
+
+            mSecurityState.setText(R.string.identity_connection_insecure);
+            mSecurityState.setTextColor(mResources.getColor(R.color.placeholder_active_grey));
+            mSecurityState.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            mSecurityState.setCompoundDrawablePadding(0);
         }
     }
 
     private void updateIdentityInformation(final SiteIdentity siteIdentity) {
-        if (siteIdentity.getEncrypted()) {
-            mEncrypted.setVisibility(View.VISIBLE);
-            mIcon.setImageResource(R.drawable.lock_identified);
-        } else {
-            mEncrypted.setVisibility(View.GONE);
-        }
-
-        mHost.setText(siteIdentity.getHost());
-
         String owner = siteIdentity.getOwner();
         if (owner == null) {
-            mOwnerLabel.setVisibility(View.GONE);
             mOwner.setVisibility(View.GONE);
         } else {
-            mOwnerLabel.setVisibility(View.VISIBLE);
             mOwner.setVisibility(View.VISIBLE);
 
             // Supplemental data is optional.
@@ -324,38 +334,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final String verifier = siteIdentity.getVerifier();
         mVerifier.setText(verifier);
-    }
-
-    private void addMixedContentNotification(boolean blocked) {
-        // Remove any existing mixed content notification.
-        removeMixedContentNotification();
-
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mContentButtonClickListener);
-        int icon;
-        if (blocked) {
-            icon = R.drawable.shield_enabled;
-            config.setMessage(mContext.getString(R.string.blocked_mixed_content_message_top) + "\n\n" +
-                      mContext.getString(R.string.blocked_mixed_content_message_bottom));
-        } else {
-            icon = R.drawable.shield_disabled;
-            config.setMessage(mContext.getString(R.string.loaded_mixed_content_message));
-        }
-
-        config.setLink(mContext.getString(R.string.learn_more), MIXED_CONTENT_SUPPORT_URL);
-        addNotificationButtons(config, blocked);
-
-        mMixedContentNotification = DoorHanger.Get(mContext, config);
-        mMixedContentNotification.setIcon(icon);
-
-        mContent.addView(mMixedContentNotification);
-        mDivider.setVisibility(View.VISIBLE);
-    }
-
-    private void removeMixedContentNotification() {
-        if (mMixedContentNotification != null) {
-            mContent.removeView(mMixedContentNotification);
-            mMixedContentNotification = null;
-        }
     }
 
     private void addTrackingContentNotification(boolean blocked) {
@@ -427,11 +405,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         updateIdentity(mSiteIdentity);
 
-        final MixedMode mixedMode = mSiteIdentity.getMixedMode();
-        if (mixedMode != MixedMode.UNKNOWN) {
-            addMixedContentNotification(mixedMode == MixedMode.MIXED_CONTENT_BLOCKED);
-        }
-
         final TrackingMode trackingMode = mSiteIdentity.getTrackingMode();
         if (trackingMode != TrackingMode.UNKNOWN) {
             addTrackingContentNotification(trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED);
@@ -491,7 +464,6 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     @Override
     public void dismiss() {
         super.dismiss();
-        removeMixedContentNotification();
         removeTrackingContentNotification();
         removeSelectLoginDoorhanger();
         mTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);

@@ -127,6 +127,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
     private final int LEVEL_SHIELD_ENABLED = 3;
     private final int LEVEL_SHIELD_DISABLED = 4;
+    private final int LEVEL_LOCK_DISABLED = 5;
 
     private PropertyAnimator mForwardAnim;
 
@@ -435,12 +436,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         int imageLevel = securityMode.ordinal();
 
         // Check to see if any protection was overridden first
-        if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED ||
-            mixedMode == MixedMode.MIXED_CONTENT_LOADED) {
-          imageLevel = LEVEL_SHIELD_DISABLED;
-        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED ||
-                   mixedMode == MixedMode.MIXED_CONTENT_BLOCKED) {
-          imageLevel = LEVEL_SHIELD_ENABLED;
+        if (trackingMode == TrackingMode.TRACKING_CONTENT_LOADED) {
+            imageLevel = LEVEL_SHIELD_DISABLED;
+        } else if (trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED) {
+            imageLevel = LEVEL_SHIELD_ENABLED;
+        } else if (mixedMode == MixedMode.MIXED_CONTENT_LOADED) {
+            imageLevel = LEVEL_LOCK_DISABLED;
         }
 
         if (mSecurityImageLevel != imageLevel) {
