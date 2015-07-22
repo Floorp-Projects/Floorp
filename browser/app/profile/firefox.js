@@ -1927,6 +1927,12 @@ pref("browser.tabs.remote.autostart.1", false);
 pref("browser.tabs.remote.autostart.2", true);
 #endif
 
+#ifdef NIGHTLY_BUILD
+#if defined(XP_MACOSX)
+pref("layers.async-pan-zoom.enabled", true);
+#endif
+#endif
+
 #ifdef E10S_TESTING_ONLY
 // Enable e10s add-on interposition by default.
 pref("extensions.interposition.enabled", true);
