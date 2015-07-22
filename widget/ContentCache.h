@@ -353,6 +353,7 @@ public:
 private:
   IMENotification mPendingSelectionChange;
   IMENotification mPendingTextChange;
+  IMENotification mPendingLayoutChange;
   IMENotification mPendingCompositionUpdate;
 
   // This is commit string which is caused by our request.

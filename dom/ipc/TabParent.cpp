@@ -2093,7 +2093,7 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache,
   const nsIMEUpdatePreference updatePreference =
     widget->GetIMEUpdatePreference();
   if (updatePreference.WantPositionChanged()) {
-    IMEStateManager::NotifyIME(aIMENotification, widget, true);
+    mContentCache.MaybeNotifyIME(widget, aIMENotification);
   }
   return true;
 }
