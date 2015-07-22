@@ -17,7 +17,7 @@ nsChromeRegistryContent::nsChromeRegistryContent()
 void
 nsChromeRegistryContent::RegisterRemoteChrome(
     const InfallibleTArray<ChromePackage>& aPackages,
-    const InfallibleTArray<ResourceMapping>& aResources,
+    const InfallibleTArray<SubstitutionMapping>& aSubstitutions,
     const InfallibleTArray<OverrideMapping>& aOverrides,
     const nsACString& aLocale,
     bool aReset)
@@ -36,9 +36,9 @@ nsChromeRegistryContent::RegisterRemoteChrome(
     RegisterPackage(aPackages[i]);
   }
 
-  for (uint32_t i = aResources.Length(); i > 0; ) {
+  for (uint32_t i = aSubstitutions.Length(); i > 0; ) {
     --i;
-    RegisterResource(aResources[i]);
+    RegisterSubstitution(aSubstitutions[i]);
   }
 
   for (uint32_t i = aOverrides.Length(); i > 0; ) {
@@ -94,32 +94,32 @@ nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage)
 }
 
 void
-nsChromeRegistryContent::RegisterResource(const ResourceMapping& aResource)
+nsChromeRegistryContent::RegisterSubstitution(const SubstitutionMapping& aSubstitution)
 {
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   if (!io)
     return;
 
   nsCOMPtr<nsIProtocolHandler> ph;
-  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
+  nsresult rv = io->GetProtocolHandler(aSubstitution.scheme.get(), getter_AddRefs(ph));
   if (NS_FAILED(rv))
     return;
   
-  nsCOMPtr<nsIResProtocolHandler> rph (do_QueryInterface(ph));
-  if (!rph)
+  nsCOMPtr<nsISubstitutingProtocolHandler> sph (do_QueryInterface(ph));
+  if (!sph)
     return;
 
   nsCOMPtr<nsIURI> resolvedURI;
-  if (aResource.resolvedURI.spec.Length()) {
+  if (aSubstitution.resolvedURI.spec.Length()) {
     nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI),
-                            aResource.resolvedURI.spec,
-                            aResource.resolvedURI.charset.get(),
+                            aSubstitution.resolvedURI.spec,
+                            aSubstitution.resolvedURI.charset.get(),
                             nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
 
-  rv = rph->SetSubstitution(aResource.resource, resolvedURI);
+  rv = sph->SetSubstitution(aSubstitution.path, resolvedURI);
   if (NS_FAILED(rv))
     return;
 }

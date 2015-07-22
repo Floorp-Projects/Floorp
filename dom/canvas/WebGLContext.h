@@ -1461,11 +1461,20 @@ protected:
                                 UniquePtr<FakeBlackTexture>& opaqueTextureScopedPtr,
                                 UniquePtr<FakeBlackTexture>& transparentTextureScopedPtr);
 
+    // Generic Vertex Attributes
+    UniquePtr<GLenum[]> mVertexAttribType;
     GLfloat mVertexAttrib0Vector[4];
     GLfloat mFakeVertexAttrib0BufferObjectVector[4];
     size_t mFakeVertexAttrib0BufferObjectSize;
     GLuint mFakeVertexAttrib0BufferObject;
     WebGLVertexAttrib0Status mFakeVertexAttrib0BufferStatus;
+
+    void GetVertexAttribFloat(GLuint index, GLfloat* out_result);
+    void GetVertexAttribInt(GLuint index, GLint* out_result);
+    void GetVertexAttribUint(GLuint index, GLuint* out_result);
+    JSObject* GetVertexAttribFloat32Array(JSContext* cx, GLuint index);
+    JSObject* GetVertexAttribInt32Array(JSContext* cx, GLuint index);
+    JSObject* GetVertexAttribUint32Array(JSContext* cx, GLuint index);
 
     GLint mStencilRefFront;
     GLint mStencilRefBack;

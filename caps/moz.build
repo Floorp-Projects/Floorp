@@ -8,6 +8,11 @@ MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
+# Hack to make this file available as a resource:// URI.
+TESTING_JS_MODULES += [
+    'tests/mochitest/resource_test_file.html',
+]
+
 XPIDL_SOURCES += [
     'nsIAddonPolicyService.idl',
     'nsIDomainPolicy.idl',

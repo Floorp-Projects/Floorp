@@ -39,14 +39,16 @@ struct ChromePackage
   }
 };
 
-struct ResourceMapping
+struct SubstitutionMapping
 {
-  nsCString resource;
+  nsCString scheme;
+  nsCString path;
   SerializedURI resolvedURI;
 
-  bool operator ==(const ResourceMapping& rhs) const
+  bool operator ==(const SubstitutionMapping& rhs) const
   {
-    return resource.Equals(rhs.resource) &&
+    return scheme.Equals(rhs.scheme) &&
+           path.Equals(rhs.path) &&
            resolvedURI == rhs.resolvedURI;
   }
 };
@@ -134,24 +136,27 @@ struct ParamTraits<ChromePackage>
 };
 
 template <>
-struct ParamTraits<ResourceMapping>
+struct ParamTraits<SubstitutionMapping>
 {
-  typedef ResourceMapping paramType;
+  typedef SubstitutionMapping paramType;
   
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.resource);
+    WriteParam(aMsg, aParam.scheme);
+    WriteParam(aMsg, aParam.path);
     WriteParam(aMsg, aParam.resolvedURI);
   }
   
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    nsCString resource;
+    nsCString scheme, path;
     SerializedURI resolvedURI;
     
-    if (ReadParam(aMsg, aIter, &resource) &&
+    if (ReadParam(aMsg, aIter, &scheme) &&
+        ReadParam(aMsg, aIter, &path) &&
         ReadParam(aMsg, aIter, &resolvedURI)) {
-      aResult->resource = resource;
+      aResult->scheme = scheme;
+      aResult->path = path;
       aResult->resolvedURI = resolvedURI;
       return true;
     }
@@ -160,7 +165,9 @@ struct ParamTraits<ResourceMapping>
 
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
-    aLog->append(StringPrintf(L"[%s, %s, %u]", aParam.resource.get(),
+    aLog->append(StringPrintf(L"[%s://%s, %s, %u]",
+                             aParam.scheme.get(),
+                             aParam.path.get(),
                              aParam.resolvedURI.spec.get()));
   }
 };

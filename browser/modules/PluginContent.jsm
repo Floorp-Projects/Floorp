@@ -580,12 +580,12 @@ PluginContent.prototype = {
     }
 
     let runID = plugin.runID;
-    let submitURLOptIn = this.getPluginUI(plugin, "submitURLOptIn");
+    let submitURLOptIn = this.getPluginUI(plugin, "submitURLOptIn").checked;
     let keyVals = {};
     let userComment = this.getPluginUI(plugin, "submitComment").value.trim();
     if (userComment)
       keyVals.PluginUserComment = userComment;
-    if (this.getPluginUI(plugin, "submitURLOptIn").checked)
+    if (submitURLOptIn)
       keyVals.PluginContentURL = plugin.ownerDocument.URL;
 
     this.global.sendAsyncMessage("PluginContent:SubmitReport",

@@ -383,12 +383,6 @@ class PandaTalosTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixi
         if self.config['%s_options' % suite_category]:
             for option in self.config['%s_options' % suite_category]:
                 options.append(option % str_format_values)
-            for url in self.config.get('datazilla_urls', []):
-                options.extend(['--datazilla-url', url])
-            # add datazilla authfile
-            authfile = self.config.get('datazilla_authfile')
-            if authfile:
-                options.extend(['--authfile', authfile])
             abs_base_cmd = base_cmd + options
             return abs_base_cmd
         else:
