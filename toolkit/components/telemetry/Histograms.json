@@ -8542,5 +8542,18 @@
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
     "description": "Reports why a graphics sanity test was run. 0=First Run, 1=App Updated, 2=Device Change, 3=Driver Change."
+  },
+  "PERMISSIONS_REMIGRATION_COMPARISON": {
+    "alert_emails": ["michael@thelayzells.com"],
+    "expires_in_version": "44",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Reports a comparison between row count of original and re-migration of the v7 permissions DB. 0=New == 0, 1=New < Old, 2=New == Old, 3=New > Old"
+  },
+  "PERMISSIONS_MIGRATION_7_ERROR": {
+    "alert_emails": ["michael@thelayzells.com"],
+    "expires_in_version": "44",
+    "kind": "boolean",
+    "description": "Was there an error while performing the v7 permissions DB migration?"
   }
 }
