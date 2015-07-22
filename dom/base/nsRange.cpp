@@ -135,36 +135,6 @@ nsRange::CompareNodeToRange(nsINode* aNode, nsRange* aRange,
   return NS_OK;
 }
 
-struct FindSelectedRangeData
-{
-  nsINode*  mNode;
-  nsRange* mResult;
-  uint32_t  mStartOffset;
-  uint32_t  mEndOffset;
-};
-
-static PLDHashOperator
-FindSelectedRange(nsPtrHashKey<nsRange>* aEntry, void* userArg)
-{
-  nsRange* range = aEntry->GetKey();
-  if (range->IsInSelection() && !range->Collapsed()) {
-    FindSelectedRangeData* data = static_cast<FindSelectedRangeData*>(userArg);
-    int32_t cmp = nsContentUtils::ComparePoints(data->mNode, data->mEndOffset,
-                                                range->GetStartParent(),
-                                                range->StartOffset());
-    if (cmp == 1) {
-      cmp = nsContentUtils::ComparePoints(data->mNode, data->mStartOffset,
-                                          range->GetEndParent(),
-                                          range->EndOffset());
-      if (cmp == -1) {
-        data->mResult = range;
-        return PL_DHASH_STOP;
-      }
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 static nsINode*
 GetNextRangeCommonAncestor(nsINode* aNode)
 {
@@ -183,16 +153,27 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
 {
   NS_PRECONDITION(aNode, "bad arg");
 
-  FindSelectedRangeData data = { aNode, nullptr, aStartOffset, aEndOffset };
   nsINode* n = GetNextRangeCommonAncestor(aNode);
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
                "orphan selection descendant");
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
     RangeHashTable* ranges =
       static_cast<RangeHashTable*>(n->GetProperty(nsGkAtoms::range));
-    ranges->EnumerateEntries(FindSelectedRange, &data);
-    if (data.mResult) {
-      return true;
+    for (auto iter = ranges->ConstIter(); !iter.Done(); iter.Next()) {
+      nsRange* range = iter.Get()->GetKey();
+      if (range->IsInSelection() && !range->Collapsed()) {
+        int32_t cmp = nsContentUtils::ComparePoints(aNode, aEndOffset,
+                                                    range->GetStartParent(),
+                                                    range->StartOffset());
+        if (cmp == 1) {
+          cmp = nsContentUtils::ComparePoints(aNode, aStartOffset,
+                                              range->GetEndParent(),
+                                              range->EndOffset());
+          if (cmp == -1) {
+            return true;
+          }
+        }
+      }
     }
   }
   return false;
