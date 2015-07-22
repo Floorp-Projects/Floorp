@@ -53,6 +53,9 @@ XPCOMUtils.defineLazyGetter(Services, "mm", () => {
 });
 
 XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
+  if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+    return undefined;
+  }
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
            .getService(Ci.nsIMessageBroadcaster)
            .QueryInterface(Ci.nsIProcessScriptLoader);
