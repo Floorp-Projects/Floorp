@@ -510,6 +510,31 @@ typedef long PRWord;
 typedef unsigned long PRUword;
 #endif
 
+/*
+ * PR_PRETEND_NORETURN, specified at the end of a function declaration,
+ * indicates that for the purposes of static analysis, this function does not
+ * return.  (The function definition does not need to be annotated.)
+ *
+ * void PR_Assert(const char *s, const char *file, PRIntn ln)
+ *     PR_PRETEND_NORETURN;
+ *
+ * Some static analyzers, like scan-build from clang, can use this information
+ * to eliminate false positives.  From the upstream documentation of
+ * scan-build:
+ *     This attribute is useful for annotating assertion handlers that actually
+ *     can return, but for the purpose of using the analyzer we want to pretend
+ *     that such functions do not return.
+ */
+#ifdef __clang_analyzer__
+#if __has_extension(attribute_analyzer_noreturn)
+#define PR_PRETEND_NORETURN __attribute__((analyzer_noreturn))
+#endif
+#endif
+
+#ifndef PR_PRETEND_NORETURN
+#define PR_PRETEND_NORETURN /* no support */
+#endif
+
 #if defined(NO_NSPR_10_SUPPORT)
 #else
 /********* ???????????????? FIX ME       ??????????????????????????? *****/
