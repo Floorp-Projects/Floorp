@@ -71,14 +71,15 @@ private:
   bool AllocateBuffer();
   bool FFTAnalysis();
   void ApplyBlackmanWindow(float* aBuffer, uint32_t aSize);
+  void GetTimeDomainData(float* aData, size_t aLength);
 
 private:
   FFTBlock mAnalysisBlock;
+  nsTArray<AudioChunk> mChunks;
   double mMinDecibels;
   double mMaxDecibels;
   double mSmoothingTimeConstant;
-  uint32_t mWriteIndex;
-  AlignedTArray<float> mBuffer;
+  size_t mCurrentChunk = 0;
   AlignedTArray<float> mOutputBuffer;
 };
 
