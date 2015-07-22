@@ -121,6 +121,9 @@ function testClasses() {
     // For now, disallow arrow functions in derived class constructors
     assertClassError("class NAME extends null { constructor() { (() => 0); }", InternalError);
 
+    // Derived class constructor must have curly brackets
+    assertClassError("class NAME extends null {  constructor() 1 }", SyntaxError);
+
     // It is an error to have two methods named constructor, but not other
     // names, regardless if one is an accessor or a generator or static.
     assertClassError("class NAME { constructor() { } constructor(a) { } }", SyntaxError);
