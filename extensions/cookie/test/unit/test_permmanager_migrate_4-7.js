@@ -47,7 +47,9 @@ add_task(function test() {
   let id = 0;
 
   function insertHost(host, type, permission, expireType, expireTime, modificationTime, appId, isInBrowserElement) {
-    stmtInsert.bindByName("id", id++);
+    let thisId = id++;
+
+    stmtInsert.bindByName("id", thisId);
     stmtInsert.bindByName("host", host);
     stmtInsert.bindByName("type", type);
     stmtInsert.bindByName("permission", permission);
@@ -57,30 +59,39 @@ add_task(function test() {
     stmtInsert.bindByName("appId", appId);
     stmtInsert.bindByName("isInBrowserElement", isInBrowserElement);
 
-    try {
-      stmtInsert.executeStep();
-      stmtInsert.reset();
-    } catch (e) {
-      stmtInsert.reset();
-      throw e;
-    }
+    stmtInsert.execute();
+
+    return {
+      id: thisId,
+      host: host,
+      type: type,
+      permission: permission,
+      expireType: expireType,
+      expireTime: expireTime,
+      modificationTime: modificationTime,
+      appId: appId,
+      isInBrowserElement: isInBrowserElement
+    };
   }
 
   // Add some rows to the database
-  insertHost("foo.com", "A", 1, 0, 0, 0, 0, false);
-  insertHost("foo.com", "A", 1, 0, 0, 0, 1000, false);
-  insertHost("foo.com", "A", 1, 0, 0, 0, 2000, true);
-  insertHost("sub.foo.com", "B", 1, 0, 0, 0, 0, false);
-  insertHost("subber.sub.foo.com", "B", 1, 0, 0, 0, 0, false);
-  insertHost("bar.ca", "B", 1, 0, 0, 0, 0, false);
-  insertHost("bar.ca", "B", 1, 0, 0, 0, 1000, false);
-  insertHost("bar.ca", "A", 1, 0, 0, 0, 1000, true);
-  insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false);
-  insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false);
-  insertHost("moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}", "A", 1, 0, 0, 0, 0, false);
-  insertHost("moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}", "B", 1, 0, 0, 0, 0, false);
-  insertHost("<file>", "A", 1, 0, 0, 0, 0, false);
-  insertHost("<file>", "B", 1, 0, 0, 0, 0, false);
+  let created = [
+    insertHost("foo.com", "A", 1, 0, 0, 0, 0, false),
+    insertHost("foo.com", "C", 1, 0, 0, 0, 0, false),
+    insertHost("foo.com", "A", 1, 0, 0, 0, 1000, false),
+    insertHost("foo.com", "A", 1, 0, 0, 0, 2000, true),
+    insertHost("sub.foo.com", "B", 1, 0, 0, 0, 0, false),
+    insertHost("subber.sub.foo.com", "B", 1, 0, 0, 0, 0, false),
+    insertHost("bar.ca", "B", 1, 0, 0, 0, 0, false),
+    insertHost("bar.ca", "B", 1, 0, 0, 0, 1000, false),
+    insertHost("bar.ca", "A", 1, 0, 0, 0, 1000, true),
+    insertHost("file:///some/path/to/file.html", "A", 1, 0, 0, 0, 0, false),
+    insertHost("file:///another/file.html", "A", 1, 0, 0, 0, 0, false),
+    insertHost("moz-nullprincipal:{8695105a-adbe-4e4e-8083-851faa5ca2d7}", "A", 1, 0, 0, 0, 0, false),
+    insertHost("moz-nullprincipal:{12ahjksd-akjs-asd3-8393-asdu2189asdu}", "B", 1, 0, 0, 0, 0, false),
+    insertHost("<file>", "A", 1, 0, 0, 0, 0, false),
+    insertHost("<file>", "B", 1, 0, 0, 0, 0, false),
+  ];
 
   // CLose the db connection
   stmtInsert.finalize();
@@ -91,22 +102,23 @@ add_task(function test() {
   let expected = [
     // The http:// entries under foo.com won't be inserted, as there are history entries for foo.com,
     // and http://foo.com or a subdomain are never visited.
-    // However, permissions for subdomains of foo.com will be present for both http:// and https://,
-    // as they do not apply to any entry in the history
     // ["http://foo.com", "A", 1, 0, 0],
     // ["http://foo.com^appId=1000", "A", 1, 0, 0],
     // ["http://foo.com^appId=2000&inBrowser=1", "A", 1, 0, 0],
-
-    ["http://sub.foo.com", "B", 1, 0, 0],
-    ["http://subber.sub.foo.com", "B", 1, 0, 0],
+    //
+    // Because we search for port/scheme combinations under eTLD+1, we should not have http:// entries
+    // for subdomains of foo.com either
+    // ["http://sub.foo.com", "B", 1, 0, 0],
+    // ["http://subber.sub.foo.com", "B", 1, 0, 0],
 
     ["https://foo.com", "A", 1, 0, 0],
+    ["https://foo.com", "C", 1, 0, 0],
     ["https://foo.com^appId=1000", "A", 1, 0, 0],
     ["https://foo.com^appId=2000&inBrowser=1", "A", 1, 0, 0],
     ["https://sub.foo.com", "B", 1, 0, 0],
     ["https://subber.sub.foo.com", "B", 1, 0, 0],
 
-    // bar.ca will have both http:// and https:// for all entries, because the foo did the bar a favour
+    // bar.ca will have both http:// and https:// for all entries, because there are no associated history entries
     ["http://bar.ca", "B", 1, 0, 0],
     ["https://bar.ca", "B", 1, 0, 0],
     ["http://bar.ca^appId=1000", "B", 1, 0, 0],
@@ -119,8 +131,14 @@ add_task(function test() {
     // Because we put ftp://some.subdomain.of.foo.com:8000/some/subdirectory in the history, we should
     // also have these entries
     ["ftp://foo.com:8000", "A", 1, 0, 0],
+    ["ftp://foo.com:8000", "C", 1, 0, 0],
     ["ftp://foo.com:8000^appId=1000", "A", 1, 0, 0],
     ["ftp://foo.com:8000^appId=2000&inBrowser=1", "A", 1, 0, 0],
+
+    // In addition, because we search for port/scheme combinations under eTLD+1, we should have the
+    // following entries
+    ["ftp://sub.foo.com:8000", "B", 1, 0, 0],
+    ["ftp://subber.sub.foo.com:8000", "B", 1, 0, 0],
   ];
 
   let found = expected.map((it) => 0);
@@ -159,4 +177,40 @@ add_task(function test() {
   found.forEach((count, i) => {
     do_check_true(count == 1, "Expected count = 1, got count = " + count + " for permission " + expected[i]);
   });
+
+  // Check to make sure that all of the tables which we care about are present
+  {
+    let db = Services.storage.openDatabase(GetPermissionsFile(profile));
+    do_check_true(db.tableExists("moz_perms"));
+    do_check_true(db.tableExists("moz_hosts"));
+    do_check_true(db.tableExists("moz_hosts_is_backup"));
+    do_check_false(db.tableExists("moz_perms_v6"));
+
+    let mozHostsStmt = db.createStatement("SELECT " +
+                                          "host, type, permission, expireType, expireTime, " +
+                                          "modificationTime, appId, isInBrowserElement " +
+                                          "FROM moz_hosts WHERE id = :id");
+
+    // Check that the moz_hosts table still contains the correct values.
+    created.forEach((it) => {
+      mozHostsStmt.reset();
+      mozHostsStmt.bindByName("id", it.id);
+      mozHostsStmt.executeStep();
+      do_check_eq(mozHostsStmt.getUTF8String(0), it.host);
+      do_check_eq(mozHostsStmt.getUTF8String(1), it.type);
+      do_check_eq(mozHostsStmt.getInt64(2), it.permission);
+      do_check_eq(mozHostsStmt.getInt64(3), it.expireType);
+      do_check_eq(mozHostsStmt.getInt64(4), it.expireTime);
+      do_check_eq(mozHostsStmt.getInt64(5), it.modificationTime);
+      do_check_eq(mozHostsStmt.getInt64(6), it.appId);
+      do_check_eq(mozHostsStmt.getInt64(7), it.isInBrowserElement);
+    });
+
+    // Check that there are the right number of values
+    let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
+    mozHostsCount.executeStep();
+    do_check_eq(mozHostsCount.getInt64(0), created.length);
+
+    db.close();
+  }
 });
