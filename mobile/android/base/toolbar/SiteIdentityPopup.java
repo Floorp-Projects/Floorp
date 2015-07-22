@@ -6,6 +6,7 @@ package org.mozilla.gecko.toolbar;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -61,6 +62,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     // Placeholder string.
     private final static String FORMAT_S = "%s";
 
+    private final Resources mResources;
     private SiteIdentity mSiteIdentity;
 
     private LinearLayout mIdentity;
@@ -87,6 +89,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     public SiteIdentityPopup(Context context) {
         super(context);
+
+        mResources = mContext.getResources();
 
         mContentButtonClickListener = new ContentNotificationButtonListener();
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "Doorhanger:Logins");
@@ -442,7 +446,11 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mTitle.setText(selectedTab.getBaseDomain());
         final Bitmap favicon = selectedTab.getFavicon();
         if (favicon != null) {
-            mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mContext.getResources(), favicon), null, null, null);
+            final Drawable faviconDrawable = new BitmapDrawable(mResources, favicon);
+            final int dimen = (int) mResources.getDimension(R.dimen.browser_toolbar_favicon_size);
+            faviconDrawable.setBounds(0, 0, dimen, dimen);
+
+            mTitle.setCompoundDrawables(faviconDrawable, null, null, null);
             mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
         }
 
