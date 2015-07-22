@@ -79,6 +79,40 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, const void* 
 
 } // CreatePrimitiveForData
 
+//
+// CreatePrimitiveForCFHTML
+//
+// Platform specific CreatePrimitive, windows CF_HTML.
+//
+void
+nsPrimitiveHelpers :: CreatePrimitiveForCFHTML ( const void* aDataBuff,
+                                                 uint32_t* aDataLen, nsISupports** aPrimitive )
+{
+  if (!aPrimitive)
+    return;
+
+  nsCOMPtr<nsISupportsString> primitive =
+    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!primitive)
+    return;
+
+  // We need to duplicate the input buffer, since the removal of linebreaks
+  // might reallocte it.
+  void* utf8 = moz_xmalloc(*aDataLen);
+  if (!utf8)
+    return;
+  memcpy(utf8, aDataBuff, *aDataLen);
+  int32_t signedLen = static_cast<int32_t>(*aDataLen);
+  nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(kTextMime, &utf8, &signedLen);
+  *aDataLen = signedLen;
+
+  nsAutoString str(NS_ConvertUTF8toUTF16(reinterpret_cast<const char*>(utf8), *aDataLen));
+  free(utf8);
+  *aDataLen = str.Length() * sizeof(char16_t);
+  primitive->SetData(str);
+  NS_ADDREF(*aPrimitive = primitive);
+}
+
 
 //
 // CreateDataFromPrimitive
