@@ -712,7 +712,10 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
       rootContent = do_QueryInterface(parentDoc->GetDocumentElement());
     }
   }
-  NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
+
+  if (!rootContent) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsRefPtr<DictionaryFetcher> fetcher =
     new DictionaryFetcher(this, aCallback, mDictionaryFetcherGroup);
