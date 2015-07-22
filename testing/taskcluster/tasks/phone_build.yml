@@ -56,6 +56,7 @@ task:
       GECKO_HEAD_REF: '{{head_ref}}'
 
   extra:
+    build_product: 'b2g'
     index:
       rank: {{pushlog_id}}
     treeherder:

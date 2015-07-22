@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/builds/firefox_base.yml'
   variables:
     build_name: 'linux64'
     build_type: 'opt'
