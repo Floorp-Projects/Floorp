@@ -54,14 +54,19 @@
                           android:orientation="vertical">
 
                 <TextView android:id="@+id/owner"
-                          android:layout_width="wrap_content"
+                          android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:layout_marginBottom="@dimen/doorhanger_section_padding_medium"
                           android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
                           android:textStyle="bold"/>
 
+                <TextView android:id="@+id/owner_supplemental"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginBottom="@dimen/doorhanger_section_padding_medium"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
+
                 <TextView android:id="@+id/verifier"
-                          android:layout_width="wrap_content"
+                          android:layout_width="match_parent"
                           android:layout_height="wrap_content"
                           android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"/>
 
