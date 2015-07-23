@@ -4329,24 +4329,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 // developer.apple.com/library/mac/#releasenotes/Cocoa/AppKitOlderNotes.html
 // (under Fluid Swipe Tracking API).
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                     scrollOverflowX:(double)anOverflowX
-                     scrollOverflowY:(double)anOverflowY
-              viewPortIsOverscrolled:(BOOL)aViewPortIsOverscrolled
 {
-  // We should only track scroll events as swipe if the viewport is being
-  // overscrolled.
-  if (!aViewPortIsOverscrolled) {
-    return;
-  }
-
-  // Only initiate tracking if the user has tried to scroll past the edge of
-  // the current page (as indicated by 'anOverflowX' or 'anOverflowY' being
-  // non-zero). Gecko only sets WidgetMouseScrollEvent.scrollOverflow when it's
-  // processing NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
-  if (anOverflowX == 0.0) {
-    return;
-  }
-
   CGFloat deltaX = [anEvent scrollingDeltaX];
 
   uint32_t direction = (deltaX < 0.0)
@@ -4900,6 +4883,14 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   }
 }
 
+static bool
+IsPotentialSwipeStartEventOverscrollingViewport(const WidgetWheelEvent& aEvent)
+{
+  // We should only track scroll events as swipe if the viewport is being
+  // overscrolled.
+  return aEvent.mViewPortIsOverscrolled && aEvent.overflowDeltaX != 0.0;
+}
+
 - (void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4973,13 +4964,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
 #ifdef __LP64__
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
-    if (canTriggerSwipe) {
-      // overflowDeltaX and overflowDeltaY tell us when the user has tried to
-      // scroll past the edge of a page (in those cases it's non-zero).
-      [self maybeTrackScrollEventAsSwipe:theEvent
-                         scrollOverflowX:widgetWheelEvent.overflowDeltaX
-                         scrollOverflowY:widgetWheelEvent.overflowDeltaY
-                  viewPortIsOverscrolled:widgetWheelEvent.mViewPortIsOverscrolled];
+    if (canTriggerSwipe && IsPotentialSwipeStartEventOverscrollingViewport(widgetWheelEvent)) {
+      [self maybeTrackScrollEventAsSwipe:theEvent];
     }
 #endif // #ifdef __LP64__
 

@@ -310,10 +310,7 @@ typedef NSInteger NSEventGestureAxis;
 
 // Support for fluid swipe tracking.
 #ifdef __LP64__
-- (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                     scrollOverflowX:(double)anOverflowX
-                     scrollOverflowY:(double)anOverflowY
-              viewPortIsOverscrolled:(BOOL)aViewPortIsOverscrolled;
+- (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent;
 #endif
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
