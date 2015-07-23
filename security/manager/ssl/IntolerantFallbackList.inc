@@ -19,7 +19,6 @@ static const char* const kIntolerantFallbackList[] =
   "access.boekhuis.nl", // bug 1151580
   "account.61.com.tw",
   "acs.sia.eu", // RC4
-  "actiononline.stpete.org",
   "adman.you.gr",
   "adminweb.uthscsa.edu",
   "airportwifi.com", // bug 1116891
@@ -47,10 +46,10 @@ static const char* const kIntolerantFallbackList[] =
   "ap.meitetsuunyu.co.jp",
   "apply.hkbn.net", // bug 1138451
   "apps.amerch.com",
-  "apps.fpcu.org",
   "apps.sasken.com",
   "apps.state.or.us", // bug 1130472
   "appsrv.restat.com",
+  "arcgames.com", // bug 1182932
   "ascii.jp",
   "asko.fi", // bug 1158584
   "b2b.feib.com.tw",
@@ -70,11 +69,11 @@ static const char* const kIntolerantFallbackList[] =
   "buttons.verticalresponse.com",
   "c2g.jupiter.fl.us",
   "canadaca.geotrust.com", // bug 1137677
+  "car2go.com", // bug 1185080
   "cbsfnotes1.blood.org.tw",
   "central.acadiau.ca", // bug 1152377
   "cherry.de", // bug 1141521
   "civilization.com", // bug 1156004
-  "click2gov.sanangelotexas.us",
   "clientes.chilectra.cl",
   "club.guosen.com.cn",
   "coagov.aurora-il.org",
@@ -90,7 +89,6 @@ static const char* const kIntolerantFallbackList[] =
   "cwu.edu",
   "dbank.hxb.com.cn",
   "dealer.autobytel.com",
-  "dealer.autoc-one.jp",
   "dheb.delavska-hranilnica.si",
   "digibet.com",
   "digitalsecurity.intel.com", // bug 1148744
@@ -107,18 +105,14 @@ static const char* const kIntolerantFallbackList[] =
   "ebpp.airtel.lk",
   "ebspay.boc.cn", // bug 1155567
   "ec-line.cn",
-  "ecams.geico.com", // bug 1138613
   "echo.com",
   "echotrak.com",
   "ecom.morethangourmet.com",
   "ecourses.uthscsa.edu",
-  "egov.leaguecity.com",
   "egov.town-menasha.com", // bug 1157536
   "emaildvla.direct.gov.uk", // bug 1116891
-  "embroiderydesignsplus.com",
   "epicreg.com",
   "eremit.sbising.com",
-  "escrowrefills.com",
   "eservices.palomar.edu",
   "essentialsupplies.com",
   "event.kasite.net",
@@ -135,10 +129,8 @@ static const char* const kIntolerantFallbackList[] =
   "fubar.com",
   "gateway.halton.gov.uk",
   "gbe-bund.de",
-  "geico.com", // bug 1138613
   "gestionesytramites.madrid.org",
   "giftcertificates.com",
-  "hbk.bb.com.br", // bug 1135966
   "hercle.com",
   "hpshop.gr",
   "ibusiness.shacombank.com.hk", // bug 1141989
@@ -153,26 +145,20 @@ static const char* const kIntolerantFallbackList[] =
   "jbclick.jaxbchfl.net", // bug 1158465
   "jifenpay.com",
   "jst.doded.mil", // bug 1152627
-  "juror.fairfaxcounty.gov",
   "keirin.jp",
   "kjp.keinet.ne.jp",
   "kjp.oo.kawai-juku.ac.jp",
-  "learn.ou.edu",
-  "learn.swosu.edu",
   "lewisham.gov.uk",
   "lm-order.de",
   "login.chicagopolice.org",
   "login.ermis.gov.gr",
   "m.e-hon.ne.jp",
-  "macif.fr", // bug 1167893
+  "m.safari.cwu.edu", // bug 1143035
   "mail.izhnet.ru",
   "map.infonavit.org.mx",
-  "marketday.com", // bug 1092998
-  "matkahuolto.fi", // bug 1174957
   "mchrono.com",
   "mecsumai.com",
   "member.edenredticket.com",
-  "mercernet.fr", // bug 1147649
   "merchant.edenredticket.com",
   "meta-ehealth.com",
   "mobile.aa.com", // bug 1141604
@@ -193,7 +179,6 @@ static const char* const kIntolerantFallbackList[] =
   "myaccount3.westnet.com.au", // bug 1157139
   "mybank.nbcb.com.cn",
   "myhancock.hancockcollege.edu",
-  "myntc.ntc.edu",
   "myuws.uws.edu.au",
   "mywebreservations.com",
   "na.aiononline.com", // bug 1139782
@@ -208,13 +193,11 @@ static const char* const kIntolerantFallbackList[] =
   "online.newindia.co.in",
   "online.sainsburysbank.co.uk",
   "openwebosproject.org", // bug 1151990
-  "opi.emersonclimate.com",
   "opus.pinellascounty.org",
   "owa.byui.edu",
   "ozone.ou.edu",
   "parents.ou.edu",
   "partnerweb.vmware.com", // bug 1142187
-  "paslists.com", // for port 9211, bug 1155712
   "payment.condor.com", // bug 1152347
   "payment.safepass.cn",
   "payments.virginmedia.com", // bug 1129887
@@ -227,6 +210,7 @@ static const char* const kIntolerantFallbackList[] =
   "publicjobs.ie",
   "publicrecords.com",
   "racenet.codemasters.com", // bug 1163716
+  "rapidscansecure.com", // bug 1177212
   "recoup.com",
   "registration.o2.co.uk",
   "regonline.com", // bug 1139783
@@ -236,40 +220,27 @@ static const char* const kIntolerantFallbackList[] =
   "reputation.com",
   "research-report.uws.edu.au",
   "reservations.usairways.com", // bug 1165400
-  "rezstream.net",
   "rietumu.lv",
-  "rotr.com",
   "roxyaffiliates.com",
   "sales.newchinalife.com",
   "sbank.hxb.com.cn",
   "sboseweb.mcpsweb.org",
-  "school.keystoneschoolonline.com",
   "secure-checkout.t-mobile.com", // bug 1133648
   "secure.bg-mania.jp",
   "secure.crbonline.gov.uk", // bug 1166644
   "secure.fortisbc.com",
   "secure.ncsoft.com", // bug 1139782
   "secure.smartcart.com",
-  "secure2.i-doxs.net", // bug 1140876
-  "secure3.i-doxs.net", // bug 1140876
-  "secure4.i-doxs.net", // bug 1140876
-  "secure6.i-doxs.net", // bug 1140876
-  "secure7.i-doxs.net", // bug 1140876
-  "secure8.i-doxs.net", // bug 1140876
   "secureonline.dwp.gov.uk",
   "sems.hrd.ccsd.net",
-  "service.autoc-one.jp",
   "services.apvma.gov.au",
   "services.geotrust.com", // bug 1137677
   "servizionline.infogroup.it",
-  "shop.autoc-one.jp",
   "shop.kagome.co.jp",
   "shop.nanairo.coop", // bug 1128318
   "shop.wildstar-online.com", // bug 1139782
-  "sisweb.ucd.ie",
   "slovanet.sk",
   "smartcart.com",
-  "smarticon.geotrust.com", // bug 1137677
   "socialclub.rockstargames.com", // bug 1138673
   "soeasy.sodexo.be", // bug 1117157
   "ss2.sfcollege.edu",
@@ -280,16 +251,15 @@ static const char* const kIntolerantFallbackList[] =
   "stenhouse.com",
   "store.moxa.com",
   "svrch13.sugarlandtx.gov",
+  "swdownloads.blackberry.com", // bug 1182997
   "syzygy.co.uk",
   "tarjetacencosud.cl",
   "tele2.hr",
   "tienda.boe.es",
   "tiendas.mediamarkt.es",
-  "trueblue.jetblue.com",
   "uralsg.megafon.ru", // bug 1153168
   "usacycling.org", // bug 1163791
   "userdoor.com",
-  "uslugi.beeline.am",
   "utradehub.or.kr",
   "vod.skyperfectv.co.jp",
   "watch.sportsnet.ca", // bug 1144769
@@ -340,6 +310,7 @@ static const char* const kIntolerantFallbackList[] =
   "www.ancelutil.com.uy",
   "www.animate-onlineshop.jp", // bug 1126652
   "www.apeasternpower.com",
+  "www.arcgames.com", // bug 1182932
   "www.asko.fi", // bug 1158584
   "www.auroragov.org",
   "www.bancocredichile.cl",
@@ -362,10 +333,10 @@ static const char* const kIntolerantFallbackList[] =
   "www.bredbandsbolaget.se", // bug 1158755
   "www.businessdirect.bt.com",
   "www.cafedumonde.jp",
+  "www.car2go.com", // bug 1185080
   "www.careers.asio.gov.au",
   "www.cherry.de", // bug 1141521
   "www.chinapay.com", // bug 1137983
-  "www.cihi.ca",
   "www.cipd.co.uk",
   "www.civilization.com", // bug 1156004
   "www.club-animate.jp",
@@ -389,14 +360,12 @@ static const char* const kIntolerantFallbackList[] =
   "www.ec-line.cn",
   "www.echo.com",
   "www.echotrak.com",
-  "www.embroiderydesignsplus.com",
   "www.epicreg.com",
   "www.ermis.gov.gr",
   "www.esadealumni.net",
   "www.esavingsaccount.co.uk",
   "www.escrowrefills.com",
   "www.essentialsupplies.com",
-  "www.euronext.com", // bug 1136091
   "www.everyd.com",
   "www.ezpay.com.tw",
   "www.fhsaa.org",
@@ -405,17 +374,13 @@ static const char* const kIntolerantFallbackList[] =
   "www.fontainebleau.com",
   "www.foundersc.com",
   "www.fubar.com",
-  "www.fundsupermart.co.in",
   "www.gamers-onlineshop.jp", // bug 1126654
   "www.gbe-bund.de",
   "www.giftcertificates.com",
-  "www.golfersland.net",
   "www.gtja.com",
-  "www.hankyu-club.com",
   "www.haynes.co.uk",
   "www.hercle.com",
   "www.hn.10086.cn",
-  "www.hotel-story.ne.jp",
   "www.hpshop.gr",
   "www.hsbank.cc",
   "www.hx168.com.cn",
@@ -426,9 +391,6 @@ static const char* const kIntolerantFallbackList[] =
   "www.jifenpay.com",
   "www.kasite.net",
   "www.khan.co.kr",
-  "www.komatsu-kenki.co.jp",
-  "www.komatsu.co.jp",
-  "www.komatsu.com",
   "www.kredodirect.com.ua", // bug 1095507
   "www.law888.com.tw",
   "www.lewisham.gov.uk",
@@ -436,19 +398,12 @@ static const char* const kIntolerantFallbackList[] =
   "www.libraryvideo.com",
   "www.lm-order.de",
   "www.londonstockexchange.com",
-  "www.macif.fr", // bug 1167893
-  "www.marketday.com", // bug 1092998
-  "www.matkahuolto.fi", // bug 1174957
   "www.matkahuolto.info",
   "www.matrics.or.jp",
   "www.mchrono.com",
   "www.mecsumai.com",
-  "www.mercatoneuno.com",
-  "www.mercernet.fr", // bug 1147649
   "www.meta-ehealth.com",
   "www.misterdonut.jp",
-  "www.mizuno.jp",
-  "www.monclick.it",
   "www.mp2.aeroport.fr",
   "www.mpay.co.th",
   "www.mtsindia.in", // RC4
@@ -462,34 +417,30 @@ static const char* const kIntolerantFallbackList[] =
   "www.nishi.or.jp",
   "www.ocbcwhhk.com", // bug 1141746
   "www.openwebosproject.org", // bug 1151990
-  "www.paslists.com", // for port 9211, bug 1155712
   "www.pen-kanagawa.ed.jp",
   "www.polla.cl",
   "www.publicjobs.ie",
   "www.publicrecords.com",
   "www.pwcrecruiting.com",
+  "www.rapidscansecure.com", // bug 1177212
   "www.razorgator.com",
   "www.recoup.com",
   "www.regonline.com", // bug 1139783
   "www.renaultcredit.com.ar",
   "www.reputation.com",
-  "www.rezstream.net",
   "www.rietumu.lv",
   "www.rimac.com.pe",
   "www.riversendtrading.com",
-  "www.rotr.com",
   "www.roxyaffiliates.com",
   "www.s-book.net",
   "www.safepass.cn",
   "www.session.ne.jp",
-  "www.shacombank.com.hk", // bug 1141989
   "www.shacomsecurities.com.hk", // bug 1141989
   "www.shop.bt.com",
   "www.slovanet.sk",
   "www.smartcart.com",
   "www.smartoffice.jp",
   "www.sokamocka.com",
-  "www.sports-nakama.com",
   "www.starbucks.com", // bug 1167190
   "www.stenhouse.com",
   "www.sunderland.gov.uk",
@@ -515,15 +466,11 @@ static const char* const kIntolerantFallbackList[] =
   "www1.aeroplan.com", // bug 1137543
   "www1.isracard.co.il", // bug 1165582
   "www2.aeroplan.com", // bug 1137543
-  "www2.bancobrasil.com.br", // bug 1135966
   "www2.wou.edu",
-  "www28.bb.com.br", // bug 1135966
   "www3.aeroplan.com", // bug 1137543
   "www3.ibac.co.jp",
   "www3.taiheiyo-ferry.co.jp",
   "www4.aeroplan.com", // bug 1137543
-  "www41.bb.com.br", // bug 1135966
-  "www73.bb.com.br", // bug 1135966
   "wwws.kadokawa.co.jp",
   "xyk.cebbank.com", // bug 1145524
   "zenfolio.com",
