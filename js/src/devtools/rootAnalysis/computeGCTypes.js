@@ -119,9 +119,11 @@ function markGCType(typeName, child, why, depth, ptrdness)
         gcPointers[typeName].add(why);
     }
 
+    if (depth < 2) {
         if (!gcFields.has(typeName))
             gcFields.set(typeName, new Map());
         gcFields.get(typeName).set(child, [ why, ptrdness ]);
+    }
 
     if (typeName in structureParents) {
         for (var field of structureParents[typeName]) {
