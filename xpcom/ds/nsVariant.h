@@ -32,7 +32,13 @@ class nsDiscriminatedUnion
 public:
 
   nsDiscriminatedUnion() : mType(nsIDataType::VTYPE_EMPTY) {}
+  nsDiscriminatedUnion(const nsDiscriminatedUnion&) = delete;
+  nsDiscriminatedUnion(nsDiscriminatedUnion&&) = delete;
+
   ~nsDiscriminatedUnion() { Cleanup(); }
+
+  nsDiscriminatedUnion& operator=(const nsDiscriminatedUnion&) = delete;
+  nsDiscriminatedUnion& operator=(nsDiscriminatedUnion&&) = delete;
 
   void Cleanup();
 
