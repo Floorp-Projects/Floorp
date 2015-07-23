@@ -14,6 +14,7 @@ namespace js {
 class BaseShape;
 class LazyScript;
 class ObjectGroup;
+class Shape;
 namespace jit {
 class JitCode;
 } // namespace jit
