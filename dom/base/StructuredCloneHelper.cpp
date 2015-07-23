@@ -89,7 +89,7 @@ void
 StructuredCloneCallbacksError(JSContext* aCx,
                               uint32_t aErrorId)
 {
-  NS_WARNING("Failed to clone data for the Console API in workers.");
+  NS_WARNING("Failed to clone data.");
 }
 
 const JSStructuredCloneCallbacks gCallbacks = {
@@ -105,11 +105,36 @@ const JSStructuredCloneCallbacks gCallbacks = {
 
 // StructuredCloneHelperInternal class
 
+StructuredCloneHelperInternal::StructuredCloneHelperInternal()
+#ifdef DEBUG
+  : mShutdownCalled(false)
+#endif
+{}
+
+StructuredCloneHelperInternal::~StructuredCloneHelperInternal()
+{
+#ifdef DEBUG
+  MOZ_ASSERT(mShutdownCalled);
+#endif
+}
+
+void
+StructuredCloneHelperInternal::Shutdown()
+{
+#ifdef DEBUG
+  MOZ_ASSERT(!mShutdownCalled, "Shutdown already called!");
+  mShutdownCalled = true;
+#endif
+
+  mBuffer = nullptr;
+}
+
 bool
 StructuredCloneHelperInternal::Write(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue)
 {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
+  MOZ_ASSERT(mShutdownCalled, "This method cannot be called after Shutdown.");
 
   mBuffer = new JSAutoStructuredCloneBuffer(&gCallbacks, this);
   return mBuffer->write(aCx, aValue, &gCallbacks, this);
@@ -121,6 +146,7 @@ StructuredCloneHelperInternal::Write(JSContext* aCx,
                                      JS::Handle<JS::Value> aTransfer)
 {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
+  MOZ_ASSERT(mShutdownCalled, "This method cannot be called after Shutdown.");
 
   mBuffer = new JSAutoStructuredCloneBuffer(&gCallbacks, this);
   return mBuffer->write(aCx, aValue, aTransfer, &gCallbacks, this);
@@ -131,6 +157,7 @@ StructuredCloneHelperInternal::Read(JSContext* aCx,
                                     JS::MutableHandle<JS::Value> aValue)
 {
   MOZ_ASSERT(mBuffer, "Read() without Write() is not allowed.");
+  MOZ_ASSERT(mShutdownCalled, "This method cannot be called after Shutdown.");
 
   bool ok = mBuffer->read(aCx, aValue, &gCallbacks, this);
   mBuffer = nullptr;
@@ -178,7 +205,9 @@ StructuredCloneHelper::StructuredCloneHelper(uint32_t aFlags)
 {}
 
 StructuredCloneHelper::~StructuredCloneHelper()
-{}
+{
+  Shutdown();
+}
 
 bool
 StructuredCloneHelper::Write(JSContext* aCx,
