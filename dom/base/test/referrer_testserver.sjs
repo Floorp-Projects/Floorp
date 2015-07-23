@@ -6,18 +6,47 @@
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 const BASE_URL = 'example.com/tests/dom/base/test/referrer_testserver.sjs';
 const SHARED_KEY = 'referrer_testserver.sjs';
-const ATTRIBUTE_POLICY = 'attributePolicy';
-const NEW_ATTRIBUTE_POLICY = 'newAttributePolicy';
-const NAME = 'name';
-const META_POLICY = 'metaPolicy';
-const REL = 'rel';
 
 function createTestUrl(aPolicy, aAction, aName, aType) {
   return 'http://' + BASE_URL + '?' +
-         'action=' + aAction + '&' +
+         'ACTION=' + aAction + '&' +
          'policy=' + aPolicy + '&' +
          'name=' + aName + '&' +
          'type=' + aType;
+}
+
+// test page using iframe referrer attribute
+function createIframeTestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttributePolicy, aName, aChangingMethod) {
+  var metaString = "";
+  if (aMetaPolicy) {
+    metaString = '<meta name="referrer" content="' + aMetaPolicy + '">';
+  }
+  var changeString = '';
+  if (aChangingMethod === 'setAttribute') {
+    changeString = `document.getElementById("myframe").setAttribute("referrer", "${aNewAttributePolicy}")`;
+  } else if (aChangingMethod === 'property') {
+    changeString = `document.getElementById("myframe").referrer = "${aNewAttributePolicy}"`;
+  }
+  var iFrameString = `<iframe src="" id="myframe" ${aAttributePolicy ? ` referrer='${aAttributePolicy}'` : ""}>iframe</iframe>`;
+
+  return `<!DOCTYPE HTML>
+           <html>
+             <head>
+             ${metaString}
+             </head>
+             <body>
+               ${iFrameString}
+               <script>
+                 window.addEventListener("load", function() {
+                   ${changeString}
+                   document.getElementById("myframe").onload = function(){
+                    parent.postMessage("childLoadComplete", "http://mochi.test:8888");
+                   };
+                   document.getElementById("myframe").src = "${createTestUrl(aAttributePolicy, 'test', aName, 'iframe')}";
+                 }.bind(window), false);
+               </script>
+             </body>
+           </html>`;
 }
 
 function buildAnchorString(aMetaPolicy, aReferrerPolicy, aName, aRelString){
@@ -75,7 +104,7 @@ function createAETestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttrib
 
 function handleRequest(request, response) {
   var params = new URLSearchParams(request.queryString);
-  var action = params.get('action');
+  var action = params.get('ACTION');
 
   response.setHeader('Cache-Control', 'no-cache', false);
   response.setHeader('Content-Type', 'text/html; charset=utf-8', false);
@@ -128,9 +157,12 @@ function handleRequest(request, response) {
 
     setSharedState(SHARED_KEY, JSON.stringify(result));
 
-    if (type === "link") {
+    if (type === "iframe") {
+      // return iframe page
+      response.write("<html><body>I am the iframe</body></html>");
+    } else if (type === "link") {
       // forward link click to redirect URL to finish test
-      var loc = "http://" + BASE_URL + "?action=redirect";
+      var loc = "http://" + BASE_URL + "?ACTION=redirect";
       response.setStatusLine('1.1', 302, 'Found');
       response.setHeader('Location', loc, false);
     }
@@ -138,11 +170,11 @@ function handleRequest(request, response) {
   }
 
   // parse test arguments and start test
-  var attributePolicy = params.get(ATTRIBUTE_POLICY) || '';
-  var newAttributePolicy = params.get(NEW_ATTRIBUTE_POLICY) || '';
-  var metaPolicy = params.get(META_POLICY) || '';
-  var rel = params.get(REL) || '';
-  var name = params.get(NAME);
+  var attributePolicy = params.get("ATTRIBUTE_POLICY") || '';
+  var newAttributePolicy = params.get("NEW_ATTRIBUTE_POLICY") || '';
+  var metaPolicy = params.get("META_POLICY") || '';
+  var rel = params.get("REL") || '';
+  var name = params.get("NAME");
 
   // anchor & area
   var _getPage = createAETestPageUsingRefferer.bind(null, metaPolicy, attributePolicy, newAttributePolicy, name, rel);
@@ -172,6 +204,23 @@ function handleRequest(request, response) {
   }
   if (action === 'generate-area-changing-policy-test-property') {
     response.write(_getAreaPage('property'));
+    return;
+  }
+
+  // iframe
+  _getPage = createIframeTestPageUsingRefferer.bind(null, metaPolicy, attributePolicy, newAttributePolicy, name);
+
+  // aMetaPolicy, aAttributePolicy, aNewAttributePolicy, aName, aChangingMethod
+  if (action === 'generate-iframe-policy-test') {
+    response.write(_getPage());
+    return;
+  }
+  if (action === 'generate-iframe-changing-policy-test-set-attribute') {
+    response.write(_getPage('setAttribute'));
+    return;
+  }
+  if (action === 'generate-iframe-changing-policy-test-property') {
+    response.write(_getPage('property'));
     return;
   }
 

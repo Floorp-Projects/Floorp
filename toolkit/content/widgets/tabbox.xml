@@ -727,6 +727,11 @@
       <property name="selected" readonly="true"
                 onget="return this.getAttribute('selected') == 'true';"/>
 
+      <!--
+          This code is the same as in browser/base/content/tabbrowser.xml,
+          except for the _tabAttrModified call. If you modify it, tabbrowser.xml
+          should probably also be modified.
+      -->
       <property name="_visuallySelected">
         <setter>
           <![CDATA[

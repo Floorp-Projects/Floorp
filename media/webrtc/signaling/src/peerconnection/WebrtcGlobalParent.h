@@ -8,7 +8,7 @@
 #include "mozilla/dom/PWebrtcGlobalParent.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,7 +17,6 @@ class WebrtcParents;
 
 class WebrtcGlobalParent
   : public PWebrtcGlobalParent
-  , public RefCounted<WebrtcGlobalParent>
 {
   friend class ContentParent;
   friend class WebrtcGlobalInformation;
@@ -37,9 +36,11 @@ class WebrtcGlobalParent
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual bool Recv__delete__() override;
-public:
+
   virtual ~WebrtcGlobalParent();
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(WebrtcGlobalParent)
+public:
+  NS_INLINE_DECL_REFCOUNTING(WebrtcGlobalParent)
+
   bool IsActive()
   {
     return !mShutdown;

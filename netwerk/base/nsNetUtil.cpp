@@ -117,19 +117,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                aIoService);
 }
 
-nsresult
-NS_NewFileURI(nsIURI **result,
-              nsIFile *spec,
-              nsIIOService *ioService /* = nullptr */)     // pass in nsIIOService to optimize callers
-{
-    nsresult rv;
-    nsCOMPtr<nsIIOService> grip;
-    rv = net_EnsureIOService(&ioService, grip);
-    if (ioService)
-        rv = ioService->NewFileURI(spec, result);
-    return rv;
-}
-
 nsresult /* NS_NewChannelNode */
 NS_NewChannel(nsIChannel           **outChannel,
               nsIURI                *aUri,
@@ -1399,19 +1386,6 @@ NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
                                        nsIInterfaceRequestor **result)
 {
     return NS_NewNotificationCallbacksAggregation(callbacks, loadGroup, nullptr, result);
-}
-
-bool
-NS_IsOffline()
-{
-    bool offline = true;
-    bool connectivity = true;
-    nsCOMPtr<nsIIOService> ios = do_GetIOService();
-    if (ios) {
-        ios->GetOffline(&offline);
-        ios->GetConnectivity(&connectivity);
-    }
-    return offline || !connectivity;
 }
 
 bool
