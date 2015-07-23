@@ -4,7 +4,7 @@ fuzzy-if(cocoaWidget,2,6) random-if(Android&&!browserIsRemote) == component-alph
 != pull-background-2.html about:blank
 != pull-background-3.html about:blank 
 != pull-background-4.html about:blank 
-skip-if(asyncPan) != pull-background-5.html about:blank # Fails with event regions, bug 1150941
+!= pull-background-5.html about:blank
 != pull-background-6.html about:blank
 # The animated-position tests are disabled for intermittent failures / passes, bug 1150941
 skip != pull-background-animated-position-1.html about:blank # Fails with event regions
