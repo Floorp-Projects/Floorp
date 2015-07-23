@@ -12,8 +12,11 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
+import org.mozilla.gecko.widget.ThemedTextView;
 
 import android.content.Context;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -37,6 +40,8 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     protected final BackButton backButton;
     protected final ForwardButton forwardButton;
 
+    private final PorterDuffColorFilter privateBrowsingTabletMenuItemColorFilter;
+
     protected abstract void animateForwardButton(ForwardButtonAnimation animation);
 
     public BrowserToolbarTabletBase(final Context context, final AttributeSet attrs) {
@@ -55,6 +60,9 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         focusOrder.addAll(Arrays.asList(actionItemBar, menuButton));
 
         urlDisplayLayout.updateSiteIdentityAnchor(backButton);
+
+        privateBrowsingTabletMenuItemColorFilter = new PorterDuffColorFilter(
+                getResources().getColor(R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
     }
 
     private void initButtonListeners() {
@@ -121,12 +129,38 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     public void setPrivateMode(final boolean isPrivate) {
         super.setPrivateMode(isPrivate);
 
+        // Better done with android:tint but it doesn't take a ColorStateList:
+        //   https://code.google.com/p/android/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Owner%20Summary%20Stars&groupby=&sort=&id=18220
+        // Nor can we use DrawableCompat because the drawables (as opposed
+        // to the Views) don't receive gecko:state_private.
+        final PorterDuffColorFilter colorFilter =
+                isPrivate ? privateBrowsingTabletMenuItemColorFilter : null;
+        backButton.setColorFilter(colorFilter);
+        forwardButton.setColorFilter(colorFilter);
+        setTabsCounterPrivateMode(isPrivate, colorFilter);
+        menuIcon.setColorFilter(colorFilter);
+
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
         for (int i = 0; i < actionItemBar.getChildCount(); ++i) {
             final MenuItemActionBar child = (MenuItemActionBar) actionItemBar.getChildAt(i);
             child.setPrivateMode(isPrivate);
+            child.setColorFilter(colorFilter);
         }
+    }
+
+    private void setTabsCounterPrivateMode(final boolean isPrivate, final PorterDuffColorFilter colorFilter) {
+        // The TabsCounter is a TextSwitcher which cycles two views
+        // to provide animations, hence looping over these two children.
+        for (int i = 0; i < 2; ++i) {
+            final ThemedTextView view = (ThemedTextView) tabsCounter.getChildAt(i);
+            view.setPrivateMode(isPrivate);
+            view.getBackground().mutate().setColorFilter(colorFilter);
+        }
+
+        // To prevent animation of the background,
+        // it is set to a different Drawable.
+        tabsCounter.getBackground().mutate().setColorFilter(colorFilter);
     }
 
     @Override
