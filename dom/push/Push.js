@@ -15,99 +15,11 @@ function debug(s) {
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
-
-const PUSH_SUBSCRIPTION_CID = Components.ID("{CA86B665-BEDA-4212-8D0F-5C9F65270B58}");
-
-function PushSubscription(pushEndpoint, scope, principal) {
-  debug("PushSubscription Constructor");
-  this._pushEndpoint = pushEndpoint;
-  this._scope = scope;
-  this._principal = principal;
-}
-
-PushSubscription.prototype = {
-  __proto__: DOMRequestIpcHelper.prototype,
-
-  contractID: "@mozilla.org/push/PushSubscription;1",
-
-  classID : PUSH_SUBSCRIPTION_CID,
-
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsIObserver]),
-
-  init: function(aWindow) {
-    debug("PushSubscription init()");
-
-    this.initDOMRequestHelper(aWindow, [
-      "PushService:Unregister:OK",
-      "PushService:Unregister:KO",
-    ]);
-
-    this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-                   .getService(Ci.nsISyncMessageSender);
-  },
-
-  __init: function(endpoint, scope, principal) {
-    this._pushEndpoint = endpoint;
-    this._scope = scope;
-    this._principal = principal;
-  },
-
-  get endpoint() {
-    return this._pushEndpoint;
-  },
-
-  unsubscribe: function() {
-    debug("unsubscribe! ")
-
-    let promiseInit = function(resolve, reject) {
-      let resolverId = this.getPromiseResolverId({resolve: resolve,
-                                                  reject: reject });
-
-      this._cpmm.sendAsyncMessage("Push:Unregister", {
-                                  scope: this._scope,
-                                  pushEndpoint: this._pushEndpoint,
-                                  requestID: resolverId
-                                }, null, this._principal);
-    }.bind(this);
-
-    return this.createPromise(promiseInit);
-  },
-
-  receiveMessage: function(aMessage) {
-    debug("push subscription receiveMessage(): " + JSON.stringify(aMessage))
-
-    let json = aMessage.data;
-    let resolver = this.takePromiseResolver(json.requestID);
-    if (resolver == null) {
-      return;
-    }
-
-    switch (aMessage.name) {
-      case "PushService:Unregister:OK":
-        if (typeof json.result !== "boolean") {
-          debug("Expected boolean result from PushService!");
-          resolve.reject("NetworkError");
-          return;
-        }
-
-        resolver.resolve(json.result);
-        break;
-      case "PushService:Unregister:KO":
-        resolver.reject("NetworkError");
-        break;
-      default:
-        debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
-    }
-  },
-
-};
 
 const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
 
@@ -140,16 +52,11 @@ Push.prototype = {
 
     this._window = aWindow;
 
-    this.initDOMRequestHelper(aWindow, [
-      "PushService:Register:OK",
-      "PushService:Register:KO",
-      "PushService:Registration:OK",
-      "PushService:Registration:KO"
-    ]);
+    this.initDOMRequestHelper(aWindow);
 
-    this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-                   .getService(Ci.nsISyncMessageSender);
     this._principal = aWindow.document.nodePrincipal;
+
+    this._client = Cc["@mozilla.org/push/PushClient;1"].createInstance(Ci.nsIPushClient);
   },
 
   setScope: function(scope){
@@ -199,7 +106,6 @@ Push.prototype = {
       window: this._window
     };
 
-    debug("asking the window utils about permission...")
     // Using askPermission from nsIDOMWindowUtils that takes care of the
     // remoting if needed.
     let windowUtils = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -207,92 +113,46 @@ Push.prototype = {
     windowUtils.askPermission(request);
   },
 
+  getEndpointResponse: function(fn) {
+    debug("GetEndpointResponse " + fn.toSource());
+    let that = this;
+    let p = this.createPromise(function(resolve, reject) {
+      this.askPermission(
+        () => {
+          fn(that._scope, that._principal, {
+            QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushEndpointCallback]),
+            onPushEndpoint: function(ok, endpoint) {
+              if (ok === Cr.NS_OK) {
+                if (endpoint) {
+                  let sub = new that._window.PushSubscription(endpoint, that._scope);
+                  sub.setPrincipal(that._principal);
+                  resolve(sub);
+                } else {
+                  resolve(null);
+                }
+              } else {
+                reject("AbortError");
+              }
+            }
+          });
+        },
 
-
-  receiveMessage: function(aMessage) {
-    debug("push receiveMessage(): " + JSON.stringify(aMessage))
-
-    let json = aMessage.data;
-    let resolver = this.takePromiseResolver(json.requestID);
-
-    if (!resolver) {
-      return;
-    }
-
-    switch (aMessage.name) {
-      case "PushService:Register:OK":
-      {
-        let subscription =
-          new this._window.PushSubscription(json.pushEndpoint, this._scope,
-                                            this._principal);
-        resolver.resolve(subscription);
-        break;
-      }
-      case "PushService:Register:KO":
-        resolver.reject(null);
-        break;
-      case "PushService:Registration:OK":
-      {
-        let subscription = null;
-        try {
-          subscription =
-            new this._window.PushSubscription(json.registration.pushEndpoint,
-                                              this._scope, this._principal);
-        } catch(error) {
+        () => {
+          reject("PermissionDeniedError");
         }
-        resolver.resolve(subscription);
-        break;
-      }
-      case "PushService:Registration:KO":
-        resolver.reject(null);
-        break;
-      default:
-        debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
-    }
+      );
+    }.bind(this));
+    return p;
   },
 
   subscribe: function() {
     debug("subscribe()");
-    let p = this.createPromise(function(resolve, reject) {
-      let resolverId = this.getPromiseResolverId({ resolve: resolve, reject: reject });
-
-      this.askPermission(
-        function() {
-          this._cpmm.sendAsyncMessage("Push:Register", {
-                                      scope: this._scope,
-                                      requestID: resolverId
-                                    }, null, this._principal);
-        }.bind(this),
-
-        function() {
-          reject("PermissionDeniedError");
-        }
-      );
-    }.bind(this));
-    return p;
+    return this.getEndpointResponse(this._client.subscribe.bind(this._client));
   },
 
   getSubscription: function() {
     debug("getSubscription()" + this._scope);
-
-    let p = this.createPromise(function(resolve, reject) {
-
-      let resolverId = this.getPromiseResolverId({ resolve: resolve, reject: reject });
-
-      this.askPermission(
-        function() {
-          this._cpmm.sendAsyncMessage("Push:Registration", {
-                                      scope: this._scope,
-                                      requestID: resolverId
-                                    }, null, this._principal);
-        }.bind(this),
-
-        function() {
-          reject("PermissionDeniedError");
-        }
-      );
-    }.bind(this));
-    return p;
+    return this.getEndpointResponse(this._client.getSubscription.bind(this._client));
   },
 
   permissionState: function() {
@@ -324,4 +184,4 @@ Push.prototype = {
   },
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Push, PushSubscription]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Push]);
