@@ -803,7 +803,7 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
     }
 
     // Get a type which captures all the elements in the array to be created.
-    TypeSet::Type elementType = TypeSet::UnknownType();
+    Rooted<TypeSet::Type> elementType(cx, TypeSet::UnknownType());
     if (arrayKind != NewArrayKind::UnknownIndex && length != 0) {
         elementType = GetValueTypeForTable(vp[0]);
         for (unsigned i = 1; i < length; i++) {
@@ -860,7 +860,7 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
             group->setPreliminaryObjects(preliminaryObjects);
         }
 
-        if (!p.add(cx, *table, key, group))
+        if (!p.add(cx, *table, ObjectGroupCompartment::ArrayObjectKey(elementType), group))
             return nullptr;
     }
 
