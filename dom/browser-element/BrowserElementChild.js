@@ -41,15 +41,7 @@ if (!('BrowserElementIsPreloaded' in this)) {
       } catch (e) {
       }
     }
-  }
 
-  if(Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-    // general content apps
-    if (isTopBrowserElement(docShell)) {
-      Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js");
-    }
-  } else {
-    // rocketbar in system app and other in-process case (ex. B2G desktop client)
     Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js");
   }
 
