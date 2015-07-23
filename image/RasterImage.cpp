@@ -21,17 +21,11 @@
 #include "ImageRegion.h"
 #include "Layers.h"
 #include "LookupResult.h"
+#include "nsIInputStream.h"
 #include "nsPresContext.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"
 #include "FrameAnimator.h"
-
-#include "nsPNGDecoder.h"
-#include "nsGIFDecoder2.h"
-#include "nsJPEGDecoder.h"
-#include "nsBMPDecoder.h"
-#include "nsICODecoder.h"
-#include "nsIconDecoder.h"
 
 #include "gfxContext.h"
 
@@ -282,8 +276,8 @@ RasterImage::Init(const char* aMimeType,
   // Use the MIME type to select a decoder type, and make sure there *is* a
   // decoder for this MIME type.
   NS_ENSURE_ARG_POINTER(aMimeType);
-  mDecoderType = GetDecoderType(aMimeType);
-  if (mDecoderType == eDecoderType_unknown) {
+  mDecoderType = DecoderFactory::GetDecoderType(aMimeType);
+  if (mDecoderType == DecoderType::UNKNOWN) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1339,64 +1333,28 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
     MOZ_ASSERT(!mHasSize, "Should not do unnecessary size decodes");
   }
 
-  // Instantiate the appropriate decoder.
-  nsRefPtr<Decoder> decoder;
-  switch (mDecoderType) {
-    case eDecoderType_png:
-      decoder = new nsPNGDecoder(this);
-      break;
-    case eDecoderType_gif:
-      decoder = new nsGIFDecoder2(this);
-      break;
-    case eDecoderType_jpeg:
-      // If we have all the data we don't want to waste cpu time doing
-      // a progressive decode.
-      decoder = new nsJPEGDecoder(this,
-                                  mHasBeenDecoded ? Decoder::SEQUENTIAL :
-                                                    Decoder::PROGRESSIVE);
-      break;
-    case eDecoderType_bmp:
-      decoder = new nsBMPDecoder(this);
-      break;
-    case eDecoderType_ico:
-      decoder = new nsICODecoder(this);
-      break;
-    case eDecoderType_icon:
-      decoder = new nsIconDecoder(this);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown decoder type");
-  }
-
-  MOZ_ASSERT(decoder, "Should have a decoder now");
-
-  // Initialize the decoder.
-  decoder->SetSizeDecode(!aSize);
-  decoder->SetSendPartialInvalidations(!mHasBeenDecoded);
-  decoder->SetImageIsTransient(mTransient);
-  decoder->SetFlags(aFlags);
-
+  bool imageIsLocked = false;
   if (!mHasBeenDecoded && aSize) {
     // Lock the image while we're decoding, so that it doesn't get evicted from
     // the SurfaceCache before we have a chance to realize that it's animated.
     // The corresponding unlock happens in FinalizeDecoder.
     LockImage();
-    decoder->SetImageIsLocked();
+    imageIsLocked = true;
   }
 
-  decoder->SetIterator(mSourceBuffer->Iterator());
-
-  // Set a target size for downscale-during-decode if applicable.
-  if (mDownscaleDuringDecode && aSize && *aSize != mSize) {
-    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aSize);
-    MOZ_ASSERT(nsresult(rv) != NS_ERROR_NOT_AVAILABLE,
-               "We're downscale-during-decode but decoder doesn't support it?");
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  nsRefPtr<Decoder> decoder;
+  if (aSize) {
+    Maybe<IntSize> targetSize = mSize != *aSize ? aSize : Nothing();
+    decoder = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
+                                            targetSize, aFlags, mHasBeenDecoded,
+                                            mTransient, imageIsLocked);
+  } else {
+    decoder = DecoderFactory::CreateMetadataDecoder(mDecoderType, this,
+                                                    mSourceBuffer);
   }
 
-  decoder->Init();
-
-  if (NS_FAILED(decoder->GetDecoderError())) {
+  // Make sure DecoderFactory was able to create a decoder successfully.
+  if (!decoder) {
     return nullptr;
   }
 
