@@ -665,7 +665,6 @@ CheckForInterrupt(JSContext* cx)
 
 typedef JS::AutoVectorRooter<JSString*> AutoStringVector;
 typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
-typedef JS::AutoVectorRooter<Shape*> AutoShapeVector;
 
 using ShapeVector = js::TraceableVector<Shape*>;
 

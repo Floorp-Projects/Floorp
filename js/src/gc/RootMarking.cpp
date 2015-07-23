@@ -124,13 +124,6 @@ AutoGCRooter::trace(JSTracer* trc)
         return;
       }
 
-      case SHAPEVECTOR: {
-        AutoShapeVector::VectorImpl& vector = static_cast<js::AutoShapeVector*>(this)->vector;
-        TraceRootRange(trc, vector.length(), const_cast<Shape**>(vector.begin()),
-                       "js::AutoShapeVector.vector");
-        return;
-      }
-
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
         TraceRootRange(trc, vector.length(), vector.begin(), "JS::AutoObjectVector.vector");
