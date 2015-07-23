@@ -27,6 +27,10 @@ else
     _arch=32
 fi
 
+TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/linux${_arch}/valgrind.manifest
+TOOLTOOL_SERVER=https://api.pub.build.mozilla.org/tooltool/
+(cd $srcdir; python /builds/tooltool.py --url $TOOLTOOL_SERVER --overwrite -m $TOOLTOOL_MANIFEST fetch ${TOOLTOOL_CACHE:+ -c ${TOOLTOOL_CACHE}}) || exit 2
+
 # Note: an exit code of 2 turns the job red on TBPL.
 MOZCONFIG=$srcdir/browser/config/mozconfigs/linux${_arch}/valgrind make -f $srcdir/client.mk configure || exit 2
 make -j4 || exit 2
