@@ -65,7 +65,7 @@ public class TabMenuStrip extends HorizontalScrollView
         super.draw(canvas);
 
         final int height = getHeight();
-        canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
+        canvas.drawRect(0, height - shadowSize, layout.getWidth(), height, shadowPaint);
     }
 
     @Override
