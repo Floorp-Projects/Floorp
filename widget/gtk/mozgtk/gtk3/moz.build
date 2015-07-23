@@ -14,11 +14,15 @@ SharedLibrary('mozgtk')
 
 SONAME = 'mozgtk'
 
-# If LDFLAGS contains -Wl,--as-needed, we need to add -Wl,--no-as-needed
-# before the gtk libraries, otherwise the linker will drop those dependencies
-# because no symbols are used from them. But those dependencies need to be
-# kept for things to work properly.
-if '-Wl,--as-needed' in CONFIG['OS_LDFLAGS']:
+# If LDFLAGS contains -Wl,--as-needed or if it's the default for the toolchain,
+# we need to add -Wl,--no-as-needed before the gtk libraries, otherwise the
+# linker will drop those dependencies because no symbols are used from them.
+# But those dependencies need to be kept for things to work properly.
+# Ideally, we'd only add -Wl,--no-as-needed if necessary, but it's just simpler
+# to add it unconditionally. This library is also simple enough that forcing
+# -Wl,--as-needed after the gtk libraries is not going to make a significant
+# difference.
+if CONFIG['GCC_USE_GNU_LD']:
     no_as_needed = ['-Wl,--no-as-needed']
     as_needed = ['-Wl,--as-needed']
 else:
