@@ -7,6 +7,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/Preferences.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaSource.h"
 #include "MediaSourceReader.h"
@@ -16,6 +17,7 @@
 #include "VideoUtils.h"
 #include "MediaFormatReader.h"
 #include "MediaSourceDemuxer.h"
+#include "SourceBufferList.h"
 
 extern PRLogModuleInfo* GetMediaSourceLog();
 

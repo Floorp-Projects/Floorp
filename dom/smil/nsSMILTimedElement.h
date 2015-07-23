@@ -366,11 +366,6 @@ protected:
                       const nsSMILInstanceTime* aElem2) const;
   };
 
-  struct NotifyTimeDependentsParams {
-    nsSMILTimedElement*  mTimedElement;
-    nsSMILTimeContainer* mTimeContainer;
-  };
-
   // Templated helper functions
   template <class TestFunctor>
   void RemoveInstanceTimes(InstanceTimeList& aArray, TestFunctor& aTest);
@@ -564,10 +559,6 @@ protected:
       interval->Unlink();
     }
   }
-
-  // Hashtable callback methods
-  static PLDHashOperator NotifyNewIntervalCallback(
-      TimeValueSpecPtrKey* aKey, void* aData);
 
   //
   // Members

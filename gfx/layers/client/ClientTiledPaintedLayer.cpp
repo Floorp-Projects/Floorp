@@ -311,7 +311,8 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
   TILING_LOG("TILING %p: Non-progressive paint new valid region %s\n", this, Stringify(mValidRegion).c_str());
 
   mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
-  mContentClient->mTiledBuffer.PaintThebes(mValidRegion, aInvalidRegion, aCallback, aCallbackData);
+  mContentClient->mTiledBuffer.PaintThebes(mValidRegion, aInvalidRegion, aInvalidRegion,
+                                           aCallback, aCallbackData);
   mPaintData.mPaintFinished = true;
   return true;
 }

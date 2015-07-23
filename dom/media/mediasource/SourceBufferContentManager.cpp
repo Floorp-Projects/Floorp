@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SourceBufferContentManager.h"
+#include "mozilla/Preferences.h"
 #include "TrackBuffer.h"
 #include "TrackBuffersManager.h"
 

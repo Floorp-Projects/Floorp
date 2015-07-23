@@ -45,6 +45,7 @@ let Logins = {
 
   _getLogins: function() {
     let logins;
+    this._toggleListBody(true);
     try {
       logins = Services.logins.getAllLogins();
     } catch(e) {
@@ -52,9 +53,23 @@ let Logins = {
       debug("Master password permissions error: " + e);
       logins = [];
     }
-
+    this._toggleListBody(false);
     logins.sort((a, b) => a.hostname.localeCompare(b.hostname));
     return this._logins = logins;
+  },
+
+  _toggleListBody: function(isLoading) {
+    let nonemptyBody = document.getElementById("logins-list-nonempty-body");
+    let loadingBody = document.getElementById("logins-list-loading-body");
+
+    if (isLoading) {
+      nonemptyBody.classList.add("hidden");
+      loadingBody.classList.remove("hidden");
+    } else {
+      loadingBody.classList.add("hidden");
+      nonemptyBody.classList.remove("hidden");
+    }
+
   },
 
   init: function () {

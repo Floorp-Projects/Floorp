@@ -471,15 +471,6 @@ HostDB_ClearEntry(PLDHashTable *table,
         }
     }
 #endif
-
-    {
-        MutexAutoLock lock(he->rec->addr_info_lock);
-        if (he->rec->addr_info) {
-            delete hr->addr_info;
-            he->rec->addr_info = nullptr;
-        }
-    }
-
     NS_RELEASE(he->rec);
 }
 
@@ -862,12 +853,8 @@ nsHostResolver::ResolveHost(const char            *host,
                         LOG(("  Trying AF_UNSPEC entry for host [%s%s%s] af: %s.\n",
                              LOG_HOST(host, netInterface),
                              (af == PR_AF_INET) ? "AF_INET" : "AF_INET6"));
-                        // Ensure existing `addr_info` in `he` is cleared before
-                        // copying from `unSpecHe`.
-                        if (he->rec->addr_info) {
-                            delete he->rec->addr_info;
-                            he->rec->addr_info = nullptr;
-                        }
+
+                        he->rec->addr_info = nullptr;
                         if (unspecHe->rec->negative) {
                             he->rec->negative = unspecHe->rec->negative;
                             he->rec->CopyExpirationTimesAndFlagsFrom(unspecHe->rec);

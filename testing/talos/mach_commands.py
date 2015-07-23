@@ -24,7 +24,7 @@ from mach.decorators import (
 )
 
 class TalosRunner(MozbuildObject):
-    def run_test(self, suite, repo, rev, sps_profile):
+    def run_test(self, suite, sps_profile):
         """
         We want to do couple of things before running Talos
         1. Clone mozharness
@@ -33,21 +33,20 @@ class TalosRunner(MozbuildObject):
         """
 
         print("Running Talos test suite %s" % suite)
-        self.init_variables(suite, repo, rev, sps_profile)
-        self.clone_mozharness()
+        self.init_variables(suite, sps_profile)
         self.make_config()
         self.write_config()
         self.make_args()
         return self.run_mozharness()
 
-    def init_variables(self, suite, repo, rev, sps_profile):
+    def init_variables(self, suite, sps_profile):
         self.suite = suite
         self.sps_profile = sps_profile
-        self.mozharness_repo = repo
-        self.mozharness_rev = rev
 
         self.talos_dir = os.path.join(self.topsrcdir, 'testing', 'talos')
-        self.mozharness_dir = os.path.join(self.topobjdir, 'mozharness')
+        self.talos_webroot = os.path.join(self.topobjdir, 'testing', 'talos')
+        self.mozharness_dir = os.path.join(self.topsrcdir, 'testing',
+                                           'mozharness')
         self.config_dir = os.path.join(self.mozharness_dir, 'configs', 'talos')
         self.talos_json = os.path.join(self.talos_dir, 'talos.json')
         self.config_filename = 'in_tree_conf.json'
@@ -58,25 +57,6 @@ class TalosRunner(MozbuildObject):
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self.mozharness_dir, 'venv')
         self.python_interp = sys.executable
-
-    def clone_mozharness(self):
-        """Clones mozharness into topobjdir/mozharness
-           using mercurial. If mozharness is already cloned,
-           it updates it to the latest version"""
-        try:
-            mercurial = which.which('hg')
-        except which.WhichError as e:
-            print("You don't have hg in your PATH: {0}".format(e))
-            raise e
-        clone_cmd = [mercurial, 'clone', '-r', self.mozharness_rev,
-                     self.mozharness_repo, self.mozharness_dir]
-        pull_cmd = [mercurial, 'pull', '-r', self.mozharness_rev, '-u']
-
-        dot_hg = os.path.join(self.mozharness_dir, '.hg')
-        if os.path.exists(dot_hg):
-            self.run_process(args=pull_cmd, cwd=self.mozharness_dir)
-        else:
-            self.run_process(args=clone_cmd)
 
     def make_config(self):
         self.config = {
@@ -97,7 +77,9 @@ class TalosRunner(MozbuildObject):
                 'create-virtualenv',
                 'run-tests',
             ],
-            'python_webserver': True
+            'python_webserver': False,
+            'populate_webroot': True,
+            'talos_extra_options': ['--develop'],
         }
 
     def make_args(self):
@@ -105,7 +87,8 @@ class TalosRunner(MozbuildObject):
             'config': {
                 'suite': self.suite,
                 'sps_profile': self.sps_profile,
-                'use_talos_json': True
+                'use_talos_json': True,
+                'webroot': self.talos_webroot,
             },
            'initial_config_file': self.config_file_path,
        }
@@ -128,29 +111,20 @@ class TalosRunner(MozbuildObject):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    mozharness_repo = 'https://hg.mozilla.org/build/mozharness'
-    mozharness_rev = 'production'
-
     @Command('talos-test', category='testing',
              description='Run talos tests (performance testing).')
     @CommandArgument('suite', help='Talos test suite to run. Valid suites are '
                                    'chromez, dirtypaint, dromaeojs, other,'
                                    'svgr, rafx, tpn, tp5o, xperf.')
-    @CommandArgument('--repo', default=mozharness_repo,
-                     help='The mozharness repository to clone from. '
-                          'Defaults to http://hg.mozilla.org/build/mozharness')
-    @CommandArgument('--rev', default=mozharness_rev,
-                     help='The mozharness revision to clone. Defaults to '
-                          'production')
     @CommandArgument('--spsProfile', default=False,
                      help='Use the Gecko Profiler to capture profiles that can '
                           'then be displayed by Cleopatra.', action='store_true')
 
-    def run_talos_test(self, suite, repo=None, rev=None, spsProfile=False):
+    def run_talos_test(self, suite, spsProfile=False):
         talos = self._spawn(TalosRunner)
 
         try:
-            return talos.run_test(suite, repo, rev, spsProfile)
+            return talos.run_test(suite, spsProfile)
         except Exception as e:
             print(str(e))
             return 1

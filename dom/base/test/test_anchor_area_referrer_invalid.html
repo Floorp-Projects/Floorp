@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test anchor and area policy attribute for Bug 1174913</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that anchor and area referrer attributes are honoured correctly
+  * anchor tag with invalid referrer attributes
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1174913
+  -->
+
+  <script type="application/javascript;version=1.8">
+
+  const SJS = "/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "REL"];
+
+  const testCases = [
+    {ACTION: ["generate-anchor-policy-test", "generate-area-policy-test"],
+      TESTS: [
+        // setting invalid refer values -> we expect either full referrer (default)
+        // or whatever is specified in the meta referrer policy
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-no-meta',
+         META_POLICY: '',
+         DESC: "origin-when-cross-origin (anchor) with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'default',
+         NAME: 'default-with-no-meta',
+         META_POLICY: '',
+         DESC: "default (anchor) with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'something',
+         NAME: 'something-with-no-meta',
+         META_POLICY: '',
+         DESC: "something (anchor) with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         DESC: "origin-when-cross-origin (anchor) with no-referrer in meta",
+         RESULT: 'none'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-unsafe-url-in-meta',
+         META_POLICY: 'unsafe-url',
+         DESC: "origin-when-cross-origin (anchor) with unsafe-url in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'origin-when-cross-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         DESC: "origin-when-cross-origin (anchor) with origin in meta",
+         RESULT: 'origin'}]}
+  ];
+  </script>
+  <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+
