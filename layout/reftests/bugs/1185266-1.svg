@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <style>
+    g { fill: url(#red); }
+    g.x { fill: url(#green); }
+  </style>
+  <linearGradient id="red">
+    <stop stop-color="red"/>
+  </linearGradient>
+  <linearGradient id="green">
+    <stop stop-color="green"/>
+  </linearGradient>
+  <g>
+    <text x="10" y="20">This text must be green.</text>
+  </g>
+  <script>
+    function run() {
+      var g = document.querySelector("g");
+      g.setAttribute("class", "x");
+      document.documentElement.removeAttribute("class");
+    }
+    document.addEventListener("MozReftestInvalidate", run, false);
+  </script>
+</svg>
