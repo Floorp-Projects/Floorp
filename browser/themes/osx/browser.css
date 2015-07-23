@@ -1648,6 +1648,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-box-direction: reverse;
 }
 
+%include ../shared/identity-block/identity-block.inc.css
+
 #urlbar:not([focused="true"]) > #identity-box {
   margin-top: -1px;
   margin-bottom: -1px;
@@ -1763,8 +1765,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 #search-container {
   min-width: calc(54px + 11ch);
 }
-
-%include ../shared/identity-block/identity-block.inc.css
 
 #wrapper-urlbar-container[place="palette"] {
   max-width: 20em;
