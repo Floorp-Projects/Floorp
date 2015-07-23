@@ -64,6 +64,8 @@ public:
   nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
                           uint32_t* aCount, void** aPtr) const;
 
+  nsresult SetFromVariant(nsIVariant* aValue);
+
   nsresult SetFromInt8(uint8_t aValue);
   nsresult SetFromInt16(int16_t aValue);
   nsresult SetFromInt32(int32_t aValue);
@@ -173,9 +175,6 @@ public:
   NS_DECL_NSIWRITABLEVARIANT
 
   nsVariant();
-
-  static nsresult SetFromVariant(nsDiscriminatedUnion* aData,
-                                 nsIVariant* aValue);
 
   static void Traverse(const nsDiscriminatedUnion& aData,
                        nsCycleCollectionTraversalCallback& aCb);
