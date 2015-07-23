@@ -518,6 +518,41 @@ PackagedAppService::~PackagedAppService()
   gPackagedAppService = nullptr;
 }
 
+/* static */ nsresult
+PackagedAppService::GetPackageURI(nsIURI *aURI, nsIURI **aPackageURI)
+{
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoCString path;
+  nsresult rv = url->GetFilePath(path);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  int32_t pos = path.Find(PACKAGED_APP_TOKEN);
+  if (pos == kNotFound) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIURI> packageURI;
+  rv = aURI->CloneIgnoringRef(getter_AddRefs(packageURI));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = packageURI->SetPath(Substring(path, 0, pos));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  packageURI.forget(aPackageURI);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PackagedAppService::RequestURI(nsIURI *aURI,
                                nsILoadContextInfo *aInfo,
