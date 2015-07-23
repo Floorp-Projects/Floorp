@@ -32,6 +32,7 @@ class nsDiscriminatedUnion
 public:
 
   nsDiscriminatedUnion() : mType(nsIDataType::VTYPE_EMPTY) {}
+  ~nsDiscriminatedUnion() { Cleanup(); }
 
   void Cleanup();
 
@@ -181,7 +182,7 @@ public:
   nsVariant();
 
 private:
-  ~nsVariant();
+  ~nsVariant() {};
 
 protected:
   nsDiscriminatedUnion mData;
