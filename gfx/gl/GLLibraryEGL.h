@@ -494,7 +494,7 @@ public:
         return IsExtensionSupported(EXT_create_context_robustness);
     }
 
-    bool EnsureInitialized();
+    bool EnsureInitialized(bool forceAccel = false);
 
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();

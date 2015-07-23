@@ -570,15 +570,8 @@ CreateHeadlessANGLE(bool forceEnabled, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
     nsRefPtr<GLContext> gl;
 
 #ifdef XP_WIN
-    if (!forceEnabled &&
-        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_ANGLE))
-    {
-        webgl->GenerateWarning("Refused to create ANGLE OpenGL context"
-                               " because of blacklisting.");
-        return nullptr;
-    }
-
-    gl = gl::GLContextProviderEGL::CreateHeadless(requireCompatProfile);
+    gl = gl::GLContextProviderEGL::CreateHeadless(requireCompatProfile,
+                                                  forceEnabled);
     if (!gl) {
         webgl->GenerateWarning("Error during ANGLE OpenGL init.");
         return nullptr;

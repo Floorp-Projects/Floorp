@@ -933,9 +933,9 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateHeadless(bool)
+GLContextProviderEGL::CreateHeadless(bool requireCompatProfile, bool forceEnabled)
 {
-    if (!sEGLLibrary.EnsureInitialized()) {
+    if (!sEGLLibrary.EnsureInitialized(forceEnabled)) {
         return nullptr;
     }
 
