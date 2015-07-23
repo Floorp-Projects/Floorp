@@ -18,9 +18,6 @@
 #ifdef MOZ_INSTRUMENTS
 # include "devtools/Instruments.h"
 #endif
-#ifdef MOZ_SHARK
-# include "devtools/sharkctl.h"
-#endif
 #endif
 
 #ifdef XP_WIN
@@ -68,10 +65,6 @@ StartOSXProfiling(const char* profileName, pid_t pid)
 {
     bool ok = true;
     const char* profiler = nullptr;
-#ifdef MOZ_SHARK
-    ok = Shark::Start();
-    profiler = "Shark";
-#endif
 #ifdef MOZ_INSTRUMENTS
     ok = Instruments::Start(pid);
     profiler = "Instruments";
@@ -106,9 +99,6 @@ JS_StopProfiling(const char* profileName)
 {
     bool ok = true;
 #ifdef __APPLE__
-#ifdef MOZ_SHARK
-    Shark::Stop();
-#endif
 #ifdef MOZ_INSTRUMENTS
     Instruments::Stop(profileName);
 #endif
@@ -131,12 +121,8 @@ ControlProfilers(bool toState)
 
     if (! probes::ProfilingActive && toState) {
 #ifdef __APPLE__
-#if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
+#if defined(MOZ_INSTRUMENTS)
         const char* profiler;
-#ifdef MOZ_SHARK
-        ok = Shark::Start();
-        profiler = "Shark";
-#endif
 #ifdef MOZ_INSTRUMENTS
         ok = Instruments::Resume();
         profiler = "Instruments";
@@ -154,9 +140,6 @@ ControlProfilers(bool toState)
 #endif
     } else if (probes::ProfilingActive && ! toState) {
 #ifdef __APPLE__
-#ifdef MOZ_SHARK
-        Shark::Stop();
-#endif
 #ifdef MOZ_INSTRUMENTS
         Instruments::Pause();
 #endif
@@ -347,7 +330,7 @@ ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
+#if defined(MOZ_INSTRUMENTS)
 
 static bool
 IgnoreAndReturnTrue(JSContext* cx, unsigned argc, Value* vp)
@@ -402,7 +385,7 @@ static const JSFunctionSpec profiling_functions[] = {
     JS_FN("dumpProfile",     DumpProfile,         2,0),
     JS_FN("getMaxGCPauseSinceClear",    GetMaxGCPauseSinceClear,    0, 0),
     JS_FN("clearMaxGCPauseAccumulator", ClearMaxGCPauseAccumulator, 0, 0),
-#if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
+#if defined(MOZ_INSTRUMENTS)
     /* Keep users of the old shark API happy. */
     JS_FN("connectShark",    IgnoreAndReturnTrue, 0,0),
     JS_FN("disconnectShark", IgnoreAndReturnTrue, 0,0),
