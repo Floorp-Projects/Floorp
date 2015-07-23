@@ -8,6 +8,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
+#include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -1257,6 +1258,20 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
     // used by telemetry.
     UniquePtr<base::StatisticsRecorder> telStats =
        MakeUnique<base::StatisticsRecorder>();
+
+    if (PR_GetEnv("MOZ_CHAOSMODE")) {
+        ChaosFeature feature = ChaosFeature::Any;
+        long featureInt = strtol(PR_GetEnv("MOZ_CHAOSMODE"), nullptr, 16);
+        if (featureInt) {
+            // NOTE: MOZ_CHAOSMODE=0 or a non-hex value maps to Any feature.
+            feature = static_cast<ChaosFeature>(featureInt);
+        }
+        ChaosMode::SetChaosFeature(feature);
+    }
+
+    if (ChaosMode::isActive(ChaosFeature::Any)) {
+        printf_stderr("*** You are running in chaos test mode. See ChaosMode.h. ***\n");
+    }
 
     nsCOMPtr<nsIFile> appFile;
     rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appFile));
