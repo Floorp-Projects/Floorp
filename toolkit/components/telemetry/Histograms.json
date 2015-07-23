@@ -8087,14 +8087,14 @@
   },
   "VIDEO_ADOBE_GMP_DISAPPEARED": {
     "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "42",
+    "expires_in_version": "50",
     "kind": "flag",
     "description": "Whether or not the Adobe EME GMP was expected to be resident on disk but mysteriously isn't.",
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_ADOBE_GMP_MISSING_FILES": {
     "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "42",
+    "expires_in_version": "50",
     "kind": "enumerated",
     "n_values" : 8,
     "description": "Adobe EME GMP files missing (0=none, or sum of: 1=library, 2=info, 4=voucher)",
@@ -8102,14 +8102,14 @@
   },
   "VIDEO_OPENH264_GMP_DISAPPEARED": {
     "alert_emails": ["cpearce@mozilla.com", "rjesup@mozilla.com"],
-    "expires_in_version": "42",
+    "expires_in_version": "50",
     "kind": "flag",
     "description": "Whether or not the OpenH264 GMP was expected to be resident on disk but mysteriously isn't.",
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_OPENH264_GMP_MISSING_FILES": {
     "alert_emails": ["cpearce@mozilla.com", "rjesup@mozilla.com"],
-    "expires_in_version": "42",
+    "expires_in_version": "50",
     "kind": "enumerated",
     "n_values" : 4,
     "description": "OpenH264 GMP files missing (0=none, or sum of: 1=library, 2=info)",
