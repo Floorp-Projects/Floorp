@@ -8,16 +8,6 @@
   background-color: transparent;
 }
 
-/* SCROLLBOX */
-#newtab-scrollbox:not([page-disabled]) {
-  color: rgb(0,0,0);
-  background-color: #f9f9f9;
-}
-
-#newtab-scrollbox:not([page-disabled]) #newtab-margin-bottom {
-  background: inherit;
-}
-
 /* UNDO */
 #newtab-undo-container {
   padding: 4px 3px;
@@ -57,8 +47,24 @@
   border: none;
 }
 
-#newtab-undo-close-button:-moz-focusring {
-  outline: 1px dotted;
+#newtab-undo-close-button {
+  -moz-appearance: none;
+  padding: 0;
+  border: none;
+  height: 16px;
+  width: 16px;
+  float: right;
+  right: 0;
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 16, 16, 0);
+  background-color: transparent;
+}
+
+#newtab-undo-close-button:hover {
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 32, 16, 16);
+}
+
+#newtab-undo-close-button:active {
+  background-image: -moz-image-rect(url(chrome://global/skin/icons/close.png), 0, 48, 16, 32);
 }
 
 /* CUSTOMIZE */
@@ -180,7 +186,7 @@
   margin-top: 6px;
 }
 
-.newtab-site[pinned] .newtab-title:-moz-locale-dir(rtl)::before {
+.newtab-site[pinned] .newtab-title:-moz-dir(rtl)::before {
   left: auto;
   right: 0;
 }

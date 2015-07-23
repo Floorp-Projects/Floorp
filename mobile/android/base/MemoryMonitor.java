@@ -9,6 +9,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.home.ImageLoader;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -179,6 +180,7 @@ class MemoryMonitor extends BroadcastReceiver {
             }
 
             Favicons.clearMemCache();
+            ImageLoader.clearLruCache();
         }
         return true;
     }

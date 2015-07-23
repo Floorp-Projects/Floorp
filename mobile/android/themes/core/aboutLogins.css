@@ -184,3 +184,15 @@ body {
     background-image: url("resource://android/res/drawable-xhdpi-v4/favicon_globe.png");
   }
 }
+
+#loading-img-container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#spinner {
+  margin-top: 60px;
+  height: 60px;
+  width: 60px;
+}
