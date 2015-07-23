@@ -108,7 +108,8 @@ public:
     GLLibraryEGL()
         : mInitialized(false),
           mEGLLibrary(nullptr),
-          mIsANGLE(false)
+          mIsANGLE(false),
+          mIsWARP(false)
     {
     }
 
@@ -469,6 +470,10 @@ public:
         return mIsANGLE;
     }
 
+    bool IsWARP() const {
+        return mIsWARP;
+    }
+
     bool HasKHRImageBase() {
         return IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base);
     }
@@ -619,6 +624,7 @@ private:
     EGLDisplay mEGLDisplay;
 
     bool mIsANGLE;
+    bool mIsWARP;
 };
 
 extern GLLibraryEGL sEGLLibrary;
