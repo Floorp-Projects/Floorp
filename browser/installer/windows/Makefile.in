@@ -6,8 +6,6 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 CONFIG_DIR = instgen
 SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
-APP_VERSION := $(FIREFOX_VERSION)
-DEFINES += -DAPP_VERSION=$(APP_VERSION)
 
 INSTALLER_FILES = \
 	app.tag \
@@ -35,12 +33,6 @@ BRANDING_FILES = \
 	wizHeader.bmp \
 	wizHeaderRTL.bmp \
 	wizWatermark.bmp \
-	$(NULL)
-
-DEFINES += \
-	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-	-DMOZ_APP_DISPLAYNAME='${MOZ_APP_DISPLAYNAME}' \
-	-DMOZILLA_VERSION=${MOZILLA_VERSION} \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

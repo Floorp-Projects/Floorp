@@ -1040,7 +1040,10 @@ pref("security.exthelperapp.disable_background_handling", true);
 pref("osfile.reset_worker_delay", 5000);
 
 // APZC preferences.
-//
+#ifdef MOZ_WIDGET_GONK
+pref("apz.allow_zooming", true);
+#endif
+
 // Gaia relies heavily on scroll events for now, so lets fire them
 // more often than the default value (100).
 pref("apz.asyncscroll.throttle", 40);

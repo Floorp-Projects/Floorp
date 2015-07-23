@@ -67,26 +67,6 @@ jsconfig_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-#############################################
-# BEGIN ECMAScript Internationalization API
-#
-
-# ICU headers need to be available whether we build with the complete
-# Internationalization API or not - ICU stubs rely on them.
-
-LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
-
-ifdef ENABLE_INTL_API
-ifndef MOZ_NATIVE_ICU
-
-endif
-endif
-
-#
-# END ECMAScript Internationalization API
-#############################################
-
-
 # check_vanilla_allocations.py is tailored to Linux, so only run it there.
 # That should be enough to catch any problems.
 check-vanilla-allocations:

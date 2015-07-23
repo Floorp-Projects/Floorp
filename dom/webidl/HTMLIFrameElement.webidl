@@ -26,6 +26,8 @@ interface HTMLIFrameElement : HTMLElement {
            attribute DOMString width;
   [SetterThrows, Pure]
            attribute DOMString height;
+  [SetterThrows, Pure, Pref="network.http.enablePerElementReferrer"]
+           attribute DOMString referrer;
   readonly attribute Document? contentDocument;
   readonly attribute WindowProxy? contentWindow;
 };

@@ -604,6 +604,9 @@ if CONFIG['OS_ARCH'] == 'SunOS':
         'socket',
     ]
 
+CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+
 if CONFIG['GNU_CXX']:
     FAIL_ON_WARNINGS = True
 

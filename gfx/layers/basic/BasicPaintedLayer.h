@@ -112,8 +112,8 @@ protected:
       BasicManager()->SetTransactionIncomplete();
       return;
     }
-    aCallback(this, aContext, aExtendedRegionToDraw, aClip,
-              aRegionToInvalidate, aCallbackData);
+    aCallback(this, aContext, aExtendedRegionToDraw, aExtendedRegionToDraw,
+              aClip, aRegionToInvalidate, aCallbackData);
     // Everything that's visible has been validated. Do this instead of just
     // OR-ing with aRegionToDraw, since that can lead to a very complex region
     // here (OR doesn't automatically simplify to the simplest possible
