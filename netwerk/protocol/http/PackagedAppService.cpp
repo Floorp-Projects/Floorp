@@ -342,9 +342,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
     CallCallbacks(uri, entry, aStatusCode);
   }
 
-  // lastPart will be true if this is the last part in the package,
-  // or if aRequest isn't a multipart channel
-  bool lastPart = true;
+  bool lastPart = false;
   if (multiChannel) {
     rv = multiChannel->GetIsLastPart(&lastPart);
     if (NS_SUCCEEDED(rv) && !lastPart) {
