@@ -101,6 +101,8 @@ public:
   nsresult SetToEmpty();
   nsresult SetToEmptyArray();
 
+  void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
+
 private:
   nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
@@ -175,9 +177,6 @@ public:
   NS_DECL_NSIWRITABLEVARIANT
 
   nsVariant();
-
-  static void Traverse(const nsDiscriminatedUnion& aData,
-                       nsCycleCollectionTraversalCallback& aCb);
 
 private:
   ~nsVariant();

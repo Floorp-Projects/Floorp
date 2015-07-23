@@ -1636,22 +1636,21 @@ nsDiscriminatedUnion::Cleanup()
   mType = nsIDataType::VTYPE_EMPTY;
 }
 
-/* static */ void
-nsVariant::Traverse(const nsDiscriminatedUnion& aData,
-                    nsCycleCollectionTraversalCallback& aCb)
+void
+nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 {
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mData");
-      aCb.NoteXPCOMChild(aData.u.iface.mInterfaceValue);
+      aCb.NoteXPCOMChild(u.iface.mInterfaceValue);
       break;
     case nsIDataType::VTYPE_ARRAY:
-      switch (aData.u.array.mArrayType) {
+      switch (u.array.mArrayType) {
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS: {
-          nsISupports** p = (nsISupports**)aData.u.array.mArrayValue;
-          for (uint32_t i = aData.u.array.mArrayCount; i > 0; ++p, --i) {
+          nsISupports** p = (nsISupports**)u.array.mArrayValue;
+          for (uint32_t i = u.array.mArrayCount; i > 0; ++p, --i) {
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mData[i]");
             aCb.NoteXPCOMChild(*p);
           }

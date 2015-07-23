@@ -79,7 +79,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
         cb.NoteJSObject(&val.toObject());
     }
 
-    nsVariant::Traverse(tmp->mData, cb);
+    tmp->mData.Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
