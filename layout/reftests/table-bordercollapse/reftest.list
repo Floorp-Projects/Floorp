@@ -96,3 +96,11 @@
 == empty-toprow.html empty-toprow-ref.html
 == double_borders.html double_borders_ref.html
 == border-collapse-rtl.html border-collapse-rtl-ref.html
+# Fuzzy because for some reason the corner beveling is antialiased differently.
+# So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
+# is 20px).
+fuzzy(255,40) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
+# Fuzzy because for some reason the corner beveling is antialiased differently.
+# So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
+# is 20px).
+fuzzy(255,40) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
