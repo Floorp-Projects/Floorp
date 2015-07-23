@@ -33,7 +33,8 @@ function hidden(sel) {
   let win = browser.ownerGlobal;
   let el = win.document.querySelector(sel);
   let display = win.getComputedStyle(el).getPropertyValue("display", null);
-  return display === "none";
+  let opacity = win.getComputedStyle(el).getPropertyValue("opacity", null);
+  return display === "none" || opacity === "0";
 }
 
 function clickButton(sel) {
