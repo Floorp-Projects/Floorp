@@ -35,6 +35,8 @@ public:
 
   void Cleanup();
 
+  uint16_t GetType() const { return mType; }
+
   nsresult ConvertToInt8(uint8_t* aResult) const;
   nsresult ConvertToInt16(int16_t* aResult) const;
   nsresult ConvertToInt32(int32_t* aResult) const;
