@@ -59,6 +59,11 @@ public:
   nsresult ConvertToStringWithSize(uint32_t* aSize, char** aStr) const;
   nsresult ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const;
 
+  nsresult ConvertToISupports(nsISupports** aResult) const;
+  nsresult ConvertToInterface(nsIID** aIID, void** aInterface) const;
+  nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
+                          uint32_t* aCount, void** aPtr) const;
+
 private:
   nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
@@ -133,14 +138,6 @@ public:
   NS_DECL_NSIWRITABLEVARIANT
 
   nsVariant();
-
-  static nsresult ConvertToISupports(const nsDiscriminatedUnion& aData,
-                                     nsISupports** aResult);
-  static nsresult ConvertToInterface(const nsDiscriminatedUnion& aData,
-                                     nsIID** aIID, void** aInterface);
-  static nsresult ConvertToArray(const nsDiscriminatedUnion& aData,
-                                 uint16_t* aType, nsIID* aIID,
-                                 uint32_t* aCount, void** aPtr);
 
   static nsresult SetFromVariant(nsDiscriminatedUnion* aData,
                                  nsIVariant* aValue);

@@ -1129,15 +1129,14 @@ nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr)
   return *aStr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* static */ nsresult
-nsVariant::ConvertToISupports(const nsDiscriminatedUnion& aData,
-                              nsISupports** aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToISupports(nsISupports** aResult) const
 {
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
-      if (aData.u.iface.mInterfaceValue) {
-        return aData.u.iface.mInterfaceValue->
+      if (u.iface.mInterfaceValue) {
+        return u.iface.mInterfaceValue->
           QueryInterface(NS_GET_IID(nsISupports), (void**)aResult);
       } else {
         *aResult = nullptr;
@@ -1148,18 +1147,18 @@ nsVariant::ConvertToISupports(const nsDiscriminatedUnion& aData,
   }
 }
 
-/* static */ nsresult
-nsVariant::ConvertToInterface(const nsDiscriminatedUnion& aData, nsIID** aIID,
-                              void** aInterface)
+nsresult
+nsDiscriminatedUnion::ConvertToInterface(nsIID** aIID,
+                                         void** aInterface) const
 {
   const nsIID* piid;
 
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_INTERFACE:
       piid = &NS_GET_IID(nsISupports);
       break;
     case nsIDataType::VTYPE_INTERFACE_IS:
-      piid = &aData.u.iface.mInterfaceID;
+      piid = &u.iface.mInterfaceID;
       break;
     default:
       return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -1170,26 +1169,25 @@ nsVariant::ConvertToInterface(const nsDiscriminatedUnion& aData, nsIID** aIID,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (aData.u.iface.mInterfaceValue) {
-    return aData.u.iface.mInterfaceValue->QueryInterface(*piid,
-                                                              aInterface);
+  if (u.iface.mInterfaceValue) {
+    return u.iface.mInterfaceValue->QueryInterface(*piid, aInterface);
   }
 
   *aInterface = nullptr;
   return NS_OK;
 }
 
-/* static */ nsresult
-nsVariant::ConvertToArray(const nsDiscriminatedUnion& aData, uint16_t* aType,
-                          nsIID* aIID, uint32_t* aCount, void** aPtr)
+nsresult
+nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
+                                     uint32_t* aCount, void** aPtr) const
 {
   // XXX perhaps we'd like to add support for converting each of the various
   // types into an array containing one element of that type. We can leverage
   // CloneArray to do this if we want to support this.
 
-  if (aData.mType == nsIDataType::VTYPE_ARRAY) {
-    return CloneArray(aData.u.array.mArrayType, &aData.u.array.mArrayInterfaceID,
-                      aData.u.array.mArrayCount, aData.u.array.mArrayValue,
+  if (mType == nsIDataType::VTYPE_ARRAY) {
+    return CloneArray(u.array.mArrayType, &u.array.mArrayInterfaceID,
+                      u.array.mArrayCount, u.array.mArrayValue,
                       aType, aIID, aCount, aPtr);
   }
   return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -1879,7 +1877,7 @@ nsVariant::GetAsWString(char16_t** aResult)
 NS_IMETHODIMP
 nsVariant::GetAsISupports(nsISupports** aResult)
 {
-  return nsVariant::ConvertToISupports(mData, aResult);
+  return mData.ConvertToISupports(aResult);
 }
 
 /* jsval getAsJSVal() */
@@ -1894,7 +1892,7 @@ nsVariant::GetAsJSVal(JS::MutableHandleValue)
 NS_IMETHODIMP
 nsVariant::GetAsInterface(nsIID** aIID, void** aInterface)
 {
-  return nsVariant::ConvertToInterface(mData, aIID, aInterface);
+  return mData.ConvertToInterface(aIID, aInterface);
 }
 
 /* [notxpcom] nsresult getAsArray (out uint16_t type, out nsIID iid, out uint32_t count, out voidPtr ptr); */
@@ -1902,7 +1900,7 @@ NS_IMETHODIMP_(nsresult)
 nsVariant::GetAsArray(uint16_t* aType, nsIID* aIID,
                       uint32_t* aCount, void** aPtr)
 {
-  return nsVariant::ConvertToArray(mData, aType, aIID, aCount, aPtr);
+  return mData.ConvertToArray(aType, aIID, aCount, aPtr);
 }
 
 /* void getAsStringWithSize (out uint32_t size, [size_is (size), retval] out string str); */
