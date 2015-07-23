@@ -116,9 +116,9 @@ function markGCType(typeName, child, why, typePtrLevel, fieldPtrLevel, indent)
     if (ptrLevel > 2)
         return;
 
-    if (ptrLevel == 0 && isRootedTypeName(typeName))
+    if (ptrLevel == 0 && isRootedGCTypeName(typeName))
         return;
-    if (ptrLevel == 1 && isRootedPointerTypeName(typeName))
+    if (ptrLevel == 1 && isRootedGCPointerTypeName(typeName))
         return;
 
     if (ptrLevel == 0) {
