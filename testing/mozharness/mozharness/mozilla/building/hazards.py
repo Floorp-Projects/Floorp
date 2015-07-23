@@ -85,6 +85,7 @@ class HazardAnalysis(object):
             'source': os.path.join(dirs['abs_work_dir'], 'source'),
             'sixgill': os.path.join(dirs['abs_work_dir'], builder.config['sixgill']),
             'sixgill_bin': os.path.join(dirs['abs_work_dir'], builder.config['sixgill_bin']),
+            'gcc_bin': os.path.join(dirs['abs_work_dir'], 'gcc'),
         }
         defaults = """
 js = '%(js)s'
@@ -93,7 +94,8 @@ objdir = '%(source_objdir)s'
 source = '%(source)s'
 sixgill = '%(sixgill)s'
 sixgill_bin = '%(sixgill_bin)s'
-jobs = 2
+gcc_bin = '%(gcc_bin)s'
+jobs = 4
 """ % values
 
         defaults_path = os.path.join(analysis_dir, 'defaults.py')
