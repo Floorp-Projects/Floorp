@@ -320,17 +320,16 @@ struct PersistentRootedMarker
 void
 js::gc::MarkPersistentRootedChainsInLists(RootLists& roots, JSTracer* trc)
 {
-    PersistentRootedMarker<JSFunction*>::markChain(trc, roots.functionPersistentRooteds,
-                                                   "PersistentRooted<JSFunction*>");
-    PersistentRootedMarker<JSObject*>::markChain(trc, roots.objectPersistentRooteds,
+    PersistentRootedMarker<JSObject*>::markChain(trc, roots.getPersistentRootedList<JSObject*>(),
                                                  "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChain(trc, roots.scriptPersistentRooteds,
+    PersistentRootedMarker<JSScript*>::markChain(trc, roots.getPersistentRootedList<JSScript*>(),
                                                  "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChain(trc, roots.stringPersistentRooteds,
+    PersistentRootedMarker<JSString*>::markChain(trc, roots.getPersistentRootedList<JSString*>(),
                                                  "PersistentRooted<JSString*>");
-    PersistentRootedMarker<jsid>::markChain(trc, roots.idPersistentRooteds,
+
+    PersistentRootedMarker<jsid>::markChain(trc, roots.getPersistentRootedList<jsid>(),
                                             "PersistentRooted<jsid>");
-    PersistentRootedMarker<Value>::markChain(trc, roots.valuePersistentRooteds,
+    PersistentRootedMarker<Value>::markChain(trc, roots.getPersistentRootedList<Value>(),
                                              "PersistentRooted<Value>");
 }
 
