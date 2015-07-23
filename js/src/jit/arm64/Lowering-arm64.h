@@ -70,8 +70,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
 
     void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
                                  MDefinition* lhs, MDefinition* rhs);
-    void lowerConstantDouble(double d, MInstruction* ins);
-    void lowerConstantFloat32(float d, MInstruction* ins);
     void lowerTruncateDToInt32(MTruncateToInt32* ins);
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
     void lowerDivI(MDiv* div);
@@ -88,7 +86,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
                                   MTableSwitch* ins);
 
   public:
-    void visitConstant(MConstant* ins);
     void visitBox(MBox* box);
     void visitUnbox(MUnbox* unbox);
     void visitReturn(MReturn* ret);
