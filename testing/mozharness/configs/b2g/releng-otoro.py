@@ -47,10 +47,9 @@ config = {
         "ssh_key": os.path.expanduser("~/.ssh/b2gbld_dsa"),
         "ssh_user": "b2gbld",
         "branches": {
-            'mozilla-b2g32_v2_0': '2.0.0',
             'mozilla-b2g34_v2_1': '2.1.0',
             'mozilla-b2g37_v2_2': '2.2.0',
-            'mozilla-central': '3.0.0',
+            'mozilla-central': '2.5.0',
         },
         "translate_hg_to_git": True,
         "translate_base_url": "http://cruncher.build.mozilla.org/mapper/{project}/{vcs}/{rev}",
