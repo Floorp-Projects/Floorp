@@ -143,7 +143,7 @@ BluetoothPairingListener::TryListeningToBluetoothSignal()
       !HasListenersFor(nsGkAtoms::onenterpincodereq) ||
       !HasListenersFor(nsGkAtoms::onpairingconfirmationreq) ||
       !HasListenersFor(nsGkAtoms::onpairingconsentreq)) {
-    BT_LOGR("Pairing listener is not ready to handle pairing requests!");
+    BT_LOGD("Pairing listener is not ready to handle pairing requests!");
     return;
   }
 

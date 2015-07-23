@@ -103,7 +103,7 @@ let gTransformation = {
 
     let style = aSite.node.style;
     let comp = getComputedStyle(aSite.node, null);
-    style.width = comp.getPropertyValue("width")
+    style.width = comp.getPropertyValue("width");
     style.height = comp.getPropertyValue("height");
 
     aSite.node.setAttribute("frozen", "true");

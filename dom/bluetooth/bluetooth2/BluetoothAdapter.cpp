@@ -409,10 +409,9 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
       = value.get_ArrayOfnsString();
 
     for (uint32_t i = 0; i < pairedDeviceAddresses.Length(); i++) {
-      // Check whether or not the address exists in mDevices.
       if (mDevices.Contains(pairedDeviceAddresses[i])) {
-        // If the paired device exists in mDevices, it would handle
-        // 'PropertyChanged' signal in BluetoothDevice::Notify().
+        // Existing paired devices handle 'PropertyChanged' signal
+        // in BluetoothDevice::Notify()
         continue;
       }
 
@@ -420,12 +419,9 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
       BT_APPEND_NAMED_VALUE(props, "Address", pairedDeviceAddresses[i]);
       BT_APPEND_NAMED_VALUE(props, "Paired", true);
 
-      // Create paired device with 'address' and 'paired' attributes
-      nsRefPtr<BluetoothDevice> pairedDevice =
-        BluetoothDevice::Create(GetOwner(), BluetoothValue(props));
-
-      // Append to adapter's device array
-      mDevices.AppendElement(pairedDevice);
+      // Create paired device and append to adapter's device array
+      mDevices.AppendElement(
+        BluetoothDevice::Create(GetOwner(), BluetoothValue(props)));
     }
 
     // Retrieve device properties, result will be handled by device objects.
@@ -693,12 +689,10 @@ BluetoothAdapter::SetName(const nsAString& aName, ErrorResult& aRv)
   nsString name(aName);
   BluetoothNamedValue property(NS_LITERAL_STRING("Name"),
                                BluetoothValue(name));
-  BT_ENSURE_TRUE_REJECT(
-    NS_SUCCEEDED(
-      bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER, property,
-                      new BluetoothVoidReplyRunnable(nullptr, promise))),
-    promise,
-    NS_ERROR_DOM_OPERATION_ERR);
+  BT_ENSURE_SUCCESS_REJECT(
+    bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER, property,
+                    new BluetoothVoidReplyRunnable(nullptr, promise)),
+    promise, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
 }
@@ -733,12 +727,10 @@ BluetoothAdapter::SetDiscoverable(bool aDiscoverable, ErrorResult& aRv)
   // Wrap property to set and runnable to handle result
   BluetoothNamedValue property(NS_LITERAL_STRING("Discoverable"),
                                BluetoothValue(aDiscoverable));
-  BT_ENSURE_TRUE_REJECT(
-    NS_SUCCEEDED(
-      bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER, property,
-                      new BluetoothVoidReplyRunnable(nullptr, promise))),
-    promise,
-    NS_ERROR_DOM_OPERATION_ERR);
+  BT_ENSURE_SUCCESS_REJECT(
+    bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER, property,
+                    new BluetoothVoidReplyRunnable(nullptr, promise)),
+    promise, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
 }

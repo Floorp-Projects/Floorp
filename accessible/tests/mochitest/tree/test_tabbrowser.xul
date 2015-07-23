@@ -180,7 +180,7 @@
                   children: [
                     {
                       // #document ("about:newtab" preloaded)
-                      role: ROLE_APPLICATION
+                      role: ROLE_DOCUMENT
                       // children: [ ... ] // Ignore document content.
                     }
                   ]

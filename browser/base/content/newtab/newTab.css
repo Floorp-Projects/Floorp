@@ -2,6 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font: message-box;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: #F9F9F9;
+  display: -moz-box;
+  position: relative;
+  -moz-box-flex: 1;
+  -moz-user-focus: normal;
+  -moz-box-orient: vertical;
+}
+
 input {
   font: message-box !important;
   font-size: 16px !important;
@@ -11,23 +30,9 @@ input[type=button] {
   cursor: pointer;
 }
 
-/* SCROLLBOX */
-#newtab-scrollbox {
-  display: -moz-box;
-  position: relative;
-  -moz-box-flex: 1;
-  -moz-user-focus: normal;
-  -moz-box-orient: vertical;
-}
-
-#newtab-scrollbox:not([page-disabled]) {
-  overflow: auto;
-}
-
 /* UNDO */
 #newtab-undo-container {
   transition: opacity 100ms ease-out;
-  display: -moz-box;
   -moz-box-align: center;
   -moz-box-pack: center;
 }
@@ -45,7 +50,7 @@ input[type=button] {
   z-index: 101;
 }
 
-#newtab-customize-button:-moz-locale-dir(rtl) {
+#newtab-customize-button:-moz-dir(rtl) {
   left: 20px;
   right: auto;
 }
@@ -66,9 +71,13 @@ input[type=button] {
   z-index: 1;
 }
 
-#newtab-margin-undo-container:-moz-locale-dir(rtl) {
+#newtab-margin-undo-container:-moz-dir(rtl) {
   left: auto;
   right: 6px;
+}
+
+#newtab-undo-close-button:-moz-dir(rtl) {
+  float:left;
 }
 
 #newtab-horizontal-margin {
@@ -238,7 +247,7 @@ input[type=button] {
   background-color: #000000;
 }
 
-.newtab-sponsored:-moz-locale-dir(rtl) {
+.newtab-sponsored:-moz-dir(rtl) {
   right: 0;
   left: auto;
 }
@@ -302,13 +311,13 @@ input[type=button] {
   }
 }
 
-.newtab-control-pin:-moz-locale-dir(ltr),
-.newtab-control-block:-moz-locale-dir(rtl) {
+.newtab-control-pin:-moz-dir(ltr),
+.newtab-control-block:-moz-dir(rtl) {
   left: 4px;
 }
 
-.newtab-control-block:-moz-locale-dir(ltr),
-.newtab-control-pin:-moz-locale-dir(rtl) {
+.newtab-control-block:-moz-dir(ltr),
+.newtab-control-pin:-moz-dir(rtl) {
   right: 4px;
 }
 
@@ -442,6 +451,7 @@ input[type=button] {
   transition-duration: 0ms;
 }
 
+/* CUSTOMIZE */
 #newtab-customize-overlay {
   opacity: 0;
   display: none;
@@ -456,6 +466,12 @@ input[type=button] {
 .newtab-customize-panel-container {
   position: absolute;
   margin-right: 40px;
+  right: 0;
+}
+
+.newtab-customize-panel-container:-moz-dir(rtl) {
+  right: auto;
+  left: 0;
 }
 
 #newtab-customize-panel {
@@ -471,12 +487,12 @@ input[type=button] {
   transform: translate(-30px, -20px) scale(0) translate(30px, 20px);
 }
 
-#newtab-customize-panel:-moz-locale-dir(rtl) {
+#newtab-customize-panel:-moz-dir(rtl) {
   transform-origin: 40px top 20px;
 }
 
-#newtab-customize-panel:-moz-locale-dir(rtl),
-#newtab-customize-panel-anchor:-moz-locale-dir(rtl) {
+#newtab-customize-panel:-moz-dir(rtl),
+#newtab-customize-panel-anchor:-moz-dir(rtl) {
   left: 15px;
   right: auto;
 }

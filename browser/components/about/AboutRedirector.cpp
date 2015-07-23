@@ -89,7 +89,7 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::ENABLE_INDEXED_DB },
-  { "newtab", "chrome://browser/content/newtab/newTab.xul",
+  { "newtab", "chrome://browser/content/newtab/newTab.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
   { "permissions", "chrome://browser/content/preferences/aboutPermissions.xul",
     nsIAboutModule::ALLOW_SCRIPT },

@@ -47,10 +47,8 @@
     "no-console": 0,              // Leave as 0. We use console logging in content code.
     "no-empty": 0,                // TODO: Remove (use default)
     "no-extra-bind": 0,           // Leave as 0
-    "no-extra-boolean-cast": 0,   // TODO: Remove (use default)
     "no-multi-spaces": 0,         // TBD.
     "no-new": 0,                  // TODO: Remove (use default)
-    "no-redeclare": 0,            // TODO: Remove (use default)
     "no-return-assign": 0,        // TODO: Remove (use default)
     "no-underscore-dangle": 0,    // Leave as 0. Commonly used for private variables.
     "no-unexpected-multiline": 2,

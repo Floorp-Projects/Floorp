@@ -1286,7 +1286,7 @@
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +
-          (!!(uncaughtError && warningsMismatch) ? 2 : 1) + "</em></div>");
+          ((uncaughtError && warningsMismatch) ? 2 : 1) + "</em></div>");
         if (warningsMismatch) {
           $("#results").append("<li class='test fail'>" +
             "<h2>Unexpected number of warnings detected in UI-Showcase</h2>" +

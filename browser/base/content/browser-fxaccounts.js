@@ -110,14 +110,7 @@ let gFxAccounts = {
     // notified of fxa-migration:state-changed in response if necessary.
     Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
 
-    let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
-    // The FxAccountsWebChannel listens for events and updates
-    // the state machine accordingly.
-    let fxAccountsWebChannel = new FxAccountsWebChannel({
-      content_uri: contentUri,
-      channel_id: this.FxAccountsCommon.WEBCHANNEL_ID
-    });
-
+    EnsureFxAccountsWebChannel();
     this._initialized = true;
 
     this.updateUI();
@@ -482,5 +475,5 @@ XPCOMUtils.defineLazyGetter(gFxAccounts, "FxAccountsCommon", function () {
 XPCOMUtils.defineLazyModuleGetter(gFxAccounts, "fxaMigrator",
   "resource://services-sync/FxaMigrator.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsWebChannel",
+XPCOMUtils.defineLazyModuleGetter(this, "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm");

@@ -5,9 +5,6 @@
 
 <resources>
 
-    <integer name="number_of_top_sites">9</integer>
-    <integer name="number_of_top_sites_cols">3</integer>
-    <integer name="panel_icon_grid_view_columns">6</integer>
-    <integer name="number_of_inline_share_devices">4</integer>
+    <integer name="number_of_inline_share_devices">3</integer>
 
 </resources>
