@@ -218,26 +218,6 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
     }
 };
 
-// Double raised to a half power.
-class LPowHalfD : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(PowHalfD)
-    explicit LPowHalfD(const LAllocation& input) {
-        setOperand(0, input);
-    }
-
-    const LAllocation* input() {
-        return getOperand(0);
-    }
-    const LDefinition* output() {
-        return getDef(0);
-    }
-    MPowHalf* mir() const {
-        return mir_->toPowHalf();
-    }
-};
-
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {
