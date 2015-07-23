@@ -668,17 +668,6 @@ protected:
   void SetPlayStartTime(const TimeStamp& aTimeStamp);
 
 private:
-  // Update mDecoder's playback offset.
-  void OnPlaybackOffsetUpdate(int64_t aPlaybackOffset);
-public:
-  void DispatchOnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
-  {
-    RefPtr<nsRunnable> r =
-      NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::OnPlaybackOffsetUpdate, aPlaybackOffset);
-    OwnerThread()->Dispatch(r.forget());
-  }
-
-private:
   // Resolved by the AudioSink to signal that all outstanding work is complete
   // and the sink is shutting down.
   void OnAudioSinkComplete();
