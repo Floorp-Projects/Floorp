@@ -724,10 +724,6 @@ public:
   static bool IsAppleMP3Enabled();
 #endif
 
-  // Schedules the state machine to run one cycle on the shared state
-  // machine thread. Main thread only.
-  nsresult ScheduleStateMachine();
-
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
     double mPlaybackRate;
