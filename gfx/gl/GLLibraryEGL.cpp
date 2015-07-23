@@ -146,7 +146,7 @@ GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
 }
 
 bool
-GLLibraryEGL::EnsureInitialized()
+GLLibraryEGL::EnsureInitialized(bool forceAccel)
 {
     if (mInitialized) {
         return true;
@@ -311,18 +311,19 @@ GLLibraryEGL::EnsureInitialized()
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     mIsANGLE = IsExtensionSupported(ANGLE_platform_angle_d3d);
 
-    //WARP ANGLE fallback path
     if (mIsANGLE) {
         bool accelAngleSupport = IsAccelAngleSupported(gfxInfo);
         bool warpAngleSupport = gfxPlatform::CanUseDirect3D11ANGLE();
 
-        // Fallback to a WARP display if non-WARP is blacklisted,
-        // or if WARP is forced
-        bool shouldTryWARP = warpAngleSupport && !accelAngleSupport;
+        bool shouldTryAccel = forceAccel || accelAngleSupport;
+        bool shouldTryWARP = !shouldTryAccel && warpAngleSupport;
         if (gfxPrefs::WebGLANGLEForceWARP()) {
             shouldTryWARP = true;
+            shouldTryAccel = false;
         }
 
+        // Fallback to a WARP display if non-WARP is blacklisted,
+        // or if WARP is forced
         if (shouldTryWARP) {
             mEGLDisplay = GetAndInitWARPDisplay(*this,
                                                 EGL_DEFAULT_DISPLAY);
@@ -331,38 +332,34 @@ GLLibraryEGL::EnsureInitialized()
             }
         }
 
-        // If falling back to WARP did not work, then fail
-        if (mEGLDisplay == EGL_NO_DISPLAY && !accelAngleSupport) {
+        // If falling back to WARP did not work and we don't want to try
+        // using HW accelerated ANGLE, then fail
+        if (mEGLDisplay == EGL_NO_DISPLAY && !shouldTryAccel) {
             NS_ERROR("Fallback WARP ANGLE context failed to initialize.");
             return false;
+        }
+
+        // Hardware accelerated ANGLE path
+        if (mEGLDisplay == EGL_NO_DISPLAY && shouldTryAccel) {
+            // D3D11 ANGLE only works with OMTC; there's a bug in the non-OMTC layer
+            // manager, and it's pointless to try to fix it.  We also don't try
+            // D3D11 ANGLE if the layer manager is prefering D3D9 (hrm, do we care?)
+            if (gfxPrefs::LayersOffMainThreadCompositionEnabled() &&
+                !gfxPrefs::LayersPreferD3D9())
+            {
+                if (gfxPrefs::WebGLANGLEForceD3D11()) {
+                    mEGLDisplay = GetAndInitDisplay(*this,
+                                                    LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
+                } else if (gfxPrefs::WebGLANGLETryD3D11() && gfxPlatform::CanUseDirect3D11ANGLE()) {
+                    mEGLDisplay = GetAndInitDisplay(*this,
+                                                    LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
+                }
+            }
         }
     }
 
     if (mEGLDisplay == EGL_NO_DISPLAY) {
         mEGLDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
-
-        EGLDisplay newDisplay = EGL_NO_DISPLAY;
-
-        // D3D11 ANGLE only works with OMTC; there's a bug in the non-OMTC layer
-        // manager, and it's pointless to try to fix it.  We also don't try
-        // D3D11 ANGLE if the layer manager is prefering D3D9 (hrm, do we care?)
-        if (gfxPrefs::LayersOffMainThreadCompositionEnabled() &&
-            !gfxPrefs::LayersPreferD3D9())
-        {
-            if (gfxPrefs::WebGLANGLEForceD3D11()) {
-                newDisplay = GetAndInitDisplay(*this,
-                                               LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
-            } else if (gfxPrefs::WebGLANGLETryD3D11() && gfxPlatform::CanUseDirect3D11ANGLE()) {
-                newDisplay = GetAndInitDisplay(*this,
-                                               LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
-            }
-        }
-
-        if (newDisplay != EGL_NO_DISPLAY) {
-            DebugOnly<EGLBoolean> success = fTerminate(mEGLDisplay);
-            MOZ_ASSERT(success == LOCAL_EGL_TRUE);
-            mEGLDisplay = newDisplay;
-        }
     }
 
     InitExtensionsFromDisplay(mEGLDisplay);
