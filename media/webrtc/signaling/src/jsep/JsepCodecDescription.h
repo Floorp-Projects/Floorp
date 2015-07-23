@@ -7,8 +7,8 @@
 
 #include <iostream>
 #include <string>
-#include <string.h>
 #include "signaling/src/sdp/SdpMediaSection.h"
+#include "signaling/src/sdp/SdpHelper.h"
 #include "nsCRT.h"
 
 namespace mozilla {
@@ -42,47 +42,26 @@ struct JsepCodecDescription {
   virtual void AddFmtps(SdpFmtpAttributeList& fmtp) const = 0;
   virtual void AddRtcpFbs(SdpRtcpFbAttributeList& rtcpfb) const = 0;
 
-  // TODO(bug 1142105): This probably should be a helper function in
-  // /sdp
-  static bool
-  GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam)
-  {
-    char* end;
-    unsigned long pt = strtoul(ptString.c_str(), &end, 10);
-    size_t length = static_cast<size_t>(end - ptString.c_str());
-    if ((pt > UINT16_MAX) || (length != ptString.size())) {
-      return false;
-    }
-    *ptOutparam = pt;
-    return true;
-  }
-
   bool
   GetPtAsInt(uint16_t* ptOutparam) const
   {
-    return GetPtAsInt(mDefaultPt, ptOutparam);
+    return SdpHelper::GetPtAsInt(mDefaultPt, ptOutparam);
   }
 
   virtual bool
   Matches(const std::string& fmt, const SdpMediaSection& remoteMsection) const
   {
-    auto& attrs = remoteMsection.GetAttributeList();
-    if (!attrs.HasAttribute(SdpAttribute::kRtpmapAttribute)) {
+    if (mType != remoteMsection.GetMediaType()) {
       return false;
     }
 
-    const SdpRtpmapAttributeList& rtpmap = attrs.GetRtpmap();
-    if (!rtpmap.HasEntry(fmt)) {
-      return false;
-    }
+    const SdpRtpmapAttributeList::Rtpmap* entry(remoteMsection.FindRtpmap(fmt));
 
-    const SdpRtpmapAttributeList::Rtpmap& entry = rtpmap.GetEntry(fmt);
-
-    if (mType == remoteMsection.GetMediaType()
-        && !nsCRT::strcasecmp(mName.c_str(), entry.name.c_str())
-        && (mClock == entry.clock)
-        && (mChannels == entry.channels)) {
-      return ParametersMatch(entry.pt, remoteMsection);
+    if (entry
+        && !nsCRT::strcasecmp(mName.c_str(), entry->name.c_str())
+        && (mClock == entry->clock)
+        && (mChannels == entry->channels)) {
+      return ParametersMatch(fmt, remoteMsection);
     }
     return false;
   }
@@ -98,25 +77,6 @@ struct JsepCodecDescription {
   Negotiate(const SdpMediaSection& remoteMsection)
   {
     return true;
-  }
-
-  // TODO(bug 1142105): This probably should be a helper function in
-  // /sdp
-  static const SdpFmtpAttributeList::Parameters*
-  FindParameters(const std::string& pt,
-                 const mozilla::SdpMediaSection& remoteMsection)
-  {
-    const SdpAttributeList& attrs = remoteMsection.GetAttributeList();
-
-    if (attrs.HasAttribute(SdpAttribute::kFmtpAttribute)) {
-      const SdpFmtpAttributeList& fmtps = attrs.GetFmtp();
-      for (auto i = fmtps.mFmtps.begin(); i != fmtps.mFmtps.end(); ++i) {
-        if (i->format == pt && i->parameters) {
-          return i->parameters.get();
-        }
-      }
-    }
-    return nullptr;
   }
 
   virtual bool LoadSendParameters(
@@ -307,7 +267,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   {
     // Will contain defaults if nothing else
     SdpFmtpAttributeList::H264Parameters result;
-    auto* params = FindParameters(pt, msection);
+    auto* params = msection.FindFmtp(pt);
 
     if (params && params->codec_type == SdpRtpmapAttributeList::kH264) {
       result =
@@ -328,7 +288,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
 
     // Will contain defaults if nothing else
     SdpFmtpAttributeList::VP8Parameters result(expectedType);
-    auto* params = FindParameters(pt, msection);
+    auto* params = msection.FindFmtp(pt);
 
     if (params && params->codec_type == expectedType) {
       result =
@@ -338,31 +298,6 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
     return result;
   }
 
-  static bool
-  HasRtcpFb(const SdpMediaSection& msection,
-            const std::string& pt,
-            SdpRtcpFbAttributeList::Type type,
-            const std::string& subType)
-  {
-    const SdpAttributeList& attrs(msection.GetAttributeList());
-
-    if (!attrs.HasAttribute(SdpAttribute::kRtcpFbAttribute)) {
-      return false;
-    }
-
-    for (auto& rtcpfb : attrs.GetRtcpFb().mFeedbacks) {
-      if (rtcpfb.type == type) {
-        if (rtcpfb.pt == "*" || rtcpfb.pt == pt) {
-          if (rtcpfb.parameter == subType) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
   void
   NegotiateRtcpFb(const SdpMediaSection& remoteMsection,
                   SdpRtcpFbAttributeList::Type type,
@@ -370,7 +305,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   {
     std::vector<std::string> temp;
     for (auto& subType : *supportedTypes) {
-      if (HasRtcpFb(remoteMsection, mDefaultPt, type, subType)) {
+      if (remoteMsection.HasRtcpFb(mDefaultPt, type, subType)) {
         temp.push_back(subType);
       }
     }
@@ -691,20 +626,14 @@ struct JsepApplicationCodecDescription : public JsepCodecDescription {
   Matches(const std::string& fmt,
           const SdpMediaSection& remoteMsection) const override
   {
-    auto& attrs = remoteMsection.GetAttributeList();
-    if (!attrs.HasAttribute(SdpAttribute::kSctpmapAttribute)) {
+    if (mType != remoteMsection.GetMediaType()) {
       return false;
     }
 
-    const SdpSctpmapAttributeList& sctpmap = attrs.GetSctpmap();
-    if (!sctpmap.HasEntry(fmt)) {
-      return false;
-    }
+    const SdpSctpmapAttributeList::Sctpmap* entry(
+        remoteMsection.FindSctpmap(fmt));
 
-    const SdpSctpmapAttributeList::Sctpmap& entry = sctpmap.GetEntry(fmt);
-
-    if (mType == remoteMsection.GetMediaType() &&
-        !nsCRT::strcasecmp(mName.c_str(), entry.name.c_str())) {
+    if (entry && !nsCRT::strcasecmp(mName.c_str(), entry->name.c_str())) {
       return true;
     }
     return false;
