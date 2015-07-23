@@ -29,6 +29,7 @@
 
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushManagerBinding.h"
+#include "mozilla/dom/PushManager.h"
 #endif
 
 using namespace mozilla::dom::workers;
@@ -677,9 +678,15 @@ ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
     if (aRv.Failed()) {
       return nullptr;
     }
-    mPushManager = new PushManager(jsImplObj, globalObject);
+    mPushManager = new PushManager(globalObject, mScope);
 
-    mPushManager->SetScope(mScope, aRv);
+    nsRefPtr<PushManagerImpl> impl = new PushManagerImpl(jsImplObj, globalObject);
+    impl->SetScope(mScope, aRv);
+    if (aRv.Failed()) {
+      mPushManager = nullptr;
+      return nullptr;
+    }
+    mPushManager->SetPushManagerImpl(*impl, aRv);
     if (aRv.Failed()) {
       mPushManager = nullptr;
       return nullptr;
@@ -807,10 +814,16 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ServiceWorkerRegistrationWorkerThread)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                                   ServiceWorkerRegistrationBase)
+#ifndef MOZ_SIMPLEPUSH
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPushManager)
+#endif
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                                 ServiceWorkerRegistrationBase)
+#ifndef MOZ_SIMPLEPUSH
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPushManager)
+#endif
   tmp->ReleaseListener(RegistrationIsGoingAway);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1073,6 +1086,23 @@ already_AddRefed<Promise>
 ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
   return Notification::WorkerGet(mWorkerPrivate, aOptions, mScope, aRv);
+}
+
+already_AddRefed<WorkerPushManager>
+ServiceWorkerRegistrationWorkerThread::GetPushManager(ErrorResult& aRv)
+{
+#ifdef MOZ_SIMPLEPUSH
+  return nullptr;
+#else
+
+  if (!mPushManager) {
+    mPushManager = new WorkerPushManager(mScope);
+  }
+
+  nsRefPtr<WorkerPushManager> ret = mPushManager;
+  return ret.forget();
+
+  #endif /* ! MOZ_SIMPLEPUSH */
 }
 
 } // dom namespace

@@ -172,6 +172,10 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Promise",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "PushManager",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PushSubscription",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "Request",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Response",
