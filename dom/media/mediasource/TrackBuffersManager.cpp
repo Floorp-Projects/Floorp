@@ -5,9 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TrackBuffersManager.h"
+#include "ContainerParser.h"
+#include "MediaSourceDemuxer.h"
+#include "MediaSourceUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StateMirroring.h"
 #include "SourceBufferResource.h"
 #include "SourceBuffer.h"
-#include "MediaSourceDemuxer.h"
 
 #ifdef MOZ_FMP4
 #include "MP4Demuxer.h"
@@ -31,6 +35,11 @@ PRLogModuleInfo* GetMediaSourceSamplesLog()
 #define SAMPLE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 namespace mozilla {
+
+using dom::SourceBufferAppendMode;
+using media::TimeUnit;
+using media::TimeInterval;
+using media::TimeIntervals;
 
 static const char*
 AppendStateToStr(TrackBuffersManager::AppendState aState)
@@ -247,7 +256,7 @@ TrackBuffersManager::EvictBefore(TimeUnit aTime)
   GetTaskQueue()->Dispatch(task.forget());
 }
 
-media::TimeIntervals
+TimeIntervals
 TrackBuffersManager::Buffered()
 {
   MSE_DEBUG("");

@@ -17,7 +17,7 @@ task:
         --config-file ./mozharness_configs/remove_executables.py
         --download-symbols ondemand
         --installer-url {{build_url}}
-        --test-url {{tests_url}}
+        --test-packages-url {{test_packages_url}}
     artifacts:
       'public/build':
         type: directory

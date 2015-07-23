@@ -457,53 +457,6 @@ GetWindows(const uint64_t& aId, nsGlobalWindow*& aWindow, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
-struct ReportGhostWindowsEnumeratorData
-{
-  nsIMemoryReporterCallback* mCallback;
-  nsISupports* mData;
-  bool mAnonymize;
-  nsresult mRv;
-};
-
-static PLDHashOperator
-ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aData)
-{
-  ReportGhostWindowsEnumeratorData *data =
-    static_cast<ReportGhostWindowsEnumeratorData*>(aData);
-
-  nsGlobalWindow::WindowByIdTable* windowsById =
-    nsGlobalWindow::GetWindowsTable();
-  if (!windowsById) {
-    NS_WARNING("Couldn't get window-by-id hashtable?");
-    return PL_DHASH_NEXT;
-  }
-
-  nsGlobalWindow* window = windowsById->Get(aIDHashKey->GetKey());
-  if (!window) {
-    NS_WARNING("Could not look up window?");
-    return PL_DHASH_NEXT;
-  }
-
-  nsAutoCString path;
-  path.AppendLiteral("ghost-windows/");
-  AppendWindowURI(window, path, data->mAnonymize);
-
-  nsresult rv = data->mCallback->Callback(
-    /* process = */ EmptyCString(),
-    path,
-    nsIMemoryReporter::KIND_OTHER,
-    nsIMemoryReporter::UNITS_COUNT,
-    /* amount = */ 1,
-    /* description = */ NS_LITERAL_CSTRING("A ghost window."),
-    data->mData);
-
-  if (NS_FAILED(rv) && NS_SUCCEEDED(data->mRv)) {
-    data->mRv = rv;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
                                        nsISupports* aClosure, bool aAnonymize)
@@ -521,11 +474,37 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
   // one.
   nsTHashtable<nsUint64HashKey> ghostWindows;
   CheckForGhostWindows(&ghostWindows);
-  ReportGhostWindowsEnumeratorData reportGhostWindowsEnumData =
-    { aCb, aClosure, aAnonymize, NS_OK };
-  ghostWindows.EnumerateEntries(ReportGhostWindowsEnumerator,
-                                &reportGhostWindowsEnumData);
-  nsresult rv = reportGhostWindowsEnumData.mRv;
+  nsresult rv = NS_OK;
+  for (auto iter = ghostWindows.ConstIter(); !iter.Done(); iter.Next()) {
+    nsGlobalWindow::WindowByIdTable* windowsById =
+      nsGlobalWindow::GetWindowsTable();
+    if (!windowsById) {
+      NS_WARNING("Couldn't get window-by-id hashtable?");
+      continue;
+    }
+
+    nsGlobalWindow* window = windowsById->Get(iter.Get()->GetKey());
+    if (!window) {
+      NS_WARNING("Could not look up window?");
+      continue;
+    }
+
+    nsAutoCString path;
+    path.AppendLiteral("ghost-windows/");
+    AppendWindowURI(window, path, aAnonymize);
+
+    nsresult callbackRv = aCb->Callback(
+      /* process = */ EmptyCString(),
+      path,
+      nsIMemoryReporter::KIND_OTHER,
+      nsIMemoryReporter::UNITS_COUNT,
+      /* amount = */ 1,
+      /* description = */ NS_LITERAL_CSTRING("A ghost window."),
+      aClosure);
+    if (NS_FAILED(callbackRv) && NS_SUCCEEDED(rv)) {
+      rv = callbackRv;
+    }
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   WindowPaths windowPaths;
@@ -921,23 +900,6 @@ nsWindowMemoryReporter::KillCheckTimer()
 }
 
 #ifdef DEBUG
-static PLDHashOperator
-UnlinkGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void *)
-{
-  nsGlobalWindow::WindowByIdTable* windowsById =
-    nsGlobalWindow::GetWindowsTable();
-  if (!windowsById) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsRefPtr<nsGlobalWindow> window = windowsById->Get(aIDHashKey->GetKey());
-  if (window) {
-    window->RiskyUnlink();
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 /* static */ void
 nsWindowMemoryReporter::UnlinkGhostWindows()
 {
@@ -959,6 +921,17 @@ nsWindowMemoryReporter::UnlinkGhostWindows()
   // Get the IDs of all the "ghost" windows, and unlink them all.
   nsTHashtable<nsUint64HashKey> ghostWindows;
   sWindowReporter->CheckForGhostWindows(&ghostWindows);
-  ghostWindows.EnumerateEntries(UnlinkGhostWindowsEnumerator, nullptr);
+  for (auto iter = ghostWindows.ConstIter(); !iter.Done(); iter.Next()) {
+    nsGlobalWindow::WindowByIdTable* windowsById =
+      nsGlobalWindow::GetWindowsTable();
+    if (!windowsById) {
+      continue;
+    }
+
+    nsRefPtr<nsGlobalWindow> window = windowsById->Get(iter.Get()->GetKey());
+    if (window) {
+      window->RiskyUnlink();
+    }
+  }
 }
 #endif

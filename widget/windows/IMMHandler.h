@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIMM32Handler_h__
-#define nsIMM32Handler_h__
+#ifndef IMMHandler_h_
+#define IMMHandler_h_
 
 #include "nscore.h"
 #include <windows.h>
@@ -23,18 +23,13 @@ namespace widget {
 
 struct MSGResult;
 
-} // namespace widget
-} // namespace mozilla
-
-class nsIMEContext
+class IMEContext final
 {
 public:
-  nsIMEContext(HWND aWnd) : mWnd(aWnd)
-  {
-    mIMC = ::ImmGetContext(mWnd);
-  }
+  explicit IMEContext(HWND aWnd);
+  explicit IMEContext(nsWindow* aWindow);
 
-  ~nsIMEContext()
+  ~IMEContext()
   {
     if (mIMC) {
       ::ImmReleaseContext(mWnd, mIMC);
@@ -95,24 +90,22 @@ public:
   }
 
 protected:
-  nsIMEContext()
+  IMEContext()
   {
-    NS_ERROR("Don't create nsIMEContext without window handle");
+    MOZ_CRASH("Don't create IMEContext without window handle");
   }
 
-  nsIMEContext(const nsIMEContext &aSrc) : mWnd(nullptr), mIMC(nullptr)
+  IMEContext(const IMEContext& aOther)
   {
-    NS_ERROR("Don't copy nsIMEContext");
+    MOZ_CRASH("Don't copy IMEContext");
   }
 
   HWND mWnd;
   HIMC mIMC;
 };
 
-class nsIMM32Handler
+class IMMHandler final
 {
-  typedef mozilla::widget::IMENotification IMENotification;
-  typedef mozilla::widget::MSGResult MSGResult;
 public:
   static void Initialize();
   static void Terminate();
@@ -187,8 +180,8 @@ protected:
                                         WPARAM &wParam, LPARAM &lParam,
                                         MSGResult& aResult);
 
-  nsIMM32Handler();
-  ~nsIMM32Handler();
+  IMMHandler();
+  ~IMMHandler();
 
   // On*() methods return true if the caller of message handler shouldn't do
   // anything anymore.  Otherwise, false.
@@ -234,9 +227,10 @@ protected:
 
   // The result of Handle* method mean "Processed" when it's TRUE.
   void HandleStartComposition(nsWindow* aWindow,
-                              const nsIMEContext &aIMEContext);
-  bool HandleComposition(nsWindow* aWindow, const nsIMEContext &aIMEContext,
-                           LPARAM lParam);
+                              const IMEContext& aContext);
+  bool HandleComposition(nsWindow* aWindow,
+                         const IMEContext& aContext,
+                         LPARAM lParam);
   // If aCommitString is null, this commits composition with the latest
   // dispatched data.  Otherwise, commits composition with the value.
   void HandleEndComposition(nsWindow* aWindow,
@@ -282,9 +276,9 @@ protected:
                              nsACString& aANSIStr);
 
   bool SetIMERelatedWindowsPos(nsWindow* aWindow,
-                               const nsIMEContext& aIMEContext);
+                               const IMEContext& aContext);
   void SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
-                                       const nsIMEContext& aIMEContext);
+                                       const IMEContext& aContext);
   bool GetCharacterRectOfSelectedTextAt(
          nsWindow* aWindow,
          uint32_t aOffset,
@@ -293,7 +287,7 @@ protected:
   bool GetCaretRect(nsWindow* aWindow,
                     nsIntRect& aCaretRect,
                     mozilla::WritingMode* aWritingMode = nullptr);
-  void GetCompositionString(const nsIMEContext &aIMEContext,
+  void GetCompositionString(const IMEContext& aContext,
                             DWORD aIndex,
                             nsAString& aCompositionString) const;
 
@@ -302,7 +296,7 @@ protected:
    * If aForceUpdate is true, it will update composition font even if writing
    * mode isn't being changed.
    */
-  void AdjustCompositionFont(const nsIMEContext& aIMEContext,
+  void AdjustCompositionFont(const IMEContext& aContext,
                              const mozilla::WritingMode& aWritingMode,
                              bool aForceUpdate = false);
 
@@ -337,10 +331,10 @@ protected:
    * being committed, only HandleCompositionEnd() should be called.
    *
    * @param aWindow     The window which has the composition.
-   * @param aIMEContext Native IME context which has the composition.
+   * @param aContext    Native IME context which has the composition.
    */
   void DispatchCompositionChangeEvent(nsWindow* aWindow,
-                                      const nsIMEContext& aIMEContext);
+                                      const IMEContext& aContext);
   already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray();
 
   nsresult EnsureClauseArray(int32_t aCount);
@@ -432,4 +426,7 @@ protected:
   static bool sHasFocus;
 };
 
-#endif // nsIMM32Handler_h__
+} // namespace widget
+} // namespace mozilla
+
+#endif // IMMHandler_h_

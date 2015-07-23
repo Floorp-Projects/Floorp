@@ -16,7 +16,7 @@
 #include <asm/unistd.h>
 #include <linux/filter.h>
 
-#include <sys/cdefs.h>
+#include <sys/types.h>
 // Old Bionic versions do not have sys/user.h.  The if can be removed once we no
 // longer need to support these old Bionic versions.
 // All x86_64 builds use a new enough bionic to have sys/user.h.

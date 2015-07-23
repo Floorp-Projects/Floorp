@@ -28,6 +28,7 @@
 #include "mozilla/dom/DataTransferBinding.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FileList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
 

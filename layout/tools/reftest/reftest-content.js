@@ -402,10 +402,11 @@ function FlushRendering() {
                     .getInterface(CI.nsIDOMWindowUtils);
         var afterPaintWasPending = utils.isMozAfterPaintPending;
 
-        if (win.document.documentElement) {
+        var root = win.document.documentElement;
+        if (root && !root.classList.contains("reftest-no-flush")) {
             try {
                 // Flush pending restyles and reflows for this window
-                win.document.documentElement.getBoundingClientRect();
+                root.getBoundingClientRect();
             } catch (e) {
                 LogWarning("flushWindow failed: " + e + "\n");
             }
