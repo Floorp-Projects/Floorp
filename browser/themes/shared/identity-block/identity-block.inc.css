@@ -4,57 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-:root {
-  --identity-box-background-image: linear-gradient(
-                                   transparent 15%,
-                                   hsla(0,0%,16%,.2) 15%,
-                                   hsla(0,0%,16%,.2) 85%,
-                                   transparent 85%);
+#identity-box {
+  --identity-box-border-color: hsla(0,0%,16%,.2);
   --identity-box-selected-background-color: rgb(231,230,230);
   --identity-box-verified-color: hsl(92,100%,30%);
-  --identity-box-verified-background-image: linear-gradient(
-                                            transparent 15%,
-                                            hsla(92,81%,16%,.2) 15%,
-                                            hsla(92,81%,16%,.2) 85%,
-                                            transparent 85%);
 %ifdef MOZ_OFFICIAL_BRANDING
   --identity-box-chrome-color: rgb(229,115,0);
-  --identity-box-chrome-background-image: linear-gradient(
-                                    transparent 15%,
-                                    rgba(229,114,0,.5) 15%,
-                                    rgba(229,114,0,.5) 85%,
-                                    transparent 85%);
 %else
 %if MOZ_UPDATE_CHANNEL == aurora
   --identity-box-chrome-color: rgb(51,30,84);
-  --identity-box-chrome-background-image: linear-gradient(
-                                    transparent 15%,
-                                    rgba(51,30,84,.5) 15%,
-                                    rgba(51,30,84,.5) 85%,
-                                    transparent 85%);
 %else
   --identity-box-chrome-color: rgb(0,33,71);
-  --identity-box-chrome-background-image: linear-gradient(
-                                    transparent 15%,
-                                    rgba(0,33,71,.5) 15%,
-                                    rgba(0,33,71,.5) 85%,
-                                    transparent 85%);
 %endif
 %endif
-}
 
-#identity-box {
-  background-position: right;
-  background-size: 1px;
-  background-repeat: no-repeat;
-  background-image: var(--identity-box-background-image);
+  border-inline-end: 1px solid;
+  border-image: linear-gradient(transparent 15%,
+                                var(--identity-box-border-color) 15%,
+                                var(--identity-box-border-color) 85%,
+                                transparent 85%);
+  border-image-slice: 1;
   font-size: .9em;
   padding: 2px 5px;
   margin-inline-end: 4px;
-}
-
-#identity-box:-moz-locale-dir(rtl) {
-  background-position: left;
 }
 
 #identity-box:hover,
@@ -64,12 +36,10 @@
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: var(--identity-box-verified-color);
-  background-image: var(--identity-box-verified-background-image);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
   color: var(--identity-box-chrome-color);
-  background-image: var(--identity-box-chrome-background-image);
 }
 
 #identity-icon-labels {
