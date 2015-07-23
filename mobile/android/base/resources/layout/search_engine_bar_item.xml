@@ -17,6 +17,7 @@
     android:id="@+id/search_engine_icon_container"
     android:layout_width="72dp"
     android:layout_height="match_parent"
+    android:clickable="true"
     android:background="@color/pressed_about_page_header_grey">
 
     <!-- Width & height are set to make the Favicons as sharp as possible
