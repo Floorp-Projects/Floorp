@@ -69,6 +69,28 @@ config = {
             ],
         },
     }, {
+        "repo": "https://hg.mozilla.org/releases/mozilla-b2g37_v2_2r",
+        "revision": "default",
+        "repo_name": "mozilla-b2g37_v2_2r",
+        "targets": [{
+            "target_dest": "gecko-git/.git",
+            "vcs": "git",
+            "test_push": True,
+        }, {
+            "target_dest": "github-gecko-git",
+        }],
+        "vcs": "hg",
+        "branch_config": {
+            "branches": {
+                "default": "v2.2r",
+            },
+        },
+        "tag_config": {
+            "tag_regexes": [
+                "^B2G_",
+            ],
+        },
+    }, {
         "repo": "https://hg.mozilla.org/releases/mozilla-b2g34_v2_1",
         "revision": "default",
         "repo_name": "mozilla-b2g34_v2_1",
@@ -91,6 +113,28 @@ config = {
             ],
         },
     }, {
+        "repo": "https://hg.mozilla.org/releases/mozilla-b2g34_v2_1s",
+        "revision": "default",
+        "repo_name": "mozilla-b2g34_v2_1s",
+        "targets": [{
+            "target_dest": "gecko-git/.git",
+            "vcs": "git",
+            "test_push": True,
+        }, {
+            "target_dest": "github-gecko-git",
+        }],
+        "vcs": "hg",
+        "branch_config": {
+            "branches": {
+                "default": "v2.1s",
+            },
+        },
+        "tag_config": {
+            "tag_regexes": [
+                "^B2G_",
+            ],
+        },
+    }, {
         "repo": "https://hg.mozilla.org/releases/mozilla-b2g32_v2_0",
         "revision": "default",
         "repo_name": "mozilla-b2g32_v2_0",
@@ -105,6 +149,28 @@ config = {
         "branch_config": {
             "branches": {
                 "default": "v2.0",
+            },
+        },
+        "tag_config": {
+            "tag_regexes": [
+                "^B2G_",
+            ],
+        },
+    }, {
+        "repo": "https://hg.mozilla.org/releases/mozilla-b2g32_v2_0m",
+        "revision": "default",
+        "repo_name": "mozilla-b2g32_v2_0m",
+        "targets": [{
+            "target_dest": "gecko-git/.git",
+            "vcs": "git",
+            "test_push": True,
+        }, {
+            "target_dest": "github-gecko-git",
+        }],
+        "vcs": "hg",
+        "branch_config": {
+            "branches": {
+                "default": "v2.0m",
             },
         },
         "tag_config": {
@@ -157,6 +223,28 @@ config = {
             ],
         },
     }, {
+        "repo": "https://hg.mozilla.org/releases/mozilla-b2g28_v1_3t",
+        "revision": "default",
+        "repo_name": "mozilla-b2g28_v1_3t",
+        "targets": [{
+            "target_dest": "gecko-git/.git",
+            "vcs": "git",
+            "test_push": True,
+        }, {
+            "target_dest": "github-gecko-git",
+        }],
+        "vcs": "hg",
+        "branch_config": {
+            "branches": {
+                "default": "v1.3t",
+            },
+        },
+        "tag_config": {
+            "tag_regexes": [
+                "^B2G_",
+            ],
+        },
+    }, {
         "repo": "https://hg.mozilla.org/releases/mozilla-b2g26_v1_2",
         "revision": "default",
         "repo_name": "mozilla-b2g26_v1_2",
@@ -193,50 +281,6 @@ config = {
         "branch_config": {
             "branches": {
                 "default": "v1.2f",
-            },
-        },
-        "tag_config": {
-            "tag_regexes": [
-                "^B2G_",
-            ],
-        },
-    }, {
-        "repo": "https://hg.mozilla.org/releases/mozilla-b2g28_v1_3t",
-        "revision": "default",
-        "repo_name": "mozilla-b2g28_v1_3t",
-        "targets": [{
-            "target_dest": "gecko-git/.git",
-            "vcs": "git",
-            "test_push": True,
-        }, {
-            "target_dest": "github-gecko-git",
-        }],
-        "vcs": "hg",
-        "branch_config": {
-            "branches": {
-                "default": "v1.3t",
-            },
-        },
-        "tag_config": {
-            "tag_regexes": [
-                "^B2G_",
-            ],
-        },
-    }, {
-        "repo": "https://hg.mozilla.org/releases/mozilla-b2g30_v1_4",
-        "revision": "default",
-        "repo_name": "mozilla-b2g30_v1_4",
-        "targets": [{
-            "target_dest": "gecko-git/.git",
-            "vcs": "git",
-            "test_push": True,
-        }, {
-            "target_dest": "github-gecko-git",
-        }],
-        "vcs": "hg",
-        "branch_config": {
-            "branches": {
-                "default": "v1.4",
             },
         },
         "tag_config": {
