@@ -122,7 +122,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
-  decoder->SetSizeDecode(false);
+  decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
   decoder->SetFlags(aFlags);
   decoder->SetSendPartialInvalidations(!aIsRedecode);
@@ -162,7 +162,7 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
   // Initialize the decoder.
-  decoder->SetSizeDecode(true);
+  decoder->SetMetadataDecode(true);
   decoder->SetIterator(aSourceBuffer->Iterator());
 
   decoder->Init();
