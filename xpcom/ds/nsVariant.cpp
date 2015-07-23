@@ -1220,14 +1220,14 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
     {                                                                         \
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
-        rv = aValue->GetAs##name_ (&(aData->u. member_ ));
+        rv = aValue->GetAs##name_ (&(u. member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
-        rv = aValue->GetAs##name_ ( cast_ &(aData->u. member_ ));
+        rv = aValue->GetAs##name_ ( cast_ &(u. member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)                          \
         if (NS_SUCCEEDED(rv)) {                                               \
-          aData->mType  = nsIDataType :: type_ ;                              \
+          mType  = nsIDataType :: type_ ;                                     \
         }                                                                     \
         break;                                                                \
     }
@@ -1245,13 +1245,13 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
         CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
 
 
-/* static */ nsresult
-nsVariant::SetFromVariant(nsDiscriminatedUnion* aData, nsIVariant* aValue)
+nsresult
+nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
 {
   uint16_t type;
   nsresult rv;
 
-  aData->Cleanup();
+  Cleanup();
 
   rv = aValue->GetDataType(&type);
   if (NS_FAILED(rv)) {
@@ -1278,45 +1278,45 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* aData, nsIVariant* aValue)
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_ASTRING);
-      aData->u.mAStringValue = new nsString();
-      if (!aData->u.mAStringValue) {
+      u.mAStringValue = new nsString();
+      if (!u.mAStringValue) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      rv = aValue->GetAsAString(*aData->u.mAStringValue);
+      rv = aValue->GetAsAString(*u.mAStringValue);
       if (NS_FAILED(rv)) {
-        delete aData->u.mAStringValue;
+        delete u.mAStringValue;
       }
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_ASTRING)
 
     case nsIDataType::VTYPE_CSTRING:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_CSTRING);
-      aData->u.mCStringValue = new nsCString();
-      if (!aData->u.mCStringValue) {
+      u.mCStringValue = new nsCString();
+      if (!u.mCStringValue) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      rv = aValue->GetAsACString(*aData->u.mCStringValue);
+      rv = aValue->GetAsACString(*u.mCStringValue);
       if (NS_FAILED(rv)) {
-        delete aData->u.mCStringValue;
+        delete u.mCStringValue;
       }
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_CSTRING)
 
     case nsIDataType::VTYPE_UTF8STRING:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_UTF8STRING);
-      aData->u.mUTF8StringValue = new nsUTF8String();
-      if (!aData->u.mUTF8StringValue) {
+      u.mUTF8StringValue = new nsUTF8String();
+      if (!u.mUTF8StringValue) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      rv = aValue->GetAsAUTF8String(*aData->u.mUTF8StringValue);
+      rv = aValue->GetAsAUTF8String(*u.mUTF8StringValue);
       if (NS_FAILED(rv)) {
-        delete aData->u.mUTF8StringValue;
+        delete u.mUTF8StringValue;
       }
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_UTF8STRING)
 
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_STRING_SIZE_IS);
-      rv = aValue->GetAsStringWithSize(&aData->u.str.mStringLength,
-                                       &aData->u.str.mStringValue);
+      rv = aValue->GetAsStringWithSize(&u.str.mStringLength,
+                                       &u.str.mStringValue);
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_STRING_SIZE_IS)
 
     case nsIDataType::VTYPE_INTERFACE:
@@ -1324,29 +1324,29 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* aData, nsIVariant* aValue)
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_INTERFACE_IS);
       // XXX This iid handling is ugly!
       nsIID* iid;
-      rv = aValue->GetAsInterface(&iid, (void**)&aData->u.iface.mInterfaceValue);
+      rv = aValue->GetAsInterface(&iid, (void**)&u.iface.mInterfaceValue);
       if (NS_SUCCEEDED(rv)) {
-        aData->u.iface.mInterfaceID = *iid;
+        u.iface.mInterfaceID = *iid;
         free((char*)iid);
       }
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_INTERFACE_IS)
 
     case nsIDataType::VTYPE_ARRAY:
       CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_ARRAY);
-      rv = aValue->GetAsArray(&aData->u.array.mArrayType,
-                              &aData->u.array.mArrayInterfaceID,
-                              &aData->u.array.mArrayCount,
-                              &aData->u.array.mArrayValue);
+      rv = aValue->GetAsArray(&u.array.mArrayType,
+                              &u.array.mArrayInterfaceID,
+                              &u.array.mArrayCount,
+                              &u.array.mArrayValue);
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_ARRAY)
 
     case nsIDataType::VTYPE_VOID:
-      rv = aData->SetToVoid();
+      rv = SetToVoid();
       break;
     case nsIDataType::VTYPE_EMPTY_ARRAY:
-      rv = aData->SetToEmptyArray();
+      rv = SetToEmptyArray();
       break;
     case nsIDataType::VTYPE_EMPTY:
-      rv = aData->SetToEmpty();
+      rv = SetToEmpty();
       break;
     default:
       NS_ERROR("bad type in variant!");
@@ -2237,5 +2237,5 @@ nsVariant::SetFromVariant(nsIVariant* aValue)
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
-  return nsVariant::SetFromVariant(&mData, aValue);
+  return mData.SetFromVariant(aValue);
 }
