@@ -64,12 +64,6 @@ config = {
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
     },
-    'mozilla-b2g32_v2_0': {
-        'repo_path': 'releases/mozilla-b2g32_v2_0',
-        'use_branch_in_symbols_extra_buildid': False,
-        'update_channel': 'nightly-b2g32',
-        'graph_server_branch_name': 'Mozilla-B2g32-v2.0',
-    },
     'try': {
         'repo_path': 'try',
         'clone_by_revision': True,
