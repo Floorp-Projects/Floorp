@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIGfxInfo.h"
 #include "nsPrintfCString.h"
 #ifdef XP_WIN
 #include "nsWindowsHelpers.h"
@@ -101,7 +102,35 @@ LoadLibraryForEGLOnWindows(const nsAString& filename)
     }
     return lib;
 }
+
 #endif // XP_WIN
+
+static EGLDisplay
+GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
+{
+    EGLint attrib_list[] = {  LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
+                              LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_WARP_ANGLE,
+                              LOCAL_EGL_NONE };
+    EGLDisplay display = egl.fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_ANGLE_ANGLE,
+                                                    displayType,
+                                                    attrib_list);
+
+    if (display == EGL_NO_DISPLAY)
+        return EGL_NO_DISPLAY;
+
+    if (!egl.fInitialize(display, nullptr, nullptr))
+        return EGL_NO_DISPLAY;
+
+    return display;
+}
+
+static bool
+IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo)
+{
+    int32_t angleSupport;
+    gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &angleSupport);
+    return (angleSupport == nsIGfxInfo::FEATURE_STATUS_OK);
+}
 
 static EGLDisplay
 GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
@@ -277,17 +306,41 @@ GLLibraryEGL::EnsureInitialized()
         }
     }
 #endif
+    mEGLDisplay = EGL_NO_DISPLAY;
+    // Check the ANGLE support the system has
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    mIsANGLE = IsExtensionSupported(ANGLE_platform_angle_d3d);
 
-    mEGLDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
+    //WARP ANGLE fallback path
+    if (mIsANGLE) {
+        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo);
+        bool warpAngleSupport = gfxPlatform::CanUseDirect3D11ANGLE();
 
-    const char* vendor = (char*)fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
-    if (vendor && (strstr(vendor, "TransGaming") != 0 ||
-                   strstr(vendor, "Google Inc.") != 0))
-    {
-        mIsANGLE = true;
+        // Fallback to a WARP display if non-WARP is blacklisted,
+        // or if WARP is forced
+        bool shouldTryWARP = warpAngleSupport && !accelAngleSupport;
+        if (gfxPrefs::WebGLANGLEForceWARP()) {
+            shouldTryWARP = true;
+        }
+
+        if (shouldTryWARP) {
+            mEGLDisplay = GetAndInitWARPDisplay(*this,
+                                                EGL_DEFAULT_DISPLAY);
+            if (mEGLDisplay != EGL_NO_DISPLAY) {
+                mIsWARP = true;
+            }
+        }
+
+        // If falling back to WARP did not work, then fail
+        if (mEGLDisplay == EGL_NO_DISPLAY && !accelAngleSupport) {
+            NS_ERROR("Fallback WARP ANGLE context failed to initialize.");
+            return false;
+        }
     }
 
-    if (mIsANGLE) {
+    if (mEGLDisplay == EGL_NO_DISPLAY) {
+        mEGLDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
+
         EGLDisplay newDisplay = EGL_NO_DISPLAY;
 
         // D3D11 ANGLE only works with OMTC; there's a bug in the non-OMTC layer
@@ -308,10 +361,7 @@ GLLibraryEGL::EnsureInitialized()
         if (newDisplay != EGL_NO_DISPLAY) {
             DebugOnly<EGLBoolean> success = fTerminate(mEGLDisplay);
             MOZ_ASSERT(success == LOCAL_EGL_TRUE);
-
             mEGLDisplay = newDisplay;
-
-            vendor = (char*)fQueryString(mEGLDisplay, LOCAL_EGL_VENDOR);
         }
     }
 
