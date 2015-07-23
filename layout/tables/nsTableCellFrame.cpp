@@ -627,8 +627,9 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent)
       // Align the middle of the child frame with the middle of the content area,
       kidBStart = (bSize - childBSize - bEndInset + bStartInset) / 2;
   }
-  // if the content is larger than the cell bsize, align from bstart
-  kidBStart = std::max(0, kidBStart);
+  // If the content is larger than the cell bsize, align from bStartInset
+  // (cell's content-box bstart edge).
+  kidBStart = std::max(bStartInset, kidBStart);
 
   if (kidBStart != kidRect.BStart(aWM)) {
     // Invalidate at the old position first
