@@ -899,17 +899,6 @@ js::GetStopwatchIsMonitoringCPOW(JSRuntime* rt)
     return rt->stopwatch.isMonitoringCPOW();
 }
 
-bool
-js::SetStopwatchIsMonitoringPerCompartment(JSRuntime* rt, bool value)
-{
-    return rt->stopwatch.setIsMonitoringPerCompartment(value);
-}
-bool
-js::GetStopwatchIsMonitoringPerCompartment(JSRuntime* rt)
-{
-    return rt->stopwatch.isMonitoringPerCompartment();
-}
-
 js::PerformanceGroupHolder::~PerformanceGroupHolder()
 {
     unlink();
@@ -929,18 +918,13 @@ js::PerformanceGroupHolder::getHashKey(JSContext* cx)
 void
 js::PerformanceGroupHolder::unlink()
 {
-    if (ownGroup_) {
-        js_delete(ownGroup_);
-        ownGroup_ = nullptr;
-    }
-
-    if (!sharedGroup_) {
+    if (!group_) {
         // The group has never been instantiated.
         return;
     }
 
-    js::PerformanceGroup* group = sharedGroup_;
-    sharedGroup_ = nullptr;
+    js::PerformanceGroup* group = group_;
+    group_ = nullptr;
 
     if (group->decRefCount() > 0) {
         // The group has at least another owner.
@@ -949,51 +933,32 @@ js::PerformanceGroupHolder::unlink()
 
 
     JSRuntime::Stopwatch::Groups::Ptr ptr =
-        runtime_->stopwatch.groups().lookup(group->key_);
+        runtime_->stopwatch.groups_.lookup(group->key_);
     MOZ_ASSERT(ptr);
-    runtime_->stopwatch.groups().remove(ptr);
+    runtime_->stopwatch.groups_.remove(ptr);
     js_delete(group);
 }
 
 PerformanceGroup*
-js::PerformanceGroupHolder::getOwnGroup(JSContext* cx)
+js::PerformanceGroupHolder::getGroup(JSContext* cx)
 {
-    if (ownGroup_)
-        return ownGroup_;
-
-    ownGroup_ = runtime_->new_<PerformanceGroup>(cx, nullptr);
-    return ownGroup_;
-}
-
-PerformanceGroup*
-js::PerformanceGroupHolder::getSharedGroup(JSContext* cx)
-{
-    if (sharedGroup_)
-        return sharedGroup_;
-
-    if (!runtime_->stopwatch.groups().initialized())
-        return nullptr;
+    if (group_)
+        return group_;
 
     void* key = getHashKey(cx);
-    JSRuntime::Stopwatch::Groups::AddPtr ptr = runtime_->stopwatch.groups().lookupForAdd(key);
+    JSRuntime::Stopwatch::Groups::AddPtr ptr =
+        runtime_->stopwatch.groups_.lookupForAdd(key);
     if (ptr) {
-        sharedGroup_ = ptr->value();
-        MOZ_ASSERT(sharedGroup_);
+        group_ = ptr->value();
+        MOZ_ASSERT(group_);
     } else {
-        sharedGroup_ = runtime_->new_<PerformanceGroup>(cx, key);
-        if (!sharedGroup_)
-            return nullptr;
-
-        if (!runtime_->stopwatch.groups().add(ptr, key, sharedGroup_)) {
-            js_delete(sharedGroup_);
-            sharedGroup_ = nullptr;
-            return nullptr;
-        }
+        group_ = runtime_->new_<PerformanceGroup>(cx, key);
+        runtime_->stopwatch.groups_.add(ptr, key, group_);
     }
 
-    sharedGroup_->incRefCount();
+    group_->incRefCount();
 
-    return sharedGroup_;
+    return group_;
 }
 
 PerformanceData*
