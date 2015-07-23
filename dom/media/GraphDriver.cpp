@@ -336,12 +336,6 @@ SystemClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)
   }
 }
 
-GraphTime
-SystemClockDriver::GetCurrentTime()
-{
-  return IterationEnd();
-}
-
 TimeStamp
 OfflineClockDriver::GetCurrentTimeStamp()
 {
@@ -449,13 +443,6 @@ OfflineClockDriver::GetIntervalForIteration(GraphTime& aFrom, GraphTime& aTo)
     STREAM_LOG(LogLevel::Debug, ("Time did not advance"));
   }
 }
-
-GraphTime
-OfflineClockDriver::GetCurrentTime()
-{
-  return mIterationEnd;
-}
-
 
 void
 OfflineClockDriver::WaitForNextIteration()
@@ -709,18 +696,6 @@ void
 AudioCallbackDriver::GetIntervalForIteration(GraphTime& aFrom,
                                              GraphTime& aTo)
 {
-}
-
-GraphTime
-AudioCallbackDriver::GetCurrentTime()
-{
-  uint64_t position = 0;
-
-  if (cubeb_stream_get_position(mAudioStream, &position) != CUBEB_OK) {
-    NS_WARNING("Could not get current time from cubeb.");
-  }
-
-  return mSampleRate * position;
 }
 
 void AudioCallbackDriver::WaitForNextIteration()
