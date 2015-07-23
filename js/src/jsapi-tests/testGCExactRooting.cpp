@@ -7,6 +7,7 @@
 
 #include "js/RootingAPI.h"
 #include "js/TraceableHashTable.h"
+#include "js/TraceableVector.h"
 
 #include "jsapi-tests/tests.h"
 
@@ -167,6 +168,8 @@ BEGIN_TEST(testGCRootedHashMap)
     for (size_t i = 0; i < 10; ++i) {
         RootedObject obj(cx, JS_NewObject(cx, nullptr));
         RootedValue val(cx, UndefinedValue());
+        // Construct a unique property name to ensure that the object creates a
+        // new shape.
         char buffer[2];
         buffer[0] = 'a' + i;
         buffer[1] = '\0';
@@ -192,6 +195,8 @@ FillMyHashMap(JSContext* cx, MutableHandle<MyHashMap> map)
     for (size_t i = 0; i < 10; ++i) {
         RootedObject obj(cx, JS_NewObject(cx, nullptr));
         RootedValue val(cx, UndefinedValue());
+        // Construct a unique property name to ensure that the object creates a
+        // new shape.
         char buffer[2];
         buffer[0] = 'a' + i;
         buffer[1] = '\0';
@@ -230,3 +235,109 @@ BEGIN_TEST(testGCHandleHashMap)
     return true;
 }
 END_TEST(testGCHandleHashMap)
+
+BEGIN_TEST(testGCRootedVector)
+{
+    using ShapeVec = TraceableVector<Shape*>;
+    JS::Rooted<ShapeVec> shapes(cx, ShapeVec(cx));
+
+    for (size_t i = 0; i < 10; ++i) {
+        RootedObject obj(cx, JS_NewObject(cx, nullptr));
+        RootedValue val(cx, UndefinedValue());
+        // Construct a unique property name to ensure that the object creates a
+        // new shape.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        CHECK(JS_SetProperty(cx, obj, buffer, val));
+        CHECK(shapes.append(obj->as<NativeObject>().lastProperty()));
+    }
+
+    JS_GC(rt);
+    JS_GC(rt);
+
+    for (size_t i = 0; i < 10; ++i) {
+        // Check the shape to ensure it did not get collected.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        bool match;
+        CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer, &match));
+        CHECK(match);
+    }
+
+    // Ensure iterator enumeration works through the rooted.
+    for (auto shape : shapes) {
+        CHECK(shape);
+    }
+
+    return true;
+}
+END_TEST(testGCRootedVector)
+
+using ShapeVec = TraceableVector<Shape*>;
+
+static bool
+FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes)
+{
+    for (size_t i = 0; i < 10; ++i) {
+        RootedObject obj(cx, JS_NewObject(cx, nullptr));
+        RootedValue val(cx, UndefinedValue());
+        // Construct a unique property name to ensure that the object creates a
+        // new shape.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        if (!JS_SetProperty(cx, obj, buffer, val))
+            return false;
+        if (!shapes.append(obj->as<NativeObject>().lastProperty()))
+            return false;
+    }
+
+    // Ensure iterator enumeration works through the mutable handle.
+    for (auto shape : shapes) {
+        if (!shape)
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+CheckVector(JSContext* cx, Handle<ShapeVec> shapes)
+{
+    for (size_t i = 0; i < 10; ++i) {
+        // Check the shape to ensure it did not get collected.
+        char buffer[2];
+        buffer[0] = 'a' + i;
+        buffer[1] = '\0';
+        bool match;
+        if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), buffer, &match))
+            return false;
+        if (!match)
+            return false;
+    }
+
+    // Ensure iterator enumeration works through the handle.
+    for (auto shape : shapes) {
+        if (!shape)
+            return false;
+    }
+
+    return true;
+}
+
+BEGIN_TEST(testGCHandleVector)
+{
+    JS::Rooted<ShapeVec> vec(cx, ShapeVec(cx));
+
+    CHECK(FillVector(cx, &vec));
+
+    JS_GC(rt);
+    JS_GC(rt);
+
+    CHECK(CheckVector(cx, vec));
+
+    return true;
+}
+END_TEST(testGCHandleVector)
