@@ -4687,7 +4687,9 @@ Tab.prototype = {
       this.contentDocumentIsDisplayed = false;
       this.hasTouchListener = false;
     } else {
-      this.sendViewportUpdate();
+      setTimeout(function() {
+        this.sendViewportUpdate();
+      }.bind(this), 0);
     }
   },
 
