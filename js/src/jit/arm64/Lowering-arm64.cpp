@@ -43,24 +43,6 @@ LIRGeneratorARM64::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 }
 
 void
-LIRGeneratorARM64::lowerConstantDouble(double d, MInstruction* mir)
-{
-    MOZ_CRASH("lowerConstantDouble");
-}
-
-void
-LIRGeneratorARM64::lowerConstantFloat32(float d, MInstruction* mir)
-{
-    MOZ_CRASH("lowerConstantFloat32");
-}
-
-void
-LIRGeneratorARM64::visitConstant(MConstant* ins)
-{
-    MOZ_CRASH("visitConstant");
-}
-
-void
 LIRGeneratorARM64::visitBox(MBox* box)
 {
     MOZ_CRASH("visitBox");

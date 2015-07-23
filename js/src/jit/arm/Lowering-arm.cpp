@@ -48,31 +48,6 @@ LIRGeneratorARM::tempByteOpRegister()
 }
 
 void
-LIRGeneratorARM::lowerConstantDouble(double d, MInstruction* mir)
-{
-    define(new(alloc()) LDouble(d), mir);
-}
-
-void
-LIRGeneratorARM::lowerConstantFloat32(float d, MInstruction* mir)
-{
-    define(new(alloc()) LFloat32(d), mir);
-}
-
-void
-LIRGeneratorARM::visitConstant(MConstant* ins)
-{
-    if (ins->type() == MIRType_Double)
-        lowerConstantDouble(ins->value().toDouble(), ins);
-    else if (ins->type() == MIRType_Float32)
-        lowerConstantFloat32(ins->value().toDouble(), ins);
-    else if (ins->canEmitAtUses())
-        emitAtUses(ins);
-    else
-        LIRGeneratorShared::visitConstant(ins);
-}
-
-void
 LIRGeneratorARM::visitBox(MBox* box)
 {
     MDefinition* inner = box->getOperand(0);
