@@ -22,8 +22,6 @@ class RasterImage;
 class nsICODecoder : public Decoder
 {
 public:
-
-  explicit nsICODecoder(RasterImage* aImage);
   virtual ~nsICODecoder();
 
   // Obtains the width of the icon directory entry
@@ -43,6 +41,11 @@ public:
   virtual void FinishWithErrorInternal() override;
 
 private:
+  friend class DecoderFactory;
+
+  // Decoders should only be instantiated via DecoderFactory.
+  explicit nsICODecoder(RasterImage* aImage);
+
   // Writes to the contained decoder and sets the appropriate errors
   // Returns true if there are no errors.
   bool WriteToContainedDecoder(const char* aBuffer, uint32_t aCount);

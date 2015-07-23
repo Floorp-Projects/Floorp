@@ -680,7 +680,7 @@ PR_IMPLEMENT(PRThreadPriority) PR_GetThreadPriority(const PRThread *thred)
 
 PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri)
 {
-    PRIntn rv = -1;
+    PRIntn rv;
 
     PR_ASSERT(NULL != thred);
 
@@ -736,6 +736,8 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
                  errno));
         }
     }
+#else
+    (void)rv; /* rv is unused */
 #endif
 
     thred->priority = newPri;

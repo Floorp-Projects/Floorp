@@ -1672,23 +1672,24 @@ PR_ParseTimeString(
  */
 
 PR_IMPLEMENT(PRUint32)
-PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
+PR_FormatTime(char *buf, int buflen, const char *fmt,
+              const PRExplodedTime *time)
 {
     size_t rv;
     struct tm a;
     struct tm *ap;
 
-    if (tm) {
+    if (time) {
         ap = &a;
-        a.tm_sec = tm->tm_sec;
-        a.tm_min = tm->tm_min;
-        a.tm_hour = tm->tm_hour;
-        a.tm_mday = tm->tm_mday;
-        a.tm_mon = tm->tm_month;
-        a.tm_wday = tm->tm_wday;
-        a.tm_year = tm->tm_year - 1900;
-        a.tm_yday = tm->tm_yday;
-        a.tm_isdst = tm->tm_params.tp_dst_offset ? 1 : 0;
+        a.tm_sec = time->tm_sec;
+        a.tm_min = time->tm_min;
+        a.tm_hour = time->tm_hour;
+        a.tm_mday = time->tm_mday;
+        a.tm_mon = time->tm_month;
+        a.tm_wday = time->tm_wday;
+        a.tm_year = time->tm_year - 1900;
+        a.tm_yday = time->tm_yday;
+        a.tm_isdst = time->tm_params.tp_dst_offset ? 1 : 0;
 
         /*
          * On some platforms, for example SunOS 4, struct tm has two
@@ -1699,8 +1700,8 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
         || defined(NETBSD) || defined(OPENBSD) || defined(FREEBSD) \
         || defined(DARWIN) || defined(SYMBIAN) || defined(ANDROID)
         a.tm_zone = NULL;
-        a.tm_gmtoff = tm->tm_params.tp_gmt_offset +
-                      tm->tm_params.tp_dst_offset;
+        a.tm_gmtoff = time->tm_params.tp_gmt_offset +
+                      time->tm_params.tp_dst_offset;
 #endif
     } else {
         ap = NULL;

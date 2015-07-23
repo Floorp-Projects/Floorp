@@ -46,4 +46,5 @@ enum AudioChannel {
   "telephony",
   "ringer",
   "publicnotification",
+  "system"
 };

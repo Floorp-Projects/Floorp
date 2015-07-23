@@ -19,7 +19,6 @@
 #include "GraphicsFilter.h"
 #include "nsCSSPseudoElements.h"
 #include "FrameMetrics.h"
-#include "gfx3DMatrix.h"
 #include "nsIWidget.h"
 #include "nsCSSProperty.h"
 #include "nsStyleCoord.h"
@@ -926,7 +925,7 @@ public:
    * @return The smallest rect that contains the image of aBounds.
    */
   static nsRect MatrixTransformRect(const nsRect &aBounds,
-                                    const gfx3DMatrix &aMatrix, float aFactor);
+                                    const Matrix4x4 &aMatrix, float aFactor);
 
   /**
    * Helper function that, given a rectangle and a matrix, returns the smallest
@@ -939,7 +938,7 @@ public:
    * @return The smallest rect that contains the image of aBounds.
    */
   static nsRect MatrixTransformRectOut(const nsRect &aBounds,
-                                    const gfx3DMatrix &aMatrix, float aFactor);
+                                       const Matrix4x4 &aMatrix, float aFactor);
   /**
    * Helper function that, given a point and a matrix, returns the image
    * of that point under the matrix transform.
@@ -950,7 +949,7 @@ public:
    * @return The image of the point under the transform.
    */
   static nsPoint MatrixTransformPoint(const nsPoint &aPoint,
-                                      const gfx3DMatrix &aMatrix, float aFactor);
+                                      const Matrix4x4 &aMatrix, float aFactor);
 
   /**
    * Given a graphics rectangle in graphics space, return a rectangle in

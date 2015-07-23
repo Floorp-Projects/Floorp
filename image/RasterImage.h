@@ -26,6 +26,7 @@
 #include "LookupResult.h"
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
+#include "DecoderFactory.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -339,19 +340,23 @@ private:
 
   /**
    * Creates and runs a decoder, either synchronously or asynchronously
-   * according to @aFlags. Passes the provided target size @aSize and decode
-   * flags @aFlags to CreateDecoder. If a size decode is desired, pass Nothing
-   * for @aSize.
+   * according to @aFlags. Decodes at the provided target size @aSize, using
+   * decode flags @aFlags.
+   *
+   * It's an error to call Decode() before this image's intrinsic size is
+   * available. A metadata decode must successfully complete first.
+   *
+   * If downscale-during-decode is not enabled for this image (i.e., if
+   * mDownscaleDuringDecode is false), it is an error to pass an @aSize value
+   * different from this image's intrinsic size.
    */
-  NS_IMETHOD Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags);
+  NS_IMETHOD Decode(const gfx::IntSize& aSize, uint32_t aFlags);
 
   /**
-   * Creates a new decoder with a target size of @aSize and decode flags
-   * specified by @aFlags. If a size decode is desired, pass Nothing() for
-   * @aSize.
+   * Creates and runs a metadata decoder, either synchronously or
+   * asynchronously according to @aFlags.
    */
-  already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
-                                          uint32_t aFlags);
+  NS_IMETHOD DecodeMetadata(uint32_t aFlags);
 
   /**
    * In catastrophic circumstances like a GPU driver crash, we may lose our
@@ -376,7 +381,7 @@ private: // data
   uint32_t                   mLockCount;
 
   // The type of decoder this image needs. Computed from the MIME type in Init().
-  eDecoderType               mDecoderType;
+  DecoderType                mDecoderType;
 
   // How many times we've decoded this image.
   // This is currently only used for statistics
@@ -425,8 +430,8 @@ private: // data
   // of frames, or no more owning request
   bool                       mAnimationFinished:1;
 
-  // Whether, once we are done doing a size decode, we should immediately kick
-  // off a full decode.
+  // Whether, once we are done doing a metadata decode, we should immediately
+  // kick off a full decode.
   bool                       mWantFullDecode:1;
 
   TimeStamp mDrawStartTime;

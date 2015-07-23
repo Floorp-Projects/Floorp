@@ -213,7 +213,6 @@ void _PR_InitFdCache(void)
 void _PR_CleanupFdCache(void)
 {
     PRFileDesc *fd, *next;
-    PRStackElem *pop;
 
     for (fd = _pr_fd_cache.head; fd != NULL; fd = next)
     {

@@ -67,8 +67,8 @@ nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           return;
         }
 
-        // If We're doing a size decode, we're done
-        if (IsSizeDecode()) {
+        // If we're doing a metadata decode, we're done.
+        if (IsMetadataDecode()) {
           mState = iconStateFinished;
           break;
         }

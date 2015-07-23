@@ -119,7 +119,6 @@ extern PRLogModuleInfo* gMediaSampleLog;
 */
 class MediaDecoderStateMachine
 {
-  friend class AudioSink;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 public:
   typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
@@ -398,8 +397,8 @@ protected:
   void PushFront(AudioData* aSample);
   void PushFront(VideoData* aSample);
 
-  void OnAudioPopped();
-  void OnVideoPopped();
+  void OnAudioPopped(const AudioData* aSample);
+  void OnVideoPopped(const VideoData* aSample);
 
   void VolumeChanged();
   void LogicalPlaybackRateChanged();
@@ -666,17 +665,6 @@ protected:
   // Set the time that playback started from the system clock.
   // Can only be called on the state machine thread.
   void SetPlayStartTime(const TimeStamp& aTimeStamp);
-
-private:
-  // Update mDecoder's playback offset.
-  void OnPlaybackOffsetUpdate(int64_t aPlaybackOffset);
-public:
-  void DispatchOnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
-  {
-    RefPtr<nsRunnable> r =
-      NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::OnPlaybackOffsetUpdate, aPlaybackOffset);
-    OwnerThread()->Dispatch(r.forget());
-  }
 
 private:
   // Resolved by the AudioSink to signal that all outstanding work is complete

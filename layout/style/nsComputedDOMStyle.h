@@ -41,7 +41,6 @@ class nsStyleGradient;
 struct nsStyleImage;
 class nsStyleSides;
 struct nsTimingFunction;
-class gfx3DMatrix;
 
 class nsComputedDOMStyle final : public nsDOMCSSDeclaration
 {
@@ -104,7 +103,7 @@ public:
   virtual nsIDocument* DocToUpdate() override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
 
-  static nsROCSSPrimitiveValue* MatrixToCSSValue(gfx3DMatrix& aMatrix);
+  static nsROCSSPrimitiveValue* MatrixToCSSValue(const mozilla::gfx::Matrix4x4& aMatrix);
 
   static void RegisterPrefChangeCallbacks();
   static void UnregisterPrefChangeCallbacks();

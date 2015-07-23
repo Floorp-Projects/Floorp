@@ -21,10 +21,10 @@ function mustFailWith(msg, reason, f) {
                   e => is(e.name, reason, msg + " must fail: " + e.message));
 }
 
-var pushPrefs = dict => new Promise(res => SpecialPowers.pushPrefEnv(dict, res));
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
 
 runTest(() =>
-  pushPrefs({ set : [["media.navigator.streams.fake", true]] })
+  pushPrefs(["media.navigator.streams.fake", true])
   .then(() => navigator.mediaDevices.enumerateDevices())
   .then(devices => {
     ok(devices.length > 0, "At least one device found");
@@ -58,7 +58,12 @@ runTest(() =>
                        () => navigator.mediaDevices.getUserMedia({
     audio: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
     fake: true,
-  }))));
+  })))
+  // Check the special case of no devices found (these prefs override fake).
+  .then(() => pushPrefs(["media.audio_loopback_dev", "none"],
+                        ["media.video_loopback_dev", "none"]))
+  .then(() => navigator.mediaDevices.enumerateDevices())
+  .then(devices => ok(devices.length === 0, "No devices found")));
 
 </script>
 </pre>

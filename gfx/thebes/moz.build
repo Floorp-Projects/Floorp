@@ -8,7 +8,6 @@ EXPORTS += [
     'ContextStateTracker.h',
     'DrawMode.h',
     'gfx2DGlue.h',
-    'gfx3DMatrix.h',
     'gfxAlphaRecovery.h',
     'gfxASurface.h',
     'gfxBaseSharedMemorySurface.h',
@@ -212,7 +211,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'CJKCompatSVS.cpp',
-    'gfx3DMatrix.cpp',
     'gfxAlphaRecovery.cpp',
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',

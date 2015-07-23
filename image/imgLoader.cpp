@@ -41,6 +41,7 @@
 #include "nsIApplicationCacheContainer.h"
 
 #include "nsIMemoryReporter.h"
+#include "DecoderFactory.h"
 #include "Image.h"
 #include "gfxPrefs.h"
 #include "prtime.h"
@@ -2475,7 +2476,8 @@ imgLoader::SupportImageWithMimeType(const char* aMimeType,
     return true;
   }
 
-  return Image::GetDecoderType(mimeType.get()) != Image::eDecoderType_unknown;
+  DecoderType type = DecoderFactory::GetDecoderType(mimeType.get());
+  return type != DecoderType::UNKNOWN;
 }
 
 NS_IMETHODIMP

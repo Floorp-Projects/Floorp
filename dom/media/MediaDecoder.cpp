@@ -558,12 +558,11 @@ void MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
 nsresult MediaDecoder::ScheduleStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ASSERTION(mDecoderStateMachine,
-               "Must have state machine to start state machine thread");
-  NS_ENSURE_STATE(mDecoderStateMachine);
-
   if (mShuttingDown)
     return NS_OK;
+
+  MOZ_ASSERT(mDecoderStateMachine);
+  NS_ENSURE_STATE(mDecoderStateMachine);
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->ScheduleStateMachineCrossThread();
   return NS_OK;
