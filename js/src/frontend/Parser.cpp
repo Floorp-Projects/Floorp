@@ -2542,7 +2542,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_LC) {
-        if (funbox->isStarGenerator() || kind == Method || kind == ClassConstructor) {
+        if (funbox->isStarGenerator() || kind == Method || IsConstructorKind(kind)) {
             report(ParseError, false, null(), JSMSG_CURLY_BEFORE_BODY);
             return false;
         }
@@ -2567,7 +2567,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     if (!body)
         return false;
 
-    if ((kind != Method && kind != ClassConstructor) && fun->name() &&
+    if ((kind != Method && !IsConstructorKind(kind)) && fun->name() &&
         !checkStrictBinding(fun->name(), pn))
     {
         return false;
@@ -8732,9 +8732,7 @@ Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropListType
                kind == Getter || kind == Setter);
     /* NB: Getter function in { get x(){} } is unnamed. */
     RootedPropertyName funName(context);
-    if ((kind == Method || kind == ClassConstructor || kind == DerivedClassConstructor) &&
-        tokenStream.isCurrentTokenType(TOK_NAME))
-    {
+    if ((kind == Method || IsConstructorKind(kind)) && tokenStream.isCurrentTokenType(TOK_NAME)) {
         funName = tokenStream.currentName();
     } else {
         funName = nullptr;

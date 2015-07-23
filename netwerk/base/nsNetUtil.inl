@@ -123,6 +123,19 @@ NS_NewURI(nsIURI **result,
 }
 
 INLINE_IF_EXTERN nsresult
+NS_NewFileURI(nsIURI **result,
+              nsIFile *spec,
+              nsIIOService *ioService /* = nullptr */)     // pass in nsIIOService to optimize callers
+{
+    nsresult rv;
+    nsCOMPtr<nsIIOService> grip;
+    rv = net_EnsureIOService(&ioService, grip);
+    if (ioService)
+        rv = ioService->NewFileURI(spec, result);
+    return rv;
+}
+
+INLINE_IF_EXTERN nsresult
 NS_NewChannelInternal(nsIChannel           **outChannel,
                       nsIURI                *aUri,
                       nsINode               *aLoadingNode,
@@ -347,6 +360,19 @@ NS_NewPostDataStream(nsIInputStream  **result,
 
     stream.forget(result);
     return NS_OK;
+}
+
+INLINE_IF_EXTERN bool
+NS_IsOffline()
+{
+    bool offline = true;
+    bool connectivity = true;
+    nsCOMPtr<nsIIOService> ios = do_GetIOService();
+    if (ios) {
+        ios->GetOffline(&offline);
+        ios->GetConnectivity(&connectivity);
+    }
+    return offline || !connectivity;
 }
 
 #endif // nsNetUtil_inl

@@ -57,13 +57,13 @@ extern bool gBluetoothDebugFlag;
  */
 #define BT_LOGR(msg, ...)                                            \
   __android_log_print(ANDROID_LOG_INFO, "GeckoBluetooth",            \
-                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)       \
+                      "%s: " msg, __FUNCTION__, ##__VA_ARGS__)
 
 /**
  * Prints DEBUG build warnings, which show in DEBUG build only.
  */
 #define BT_WARNING(args...)                                          \
-  NS_WARNING(nsPrintfCString(args).get())                            \
+  NS_WARNING(nsPrintfCString(args).get())
 
 #else
 #define BT_LOGD(msg, ...)                                            \
@@ -88,10 +88,24 @@ extern bool gBluetoothDebugFlag;
 /**
  * Wrap literal name and value into a BluetoothNamedValue
  * and insert it to the array.
+ *
+ * TODO: remove with bluetooth1
  */
 #define BT_INSERT_NAMED_VALUE(array, index, name, value)                      \
   array.InsertElementAt(index, BluetoothNamedValue(NS_LITERAL_STRING(name),   \
                                                    BluetoothValue(value)))
+
+/**
+ * Convert an enum value to string and append it to a fallible array.
+ */
+#define BT_APPEND_ENUM_STRING_FALLIBLE(array, enumType, enumValue)   \
+  do {                                                               \
+    uint32_t index = uint32_t(enumValue);                            \
+    nsAutoString name;                                               \
+    name.AssignASCII(enumType##Values::strings[index].value,         \
+                     enumType##Values::strings[index].length);       \
+    array.AppendElement(name, mozilla::fallible);                    \
+  } while(0)
 
 /**
  * Ensure success of system message broadcast with void return.
@@ -104,30 +118,6 @@ extern bool gBluetoothDebugFlag;
       return;                                                        \
     }                                                                \
   } while(0)
-
-/**
- * Convert an enum value to string then append it to an array.
- */
-#define BT_APPEND_ENUM_STRING(array, enumType, enumValue)            \
-  do {                                                               \
-    uint32_t index = uint32_t(enumValue);                            \
-    nsAutoString name;                                               \
-    name.AssignASCII(enumType##Values::strings[index].value,         \
-                     enumType##Values::strings[index].length);       \
-    array.AppendElement(name);                                       \
-  } while(0)                                                         \
-
-/**
- * Convert an enum value to string then append it to a fallible array.
- */
-#define BT_APPEND_ENUM_STRING_FALLIBLE(array, enumType, enumValue)   \
-  do {                                                               \
-    uint32_t index = uint32_t(enumValue);                            \
-    nsAutoString name;                                               \
-    name.AssignASCII(enumType##Values::strings[index].value,         \
-                     enumType##Values::strings[index].length);       \
-    array.AppendElement(name, mozilla::fallible);                    \
-  } while(0)                                                         \
 
 /**
  * Resolve |promise| with |ret| if |x| is false.
@@ -152,6 +142,12 @@ extern bool gBluetoothDebugFlag;
       return (promise).forget();                                     \
     }                                                                \
   } while(0)
+
+/**
+ * Reject |promise| with |ret| if nsresult |rv| is not successful.
+ */
+#define BT_ENSURE_SUCCESS_REJECT(rv, promise, ret)                   \
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, ret)
 
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {

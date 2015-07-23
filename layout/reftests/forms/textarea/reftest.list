@@ -10,5 +10,5 @@ skip-if(B2G||Mulet) fails-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2")
 == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
 == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
-fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,4168) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
 == various-cols.html various-cols-ref.html

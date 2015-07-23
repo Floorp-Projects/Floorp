@@ -189,7 +189,9 @@ class BackendMakeFile(object):
         self.fh.write(buf)
 
     def write_once(self, buf):
-        if '\n' + buf not in self.fh.getvalue():
+        if isinstance(buf, unicode):
+            buf = buf.encode('utf-8')
+        if b'\n' + buf not in self.fh.getvalue():
             self.write(buf)
 
     # For compatibility with makeutil.Makefile

@@ -2326,8 +2326,18 @@ nsSMILTimedElement::NotifyNewInterval()
     container->SyncPauseTime();
   }
 
-  NotifyTimeDependentsParams params = { this, container };
-  mTimeDependents.EnumerateEntries(NotifyNewIntervalCallback, &params);
+  for (auto iter = mTimeDependents.Iter(); !iter.Done(); iter.Next()) {
+    nsSMILInterval* interval = mCurrentInterval;
+    // It's possible that in notifying one new time dependent of a new interval
+    // that a chain reaction is triggered which results in the original
+    // interval disappearing. If that's the case we can skip sending further
+    // notifications.
+    if (!interval) {
+      break;
+    }
+    nsSMILTimeValueSpec* spec = iter.Get()->GetKey();
+    spec->HandleNewInterval(*interval, container);
+  }
 }
 
 void
@@ -2428,28 +2438,3 @@ nsSMILTimedElement::AreEndTimesDependentOn(
   return true;
 }
 
-//----------------------------------------------------------------------
-// Hashtable callback functions
-
-/* static */ PLDHashOperator
-nsSMILTimedElement::NotifyNewIntervalCallback(TimeValueSpecPtrKey* aKey,
-                                              void* aData)
-{
-  MOZ_ASSERT(aKey, "Null hash key for time container hash table");
-  MOZ_ASSERT(aKey->GetKey(),
-             "null nsSMILTimeValueSpec in set of time dependents");
-
-  NotifyTimeDependentsParams* params =
-    static_cast<NotifyTimeDependentsParams*>(aData);
-  MOZ_ASSERT(params, "null data ptr while enumerating hashtable");
-  nsSMILInterval* interval = params->mTimedElement->mCurrentInterval;
-  // It's possible that in notifying one new time dependent of a new interval
-  // that a chain reaction is triggered which results in the original interval
-  // disappearing. If that's the case we can skip sending further notifications.
-  if (!interval)
-    return PL_DHASH_STOP;
-
-  nsSMILTimeValueSpec* spec = aKey->GetKey();
-  spec->HandleNewInterval(*interval, params->mTimeContainer);
-  return PL_DHASH_NEXT;
-}

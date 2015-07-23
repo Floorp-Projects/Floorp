@@ -197,8 +197,7 @@ nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
   }
 
   NSURL* jobSavingURL =
-    [NSURL URLWithString:[nsCocoaUtils::ToNSString(data.toFileName())
-                          stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding]];
+    [NSURL URLWithString: nsCocoaUtils::ToNSString(data.toFileName())];
   if (jobSavingURL) {
     [newPrintInfoDict setObject: jobSavingURL forKey: NSPrintJobSavingURL];
   }

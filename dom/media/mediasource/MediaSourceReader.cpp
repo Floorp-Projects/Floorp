@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "DecoderTraits.h"
 #include "MediaDecoderOwner.h"
 #include "MediaFormatReader.h"

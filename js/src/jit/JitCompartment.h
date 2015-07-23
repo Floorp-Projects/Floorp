@@ -254,6 +254,7 @@ class JitRuntime
     void freeOsrTempData();
 
     static void Mark(JSTracer* trc);
+    static void MarkJitcodeGlobalTableUnconditionally(JSTracer* trc);
     static bool MarkJitcodeGlobalTableIteratively(JSTracer* trc);
     static void SweepJitcodeGlobalTable(JSRuntime* rt);
 
