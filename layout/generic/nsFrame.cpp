@@ -4906,8 +4906,8 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                  "Cannot transform the viewport frame!");
     int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
-    Matrix4x4 result = ToMatrix4x4(
-      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0), scaleFactor, nullptr, aOutAncestor));
+    Matrix4x4 result = nsDisplayTransform::GetResultingTransformMatrix(this,
+                         nsPoint(0, 0), scaleFactor, nullptr, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */

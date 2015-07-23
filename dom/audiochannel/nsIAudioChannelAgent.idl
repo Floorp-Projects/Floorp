@@ -29,7 +29,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[uuid(e28e1569-2a44-4f71-9cd0-216874b05d57)]
+[uuid(ee39a34b-a5c7-4b30-b1ac-cd64ceedef67)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -39,6 +39,7 @@ interface nsIAudioChannelAgent : nsISupports
   const long AUDIO_AGENT_CHANNEL_TELEPHONY          = 4;
   const long AUDIO_AGENT_CHANNEL_RINGER             = 5;
   const long AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION = 6;
+  const long AUDIO_AGENT_CHANNEL_SYSTEM             = 7;
 
   const long AUDIO_AGENT_CHANNEL_ERROR              = 1000;
 

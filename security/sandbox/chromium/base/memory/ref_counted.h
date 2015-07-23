@@ -208,7 +208,7 @@ class RefCountedData
     : public base::RefCountedThreadSafe< base::RefCountedData<T> > {
  public:
   RefCountedData() : data() {}
-  MOZ_IMPLICIT RefCountedData(const T& in_value) : data(in_value) {}
+  RefCountedData(const T& in_value) : data(in_value) {}
 
   T data;
 
@@ -275,7 +275,7 @@ class scoped_refptr {
   scoped_refptr() : ptr_(NULL) {
   }
 
-  MOZ_IMPLICIT scoped_refptr(T* p) : ptr_(p) {
+  scoped_refptr(T* p) : ptr_(p) {
     if (ptr_)
       AddRef(ptr_);
   }

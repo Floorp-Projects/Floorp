@@ -337,7 +337,7 @@ public:
       return mLayer->GetVisibleRegion();
     }
     nsIntRegion region = mLayer->GetVisibleRegion();
-    region.Transform(gfx::To3DMatrix(mLayer->GetTransform()));
+    region.Transform(mLayer->GetTransform());
     return region;
   }
 

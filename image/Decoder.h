@@ -97,15 +97,17 @@ public:
    * State.
    */
 
-  // If we're doing a "size decode", we more or less pass through the image
-  // data, stopping only to scoop out the image dimensions. A size decode
-  // must be enabled by SetSizeDecode() _before_calling Init().
-  bool IsSizeDecode() { return mSizeDecode; }
-  void SetSizeDecode(bool aSizeDecode)
+  /**
+   * If we're doing a metadata decode, we only decode the image's headers, which
+   * is enough to determine the image's intrinsic size. A metadata decode is
+   * enabled by calling SetMetadataDecode() *before* calling Init().
+   */
+  void SetMetadataDecode(bool aMetadataDecode)
   {
     MOZ_ASSERT(!mInitialized, "Shouldn't be initialized yet");
-    mSizeDecode = aSizeDecode;
+    mMetadataDecode = aMetadataDecode;
   }
+  bool IsMetadataDecode() { return mMetadataDecode; }
 
   /**
    * If this decoder supports downscale-during-decode, sets the target size that
@@ -209,7 +211,8 @@ public:
 
   bool GetDecodeDone() const
   {
-    return mDecodeDone || (mSizeDecode && HasSize()) || HasError() || mDataDone;
+    return mDecodeDone || (mMetadataDecode && HasSize()) ||
+           HasError() || mDataDone;
   }
 
   /**
@@ -282,7 +285,7 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) = 0;
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();
 
@@ -423,7 +426,7 @@ private:
   nsresult mFailCode;
 
   bool mInitialized;
-  bool mSizeDecode;
+  bool mMetadataDecode;
   bool mInFrame;
   bool mIsAnimated;
 };

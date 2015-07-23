@@ -408,7 +408,7 @@ SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
                                                      transformOrigin,
                                                      perspectiveOrigin,
                                                      data.perspective());
-  gfx3DMatrix transform =
+  Matrix4x4 transform =
     nsDisplayTransform::GetResultingTransformMatrix(props, origin,
                                                     data.appUnitsPerDevPixel(),
                                                     &data.bounds());
@@ -417,10 +417,10 @@ SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
             NS_round(NSAppUnitsToFloatPixels(origin.y, data.appUnitsPerDevPixel())),
             0.0f);
 
-  transform.Translate(scaledOrigin);
+  transform.PreTranslate(scaledOrigin);
 
   InfallibleTArray<TransformFunction> functions;
-  functions.AppendElement(TransformMatrix(ToMatrix4x4(transform)));
+  functions.AppendElement(TransformMatrix(transform));
   *aValue = functions;
 }
 

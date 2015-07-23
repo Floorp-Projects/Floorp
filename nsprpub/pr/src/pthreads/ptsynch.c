@@ -322,13 +322,21 @@ PR_IMPLEMENT(PRCondVar*) PR_NewCondVar(PRLock *lock)
     PR_ASSERT(lock != NULL);
     if (cv != NULL)
     {
-        int rv = _PT_PTHREAD_COND_INIT(cv->cv, _pt_cvar_attr); 
+        int rv = _PT_PTHREAD_COND_INIT(cv->cv, _pt_cvar_attr);
         PR_ASSERT(0 == rv);
-        cv->lock = lock;
-        cv->notify_pending = 0;
+        if (0 == rv)
+        {
+            cv->lock = lock;
+            cv->notify_pending = 0;
 #if defined(DEBUG)
-        pt_debug.cvars_created += 1;
+            pt_debug.cvars_created += 1;
 #endif
+        }
+        else
+        {
+            PR_DELETE(cv);
+            cv = NULL;
+        }
     }
     return cv;
 }  /* PR_NewCondVar */
@@ -337,10 +345,13 @@ PR_IMPLEMENT(void) PR_DestroyCondVar(PRCondVar *cvar)
 {
     if (0 > PR_ATOMIC_DECREMENT(&cvar->notify_pending))
     {
-        PRIntn rv = pthread_cond_destroy(&cvar->cv); PR_ASSERT(0 == rv);
+        PRIntn rv = pthread_cond_destroy(&cvar->cv);
 #if defined(DEBUG)
+        PR_ASSERT(0 == rv);
         memset(cvar, 0xaf, sizeof(PRCondVar));
         pt_debug.cvars_destroyed += 1;
+#else
+        (void)rv;
 #endif
         PR_Free(cvar);
     }
@@ -1181,9 +1192,17 @@ PR_IMPLEMENT(PRCondVar*) PRP_NewNakedCondVar(void)
     if (cv != NULL)
     {
         int rv;
-        rv = _PT_PTHREAD_COND_INIT(cv->cv, _pt_cvar_attr); 
+        rv = _PT_PTHREAD_COND_INIT(cv->cv, _pt_cvar_attr);
         PR_ASSERT(0 == rv);
-        cv->lock = _PR_NAKED_CV_LOCK;
+        if (0 == rv)
+        {
+            cv->lock = _PR_NAKED_CV_LOCK;
+        }
+        else
+        {
+            PR_DELETE(cv);
+            cv = NULL;
+        }
     }
     return cv;
 }  /* PRP_NewNakedCondVar */
