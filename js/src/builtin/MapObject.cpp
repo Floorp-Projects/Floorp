@@ -1236,14 +1236,13 @@ MapObject::finalize(FreeOp* fop, JSObject* obj)
 bool
 MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
-    Rooted<MapObject*> obj(cx, MapObject::create(cx));
-    if (!obj)
-        return false;
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // FIXME: bug 1083752
-    if (!WarnIfNotConstructing(cx, args, "Map"))
+    if (!ThrowIfNotConstructing(cx, args, "Map"))
+        return false;
+
+    Rooted<MapObject*> obj(cx, MapObject::create(cx));
+    if (!obj)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
@@ -1902,14 +1901,13 @@ SetObject::finalize(FreeOp* fop, JSObject* obj)
 bool
 SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
-    Rooted<SetObject*> obj(cx, SetObject::create(cx));
-    if (!obj)
-        return false;
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // FIXME: bug 1083752
-    if (!WarnIfNotConstructing(cx, args, "Set"))
+    if (!ThrowIfNotConstructing(cx, args, "Set"))
+        return false;
+
+    Rooted<SetObject*> obj(cx, SetObject::create(cx));
+    if (!obj)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
