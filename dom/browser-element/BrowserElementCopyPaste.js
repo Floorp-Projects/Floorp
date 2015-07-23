@@ -8,8 +8,6 @@
 
 dump("###################################### BrowserElementCopyPaste.js loaded\n");
 
-let { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
-
 let CopyPasteAssistent = {
   COMMAND_MAP: {
     'cut': 'cmd_cut',
@@ -21,7 +19,7 @@ let CopyPasteAssistent = {
   init: function() {
     addEventListener('mozcaretstatechanged',
                      this._caretStateChangedHandler.bind(this),
-                     /* useCapture = */ false,
+                     /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
     addMessageListener('browser-element-api:call', this._browserAPIHandler.bind(this));
   },
@@ -83,13 +81,6 @@ let CopyPasteAssistent = {
       detail.rect.left += currentRect.left;
       detail.rect.right += currentRect.left;
       currentWindow = currentWindow.realFrameElement.ownerDocument.defaultView;
-
-      let targetDocShell = currentWindow
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation);
-      if(targetDocShell.isBrowserOrApp) {
-        break;
-      }
     }
 
     sendAsyncMsg('caretstatechanged', detail);
