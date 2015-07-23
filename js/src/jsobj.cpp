@@ -520,15 +520,15 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             return false;
 
         // Get an in-order list of the shapes in this object.
-        AutoShapeVector shapes(cx);
+        Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
         for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
             if (!shapes.append(&r.front()))
                 return false;
         }
         Reverse(shapes.begin(), shapes.end());
 
-        for (size_t i = 0; i < shapes.length(); i++) {
-            StackShape unrootedChild(shapes[i]);
+        for (Shape* shape : shapes) {
+            StackShape unrootedChild(shape);
             RootedGeneric<StackShape*> child(cx, &unrootedChild);
             child->attrs |= GetSealedOrFrozenAttributes(child->attrs, level);
 
@@ -1351,15 +1351,15 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
             return false;
 
         // Get an in-order list of the shapes in the src object.
-        AutoShapeVector shapes(cx);
+        Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
         for (Shape::Range<NoGC> r(src->lastProperty()); !r.empty(); r.popFront()) {
             if (!shapes.append(&r.front()))
                 return false;
         }
         Reverse(shapes.begin(), shapes.end());
 
-        for (size_t i = 0; i < shapes.length(); i++) {
-            StackShape unrootedChild(shapes[i]);
+        for (Shape* shape : shapes) {
+            StackShape unrootedChild(shape);
             RootedGeneric<StackShape*> child(cx, &unrootedChild);
             shape = cx->compartment()->propertyTree.getChild(cx, shape, *child);
             if (!shape)
