@@ -68,7 +68,7 @@ add_test(function setup_browser() {
 
   do_register_cleanup(function cleanup() {
     Services.obs.removeObserver(visitObserver, "link-visited");
-    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+    BrowserApp.closeTab(BrowserApp.getTabForBrowser(gBrowser));
   });
 
   Services.obs.addObserver(visitObserver, "link-visited", false);
