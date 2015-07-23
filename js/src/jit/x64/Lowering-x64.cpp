@@ -61,7 +61,7 @@ LIRGeneratorX64::visitBox(MBox* box)
     if (opd->isConstant()) {
         define(new(alloc()) LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
     } else {
-        LBox* ins = new(alloc()) LBox(opd->type(), useRegister(opd));
+        LBox* ins = new(alloc()) LBox(useRegister(opd), opd->type());
         define(ins, box, LDefinition(LDefinition::BOX));
     }
 }
