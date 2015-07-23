@@ -24,6 +24,8 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = null;
+var gPAS = Cc["@mozilla.org/network/packaged-app-service;1"]
+              .getService(Ci.nsIPackagedAppService);
 
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -176,10 +178,10 @@ headerListener.prototype.visitHeader = function(header, value) {
 function test_multipart() {
   var streamConv = Cc["@mozilla.org/streamConverters;1"]
                      .getService(Ci.nsIStreamConverterService);
-  var conv = streamConv.asyncConvertData("application/package",
+  var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart");
   chan.asyncOpen(conv, null);
@@ -188,10 +190,10 @@ function test_multipart() {
 function test_multipart_with_boundary() {
   var streamConv = Cc["@mozilla.org/streamConverters;1"]
                      .getService(Ci.nsIStreamConverterService);
-  var conv = streamConv.asyncConvertData("application/package",
+  var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart2");
   chan.asyncOpen(conv, null);
@@ -200,10 +202,10 @@ function test_multipart_with_boundary() {
 function test_multipart_chunked_headers() {
   var streamConv = Cc["@mozilla.org/streamConverters;1"]
                      .getService(Ci.nsIStreamConverterService);
-  var conv = streamConv.asyncConvertData("application/package",
+  var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart3");
   chan.asyncOpen(conv, null);
@@ -213,10 +215,12 @@ function test_multipart_content_type_other() {
   var streamConv = Cc["@mozilla.org/streamConverters;1"]
                      .getService(Ci.nsIStreamConverterService);
 
-  var conv = streamConv.asyncConvertData("application/package",
+  // mime types other that multipart/mixed and application/package are only
+  // allowed if an nsIPackagedAppService is passed as context
+  var conv = streamConv.asyncConvertData("multipart/mixed",
            "*/*",
            new multipartListener(testData, true),
-           null);
+           gPAS);
 
   var chan = make_channel(uri + "/multipart4");
   chan.asyncOpen(conv, null);
