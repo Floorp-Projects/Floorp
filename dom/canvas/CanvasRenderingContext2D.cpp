@@ -5023,21 +5023,6 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  IntRect srcRect(0, 0, mWidth, mHeight);
-  IntRect destRect(aX, aY, aWidth, aHeight);
-  IntRect srcReadRect = srcRect.Intersect(destRect);
-  RefPtr<DataSourceSurface> readback;
-  DataSourceSurface::MappedSurface rawData;
-  if (!srcReadRect.IsEmpty() && !mZero) {
-    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-    if (snapshot) {
-      readback = snapshot->GetDataSurface();
-    }
-    if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   JS::Rooted<JSObject*> darray(aCx, JS_NewUint8ClampedArray(aCx, len.value()));
   if (!darray) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -5046,6 +5031,21 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   if (mZero) {
     *aRetval = darray;
     return NS_OK;
+  }
+
+  IntRect srcRect(0, 0, mWidth, mHeight);
+  IntRect destRect(aX, aY, aWidth, aHeight);
+  IntRect srcReadRect = srcRect.Intersect(destRect);
+  RefPtr<DataSourceSurface> readback;
+  DataSourceSurface::MappedSurface rawData;
+  if (!srcReadRect.IsEmpty()) {
+    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    if (snapshot) {
+      readback = snapshot->GetDataSurface();
+    }
+    if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   IntRect dstWriteRect = srcReadRect;
