@@ -14,8 +14,27 @@
   padding: 2px;
 }
 
-.identity-popup-button:-moz-focusring > .button-box,
 .identity-popup-expander:-moz-focusring > .button-box,
 #identity-popup-more-info-button:-moz-focusring > .button-box {
   @hudButtonFocused@
 }
+
+#tracking-action-block,
+#tracking-action-unblock,
+#tracking-action-unblock-private {
+  @hudButton@
+  min-height: 30px;
+}
+
+#tracking-action-block:hover:active,
+#tracking-action-unblock:hover:active,
+#tracking-action-unblock-private:hover:active {
+  @hudButtonPressed@
+}
+
+#tracking-action-block:-moz-focusring,
+#tracking-action-unblock:-moz-focusring,
+#tracking-action-unblock-private:-moz-focusring {
+  @hudButtonFocused@
+}
+
