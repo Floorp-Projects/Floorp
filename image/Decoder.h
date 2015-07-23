@@ -285,7 +285,7 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) = 0;
   virtual void FinishInternal();
   virtual void FinishWithErrorInternal();
 

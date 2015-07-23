@@ -424,7 +424,6 @@ Decoder::SetSizeOnImage()
  */
 
 void Decoder::InitInternal() { }
-void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
 void Decoder::FinishInternal() { }
 void Decoder::FinishWithErrorInternal() { }
 

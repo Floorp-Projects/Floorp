@@ -67,10 +67,10 @@ DecoderFactory::GetDecoderType(const char* aMimeType)
   return type;
 }
 
-static already_AddRefed<Decoder>
-GetDecoder(DecoderType aType,
-           RasterImage* aImage,
-           bool aIsRedecode)
+/* static */ already_AddRefed<Decoder>
+DecoderFactory::GetDecoder(DecoderType aType,
+                           RasterImage* aImage,
+                           bool aIsRedecode)
 {
   nsRefPtr<Decoder> decoder;
 
