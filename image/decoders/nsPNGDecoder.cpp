@@ -47,7 +47,7 @@ GetPNGDecoderAccountingLog()
 #  define MOZ_PNG_MAX_DIMENSION 32767
 #endif
 
-// For size decodes
+// For metadata decodes.
 #define WIDTH_OFFSET 16
 #define HEIGHT_OFFSET (WIDTH_OFFSET + 4)
 #define BYTES_NEEDED_FOR_DIMENSIONS (HEIGHT_OFFSET + 4)
@@ -226,8 +226,8 @@ nsPNGDecoder::EndImageFrame()
 void
 nsPNGDecoder::InitInternal()
 {
-  // For size decodes, we don't need to initialize the png decoder
-  if (IsSizeDecode()) {
+  // For metadata decodes, we don't need to initialize the PNG decoder.
+  if (IsMetadataDecode()) {
     return;
   }
 
@@ -321,8 +321,8 @@ nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
 
-  // If we only want width/height, we don't need to go through libpng
-  if (IsSizeDecode()) {
+  // If we only want width/height, we don't need to go through libpng.
+  if (IsMetadataDecode()) {
 
     // Are we done?
     if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {

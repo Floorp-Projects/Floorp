@@ -141,7 +141,7 @@ nsBMPDecoder::FinishInternal()
     MOZ_ASSERT(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && HasSize()) {
+    if (!IsMetadataDecode() && HasSize()) {
 
         // Invalidate
         nsIntRect r(0, 0, mBIH.width, GetHeight());
@@ -369,9 +369,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return;
       }
 
-      // We have the size. If we're doing a size decode, we got what
-      // we came for.
-      if (IsSizeDecode()) {
+      // We have the size. If we're doing a metadata decode, we're done.
+      if (IsMetadataDecode()) {
         return;
       }
 

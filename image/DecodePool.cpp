@@ -203,8 +203,8 @@ public:
       return;
     }
 
-    if (aDecoder->IsSizeDecode()) {
-      mSizeDecodeQueue.AppendElement(Move(decoder));
+    if (aDecoder->IsMetadataDecode()) {
+      mMetadataDecodeQueue.AppendElement(Move(decoder));
     } else {
       mFullDecodeQueue.AppendElement(Move(decoder));
     }
@@ -218,9 +218,9 @@ public:
     MonitorAutoLock lock(mMonitor);
 
     do {
-      // Prioritize size decodes over full decodes.
-      if (!mSizeDecodeQueue.IsEmpty()) {
-        return PopWorkFromQueue(mSizeDecodeQueue);
+      // Prioritize metadata decodes over full decodes.
+      if (!mMetadataDecodeQueue.IsEmpty()) {
+        return PopWorkFromQueue(mMetadataDecodeQueue);
       }
 
       if (!mFullDecodeQueue.IsEmpty()) {
@@ -253,9 +253,9 @@ private:
 
   nsThreadPoolNaming mThreadNaming;
 
-  // mMonitor guards mQueue and mShuttingDown.
+  // mMonitor guards the queues and mShuttingDown.
   Monitor mMonitor;
-  nsTArray<nsRefPtr<Decoder>> mSizeDecodeQueue;
+  nsTArray<nsRefPtr<Decoder>> mMetadataDecodeQueue;
   nsTArray<nsRefPtr<Decoder>> mFullDecodeQueue;
   bool mShuttingDown;
 };
