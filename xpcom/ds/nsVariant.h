@@ -64,6 +64,41 @@ public:
   nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
                           uint32_t* aCount, void** aPtr) const;
 
+  nsresult SetFromInt8(uint8_t aValue);
+  nsresult SetFromInt16(int16_t aValue);
+  nsresult SetFromInt32(int32_t aValue);
+  nsresult SetFromInt64(int64_t aValue);
+  nsresult SetFromUint8(uint8_t aValue);
+  nsresult SetFromUint16(uint16_t aValue);
+  nsresult SetFromUint32(uint32_t aValue);
+  nsresult SetFromUint64(uint64_t aValue);
+  nsresult SetFromFloat(float aValue);
+  nsresult SetFromDouble(double aValue);
+  nsresult SetFromBool(bool aValue);
+  nsresult SetFromChar(char aValue);
+  nsresult SetFromWChar(char16_t aValue);
+  nsresult SetFromID(const nsID& aValue);
+  nsresult SetFromAString(const nsAString& aValue);
+  nsresult SetFromDOMString(const nsAString& aValue);
+  nsresult SetFromAUTF8String(const nsAUTF8String& aValue);
+  nsresult SetFromACString(const nsACString& aValue);
+  nsresult SetFromString(const char* aValue);
+  nsresult SetFromWString(const char16_t* aValue);
+  nsresult SetFromISupports(nsISupports* aValue);
+  nsresult SetFromInterface(const nsIID& aIID, nsISupports* aValue);
+  nsresult SetFromArray(uint16_t aType, const nsIID* aIID, uint32_t aCount,
+                        void* aValue);
+  nsresult SetFromStringWithSize(uint32_t aSize, const char* aValue);
+  nsresult SetFromWStringWithSize(uint32_t aSize, const char16_t* aValue);
+
+  // Like SetFromWStringWithSize, but leaves the string uninitialized. It does
+  // does write the null-terminator.
+  nsresult AllocateWStringWithSize(uint32_t aSize);
+
+  nsresult SetToVoid();
+  nsresult SetToEmpty();
+  nsresult SetToEmptyArray();
+
 private:
   nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
@@ -141,52 +176,6 @@ public:
 
   static nsresult SetFromVariant(nsDiscriminatedUnion* aData,
                                  nsIVariant* aValue);
-
-  static nsresult SetFromInt8(nsDiscriminatedUnion* aData, uint8_t aValue);
-  static nsresult SetFromInt16(nsDiscriminatedUnion* aData, int16_t aValue);
-  static nsresult SetFromInt32(nsDiscriminatedUnion* aData, int32_t aValue);
-  static nsresult SetFromInt64(nsDiscriminatedUnion* aData, int64_t aValue);
-  static nsresult SetFromUint8(nsDiscriminatedUnion* aData, uint8_t aValue);
-  static nsresult SetFromUint16(nsDiscriminatedUnion* aData, uint16_t aValue);
-  static nsresult SetFromUint32(nsDiscriminatedUnion* aData, uint32_t aValue);
-  static nsresult SetFromUint64(nsDiscriminatedUnion* aData, uint64_t aValue);
-  static nsresult SetFromFloat(nsDiscriminatedUnion* aData, float aValue);
-  static nsresult SetFromDouble(nsDiscriminatedUnion* aData, double aValue);
-  static nsresult SetFromBool(nsDiscriminatedUnion* aData, bool aValue);
-  static nsresult SetFromChar(nsDiscriminatedUnion* aData, char aValue);
-  static nsresult SetFromWChar(nsDiscriminatedUnion* aData, char16_t aValue);
-  static nsresult SetFromID(nsDiscriminatedUnion* aData, const nsID& aValue);
-  static nsresult SetFromAString(nsDiscriminatedUnion* aData,
-                                 const nsAString& aValue);
-  static nsresult SetFromAUTF8String(nsDiscriminatedUnion* aData,
-                                     const nsAUTF8String& aValue);
-  static nsresult SetFromACString(nsDiscriminatedUnion* aData,
-                                  const nsACString& aValue);
-  static nsresult SetFromString(nsDiscriminatedUnion* aData,
-                                const char* aValue);
-  static nsresult SetFromWString(nsDiscriminatedUnion* aData,
-                                 const char16_t* aValue);
-  static nsresult SetFromISupports(nsDiscriminatedUnion* aData,
-                                   nsISupports* aValue);
-  static nsresult SetFromInterface(nsDiscriminatedUnion* aData,
-                                   const nsIID& aIID, nsISupports* aValue);
-  static nsresult SetFromArray(nsDiscriminatedUnion* aData, uint16_t aType,
-                               const nsIID* aIID, uint32_t aCount,
-                               void* aValue);
-  static nsresult SetFromStringWithSize(nsDiscriminatedUnion* aData,
-                                        uint32_t aSize, const char* aValue);
-  static nsresult SetFromWStringWithSize(nsDiscriminatedUnion* aData,
-                                         uint32_t aSize,
-                                         const char16_t* aValue);
-
-  // Like SetFromWStringWithSize, but leaves the string uninitialized. It does
-  // does write the null-terminator.
-  static nsresult AllocateWStringWithSize(nsDiscriminatedUnion* aData,
-                                          uint32_t aSize);
-
-  static nsresult SetToVoid(nsDiscriminatedUnion* aData);
-  static nsresult SetToEmpty(nsDiscriminatedUnion* aData);
-  static nsresult SetToEmptyArray(nsDiscriminatedUnion* aData);
 
   static void Traverse(const nsDiscriminatedUnion& aData,
                        nsCycleCollectionTraversalCallback& aCb);
