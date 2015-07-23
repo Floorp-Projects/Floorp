@@ -742,12 +742,12 @@ nsDiscriminatedUnion::ConvertToID(nsID* aResult) const
 
 /***************************************************************************/
 
-static nsresult
-ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
+nsresult
+nsDiscriminatedUnion::ToString(nsACString& aOutString) const
 {
   char* ptr;
 
-  switch (aData.mType) {
+  switch (mType) {
     // all the stuff we don't handle...
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
@@ -779,7 +779,7 @@ ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
     // nsID has its own text formatter.
 
     case nsIDataType::VTYPE_ID:
-      ptr = aData.u.mIDValue.ToString();
+      ptr = u.mIDValue.ToString();
       if (!ptr) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -792,7 +792,7 @@ ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
     case nsIDataType :: type_ :                                         \
     {                                                                   \
         nsAutoCString str;                                              \
-        str.AppendFloat(aData.u. member_);                              \
+        str.AppendFloat(u. member_);                              \
         aOutString.Assign(str);                                         \
         return NS_OK;                                                   \
     }
@@ -806,7 +806,7 @@ ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
 
 #define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)                 \
     case nsIDataType :: type_ :                                               \
-        ptr = PR_smprintf( format_ , (cast_) aData.u. member_ );              \
+        ptr = PR_smprintf( format_ , (cast_) u. member_ );              \
         break;
 
     CASE__SMPRINTF_NUMBER(VTYPE_INT8,   "%d",   int,      mInt8Value)
@@ -835,41 +835,40 @@ ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
   return NS_OK;
 }
 
-/* static */ nsresult
-nsVariant::ConvertToAString(const nsDiscriminatedUnion& aData,
-                            nsAString& aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToAString(nsAString& aResult) const
 {
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      aResult.Assign(*aData.u.mAStringValue);
+      aResult.Assign(*u.mAStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-      CopyASCIItoUTF16(*aData.u.mCStringValue, aResult);
+      CopyASCIItoUTF16(*u.mCStringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
-      CopyUTF8toUTF16(*aData.u.mUTF8StringValue, aResult);
+      CopyUTF8toUTF16(*u.mUTF8StringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-      CopyASCIItoUTF16(aData.u.str.mStringValue, aResult);
+      CopyASCIItoUTF16(u.str.mStringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-      aResult.Assign(aData.u.wstr.mWStringValue);
+      aResult.Assign(u.wstr.mWStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      CopyASCIItoUTF16(nsDependentCString(aData.u.str.mStringValue,
-                                          aData.u.str.mStringLength),
+      CopyASCIItoUTF16(nsDependentCString(u.str.mStringValue,
+                                          u.str.mStringLength),
                        aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      aResult.Assign(aData.u.wstr.mWStringValue, aData.u.wstr.mWStringLength);
+      aResult.Assign(u.wstr.mWStringValue, u.wstr.mWStringLength);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR:
-      aResult.Assign(aData.u.mWCharValue);
+      aResult.Assign(u.mWCharValue);
       return NS_OK;
     default: {
       nsAutoCString tempCString;
-      nsresult rv = ToString(aData, tempCString);
+      nsresult rv = ToString(tempCString);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -879,97 +878,95 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& aData,
   }
 }
 
-/* static */ nsresult
-nsVariant::ConvertToACString(const nsDiscriminatedUnion& aData,
-                             nsACString& aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToACString(nsACString& aResult) const
 {
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      LossyCopyUTF16toASCII(*aData.u.mAStringValue, aResult);
+      LossyCopyUTF16toASCII(*u.mAStringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-      aResult.Assign(*aData.u.mCStringValue);
+      aResult.Assign(*u.mCStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
       // XXX This is an extra copy that should be avoided
       // once Jag lands support for UTF8String and associated
       // conversion methods.
-      LossyCopyUTF16toASCII(NS_ConvertUTF8toUTF16(*aData.u.mUTF8StringValue),
+      LossyCopyUTF16toASCII(NS_ConvertUTF8toUTF16(*u.mUTF8StringValue),
                             aResult);
       return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-      aResult.Assign(*aData.u.str.mStringValue);
+      aResult.Assign(*u.str.mStringValue);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-      LossyCopyUTF16toASCII(nsDependentString(aData.u.wstr.mWStringValue),
+      LossyCopyUTF16toASCII(nsDependentString(u.wstr.mWStringValue),
                             aResult);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      aResult.Assign(aData.u.str.mStringValue, aData.u.str.mStringLength);
+      aResult.Assign(u.str.mStringValue, u.str.mStringLength);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      LossyCopyUTF16toASCII(nsDependentString(aData.u.wstr.mWStringValue,
-                                              aData.u.wstr.mWStringLength),
+      LossyCopyUTF16toASCII(nsDependentString(u.wstr.mWStringValue,
+                                              u.wstr.mWStringLength),
                             aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR: {
-      const char16_t* str = &aData.u.mWCharValue;
+      const char16_t* str = &u.mWCharValue;
       LossyCopyUTF16toASCII(Substring(str, 1), aResult);
       return NS_OK;
     }
     default:
-      return ToString(aData, aResult);
+      return ToString(aResult);
   }
 }
 
-/* static */ nsresult
-nsVariant::ConvertToAUTF8String(const nsDiscriminatedUnion& aData,
-                                nsAUTF8String& aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToAUTF8String(nsAUTF8String& aResult) const
 {
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      CopyUTF16toUTF8(*aData.u.mAStringValue, aResult);
+      CopyUTF16toUTF8(*u.mAStringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
       // XXX Extra copy, can be removed if we're sure CSTRING can
       //     only contain ASCII.
-      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(*aData.u.mCStringValue),
+      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(*u.mCStringValue),
                       aResult);
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
-      aResult.Assign(*aData.u.mUTF8StringValue);
+      aResult.Assign(*u.mUTF8StringValue);
       return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
       // XXX Extra copy, can be removed if we're sure CHAR_STR can
       //     only contain ASCII.
-      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(aData.u.str.mStringValue),
+      CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(u.str.mStringValue),
                       aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-      CopyUTF16toUTF8(aData.u.wstr.mWStringValue, aResult);
+      CopyUTF16toUTF8(u.wstr.mWStringValue, aResult);
       return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
       // XXX Extra copy, can be removed if we're sure CHAR_STR can
       //     only contain ASCII.
       CopyUTF16toUTF8(NS_ConvertASCIItoUTF16(
-        nsDependentCString(aData.u.str.mStringValue,
-                           aData.u.str.mStringLength)), aResult);
+        nsDependentCString(u.str.mStringValue,
+                           u.str.mStringLength)), aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      CopyUTF16toUTF8(nsDependentString(aData.u.wstr.mWStringValue,
-                                        aData.u.wstr.mWStringLength),
+      CopyUTF16toUTF8(nsDependentString(u.wstr.mWStringValue,
+                                        u.wstr.mWStringLength),
                       aResult);
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR: {
-      const char16_t* str = &aData.u.mWCharValue;
+      const char16_t* str = &u.mWCharValue;
       CopyUTF16toUTF8(Substring(str, 1), aResult);
       return NS_OK;
     }
     default: {
       nsAutoCString tempCString;
-      nsresult rv = ToString(aData, tempCString);
+      nsresult rv = ToString(tempCString);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -981,84 +978,82 @@ nsVariant::ConvertToAUTF8String(const nsDiscriminatedUnion& aData,
   }
 }
 
-/* static */ nsresult
-nsVariant::ConvertToString(const nsDiscriminatedUnion& aData, char** aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToString(char** aResult) const
 {
   uint32_t ignored;
-  return nsVariant::ConvertToStringWithSize(aData, &ignored, aResult);
+  return ConvertToStringWithSize(&ignored, aResult);
 }
 
-/* static */ nsresult
-nsVariant::ConvertToWString(const nsDiscriminatedUnion& aData,
-                            char16_t** aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToWString(char16_t** aResult) const
 {
   uint32_t ignored;
-  return nsVariant::ConvertToWStringWithSize(aData, &ignored, aResult);
+  return ConvertToWStringWithSize(&ignored, aResult);
 }
 
-/* static */ nsresult
-nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& aData,
-                                   uint32_t* aSize, char** aStr)
+nsresult
+nsDiscriminatedUnion::ConvertToStringWithSize(uint32_t* aSize, char** aStr) const
 {
   nsAutoString  tempString;
   nsAutoCString tempCString;
   nsresult rv;
 
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      *aSize = aData.u.mAStringValue->Length();
-      *aStr = ToNewCString(*aData.u.mAStringValue);
+      *aSize = u.mAStringValue->Length();
+      *aStr = ToNewCString(*u.mAStringValue);
       break;
     case nsIDataType::VTYPE_CSTRING:
-      *aSize = aData.u.mCStringValue->Length();
-      *aStr = ToNewCString(*aData.u.mCStringValue);
+      *aSize = u.mCStringValue->Length();
+      *aStr = ToNewCString(*u.mCStringValue);
       break;
     case nsIDataType::VTYPE_UTF8STRING: {
       // XXX This is doing 1 extra copy.  Need to fix this
       // when Jag lands UTF8String
       // we want:
-      // *aSize = *aData.mUTF8StringValue->Length();
-      // *aStr = ToNewCString(*aData.mUTF8StringValue);
+      // *aSize = *mUTF8StringValue->Length();
+      // *aStr = ToNewCString(*mUTF8StringValue);
       // But this will have to do for now.
-      NS_ConvertUTF8toUTF16 tempString(*aData.u.mUTF8StringValue);
+      NS_ConvertUTF8toUTF16 tempString(*u.mUTF8StringValue);
       *aSize = tempString.Length();
       *aStr = ToNewCString(tempString);
       break;
     }
     case nsIDataType::VTYPE_CHAR_STR: {
-      nsDependentCString cString(aData.u.str.mStringValue);
+      nsDependentCString cString(u.str.mStringValue);
       *aSize = cString.Length();
       *aStr = ToNewCString(cString);
       break;
     }
     case nsIDataType::VTYPE_WCHAR_STR: {
-      nsDependentString string(aData.u.wstr.mWStringValue);
+      nsDependentString string(u.wstr.mWStringValue);
       *aSize = string.Length();
       *aStr = ToNewCString(string);
       break;
     }
     case nsIDataType::VTYPE_STRING_SIZE_IS: {
-      nsDependentCString cString(aData.u.str.mStringValue,
-                                 aData.u.str.mStringLength);
+      nsDependentCString cString(u.str.mStringValue,
+                                 u.str.mStringLength);
       *aSize = cString.Length();
       *aStr = ToNewCString(cString);
       break;
     }
     case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
-      nsDependentString string(aData.u.wstr.mWStringValue,
-                               aData.u.wstr.mWStringLength);
+      nsDependentString string(u.wstr.mWStringValue,
+                               u.wstr.mWStringLength);
       *aSize = string.Length();
       *aStr = ToNewCString(string);
       break;
     }
     case nsIDataType::VTYPE_WCHAR:
-      tempString.Assign(aData.u.mWCharValue);
+      tempString.Assign(u.mWCharValue);
       *aSize = tempString.Length();
       *aStr = ToNewCString(tempString);
       break;
     default:
-      rv = ToString(aData, tempCString);
+      rv = ToString(tempCString);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1069,61 +1064,60 @@ nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& aData,
 
   return *aStr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-/* static */ nsresult
-nsVariant::ConvertToWStringWithSize(const nsDiscriminatedUnion& aData,
-                                    uint32_t* aSize, char16_t** aStr)
+nsresult
+nsDiscriminatedUnion::ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const
 {
   nsAutoString  tempString;
   nsAutoCString tempCString;
   nsresult rv;
 
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      *aSize = aData.u.mAStringValue->Length();
-      *aStr = ToNewUnicode(*aData.u.mAStringValue);
+      *aSize = u.mAStringValue->Length();
+      *aStr = ToNewUnicode(*u.mAStringValue);
       break;
     case nsIDataType::VTYPE_CSTRING:
-      *aSize = aData.u.mCStringValue->Length();
-      *aStr = ToNewUnicode(*aData.u.mCStringValue);
+      *aSize = u.mCStringValue->Length();
+      *aStr = ToNewUnicode(*u.mCStringValue);
       break;
     case nsIDataType::VTYPE_UTF8STRING: {
-      *aStr = UTF8ToNewUnicode(*aData.u.mUTF8StringValue, aSize);
+      *aStr = UTF8ToNewUnicode(*u.mUTF8StringValue, aSize);
       break;
     }
     case nsIDataType::VTYPE_CHAR_STR: {
-      nsDependentCString cString(aData.u.str.mStringValue);
+      nsDependentCString cString(u.str.mStringValue);
       *aSize = cString.Length();
       *aStr = ToNewUnicode(cString);
       break;
     }
     case nsIDataType::VTYPE_WCHAR_STR: {
-      nsDependentString string(aData.u.wstr.mWStringValue);
+      nsDependentString string(u.wstr.mWStringValue);
       *aSize = string.Length();
       *aStr = ToNewUnicode(string);
       break;
     }
     case nsIDataType::VTYPE_STRING_SIZE_IS: {
-      nsDependentCString cString(aData.u.str.mStringValue,
-                                 aData.u.str.mStringLength);
+      nsDependentCString cString(u.str.mStringValue,
+                                 u.str.mStringLength);
       *aSize = cString.Length();
       *aStr = ToNewUnicode(cString);
       break;
     }
     case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
-      nsDependentString string(aData.u.wstr.mWStringValue,
-                               aData.u.wstr.mWStringLength);
+      nsDependentString string(u.wstr.mWStringValue,
+                               u.wstr.mWStringLength);
       *aSize = string.Length();
       *aStr = ToNewUnicode(string);
       break;
     }
     case nsIDataType::VTYPE_WCHAR:
-      tempString.Assign(aData.u.mWCharValue);
+      tempString.Assign(u.mWCharValue);
       *aSize = tempString.Length();
       *aStr = ToNewUnicode(tempString);
       break;
     default:
-      rv = ToString(aData, tempCString);
+      rv = ToString(tempCString);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1841,7 +1835,7 @@ nsVariant::GetAsID(nsID* aResult)
 NS_IMETHODIMP
 nsVariant::GetAsAString(nsAString& aResult)
 {
-  return nsVariant::ConvertToAString(mData, aResult);
+  return mData.ConvertToAString(aResult);
 }
 
 /* DOMString getAsDOMString (); */
@@ -1850,35 +1844,35 @@ nsVariant::GetAsDOMString(nsAString& aResult)
 {
   // A DOMString maps to an AString internally, so we can re-use
   // ConvertToAString here.
-  return nsVariant::ConvertToAString(mData, aResult);
+  return mData.ConvertToAString(aResult);
 }
 
 /* ACString getAsACString (); */
 NS_IMETHODIMP
 nsVariant::GetAsACString(nsACString& aResult)
 {
-  return nsVariant::ConvertToACString(mData, aResult);
+  return mData.ConvertToACString(aResult);
 }
 
 /* AUTF8String getAsAUTF8String (); */
 NS_IMETHODIMP
 nsVariant::GetAsAUTF8String(nsAUTF8String& aResult)
 {
-  return nsVariant::ConvertToAUTF8String(mData, aResult);
+  return mData.ConvertToAUTF8String(aResult);
 }
 
 /* string getAsString (); */
 NS_IMETHODIMP
 nsVariant::GetAsString(char** aResult)
 {
-  return nsVariant::ConvertToString(mData, aResult);
+  return mData.ConvertToString(aResult);
 }
 
 /* wstring getAsWString (); */
 NS_IMETHODIMP
 nsVariant::GetAsWString(char16_t** aResult)
 {
-  return nsVariant::ConvertToWString(mData, aResult);
+  return mData.ConvertToWString(aResult);
 }
 
 /* nsISupports getAsISupports (); */
@@ -1915,14 +1909,14 @@ nsVariant::GetAsArray(uint16_t* aType, nsIID* aIID,
 NS_IMETHODIMP
 nsVariant::GetAsStringWithSize(uint32_t* aSize, char** aStr)
 {
-  return nsVariant::ConvertToStringWithSize(mData, aSize, aStr);
+  return mData.ConvertToStringWithSize(aSize, aStr);
 }
 
 /* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
 NS_IMETHODIMP
 nsVariant::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr)
 {
-  return nsVariant::ConvertToWStringWithSize(mData, aSize, aStr);
+  return mData.ConvertToWStringWithSize(aSize, aStr);
 }
 
 /***************************************************************************/

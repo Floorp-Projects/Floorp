@@ -51,10 +51,19 @@ public:
 
   nsresult ConvertToID(nsID* aResult) const;
 
+  nsresult ConvertToAString(nsAString& aResult) const;
+  nsresult ConvertToAUTF8String(nsAUTF8String& aResult) const;
+  nsresult ConvertToACString(nsACString& aResult) const;
+  nsresult ConvertToString(char** aResult) const;
+  nsresult ConvertToWString(char16_t** aResult) const;
+  nsresult ConvertToStringWithSize(uint32_t* aSize, char** aStr) const;
+  nsresult ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const;
+
 private:
   nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
   bool String2ID(nsID* aPid) const;
+  nsresult ToString(nsACString& aOutString) const;
 
 public:
   union
@@ -125,16 +134,6 @@ public:
 
   nsVariant();
 
-  static nsresult ConvertToAString(const nsDiscriminatedUnion& aData,
-                                   nsAString& aResult);
-  static nsresult ConvertToAUTF8String(const nsDiscriminatedUnion& aData,
-                                       nsAUTF8String& aResult);
-  static nsresult ConvertToACString(const nsDiscriminatedUnion& aData,
-                                    nsACString& aResult);
-  static nsresult ConvertToString(const nsDiscriminatedUnion& aData,
-                                  char** aResult);
-  static nsresult ConvertToWString(const nsDiscriminatedUnion& aData,
-                                   char16_t** aResult);
   static nsresult ConvertToISupports(const nsDiscriminatedUnion& aData,
                                      nsISupports** aResult);
   static nsresult ConvertToInterface(const nsDiscriminatedUnion& aData,
@@ -142,10 +141,6 @@ public:
   static nsresult ConvertToArray(const nsDiscriminatedUnion& aData,
                                  uint16_t* aType, nsIID* aIID,
                                  uint32_t* aCount, void** aPtr);
-  static nsresult ConvertToStringWithSize(const nsDiscriminatedUnion& aData,
-                                          uint32_t* aSize, char** aStr);
-  static nsresult ConvertToWStringWithSize(const nsDiscriminatedUnion& aData,
-                                           uint32_t* aSize, char16_t** aStr);
 
   static nsresult SetFromVariant(nsDiscriminatedUnion* aData,
                                  nsIVariant* aValue);
