@@ -1721,11 +1721,6 @@ nsVariant::nsVariant()
 #endif
 }
 
-nsVariant::~nsVariant()
-{
-  mData.Cleanup();
-}
-
 // For all the data getters we just forward to the static (and sharable)
 // 'ConvertTo' functions.
 

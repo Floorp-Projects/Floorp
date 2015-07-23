@@ -603,7 +603,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                 case nsIDataType::VTYPE_EMPTY:
                 default:
                     NS_ERROR("bad type in array!");
-                    du.Cleanup();
                     return false;
             }
 
@@ -613,7 +612,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                                            conversionType, pid,
                                            du.u.array.mArrayCount, pErr);
 
-            du.Cleanup();
             return success;
         }
         case nsIDataType::VTYPE_EMPTY_ARRAY:
