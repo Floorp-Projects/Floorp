@@ -49,7 +49,7 @@ public class SendTabList extends ListView {
 
     // The maximum number of target devices to show in the main list. Further devices are available
     // from a secondary menu.
-    public static final int MAXIMUM_INLINE_ELEMENTS = 2;
+    public static final int MAXIMUM_INLINE_ELEMENTS = R.integer.number_of_inline_share_devices;
 
     private SendTabDeviceListArrayAdapter clientListAdapter;
 
