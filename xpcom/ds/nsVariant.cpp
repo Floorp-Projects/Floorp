@@ -467,9 +467,9 @@ bad:
 #define NUMERIC_CONVERSION_METHOD_BEGIN(type_, Ctype_, name_)                 \
 /* static */ nsresult                                                         \
 nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
-                             Ctype_ *_retval)                                 \
+                             Ctype_* aResult)                                 \
 {                                                                             \
-    TRIVIAL_DATA_CONVERTER(type_, data, m##name_##Value, _retval)             \
+    TRIVIAL_DATA_CONVERTER(type_, data, m##name_##Value, aResult)             \
     nsDiscriminatedUnion tempData;                                            \
     nsresult rv = ToManageableNumber(data, &tempData);                        \
     /*                                                                     */ \
@@ -484,7 +484,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 
 #define CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(Ctype_)                      \
     case nsIDataType::VTYPE_INT32:                                            \
-        *_retval = ( Ctype_ ) tempData.u.mInt32Value;                         \
+        *aResult = ( Ctype_ ) tempData.u.mInt32Value;                         \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_)            \
@@ -493,13 +493,13 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
         int32_t value = tempData.u.mInt32Value;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *_retval = ( Ctype_ ) value;                                          \
+        *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
     }
 
 #define CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(Ctype_)                     \
     case nsIDataType::VTYPE_UINT32:                                           \
-        *_retval = ( Ctype_ ) tempData.u.mUint32Value;                        \
+        *aResult = ( Ctype_ ) tempData.u.mUint32Value;                        \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)                     \
@@ -508,13 +508,13 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
         uint32_t value = tempData.u.mUint32Value;                             \
         if(value > max_)                                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *_retval = ( Ctype_ ) value;                                          \
+        *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
     }
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_)                     \
     case nsIDataType::VTYPE_DOUBLE:                                           \
-        *_retval = ( Ctype_ ) tempData.u.mDoubleValue;                        \
+        *aResult = ( Ctype_ ) tempData.u.mDoubleValue;                        \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_)           \
@@ -523,7 +523,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
         double value = tempData.u.mDoubleValue;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *_retval = ( Ctype_ ) value;                                          \
+        *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
     }
 
@@ -533,7 +533,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
         double value = tempData.u.mDoubleValue;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
-        *_retval = ( Ctype_ ) value;                                          \
+        *aResult = ( Ctype_ ) value;                                          \
         return (0.0 == fmod(value,1.0)) ?                                     \
             rv : NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;                       \
     }
