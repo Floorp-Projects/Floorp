@@ -340,19 +340,23 @@ private:
 
   /**
    * Creates and runs a decoder, either synchronously or asynchronously
-   * according to @aFlags. Passes the provided target size @aSize and decode
-   * flags @aFlags to CreateDecoder. If a size decode is desired, pass Nothing
-   * for @aSize.
+   * according to @aFlags. Decodes at the provided target size @aSize, using
+   * decode flags @aFlags.
+   *
+   * It's an error to call Decode() before this image's intrinsic size is
+   * available. A metadata decode must successfully complete first.
+   *
+   * If downscale-during-decode is not enabled for this image (i.e., if
+   * mDownscaleDuringDecode is false), it is an error to pass an @aSize value
+   * different from this image's intrinsic size.
    */
-  NS_IMETHOD Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags);
+  NS_IMETHOD Decode(const gfx::IntSize& aSize, uint32_t aFlags);
 
   /**
-   * Creates a new decoder with a target size of @aSize and decode flags
-   * specified by @aFlags. If a size decode is desired, pass Nothing() for
-   * @aSize.
+   * Creates and runs a metadata decoder, either synchronously or
+   * asynchronously according to @aFlags.
    */
-  already_AddRefed<Decoder> CreateDecoder(const Maybe<nsIntSize>& aSize,
-                                          uint32_t aFlags);
+  NS_IMETHOD DecodeMetadata(uint32_t aFlags);
 
   /**
    * In catastrophic circumstances like a GPU driver crash, we may lose our
