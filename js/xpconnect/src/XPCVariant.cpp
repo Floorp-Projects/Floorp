@@ -730,7 +730,7 @@ NS_IMETHODIMP XPCVariant::GetAsWChar(char16_t* _retval)
 /* [notxpcom] nsresult getAsID (out nsID retval); */
 NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID* retval)
 {
-    return nsVariant::ConvertToID(mData, retval);
+    return mData.ConvertToID(retval);
 }
 
 /* AString getAsAString (); */

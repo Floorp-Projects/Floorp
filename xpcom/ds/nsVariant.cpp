@@ -670,27 +670,27 @@ nsDiscriminatedUnion::ConvertToUint64(uint64_t* aResult) const
 
 /***************************************************************************/
 
-static bool
-String2ID(const nsDiscriminatedUnion& aData, nsID* aPid)
+bool
+nsDiscriminatedUnion::String2ID(nsID* aPid) const
 {
   nsAutoString tempString;
   nsAString* pString;
 
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      return aPid->Parse(aData.u.str.mStringValue);
+      return aPid->Parse(u.str.mStringValue);
     case nsIDataType::VTYPE_CSTRING:
-      return aPid->Parse(PromiseFlatCString(*aData.u.mCStringValue).get());
+      return aPid->Parse(PromiseFlatCString(*u.mCStringValue).get());
     case nsIDataType::VTYPE_UTF8STRING:
-      return aPid->Parse(PromiseFlatUTF8String(*aData.u.mUTF8StringValue).get());
+      return aPid->Parse(PromiseFlatUTF8String(*u.mUTF8StringValue).get());
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      pString = aData.u.mAStringValue;
+      pString = u.mAStringValue;
       break;
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      tempString.Assign(aData.u.wstr.mWStringValue);
+      tempString.Assign(u.wstr.mWStringValue);
       pString = &tempString;
       break;
     default:
@@ -707,20 +707,20 @@ String2ID(const nsDiscriminatedUnion& aData, nsID* aPid)
   return result;
 }
 
-/* static */ nsresult
-nsVariant::ConvertToID(const nsDiscriminatedUnion& aData, nsID* aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToID(nsID* aResult) const
 {
   nsID id;
 
-  switch (aData.mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_ID:
-      *aResult = aData.u.mIDValue;
+      *aResult = u.mIDValue;
       return NS_OK;
     case nsIDataType::VTYPE_INTERFACE:
       *aResult = NS_GET_IID(nsISupports);
       return NS_OK;
     case nsIDataType::VTYPE_INTERFACE_IS:
-      *aResult = aData.u.iface.mInterfaceID;
+      *aResult = u.iface.mInterfaceID;
       return NS_OK;
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
@@ -730,7 +730,7 @@ nsVariant::ConvertToID(const nsDiscriminatedUnion& aData, nsID* aResult)
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      if (!String2ID(aData, &id)) {
+      if (!String2ID(&id)) {
         return NS_ERROR_CANNOT_CONVERT_DATA;
       }
       *aResult = id;
@@ -1834,7 +1834,7 @@ nsVariant::GetAsWChar(char16_t* aResult)
 NS_IMETHODIMP_(nsresult)
 nsVariant::GetAsID(nsID* aResult)
 {
-  return nsVariant::ConvertToID(mData, aResult);
+  return mData.ConvertToID(aResult);
 }
 
 /* AString getAsAString (); */

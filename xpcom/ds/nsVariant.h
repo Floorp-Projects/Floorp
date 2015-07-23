@@ -49,9 +49,12 @@ public:
   nsresult ConvertToChar(char* aResult) const;
   nsresult ConvertToWChar(char16_t* aResult) const;
 
+  nsresult ConvertToID(nsID* aResult) const;
+
 private:
   nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
+  bool String2ID(nsID* aPid) const;
 
 public:
   union
@@ -122,8 +125,6 @@ public:
 
   nsVariant();
 
-  static nsresult ConvertToID(const nsDiscriminatedUnion& aData,
-                              nsID* aResult);
   static nsresult ConvertToAString(const nsDiscriminatedUnion& aData,
                                    nsAString& aResult);
   static nsresult ConvertToAUTF8String(const nsDiscriminatedUnion& aData,
