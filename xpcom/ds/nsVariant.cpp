@@ -1733,7 +1733,7 @@ nsVariant::~nsVariant()
 NS_IMETHODIMP
 nsVariant::GetDataType(uint16_t* aDataType)
 {
-  *aDataType = mData.mType;
+  *aDataType = mData.GetType();
   return NS_OK;
 }
 

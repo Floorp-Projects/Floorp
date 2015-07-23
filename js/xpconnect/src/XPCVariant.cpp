@@ -274,7 +274,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
         if (!str)
             return false;
 
-        MOZ_ASSERT(mData.mType == nsIDataType::VTYPE_EMPTY,
+        MOZ_ASSERT(mData.GetType() == nsIDataType::VTYPE_EMPTY,
                    "Why do we already have data?");
 
         size_t length = JS_GetStringLength(str);
@@ -645,7 +645,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 /* readonly attribute uint16_t dataType; */
 NS_IMETHODIMP XPCVariant::GetDataType(uint16_t* aDataType)
 {
-    *aDataType = mData.mType;
+    *aDataType = mData.GetType();
     return NS_OK;
 }
 
