@@ -176,8 +176,8 @@ nsDiscriminatedUnion::FreeArray()
         case nsIDataType:: type_ :                                            \
         {                                                                     \
             ctype_ ** p = (ctype_ **) u.array.mArrayValue;                    \
-            for(uint32_t i = u.array.mArrayCount; i > 0; p++, i--)            \
-                if(*p)                                                        \
+            for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
+                if (*p)                                                       \
                     free((char*)*p);                                          \
             break;                                                            \
         }
@@ -459,7 +459,7 @@ bad:
 /***************************************************************************/
 
 #define TRIVIAL_DATA_CONVERTER(type_, data_, member_, retval_)                \
-    if(data_.mType == nsIDataType :: type_) {                                 \
+    if (data_.mType == nsIDataType :: type_) {                                \
         *retval_ = data_.u.member_;                                           \
         return NS_OK;                                                         \
     }
@@ -477,7 +477,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
     /* For the final return. So all the return cases below should return   */ \
     /* this rv when indicating success.                                    */ \
     /*                                                                     */ \
-    if(NS_FAILED(rv))                                                         \
+    if (NS_FAILED(rv))                                                        \
         return rv;                                                            \
     switch(tempData.mType)                                                    \
     {
@@ -491,7 +491,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
     case nsIDataType::VTYPE_INT32:                                            \
     {                                                                         \
         int32_t value = tempData.u.mInt32Value;                               \
-        if(value < min_ || value > max_)                                      \
+        if (value < min_ || value > max_)                                     \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
@@ -506,7 +506,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
     case nsIDataType::VTYPE_UINT32:                                           \
     {                                                                         \
         uint32_t value = tempData.u.mUint32Value;                             \
-        if(value > max_)                                                      \
+        if (value > max_)                                                     \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
@@ -521,7 +521,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
     case nsIDataType::VTYPE_DOUBLE:                                           \
     {                                                                         \
         double value = tempData.u.mDoubleValue;                               \
-        if(value < min_ || value > max_)                                      \
+        if (value < min_ || value > max_)                                     \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *aResult = ( Ctype_ ) value;                                          \
         return rv;                                                            \
@@ -531,7 +531,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
     case nsIDataType::VTYPE_DOUBLE:                                           \
     {                                                                         \
         double value = tempData.u.mDoubleValue;                               \
-        if(value < min_ || value > max_)                                      \
+        if (value < min_ || value > max_)                                     \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *aResult = ( Ctype_ ) value;                                          \
         return (0.0 == fmod(value,1.0)) ?                                     \
@@ -1237,9 +1237,8 @@ nsVariant::ConvertToArray(const nsDiscriminatedUnion& aData, uint16_t* aType,
         rv = aValue->GetAs##name_ ( cast_ &(aData->u. member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)                          \
-        if(NS_SUCCEEDED(rv))                                                  \
-        {                                                                     \
-            aData->mType  = nsIDataType :: type_ ;                            \
+        if (NS_SUCCEEDED(rv)) {                                               \
+          aData->mType  = nsIDataType :: type_ ;                              \
         }                                                                     \
         break;                                                                \
     }
