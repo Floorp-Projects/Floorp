@@ -20,10 +20,8 @@ fi
 cd $objdir
 
 if [ "`uname -m`" = "x86_64" ]; then
-    export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib64
     _arch=64
 else
-    export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib
     _arch=32
 fi
 
