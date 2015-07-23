@@ -179,10 +179,10 @@ template <typename STRING_TYPE> class BasicStringPiece {
   // in a "const char*" or a "string" wherever a "StringPiece" is
   // expected (likewise for char16, string16, StringPiece16).
   BasicStringPiece() : ptr_(NULL), length_(0) {}
-  MOZ_IMPLICIT BasicStringPiece(const value_type* str)
+  BasicStringPiece(const value_type* str)
       : ptr_(str),
         length_((str == NULL) ? 0 : STRING_TYPE::traits_type::length(str)) {}
-  MOZ_IMPLICIT BasicStringPiece(const STRING_TYPE& str)
+  BasicStringPiece(const STRING_TYPE& str)
       : ptr_(str.data()), length_(str.size()) {}
   BasicStringPiece(const value_type* offset, size_type len)
       : ptr_(offset), length_(len) {}

@@ -1363,7 +1363,7 @@ StyleAnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
 #define YZSHEAR 2
 
 static bool
-Decompose2DMatrix(const gfxMatrix &aMatrix, Point3D &aScale,
+Decompose2DMatrix(const Matrix &aMatrix, Point3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
                   Point3D &aTranslate)
 {
@@ -1422,11 +1422,11 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, Point3D &aScale,
  * in http://tog.acm.org/resources/GraphicsGems/AllGems.tar.gz
  */
 static bool
-Decompose3DMatrix(const gfx3DMatrix &aMatrix, Point3D &aScale,
+Decompose3DMatrix(const Matrix4x4 &aMatrix, Point3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
                   Point3D &aTranslate, Point4D &aPerspective)
 {
-  Matrix4x4 local = ToMatrix4x4(aMatrix);
+  Matrix4x4 local = aMatrix;
 
   if (local[3][3] == 0) {
     return false;
@@ -1524,9 +1524,9 @@ T InterpolateNumerically(const T& aOne, const T& aTwo, double aCoeff)
 }
 
 
-/* static */ gfx3DMatrix
-StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
-                                                const gfx3DMatrix &aMatrix2,
+/* static */ Matrix4x4
+StyleAnimationValue::InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
+                                                const Matrix4x4 &aMatrix2,
                                                 double aProgress)
 {
   // Decompose both matrices
@@ -1543,7 +1543,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
   gfxQuaternion rotate2;
   float shear2[3] = { 0.0f, 0.0f, 0.0f};
 
-  gfxMatrix matrix2d1, matrix2d2;
+  Matrix matrix2d1, matrix2d2;
   if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
     Decompose2DMatrix(matrix2d1, scale1, shear1, rotate1, translate1);
     Decompose2DMatrix(matrix2d2, scale2, shear2, rotate2, translate2);
@@ -1596,7 +1596,7 @@ StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
     result.PreScale(scale.x, scale.y, scale.z);
   }
 
-  return To3DMatrix(result);
+  return result;
 }
 
 static nsCSSValueList*
@@ -3538,19 +3538,19 @@ StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
 
   RuleNodeCacheConditions dontCare;
   nsStyleTransformMatrix::TransformReferenceBox refBox(aForFrame);
-  gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
-                            list->mHead,
-                            aForFrame->StyleContext(),
-                            aForFrame->PresContext(), dontCare, refBox,
-                            aForFrame->PresContext()->AppUnitsPerDevPixel());
+  Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
+                          list->mHead,
+                          aForFrame->StyleContext(),
+                          aForFrame->PresContext(), dontCare, refBox,
+                          aForFrame->PresContext()->AppUnitsPerDevPixel());
 
-  gfxMatrix transform2d;
+  Matrix transform2d;
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   if (!canDraw2D) {
     return gfxSize();
   }
 
-  return transform2d.ScaleFactors(true);
+  return ThebesMatrix(transform2d).ScaleFactors(true);
 }
 
 StyleAnimationValue::StyleAnimationValue(int32_t aInt, Unit aUnit,

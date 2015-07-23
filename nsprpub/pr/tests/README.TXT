@@ -227,6 +227,9 @@ prftest1.c
 prftest2.c
 	Obsolete. Subsumed in prftest.c
 
+prfz.c
+	Tests printf handling of (s)size_t formats
+
 priotest.c
 	Limited use. Tests NSPR thread dispatching priority.
 

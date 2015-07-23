@@ -475,6 +475,7 @@ static PRStatus _MW_PollInternal(PRWaitGroup *group)
             PR_Lock(group->ml);
             if (_prmw_running != group->state)
             {
+                PR_DELETE(poll_list);
                 PR_SetError(PR_INVALID_STATE_ERROR, 0);
                 goto aborted;
             }

@@ -126,8 +126,13 @@ RESPATH = $(BINPATH)
 endif
 DEFINES += -DRESPATH=$(RESPATH)
 
-AB = $(firstword $(subst -, ,$(AB_CD)))
-DEFINES += -DAB=$(AB)
+LPROJ_ROOT = $(firstword $(subst -, ,$(AB_CD)))
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifeq (zh-TW,$(AB_CD))
+LPROJ_ROOT := $(subst -,_,$(AB_CD))
+endif
+endif
+DEFINES += -DLPROJ_ROOT=$(LPROJ_ROOT)
 
 DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
 ifdef MOZ_NATIVE_ICU

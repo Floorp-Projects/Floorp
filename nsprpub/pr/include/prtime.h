@@ -248,14 +248,14 @@ NSPR_API(PRStatus) PR_ParseTimeString (
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 NSPR_API(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt,
-                                           const PRExplodedTime *tm);
+                                 const PRExplodedTime *time);
 
-/* Format a time value into a buffer. Time is always in US English format, regardless
- * of locale setting.
+/* Format a time value into a buffer. Time is always in US English format,
+ * regardless of locale setting.
  */
 NSPR_API(PRUint32)
-PR_FormatTimeUSEnglish( char* buf, PRUint32 bufSize,
-                        const char* format, const PRExplodedTime* tm );
+PR_FormatTimeUSEnglish(char *buf, PRUint32 bufSize,
+                       const char *format, const PRExplodedTime *time);
 
 PR_END_EXTERN_C
 

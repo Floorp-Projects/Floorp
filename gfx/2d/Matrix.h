@@ -716,6 +716,11 @@ public:
       (*this)[2] += (*this)[1] * aSkew;
   }
 
+  Matrix4x4 &ChangeBasis(const Point3D& aOrigin)
+  {
+    return ChangeBasis(aOrigin.x, aOrigin.y, aOrigin.z);
+  }
+
   Matrix4x4 &ChangeBasis(Float aX, Float aY, Float aZ)
   {
     // Translate to the origin before applying this matrix
@@ -950,6 +955,18 @@ public:
 
   // Set all the members of the matrix to NaN
   void SetNAN();
+
+  void SkewXY(double aXSkew, double aYSkew);
+
+  void RotateX(double aTheta);
+
+  void RotateY(double aTheta);
+
+  void RotateZ(double aTheta);
+
+  void Perspective(float aDepth);
+
+  Point3D GetNormalVector() const;
 };
 
 class Matrix5x4

@@ -14,6 +14,14 @@
 #include "mozilla/gfx/BaseRect.h"
 #include "mozilla/Assertions.h"
 
+namespace mozilla {
+namespace gfx {
+class Matrix4x4;
+} // namepsace gfx
+} // namespace mozilla
+
+struct gfxQuad;
+
 struct gfxMargin : public mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> {
   typedef mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> Super;
 
@@ -137,6 +145,16 @@ struct gfxRect :
         width /= k;
         height /= k;
     }
+
+    /*
+     * Transform this rectangle with aMatrix, resulting in a gfxQuad.
+     */
+    gfxQuad TransformToQuad(const mozilla::gfx::Matrix4x4 &aMatrix) const;
+
+    /*
+     * Transform this rectangle with aMatrix, as an axis-aligned bounding box
+     */
+    void TransformBounds(const mozilla::gfx::Matrix4x4 &aMatrix);
 };
 
 #endif /* GFX_RECT_H */

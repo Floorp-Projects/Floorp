@@ -6,6 +6,7 @@
 #include "gfxMatrix.h"
 #include "cairo.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/gfx/Matrix.h" // for Matrix4x4
 
 #define CAIRO_MATRIX(x) reinterpret_cast<cairo_matrix_t*>((x))
 #define CONST_CAIRO_MATRIX(x) reinterpret_cast<const cairo_matrix_t*>((x))
@@ -157,4 +158,32 @@ gfxMatrix::NudgeToIntegers(void)
     NudgeToInteger(&_31);
     NudgeToInteger(&_32);
     return *this;
+}
+
+mozilla::gfx::Matrix4x4
+gfxMatrix::operator *(const mozilla::gfx::Matrix4x4& aMatrix) const
+{
+  Matrix4x4 resultMatrix;
+
+  resultMatrix._11 = _11 * aMatrix._11 + _12 * aMatrix._21;
+  resultMatrix._12 = _11 * aMatrix._12 + _12 * aMatrix._22;
+  resultMatrix._13 = _11 * aMatrix._13 + _12 * aMatrix._23;
+  resultMatrix._14 = _11 * aMatrix._14 + _12 * aMatrix._24;
+
+  resultMatrix._21 = _21 * aMatrix._11 + _22 * aMatrix._21;
+  resultMatrix._22 = _21 * aMatrix._12 + _22 * aMatrix._22;
+  resultMatrix._23 = _21 * aMatrix._13 + _22 * aMatrix._23;
+  resultMatrix._24 = _21 * aMatrix._14 + _22 * aMatrix._24;
+
+  resultMatrix._31 = aMatrix._31;
+  resultMatrix._32 = aMatrix._32;
+  resultMatrix._33 = aMatrix._33;
+  resultMatrix._34 = aMatrix._34;
+
+  resultMatrix._41 = _31 * aMatrix._11 + _32 * aMatrix._21 + aMatrix._41;
+  resultMatrix._42 = _31 * aMatrix._12 + _32 * aMatrix._22 + aMatrix._42;
+  resultMatrix._43 = _31 * aMatrix._13 + _32 * aMatrix._23 + aMatrix._43;
+  resultMatrix._44 = _31 * aMatrix._14 + _32 * aMatrix._24 + aMatrix._44;
+
+  return resultMatrix;
 }

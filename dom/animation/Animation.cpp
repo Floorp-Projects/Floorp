@@ -158,9 +158,7 @@ Animation::SetPlaybackRate(double aPlaybackRate)
   Nullable<TimeDuration> previousTime = GetCurrentTime();
   mPlaybackRate = aPlaybackRate;
   if (!previousTime.IsNull()) {
-    ErrorResult rv;
     SetCurrentTime(previousTime.Value());
-    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
   }
 }
 
@@ -449,9 +447,7 @@ Animation::SilentlySetPlaybackRate(double aPlaybackRate)
   Nullable<TimeDuration> previousTime = GetCurrentTime();
   mPlaybackRate = aPlaybackRate;
   if (!previousTime.IsNull()) {
-    ErrorResult rv;
     SilentlySetCurrentTime(previousTime.Value());
-    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
   }
 }
 
