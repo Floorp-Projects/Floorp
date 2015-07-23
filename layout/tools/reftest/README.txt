@@ -491,6 +491,16 @@ In a reftest-wait test, to disable testing of invalidation and force the final
 snapshot to be taken of the whole window, set the "reftest-snapshot-all"
 class on the root element.
 
+Avoid triggering flushes: class="reftest-no-flush"
+==================================================
+
+The reftest harness normally triggers flushes by calling
+getBoundingClientRect on the root element.  If the root element of the
+test has class="reftest-no-flush", it doesn't do this.
+
+This is useful for testing animations on the compositor thread, since
+the flushing will cause a main thread style update.
+
 Zoom Tests: reftest-zoom="<float>"
 ==================================
 

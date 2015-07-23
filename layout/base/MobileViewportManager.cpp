@@ -114,7 +114,11 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
     / mPresShell->GetPresContext()->AppUnitsPerDevPixel());
   LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
 
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
+  if (!gfxPrefs::APZAllowZooming()) {
+    return ViewTargetAs<ScreenPixel>(cssToDev * res / ParentLayerToLayerScale(1),
+      PixelCastJustification::ScreenIsParentLayerForRoot);
+  }
+
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom = aViewportInfo.GetDefaultZoom();
     MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
@@ -173,7 +177,6 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
     nsLayoutUtils::SetResolutionAndScaleTo(mPresShell, newRes.scale);
     res = newRes;
   }
-#endif
 
   return ViewTargetAs<ScreenPixel>(cssToDev * res / ParentLayerToLayerScale(1),
     PixelCastJustification::ScreenIsParentLayerForRoot);

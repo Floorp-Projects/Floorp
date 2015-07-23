@@ -137,8 +137,8 @@ mozilla::layers::ZoomConstraints
 ComputeZoomConstraintsFromViewportInfo(const nsViewportInfo& aViewportInfo)
 {
   mozilla::layers::ZoomConstraints constraints;
-  constraints.mAllowZoom = aViewportInfo.IsZoomAllowed();
-  constraints.mAllowDoubleTapZoom = aViewportInfo.IsDoubleTapZoomAllowed();
+  constraints.mAllowZoom = aViewportInfo.IsZoomAllowed() && gfxPrefs::APZAllowZooming();
+  constraints.mAllowDoubleTapZoom = aViewportInfo.IsDoubleTapZoomAllowed() && gfxPrefs::APZAllowZooming();
   constraints.mMinZoom.scale = aViewportInfo.GetMinZoom().scale;
   constraints.mMaxZoom.scale = aViewportInfo.GetMaxZoom().scale;
   return constraints;

@@ -23,7 +23,10 @@ from collections import (
     defaultdict,
     OrderedDict,
 )
-from StringIO import StringIO
+from io import (
+    StringIO,
+    BytesIO,
+)
 
 
 if sys.version_info[0] == 3:
@@ -106,7 +109,7 @@ def ensureParentDir(path):
                 raise
 
 
-class FileAvoidWrite(StringIO):
+class FileAvoidWrite(BytesIO):
     """File-like object that buffers output and only writes if content changed.
 
     We create an instance from an existing filename. New content is written to
@@ -119,11 +122,16 @@ class FileAvoidWrite(StringIO):
     could add unwanted overhead to calls.
     """
     def __init__(self, filename, capture_diff=False, mode='rU'):
-        StringIO.__init__(self)
+        BytesIO.__init__(self)
         self.name = filename
         self._capture_diff = capture_diff
         self.diff = None
         self.mode = mode
+
+    def write(self, buf):
+        if isinstance(buf, unicode):
+            buf = buf.encode('utf-8')
+        BytesIO.write(self, buf)
 
     def close(self):
         """Stop accepting writes, compare file contents, and rewrite if needed.
@@ -137,7 +145,7 @@ class FileAvoidWrite(StringIO):
         of the result.
         """
         buf = self.getvalue()
-        StringIO.close(self)
+        BytesIO.close(self)
         existed = False
         old_content = None
 

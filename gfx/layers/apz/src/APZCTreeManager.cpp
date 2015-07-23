@@ -28,6 +28,7 @@
 #include "UnitTransforms.h"             // for ViewAs
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
+#include "TreeTraversal.h"              // for generic tree traveral algorithms
 #include "LayersLogging.h"              // for Stringify
 #include "Units.h"                      // for ParentlayerPixel
 
@@ -1529,39 +1530,6 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
     if (*aOutHitResult != HitNothing) {
       return result;
-    }
-  }
-
-  return nullptr;
-}
-
-/*
- * Do a breadth-first search of the tree rooted at |aRoot|, and return the
- * first visited node that satisfies |aCondition|, or nullptr if no such node
- * was found.
- *
- * |Node| should have methods GetLastChild() and GetPrevSibling().
- */
-template <typename Node, typename Condition>
-static const Node* BreadthFirstSearch(const Node* aRoot, const Condition& aCondition)
-{
-  if (!aRoot) {
-    return nullptr;
-  }
-  std::deque<const Node*> queue;
-  queue.push_back(aRoot);
-  while (!queue.empty()) {
-    const Node* node = queue.front();
-    queue.pop_front();
-
-    if (aCondition(node)) {
-      return node;
-    }
-
-    for (const Node* child = node->GetLastChild();
-         child;
-         child = child->GetPrevSibling()) {
-      queue.push_back(child);
     }
   }
 

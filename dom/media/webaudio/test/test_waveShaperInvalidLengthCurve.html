@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test WaveShaperNode with no curve</title>
+  <title>Test WaveShaperNode with an invalid curve</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="webaudio.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -18,7 +18,30 @@ var gTest = {
     source.buffer = this.buffer;
 
     var shaper = context.createWaveShaper();
-    shaper.curve = new Float32Array(0);
+
+    expectException(() => {
+        shaper.curve = new Float32Array(0);
+    }, DOMException.INVALID_STATE_ERR);
+
+    is(shaper.curve, null, "The curve mustn't have been set");
+
+    expectException(() => {
+        shaper.curve = new Float32Array(1);
+    }, DOMException.INVALID_STATE_ERR);
+
+    is(shaper.curve, null, "The curve mustn't have been set");
+
+    expectNoException(() => {
+        shaper.curve = new Float32Array(2);
+    });
+
+    isnot(shaper.curve, null, "The curve must have been set");
+
+    expectNoException(() => {
+        shaper.curve = null;
+    });
+
+    is(shaper.curve, null, "The curve must be null by default");
 
     source.connect(shaper);
 

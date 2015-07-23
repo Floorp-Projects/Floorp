@@ -1,7 +1,8 @@
 Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
 
-https://bugzilla.mozilla.org/show_bug.cgi?id=1102195 bug1102195part2.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=1102195 bug1102195part3.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=1102195 bug1102195part4.patch
+https://hg.mozilla.org/mozilla-central/rev/efa7518e43b0
+https://hg.mozilla.org/mozilla-central/rev/421446ab2347
+https://hg.mozilla.org/mozilla-central/rev/beb74056ac2d
 https://hg.mozilla.org/mozilla-central/rev/7df8d6639971
+https://bugzilla.mozilla.org/show_bug.cgi?id=1157864 sandbox-cdefs.patch

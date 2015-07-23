@@ -58,7 +58,10 @@ ls -lah $WORKSPACE/B2G/objdir-gecko/dist/
 
 mv $WORKSPACE/B2G/sources.xml $HOME/artifacts/sources.xml
 mv $WORKSPACE/B2G/out/target/product/generic_x86/tests/gaia-tests.zip $HOME/artifacts/gaia-tests.zip
-mv $WORKSPACE/B2G/out/target/product/generic_x86/tests/b2g-*.zip $HOME/artifacts
+for name in common cppunittest reftest mochitest xpcshell web-platform; do
+    mv $WORKSPACE/B2G/objdir-gecko/dist/*.$name.tests.zip $HOME/artifacts/target.$name.tests.zip ;
+done
+mv $WORKSPACE/B2G/objdir-gecko/dist/test_packages_tc.json $HOME/artifacts/test_packages.json
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 

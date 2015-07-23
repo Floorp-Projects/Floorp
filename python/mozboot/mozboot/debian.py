@@ -37,6 +37,7 @@ class DebianBootstrapper(BaseBootstrapper):
         'libgstreamer0.10-dev',
         'libgstreamer-plugins-base0.10-dev',
         'libgtk2.0-dev',
+        'libgtk-3-dev',
         'libiw-dev',
         'libnotify-dev',
         'libpulse-dev',

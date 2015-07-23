@@ -8,6 +8,7 @@
 
 #include "AsyncEventRunner.h"
 #include "MediaData.h"
+#include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "TrackBuffer.h"
 #include "mozilla/ErrorResult.h"
@@ -34,6 +35,8 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #define MSE_API(arg, ...) MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug, ("SourceBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 namespace mozilla {
+
+using media::TimeUnit;
 
 namespace dom {
 
@@ -140,7 +143,7 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  TimeIntervals ranges = mContentManager->Buffered();
+  media::TimeIntervals ranges = mContentManager->Buffered();
   MSE_DEBUGV("ranges=%s", DumpTimeRanges(ranges).get());
   nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   ranges.ToTimeRanges(tr);

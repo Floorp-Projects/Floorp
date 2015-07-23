@@ -8561,13 +8561,10 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
                          providedPrincipal,
                          nsContentUtils::IsCallerChrome());
 
-  nsIPrincipal* principal = GetPrincipal();
   JS::Rooted<JS::Value> message(aCx, aMessage);
   JS::Rooted<JS::Value> transfer(aCx, aTransfer);
-  bool subsumes;
 
-  if (NS_FAILED(callerPrin->Subsumes(principal, &subsumes)) ||
-      !event->Write(aCx, message, transfer, subsumes, this)) {
+  if (!event->Write(aCx, message, transfer, this)) {
     aError.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }

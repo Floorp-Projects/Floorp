@@ -207,7 +207,7 @@ class JitcodeGlobalEntry
             return startsBelowPointer(ptr) && endsAbovePointer(ptr);
         }
 
-        bool markJitcodeIfUnmarked(JSTracer* trc);
+        template <class ShouldMarkProvider> bool markJitcode(JSTracer* trc);
         bool isJitcodeMarkedFromAnyThread();
         bool isJitcodeAboutToBeFinalized();
     };
@@ -368,7 +368,7 @@ class JitcodeGlobalEntry
         void forEachOptimizationTypeInfo(JSRuntime* rt, uint8_t index,
                                          IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op);
 
-        bool markIfUnmarked(JSTracer* trc);
+        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
         void sweep();
         bool isMarkedFromAnyThread();
     };
@@ -426,7 +426,7 @@ class JitcodeGlobalEntry
         void youngestFrameLocationAtAddr(JSRuntime* rt, void* ptr,
                                          JSScript** script, jsbytecode** pc) const;
 
-        bool markIfUnmarked(JSTracer* trc);
+        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
         void sweep();
         bool isMarkedFromAnyThread();
     };
@@ -475,7 +475,7 @@ class JitcodeGlobalEntry
         void forEachOptimizationTypeInfo(JSRuntime* rt, uint8_t index,
                                          IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op);
 
-        bool markIfUnmarked(JSTracer* trc);
+        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
         void sweep(JSRuntime* rt);
         bool isMarkedFromAnyThread(JSRuntime* rt);
     };
@@ -911,17 +911,18 @@ class JitcodeGlobalEntry
         return baseEntry().jitcode()->zone();
     }
 
-    bool markIfUnmarked(JSTracer* trc) {
-        bool markedAny = baseEntry().markJitcodeIfUnmarked(trc);
+    template <class ShouldMarkProvider>
+    bool mark(JSTracer* trc) {
+        bool markedAny = baseEntry().markJitcode<ShouldMarkProvider>(trc);
         switch (kind()) {
           case Ion:
-            markedAny |= ionEntry().markIfUnmarked(trc);
+            markedAny |= ionEntry().mark<ShouldMarkProvider>(trc);
             break;
           case Baseline:
-            markedAny |= baselineEntry().markIfUnmarked(trc);
+            markedAny |= baselineEntry().mark<ShouldMarkProvider>(trc);
             break;
           case IonCache:
-            markedAny |= ionCacheEntry().markIfUnmarked(trc);
+            markedAny |= ionCacheEntry().mark<ShouldMarkProvider>(trc);
           case Dummy:
             break;
           default:
@@ -1052,6 +1053,7 @@ class JitcodeGlobalTable
     void releaseEntry(JitcodeGlobalEntry& entry, JitcodeGlobalEntry** prevTower, JSRuntime* rt);
 
     void setAllEntriesAsExpired(JSRuntime* rt);
+    void markUnconditionally(JSTracer* trc);
     bool markIteratively(JSTracer* trc);
     void sweep(JSRuntime* rt);
 
