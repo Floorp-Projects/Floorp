@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { fill: url(#green); }
+  </style>
+  <linearGradient id="green">
+    <stop stop-color="green"/>
+  </linearGradient>
+  <text x="10" y="20">This text must be green.</text>
+</svg>
