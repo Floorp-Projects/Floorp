@@ -10,8 +10,9 @@
 
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nspr/prprf.h"
+#include "prprf.h"
 
+#include <string.h>
 #include <set>
 
 namespace mozilla {
@@ -588,6 +589,19 @@ SdpHelper::appendSdpParseErrors(
        << std::endl;
   }
   *aErrorString += os.str();
+}
+
+/* static */ bool
+SdpHelper::GetPtAsInt(const std::string& ptString, uint16_t* ptOutparam)
+{
+  char* end;
+  unsigned long pt = strtoul(ptString.c_str(), &end, 10);
+  size_t length = static_cast<size_t>(end - ptString.c_str());
+  if ((pt > UINT16_MAX) || (length != ptString.size())) {
+    return false;
+  }
+  *ptOutparam = pt;
+  return true;
 }
 
 } // namespace mozilla
