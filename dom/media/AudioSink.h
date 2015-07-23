@@ -6,15 +6,20 @@
 #if !defined(AudioSink_h__)
 #define AudioSink_h__
 
+#include "MediaInfo.h"
+#include "nsRefPtr.h"
 #include "nsISupportsImpl.h"
-#include "MediaDecoderReader.h"
+
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 
+class AudioData;
 class AudioStream;
+template <class T> class MediaQueue;
 
 class AudioSink {
 public:
@@ -22,7 +27,9 @@ public:
 
   AudioSink(MediaQueue<AudioData>& aAudioQueue,
             ReentrantMonitor& aMonitor,
-            int64_t aStartTime, AudioInfo aInfo, dom::AudioChannel aChannel);
+            int64_t aStartTime,
+            const AudioInfo& aInfo,
+            dom::AudioChannel aChannel);
 
   // Return a promise which will be resolved when AudioSink finishes playing,
   // or rejected if any error.
