@@ -66,9 +66,8 @@
 }
 
 :root[devtoolstheme="dark"] #identity-box {
+  --identity-box-border-color: #5F6670;
   --identity-box-chrome-color: #46afe3;
-  --identity-box-chrome-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
-  --identity-box-verified-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
   --verified-identity-box-background-color: transparent;
   --identity-box-selected-background-color: rgba(231,230,230,.2);
 }
