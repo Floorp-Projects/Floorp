@@ -7906,14 +7906,14 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
                           /*allowZoom*/false,
-                          /*allowDoubleTapZoom*/ true);
+                          /*allowDoubleTapZoom*/ false);
   }
 
   if (!gfxPrefs::MetaViewportEnabled()) {
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
                           /*allowZoom*/ false,
-                          /*allowDoubleTapZoom*/ true);
+                          /*allowDoubleTapZoom*/ false);
   }
 
   // In cases where the width of the CSS viewport is less than or equal to the width
