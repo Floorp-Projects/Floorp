@@ -78,10 +78,6 @@ public:
    * the image. No actual image data will be decoded and no surfaces will be
    * allocated. The decoder will send notifications to @aImage.
    *
-   * XXX(seth): A metadata decode is called a "size decode" in most of ImageLib,
-   * but we are going to move away from that term, as it's both confusing to
-   * people and increasingly inaccurate.
-   *
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aImage The image will own the decoder and which should receive
    *               notifications as decoding progresses.

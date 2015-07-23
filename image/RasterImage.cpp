@@ -2018,17 +2018,17 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
                  aDecoder->TakeInvalidRect(),
                  aDecoder->GetDecodeFlags());
 
-  bool wasSize = aDecoder->IsSizeDecode();
+  bool wasMetadata = aDecoder->IsMetadataDecode();
   bool done = aDecoder->GetDecodeDone();
 
-  if (!wasSize && aDecoder->ChunkCount()) {
+  if (!wasMetadata && aDecoder->ChunkCount()) {
     Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS,
                           aDecoder->ChunkCount());
   }
 
   if (done) {
-    // Do some telemetry if this isn't a size decode.
-    if (!wasSize) {
+    // Do some telemetry if this isn't a metadata decode.
+    if (!wasMetadata) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_TIME,
                             int32_t(aDecoder->DecodeTime().ToMicroseconds()));
 
@@ -2045,12 +2045,12 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     // Detect errors.
     if (aDecoder->HasError() && !aDecoder->WasAborted()) {
       DoError();
-    } else if (wasSize && !mHasSize) {
+    } else if (wasMetadata && !mHasSize) {
       DoError();
     }
 
     // If we were waiting to fire the load event, go ahead and fire it now.
-    if (mLoadProgress && wasSize) {
+    if (mLoadProgress && wasMetadata) {
       NotifyForLoadEvent(*mLoadProgress);
       mLoadProgress = Nothing();
       NotifyProgress(FLAG_ONLOAD_UNBLOCKED);
@@ -2062,8 +2062,8 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
     UnlockImage();
   }
 
-  // If we were a size decode and a full decode was requested, now's the time.
-  if (done && wasSize && mWantFullDecode) {
+  // If we were a metadata decode and a full decode was requested, do it.
+  if (done && wasMetadata && mWantFullDecode) {
     mWantFullDecode = false;
     RequestDecode();
   }
