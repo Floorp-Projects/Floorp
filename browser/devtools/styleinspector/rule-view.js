@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals overlays, Services, EventEmitter, StyleInspectorMenu,
-   clipboardHelper, _strings, domUtils, AutocompletePopup */
+   clipboardHelper, _strings, domUtils, AutocompletePopup, loader,
+   osString */
 
 "use strict";
 
@@ -209,7 +210,7 @@ ElementStyle.prototype = {
       filter: this.showUserAgentStyles ? "ua" : undefined,
     }).then(entries => {
       if (this.destroyed) {
-        return;
+        return promise.resolve(undefined);
       }
 
       // Make sure the dummy element has been created before continuing...
@@ -236,14 +237,12 @@ ElementStyle.prototype = {
 
         // We're done with the previous list of rules.
         delete this._refreshRules;
-
-        return null;
       });
     }).then(null, e => {
       // populate is often called after a setTimeout,
       // the connection may already be closed.
       if (this.destroyed) {
-        return;
+        return promise.resolve(undefined);
       }
       return promiseWarn(e);
     });
@@ -636,7 +635,7 @@ Rule.prototype = {
       disabled.delete(this.style);
     }
 
-    let promise = aModifications.apply().then(() => {
+    let modificationsPromise = aModifications.apply().then(() => {
       let cssProps = {};
       for (let cssProp of parseDeclarations(this.style.cssText)) {
         cssProps[cssProp.name] = cssProp;
@@ -668,8 +667,8 @@ Rule.prototype = {
       this.elementStyle._changed();
     }).then(null, promiseWarn);
 
-    this._applyingModifications = promise;
-    return promise;
+    this._applyingModifications = modificationsPromise;
+    return modificationsPromise;
   },
 
   /**
@@ -1741,7 +1740,7 @@ CssRuleView.prototype = {
   refreshPanel: function() {
     // Ignore refreshes during editing or when no element is selected.
     if (this.isEditing || !this._elementStyle) {
-      return;
+      return promise.resolve(undefined);
     }
 
     // Repopulate the element style once the current modifications are done.
@@ -1893,9 +1892,10 @@ CssRuleView.prototype = {
 
   /**
    * Creates an expandable container in the rule view
-   * @param  {String}  aLabel The label for the container header
-   * @param  {Boolean} isPseudo Whether or not the container will hold
-   *                            pseudo element rules
+   * @param  {String} aLabel
+   *         The label for the container header
+   * @param  {Boolean} isPseudo
+   *         Whether or not the container will hold pseudo element rules
    * @return {DOMNode} The container element
    */
   createExpandableContainer: function(aLabel, isPseudo = false) {
@@ -1915,42 +1915,57 @@ CssRuleView.prototype = {
     container.classList.add("ruleview-expandable-container");
     this.element.appendChild(container);
 
-    let toggleContainerVisibility = (isPseudo, showPseudo) => {
-      let isOpen = twisty.getAttribute("open");
-
-      if (isPseudo) {
-        this._showPseudoElements = !!showPseudo;
-
-        Services.prefs.setBoolPref("devtools.inspector.show_pseudo_elements",
-          this.showPseudoElements);
-
-        header.classList.toggle("show-expandable-container",
-          this.showPseudoElements);
-
-        isOpen = !this.showPseudoElements;
-      } else {
-        header.classList.toggle("show-expandable-container");
-      }
-
-      if (isOpen) {
-        twisty.removeAttribute("open");
-      } else {
-        twisty.setAttribute("open", "true");
-      }
-    };
-
     header.addEventListener("dblclick", () => {
-      toggleContainerVisibility(isPseudo, !this.showPseudoElements);
+      this._toggleContainerVisibility(twisty, header, isPseudo,
+        !this.showPseudoElements);
     }, false);
+
     twisty.addEventListener("click", () => {
-      toggleContainerVisibility(isPseudo, !this.showPseudoElements);
+      this._toggleContainerVisibility(twisty, header, isPseudo,
+        !this.showPseudoElements);
     }, false);
 
     if (isPseudo) {
-      toggleContainerVisibility(isPseudo, this.showPseudoElements);
+      this._toggleContainerVisibility(twisty, header, isPseudo,
+        this.showPseudoElements);
     }
 
     return container;
+  },
+
+  /**
+   * Toggle the visibility of an expandable container
+   * @param  {DOMNode}  twisty
+   *         clickable toggle DOM Node
+   * @param  {DOMNode}  header
+   *         expandable container header DOM Node
+   * @param  {Boolean}  isPseudo
+   *         whether or not the container will hold pseudo element rules
+   * @param  {Boolean}  showPseudo
+   *         whether or not pseudo element rules should be displayed
+   */
+  _toggleContainerVisibility: function(twisty, header, isPseudo, showPseudo) {
+    let isOpen = twisty.getAttribute("open");
+
+    if (isPseudo) {
+      this._showPseudoElements = !!showPseudo;
+
+      Services.prefs.setBoolPref("devtools.inspector.show_pseudo_elements",
+        this.showPseudoElements);
+
+      header.classList.toggle("show-expandable-container",
+        this.showPseudoElements);
+
+      isOpen = !this.showPseudoElements;
+    } else {
+      header.classList.toggle("show-expandable-container");
+    }
+
+    if (isOpen) {
+      twisty.removeAttribute("open");
+    } else {
+      twisty.setAttribute("open", "true");
+    }
   },
 
   _getRuleViewHeaderClassName: function(isPseudo) {
