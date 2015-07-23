@@ -2091,7 +2091,9 @@ HttpBaseChannel::ShouldIntercept()
     nsresult rv = controller->ShouldPrepareForIntercept(mURI,
                                                         IsNavigation(),
                                                         &shouldIntercept);
-    NS_ENSURE_SUCCESS(rv, false);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
   }
   return shouldIntercept;
 }
