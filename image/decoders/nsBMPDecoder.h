@@ -22,8 +22,6 @@ class RasterImage;
 class nsBMPDecoder : public Decoder
 {
 public:
-
-    explicit nsBMPDecoder(RasterImage* aImage);
     ~nsBMPDecoder();
 
     // Specifies whether or not the BMP file will contain alpha data
@@ -55,6 +53,12 @@ public:
     virtual void FinishInternal() override;
 
 private:
+    friend class DecoderFactory;
+    friend class nsICODecoder;
+
+    // Decoders should only be instantiated via DecoderFactory.
+    // XXX(seth): nsICODecoder is temporarily an exception to this rule.
+    explicit nsBMPDecoder(RasterImage* aImage);
 
     /// Calculates the red-, green- and blueshift in mBitFields using
     /// the bitmasks from mBitFields

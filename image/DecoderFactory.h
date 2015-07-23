@@ -91,6 +91,13 @@ public:
 
 private:
   virtual ~DecoderFactory() = 0;
+
+  /**
+   * An internal method which allocates a new decoder of the requested @aType.
+   */
+  static already_AddRefed<Decoder> GetDecoder(DecoderType aType,
+                                              RasterImage* aImage,
+                                              bool aIsRedecode);
 };
 
 } // namespace image
