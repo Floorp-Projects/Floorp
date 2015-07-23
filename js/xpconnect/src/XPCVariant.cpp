@@ -736,7 +736,7 @@ NS_IMETHODIMP_(nsresult) XPCVariant::GetAsID(nsID* retval)
 /* AString getAsAString (); */
 NS_IMETHODIMP XPCVariant::GetAsAString(nsAString & _retval)
 {
-    return nsVariant::ConvertToAString(mData, _retval);
+    return mData.ConvertToAString(_retval);
 }
 
 /* DOMString getAsDOMString (); */
@@ -744,31 +744,31 @@ NS_IMETHODIMP XPCVariant::GetAsDOMString(nsAString & _retval)
 {
     // A DOMString maps to an AString internally, so we can re-use
     // ConvertToAString here.
-    return nsVariant::ConvertToAString(mData, _retval);
+    return mData.ConvertToAString(_retval);
 }
 
 /* ACString getAsACString (); */
 NS_IMETHODIMP XPCVariant::GetAsACString(nsACString & _retval)
 {
-    return nsVariant::ConvertToACString(mData, _retval);
+    return mData.ConvertToACString(_retval);
 }
 
 /* AUTF8String getAsAUTF8String (); */
 NS_IMETHODIMP XPCVariant::GetAsAUTF8String(nsAUTF8String & _retval)
 {
-    return nsVariant::ConvertToAUTF8String(mData, _retval);
+    return mData.ConvertToAUTF8String(_retval);
 }
 
 /* string getAsString (); */
 NS_IMETHODIMP XPCVariant::GetAsString(char** _retval)
 {
-    return nsVariant::ConvertToString(mData, _retval);
+    return mData.ConvertToString(_retval);
 }
 
 /* wstring getAsWString (); */
 NS_IMETHODIMP XPCVariant::GetAsWString(char16_t** _retval)
 {
-    return nsVariant::ConvertToWString(mData, _retval);
+    return mData.ConvertToWString(_retval);
 }
 
 /* nsISupports getAsISupports (); */
@@ -793,11 +793,11 @@ NS_IMETHODIMP_(nsresult) XPCVariant::GetAsArray(uint16_t* type, nsIID* iid, uint
 /* void getAsStringWithSize (out uint32_t size, [size_is (size), retval] out string str); */
 NS_IMETHODIMP XPCVariant::GetAsStringWithSize(uint32_t* size, char** str)
 {
-    return nsVariant::ConvertToStringWithSize(mData, size, str);
+    return mData.ConvertToStringWithSize(size, str);
 }
 
 /* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
 NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t* size, char16_t** str)
 {
-    return nsVariant::ConvertToWStringWithSize(mData, size, str);
+    return mData.ConvertToWStringWithSize(size, str);
 }
