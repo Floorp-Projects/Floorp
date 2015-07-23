@@ -256,9 +256,10 @@ public:
   virtual bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
 
   /* When the graph wakes up to do an iteration, implementations return the
-   * range of time that will be processed. */
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) = 0;
+   * range of time that will be processed.  This is called only once per
+   * iteration; it may determine the interval from state in a previous
+   * call. */
+  virtual MediaTime GetIntervalForIteration() = 0;
 protected:
   nsCOMPtr<nsIThread> mThread;
 };
@@ -272,8 +273,7 @@ class SystemClockDriver : public ThreadedDriver
 public:
   explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
+  virtual MediaTime GetIntervalForIteration() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
@@ -292,8 +292,7 @@ class OfflineClockDriver : public ThreadedDriver
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) override;
+  virtual MediaTime GetIntervalForIteration() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
   virtual TimeStamp GetCurrentTimeStamp() override;
