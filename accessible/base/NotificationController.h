@@ -298,12 +298,6 @@ private:
   nsTHashtable<nsCOMPtrHashKey<nsIContent> > mTextHash;
 
   /**
-   * Update the accessible tree for pending rendered text change notifications.
-   */
-  static PLDHashOperator TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
-                                        void* aUserArg);
-
-  /**
    * Other notifications like DOM events. Don't make this an nsAutoTArray; we
    * use SwapElements() on it.
    */
