@@ -65,8 +65,8 @@ nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
     // This group results in a int32_t...
 
 #define CASE__NUMBER_INT32(type_, member_)                                    \
-    case nsIDataType :: type_ :                                               \
-        aOutData->u.mInt32Value = u. member_ ;                                \
+    case nsIDataType::type_ :                                                 \
+        aOutData->u.mInt32Value = u.member_ ;                                 \
         aOutData->mType = nsIDataType::VTYPE_INT32;                           \
         return NS_OK;
 
@@ -172,9 +172,9 @@ nsDiscriminatedUnion::FreeArray()
   NS_ASSERTION(u.array.mArrayCount, "bad array count");
 
 #define CASE__FREE_ARRAY_PTR(type_, ctype_)                                   \
-        case nsIDataType:: type_ :                                            \
+        case nsIDataType::type_ :                                             \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) u.array.mArrayValue;                    \
+            ctype_** p = (ctype_**) u.array.mArrayValue;                      \
             for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
                 if (*p)                                                       \
                     free((char*)*p);                                          \
@@ -182,9 +182,9 @@ nsDiscriminatedUnion::FreeArray()
         }
 
 #define CASE__FREE_ARRAY_IFACE(type_, ctype_)                                 \
-        case nsIDataType:: type_ :                                            \
+        case nsIDataType::type_ :                                             \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) u.array.mArrayValue;                    \
+            ctype_** p = (ctype_**) u.array.mArrayValue;                      \
             for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
                 if (*p)                                                       \
                     (*p)->Release();                                          \
@@ -458,7 +458,7 @@ bad:
 /***************************************************************************/
 
 #define TRIVIAL_DATA_CONVERTER(type_, member_, retval_)                       \
-    if (mType == nsIDataType :: type_) {                                      \
+    if (mType == nsIDataType::type_) {                                        \
         *retval_ = u.member_;                                                 \
         return NS_OK;                                                         \
     }
@@ -789,10 +789,10 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
 
     // Can't use PR_smprintf for floats, since it's locale-dependent
 #define CASE__APPENDFLOAT_NUMBER(type_, member_)                        \
-    case nsIDataType :: type_ :                                         \
+    case nsIDataType::type_ :                                           \
     {                                                                   \
         nsAutoCString str;                                              \
-        str.AppendFloat(u. member_);                              \
+        str.AppendFloat(u.member_);                                     \
         aOutString.Assign(str);                                         \
         return NS_OK;                                                   \
     }
@@ -804,9 +804,9 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
 
     // the rest can be PR_smprintf'd and use common code.
 
-#define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)                 \
-    case nsIDataType :: type_ :                                               \
-        ptr = PR_smprintf( format_ , (cast_) u. member_ );              \
+#define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)          \
+    case nsIDataType::type_:                                           \
+        ptr = PR_smprintf( format_ , (cast_) u.member_);               \
         break;
 
     CASE__SMPRINTF_NUMBER(VTYPE_INT8,   "%d",   int,      mInt8Value)
@@ -1200,7 +1200,7 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
     Cleanup()
 
 #define DATA_SETTER_EPILOGUE(type_)                                           \
-    mType = nsIDataType :: type_;                                             \
+    mType = nsIDataType::type_;                                               \
     return NS_OK
 
 #define DATA_SETTER(type_, member_, value_)                                   \
@@ -1220,26 +1220,26 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
     {                                                                         \
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
-        rv = aValue->GetAs##name_ (&(u. member_ ));
+        rv = aValue->GetAs##name_ (&(u.member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
-        rv = aValue->GetAs##name_ ( cast_ &(u. member_ ));
+        rv = aValue->GetAs##name_ ( cast_ &(u.member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)                          \
         if (NS_SUCCEEDED(rv)) {                                               \
-          mType  = nsIDataType :: type_ ;                                     \
+          mType  = nsIDataType::type_ ;                                       \
         }                                                                     \
         break;                                                                \
     }
 
 #define CASE__SET_FROM_VARIANT_TYPE(type_, member_, name_)                    \
-    case nsIDataType :: type_ :                                               \
+    case nsIDataType::type_:                                                  \
         CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                          \
         CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
         CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
 
 #define CASE__SET_FROM_VARIANT_VTYPE_CAST(type_, cast_, member_, name_)       \
-    case nsIDataType :: type_ :                                               \
+    case nsIDataType::type_ :                                                 \
         CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(type_)                          \
         CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
         CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)
