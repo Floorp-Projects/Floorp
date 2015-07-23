@@ -391,10 +391,6 @@ CompositorD3D11::Initialize()
                                        DXGI_MWA_NO_WINDOW_CHANGES);
   }
 
-  if (!mWidget->InitCompositor(this)) {
-    return false;
-  }
-
   reporter.SetSuccessful();
   return true;
 }
