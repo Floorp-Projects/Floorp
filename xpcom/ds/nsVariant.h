@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* The long avoided variant support for xpcom. */
-
 #ifndef nsVariant_h
 #define nsVariant_h
 
@@ -25,13 +23,16 @@ class nsCycleCollectionTraversalCallback;
 #define PromiseFlatUTF8String PromiseFlatCString
 
 /**
- * nsDiscriminatedUnion is a type that nsIVariant implementors *may* use
- * to hold underlying data. It has no methods. So, its use requires no linkage
- * to the xpcom module.
+ * nsDiscriminatedUnion is a class that nsIVariant implementors can use
+ * to hold the underlying data.
  */
 
-struct nsDiscriminatedUnion
+class nsDiscriminatedUnion
 {
+public:
+
+  nsDiscriminatedUnion() : mType(nsIDataType::VTYPE_EMPTY) {}
+
   union
   {
     int8_t         mInt8Value;
@@ -100,7 +101,6 @@ public:
 
   nsVariant();
 
-  static nsresult Initialize(nsDiscriminatedUnion* aData);
   static nsresult Cleanup(nsDiscriminatedUnion* aData);
 
   static nsresult ConvertToInt8(const nsDiscriminatedUnion& aData,

@@ -32,7 +32,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(XPCVariant)
 XPCVariant::XPCVariant(JSContext* cx, Value aJSVal)
     : mJSVal(aJSVal), mCCGeneration(0)
 {
-    nsVariant::Initialize(&mData);
     if (!mJSVal.isPrimitive()) {
         // XXXbholley - The innerization here was from bug 638026. Blake says
         // the basic problem was that we were storing the C++ inner but the JS
@@ -542,7 +541,6 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         case nsIDataType::VTYPE_ARRAY:
         {
             nsDiscriminatedUnion du;
-            nsVariant::Initialize(&du);
             nsresult rv;
 
             rv = variant->GetAsArray(&du.u.array.mArrayType,
