@@ -8,7 +8,6 @@
 
 .searchbar-dropmarker-image {
   --searchbar-dropmarker-url: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
-  --searchbar-dropmarker-2x-url: url("chrome://browser/skin/searchbar-dropmarker@2x.png");
 }
 
 .autocomplete-textbox-container {
@@ -132,10 +131,6 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 @media (min-resolution: 1.1dppx) {
   .searchbar-engine-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
-  .searchbar-dropmarker-image {
-    list-style-image: var(--searchbar-dropmarker-2x-url);
   }
 
   .searchbar-search-button {

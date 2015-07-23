@@ -36,6 +36,7 @@ TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell,
 {
   MOZ_ASSERT(aObservedPtr);
   sActiveConsumers--;
+  aObservedPtr.get()->ClearMarkers();
   aObservedPtr.get()->remove();
   aObservedPtr.reset(nullptr);
 }

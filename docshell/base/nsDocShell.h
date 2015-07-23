@@ -977,11 +977,6 @@ private:
   // has been called without a matching NotifyRunToCompletionStop.
   uint32_t mJSRunToCompletionDepth;
 
-  nsTArray<mozilla::UniquePtr<TimelineMarker>> mProfileTimelineMarkers;
-
-  // Get rid of all the timeline markers accumulated so far
-  void ClearProfileTimelineMarkers();
-
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
   nsresult DoFindItemWithName(const char16_t* aName,
