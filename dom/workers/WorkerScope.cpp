@@ -59,7 +59,8 @@ using mozilla::ipc::PrincipalInfo;
 BEGIN_WORKERS_NAMESPACE
 
 WorkerGlobalScope::WorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
-: mWorkerPrivate(aWorkerPrivate)
+: mWindowInteractionsAllowed(0)
+, mWorkerPrivate(aWorkerPrivate)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
