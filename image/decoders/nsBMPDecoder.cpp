@@ -39,7 +39,7 @@ GetBMPLog()
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mPos(0)
-  , mLOH(WIN_V3_HEADER_LENGTH)
+  , mLOH(BMP_HEADER_LENGTH::WIN_V3)
   , mNumColors(0)
   , mColors(nullptr)
   , mRow(nullptr)
@@ -101,13 +101,14 @@ nsBMPDecoder::GetImageData()
 int32_t
 nsBMPDecoder::GetCompressedImageSize() const
 {
-  // For everything except BI_RGB the header field must be defined
-  if (mBIH.compression != BI_RGB) {
+  // For everything except BMPINFOHEADER::RGB the header field must be defined
+  if (mBIH.compression != BMPINFOHEADER::RGB) {
     return mBIH.image_size;
   }
 
-  // mBIH.image_size isn't always filled for BI_RGB so calculate it manually
-  // The pixel array size is calculated based on extra 4 byte boundary padding
+  // mBIH.image_size isn't always filled for BMPINFOHEADER::RGB so calculate it
+  // manually. The pixel array size is calculated based on extra 4 byte
+  // boundary padding.
   uint32_t rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to round up
 
   // Pad to DWORD Boundary
@@ -140,7 +141,7 @@ nsBMPDecoder::FinishInternal()
     MOZ_ASSERT(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && HasSize()) {
+    if (!IsMetadataDecode() && HasSize()) {
 
         // Invalidate
         nsIntRect r(0, 0, mBIH.width, GetHeight());
@@ -206,39 +207,39 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       return;
   }
 
-  // This code assumes that mRawBuf == WIN_V3_INTERNAL_BIH_LENGTH
-  // and that sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH
-  MOZ_ASSERT(sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH);
-  MOZ_ASSERT(sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH);
-  MOZ_ASSERT(OS2_INTERNAL_BIH_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH);
+  // This code assumes that mRawBuf == BIH_INTERNAL_LENGTH::WIN_V3
+  // and that sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH
+  MOZ_ASSERT(sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3);
+  MOZ_ASSERT(sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH);
+  MOZ_ASSERT(BIH_INTERNAL_LENGTH::OS2 < BIH_INTERNAL_LENGTH::WIN_V3);
 
   // This code also assumes it's working with a byte array
   MOZ_ASSERT(sizeof(mRawBuf[0]) == 1);
 
-  if (mPos < BFH_INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
-      // BFH_INTERNAL_LENGTH < sizeof(mRawBuf)
-      // mPos < BFH_INTERNAL_LENGTH
-      // BFH_INTERNAL_LENGTH - mPos < sizeof(mRawBuf)
-      // so toCopy <= BFH_INTERNAL_LENGTH
+  if (mPos < BMPFILEHEADER::INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
+      // BMPFILEHEADER::INTERNAL_LENGTH < sizeof(mRawBuf)
+      // mPos < BMPFILEHEADER::INTERNAL_LENGTH
+      // BMPFILEHEADER::INTERNAL_LENGTH - mPos < sizeof(mRawBuf)
+      // so toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
       // so toCopy < sizeof(mRawBuf)
-      // so toCopy > 0 && toCopy <= BFH_INTERNAL_LENGTH
-      uint32_t toCopy = BFH_INTERNAL_LENGTH - mPos;
+      // so toCopy > 0 && toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
+      uint32_t toCopy = BMPFILEHEADER::INTERNAL_LENGTH - mPos;
       if (toCopy > aCount) {
           toCopy = aCount;
       }
 
-      // mRawBuf is a byte array of size WIN_V3_INTERNAL_BIH_LENGTH
+      // mRawBuf is a byte array of size BIH_INTERNAL_LENGTH::WIN_V3
       // (verified above)
-      // mPos is < BFH_INTERNAL_LENGTH
-      // BFH_INTERNAL_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
+      // mPos is < BMPFILEHEADER::INTERNAL_LENGTH
+      // BMPFILEHEADER::INTERNAL_LENGTH < BIH_INTERNAL_LENGTH::WIN_V3
       // so mPos < sizeof(mRawBuf)
       //
       // Therefore this assert should hold
       MOZ_ASSERT(mPos < sizeof(mRawBuf));
 
-      // toCopy <= BFH_INTERNAL_LENGTH
-      // mPos >= 0 && mPos < BFH_INTERNAL_LENGTH
-      // sizeof(mRawBuf) >= BFH_INTERNAL_LENGTH (verified above)
+      // toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
+      // mPos >= 0 && mPos < BMPFILEHEADER::INTERNAL_LENGTH
+      // sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH (verified above)
       //
       // Therefore this assert should hold
       MOZ_ASSERT(mPos + toCopy <= sizeof(mRawBuf));
@@ -248,37 +249,37 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       aCount -= toCopy;
       aBuffer += toCopy;
   }
-  if (mPos == BFH_INTERNAL_LENGTH) {
+  if (mPos == BMPFILEHEADER::INTERNAL_LENGTH) {
       ProcessFileHeader();
       if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M') {
           PostDataError();
           return;
       }
-      if (mBFH.bihsize == OS2_BIH_LENGTH) {
-          mLOH = OS2_HEADER_LENGTH;
+      if (mBFH.bihsize == BIH_LENGTH::OS2) {
+          mLOH = BMP_HEADER_LENGTH::OS2;
       }
   }
-  if (mPos >= BFH_INTERNAL_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
-      // mLOH == WIN_V3_HEADER_LENGTH || mLOH == OS2_HEADER_LENGTH
-      // OS2_HEADER_LENGTH < WIN_V3_HEADER_LENGTH
-      // BFH_INTERNAL_LENGTH < OS2_HEADER_LENGTH
-      // BFH_INTERNAL_LENGTH < WIN_V3_HEADER_LENGTH
+  if (mPos >= BMPFILEHEADER::INTERNAL_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
+      // mLOH == BMP_HEADER_LENGTH::WIN_V3 || mLOH == BMP_HEADER_LENGTH::OS2
+      // BMP_HEADER_LENGTH::OS2 < BMP_HEADER_LENGTH::WIN_V3
+      // BMPFILEHEADER::INTERNAL_LENGTH < BMP_HEADER_LENGTH::OS2
+      // BMPFILEHEADER::INTERNAL_LENGTH < BMP_HEADER_LENGTH::WIN_V3
       //
       // So toCopy is in the range
-      //      1 to (WIN_V3_HEADER_LENGTH - BFH_INTERNAL_LENGTH)
-      // or   1 to (OS2_HEADER_LENGTH - BFH_INTERNAL_LENGTH)
+      //      1 to (BMP_HEADER_LENGTH::WIN_V3 - BMPFILEHEADER::INTERNAL_LENGTH)
+      // or   1 to (BMP_HEADER_LENGTH::OS2 - BMPFILEHEADER::INTERNAL_LENGTH)
       //
-      // But WIN_V3_HEADER_LENGTH =
-      //     BFH_INTERNAL_LENGTH + WIN_V3_INTERNAL_BIH_LENGTH
-      // and OS2_HEADER_LENGTH = BFH_INTERNAL_LENGTH + OS2_INTERNAL_BIH_LENGTH
+      // But BMP_HEADER_LENGTH::WIN_V3 =
+      //     BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V3
+      // and BMP_HEADER_LENGTH::OS2 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::OS2
       //
       // So toCopy is in the range
       //
-      //      1 to WIN_V3_INTERNAL_BIH_LENGTH
-      // or   1 to OS2_INTERNAL_BIH_LENGTH
-      // and  OS2_INTERNAL_BIH_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
+      //      1 to BIH_INTERNAL_LENGTH::WIN_V3
+      // or   1 to BIH_INTERNAL_LENGTH::OS2
+      // and  BIH_INTERNAL_LENGTH::OS2 < BIH_INTERNAL_LENGTH::WIN_V3
       //
-      // sizeof(mRawBuf) = WIN_V3_INTERNAL_BIH_LENGTH
+      // sizeof(mRawBuf) = BIH_INTERNAL_LENGTH::WIN_V3
       // so toCopy <= sizeof(mRawBuf)
       uint32_t toCopy = mLOH - mPos;
       if (toCopy > aCount) {
@@ -286,37 +287,37 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       }
 
       // mPos is in the range
-      //      BFH_INTERNAL_LENGTH to (WIN_V3_HEADER_LENGTH - 1)
+      //      BMPFILEHEADER::INTERNAL_LENGTH to (BMP_HEADER_LENGTH::WIN_V3 - 1)
       //
       // offset is then in the range (see toCopy comments for more details)
-      //      0 to (WIN_V3_INTERNAL_BIH_LENGTH - 1)
+      //      0 to (BIH_INTERNAL_LENGTH::WIN_V3 - 1)
       //
-      // sizeof(mRawBuf) is WIN_V3_INTERNAL_BIH_LENGTH so this
+      // sizeof(mRawBuf) is BIH_INTERNAL_LENGTH::WIN_V3 so this
       // offset stays within bounds and this assert should hold
-      const uint32_t offset = mPos - BFH_INTERNAL_LENGTH;
+      const uint32_t offset = mPos - BMPFILEHEADER::INTERNAL_LENGTH;
       MOZ_ASSERT(offset < sizeof(mRawBuf));
 
       // Two cases:
-      //      mPos = BFH_INTERNAL_LENGTH
-      //      mLOH = WIN_V3_HEADER_LENGTH
+      //      mPos = BMPFILEHEADER::INTERNAL_LENGTH
+      //      mLOH = BMP_HEADER_LENGTH::WIN_V3
       //
       // offset = 0
-      // toCopy = WIN_V3_INTERNAL_BIH_LENGTH
+      // toCopy = BIH_INTERNAL_LENGTH::WIN_V3
       //
       //      This will be in the bounds of sizeof(mRawBuf)
       //
       // Second Case:
-      //      mPos = WIN_V3_HEADER_LENGTH - 1
-      //      mLOH = WIN_V3_HEADER_LENGTH
+      //      mPos = BMP_HEADER_LENGTH::WIN_V3 - 1
+      //      mLOH = BMP_HEADER_LENGTH::WIN_V3
       //
-      // offset = WIN_V3_INTERNAL_BIH_LENGTH - 1
+      // offset = BIH_INTERNAL_LENGTH::WIN_V3 - 1
       // toCopy = 1
       //
       //      This will be in the bounds of sizeof(mRawBuf)
       //
-      // As sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH (verified above)
-      // and WIN_V3_HEADER_LENGTH is the largest range of values. If mLOH
-      // was equal to OS2_HEADER_LENGTH then the ranges are smaller.
+      // As sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3 (verified above)
+      // and BMP_HEADER_LENGTH::WIN_V3 is the largest range of values. If mLOH
+      // was equal to BMP_HEADER_LENGTH::OS2 then the ranges are smaller.
       MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
 
       memcpy(mRawBuf + offset, aBuffer, toCopy);
@@ -368,9 +369,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return;
       }
 
-      // We have the size. If we're doing a size decode, we got what
-      // we came for.
-      if (IsSizeDecode()) {
+      // We have the size. If we're doing a metadata decode, we're done.
+      if (IsMetadataDecode()) {
         return;
       }
 
@@ -386,7 +386,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         // Always allocate 256 even though mNumColors might be smaller
         mColors = new colorTable[256];
         memset(mColors, 0, 256 * sizeof(colorTable));
-      } else if (mBIH.compression != BI_BITFIELDS && mBIH.bpp == 16) {
+      } else if (mBIH.compression != BMPINFOHEADER::BITFIELDS &&
+                 mBIH.bpp == 16) {
         // Use default 5-5-5 format
         mBitFields.red   = 0x7C00;
         mBitFields.green = 0x03E0;
@@ -396,27 +397,30 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 
       // Make sure we have a valid value for our supported compression modes
       // before adding the frame
-      if (mBIH.compression != BI_RGB && mBIH.compression != BI_RLE8 &&
-          mBIH.compression != BI_RLE4 && mBIH.compression != BI_BITFIELDS) {
+      if (mBIH.compression != BMPINFOHEADER::RGB &&
+          mBIH.compression != BMPINFOHEADER::RLE8 &&
+          mBIH.compression != BMPINFOHEADER::RLE4 &&
+          mBIH.compression != BMPINFOHEADER::BITFIELDS) {
         PostDataError();
         return;
       }
 
-      // If we have RLE4 or RLE8 or BI_ALPHABITFIELDS, then ensure we
-      // have valid BPP values before adding the frame
-      if (mBIH.compression == BI_RLE8 && mBIH.bpp != 8) {
+      // If we have RLE4 or RLE8 or BMPINFOHEADER::ALPHABITFIELDS, then ensure
+      // we have valid BPP values before adding the frame.
+      if (mBIH.compression == BMPINFOHEADER::RLE8 && mBIH.bpp != 8) {
         MOZ_LOG(GetBMPLog(), LogLevel::Debug,
                ("BMP RLE8 compression only supports 8 bits per pixel\n"));
         PostDataError();
         return;
       }
-      if (mBIH.compression == BI_RLE4 && mBIH.bpp != 4 && mBIH.bpp != 1) {
+      if (mBIH.compression == BMPINFOHEADER::RLE4 &&
+          mBIH.bpp != 4 && mBIH.bpp != 1) {
         MOZ_LOG(GetBMPLog(), LogLevel::Debug,
                ("BMP RLE4 compression only supports 4 bits per pixel\n"));
         PostDataError();
         return;
       }
-      if (mBIH.compression == BI_ALPHABITFIELDS &&
+      if (mBIH.compression == BMPINFOHEADER::ALPHABITFIELDS &&
           mBIH.bpp != 16 && mBIH.bpp != 32) {
         MOZ_LOG(GetBMPLog(), LogLevel::Debug,
                ("BMP ALPHABITFIELDS only supports 16 or 32 bits per pixel\n"
@@ -425,8 +429,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         return;
       }
 
-      if (mBIH.compression != BI_RLE8 && mBIH.compression != BI_RLE4 &&
-          mBIH.compression != BI_ALPHABITFIELDS) {
+      if (mBIH.compression != BMPINFOHEADER::RLE8 &&
+          mBIH.compression != BMPINFOHEADER::RLE4 &&
+          mBIH.compression != BMPINFOHEADER::ALPHABITFIELDS) {
         // mRow is not used for RLE encoded images
         mRow = (uint8_t*)malloc((mBIH.width * mBIH.bpp) / 8 + 4);
         // + 4 because the line is padded to a 4 bit boundary, but
@@ -447,7 +452,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       MOZ_ASSERT(mImageData, "Should have a buffer now");
 
       // Prepare for transparency
-      if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
+      if ((mBIH.compression == BMPINFOHEADER::RLE8) ||
+          (mBIH.compression == BMPINFOHEADER::RLE4)) {
         // Clear the image, as the RLE may jump over areas
         memset(mImageData, 0, mImageDataLength);
       }
@@ -455,7 +461,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 
   if (mColors && mPos >= mLOH) {
     // OS/2 Bitmaps have no padding byte
-    uint8_t bytesPerColor = (mBFH.bihsize == OS2_BIH_LENGTH) ? 3 : 4;
+    uint8_t bytesPerColor = (mBFH.bihsize == BIH_LENGTH::OS2) ? 3 : 4;
     if (mPos < (mLOH + mNumColors * bytesPerColor)) {
       // Number of bytes already received
       uint32_t colorBytes = mPos - mLOH;
@@ -488,62 +494,62 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         at = (at + 1) % bytesPerColor;
       }
     }
-  } else if (aCount && mBIH.compression == BI_BITFIELDS && mPos <
-         (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH)) {
-    // If compression is used, this is a windows bitmap (compression
-    // can't be used with OS/2 bitmaps),
-    // hence we can use WIN_V3_HEADER_LENGTH instead of mLOH.
-    // (verified below)
+  } else if (aCount &&
+             mBIH.compression == BMPINFOHEADER::BITFIELDS &&
+             mPos < (BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH)) {
+    // If compression is used, this is a windows bitmap (compression can't be
+    // used with OS/2 bitmaps), hence we can use BMP_HEADER_LENGTH::WIN_V3
+    // instead of mLOH.  (verified below)
 
     // If aCount != 0 then mPos should be >= mLOH due to the if statements
     // at the beginning of the function
     MOZ_ASSERT(mPos >= mLOH);
-    MOZ_ASSERT(mLOH == WIN_V3_HEADER_LENGTH);
+    MOZ_ASSERT(mLOH == BMP_HEADER_LENGTH::WIN_V3);
 
-    // mLOH == WIN_V3_HEADER_LENGTH (verified above)
+    // mLOH == BMP_HEADER_LENGTH::WIN_V3 (verified above)
     // mPos >= mLOH (verified above)
-    // mPos < WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH
+    // mPos < BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH
     //
     // So toCopy is in the range
-    //      0 to (BITFIELD_LENGTH - 1)
-    uint32_t toCopy = (WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH) - mPos;
+    //      0 to (bitFields::LENGTH - 1)
+    uint32_t toCopy = (BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH) - mPos;
     if (toCopy > aCount) {
       toCopy = aCount;
     }
 
-    // mPos >= WIN_V3_HEADER_LENGTH
-    // mPos < WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH
+    // mPos >= BMP_HEADER_LENGTH::WIN_V3
+    // mPos < BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH
     //
     // offset is in the range
-    //      0 to (BITFIELD_LENGTH - 1)
+    //      0 to (bitFields::LENGTH - 1)
     //
-    // BITFIELD_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH
-    // and sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH (verified at
+    // bitFields::LENGTH < BIH_INTERNAL_LENGTH::WIN_V3
+    // and sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3 (verified at
     // top of function)
     //
     // Therefore this assert should hold
-    const uint32_t offset = mPos - WIN_V3_HEADER_LENGTH;
+    const uint32_t offset = mPos - BMP_HEADER_LENGTH::WIN_V3;
     MOZ_ASSERT(offset < sizeof(mRawBuf));
 
     // Two cases:
-    //      mPos = WIN_V3_HEADER_LENGTH
+    //      mPos = BMP_HEADER_LENGTH::WIN_V3
     //
     // offset = 0
-    // toCopy = BITFIELD_LENGTH
+    // toCopy = bitFields::LENGTH
     //
     //      This will be in the bounds of sizeof(mRawBuf)
     //
     // Second case:
     //
-    //      mPos = WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH - 1
+    //      mPos = BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH - 1
     //
-    // offset = BITFIELD_LENGTH - 1
+    // offset = bitFields::LENGTH - 1
     // toCopy = 1
     //
     //      This will be in the bounds of sizeof(mRawBuf)
     //
-    // As BITFIELD_LENGTH < WIN_V3_INTERNAL_BIH_LENGTH and
-    // sizeof(mRawBuf) == WIN_V3_INTERNAL_BIH_LENGTH
+    // As bitFields::LENGTH < BIH_INTERNAL_LENGTH::WIN_V3 and
+    // sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3
     //
     // Therefore this assert should hold
     MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
@@ -553,8 +559,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     aBuffer += toCopy;
     aCount -= toCopy;
   }
-  if (mPos == WIN_V3_HEADER_LENGTH + BITFIELD_LENGTH &&
-    mBIH.compression == BI_BITFIELDS) {
+  if (mPos == BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH &&
+      mBIH.compression == BMPINFOHEADER::BITFIELDS) {
     mBitFields.red = LittleEndian::readUint32(reinterpret_cast<uint32_t*>
                                               (mRawBuf));
     mBitFields.green = LittleEndian::readUint32(reinterpret_cast<uint32_t*>
@@ -570,7 +576,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   if (aCount && ++mPos >= mBFH.dataoffset) {
     // Need to increment mPos, else we might get to mPos==mLOH again
     // From now on, mPos is irrelevant
-    if (!mBIH.compression || mBIH.compression == BI_BITFIELDS) {
+    if (!mBIH.compression || mBIH.compression == BMPINFOHEADER::BITFIELDS) {
         uint32_t rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to
                                                             // round up
         if (rowSize % 4) {
@@ -689,10 +695,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           mRowBytes = 0;
         }
       } while (aCount > 0);
-    } else if ((mBIH.compression == BI_RLE8) ||
-             (mBIH.compression == BI_RLE4)) {
-      if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) ||
-          ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) &&
+    } else if ((mBIH.compression == BMPINFOHEADER::RLE8) ||
+               (mBIH.compression == BMPINFOHEADER::RLE4)) {
+      if (((mBIH.compression == BMPINFOHEADER::RLE8) && (mBIH.bpp != 8)) ||
+          ((mBIH.compression == BMPINFOHEADER::RLE4) && (mBIH.bpp != 4) &&
            (mBIH.bpp != 1))) {
         MOZ_LOG(GetBMPLog(), LogLevel::Debug,
                ("BMP RLE8/RLE4 compression only supports 8/4 bits per"
@@ -715,7 +721,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           case eRLEStateNeedSecondEscapeByte:
             byte = *aBuffer++;
             aCount--;
-            if (mStateData != RLE_ESCAPE) { // encoded mode
+            if (mStateData != RLE::ESCAPE) { // encoded mode
               // Encoded mode consists of two bytes:
               // the first byte (mStateData) specifies the
               // number of consecutive pixels to be drawn
@@ -729,7 +735,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                 uint32_t* d = reinterpret_cast<uint32_t*>
                               (mImageData) + PIXEL_OFFSET(mCurLine, mCurPos);
                 mCurPos += pixelsNeeded;
-                if (mBIH.compression == BI_RLE8) {
+                if (mBIH.compression == BMPINFOHEADER::RLE8) {
                   do {
                     SetPixel(d, byte, mColors);
                     pixelsNeeded --;
@@ -744,18 +750,18 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             }
 
             switch(byte) {
-              case RLE_ESCAPE_EOL:
+              case RLE::ESCAPE_EOL:
                 // End of Line: Go to next row
                 mCurLine --;
                 mCurPos = 0;
                 mState = eRLEStateInitial;
                 break;
 
-              case RLE_ESCAPE_EOF: // EndOfFile
+              case RLE::ESCAPE_EOF: // EndOfFile
                 mCurPos = mCurLine = 0;
                 break;
 
-              case RLE_ESCAPE_DELTA:
+              case RLE::ESCAPE_DELTA:
                 mState = eRLEStateNeedXDelta;
                 continue;
 
@@ -834,7 +840,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                             (mImageData) +
                             PIXEL_OFFSET(mCurLine, mCurPos);
               uint32_t* oldPos = d;
-              if (mBIH.compression == BI_RLE8) {
+              if (mBIH.compression == BMPINFOHEADER::RLE8) {
                   while (aCount > 0 && mStateData > 0) {
                     byte = *aBuffer++;
                     aCount--;

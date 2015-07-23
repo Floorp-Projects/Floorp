@@ -67,7 +67,7 @@ class KillResultExprImpl : public internal::ResultExprImpl {
 
 class TraceResultExprImpl : public internal::ResultExprImpl {
  public:
-  MOZ_IMPLICIT TraceResultExprImpl(uint16_t aux) : aux_(aux) {}
+  TraceResultExprImpl(uint16_t aux) : aux_(aux) {}
 
   ErrorCode Compile(PolicyCompiler* pc) const override {
     return ErrorCode(ErrorCode::ERR_TRACE + aux_);
@@ -151,7 +151,7 @@ class IfThenResultExprImpl : public internal::ResultExprImpl {
 
 class ConstBoolExprImpl : public internal::BoolExprImpl {
  public:
-  MOZ_IMPLICIT ConstBoolExprImpl(bool value) : value_(value) {}
+  ConstBoolExprImpl(bool value) : value_(value) {}
 
   ErrorCode Compile(PolicyCompiler* pc,
                     ErrorCode true_ec,

@@ -29,6 +29,7 @@ LDFLAGS="${LDFLAGS=}"
 HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_CXXFLAGS="${HOST_CXXFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
+RUSTFLAGS="${RUSTFLAGS=}"
 
 dnl ========================================================
 dnl = Preserve certain environment flags passed to configure
@@ -429,7 +430,7 @@ if test -n "$RUSTC"; then
   AC_MSG_RESULT([$RUSTC_VERSION (v${_RUSTC_MAJOR_VERSION}.${_RUSTC_MINOR_VERSION}.${_RUSTC_PATCH_VERSION})])
 fi
 MOZ_ARG_ENABLE_BOOL([rust],
-                    [  --enable-rust           Include rust language sources],
+                    [  --enable-rust           Include Rust language sources],
                     [MOZ_RUST=1],
                     [MOZ_RUST= ])
 if test -z "$RUSTC" -a -n "$MOZ_RUST"; then
@@ -440,7 +441,7 @@ fi
 if test -n "$MOZ_RUST" && test -z "$_RUSTC_MAJOR_VERSION" -o \
   "$_RUSTC_MAJOR_VERSION" -lt 1; then
   AC_MSG_ERROR([Rust compiler ${RUSTC_VERSION} is too old.
-    To compile rust language sources please install at least
+    To compile Rust language sources please install at least
     version 1.0 of the 'rustc' toolchain and make sure it is
     first in your path.
     You can verify this by typing 'rustc --version'.])
@@ -505,7 +506,7 @@ EOF
   if test -z "$MOZ_RUST"; then
     AC_MSG_ERROR([rustc does not support MacOS X $MACOSX_DEPLOYMENT_TARGET
       Add 'ac_add_options --enable-macos-target=10.7' (or later)
-      to mozconfig, disable rust support, or use an alternate toolchain.])
+      to mozconfig, disable Rust support, or use an alternate toolchain.])
   fi
 fi
 
@@ -7054,6 +7055,10 @@ if test -z "$MOZ_OPTIMIZE_FLAGS"; then
     MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
+if test -z "$MOZ_OPTIMIZE_RUSTFLAGS"; then
+    MOZ_OPTIMIZE_RUSTFLAGS="-O"
+fi
+
 MOZ_ARG_ENABLE_STRING(optimize,
 [  --disable-optimize      Disable compiler optimization
   --enable-optimize=[OPT] Specify compiler optimization flags [OPT=-O]],
@@ -7071,7 +7076,7 @@ MOZ_SET_FRAMEPTR_FLAGS
 
 if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_OPTIMIZE"; then
-    AC_MSG_CHECKING([for valid optimization flags])
+    AC_MSG_CHECKING([for valid C compiler optimization flags])
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
     AC_TRY_COMPILE([#include <stdio.h>],
@@ -7080,7 +7085,7 @@ if test -n "$MOZ_OPTIMIZE"; then
         _results=no)
     AC_MSG_RESULT([$_results])
     if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_OPTIMIZE_FLAGS])
+        AC_MSG_ERROR([These compiler flags for C are invalid: $MOZ_OPTIMIZE_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
 fi
@@ -7089,6 +7094,7 @@ fi # COMPILE_ENVIRONMENT
 AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_FRAMEPTR_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
+AC_SUBST(MOZ_OPTIMIZE_RUSTFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
 AC_SUBST(MOZ_PGO)

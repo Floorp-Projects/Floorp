@@ -7,8 +7,8 @@
 #define MediaQueue_h_
 
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsDeque.h"
 #include "nsTArray.h"
@@ -24,14 +24,44 @@ class MediaQueueDeallocator : public nsDequeFunctor {
   }
 };
 
-template <class T> class MediaQueue : private nsDeque {
- public:
+template <class T>
+class MediaQueue : private nsDeque {
+  struct Listener {
+    virtual ~Listener() {}
+    virtual void Dispatch(T* aItem) = 0;
+  };
 
-   MediaQueue()
-     : nsDeque(new MediaQueueDeallocator<T>()),
-       mReentrantMonitor("mediaqueue"),
-       mEndOfStream(false)
-   {}
+  template<typename Function>
+  class PopListener : public Listener {
+  public:
+    explicit PopListener(const Function& aFunction, TaskQueue* aTarget)
+      : mFunction(aFunction), mTarget(aTarget) {}
+
+    void Dispatch(T* aItem) override {
+      nsRefPtr<T> item = aItem;
+      Function function = mFunction;
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+        function(item);
+      });
+      mTarget->Dispatch(r.forget());
+    }
+  private:
+    Function mFunction;
+    nsRefPtr<TaskQueue> mTarget;
+  };
+
+  void NotifyPopListeners(T* aItem) {
+    for (auto&& l : mPopListeners) {
+      l->Dispatch(aItem);
+    }
+  }
+
+public:
+  MediaQueue()
+    : nsDeque(new MediaQueueDeallocator<T>()),
+      mReentrantMonitor("mediaqueue"),
+      mEndOfStream(false)
+  {}
 
   ~MediaQueue() {
     Reset();
@@ -60,7 +90,7 @@ template <class T> class MediaQueue : private nsDeque {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsRefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
-      NotifyPopListeners();
+      NotifyPopListeners(rv);
     }
     return rv.forget();
   }
@@ -160,39 +190,16 @@ template <class T> class MediaQueue : private nsDeque {
     mPopListeners.Clear();
   }
 
-  void AddPopListener(nsIRunnable* aRunnable, TaskQueue* aTarget) {
+  template<typename Function>
+  void AddPopListener(const Function& aFunction, TaskQueue* aTarget) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mPopListeners.AppendElement(Listener(aRunnable, aTarget));
+    mPopListeners.AppendElement()->reset(
+      new PopListener<Function>(aFunction, aTarget));
   }
 
 private:
   mutable ReentrantMonitor mReentrantMonitor;
-
-  struct Listener {
-    Listener(nsIRunnable* aRunnable, TaskQueue* aTarget)
-      : mRunnable(aRunnable)
-      , mTarget(aTarget)
-    {
-    }
-    Listener(const Listener& aOther)
-      : mRunnable(aOther.mRunnable)
-      , mTarget(aOther.mTarget)
-    {
-    }
-    nsCOMPtr<nsIRunnable> mRunnable;
-    RefPtr<TaskQueue> mTarget;
-  };
-
-  nsTArray<Listener> mPopListeners;
-
-  void NotifyPopListeners() {
-    for (uint32_t i = 0; i < mPopListeners.Length(); i++) {
-      Listener& l = mPopListeners[i];
-      nsCOMPtr<nsIRunnable> r = l.mRunnable;
-      l.mTarget->Dispatch(r.forget());
-    }
-  }
-
+  nsTArray<UniquePtr<Listener>> mPopListeners;
   // True when we've decoded the last frame of data in the
   // bitstream for which we're queueing frame data.
   bool mEndOfStream;

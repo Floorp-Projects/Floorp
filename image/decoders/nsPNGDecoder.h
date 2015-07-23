@@ -24,7 +24,6 @@ class RasterImage;
 class nsPNGDecoder : public Decoder
 {
 public:
-  explicit nsPNGDecoder(RasterImage* aImage);
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal() override;
@@ -67,6 +66,14 @@ public:
     }
   }
 
+private:
+  friend class DecoderFactory;
+  friend class nsICODecoder;
+
+  // Decoders should only be instantiated via DecoderFactory.
+  // XXX(seth): nsICODecoder is temporarily an exception to this rule.
+  explicit nsPNGDecoder(RasterImage* aImage);
+
 public:
   png_structp mPNG;
   png_infop mInfo;
@@ -78,7 +85,7 @@ public:
 
   gfx::SurfaceFormat format;
 
-  // For size decodes
+  // For metadata decodes.
   uint8_t mSizeBytes[8]; // Space for width and height, both 4 bytes
   uint32_t mHeaderBytesRead;
 
