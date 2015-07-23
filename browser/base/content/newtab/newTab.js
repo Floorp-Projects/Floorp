@@ -44,7 +44,7 @@ function newTabString(name, args) {
 }
 
 function inPrivateBrowsingMode() {
-  return PrivateBrowsingUtils.isWindowPrivate(window);
+  return PrivateBrowsingUtils.isContentWindowPrivate(window);
 }
 
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
