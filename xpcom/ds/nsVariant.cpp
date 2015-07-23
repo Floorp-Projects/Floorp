@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* The long avoided variant support for xpcom. */
-
 #include "nsVariant.h"
 #include "prprf.h"
 #include "prdtoa.h"
@@ -473,7 +471,6 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 {                                                                             \
     TRIVIAL_DATA_CONVERTER(type_, data, m##name_##Value, _retval)             \
     nsDiscriminatedUnion tempData;                                            \
-    nsVariant::Initialize(&tempData);                                         \
     nsresult rv = ToManageableNumber(data, &tempData);                        \
     /*                                                                     */ \
     /* NOTE: rv may indicate a success code that we want to preserve       */ \
@@ -646,7 +643,6 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& aData, int64_t* aResult)
   TRIVIAL_DATA_CONVERTER(VTYPE_UINT64, aData, mUint64Value, aResult)
 
   nsDiscriminatedUnion tempData;
-  nsVariant::Initialize(&tempData);
   nsresult rv = ToManageableNumber(aData, &tempData);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1590,13 +1586,6 @@ nsVariant::SetToEmptyArray(nsDiscriminatedUnion* aData)
 /***************************************************************************/
 
 /* static */ nsresult
-nsVariant::Initialize(nsDiscriminatedUnion* aData)
-{
-  aData->mType = nsIDataType::VTYPE_EMPTY;
-  return NS_OK;
-}
-
-/* static */ nsresult
 nsVariant::Cleanup(nsDiscriminatedUnion* aData)
 {
   switch (aData->mType) {
@@ -1690,8 +1679,6 @@ NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
 nsVariant::nsVariant()
   : mWritable(true)
 {
-  nsVariant::Initialize(&mData);
-
 #ifdef DEBUG
   {
     // Assert that the nsIDataType consts match the values #defined in
