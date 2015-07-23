@@ -35,7 +35,22 @@ public:
 
   void Cleanup();
 
+  nsresult ConvertToInt8(uint8_t* aResult) const;
+  nsresult ConvertToInt16(int16_t* aResult) const;
+  nsresult ConvertToInt32(int32_t* aResult) const;
+  nsresult ConvertToInt64(int64_t* aResult) const;
+  nsresult ConvertToUint8(uint8_t* aResult) const;
+  nsresult ConvertToUint16(uint16_t* aResult) const;
+  nsresult ConvertToUint32(uint32_t* aResult) const;
+  nsresult ConvertToUint64(uint64_t* aResult) const;
+  nsresult ConvertToFloat(float* aResult) const;
+  nsresult ConvertToDouble(double* aResult) const;
+  nsresult ConvertToBool(bool* aResult) const;
+  nsresult ConvertToChar(char* aResult) const;
+  nsresult ConvertToWChar(char16_t* aResult) const;
+
 private:
+  nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
 
 public:
@@ -107,32 +122,6 @@ public:
 
   nsVariant();
 
-  static nsresult ConvertToInt8(const nsDiscriminatedUnion& aData,
-                                uint8_t* aResult);
-  static nsresult ConvertToInt16(const nsDiscriminatedUnion& aData,
-                                 int16_t* aResult);
-  static nsresult ConvertToInt32(const nsDiscriminatedUnion& aData,
-                                 int32_t* aResult);
-  static nsresult ConvertToInt64(const nsDiscriminatedUnion& aData,
-                                 int64_t* aResult);
-  static nsresult ConvertToUint8(const nsDiscriminatedUnion& aData,
-                                 uint8_t* aResult);
-  static nsresult ConvertToUint16(const nsDiscriminatedUnion& aData,
-                                  uint16_t* aResult);
-  static nsresult ConvertToUint32(const nsDiscriminatedUnion& aData,
-                                  uint32_t* aResult);
-  static nsresult ConvertToUint64(const nsDiscriminatedUnion& aData,
-                                  uint64_t* aResult);
-  static nsresult ConvertToFloat(const nsDiscriminatedUnion& aData,
-                                 float* aResult);
-  static nsresult ConvertToDouble(const nsDiscriminatedUnion& aData,
-                                  double* aResult);
-  static nsresult ConvertToBool(const nsDiscriminatedUnion& aData,
-                                bool* aResult);
-  static nsresult ConvertToChar(const nsDiscriminatedUnion& aData,
-                                char* aResult);
-  static nsresult ConvertToWChar(const nsDiscriminatedUnion& aData,
-                                 char16_t* aResult);
   static nsresult ConvertToID(const nsDiscriminatedUnion& aData,
                               nsID* aResult);
   static nsresult ConvertToAString(const nsDiscriminatedUnion& aData,
