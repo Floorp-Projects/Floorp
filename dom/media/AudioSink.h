@@ -6,23 +6,30 @@
 #if !defined(AudioSink_h__)
 #define AudioSink_h__
 
+#include "MediaInfo.h"
+#include "nsRefPtr.h"
 #include "nsISupportsImpl.h"
-#include "MediaDecoderReader.h"
+
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 
+class AudioData;
 class AudioStream;
-class MediaDecoderStateMachine;
+template <class T> class MediaQueue;
 
 class AudioSink {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioSink)
 
-  AudioSink(MediaDecoderStateMachine* aStateMachine,
-            int64_t aStartTime, AudioInfo aInfo, dom::AudioChannel aChannel);
+  AudioSink(MediaQueue<AudioData>& aAudioQueue,
+            ReentrantMonitor& aMonitor,
+            int64_t aStartTime,
+            const AudioInfo& aInfo,
+            dom::AudioChannel aChannel);
 
   // Return a promise which will be resolved when AudioSink finishes playing,
   // or rejected if any error.
@@ -92,13 +99,22 @@ private:
   void StartAudioStreamPlaybackIfNeeded();
   void WriteSilence(uint32_t aFrames);
 
-  MediaQueue<AudioData>& AudioQueue();
+  MediaQueue<AudioData>& AudioQueue() const {
+    return mAudioQueue;
+  }
 
-  ReentrantMonitor& GetReentrantMonitor();
-  void AssertCurrentThreadInMonitor();
+  ReentrantMonitor& GetReentrantMonitor() const {
+    return mDecoderMonitor;
+  }
+
+  void AssertCurrentThreadInMonitor() const {
+    GetReentrantMonitor().AssertCurrentThreadIn();
+  }
+
   void AssertOnAudioThread();
 
-  nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  MediaQueue<AudioData>& mAudioQueue;
+  ReentrantMonitor& mDecoderMonitor;
 
   // Thread for pushing audio onto the audio hardware.
   // The "audio push thread".

@@ -6,7 +6,6 @@
 #include "nsRegion.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
-#include "gfx3DMatrix.h"
 #include "gfxUtils.h"
 
 bool nsRegion::Contains(const nsRegion& aRgn) const
@@ -607,14 +606,14 @@ nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
 }
 
 static mozilla::gfx::IntRect
-TransformRect(const mozilla::gfx::IntRect& aRect, const gfx3DMatrix& aTransform)
+TransformRect(const mozilla::gfx::IntRect& aRect, const mozilla::gfx::Matrix4x4& aTransform)
 {
     if (aRect.IsEmpty()) {
         return mozilla::gfx::IntRect();
     }
 
     gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
-    rect = aTransform.TransformBounds(rect);
+    rect.TransformBounds(aTransform);
     rect.RoundOut();
 
     mozilla::gfx::IntRect intRect;
@@ -625,7 +624,7 @@ TransformRect(const mozilla::gfx::IntRect& aRect, const gfx3DMatrix& aTransform)
     return intRect;
 }
 
-nsRegion& nsRegion::Transform (const gfx3DMatrix &aTransform)
+nsRegion& nsRegion::Transform (const mozilla::gfx::Matrix4x4 &aTransform)
 {
   int n;
   pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);

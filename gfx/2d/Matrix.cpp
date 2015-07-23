@@ -9,10 +9,55 @@
 #include <algorithm>
 #include <ostream>
 #include <math.h>
+#include <float.h>  // for FLT_EPSILON
 
 #include "mozilla/FloatingPoint.h" // for UnspecifiedNaN
 
 using namespace std;
+
+namespace {
+
+/* Force small values to zero.  We do this to avoid having sin(360deg)
+ * evaluate to a tiny but nonzero value.
+ */
+double
+FlushToZero(double aVal)
+{
+  // XXX Is double precision really necessary here
+  if (-FLT_EPSILON < aVal && aVal < FLT_EPSILON) {
+    return 0.0f;
+  } else {
+    return aVal;
+  }
+}
+
+/* Computes tan(aTheta).  For values of aTheta such that tan(aTheta) is
+ * undefined or very large, SafeTangent returns a manageably large value
+ * of the correct sign.
+ */
+double
+SafeTangent(double aTheta)
+{
+  // XXX Is double precision really necessary here
+  const double kEpsilon = 0.0001;
+
+  /* tan(theta) = sin(theta)/cos(theta); problems arise when
+   * cos(theta) is too close to zero.  Limit cos(theta) to the
+   * range [-1, -epsilon] U [epsilon, 1].
+   */
+
+  double sinTheta = sin(aTheta);
+  double cosTheta = cos(aTheta);
+
+  if (cosTheta >= 0 && cosTheta < kEpsilon) {
+    cosTheta = kEpsilon;
+  } else if (cosTheta < 0 && cosTheta >= -kEpsilon) {
+    cosTheta = -kEpsilon;
+  }
+  return FlushToZero(sinTheta / cosTheta);
+}
+
+} // namespace
 
 namespace mozilla {
 namespace gfx {
@@ -395,6 +440,135 @@ Matrix4x4::SetRotationFromQuaternion(const Quaternion& q)
 
   _14 = _42 = _43 = 0.0f;
   _44 = 1.0f;
+}
+
+void
+Matrix4x4::SkewXY(double aXSkew, double aYSkew)
+{
+  // XXX Is double precision really necessary here
+  float tanX = SafeTangent(aXSkew);
+  float tanY = SafeTangent(aYSkew);
+  float temp;
+
+  temp = _11;
+  _11 += tanY * _21;
+  _21 += tanX * temp;
+
+  temp = _12;
+  _12 += tanY * _22;
+  _22 += tanX * temp;
+
+  temp = _13;
+  _13 += tanY * _23;
+  _23 += tanX * temp;
+
+  temp = _14;
+  _14 += tanY * _24;
+  _24 += tanX * temp;
+}
+
+void
+Matrix4x4::RotateX(double aTheta)
+{
+  // XXX Is double precision really necessary here
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _21;
+  _21 = cosTheta * _21 + sinTheta * _31;
+  _31 = -sinTheta * temp + cosTheta * _31;
+
+  temp = _22;
+  _22 = cosTheta * _22 + sinTheta * _32;
+  _32 = -sinTheta * temp + cosTheta * _32;
+
+  temp = _23;
+  _23 = cosTheta * _23 + sinTheta * _33;
+  _33 = -sinTheta * temp + cosTheta * _33;
+
+  temp = _24;
+  _24 = cosTheta * _24 + sinTheta * _34;
+  _34 = -sinTheta * temp + cosTheta * _34;
+}
+
+void
+Matrix4x4::RotateY(double aTheta)
+{
+  // XXX Is double precision really necessary here
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _11;
+  _11 = cosTheta * _11 + -sinTheta * _31;
+  _31 = sinTheta * temp + cosTheta * _31;
+
+  temp = _12;
+  _12 = cosTheta * _12 + -sinTheta * _32;
+  _32 = sinTheta * temp + cosTheta * _32;
+
+  temp = _13;
+  _13 = cosTheta * _13 + -sinTheta * _33;
+  _33 = sinTheta * temp + cosTheta * _33;
+
+  temp = _14;
+  _14 = cosTheta * _14 + -sinTheta * _34;
+  _34 = sinTheta * temp + cosTheta * _34;
+}
+
+void
+Matrix4x4::RotateZ(double aTheta)
+{
+  // XXX Is double precision really necessary here
+  double cosTheta = FlushToZero(cos(aTheta));
+  double sinTheta = FlushToZero(sin(aTheta));
+
+  float temp;
+
+  temp = _11;
+  _11 = cosTheta * _11 + sinTheta * _21;
+  _21 = -sinTheta * temp + cosTheta * _21;
+
+  temp = _12;
+  _12 = cosTheta * _12 + sinTheta * _22;
+  _22 = -sinTheta * temp + cosTheta * _22;
+
+  temp = _13;
+  _13 = cosTheta * _13 + sinTheta * _23;
+  _23 = -sinTheta * temp + cosTheta * _23;
+
+  temp = _14;
+  _14 = cosTheta * _14 + sinTheta * _24;
+  _24 = -sinTheta * temp + cosTheta * _24;
+}
+
+void
+Matrix4x4::Perspective(float aDepth)
+{
+  MOZ_ASSERT(aDepth > 0.0f, "Perspective must be positive!");
+  _31 += -1.0/aDepth * _41;
+  _32 += -1.0/aDepth * _42;
+  _33 += -1.0/aDepth * _43;
+  _34 += -1.0/aDepth * _44;
+}
+
+Point3D
+Matrix4x4::GetNormalVector() const
+{
+  // Define a plane in transformed space as the transformations
+  // of 3 points on the z=0 screen plane.
+  Point3D a = *this * Point3D(0, 0, 0);
+  Point3D b = *this * Point3D(0, 1, 0);
+  Point3D c = *this * Point3D(1, 0, 0);
+
+  // Convert to two vectors on the surface of the plane.
+  Point3D ab = b - a;
+  Point3D ac = c - a;
+
+  return ac.CrossProduct(ab);
 }
 
 } // namespace gfx

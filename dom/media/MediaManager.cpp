@@ -1683,12 +1683,12 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
     if (!privileged) {
       // only allow privileged content to set the window id
       if (vc.mBrowserWindow.WasPassed()) {
-        vc.mBrowserWindow.Construct(-1);
+        vc.mBrowserWindow.Value() = -1;
       }
       if (vc.mAdvanced.WasPassed()) {
         for (MediaTrackConstraintSet& cs : vc.mAdvanced.Value()) {
           if (cs.mBrowserWindow.WasPassed()) {
-            cs.mBrowserWindow.Construct(-1);
+            cs.mBrowserWindow.Value() = -1;
           }
         }
       }

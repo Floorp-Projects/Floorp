@@ -165,14 +165,16 @@ def setup_handlers(logger, formatters, formatter_options):
             logger.add_handler(handler)
 
 
-def setup_logging(suite, args, defaults=None, formatter_defaults=None):
+def setup_logging(logger, args, defaults=None, formatter_defaults=None):
     """
     Configure a structuredlogger based on command line arguments.
 
     The created structuredlogger will also be set as the default logger, and
     can be retrieved with :py:func:`~mozlog.get_default_logger`.
 
-    :param suite: The name of the testsuite being run
+    :param logger: A StructuredLogger instance or string name. If a string, a
+                   new StructuredLogger instance will be created using
+                   `logger` as the name.
     :param args: A dictionary of {argument_name:value} produced from
                  parsing the command line arguments for the application
     :param defaults: A dictionary of {formatter name: output stream} to apply
@@ -185,7 +187,9 @@ def setup_logging(suite, args, defaults=None, formatter_defaults=None):
     :rtype: StructuredLogger
     """
 
-    logger = StructuredLogger(suite)
+    if not isinstance(logger, StructuredLogger):
+        logger = StructuredLogger(logger)
+
     # Keep track of any options passed for formatters.
     formatter_options = {}
     # Keep track of formatters and list of streams specified.

@@ -3,10 +3,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "AudioSink.h"
-#include "MediaDecoderStateMachine.h"
 #include "AudioStream.h"
-#include "prenv.h"
+#include "MediaQueue.h"
+#include "VideoUtils.h"
+
+#include "mozilla/CheckedInt.h"
 
 namespace mozilla {
 
@@ -19,9 +22,13 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
-AudioSink::AudioSink(MediaDecoderStateMachine* aStateMachine,
-                     int64_t aStartTime, AudioInfo aInfo, dom::AudioChannel aChannel)
-  : mStateMachine(aStateMachine)
+AudioSink::AudioSink(MediaQueue<AudioData>& aAudioQueue,
+                     ReentrantMonitor& aMonitor,
+                     int64_t aStartTime,
+                     const AudioInfo& aInfo,
+                     dom::AudioChannel aChannel)
+  : mAudioQueue(aAudioQueue)
+  , mDecoderMonitor(aMonitor)
   , mStartTime(aStartTime)
   , mWritten(0)
   , mLastGoodPosition(0)
@@ -318,9 +325,6 @@ AudioSink::PlayFromAudioQueue()
 
   StartAudioStreamPlaybackIfNeeded();
 
-  if (audio->mOffset != -1) {
-    mStateMachine->DispatchOnPlaybackOffsetUpdate(audio->mOffset);
-  }
   return audio->mFrames;
 }
 
@@ -394,28 +398,10 @@ AudioSink::GetEndTime() const
   return playedUsecs.value();
 }
 
-MediaQueue<AudioData>&
-AudioSink::AudioQueue()
-{
-  return mStateMachine->AudioQueue();
-}
-
-ReentrantMonitor&
-AudioSink::GetReentrantMonitor()
-{
-  return mStateMachine->mDecoder->GetReentrantMonitor();
-}
-
-void
-AudioSink::AssertCurrentThreadInMonitor()
-{
-  return mStateMachine->AssertCurrentThreadInMonitor();
-}
-
 void
 AudioSink::AssertOnAudioThread()
 {
-  MOZ_ASSERT(IsCurrentThread(mThread));
+  MOZ_ASSERT(NS_GetCurrentThread() == mThread);
 }
 
 } // namespace mozilla

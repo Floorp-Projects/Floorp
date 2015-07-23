@@ -23,11 +23,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607464
  * Pixel scrolling shouldn't scroll smoothly, even if general.smoothScroll is on.
  **/
 
-function scrollDown15PxWithPixelScrolling(scrollbox) {
+function scrollDown150PxWithPixelScrolling(scrollbox) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
     deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-    deltaY: 3.0,
+    deltaY: 30.0,
     lineOrPageDeltaY: 1
   };
   // A pixel scroll with lineOrPageDeltaY.
@@ -52,20 +52,18 @@ function runTest() {
     var scrollbox = win.document.getElementById("scrollbox");
     let scrollTopBefore = scrollbox.scrollTop;
 
-    scrollDown15PxWithPixelScrolling(scrollbox);
-
-    // wait for the next refresh driver run
-    win.requestAnimationFrame(function() {
-      // actually, wait for the next one before checking results, since
-      // scrolling might not be flushed until after this code has run
-      win.requestAnimationFrame(function() {
-        is(scrollbox.scrollTop, scrollTopBefore + 15,
-           "Pixel scrolling should have finished after one refresh driver iteration. " +
-           "We shouldn't be scrolling smoothly, even though the pref is set.");
+    win.addEventListener("scroll", function(e) {
+      is(scrollbox.scrollTop % 30, 0,
+         "Pixel scrolling should happen instantly, not smoothly. The " +
+         "scroll position " + scrollbox.scrollTop + " in this sequence of wheel " +
+         "events should be a multiple of 30.");
+      if (scrollbox.scrollTop == 150) {
         win.close();
         SimpleTest.finish();
-      });
-    });
+      }
+    }, true);
+
+    scrollDown150PxWithPixelScrolling(scrollbox);
   }, win);
 }
 
@@ -77,6 +75,7 @@ window.onload = function() {
 }
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.testInChaosMode();
 
 </script>
 </pre>

@@ -9,8 +9,6 @@ assertEq(m.size, 0);
 m = new Map(null);
 assertEq(m.size, 0);
 
-// FIXME: bug 1083752
-assertWarning(() => Map(), "None");
-// assertThrowsInstanceOf(() => Map(), TypeError);
-// assertThrowsInstanceOf(() => Map(undefined), TypeError);
-// assertThrowsInstanceOf(() => Map(null), TypeError);
+assertThrowsInstanceOf(() => Map(), TypeError);
+assertThrowsInstanceOf(() => Map(undefined), TypeError);
+assertThrowsInstanceOf(() => Map(null), TypeError);

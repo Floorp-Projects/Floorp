@@ -344,7 +344,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
       container->SetChildrenChanged(true);
     }
 
-    result.Transform(gfx::To3DMatrix(mLayer->GetLocalTransform()));
+    result.Transform(mLayer->GetLocalTransform());
 
     return result;
   }
