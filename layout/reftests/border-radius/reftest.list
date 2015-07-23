@@ -90,3 +90,5 @@ skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuz
 fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
+
+== corner-split.html corner-split-ref.svg # bug 1185636
