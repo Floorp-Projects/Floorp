@@ -128,10 +128,6 @@ a {
   background-color: var(--in-content-primary-button-background-hover);
 }
 
-#tourTpDisabled {
-  font-size: 14px;
-}
-
 #enableTrackingProtection {
   height: 40px;
 }
