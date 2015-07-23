@@ -7,6 +7,7 @@ import threading
 import time
 import unittest
 import errno
+from contextlib import contextmanager
 
 import mozfile
 import mozinfo
@@ -27,18 +28,31 @@ class FileOpenCloseThread(threading.Thread):
     """Helper thread for asynchronous file handling"""
     def __init__(self, path, delay, delete=False):
         threading.Thread.__init__(self)
+        self.file_opened = threading.Event()
         self.delay = delay
         self.path = path
         self.delete = delete
 
     def run(self):
         with open(self.path):
+            self.file_opened.set()
             time.sleep(self.delay)
         if self.delete:
             try:
                 os.remove(self.path)
             except:
                 pass
+
+
+@contextmanager
+def wait_file_opened_in_thread(*args, **kwargs):
+    thread = FileOpenCloseThread(*args, **kwargs)
+    thread.start()
+    thread.file_opened.wait()
+    try:
+        yield thread
+    finally:
+        thread.join()
 
 
 class MozfileRemoveTestCase(unittest.TestCase):
@@ -90,13 +104,10 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a file in use with retry"""
         filepath = os.path.join(self.tempdir, *stubs.files[1])
 
-        thread = FileOpenCloseThread(filepath, 1)
-        thread.start()
-
-        # Wait a bit so we can be sure the file has been opened
-        time.sleep(.5)
-        mozfile.remove(filepath)
-        thread.join()
+        with wait_file_opened_in_thread(filepath, 0.2):
+            # on windows first attempt will fail,
+            # and it will be retried until the thread leave the handle
+            mozfile.remove(filepath)
 
         # Check deletion was successful
         self.assertFalse(os.path.exists(filepath))
@@ -105,14 +116,10 @@ class MozfileRemoveTestCase(unittest.TestCase):
         """Test removing a meanwhile removed file with retry"""
         filepath = os.path.join(self.tempdir, *stubs.files[1])
 
-        thread = FileOpenCloseThread(filepath, .8, True)
-        thread.start()
-
-        # Wait a bit so we can be sure the file has been opened and gets deleted
-        # while remove() waits for the next retry
-        time.sleep(.5)
-        mozfile.remove(filepath)
-        thread.join()
+        with wait_file_opened_in_thread(filepath, 0.2, True):
+            # on windows first attempt will fail, and before
+            # the retry the opened file will be deleted in the thread
+            mozfile.remove(filepath)
 
         # Check deletion was successful
         self.assertFalse(os.path.exists(filepath))
@@ -191,6 +198,33 @@ class MozfileRemoveTestCase(unittest.TestCase):
             if exc.errno == errno.ENOENT:
                 self.fail("removing non existing path must not raise error")
             raise
+
+
+class MozFileMoveTestCase(unittest.TestCase):
+    def setUp(self):
+        # Generate a stub
+        self.tempdir = stubs.create_stub()
+        self.addCleanup(mozfile.rmtree, self.tempdir)
+
+    def test_move_file(self):
+        file_path = os.path.join(self.tempdir, *stubs.files[1])
+        moved_path = file_path + '.moved'
+        self.assertTrue(os.path.isfile(file_path))
+        self.assertFalse(os.path.exists(moved_path))
+        mozfile.move(file_path, moved_path)
+        self.assertFalse(os.path.exists(file_path))
+        self.assertTrue(os.path.isfile(moved_path))
+
+    def test_move_file_with_retry(self):
+        file_path = os.path.join(self.tempdir, *stubs.files[1])
+        moved_path = file_path + '.moved'
+
+        with wait_file_opened_in_thread(file_path, 0.2):
+            # first move attempt should fail on windows and be retried
+            mozfile.move(file_path, moved_path)
+            self.assertFalse(os.path.exists(file_path))
+            self.assertTrue(os.path.isfile(moved_path))
+
 
 if __name__ == '__main__':
     unittest.main()
