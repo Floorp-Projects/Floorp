@@ -8582,7 +8582,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
   JS::Rooted<JS::Value> message(aCx, aMessage);
   JS::Rooted<JS::Value> transfer(aCx, aTransfer);
 
-  if (!event->Write(aCx, message, transfer)) {
+  if (!event->Write(aCx, message, transfer, this)) {
     aError.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
