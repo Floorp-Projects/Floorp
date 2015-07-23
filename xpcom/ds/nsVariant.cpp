@@ -165,34 +165,34 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
 /***************************************************************************/
 // Array helpers...
 
-static void
-FreeArray(nsDiscriminatedUnion* aData)
+void
+nsDiscriminatedUnion::FreeArray()
 {
-  NS_ASSERTION(aData->mType == nsIDataType::VTYPE_ARRAY, "bad FreeArray call");
-  NS_ASSERTION(aData->u.array.mArrayValue, "bad array");
-  NS_ASSERTION(aData->u.array.mArrayCount, "bad array count");
+  NS_ASSERTION(mType == nsIDataType::VTYPE_ARRAY, "bad FreeArray call");
+  NS_ASSERTION(u.array.mArrayValue, "bad array");
+  NS_ASSERTION(u.array.mArrayCount, "bad array count");
 
 #define CASE__FREE_ARRAY_PTR(type_, ctype_)                                   \
         case nsIDataType:: type_ :                                            \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) aData->u.array.mArrayValue;             \
-            for(uint32_t i = aData->u.array.mArrayCount; i > 0; p++, i--)     \
+            ctype_ ** p = (ctype_ **) u.array.mArrayValue;                    \
+            for(uint32_t i = u.array.mArrayCount; i > 0; p++, i--)            \
                 if(*p)                                                        \
-                    free((char*)*p);                                \
+                    free((char*)*p);                                          \
             break;                                                            \
         }
 
 #define CASE__FREE_ARRAY_IFACE(type_, ctype_)                                 \
         case nsIDataType:: type_ :                                            \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) aData->u.array.mArrayValue;             \
-            for(uint32_t i = aData->u.array.mArrayCount; i > 0; p++, i--)     \
-                if(*p)                                                        \
+            ctype_ ** p = (ctype_ **) u.array.mArrayValue;                    \
+            for (uint32_t i = u.array.mArrayCount; i > 0; p++, i--)           \
+                if (*p)                                                       \
                     (*p)->Release();                                          \
             break;                                                            \
         }
 
-  switch (aData->u.array.mArrayType) {
+  switch (u.array.mArrayType) {
     case nsIDataType::VTYPE_INT8:
     case nsIDataType::VTYPE_INT16:
     case nsIDataType::VTYPE_INT32:
@@ -232,7 +232,7 @@ FreeArray(nsDiscriminatedUnion* aData)
   }
 
   // Free the array memory.
-  free((char*)aData->u.array.mArrayValue);
+  free((char*)u.array.mArrayValue);
 
 #undef CASE__FREE_ARRAY_PTR
 #undef CASE__FREE_ARRAY_IFACE
@@ -1208,7 +1208,7 @@ nsVariant::ConvertToArray(const nsDiscriminatedUnion& aData, uint16_t* aType,
 // static setter functions...
 
 #define DATA_SETTER_PROLOGUE(data_)                                           \
-    nsVariant::Cleanup(data_);
+    data_->Cleanup();
 
 #define DATA_SETTER_EPILOGUE(data_, type_)                                    \
     data_->mType = nsIDataType :: type_;                                      \
@@ -1263,7 +1263,7 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* aData, nsIVariant* aValue)
   uint16_t type;
   nsresult rv;
 
-  nsVariant::Cleanup(aData);
+  aData->Cleanup();
 
   rv = aValue->GetDataType(&type);
   if (NS_FAILED(rv)) {
@@ -1585,10 +1585,10 @@ nsVariant::SetToEmptyArray(nsDiscriminatedUnion* aData)
 
 /***************************************************************************/
 
-/* static */ nsresult
-nsVariant::Cleanup(nsDiscriminatedUnion* aData)
+void
+nsDiscriminatedUnion::Cleanup()
 {
-  switch (aData->mType) {
+  switch (mType) {
     case nsIDataType::VTYPE_INT8:
     case nsIDataType::VTYPE_INT16:
     case nsIDataType::VTYPE_INT32:
@@ -1607,28 +1607,28 @@ nsVariant::Cleanup(nsDiscriminatedUnion* aData)
       break;
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_DOMSTRING:
-      delete aData->u.mAStringValue;
+      delete u.mAStringValue;
       break;
     case nsIDataType::VTYPE_CSTRING:
-      delete aData->u.mCStringValue;
+      delete u.mCStringValue;
       break;
     case nsIDataType::VTYPE_UTF8STRING:
-      delete aData->u.mUTF8StringValue;
+      delete u.mUTF8StringValue;
       break;
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      free((char*)aData->u.str.mStringValue);
+      free((char*)u.str.mStringValue);
       break;
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      free((char*)aData->u.wstr.mWStringValue);
+      free((char*)u.wstr.mWStringValue);
       break;
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
-      NS_IF_RELEASE(aData->u.iface.mInterfaceValue);
+      NS_IF_RELEASE(u.iface.mInterfaceValue);
       break;
     case nsIDataType::VTYPE_ARRAY:
-      FreeArray(aData);
+      FreeArray();
       break;
     case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_EMPTY:
@@ -1638,8 +1638,7 @@ nsVariant::Cleanup(nsDiscriminatedUnion* aData)
       break;
   }
 
-  aData->mType = nsIDataType::VTYPE_EMPTY;
-  return NS_OK;
+  mType = nsIDataType::VTYPE_EMPTY;
 }
 
 /* static */ void
@@ -1730,7 +1729,7 @@ nsVariant::nsVariant()
 
 nsVariant::~nsVariant()
 {
-  nsVariant::Cleanup(&mData);
+  mData.Cleanup();
 }
 
 // For all the data getters we just forward to the static (and sharable)

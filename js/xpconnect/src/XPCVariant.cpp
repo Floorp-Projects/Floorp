@@ -58,7 +58,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 
     MOZ_ASSERT(val.isGCThing(), "Must be traceable or unlinked");
 
-    nsVariant::Cleanup(&mData);
+    mData.Cleanup();
 
     if (!val.isNull())
         RemoveFromRootSet();
@@ -85,7 +85,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
     JS::Value val = tmp->GetJSValPreserveColor();
 
-    nsVariant::Cleanup(&tmp->mData);
+    tmp->mData.Cleanup();
 
     if (val.isMarkable()) {
         XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
@@ -603,7 +603,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                 case nsIDataType::VTYPE_EMPTY:
                 default:
                     NS_ERROR("bad type in array!");
-                    nsVariant::Cleanup(&du);
+                    du.Cleanup();
                     return false;
             }
 
@@ -613,7 +613,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                                            conversionType, pid,
                                            du.u.array.mArrayCount, pErr);
 
-            nsVariant::Cleanup(&du);
+            du.Cleanup();
             return success;
         }
         case nsIDataType::VTYPE_EMPTY_ARRAY:
