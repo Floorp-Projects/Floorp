@@ -1169,10 +1169,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   if (!success || !lf) {
     NS_WARNING("Failed to create an OMT compositor.");
     DestroyCompositor();
-    mLayerManager = nullptr;
-    mCompositorChild = nullptr;
-    mCompositorParent = nullptr;
-    mCompositorVsyncDispatcher = nullptr;
     return;
   }
 

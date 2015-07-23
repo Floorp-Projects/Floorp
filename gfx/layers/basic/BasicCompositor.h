@@ -46,7 +46,7 @@ protected:
   virtual ~BasicCompositor();
 
 public:
-  virtual bool Initialize() override;
+  virtual bool Initialize() override { return true; };
 
   virtual void Destroy() override;
 
