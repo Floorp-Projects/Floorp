@@ -1411,9 +1411,7 @@ RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
     if (outcome != InsertOutcome::SUCCESS) {
       return nullptr;
     }
-  }
 
-  if (!aSize) {
     Telemetry::GetHistogramById(
       Telemetry::IMAGE_DECODE_COUNT)->Subtract(mDecodeCount);
     mDecodeCount++;
