@@ -88,9 +88,6 @@ public:
    * that will be processed. */
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) = 0;
-  /* Returns the current time for this graph. This is the end of the current
-   * iteration. */
-  virtual GraphTime GetCurrentTime() = 0;
   /* For real-time graphs, this waits until it's time to process more data. For
    * offline graphs, this is a no-op. */
   virtual void WaitForNextIteration() = 0;
@@ -292,7 +289,6 @@ public:
   virtual ~SystemClockDriver();
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
@@ -313,7 +309,6 @@ public:
   virtual ~OfflineClockDriver();
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
   virtual TimeStamp GetCurrentTimeStamp() override;
@@ -376,7 +371,6 @@ public:
   virtual void Revive() override;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
                                        GraphTime& aTo) override;
-  virtual GraphTime GetCurrentTime() override;
   virtual void WaitForNextIteration() override;
   virtual void WakeUp() override;
 
