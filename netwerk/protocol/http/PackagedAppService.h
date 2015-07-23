@@ -61,6 +61,9 @@ private:
   // Should be called on the main thread.
   nsresult NotifyPackageDownloaded(nsCString aKey);
 
+  // Extract the URI of a package from the given packaged resource URI.
+  static nsresult GetPackageURI(nsIURI *aUri, nsIURI **aPackageURI);
+
   // This class is used to write data into the cache entry corresponding to the
   // packaged resource being downloaded.
   // The PackagedAppDownloader will hold a ref to a CacheEntryWriter that
