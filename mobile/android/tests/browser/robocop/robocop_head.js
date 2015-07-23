@@ -13,6 +13,7 @@
 var _quit = false;
 var _tests_pending = 0;
 var _pendingTimers = [];
+var _cleanupFunctions = [];
 
 function _dump(str) {
   let start = /^TEST-/.test(str) ? "\n" : "";
@@ -100,6 +101,7 @@ function _Timer(func, delay) {
   // Keep timer alive until it fires
   _pendingTimers.push(timer);
 }
+
 _Timer.prototype = {
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsITimerCallback) ||
@@ -554,8 +556,10 @@ function do_test_finished() {
   _dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
          " finished\n");
 
-  if (--_tests_pending == 0)
+  if (--_tests_pending == 0) {
+    _do_execute_cleanup();
     _do_quit();
+  }
 }
 
 function do_get_file(path, allowNonexistent) {
@@ -640,13 +644,30 @@ function do_parse_document(aPath, aType) {
   return doc;
 }
 
-//
-// XXX UNUSED - Registers a function that will run when the test harness
-// is done running all tests.
-//
-function do_register_cleanup(unused) {
-  // stubbed out until time to remove.
-  _dump("TEST-INFO | (xpcshell/head.js) | test IGNORING do_register_cleanup() Registration\n");
+/**
+ * Registers a function that will run when the test harness is done running all
+ * tests.
+ *
+ * @param aFunction
+ *        The function to be called when the test harness has finished running.
+ */
+function do_register_cleanup(func) {
+  _dump("TEST-INFO | " + _TEST_FILE + " | " +
+    (_gRunningTest ? _gRunningTest.name + " " : "") +
+    "registering cleanup function.");
+
+  _cleanupFunctions.push(func);
+}
+
+/**
+ * Execute a function when the test harness is done running all tests.
+ */
+function _do_execute_cleanup() {
+  let func;
+  while ((func = _cleanupFunctions.pop())) {
+    _dump("TEST-INFO | " + _TEST_FILE + " | executing cleanup function.");
+    func();
+  }
 }
 
 /**
