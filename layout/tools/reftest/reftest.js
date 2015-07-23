@@ -748,9 +748,14 @@ function BuildConditionSandbox(aURL) {
     sandbox.Mulet = gB2GisMulet;
 
     try {
-        sandbox.asyncPanZoom = gContainingWindow.document.docShell.asyncPanZoomEnabled;
+        sandbox.asyncPan = gContainingWindow.document.docShell.asyncPanZoomEnabled;
     } catch (e) {
-        sandbox.asyncPanZoom = false;
+        sandbox.asyncPan = false;
+    }
+    try {
+        sandbox.asyncZoom = sandbox.asyncPan && prefs.getBoolPref("apz.allow_zooming");
+    } catch (e) {
+        sandbox.asyncZoom = false;
     }
 
     if (!gDumpedConditionSandbox) {
