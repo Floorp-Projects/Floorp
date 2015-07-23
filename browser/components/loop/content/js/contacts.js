@@ -700,7 +700,7 @@ loop.contacts = (function(_, mozL10n) {
             category: ["local"]
           };
           var tel = this.state.tel.trim();
-          if (!!tel) {
+          if (tel) {
             contact.tel = [{
               pref: true,
               type: ["fxos"],

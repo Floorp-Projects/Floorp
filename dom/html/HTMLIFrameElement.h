@@ -159,6 +159,15 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::marginheight, aMarginHeight, aError);
   }
+  void SetReferrer(const nsAString& aReferrer, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::referrer, aReferrer, aError);
+  }
+  void GetReferrer(nsAString& aReferrer)
+  {
+    GetHTMLAttr(nsGkAtoms::referrer, aReferrer);
+  }
+
   nsIDocument* GetSVGDocument()
   {
     return GetContentDocument();

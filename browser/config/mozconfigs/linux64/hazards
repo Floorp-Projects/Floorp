@@ -11,6 +11,8 @@
 ac_add_options --enable-elf-hack
 ac_add_options --enable-stdcxx-compat
 
+ac_add_options --enable-default-toolkit=cairo-gtk2
+
 # The objdir must be at a known location so its path can be stripped from the
 # filenames stored by the analysis
 mk_add_options MOZ_OBJDIR=obj-analyzed

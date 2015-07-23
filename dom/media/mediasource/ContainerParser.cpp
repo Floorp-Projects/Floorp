@@ -42,13 +42,13 @@ ContainerParser::ContainerParser(const nsACString& aType)
 bool
 ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 {
-MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
+  MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
             aData->Length(),
             aData->Length() > 0 ? (*aData)[0] : 0,
             aData->Length() > 1 ? (*aData)[1] : 0,
             aData->Length() > 2 ? (*aData)[2] : 0,
             aData->Length() > 3 ? (*aData)[3] : 0);
-return false;
+  return false;
 }
 
 bool
