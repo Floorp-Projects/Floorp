@@ -22,11 +22,7 @@ var _pendingTimers = [];
 
 function _dump(str) {
   let start = /^TEST-/.test(str) ? "\n" : "";
-  if (typeof _XPCSHELL_PROCESS == "undefined") {
-    dump(start + str);
-  } else {
-    dump(start + _XPCSHELL_PROCESS + ": " + str);
-  }
+  dump(start + str);
 }
 
 // Disable automatic network detection, so tests work correctly when
@@ -906,71 +902,6 @@ function do_register_cleanup(unused) {
   // stubbed out until time to remove.
   _dump("TEST-INFO | (xpcshell/head.js) | test IGNORING do_register_cleanup() Registration\n");
 }
-
-/**
- * This function loads head.js (this file) in the child process, so that all
- * functions defined in this file (do_throw, etc) are available to subsequent
- * sendCommand calls.  It also sets various constants used by these functions.
- *
- * (Note that you may use sendCommand without calling this function first;  you
- * simply won't have any of the functions in this file available.)
- */
-function do_load_child_test_harness()
-{
-  // Make sure this isn't called from child process
-  if (!runningInParent) {
-    do_throw("run_test_in_child cannot be called from child!");
-  }
-
-  // Allow to be called multiple times, but only run once
-  if (typeof do_load_child_test_harness.alreadyRun != "undefined")
-    return;
-  do_load_child_test_harness.alreadyRun = 1;
-
-  _XPCSHELL_PROCESS = "parent";
-
-  let command =
-        "const _HEAD_JS_PATH=" + uneval(_HEAD_JS_PATH) + "; "
-      + "const _HEAD_FILES=" + uneval(_HEAD_FILES) + "; "
-      + "const _TAIL_FILES=" + uneval(_TAIL_FILES) + "; "
-      + "const _XPCSHELL_PROCESS='child';";
-
-  if (this._TESTING_MODULES_DIR) {
-    command += " const _TESTING_MODULES_DIR=" + uneval(_TESTING_MODULES_DIR) + ";";
-  }
-
-  command += " load(_HEAD_JS_PATH);";
-
-  sendCommand(command);
-}
-
-/**
- * Runs an entire xpcshell unit test in a child process (rather than in chrome,
- * which is the default).
- *
- * This function returns immediately, before the test has completed.
- *
- * @param testFile
- *        The name of the script to run.  Path format same as load().
- * @param optionalCallback.
- *        Optional function to be called (in parent) when test on child is
- *        complete.  If provided, the function must call do_test_finished();
- */
-function run_test_in_child(testFile, optionalCallback)
-{
-  var callback = (typeof optionalCallback == 'undefined') ?
-                    do_test_finished : optionalCallback;
-
-  do_load_child_test_harness();
-
-  var testPath = do_get_file(testFile).path.replace(/\\/g, "/");
-  do_test_pending();
-  sendCommand("_dump('CHILD-TEST-STARTED'); "
-              + "const _TEST_FILE=['" + testPath + "']; _execute_test(); "
-              + "_dump('CHILD-TEST-COMPLETED');",
-              callback);
-}
-
 
 /**
  * Add a test function to the list of tests that are to be run asynchronously.
