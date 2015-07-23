@@ -173,13 +173,13 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 function setJSONPref(aName, aValue) {
-  let value = !!aValue ? JSON.stringify(aValue) : "";
+  let value = aValue ? JSON.stringify(aValue) : "";
   Services.prefs.setCharPref(aName, value);
 }
 
 function getJSONPref(aName) {
   let value = Services.prefs.getCharPref(aName);
-  return !!value ? JSON.parse(value) : null;
+  return value ? JSON.parse(value) : null;
 }
 
 let gHawkClient = null;

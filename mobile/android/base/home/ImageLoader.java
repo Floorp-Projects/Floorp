@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import com.squareup.picasso.LruCache;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Downloader.Response;
 import com.squareup.picasso.UrlConnectionDownloader;
@@ -46,11 +47,14 @@ public class ImageLoader {
         }
     }
 
+    // Picasso instance and LruCache lrucache are protected by synchronization.
     private static Picasso instance;
+    private static LruCache lrucache;
 
     public static synchronized Picasso with(Context context) {
         if (instance == null) {
-            Picasso.Builder builder = new Picasso.Builder(context);
+            lrucache = new LruCache(context);
+            Picasso.Builder builder = new Picasso.Builder(context).memoryCache(lrucache);
 
             final Distribution distribution = Distribution.getInstance(context);
             builder.downloader(new ImageDownloader(context, distribution));
@@ -58,6 +62,12 @@ public class ImageLoader {
         }
 
         return instance;
+    }
+
+    public static synchronized void clearLruCache() {
+        if (lrucache != null) {
+            lrucache.evictAll();
+        }
     }
 
     /**
