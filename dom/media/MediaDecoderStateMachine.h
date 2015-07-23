@@ -119,7 +119,6 @@ extern PRLogModuleInfo* gMediaSampleLog;
 */
 class MediaDecoderStateMachine
 {
-  friend class AudioSink;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 public:
   typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
