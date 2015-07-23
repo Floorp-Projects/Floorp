@@ -72,6 +72,7 @@
 #define APPLICATION_XSLT_XML                "application/xslt+xml"
 #define APPLICATION_MATHML_XML              "application/mathml+xml"
 #define APPLICATION_RDF_XML                 "application/rdf+xml"
+#define APPLICATION_PACKAGE                 "application/package"
 
 #define AUDIO_BASIC                         "audio/basic"
 #define AUDIO_OGG                           "audio/ogg"
