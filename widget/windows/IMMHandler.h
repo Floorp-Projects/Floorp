@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIMM32Handler_h__
-#define nsIMM32Handler_h__
+#ifndef IMMHandler_h_
+#define IMMHandler_h_
 
 #include "nscore.h"
 #include <windows.h>
@@ -104,14 +104,8 @@ protected:
   HIMC mIMC;
 };
 
-} // namespace widget
-} // namespace mozilla
-
-class nsIMM32Handler
+class IMMHandler final
 {
-  typedef mozilla::widget::IMEContext IMEContext;
-  typedef mozilla::widget::IMENotification IMENotification;
-  typedef mozilla::widget::MSGResult MSGResult;
 public:
   static void Initialize();
   static void Terminate();
@@ -186,8 +180,8 @@ protected:
                                         WPARAM &wParam, LPARAM &lParam,
                                         MSGResult& aResult);
 
-  nsIMM32Handler();
-  ~nsIMM32Handler();
+  IMMHandler();
+  ~IMMHandler();
 
   // On*() methods return true if the caller of message handler shouldn't do
   // anything anymore.  Otherwise, false.
@@ -432,4 +426,7 @@ protected:
   static bool sHasFocus;
 };
 
-#endif // nsIMM32Handler_h__
+} // namespace widget
+} // namespace mozilla
+
+#endif // IMMHandler_h_
