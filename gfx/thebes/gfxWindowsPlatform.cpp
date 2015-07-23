@@ -1735,6 +1735,12 @@ CheckForAdapterMismatch(ID3D11Device *device)
 
 void CheckIfRenderTargetViewNeedsRecreating(ID3D11Device *device)
 {
+    // CreateTexture2D is known to crash on lower feature levels, see bugs
+    // 1170211 and 1089413.
+    if (device->GetFeatureLevel() < D3D_FEATURE_LEVEL_10_0) {
+        return;
+    }
+
     nsRefPtr<ID3D11DeviceContext> deviceContext;
     device->GetImmediateContext(getter_AddRefs(deviceContext));
     int backbufferWidth = 32; int backbufferHeight = 32;

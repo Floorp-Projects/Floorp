@@ -19,7 +19,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIIdleServiceInternal.h"
-#include "nsIMM32Handler.h"
 #include "nsMemory.h"
 #include "nsPrintfCString.h"
 #include "nsQuickSort.h"

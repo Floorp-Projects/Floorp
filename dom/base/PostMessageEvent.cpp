@@ -8,6 +8,8 @@
 
 #include "MessageEvent.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/FileList.h"
+#include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/PMessagePort.h"
@@ -26,7 +28,6 @@ namespace {
 struct StructuredCloneInfo
 {
   PostMessageEvent* event;
-  bool subsumes;
   nsPIDOMWindow* window;
 
   // This hashtable contains the transferred ports - used to avoid duplicates.
@@ -86,12 +87,27 @@ PostMessageEvent::ReadStructuredClone(JSContext* cx,
   if (tag == SCTAG_DOM_FILELIST) {
     NS_ASSERTION(!data, "Data should be empty");
 
-    nsISupports* supports;
-    if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
+    // What we get back from the reader is a FileListClonedData.
+    // From that we create a new FileList.
+    FileListClonedData* fileListClonedData;
+    if (JS_ReadBytes(reader, &fileListClonedData, sizeof(fileListClonedData))) {
+      MOZ_ASSERT(fileListClonedData);
+
+      // nsRefPtr<FileList> needs to go out of scope before toObjectOrNull() is
+      // called because the static analysis thinks dereferencing XPCOM objects
+      // can GC (because in some cases it can!), and a return statement with a
+      // JSObject* type means that JSObject* is on the stack as a raw pointer
+      // while destructors are running.
       JS::Rooted<JS::Value> val(cx);
-      if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, supports, &val))) {
-        return val.toObjectOrNull();
+      {
+        nsRefPtr<FileList> fileList =
+          FileList::Create(scInfo->window, fileListClonedData);
+        if (!fileList || !ToJSValue(cx, fileList, &val)) {
+          return nullptr;
+        }
       }
+
+      return &val.toObject();
     }
   }
 
@@ -117,7 +133,7 @@ PostMessageEvent::WriteStructuredClone(JSContext* cx,
   // See if this is a File/Blob object.
   {
     Blob* blob = nullptr;
-    if (scInfo->subsumes && NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
       BlobImpl* blobImpl = blob->Impl();
       if (JS_WriteUint32Pair(writer, SCTAG_DOM_BLOB, 0) &&
           JS_WriteBytes(writer, &blobImpl, sizeof(blobImpl))) {
@@ -127,21 +143,20 @@ PostMessageEvent::WriteStructuredClone(JSContext* cx,
     }
   }
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrappedNative));
-  if (wrappedNative) {
-    uint32_t scTag = 0;
-    nsISupports* supports = wrappedNative->Native();
-
-    nsCOMPtr<nsIDOMFileList> list = do_QueryInterface(supports);
-    if (list && scInfo->subsumes)
-      scTag = SCTAG_DOM_FILELIST;
-
-    if (scTag)
-      return JS_WriteUint32Pair(writer, scTag, 0) &&
-             JS_WriteBytes(writer, &supports, sizeof(supports)) &&
-             scInfo->event->StoreISupports(supports);
+  // See if this is a FileList object.
+  {
+    FileList* fileList = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileList, obj, fileList))) {
+      nsRefPtr<FileListClonedData> fileListClonedData =
+        fileList->CreateClonedData();
+      MOZ_ASSERT(fileListClonedData);
+      FileListClonedData* ptr = fileListClonedData.get();
+      if (JS_WriteUint32Pair(writer, SCTAG_DOM_FILELIST, 0) &&
+          JS_WriteBytes(writer, &ptr, sizeof(ptr))) {
+        scInfo->event->StoreISupports(fileListClonedData);
+        return true;
+      }
+    }
   }
 
   const JSStructuredCloneCallbacks* runtimeCallbacks =
@@ -379,15 +394,13 @@ PostMessageEvent::Run()
 
 bool
 PostMessageEvent::Write(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                        JS::Handle<JS::Value> aTransfer, bool aSubsumes,
-                        nsPIDOMWindow* aWindow)
+                        JS::Handle<JS::Value> aTransfer, nsPIDOMWindow* aWindow)
 {
   // We *must* clone the data here, or the JS::Value could be modified
   // by script
   StructuredCloneInfo scInfo;
   scInfo.event = this;
   scInfo.window = aWindow;
-  scInfo.subsumes = aSubsumes;
 
   return mBuffer.write(aCx, aMessage, aTransfer, &sPostMessageCallbacks,
                        &scInfo);

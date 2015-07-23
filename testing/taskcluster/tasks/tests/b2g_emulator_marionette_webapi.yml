@@ -18,7 +18,7 @@ task:
         --download-symbols ondemand
         --test-manifest webapi-tests.ini
         --installer-url {{build_url}}
-        --test-url {{tests_url}}
+        --test-packages-url {{test_packages_url}}
     artifacts:
       'public/build':
         type: directory

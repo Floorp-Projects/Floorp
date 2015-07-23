@@ -21,15 +21,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static PLDHashOperator
-IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  aEntry->Traverse(cb);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
@@ -39,7 +30,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOlderShadow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mYoungerShadow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAssociatedBinding)
-  tmp->mIdentifierMap.EnumerateEntries(IdentifierMapEntryTraverse, &cb);
+  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done();
+       iter.Next()) {
+    iter.Get()->Traverse(&cb);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ShadowRoot,

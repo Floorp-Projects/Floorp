@@ -384,12 +384,6 @@ class jit::UniqueTrackedTypes
 bool
 UniqueTrackedTypes::getIndexOf(JSContext* cx, TypeSet::Type ty, uint8_t* indexp)
 {
-    // FIXME bug 1176511. It is unduly onerous to make nursery things work
-    // correctly as keys of hash tables. Until then, since TypeSet::Types may
-    // be in the nursery, we evict the nursery before tracking types.
-    cx->runtime()->gc.evictNursery();
-    MOZ_ASSERT_IF(ty.isSingletonUnchecked(), !IsInsideNursery(ty.singleton()));
-
     TypesMap::AddPtr p = map_.lookupForAdd(ty);
     if (p) {
         *indexp = p->value();

@@ -394,6 +394,9 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
         }
     }
 
+    if (rt->isHeapMinorCollecting())
+        jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
+
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->mark(trc);
 

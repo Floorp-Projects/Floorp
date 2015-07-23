@@ -101,13 +101,16 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
     return;
   }
 
-  GdkPixbuf *preview_pixbuf;
+  GdkPixbuf *preview_pixbuf = nullptr;
   // Only scale down images that are too big
   if (preview_width > MAX_PREVIEW_SIZE || preview_height > MAX_PREVIEW_SIZE) {
-    preview_pixbuf = gdk_pixbuf_new_from_file_at_size(image_filename,
-                                                      MAX_PREVIEW_SIZE,
-                                                      MAX_PREVIEW_SIZE,
-                                                      nullptr);
+    if (ceil(preview_width / double(MAX_PREVIEW_SIZE) + 1.0) *
+          ceil(preview_height / double(MAX_PREVIEW_SIZE) + 1.0) < 0x7FFFFF) {
+      preview_pixbuf = gdk_pixbuf_new_from_file_at_size(image_filename,
+                                                        MAX_PREVIEW_SIZE,
+                                                        MAX_PREVIEW_SIZE,
+                                                        nullptr);
+    }
   }
   else {
     preview_pixbuf = gdk_pixbuf_new_from_file(image_filename, nullptr);
