@@ -6,22 +6,6 @@
   == Styles used by the XUL outline element.
   ======================================================================= */
 
-%filter substitution
-%define selectedBorderColor rgb(217,217,217)
-%define hoverAndFocusBorderColor rgb(125,162,206)
-%define selectedFocusBorderColor rgb(132,172,221)
-%define hoverBorderColor rgb(184,214,251)
-%define whiteOpacityBorderColor rgba(255,255,255,.4)
-%define whiteOpacityBottomBorderColor rgba(255,255,255,.6)
-%define selectedGradientColor1 rgba(190,190,190,.1)
-%define selectedGradientColor2 rgba(190,190,190,.4)
-%define selectedFocusGradientColor1 rgba(131,183,249,.16)
-%define selectedFocusGradientColor2 rgba(131,183,249,.375)
-%define hoverAndCurrentFocusGradientColor1 rgba(131,183,249,.28)
-%define hoverAndCurrentFocusGradientColor2 rgba(131,183,249,.5)
-%define hoverGradientColor1 rgba(131,183,249,.05)
-%define hoverGradientColor2 rgba(131,183,249,.16)
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: tree ::::: */
@@ -41,7 +25,7 @@ tree {
 /* ::::: tree focusring ::::: */
 
 .focusring > .tree-stack > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;  
+  border: 1px solid transparent;
 }
 
 .focusring:-moz-focusring > .tree-stack > .tree-rows > .tree-bodybox {
@@ -252,9 +236,7 @@ treecol[hideheader="true"] {
 treecol:hover:active,
 treecolpicker:hover:active {
   border-top: 2px solid;
-  border-right: 1px solid;
   border-bottom: 1px solid;
-  border-left: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow;
@@ -262,14 +244,14 @@ treecolpicker:hover:active {
   padding-top: 1px;
   padding-bottom: 0px;
   -moz-padding-start: 5px;
-  -moz-padding-end: 4px;
+  -moz-padding-end: 3px;
 }
 
 .treecol-image:hover:active {
   padding-top: 1px;
   padding-bottom: 0px;
   -moz-padding-start: 2px;
-  -moz-padding-end: 1px;
+  -moz-padding-end: 0px;
 }
 
 /* ::::: column drag and drop styles ::::: */
@@ -419,6 +401,38 @@ treechildren::-moz-tree-cell-text(selected, editing) {
   }
 
   @media (-moz-windows-default-theme) {
+    treechildren {
+      --treechildren-outline: none;
+      --treechildren-2ndBorderColor: rgba(255,255,255,.4);
+      --treechildren-selectedColor: rgb(217,217,217);
+      --treechildren-focusColor: rgb(123,195,255);
+      --treechildren-selectedFocusColor: rgb(205,232,255);
+      --treechildren-currentColor: rgb(125,162,206);
+      --treechildren-hoverColor: rgb(229,243,255);
+      --treechildren-selectedBorder: var(--treechildren-selectedColor);
+      --treechildren-selectedBottomBorder: rgb(204,204,204);
+      --treechildren-selectedImage: linear-gradient(rgb(217,217,217), rgb(217,217,217));
+      --treechildren-selectedBackground: transparent;
+      --treechildren-currentFocusBorder: var(--treechildren-focusColor);
+      --treechildren-currentFocusBottomBorder: var(--treechildren-focusColor);
+      --treechildren-selectedFocusBorder: var(--treechildren-selectedFocusColor);
+      --treechildren-selectedFocusBottomBorder: rgb(165,214,255);
+      --treechildren-selectedFocusImage: none;
+      --treechildren-selectedFocusBackground: var(--treechildren-selectedFocusColor);
+      --treechildren-selectedFocusCurrentBorder: var(--treechildren-focusColor);
+      --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-focusColor);
+      --treechildren-selectedFocusCurrentImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
+      --treechildren-hoverBorder: var(--treechildren-hoverColor);
+      --treechildren-hoverBottomBorder: var(--treechildren-hoverColor);
+      --treechildren-hoverImage: linear-gradient(rgb(229,243,255), rgb(229,243,255));
+      --treechildren-hoverCurrentBorder: var(--treechildren-currentColor);
+      --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor);
+      --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
+      --treechildren-hoverSelectedBorder: var(--treechildren-focusColor);
+      --treechildren-hoverSelectedBottomBorder: var(--treechildren-focusColor);
+      --treechildren-hoverSelectedImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
+    }
+
     treechildren:not(.autocomplete-treebody)::-moz-tree-row {
       height: 1.8em;
       color: -moz-FieldText;
@@ -431,66 +445,66 @@ treechildren::-moz-tree-cell-text(selected, editing) {
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
-      -moz-border-top-colors: @selectedBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @selectedBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @selectedBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @selectedBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
-      background-color: transparent;
-      outline: 1px solid @whiteOpacityBorderColor@;
+      -moz-border-top-colors: var(--treechildren-selectedBorder);
+      -moz-border-right-colors: var(--treechildren-selectedBorder);
+      -moz-border-left-colors: var(--treechildren-selectedBorder);
+      -moz-border-bottom-colors: var(--treechildren-selectedBottomBorder);
+      background-image: var(--treechildren-selectedImage);
+      background-color: var(--treechildren-selectedBackground);
+      outline: var(--treechildren-outline);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(current, focus) {
       border-style: solid;
-      -moz-border-top-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-      outline: 1px solid @whiteOpacityBorderColor@;
+      -moz-border-top-colors: var(--treechildren-currentFocusBorder);
+      -moz-border-right-colors: var(--treechildren-currentFocusBorder);
+      -moz-border-left-colors: var(--treechildren-currentFocusBorder);
+      -moz-border-bottom-colors: var(--treechildren-currentFocusBottomBorder);
+      outline: var(--treechildren-outline);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
     treechildren::-moz-tree-row(dropOn) {
-      -moz-border-top-colors: @selectedFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @selectedFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @selectedFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @selectedFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
-      background-color: transparent;
+      -moz-border-top-colors: var(--treechildren-selectedFocusBorder);
+      -moz-border-right-colors: var(--treechildren-selectedFocusBorder);
+      -moz-border-left-colors: var(--treechildren-selectedFocusBorder);
+      -moz-border-bottom-colors: var(--treechildren-selectedFocusBottomBorder);
+      background-image: var(--treechildren-selectedFocusImage);
+      background-color: var(--treechildren-selectedFocusBackground);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
       border-style: solid;
-      -moz-border-top-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
+      -moz-border-top-colors: var(--treechildren-selectedFocusCurrentBorder);
+      -moz-border-right-colors: var(--treechildren-selectedFocusCurrentBorder);
+      -moz-border-left-colors: var(--treechildren-selectedFocusCurrentBorder);
+      -moz-border-bottom-colors: var(--treechildren-selectedFocusCurrentBottomBorder);
+      background-image: var(--treechildren-selectedFocusCurrentImage);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
-      -moz-border-top-colors: @hoverBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @hoverBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @hoverBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @hoverBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
-      outline: 1px solid @whiteOpacityBorderColor@;
+      -moz-border-top-colors: var(--treechildren-hoverBorder);
+      -moz-border-right-colors: var(--treechildren-hoverBorder);
+      -moz-border-left-colors: var(--treechildren-hoverBorder);
+      -moz-border-bottom-colors: var(--treechildren-hoverBottomBorder);
+      background-image: var(--treechildren-hoverImage);
+      outline: var(--treechildren-outline);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
-      -moz-border-top-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@hoverGradientColor2@, @hoverGradientColor2@);
+      -moz-border-top-colors: var(--treechildren-hoverCurrentBorder);
+      -moz-border-right-colors: var(--treechildren-hoverCurrentBorder);
+      -moz-border-left-colors: var(--treechildren-hoverCurrentBorder);
+      -moz-border-bottom-colors: var(--treechildren-hoverCurrentBottomBorder);
+      background-image: var(--treechildren-hoverCurrentImage);
     }
 
     treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
-      -moz-border-top-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-right-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-left-colors: @hoverAndFocusBorderColor@ @whiteOpacityBorderColor@;
-      -moz-border-bottom-colors: @hoverAndFocusBorderColor@ @whiteOpacityBottomBorderColor@;
-      background-image: linear-gradient(@hoverAndCurrentFocusGradientColor2@, @hoverAndCurrentFocusGradientColor2@);
+      -moz-border-top-colors: var(--treechildren-hoverSelectedBorder);
+      -moz-border-right-colors: var(--treechildren-hoverSelectedBorder);
+      -moz-border-left-colors: var(--treechildren-hoverSelectedBorder);
+      -moz-border-bottom-colors: var(--treechildren-hoverSelectedBottomBorder);
+      background-image: var(--treechildren-hoverSelectedImage);
     }
 
     tree[disabled="true"] > treechildren::-moz-tree-row {
@@ -519,35 +533,60 @@ treechildren::-moz-tree-cell-text(selected, editing) {
 
     @media (-moz-os-version: windows-vista),
            (-moz-os-version: windows-win7) {
+      treechildren {
+        --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
+        --treechildren-2ndBottomBorderColor: rgba(255,255,255,.6);
+        --treechildren-selectedBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBorderColor);
+        --treechildren-selectedBottomBorder: var(--treechildren-selectedColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.1), rgba(190,190,190,.4));
+        --treechildren-currentFocusBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+        --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
+        --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.375));
+        --treechildren-selectedFocusBackground: transparent;
+        --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+        --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
+        --treechildren-hoverBorder: rgb(184,214,251) var(--treechildren-2ndBorderColor);
+        --treechildren-hoverBottomBorder: rgb(184,214,251) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
+        --treechildren-hoverCurrentBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+        --treechildren-hoverCurrentBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-hoverCurrentImage: linear-gradient(rgba(131,183,249,.05), rgba(131,183,249,.16));
+        --treechildren-hoverSelectedBorder: var(--treechildren-currentColor) var(--treechildren-2ndBorderColor);
+        --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor) var(--treechildren-2ndBottomBorderColor);
+        --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
+      }
+
       treechildren:not(.autocomplete-treebody)::-moz-tree-row {
         border-width: 2px;
         border-radius: 3px;
         -moz-outline-radius: 3px;
       }
+    }
 
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
-        background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
-      treechildren::-moz-tree-row(dropOn) {
-        background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
-        background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
-        background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
-        background-image: linear-gradient(@hoverGradientColor1@, @hoverGradientColor2@);
-      }
-
-      treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
-        background-image: linear-gradient(@hoverAndCurrentFocusGradientColor1@, @hoverAndCurrentFocusGradientColor2@);
+    @media (-moz-os-version: windows-win8) {
+      treechildren {
+        --treechildren-outline: 1px solid var(--treechildren-2ndBorderColor);
+        --treechildren-selectedBorder: var(--treechildren-selectedColor);
+        --treechildren-selectedBottomBorder: var(--treechildren-selectedColor);
+        --treechildren-selectedImage: linear-gradient(rgba(190,190,190,.4), rgba(190,190,190,.4));
+        --treechildren-currentFocusBorder: var(--treechildren-currentColor);
+        --treechildren-currentFocusBottomBorder: var(--treechildren-currentColor);
+        --treechildren-selectedFocusBorder: rgb(132,172,221) var(--treechildren-2ndBorderColor);
+        --treechildren-selectedFocusBottomBorder: var(--treechildren-currentColor);
+        --treechildren-selectedFocusImage: linear-gradient(rgba(131,183,249,.375), rgba(131,183,249,.375));
+        --treechildren-selectedFocusBackground: transparent;
+        --treechildren-selectedFocusCurrentBorder: var(--treechildren-currentColor);
+        --treechildren-selectedFocusCurrentBottomBorder: var(--treechildren-currentColor);
+        --treechildren-selectedFocusCurrentImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
+        --treechildren-hoverBorder: rgb(184,214,251);
+        --treechildren-hoverBottomBorder: rgb(184,214,251);
+        --treechildren-hoverImage: linear-gradient(rgba(131,183,249,.16), rgba(131,183,249,.16));
+        --treechildren-hoverSelectedBorder: var(--treechildren-currentColor);
+        --treechildren-hoverSelectedBottomBorder: var(--treechildren-currentColor);
+        --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.5), rgba(131,183,249,.5));
       }
     }
   }

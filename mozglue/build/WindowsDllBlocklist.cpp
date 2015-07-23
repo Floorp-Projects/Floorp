@@ -169,6 +169,10 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "rndlnpshimswf.dll", ALL_VERSIONS },
   { "rndlmainbrowserrecordplugin.dll", ALL_VERSIONS },
 
+  // Startup crashes with RealNetworks Browser Record Plugin, bug 1170141
+  { "nprpffbrowserrecordext.dll", ALL_VERSIONS },
+  { "nprndlffbrowserrecordext.dll", ALL_VERSIONS },
+
   // Crashes with CyberLink YouCam, bug 1136968
   { "ycwebcamerasource.ax", MAKE_VERSION(2, 0, 0, 1611) },
 
