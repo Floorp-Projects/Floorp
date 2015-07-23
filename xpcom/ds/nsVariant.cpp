@@ -54,20 +54,19 @@ ACString2Double(const nsACString& aString, double* aResult)
   return String2Double(PromiseFlatCString(aString).get(), aResult);
 }
 
-// Fills outVariant with double, uint32_t, or int32_t.
+// Fills aOutData with double, uint32_t, or int32_t.
 // Returns NS_OK, an error code, or a non-NS_OK success code
-static nsresult
-ToManageableNumber(const nsDiscriminatedUnion& aInData,
-                   nsDiscriminatedUnion* aOutData)
+nsresult
+nsDiscriminatedUnion::ToManageableNumber(nsDiscriminatedUnion* aOutData) const
 {
   nsresult rv;
 
-  switch (aInData.mType) {
+  switch (mType) {
     // This group results in a int32_t...
 
 #define CASE__NUMBER_INT32(type_, member_)                                    \
     case nsIDataType :: type_ :                                               \
-        aOutData->u.mInt32Value = aInData.u. member_ ;                        \
+        aOutData->u.mInt32Value = u. member_ ;                                \
         aOutData->mType = nsIDataType::VTYPE_INT32;                           \
         return NS_OK;
 
@@ -85,7 +84,7 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
     // This group results in a uint32_t...
 
     case nsIDataType::VTYPE_UINT32:
-      aOutData->u.mInt32Value = aInData.u.mUint32Value;
+      aOutData->u.mInt32Value = u.mUint32Value;
       aOutData->mType = nsIDataType::VTYPE_INT32;
       return NS_OK;
 
@@ -95,20 +94,20 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
     case nsIDataType::VTYPE_UINT64:
       // XXX Need boundary checking here.
       // We may need to return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
-      aOutData->u.mDoubleValue = double(aInData.u.mInt64Value);
+      aOutData->u.mDoubleValue = double(u.mInt64Value);
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_FLOAT:
-      aOutData->u.mDoubleValue = aInData.u.mFloatValue;
+      aOutData->u.mDoubleValue = u.mFloatValue;
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_DOUBLE:
-      aOutData->u.mDoubleValue = aInData.u.mDoubleValue;
+      aOutData->u.mDoubleValue = u.mDoubleValue;
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      rv = String2Double(aInData.u.str.mStringValue, &aOutData->u.mDoubleValue);
+      rv = String2Double(u.str.mStringValue, &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -116,14 +115,14 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
       return NS_OK;
     case nsIDataType::VTYPE_DOMSTRING:
     case nsIDataType::VTYPE_ASTRING:
-      rv = AString2Double(*aInData.u.mAStringValue, &aOutData->u.mDoubleValue);
+      rv = AString2Double(*u.mAStringValue, &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_UTF8STRING:
-      rv = AUTF8String2Double(*aInData.u.mUTF8StringValue,
+      rv = AUTF8String2Double(*u.mUTF8StringValue,
                               &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
@@ -131,7 +130,7 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
       aOutData->mType = nsIDataType::VTYPE_DOUBLE;
       return NS_OK;
     case nsIDataType::VTYPE_CSTRING:
-      rv = ACString2Double(*aInData.u.mCStringValue,
+      rv = ACString2Double(*u.mCStringValue,
                            &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
@@ -140,7 +139,7 @@ ToManageableNumber(const nsDiscriminatedUnion& aInData,
       return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      rv = AString2Double(nsDependentString(aInData.u.wstr.mWStringValue),
+      rv = AString2Double(nsDependentString(u.wstr.mWStringValue),
                           &aOutData->u.mDoubleValue);
       if (NS_FAILED(rv)) {
         return rv;
@@ -458,20 +457,19 @@ bad:
 
 /***************************************************************************/
 
-#define TRIVIAL_DATA_CONVERTER(type_, data_, member_, retval_)                \
-    if (data_.mType == nsIDataType :: type_) {                                \
-        *retval_ = data_.u.member_;                                           \
+#define TRIVIAL_DATA_CONVERTER(type_, member_, retval_)                       \
+    if (mType == nsIDataType :: type_) {                                      \
+        *retval_ = u.member_;                                                 \
         return NS_OK;                                                         \
     }
 
 #define NUMERIC_CONVERSION_METHOD_BEGIN(type_, Ctype_, name_)                 \
-/* static */ nsresult                                                         \
-nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
-                             Ctype_* aResult)                                 \
+nsresult                                                                      \
+nsDiscriminatedUnion::ConvertTo##name_ (Ctype_* aResult) const                \
 {                                                                             \
-    TRIVIAL_DATA_CONVERTER(type_, data, m##name_##Value, aResult)             \
+    TRIVIAL_DATA_CONVERTER(type_, m##name_##Value, aResult)                   \
     nsDiscriminatedUnion tempData;                                            \
-    nsresult rv = ToManageableNumber(data, &tempData);                        \
+    nsresult rv = ToManageableNumber(&tempData);                              \
     /*                                                                     */ \
     /* NOTE: rv may indicate a success code that we want to preserve       */ \
     /* For the final return. So all the return cases below should return   */ \
@@ -620,13 +618,13 @@ NUMERIC_CONVERSION_METHOD_END
 // Just leverage a numeric converter for bool (but restrict the values).
 // XXX Is this really what we want to do?
 
-/* static */ nsresult
-nsVariant::ConvertToBool(const nsDiscriminatedUnion& aData, bool* aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToBool(bool* aResult) const
 {
-  TRIVIAL_DATA_CONVERTER(VTYPE_BOOL, aData, mBoolValue, aResult)
+  TRIVIAL_DATA_CONVERTER(VTYPE_BOOL, mBoolValue, aResult)
 
   double val;
-  nsresult rv = nsVariant::ConvertToDouble(aData, &val);
+  nsresult rv = ConvertToDouble(&val);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -636,14 +634,14 @@ nsVariant::ConvertToBool(const nsDiscriminatedUnion& aData, bool* aResult)
 
 /***************************************************************************/
 
-/* static */ nsresult
-nsVariant::ConvertToInt64(const nsDiscriminatedUnion& aData, int64_t* aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const
 {
-  TRIVIAL_DATA_CONVERTER(VTYPE_INT64, aData, mInt64Value, aResult)
-  TRIVIAL_DATA_CONVERTER(VTYPE_UINT64, aData, mUint64Value, aResult)
+  TRIVIAL_DATA_CONVERTER(VTYPE_INT64, mInt64Value, aResult)
+  TRIVIAL_DATA_CONVERTER(VTYPE_UINT64, mUint64Value, aResult)
 
   nsDiscriminatedUnion tempData;
-  nsresult rv = ToManageableNumber(aData, &tempData);
+  nsresult rv = ToManageableNumber(&tempData);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -664,11 +662,10 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& aData, int64_t* aResult)
   }
 }
 
-/* static */ nsresult
-nsVariant::ConvertToUint64(const nsDiscriminatedUnion& aData,
-                           uint64_t* aResult)
+nsresult
+nsDiscriminatedUnion::ConvertToUint64(uint64_t* aResult) const
 {
-  return nsVariant::ConvertToInt64(aData, (int64_t*)aResult);
+  return ConvertToInt64((int64_t*)aResult);
 }
 
 /***************************************************************************/
@@ -1746,91 +1743,91 @@ nsVariant::GetDataType(uint16_t* aDataType)
 NS_IMETHODIMP
 nsVariant::GetAsInt8(uint8_t* aResult)
 {
-  return nsVariant::ConvertToInt8(mData, aResult);
+  return mData.ConvertToInt8(aResult);
 }
 
 /* int16_t getAsInt16 (); */
 NS_IMETHODIMP
 nsVariant::GetAsInt16(int16_t* aResult)
 {
-  return nsVariant::ConvertToInt16(mData, aResult);
+  return mData.ConvertToInt16(aResult);
 }
 
 /* int32_t getAsInt32 (); */
 NS_IMETHODIMP
 nsVariant::GetAsInt32(int32_t* aResult)
 {
-  return nsVariant::ConvertToInt32(mData, aResult);
+  return mData.ConvertToInt32(aResult);
 }
 
 /* int64_t getAsInt64 (); */
 NS_IMETHODIMP
 nsVariant::GetAsInt64(int64_t* aResult)
 {
-  return nsVariant::ConvertToInt64(mData, aResult);
+  return mData.ConvertToInt64(aResult);
 }
 
 /* uint8_t getAsUint8 (); */
 NS_IMETHODIMP
 nsVariant::GetAsUint8(uint8_t* aResult)
 {
-  return nsVariant::ConvertToUint8(mData, aResult);
+  return mData.ConvertToUint8(aResult);
 }
 
 /* uint16_t getAsUint16 (); */
 NS_IMETHODIMP
 nsVariant::GetAsUint16(uint16_t* aResult)
 {
-  return nsVariant::ConvertToUint16(mData, aResult);
+  return mData.ConvertToUint16(aResult);
 }
 
 /* uint32_t getAsUint32 (); */
 NS_IMETHODIMP
 nsVariant::GetAsUint32(uint32_t* aResult)
 {
-  return nsVariant::ConvertToUint32(mData, aResult);
+  return mData.ConvertToUint32(aResult);
 }
 
 /* uint64_t getAsUint64 (); */
 NS_IMETHODIMP
 nsVariant::GetAsUint64(uint64_t* aResult)
 {
-  return nsVariant::ConvertToUint64(mData, aResult);
+  return mData.ConvertToUint64(aResult);
 }
 
 /* float getAsFloat (); */
 NS_IMETHODIMP
 nsVariant::GetAsFloat(float* aResult)
 {
-  return nsVariant::ConvertToFloat(mData, aResult);
+  return mData.ConvertToFloat(aResult);
 }
 
 /* double getAsDouble (); */
 NS_IMETHODIMP
 nsVariant::GetAsDouble(double* aResult)
 {
-  return nsVariant::ConvertToDouble(mData, aResult);
+  return mData.ConvertToDouble(aResult);
 }
 
 /* bool getAsBool (); */
 NS_IMETHODIMP
 nsVariant::GetAsBool(bool* aResult)
 {
-  return nsVariant::ConvertToBool(mData, aResult);
+  return mData.ConvertToBool(aResult);
 }
 
 /* char getAsChar (); */
 NS_IMETHODIMP
 nsVariant::GetAsChar(char* aResult)
 {
-  return nsVariant::ConvertToChar(mData, aResult);
+  return mData.ConvertToChar(aResult);
 }
 
 /* wchar getAsWChar (); */
 NS_IMETHODIMP
 nsVariant::GetAsWChar(char16_t* aResult)
 {
-  return nsVariant::ConvertToWChar(mData, aResult);
+  return mData.ConvertToWChar(aResult);
 }
 
 /* [notxpcom] nsresult getAsID (out nsID retval); */
