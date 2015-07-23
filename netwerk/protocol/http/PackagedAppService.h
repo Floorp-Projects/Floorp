@@ -27,10 +27,6 @@ class nsHttpResponseHead;
 //     aURI is the subresource uri - http://domain.com/path/package!//resource.html
 //     aInfo is a nsILoadContextInfo used to pick the cache jar the resource goes into
 //     aCallback is the target of the async call to requestURI
-// When requestURI is called, a CacheEntryChecker is created to verify if the
-// resource is already in the cache. If it is, it passes it to the callback.
-// Otherwise, it starts downloading the package. When the packaged resource has
-// been downloaded, its cache entry gets passed to the callback.
 class PackagedAppService final
   : public nsIPackagedAppService
 {
@@ -41,20 +37,6 @@ class PackagedAppService final
 
 private:
   ~PackagedAppService();
-
-  // This method is called if an entry wasn't found in the cache.
-  // It checks to see if the package is currently being downloaded.
-  // If so, then it simply adds the callback to that PackageAppDownloader
-  // Else it begins downloading the new package and adds it to mDownloadingPackages
-  // - aURI is the packaged resource's URL
-  // - aCallback is the listener which gets called when the requested
-  //   resource is available.
-  // - aInfo is needed because cache entries are located in separate cache jars
-  //   If a resource isn't found in the package, aCallback->OnCacheEntryAvailable
-  //   will be called with a null entry and an error result as a status.
-  nsresult OpenNewPackageInternal(nsIURI *aURI,
-                                  nsICacheEntryOpenCallback *aCallback,
-                                  nsILoadContextInfo *aInfo);
 
   // Called by PackageAppDownloader once the download has finished
   // (or encountered an error) to remove the package from mDownloadingPackages
@@ -78,8 +60,7 @@ private:
 
     // If successful, calling this static method will create a new
     // CacheEntryWriter and will create the cache entry associated to the
-    // resource and open an output stream which we use for writing the resource's
-    // content into the cache entry.
+    // resource.
     static nsresult Create(nsIURI*, nsICacheStorage*, CacheEntryWriter**);
 
     nsCOMPtr<nsICacheEntry> mEntry;
@@ -130,6 +111,10 @@ private:
     // aURI is the full URI of a subresource, composed of packageURI + !// + subresourcePath
     nsresult AddCallback(nsIURI *aURI, nsICacheEntryOpenCallback *aCallback);
 
+    // Called by PackagedAppChannelListener to note the fact that the package
+    // is coming from the cache, and no subresources are to be expected as only
+    // package metadata is saved in the cache.
+    void SetIsFromCache(bool aFromCache) { mIsFromCache = aFromCache; }
   private:
     ~PackagedAppDownloader() { }
 
@@ -142,9 +127,6 @@ private:
     // cause us to call OnCacheEntryAvailable with a null entry. This would be
     // equivalent to a 404 when loading from the net.
     nsresult ClearCallbacks(nsresult aResult);
-    static PLDHashOperator ClearCallbacksEnumerator(const nsACString& key,
-      nsAutoPtr<nsCOMArray<nsICacheEntryOpenCallback>>& callbackArray,
-      void* arg);
     // Returns a URI with the subresource's full URI
     // The request must be QIable to nsIResponseHeadProvider since it looks
     // at the Content-Location header to compute the full path.
@@ -162,33 +144,38 @@ private:
     // The key with which this package is inserted in
     // PackagedAppService::mDownloadingPackages
     nsCString mPackageKey;
+
+    // Whether the package is from the cache
+    bool mIsFromCache;
   };
 
-  // This class is used to check if a packaged resource has already been
-  // downloaded and saved into the cache.
-  // It calls aCallback->OnCacheEntryAvailable if the resource exists in the
-  // cache or PackagedAppService::OpenNewPackageInternal if it needs
-  // to be downloaded
-  class CacheEntryChecker final
-    : public nsICacheEntryOpenCallback
+  // Intercepts OnStartRequest, OnDataAvailable*, OnStopRequest method calls
+  // and forwards them to the listener.
+  // The target is a `mListener` which converts the package to individual
+  // resources and serves them to mDownloader.
+  // This class is able to perform conditional actions based on whether the
+  // underlying nsIHttpChannel is served from the cache.
+  // As this object serves as a listener for the channel, it is kept alive until
+  // calling OnStopRequest is completed.
+  class PackagedAppChannelListener final
+    : public nsIStreamListener
   {
   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICACHEENTRYOPENCALLBACK
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
 
-    CacheEntryChecker(nsIURI *aURI, nsICacheEntryOpenCallback * aCallback,
-                      nsILoadContextInfo *aInfo)
-      : mURI(aURI)
-      , mCallback(aCallback)
-      , mLoadContextInfo(aInfo)
+    PackagedAppChannelListener(PackagedAppDownloader *aDownloader,
+                               nsIStreamListener *aListener)
+    : mDownloader(aDownloader)
+    , mListener(aListener)
     {
     }
   private:
-    ~CacheEntryChecker() { }
+    ~PackagedAppChannelListener() { }
 
-    nsCOMPtr<nsIURI> mURI;
-    nsCOMPtr<nsICacheEntryOpenCallback> mCallback;
-    nsCOMPtr<nsILoadContextInfo> mLoadContextInfo;
+    nsRefPtr<PackagedAppDownloader> mDownloader;
+    nsCOMPtr<nsIStreamListener> mListener; // nsMultiMixedConv
   };
 
   // A hashtable of packages that are currently being downloaded.
