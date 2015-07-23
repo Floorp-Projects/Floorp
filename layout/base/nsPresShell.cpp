@@ -7623,10 +7623,12 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // retarget the event back at the keydown target. This prevents a
         // content area from grabbing the focus from chrome in-between key
         // events.
-        if (eventTarget &&
-            nsContentUtils::IsChromeDoc(gKeyDownTarget->GetComposedDoc()) !=
-            nsContentUtils::IsChromeDoc(eventTarget->GetComposedDoc())) {
-          eventTarget = gKeyDownTarget;
+        if (eventTarget) {
+          bool keyDownIsChrome = nsContentUtils::IsChromeDoc(gKeyDownTarget->GetComposedDoc());
+          if (keyDownIsChrome != nsContentUtils::IsChromeDoc(eventTarget->GetComposedDoc()) ||
+              (keyDownIsChrome && TabParent::GetFrom(eventTarget))) {
+            eventTarget = gKeyDownTarget;
+          }
         }
 
         if (aEvent->message == NS_KEY_UP) {
