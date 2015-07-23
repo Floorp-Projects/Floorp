@@ -3579,10 +3579,20 @@ nsWindow::EndRemoteDrawing()
 void
 nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
 {
-  nsIntRegion clearRegion;
-  if (!HasGlass() || !nsUXThemeData::CheckForCompositor()) {
+  nsRefPtr<LayerManager> layerManager = GetLayerManager();
+  if (!layerManager) {
     return;
   }
+
+  nsIntRegion clearRegion;
+  if (!HasGlass() || !nsUXThemeData::CheckForCompositor()) {
+    // Make sure and clear old regions we've set previously. Note HasGlass can be false
+    // for glass desktops if the window we are rendering to doesn't make use of glass
+    // (e.g. fullscreen browsing).
+    layerManager->SetRegionToClear(clearRegion);
+    return;
+  }
+
   // On Win10, force show the top border:
   if (IsWin10OrLater() && mCustomNonClient && mSizeMode == nsSizeMode_Normal) {
     RECT rect;
@@ -3591,10 +3601,10 @@ nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
     double borderSize = RoundDown(GetDefaultScale().scale);
     clearRegion.Or(clearRegion, nsIntRect(0, 0, rect.right - rect.left, borderSize));
   }
+
   if (!IsWin10OrLater()) {
     for (size_t i = 0; i < aThemeGeometries.Length(); i++) {
-      if (aThemeGeometries[i].mType == nsNativeThemeWin::eThemeGeometryTypeWindowButtons)
-      {
+      if (aThemeGeometries[i].mType == nsNativeThemeWin::eThemeGeometryTypeWindowButtons) {
         nsIntRect bounds = aThemeGeometries[i].mRect;
         clearRegion.Or(clearRegion, nsIntRect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height() - 2.0));
         clearRegion.Or(clearRegion, nsIntRect(bounds.X() + 1.0, bounds.YMost() - 2.0, bounds.Width() - 1.0, 1.0));
@@ -3603,10 +3613,7 @@ nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
     }
   }
 
-  nsRefPtr<LayerManager> layerManager = GetLayerManager();
-  if (layerManager) {
-    layerManager->SetRegionToClear(clearRegion);
-  }
+  layerManager->SetRegionToClear(clearRegion);
 }
 
 uint32_t
