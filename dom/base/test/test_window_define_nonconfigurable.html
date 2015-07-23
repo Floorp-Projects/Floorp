@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
 
   /** Test for Bug 1107443 **/
   try {
-    Object.defineProperty(window, "nosuchprop", { value: 5 });
+    Object.defineProperty(window, "nosuchprop", { value: 5, configurable: false });
     throw "didn't throw";
   } catch (e) {
     is(e instanceof TypeError, true,
@@ -22,8 +22,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
        'Window should not have property after an attempt to define it failed');
   }
 
-  Object.defineProperty(window, "nosuchprop", { value: 7, configurable: true });
+  Object.defineProperty(window, "nosuchprop", { value: 6 });
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
+  is(typeof(desc), "object", "Should have a property now");
+  todo_is(desc.configurable, true, "Property should be configurable");
+  is(desc.writable, false, "Property should be readonly");
+  is(desc.value, 6, "Property should have the right value");
+
+  Object.defineProperty(window, "nosuchprop2", { value: 7, configurable: true });
+  desc = Object.getOwnPropertyDescriptor(window, "nosuchprop2");
   is(typeof(desc), "object", "Should have a property now");
   is(desc.configurable, true, "Property should be configurable");
   is(desc.writable, false, "Property should be readonly");
