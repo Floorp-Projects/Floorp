@@ -33,6 +33,12 @@ public:
 
   nsDiscriminatedUnion() : mType(nsIDataType::VTYPE_EMPTY) {}
 
+  void Cleanup();
+
+private:
+  void FreeArray();
+
+public:
   union
   {
     int8_t         mInt8Value;
@@ -100,8 +106,6 @@ public:
   NS_DECL_NSIWRITABLEVARIANT
 
   nsVariant();
-
-  static nsresult Cleanup(nsDiscriminatedUnion* aData);
 
   static nsresult ConvertToInt8(const nsDiscriminatedUnion& aData,
                                 uint8_t* aResult);
