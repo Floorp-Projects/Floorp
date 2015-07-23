@@ -371,7 +371,9 @@ ThirdPartyUtil::GetBaseDomain(nsIURI* aHostURI,
   if (aBaseDomain.IsEmpty()) {
     bool isFileURI = false;
     aHostURI->SchemeIs("file", &isFileURI);
-    NS_ENSURE_TRUE(isFileURI, NS_ERROR_INVALID_ARG);
+    if (!isFileURI) {
+     return NS_ERROR_INVALID_ARG;
+    }
   }
 
   return NS_OK;
