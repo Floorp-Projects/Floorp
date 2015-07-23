@@ -26,6 +26,7 @@
 #include "LookupResult.h"
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
+#include "DecoderFactory.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -376,7 +377,7 @@ private: // data
   uint32_t                   mLockCount;
 
   // The type of decoder this image needs. Computed from the MIME type in Init().
-  eDecoderType               mDecoderType;
+  DecoderType                mDecoderType;
 
   // How many times we've decoded this image.
   // This is currently only used for statistics
