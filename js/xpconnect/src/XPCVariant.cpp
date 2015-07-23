@@ -652,79 +652,79 @@ NS_IMETHODIMP XPCVariant::GetDataType(uint16_t* aDataType)
 /* uint8_t getAsInt8 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt8(uint8_t* _retval)
 {
-    return nsVariant::ConvertToInt8(mData, _retval);
+    return mData.ConvertToInt8(_retval);
 }
 
 /* int16_t getAsInt16 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt16(int16_t* _retval)
 {
-    return nsVariant::ConvertToInt16(mData, _retval);
+    return mData.ConvertToInt16(_retval);
 }
 
 /* int32_t getAsInt32 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt32(int32_t* _retval)
 {
-    return nsVariant::ConvertToInt32(mData, _retval);
+    return mData.ConvertToInt32(_retval);
 }
 
 /* int64_t getAsInt64 (); */
 NS_IMETHODIMP XPCVariant::GetAsInt64(int64_t* _retval)
 {
-    return nsVariant::ConvertToInt64(mData, _retval);
+    return mData.ConvertToInt64(_retval);
 }
 
 /* uint8_t getAsUint8 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint8(uint8_t* _retval)
 {
-    return nsVariant::ConvertToUint8(mData, _retval);
+    return mData.ConvertToUint8(_retval);
 }
 
 /* uint16_t getAsUint16 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint16(uint16_t* _retval)
 {
-    return nsVariant::ConvertToUint16(mData, _retval);
+    return mData.ConvertToUint16(_retval);
 }
 
 /* uint32_t getAsUint32 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint32(uint32_t* _retval)
 {
-    return nsVariant::ConvertToUint32(mData, _retval);
+    return mData.ConvertToUint32(_retval);
 }
 
 /* uint64_t getAsUint64 (); */
 NS_IMETHODIMP XPCVariant::GetAsUint64(uint64_t* _retval)
 {
-    return nsVariant::ConvertToUint64(mData, _retval);
+    return mData.ConvertToUint64(_retval);
 }
 
 /* float getAsFloat (); */
 NS_IMETHODIMP XPCVariant::GetAsFloat(float* _retval)
 {
-    return nsVariant::ConvertToFloat(mData, _retval);
+    return mData.ConvertToFloat(_retval);
 }
 
 /* double getAsDouble (); */
 NS_IMETHODIMP XPCVariant::GetAsDouble(double* _retval)
 {
-    return nsVariant::ConvertToDouble(mData, _retval);
+    return mData.ConvertToDouble(_retval);
 }
 
 /* bool getAsBool (); */
 NS_IMETHODIMP XPCVariant::GetAsBool(bool* _retval)
 {
-    return nsVariant::ConvertToBool(mData, _retval);
+    return mData.ConvertToBool(_retval);
 }
 
 /* char getAsChar (); */
 NS_IMETHODIMP XPCVariant::GetAsChar(char* _retval)
 {
-    return nsVariant::ConvertToChar(mData, _retval);
+    return mData.ConvertToChar(_retval);
 }
 
 /* wchar getAsWChar (); */
 NS_IMETHODIMP XPCVariant::GetAsWChar(char16_t* _retval)
 {
-    return nsVariant::ConvertToWChar(mData, _retval);
+    return mData.ConvertToWChar(_retval);
 }
 
 /* [notxpcom] nsresult getAsID (out nsID retval); */
