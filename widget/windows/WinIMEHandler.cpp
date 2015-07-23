@@ -292,8 +292,8 @@ IMEHandler::GetOpenState(nsWindow* aWindow)
   }
 #endif //NS_ENABLE_TSF
 
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  return IMEContext.GetOpenState();
+  IMEContext context(aWindow);
+  return context.GetOpenState();
 }
 
 // static
@@ -361,9 +361,9 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
 
   AssociateIMEContext(aWindow, enable);
 
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  IMEContext context(aWindow);
   if (adjustOpenState) {
-    IMEContext.SetOpenState(open);
+    context.SetOpenState(open);
   }
 
   if (aInputContext.mNativeIMEContext) {
@@ -373,23 +373,23 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
   // The old InputContext must store the default IMC or old TextStore.
   // When IME context is disassociated from the window, use it.
   aInputContext.mNativeIMEContext = enable ?
-    static_cast<void*>(IMEContext.get()) : oldInputContext.mNativeIMEContext;
+    static_cast<void*>(context.get()) : oldInputContext.mNativeIMEContext;
 }
 
 // static
 void
 IMEHandler::AssociateIMEContext(nsWindow* aWindow, bool aEnable)
 {
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  IMEContext context(aWindow);
   if (aEnable) {
-    IMEContext.AssociateDefaultContext();
+    context.AssociateDefaultContext();
     return;
   }
   // Don't disassociate the context after the window is destroyed.
   if (aWindow->Destroyed()) {
     return;
   }
-  IMEContext.Disassociate();
+  context.Disassociate();
 }
 
 // static
@@ -415,8 +415,8 @@ IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
 #endif // #ifdef NS_ENABLE_TSF
 
   // NOTE: mNativeIMEContext may be null if IMM module isn't installed.
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  aInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+  IMEContext context(aWindow);
+  aInputContext.mNativeIMEContext = static_cast<void*>(context.get());
   MOZ_ASSERT(aInputContext.mNativeIMEContext || !CurrentKeyboardLayoutHasIME());
   // If no IME context is available, we should set the widget's pointer since
   // nullptr indicates there is only one context per process on the platform.
