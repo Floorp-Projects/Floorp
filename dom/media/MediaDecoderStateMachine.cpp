@@ -1794,8 +1794,9 @@ MediaDecoderStateMachine::StartAudioThread()
 
   if (HasAudio() && !mAudioSink) {
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(this, GetMediaTime(),
-                               mInfo.mAudio, mDecoder->GetAudioChannel());
+    mAudioSink = new AudioSink(mAudioQueue, mDecoder->GetReentrantMonitor(),
+                               GetMediaTime(), mInfo.mAudio,
+                               mDecoder->GetAudioChannel());
 
     mAudioSinkPromise.Begin(
       mAudioSink->Init()->Then(

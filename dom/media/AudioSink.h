@@ -15,13 +15,13 @@
 namespace mozilla {
 
 class AudioStream;
-class MediaDecoderStateMachine;
 
 class AudioSink {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioSink)
 
-  AudioSink(MediaDecoderStateMachine* aStateMachine,
+  AudioSink(MediaQueue<AudioData>& aAudioQueue,
+            ReentrantMonitor& aMonitor,
             int64_t aStartTime, AudioInfo aInfo, dom::AudioChannel aChannel);
 
   // Return a promise which will be resolved when AudioSink finishes playing,
@@ -92,13 +92,22 @@ private:
   void StartAudioStreamPlaybackIfNeeded();
   void WriteSilence(uint32_t aFrames);
 
-  MediaQueue<AudioData>& AudioQueue();
+  MediaQueue<AudioData>& AudioQueue() const {
+    return mAudioQueue;
+  }
 
-  ReentrantMonitor& GetReentrantMonitor();
-  void AssertCurrentThreadInMonitor();
+  ReentrantMonitor& GetReentrantMonitor() const {
+    return mDecoderMonitor;
+  }
+
+  void AssertCurrentThreadInMonitor() const {
+    GetReentrantMonitor().AssertCurrentThreadIn();
+  }
+
   void AssertOnAudioThread();
 
-  nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  MediaQueue<AudioData>& mAudioQueue;
+  ReentrantMonitor& mDecoderMonitor;
 
   // Thread for pushing audio onto the audio hardware.
   // The "audio push thread".
