@@ -348,9 +348,6 @@ loop.roomViews = (function(mozL10n) {
       if (this.props.savingContext && nextProps.savingContext !== this.props.savingContext &&
         !nextProps.error && this.state.editMode) {
         newState.editMode = false;
-        if (this.props.onEditModeChange) {
-          this.props.onEditModeChange(false);
-        }
       }
 
       if (Object.getOwnPropertyNames(newState).length) {
