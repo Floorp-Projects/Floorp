@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     'ClippedImage.cpp',
     'DecodePool.cpp',
     'Decoder.cpp',
+    'DecoderFactory.cpp',
     'DynamicImage.cpp',
     'FrameAnimator.cpp',
     'FrozenImage.cpp',

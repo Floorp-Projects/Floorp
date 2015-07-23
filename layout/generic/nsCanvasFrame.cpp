@@ -145,6 +145,15 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Create the custom content container.
   mCustomContentContainer = doc->CreateHTMLElement(nsGkAtoms::div);
+#ifdef DEBUG
+  // We restyle our mCustomContentContainer, even though it's root anonymous
+  // content.  Normally that's not OK because the frame constructor doesn't know
+  // how to order the frame tree in such cases, but we make this work for this
+  // particular case, so it's OK.
+  mCustomContentContainer->SetProperty(nsGkAtoms::restylableAnonymousNode,
+                                       reinterpret_cast<void*>(true));
+#endif // DEBUG
+
   aElements.AppendElement(mCustomContentContainer);
 
   // XXX add :moz-native-anonymous or will that be automatically set?

@@ -53,7 +53,6 @@ struct Orientation;
 class nsJPEGDecoder : public Decoder
 {
 public:
-  nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
   virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
@@ -70,6 +69,12 @@ protected:
   void OutputScanlines(bool* suspend);
 
   Maybe<Downscaler> mDownscaler;
+
+private:
+  friend class DecoderFactory;
+
+  // Decoders should only be instantiated via DecoderFactory.
+  nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
 
 public:
   struct jpeg_decompress_struct mInfo;

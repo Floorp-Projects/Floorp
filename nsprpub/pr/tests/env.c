@@ -9,6 +9,7 @@
 **
 */
 #include "prenv.h"
+#include "prmem.h"
 #include "plgetopt.h"
 
 #include <stdio.h>
@@ -110,6 +111,83 @@ int main(int argc, char **argv)
         failedAlready = PR_TRUE;
     } else {
         if (verbose) printf("env: PR_GetEnv() worked after setting it. Found: %s\n", value );
+    }
+
+/* ---------------------------------------------------------------------- */
+    /* check that PR_DuplicateEnvironment() agrees with PR_GetEnv() */
+    {
+#if defined(XP_UNIX) && (!defined(DARWIN) || defined(HAVE_CRT_EXTERNS_H))
+        static const PRBool expect_failure = PR_FALSE;
+#else
+        static const PRBool expect_failure = PR_TRUE;
+#endif
+        char **i, **dupenv = PR_DuplicateEnvironment();
+
+
+        if ( NULL == dupenv ) {
+            if (expect_failure) {
+                if (verbose) printf("env: PR_DuplicateEnvironment failed, "
+                                    "as expected on this platform.\n");
+            } else {
+                if (debug) printf("env: PR_DuplicateEnvironment() failed.\n");
+                failedAlready = PR_TRUE;
+            }
+        } else {
+            unsigned found = 0;
+
+            if (expect_failure) {
+                if (debug) printf("env: PR_DuplicateEnvironment() succeeded, "
+                                  "but failure is expected on this platform.\n");
+                failedAlready = PR_TRUE;
+            } else {
+                if (verbose) printf("env: PR_DuplicateEnvironment() succeeded.\n");
+            }
+            for (i = dupenv; *i; i++) {
+                char *equals = strchr(*i, '=');
+
+                if ( equals == NULL ) {
+                    if (debug) printf("env: PR_DuplicateEnvironment() returned a string"
+                                      " with no '=': %s\n", *i);
+                    failedAlready = PR_TRUE;
+                } else {
+                    /* We own this string, so we can temporarily alter it */
+                    /* *i is the null-terminated name; equals + 1 is the value */
+                    *equals = '\0';
+
+                    if ( strcmp(*i, ENVNAME) == 0) {
+                        found++;
+                        if (verbose) printf("env: PR_DuplicateEnvironment() found " ENVNAME
+                                            " (%u so far).\n", found);
+                    }
+
+                    /* Multiple values for the same name can't happen, according to POSIX. */
+                    value = PR_GetEnv(*i);
+                    if ( value == NULL ) {
+                        if (debug) printf("env: PR_DuplicateEnvironment() returned a name"
+                                          " which PR_GetEnv() failed to find: %s\n", *i);
+                        failedAlready = PR_TRUE;
+                    } else if ( strcmp(equals + 1, value) != 0) {
+                        if (debug) printf("env: PR_DuplicateEnvironment() returned the wrong"
+                                          " value for %s: expected %s; found %s\n",
+                                          *i, value, equals + 1);
+                        failedAlready = PR_TRUE;
+                    } else {
+                        if (verbose) printf("env: PR_DuplicateEnvironment() agreed with"
+                                            " PR_GetEnv() about %s\n", *i);
+                    }
+                }
+                PR_Free(*i);
+            }
+            PR_Free(dupenv);
+
+            if (found != 1) {
+                if (debug) printf("env: PR_DuplicateEnvironment() found %u entries for " ENVNAME
+                                  " (expected 1)\n", found);
+                failedAlready = PR_TRUE;
+            } else {
+                if (verbose) printf("env: PR_DuplicateEnvironment() found 1 entry for " ENVNAME "\n");
+            }
+        }
     }
 
 /* ---------------------------------------------------------------------- */

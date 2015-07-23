@@ -42,7 +42,7 @@ Decoder::Decoder(RasterImage* aImage)
   , mFrameCount(0)
   , mFailCode(NS_OK)
   , mInitialized(false)
-  , mSizeDecode(false)
+  , mMetadataDecode(false)
   , mInFrame(false)
   , mIsAnimated(false)
 { }
@@ -169,7 +169,7 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
     return;
   }
 
-  if (IsSizeDecode() && HasSize()) {
+  if (IsMetadataDecode() && HasSize()) {
     // More data came in since we found the size. We have nothing to do here.
     return;
   }
@@ -200,7 +200,7 @@ Decoder::CompleteDecode()
   // early because of low-memory conditions or losing a race with another
   // decoder, we need to send teardown notifications (and report an error to the
   // console later).
-  if (!IsSizeDecode() && !mDecodeDone && !WasAborted()) {
+  if (!IsMetadataDecode() && !mDecodeDone && !WasAborted()) {
     mShouldReportError = true;
 
     // If we only have a data error, we're usable if we have at least one
@@ -218,7 +218,7 @@ Decoder::CompleteDecode()
       PostDecodeDone();
     } else {
       // We're not usable. Record some final progress indicating the error.
-      if (!IsSizeDecode()) {
+      if (!IsMetadataDecode()) {
         mProgress |= FLAG_DECODE_COMPLETE;
       }
       mProgress |= FLAG_HAS_ERROR;
@@ -269,7 +269,7 @@ Decoder::Finish()
     SetSizeOnImage();
   }
 
-  if (mDecodeDone && !IsSizeDecode()) {
+  if (mDecodeDone && !IsMetadataDecode()) {
     MOZ_ASSERT(HasError() || mCurrentFrame, "Should have an error or a frame");
 
     // If this image wasn't animated and isn't a transient image, mark its frame
@@ -424,7 +424,6 @@ Decoder::SetSizeOnImage()
  */
 
 void Decoder::InitInternal() { }
-void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
 void Decoder::FinishInternal() { }
 void Decoder::FinishWithErrorInternal() { }
 
@@ -478,7 +477,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity    /* = Opacity::TRANSPARENT */,
                        BlendMethod aBlendMethod /* = BlendMethod::OVER */)
 {
   // We should be mid-frame
-  MOZ_ASSERT(!IsSizeDecode(), "Stopping frame during a size decode");
+  MOZ_ASSERT(!IsMetadataDecode(), "Stopping frame during metadata decode");
   MOZ_ASSERT(mInFrame, "Stopping frame when we didn't start one");
   MOZ_ASSERT(mCurrentFrame, "Stopping frame when we don't have one");
 
@@ -517,7 +516,7 @@ Decoder::PostInvalidation(const nsIntRect& aRect,
 void
 Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
 {
-  MOZ_ASSERT(!IsSizeDecode(), "Can't be done with decoding with size decode!");
+  MOZ_ASSERT(!IsMetadataDecode(), "Done with decoding in metadata decode");
   MOZ_ASSERT(!mInFrame, "Can't be done decoding if we're mid-frame!");
   MOZ_ASSERT(!mDecodeDone, "Decode already done!");
   mDecodeDone = true;

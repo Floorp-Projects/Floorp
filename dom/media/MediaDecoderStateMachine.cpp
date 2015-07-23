@@ -283,13 +283,17 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   timeBeginPeriod(1);
 #endif
 
+  nsRefPtr<MediaDecoderStateMachine> self = this;
+
   AudioQueue().AddPopListener(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioPopped),
-    mTaskQueue);
+    [self] (const AudioData* aSample) {
+      self->OnAudioPopped(aSample);
+    }, mTaskQueue);
 
   VideoQueue().AddPopListener(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnVideoPopped),
-    mTaskQueue);
+    [self] (const VideoData* aSample) {
+      self->OnVideoPopped(aSample);
+    }, mTaskQueue);
 }
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
@@ -681,19 +685,21 @@ MediaDecoderStateMachine::PushFront(VideoData* aSample)
 }
 
 void
-MediaDecoderStateMachine::OnAudioPopped()
+MediaDecoderStateMachine::OnAudioPopped(const AudioData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mDecoder->UpdatePlaybackOffset(std::max<int64_t>(0, aSample->mOffset));
   UpdateNextFrameStatus();
   DispatchAudioDecodeTaskIfNeeded();
 }
 
 void
-MediaDecoderStateMachine::OnVideoPopped()
+MediaDecoderStateMachine::OnVideoPopped(const VideoData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mDecoder->UpdatePlaybackOffset(aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchVideoDecodeTaskIfNeeded();
   // Notify the decode thread that the video queue's buffers may have
@@ -1788,8 +1794,9 @@ MediaDecoderStateMachine::StartAudioThread()
 
   if (HasAudio() && !mAudioSink) {
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(this, GetMediaTime(),
-                               mInfo.mAudio, mDecoder->GetAudioChannel());
+    mAudioSink = new AudioSink(mAudioQueue, mDecoder->GetReentrantMonitor(),
+                               GetMediaTime(), mInfo.mAudio,
+                               mDecoder->GetAudioChannel());
 
     mAudioSinkPromise.Begin(
       mAudioSink->Init()->Then(
@@ -2714,7 +2721,6 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     }
     VideoQueue().PushFront(currentFrame);
     if (framesRemoved > 0) {
-      OnPlaybackOffsetUpdate(currentFrame->mOffset);
       mVideoFrameEndTime = currentFrame->GetEndTime();
       MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
       frameStats.NotifyPresentedFrame();
@@ -3102,13 +3108,6 @@ MediaDecoderStateMachine::AudioEndTime() const
   // is null in both cases.
   MOZ_ASSERT(!mAudioCompleted);
   return -1;
-}
-
-void MediaDecoderStateMachine::OnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mDecoder->UpdatePlaybackOffset(aPlaybackOffset);
 }
 
 void MediaDecoderStateMachine::OnAudioSinkComplete()

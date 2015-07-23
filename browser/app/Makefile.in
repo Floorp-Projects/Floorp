@@ -79,7 +79,12 @@ endif
 
 AB_CD = $(MOZ_UI_LOCALE)
 
-AB := $(firstword $(subst -, ,$(AB_CD)))
+ifeq (zh-TW,$(AB_CD))
+LPROJ_ROOT := $(subst -,_,$(AB_CD))
+else
+LPROJ_ROOT := $(firstword $(subst -, ,$(AB_CD)))
+endif
+LPROJ := Contents/Resources/$(LPROJ_ROOT).lproj
 
 clean clobber repackage::
 	$(RM) -r $(dist_dest)
@@ -89,11 +94,11 @@ MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_A
 .PHONY: repackage
 tools repackage:: $(PROGRAM)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
-	$(MKDIR) -p $(dist_dest)/Contents/Resources/$(AB).lproj
+	$(MKDIR) -p $(dist_dest)/$(LPROJ)
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
-	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/$(LPROJ)
 	sed -e 's/%APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' -e 's/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
-	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/$(LPROJ)/InfoPlist.strings
 	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(dist_dest)/Contents/Resources
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(dist_dest)/Contents/MacOS
 	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
