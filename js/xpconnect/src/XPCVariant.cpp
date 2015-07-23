@@ -259,16 +259,16 @@ bool XPCVariant::InitializeData(JSContext* cx)
     RootedValue val(cx, GetJSVal());
 
     if (val.isInt32())
-        return NS_SUCCEEDED(nsVariant::SetFromInt32(&mData, val.toInt32()));
+        return NS_SUCCEEDED(mData.SetFromInt32(val.toInt32()));
     if (val.isDouble())
-        return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData, val.toDouble()));
+        return NS_SUCCEEDED(mData.SetFromDouble(val.toDouble()));
     if (val.isBoolean())
-        return NS_SUCCEEDED(nsVariant::SetFromBool(&mData, val.toBoolean()));
+        return NS_SUCCEEDED(mData.SetFromBool(val.toBoolean()));
     // We can't represent symbol on C++ side, so pretend it is void.
     if (val.isUndefined() || val.isSymbol())
-        return NS_SUCCEEDED(nsVariant::SetToVoid(&mData));
+        return NS_SUCCEEDED(mData.SetToVoid());
     if (val.isNull())
-        return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));
+        return NS_SUCCEEDED(mData.SetToEmpty());
     if (val.isString()) {
         JSString* str = val.toString();
         if (!str)
@@ -278,7 +278,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
                    "Why do we already have data?");
 
         size_t length = JS_GetStringLength(str);
-        if (!NS_SUCCEEDED(nsVariant::AllocateWStringWithSize(&mData, length)))
+        if (!NS_SUCCEEDED(mData.AllocateWStringWithSize(length)))
             return false;
 
         mozilla::Range<char16_t> destChars(mData.u.wstr.mWStringValue, length);
@@ -298,7 +298,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
 
     const nsID* id = xpc_JSObjectToID(cx, jsobj);
     if (id)
-        return NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
+        return NS_SUCCEEDED(mData.SetFromID(*id));
 
     // Let's see if it is a js array object.
 
@@ -307,7 +307,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
     if (JS_IsArrayObject(cx, jsobj) && JS_GetArrayLength(cx, jsobj, &len)) {
         if (!len) {
             // Zero length array
-            nsVariant::SetToEmptyArray(&mData);
+            mData.SetToEmptyArray();
             return true;
         }
 
@@ -338,7 +338,7 @@ bool XPCVariant::InitializeData(JSContext* cx)
 
     return NS_SUCCEEDED(xpc->WrapJS(cx, jsobj,
                                     iid, getter_AddRefs(wrapper))) &&
-           NS_SUCCEEDED(nsVariant::SetFromInterface(&mData, iid, wrapper));
+           NS_SUCCEEDED(mData.SetFromInterface(iid, wrapper));
 }
 
 NS_IMETHODIMP
