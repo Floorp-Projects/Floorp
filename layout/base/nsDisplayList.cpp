@@ -1245,7 +1245,7 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 
     const char16_t* params[] = { usageStr.get(), multiplierStr.get(), limitStr.get() };
     aFrame->PresContext()->Document()->WarnOnceAbout(
-      nsIDocument::eWillChangeBudget, false,
+      nsIDocument::eWillChangeOverBudgetIgnored, false,
       params, ArrayLength(params));
   }
   return onBudget;
