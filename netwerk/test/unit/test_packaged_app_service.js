@@ -43,8 +43,19 @@ var packagedAppRequestsMade = 0;
 function packagedAppContentHandler(metadata, response)
 {
   packagedAppRequestsMade++;
+  if (packagedAppRequestsMade == 2) {
+    // The second request returns a 304 not modified response
+    response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
+    response.bodyOutputStream.write("", 0);
+    return;
+  }
   response.setHeader("Content-Type", 'application/package');
   var body = testData.getData();
+
+  if (packagedAppRequestsMade == 3) {
+    // The third request returns a 200 OK response with a slightly different content
+    body = body.replace(/\.\.\./g, 'xxx');
+  }
   response.bodyOutputStream.write(body, body.length);
 }
 
@@ -103,6 +114,7 @@ function run_test()
   add_test(test_callback_gets_called);
   add_test(test_same_content);
   add_test(test_request_number);
+  add_test(test_updated_package);
 
   add_test(test_package_does_not_exist);
   add_test(test_file_does_not_exist);
@@ -127,24 +139,33 @@ var metadataListener = {
 }
 
 // A listener we use to check the proper cache entry is returned by the service
-// NOTE: this listener only checks the content of index.html
-//       Don't use it when requesting other packaged resources! :)
-var cacheListener = {
+function packagedResourceListener(content) {
+  this.content = content;
+}
+
+packagedResourceListener.prototype = {
+  QueryInterface: function (iid) {
+    if (iid.equals(Ci.nsICacheEntryOpenCallback) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
   onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
   onCacheEntryAvailable: function (entry, isnew, appcache, status) {
-    ok(!!entry, "Needs to have an entry");
     equal(status, Cr.NS_OK, "status is NS_OK");
+    ok(!!entry, "Needs to have an entry");
     equal(entry.key, uri + packagePath + "!//index.html", "Check entry has correct name");
     entry.visitMetaData(metadataListener);
     var inputStream = entry.openInputStream(0);
-    pumpReadStream(inputStream, function(read) {
+    pumpReadStream(inputStream, (read) => {
         inputStream.close();
-        equal(read,"<html>\r\n  <head>\r\n    <script src=\"/scripts/app.js\"></script>\r\n    ...\r\n  </head>\r\n  ...\r\n</html>\r\n"); // not using do_check_eq since logger will fail for the 1/4MB string
+        equal(read, this.content); // not using do_check_eq since logger will fail for the 1/4MB string
+        run_next_test();
     });
-    run_next_test();
   }
 };
 
+var cacheListener = new packagedResourceListener(testData.content[0].data);
 // ----------------------------------------------------------------------------
 
 // These calls should fail, since one of the arguments is invalid or null
@@ -170,10 +191,17 @@ function test_same_content() {
   paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default, cacheListener);
 }
 
-// Check the package has only been requested once.
+// Check the content handler has been called the expected number of times.
 function test_request_number() {
-  equal(packagedAppRequestsMade, 1, "only one request should be made. Second should be loaded from cache");
+  equal(packagedAppRequestsMade, 2, "2 requests are expected. First with content, second is a 304 not modified.");
   run_next_test();
+}
+
+// This tests that new content is returned if the package has been updated
+function test_updated_package() {
+  packagePath = "/package";
+  paservice.requestURI(createURI(uri + packagePath + "!//index.html"), LoadContextInfo.default,
+      new packagedResourceListener(testData.content[0].data.replace(/\.\.\./g, 'xxx')));
 }
 
 // ----------------------------------------------------------------------------
