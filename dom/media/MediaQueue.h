@@ -24,14 +24,14 @@ class MediaQueueDeallocator : public nsDequeFunctor {
   }
 };
 
-template <class T> class MediaQueue : private nsDeque {
- public:
-
-   MediaQueue()
-     : nsDeque(new MediaQueueDeallocator<T>()),
-       mReentrantMonitor("mediaqueue"),
-       mEndOfStream(false)
-   {}
+template <class T>
+class MediaQueue : private nsDeque {
+public:
+  MediaQueue()
+    : nsDeque(new MediaQueueDeallocator<T>()),
+      mReentrantMonitor("mediaqueue"),
+      mEndOfStream(false)
+  {}
 
   ~MediaQueue() {
     Reset();
