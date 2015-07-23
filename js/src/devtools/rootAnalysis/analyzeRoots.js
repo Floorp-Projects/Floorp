@@ -280,27 +280,34 @@ function edgeCanGC(edge)
 {
     if (edge.Kind != "Call")
         return false;
+
     var callee = edge.Exp[0];
+
+    while (callee.Kind == "Drf")
+        callee = callee.Exp[0];
+
     if (callee.Kind == "Var") {
         var variable = callee.Variable;
-        assert(variable.Kind == "Func");
-        var callee = mangled(variable.Name[0]);
-        if ((callee in gcFunctions) || ((callee + internalMarker) in gcFunctions))
-            return "'" + variable.Name[0] + "'";
-        return null;
+
+        if (variable.Kind == "Func") {
+            var callee = mangled(variable.Name[0]);
+            if ((callee in gcFunctions) || ((callee + internalMarker) in gcFunctions))
+                return "'" + variable.Name[0] + "'";
+            return null;
+        }
+
+        var varName = variable.Name[0];
+        return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
     }
-    assert(callee.Kind == "Drf");
-    if (callee.Exp[0].Kind == "Fld") {
-        var field = callee.Exp[0].Field;
+
+    if (callee.Kind == "Fld") {
+        var field = callee.Field;
         var csuName = field.FieldCSU.Type.Name;
         var fullFieldName = csuName + "." + field.Name[0];
         if (fieldCallCannotGC(csuName, fullFieldName))
             return null;
         return (fullFieldName in suppressedFunctions) ? null : fullFieldName;
     }
-    assert(callee.Exp[0].Kind == "Var");
-    var varName = callee.Exp[0].Variable.Name[0];
-    return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
 }
 
 // Search recursively through predecessors from a variable use, returning
