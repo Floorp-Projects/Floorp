@@ -47,6 +47,15 @@ public:
     SendShutdown();
   }
 
+  virtual void ActorDestroy(ActorDestroyReason) override
+  {
+    if (!mDoc)
+      return;
+
+    mDoc->SetIPCDoc(nullptr);
+    mDoc = nullptr;
+  }
+
   void ShowEvent(AccShowEvent* aShowEvent);
 
   /*
