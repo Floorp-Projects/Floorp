@@ -686,7 +686,7 @@ PLDHashTable::Remove(const void* aKey)
                 : nullptr;
   if (entry) {
     /* Clear this entry and mark it as "removed". */
-    PL_DHashTableRawRemove(this, entry);
+    RawRemove(entry);
 
     /* Shrink if alpha is <= .25 and the table isn't too small already. */
     uint32_t capacity = Capacity();
