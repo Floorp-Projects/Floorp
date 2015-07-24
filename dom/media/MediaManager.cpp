@@ -1257,7 +1257,9 @@ static auto& MediaManager_AnonymizeDevices = MediaManager::AnonymizeDevices;
  */
 
 already_AddRefed<MediaManager::PledgeSourceSet>
-MediaManager::EnumerateRawDevices(uint64_t aWindowId, MediaSourceEnum aVideoType,
+MediaManager::EnumerateRawDevices(uint64_t aWindowId,
+                                  MediaSourceEnum aVideoType,
+                                  MediaSourceEnum aAudioType,
                                   bool aFake, bool aFakeTracks)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1287,7 +1289,8 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId, MediaSourceEnum aVideoType
 
   MediaManager::PostTask(FROM_HERE, NewTaskFrom([id, aWindowId, audioLoopDev,
                                                  videoLoopDev, aVideoType,
-                                                 aFake, aFakeTracks]() mutable {
+                                                 aAudioType, aFake,
+                                                 aFakeTracks]() mutable {
     nsRefPtr<MediaEngine> backend;
     if (aFake) {
       backend = new MediaEngineDefault(aFakeTracks);
@@ -1306,7 +1309,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId, MediaSourceEnum aVideoType
     }
 
     nsTArray<nsRefPtr<AudioDevice>> audios;
-    GetSources(backend, dom::MediaSourceEnum::Microphone,
+    GetSources(backend, aAudioType,
                &MediaEngine::EnumerateAudioDevices, audios, audioLoopDev);
     for (auto& source : audios) {
       result->AppendElement(source);
@@ -1628,6 +1631,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
   }
 
   MediaSourceEnum videoType = dom::MediaSourceEnum::Camera;
+  MediaSourceEnum audioType = dom::MediaSourceEnum::Microphone;
 
   if (c.mVideo.IsMediaTrackConstraints()) {
     auto& vc = c.mVideo.GetAsMediaTrackConstraints();
@@ -1716,6 +1720,23 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
        privileged = false;
     }
   }
+
+  if (c.mAudio.IsMediaTrackConstraints()) {
+    auto& ac = c.mAudio.GetAsMediaTrackConstraints();
+    audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
+                             ac.mMediaSource,
+                             audioType);
+    // Only enable AudioCapture if the pref is enabled. If it's not, we can deny
+    // right away.
+    if (audioType == dom::MediaSourceEnum::AudioCapture &&
+        !Preferences::GetBool("media.getusermedia.audiocapture.enabled")) {
+      nsRefPtr<MediaStreamError> error =
+        new MediaStreamError(aWindow,
+            NS_LITERAL_STRING("PermissionDeniedError"));
+      onFailure->OnError(error);
+      return NS_OK;
+    }
+  }
   StreamListeners* listeners = AddWindowID(windowID);
 
   // Create a disabled listener to act as a placeholder
@@ -1778,7 +1799,8 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
       (!fake || Preferences::GetBool("media.navigator.permission.fake"));
 
   nsRefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID, videoType,
-                                                     fake, fakeTracks);
+                                                     audioType, fake,
+                                                     fakeTracks);
   p->Then([this, onSuccess, onFailure, windowID, c, listener, askPermission,
            prefs, isHTTPS, callID, origin](SourceSet*& aDevices) mutable {
     ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
@@ -1934,7 +1956,9 @@ MediaManager::ToJSArray(SourceSet& aDevices)
 }
 
 already_AddRefed<MediaManager::PledgeSourceSet>
-MediaManager::EnumerateDevicesImpl(uint64_t aWindowId, MediaSourceEnum aVideoType,
+MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
+                                   MediaSourceEnum aVideoType,
+                                   MediaSourceEnum aAudioType,
                                    bool aFake, bool aFakeTracks)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1963,12 +1987,13 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId, MediaSourceEnum aVideoTyp
 
   nsRefPtr<Pledge<nsCString>> p = media::GetOriginKey(origin, privateBrowsing,
                                                       persist);
-  p->Then([id, aWindowId, aVideoType,
+  p->Then([id, aWindowId, aVideoType, aAudioType,
            aFake, aFakeTracks](const nsCString& aOriginKey) mutable {
     MOZ_ASSERT(NS_IsMainThread());
     nsRefPtr<MediaManager> mgr = MediaManager_GetInstance();
 
-    nsRefPtr<PledgeSourceSet> p = mgr->EnumerateRawDevices(aWindowId, aVideoType,
+    nsRefPtr<PledgeSourceSet> p = mgr->EnumerateRawDevices(aWindowId,
+                                                           aVideoType, aAudioType,
                                                            aFake, aFakeTracks);
     p->Then([id, aWindowId, aOriginKey](SourceSet*& aDevices) mutable {
       ScopedDeletePtr<SourceSet> devices(aDevices); // secondary result
@@ -2007,6 +2032,7 @@ MediaManager::EnumerateDevices(nsPIDOMWindow* aWindow,
 
   nsRefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowId,
                                                      dom::MediaSourceEnum::Camera,
+                                                     dom::MediaSourceEnum::Microphone,
                                                      fake);
   p->Then([onSuccess](SourceSet*& aDevices) mutable {
     ScopedDeletePtr<SourceSet> devices(aDevices); // grab result
