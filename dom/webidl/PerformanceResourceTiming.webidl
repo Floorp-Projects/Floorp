@@ -18,6 +18,7 @@ interface PerformanceResourceTiming : PerformanceEntry
   // If the initiator is an XMLHttpRequest object, the initiatorType attribute
   // must return the string "xmlhttprequest".
   readonly attribute DOMString initiatorType;
+  readonly attribute DOMString nextHopProtocol;
 
   readonly attribute DOMHighResTimeStamp redirectStart;
   readonly attribute DOMHighResTimeStamp redirectEnd;
@@ -30,6 +31,10 @@ interface PerformanceResourceTiming : PerformanceEntry
   readonly attribute DOMHighResTimeStamp requestStart;
   readonly attribute DOMHighResTimeStamp responseStart;
   readonly attribute DOMHighResTimeStamp responseEnd;
+
+  readonly attribute unsigned long long transferSize;
+  readonly attribute unsigned long long encodedBodySize;
+  readonly attribute unsigned long long decodedBodySize;
 
   jsonifier;
 };
