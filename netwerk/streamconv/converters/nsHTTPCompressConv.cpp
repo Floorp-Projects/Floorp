@@ -30,7 +30,8 @@ namespace net {
 NS_IMPL_ISUPPORTS(nsHTTPCompressConv,
                   nsIStreamConverter,
                   nsIStreamListener,
-                  nsIRequestObserver)
+                  nsIRequestObserver,
+                  nsICompressConvStats)
 
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv()
@@ -46,6 +47,7 @@ nsHTTPCompressConv::nsHTTPCompressConv()
   , hMode(0)
   , mSkipCount(0)
   , mFlags(0)
+  , mDecodedDataLength(0)
 {
   LOG(("nsHttpCompresssConv %p ctor\n", this));
   if (NS_IsMainThread()) {
@@ -72,6 +74,13 @@ nsHTTPCompressConv::~nsHTTPCompressConv()
   if (mStreamInitialized && !mStreamEnded) {
     inflateEnd (&d_stream);
   }
+}
+
+NS_IMETHODIMP
+nsHTTPCompressConv::GetDecodedDataLength(uint64_t *aDecodedDataLength)
+{
+    *aDecodedDataLength = mDecodedDataLength;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -476,6 +485,7 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
   // Make sure the stream no longer references |buffer| in case our listener
   // is crazy enough to try to read from |mStream| after ODA.
   mStream->ShareData("", 0);
+  mDecodedDataLength += count;
 
   return rv;
 }

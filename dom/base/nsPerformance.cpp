@@ -566,6 +566,25 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
     RefPtr<PerformanceResourceTiming> performanceEntry =
       new PerformanceResourceTiming(performanceTiming, this, entryName);
 
+    nsAutoCString protocol;
+    channel->GetProtocolVersion(protocol);
+    performanceEntry->SetNextHopProtocol(NS_ConvertUTF8toUTF16(protocol));
+
+    uint64_t encodedBodySize = 0;
+    channel->GetEncodedBodySize(&encodedBodySize);
+    performanceEntry->SetEncodedBodySize(encodedBodySize);
+
+    uint64_t transferSize = 0;
+    channel->GetTransferSize(&transferSize);
+    performanceEntry->SetTransferSize(transferSize);
+
+    uint64_t decodedBodySize = 0;
+    channel->GetDecodedBodySize(&decodedBodySize);
+    if (decodedBodySize == 0) {
+      decodedBodySize = encodedBodySize;
+    }
+    performanceEntry->SetDecodedBodySize(decodedBodySize);
+
     // If the initiator type had no valid value, then set it to the default
     // ("other") value.
     if (initiatorType.IsEmpty()) {

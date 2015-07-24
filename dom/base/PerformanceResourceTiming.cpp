@@ -27,7 +27,10 @@ PerformanceResourceTiming::PerformanceResourceTiming(nsPerformanceTiming* aPerfo
                                                      nsPerformance* aPerformance,
                                                      const nsAString& aName)
 : PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("resource")),
-  mTiming(aPerformanceTiming)
+  mTiming(aPerformanceTiming),
+  mEncodedBodySize(0),
+  mTransferSize(0),
+  mDecodedBodySize(0)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 }
