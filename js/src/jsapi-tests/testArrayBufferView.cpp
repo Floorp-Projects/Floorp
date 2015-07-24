@@ -86,23 +86,10 @@ BEGIN_TEST(testArrayBufferView_type)
 static JSObject*
 CreateDataView(JSContext* cx)
 {
-    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    if (!global)
+    JS::Rooted<JSObject*> buffer(cx, JS_NewArrayBuffer(cx, 8));
+    if (!buffer)
         return nullptr;
-
-    static const char code[] = "new DataView(new ArrayBuffer(8))";
-
-    JS::Rooted<JS::Value> val(cx);
-    JS::CompileOptions opts(cx);
-    if (!JS::Evaluate(cx, opts.setFileAndLine(__FILE__, __LINE__),
-                      code, strlen(code), &val))
-        return nullptr;
-
-    JS::Rooted<JSObject*> dv(cx, &val.toObject());
-    if (!JS_IsDataViewObject(dv))
-        return nullptr;
-
-    return dv;
+    return JS_NewDataView(cx, buffer, 0, 8);
 }
 
 template<JSObject * CreateTypedArray(JSContext* cx, uint32_t length),
@@ -140,6 +127,42 @@ bool TestViewType(JSContext* cx)
         CHECK(data1 == data2);
         CHECK(len == ExpectedLength);
     }
+
+    JS::CompartmentOptions options;
+    JS::RootedObject otherGlobal(cx, JS_NewGlobalObject(cx, basicGlobalClass(), nullptr, JS::DontFireOnNewGlobalHook, options));
+    CHECK(otherGlobal);
+
+    JS::Rooted<JSObject*> buffer(cx);
+    {
+        AutoCompartment ac(cx, otherGlobal);
+        buffer = JS_NewArrayBuffer(cx, 8);
+        CHECK(buffer);
+        CHECK(buffer->as<ArrayBufferObject>().byteLength() == 8);
+    }
+    CHECK(buffer->compartment() == otherGlobal->compartment());
+    CHECK(JS_WrapObject(cx, &buffer));
+    CHECK(buffer->compartment() == global->compartment());
+
+    JS::Rooted<JSObject*> dataview(cx, JS_NewDataView(cx, buffer, 4, 4));
+    CHECK(dataview);
+    CHECK(dataview->is<ProxyObject>());
+
+    JS::Rooted<JS::Value> val(cx);
+
+    val = ObjectValue(*dataview);
+    CHECK(JS_SetProperty(cx, global, "view", val));
+
+    EVAL("view.buffer", &val);
+    CHECK(val.toObject().is<ProxyObject>());
+
+    CHECK(dataview->compartment() == global->compartment());
+    JS::Rooted<JSObject*> otherView(cx, js::UncheckedUnwrap(dataview));
+    CHECK(otherView->compartment() == otherGlobal->compartment());
+    JS::Rooted<JSObject*> otherBuffer(cx, js::UncheckedUnwrap(&val.toObject()));
+    CHECK(otherBuffer->compartment() == otherGlobal->compartment());
+
+    EVAL("Object.getPrototypeOf(view) === DataView.prototype", &val);
+    CHECK(val.toBoolean() == true);
 
     return true;
 }
