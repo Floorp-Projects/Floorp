@@ -114,7 +114,7 @@ public:
   RetrieveMMS(nsIDOMMozMmsMessage* aMessage,
               ErrorResult& aRv);
 
-  already_AddRefed<DOMRequest>
+  already_AddRefed<Promise>
   GetSmscAddress(const Optional<uint32_t>& aServiceId,
                  ErrorResult& aRv);
 

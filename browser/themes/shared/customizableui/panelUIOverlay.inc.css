@@ -174,16 +174,6 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   flex-direction: column;
 }
 
-#app-extension-point-end > #PanelUI-menu-button {
-  padding: 2px 5px;
-}
-#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-text {
-  display: none;
-}
-#app-extension-point-end > #PanelUI-menu-button .toolbarbutton-icon {
-  margin: 0;
-}
-
 #PanelUI-popup > arrowscrollbox > autorepeatbutton {
   display: none;
 }

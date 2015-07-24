@@ -38,7 +38,7 @@
   --toolbarbutton-combined-boxshadow: none;
   --toolbarbutton-combined-backgroundimage: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 16px);
 
-  --verified-identity-box-backgroundcolor: #FFF;
+  --identity-box-verified-background-color: #fff;
 
   --urlbar-dropmarker-url: url("chrome://browser/skin/urlbar-history-dropmarker.png");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
@@ -1261,6 +1261,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   .searchbar-textbox {
     font-size: 1.15em;
     min-height: 28px;
+    transition-property: border-color, box-shadow;
+    transition-duration: .1s;
   }
 
   :root {
@@ -1435,7 +1437,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 #identity-box.verifiedIdentity:not(:-moz-lwtheme):not(:hover):not([open=true]) {
-  background-color: var(--verified-identity-box-backgroundcolor);
+  background-color: var(--identity-box-verified-background-color);
 }
 
 #identity-box:-moz-focusring {

@@ -725,7 +725,7 @@ MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 MobileMessageManager::GetSmscAddress(const Optional<uint32_t>& aServiceId,
                                      ErrorResult& aRv)
 {
@@ -754,15 +754,27 @@ MobileMessageManager::GetSmscAddress(const Optional<uint32_t>& aServiceId,
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(window);
-  nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
-  rv = smsService->GetSmscAddress(serviceId, msgCallback);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+  if (!global) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  return request.forget();
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIMobileMessageCallback> msgCallback =
+    new MobileMessageCallback(promise);
+
+  rv = smsService->GetSmscAddress(serviceId, msgCallback);
+  if (NS_FAILED(rv)) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
