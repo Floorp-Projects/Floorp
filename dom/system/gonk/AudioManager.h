@@ -20,7 +20,6 @@
 #include "nsAutoPtr.h"
 #include "nsIAudioManager.h"
 #include "nsIObserver.h"
-#include "AudioChannelAgent.h"
 #include "android_audio/AudioSystem.h"
 
 // {b2b51423-502d-4d77-89b3-7786b562b084}
@@ -107,7 +106,6 @@ protected:
 
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
-  nsCOMPtr<nsIAudioChannelAgent>          mPhoneAudioAgent;
 #ifdef MOZ_B2G_RIL
   bool                                    mMuteCallToRIL;
   // mIsMicMuted is only used for toggling mute call to RIL.
