@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    new Audio().mozCaptureStreamUntilEnded();
+    var ac = new window.AudioContext();
+    ac.resume();
+    ac.close();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
+

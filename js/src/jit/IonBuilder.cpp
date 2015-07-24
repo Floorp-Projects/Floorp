@@ -406,12 +406,9 @@ IonBuilder::DontInline(JSScript* targetScript, const char* reason)
 bool
 IonBuilder::hasCommonInliningPath(const JSScript* scriptToInline)
 {
-    if (this->script() == scriptToInline)
-        return true;
-
     // Find all previous inlinings of the |scriptToInline| and check for common
     // inlining paths with the top of the inlining stack.
-    for (IonBuilder* it = this; it; it = it->callerBuilder_) {
+    for (IonBuilder* it = this->callerBuilder_; it; it = it->callerBuilder_) {
         if (it->script() != scriptToInline)
             continue;
 

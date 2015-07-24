@@ -66,6 +66,10 @@ public:
         return sEGLLibrary.IsANGLE();
     }
 
+    virtual bool IsWARP() const override {
+        return sEGLLibrary.IsWARP();
+    }
+
     virtual bool BindTexImage() override;
 
     virtual bool ReleaseTexImage() override;

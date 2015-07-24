@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "nsDeque.h"
 #include "nsString.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
 namespace net {
@@ -29,6 +30,8 @@ nvPair(const nsACString &name, const nsACString &value)
   { }
 
   uint32_t Size() const { return mName.Length() + mValue.Length() + 32; }
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   nsCString mName;
   nsCString mValue;
@@ -54,11 +57,14 @@ private:
   nsDeque  mTable;
 };
 
+class HpackDynamicTableReporter;
+
 class Http2BaseCompressor
 {
 public:
   Http2BaseCompressor();
-  virtual ~Http2BaseCompressor() { };
+  virtual ~Http2BaseCompressor();
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
   const static uint32_t kDefaultMaxBuffer = 4096;
@@ -71,6 +77,9 @@ protected:
   nvFIFO mHeaderTable;
 
   uint32_t mMaxBuffer;
+
+private:
+  nsRefPtr<HpackDynamicTableReporter> mDynamicReporter;
 };
 
 class Http2Compressor;

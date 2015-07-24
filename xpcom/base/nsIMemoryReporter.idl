@@ -464,6 +464,9 @@ XPCOM_API(nsresult) RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
 // to this reporter.
 XPCOM_API(nsresult) RegisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
 
+// Unregister a strong memory reporter.
+XPCOM_API(nsresult) UnregisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
+
 // Unregister a weak memory reporter.
 XPCOM_API(nsresult) UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
 

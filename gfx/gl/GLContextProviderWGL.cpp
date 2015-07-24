@@ -607,7 +607,7 @@ CreateWindowOffscreenContext()
 }
 
 already_AddRefed<GLContext>
-GLContextProviderWGL::CreateHeadless(bool)
+GLContextProviderWGL::CreateHeadless(bool requireCompatProfile, bool forceEnabled)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;

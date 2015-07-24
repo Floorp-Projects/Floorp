@@ -4459,6 +4459,17 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
   return result;
 }
 
+static void
+AddStateBitToAncestors(nsIFrame* aFrame, nsFrameState aBit)
+{
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    if (f->HasAnyStateBits(aBit)) {
+      break;
+    }
+    f->AddStateBits(aBit);
+  }
+}
+
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
                                 nsRenderingContext* aRenderingContext,
@@ -4594,6 +4605,9 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
       nscoord ratioISize = (horizontalAxis ? ratio.width  : ratio.height);
       nscoord ratioBSize = (horizontalAxis ? ratio.height : ratio.width);
       if (ratioBSize != 0) {
+        AddStateBitToAncestors(aFrame,
+            NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE);
+
         nscoord bSizeTakenByBoxSizing = 0;
         switch (boxSizing) {
         case NS_STYLE_BOX_SIZING_BORDER: {

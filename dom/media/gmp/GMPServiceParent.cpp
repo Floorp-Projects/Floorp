@@ -432,13 +432,13 @@ GeckoMediaPluginServiceParent::AsyncShutdownPluginStates::Update(const nsCString
     note += pluginIt.Key();
     note += ":{";
     bool firstInstance = true;
-    for (auto instanceIt = pluginIt.Data()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
+    for (auto instanceIt = pluginIt.UserData()->ConstIter(); !instanceIt.Done(); instanceIt.Next()) {
       if (!firstInstance) { note += ','; } else { firstInstance = false; }
       note += instanceIt.Key();
       note += ":\"";
-      note += instanceIt.Data()->mStateSequence;
+      note += instanceIt.UserData()->mStateSequence;
       note += '=';
-      note += instanceIt.Data()->mLastStateDescription;
+      note += instanceIt.UserData()->mLastStateDescription;
       note += '"';
     }
     note += '}';

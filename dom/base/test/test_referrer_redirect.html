@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test anchor and area policy attribute for Bug 1184781</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing referrer headers after redirects.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1184781
+  -->
+
+  <script type="application/javascript;version=1.8">
+
+  const SJS = "/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY"];
+
+  const testCases = [
+    {ACTION: ["generate-img-redirect-policy-test", "generate-iframe-redirect-policy-test"],
+      TESTS: [
+        {
+          ATTRIBUTE_POLICY: "no-referrer",
+           NAME: "no-referrer-with-no-meta",
+           DESC: "no-referrer (img/iframe) with no meta",
+           RESULT: "none"
+        },
+        {
+          ATTRIBUTE_POLICY: "origin",
+           NAME: "origin-with-no-meta",
+           DESC: "origin (img/iframe) with no meta",
+           RESULT: "origin"
+        },
+        {
+          ATTRIBUTE_POLICY: "unsafe-url",
+           NAME: "unsafe-url-with-no-meta",
+           DESC: "unsafe-url (img/iframe) with no meta",
+           RESULT: "full"
+        },
+        {
+          META_POLICY: "unsafe-url",
+           NAME: "unsafe-url-in-meta",
+           DESC: "unsafe-url in meta",
+           RESULT: "full"
+        },
+        {
+          META_POLICY: "origin",
+           NAME: "origin-in-meta",
+           DESC: "origin in meta",
+           RESULT: "origin"
+        },
+        {
+          META_POLICY: "no-referrer",
+           NAME: "no-referrer-in-meta",
+           DESC: "no-referrer in meta",
+           RESULT: "none"
+        },
+        {
+          META_POLICY: "origin-when-cross-origin",
+           NAME: "origin-when-cross-origin-in-meta",
+           DESC: "origin-when-cross-origin in meta",
+           RESULT: "origin"
+        }]}
+  ];
+  </script>
+  <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+

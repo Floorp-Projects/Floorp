@@ -147,6 +147,11 @@ public:
                                            bool aIntersectWithExisting) override;
     virtual bool       HasPendingInputEvent() override;
 
+    virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
+    virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                             uint16_t aDuration,
+                                             nsISupports* aData,
+                                             nsIRunnable* aCallback) override;
     NS_IMETHOD         MakeFullScreen(bool aFullScreen,
                                       nsIScreen* aTargetScreen = nullptr) override;
     NS_IMETHOD         HideWindowChrome(bool aShouldHide) override;

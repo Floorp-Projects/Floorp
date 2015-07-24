@@ -75,6 +75,9 @@ public:
     // GMP_EME_CAP_* flags from gmp-decryption.h.
     void SetCaps(uint64_t aCaps);
 
+    bool CanRenderAudio();
+    bool CanRenderVideo();
+
     bool CanDecryptAndDecodeAudio();
     bool CanDecryptAndDecodeVideo();
 

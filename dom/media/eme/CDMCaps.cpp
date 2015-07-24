@@ -185,6 +185,18 @@ CDMCaps::AutoLock::AreCapsKnown()
 }
 
 bool
+CDMCaps::AutoLock::CanRenderAudio()
+{
+  return mData.HasCap(GMP_EME_CAP_RENDER_AUDIO);
+}
+
+bool
+CDMCaps::AutoLock::CanRenderVideo()
+{
+  return mData.HasCap(GMP_EME_CAP_RENDER_VIDEO);
+}
+
+bool
 CDMCaps::AutoLock::CanDecryptAndDecodeAudio()
 {
   return mData.HasCap(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO);
