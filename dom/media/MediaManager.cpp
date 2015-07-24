@@ -797,6 +797,9 @@ public:
     if (mAudioSource &&
         mAudioSource->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
       domStream = DOMLocalMediaStream::CreateAudioCaptureStream(window);
+      // It should be possible to pipe the capture stream to anything. CORS is
+      // not a problem here, we got explicit user content.
+      domStream->SetPrincipal(window->GetExtantDoc()->NodePrincipal());
       msg->RegisterCaptureStreamForWindow(
             mWindowID, domStream->GetStream()->AsProcessedStream());
       window->SetAudioCapture(true);
