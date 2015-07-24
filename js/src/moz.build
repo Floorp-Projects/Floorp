@@ -123,6 +123,7 @@ EXPORTS.js += [
     '../public/SliceBudget.h',
     '../public/StructuredClone.h',
     '../public/TraceableHashTable.h',
+    '../public/TraceableVector.h',
     '../public/TraceKind.h',
     '../public/TracingAPI.h',
     '../public/TrackedOptimizationInfo.h',

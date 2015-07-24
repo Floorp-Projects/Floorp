@@ -46,6 +46,7 @@ struct Zone;
 
 namespace js {
 struct ContextFriendFields;
+class RootLists;
 class Shape;
 } // namespace js
 
@@ -131,7 +132,8 @@ namespace gc {
 class AutoTraceSession;
 class StoreBuffer;
 void MarkPersistentRootedChains(JSTracer*);
-void FinishPersistentRootedChains(JSRuntime*);
+void MarkPersistentRootedChainsInLists(js::RootLists&, JSTracer*);
+void FinishPersistentRootedChains(js::RootLists&);
 } // namespace gc
 } // namespace js
 
@@ -175,48 +177,7 @@ struct Runtime
     void setGCStoreBufferPtr(js::gc::StoreBuffer* storeBuffer) {
         gcStoreBufferPtr_ = storeBuffer;
     }
-
-    /* Allow inlining of PersistentRooted constructors and destructors. */
-  private:
-    template <typename Referent> friend class JS::PersistentRooted;
-    friend void js::gc::MarkPersistentRootedChains(JSTracer*);
-    friend void js::gc::FinishPersistentRootedChains(JSRuntime* rt);
-
-    mozilla::LinkedList<PersistentRootedFunction> functionPersistentRooteds;
-    mozilla::LinkedList<PersistentRootedId>       idPersistentRooteds;
-    mozilla::LinkedList<PersistentRootedObject>   objectPersistentRooteds;
-    mozilla::LinkedList<PersistentRootedScript>   scriptPersistentRooteds;
-    mozilla::LinkedList<PersistentRootedString>   stringPersistentRooteds;
-    mozilla::LinkedList<PersistentRootedValue>    valuePersistentRooteds;
-
-    /* Specializations of this return references to the appropriate list. */
-    template<typename Referent>
-    inline mozilla::LinkedList<PersistentRooted<Referent> >& getPersistentRootedList();
 };
-
-template<>
-inline mozilla::LinkedList<PersistentRootedFunction>
-&Runtime::getPersistentRootedList<JSFunction*>() { return functionPersistentRooteds; }
-
-template<>
-inline mozilla::LinkedList<PersistentRootedId>
-&Runtime::getPersistentRootedList<jsid>() { return idPersistentRooteds; }
-
-template<>
-inline mozilla::LinkedList<PersistentRootedObject>
-&Runtime::getPersistentRootedList<JSObject*>() { return objectPersistentRooteds; }
-
-template<>
-inline mozilla::LinkedList<PersistentRootedScript>
-&Runtime::getPersistentRootedList<JSScript*>() { return scriptPersistentRooteds; }
-
-template<>
-inline mozilla::LinkedList<PersistentRootedString>
-&Runtime::getPersistentRootedList<JSString*>() { return stringPersistentRooteds; }
-
-template<>
-inline mozilla::LinkedList<PersistentRootedValue>
-&Runtime::getPersistentRootedList<Value>() { return valuePersistentRooteds; }
 
 } /* namespace shadow */
 
@@ -376,7 +337,49 @@ class RootLists
     }
 
     void checkNoGCRooters();
+
+    /* Allow inlining of PersistentRooted constructors and destructors. */
+  private:
+    template <typename Referent> friend class JS::PersistentRooted;
+    friend void js::gc::MarkPersistentRootedChains(JSTracer*);
+    friend void js::gc::MarkPersistentRootedChainsInLists(RootLists&, JSTracer*);
+    friend void js::gc::FinishPersistentRootedChains(RootLists&);
+
+    mozilla::LinkedList<JS::PersistentRootedFunction> functionPersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRootedId>       idPersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRootedObject>   objectPersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRootedScript>   scriptPersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRootedString>   stringPersistentRooteds;
+    mozilla::LinkedList<JS::PersistentRootedValue>    valuePersistentRooteds;
+
+    /* Specializations of this return references to the appropriate list. */
+    template<typename Referent>
+    inline mozilla::LinkedList<JS::PersistentRooted<Referent>>& getPersistentRootedList();
 };
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedFunction>
+&RootLists::getPersistentRootedList<JSFunction*>() { return functionPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedId>
+&RootLists::getPersistentRootedList<jsid>() { return idPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedObject>
+&RootLists::getPersistentRootedList<JSObject*>() { return objectPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedScript>
+&RootLists::getPersistentRootedList<JSScript*>() { return scriptPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedString>
+&RootLists::getPersistentRootedList<JSString*>() { return stringPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<JS::PersistentRootedValue>
+&RootLists::getPersistentRootedList<JS::Value>() { return valuePersistentRooteds; }
 
 struct ContextFriendFields
 {

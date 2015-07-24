@@ -50,6 +50,9 @@ class ContainerLayerComposite : public ContainerLayer,
                         LayerManagerComposite* aManager,
                         const RenderTargetIntRect& aClipRect);
 
+  template<class ContainerT>
+  void RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
+                     const RenderTargetIntRect& aClipRect, Layer* aLayer);
 public:
   explicit ContainerLayerComposite(LayerManagerComposite *aManager);
 
