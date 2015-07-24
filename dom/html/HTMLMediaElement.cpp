@@ -4707,7 +4707,23 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged()
         mCaptureStreamPort = msg->ConnectToCaptureStream(id, mPlaybackStream->GetStream());
       }
     } else {
-      // TODO: uncapture
+      mAudioCapturedByWindow = false;
+      if (mDecoder) {
+        ProcessedMediaStream* ps =
+          mCaptureStreamPort->GetSource()->AsProcessedStream();
+        MOZ_ASSERT(ps);
+
+        for (uint32_t i = 0; i < mOutputStreams.Length(); i++) {
+          if (mOutputStreams[i].mStream->GetStream() == ps) {
+            mOutputStreams.RemoveElementAt(i);
+            break;
+          }
+        }
+
+        mDecoder->RemoveOutputStream(ps);
+      }
+      mCaptureStreamPort->Destroy();
+      mCaptureStreamPort = nullptr;
     }
   }
 
