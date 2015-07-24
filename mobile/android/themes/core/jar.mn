@@ -127,3 +127,4 @@ chrome.jar:
   skin/images/icon_heart_mdpi.png                (images/icon_heart_mdpi.png)
   skin/images/icon_heart_xhdpi.png               (images/icon_heart_xhdpi.png)
   skin/images/icon_heart_xxhdpi.png              (images/icon_heart_xxhdpi.png)
+  skin/images/icon_key_emptypage.svg             (images/icon_key_emptypage.svg)
