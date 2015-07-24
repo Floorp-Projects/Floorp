@@ -8,6 +8,11 @@ let TrackingProtection = {
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
+  container: null,
+  content: null,
+  icon: null,
+  activeTooltipText: null,
+  disabledTooltipText: null,
 
   init() {
     let $ = selector => document.querySelector(selector);
@@ -18,6 +23,11 @@ let TrackingProtection = {
     this.updateEnabled();
     Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this, false);
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this, false);
+
+    this.activeTooltipText =
+      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
+    this.disabledTooltipText =
+      gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
 
     this.enabledHistogram.add(this.enabledGlobally);
   },
@@ -66,21 +76,14 @@ let TrackingProtection = {
       this.icon.setAttribute("animate", "true");
     }
 
-    let {
-      STATE_BLOCKED_TRACKING_CONTENT, STATE_LOADED_TRACKING_CONTENT
-    } = Ci.nsIWebProgressListener;
+    let isBlocking = state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
+    let isAllowing = state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
 
-    for (let element of [this.icon, this.content]) {
-      if (state & STATE_BLOCKED_TRACKING_CONTENT) {
-        element.setAttribute("state", "blocked-tracking-content");
-      } else if (state & STATE_LOADED_TRACKING_CONTENT) {
-        element.setAttribute("state", "loaded-tracking-content");
-      } else {
-        element.removeAttribute("state");
-      }
-    }
+    if (isBlocking) {
+      this.icon.setAttribute("tooltiptext", this.activeTooltipText);
+      this.icon.setAttribute("state", "blocked-tracking-content");
+      this.content.setAttribute("state", "blocked-tracking-content");
 
-    if (state & STATE_BLOCKED_TRACKING_CONTENT) {
       // Open the tracking protection introduction panel, if applicable.
       let introCount = gPrefService.getIntPref("privacy.trackingprotection.introCount");
       if (introCount < TrackingProtection.MAX_INTROS) {
@@ -88,6 +91,14 @@ let TrackingProtection = {
         gPrefService.savePrefFile(null);
         this.showIntroPanel();
       }
+    } else if (isAllowing) {
+      this.icon.setAttribute("tooltiptext", this.disabledTooltipText);
+      this.icon.setAttribute("state", "loaded-tracking-content");
+      this.content.setAttribute("state", "loaded-tracking-content");
+    } else {
+      this.icon.removeAttribute("tooltiptext");
+      this.icon.removeAttribute("state");
+      this.content.removeAttribute("state");
     }
 
     // Telemetry for state change.

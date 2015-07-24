@@ -251,18 +251,18 @@ ThreadNode.prototype = {
    * Uninverts the call tree after its having been built.
    */
   _uninvert: function uninvert() {
-    function mergeOrAddFrameNode(calls, node) {
+    function mergeOrAddFrameNode(calls, node, samples) {
       // Unlike the inverted call tree, we don't use a root table for the top
       // level, as in general, there are many fewer entry points than
       // leaves. Instead, linear search is used regardless of level.
       for (let i = 0; i < calls.length; i++) {
         if (calls[i].key === node.key) {
           let foundNode = calls[i];
-          foundNode._merge(node);
+          foundNode._merge(node, samples);
           return foundNode.calls;
         }
       }
-      let copy = node._clone();
+      let copy = node._clone(samples);
       calls.push(copy);
       return copy.calls;
     }
@@ -280,19 +280,42 @@ ThreadNode.prototype = {
 
       let node = entry.node;
       let calls = node.calls;
+      let callSamples = 0;
 
-      if (calls.length === 0) {
-        // We've bottomed out. Reverse the spine and add them to the
-        // uninverted call tree.
+      // Continue the depth-first walk.
+      for (let i = 0; i < calls.length; i++) {
+        workstack.push({ node: calls[i], level: entry.level + 1 });
+        callSamples += calls[i].samples;
+      }
+
+      // The sample delta is used to distinguish stacks.
+      //
+      // Suppose we have the following stack samples:
+      //
+      //   A -> B
+      //   A -> C
+      //   A
+      //
+      // The inverted tree is:
+      //
+      //     A
+      //    / \
+      //   B   C
+      //
+      // with A.samples = 3, B.samples = 1, C.samples = 1.
+      //
+      // A is distinguished as being its own stack because
+      // A.samples - (B.samples + C.samples) > 0.
+      //
+      // Note that bottoming out is a degenerate where callSamples = 0.
+
+      let samplesDelta = node.samples - callSamples;
+      if (samplesDelta > 0) {
+        // Reverse the spine and add them to the uninverted call tree.
         let uninvertedCalls = rootCalls;
         for (let level = entry.level; level > 0; level--) {
           let callee = spine[level];
-          uninvertedCalls = mergeOrAddFrameNode(uninvertedCalls, callee.node);
-        }
-      } else {
-        // We still have children. Continue the depth-first walk.
-        for (let i = 0; i < calls.length; i++) {
-          workstack.push({ node: calls[i], level: entry.level + 1 });
+          uninvertedCalls = mergeOrAddFrameNode(uninvertedCalls, callee.node, samplesDelta);
         }
       }
     }
@@ -410,19 +433,21 @@ FrameNode.prototype = {
     }
   },
 
-  _clone: function () {
+  _clone: function (samples) {
     let newNode = new FrameNode(this.key, this, this.isMetaCategory);
-    newNode._merge(this);
+    newNode._merge(this, samples);
     return newNode;
   },
 
-  _merge: function (otherNode) {
+  _merge: function (otherNode, samples) {
     if (this === otherNode) {
       return;
     }
 
-    this.samples += otherNode.samples;
-    this.youngestFrameSamples += otherNode.youngestFrameSamples;
+    this.samples += samples;
+    if (otherNode.youngestFrameSamples > 0) {
+      this.youngestFrameSamples += samples;
+    }
 
     if (otherNode._optimizations) {
       let opts = this._optimizations;

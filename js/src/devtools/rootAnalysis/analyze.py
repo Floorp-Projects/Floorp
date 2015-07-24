@@ -18,7 +18,7 @@ import re
 
 def env(config):
     e = dict(os.environ)
-    e['PATH'] = '%s:%s' % (e['PATH'], config['sixgill_bin'])
+    e['PATH'] = ':'.join(p for p in (config.get('gcc_bin'), config.get('sixgill_bin'), e['PATH']) if p)
     e['XDB'] = '%(sixgill_bin)s/xdb.so' % config
     e['SOURCE'] = config['source']
     e['ANALYZED_OBJDIR'] = config['objdir']

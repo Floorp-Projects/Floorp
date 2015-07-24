@@ -23,12 +23,11 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
 AudioSink::AudioSink(MediaQueue<AudioData>& aAudioQueue,
-                     ReentrantMonitor& aMonitor,
                      int64_t aStartTime,
                      const AudioInfo& aInfo,
                      dom::AudioChannel aChannel)
   : mAudioQueue(aAudioQueue)
-  , mDecoderMonitor(aMonitor)
+  , mMonitor("AudioSink::mMonitor")
   , mStartTime(aStartTime)
   , mWritten(0)
   , mLastGoodPosition(0)
@@ -71,7 +70,7 @@ AudioSink::Init()
 int64_t
 AudioSink::GetPosition()
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
   int64_t pos;
   if (mAudioStream &&
@@ -86,7 +85,7 @@ AudioSink::GetPosition()
 bool
 AudioSink::HasUnplayedFrames()
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   // Experimentation suggests that GetPositionInFrames() is zero-indexed,
   // so we need to add 1 here before comparing it to mWritten.
   return mAudioStream && mAudioStream->GetPositionInFrames() + 1 < mWritten;
@@ -95,13 +94,14 @@ AudioSink::HasUnplayedFrames()
 void
 AudioSink::Shutdown()
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mStopAudioThread = true;
   if (mAudioStream) {
     mAudioStream->Cancel();
   }
   GetReentrantMonitor().NotifyAll();
 
+  // Exit the monitor so audio loop can enter the monitor and finish its job.
   ReentrantMonitorAutoExit exit(GetReentrantMonitor());
   mThread->Shutdown();
   mThread = nullptr;
@@ -114,7 +114,7 @@ AudioSink::Shutdown()
 void
 AudioSink::SetVolume(double aVolume)
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mVolume = aVolume;
   mSetVolume = true;
 }
@@ -122,7 +122,7 @@ AudioSink::SetVolume(double aVolume)
 void
 AudioSink::SetPlaybackRate(double aPlaybackRate)
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   NS_ASSERTION(mPlaybackRate != 0, "Don't set the playbackRate to 0 on AudioStream");
   mPlaybackRate = aPlaybackRate;
   mSetPlaybackRate = true;
@@ -131,7 +131,7 @@ AudioSink::SetPlaybackRate(double aPlaybackRate)
 void
 AudioSink::SetPreservesPitch(bool aPreservesPitch)
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mPreservesPitch = aPreservesPitch;
   mSetPreservesPitch = true;
 }
@@ -139,8 +139,15 @@ AudioSink::SetPreservesPitch(bool aPreservesPitch)
 void
 AudioSink::SetPlaying(bool aPlaying)
 {
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mPlaying = aPlaying;
+  GetReentrantMonitor().NotifyAll();
+}
+
+void
+AudioSink::NotifyData()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   GetReentrantMonitor().NotifyAll();
 }
 

@@ -65,9 +65,9 @@ static unsigned int kDefaultTimeout = 7000;
 
 //TODO(nils@mozilla.com): This should get replaced with some non-external
 //solution like discussed in bug 860775.
-const std::string kDefaultStunServerAddress((char *)"52.11.16.249");
+const std::string kDefaultStunServerAddress((char *)"52.27.56.60");
 const std::string kDefaultStunServerHostname(
-    (char *)"global.stun.twilio.com");
+    (char *)"global.stun.twillio.com");
 const std::string kBogusStunServerHostname(
     (char *)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort=3478;
@@ -1672,7 +1672,8 @@ TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddress) {
   peer_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
   peer_->SetDNSResolver();
   Gather();
-  // TODO(jib@mozilla.com): ensure we get server reflexive candidates Bug 848094
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " UDP "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "typ srflx raddr"));
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddressTcp) {
@@ -1685,6 +1686,11 @@ TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddressTcp) {
     kNrIceTransportTcp);
   peer_->SetDNSResolver();
   Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype passive"));
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, "tcptype passive", " 9 "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype so"));
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, "tcptype so", " 9 "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype active", " 9 "));
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerHostname) {
@@ -1696,6 +1702,8 @@ TEST_F(IceGatherTest, TestGatherDNSStunServerHostname) {
   peer_->SetStunServer(g_stun_server_hostname, kDefaultStunServerPort);
   peer_->SetDNSResolver();
   Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " UDP "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "typ srflx raddr"));
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerHostnameTcp) {
@@ -1704,6 +1712,11 @@ TEST_F(IceGatherTest, TestGatherDNSStunServerHostnameTcp) {
     kNrIceTransportTcp);
   peer_->SetDNSResolver();
   Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype passive"));
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, "tcptype passive", " 9 "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype so"));
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, "tcptype so", " 9 "));
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, "tcptype active", " 9 "));
 }
 
 TEST_F(IceGatherTest, TestGatherDNSStunServerHostnameBothUdpTcp) {

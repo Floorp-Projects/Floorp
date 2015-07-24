@@ -490,15 +490,15 @@ private:
     return map;
   }
 
-  static PLDHashOperator SetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aDir)
+  static nsCheapSetOperator SetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aDir)
   {
     MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     aEntry->GetKey()->SetDirectionality(*reinterpret_cast<Directionality*>(aDir),
                                         true);
-    return PL_DHASH_NEXT;
+    return OpNext;
   }
 
-  static PLDHashOperator ResetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aData)
+  static nsCheapSetOperator ResetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aData)
   {
     MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     // run the downward propagation algorithm
@@ -516,15 +516,15 @@ private:
       rootNode->ClearHasDirAutoSet();
       rootNode->UnsetProperty(nsGkAtoms::dirAutoSetBy);
     }
-    return PL_DHASH_REMOVE;
+    return OpRemove;
   }
 
-  static PLDHashOperator ClearEntry(nsPtrHashKey<Element>* aEntry, void* aData)
+  static nsCheapSetOperator ClearEntry(nsPtrHashKey<Element>* aEntry, void* aData)
   {
     Element* rootNode = aEntry->GetKey();
     rootNode->ClearHasDirAutoSet();
     rootNode->UnsetProperty(nsGkAtoms::dirAutoSetBy);
-    return PL_DHASH_REMOVE;
+    return OpRemove;
   }
 
 public:

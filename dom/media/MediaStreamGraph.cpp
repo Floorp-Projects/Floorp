@@ -3473,6 +3473,13 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
         mMixer.RemoveCallback(CurrentDriver()->AsAudioCallbackDriver());
         CurrentDriver()->SwitchAtNextIteration(driver);
       }
+      // We are closing or suspending an AudioContext, but we just got resumed.
+      // Queue the operation on the next driver so that the ordering is
+      // preserved.
+    } else if (!audioTrackPresent && CurrentDriver()->Switching()) {
+      MOZ_ASSERT(CurrentDriver()->NextDriver()->AsAudioCallbackDriver());
+      CurrentDriver()->NextDriver()->AsAudioCallbackDriver()->
+        EnqueueStreamAndPromiseForOperation(aStream, aPromise, aOperation);
     } else {
       // We are closing or suspending an AudioContext, but something else is
       // using the audio stream, we can resolve the promise now.

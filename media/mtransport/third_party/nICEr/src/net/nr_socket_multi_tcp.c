@@ -170,8 +170,15 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
     nr_tcp_socket_ctx *tcp_socket_ctx=0;
     nr_socket * nrsock;
 
-    if (stun_server->transport!=IPPROTO_TCP)
+    if (stun_server->transport!=IPPROTO_TCP) {
+      r_log(LOG_ICE,LOG_INFO,"%s:%d function %s skipping UDP STUN server(addr:%s)",__FILE__,__LINE__,__FUNCTION__,stun_server->u.addr.as_string);
       ABORT(R_BAD_ARGS);
+    }
+
+    if (stun_server->u.addr.ip_version!=addr->ip_version) {
+      r_log(LOG_ICE,LOG_INFO,"%s:%d function %s skipping STUN with different IP version (%u) than local socket (%u),",__FILE__,__LINE__,__FUNCTION__,stun_server->u.addr.ip_version,addr->ip_version);
+      ABORT(R_BAD_ARGS);
+    }
 
     if ((r=nr_socket_factory_create_socket(sock->ctx->socket_factory,addr, &nrsock)))
       ABORT(r);

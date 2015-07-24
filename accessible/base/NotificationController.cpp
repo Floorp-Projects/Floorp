@@ -204,7 +204,89 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   }
 
   // Process rendered text change notifications.
-  mTextHash.EnumerateEntries(TextEnumerator, mDocument);
+  for (auto iter = mTextHash.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
+    nsIContent* textNode = entry->GetKey();
+    Accessible* textAcc = mDocument->GetAccessible(textNode);
+
+    // If the text node is not in tree or doesn't have frame then this case should
+    // have been handled already by content removal notifications.
+    nsINode* containerNode = textNode->GetParentNode();
+    if (!containerNode) {
+      NS_ASSERTION(!textAcc,
+                   "Text node was removed but accessible is kept alive!");
+      continue;
+    }
+
+    nsIFrame* textFrame = textNode->GetPrimaryFrame();
+    if (!textFrame) {
+      NS_ASSERTION(!textAcc,
+                   "Text node isn't rendered but accessible is kept alive!");
+      continue;
+    }
+
+    nsIContent* containerElm = containerNode->IsElement() ?
+      containerNode->AsElement() : nullptr;
+
+    nsAutoString text;
+    textFrame->GetRenderedText(&text);
+
+    // Remove text accessible if rendered text is empty.
+    if (textAcc) {
+      if (text.IsEmpty()) {
+  #ifdef A11Y_LOG
+        if (logging::IsEnabled(logging::eTree | logging::eText)) {
+          logging::MsgBegin("TREE", "text node lost its content");
+          logging::Node("container", containerElm);
+          logging::Node("content", textNode);
+          logging::MsgEnd();
+        }
+  #endif
+
+        mDocument->ContentRemoved(containerElm, textNode);
+        continue;
+      }
+
+      // Update text of the accessible and fire text change events.
+  #ifdef A11Y_LOG
+      if (logging::IsEnabled(logging::eText)) {
+        logging::MsgBegin("TEXT", "text may be changed");
+        logging::Node("container", containerElm);
+        logging::Node("content", textNode);
+        logging::MsgEntry("old text '%s'",
+                          NS_ConvertUTF16toUTF8(textAcc->AsTextLeaf()->Text()).get());
+        logging::MsgEntry("new text: '%s'",
+                          NS_ConvertUTF16toUTF8(text).get());
+        logging::MsgEnd();
+      }
+  #endif
+
+      TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text);
+      continue;
+    }
+
+    // Append an accessible if rendered text is not empty.
+    if (!text.IsEmpty()) {
+  #ifdef A11Y_LOG
+      if (logging::IsEnabled(logging::eTree | logging::eText)) {
+        logging::MsgBegin("TREE", "text node gains new content");
+        logging::Node("container", containerElm);
+        logging::Node("content", textNode);
+        logging::MsgEnd();
+      }
+  #endif
+
+      // Make sure the text node is in accessible document still.
+      Accessible* container = mDocument->GetAccessibleOrContainer(containerNode);
+      NS_ASSERTION(container,
+                   "Text node having rendered text hasn't accessible document!");
+      if (container) {
+        nsTArray<nsCOMPtr<nsIContent> > insertedContents;
+        insertedContents.AppendElement(textNode);
+        mDocument->ProcessContentInserted(container, &insertedContents);
+      }
+    }
+  }
   mTextHash.Clear();
 
   // Bind hanging child documents.
@@ -313,99 +395,6 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     mObservingState = eNotObservingRefresh;
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Notification controller: text leaf accessible text update
-
-PLDHashOperator
-NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
-                                       void* aUserArg)
-{
-  DocAccessible* document = static_cast<DocAccessible*>(aUserArg);
-  nsIContent* textNode = aEntry->GetKey();
-  Accessible* textAcc = document->GetAccessible(textNode);
-
-  // If the text node is not in tree or doesn't have frame then this case should
-  // have been handled already by content removal notifications.
-  nsINode* containerNode = textNode->GetParentNode();
-  if (!containerNode) {
-    NS_ASSERTION(!textAcc,
-                 "Text node was removed but accessible is kept alive!");
-    return PL_DHASH_NEXT;
-  }
-
-  nsIFrame* textFrame = textNode->GetPrimaryFrame();
-  if (!textFrame) {
-    NS_ASSERTION(!textAcc,
-                 "Text node isn't rendered but accessible is kept alive!");
-    return PL_DHASH_NEXT;
-  }
-
-  nsIContent* containerElm = containerNode->IsElement() ?
-    containerNode->AsElement() : nullptr;
-
-  nsAutoString text;
-  textFrame->GetRenderedText(&text);
-
-  // Remove text accessible if rendered text is empty.
-  if (textAcc) {
-    if (text.IsEmpty()) {
-#ifdef A11Y_LOG
-      if (logging::IsEnabled(logging::eTree | logging::eText)) {
-        logging::MsgBegin("TREE", "text node lost its content");
-        logging::Node("container", containerElm);
-        logging::Node("content", textNode);
-        logging::MsgEnd();
-      }
-#endif
-
-      document->ContentRemoved(containerElm, textNode);
-      return PL_DHASH_NEXT;
-    }
-
-    // Update text of the accessible and fire text change events.
-#ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eText)) {
-      logging::MsgBegin("TEXT", "text may be changed");
-      logging::Node("container", containerElm);
-      logging::Node("content", textNode);
-      logging::MsgEntry("old text '%s'",
-                        NS_ConvertUTF16toUTF8(textAcc->AsTextLeaf()->Text()).get());
-      logging::MsgEntry("new text: '%s'",
-                        NS_ConvertUTF16toUTF8(text).get());
-      logging::MsgEnd();
-    }
-#endif
-
-    TextUpdater::Run(document, textAcc->AsTextLeaf(), text);
-    return PL_DHASH_NEXT;
-  }
-
-  // Append an accessible if rendered text is not empty.
-  if (!text.IsEmpty()) {
-#ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eTree | logging::eText)) {
-      logging::MsgBegin("TREE", "text node gains new content");
-      logging::Node("container", containerElm);
-      logging::Node("content", textNode);
-      logging::MsgEnd();
-    }
-#endif
-
-    // Make sure the text node is in accessible document still.
-    Accessible* container = document->GetAccessibleOrContainer(containerNode);
-    NS_ASSERTION(container,
-                 "Text node having rendered text hasn't accessible document!");
-    if (container) {
-      nsTArray<nsCOMPtr<nsIContent> > insertedContents;
-      insertedContents.AppendElement(textNode);
-      document->ProcessContentInserted(container, &insertedContents);
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationController: content inserted notification

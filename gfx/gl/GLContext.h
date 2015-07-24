@@ -197,6 +197,14 @@ public:
     }
 
     /**
+    * Returns true if the context is using WARP. This should only be overridden
+    * for an ANGLE implementation.
+    */
+    virtual bool IsWARP() const {
+        return false;
+    }
+
+    /**
      * Return true if we are running on a OpenGL core profile context
      */
     inline bool IsCoreProfile() const {

@@ -218,10 +218,6 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     private boolean voiceIsEnabled(Context context, String prompt) {
-        // Voice input is enabled for nightly only
-        if(!AppConstants.NIGHTLY_BUILD) {
-            return false;
-        }
         final boolean voiceIsSupported = InputOptionsUtils.supportsVoiceRecognizer(context, prompt);
         if (!voiceIsSupported) {
             return false;
@@ -237,22 +233,6 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent data) {
-                switch (resultCode) {
-                    case RecognizerIntent.RESULT_CLIENT_ERROR:
-                    case RecognizerIntent.RESULT_NETWORK_ERROR:
-                    case RecognizerIntent.RESULT_SERVER_ERROR:
-                        // We have an temporarily unrecoverable error.
-                        handleVoiceSearchError(false);
-                        break;
-                    case RecognizerIntent.RESULT_AUDIO_ERROR:
-                    case RecognizerIntent.RESULT_NO_MATCH:
-                        // Maybe the user can say it differently?
-                        handleVoiceSearchError(true);
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        break;
-                }
-
                 if (resultCode != Activity.RESULT_OK) {
                     return;
                 }
@@ -270,33 +250,6 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                 imm.showSoftInput(mEditText, InputMethodManager.SHOW_IMPLICIT);
             }
         });
-    }
-
-    private void handleVoiceSearchError(boolean offerRetry) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
-                .setTitle(R.string.voicesearch_failed_title)
-                .setIcon(R.drawable.icon).setNeutralButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-        if (offerRetry) {
-            builder.setMessage(R.string.voicesearch_failed_message_recoverable)
-                    .setNegativeButton(R.string.voicesearch_failed_retry, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            launchVoiceRecognizer();
-                        }
-                    });
-        } else {
-            builder.setMessage(R.string.voicesearch_failed_message);
-        }
-
-        AlertDialog dialog = builder.create();
-
-        dialog.show();
     }
 
     private boolean qrCodeIsEnabled(Context context) {
