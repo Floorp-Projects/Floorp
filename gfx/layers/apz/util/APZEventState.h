@@ -71,8 +71,7 @@ public:
                              int aArg);
 private:
   ~APZEventState();
-  bool SendPendingTouchPreventedResponse(bool aPreventDefault,
-                                         const ScrollableLayerGuid& aGuid);
+  bool SendPendingTouchPreventedResponse(bool aPreventDefault);
   already_AddRefed<nsIWidget> GetWidget() const;
 private:
   nsWeakPtr mWidget;
