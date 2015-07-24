@@ -1799,8 +1799,8 @@ void
 BluetoothDaemonHandsfreeInterface::DispatchError(
   BluetoothHandsfreeResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothHandsfreeResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothHandsfreeResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothHandsfreeResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }

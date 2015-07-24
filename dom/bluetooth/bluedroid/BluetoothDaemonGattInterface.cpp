@@ -2964,8 +2964,8 @@ void
 BluetoothDaemonGattClientInterface::DispatchError(
   BluetoothGattClientResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothGattClientResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothGattClientResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothGattResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }
@@ -2986,8 +2986,8 @@ void
 BluetoothDaemonGattServerInterface::DispatchError(
   BluetoothGattServerResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothGattServerResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothGattServerResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothGattResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }
@@ -3008,8 +3008,8 @@ void
 BluetoothDaemonGattInterface::DispatchError(
   BluetoothGattResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothGattResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothGattResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothGattResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }

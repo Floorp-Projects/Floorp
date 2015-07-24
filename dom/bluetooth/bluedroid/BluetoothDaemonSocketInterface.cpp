@@ -366,8 +366,8 @@ void
 BluetoothDaemonSocketInterface::DispatchError(
   BluetoothSocketResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothSocketResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothSocketResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothSocketResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }
