@@ -399,6 +399,8 @@ public:
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
   virtual void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  // Remove an output stream added with AddOutputStream.
+  virtual void RemoveOutputStream(MediaStream* aStream);
 
   // Return the duration of the video in seconds.
   virtual double GetDuration();
