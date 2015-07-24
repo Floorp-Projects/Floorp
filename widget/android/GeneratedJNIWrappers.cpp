@@ -765,14 +765,6 @@ void GeckoJavaSampler::UnpauseJavaProfiling()
 
 constexpr char RestrictedProfiles::name[];
 
-constexpr char RestrictedProfiles::GetUserRestrictions_t::name[];
-constexpr char RestrictedProfiles::GetUserRestrictions_t::signature[];
-
-mozilla::jni::String::LocalRef RestrictedProfiles::GetUserRestrictions()
-{
-    return mozilla::jni::Method<GetUserRestrictions_t>::Call(nullptr, nullptr);
-}
-
 constexpr char RestrictedProfiles::IsAllowed_t::name[];
 constexpr char RestrictedProfiles::IsAllowed_t::signature[];
 

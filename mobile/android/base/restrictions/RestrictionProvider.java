@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.restrictions;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
+import org.mozilla.gecko.restrictions.Restriction;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -13,7 +17,6 @@ import android.content.Intent;
 import android.content.RestrictionEntry;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -49,7 +52,7 @@ public class RestrictionProvider extends BroadcastReceiver {
     private ArrayList<RestrictionEntry> initRestrictions(Context context, Bundle oldRestrictions) {
         ArrayList<RestrictionEntry> entries = new ArrayList<RestrictionEntry>();
 
-        for (RestrictedProfiles.Restriction restriction : RestrictedProfiles.RESTRICTED_PROFILE_RESTRICTIONS) {
+        for (Restriction restriction : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restriction,
                     oldRestrictions.getBoolean(restriction.name, true));
             entries.add(entry);
@@ -58,7 +61,7 @@ public class RestrictionProvider extends BroadcastReceiver {
         return entries;
     }
 
-    private RestrictionEntry createRestrictionEntryWithDefaultValue(Context context, RestrictedProfiles.Restriction restriction, boolean defaultValue) {
+    private RestrictionEntry createRestrictionEntryWithDefaultValue(Context context, Restriction restriction, boolean defaultValue) {
         RestrictionEntry entry = new RestrictionEntry(restriction.name, defaultValue);
 
         entry.setTitle(restriction.getTitle(context));
