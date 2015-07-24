@@ -20,13 +20,14 @@ interface nsINetworkInterfaceList : nsISupports
   nsINetworkInterface getInterface(in long interfaceIndex);
 };
 
-[scriptable, uuid(ee0e7cd7-1baa-44fd-86cb-f70acb549163)]
+[scriptable, uuid(21d7fc8b-28c4-4a4f-a15e-1f9defbc2cec)]
 interface nsINetworkInterfaceListService : nsISupports
 {
   const long LIST_NOT_INCLUDE_MMS_INTERFACES  = (1 << 0);
   const long LIST_NOT_INCLUDE_SUPL_INTERFACES = (1 << 1);
   const long LIST_NOT_INCLUDE_IMS_INTERFACES  = (1 << 2);
   const long LIST_NOT_INCLUDE_DUN_INTERFACES  = (1 << 3);
+  const long LIST_NOT_INCLUDE_FOTA_INTERFACES = (1 << 4);
 
   /**
    * Obtain a list of network interfaces that satisfy the specified condition.
