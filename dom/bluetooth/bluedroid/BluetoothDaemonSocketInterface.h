@@ -10,7 +10,6 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothInterface.h"
 #include "BluetoothInterfaceHelpers.h"
-#include "mozilla/ipc/DaemonRunnables.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -59,21 +58,20 @@ private:
   // Responses
   //
 
-  typedef mozilla::ipc::DaemonResultRunnable0<
-    BluetoothSocketResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothSocketResultHandler, void>
     ResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothSocketResultHandler, void, int, int>
+  typedef BluetoothResultRunnable1<BluetoothSocketResultHandler, void,
+                                   int, int>
     IntResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothSocketResultHandler, void, BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothSocketResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable3<
-    BluetoothSocketResultHandler, void, int, nsString, int, int,
-    const nsAString_internal&, int>
+  typedef BluetoothResultRunnable3<BluetoothSocketResultHandler, void,
+                                   int, nsString, int,
+                                   int, const nsAString_internal&, int>
     IntStringIntResultRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,

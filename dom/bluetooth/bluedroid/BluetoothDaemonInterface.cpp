@@ -17,7 +17,6 @@
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
 #include "BluetoothInterfaceHelpers.h"
-#include "mozilla/ipc/DaemonRunnables.h"
 #include "mozilla/ipc/DaemonSocket.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/unused.h"
@@ -148,12 +147,11 @@ private:
   // Responses
   //
 
-  typedef mozilla::ipc::DaemonResultRunnable0<
-    BluetoothSetupResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothSetupResultHandler, void>
     ResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothSetupResultHandler, void, BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothSetupResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void
@@ -621,12 +619,11 @@ private:
   // Responses
   //
 
-  typedef mozilla::ipc::DaemonResultRunnable0<
-    BluetoothResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothResultHandler, void>
     ResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothResultHandler, void, BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
@@ -884,58 +881,63 @@ private:
     }
   };
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, bool>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
     AdapterStateChangedNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothStatus, int,
-    nsAutoArrayPtr<BluetoothProperty>, BluetoothStatus, int,
-    const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, int,
+                                         const BluetoothProperty*>
     AdapterPropertiesNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable4<
-    NotificationHandlerWrapper, void, BluetoothStatus, nsString, int,
-    nsAutoArrayPtr<BluetoothProperty>, BluetoothStatus, const nsAString&,
-    int, const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable4<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, const nsAString&,
+                                         int, const BluetoothProperty*>
     RemoteDevicePropertiesNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, int, nsAutoArrayPtr<BluetoothProperty>,
-    int, const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         int, const BluetoothProperty*>
     DeviceFoundNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, bool>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
     DiscoveryStateChangedNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, nsString, nsString, uint32_t,
-    const nsAString&, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         const nsAString&, const nsAString&>
     PinRequestNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable5<
-    NotificationHandlerWrapper, void, nsString, nsString, uint32_t,
-    BluetoothSspVariant, uint32_t, const nsAString&, const nsAString&>
+  typedef BluetoothNotificationRunnable5<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         BluetoothSspVariant, uint32_t,
+                                         const nsAString&, const nsAString&>
     SspRequestNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothStatus, nsString,
-    BluetoothBondState, BluetoothStatus, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString,
+                                         BluetoothBondState,
+                                         BluetoothStatus, const nsAString&>
     BondStateChangedNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothStatus, nsString, bool,
-    BluetoothStatus, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, bool,
+                                         BluetoothStatus, const nsAString&>
     AclStateChangedNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, uint16_t, nsAutoArrayPtr<uint8_t>,
-    uint8_t, uint16_t, const uint8_t*>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         uint16_t, nsAutoArrayPtr<uint8_t>,
+                                         uint8_t, uint16_t, const uint8_t*>
     DutModeRecvNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothStatus, uint16_t>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
   void AdapterStateChangedNtf(const DaemonSocketPDUHeader& aHeader,
@@ -2239,7 +2241,7 @@ void
 BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
                                         BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<
+  BluetoothResultRunnable1<
     BluetoothResultHandler, void, BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
