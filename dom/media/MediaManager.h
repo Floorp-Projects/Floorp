@@ -103,7 +103,7 @@ public:
     return mStream->AsSourceStream();
   }
 
-  void StopSharing();
+  void StopScreenWindowSharing();
 
   void StopTrack(TrackID aID, bool aIsAudio);
 
@@ -597,14 +597,10 @@ public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
   static already_AddRefed<nsIWritableVariant> ToJSArray(SourceSet& aDevices);
 private:
   already_AddRefed<PledgeSourceSet>
-  EnumerateRawDevices(uint64_t aWindowId,
-                      dom::MediaSourceEnum aVideoType,
-                      dom::MediaSourceEnum aAudioType,
+  EnumerateRawDevices(uint64_t aWindowId, dom::MediaSourceEnum aSrcType,
                       bool aFake, bool aFakeTracks);
   already_AddRefed<PledgeSourceSet>
-  EnumerateDevicesImpl(uint64_t aWindowId,
-                       dom::MediaSourceEnum aVideoSrcType,
-                       dom::MediaSourceEnum aAudioSrcType,
+  EnumerateDevicesImpl(uint64_t aWindowId, dom::MediaSourceEnum aSrcType,
                        bool aFake = false, bool aFakeTracks = false);
 
   StreamListeners* AddWindowID(uint64_t aWindowId);

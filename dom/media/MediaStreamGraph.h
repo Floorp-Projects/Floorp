@@ -1262,10 +1262,6 @@ public:
    * particular tracks of each input stream.
    */
   ProcessedMediaStream* CreateTrackUnionStream(DOMMediaStream* aWrapper);
-  /**
-   * Create a stream that will mix all its audio input.
-   */
-  ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper);
   // Internal AudioNodeStreams can only pass their output to another
   // AudioNode, whereas external AudioNodeStreams can pass their output
   // to an nsAudioStream for playback.
@@ -1321,12 +1317,6 @@ public:
    * Returns graph sample rate in Hz.
    */
   TrackRate GraphRate() const { return mSampleRate; }
-
-  void RegisterCaptureStreamForWindow(uint64_t aWindowId,
-                                      ProcessedMediaStream* aCaptureStream);
-  void UnregisterCaptureStreamForWindow(uint64_t aWindowId);
-  already_AddRefed<MediaInputPort> ConnectToCaptureStream(
-    uint64_t aWindowId, MediaStream* aMediaStream);
 
 protected:
   explicit MediaStreamGraph(TrackRate aSampleRate)

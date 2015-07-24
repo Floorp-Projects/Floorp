@@ -326,13 +326,6 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
   mDecoderStateMachine->AddOutputStream(aStream, aFinishWhenEnded);
 }
 
-void MediaDecoder::RemoveOutputStream(MediaStream* aStream)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  mDecoderStateMachine->RemoveOutputStream(aStream);
-}
-
 double MediaDecoder::GetDuration()
 {
   MOZ_ASSERT(NS_IsMainThread());
