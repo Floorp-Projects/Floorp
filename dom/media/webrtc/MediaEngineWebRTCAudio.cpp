@@ -44,6 +44,7 @@ extern PRLogModuleInfo* GetMediaManagerLog();
  * Webrtc microphone source source.
  */
 NS_IMPL_ISUPPORTS0(MediaEngineWebRTCMicrophoneSource)
+NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioCaptureSource)
 
 // XXX temp until MSG supports registration
 StaticRefPtr<AudioOutputObserver> gFarendObserver;
@@ -620,4 +621,55 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
   return;
 }
 
+void
+MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName)
+{
+  aName.AssignLiteral("AudioCapture");
+}
+void
+MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID)
+{
+  nsID uuid;
+  char uuidBuffer[NSID_LENGTH];
+  nsCString asciiString;
+  ErrorResult rv;
+
+  rv = nsContentUtils::GenerateUUIDInPlace(uuid);
+  if (rv.Failed()) {
+    aUUID.AssignLiteral("");
+    return;
+  }
+
+
+  uuid.ToProvidedString(uuidBuffer);
+  asciiString.AssignASCII(uuidBuffer);
+
+  // Remove {} and the null terminator
+  aUUID.Assign(Substring(asciiString, 1, NSID_LENGTH - 3));
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Start(SourceMediaStream *aMediaStream,
+                                           TrackID aId)
+{
+  aMediaStream->AddTrack(aId, 0, new AudioSegment());
+  return NS_OK;
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
+                                          TrackID aId)
+{
+  aMediaStream->EndAllTrackAndFinish();
+  return NS_OK;
+}
+
+uint32_t
+MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId)
+{
+  // There is only one way of capturing audio for now, and it's always adequate.
+  return 0;
+}
 }
