@@ -481,8 +481,8 @@ void
 BluetoothDaemonA2dpInterface::DispatchError(
   BluetoothA2dpResultHandler* aRes, BluetoothStatus aStatus)
 {
-  DaemonResultRunnable1<BluetoothA2dpResultHandler, void,
-                        BluetoothStatus, BluetoothStatus>::Dispatch(
+  BluetoothResultRunnable1<BluetoothA2dpResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothA2dpResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }

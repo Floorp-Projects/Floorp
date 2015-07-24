@@ -10,7 +10,6 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothInterface.h"
 #include "BluetoothInterfaceHelpers.h"
-#include "mozilla/ipc/DaemonRunnables.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -136,12 +135,11 @@ protected:
   // Responses
   //
 
-  typedef mozilla::ipc::DaemonResultRunnable0<
-    BluetoothHandsfreeResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothHandsfreeResultHandler, void>
     ResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothHandsfreeResultHandler, void, BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothHandsfreeResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
@@ -218,76 +216,88 @@ protected:
 
   class NotificationHandlerWrapper;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeConnectionState,
-    nsString, BluetoothHandsfreeConnectionState, const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         BluetoothHandsfreeConnectionState,
+                                         nsString,
+                                         BluetoothHandsfreeConnectionState,
+                                         const nsAString&>
     ConnectionStateNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeAudioState,
-    nsString, BluetoothHandsfreeAudioState, const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         BluetoothHandsfreeAudioState,
+                                         nsString,
+                                         BluetoothHandsfreeAudioState,
+                                         const nsAString&>
     AudioStateNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeVoiceRecognitionState,
-    nsString, BluetoothHandsfreeVoiceRecognitionState, const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    BluetoothHandsfreeVoiceRecognitionState, nsString,
+    BluetoothHandsfreeVoiceRecognitionState, const nsAString&>
     VoiceRecognitionNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     AnswerCallNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     HangupCallNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeVolumeType,
-    int, nsString, BluetoothHandsfreeVolumeType, int, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+    BluetoothHandsfreeVolumeType, int, nsString,
+    BluetoothHandsfreeVolumeType, int, const nsAString&>
     VolumeNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, nsString, nsString, const nsAString&,
-    const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    nsString, nsString,
+    const nsAString&, const nsAString&>
     DialCallNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, char, nsString, char, const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    char, nsString,
+    char, const nsAString&>
     DtmfNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeNRECState, nsString,
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    BluetoothHandsfreeNRECState, nsString,
     BluetoothHandsfreeNRECState, const nsAString&>
     NRECNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, BluetoothHandsfreeCallHoldType,
-    nsString, BluetoothHandsfreeCallHoldType, const nsAString&>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    BluetoothHandsfreeCallHoldType, nsString,
+    BluetoothHandsfreeCallHoldType, const nsAString&>
     CallHoldNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     CnumNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     CindNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     CopsNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     ClccNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, nsCString, nsString,
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+    nsCString, nsString,
     const nsACString&, const nsAString&>
     UnknownAtNotification;
 
-  typedef mozilla::ipc::DaemonNotificationRunnable1<
-    NotificationHandlerWrapper, void, nsString, const nsAString&>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+    nsString,
+    const nsAString&>
     KeyPressedNotification;
 
   class ConnectionStateInitOp;
