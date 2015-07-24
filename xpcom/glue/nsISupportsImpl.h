@@ -1007,11 +1007,6 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
     MOZ_FOR_EACH(NS_INTERFACE_TABLE_ENTRY, (aClass,), (__VA_ARGS__))          \
   NS_INTERFACE_TABLE_END
 
-#define NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                    \
-  NS_INTERFACE_TABLE_HEAD(aClass)                                             \
-  NS_INTERFACE_TABLE_INHERITED0(aClass)                                       \
-  NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)
-
 #define NS_IMPL_QUERY_INTERFACE_INHERITED(aClass, aSuper, ...)                \
   NS_INTERFACE_TABLE_HEAD(aClass)                                             \
   NS_INTERFACE_TABLE_INHERITED(aClass, __VA_ARGS__)                           \
@@ -1036,7 +1031,8 @@ NS_IMETHODIMP_(MozExternalRefCountType) Class::Release(void)                  \
   NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
 
 #define NS_IMPL_ISUPPORTS_INHERITED0(aClass, aSuper)                          \
-    NS_IMPL_QUERY_INTERFACE_INHERITED0(aClass, aSuper)                        \
+    NS_INTERFACE_TABLE_HEAD(aClass)                                           \
+    NS_INTERFACE_TABLE_TAIL_INHERITING(aSuper)                                \
     NS_IMPL_ADDREF_INHERITED(aClass, aSuper)                                  \
     NS_IMPL_RELEASE_INHERITED(aClass, aSuper)                                 \
 
