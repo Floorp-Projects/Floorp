@@ -103,7 +103,7 @@ public:
     return mStream->AsSourceStream();
   }
 
-  void StopScreenWindowSharing();
+  void StopSharing();
 
   void StopTrack(TrackID aID, bool aIsAudio);
 
