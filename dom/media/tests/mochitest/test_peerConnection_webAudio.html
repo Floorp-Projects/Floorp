@@ -32,7 +32,7 @@ runNetworkTest(function() {
   ]);
   test.chain.append([
     function CHECK_AUDIO_FLOW(test) {
-      return test.pcRemote.checkReceivingToneFrom(test.pcLocal);
+      return test.pcRemote.checkReceivingToneFrom(test.audioContext, test.pcLocal);
     }
   ]);
   test.run();
