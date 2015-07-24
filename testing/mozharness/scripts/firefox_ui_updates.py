@@ -20,6 +20,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.script import PreScriptAction
 from mozharness.mozilla.testing.firefox_ui_tests import FirefoxUITests
+from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, EXIT_STATUS_DICT
 
 INSTALLER_SUFFIXES = ('.tar.bz2', '.zip', '.dmg', '.exe', '.apk', '.tar.gz')
 
@@ -420,14 +421,25 @@ class FirefoxUIUpdates(FirefoxUITests):
 
                     results[build_id][locale] = retcode
 
-            self.info("Firefox UI update tests failed locales:")
+            # Determine which locales have failed and set scripts exit code
+            exit_status = TBPL_SUCCESS
             for build_id in sorted(results.keys()):
-                self.info(build_id)
                 failed_locales = []
                 for locale in sorted(results[build_id].keys()):
                     if results[build_id][locale] != 0:
                         failed_locales.append(locale)
-                self.info("  %s" % (', '.join(failed_locales)))
+
+                if failed_locales:
+                    if exit_status == TBPL_SUCCESS:
+                        self.info("")
+                        self.info("SUMMARY - Firefox UI update tests failed locales:")
+                        self.info("=================================================")
+                        exit_status = TBPL_WARNING
+
+                    self.info(build_id)
+                    self.info("  %s" % (', '.join(failed_locales)))
+
+            self.return_code = EXIT_STATUS_DICT[exit_status]
 
 
 if __name__ == '__main__':
