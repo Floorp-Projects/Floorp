@@ -44,6 +44,10 @@ exports.getHighlighterUtils = function(toolbox) {
   // Is the highlighter currently in pick mode
   let isPicking = false;
 
+  // Is the box model already displayed, used to prevent dispatching
+  // unnecessary requests, especially during toolbox shutdown
+  let isNodeFrontHighlighted = false;
+
   /**
    * Release this utils, nullifying the references to the toolbox
    */
@@ -203,6 +207,7 @@ exports.getHighlighterUtils = function(toolbox) {
       return;
     }
 
+    isNodeFrontHighlighted = true;
     if (isRemoteHighlightable()) {
       yield toolbox.highlighter.showBoxModel(nodeFront, options);
     } else {
@@ -256,7 +261,8 @@ exports.getHighlighterUtils = function(toolbox) {
 
     // Note that if isRemoteHighlightable is true, there's no need to hide the
     // highlighter as the walker uses setTimeout to hide it after some time
-    if (forceHide && toolbox.highlighter && isRemoteHighlightable()) {
+    if (isNodeFrontHighlighted && forceHide && toolbox.highlighter && isRemoteHighlightable()) {
+      isNodeFrontHighlighted = false;
       yield toolbox.highlighter.hideBoxModel();
     }
 

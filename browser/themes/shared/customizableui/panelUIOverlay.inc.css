@@ -21,12 +21,6 @@
 %include ../browser.inc
 
 :root {
-  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent);
-  --panel-ui-button-background-size: 1px calc(100% - 1px), 1px calc(100% - 1px), 1px  calc(100% - 1px) !important;
-  --panel-ui-button-background-position: 0px 0px, 1px 0px, 2px 0px;
-  --panel-ui-button-background-repeat: no-repeat;
   --panel-ui-exit-subview-gutter-width: 38px;
 }
 
@@ -97,14 +91,14 @@
 }
 
 #PanelUI-button {
-  background-image: var(--panel-ui-button-background-image);
-  background-size: var(--panel-ui-button-background-size);
-  background-position: var(--panel-ui-button-background-position);
-  background-repeat: var(--panel-ui-button-background-repeat);
+  margin-inline-start: 2px;
+  border-inline-start: 1px solid;
+  border-image: linear-gradient(transparent, rgba(0,0,0,.1) 20%, rgba(0,0,0,.1) 80%, transparent);
+  border-image-slice: 1;
 }
 
-#PanelUI-button:-moz-locale-dir(rtl) {
-  background-position: 100% 0, calc(100% - 1px) 0, calc(100% - 2px) 0;
+#nav-bar[brighttext] > #PanelUI-button {
+  border-image-source: linear-gradient(transparent, rgba(100%,100%,100%,.2) 20%, rgba(100%,100%,100%,.2) 80%, transparent);
 }
 
 #PanelUI-menu-button[update-status="succeeded"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {

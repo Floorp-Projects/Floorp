@@ -363,7 +363,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         if self.config.get("tooltool_config"):
             self.tooltool_fetch(
                 self.config['tooltool_config']['manifest'],
-                bootstrap_cmd=self.config['tooltool_config']['bootstrap_cmd'],
+                bootstrap_cmd=self.config['tooltool_config'].get('bootstrap_cmd'),
                 output_dir=self.config['tooltool_config']['output_dir'] % self.query_abs_dirs(),
             )
         self._setup_configure()

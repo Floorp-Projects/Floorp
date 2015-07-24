@@ -358,7 +358,7 @@ RestyleTracker::DoProcessRestyles()
             MakeUnique<RestyleTimelineMarker>(docShell,
                                               TRACING_INTERVAL_START,
                                               data->mRestyleHint);
-          docShell->AddProfileTimelineMarker(Move(marker));
+          TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
         }
 
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
@@ -375,7 +375,7 @@ RestyleTracker::DoProcessRestyles()
             MakeUnique<RestyleTimelineMarker>(docShell,
                                               TRACING_INTERVAL_END,
                                               data->mRestyleHint);
-          docShell->AddProfileTimelineMarker(Move(marker));
+          TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
         }
       }
 
@@ -422,7 +422,7 @@ RestyleTracker::DoProcessRestyles()
               MakeUnique<RestyleTimelineMarker>(docShell,
                                                 TRACING_INTERVAL_START,
                                                 currentRestyle->mRestyleHint);
-            docShell->AddProfileTimelineMarker(Move(marker));
+            TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
           }
 
           ProcessOneRestyle(currentRestyle->mElement,
@@ -434,7 +434,7 @@ RestyleTracker::DoProcessRestyles()
               MakeUnique<RestyleTimelineMarker>(docShell,
                                                 TRACING_INTERVAL_END,
                                                 currentRestyle->mRestyleHint);
-            docShell->AddProfileTimelineMarker(Move(marker));
+            TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
           }
         }
       }

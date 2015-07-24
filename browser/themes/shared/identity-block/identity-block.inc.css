@@ -27,6 +27,7 @@
   font-size: .9em;
   padding: 2px 5px;
   margin-inline-end: 4px;
+  overflow: hidden;
 }
 
 #identity-box:hover,
@@ -89,14 +90,24 @@
   height: 16px;
   margin-inline-end: 2px;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
+  margin-left: 0;
+  opacity: 1;
 }
 
 #tracking-protection-icon[state="loaded-tracking-content"] {
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled-16.svg);
 }
 
+#tracking-protection-icon[animate] {
+  transition: margin-left 200ms ease-out;
+}
+
 #tracking-protection-icon:not([state]) {
-  display: none;
+  margin-left: -16px;
+  pointer-events: none;
+  opacity: 0;
+  /* Only animate the shield in, when it disappears hide it immediately. */
+  transition: none;
 }
 
 /* MAIN IDENTITY ICON */

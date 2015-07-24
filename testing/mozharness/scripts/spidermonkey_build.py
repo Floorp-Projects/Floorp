@@ -387,10 +387,8 @@ class SpidermonkeyBuild(MockMixin,
         work_dir = self.query_abs_dirs()['abs_work_dir']
         if not os.path.exists(work_dir):
             self.mkdir_p(work_dir)
-        self.tooltool_fetch(self.query_compiler_manifest(), "sh " + self.config['compiler_setup'],
-                            work_dir)
-        self.tooltool_fetch(self.query_sixgill_manifest(), "sh " + self.config['sixgill_setup'],
-                            work_dir)
+        self.tooltool_fetch(self.query_compiler_manifest(), output_dir=work_dir)
+        self.tooltool_fetch(self.query_sixgill_manifest(), output_dir=work_dir)
 
     def clobber_shell(self):
         self.analysis.clobber_shell(self)

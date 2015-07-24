@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = 'mozfile'
-PACKAGE_VERSION = '1.1'
+PACKAGE_VERSION = '1.2'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

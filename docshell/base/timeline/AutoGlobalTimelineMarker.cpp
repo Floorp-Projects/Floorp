@@ -8,15 +8,12 @@
 
 #include "mozilla/TimelineConsumers.h"
 #include "MainThreadUtils.h"
-#include "nsDocShell.h"
 
 namespace mozilla {
 
 AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : mName(aName)
-  , mDocShells()
-  , mDocShellsRetrieved(false)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
@@ -25,31 +22,16 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
     return;
   }
 
-  mDocShellsRetrieved = TimelineConsumers::GetKnownDocShells(mDocShells);
-  if (!mDocShellsRetrieved) {
-    // If we don't successfully populate our vector with *all* docshells being
-    // observed, don't add markers to *any* of them.
-    return;
-  }
-
-  for (Vector<nsRefPtr<nsDocShell>>::Range range = mDocShells.all();
-       !range.empty();
-       range.popFront()) {
-    range.front()->AddProfileTimelineMarker(mName, TRACING_INTERVAL_START);
-  }
+  TimelineConsumers::AddMarkerToAllObservedDocShells(mName, TRACING_INTERVAL_START);
 }
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
 {
-  if (!mDocShellsRetrieved) {
+  if (TimelineConsumers::IsEmpty()) {
     return;
   }
 
-  for (Vector<nsRefPtr<nsDocShell>>::Range range = mDocShells.all();
-       !range.empty();
-       range.popFront()) {
-    range.front()->AddProfileTimelineMarker(mName, TRACING_INTERVAL_END);
-  }
+  TimelineConsumers::AddMarkerToAllObservedDocShells(mName, TRACING_INTERVAL_END);
 }
 
 } // namespace mozilla

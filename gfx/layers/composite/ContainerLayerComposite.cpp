@@ -330,6 +330,86 @@ ContainerPrepare(ContainerT* aContainer,
 }
 
 template<class ContainerT> void
+RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
+                   const RenderTargetIntRect& aClipRect, Layer* aLayer)
+{
+  Compositor* compositor = aManager->GetCompositor();
+
+  if (aLayer->GetFrameMetricsCount() < 1) {
+    return;
+  }
+
+  AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(0);
+  if (!controller) {
+    return;
+  }
+
+  ViewTransform asyncTransformWithoutOverscroll;
+  ParentLayerPoint scrollOffset;
+  controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
+                                           scrollOffset);
+
+  // Options
+  const int verticalPadding = 10;
+  const int horizontalPadding = 5;
+  gfx::Color backgroundColor(0.3f, 0.3f, 0.3f, 0.3f);
+  gfx::Color tileActiveColor(1, 1, 1, 0.5f);
+  gfx::Color tileBorderColor(0, 0, 0, 0.1f);
+  gfx::Color pageBorderColor(0, 0, 0);
+  gfx::Color displayPortColor(0, 1.f, 0);
+  gfx::Color viewPortColor(0, 0, 1.f);
+
+  // Rects
+  const FrameMetrics& fm = aLayer->GetFrameMetrics(0);
+  LayerRect scrollRect = fm.GetScrollableRect() * fm.LayersPixelsPerCSSPixel();
+  LayerRect viewRect = ParentLayerRect(scrollOffset, fm.GetCompositionBounds().Size()) / LayerToParentLayerScale(1);
+  LayerRect dp = (fm.GetDisplayPort() + fm.GetScrollOffset()) * fm.LayersPixelsPerCSSPixel();
+
+  // Compute a scale with an appropriate aspect ratio
+  // We allocate up to 100px of width and the height of this layer.
+  float scaleFactor;
+  float scaleFactorX;
+  float scaleFactorY;
+  scaleFactorX = 100.f / scrollRect.width;
+  scaleFactorY = ((viewRect.height) - 2 * verticalPadding) / scrollRect.height;
+  scaleFactor = std::min(scaleFactorX, scaleFactorY);
+
+  Matrix4x4 transform = Matrix4x4::Scaling(scaleFactor, scaleFactor, 1);
+  transform.PostTranslate(horizontalPadding, verticalPadding, 0);
+
+  Rect clipRect = aContainer->GetEffectiveTransform().TransformBounds(
+                    transform.TransformBounds(scrollRect.ToUnknownRect()));
+  clipRect.width++;
+  clipRect.height++;
+
+  Rect r;
+  r = transform.TransformBounds(scrollRect.ToUnknownRect());
+  compositor->FillRect(r, backgroundColor, clipRect, aContainer->GetEffectiveTransform());
+
+  int tileW = gfxPrefs::LayersTileWidth();
+  int tileH = gfxPrefs::LayersTileHeight();
+
+  for (int x = scrollRect.x; x < scrollRect.XMost(); x += tileW) {
+    for (int y = scrollRect.y; y < scrollRect.YMost(); y += tileH) {
+      LayerRect tileRect = LayerRect(x - x % tileW, y - y % tileH, tileW, tileH);
+      r = transform.TransformBounds(tileRect.ToUnknownRect());
+      if (tileRect.Intersects(dp)) {
+        compositor->FillRect(r, tileActiveColor, clipRect, aContainer->GetEffectiveTransform());
+      }
+      compositor->SlowDrawRect(r, tileBorderColor, clipRect, aContainer->GetEffectiveTransform());
+    }
+  }
+
+  r = transform.TransformBounds(scrollRect.ToUnknownRect());
+  compositor->SlowDrawRect(r, pageBorderColor, clipRect, aContainer->GetEffectiveTransform());
+  r = transform.TransformBounds(dp.ToUnknownRect());
+  compositor->SlowDrawRect(r, displayPortColor, clipRect, aContainer->GetEffectiveTransform());
+  r = transform.TransformBounds(viewRect.ToUnknownRect());
+  compositor->SlowDrawRect(r, viewPortColor, clipRect, aContainer->GetEffectiveTransform());
+}
+
+
+template<class ContainerT> void
 RenderLayers(ContainerT* aContainer,
 	     LayerManagerComposite* aManager,
 	     const RenderTargetIntRect& aClipRect)
@@ -405,6 +485,10 @@ RenderLayers(ContainerT* aContainer,
                          * asyncTransform;
         }
       }
+    }
+
+    if (gfxPrefs::APZMinimap()) {
+      RenderMinimap(aContainer, aManager, aClipRect, layer);
     }
 
     // invariant: our GL context should be current here, I don't think we can

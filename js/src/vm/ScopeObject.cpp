@@ -791,12 +791,12 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
             obj->setAliased(i, aliased);
         }
     } else {
-        AutoShapeVector shapes(cx);
+        Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
         if (!shapes.growBy(count))
             return false;
 
         for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
-            shapes[obj->shapeToIndex(r.front())].set(&r.front());
+            shapes[obj->shapeToIndex(r.front())] = &r.front();
 
         RootedShape shape(cx);
         RootedId propid(cx);
@@ -844,19 +844,20 @@ CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<Static
     clone->setLocalOffset(srcBlock->localOffset());
 
     /* Shape::Range is reverse order, so build a list in forward order. */
-    AutoShapeVector shapes(cx);
+    Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
     if (!shapes.growBy(srcBlock->numVariables()))
         return nullptr;
 
     for (Shape::Range<NoGC> r(srcBlock->lastProperty()); !r.empty(); r.popFront())
-        shapes[srcBlock->shapeToIndex(r.front())].set(&r.front());
+        shapes[srcBlock->shapeToIndex(r.front())] = &r.front();
 
-    for (Shape** p = shapes.begin(); p != shapes.end(); ++p) {
-        RootedId id(cx, (*p)->propid());
-        unsigned i = srcBlock->shapeToIndex(**p);
+    RootedId id(cx);
+    for (Shape* shape : shapes) {
+        id = shape->propid();
+        unsigned i = srcBlock->shapeToIndex(*shape);
 
         bool redeclared;
-        if (!StaticBlockObject::addVar(cx, clone, id, !(*p)->writable(), i, &redeclared)) {
+        if (!StaticBlockObject::addVar(cx, clone, id, !shape->writable(), i, &redeclared)) {
             MOZ_ASSERT(!redeclared);
             return nullptr;
         }
