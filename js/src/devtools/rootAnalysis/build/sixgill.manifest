@@ -9,11 +9,5 @@
       "filename" : "sixgill.tar.xz",
       "size" : 2255520,
       "unpack": true
-   },
-   {
-      "algorithm" : "sha512",
-      "digest" : "9f4a123b8b037c4313c7065f872e07af38390f352f2498b41779c389fa1a0712e5f588d7b3d9a124875916f5257434da83553b560d7d146192f3f6c8da6f0412",
-      "filename" : "setup.sh.sixgill",
-      "size" : 48
    }
 ]

@@ -121,7 +121,6 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
 #else
   int lWidth = 2;
 #endif
-  float opacity = 0.7f;
 
   gfx::Color color;
   if (aFlags & DiagnosticFlags::CONTENT) {
@@ -142,11 +141,14 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
       aFlags & DiagnosticFlags::BIGIMAGE ||
       aFlags & DiagnosticFlags::REGION_RECT) {
     lWidth = 1;
-    opacity = 0.5f;
     color.r *= 0.7f;
     color.g *= 0.7f;
     color.b *= 0.7f;
+    color.a = color.a * 0.5f;
+  } else {
+    color.a = color.a * 0.7f;
   }
+
 
   if (mDiagnosticTypes & DiagnosticTypes::FLASH_BORDERS) {
     float flash = (float)aFlashCounter / (float)DIAGNOSTIC_FLASH_COUNTER_MAX;
@@ -155,30 +157,56 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
     color.b *= flash;
   }
 
+  SlowDrawRect(aVisibleRect, color, aClipRect, aTransform, lWidth);
+}
+
+void
+Compositor::SlowDrawRect(const gfx::Rect& aRect, const gfx::Color& aColor,
+                     const gfx::Rect& aClipRect,
+                     const gfx::Matrix4x4& aTransform, int aStrokeWidth)
+{
+  // TODO This should draw a rect using a single draw call but since
+  // this is only used for debugging overlays it's not worth optimizing ATM.
+  float opacity = 1.0f;
   EffectChain effects;
 
-  effects.mPrimaryEffect = new EffectSolidColor(color);
+  effects.mPrimaryEffect = new EffectSolidColor(aColor);
   // left
-  this->DrawQuad(gfx::Rect(aVisibleRect.x, aVisibleRect.y,
-                           lWidth, aVisibleRect.height),
+  this->DrawQuad(gfx::Rect(aRect.x, aRect.y,
+                           aStrokeWidth, aRect.height),
                  aClipRect, effects, opacity,
                  aTransform);
   // top
-  this->DrawQuad(gfx::Rect(aVisibleRect.x + lWidth, aVisibleRect.y,
-                           aVisibleRect.width - 2 * lWidth, lWidth),
+  this->DrawQuad(gfx::Rect(aRect.x + aStrokeWidth, aRect.y,
+                           aRect.width - 2 * aStrokeWidth, aStrokeWidth),
                  aClipRect, effects, opacity,
                  aTransform);
   // right
-  this->DrawQuad(gfx::Rect(aVisibleRect.x + aVisibleRect.width - lWidth, aVisibleRect.y,
-                           lWidth, aVisibleRect.height),
+  this->DrawQuad(gfx::Rect(aRect.x + aRect.width - aStrokeWidth, aRect.y,
+                           aStrokeWidth, aRect.height),
                  aClipRect, effects, opacity,
                  aTransform);
   // bottom
-  this->DrawQuad(gfx::Rect(aVisibleRect.x + lWidth, aVisibleRect.y + aVisibleRect.height-lWidth,
-                           aVisibleRect.width - 2 * lWidth, lWidth),
+  this->DrawQuad(gfx::Rect(aRect.x + aStrokeWidth, aRect.y + aRect.height - aStrokeWidth,
+                           aRect.width - 2 * aStrokeWidth, aStrokeWidth),
                  aClipRect, effects, opacity,
                  aTransform);
 }
+
+void
+Compositor::FillRect(const gfx::Rect& aRect, const gfx::Color& aColor,
+                     const gfx::Rect& aClipRect,
+                     const gfx::Matrix4x4& aTransform)
+{
+  float opacity = 1.0f;
+  EffectChain effects;
+
+  effects.mPrimaryEffect = new EffectSolidColor(aColor);
+  this->DrawQuad(aRect,
+                 aClipRect, effects, opacity,
+                 aTransform);
+}
+
 
 static float
 WrapTexCoord(float v)
