@@ -2088,11 +2088,13 @@ class CloseNotificationRunnable final
   : public WorkerMainThreadRunnable
 {
   Notification* mNotification;
+  bool mHadObserver;
 
   public:
   explicit CloseNotificationRunnable(Notification* aNotification)
     : WorkerMainThreadRunnable(aNotification->mWorkerPrivate)
     , mNotification(aNotification)
+    , mHadObserver(false)
   {}
 
   bool
@@ -2102,26 +2104,54 @@ class CloseNotificationRunnable final
       // The Notify() take's responsibility of releasing the Notification.
       mNotification->mObserver->ForgetNotification();
       mNotification->mObserver = nullptr;
+      mHadObserver = true;
     }
     mNotification->CloseInternal();
     return true;
+  }
+
+  bool
+  HadObserver()
+  {
+    return mHadObserver;
   }
 };
 
 bool
 NotificationFeature::Notify(JSContext* aCx, Status aStatus)
 {
-  MOZ_ASSERT(aStatus >= Canceling);
+  if (aStatus >= Canceling) {
+    // CloseNotificationRunnable blocks the worker by pushing a sync event loop
+    // on the stack. Meanwhile, WorkerControlRunnables dispatched to the worker
+    // can still continue running. One of these is
+    // ReleaseNotificationControlRunnable that releases the notification,
+    // invalidating the notification and this feature. We hold this reference to
+    // keep the notification valid until we are done with it.
+    //
+    // An example of when the control runnable could get dispatched to the
+    // worker is if a Notification is created and the worker is immediately
+    // closed, but there is no permission to show it so that the main thread
+    // immediately drops the NotificationRef. In this case, this function blocks
+    // on the main thread, but the main thread dispatches the control runnable,
+    // invalidating mNotification.
+    nsRefPtr<Notification> kungFuDeathGrip = mNotification;
 
-  // Dispatched to main thread, blocks on closing the Notification.
-  nsRefPtr<CloseNotificationRunnable> r =
-    new CloseNotificationRunnable(mNotification);
-  r->Dispatch(aCx);
+    // Dispatched to main thread, blocks on closing the Notification.
+    nsRefPtr<CloseNotificationRunnable> r =
+      new CloseNotificationRunnable(mNotification);
+    r->Dispatch(aCx);
 
-  mNotification->ReleaseObject();
-  // From this point we cannot touch properties of this feature because
-  // ReleaseObject() may have led to the notification going away and the
-  // notification owns this feature!
+    // Only call ReleaseObject() to match the observer's NotificationRef
+    // ownership (since CloseNotificationRunnable asked the observer to drop the
+    // reference to the notification).
+    if (r->HadObserver()) {
+      mNotification->ReleaseObject();
+    }
+
+    // From this point we cannot touch properties of this feature because
+    // ReleaseObject() may have led to the notification going away and the
+    // notification owns this feature!
+  }
   return true;
 }
 
@@ -2132,8 +2162,13 @@ Notification::RegisterFeature()
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mFeature);
   mFeature = MakeUnique<NotificationFeature>(this);
-  return mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
-                                    mFeature.get());
+  bool added = mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(),
+                                          mFeature.get());
+  if (!added) {
+    mFeature = nullptr;
+  }
+
+  return added;
 }
 
 void
@@ -2305,14 +2340,14 @@ Notification::CreateAndShow(nsIGlobalObject* aGlobal,
   // Make a structured clone of the aOptions.mData object
   JS::Rooted<JS::Value> data(cx, aOptions.mData);
   notification->InitFromJSVal(cx, data, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   notification->SetScope(aScope);
 
   auto ref = MakeUnique<NotificationRef>(notification);
-  if (!ref->Initialized()) {
+  if (NS_WARN_IF(!ref->Initialized())) {
     aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
     return nullptr;
   }
