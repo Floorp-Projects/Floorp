@@ -207,6 +207,9 @@ public:
                                 nsIHandlerApp **aDefaultApp = nullptr,
                                 const nsAString& aAction = EmptyString());
 
+    bool GetHWEncoderCapability();
+    bool GetHWDecoderCapability();
+
     void GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& aMimeType);
     void GetExtensionFromMimeType(const nsACString& aMimeType, nsACString& aFileExt);
 

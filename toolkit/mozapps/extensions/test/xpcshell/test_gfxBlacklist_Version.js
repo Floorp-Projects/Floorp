@@ -107,6 +107,12 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_LAYERS);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
