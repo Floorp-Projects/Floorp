@@ -2626,18 +2626,16 @@ TabParent::AllocPRenderFrameParent()
   TextureFactoryIdentifier textureFactoryIdentifier;
   uint64_t layersId = 0;
   bool success = false;
-  if(frameLoader) {
-    PRenderFrameParent* renderFrame = 
-      new RenderFrameParent(frameLoader,
-                            &textureFactoryIdentifier,
-                            &layersId,
-                            &success);
-    MOZ_ASSERT(success);
+
+  PRenderFrameParent* renderFrame =
+    new RenderFrameParent(frameLoader,
+                          &textureFactoryIdentifier,
+                          &layersId,
+                          &success);
+  if (success) {
     AddTabParentToTable(layersId, this);
-    return renderFrame;
-  } else {
-    return nullptr;
   }
+  return renderFrame;
 }
 
 bool
