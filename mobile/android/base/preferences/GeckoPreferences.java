@@ -37,6 +37,7 @@ import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -309,9 +310,6 @@ OnSharedPreferenceChangeListener
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Make sure RestrictedProfiles is ready.
-        RestrictedProfiles.initWithProfile(GeckoProfile.get(this));
-
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
@@ -759,13 +757,13 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_USB_ENABLED.equals(key)) {
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED.equals(key)) {
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -788,7 +786,7 @@ OnSharedPreferenceChangeListener
                     continue;
                 } else if (PREFS_SYNC.equals(key)) {
                     // Don't show sync prefs while in guest mode.
-                    if (!RestrictedProfiles.isAllowed(this, RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+                    if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

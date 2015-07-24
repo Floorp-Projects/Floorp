@@ -9,7 +9,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.RestrictedProfiles;
-import org.mozilla.gecko.RestrictedProfiles.Restriction;
+import org.mozilla.gecko.restrictions.Restriction;
 
 import java.util.Set;
 

@@ -29,27 +29,4 @@ add_task(function test_isUserRestricted() {
   do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.MODIFY_ACCOUNTS));
 });
 
-add_task(function test_getUserRestrictions() {
-  // In an admin profile, like the tests: {}
-  // In a restricted profile: {"no_modify_accounts":true,"no_share_location":true}
-  let restrictions = "{}";
-
-  var jenv = null;
-  try {
-    jenv = JNI.GetForThread();
-    var profile = JNI.LoadClass(jenv, "org.mozilla.gecko.RestrictedProfiles", {
-      static_methods: [
-        { name: "getUserRestrictions", sig: "()Ljava/lang/String;" },
-      ],
-    });
-    restrictions = JNI.ReadString(jenv, profile.getUserRestrictions());
-  } finally {
-    if (jenv) {
-      JNI.UnloadClasses(jenv);
-    }
-  }
-
-  do_check_eq(restrictions, "{}");
-});
-
 run_next_test();

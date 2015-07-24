@@ -1819,23 +1819,6 @@ protected:
     RestrictedProfiles(jobject instance) : Class(instance) {}
 
 public:
-    struct GetUserRestrictions_t {
-        typedef RestrictedProfiles Owner;
-        typedef mozilla::jni::String::LocalRef ReturnType;
-        typedef mozilla::jni::String::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "getUserRestrictions";
-        static constexpr char signature[] =
-                "()Ljava/lang/String;";
-        static const bool isStatic = true;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static mozilla::jni::String::LocalRef GetUserRestrictions();
-
-public:
     struct IsAllowed_t {
         typedef RestrictedProfiles Owner;
         typedef bool ReturnType;
