@@ -267,7 +267,8 @@ class FirefoxUIUpdates(FirefoxUITests):
 
             try:
                 # Let's see if the symbols are available
-                return urllib2.urlopen(symbols_url)
+                urllib2.urlopen(symbols_path)
+                return symbols_path
 
             except urllib2.HTTPError, e:
                 self.warning("%s - %s" % (str(e), symbols_url))
