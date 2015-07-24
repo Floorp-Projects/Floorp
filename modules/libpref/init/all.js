@@ -445,6 +445,8 @@ pref("media.getusermedia.screensharing.allowed_domains", "mozilla.github.io,webe
 // OS/X 10.6 and XP have screen/window sharing off by default due to various issues - Caveat emptor
 pref("media.getusermedia.screensharing.allow_on_old_platforms", false);
 
+pref("media.getusermedia.audiocapture.enabled", false);
+
 // TextTrack support
 pref("media.webvtt.enabled", true);
 pref("media.webvtt.regions.enabled", false);
