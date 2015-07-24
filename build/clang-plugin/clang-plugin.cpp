@@ -241,6 +241,7 @@ class CustomTypeAnnotation {
     RK_ArrayElement,
     RK_BaseClass,
     RK_Field,
+    RK_TemplateInherited,
   };
   struct AnnotationReason {
     QualType Type;
@@ -842,6 +843,15 @@ void CustomTypeAnnotation::dumpAnnotationReason(DiagnosticsEngine &Diag, QualTyp
       Diag.Report(Reason.Field->getLocation(), MemberID)
         << Pretty << T << Reason.Field << Reason.Type;
       break;
+    case RK_TemplateInherited:
+      {
+        const CXXRecordDecl *Decl = T->getAsCXXRecordDecl();
+        assert(Decl && "This type should be a C++ class");
+
+        Diag.Report(Decl->getLocation(), TemplID)
+          << Pretty << T << Reason.Type;
+        break;
+      }
     default:
       return;
     }
@@ -903,6 +913,29 @@ CustomTypeAnnotation::AnnotationReason CustomTypeAnnotation::directAnnotationRea
           AnnotationReason Reason = { Field->getType(), RK_Field, Field };
           Cache[Key] = Reason;
           return Reason;
+        }
+      }
+
+      // Recurse into template arguments if the annotation
+      // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS is present
+      if (MozChecker::hasCustomAnnotation(
+            Decl, "moz_inherit_type_annotations_from_template_args")) {
+        const ClassTemplateSpecializationDecl *Spec =
+          dyn_cast<ClassTemplateSpecializationDecl>(Decl);
+        if (Spec) {
+          const TemplateArgumentList &Args = Spec->getTemplateArgs();
+
+          for (const TemplateArgument &Arg : Args.asArray()) {
+            if (Arg.getKind() == TemplateArgument::Type) {
+              QualType Type = Arg.getAsType();
+
+              if (hasEffectiveAnnotation(Type)) {
+                AnnotationReason Reason = { Type, RK_TemplateInherited, nullptr };
+                Cache[Key] = Reason;
+                return Reason;
+              }
+            }
+          }
         }
       }
     }
