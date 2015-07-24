@@ -12,7 +12,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     # Fix inline symbols and math defines for windows.
     DEFINES['_USE_MATH_DEFINES'] = True
     DEFINES['inline'] = "__inline"
-    if CONFIG['_MSC_VER'] and CONFIG['_MSC_VER'] < 1900:
+    if CONFIG['_MSC_VER'] and CONFIG['_MSC_VER'] < '1900':
         # snprintf is prefixed with an underscore on MSVC 2013.
         DEFINES['snprintf'] = "_snprintf"
     ASFLAGS += ['-Pconfig_win.asm']
