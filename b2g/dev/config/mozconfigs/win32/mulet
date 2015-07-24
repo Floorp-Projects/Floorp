@@ -10,4 +10,4 @@ MOZ_AUTOMATION_SDK=0
 ac_add_options --enable-application=b2g/dev
 
 # Include Firefox OS fonts.
-MOZTTDIR=$topsrcdir/moztt
+MOZTTDIR=$topsrcdir/moz-tt
