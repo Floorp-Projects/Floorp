@@ -764,6 +764,16 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 }
 
 void
+nsWindow::DestroyCompositor()
+{
+    if (mCompositorParent && mScreen->IsPrimaryScreen()) {
+        // Unset CompositorParent
+        mComposer2D->SetCompositorParent(nullptr);
+    }
+    nsBaseWidget::DestroyCompositor();
+}
+
+void
 nsWindow::BringToTop()
 {
     const nsTArray<nsWindow*>& windows = mScreen->GetTopWindows();
