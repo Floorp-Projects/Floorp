@@ -322,7 +322,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mFramesToProduce(aLength)
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
-  , mAudioChannelAgentMuted(AudioChannelService::IsAudioChannelMutedByDefault())
+  , mAudioChannelAgentPlaying(false)
   , mExtraCurrentTime(0)
   , mExtraCurrentTimeSinceLastStartedBlocking(0)
   , mExtraCurrentTimeUpdatedSinceLastStableState(false)
@@ -492,8 +492,8 @@ AudioDestinationNode::SetCanPlay(float aVolume, bool aMuted)
 NS_IMETHODIMP
 AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
 {
-  if (aMuted != mAudioChannelAgentMuted) {
-    mAudioChannelAgentMuted = aMuted;
+  if (aMuted != mAudioChannelAgentPlaying) {
+    mAudioChannelAgentPlaying = aMuted;
 
     if (UseAudioChannelAPI() &&
         (mHaveDispatchedInterruptBeginEvent || aMuted)) {
