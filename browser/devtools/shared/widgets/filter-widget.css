@@ -139,7 +139,8 @@ html, body {
 
 
 .theme-light .add,
-.theme-light .remove-button {
+.theme-light .remove-button,
+.theme-light #toggle-presets {
   filter: invert(1);
 }
 
@@ -217,8 +218,8 @@ html, body {
   line-height: 20px;
 }
 
-.add {
-  background: url(chrome://browser/skin/devtools/add.svg);
+.add,
+#toggle-presets {
   background-size: cover;
   border: none;
   width: 16px;
@@ -226,4 +227,18 @@ html, body {
   font-size: 0;
   vertical-align: middle;
   cursor: pointer;
+  margin: 0 5px;
+}
+
+.add {
+  background: url(chrome://browser/skin/devtools/add.svg);
+}
+
+#toggle-presets {
+  background: url(chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class);
+}
+
+.show-presets #toggle-presets {
+  background: url(chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class-checked);
+  filter: none;
 }
