@@ -1266,6 +1266,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   .searchbar-textbox {
     font-size: 1.15em;
     min-height: 28px;
+    transition-property: border-color, box-shadow;
+    transition-duration: .1s;
   }
 
   :root {
