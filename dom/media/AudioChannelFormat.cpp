@@ -76,8 +76,8 @@ AudioChannelsUpMix(nsTArray<const void*>* aChannelArray,
     GetAudioChannelsSuperset(aOutputChannelCount, inputChannelCount);
   NS_ASSERTION(outputChannelCount > inputChannelCount,
                "No up-mix needed");
-  NS_ASSERTION(inputChannelCount > 0, "Bad number of channels");
-  NS_ASSERTION(outputChannelCount > 0, "Bad number of channels");
+  MOZ_ASSERT(inputChannelCount > 0, "Bad number of channels");
+  MOZ_ASSERT(outputChannelCount > 0, "Bad number of channels");
 
   aChannelArray->SetLength(outputChannelCount);
 
