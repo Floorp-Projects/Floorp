@@ -268,7 +268,7 @@ MediaEngineWebRTCMicrophoneSource::Config(bool aEchoOn, uint32_t aEcho,
 // Infinity = UINT32_MAX e.g. device cannot satisfy accumulated ConstraintSets.
 // A finite result may be used to calculate this device's ranking as a choice.
 
-uint32_t MediaEngineWebRTCAudioSource::GetBestFitnessDistance(
+uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
     const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId)
 {
