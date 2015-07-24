@@ -7,7 +7,6 @@
 #include "Telephony.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/dom/CallEvent.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -21,7 +20,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include "AudioChannelAgent.h"
 #include "CallsList.h"
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
@@ -64,10 +62,8 @@ public:
 };
 
 Telephony::Telephony(nsPIDOMWindow* aOwner)
-  : DOMEventTargetHelper(aOwner),
-    mIsAudioStartPlaying(false)
+  : DOMEventTargetHelper(aOwner)
 {
-  MOZ_ASSERT(aOwner);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aOwner);
   MOZ_ASSERT(global);
 
@@ -522,61 +518,6 @@ Telephony::StopTone(const Optional<uint32_t>& aServiceId, ErrorResult& aRv)
   aRv = mService->StopTone(serviceId);
 }
 
-void
-Telephony::OwnAudioChannel(ErrorResult& aRv)
-{
-  if (mAudioAgent) {
-    return;
-  }
-
-  mAudioAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
-  MOZ_ASSERT(mAudioAgent);
-  aRv = mAudioAgent->Init(GetParentObject(),
-                         (int32_t)AudioChannel::Telephony, this);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  aRv = HandleAudioAgentState();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-}
-
-nsresult
-Telephony::HandleAudioAgentState()
-{
-  if (!mAudioAgent) {
-    return NS_OK;
-  }
-
-  Nullable<OwningTelephonyCallOrTelephonyCallGroup> activeCall;
-  GetActive(activeCall);
-  nsresult rv;
-  // Only stop agent when the call is disconnected.
-  if ((!mCalls.Length() && !mGroup->CallsArray().Length()) &&
-       mIsAudioStartPlaying) {
-    mIsAudioStartPlaying = false;
-    rv = mAudioAgent->NotifyStoppedPlaying();
-    mAudioAgent = nullptr;
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else if (!activeCall.IsNull() && !mIsAudioStartPlaying) {
-    mIsAudioStartPlaying = true;
-    float volume = 1.0;
-    bool muted = false;
-    rv = mAudioAgent->NotifyStartedPlaying(&volume, &muted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = WindowVolumeChanged(volume, muted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
 bool
 Telephony::GetMuted(ErrorResult& aRv) const
 {
@@ -650,55 +591,13 @@ Telephony::GetReady(ErrorResult& aRv) const
   return promise.forget();
 }
 
-// nsIAudioChannelAgentCallback
-
-NS_IMETHODIMP
-Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
-{
-  // Check the limitation of the network connection
-  if (mCalls.Length() > 1 ||
-     (mCalls.Length() == 1 && mGroup->CallsArray().Length())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  nsRefPtr<Promise> promise = Promise::Create(global, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  // Check the single call or conference call
-  bool isSingleCall = mCalls.Length();
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  if (isSingleCall) {
-    rv = aMuted ? mCalls[0]->Hold(callback) : mCalls[0]->Resume(callback);
-  } else {
-    rv = aMuted ? mGroup->Hold(callback) : mGroup->Resume(callback);
-  }
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  return NS_OK;
-}
-
 // nsITelephonyListener
 
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
-  nsresult rv;
   for (uint32_t i = 0; i < aLength; ++i) {
-    rv = HandleCallInfo(aAllInfo[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = HandleAudioAgentState();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    HandleCallInfo(aAllInfo[i]);
   }
   return NS_OK;
 }
@@ -706,8 +605,7 @@ Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 NS_IMETHODIMP
 Telephony::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
-  uint32_t currentCallNum = 1;
-  return CallStateChanged(currentCallNum, &aInfo);
+  return HandleCallInfo(aInfo);
 }
 
 NS_IMETHODIMP
