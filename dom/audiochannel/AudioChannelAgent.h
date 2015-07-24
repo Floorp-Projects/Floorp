@@ -34,7 +34,6 @@ public:
   AudioChannelAgent();
 
   void WindowVolumeChanged();
-  void WindowAudioCaptureChanged(uint64_t aInnerWindowID);
 
   nsPIDOMWindow* Window() const
   {
@@ -62,7 +61,6 @@ private:
   nsWeakPtr mWeakCallback;
 
   int32_t mAudioChannelType;
-  uint64_t mInnerWindowID;
   bool mIsRegToService;
 };
 

@@ -546,38 +546,6 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
   }
 }
 
-void
-AudioChannelService::RefreshAgentsCapture(nsPIDOMWindow* aWindow,
-                                          uint64_t aInnerWindowID)
-{
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsOuterWindow());
-
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-  nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
-  if (!pTopWindow) {
-    return;
-  }
-
-  AudioChannelWindow* winData = GetWindowData(pTopWindow->WindowID());
-
-  // This can happen, but only during shutdown, because the the outer window
-  // changes ScriptableTop, so that its ID is different.
-  // In this case either we are capturing, and it's too late because the window
-  // has been closed anyways, or we are un-capturing, and everything has already
-  // been cleaned up by the HTMLMediaElements or the AudioContexts.
-  if (!winData) {
-    return;
-  }
-
-  nsTObserverArray<AudioChannelAgent*>::ForwardIterator
-    iter(winData->mAgents);
-  while (iter.HasMore()) {
-    iter.GetNext()->WindowAudioCaptureChanged(aInnerWindowID);
-  }
-}
-
 /* static */ const nsAttrValue::EnumTable*
 AudioChannelService::GetAudioChannelTable()
 {
