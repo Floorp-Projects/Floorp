@@ -53,7 +53,10 @@ interface nsISmsService : nsISupports
 
   /**
    * Constant definitions of SM-RP number plan identification as defined in
-   * |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+   * |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008. These values
+   * do not represent the actual protocol values defined in the 3GPP standard,
+   * but rather the corresponding enum values of NumberPlanIdentification in
+   * MozMobileMessageManager.
    */
   const unsigned short NUMBER_PLAN_IDENTIFICATION_UNKNOWN  = 0;
   const unsigned short NUMBER_PLAN_IDENTIFICATION_ISDN     = 1;

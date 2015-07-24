@@ -642,8 +642,9 @@ MediaDecoderStateMachine::Push(AudioData* aSample)
   UpdateNextFrameStatus();
   DispatchDecodeTasksIfNeeded();
 
-  // XXXbholley - Still necessary?
-  mDecoder->GetReentrantMonitor().NotifyAll();
+  if (mAudioSink) {
+    mAudioSink->NotifyData();
+  }
 }
 
 void
@@ -789,6 +790,10 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     case DECODER_STATE_DECODING: {
       CheckIfDecodeComplete();
       mDecoder->GetReentrantMonitor().NotifyAll();
+      // Tell AudioSink to wake up for audio queue is finished.
+      if (mAudioSink) {
+        mAudioSink->NotifyData();
+      }
       // Schedule the state machine to notify track ended as soon as possible.
       if (mAudioCaptured) {
         ScheduleStateMachine();
@@ -1053,9 +1058,6 @@ void MediaDecoderStateMachine::StopPlayback()
     mPlayDuration = GetClock();
     SetPlayStartTime(TimeStamp());
   }
-  // Notify the audio sink, so that it notices that we've stopped playing,
-  // so it can pause audio playback.
-  mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
 
   DispatchDecodeTasksIfNeeded();
@@ -1794,7 +1796,7 @@ MediaDecoderStateMachine::StartAudioThread()
 
   if (HasAudio() && !mAudioSink) {
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(mAudioQueue, mDecoder->GetReentrantMonitor(),
+    mAudioSink = new AudioSink(mAudioQueue,
                                GetMediaTime(), mInfo.mAudio,
                                mDecoder->GetAudioChannel());
 

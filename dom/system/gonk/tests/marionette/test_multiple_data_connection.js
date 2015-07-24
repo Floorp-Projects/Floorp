@@ -24,7 +24,10 @@ function setEmulatorAPN() {
                  "types":["ims"] },
                { "carrier":"T-Mobile US",
                  "apn":"epc5.tmobile.com",
-                 "types":["dun"] }]];
+                 "types":["dun"] },
+               { "carrier":"T-Mobile US",
+                 "apn":"epc6.tmobile.com",
+                 "types":["fota"] }]];
 
   return setSettings(SETTINGS_KEY_DATA_APN_SETTINGS, apn);
 }

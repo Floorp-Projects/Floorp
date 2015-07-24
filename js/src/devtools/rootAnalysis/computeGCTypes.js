@@ -74,44 +74,60 @@ var gcTypes = {}; // map from parent struct => Set of GC typed children
 var gcPointers = {}; // map from parent struct => Set of GC typed children
 var nonGCTypes = {}; // set of types that would ordinarily be GC types but we are suppressing
 var nonGCPointers = {}; // set of types that would ordinarily be GC pointers but we are suppressing
-var gcFields = {};
+var gcFields = new Map;
 
-// "typeName is a (pointer to a)*'depth' GC type because it contains a field
-// named 'child' of type 'why' (or pointer to 'why' if ptrdness == 1), which
+function stars(n) { return n ? '*' + stars(n-1) : '' };
+
+// "typeName is a (pointer to a)^'typePtrLevel' GC type because it contains a field
+// named 'child' of type 'why' (or pointer to 'why' if fieldPtrLevel == 1), which is
 // itself a GCThing or GCPointer."
-function markGCType(typeName, child, why, depth, ptrdness)
+function markGCType(typeName, child, why, typePtrLevel, fieldPtrLevel, indent)
 {
+    //printErr(`${indent}${typeName}${stars(typePtrLevel)} may be a gctype/ptr because of its child '${child}' of type ${why}${stars(fieldPtrLevel)}`);
+
     // Some types, like UniquePtr, do not mark/trace/relocate their contained
     // pointers and so should not hold them live across a GC. UniquePtr in
     // particular should be the only thing pointing to a structure containing a
-    // GCPointer, so nothing else can be tracing it and it'll die when the
-    // UniquePtr goes out of scope. So we say that a UniquePtr's memory is just
-    // as unsafe as the stack for storing GC pointers.
-    if (!ptrdness && isUnsafeStorage(typeName)) {
+    // GCPointer, so nothing else can possibly trace it and it'll die when the
+    // UniquePtr goes out of scope. So we say that memory pointed to by a
+    // UniquePtr is just as unsafe as the stack for storing GC pointers.
+    if (!fieldPtrLevel && isUnsafeStorage(typeName)) {
         // The UniquePtr itself is on the stack but when you dereference the
         // contained pointer, you get to the unsafe memory that we are treating
-        // as if it were the stack (aka depth 0). Note that
+        // as if it were the stack (aka ptrLevel 0). Note that
         // UniquePtr<UniquePtr<JSObject*>> is fine, so we don't want to just
-        // hardcode the depth.
-        ptrdness = -1;
+        // hardcode the ptrLevel.
+        fieldPtrLevel = -1;
     }
 
-    depth += ptrdness;
-    if (depth > 2)
+    // Example: with:
+    //    struct Pair { JSObject* foo; int bar; };
+    //    struct { Pair** info }***
+    // make a call to:
+    //    child='info' typePtrLevel=3 fieldPtrLevel=2
+    // for a final ptrLevel of 5, used to later call:
+    //    child='foo' typePtrLevel=5 fieldPtrLevel=1
+    //
+    var ptrLevel = typePtrLevel + fieldPtrLevel;
+
+    // ...except when > 2 levels of pointers away from an actual GC thing, stop
+    // searching the graph. (This would just be > 1, except that a UniquePtr
+    // field might still have a GC pointer.)
+    if (ptrLevel > 2)
         return;
 
-    if (depth == 0 && isRootedTypeName(typeName))
+    if (ptrLevel == 0 && isRootedGCTypeName(typeName))
         return;
-    if (depth == 1 && isRootedPointerTypeName(typeName))
+    if (ptrLevel == 1 && isRootedGCPointerTypeName(typeName))
         return;
 
-    if (depth == 0) {
+    if (ptrLevel == 0) {
         if (typeName in nonGCTypes)
             return;
         if (!(typeName in gcTypes))
             gcTypes[typeName] = new Set();
         gcTypes[typeName].add(why);
-    } else if (depth == 1) {
+    } else if (ptrLevel == 1) {
         if (typeName in nonGCPointers)
             return;
         if (!(typeName in gcPointers))
@@ -119,32 +135,34 @@ function markGCType(typeName, child, why, depth, ptrdness)
         gcPointers[typeName].add(why);
     }
 
-    if (!(typeName in gcFields))
-        gcFields[typeName] = new Map();
-    gcFields[typeName].set(why, [ child, ptrdness ]);
+    if (ptrLevel < 2) {
+        if (!gcFields.has(typeName))
+            gcFields.set(typeName, new Map());
+        gcFields.get(typeName).set(child, [ why, fieldPtrLevel ]);
+    }
 
     if (typeName in structureParents) {
         for (var field of structureParents[typeName]) {
             var [ holderType, fieldName ] = field;
-            markGCType(holderType, typeName, fieldName, depth, 0);
+            markGCType(holderType, fieldName, typeName, ptrLevel, 0, indent + "  ");
         }
     }
     if (typeName in pointerParents) {
         for (var field of pointerParents[typeName]) {
             var [ holderType, fieldName ] = field;
-            markGCType(holderType, typeName, fieldName, depth, 1);
+            markGCType(holderType, fieldName, typeName, ptrLevel, 1, indent + "  ");
         }
     }
 }
 
-function addGCType(typeName, child, why, depth, ptrdness)
+function addGCType(typeName, child, why, depth, fieldPtrLevel)
 {
-    markGCType(typeName, 'annotation', '<annotation>', 0, 0);
+    markGCType(typeName, '<annotation>', '(annotation)', 0, 0, "");
 }
 
 function addGCPointer(typeName)
 {
-    markGCType(typeName, 'annotation', '<pointer-annotation>', 1, 0);
+    markGCType(typeName, '<pointer-annotation>', '(annotation)', 1, 0, "");
 }
 
 for (var type of listNonGCTypes())
@@ -163,17 +181,19 @@ function explain(csu, indent, seen) {
     if (!seen)
         seen = new Set();
     seen.add(csu);
-    if (!(csu in gcFields))
+    if (!gcFields.has(csu))
         return;
-    if (gcFields[csu].has('<annotation>')) {
+    var fields = gcFields.get(csu);
+
+    if (fields.has('<annotation>')) {
         print(indent + "which is a GCThing because I said so");
         return;
     }
-    if (gcFields[csu].has('<pointer-annotation>')) {
+    if (fields.has('<pointer-annotation>')) {
         print(indent + "which is a GCPointer because I said so");
         return;
     }
-    for (var [ field, [ child, ptrdness ] ] of gcFields[csu]) {
+    for (var [ field, [ child, ptrdness ] ] of fields) {
         var inherit = "";
         if (field == "field:0")
             inherit = " (probably via inheritance)";

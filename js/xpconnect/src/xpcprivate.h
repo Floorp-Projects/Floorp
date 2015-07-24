@@ -3567,11 +3567,13 @@ public:
         : OptionsBase(cx, options)
         , wrapReflectors(false)
         , cloneFunctions(false)
+        , deepFreeze(false)
     { }
 
     virtual bool Parse() {
         return ParseBoolean("wrapReflectors", &wrapReflectors) &&
-               ParseBoolean("cloneFunctions", &cloneFunctions);
+               ParseBoolean("cloneFunctions", &cloneFunctions) &&
+               ParseBoolean("deepFreeze", &deepFreeze);
     }
 
     // When a reflector is encountered, wrap it rather than aborting the clone.
@@ -3580,6 +3582,9 @@ public:
     // When a function is encountered, clone it (exportFunction-style) rather than
     // aborting the clone.
     bool cloneFunctions;
+
+    // If true, the resulting object is deep-frozen after being cloned.
+    bool deepFreeze;
 };
 
 JSObject*

@@ -44,7 +44,8 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
     nsINetworkInterfaceListService::LIST_NOT_INCLUDE_SUPL_INTERFACES |
     nsINetworkInterfaceListService::LIST_NOT_INCLUDE_MMS_INTERFACES |
     nsINetworkInterfaceListService::LIST_NOT_INCLUDE_IMS_INTERFACES |
-    nsINetworkInterfaceListService::LIST_NOT_INCLUDE_DUN_INTERFACES;
+    nsINetworkInterfaceListService::LIST_NOT_INCLUDE_DUN_INTERFACES |
+    nsINetworkInterfaceListService::LIST_NOT_INCLUDE_FOTA_INTERFACES;
   nsCOMPtr<nsINetworkInterfaceList> networkList;
   NS_ENSURE_SUCCESS(listService->GetDataInterfaceList(flags,
                                                       getter_AddRefs(networkList)),

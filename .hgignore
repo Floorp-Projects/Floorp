@@ -88,3 +88,7 @@ GPATH
 # XCode project cruft
 ^embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
 ^embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
+
+# Ignore mozharness execution files
+^testing/mozharness/logs/
+^testing/mozharness/build/
