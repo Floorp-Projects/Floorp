@@ -9,13 +9,13 @@
     <!-- private pressed state -->
     <item gecko:state_private="true"
           android:state_pressed="true"
-          android:drawable="@color/placeholder_active_grey"/>
+          android:drawable="@color/text_and_tabs_tray_grey"/>
 
     <!-- focused state -->
     <item gecko:state_private="true"
           android:state_focused="true"
           android:state_pressed="false"
-          android:drawable="@color/text_and_tabs_tray_grey"/>
+          android:drawable="@color/placeholder_active_grey"/>
 
     <!-- pressed state -->
     <item android:state_pressed="true"
