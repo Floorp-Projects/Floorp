@@ -59,8 +59,6 @@ class Telephony final : public DOMEventTargetHelper,
   nsRefPtr<Promise> mReadyPromise;
 
   bool mIsAudioStartPlaying;
-  bool mHaveDispatchedInterruptBeginEvent;
-  bool mMuted;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
