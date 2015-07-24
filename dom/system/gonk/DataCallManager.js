@@ -68,6 +68,7 @@ const NETWORK_TYPE_MOBILE_MMS  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS;
 const NETWORK_TYPE_MOBILE_SUPL = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL;
 const NETWORK_TYPE_MOBILE_IMS  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS;
 const NETWORK_TYPE_MOBILE_DUN  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
+const NETWORK_TYPE_MOBILE_FOTA = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_FOTA;
 
 const NETWORK_STATE_UNKNOWN       = Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN;
 const NETWORK_STATE_CONNECTING    = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTING;
@@ -444,6 +445,8 @@ DataCallHandler.prototype = {
         return NETWORK_TYPE_MOBILE_IMS;
       case "dun":
         return NETWORK_TYPE_MOBILE_DUN;
+      case "fota":
+        return NETWORK_TYPE_MOBILE_FOTA;
       default:
         return NETWORK_TYPE_UNKNOWN;
      }
@@ -688,7 +691,8 @@ DataCallHandler.prototype = {
         aNetworkType === NETWORK_TYPE_MOBILE_MMS ||
         aNetworkType === NETWORK_TYPE_MOBILE_SUPL ||
         aNetworkType === NETWORK_TYPE_MOBILE_IMS ||
-        aNetworkType === NETWORK_TYPE_MOBILE_DUN) {
+        aNetworkType === NETWORK_TYPE_MOBILE_DUN ||
+        aNetworkType === NETWORK_TYPE_MOBILE_FOTA) {
       return true;
     }
 

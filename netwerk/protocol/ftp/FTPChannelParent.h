@@ -19,6 +19,12 @@
 class nsILoadContext;
 
 namespace mozilla {
+
+namespace dom {
+class TabParent;
+class PBrowserOrId;
+} // namespace dom
+
 namespace net {
 
 class FTPChannelParent final : public PFTPChannelParent
@@ -36,7 +42,9 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus);
+  FTPChannelParent(const dom::PBrowserOrId& aIframeEmbedding,
+                   nsILoadContext* aLoadContext,
+                   PBOverrideStatus aOverrideStatus);
 
   bool Init(const FTPChannelCreationArgs& aOpenArgs);
 
@@ -110,6 +118,7 @@ protected:
   // when we call ResumeForDiversion.
   bool mSuspendedForDiversion;
   nsRefPtr<OfflineObserver> mObserver;
+  nsRefPtr<mozilla::dom::TabParent> mTabParent;
 };
 
 } // namespace net

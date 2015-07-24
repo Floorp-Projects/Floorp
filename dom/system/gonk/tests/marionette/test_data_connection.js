@@ -9,7 +9,7 @@ function setEmulatorAPN() {
     [{"carrier":"T-Mobile US",
       "apn":"epc.tmobile.com",
       "mmsc":"http://mms.msg.eng.t-mobile.com/mms/wapenc",
-      "types":["default","supl","mms","ims","dun"]}]
+      "types":["default","supl","mms","ims","dun", "fota"]}]
   ];
 
   return setSettings(SETTINGS_KEY_DATA_APN_SETTINGS, apn);
@@ -57,6 +57,7 @@ function testNonDefaultDataConnection() {
     .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_SUPL))
     .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_IMS))
     .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_DUN))
+    .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_FOTA))
     // Restore APN settings
     .then(() => setSettings(SETTINGS_KEY_DATA_APN_SETTINGS, currentApn));
 }

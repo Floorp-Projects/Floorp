@@ -66,7 +66,7 @@ public:
 
     // Just create a context. We'll add offscreen stuff ourselves.
     static already_AddRefed<GLContext>
-    CreateHeadless(bool requireCompatProfile);
+    CreateHeadless(bool requireCompatProfile, bool forceEnabled = false);
 
     /**
      * Create wrapping Gecko GLContext for external gl context.

@@ -287,7 +287,7 @@ CreateOffscreenFBOContext(bool requireCompatProfile)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateHeadless(bool requireCompatProfile)
+GLContextProviderCGL::CreateHeadless(bool requireCompatProfile, bool forceEnabled)
 {
     nsRefPtr<GLContextCGL> gl;
     gl = CreateOffscreenFBOContext(requireCompatProfile);

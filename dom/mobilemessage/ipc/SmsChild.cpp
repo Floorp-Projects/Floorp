@@ -259,7 +259,9 @@ SmsRequestChild::Recv__delete__(const MessageReply& aReply)
         aReply.get_ReplyGetSegmentInfoForTextFail().error());
       break;
     case MessageReply::TReplyGetSmscAddress:
-      mReplyRequest->NotifyGetSmscAddress(aReply.get_ReplyGetSmscAddress().smscAddress());
+      mReplyRequest->NotifyGetSmscAddress(aReply.get_ReplyGetSmscAddress().smscAddress(),
+                                          aReply.get_ReplyGetSmscAddress().typeOfNumber(),
+                                          aReply.get_ReplyGetSmscAddress().numberPlanIdentification());
       break;
     case MessageReply::TReplyGetSmscAddressFail:
       mReplyRequest->NotifyGetSmscAddressFailed(aReply.get_ReplyGetSmscAddressFail().error());

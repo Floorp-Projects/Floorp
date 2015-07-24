@@ -144,7 +144,7 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute EventHandler onremovestream;
   attribute EventHandler oniceconnectionstatechange;
 
-  Promise<RTCStatsReport> getStats (MediaStreamTrack? selector);
+  Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector);
 
   // Data channel.
   RTCDataChannel createDataChannel (DOMString label,
