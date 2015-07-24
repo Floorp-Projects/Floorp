@@ -481,8 +481,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
   public:
     static JSObject*
     fromBuffer(JSContext* cx, HandleObject bufobj, uint32_t byteOffset, int32_t lengthInt) {
-        RootedObject proto(cx, nullptr);
-        return fromBufferWithProto(cx, bufobj, byteOffset, lengthInt, proto);
+        return fromBufferWithProto(cx, bufobj, byteOffset, lengthInt, nullptr);
     }
 
     static JSObject*
@@ -969,16 +968,10 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
 {
     MOZ_ASSERT(byteOffset <= INT32_MAX);
     MOZ_ASSERT(byteLength <= INT32_MAX);
+    MOZ_ASSERT(byteOffset + byteLength < UINT32_MAX);
 
     RootedObject proto(cx, protoArg);
     RootedObject obj(cx);
-
-    // This is overflow-safe: 2 * INT32_MAX is still a valid uint32_t.
-    if (byteOffset + byteLength > arrayBuffer->byteLength()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
-        return nullptr;
-
-    }
 
     NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
     obj = NewBuiltinClassInstance(cx, &class_, newKind);
@@ -1002,12 +995,17 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
         }
     }
 
+    // Caller should have established these preconditions, and no
+    // (non-self-hosted) JS code has had an opportunity to run so nothing can
+    // have invalidated them.
+    MOZ_ASSERT(byteOffset <= arrayBuffer->byteLength());
+    MOZ_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
+
     DataViewObject& dvobj = obj->as<DataViewObject>();
     dvobj.setFixedSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(byteOffset));
     dvobj.setFixedSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*arrayBuffer));
     dvobj.initPrivate(arrayBuffer->dataPointer() + byteOffset);
-    MOZ_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     // Include a barrier if the data view's data pointer is in the nursery, as
     // is done for typed arrays.
@@ -1033,9 +1031,8 @@ DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args,
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &AsArrayBuffer(bufobj));
-    uint32_t bufferLength = buffer->byteLength();
     uint32_t byteOffset = 0;
-    uint32_t byteLength = bufferLength;
+    uint32_t byteLength = buffer->byteLength();
 
     if (args.length() > 1) {
         if (!ToUint32(cx, args[1], &byteOffset))
@@ -1055,6 +1052,8 @@ DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args,
                 return false;
             }
         } else {
+            uint32_t bufferLength = buffer->byteLength();
+
             if (byteOffset > bufferLength) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                      JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
@@ -1069,7 +1068,7 @@ DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args,
     MOZ_ASSERT(byteOffset <= INT32_MAX);
     MOZ_ASSERT(byteLength <= INT32_MAX);
 
-    if (byteOffset + byteLength > bufferLength) {
+    if (byteOffset + byteLength > buffer->byteLength()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
         return false;
     }
@@ -2347,4 +2346,28 @@ JS_GetDataViewByteLength(JSObject* obj)
     if (!obj)
         return 0;
     return obj->as<DataViewObject>().byteLength();
+}
+
+JS_FRIEND_API(JSObject*)
+JS_NewDataView(JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset, int32_t byteLength)
+{
+    ConstructArgs cargs(cx);
+    if (!cargs.init(3))
+        return nullptr;
+
+    RootedObject constructor(cx);
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(&DataViewObject::class_);
+    if (!GetBuiltinConstructor(cx, key, &constructor))
+        return nullptr;
+
+    cargs[0].setObject(*arrayBuffer);
+    cargs[1].setNumber(byteOffset);
+    cargs[2].setInt32(byteLength);
+
+    RootedValue fun(cx, ObjectValue(*constructor));
+    RootedValue rval(cx);
+    if (!Construct(cx, fun, cargs, fun, &rval))
+        return nullptr;
+    MOZ_ASSERT(rval.isObject());
+    return &rval.toObject();
 }
