@@ -81,7 +81,7 @@ if CONFIG['NS_PRINTING']:
 
 if CONFIG['NS_ENABLE_TSF']:
     SOURCES += [
-        'nsTextStore.cpp',
+        'TSFTextStore.cpp',
     ]
 
 FAIL_ON_WARNINGS = True
