@@ -20,6 +20,7 @@ __all__ = ['extract_tarball',
            'extract',
            'is_url',
            'load',
+           'move',
            'remove',
            'rmtree',
            'tree',
@@ -134,6 +135,35 @@ def rmtree(dir):
     return remove(dir)
 
 
+def _call_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
+    """
+    It's possible to see spurious errors on Windows due to various things
+    keeping a handle to the directory open (explorer, virus scanners, etc)
+    So we try a few times if it fails with a known error.
+    """
+    retry_count = 0
+    while True:
+        try:
+            func(*args)
+        except OSError, e:
+            # Error codes are defined in:
+            # http://docs.python.org/2/library/errno.html#module-errno
+            if e.errno not in (errno.EACCES, errno.ENOTEMPTY):
+                raise
+
+            if retry_count == retry_max:
+                raise
+
+            retry_count += 1
+
+            print '%s() failed for "%s". Reason: %s (%s). Retrying...' % \
+                    (func.__name__, args, e.strerror, e.errno)
+            time.sleep(retry_delay)
+        else:
+            # If no exception has been thrown it should be done
+            break
+
+
 def remove(path):
     """Removes the specified file, link, or directory tree.
 
@@ -154,37 +184,13 @@ def remove(path):
 
     import shutil
 
-    def _call_with_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
-        """
-        It's possible to see spurious errors on Windows due to various things
-        keeping a handle to the directory open (explorer, virus scanners, etc)
-        So we try a few times if it fails with a known error.
-        """
-        retry_count = 0
-        while True:
-            try:
-                func(*args)
-            except OSError, e:
-                # The file or directory to be removed doesn't exist anymore
-                if e.errno == errno.ENOENT:
-                    break
-
-                # Error codes are defined in:
-                # http://docs.python.org/2/library/errno.html#module-errno
-                if e.errno not in [errno.EACCES, errno.ENOTEMPTY]:
-                    raise
-
-                if retry_count == retry_max:
-                    raise
-
-                retry_count += 1
-
-                print '%s() failed for "%s". Reason: %s (%s). Retrying...' % \
-                        (func.__name__, args, e.strerror, e.errno)
-                time.sleep(retry_delay)
-            else:
-                # If no exception has been thrown it should be done
-                break
+    def _call_with_windows_retry(*args, **kwargs):
+        try:
+            _call_windows_retry(*args, **kwargs)
+        except OSError, e:
+            # The file or directory to be removed doesn't exist anymore
+            if e.errno != errno.ENOENT:
+                raise
 
     def _update_permissions(path):
         """Sets specified pemissions depending on filetype"""
@@ -222,6 +228,18 @@ def remove(path):
             for entry in dirs + files:
                 _update_permissions(os.path.join(root, entry))
         _call_with_windows_retry(shutil.rmtree, (path,))
+
+
+def move(src, dst):
+    """
+    Move a file or directory path.
+
+    This is a replacement for shutil.move that works better under windows,
+    retrying operations on some known errors due to various things keeping
+    a handle on file paths.
+    """
+    import shutil
+    _call_windows_retry(shutil.move, (src, dst))
 
 
 def depth(directory):

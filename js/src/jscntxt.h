@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "js/TraceableVector.h"
 #include "js/Vector.h"
 #include "vm/Runtime.h"
 
@@ -665,6 +666,8 @@ CheckForInterrupt(JSContext* cx)
 typedef JS::AutoVectorRooter<JSString*> AutoStringVector;
 typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
 typedef JS::AutoVectorRooter<Shape*> AutoShapeVector;
+
+using ShapeVector = js::TraceableVector<Shape*>;
 
 /* AutoArrayRooter roots an external array of Values. */
 class AutoArrayRooter : private JS::AutoGCRooter

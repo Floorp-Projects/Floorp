@@ -2744,6 +2744,9 @@ RuleEditor.prototype = {
 
       let {ruleProps, isMatching} = response;
       if (!ruleProps) {
+        // Notify for changes, even when nothing changes,
+        // just to allow tests being able to track end of this request.
+        ruleView.emit("ruleview-invalid-selector");
         return;
       }
 

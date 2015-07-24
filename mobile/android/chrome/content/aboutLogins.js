@@ -45,7 +45,13 @@ let Logins = {
 
   _getLogins: function() {
     let logins;
+    let contentBody = document.getElementById("content-body");
+    let emptyBody = document.getElementById("empty-body");
+    let filterIcon = document.getElementById("filter-button");
+
     this._toggleListBody(true);
+    emptyBody.classList.add("hidden");
+
     try {
       logins = Services.logins.getAllLogins();
     } catch(e) {
@@ -54,20 +60,32 @@ let Logins = {
       logins = [];
     }
     this._toggleListBody(false);
+
+    if (!logins.length) {
+      emptyBody.classList.remove("hidden");
+
+      filterIcon.classList.add("hidden");
+      contentBody.classList.add("hidden");
+    } else {
+      emptyBody.classList.add("hidden");
+
+      filterIcon.classList.remove("hidden");
+    }
+
     logins.sort((a, b) => a.hostname.localeCompare(b.hostname));
     return this._logins = logins;
   },
 
   _toggleListBody: function(isLoading) {
-    let nonemptyBody = document.getElementById("logins-list-nonempty-body");
+    let contentBody = document.getElementById("content-body");
     let loadingBody = document.getElementById("logins-list-loading-body");
 
     if (isLoading) {
-      nonemptyBody.classList.add("hidden");
+      contentBody.classList.add("hidden");
       loadingBody.classList.remove("hidden");
     } else {
       loadingBody.classList.add("hidden");
-      nonemptyBody.classList.remove("hidden");
+      contentBody.classList.remove("hidden");
     }
 
   },

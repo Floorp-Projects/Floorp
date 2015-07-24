@@ -196,3 +196,32 @@ body {
   height: 60px;
   width: 60px;
 }
+
+#empty-body {
+  padding-left: 60px;
+  padding-right: 60px;
+}
+
+#empty-obj-text-container {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
+.empty-text {
+  color: #363B40;
+  font-size: 25px;
+  margin-bottom: 20px;
+}
+
+.empty-hint {
+  color: #777777;
+  font-size: 20px;
+}
+
+#empty-icon {
+  margin-top: 60px;
+  margin-bottom: 20px;
+}
