@@ -14059,7 +14059,10 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
       bool isThirdPartyURI = true;
       result = thirdPartyUtil->IsThirdPartyURI(mCurrentURI, aURI,
                                                &isThirdPartyURI);
-      NS_ENSURE_SUCCESS(result, result);
+      if (NS_FAILED(result)) {
+          return result;
+      }
+
       if (isThirdPartyURI &&
           (Preferences::GetInt("network.cookie.cookieBehavior",
                                nsICookieService::BEHAVIOR_ACCEPT) ==

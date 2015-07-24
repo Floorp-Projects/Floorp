@@ -1651,7 +1651,7 @@ CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject, HandleObject
         }
     }
 
-    AutoShapeVector shapes(cx);
+    Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
     for (Shape::Range<NoGC> range(selfHostedObject->lastProperty()); !range.empty(); range.popFront()) {
         Shape& shape = range.front();
         if (shape.enumerable() && !shapes.append(&shape))
