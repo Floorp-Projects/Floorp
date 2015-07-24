@@ -546,8 +546,13 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
 {
     switch (aDataType) {
     case NS_NATIVE_OPENGL_CONTEXT:
-        // Called after primary display's GLContextEGL creation.
         GLContext* context = reinterpret_cast<GLContext*>(aVal);
+        if (!context) {
+            mScreen->SetEGLInfo(EGL_NO_DISPLAY,
+                                EGL_NO_SURFACE,
+                                nullptr);
+            return;
+        }
         mScreen->SetEGLInfo(GLContextEGL::Cast(context)->GetEGLDisplay(),
                             GLContextEGL::Cast(context)->GetEGLSurface(),
                             context);
