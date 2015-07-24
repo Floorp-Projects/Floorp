@@ -697,6 +697,12 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSString* asyncCauseForNewActivations;
 
+    /*
+     * True if the async call was explicitly requested, e.g. via
+     * callFunctionWithAsyncStack.
+     */
+    bool asyncCallIsExplicit;
+
     /* If non-null, report JavaScript entry points to this monitor. */
     JS::dbg::AutoEntryMonitor* entryMonitor;
 

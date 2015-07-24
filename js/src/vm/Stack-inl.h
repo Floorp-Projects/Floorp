@@ -868,11 +868,13 @@ Activation::Activation(JSContext* cx, Kind kind)
     hideScriptedCallerCount_(0),
     asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),
     asyncCause_(cx, cx->runtime_->asyncCauseForNewActivations),
+    asyncCallIsExplicit_(cx->runtime_->asyncCallIsExplicit),
     entryMonitor_(cx->runtime_->entryMonitor),
     kind_(kind)
 {
     cx->runtime_->asyncStackForNewActivations = nullptr;
     cx->runtime_->asyncCauseForNewActivations = nullptr;
+    cx->runtime_->asyncCallIsExplicit = false;
     cx->runtime_->entryMonitor = nullptr;
     cx->runtime_->activation_ = this;
 }
@@ -886,6 +888,7 @@ Activation::~Activation()
     cx_->runtime_->entryMonitor = entryMonitor_;
     cx_->runtime_->asyncCauseForNewActivations = asyncCause_;
     cx_->runtime_->asyncStackForNewActivations = asyncStack_;
+    cx_->runtime_->asyncCallIsExplicit = asyncCallIsExplicit_;
 }
 
 bool
