@@ -29,7 +29,7 @@
           <li id="filter-button"></li>
         </ul>
       </div>
-      <div id="logins-list-nonempty-body">
+      <div id="content-body">
         <div id="logins-list" class="list"/>
         <div id="filter-input-container" hidden="true">
           <input id="filter-input" type="search"/>
@@ -39,6 +39,13 @@
       <div id="logins-list-loading-body" class="hidden">
         <div id="loading-img-container">
           <object type="image/svg+xml" id="spinner" data="chrome://browser/skin/images/spinning_throbber.svg"/>
+        </div>
+      </div>
+      <div id="empty-body" class="hidden">
+        <div id="empty-obj-text-container">
+          <object type="image/svg+xml" id="empty-icon" data="chrome://browser/skin/images/icon_key_emptypage.svg"/>
+          <div class="empty-text">&aboutLogins.emptyLoginText;</div>
+          <div class="empty-hint">&aboutLogins.emptyLoginHint;</div>
         </div>
       </div>
     </div>
@@ -59,7 +66,7 @@
         <button id="password-btn"></button>
       </div>
       <div class="edit-login-div">
-        <button id="save-btn">&aboutLogins.save;</button>
+        <button id="save-btn">&aboutLogins.update;</button>
       </div>
     </div>
 

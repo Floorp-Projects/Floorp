@@ -10,8 +10,6 @@
   --tab-toolbar-navbar-overlap: 0px;
   --space-above-tabbar: 0px;
   --toolbarbutton-text-shadow: none;
-  --panel-ui-button-background-size: 1px calc(100% - 1px);
-  --panel-ui-button-background-position: 1px 0px;
 }
 
 :root[devtoolstheme="dark"] {
@@ -60,9 +58,6 @@
   --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
   --urlbar-dropmarker-active-2x-region: rect(0px, 22px, 14px, 11px);
   --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon-inverted");
-
-  /* Menu button separator */
-  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, #5F6670 30%, #5F6670 70%, transparent);
 }
 
 :root[devtoolstheme="dark"] #identity-box {
@@ -115,9 +110,6 @@
 
   /* Url and search bars */
   --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon");
-
-  /* Menu button separator */
-  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.1) 70%, transparent);
 }
 
 /* Give some space to drag the window around while customizing
