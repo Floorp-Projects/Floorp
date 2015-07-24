@@ -480,6 +480,7 @@
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
+@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 @BINPATH@/components/url-classifier.xpt
 #endif
 

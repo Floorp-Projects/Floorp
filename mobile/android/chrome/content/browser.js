@@ -1759,13 +1759,21 @@ var BrowserApp = {
               // Add the current host in the 'trackingprotection' consumer of
               // the permission manager using a normalized URI. This effectively
               // places this host on the tracking protection white list.
-              Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+              }
               Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
             } else {
               // Remove the current host from the 'trackingprotection' consumer
               // of the permission manager. This effectively removes this host
               // from the tracking protection white list (any list actually).
-              Services.perms.remove(normalizedUrl, "trackingprotection");
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.remove(normalizedUrl, "trackingprotection");
+              }
               Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
             }
           }
