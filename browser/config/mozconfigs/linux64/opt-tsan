@@ -2,6 +2,9 @@ ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
 
 . $topsrcdir/build/unix/mozconfig.tsan
 
+export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
+. $topsrcdir/build/unix/mozconfig.gtk
+
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=tsan
 
