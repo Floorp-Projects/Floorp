@@ -9,7 +9,8 @@ task:
   payload:
     env:
       MOZCONFIG: 'b2g/config/mozconfigs/linux64_gecko/nightly'
-      TOOLTOOL_MANIFEST: 'b2g/config/tooltool-manifests/linux64/releng.manifest'
+      MOZTT_GIT_URL: '{{moztt_git_url}}'
+      MOZTT_REVISION: '{{moztt_revision}}'
 
     command:
       - /bin/bash
