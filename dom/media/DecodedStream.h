@@ -114,6 +114,7 @@ public:
   int64_t AudioEndTime() const;
   int64_t GetPosition() const;
   bool IsFinished() const;
+  bool HasConsumers() const;
 
   // Return true if stream is finished.
   bool SendData(double aVolume, bool aIsSameOrigin);
