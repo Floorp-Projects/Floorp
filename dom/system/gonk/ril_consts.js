@@ -1411,7 +1411,8 @@ this.CALLED_PARTY_BCD_NPI_PRIVATE  = 9;
 
 /**
  * Array of number plan identification values which can be used to map an
- * enumeration to the corresponding value.
+ * enumeration to the corresponding value. The indices should be consistent
+ * with nsISmsService::NUMBER_PLAN_IDENTIFICATION_* constants.
  */
 this.CALLED_PARTY_BCD_NPI = [
   CALLED_PARTY_BCD_NPI_UNKNOWN,
