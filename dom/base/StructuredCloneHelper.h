@@ -17,6 +17,9 @@ namespace dom {
 class StructuredCloneHelperInternal
 {
 public:
+  StructuredCloneHelperInternal();
+  virtual ~StructuredCloneHelperInternal();
+
   // These methods should be implemented in order to clone data.
   // Read more documentation in js/public/StructuredClone.h.
 
@@ -28,6 +31,12 @@ public:
   virtual bool WriteCallback(JSContext* aCx,
                              JSStructuredCloneWriter* aWriter,
                              JS::Handle<JSObject*> aObj) = 0;
+
+  // This method has to be called when this object is not needed anymore.
+  // It will free memory and the buffer. This has to be called because
+  // otherwise the buffer will be freed in the DTOR of this class and at that
+  // point we cannot use the overridden methods.
+  void Shutdown();
 
   // If these 3 methods are not implement, transfering objects will not be
   // allowed.
@@ -69,6 +78,10 @@ public:
 
 protected:
   nsAutoPtr<JSAutoStructuredCloneBuffer> mBuffer;
+
+#ifdef DEBUG
+  bool mShutdownCalled;
+#endif
 };
 
 class MessagePortBase;
