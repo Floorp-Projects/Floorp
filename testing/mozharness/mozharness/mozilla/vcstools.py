@@ -49,10 +49,9 @@ class VCSToolsScript(VCSScript):
                 if type(self.query_exe(vcs_tool)) is list:
                     continue
 
-                if not self.is_exe(file_path):
-                    self.critical("%s is not executable." % file_path)
-
                 if file_path is None:
                     self.fatal("This machine is missing %s, if this is your "
                                "local machine you can use --cfg "
                                "developer_config.py" % vcs_tool)
+                elif not self.is_exe(file_path):
+                    self.critical("%s is not executable." % file_path)
