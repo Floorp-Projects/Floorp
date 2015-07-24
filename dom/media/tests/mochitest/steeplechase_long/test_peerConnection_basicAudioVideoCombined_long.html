@@ -18,13 +18,14 @@
     visible: true
   });
 
+  var STEEPLECHASE_TIMEOUT = 1000 * 3600 * 3;
   var test;
   runNetworkTest(function (options) {
     options = options || {};
-    options.commands = commandsPeerConnection.slice(0);
+    options.commands = makeDefaultCommands();
     options.commands.push(generateIntervalCommand(verifyConnectionStatus,
                                                   1000 * 10,
-                                                  1000 * 3600 * 3));
+                                                  STEEPLECHASE_TIMEOUT));
 
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true, video: true, fake: false}],
