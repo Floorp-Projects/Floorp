@@ -573,7 +573,8 @@ struct PLDHashTableOps
  * Default implementations for the above mOps.
  */
 
-PLDHashNumber PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
+PLDHashNumber
+PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
 
 /* A minimal entry is a subclass of PLDHashEntryHdr and has void key pointer. */
 struct PLDHashEntryStub : public PLDHashEntryHdr
@@ -581,29 +582,34 @@ struct PLDHashEntryStub : public PLDHashEntryHdr
   const void* key;
 };
 
-PLDHashNumber PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey);
+PLDHashNumber
+PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey);
 
-bool PL_DHashMatchEntryStub(PLDHashTable* aTable,
-                            const PLDHashEntryHdr* aEntry,
-                            const void* aKey);
+bool
+PL_DHashMatchEntryStub(PLDHashTable* aTable,
+                       const PLDHashEntryHdr* aEntry,
+                       const void* aKey);
 
-bool PL_DHashMatchStringKey(PLDHashTable* aTable,
-                            const PLDHashEntryHdr* aEntry,
-                            const void* aKey);
+bool
+PL_DHashMatchStringKey(PLDHashTable* aTable,
+                       const PLDHashEntryHdr* aEntry,
+                       const void* aKey);
 
 void
 PL_DHashMoveEntryStub(PLDHashTable* aTable,
                       const PLDHashEntryHdr* aFrom,
                       PLDHashEntryHdr* aTo);
 
-void PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+void
+PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
 /*
  * If you use PLDHashEntryStub or a subclass of it as your entry struct, and
  * if your entries move via memcpy and clear via memset(0), you can use these
  * stub operations.
  */
-const PLDHashTableOps* PL_DHashGetStubOps(void);
+const PLDHashTableOps*
+PL_DHashGetStubOps(void);
 
 // The following function are deprecated. Use the equivalent class methods
 // instead: PLDHashTable::Search() instead of PL_DHashTableSearch(), etc.
@@ -621,20 +627,24 @@ PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
 void PL_DHASH_FASTCALL
 PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
 
-void PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+void
+PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-size_t PL_DHashTableSizeOfExcludingThis(
+size_t
+PL_DHashTableSizeOfExcludingThis(
   const PLDHashTable* aTable,
   PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
   mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
 
-size_t PL_DHashTableSizeOfIncludingThis(
+size_t
+PL_DHashTableSizeOfIncludingThis(
   const PLDHashTable* aTable,
   PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
   mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
 
 #ifdef DEBUG
-void PL_DHashMarkTableImmutable(PLDHashTable* aTable);
+void
+PL_DHashMarkTableImmutable(PLDHashTable* aTable);
 #endif
 
 #endif /* pldhash_h___ */
