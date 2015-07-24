@@ -1437,6 +1437,10 @@ private:
 
   // Time spent between video load and video playback.
   TimeDurationAccumulator mJoinLatency;
+
+  // Indicates if user has interacted with the element.
+  // Used to block autoplay when disabled.
+  bool mHasUserInteraction;
 };
 
 } // namespace dom
