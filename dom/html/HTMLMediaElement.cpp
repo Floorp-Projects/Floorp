@@ -2030,7 +2030,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mAllowCasting(false),
     mIsCasting(false),
     mAudioCaptured(false),
-    mAudioCapturedByWindow(false),
     mPlayingBeforeSeek(false),
     mPlayingThroughTheAudioChannelBeforeSeek(false),
     mPausedForInactiveDocumentOrChannel(false),
@@ -2096,11 +2095,6 @@ HTMLMediaElement::~HTMLMediaElement()
   }
   if (mSrcStream) {
     EndSrcMediaStreamPlayback();
-  }
-
-  if (mCaptureStreamPort) {
-    mCaptureStreamPort->Destroy();
-    mCaptureStreamPort = nullptr;
   }
 
   NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 0,
@@ -4481,7 +4475,8 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
      (!mPaused &&
       (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
        (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-        !IsPlaybackEnded()) ||
+        !IsPlaybackEnded() &&
+        (!mSrcStream || HasAudio())) ||
        mPlayingThroughTheAudioChannelBeforeSeek));
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
@@ -4497,7 +4492,7 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
       if (!mAudioChannelAgent) {
         return;
       }
-      mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetInnerWindow(),
+      mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetWindow(),
                                                static_cast<int32_t>(mAudioChannel),
                                                this);
     }
@@ -4509,10 +4504,6 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
 void
 HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
 {
-  // Immediately check if this should go to the MSG instead of the normal
-  // media playback route.
-  WindowAudioCaptureChanged();
-
   // This is needed to pass nsContentUtils::IsCallerChrome().
   // AudioChannel API should not called from content but it can happen that
   // this method has some content JS in its stack.
@@ -4682,53 +4673,6 @@ HTMLMediaElement::GetTopLevelPrincipal()
   return principal.forget();
 }
 #endif // MOZ_EME
-
-NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged()
-{
-   MOZ_ASSERT(mAudioChannelAgent);
-
-  if (!OwnerDoc()->GetInnerWindow()) {
-    return NS_OK;
-  }
-  bool captured = OwnerDoc()->GetInnerWindow()->GetAudioCaptured();
-
-  if (captured != mAudioCapturedByWindow) {
-    if (captured) {
-      mAudioCapturedByWindow = true;
-      nsCOMPtr<nsPIDOMWindow> window =
-        do_QueryInterface(OwnerDoc()->GetParentObject());
-      uint64_t id = window->WindowID();
-      MediaStreamGraph* msg = MediaStreamGraph::GetInstance();
-
-      if (!mPlaybackStream) {
-        nsRefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);
-        mCaptureStreamPort = msg->ConnectToCaptureStream(id, stream->GetStream());
-      } else {
-        mCaptureStreamPort = msg->ConnectToCaptureStream(id, mPlaybackStream->GetStream());
-      }
-    } else {
-      mAudioCapturedByWindow = false;
-      if (mDecoder) {
-        ProcessedMediaStream* ps =
-          mCaptureStreamPort->GetSource()->AsProcessedStream();
-        MOZ_ASSERT(ps);
-
-        for (uint32_t i = 0; i < mOutputStreams.Length(); i++) {
-          if (mOutputStreams[i].mStream->GetStream() == ps) {
-            mOutputStreams.RemoveElementAt(i);
-            break;
-          }
-        }
-
-        mDecoder->RemoveOutputStream(ps);
-      }
-      mCaptureStreamPort->Destroy();
-      mCaptureStreamPort = nullptr;
-    }
-  }
-
-   return NS_OK;
-}
 
 AudioTrackList*
 HTMLMediaElement::AudioTracks()

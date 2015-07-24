@@ -9,8 +9,6 @@
 #include <stdint.h>
 
 #include "nsTArrayForwardDeclare.h"
-#include "AudioSampleFormat.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -30,26 +28,6 @@ namespace mozilla {
  *
  * Only 1, 2, 4 and 6 are currently defined in Web Audio.
  */
-
-enum {
-  SURROUND_L,
-  SURROUND_R,
-  SURROUND_C,
-  SURROUND_LFE,
-  SURROUND_SL,
-  SURROUND_SR
-};
-
-const uint32_t CUSTOM_CHANNEL_LAYOUTS = 6;
-
-// This is defined by some Windows SDK header.
-#undef IGNORE
-
-const int IGNORE = CUSTOM_CHANNEL_LAYOUTS;
-const float IGNORE_F = 0.0f;
-
-const int gMixingMatrixIndexByChannels[CUSTOM_CHANNEL_LAYOUTS - 1] =
-  { 0, 5, 9, 12, 14 };
 
 /**
  * Return a channel count whose channel layout includes all the channels from
@@ -75,102 +53,19 @@ AudioChannelsUpMix(nsTArray<const void*>* aChannelArray,
                    uint32_t aOutputChannelCount,
                    const void* aZeroChannel);
 
-
 /**
- * DownMixMatrix represents a conversion matrix efficiently by exploiting the
- * fact that each input channel contributes to at most one output channel,
- * except possibly for the C input channel in layouts that have one. Also,
- * every input channel is multiplied by the same coefficient for every output
- * channel it contributes to.
+ * Given an array of input channels (which must be float format!),
+ * downmix to aOutputChannelCount, and copy the results to the
+ * channel buffers in aOutputChannels.
+ * Don't call this with input count <= output count.
  */
-struct DownMixMatrix {
-  // Every input channel c is copied to output channel mInputDestination[c]
-  // after multiplying by mInputCoefficient[c].
-  uint8_t mInputDestination[CUSTOM_CHANNEL_LAYOUTS];
-  // If not IGNORE, then the C channel is copied to this output channel after
-  // multiplying by its coefficient.
-  uint8_t mCExtraDestination;
-  float mInputCoefficient[CUSTOM_CHANNEL_LAYOUTS];
-};
-
-static const DownMixMatrix
-gDownMixMatrices[CUSTOM_CHANNEL_LAYOUTS*(CUSTOM_CHANNEL_LAYOUTS - 1)/2] =
-{
-  // Downmixes to mono
-  { { 0, 0 }, IGNORE, { 0.5f, 0.5f } },
-  { { 0, IGNORE, IGNORE }, IGNORE, { 1.0f, IGNORE_F, IGNORE_F } },
-  { { 0, 0, 0, 0 }, IGNORE, { 0.25f, 0.25f, 0.25f, 0.25f } },
-  { { 0, IGNORE, IGNORE, IGNORE, IGNORE }, IGNORE, { 1.0f, IGNORE_F, IGNORE_F, IGNORE_F, IGNORE_F } },
-  { { 0, 0, 0, IGNORE, 0, 0 }, IGNORE, { 0.7071f, 0.7071f, 1.0f, IGNORE_F, 0.5f, 0.5f } },
-  // Downmixes to stereo
-  { { 0, 1, IGNORE }, IGNORE, { 1.0f, 1.0f, IGNORE_F } },
-  { { 0, 1, 0, 1 }, IGNORE, { 0.5f, 0.5f, 0.5f, 0.5f } },
-  { { 0, 1, IGNORE, IGNORE, IGNORE }, IGNORE, { 1.0f, 1.0f, IGNORE_F, IGNORE_F, IGNORE_F } },
-  { { 0, 1, 0, IGNORE, 0, 1 }, 1, { 1.0f, 1.0f, 0.7071f, IGNORE_F, 0.7071f, 0.7071f } },
-  // Downmixes to 3-channel
-  { { 0, 1, 2, IGNORE }, IGNORE, { 1.0f, 1.0f, 1.0f, IGNORE_F } },
-  { { 0, 1, 2, IGNORE, IGNORE }, IGNORE, { 1.0f, 1.0f, 1.0f, IGNORE_F, IGNORE_F } },
-  { { 0, 1, 2, IGNORE, IGNORE, IGNORE }, IGNORE, { 1.0f, 1.0f, 1.0f, IGNORE_F, IGNORE_F, IGNORE_F } },
-  // Downmixes to quad
-  { { 0, 1, 2, 3, IGNORE }, IGNORE, { 1.0f, 1.0f, 1.0f, 1.0f, IGNORE_F } },
-  { { 0, 1, 0, IGNORE, 2, 3 }, 1, { 1.0f, 1.0f, 0.7071f, IGNORE_F, 1.0f, 1.0f } },
-  // Downmixes to 5-channel
-  { { 0, 1, 2, 3, 4, IGNORE }, IGNORE, { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, IGNORE_F } }
-};
-
-/**
- * Given an array of input channels, downmix to aOutputChannelCount, and copy
- * the results to the channel buffers in aOutputChannels.  Don't call this with
- * input count <= output count.
- */
-template<typename T>
-void AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
-                     T** aOutputChannels,
+void
+AudioChannelsDownMix(const nsTArray<const void*>& aChannelArray,
+                     float** aOutputChannels,
                      uint32_t aOutputChannelCount,
-                     uint32_t aDuration)
-{
-  uint32_t inputChannelCount = aChannelArray.Length();
-  const void* const* inputChannels = aChannelArray.Elements();
-  NS_ASSERTION(inputChannelCount > aOutputChannelCount, "Nothing to do");
+                     uint32_t aDuration);
 
-  if (inputChannelCount > 6) {
-    // Just drop the unknown channels.
-    for (uint32_t o = 0; o < aOutputChannelCount; ++o) {
-      memcpy(aOutputChannels[o], inputChannels[o], aDuration*sizeof(T));
-    }
-    return;
-  }
-
-  // Ignore unknown channels, they're just dropped.
-  inputChannelCount = std::min<uint32_t>(6, inputChannelCount);
-
-  const DownMixMatrix& m = gDownMixMatrices[
-    gMixingMatrixIndexByChannels[aOutputChannelCount - 1] +
-    inputChannelCount - aOutputChannelCount - 1];
-
-  // This is slow, but general. We can define custom code for special
-  // cases later.
-  for (uint32_t s = 0; s < aDuration; ++s) {
-    // Reserve an extra junk channel at the end for the cases where we
-    // want an input channel to contribute to nothing
-    T outputChannels[CUSTOM_CHANNEL_LAYOUTS + 1];
-    memset(outputChannels, 0, sizeof(T)*(CUSTOM_CHANNEL_LAYOUTS));
-    for (uint32_t c = 0; c < inputChannelCount; ++c) {
-      outputChannels[m.mInputDestination[c]] +=
-        m.mInputCoefficient[c]*(static_cast<const T*>(inputChannels[c]))[s];
-    }
-    // Utilize the fact that in every layout, C is the third channel.
-    if (m.mCExtraDestination != IGNORE) {
-      outputChannels[m.mCExtraDestination] +=
-        m.mInputCoefficient[SURROUND_C]*(static_cast<const T*>(inputChannels[SURROUND_C]))[s];
-    }
-
-    for (uint32_t c = 0; c < aOutputChannelCount; ++c) {
-      aOutputChannels[c][s] = outputChannels[c];
-    }
-  }
-}
-
+// A version of AudioChannelsDownMix that downmixes int16_ts may be required.
 
 } // namespace mozilla
 

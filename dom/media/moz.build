@@ -196,7 +196,6 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'AbstractThread.cpp',
-    'AudioCaptureStream.cpp',
     'AudioChannelFormat.cpp',
     'AudioCompactor.cpp',
     'AudioSegment.cpp',
