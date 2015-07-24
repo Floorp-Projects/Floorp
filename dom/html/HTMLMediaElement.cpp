@@ -1420,6 +1420,12 @@ HTMLMediaElement::Seek(double aTime,
   // aTime should be non-NaN.
   MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
+  // Detect if user has interacted with element by seeking so that
+  // play will not be blocked when initiated by a script.
+  if (EventStateManager::IsHandlingUserInput() || nsContentUtils::IsCallerChrome()) {
+    mHasUserInteraction = true;
+  }
+
   StopSuspendingAfterFirstFrame();
 
   if (mSrcStream) {
@@ -2030,7 +2036,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
     mPlayBlockedBecauseHidden(false),
-    mElementInTreeState(ELEMENT_NOT_INTREE)
+    mElementInTreeState(ELEMENT_NOT_INTREE),
+    mHasUserInteraction(false)
 {
   if (!gMediaElementLog) {
     gMediaElementLog = PR_NewLogModule("nsMediaElement");
@@ -2146,14 +2153,16 @@ HTMLMediaElement::Play(ErrorResult& aRv)
 {
   // Prevent media element from being auto-started by a script when
   // media.autoplay.enabled=false
-  nsRefPtr<TimeRanges> played(Played());
-  if (played->Length() == 0
+  if (!mHasUserInteraction
       && !IsAutoplayEnabled()
       && !EventStateManager::IsHandlingUserInput()
       && !nsContentUtils::IsCallerChrome()) {
     LOG(LogLevel::Debug, ("%p Blocked attempt to autoplay media.", this));
     return;
   }
+
+  // Play was not blocked so assume user interacted with the element.
+  mHasUserInteraction = true;
 
   StopSuspendingAfterFirstFrame();
   SetPlayedOrSeeked(true);
