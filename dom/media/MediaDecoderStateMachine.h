@@ -149,6 +149,8 @@ public:
   };
 
   void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  // Remove an output stream added with AddOutputStream.
+  void RemoveOutputStream(MediaStream* aStream);
 
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
@@ -160,6 +162,7 @@ private:
   void InitializationTask();
 
   void DispatchAudioCaptured();
+  void DispatchAudioUncaptured();
 
   void Shutdown();
 public:

@@ -3177,6 +3177,25 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
   OwnerThread()->Dispatch(r.forget());
 }
 
+void MediaDecoderStateMachine::DispatchAudioUncaptured()
+{
+  nsRefPtr<MediaDecoderStateMachine> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
+  {
+    MOZ_ASSERT(self->OnTaskQueue());
+    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+    if (self->mAudioCaptured) {
+      // Start again the audio sink
+      self->mAudioCaptured = false;
+      if (self->IsPlaying()) {
+        self->StartAudioThread();
+      }
+      self->ScheduleStateMachine();
+    }
+  });
+  OwnerThread()->Dispatch(r.forget());
+}
+
 void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
                                                bool aFinishWhenEnded)
 {
@@ -3184,6 +3203,16 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
   mDecodedStream->Connect(aStream, aFinishWhenEnded);
   DispatchAudioCaptured();
+}
+
+void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  DECODER_LOG("RemoveOutputStream=%p!", aStream);
+  mDecodedStream->Remove(aStream);
+  if (!mDecodedStream->HasConsumers()) {
+    DispatchAudioUncaptured();
+  }
 }
 
 } // namespace mozilla
