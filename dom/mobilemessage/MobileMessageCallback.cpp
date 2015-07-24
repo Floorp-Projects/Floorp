@@ -276,28 +276,38 @@ MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress)
+MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress,
+                                            uint32_t aTypeOfNumber,
+                                            uint32_t aNumberPlanIdentification)
 {
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mDOMRequest->GetOwner()))) {
-    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
-  }
-  JSContext* cx = jsapi.cx();
-  JSString* smsc = JS_NewUCStringCopyN(cx, aSmscAddress.BeginReading(),
-                                       aSmscAddress.Length());
+  TypeOfAddress toa;
 
-  if (!smsc) {
-    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
-  }
+  // Check the value is valid and set TON accordingly.
+  bool isTonValid = aTypeOfNumber < uint32_t(TypeOfNumber::EndGuard_);
+  toa.mTypeOfNumber = (isTonValid) ?
+    static_cast<TypeOfNumber>(aTypeOfNumber) : TypeOfNumber::Unknown;
 
-  JS::Rooted<JS::Value> val(cx, JS::StringValue(smsc));
-  return NotifySuccess(val);
+  // Check the value is valid and set NPI accordingly.
+  bool isNpiValid =
+    aNumberPlanIdentification < uint32_t(NumberPlanIdentification::EndGuard_);
+  toa.mNumberPlanIdentification = (isNpiValid) ?
+    static_cast<NumberPlanIdentification>(aNumberPlanIdentification) :
+    NumberPlanIdentification::Unknown;
+
+  SmscAddress smsc;
+  smsc.mTypeOfAddress = toa;
+  smsc.mAddress.Construct(nsString(aSmscAddress));
+
+  mPromise->MaybeResolve(smsc);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSmscAddressFailed(int32_t aError)
 {
-  return NotifyError(aError);
+  const nsAString& errorStr = ConvertErrorCodeToErrorString(aError);
+  mPromise->MaybeRejectBrokenly(errorStr);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

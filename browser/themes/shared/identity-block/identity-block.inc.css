@@ -18,7 +18,7 @@
 %endif
 %endif
 
-  border-inline-end: 1px solid;
+  border-inline-end: 1px solid var(--identity-box-border-color);
   border-image: linear-gradient(transparent 15%,
                                 var(--identity-box-border-color) 15%,
                                 var(--identity-box-border-color) 85%,
@@ -33,6 +33,7 @@
 #identity-box:hover,
 #identity-box[open=true] {
   background-color: var(--identity-box-selected-background-color);
+  border-image-source: none;
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
@@ -119,8 +120,7 @@
 }
 
 .chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://branding/content/identity-icons-brand.png);
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
 .verifiedDomain > #page-proxy-favicon[pageproxystate="valid"],
@@ -144,13 +144,6 @@
 
 #page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.3;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://branding/content/identity-icons-brand@2x.png);
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
 }
 
 #urlbar[actiontype="searchengine"] > #identity-box > #page-proxy-favicon {

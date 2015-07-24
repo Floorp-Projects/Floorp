@@ -228,13 +228,15 @@ NetworkManager.prototype = {
         let excludeSupl = aMsg.json.excludeSupl;
         let excludeIms = aMsg.json.excludeIms;
         let excludeDun = aMsg.json.excludeDun;
+        let excludeFota = aMsg.json.excludeFota;
         let interfaces = [];
 
         for each (let i in this.networkInterfaces) {
           if ((i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS && excludeMms) ||
               (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL && excludeSupl) ||
               (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS && excludeIms) ||
-              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN && excludeDun)) {
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN && excludeDun) ||
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_FOTA && excludeFota)) {
             continue;
           }
 
@@ -614,7 +616,8 @@ NetworkManager.prototype = {
     return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
             type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL ||
             type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS ||
-            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN ||
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_FOTA);
   },
 
   isNetworkTypeMobile: function(type) {

@@ -46,6 +46,7 @@ function testBenignPage() {
   ok(!TrackingProtection.container.hidden, "The container is visible");
   ok(!TrackingProtection.content.hasAttribute("state"), "content: no state");
   ok(!TrackingProtection.icon.hasAttribute("state"), "icon: no state");
+  ok(!TrackingProtection.icon.hasAttribute("tooltiptext"), "icon: no tooltip");
 
   ok(hidden("#tracking-protection-icon"), "icon is hidden");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
@@ -64,6 +65,8 @@ function testTrackingPage(window) {
       'content: state="blocked-tracking-content"');
   is(TrackingProtection.icon.getAttribute("state"), "blocked-tracking-content",
       'icon: state="blocked-tracking-content"');
+  is(TrackingProtection.icon.getAttribute("tooltiptext"),
+     gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"), "correct tooltip");
 
   ok(!hidden("#tracking-protection-icon"), "icon is visible");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
@@ -90,6 +93,8 @@ function testTrackingPageUnblocked() {
       'content: state="loaded-tracking-content"');
   is(TrackingProtection.icon.getAttribute("state"), "loaded-tracking-content",
       'icon: state="loaded-tracking-content"');
+  is(TrackingProtection.icon.getAttribute("tooltiptext"),
+     gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"), "correct tooltip");
 
   ok(!hidden("#tracking-protection-icon"), "icon is visible");
   ok(!hidden("#tracking-action-block"), "blockButton is visible");
