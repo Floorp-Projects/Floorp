@@ -358,15 +358,14 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
       strcpy(uniqueId,deviceName); // safe given assert and initialization/error-check
     }
 
-    nsRefPtr<MediaEngineWebRTCAudioSource> aSource;
+    nsRefPtr<MediaEngineWebRTCMicrophoneSource> aSource;
     NS_ConvertUTF8toUTF16 uuid(uniqueId);
     if (mAudioSources.Get(uuid, getter_AddRefs(aSource))) {
       // We've already seen this device, just append.
       aASources->AppendElement(aSource.get());
     } else {
-      aSource = new MediaEngineWebRTCAudioSource(
-        mThread, mVoiceEngine, i, deviceName, uniqueId
-      );
+      aSource = new MediaEngineWebRTCMicrophoneSource(mThread, mVoiceEngine, i,
+                                                      deviceName, uniqueId);
       mAudioSources.Put(uuid, aSource); // Hashtable takes ownership.
       aASources->AppendElement(aSource);
     }
