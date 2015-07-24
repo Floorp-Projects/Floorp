@@ -13577,27 +13577,6 @@ nsGlobalWindow::DisableTimeChangeNotifications()
   mozilla::time::RemoveWindowListener(this);
 }
 
-static PLDHashOperator
-CollectSizeAndListenerCount(
-  nsPtrHashKey<DOMEventTargetHelper>* aEntry,
-  void *arg)
-{
-  nsWindowSizes* windowSizes = static_cast<nsWindowSizes*>(arg);
-
-  DOMEventTargetHelper* et = aEntry->GetKey();
-
-  if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
-    windowSizes->mDOMEventTargetsSize +=
-      iSizeOf->SizeOfEventTargetIncludingThis(windowSizes->mMallocSizeOf);
-  }
-
-  if (EventListenerManager* elm = et->GetExistingListenerManager()) {
-    windowSizes->mDOMEventListenersCount += elm->ListenerCount();
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
@@ -13631,10 +13610,19 @@ nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOMEventTargetsSize +=
     mEventTargetObjects.SizeOfExcludingThis(nullptr,
                                             aWindowSizes->mMallocSizeOf);
-  aWindowSizes->mDOMEventTargetsCount +=
-    const_cast<nsTHashtable<nsPtrHashKey<DOMEventTargetHelper> >*>
-      (&mEventTargetObjects)->EnumerateEntries(CollectSizeAndListenerCount,
-                                               aWindowSizes);
+
+
+  for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done(); iter.Next()) {
+    DOMEventTargetHelper* et = iter.Get()->GetKey();
+    if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
+      aWindowSizes->mDOMEventTargetsSize +=
+        iSizeOf->SizeOfEventTargetIncludingThis(aWindowSizes->mMallocSizeOf);
+    }
+    if (EventListenerManager* elm = et->GetExistingListenerManager()) {
+      aWindowSizes->mDOMEventListenersCount += elm->ListenerCount();
+    }
+    ++aWindowSizes->mDOMEventTargetsCount;
+  }
 }
 
 
