@@ -1118,12 +1118,15 @@ ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
 
     nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
     if (!pluginHost) {
+        NS_WARNING("Plugin host not found");
         return false;
     }
     nsPluginTag* tag =  pluginHost->PluginWithId(aPluginId);
 
     if (!tag) {
-        return false;
+        // Default state is blocked anyway
+        NS_WARNING("Plugin tag not found. This should never happen, but to avoid a crash we're forcibly blocking it");
+        return true;
     }
 
     return NS_SUCCEEDED(tag->GetBlocklistState(aState));
