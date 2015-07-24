@@ -689,8 +689,8 @@ OnSharedPreferenceChangeListener
                     pref.setSummary(getString(R.string.pref_category_customize_alt_summary));
                 }
                 if (getResources().getString(R.string.pref_category_input_options).equals(key)) {
-                    if (!AppConstants.NIGHTLY_BUILD || (!InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)) &&
-                            !InputOptionsUtils.supportsQrCodeReader(getApplicationContext()))) {
+                    if (!InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)) &&
+                            !InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -824,7 +824,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_VOICE_INPUT_ENABLED.equals(key)) {
-                    if (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt))) {
+                    if (!InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt))) {
                         // Remove UI for voice input on non nightly builds.
                         preferences.removePreference(pref);
                         i--;
