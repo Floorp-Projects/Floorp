@@ -206,13 +206,13 @@ AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
           AudioDataValue* ptr =
             PointerForOffsetInChannel(buf.Elements(), outBufferLength,
                                       aOutputChannels, channel, offsetSamples);
-          PodCopy(ptr, reinterpret_cast<const float*>(channelData[channel]),
+          PodCopy(ptr, reinterpret_cast<const AudioDataValue*>(channelData[channel]),
                   frames);
         }
         MOZ_ASSERT(channelData.Length() == aOutputChannels);
       } else if (channelData.Length() > aOutputChannels) {
         // Down mix.
-        nsAutoTArray<float*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
+        nsAutoTArray<AudioDataValue*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
         outChannelPtrs.SetLength(aOutputChannels);
         uint32_t offsetSamples = 0;
         for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
@@ -228,7 +228,7 @@ AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
           AudioDataValue* ptr =
             PointerForOffsetInChannel(buf.Elements(), outBufferLength,
                                       aOutputChannels, channel, offsetSamples);
-          PodCopy(ptr, reinterpret_cast<const float*>(channelData[channel]),
+          PodCopy(ptr, reinterpret_cast<const AudioDataValue*>(channelData[channel]),
                   frames);
         }
       }
