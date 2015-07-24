@@ -278,6 +278,22 @@ mozilla::jni::String::LocalRef GeckoAppShell::GetExternalPublicDirectory(mozilla
     return mozilla::jni::Method<GetExternalPublicDirectory_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoAppShell::GetHWDecoderCapability_t::name[];
+constexpr char GeckoAppShell::GetHWDecoderCapability_t::signature[];
+
+bool GeckoAppShell::GetHWDecoderCapability()
+{
+    return mozilla::jni::Method<GetHWDecoderCapability_t>::Call(nullptr, nullptr);
+}
+
+constexpr char GeckoAppShell::GetHWEncoderCapability_t::name[];
+constexpr char GeckoAppShell::GetHWEncoderCapability_t::signature[];
+
+bool GeckoAppShell::GetHWEncoderCapability()
+{
+    return mozilla::jni::Method<GetHWEncoderCapability_t>::Call(nullptr, nullptr);
+}
+
 constexpr char GeckoAppShell::GetHandlersForMimeTypeWrapper_t::name[];
 constexpr char GeckoAppShell::GetHandlersForMimeTypeWrapper_t::signature[];
 
