@@ -211,7 +211,7 @@ BytecodeCompiler::maybeCompressSource()
         } else if (!scriptSource->setSourceCopy(cx, sourceBuffer, sourceArgumentsNotIncluded,
                                                 sourceCompressor))
         {
-            return nullptr;
+            return false;
         }
     }
 
@@ -342,7 +342,7 @@ BytecodeCompiler::handleStatementParseFailure(HandleObject scopeChain, HandleScr
     // Destroying the parse context will destroy its free
     // variables, so check if any deoptimization is needed.
     if (!maybeCheckEvalFreeVariables(evalCaller, scopeChain, parseContext.ref()))
-        return nullptr;
+        return false;
 
     parseContext.reset();
     if (!createParseContext(parseContext, globalsc, staticLevel, script->bindings.numBlockScoped()))
