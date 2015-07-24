@@ -532,13 +532,6 @@ public:
     }
   }
 
-  // Capture Stream API. This allows to get a mixed-down output for a window.
-  void RegisterCaptureStreamForWindow(uint64_t aWindowId,
-                                      ProcessedMediaStream* aCaptureStream);
-  void UnregisterCaptureStreamForWindow(uint64_t aWindowId);
-  already_AddRefed<MediaInputPort>
-  ConnectToCaptureStream(uint64_t aWindowId, MediaStream* aMediaStream);
-
   // Data members
   //
   /**
@@ -762,16 +755,6 @@ private:
    * Used to pass memory report information across threads.
    */
   nsTArray<AudioNodeSizes> mAudioStreamSizes;
-
-  struct WindowAndStream
-  {
-    uint64_t mWindowId;
-    nsRefPtr<ProcessedMediaStream> mCaptureStreamSink;
-  };
-  /**
-   * Stream for window audio capture.
-   */
-  nsTArray<WindowAndStream> mWindowCaptureStreams;
   /**
    * Indicates that the MSG thread should gather data for a memory report.
    */

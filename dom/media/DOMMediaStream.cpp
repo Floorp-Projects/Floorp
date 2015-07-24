@@ -302,18 +302,6 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
 }
 
 void
-DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
-                                       MediaStreamGraph* aGraph)
-{
-  mWindow = aWindow;
-
-  if (!aGraph) {
-    aGraph = MediaStreamGraph::GetInstance();
-  }
-  InitStreamCommon(aGraph->CreateAudioCaptureStream(this));
-}
-
-void
 DOMMediaStream::InitStreamCommon(MediaStream* aStream)
 {
   mStream = aStream;
@@ -338,15 +326,6 @@ DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 {
   nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitTrackUnionStream(aWindow, aGraph);
-  return stream.forget();
-}
-
-already_AddRefed<DOMMediaStream>
-DOMMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
-                                         MediaStreamGraph* aGraph)
-{
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitAudioCaptureStream(aWindow, aGraph);
   return stream.forget();
 }
 
@@ -671,15 +650,6 @@ DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 {
   nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitTrackUnionStream(aWindow, aGraph);
-  return stream.forget();
-}
-
-already_AddRefed<DOMLocalMediaStream>
-DOMLocalMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
-                                              MediaStreamGraph* aGraph)
-{
-  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitAudioCaptureStream(aWindow, aGraph);
   return stream.forget();
 }
 
