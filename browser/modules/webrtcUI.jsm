@@ -188,7 +188,8 @@ function getHost(uri, href) {
 
 function prompt(aBrowser, aRequest) {
   let {audioDevices: audioDevices, videoDevices: videoDevices,
-       sharingScreen: sharingScreen, requestTypes: requestTypes} = aRequest;
+       sharingScreen: sharingScreen, sharingAudio: sharingAudio,
+       requestTypes: requestTypes} = aRequest;
   let uri = Services.io.newURI(aRequest.documentURI, null, null);
   let host = getHost(uri);
   let chromeDoc = aBrowser.ownerDocument;
@@ -198,10 +199,9 @@ function prompt(aBrowser, aRequest) {
   let message = stringBundle.getFormattedString(stringId, [host]);
 
   let mainLabel;
-  if (sharingScreen) {
+  if (sharingScreen || sharingAudio) {
     mainLabel = stringBundle.getString("getUserMedia.shareSelectedItems.label");
-  }
-  else {
+  } else {
     let string = stringBundle.getString("getUserMedia.shareSelectedDevices.label");
     mainLabel = PluralForm.get(requestTypes.length, string);
   }
@@ -225,8 +225,8 @@ function prompt(aBrowser, aRequest) {
       }
     }
   ];
-
-  if (!sharingScreen) { // Bug 1037438: implement 'never' for screen sharing.
+  // Bug 1037438: implement 'never' for screen sharing.
+  if (!sharingScreen && !sharingAudio) {
     secondaryActions.push({
       label: stringBundle.getString("getUserMedia.never.label"),
       accessKey: stringBundle.getString("getUserMedia.never.accesskey"),
@@ -243,10 +243,10 @@ function prompt(aBrowser, aRequest) {
     });
   }
 
-  if (aRequest.secure && !sharingScreen) {
+  if (aRequest.secure && !sharingScreen && !sharingAudio) {
     // Don't show the 'Always' action if the connection isn't secure, or for
-    // screen sharing (because we can't guess which window the user wants to
-    // share without prompting).
+    // screen/audio sharing (because we can't guess which window the user wants
+    // to share without prompting).
     secondaryActions.unshift({
       label: stringBundle.getString("getUserMedia.always.label"),
       accessKey: stringBundle.getString("getUserMedia.always.accesskey"),
@@ -266,7 +266,8 @@ function prompt(aBrowser, aRequest) {
       if (aTopic == "shown") {
         let PopupNotifications = chromeDoc.defaultView.PopupNotifications;
         let popupId = "Devices";
-        if (requestTypes.length == 1 && requestTypes[0] == "Microphone")
+        if (requestTypes.length == 1 && (requestTypes[0] == "Microphone" ||
+                                         requestTypes[0] == "AudioCapture"))
           popupId = "Microphone";
         if (requestTypes.indexOf("Screen") != -1)
           popupId = "Screen";
@@ -384,7 +385,7 @@ function prompt(aBrowser, aRequest) {
 
       chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length || sharingScreen;
       chromeDoc.getElementById("webRTC-selectWindowOrScreen").hidden = !sharingScreen || !videoDevices.length;
-      chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length;
+      chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length || sharingAudio;
 
       let camMenupopup = chromeDoc.getElementById("webRTC-selectCamera-menupopup");
       let windowMenupopup = chromeDoc.getElementById("webRTC-selectWindow-menupopup");
@@ -393,12 +394,16 @@ function prompt(aBrowser, aRequest) {
         listScreenShareDevices(windowMenupopup, videoDevices);
       else
         listDevices(camMenupopup, videoDevices);
-      listDevices(micMenupopup, audioDevices);
+
+      if (!sharingAudio)
+        listDevices(micMenupopup, audioDevices);
+
       if (requestTypes.length == 2) {
         let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
         if (!sharingScreen)
           addDeviceToList(camMenupopup, stringBundle.getString("getUserMedia.noVideo.label"), "-1");
-        addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
+        if (!sharingAudio)
+          addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
       }
 
       this.mainAction.callback = function(aRemember) {
@@ -416,13 +421,18 @@ function prompt(aBrowser, aRequest) {
           }
         }
         if (audioDevices.length) {
-          let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
-          let allowMic = audioDeviceIndex != "-1";
-          if (allowMic)
-            allowedDevices.push(audioDeviceIndex);
-          if (aRemember) {
-            perms.add(uri, "microphone",
-                      allowMic ? perms.ALLOW_ACTION : perms.DENY_ACTION);
+          if (!sharingAudio) {
+            let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
+            let allowMic = audioDeviceIndex != "-1";
+            if (allowMic)
+              allowedDevices.push(audioDeviceIndex);
+            if (aRemember) {
+              perms.add(uri, "microphone",
+                        allowMic ? perms.ALLOW_ACTION : perms.DENY_ACTION);
+            }
+          } else {
+            // Only one device possible for audio capture.
+            allowedDevices.push(0);
           }
         }
 
