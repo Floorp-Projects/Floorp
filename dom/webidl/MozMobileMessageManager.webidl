@@ -194,7 +194,7 @@ interface MozMobileMessageManager : EventTarget
   DOMRequest retrieveMMS(MozMmsMessage message);
 
   [Throws]
-  DOMRequest getSmscAddress(optional unsigned long serviceId);
+  Promise<SmscAddress> getSmscAddress(optional unsigned long serviceId);
 
   /**
    * Set the SMSC address.
