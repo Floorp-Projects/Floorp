@@ -614,7 +614,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #nav-bar #PanelUI-menu-button {
-  -moz-padding-start: 7px;
+  -moz-padding-start: 5px;
   -moz-padding-end: 5px;
 }
 
