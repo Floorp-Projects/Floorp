@@ -953,10 +953,12 @@ Convert(BluetoothPropertyType aIn, uint8_t& aOut)
 nsresult
 Convert(const BluetoothRemoteName& aIn, nsAString& aOut)
 {
+  const char* name = reinterpret_cast<const char*>(aIn.mName);
+
   // We construct an nsCString here because the string
   // returned from the PDU is not 0-terminated.
   aOut = NS_ConvertUTF8toUTF16(
-    nsCString(reinterpret_cast<const char*>(aIn.mName), sizeof(aIn.mName)));
+    nsCString(name, strnlen(name, sizeof(aIn.mName))));
   return NS_OK;
 }
 
