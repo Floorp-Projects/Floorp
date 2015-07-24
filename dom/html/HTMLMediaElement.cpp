@@ -2025,7 +2025,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mAutoplaying(true),
     mAutoplayEnabled(true),
     mPaused(true),
-    mMuted(0),
+    mMuted(AudioChannelService::IsAudioChannelMutedByDefault()
+             ? MUTED_BY_AUDIO_CHANNEL : 0),
     mStatsShowing(false),
     mAllowCasting(false),
     mIsCasting(false),
@@ -4447,18 +4448,20 @@ nsresult HTMLMediaElement::UpdateChannelMuteState(float aVolume, bool aMuted)
     SetVolumeInternal();
   }
 
-  // We have to mute this channel.
-  if (aMuted && !ComputedMuted()) {
-    SetMutedInternal(mMuted | MUTED_BY_AUDIO_CHANNEL);
-    if (UseAudioChannelAPI()) {
-      DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
-      mHaveDispatchedInterruptBeginEvent = true;
-    }
-  } else if (!aMuted && ComputedMuted()) {
-    SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_CHANNEL);
-    if (UseAudioChannelAPI() && mHaveDispatchedInterruptBeginEvent) {
-      mHaveDispatchedInterruptBeginEvent = false;
-      DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
+  if (aMuted != ComputedMuted()) {
+    // We have to mute this channel.
+    if (aMuted && !ComputedMuted()) {
+      SetMutedInternal(mMuted | MUTED_BY_AUDIO_CHANNEL);
+      if (UseAudioChannelAPI() && !mHaveDispatchedInterruptBeginEvent) {
+        DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptbegin"));
+        mHaveDispatchedInterruptBeginEvent = true;
+      }
+    } else if (!aMuted && ComputedMuted()) {
+      SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_CHANNEL);
+      if (UseAudioChannelAPI() && mHaveDispatchedInterruptBeginEvent) {
+        mHaveDispatchedInterruptBeginEvent = false;
+        DispatchAsyncEvent(NS_LITERAL_STRING("mozinterruptend"));
+      }
     }
   }
 
