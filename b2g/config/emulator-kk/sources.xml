@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="db299103dd17a873cba4ff88e62ec173bf80fe62"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="ade1ef5249cfab921e00ed67b30f3d03c2e24b5e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9f45c1988fe72749f0659409e6e3320fabf7b79a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -123,7 +123,7 @@
   <project name="platform/system/security" path="system/security" revision="583374f69f531ba68fc3dcbff1f74893d2a96406"/>
   <project name="platform/system/vold" path="system/vold" revision="d4455b8cf361f8353e8aebac15ffd64b4aedd2b9"/>
   <project name="platform/external/icu4c" path="external/icu4c" remote="aosp" revision="b4c6379528887dc25ca9991a535a8d92a61ad6b6"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="f3cedd7fd9b1649aa5107d466be9078bb7602af6"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="f313503b5c91aaa6fcf962d4ec9bf260e0c00bf1"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="9395eb5aa885cf6d305a202de6e9694a58a89717"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->

@@ -63,7 +63,7 @@
 :root[devtoolstheme="dark"] #identity-box {
   --identity-box-border-color: #5F6670;
   --identity-box-chrome-color: #46afe3;
-  --verified-identity-box-background-color: transparent;
+  --identity-box-verified-background-color: transparent;
   --identity-box-selected-background-color: rgba(231,230,230,.2);
 }
 

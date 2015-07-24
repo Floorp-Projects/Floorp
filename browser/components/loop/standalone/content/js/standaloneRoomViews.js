@@ -372,6 +372,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           return true;
 
         case ROOM_STATES.READY:
+        case ROOM_STATES.GATHER:
         case ROOM_STATES.INIT:
         case ROOM_STATES.JOINING:
         case ROOM_STATES.SESSION_CONNECTED:
