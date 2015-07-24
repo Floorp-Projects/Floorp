@@ -326,7 +326,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mExtraCurrentTime(0)
   , mExtraCurrentTimeSinceLastStartedBlocking(0)
   , mExtraCurrentTimeUpdatedSinceLastStableState(false)
-  , mHaveDispatchedInterruptBeginEvent(false)
 {
   bool startWithAudioDriver = true;
   MediaStreamGraph* graph = aIsOffline ?
@@ -495,12 +494,10 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
   if (aMuted != mAudioChannelAgentPlaying) {
     mAudioChannelAgentPlaying = aMuted;
 
-    if (UseAudioChannelAPI() &&
-        (mHaveDispatchedInterruptBeginEvent || aMuted)) {
+    if (UseAudioChannelAPI()) {
       Context()->DispatchTrustedEvent(
         !aMuted ? NS_LITERAL_STRING("mozinterruptend")
                 : NS_LITERAL_STRING("mozinterruptbegin"));
-      mHaveDispatchedInterruptBeginEvent = aMuted;
     }
   }
 

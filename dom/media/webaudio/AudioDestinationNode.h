@@ -111,7 +111,6 @@ private:
   double mExtraCurrentTime;
   double mExtraCurrentTimeSinceLastStartedBlocking;
   bool mExtraCurrentTimeUpdatedSinceLastStableState;
-  bool mHaveDispatchedInterruptBeginEvent;
 };
 
 } // namespace dom
