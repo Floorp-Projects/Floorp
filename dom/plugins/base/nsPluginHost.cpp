@@ -247,6 +247,11 @@ IsTypeInList(nsCString &aMimeType, nsCString aTypeList)
   commaSeparated += aMimeType;
   commaSeparated.Append(',');
 
+  // Lower-case the search string and MIME type to properly handle a mixed-case
+  // type, as MIME types are case insensitive.
+  ToLowerCase(searchStr);
+  ToLowerCase(commaSeparated);
+
   return FindInReadable(commaSeparated, start, end);
 }
 

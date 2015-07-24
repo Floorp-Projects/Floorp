@@ -8,7 +8,6 @@
 #define mozilla_AutoGlobalTimelineMarker_h_
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Vector.h"
 #include "nsRefPtr.h"
 
 class nsDocShell;
@@ -36,12 +35,6 @@ class MOZ_STACK_CLASS AutoGlobalTimelineMarker
 
   // The name of the marker we are adding.
   const char* mName;
-
-  // The set of docshells that will get the marker.
-  Vector<nsRefPtr<nsDocShell>> mDocShells;
-
-  // True as long as no operation has failed, eg due to OOM.
-  bool mDocShellsRetrieved;
 
 public:
   explicit AutoGlobalTimelineMarker(const char* aName

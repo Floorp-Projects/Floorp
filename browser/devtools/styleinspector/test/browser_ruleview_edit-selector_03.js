@@ -36,7 +36,9 @@ function* testEditSelector(view, name) {
 
   info("Entering a new selector name and committing");
   editor.input.value = name;
+  let onRuleViewChanged = once(view, "ruleview-invalid-selector");
   EventUtils.synthesizeKey("VK_RETURN", {});
+  yield onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   is(getRuleViewRule(view, name), undefined,

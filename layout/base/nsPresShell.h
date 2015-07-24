@@ -413,6 +413,7 @@ protected:
   void HandlePostedReflowCallbacks(bool aInterruptible);
   void CancelPostedReflowCallbacks();
 
+  void ScheduleBeforeFirstPaint();
   void UnsuppressAndInvalidate();
 
   void WillCauseReflow() {

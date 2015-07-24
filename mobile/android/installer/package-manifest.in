@@ -424,6 +424,11 @@
 @BINPATH@/components/ActivityWrapper.js
 @BINPATH@/components/ActivityMessageConfigurator.js
 
+@BINPATH@/components/SystemMessageInternal.js
+@BINPATH@/components/SystemMessageManager.js
+@BINPATH@/components/SystemMessageCache.js
+@BINPATH@/components/SystemMessageManager.manifest
+
 @BINPATH@/components/TCPSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPServerSocket.js

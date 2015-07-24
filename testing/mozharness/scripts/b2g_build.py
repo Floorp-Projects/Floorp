@@ -355,9 +355,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             config_dir = os.path.join(dirs['gecko_src'], 'b2g', 'config',
                                       self.config.get('b2g_config_dir', self.config['target']))
             manifest = os.path.abspath(os.path.join(config_dir, gecko_config['tooltool_manifest']))
-            self.tooltool_fetch(manifest=manifest,
-                                bootstrap_cmd=gecko_config.get('tooltool_bootstrap_cmd'),
-                                output_dir=dirs['work_dir'])
+            self.tooltool_fetch(manifest=manifest, output_dir=dirs['work_dir'])
 
     def unpack_blobs(self):
         dirs = self.query_abs_dirs()
