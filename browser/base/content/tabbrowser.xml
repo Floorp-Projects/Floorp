@@ -1100,8 +1100,11 @@
                                         false);
 
             if (securityUI) {
+              // Include the true final argument to indicate that this event is
+              // simulated (instead of being observed by the webProgressListener).
               this._callProgressListeners(null, "onSecurityChange",
-                                          [webProgress, null, securityUI.state], true, false);
+                                          [webProgress, null, securityUI.state, true],
+                                          true, false);
             }
 
             var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
