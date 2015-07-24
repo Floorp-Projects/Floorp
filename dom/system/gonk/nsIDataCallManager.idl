@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsINetworkManager.idl"
 
-[scriptable, uuid(e48d290b-ea3b-4987-9333-2e01f64c92ba)]
+[scriptable, uuid(b8ce8528-fce8-4b5e-9d0a-c3247296ccaf)]
 interface nsIRilNetworkInterface : nsINetworkInterface
 {
   readonly attribute unsigned long serviceId;

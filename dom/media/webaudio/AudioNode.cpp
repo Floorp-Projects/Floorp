@@ -294,9 +294,10 @@ AudioNode::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& 
 void
 AudioNode::SendChannelMixingParametersToStream()
 {
-  MOZ_ASSERT(mStream, "How come we don't have a stream here?");
-  mStream->SetChannelMixingParameters(mChannelCount, mChannelCountMode,
-                                 mChannelInterpretation);
+  if (mStream) {
+    mStream->SetChannelMixingParameters(mChannelCount, mChannelCountMode,
+                                        mChannelInterpretation);
+  }
 }
 
 void
@@ -422,8 +423,9 @@ AudioNode::SetPassThrough(bool aPassThrough)
 {
   MOZ_ASSERT(NumberOfInputs() <= 1 && NumberOfOutputs() == 1);
   mPassThrough = aPassThrough;
-  MOZ_ASSERT(mStream, "How come we don't have a stream here?");
-  mStream->SetPassThrough(mPassThrough);
+  if (mStream) {
+    mStream->SetPassThrough(mPassThrough);
+  }
 }
 
 } // namespace dom

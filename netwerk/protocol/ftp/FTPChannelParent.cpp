@@ -6,10 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/FTPChannelParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsFTPChannel.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
 #include "nsFtpProtocolHandler.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPromptProvider.h"
 #include "nsIEncodedChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIForcePendingChannel.h"
@@ -22,6 +26,7 @@
 #include "nsIOService.h"
 #include "mozilla/LoadInfo.h"
 
+using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 #undef LOG
@@ -30,7 +35,9 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-FTPChannelParent::FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatus aOverrideStatus)
+FTPChannelParent::FTPChannelParent(const PBrowserOrId& aIframeEmbedding,
+                                   nsILoadContext* aLoadContext,
+                                   PBOverrideStatus aOverrideStatus)
   : mIPCClosed(false)
   , mLoadContext(aLoadContext)
   , mPBOverride(aOverrideStatus)
@@ -41,8 +48,12 @@ FTPChannelParent::FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatu
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
-  NS_ASSERTION(handler, "no ftp handler");
-  
+  MOZ_ASSERT(handler, "no ftp handler");
+
+  if (aIframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
+    mTabParent = static_cast<dom::TabParent*>(aIframeEmbedding.get_PBrowserParent());
+  }
+
   mObserver = new OfflineObserver(this);
 }
 
@@ -450,6 +461,21 @@ FTPChannelParent::Delete()
 NS_IMETHODIMP
 FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
 {
+  if (uuid.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
+      uuid.Equals(NS_GET_IID(nsISecureBrowserUI))) {
+    if (mTabParent) {
+      return mTabParent->QueryInterface(uuid, result);
+    }
+  } else if (uuid.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+             uuid.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+    nsCOMPtr<nsIAuthPromptProvider> provider(do_QueryObject(mTabParent));
+    if (provider) {
+      return provider->GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL,
+                                     uuid,
+                                     result);
+    }
+  }
+
   // Only support nsILoadContext if child channel's callbacks did too
   if (uuid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
     nsCOMPtr<nsILoadContext> copy = mLoadContext;

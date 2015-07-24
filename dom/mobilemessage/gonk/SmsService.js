@@ -1031,7 +1031,9 @@ SmsService.prototype = {
                                                    null,
                                                    (aResponse) => {
       if (!aResponse.errorMsg) {
-        aRequest.notifyGetSmscAddress(aResponse.smscAddress);
+        aRequest.notifyGetSmscAddress(aResponse.smscAddress,
+                                      aResponse.typeOfNumber,
+                                      aResponse.numberPlanIdentification);
       } else {
         aRequest.notifyGetSmscAddressFailed(
           Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);

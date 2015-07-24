@@ -26,7 +26,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioSink)
 
   AudioSink(MediaQueue<AudioData>& aAudioQueue,
-            ReentrantMonitor& aMonitor,
             int64_t aStartTime,
             const AudioInfo& aInfo,
             dom::AudioChannel aChannel);
@@ -35,9 +34,10 @@ public:
   // or rejected if any error.
   nsRefPtr<GenericPromise> Init();
 
+  /*
+   * All public functions below are thread-safe.
+   */
   int64_t GetPosition();
-
-  // Thread-safe. Can be called on any thread.
   int64_t GetEndTime() const;
 
   // Check whether we've pushed more frames to the audio hardware than it has
@@ -45,14 +45,16 @@ public:
   bool HasUnplayedFrames();
 
   // Shut down the AudioSink's resources.
-  // Must be called with the decoder monitor held.
   void Shutdown();
 
   void SetVolume(double aVolume);
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
-
   void SetPlaying(bool aPlaying);
+
+  // Wake up the audio loop if it is waiting for data to play or the audio
+  // queue is finished.
+  void NotifyData();
 
 private:
   ~AudioSink() {}
@@ -104,7 +106,7 @@ private:
   }
 
   ReentrantMonitor& GetReentrantMonitor() const {
-    return mDecoderMonitor;
+    return mMonitor;
   }
 
   void AssertCurrentThreadInMonitor() const {
@@ -114,7 +116,7 @@ private:
   void AssertOnAudioThread();
 
   MediaQueue<AudioData>& mAudioQueue;
-  ReentrantMonitor& mDecoderMonitor;
+  mutable ReentrantMonitor mMonitor;
 
   // Thread for pushing audio onto the audio hardware.
   // The "audio push thread".

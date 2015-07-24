@@ -152,8 +152,6 @@ private:
                       uint32_t aIdxInParent);
   void CheckDocTree() const;
 
-  static PLDHashOperator ShutdownAccessibles(ProxyEntry* entry, void* unused);
-
   nsTArray<DocAccessibleParent*> mChildDocs;
   DocAccessibleParent* mParentDoc;
 

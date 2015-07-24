@@ -238,7 +238,9 @@ media::TimeIntervals
 MediaDecoderReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
+  if (!HaveStartTime()) {
+    return media::TimeIntervals();
+  }
   AutoPinned<MediaResource> stream(mDecoder->GetResource());
 
   if (!mDuration.Ref().isSome()) {

@@ -22,3 +22,5 @@ skip-if(B2G||Mulet) random-if(transparentScrollbars) fails-if(Android&&browserIs
 skip-if(B2G||Mulet) random-if(transparentScrollbars) fails-if(Android&&browserIsRemote) == hScrollAbsMinHeightD.html greenboxhbar.html # bug 650591, 732565 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(transparentScrollbars) fails-if(Android&&browserIsRemote) == hScrollAbsMinHeightQuirksD.html greenboxhbar.html # bug 650591, 732565 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == dynamicHeight100.html dynamicHeight100-ref.html
+== nestedHeight.html nestedHeight-ref.html
+== nestedHeightQuirks.html nestedHeightQuirks-ref.html

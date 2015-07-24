@@ -81,6 +81,8 @@ load 1157994.html
 load 1122218.html
 load 1127188.html
 load audiocontext-double-suspend.html
+load 1185176.html
+load 1185192.html
 include ../../mediasource/test/crashtests/crashtests.list
 
 # This needs to run at the end to avoid leaking busted state into other tests.
