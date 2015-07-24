@@ -25,6 +25,7 @@ enum MediaSourceEnum {
     "window",
     "browser",
     "microphone",
+    "audioCapture",
     "other"
 };
 
