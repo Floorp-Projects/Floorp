@@ -645,6 +645,40 @@ public:
     static mozilla::jni::String::LocalRef GetExternalPublicDirectory(mozilla::jni::String::Param);
 
 public:
+    struct GetHWDecoderCapability_t {
+        typedef GeckoAppShell Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getHWDecoderCapability";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static bool GetHWDecoderCapability();
+
+public:
+    struct GetHWEncoderCapability_t {
+        typedef GeckoAppShell Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getHWEncoderCapability";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static bool GetHWEncoderCapability();
+
+public:
     struct GetHandlersForMimeTypeWrapper_t {
         typedef GeckoAppShell Owner;
         typedef mozilla::jni::ObjectArray::LocalRef ReturnType;

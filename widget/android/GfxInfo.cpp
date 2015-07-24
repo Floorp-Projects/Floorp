@@ -587,20 +587,15 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       }
     }
 
-    if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION) {
-      NS_LossyConvertUTF16toASCII cManufacturer(mManufacturer);
-      NS_LossyConvertUTF16toASCII cModel(mModel);
-      NS_LossyConvertUTF16toASCII cHardware(mHardware);
-
-      if (cHardware.EqualsLiteral("hammerhead") &&
-          CompareVersions(mOSVersion.get(), "4.4.2") >= 0 &&
-          cManufacturer.Equals("lge", nsCaseInsensitiveCStringComparator()) &&
-          cModel.Equals("nexus 5", nsCaseInsensitiveCStringComparator())) {
-        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_ENCODE) {
+      if (mozilla::AndroidBridge::Bridge()) {
+        *aStatus = mozilla::AndroidBridge::Bridge()->GetHWEncoderCapability() ? nsIGfxInfo::FEATURE_STATUS_OK : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         return NS_OK;
-      } else {
-        // Blocklist all other devices except Nexus 5 which VP8 hardware acceleration is supported
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      }
+    }
+    if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_DECODE) {
+      if (mozilla::AndroidBridge::Bridge()) {
+        *aStatus = mozilla::AndroidBridge::Bridge()->GetHWDecoderCapability() ? nsIGfxInfo::FEATURE_STATUS_OK : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         return NS_OK;
       }
     }
