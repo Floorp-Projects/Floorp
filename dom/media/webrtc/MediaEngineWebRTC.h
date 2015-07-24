@@ -133,13 +133,16 @@ private:
   void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) override;
 };
 
-class MediaEngineWebRTCAudioSource : public MediaEngineAudioSource,
-                                     public webrtc::VoEMediaProcess,
-                                     private MediaConstraintsHelper
+class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
+                                          public webrtc::VoEMediaProcess,
+                                          private MediaConstraintsHelper
 {
 public:
-  MediaEngineWebRTCAudioSource(nsIThread* aThread, webrtc::VoiceEngine* aVoiceEnginePtr,
-                               int aIndex, const char* name, const char* uuid)
+  MediaEngineWebRTCMicrophoneSource(nsIThread* aThread,
+                                    webrtc::VoiceEngine* aVoiceEnginePtr,
+                                    int aIndex,
+                                    const char* name,
+                                    const char* uuid)
     : MediaEngineAudioSource(kReleased)
     , mVoiceEngine(aVoiceEnginePtr)
     , mMonitor("WebRTCMic.Monitor")
@@ -207,7 +210,7 @@ public:
   virtual void Shutdown() override;
 
 protected:
-  ~MediaEngineWebRTCAudioSource() { Shutdown(); }
+  ~MediaEngineWebRTCMicrophoneSource() { Shutdown(); }
 
 private:
   void Init();
@@ -294,7 +297,8 @@ private:
   // Store devices we've already seen in a hashtable for quick return.
   // Maps UUID to MediaEngineSource (one set for audio, one for video).
   nsRefPtrHashtable<nsStringHashKey, MediaEngineVideoSource> mVideoSources;
-  nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource> mAudioSources;
+  nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCMicrophoneSource>
+  mAudioSources;
 };
 
 }
