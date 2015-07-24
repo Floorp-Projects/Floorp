@@ -550,6 +550,17 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   return false;
 }
 
+static bool
+HasBoxAncestor(nsIFrame* aFrame)
+{
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    if (f->IsBoxFrame()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
 {
@@ -557,8 +568,18 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
   if (aHint & nsChangeHint_ClearDescendantIntrinsics) {
     NS_ASSERTION(aHint & nsChangeHint_ClearAncestorIntrinsics,
                  "Please read the comments in nsChangeHint.h");
+    NS_ASSERTION(aHint & nsChangeHint_NeedDirtyReflow,
+                 "ClearDescendantIntrinsics requires NeedDirtyReflow");
+    dirtyType = nsIPresShell::eStyleChange;
+  } else if ((aHint & nsChangeHint_UpdateComputedBSize) &&
+             aFrame->HasAnyStateBits(NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
     dirtyType = nsIPresShell::eStyleChange;
   } else if (aHint & nsChangeHint_ClearAncestorIntrinsics) {
+    dirtyType = nsIPresShell::eTreeChange;
+  } else if ((aHint & nsChangeHint_UpdateComputedBSize) &&
+             HasBoxAncestor(aFrame)) {
+    // The frame's computed BSize is changing, and we have a box ancestor
+    // whose cached intrinsic height may need to be updated.
     dirtyType = nsIPresShell::eTreeChange;
   } else {
     dirtyType = nsIPresShell::eResize;
@@ -567,7 +588,8 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
   nsFrameState dirtyBits;
   if (aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     dirtyBits = nsFrameState(0);
-  } else if (aHint & nsChangeHint_NeedDirtyReflow) {
+  } else if ((aHint & nsChangeHint_NeedDirtyReflow) ||
+             dirtyType == nsIPresShell::eStyleChange) {
     dirtyBits = NS_FRAME_IS_DIRTY;
   } else {
     dirtyBits = NS_FRAME_HAS_DIRTY_CHILDREN;
@@ -4245,7 +4267,7 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "ChildrenOnlyTransform", "RecomputePosition", "AddOrRemoveTransform",
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
     "NeutralChange", "InvalidateRenderingObservers",
-    "ReflowChangesSizeOrPosition"
+    "ReflowChangesSizeOrPosition", "UpdateComputedBSize"
   };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);

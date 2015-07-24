@@ -245,11 +245,6 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     return true;
   }
 
-  if (mLayerManager && mLayerManager->GetCompositor() &&
-      !targetConfig.naturalBounds().IsEmpty()) {
-    mLayerManager->GetCompositor()->SetScreenRotation(targetConfig.rotation());
-  }
-
   EditReplyVector replyv;
   AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this);
 

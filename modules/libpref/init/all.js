@@ -2259,6 +2259,7 @@ pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
 pref("layout.css.prefixes.font-features", true);
+pref("layout.css.prefixes.gradients", true);
 
 // Is the CSS Unprefixing Service enabled? (This service emulates support
 // for certain vendor-prefixed properties & values, for sites on a "fixlist".)
@@ -4140,6 +4141,7 @@ pref("webgl.vendor-string-override", "");
 #ifdef XP_WIN
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
+pref("webgl.angle.force-warp", false);
 #endif
 
 #ifdef MOZ_WIDGET_GONK

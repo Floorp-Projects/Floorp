@@ -1840,7 +1840,9 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
 media::TimeIntervals OggReader::GetBuffered()
 {
   MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE(HaveStartTime(), media::TimeIntervals());
+  if (!HaveStartTime()) {
+    return media::TimeIntervals();
+  }
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
     if (mIsChained) {

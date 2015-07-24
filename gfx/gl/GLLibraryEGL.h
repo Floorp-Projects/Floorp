@@ -108,7 +108,8 @@ public:
     GLLibraryEGL()
         : mInitialized(false),
           mEGLLibrary(nullptr),
-          mIsANGLE(false)
+          mIsANGLE(false),
+          mIsWARP(false)
     {
     }
 
@@ -469,6 +470,10 @@ public:
         return mIsANGLE;
     }
 
+    bool IsWARP() const {
+        return mIsWARP;
+    }
+
     bool HasKHRImageBase() {
         return IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base);
     }
@@ -489,7 +494,7 @@ public:
         return IsExtensionSupported(EXT_create_context_robustness);
     }
 
-    bool EnsureInitialized();
+    bool EnsureInitialized(bool forceAccel = false);
 
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();
@@ -619,6 +624,7 @@ private:
     EGLDisplay mEGLDisplay;
 
     bool mIsANGLE;
+    bool mIsWARP;
 };
 
 extern GLLibraryEGL sEGLLibrary;
