@@ -102,7 +102,7 @@ add_task(function* rightLeftKeys() {
   // trigger suggestions again and cycle through them by pressing Down until
   // nothing is selected again.
   state = yield msg("key", "VK_RIGHT");
-  checkState(state, "xfoo", [], 0);
+  checkState(state, "xfoo", [], -1);
 
   state = yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
   checkState(state, "xfoo", ["xfoofoo", "xfoobar"], -1);
@@ -125,19 +125,201 @@ add_task(function* rightLeftKeys() {
   yield msg("reset");
 });
 
+add_task(function* tabKey() {
+  yield setUp();
+  yield msg("key", { key: "x", waitForSuggestions: true });
+
+  let state = yield msg("key", "VK_TAB");
+  checkState(state, "x", ["xfoo", "xbar"], 2);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "x", ["xfoo", "xbar"], 3);
+
+  state = yield msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  checkState(state, "x", ["xfoo", "xbar"], 2);
+
+  state = yield msg("key", { key: "VK_TAB", modifiers: { shiftKey: true }});
+  checkState(state, "x", [], -1);
+
+  yield setUp();
+
+  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+
+  for (let i = 0; i < 3; ++i) {
+    state = yield msg("key", "VK_TAB");
+  }
+  checkState(state, "x", [], -1);
+
+  yield setUp();
+
+  yield msg("key", { key: "VK_DOWN", waitForSuggestions: true });
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xfoo", ["xfoo", "xbar"], 0);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xfoo", ["xfoo", "xbar"], 0, 0);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xfoo", ["xfoo", "xbar"], 0, 1);
+
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
+
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "x", ["xfoo", "xbar"], 2);
+
+  state = yield msg("key", "VK_UP");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xbar", [], -1);
+
+  yield msg("reset");
+});
+
+add_task(function* cycleSuggestions() {
+  yield setUp();
+  yield msg("key", { key: "x", waitForSuggestions: true });
+
+  let cycle = Task.async(function* (aSelectedButtonIndex) {
+    let modifiers = {
+      shiftKey: true,
+      accelKey: true,
+    };
+  
+    let state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+    checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+    checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+    checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+    checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+    checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+    checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+    checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
+  
+    state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+    checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
+  });
+  
+  yield cycle();
+
+  // Repeat with a one-off selected.
+  let state = yield msg("key", "VK_TAB");
+  checkState(state, "x", ["xfoo", "xbar"], 2);
+  yield cycle(0);
+
+  // Repeat with the settings button selected.
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "x", ["xfoo", "xbar"], 3);
+  yield cycle(1);
+
+  yield msg("reset");
+});
+
+add_task(function* cycleOneOffs() {
+  yield setUp();
+  yield msg("key", { key: "x", waitForSuggestions: true });
+
+  yield msg("addDuplicateOneOff");
+
+  let state = yield msg("key", "VK_DOWN");
+  state = yield msg("key", "VK_DOWN");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1);
+
+  let modifiers = {
+    altKey: true,
+  };
+
+  state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
+
+  state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
+
+  state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1);
+
+  state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
+
+  state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
+
+  state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1);
+
+  // If the settings button is selected, pressing alt+up/down should select the
+  // last/first one-off respectively (and deselect the settings button).
+  yield msg("key", "VK_TAB");
+  yield msg("key", "VK_TAB");
+  state = yield msg("key", "VK_TAB"); // Settings button selected.
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 2);
+
+  state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 1);
+
+  state = yield msg("key", "VK_TAB");
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 2);
+
+  state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
+  checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
+
+  yield msg("removeLastOneOff");
+  yield msg("reset");
+});
+
 add_task(function* mouse() {
   yield setUp();
 
   let state = yield msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
 
-  for (let i = 0; i < 4; ++i) {
-    state = yield msg("mousemove", i);
-    checkState(state, "x", ["xfoo", "xbar"], i);
-  }
+  state = yield msg("mousemove", 0);
+  checkState(state, "x", ["xfoo", "xbar"], 0);
+
+  state = yield msg("mousemove", 1);
+  checkState(state, "x", ["xfoo", "xbar"], 1);
+
+  state = yield msg("mousemove", 2);
+  checkState(state, "x", ["xfoo", "xbar"], 1, 0);
+
+  state = yield msg("mousemove", 3);
+  checkState(state, "x", ["xfoo", "xbar"], 1, 1);
 
   state = yield msg("mousemove", -1);
+  checkState(state, "x", ["xfoo", "xbar"], 1);
+
+  yield msg("reset");
+  yield setUp();
+
+  state = yield msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
+
+  state = yield msg("mousemove", 0);
+  checkState(state, "x", ["xfoo", "xbar"], 0);
+
+  state = yield msg("mousemove", 2);
+  checkState(state, "x", ["xfoo", "xbar"], 0, 0);
+
+  state = yield msg("mousemove", -1);
+  checkState(state, "x", ["xfoo", "xbar"], 0);
 
   yield msg("reset");
 });
@@ -193,6 +375,33 @@ add_task(function* formHistory() {
   // Type an X again.  The form history entry should still be gone.
   state = yield msg("key", { key: "x", waitForSuggestions: true });
   checkState(state, "x", ["xfoo", "xbar"], -1);
+
+  yield msg("reset");
+});
+
+add_task(function* cycleEngines() {
+  yield setUp();
+  yield msg("key", "VK_DOWN");
+
+  function promiseEngineChange(newEngineName) {
+    let deferred = Promise.defer();
+    Services.obs.addObserver(function resolver(subj, topic, data) {
+      if (data != "engine-current") {
+        return;
+      }
+      is(subj.name, newEngineName, "Engine cycled correctly");
+      Services.obs.removeObserver(resolver, "browser-search-engine-modified");
+      deferred.resolve();
+    }, "browser-search-engine-modified", false);
+  }
+
+  let p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_2_BASENAME);
+  yield msg("key", { key: "VK_DOWN", modifiers: { accelKey: true }});
+  yield p;
+
+  p = promiseEngineChange(TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME);
+  yield msg("key", { key: "VK_UP", modifiers: { accelKey: true }});
+  yield p;
 
   yield msg("reset");
 });
@@ -297,6 +506,42 @@ add_task(function* search() {
   yield promiseTab();
   yield setUp();
 
+  // Test selecting a suggestion, then clicking a one-off without deselecting the
+  // suggestion.
+  yield msg("key", { key: "x", waitForSuggestions: true });
+  p = msg("waitForSearch");
+  yield msg("mousemove", 1);
+  yield msg("mousemove", 3);
+  yield msg("click", { eltIdx: 3, modifiers: modifiers });
+  mesg = yield p;
+  eventData.searchString = "xfoo"
+  eventData.selection = {
+    index: 1,
+    kind: "mouse",
+  };
+  SimpleTest.isDeeply(eventData, mesg, "Search event data");
+
+  yield promiseTab();
+  yield setUp();
+
+  // Same as above, but with the keyboard.
+  delete modifiers.button;
+  yield msg("key", { key: "x", waitForSuggestions: true });
+  p = msg("waitForSearch");
+  yield msg("key", "VK_DOWN");
+  yield msg("key", "VK_DOWN");
+  yield msg("key", "VK_TAB");
+  yield msg("key", { key: "VK_RETURN", modifiers: modifiers });
+  mesg = yield p;
+  eventData.selection = {
+    index: 1,
+    kind: "key",
+  };
+  SimpleTest.isDeeply(eventData, mesg, "Search event data");
+
+  yield promiseTab();
+  yield setUp();
+
   // Test searching when using IME composition.
   let state = yield msg("startComposition", { data: "" });
   checkState(state, "", [], -1);
@@ -308,8 +553,10 @@ add_task(function* search() {
   p = msg("waitForSearch");
   yield msg("key", { key: "VK_RETURN", modifiers: modifiers });
   mesg = yield p;
+  eventData.searchString = "x"
   eventData.originalEvent = modifiers;
   eventData.engineName = TEST_ENGINE_PREFIX + " " + TEST_ENGINE_BASENAME;
+  delete eventData.selection;
   SimpleTest.isDeeply(eventData, mesg, "Search event data");
 
   yield promiseTab();
@@ -428,7 +675,7 @@ function msg(type, data=null) {
 }
 
 function checkState(actualState, expectedInputVal, expectedSuggestions,
-                    expectedSelectedIdx) {
+                    expectedSelectedIdx, expectedSelectedButtonIdx) {
   expectedSuggestions = expectedSuggestions.map(sugg => {
     return typeof(sugg) == "object" ? sugg : {
       str: sugg,
@@ -436,6 +683,10 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
     };
   });
 
+  if (expectedSelectedIdx == -1 && expectedSelectedButtonIdx != undefined) {
+    expectedSelectedIdx = expectedSuggestions.length + expectedSelectedButtonIdx;
+  }
+  
   let expectedState = {
     selectedIndex: expectedSelectedIdx,
     numSuggestions: expectedSuggestions.length,
@@ -448,6 +699,15 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
     inputValue: expectedInputVal,
     ariaExpanded: expectedSuggestions.length == 0 ? "false" : "true",
   };
+  if (expectedSelectedButtonIdx != undefined) {
+    expectedState.selectedButtonIndex = expectedSelectedButtonIdx;
+  }
+  else if (expectedSelectedIdx < expectedSuggestions.length) {
+    expectedState.selectedButtonIndex = -1;
+  }
+  else {
+    expectedState.selectedButtonIndex = expectedSelectedIdx - expectedSuggestions.length;
+  }
 
   SimpleTest.isDeeply(actualState, expectedState, "State");
 }
