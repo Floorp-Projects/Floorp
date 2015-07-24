@@ -3976,7 +3976,7 @@ class CGCallbackTempRoot(CGGeneric):
         define = dedent("""
             { // Scope for tempRoot
               JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());
-              ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());
+              ${declName} = new %s(cx, tempRoot, mozilla::dom::GetIncumbentGlobal());
             }
             """) % name
         CGGeneric.__init__(self, define=define)
@@ -13908,7 +13908,7 @@ class CGJSImplClass(CGBindingImplClass):
             destructor = ClassDestructor(virtual=False, visibility="private")
 
         baseConstructors = [
-            ("mImpl(new %s(aJSImplObject, /* aIncumbentGlobal = */ nullptr))" %
+            ("mImpl(new %s(nullptr, aJSImplObject, /* aIncumbentGlobal = */ nullptr))" %
              jsImplName(descriptor.name)),
             "mParent(aParent)"]
         parentInterface = descriptor.interface.parent
@@ -14053,13 +14053,14 @@ class CGCallback(CGClass):
             # CallbackObject does that already.
             body = ""
         return [ClassConstructor(
-            [Argument("JS::Handle<JSObject*>", "aCallback"),
+            [Argument("JSContext*", "aCx"),
+             Argument("JS::Handle<JSObject*>", "aCallback"),
              Argument("nsIGlobalObject*", "aIncumbentGlobal")],
             bodyInHeader=True,
             visibility="public",
             explicit=True,
             baseConstructors=[
-                "%s(aCallback, aIncumbentGlobal)" % self.baseName,
+                "%s(aCx, aCallback, aIncumbentGlobal)" % self.baseName,
             ],
             body=body)]
 
