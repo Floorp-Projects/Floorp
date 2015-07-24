@@ -29,7 +29,6 @@ task:
 
     env:
       MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
-      TOOLTOOL_MANIFEST: 'b2g/dev/config/tooltool-manifests/linux64/releng.manifest'
 
     maxRunTime: 3600
 

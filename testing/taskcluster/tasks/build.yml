@@ -55,8 +55,6 @@ task:
       MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
       MOZHARNESS_REV: '{{mozharness_rev}}'
       MOZHARNESS_REF: '{{mozharness_ref}}'
-      TOOLTOOL_REPO: 'https://github.com/mozilla/build-tooltool'
-      TOOLTOOL_REV: 'master'
 
   extra:
     index:
