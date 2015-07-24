@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+    var ac = new window.AudioContext();
+    var oscillator = ac.createOscillator();
+    oscillator.start(0);
+    oscillator.stop(0.1);
+    setTimeout(function() {
+      oscillator.channelCount = 1;
+      oscillator.channelCountMode = "explicit";
+      oscillator.channelInterpretation = "speakers";
+      document.documentElement.removeAttribute("class");
+    }, 1000);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
+
