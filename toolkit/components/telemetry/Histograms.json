@@ -7482,7 +7482,7 @@
   },
   "SSL_PERMANENT_CERT_ERROR_OVERRIDES": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "42",
+    "expires_in_version": "default",
     "kind": "exponential",
     "high": 1024,
     "n_buckets": 10,
