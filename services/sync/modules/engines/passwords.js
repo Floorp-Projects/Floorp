@@ -22,6 +22,7 @@ LoginRec.prototype = {
 Utils.deferGetSet(LoginRec, "cleartext", [
     "hostname", "formSubmitURL",
     "httpRealm", "username", "password", "usernameField", "passwordField",
+    "timeCreated", "timePasswordChanged",
     ]);
 
 
@@ -98,6 +99,13 @@ function PasswordStore(name, engine) {
 PasswordStore.prototype = {
   __proto__: Store.prototype,
 
+  _newPropertyBag: function () {
+    return Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
+  },
+
+  /**
+   * Return an instance of nsILoginInfo (and, implicitly, nsILoginMetaInfo).
+   */
   _nsLoginInfoFromRecord: function (record) {
     function nullUndefined(x) {
       return (x == undefined) ? null : x;
@@ -118,13 +126,21 @@ PasswordStore.prototype = {
                                      record.password,
                                      record.usernameField,
                                      record.passwordField);
+
     info.QueryInterface(Ci.nsILoginMetaInfo);
     info.guid = record.id;
+    if (record.timeCreated) {
+      info.timeCreated = record.timeCreated;
+    }
+    if (record.timePasswordChanged) {
+      info.timePasswordChanged = record.timePasswordChanged;
+    }
+
     return info;
   },
 
   _getLoginFromGUID: function (id) {
-    let prop = Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
+    let prop = this._newPropertyBag();
     prop.setPropertyAsAUTF8String("guid", id);
 
     let logins = Services.logins.searchLogins({}, prop);
@@ -169,8 +185,7 @@ PasswordStore.prototype = {
       return;
     }
 
-    let prop = Cc["@mozilla.org/hash-property-bag;1"]
-                 .createInstance(Ci.nsIWritablePropertyBag2);
+    let prop = this._newPropertyBag();
     prop.setPropertyAsAUTF8String("guid", newID);
 
     Services.logins.modifyLogin(oldLogin, prop);
@@ -196,6 +211,11 @@ PasswordStore.prototype = {
     record.password = login.password;
     record.usernameField = login.usernameField;
     record.passwordField = login.passwordField;
+
+    // Optional fields.
+    login.QueryInterface(Ci.nsILoginMetaInfo);
+    record.timeCreated = login.timeCreated;
+    record.timePasswordChanged = login.timePasswordChanged;
 
     return record;
   },

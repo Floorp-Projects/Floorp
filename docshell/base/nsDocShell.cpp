@@ -2932,10 +2932,10 @@ nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
   bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
   if (currentValue != aValue) {
     if (aValue) {
-      TimelineConsumers::AddConsumer(this, mObserved);
+      TimelineConsumers::AddConsumer(this);
       UseEntryScriptProfiling();
     } else {
-      TimelineConsumers::RemoveConsumer(this, mObserved);
+      TimelineConsumers::RemoveConsumer(this);
       UnuseEntryScriptProfiling();
     }
   }
@@ -3090,23 +3090,6 @@ nsDocShell::Now(DOMHighResTimeStamp* aWhen)
   *aWhen =
     (TimeStamp::Now() - TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
   return NS_OK;
-}
-
-void
-nsDocShell::AddProfileTimelineMarker(const char* aName,
-                                     TracingMetadata aMetaData)
-{
-  if (IsObserved()) {
-    mObserved->AddMarker(aName, aMetaData);
-  }
-}
-
-void
-nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>&& aMarker)
-{
-  if (IsObserved()) {
-    mObserved->AddMarker(Move(aMarker));
-  }
 }
 
 NS_IMETHODIMP
@@ -13984,7 +13967,7 @@ nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
       MakeUnique<JavascriptTimelineMarker>(this, "Javascript", aReason,
                                            aFunctionName, aFilename,
                                            aLineNumber);
-    AddProfileTimelineMarker(Move(marker));
+    TimelineConsumers::AddMarkerForDocShell(this, Move(marker));
   }
   mJSRunToCompletionDepth++;
 }
@@ -13997,7 +13980,7 @@ nsDocShell::NotifyJSRunToCompletionStop()
   // If last stop, mark interval end.
   mJSRunToCompletionDepth--;
   if (timelineOn && mJSRunToCompletionDepth == 0) {
-    AddProfileTimelineMarker("Javascript", TRACING_INTERVAL_END);
+    TimelineConsumers::AddMarkerForDocShell(this, "Javascript", TRACING_INTERVAL_END);
   }
 }
 

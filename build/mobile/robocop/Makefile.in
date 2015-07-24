@@ -67,7 +67,7 @@ tools:: $(ANDROID_APK_NAME).apk
 # out of sync with base's build config.
 jars_dir := $(DEPTH)/mobile/android/base
 stumbler_jars_dir := $(DEPTH)/mobile/android/stumbler
-JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(jars_dir)/*.jar)):$(subst $(NULL) ,:,$(wildcard $(stumbler_jars_dir)/*.jar)):$(ANDROID_COMPAT_LIB)
+JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(jars_dir)/*.jar)):$(subst $(NULL) ,:,$(wildcard $(stumbler_jars_dir)/*.jar)):$(ANDROID_COMPAT_LIB):$(ANDROID_RECYCLERVIEW_LIB)
 # We also want to re-compile classes.dex when the associated base
 # content changes.
 classes.dex: $(wildcard $(jars_dir)/*.jar)
