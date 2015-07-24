@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg width="60px" height="60px" viewBox="0 0 180 180" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+  <title>Key</title>
+    <g sketch:type="MSArtboardGroup" fill="#bfbfbf">
+      <path d="M72,60.75 C72,60.75 59.625,72 59.625,72 C57.375,74.25 58.5,76.5 59.625,77.625 L65.25,82.125 C66.375,83.25 67.5,84.375 65.25,86.625 L0,157.5 L0,176.625 C0,178.875 1.125,180 3.375,180 L33.75,180 C34.875,180 36,178.875 36,177.75 L36,168.75 L48.375,167.625 L47.25,156.375 L55.125,156.375 C55.125,156.375 56.25,156.375 56.25,155.25 L56.25,148.5 L65.25,148.5 L65.25,132.75 L78.75,132.75 L94.5,115.875 C96.75,113.625 99,113.625 101.25,115.875 L106.875,121.5 C109.125,123.75 111.375,123.75 113.625,121.5 L122.625,109.125 C157.125,108.963211 180,82.6329431 180,55.125 C179.4,24.0802676 155.4,0 124.875,0 C95.4,0 68.025,26.3302676 72,60.75 Z M139,54 C131.85,54 126,48.15 126,41 C126,33.85 131.85,28 139,28 C146.15,28 152,33.85 152,41 C152,48.15 146.15,54 139,54 L139,54 Z" sketch:type="MSShapeGroup"></path>
+    </g>
+</svg>
