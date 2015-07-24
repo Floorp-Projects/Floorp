@@ -229,6 +229,26 @@ nsHttp::IsValidToken(const char *start, const char *end)
     return true;
 }
 
+const char*
+nsHttp::GetProtocolVersion(uint32_t pv)
+{
+    switch (pv) {
+    case SPDY_VERSION_31:
+        return "spdy/3.1";
+    case HTTP_VERSION_2:
+    case NS_HTTP_VERSION_2_0:
+        return "h2";
+    case NS_HTTP_VERSION_1_0:
+        return "http/1.0";
+    case NS_HTTP_VERSION_1_1:
+        return "http/1.1";
+    default:
+        NS_WARNING(nsPrintfCString("Unkown protocol version: 0x%X. "
+                                   "Please file a bug", pv).get());
+        return "http/1.1";
+    }
+}
+
 // static
 bool
 nsHttp::IsReasonableHeaderValue(const nsACString &s)

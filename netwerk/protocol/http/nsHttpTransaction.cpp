@@ -96,6 +96,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mResponseHead(nullptr)
     , mContentLength(-1)
     , mContentRead(0)
+    , mTransferSize(0)
     , mInvalidResponseBytesRead(0)
     , mPushedStream(nullptr)
     , mInitialRwin(0)
@@ -773,6 +774,7 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
     MOZ_ASSERT(*countWritten > 0, "bad writer");
     trans->CountRecvBytes(*countWritten);
     trans->mReceivedData = true;
+    trans->mTransferSize += *countWritten;
 
     // Let the transaction "play" with the buffer.  It is free to modify
     // the contents of the buffer and/or modify countWritten.
