@@ -4236,7 +4236,8 @@ PresShell::AttributeWillChange(nsIDocument* aDocument,
                                Element*     aElement,
                                int32_t      aNameSpaceID,
                                nsIAtom*     aAttribute,
-                               int32_t      aModType)
+                               int32_t      aModType,
+                               const nsAttrValue* aNewValue)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeWillChange");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");

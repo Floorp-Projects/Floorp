@@ -129,7 +129,7 @@ nsNodeUtils::AttributeWillChange(Element* aElement,
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
-                              aModType));
+                              aModType, aNewValue));
 }
 
 void
