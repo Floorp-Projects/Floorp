@@ -832,25 +832,22 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
     return true;
 }
 
-bool
-js::InvokeConstructor(JSContext* cx, CallArgs args)
+static bool
+InternalConstruct(JSContext* cx, const CallArgs& args)
 {
+    MOZ_ASSERT(args.array() + args.length() + 1 == args.end(),
+               "must pass constructing arguments to a construction attempt");
     MOZ_ASSERT(!JSFunction::class_.construct);
 
-    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
-
-    // +2 here and below to pass over |this| and |new.target|
-    if (!args.calleev().isObject())
-        return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
-
-    MOZ_ASSERT(args.newTarget().isObject());
+    // Callers are responsible for enforcing these preconditions.
+    MOZ_ASSERT(IsConstructor(args.calleev()),
+               "trying to construct a value that isn't a constructor");
+    MOZ_ASSERT(IsConstructor(args.newTarget()),
+               "provided new.target value must be a constructor");
 
     JSObject& callee = args.callee();
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
-
-        if (!fun->isConstructor())
-            return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
 
         if (fun->isNative())
             return CallJSNativeConstructor(cx, fun->native(), args);
@@ -863,29 +860,65 @@ js::InvokeConstructor(JSContext* cx, CallArgs args)
     }
 
     JSNative construct = callee.constructHook();
-    if (!construct)
-        return ReportIsNotFunction(cx, args.calleev(), args.length() + 2, CONSTRUCT);
+    MOZ_ASSERT(construct != nullptr, "IsConstructor without a construct hook?");
 
     return CallJSNativeConstructor(cx, construct, args);
 }
 
-bool
-js::InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
-                      bool newTargetInArgv, MutableHandleValue rval)
+// Check that |callee|, the callee in a |new| expression, is a constructor.
+static bool
+StackCheckIsConstructorCalleeNewTarget(JSContext* cx, HandleValue callee, HandleValue newTarget)
 {
-    InvokeArgs args(cx);
-    if (!args.init(argc, true))
+    // Calls from the stack could have any old non-constructor callee.
+    if (!IsConstructor(callee)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_SEARCH_STACK, callee, nullptr);
+        return false;
+    }
+
+    // The new.target for a stack construction attempt is just the callee: no
+    // need to check that it's a constructor.
+    MOZ_ASSERT(&callee.toObject() == &newTarget.toObject());
+
+    return true;
+}
+
+static bool
+ConstructFromStack(JSContext* cx, const CallArgs& args)
+{
+    if (!StackCheckIsConstructorCalleeNewTarget(cx, args.calleev(), args.newTarget()))
         return false;
 
-    args.setCallee(fval);
-    args.setThis(MagicValue(JS_THIS_POISON));
-    PodCopy(args.array(), argv, argc);
-    if (newTargetInArgv)
-        args.newTarget().set(argv[argc]);
-    else
-        args.newTarget().set(fval);
+    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
+    return InternalConstruct(cx, args);
+}
 
-    if (!InvokeConstructor(cx, args))
+bool
+js::Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+              MutableHandleValue rval)
+{
+    args.setCallee(fval);
+    args.setThis(MagicValue(JS_IS_CONSTRUCTING));
+    args.newTarget().set(newTarget);
+    if (!InternalConstruct(cx, args))
+        return false;
+
+    rval.set(args.rval());
+    return true;
+}
+
+bool
+js::InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
+                                      const ConstructArgs& args, HandleValue newTarget,
+                                      MutableHandleValue rval)
+{
+    args.setCallee(fval);
+
+    MOZ_ASSERT(thisv.isObject());
+    args.setThis(thisv);
+
+    args.newTarget().set(newTarget);
+
+    if (!InternalConstruct(cx, args))
         return false;
 
     rval.set(args.rval());
@@ -3029,7 +3062,7 @@ CASE(JSOP_FUNCALL)
         (!construct && maybeFun->isClassConstructor()))
     {
         if (construct) {
-            if (!InvokeConstructor(cx, args))
+            if (!ConstructFromStack(cx, args))
                 goto error;
         } else {
             if (!Invoke(cx, args))
@@ -3943,7 +3976,7 @@ CASE(JSOP_CLASSHERITAGE)
         if (!GetBuiltinPrototype(cx, JSProto_Function, &funcProto))
             goto error;
     } else {
-        if (!val.isObject() || !val.toObject().isConstructor()) {
+        if (!IsConstructor(val)) {
             ReportIsNotFunction(cx, val, 0, CONSTRUCT);
             goto error;
         }
@@ -4667,44 +4700,53 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
         MOZ_ASSERT(!aobj->getDenseElement(i).isMagic());
 #endif
 
-    InvokeArgs args(cx);
-
-    if (!args.init(length, constructing))
-        return false;
-
-    args.setCallee(callee);
-    args.setThis(thisv);
-
-    if (!GetElements(cx, aobj, length, args.array()))
-        return false;
-
-    if (constructing)
-        args.newTarget().set(newTarget);
-
-    switch (op) {
-      case JSOP_SPREADNEW:
-        if (!InvokeConstructor(cx, args))
+    if (op == JSOP_SPREADNEW) {
+        if (!StackCheckIsConstructorCalleeNewTarget(cx, callee, newTarget))
             return false;
-        break;
-      case JSOP_SPREADCALL:
-        if (!Invoke(cx, args))
+
+        ConstructArgs cargs(cx);
+        if (!cargs.init(length))
             return false;
-        break;
-      case JSOP_SPREADEVAL:
-      case JSOP_STRICTSPREADEVAL:
-        if (cx->global()->valueIsEval(args.calleev())) {
-            if (!DirectEval(cx, args))
-                return false;
-        } else {
+
+        if (!GetElements(cx, aobj, length, cargs.array()))
+            return false;
+
+        if (!Construct(cx, callee, cargs, newTarget, res))
+            return false;
+    } else {
+        InvokeArgs args(cx);
+
+        if (!args.init(length))
+            return false;
+
+        args.setCallee(callee);
+        args.setThis(thisv);
+
+        if (!GetElements(cx, aobj, length, args.array()))
+            return false;
+
+        switch (op) {
+          case JSOP_SPREADCALL:
             if (!Invoke(cx, args))
                 return false;
+            break;
+          case JSOP_SPREADEVAL:
+          case JSOP_STRICTSPREADEVAL:
+            if (cx->global()->valueIsEval(args.calleev())) {
+                if (!DirectEval(cx, args))
+                    return false;
+            } else {
+                if (!Invoke(cx, args))
+                    return false;
+            }
+            break;
+          default:
+            MOZ_CRASH("bad spread opcode");
         }
-        break;
-      default:
-        MOZ_CRASH("bad spread opcode");
+
+        res.set(args.rval());
     }
 
-    res.set(args.rval());
     TypeScript::Monitor(cx, script, pc, res);
     return true;
 }
