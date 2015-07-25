@@ -94,10 +94,7 @@ public:
    *
    * @return Singleton instance of this class.
    */
-  static already_AddRefed<Database> GetDatabase()
-  {
-    return GetSingleton();
-  }
+  static already_AddRefed<Database> GetDatabase();
 
   /**
    * Returns last known database status.
