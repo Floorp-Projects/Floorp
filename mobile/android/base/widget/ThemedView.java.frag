@@ -8,7 +8,7 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.LightweightTheme;
+import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
