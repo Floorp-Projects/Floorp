@@ -18,6 +18,7 @@
 
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::jit;

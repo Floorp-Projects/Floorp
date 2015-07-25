@@ -24,6 +24,7 @@
 #include "vm/Shape.h"
 #include "vm/Symbol.h"
 
+#include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
 #include "vm/ObjectGroup-inl.h"
