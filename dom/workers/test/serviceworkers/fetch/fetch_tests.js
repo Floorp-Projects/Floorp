@@ -71,7 +71,7 @@ fetchXHR('synthesized-redirect-twice-synthesized.txt', function(xhr) {
   finish();
 });
 
-fetchXHR('fetch/redirect.sjs', function(xhr) {
+fetchXHR('redirect.sjs', function(xhr) {
   my_ok(xhr.status == 404, "redirected load should be uninterrupted");
   finish();
 });
