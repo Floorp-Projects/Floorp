@@ -548,10 +548,11 @@ HTMLBreadcrumbs.prototype = {
     let deferred = promise.defer();
 
     let fallback = null;
+    let lastNode = null;
 
     let moreChildren = () => {
       this.walker.children(node, {
-        start: fallback,
+        start: lastNode,
         maxNodes: 10,
         whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
       }).then(this.selectionGuard()).then(response => {
@@ -563,6 +564,7 @@ HTMLBreadcrumbs.prototype = {
           if (!fallback) {
             fallback = node;
           }
+          lastNode = node;
         }
         if (response.hasLast) {
           deferred.resolve(fallback);
