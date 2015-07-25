@@ -25,6 +25,7 @@ from .mozconfig import (
     MozconfigLoadException,
     MozconfigLoader,
 )
+from .util import memoized_property
 from .virtualenv import VirtualenvManager
 
 
@@ -289,6 +290,23 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
+
+    @memoized_property
+    def extra_environment_variables(self):
+        '''Some extra environment variables are stored in .mozconfig.mk.
+        This functions extracts and returns them.'''
+        from pymake.process import ClineSplitter
+        mozconfig_mk = os.path.join(self.topobjdir, '.mozconfig.mk')
+        env = {}
+        with open(mozconfig_mk) as fh:
+            for line in fh:
+                if line.startswith('export '):
+                    exports = ClineSplitter(line, self.topobjdir)[1:]
+                    for e in exports:
+                        if '=' in e:
+                            key, value = e.split('=')
+                            env[key] = value
+        return env
 
     def is_clobber_needed(self):
         if not os.path.exists(self.topobjdir):
