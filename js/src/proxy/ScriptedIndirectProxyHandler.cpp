@@ -463,11 +463,24 @@ bool
 CallableScriptedIndirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
+
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
     MOZ_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+
     RootedValue construct(cx, ccHolder->as<NativeObject>().getReservedSlot(1));
-    MOZ_ASSERT(construct.isObject() && construct.toObject().isCallable());
-    return InvokeConstructor(cx, construct, args.length(), args.array(), true, args.rval());
+
+    // We could enforce this at proxy creation time, but lipstick on a pig.
+    // Plus, let's delay in-the-field bustage as long as possible.
+    if (!IsConstructor(construct)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, construct, nullptr);
+        return false;
+    }
+
+    ConstructArgs cargs(cx);
+    if (!FillArgumentsFromArraylike(cx, cargs, args))
+        return false;
+
+    return Construct(cx, construct, cargs, args.newTarget(), args.rval());
 }
 
 const CallableScriptedIndirectProxyHandler CallableScriptedIndirectProxyHandler::singleton;
