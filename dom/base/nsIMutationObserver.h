@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 
+class nsAttrValue;
 class nsIAtom;
 class nsIContent;
 class nsIDocument;
@@ -21,9 +22,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IMUTATION_OBSERVER_IID \
-{ 0x16fe5e3e, 0xeadc, 0x4312, \
-  { 0x9d, 0x44, 0xb6, 0xbe, 0xdd, 0x6b, 0x54, 0x74 } }
-
+{ 0x51a4cec3, 0xb720, 0x4893, \
+  { 0xb1, 0x11, 0x33, 0xca, 0xbe, 0xae, 0xbf, 0x57 } }
 /**
  * Information details about a characterdata change.  Basically, we
  * view all changes as replacements of a length of text at some offset
@@ -180,6 +180,8 @@ public:
    * @param aModType     Whether or not the attribute was added, changed, or
    *                     removed. The constants are defined in
    *                     nsIDOMMutationEvent.h.
+   * @param aOldValue    The old value, if either the old value or the new
+   *                     value are StoresOwnData() (or absent); null otherwise.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays
@@ -191,7 +193,8 @@ public:
                                 mozilla::dom::Element* aElement,
                                 int32_t      aNameSpaceID,
                                 nsIAtom*     aAttribute,
-                                int32_t      aModType) = 0;
+                                int32_t      aModType,
+                                const nsAttrValue* aOldValue) = 0;
 
   /**
    * Notification that an attribute of an element has been
@@ -343,7 +346,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
                                   mozilla::dom::Element* aElement,           \
                                   int32_t aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
-                                  int32_t aModType) override;
+                                  int32_t aModType,                          \
+                                  const nsAttrValue* aOldValue) override;
 
 #define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                          \
     virtual void ContentAppended(nsIDocument* aDocument,                     \
@@ -413,7 +417,8 @@ _class::AttributeChanged(nsIDocument* aDocument,                          \
                          mozilla::dom::Element* aElement,                 \
                          int32_t aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
-                         int32_t aModType)                                \
+                         int32_t aModType,                                \
+                         const nsAttrValue* aOldValue)                    \
 {                                                                         \
 }                                                                         \
 void                                                                      \
