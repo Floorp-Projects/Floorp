@@ -2590,7 +2590,8 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
                                 mozilla::dom::Element* aElement,
                                 int32_t      aNameSpaceID,
                                 nsIAtom*     aAttribute,
-                                int32_t      aModType)
+                                int32_t      aModType,
+                                const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(mObservingOwnerContent);
   // TODO: Implement ContentShellAdded for remote browsers (bug 658304)

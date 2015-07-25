@@ -931,7 +931,8 @@ XULDocument::AttributeWillChange(nsIDocument* aDocument,
 void
 XULDocument::AttributeChanged(nsIDocument* aDocument,
                               Element* aElement, int32_t aNameSpaceID,
-                              nsIAtom* aAttribute, int32_t aModType)
+                              nsIAtom* aAttribute, int32_t aModType,
+                              const nsAttrValue* aOldValue)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
