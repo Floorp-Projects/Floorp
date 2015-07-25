@@ -914,7 +914,8 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
 void
 XULDocument::AttributeWillChange(nsIDocument* aDocument,
                                  Element* aElement, int32_t aNameSpaceID,
-                                 nsIAtom* aAttribute, int32_t aModType)
+                                 nsIAtom* aAttribute, int32_t aModType,
+                                 const nsAttrValue* aNewValue)
 {
     MOZ_ASSERT(aElement, "Null content!");
     NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
