@@ -36,6 +36,19 @@
     <item android:state_focused="false"
           android:state_pressed="false"
           android:state_checked="true"
+          gecko:state_recording="false"
+          gecko:state_private="true">
+
+        <shape android:shape="rectangle">
+            <solid android:color="@color/private_browsing_purple"/>
+            <corners android:radius="3dp"/>
+        </shape>
+
+    </item>
+
+    <item android:state_focused="false"
+          android:state_pressed="false"
+          android:state_checked="true"
           gecko:state_recording="false">
 
         <shape android:shape="rectangle">
