@@ -2072,7 +2072,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
               "transportSeekable=%d, mediaSeekable=%d",
               Duration().ToMicroseconds(), mDecoder->IsTransportSeekable(), mDecoder->IsMediaSeekable());
 
-  if (HasAudio() && !HasVideo()) {
+  if (HasAudio() && !HasVideo() && !mSentFirstFrameLoadedEvent) {
     // We're playing audio only. We don't need to worry about slow video
     // decodes causing audio underruns, so don't buffer so much audio in
     // order to reduce memory usage.
