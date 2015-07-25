@@ -88,6 +88,7 @@ public:
   const nsAttrValue* GetAttr(const nsAString& aName,
                              nsCaseTreatment aCaseSensitive) const;
   const nsAttrValue* AttrAt(uint32_t aPos) const;
+  // SetAndSwapAttr swaps the current attribute value with aValue.
   nsresult SetAndSwapAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
   nsresult SetAndSwapAttr(mozilla::dom::NodeInfo* aName, nsAttrValue& aValue);
 
