@@ -347,6 +347,8 @@ protected:
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
 
   nsAttrValue WillChangeValue(nsIAtom* aName);
+  // aNewValue is set to the old value. This value may be invalid if
+  // !StoresOwnData.
   void DidChangeValue(nsIAtom* aName, const nsAttrValue& aEmptyOrOldValue,
                       nsAttrValue& aNewValue);
   void MaybeSerializeAttrBeforeRemoval(nsIAtom* aName, bool aNotify);
