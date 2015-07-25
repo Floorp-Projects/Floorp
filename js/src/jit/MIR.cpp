@@ -25,6 +25,7 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/AtomicOperations-inl.h"
 
