@@ -8,6 +8,7 @@
 #include "nsIComponentManager.h"
 #include "nsRect.h"
 #include "nsAutoPtr.h"
+#include "nsGtkUtils.h"
 
 #define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
@@ -20,6 +21,12 @@ typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
 
 #include <gtk/gtk.h>
 
+void
+monitors_changed(GdkScreen* aScreen, gpointer aClosure)
+{
+  nsScreenManagerGtk *manager = static_cast<nsScreenManagerGtk*>(aClosure);
+  manager->Init();
+}
 
 static GdkFilterReturn
 root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
@@ -31,9 +38,6 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
 
   // See comments in nsScreenGtk::Init below.
   switch (xevent->type) {
-    case ConfigureNotify:
-      manager->Init();
-      break;
     case PropertyNotify:
       {
         XPropertyEvent *propertyEvent = &xevent->xproperty;
@@ -63,6 +67,10 @@ nsScreenManagerGtk :: nsScreenManagerGtk ( )
 
 nsScreenManagerGtk :: ~nsScreenManagerGtk()
 {
+  g_signal_handlers_disconnect_by_func(gdk_screen_get_default(),
+                                       FuncToGpointer(monitors_changed),
+                                       this);
+
   if (mRootWindow) {
     gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
     g_object_unref(mRootWindow);
@@ -93,14 +101,15 @@ nsScreenManagerGtk :: EnsureInit()
   mRootWindow = gdk_get_default_root_window();
   g_object_ref(mRootWindow);
 
-  // GDK_STRUCTURE_MASK ==> StructureNotifyMask, for ConfigureNotify
   // GDK_PROPERTY_CHANGE_MASK ==> PropertyChangeMask, for PropertyNotify
   gdk_window_set_events(mRootWindow,
                         GdkEventMask(gdk_window_get_events(mRootWindow) |
-                                     GDK_STRUCTURE_MASK |
                                      GDK_PROPERTY_CHANGE_MASK));
-  gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
+
+  g_signal_connect(gdk_screen_get_default(), "monitors-changed",
+                   G_CALLBACK(monitors_changed), this);
 #ifdef MOZ_X11
+  gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
       mNetWorkareaAtom =
         XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
