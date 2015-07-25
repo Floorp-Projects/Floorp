@@ -1439,7 +1439,8 @@ nsSVGElement::WillChangeValue(nsIAtom* aName)
   uint8_t modType = attrValue
                   ? static_cast<uint8_t>(nsIDOMMutationEvent::MODIFICATION)
                   : static_cast<uint8_t>(nsIDOMMutationEvent::ADDITION);
-  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType);
+  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType,
+                                   nullptr);
 
   return emptyOrOldAttrValue;
 }

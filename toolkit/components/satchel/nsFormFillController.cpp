@@ -189,7 +189,8 @@ void
 nsFormFillController::AttributeWillChange(nsIDocument* aDocument,
                                           mozilla::dom::Element* aElement,
                                           int32_t aNameSpaceID,
-                                          nsIAtom* aAttribute, int32_t aModType)
+                                          nsIAtom* aAttribute, int32_t aModType,
+                                          const nsAttrValue* aNewValue)
 {
 }
 

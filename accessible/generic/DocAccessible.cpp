@@ -692,7 +692,8 @@ void
 DocAccessible::AttributeWillChange(nsIDocument* aDocument,
                                    dom::Element* aElement,
                                    int32_t aNameSpaceID,
-                                   nsIAtom* aAttribute, int32_t aModType)
+                                   nsIAtom* aAttribute, int32_t aModType,
+                                   const nsAttrValue* aNewValue)
 {
   Accessible* accessible = GetAccessible(aElement);
   if (!accessible) {
