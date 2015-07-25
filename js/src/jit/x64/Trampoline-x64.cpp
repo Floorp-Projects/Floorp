@@ -14,6 +14,8 @@
 #include "jit/VMFunctions.h"
 #include "jit/x64/SharedICHelpers-x64.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

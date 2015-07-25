@@ -6,9 +6,13 @@
 
 #include "builtin/Reflect.h"
 
+#include "jsarray.h"
 #include "jscntxt.h"
 
+#include "vm/ArgumentsObject.h"
 #include "vm/Stack.h"
+
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 
