@@ -85,17 +85,26 @@ InvokeGetter(JSContext* cx, JSObject* obj, Value fval, MutableHandleValue rval);
 extern bool
 InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
 
-/*
- * InvokeConstructor implement a function call from a constructor context
- * (e.g. 'new') handling the the creation of the new 'this' object.
- */
+// ES6 7.3.13 Construct(F, argumentsList, newTarget).  All parameters are
+// required, hopefully forcing callers to be careful not to (say) blindly pass
+// callee as |newTarget| when a different value should have been passed.
+//
+// NOTE: As with the ES6 spec operation, it's the caller's responsibility to
+//       ensure |fval| and |newTarget| are both |IsConstructor|.
 extern bool
-InvokeConstructor(JSContext* cx, CallArgs args);
+Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
+          MutableHandleValue rval);
 
-/* See the fval overload of Invoke. */
+// Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
+// during construction of |fval|.
+//
+// This method exists only for very rare cases where a |this| was created
+// caller-side for construction of |fval|: basically only for JITs using
+// |CreateThis|.  If that's not you, use Construct()!
 extern bool
-InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
-                  bool newTargetInArgv, MutableHandleValue rval);
+InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleValue thisv,
+                                  const ConstructArgs& args, HandleValue newTarget,
+                                  MutableHandleValue rval);
 
 /*
  * Executes a script with the given scopeChain/this. The 'type' indicates
