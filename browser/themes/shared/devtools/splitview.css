@@ -140,20 +140,3 @@
   min-width: 48px;
   min-height: 0;
 }
-
-
-/* Resizers */
-
-.splitview-portrait-resizer {
-  -moz-appearance: none;
-  background: linear-gradient(black 1px, rgba(255,255,255,0.2) 1px),
-              linear-gradient(hsl(210,11%,36%), hsl(210,11%,18%));
-  height: 12px;
-  background-size: 10px 2px, 100% 12px;
-  background-clip: content-box, border-box;
-  background-repeat: repeat-y, no-repeat;
-  background-position: center center;
-  padding: 2px 0;
-  border-top: 1px solid hsla(210,8%,5%,.5);
-  border-bottom: 1px solid hsla(210,8%,5%,.5);
-}
