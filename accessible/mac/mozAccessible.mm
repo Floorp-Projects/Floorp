@@ -355,10 +355,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (accWrap) {
-    Accessible* acc = accWrap->GetChildAt(i);
-    return acc ? GetNativeFromGeckoAccessible(acc) : nil;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    Accessible* child = accWrap->GetChildAt(i);
+    return child ? GetNativeFromGeckoAccessible(child) : nil;
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    ProxyAccessible* child = proxy->ChildAt(i);
+    return child ? GetNativeFromProxy(child) : nil;
   }
 
   return nil;
