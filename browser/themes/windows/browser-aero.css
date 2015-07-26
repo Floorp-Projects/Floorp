@@ -115,7 +115,7 @@
         .titlebar-button {
           border: none;
           margin: 0 !important;
-          padding: 12px 17px;
+          padding: 10px 17px;
         }
 
         #main-window[sizemode=maximized] .titlebar-button {
