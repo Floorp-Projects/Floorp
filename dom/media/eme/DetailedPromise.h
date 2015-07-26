@@ -8,6 +8,7 @@
 #define __DetailedPromise_h__
 
 #include "mozilla/dom/Promise.h"
+#include "EMEUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,11 +22,12 @@ class DetailedPromise : public Promise
 {
 public:
   static already_AddRefed<DetailedPromise>
-  Create(nsIGlobalObject* aGlobal, ErrorResult& aRv);
+  Create(nsIGlobalObject* aGlobal, ErrorResult& aRv, const nsACString& aName);
 
   template <typename T>
   void MaybeResolve(const T& aArg)
   {
+    EME_LOG("%s promise resolved", mName.get());
     mResponded = true;
     Promise::MaybeResolve<T>(aArg);
   }
@@ -37,9 +39,10 @@ public:
   void MaybeReject(ErrorResult&, const nsACString& aReason);
 
 private:
-  explicit DetailedPromise(nsIGlobalObject* aGlobal);
+  explicit DetailedPromise(nsIGlobalObject* aGlobal, const nsACString& aName);
   virtual ~DetailedPromise();
 
+  nsCString mName;
   bool mResponded;
 };
 
