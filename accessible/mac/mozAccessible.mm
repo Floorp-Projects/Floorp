@@ -851,11 +851,13 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  nsIntRect rect;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    rect = accWrap->Bounds();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    rect = proxy->Bounds();
+  else
     return nil;
-
-  nsIntRect rect = accWrap->Bounds();
 
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
