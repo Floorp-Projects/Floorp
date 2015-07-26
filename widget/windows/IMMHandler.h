@@ -279,11 +279,39 @@ protected:
                                const IMEContext& aContext);
   void SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
                                        const IMEContext& aContext);
+  /**
+   * GetCharacterRectOfSelectedTextAt() returns character rect of the offset
+   * from the selection start or the start of composition string if there is
+   * a composition.
+   *
+   * @param aWindow         The window which has focus.
+   * @param aOffset         Offset from the selection start or the start of
+   *                        composition string when there is a composition.
+   *                        This must be in the selection range or
+   *                        the composition string.
+   * @param aCharRect       The result.
+   * @param aWritingMode    The writing mode of current selection.  When this
+   *                        is nullptr, this assumes that the selection is in
+   *                        horizontal writing mode.
+   * @return                true if this succeeded to retrieve the rect.
+   *                        Otherwise, false.
+   */
   bool GetCharacterRectOfSelectedTextAt(
          nsWindow* aWindow,
          uint32_t aOffset,
          nsIntRect& aCharRect,
          mozilla::WritingMode* aWritingMode = nullptr);
+  /**
+   * GetCaretRect() returns caret rect at current selection start.
+   *
+   * @param aWindow         The window which has focus.
+   * @param aCaretRect      The result.
+   * @param aWritingMode    The writing mode of current selection.  When this
+   *                        is nullptr, this assumes that the selection is in
+   *                        horizontal writing mode.
+   * @return                true if this succeeded to retrieve the rect.
+   *                        Otherwise, false.
+   */
   bool GetCaretRect(nsWindow* aWindow,
                     nsIntRect& aCaretRect,
                     mozilla::WritingMode* aWritingMode = nullptr);
@@ -402,6 +430,7 @@ protected:
       mIsValid = false;
     }
     uint32_t Length() const { return mString.Length(); }
+    bool Collapsed() const { return !Length(); }
 
     bool IsValid() const;
     bool Update(const IMENotification& aIMENotification);
