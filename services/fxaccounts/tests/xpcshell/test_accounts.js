@@ -155,7 +155,7 @@ function MockFxAccounts() {
       // we use a real accountState but mocked storage.
       let storage = new MockStorageManager();
       storage.initialize(credentials);
-      return new AccountState(this, storage);
+      return new AccountState(storage);
     },
     getCertificateSigned: function (sessionToken, serializedPublicKey) {
       _("mock getCertificateSigned\n");
@@ -202,7 +202,7 @@ add_task(function test_get_signed_in_user_initially_unset() {
       // we use a real accountState but mocked storage.
       let storage = new MockStorageManager();
       storage.initialize(credentials);
-      return new AccountState(this, storage);
+      return new AccountState(storage);
     },
   });
   let credentials = {
@@ -251,7 +251,7 @@ add_task(function* test_getCertificate() {
       // we use a real accountState but mocked storage.
       let storage = new MockStorageManager();
       storage.initialize(credentials);
-      return new AccountState(this, storage);
+      return new AccountState(storage);
     },
   });
   let credentials = {
@@ -272,7 +272,7 @@ add_task(function* test_getCertificate() {
   let offline = Services.io.offline;
   Services.io.offline = true;
   // This call would break from missing parameters ...
-  yield fxa.internal.currentAccountState.getCertificate().then(
+  yield fxa.internal.getCertificate().then(
     result => {
       Services.io.offline = offline;
       do_throw("Unexpected success");
@@ -505,8 +505,9 @@ add_task(function test_getAssertion() {
   _("ASSERTION: " + assertion + "\n");
   let pieces = assertion.split("~");
   do_check_eq(pieces[0], "cert1");
-  let keyPair = fxa.internal.currentAccountState.keyPair;
-  let cert = fxa.internal.currentAccountState.cert;
+  let userData = yield fxa.getSignedInUser();
+  let keyPair = userData.keyPair;
+  let cert = userData.cert;
   do_check_neq(keyPair, undefined);
   _(keyPair.validUntil + "\n");
   let p2 = pieces[1].split(".");
@@ -553,9 +554,10 @@ add_task(function test_getAssertion() {
   // expiration time of the assertion should be different.  We compare this to
   // the initial start time, to which they are relative, not the current value
   // of "now".
+  userData = yield fxa.getSignedInUser();
 
-  keyPair = fxa.internal.currentAccountState.keyPair;
-  cert = fxa.internal.currentAccountState.cert;
+  keyPair = userData.keyPair;
+  cert = userData.cert;
   do_check_eq(keyPair.validUntil, start + KEY_LIFETIME);
   do_check_eq(cert.validUntil, start + CERT_LIFETIME);
   exp = Number(payload.exp);
@@ -576,8 +578,9 @@ add_task(function test_getAssertion() {
   header = JSON.parse(atob(p2[0]));
   payload = JSON.parse(atob(p2[1]));
   do_check_eq(payload.aud, "fourth.example.com");
-  keyPair = fxa.internal.currentAccountState.keyPair;
-  cert = fxa.internal.currentAccountState.cert;
+  userData = yield fxa.getSignedInUser();
+  keyPair = userData.keyPair;
+  cert = userData.cert;
   do_check_eq(keyPair.validUntil, now + KEY_LIFETIME);
   do_check_eq(cert.validUntil, now + CERT_LIFETIME);
   exp = Number(payload.exp);
