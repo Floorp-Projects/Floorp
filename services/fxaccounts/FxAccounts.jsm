@@ -72,8 +72,7 @@ let publicProperties = [
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-let AccountState = this.AccountState = function(fxaInternal, storageManager) {
-  this.fxaInternal = fxaInternal;
+let AccountState = this.AccountState = function(storageManager) {
   this.storageManager = storageManager;
   this.promiseInitialized = this.storageManager.getAccountData().then(data => {
     this.oauthTokens = data && data.oauthTokens ? data.oauthTokens : {};
@@ -84,13 +83,12 @@ let AccountState = this.AccountState = function(fxaInternal, storageManager) {
 };
 
 AccountState.prototype = {
-  cert: null,
-  keyPair: null,
   oauthTokens: null,
   whenVerifiedDeferred: null,
   whenKeysReadyDeferred: null,
 
-  get isCurrent() this.fxaInternal && this.fxaInternal.currentAccountState === this,
+  // If the storage manager has been nuked then we are no longer current.
+  get isCurrent() this.storageManager != null,
 
   abort() {
     if (this.whenVerifiedDeferred) {
@@ -108,7 +106,6 @@ AccountState.prototype = {
     this.cert = null;
     this.keyPair = null;
     this.oauthTokens = null;
-    this.fxaInternal = null;
     // Avoid finalizing the storageManager multiple times (ie, .signOut()
     // followed by .abort())
     if (!this.storageManager) {
@@ -131,11 +128,14 @@ AccountState.prototype = {
     });
   },
 
-  getUserAccountData() {
+  // Get user account data. Optionally specify explcit field names to fetch
+  // (and note that if you require an in-memory field you *must* specify the
+  // field name(s).)
+  getUserAccountData(fieldNames = null) {
     if (!this.isCurrent) {
       return Promise.reject(new Error("Another user has signed in"));
     }
-    return this.storageManager.getAccountData().then(result => {
+    return this.storageManager.getAccountData(fieldNames).then(result => {
       return this.resolve(result);
     });
   },
@@ -145,66 +145,6 @@ AccountState.prototype = {
       return Promise.reject(new Error("Another user has signed in"));
     }
     return this.storageManager.updateAccountData(updatedFields);
-  },
-
-  getCertificate: function(data, keyPair, mustBeValidUntil) {
-    // TODO: get the lifetime from the cert's .exp field
-    if (this.cert && this.cert.validUntil > mustBeValidUntil) {
-      log.debug(" getCertificate already had one");
-      return this.resolve(this.cert.cert);
-    }
-
-    if (Services.io.offline) {
-      return this.reject(new Error(ERROR_OFFLINE));
-    }
-
-    let willBeValidUntil = this.fxaInternal.now() + CERT_LIFETIME;
-    return this.fxaInternal.getCertificateSigned(data.sessionToken,
-                                                 keyPair.serializedPublicKey,
-                                                 CERT_LIFETIME).then(
-      cert => {
-        log.debug("getCertificate got a new one: " + !!cert);
-        this.cert = {
-          cert: cert,
-          validUntil: willBeValidUntil
-        };
-        return cert;
-      }
-    ).then(result => this.resolve(result));
-  },
-
-  getKeyPair: function(mustBeValidUntil) {
-    // If the debugging pref to ignore cached authentication credentials is set for Sync,
-    // then don't use any cached key pair, i.e., generate a new one and get it signed.
-    // The purpose of this pref is to expedite any auth errors as the result of a
-    // expired or revoked FxA session token, e.g., from resetting or changing the FxA
-    // password.
-    let ignoreCachedAuthCredentials = false;
-    try {
-      ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials");
-    } catch(e) {
-      // Pref doesn't exist
-    }
-    if (!ignoreCachedAuthCredentials && this.keyPair && (this.keyPair.validUntil > mustBeValidUntil)) {
-      log.debug("getKeyPair: already have a keyPair");
-      return this.resolve(this.keyPair.keyPair);
-    }
-    // Otherwse, create a keypair and set validity limit.
-    let willBeValidUntil = this.fxaInternal.now() + KEY_LIFETIME;
-    let d = Promise.defer();
-    jwcrypto.generateKeyPair("DS160", (err, kp) => {
-      if (err) {
-        return this.reject(err);
-      }
-      this.keyPair = {
-        keyPair: kp,
-        validUntil: willBeValidUntil
-      };
-      log.debug("got keyPair");
-      delete this.cert;
-      d.resolve(this.keyPair.keyPair);
-    });
-    return d.promise.then(result => this.resolve(result));
   },
 
   resolve: function(result) {
@@ -427,7 +367,7 @@ FxAccountsInternal.prototype = {
   newAccountState(credentials) {
     let storage = new FxAccountsStorageManager();
     storage.initialize(credentials);
-    return new AccountState(this, storage);
+    return new AccountState(storage);
   },
 
   /**
@@ -560,6 +500,52 @@ FxAccountsInternal.prototype = {
   },
 
   /**
+   * returns a promise that fires with the keypair.
+   */
+  getKeyPair: Task.async(function* (mustBeValidUntil) {
+    // If the debugging pref to ignore cached authentication credentials is set for Sync,
+    // then don't use any cached key pair, i.e., generate a new one and get it signed.
+    // The purpose of this pref is to expedite any auth errors as the result of a
+    // expired or revoked FxA session token, e.g., from resetting or changing the FxA
+    // password.
+    let ignoreCachedAuthCredentials = false;
+    try {
+      ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials");
+    } catch(e) {
+      // Pref doesn't exist
+    }
+    let currentState = this.currentAccountState;
+    let accountData = yield currentState.getUserAccountData("keyPair");
+    if (!ignoreCachedAuthCredentials && accountData.keyPair && (accountData.keyPair.validUntil > mustBeValidUntil)) {
+      log.debug("getKeyPair: already have a keyPair");
+      return accountData.keyPair.keyPair;
+    }
+    // Otherwse, create a keypair and set validity limit.
+    let willBeValidUntil = this.now() + KEY_LIFETIME;
+    let kp = yield new Promise((resolve, reject) => {
+      jwcrypto.generateKeyPair("DS160", (err, kp) => {
+        if (err) {
+          return reject(err);
+        }
+        log.debug("got keyPair");
+        let toUpdate = {
+          keyPair: {
+            keyPair: kp,
+            validUntil: willBeValidUntil
+          },
+          cert: null
+        };
+        currentState.updateUserAccountData(toUpdate).then(() => {
+          resolve(kp);
+        }).catch(err => {
+          log.error("Failed to update account data with keypair and cert");
+        });
+      });
+    });
+    return kp;
+  }),
+
+  /**
    * returns a promise that fires with the assertion.  If there is no verified
    * signed-in user, fires with null.
    */
@@ -576,8 +562,8 @@ FxAccountsInternal.prototype = {
         // Signed-in user has not verified email
         return null;
       }
-      return currentState.getKeyPair(mustBeValidUntil).then(keyPair => {
-        return currentState.getCertificate(data, keyPair, mustBeValidUntil)
+      return this.getKeyPair(mustBeValidUntil).then(keyPair => {
+        return this.getCertificate(data, keyPair, mustBeValidUntil)
           .then(cert => {
             return this.getAssertionFromCert(data, keyPair, cert, audience);
           });
@@ -844,6 +830,37 @@ FxAccountsInternal.prototype = {
       lifetime
     );
   },
+
+  /**
+   * returns a promise that fires with a certificate.
+   */
+  getCertificate: Task.async(function* (data, keyPair, mustBeValidUntil) {
+    // TODO: get the lifetime from the cert's .exp field
+    let currentState = this.currentAccountState;
+    let accountData = yield currentState.getUserAccountData("cert");
+    if (accountData.cert && accountData.cert.validUntil > mustBeValidUntil) {
+      log.debug(" getCertificate already had one");
+      return accountData.cert.cert;
+    }
+    if (Services.io.offline) {
+      throw new Error(ERROR_OFFLINE);
+    }
+    let willBeValidUntil = this.now() + CERT_LIFETIME;
+    let cert = yield this.getCertificateSigned(data.sessionToken,
+                                               keyPair.serializedPublicKey,
+                                               CERT_LIFETIME);
+    log.debug("getCertificate got a new one: " + !!cert);
+    if (cert) {
+      let toUpdate = {
+        cert: {
+          cert: cert,
+          validUntil: willBeValidUntil
+        }
+      };
+      yield currentState.updateUserAccountData(toUpdate);
+    }
+    return cert;
+  }),
 
   getUserAccountData: function() {
     return this.currentAccountState.getUserAccountData();
