@@ -624,6 +624,11 @@ protected:
       mInitialized = true;
     }
 
+    void OnLayoutChanged()
+    {
+      mMinTextModifiedOffset = NOT_MODIFIED;
+    }
+
     const nsDependentSubstring GetSelectedText() const;
     const nsDependentSubstring GetSubstring(uint32_t aStart,
                                             uint32_t aLength) const;

@@ -4555,6 +4555,12 @@ TSFTextStore::NotifyTSFOfLayoutChange(bool aFlush)
 {
   mPendingOnLayoutChange = false;
 
+  // Now, layout has been computed.  We should notify mLockedContent for
+  // making GetTextExt() and GetACPFromPoint() not return TS_E_NOLAYOUT.
+  if (mLockedContent.IsInitialized()) {
+    mLockedContent.OnLayoutChanged();
+  }
+
   // This method should return true if either way succeeds.
   bool ret = false;
 
