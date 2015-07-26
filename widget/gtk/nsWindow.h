@@ -31,7 +31,7 @@
 #endif
 #include "mozilla/EventForwards.h"
 
-#include "nsGtkIMModule.h"
+#include "IMContextWrapper.h"
 
 #undef LOG
 #ifdef MOZ_LOGGING
@@ -478,7 +478,7 @@ private:
     virtual int32_t RoundsWidgetCoordinatesTo() override;
 
     /**
-     * |mIMModule| takes all IME related stuff.
+     * |mIMContext| takes all IME related stuff.
      *
      * This is owned by the top-level nsWindow or the topmost child
      * nsWindow embedded in a non-Gecko widget.
@@ -490,7 +490,7 @@ private:
      * level window is released, the children still have a valid pointer,
      * however, IME doesn't work at that time.
      */
-    nsRefPtr<nsGtkIMModule> mIMModule;
+    nsRefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
