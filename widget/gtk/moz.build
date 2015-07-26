@@ -20,8 +20,6 @@ UNIFIED_SOURCES += [
     'nsBidiKeyboard.cpp',
     'nsColorPicker.cpp',
     'nsFilePicker.cpp',
-    'nsGtkIMModule.cpp',
-    'nsGtkKeyUtils.cpp',
     'nsImageToPixbuf.cpp',
     'nsLookAndFeel.cpp',
     'nsNativeThemeGTK.cpp',
@@ -35,6 +33,8 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'IMContextWrapper.cpp', # methods for logging conflict with other files
+    'nsGtkKeyUtils.cpp', # methods for logging conflict with other files
     'nsWindow.cpp', # conflicts with X11 headers
 ]
 
