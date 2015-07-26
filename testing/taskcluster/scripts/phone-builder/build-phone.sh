@@ -8,13 +8,11 @@ if [ $TARGET == "aries" -o $TARGET == "shinano" ]; then
   rm -rf $WORKSPACE/B2G/out
 fi
 
-if ! test $MOZHARNESS_CONFIG; then
-  MOZHARNESS_CONFIG=b2g/taskcluster-phone.py
-fi
+MOZHARNESS_CONFIG=${MOZHARNESS_CONFIG:=b2g/taskcluster-phone.py}
 
 rm -rf $WORKSPACE/B2G/upload/
 
-./mozharness/scripts/b2g_build.py \
+$WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --config $MOZHARNESS_CONFIG \
   "$debug_flag" \
   --disable-mock \

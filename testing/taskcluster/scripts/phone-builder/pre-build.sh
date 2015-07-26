@@ -11,15 +11,10 @@ test -d $WORKSPACE
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
 test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
-test $MOZHARNESS_REPOSITORY # mozharness repository
-test $MOZHARNESS_REV # mozharness revision
-test $MOZHARNESS_REF # mozharness ref
 test $TARGET
 test $VARIANT
 
 . ../builder/setup-ccache.sh
-
-tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
 
 # Figure out where the remote manifest is so we can use caches for it.
 MANIFEST=$(repository-url.py $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV b2g/config/$TARGET/sources.xml)
