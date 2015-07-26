@@ -43,6 +43,8 @@ GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
   , mIsOpen(false)
   , mShuttingDown(false)
   , mActorDestroyed(false)
+  , mIsAwaitingResetComplete(false)
+  , mIsAwaitingDrainComplete(false)
   , mPlugin(aPlugin)
   , mCallback(nullptr)
   , mVideoHost(this)
@@ -67,6 +69,12 @@ GMPVideoDecoderParent::Close()
 {
   LOGD(("%s: %p", __FUNCTION__, this));
   MOZ_ASSERT(!mPlugin || mPlugin->GMPThread() == NS_GetCurrentThread());
+
+  // Ensure if we've received a Close while waiting for a ResetComplete
+  // or DrainComplete notification, we'll unblock the caller before processing
+  // the close. This seems unlikely to happen, but better to be careful.
+  UnblockResetAndDrain();
+
   // Consumer is done with us; we can shut down.  No more callbacks should
   // be made to mCallback.  Note: do this before Shutdown()!
   mCallback = nullptr;
@@ -161,6 +169,8 @@ GMPVideoDecoderParent::Reset()
     return NS_ERROR_FAILURE;
   }
 
+  mIsAwaitingResetComplete = true;
+
   // Async IPC, we don't have access to a return value.
   return NS_OK;
 }
@@ -178,6 +188,8 @@ GMPVideoDecoderParent::Drain()
   if (!SendDrain()) {
     return NS_ERROR_FAILURE;
   }
+
+  mIsAwaitingDrainComplete = true;
 
   // Async IPC, we don't have access to a return value.
   return NS_OK;
@@ -207,6 +219,11 @@ GMPVideoDecoderParent::Shutdown()
   }
   mShuttingDown = true;
 
+  // Ensure if we've received a shutdown while waiting for a ResetComplete
+  // or DrainComplete notification, we'll unblock the caller before processing
+  // the shutdown.
+  UnblockResetAndDrain();
+
   // Notify client we're gone!  Won't occur after Close()
   if (mCallback) {
     mCallback->Terminated();
@@ -228,6 +245,11 @@ GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
   mIsOpen = false;
   mActorDestroyed = true;
   mVideoHost.DoneWithAPI();
+
+  // Ensure if we've received a destroy while waiting for a ResetComplete
+  // or DrainComplete notification, we'll unblock the caller before processing
+  // the error.
+  UnblockResetAndDrain();
 
   if (mCallback) {
     // May call Close() (and Shutdown()) immediately or with a delay
@@ -307,6 +329,11 @@ GMPVideoDecoderParent::RecvDrainComplete()
     return false;
   }
 
+  if (!mIsAwaitingDrainComplete) {
+    return true;
+  }
+  mIsAwaitingDrainComplete = false;
+
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->DrainComplete();
 
@@ -320,6 +347,11 @@ GMPVideoDecoderParent::RecvResetComplete()
     return false;
   }
 
+  if (!mIsAwaitingResetComplete) {
+    return true;
+  }
+  mIsAwaitingResetComplete = false;
+
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->ResetComplete();
 
@@ -332,6 +364,11 @@ GMPVideoDecoderParent::RecvError(const GMPErr& aError)
   if (!mCallback) {
     return false;
   }
+
+  // Ensure if we've received an error while waiting for a ResetComplete
+  // or DrainComplete notification, we'll unblock the caller before processing
+  // the error.
+  UnblockResetAndDrain();
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->Error(aError);
@@ -385,6 +422,24 @@ GMPVideoDecoderParent::Recv__delete__()
   }
 
   return true;
+}
+
+void
+GMPVideoDecoderParent::UnblockResetAndDrain()
+{
+  if (!mCallback) {
+    MOZ_ASSERT(!mIsAwaitingResetComplete);
+    MOZ_ASSERT(!mIsAwaitingDrainComplete);
+    return;
+  }
+  if (mIsAwaitingResetComplete) {
+    mIsAwaitingResetComplete = false;
+    mCallback->ResetComplete();
+  }
+  if (mIsAwaitingDrainComplete) {
+    mIsAwaitingDrainComplete = false;
+    mCallback->DrainComplete();
+  }
 }
 
 } // namespace gmp
