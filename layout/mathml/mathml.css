@@ -21,6 +21,9 @@ math {
   font-size: inherit;
   font-style: normal;
   font-family: serif;
+  line-height: normal;
+  word-spacing: normal;
+  letter-spacing: normal;
   text-rendering: optimizeLegibility;
   -moz-float-edge: margin-box;
   -moz-math-display: inline;
