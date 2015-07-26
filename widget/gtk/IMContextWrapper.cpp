@@ -21,10 +21,10 @@ namespace widget {
 
 PRLogModuleInfo* gGtkIMLog = nullptr;
 
-static const char*
-GetBoolName(bool aBool)
+static inline const char*
+ToChar(bool aBool)
 {
-  return aBool ? "true" : "false";
+    return aBool ? "true" : "false";
 }
 
 static const char*
@@ -335,7 +335,7 @@ IMContextWrapper::OnBlurWindow(nsWindow* aWindow)
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p OnBlurWindow(aWindow=%p), mLastFocusedWindow=%p, "
          "mIsIMFocused=%s",
-         this, aWindow, mLastFocusedWindow, GetBoolName(mIsIMFocused)));
+         this, aWindow, mLastFocusedWindow, ToChar(mIsIMFocused)));
 
     if (!mIsIMFocused || mLastFocusedWindow != aWindow) {
         return;
@@ -360,7 +360,7 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
         ("GTKIM: %p OnKeyEvent(aCaller=%p, aKeyDownEventWasSent=%s), "
          "mCompositionState=%s, current context=%p, active context=%p, "
          "aEvent(%p): { type=%s, keyval=%s, unicode=0x%X }",
-         this, aCaller, GetBoolName(aKeyDownEventWasSent),
+         this, aCaller, ToChar(aKeyDownEventWasSent),
          GetCompositionStateName(), GetCurrentContext(), GetActiveContext(),
          aEvent, GetEventType(aEvent), gdk_keyval_name(aEvent->keyval),
          gdk_keyval_to_unicode(aEvent->keyval)));
@@ -429,8 +429,8 @@ IMContextWrapper::OnKeyEvent(nsWindow* aCaller,
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("GTKIM: %p   OnKeyEvent(), succeeded, filterThisEvent=%s "
          "(isFiltered=%s, mFilterKeyEvent=%s), mCompositionState=%s",
-         this, GetBoolName(filterThisEvent), GetBoolName(isFiltered),
-         GetBoolName(mFilterKeyEvent), GetCompositionStateName()));
+         this, ToChar(filterThisEvent), ToChar(isFiltered),
+         ToChar(mFilterKeyEvent), GetCompositionStateName()));
 
     return filterThisEvent;
 }
@@ -441,8 +441,8 @@ IMContextWrapper::OnFocusChangeInGecko(bool aFocus)
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p OnFocusChangeInGecko(aFocus=%s), "
          "mCompositionState=%s, mIsIMFocused=%s",
-         this, GetBoolName(aFocus), GetCompositionStateName(),
-         GetBoolName(mIsIMFocused)));
+         this, ToChar(aFocus), GetCompositionStateName(),
+         ToChar(mIsIMFocused)));
 
     // We shouldn't carry over the removed string to another editor.
     mSelectedString.Truncate();
@@ -454,7 +454,7 @@ IMContextWrapper::ResetIME()
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p ResetIME(), mCompositionState=%s, mIsIMFocused=%s",
-         this, GetCompositionStateName(), GetBoolName(mIsIMFocused)));
+         this, GetCompositionStateName(), ToChar(mIsIMFocused)));
 
     GtkIMContext* activeContext = GetActiveContext();
     if (MOZ_UNLIKELY(!activeContext)) {
@@ -486,7 +486,7 @@ IMContextWrapper::ResetIME()
          "mIsIMFocused=%s",
          this, activeContext, GetCompositionStateName(),
          NS_ConvertUTF16toUTF8(compositionString).get(),
-         GetBoolName(mIsIMFocused)));
+         ToChar(mIsIMFocused)));
 
     // XXX IIIMF (ATOK X3 which is one of the Language Engine of it is still
     //     used in Japan!) sends only "preedit_changed" signal with empty
@@ -764,7 +764,7 @@ IMContextWrapper::Blur()
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p Blur(), mIsIMFocused=%s",
-         this, GetBoolName(mIsIMFocused)));
+         this, ToChar(mIsIMFocused)));
 
     if (!mIsIMFocused) {
         return;
@@ -802,11 +802,11 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
          "} }), mCompositionState=%s, mIsDeletingSurrounding=%s",
          this, aCaller, selectionChangeData.mOffset,
          selectionChangeData.Length(),
-         GetBoolName(selectionChangeData.mReversed),
+         ToChar(selectionChangeData.mReversed),
          GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
-         GetBoolName(selectionChangeData.mCausedByComposition),
-         GetBoolName(selectionChangeData.mCausedBySelectionEvent),
-         GetCompositionStateName(), GetBoolName(mIsDeletingSurrounding)));
+         ToChar(selectionChangeData.mCausedByComposition),
+         ToChar(selectionChangeData.mCausedBySelectionEvent),
+         GetCompositionStateName(), ToChar(mIsDeletingSurrounding)));
 
     if (aCaller != mLastFocusedWindow) {
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -1074,7 +1074,7 @@ IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
          "current context=%p, active context=%p, commitString=\"%s\", "
          "mProcessingKeyEvent=%p, IsComposingOn(aContext)=%s",
          this, aContext, GetCurrentContext(), GetActiveContext(), commitString,
-         mProcessingKeyEvent, GetBoolName(IsComposingOn(aContext))));
+         mProcessingKeyEvent, ToChar(IsComposingOn(aContext))));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     if (!IsValidContext(aContext)) {
