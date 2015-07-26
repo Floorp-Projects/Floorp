@@ -13,6 +13,7 @@
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
 #endif
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
@@ -106,7 +107,17 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   }
 
   nsAutoCString message;
-  MediaKeySystemStatus status = MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message);
+  MediaKeySystemStatus status =
+    MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion, message);
+
+  nsPrintfCString msg("MediaKeySystemAccess::GetKeySystemStatus(%s, minVer=%d) "
+                      "result=%s msg='%s'",
+                      NS_ConvertUTF16toUTF8(keySystem).get(),
+                      minCdmVersion,
+                      MediaKeySystemStatusValues::strings[(size_t)status].value,
+                      message.get());
+  LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
+
   if ((status == MediaKeySystemStatus::Cdm_not_installed ||
        status == MediaKeySystemStatus::Cdm_insufficient_version) &&
       keySystem.EqualsLiteral("com.adobe.primetime")) {
@@ -139,8 +150,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
       // chrome, so we can show some UI to explain how the user can rectify
       // the situation.
       MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
-      aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                            NS_LITERAL_CSTRING("The key system has been disabled by the user"));
+      aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, message);
       return;
     }
     aPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,

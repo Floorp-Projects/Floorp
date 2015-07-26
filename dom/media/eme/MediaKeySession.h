@@ -98,7 +98,8 @@ private:
   ~MediaKeySession();
 
   void UpdateKeyStatusMap();
-  already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv);
+  already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv,
+                                                const nsACString& aName);
 
   nsRefPtr<DetailedPromise> mClosed;
 
