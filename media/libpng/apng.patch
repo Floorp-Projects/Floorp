@@ -1,3 +1,20 @@
+Index: LICENSE
+===================================================================
+--- LICENSE
++++ LICENSE
+@@ -8,6 +8,12 @@
+ If you modify libpng you may insert additional notices immediately following
+ this sentence.
+ 
++This modified version of libpng code adds animated PNG support. This code is
++released under the libpng license described below. The modifications are
++Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2015 Max Stepin,
++and can be identified by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
++surrounding them in the modified libpng source files.
++
+ This code is released under the libpng license.
+ 
+ libpng versions 1.0.7, July 1, 2000, through 1.6.18, July 23, 2015, are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -278,7 +295,20 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -480,6 +480,10 @@
+@@ -248,6 +248,12 @@
+  * If you modify libpng you may insert additional notices immediately following
+  * this sentence.
+  *
++ * This modified version of libpng code adds animated PNG support. This code is
++ * released under the libpng license described below. The modifications are
++ * Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2015 Max Stepin,
++ * and can be identified by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
++ * surrounding them in the modified libpng source files.
++ *
+  * This code is released under the libpng license.
+  *
+  * libpng versions 1.0.7, July 1, 2000, through 1.6.18, July 23, 2015, are
+@@ -480,6 +486,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -289,7 +319,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -570,6 +574,17 @@
+@@ -570,6 +580,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -307,7 +337,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -890,6 +905,10 @@
+@@ -890,6 +911,10 @@
  #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
@@ -318,7 +348,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -927,6 +946,10 @@
+@@ -927,6 +952,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -329,7 +359,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3272,6 +3295,75 @@
+@@ -3245,6 +3274,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -405,7 +435,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3280,7 +3372,11 @@
+@@ -3253,7 +3351,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -421,7 +451,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -516,6 +516,10 @@
+@@ -537,6 +537,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
                     /*             0x4000 (unused) */
  #define PNG_IS_READ_STRUCT        0x8000 /* Else is a write struct */
@@ -432,7 +462,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -737,6 +741,16 @@
+@@ -758,6 +762,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -449,7 +479,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1420,6 +1434,49 @@
+@@ -1437,6 +1451,49 @@
  
  #endif /* PROGRESSIVE_READ */
  
@@ -526,7 +556,7 @@ Index: pngstruct.h
 ===================================================================
 --- pngstruct.h
 +++ pngstruct.h
-@@ -408,6 +408,27 @@
+@@ -400,6 +400,27 @@
     png_byte filter_type;
  #endif
  
@@ -558,10 +588,10 @@ Index: pngwrite.c
 ===================================================================
 --- pngwrite.c
 +++ pngwrite.c
-@@ -127,6 +127,10 @@
-     * application continues writing the PNG.  So check the 'invalid' flag here
-     * too.
-     */
+@@ -128,6 +128,10 @@
+        * the application continues writing the PNG.  So check the 'invalid'
+        * flag here too.
+        */
 +#ifdef PNG_WRITE_APNG_SUPPORTED
 +   if ((info_ptr->valid & PNG_INFO_acTL) != 0)
 +      png_write_acTL(png_ptr, info_ptr->num_frames, info_ptr->num_plays);
@@ -569,7 +599,7 @@ Index: pngwrite.c
  #ifdef PNG_GAMMA_SUPPORTED
  #  ifdef PNG_WRITE_gAMA_SUPPORTED
        if ((info_ptr->colorspace.flags & PNG_COLORSPACE_INVALID) == 0 &&
-@@ -354,6 +358,11 @@
+@@ -360,6 +364,11 @@
     if ((png_ptr->mode & PNG_HAVE_IDAT) == 0)
        png_error(png_ptr, "No IDATs written into file");
  
@@ -581,9 +611,9 @@ Index: pngwrite.c
  #ifdef PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED
     if (png_ptr->num_palette_max > png_ptr->num_palette)
        png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
-@@ -2456,4 +2465,42 @@
+@@ -2227,4 +2236,42 @@
  }
- #endif /* STDIO */
+ # endif /* STDIO */
  #endif /* SIMPLIFIED_WRITE */
 +
 +#ifdef PNG_WRITE_APNG_SUPPORTED
@@ -628,7 +658,7 @@ Index: pngpread.c
 ===================================================================
 --- pngpread.c
 +++ pngpread.c
-@@ -219,6 +219,86 @@
+@@ -194,6 +194,89 @@
  
     chunk_name = png_ptr->chunk_name;
  
@@ -644,10 +674,10 @@ Index: pngpread.c
 +            png_error(png_ptr, "out of place IDAT");
 +
 +         PNG_PUSH_SAVE_BUFFER_IF_FULL
-+         png_push_crc_skip(png_ptr, png_ptr->push_length);
++         png_crc_finish(png_ptr, png_ptr->push_length);
 +         png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
-+         return;
 +      }
++
 +      else if (chunk_name == png_fdAT)
 +      {
 +         PNG_PUSH_SAVE_BUFFER_IF_LT(4)
@@ -660,9 +690,8 @@ Index: pngpread.c
 +               png_error(png_ptr, "out of place fdAT");
 +
 +            PNG_PUSH_SAVE_BUFFER_IF_FULL
-+            png_push_crc_skip(png_ptr, png_ptr->push_length);
++            png_crc_finish(png_ptr, png_ptr->push_length);
 +            png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
-+            return;
 +         }
 +
 +         else
@@ -671,8 +700,6 @@ Index: pngpread.c
 +            png_ptr->idat_size = png_ptr->push_length - 4;
 +            png_ptr->mode |= PNG_HAVE_IDAT;
 +            png_ptr->process_mode = PNG_READ_IDAT_MODE;
-+
-+            return;
 +         }
 +      }
 +
@@ -694,8 +721,15 @@ Index: pngpread.c
 +            (*(png_ptr->frame_info_fn))(png_ptr, png_ptr->num_frames_read);
 +
 +         png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
++      }
 +
-+         return;
++      else if (chunk_name == png_IEND)
++      {
++         PNG_PUSH_SAVE_BUFFER_IF_FULL
++         png_warning(png_ptr, "Number of actual frames fewer than expected");
++         png_crc_finish(png_ptr, png_ptr->push_length);
++         png_ptr->process_mode = PNG_READ_DONE_MODE;
++         png_push_have_end(png_ptr, info_ptr);
 +      }
 +
 +      else
@@ -703,9 +737,8 @@ Index: pngpread.c
 +         PNG_PUSH_SAVE_BUFFER_IF_FULL
 +         png_warning(png_ptr, "Skipped (ignored) a chunk "
 +                              "between APNG chunks");
-+         png_push_crc_skip(png_ptr, png_ptr->push_length);
++         png_crc_finish(png_ptr, png_ptr->push_length);
 +         png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
-+         return;
 +      }
 +
 +      return;
@@ -715,7 +748,7 @@ Index: pngpread.c
     if (chunk_name == png_IDAT)
     {
        if ((png_ptr->mode & PNG_AFTER_IDAT) != 0)
-@@ -283,6 +363,9 @@
+@@ -258,6 +341,9 @@
  
     else if (chunk_name == png_IDAT)
     {
@@ -725,7 +758,7 @@ Index: pngpread.c
        png_ptr->idat_size = png_ptr->push_length;
        png_ptr->process_mode = PNG_READ_IDAT_MODE;
        png_push_have_info(png_ptr, info_ptr);
-@@ -429,6 +512,20 @@
+@@ -404,6 +490,20 @@
     }
  #endif
  
@@ -746,7 +779,7 @@ Index: pngpread.c
     else
     {
        PNG_PUSH_SAVE_BUFFER_IF_FULL
-@@ -623,7 +720,11 @@
+@@ -533,7 +633,11 @@
        png_byte chunk_tag[4];
  
        /* TODO: this code can be commoned up with the same code in push_read */
@@ -758,7 +791,7 @@ Index: pngpread.c
        png_push_fill_buffer(png_ptr, chunk_length, 4);
        png_ptr->push_length = png_get_uint_31(png_ptr, chunk_length);
        png_reset_crc(png_ptr);
-@@ -631,17 +732,60 @@
+@@ -541,17 +645,60 @@
        png_ptr->chunk_name = PNG_CHUNK_FROM_STRING(chunk_tag);
        png_ptr->mode |= PNG_HAVE_CHUNK_HEADER;
  
@@ -819,7 +852,7 @@ Index: pngpread.c
     }
  
     if (png_ptr->idat_size != 0 && png_ptr->save_buffer_size != 0)
-@@ -714,6 +858,16 @@
+@@ -625,6 +772,16 @@
     if (!(buffer_length > 0) || buffer == NULL)
        png_error(png_ptr, "No IDAT data (internal error)");
  
@@ -836,7 +869,7 @@ Index: pngpread.c
     /* This routine must process all the data it has been given
      * before returning, calling the row callback as required to
      * handle the uncompressed results.
-@@ -1163,6 +1317,18 @@
+@@ -1074,6 +1231,18 @@
     png_set_read_fn(png_ptr, progressive_ptr, png_push_fill_buffer);
  }
  
@@ -871,7 +904,7 @@ Index: pngset.c
  }
  
  #ifdef PNG_oFFs_SUPPORTED
-@@ -1090,6 +1095,147 @@
+@@ -1089,6 +1094,146 @@
  }
  #endif /* sPLT */
  
@@ -904,8 +937,7 @@ Index: pngset.c
 +    if (num_plays > PNG_UINT_31_MAX)
 +    {
 +        png_warning(png_ptr,
-+                    "Ignoring attempt to set acTL with num_plays "
-+                    "> 2^31-1");
++                    "Ignoring attempt to set acTL with num_plays > 2^31-1");
 +        return (0);
 +    }
 +
@@ -980,7 +1012,7 @@ Index: pngset.c
 +        png_error(png_ptr, "invalid y_offset in fcTL (> 2^31-1)");
 +    if (width + x_offset > png_ptr->first_frame_width ||
 +        height + y_offset > png_ptr->first_frame_height)
-+        png_error(png_ptr, "dimensions of a frame are greater than"
++        png_error(png_ptr, "dimensions of a frame are greater than "
 +                           "the ones in IHDR");
 +
 +    if (dispose_op != PNG_DISPOSE_OP_NONE &&
@@ -1023,7 +1055,7 @@ Index: pngrutil.c
 ===================================================================
 --- pngrutil.c
 +++ pngrutil.c
-@@ -819,6 +819,11 @@
+@@ -818,6 +818,11 @@
     filter_type = buf[11];
     interlace_type = buf[12];
  
@@ -1035,7 +1067,7 @@ Index: pngrutil.c
     /* Set internal variables */
     png_ptr->width = width;
     png_ptr->height = height;
-@@ -2702,6 +2707,180 @@
+@@ -2704,6 +2709,180 @@
  }
  #endif
  
@@ -1216,7 +1248,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -3961,6 +4140,38 @@
+@@ -3963,6 +4142,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1255,7 +1287,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -3972,6 +4183,7 @@
+@@ -3974,6 +4185,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1263,7 +1295,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4035,6 +4247,9 @@
+@@ -4037,6 +4249,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1273,7 +1305,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4473,4 +4688,80 @@
+@@ -4475,4 +4690,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1485,7 +1517,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -3028,4 +3125,39 @@
+@@ -2704,4 +2801,39 @@
     }
  #endif /* WRITE_FLUSH */
  }
@@ -1510,7 +1542,7 @@ Index: pngwutil.c
 +                           "don't match the ones in IHDR");
 +    if (width > png_ptr->first_frame_width ||
 +        height > png_ptr->first_frame_height)
-+        png_error(png_ptr, "width and/or height for a frame greater than"
++        png_error(png_ptr, "width and/or height for a frame greater than "
 +                           "the ones in IHDR");
 +
 +    png_set_IHDR(png_ptr, info_ptr, width, height,

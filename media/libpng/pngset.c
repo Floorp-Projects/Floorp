@@ -1,7 +1,7 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Last changed in libpng 1.6.18 [July 23, 2015]
  * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -678,7 +678,6 @@ png_set_iCCP(png_const_structrp png_ptr, png_inforp info_ptr,
    if (new_iccp_profile == NULL)
    {
       png_free(png_ptr, new_iccp_name);
-      new_iccp_name = NULL;
       png_benign_error(png_ptr,
           "Insufficient memory to process iCCP profile");
 
@@ -715,7 +714,7 @@ png_set_text_2(png_const_structrp png_ptr, png_inforp info_ptr,
 {
    int i;
 
-   png_debug1(1, "in %lx storage function", png_ptr == NULL ? "unexpected" :
+   png_debug1(1, "in %lx storage function", png_ptr == NULL ? 0xabadca11 :
       (unsigned long)png_ptr->chunk_name);
 
    if (png_ptr == NULL || info_ptr == NULL || num_text <= 0 || text_ptr == NULL)
@@ -1124,8 +1123,7 @@ png_set_acTL(png_structp png_ptr, png_infop info_ptr,
     if (num_plays > PNG_UINT_31_MAX)
     {
         png_warning(png_ptr,
-                    "Ignoring attempt to set acTL with num_plays "
-                    "> 2^31-1");
+                    "Ignoring attempt to set acTL with num_plays > 2^31-1");
         return (0);
     }
 
@@ -1200,7 +1198,7 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
         png_error(png_ptr, "invalid y_offset in fcTL (> 2^31-1)");
     if (width + x_offset > png_ptr->first_frame_width ||
         height + y_offset > png_ptr->first_frame_height)
-        png_error(png_ptr, "dimensions of a frame are greater than"
+        png_error(png_ptr, "dimensions of a frame are greater than "
                            "the ones in IHDR");
 
     if (dispose_op != PNG_DISPOSE_OP_NONE &&
@@ -1668,6 +1666,9 @@ png_set_compression_buffer_size(png_structrp png_ptr, png_size_t size)
          }
 
 #ifndef __COVERITY__
+         /* Some compilers complain that this is always false.  However, it
+          * can be true when integer overflow happens.
+          */
          if (size > ZLIB_IO_MAX)
          {
             png_warning(png_ptr,
