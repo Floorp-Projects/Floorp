@@ -38,8 +38,7 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
-  --base-repo=$GECKO_BASE_REPOSITORY \
-  --repo=$GECKO_HEAD_REPOSITORY \
+  --repo=$WORKSPACE/gecko \
   --platform $PLATFORM \
   --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file
 

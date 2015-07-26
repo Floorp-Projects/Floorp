@@ -23,8 +23,7 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
-  --base-repo=$GECKO_BASE_REPOSITORY \
-  --repo=$GECKO_HEAD_REPOSITORY
+  --repo=$WORKSPACE/gecko
 
 # Don't cache backups
 rm -rf $WORKSPACE/B2G/backup-*
