@@ -946,6 +946,7 @@ loop.shared.views = (function(_, mozL10n) {
 
   var MediaLayoutView = React.createClass({displayName: "MediaLayoutView",
     propTypes: {
+      children: React.PropTypes.node,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       displayScreenShare: React.PropTypes.bool.isRequired,
       isLocalLoading: React.PropTypes.bool.isRequired,
@@ -1054,7 +1055,8 @@ loop.shared.views = (function(_, mozL10n) {
                 posterUrl: this.props.remotePosterUrl, 
                 srcVideoObject: this.props.remoteSrcVideoObject}), 
                this.state.localMediaAboslutelyPositioned ?
-                this.renderLocalVideo() : null
+                this.renderLocalVideo() : null, 
+               this.props.children
             ), 
             React.createElement("div", {className: screenShareStreamClasses}, 
               React.createElement(MediaView, {displayAvatar: false, 

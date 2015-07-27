@@ -504,28 +504,6 @@
   text-align: center;
 }
 
-.fx-embedded .local-stream {
-  position: absolute;
-  right: 3px;
-  bottom: 5px;
-  /* next two lines are workaround for lack of object-fit; see bug 1020445 */
-  max-width: 140px;
-  width: 30%;
-  height: 28%;
-  max-height: 105px;
-}
-
-.fx-embedded .local-stream.room-preview {
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  height: 100%;
-  width: 100%;
-  max-width: none;
-  max-height: none;
-}
-
 .conversation .media.nested .focus-stream {
   display: inline-block;
   position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
@@ -595,10 +573,6 @@
 .remote > .avatar {
   /* make visually distinct from local avatar */
   opacity: 0.25;
-}
-
-.fx-embedded .media.nested {
-  min-height: 200px;
 }
 
 .fx-embedded-call-identifier {
@@ -676,7 +650,8 @@
 html, .fx-embedded, #main,
 .video-layout-wrapper,
 .conversation,
-.desktop-call-wrapper {
+.desktop-call-wrapper,
+.desktop-room-wrapper {
   height: 100%;
 }
 
@@ -936,7 +911,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   border-top: 2px solid #444;
   border-bottom: 2px solid #444;
   padding: .5rem;
-  max-height: 400px;
   position: absolute;
   left: 0;
   bottom: 0;
@@ -952,7 +926,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   overflow-x: hidden;
   overflow-y: auto;
   /* Make the context view float atop the video elements. */
-  z-index: 2;
+  z-index: 3;
 }
 
 .room-invitation-overlay .room-context {
@@ -1140,7 +1114,8 @@ html[dir="rtl"] .room-context-btn-close {
   height: calc(100% - 300px);
 }
 
-.desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view {
+.desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
+.desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
   /* Account for height of .conversation-toolbar on desktop */
   /* When we change the toolbar in bug 1184559 we can remove this. */
   margin-top: 26px;
@@ -1212,7 +1187,7 @@ html[dir="rtl"] .room-context-btn-close {
 
   /* Temporarily slaved from .media-wrapper until we use it in more places
      to avoid affecting the conversation window on desktop. */
-  .media-wrapper > .text-chat-view > .text-chat-entries {
+  .text-chat-view > .text-chat-entries {
     /* 40px is the height of .text-chat-box. */
     height: calc(100% - 40px);
     width: 100%;
@@ -1227,7 +1202,7 @@ html[dir="rtl"] .room-context-btn-close {
     /* Position over the remote video */
     position: absolute;
     /* Make sure its on top */
-    z-index: 1001;
+    z-index: 2;
     margin: 3px;
     right: 0;
     /* 29px is (30% of 50px high header) + (height toolbar (38px) +
@@ -1261,7 +1236,8 @@ html[dir="rtl"] .room-context-btn-close {
     height: 30%;
   }
 
-  .desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view {
+  .desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
+  .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
     /* When we change the toolbar in bug 1184559 we can remove this. */
     /* Reset back to 0 for .conversation-toolbar override on desktop */
     margin-top: 0;
@@ -1316,10 +1292,6 @@ html[dir="rtl"] .room-context-btn-close {
     flex-flow: column nowrap;
   }
 
-  .media-wrapper:not(.showing-remote-streams) > .remote {
-    display: none;
-  }
-
   .media-wrapper > .focus-stream > .local {
     position: absolute;
     right: 0;
@@ -1334,7 +1306,11 @@ html[dir="rtl"] .room-context-btn-close {
     height: 25%;
   }
 
-  .media-wrapper:not(.showing-remote-streams) > .local {
+  .media-wrapper:not(.showing-remote-streams) > .focus-stream > .no-video {
+    display: none;
+  }
+
+  .media-wrapper:not(.showing-remote-streams) > .focus-stream > .local {
     position: relative;
     margin: 0;
     right: auto;
@@ -1342,6 +1318,7 @@ html[dir="rtl"] .room-context-btn-close {
     bottom: auto;
     width: 100%;
     height: 100%;
+    background-color: black;
   }
 
   .media-wrapper > .focus-stream {
@@ -1482,33 +1459,6 @@ html[dir="rtl"] .standalone .room-conversation-wrapper .room-inner-info-area {
 .text-chat-view {
   background: white;
 }
-
-/* Old styles to cope with rooms until we transition those to media-layout. */
-.fx-embedded .room-conversation-wrapper {
-  display: flex;
-  flex-flow: column nowrap;
-}
-
-.fx-embedded .room-conversation-wrapper > .video-layout-wrapper  {
-  flex: 1 1 auto;
-}
-
-.fx-embedded .room-conversation-wrapper > .text-chat-view {
-  flex: 1 0 auto;
-  display: flex;
-  flex-flow: column nowrap;
-}
-
-.fx-embedded .room-conversation-wrapper > .text-chat-view .text-chat-entries {
-  flex: 1 1 auto;
-  max-height: 120px;
-  min-height: 60px;
-}
-
-.fx-embedded .room-conversation-wrapper > .text-chat-view > .text-chat-entries-empty {
-  display: none;
-}
-
 
 .text-chat-box {
   flex: 0 0 auto;
@@ -1806,11 +1756,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 
 /* e.g. very narrow widths similar to conversation window */
 @media screen and (max-width:300px) {
-  /**
-   * XXX This section scoped to .media-layout until we have the desktop
-   * rooms working from the media-layout as well.
-   */
-  .media-layout .text-chat-view {
+  .text-chat-view {
     flex: 0 0 auto;
     display: flex;
     flex-flow: column nowrap;
@@ -1824,7 +1770,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     height: auto !important;
   }
 
-  .media-layout .text-chat-entries {
+  .text-chat-entries {
     /* The !important is to override the values defined above which have more
        specificity when we fix bug 1184559, we should be able to remove it,
        but this should be tests first. */
@@ -1833,18 +1779,18 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     min-height: 60px;
   }
 
-  .media-layout .text-chat-entries-empty.text-chat-disabled {
+  .text-chat-entries-empty.text-chat-disabled {
     display: none;
   }
 
   /* When the text chat entries are not present, then hide the entries view
      and just show the chat box. */
-  .media-layout .text-chat-entries-empty {
+  .text-chat-entries-empty {
     max-height: 40px;
     min-height: 40px;
   }
 
-  .media-layout .text-chat-entries-empty > .text-chat-entries {
+  .text-chat-entries-empty > .text-chat-entries {
     display: none;
   }
 }
