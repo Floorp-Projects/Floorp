@@ -245,6 +245,9 @@ XPCOMUtils.defineLazyGetter(this, "gABI", function aus_gABI() {
     if (macutils.isUniversalBinary) {
       abi += "-u-" + macutils.architecturesInBinary;
     }
+  } else if (AppConstants.platform == "win") {
+    // Windows build should report the CPU architecture that it's running on.
+    abi += "-" + gWinCPUArch;
   }
   return abi;
 });
@@ -310,7 +313,7 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
         osVersion += ".unknown (unknown)";
       }
 
-      if(kernel32) {
+      if (kernel32) {
         try {
           // Get Service pack info
           try {
@@ -332,38 +335,12 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
             LOG("gOSVersion - error getting service pack information. Exception: " + e);
             osVersion += ".unknown";
           }
-
-          // Get processor architecture
-          let arch = "unknown";
-          try {
-            let GetNativeSystemInfo = kernel32.declare("GetNativeSystemInfo",
-                                                       ctypes.default_abi,
-                                                       ctypes.void_t,
-                                                       SYSTEM_INFO.ptr);
-            let winSystemInfo = SYSTEM_INFO();
-            // Default to unknown
-            winSystemInfo.wProcessorArchitecture = 0xffff;
-
-            GetNativeSystemInfo(winSystemInfo.address());
-            switch(winSystemInfo.wProcessorArchitecture) {
-              case 9:
-                arch = "x64";
-                break;
-              case 6:
-                arch = "IA64";
-                break;
-              case 0:
-                arch = "x86";
-                break;
-            }
-          } catch (e) {
-            LOG("gOSVersion - error getting processor architecture.  Exception: " + e);
-          } finally {
-            osVersion += " (" + arch + ")";
-          }
         } finally {
           kernel32.close();
         }
+
+        // Add processor architecture
+        osVersion += " (" + gWinCPUArch + ")";
       }
     }
 
@@ -376,6 +353,71 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
     osVersion = encodeURIComponent(osVersion);
   }
   return osVersion;
+});
+
+/* Windows only getter that returns the processor architecture. */
+XPCOMUtils.defineLazyGetter(this, "gWinCPUArch", function aus_gWinCPUArch() {
+  // Get processor architecture
+  let arch = "unknown";
+
+  const WORD = ctypes.uint16_t;
+  const DWORD = ctypes.uint32_t;
+
+  // This structure is described at:
+  // http://msdn.microsoft.com/en-us/library/ms724958%28v=vs.85%29.aspx
+  const SYSTEM_INFO = new ctypes.StructType('SYSTEM_INFO',
+      [
+      {wProcessorArchitecture: WORD},
+      {wReserved: WORD},
+      {dwPageSize: DWORD},
+      {lpMinimumApplicationAddress: ctypes.voidptr_t},
+      {lpMaximumApplicationAddress: ctypes.voidptr_t},
+      {dwActiveProcessorMask: DWORD.ptr},
+      {dwNumberOfProcessors: DWORD},
+      {dwProcessorType: DWORD},
+      {dwAllocationGranularity: DWORD},
+      {wProcessorLevel: WORD},
+      {wProcessorRevision: WORD}
+      ]);
+
+  let kernel32 = false;
+  try {
+    kernel32 = ctypes.open("Kernel32");
+  } catch (e) {
+    LOG("gWinCPUArch - Unable to open kernel32! Exception: " + e);
+  }
+
+  if (kernel32) {
+    try {
+      let GetNativeSystemInfo = kernel32.declare("GetNativeSystemInfo",
+                                                 ctypes.default_abi,
+                                                 ctypes.void_t,
+                                                 SYSTEM_INFO.ptr);
+      let winSystemInfo = SYSTEM_INFO();
+      // Default to unknown
+      winSystemInfo.wProcessorArchitecture = 0xffff;
+
+      GetNativeSystemInfo(winSystemInfo.address());
+      switch (winSystemInfo.wProcessorArchitecture) {
+        case 9:
+          arch = "x64";
+          break;
+        case 6:
+          arch = "IA64";
+          break;
+        case 0:
+          arch = "x86";
+          break;
+      }
+    } catch (e) {
+      LOG("gWinCPUArch - error getting processor architecture. " +
+          "Exception: " + e);
+    } finally {
+      kernel32.close();
+    }
+  }
+
+  return arch;
 });
 
 /**
