@@ -53,10 +53,38 @@ add_task(function*() {
       }
     },
     {
+      desc: "Test Copy Property Value with Priority",
+      node: ruleEditor.rule.textProps[3].editor.valueSpan,
+      menuItem: contextmenu.menuitemCopyPropertyValue,
+      expectedPattern: "#00F !important",
+      hidden: {
+        copyLocation: true,
+        copyPropertyDeclaration: false,
+        copyPropertyName: true,
+        copyPropertyValue: false,
+        copySelector: true,
+        copyRule: false
+      }
+    },
+    {
       desc: "Test Copy Property Declaration",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
       menuItem: contextmenu.menuitemCopyPropertyDeclaration,
       expectedPattern: "font-size: 12px;",
+      hidden: {
+        copyLocation: true,
+        copyPropertyDeclaration: false,
+        copyPropertyName: false,
+        copyPropertyValue: true,
+        copySelector: true,
+        copyRule: false
+      }
+    },
+    {
+      desc: "Test Copy Property Declaration with Priority",
+      node: ruleEditor.rule.textProps[3].editor.nameSpan,
+      menuItem: contextmenu.menuitemCopyPropertyDeclaration,
+      expectedPattern: "border-color: #00F !important;",
       hidden: {
         copyLocation: true,
         copyPropertyDeclaration: false,
@@ -74,6 +102,7 @@ add_task(function*() {
                        "\tcolor: #F00;[\\r\\n]+" +
                        "\tbackground-color: #00F;[\\r\\n]+" +
                        "\tfont-size: 12px;[\\r\\n]+" +
+                       "\tborder-color: #00F !important;[\\r\\n]+" +
                        "}",
       hidden: {
         copyLocation: true,
@@ -124,6 +153,7 @@ add_task(function*() {
                        "\t\/\\* color: #F00; \\*\/[\\r\\n]+" +
                        "\tbackground-color: #00F;[\\r\\n]+" +
                        "\tfont-size: 12px;[\\r\\n]+" +
+                       "\tborder-color: #00F !important;[\\r\\n]+" +
                        "}",
       hidden: {
         copyLocation: true,
