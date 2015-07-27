@@ -65,7 +65,7 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:DismissedDropDown":
-        if (this.initialSelection != this.element.item[this.element.selectedIndex]) {
+        if (this.initialSelection != this.element.item(this.element.selectedIndex)) {
           let event = this.element.ownerDocument.createEvent("Events");
           event.initEvent("change", true, true);
           this.element.dispatchEvent(event);
