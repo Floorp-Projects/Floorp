@@ -227,12 +227,19 @@
     receivingScreenShare: true
   });
 
+  var updatingSharingRoomMobileStore = makeActiveRoomStore({
+    roomState: ROOM_STATES.HAS_PARTICIPANTS,
+    receivingScreenShare: true
+  });
+
   var loadingRemoteLoadingScreenStore = makeActiveRoomStore({
     mediaConnected: false,
+    receivingScreenShare: true,
     roomState: ROOM_STATES.HAS_PARTICIPANTS,
     remoteSrcVideoObject: false
   });
   var loadingScreenSharingRoomStore = makeActiveRoomStore({
+    receivingScreenShare: true,
     roomState: ROOM_STATES.HAS_PARTICIPANTS
   });
 
@@ -1178,8 +1185,7 @@
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
-                    screenSharePosterUrl: "sample-img/video-screen-baz.png"})
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS})
                 )
             ), 
 
@@ -1199,8 +1205,7 @@
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
                     remotePosterUrl: "sample-img/video-screen-remote.png", 
-                    roomState: ROOM_STATES.HAS_PARTICIPANTS, 
-                    screenSharePosterUrl: "sample-img/video-screen-baz.png"})
+                    roomState: ROOM_STATES.HAS_PARTICIPANTS})
                 )
             ), 
 
@@ -1286,12 +1291,12 @@
               cssClass: "standalone", 
               dashed: true, 
               height: 480, 
-              onContentsRendered: updatingSharingRoomStore.forcedUpdate, 
+              onContentsRendered: updatingSharingRoomMobileStore.forcedUpdate, 
               summary: "Standalone room convo (has-participants, receivingScreenShare, 600x480)", 
               width: 600}, 
                 React.createElement("div", {className: "standalone", cssClass: "standalone"}, 
                   React.createElement(StandaloneRoomView, {
-                    activeRoomStore: updatingSharingRoomStore, 
+                    activeRoomStore: updatingSharingRoomMobileStore, 
                     dispatcher: dispatcher, 
                     isFirefox: true, 
                     localPosterUrl: "sample-img/video-screen-local.png", 
