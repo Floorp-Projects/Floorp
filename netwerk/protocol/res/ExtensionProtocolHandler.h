@@ -12,19 +12,17 @@
 namespace mozilla {
 
 class ExtensionProtocolHandler final : public nsISubstitutingProtocolHandler,
+                                       public nsIProtocolHandlerWithDynamicFlags,
                                        public mozilla::SubstitutingProtocolHandler,
                                        public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
   NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
   NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
 
-  // In general a moz-extension URI is only loadable by chrome, but a whitelisted
-  // subset are web-accessible (see nsIAddonPolicyService).
-  ExtensionProtocolHandler()
-    : SubstitutingProtocolHandler("moz-extension", URI_STD | URI_DANGEROUS_TO_LOAD | URI_IS_LOCAL_RESOURCE)
-  {}
+  ExtensionProtocolHandler() : SubstitutingProtocolHandler("moz-extension") {}
 
 protected:
   ~ExtensionProtocolHandler() {}

@@ -557,6 +557,9 @@ nsIOService::GetProtocolFlags(const char* scheme, uint32_t *flags)
     nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
+    // We can't call DoGetProtocolFlags here because we don't have a URI. This
+    // API is used by (and only used by) extensions, which is why it's still
+    // around. Calling this on a scheme with dynamic flags will throw.
     rv = handler->GetProtocolFlags(flags);
     return rv;
 }
@@ -722,7 +725,7 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
         return rv;
 
     uint32_t protoFlags;
-    rv = handler->GetProtocolFlags(&protoFlags);
+    rv = handler->DoGetProtocolFlags(aURI, &protoFlags);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1481,15 +1484,17 @@ nsIOService::ProtocolHasFlags(nsIURI   *uri,
     nsAutoCString scheme;
     nsresult rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
-  
-    uint32_t protocolFlags;
-    rv = GetProtocolFlags(scheme.get(), &protocolFlags);
 
-    if (NS_SUCCEEDED(rv)) {
-        *result = (protocolFlags & flags) == flags;
-    }
-  
-    return rv;
+    // Grab the protocol flags from the URI.
+    uint32_t protocolFlags;
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = handler->DoGetProtocolFlags(uri, &protocolFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *result = (protocolFlags & flags) == flags;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
