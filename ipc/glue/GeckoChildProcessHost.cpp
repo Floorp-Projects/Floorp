@@ -125,7 +125,8 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
     SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
 #endif
     ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
-#if defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_ASAN)
+    // If we're doing leak logging, shutdown can be slow.
                                             , false // don't "force"
 #endif
     );
