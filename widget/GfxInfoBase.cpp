@@ -151,6 +151,12 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION:
       name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration";
       break;
+    case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE:
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
+      break;
+    case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE:
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.decode";
+      break;
     default:
       break;
   };
@@ -340,6 +346,10 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
     return nsIGfxInfo::FEATURE_WEBGL_MSAA;
   else if (aFeature.EqualsLiteral("STAGEFRIGHT"))
     return nsIGfxInfo::FEATURE_STAGEFRIGHT;
+  else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION_ENCODE"))
+    return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE;
+  else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION_DECODE"))
+    return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE;
   else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION"))
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION;
 
@@ -972,6 +982,8 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_OPENGL_LAYERS,
     nsIGfxInfo::FEATURE_WEBGL_OPENGL,
     nsIGfxInfo::FEATURE_WEBGL_ANGLE,
+    nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
+    nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
     nsIGfxInfo::FEATURE_WEBGL_MSAA,
     nsIGfxInfo::FEATURE_STAGEFRIGHT,
     nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION,

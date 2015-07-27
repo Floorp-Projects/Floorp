@@ -4,3 +4,5 @@ component {ca168834-cc00-48f9-b83c-fd018e58cae3} nsUrlClassifierListManager.js
 contract @mozilla.org/url-classifier/listmanager;1 {ca168834-cc00-48f9-b83c-fd018e58cae3}
 component {9111de73-9322-4bfc-8b65-2b727f3e6ec8} nsUrlClassifierHashCompleter.js
 contract @mozilla.org/url-classifier/hashcompleter;1 {9111de73-9322-4bfc-8b65-2b727f3e6ec8}
+component {a319b616-c45d-4037-8d86-01c592b5a9af} PrivateBrowsingTrackingProtectionWhitelist.js
+contract @mozilla.org/url-classifier/pbm-tp-whitelist;1 {a319b616-c45d-4037-8d86-01c592b5a9af}

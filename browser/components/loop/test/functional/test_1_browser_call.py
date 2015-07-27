@@ -99,7 +99,7 @@ class Test1BrowserCall(MarionetteTestCase):
         self.switch_to_chatbox()
 
         # expect a video container on desktop side
-        media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media")
+        media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media-layout")
         self.assertEqual(media_container.tag_name, "div", "expect a video container")
 
         self.check_video(".local-video")

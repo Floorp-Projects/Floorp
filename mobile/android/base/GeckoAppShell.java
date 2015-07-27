@@ -47,6 +47,7 @@ import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
+import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSContainer;
@@ -92,6 +93,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -959,6 +961,16 @@ public class GeckoAppShell
             TextUtils.isEmpty(aAction) ? Intent.ACTION_VIEW : aAction, "");
 
         return getHandlersForIntent(intent);
+    }
+
+    @WrapElementForJNI(stubName = "GetHWEncoderCapability")
+    static boolean getHWEncoderCapability() {
+      return HardwareCodecCapabilityUtils.getHWEncoderCapability();
+    }
+
+    @WrapElementForJNI(stubName = "GetHWDecoderCapability")
+    static boolean getHWDecoderCapability() {
+      return HardwareCodecCapabilityUtils.getHWDecoderCapability();
     }
 
     static List<ResolveInfo> queryIntentActivities(Intent intent) {
