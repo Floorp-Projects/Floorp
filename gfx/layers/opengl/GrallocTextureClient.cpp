@@ -214,6 +214,40 @@ GrallocTextureClientOGL::BorrowDrawTarget()
   return mDrawTarget;
 }
 
+void
+GrallocTextureClientOGL::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+{
+  MOZ_ASSERT(IsValid());
+  MOZ_ASSERT(mMappedBuffer, "Calling TextureClient::BorrowDrawTarget without locking :(");
+
+  if (!IsValid() || !IsAllocated() || !mMappedBuffer) {
+    return;
+  }
+
+  gfx::SurfaceFormat format = SurfaceFormatForPixelFormat(mGraphicBuffer->getPixelFormat());
+  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
+    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << format << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
+    return;
+  }
+
+  long pixelStride = mGraphicBuffer->getStride();
+  long byteStride = pixelStride * BytesPerPixel(format);
+
+  DataSourceSurface::MappedSurface sourceMap;
+
+  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+
+  uint8_t* buffer = GetBuffer();
+
+  for (int y = 0; y < aSurface->GetSize().height; y++) {
+    memcpy(buffer + byteStride * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  }
+
+  aSurface->Unmap();
+}
+
 bool
 GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
                                             TextureAllocationFlags)

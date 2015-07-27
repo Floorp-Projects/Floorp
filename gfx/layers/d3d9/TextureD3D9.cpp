@@ -498,35 +498,6 @@ TextureClientD3D9::Lock(OpenMode aMode)
 
   mIsLocked = true;
 
-  // Make sure that successful write-lock means we will have a DrawTarget to
-  // write into.
-  if (aMode & OpenMode::OPEN_WRITE) {
-    mDrawTarget = BorrowDrawTarget();
-    if (!mDrawTarget) {
-      Unlock();
-      return false;
-    }
-  }
-
-  if (mNeedsClear) {
-    mDrawTarget = BorrowDrawTarget();
-    if (!mDrawTarget) {
-      Unlock();
-      return false;
-    }
-    mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
-    mNeedsClear = false;
-  }
-  if (mNeedsClearWhite) {
-    mDrawTarget = BorrowDrawTarget();
-    if (!mDrawTarget) {
-      Unlock();
-      return false;
-    }
-    mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-    mNeedsClearWhite = false;
-  }
-
   return true;
 }
 
@@ -601,7 +572,49 @@ TextureClientD3D9::BorrowDrawTarget()
     mLockRect = true;
   }
 
+  if (mNeedsClear) {
+    mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
+    mNeedsClear = false;
+  }
+  if (mNeedsClearWhite) {
+    mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    mNeedsClearWhite = false;
+  }
+
   return mDrawTarget;
+}
+
+void
+TextureClientD3D9::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+{
+  MOZ_ASSERT(mIsLocked && mD3D9Surface);
+
+  // gfxWindowsSurface don't support transparency so we can't use the d3d9
+  // windows surface optimization.
+  // Instead we have to use a gfxImageSurface and fallback for font drawing.
+  D3DLOCKED_RECT rect;
+  HRESULT hr = mD3D9Surface->LockRect(&rect, nullptr, 0);
+  if (FAILED(hr) || !rect.pBits) {
+    gfxCriticalError() << "Failed to lock rect borrowing the target in D3D9 " << hexa(hr);
+    return;
+  }
+
+  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
+    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << mSize << " " << mFormat << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
+    return;
+  }
+
+  DataSourceSurface::MappedSurface sourceMap;
+  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+
+  for (int y = 0; y < aSurface->GetSize().height; y++) {
+    memcpy((uint8_t*)rect.pBits + rect.Pitch * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  }
+
+  aSurface->Unmap();
+  mD3D9Surface->UnlockRect();
 }
 
 bool
