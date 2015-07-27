@@ -26,7 +26,9 @@ struct MixerCallbackReceiver {
  * stream.
  *
  * AudioMixer::Mix is to be called repeatedly with buffers that have the same
- * length, sample rate, sample format and channel count.
+ * length, sample rate, sample format and channel count. This class works with
+ * interleaved and plannar buffers, but the buffer mixed must be of the same
+ * type during a mixing cycle.
  *
  * When all the tracks have been mixed, calling FinishMixing will call back with
  * a buffer containing the mixed audio data.
@@ -71,7 +73,7 @@ public:
     mSampleRate = mChannels = mFrames = 0;
   }
 
-  /* Add a buffer to the mix. aSamples is interleaved. */
+  /* Add a buffer to the mix. */
   void Mix(AudioDataValue* aSamples,
            uint32_t aChannels,
            uint32_t aFrames,

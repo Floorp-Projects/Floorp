@@ -18,7 +18,7 @@ function test() {
   Services.search.currentEngine = engine;
   engine.alias = "a";
 
-  let base = "http://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
+  let base = "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
   let url;
 
   // Test search URLs (including purposes).

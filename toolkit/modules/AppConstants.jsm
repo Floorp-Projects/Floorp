@@ -80,17 +80,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_SHARK:
-#ifdef XP_MACOSX
-#ifdef MOZ_SHARK
-  true,
-#else
-  false,
-#endif
-#else
-  false,
-#endif
-
   MOZ_TELEMETRY_REPORTING:
 #ifdef MOZ_TELEMETRY_REPORTING
   true,
