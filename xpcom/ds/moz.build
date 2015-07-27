@@ -62,6 +62,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'StickyTimeDuration.h',
+    'Tokenizer.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -79,6 +80,7 @@ UNIFIED_SOURCES += [
     'nsSupportsArrayEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
     'nsVariant.cpp',
+    'Tokenizer.cpp',
 ]
 
 # These two files cannot be built in unified mode because they use the
