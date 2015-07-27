@@ -10,6 +10,7 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothInterface.h"
 #include "BluetoothInterfaceHelpers.h"
+#include "mozilla/ipc/DaemonRunnables.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -313,21 +314,25 @@ protected:
   // Responses
   //
 
-  typedef BluetoothResultRunnable0<BluetoothGattClientResultHandler, void>
+  typedef mozilla::ipc::DaemonResultRunnable0<
+    BluetoothGattClientResultHandler, void>
     ClientResultRunnable;
 
-  typedef BluetoothResultRunnable1<BluetoothGattClientResultHandler, void,
-                                   BluetoothTypeOfDevice, BluetoothTypeOfDevice>
+  typedef mozilla::ipc::DaemonResultRunnable1<
+    BluetoothGattClientResultHandler, void,
+    BluetoothTypeOfDevice, BluetoothTypeOfDevice>
     ClientGetDeviceTypeResultRunnable;
 
-  typedef BluetoothResultRunnable0<BluetoothGattServerResultHandler, void>
+  typedef mozilla::ipc::DaemonResultRunnable0<
+    BluetoothGattServerResultHandler, void>
     ServerResultRunnable;
 
-  typedef BluetoothResultRunnable0<BluetoothGattResultHandler, void>
+  typedef mozilla::ipc::DaemonResultRunnable0<
+    BluetoothGattResultHandler, void>
     ResultRunnable;
 
-  typedef BluetoothResultRunnable1<BluetoothGattResultHandler, void,
-                                   BluetoothStatus, BluetoothStatus>
+  typedef mozilla::ipc::DaemonResultRunnable1<
+    BluetoothGattResultHandler, void, BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
@@ -488,42 +493,42 @@ protected:
   class ClientNotificationHandlerWrapper;
   class ServerNotificationHandlerWrapper;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, BluetoothUuid,
     BluetoothGattStatus, int, const BluetoothUuid&>
     ClientRegisterNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     nsString, int, BluetoothGattAdvData,
     const nsAString&, int, const BluetoothGattAdvData&>
     ClientScanResultNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, int, nsString,
     int, BluetoothGattStatus, int, const nsAString&>
     ClientConnectNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, int, nsString,
     int, BluetoothGattStatus, int, const nsAString&>
     ClientDisconnectNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus>
     ClientSearchCompleteNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattServiceId,
     int, const BluetoothGattServiceId&>
     ClientSearchResultNotification;
 
-  typedef BluetoothNotificationRunnable5<
+  typedef mozilla::ipc::DaemonNotificationRunnable5<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattServiceId,
     BluetoothGattId, BluetoothGattCharProp,
@@ -531,7 +536,7 @@ protected:
     const BluetoothGattId&, const BluetoothGattCharProp&>
     ClientGetCharacteristicNotification;
 
-  typedef BluetoothNotificationRunnable5<
+  typedef mozilla::ipc::DaemonNotificationRunnable5<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattServiceId,
     BluetoothGattId, BluetoothGattId,
@@ -539,14 +544,14 @@ protected:
     const BluetoothGattId&, const BluetoothGattId&>
     ClientGetDescriptorNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattServiceId, BluetoothGattServiceId,
     int, BluetoothGattStatus, const BluetoothGattServiceId&,
     const BluetoothGattServiceId&>
     ClientGetIncludedServiceNotification;
 
-  typedef BluetoothNotificationRunnable5<
+  typedef mozilla::ipc::DaemonNotificationRunnable5<
     ClientNotificationHandlerWrapper, void,
     int, int, BluetoothGattStatus,
     BluetoothGattServiceId, BluetoothGattId,
@@ -554,121 +559,121 @@ protected:
     const BluetoothGattServiceId&, const BluetoothGattId&>
     ClientRegisterNotificationNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattNotifyParam,
     int, const BluetoothGattNotifyParam&>
     ClientNotifyNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattReadParam,
     int, BluetoothGattStatus, const BluetoothGattReadParam&>
     ClientReadCharacteristicNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattWriteParam,
     int, BluetoothGattStatus, const BluetoothGattWriteParam&>
     ClientWriteCharacteristicNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattReadParam,
     int, BluetoothGattStatus, const BluetoothGattReadParam&>
     ClientReadDescriptorNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattWriteParam,
     int, BluetoothGattStatus, const BluetoothGattWriteParam&>
     ClientWriteDescriptorNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus>
     ClientExecuteWriteNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ClientNotificationHandlerWrapper, void,
     int, nsString, int, BluetoothGattStatus,
     int, const nsAString&, int, BluetoothGattStatus>
     ClientReadRemoteRssiNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ClientNotificationHandlerWrapper, void,
     BluetoothGattStatus, int>
     ClientListenNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, BluetoothUuid,
     BluetoothGattStatus, int, const BluetoothUuid&>
     ServerRegisterNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ServerNotificationHandlerWrapper, void,
     int, int, bool, nsString,
     int, int, bool, const nsAString&>
     ServerConnectionNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, BluetoothGattServiceId, int,
     BluetoothGattStatus, int, const BluetoothGattServiceId&, int>
     ServerServiceAddedNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, int, int>
     ServerIncludedServiceAddedNotification;
 
-  typedef BluetoothNotificationRunnable5<
+  typedef mozilla::ipc::DaemonNotificationRunnable5<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, BluetoothUuid, int, int,
     BluetoothGattStatus, int, const BluetoothUuid&, int, int>
     ServerCharacteristicAddedNotification;
 
-  typedef BluetoothNotificationRunnable5<
+  typedef mozilla::ipc::DaemonNotificationRunnable5<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, BluetoothUuid, int, int,
     BluetoothGattStatus, int, const BluetoothUuid&, int, int>
     ServerDescriptorAddedNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, int>
     ServerServiceStartedNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, int>
     ServerServiceStoppedNotification;
 
-  typedef BluetoothNotificationRunnable3<
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int, int>
     ServerServiceDeletedNotification;
 
-  typedef BluetoothNotificationRunnable6<
+  typedef mozilla::ipc::DaemonNotificationRunnable6<
     ServerNotificationHandlerWrapper, void,
     int, int, nsString, int, int, bool,
     int, int, const nsAString&, int, int, bool>
     ServerRequestReadNotification;
 
-  typedef BluetoothNotificationRunnable9<
+  typedef mozilla::ipc::DaemonNotificationRunnable9<
     ServerNotificationHandlerWrapper, void,
     int, int, nsString, int, int, int, nsAutoArrayPtr<uint8_t>, bool, bool,
     int, int, const nsAString&, int, int, int, const uint8_t*, bool, bool>
     ServerRequestWriteNotification;
 
-  typedef BluetoothNotificationRunnable4<
+  typedef mozilla::ipc::DaemonNotificationRunnable4<
     ServerNotificationHandlerWrapper, void,
     int, int, nsString, bool,
     int, int, const nsAString&, bool>
     ServerRequestExecuteWriteNotification;
 
-  typedef BluetoothNotificationRunnable2<
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
     ServerNotificationHandlerWrapper, void,
     BluetoothGattStatus, int>
     ServerResponseConfirmationNotification;
