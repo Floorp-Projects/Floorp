@@ -11,20 +11,27 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 var {Sanitizer} = tmp;
 
-function runTests() {
-  sanitizeHistory();
-  yield addFakeVisits();
-  yield addNewTabPageTab();
-
+add_task(function*() {
+  yield promiseSanitizeHistory();
+  yield promiseAddFakeVisits();
+  yield addNewTabPageTabPromise();
   is(getCell(0).site.url, URL, "first site is our fake site");
 
-  whenPagesUpdated();
-  yield sanitizeHistory();
+  whenPagesUpdated(() => {});
+  yield promiseSanitizeHistory();
 
-  ok(!getCell(0).site, "the fake site is gone");
-}
+  // Now wait until the grid is updated
+  while (true) {
+    if (!getCell(0).site) {
+      break;
+    }
+    info("the fake site is still present");
+    yield new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  ok(!getCell(0).site, "fake site is gone");
+});
 
-function addFakeVisits() {
+function promiseAddFakeVisits() {
   let visits = [];
   for (let i = 59; i > 0; i--) {
     visits.push({
@@ -37,19 +44,21 @@ function addFakeVisits() {
     title: "fake site",
     visits: visits
   };
-  PlacesUtils.asyncHistory.updatePlaces(place, {
-    handleError: function () ok(false, "couldn't add visit"),
-    handleResult: function () {},
-    handleCompletion: function () {
-      NewTabUtils.links.populateCache(function () {
-        NewTabUtils.allPages.update();
-        TestRunner.next();
-      }, true);
-    }
+  return new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces(place, {
+      handleError: function () reject(new Error("Couldn't add visit")),
+      handleResult: function () {},
+      handleCompletion: function () {
+        NewTabUtils.links.populateCache(function () {
+          NewTabUtils.allPages.update();
+          resolve();
+        }, true);
+      }
+    });
   });
 }
 
-function sanitizeHistory() {
+function promiseSanitizeHistory() {
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
 
@@ -64,5 +73,5 @@ function sanitizeHistory() {
   prefs.setBoolPref("sessions", false);
   prefs.setBoolPref("siteSettings", false);
 
-  s.sanitize();
+  return s.sanitize();
 }
