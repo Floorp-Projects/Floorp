@@ -244,8 +244,7 @@ TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
 void
 TextureClientD3D11::SyncWithObject(SyncObject* aSyncObject)
 {
-  if (!aSyncObject || !NS_IsMainThread()) {
-    // When off the main thread we sync using a keyed mutex per texture.
+  if (!aSyncObject) {
     return;
   }
 
@@ -279,35 +278,33 @@ TextureClientD3D11::Lock(OpenMode aMode)
     return false;
   }
 
-  if (NS_IsMainThread()) {
-    // Make sure that successful write-lock means we will have a DrawTarget to
-    // write into.
-    if (aMode & OpenMode::OPEN_WRITE) {
-      mDrawTarget = BorrowDrawTarget();
-      if (!mDrawTarget) {
-        Unlock();
-        return false;
-      }
+  // Make sure that successful write-lock means we will have a DrawTarget to
+  // write into.
+  if (aMode & OpenMode::OPEN_WRITE) {
+    mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
+      Unlock();
+      return false;
     }
+  }
 
-    if (mNeedsClear) {
-      mDrawTarget = BorrowDrawTarget();
-      if (!mDrawTarget) {
+  if (mNeedsClear) {
+    mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
         Unlock();
         return false;
-      }
-      mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
-      mNeedsClear = false;
     }
-    if (mNeedsClearWhite) {
-      mDrawTarget = BorrowDrawTarget();
-      if (!mDrawTarget) {
+    mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
+    mNeedsClear = false;
+  }
+  if (mNeedsClearWhite) {
+    mDrawTarget = BorrowDrawTarget();
+    if (!mDrawTarget) {
         Unlock();
         return false;
-      }
-      mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-      mNeedsClearWhite = false;
     }
+    mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    mNeedsClearWhite = false;
   }
 
   return true;
@@ -330,7 +327,7 @@ TextureClientD3D11::Unlock()
     mDrawTarget->Flush();
   }
 
-  if (NS_IsMainThread() && mReadbackSink && mTexture10) {
+  if (mReadbackSink && mTexture10) {
     ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
     D3D10_TEXTURE2D_DESC desc;
@@ -366,7 +363,6 @@ DrawTarget*
 TextureClientD3D11::BorrowDrawTarget()
 {
   MOZ_ASSERT(mIsLocked, "Calling TextureClient::BorrowDrawTarget without locking :(");
-  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mIsLocked || (!mTexture && !mTexture10)) {
     gfxCriticalError() << "Attempted to borrow a DrawTarget without locking the texture.";
@@ -389,51 +385,6 @@ TextureClientD3D11::BorrowDrawTarget()
       gfxWarning() << "Invalid draw target for borrowing";
   }
   return mDrawTarget;
-}
-
-void
-TextureClientD3D11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
-{
-  DataSourceSurface::MappedSurface sourceMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
-
-  // Ensure unflushed work from our outstanding drawtarget won't override this
-  // update later.
-  mDrawTarget->Flush();
-
-  if (mSize != aSurface->GetSize() || mFormat != aSurface->GetFormat()) {
-    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format!";
-    return;
-  }
-
-  if (mTexture) {
-    RefPtr<ID3D11Device> device;
-    mTexture->GetDevice(byRef(device));
-    RefPtr<ID3D11DeviceContext> ctx;
-    device->GetImmediateContext(byRef(ctx));
-
-    D3D11_BOX box;
-    box.front = 0;
-    box.back = 1;
-    box.top = box.left = 0;
-    box.right = aSurface->GetSize().width;
-    box.bottom = aSurface->GetSize().height;
-
-    ctx->UpdateSubresource(mTexture, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
-  } else {
-    RefPtr<ID3D10Device> device;
-    mTexture10->GetDevice(byRef(device));
-
-    D3D10_BOX box;
-    box.front = 0;
-    box.back = 1;
-    box.top = box.left = 0;
-    box.right = aSurface->GetSize().width;
-    box.bottom = aSurface->GetSize().height;
-
-    device->UpdateSubresource(mTexture10, 0, &box, sourceMap.mData, sourceMap.mStride, 0);
-  }
-  aSurface->Unmap();
 }
 
 static const GUID sD3D11TextureUsage =
@@ -496,11 +447,8 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   }
 
   gfxWindowsPlatform* windowsPlatform = gfxWindowsPlatform::GetPlatform();
-  ID3D11Device* d3d11device = windowsPlatform->GetD3D11DeviceForCurrentThread();
-
-  // When we're not on the main thread we're not going to be using Direct2D
-  // to access the contents of this texture client so we will always use D3D11.
-  bool haveD3d11Backend = windowsPlatform->GetContentBackend() == BackendType::DIRECT2D1_1 || !NS_IsMainThread();
+  ID3D11Device* d3d11device = windowsPlatform->GetD3D11ContentDevice();
+  bool haveD3d11Backend = windowsPlatform->GetContentBackend() == BackendType::DIRECT2D1_1;
 
   if (haveD3d11Backend) {
     MOZ_ASSERT(d3d11device != nullptr);
@@ -510,11 +458,6 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
                                   D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 
     newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-
-    if (!NS_IsMainThread()) {
-      // On the main thread we use the syncobject to handle synchronization.
-      newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-    }
 
     hr = d3d11device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture));
     if (FAILED(hr)) {
