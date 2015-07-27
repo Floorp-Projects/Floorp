@@ -1601,10 +1601,7 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     // in nsHTMLReflowState, they do need to force reflow of the whole subtree.
     // XXXbz due to XUL caching heights as well, height changes also need to
     // clear ancestor intrinsics!
-    return NS_CombineHint(hint, nsChangeHint_NeedReflow |
-        nsChangeHint_ClearAncestorIntrinsics |
-        nsChangeHint_ClearDescendantIntrinsics |
-        nsChangeHint_ReflowChangesSizeOrPosition);
+    return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
   if (mWidth != aOther.mWidth ||
