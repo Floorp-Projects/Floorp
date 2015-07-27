@@ -31,11 +31,11 @@
 #include "nsIWebNavigation.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
-#include "nsNullPrincipal.h"
 #include "nsIContentPolicy.h"
 #include "nsSupportsPrimitives.h"
 #include "nsThreadUtils.h"
 #include "nsString.h"
+#include "nsScriptSecurityManager.h"
 #include "nsStringStream.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/CSPReportBinding.h"
@@ -265,7 +265,9 @@ NS_IMPL_ISUPPORTS_CI(nsCSPContext,
                      nsISerializable)
 
 nsCSPContext::nsCSPContext()
-  : mSelfURI(nullptr)
+  : mInnerWindowID(0)
+  , mLoadingContext(nullptr)
+  , mLoadingPrincipal(nullptr)
 {
   CSPCONTEXTLOG(("nsCSPContext::nsCSPContext"));
 }
@@ -590,52 +592,28 @@ nsCSPContext::LogViolationDetails(uint16_t aViolationType,
 #undef CASE_CHECK_AND_REPORT
 
 NS_IMETHODIMP
-nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
-                                nsIURI* aReferrer,
-                                nsIChannel* aChannel)
+nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
+                                nsIPrincipal* aPrincipal)
 {
-  NS_PRECONDITION(aSelfURI || aChannel, "Need aSelfURI or aChannel to set the context properly");
-  NS_ENSURE_ARG(aSelfURI || aChannel);
+  NS_PRECONDITION(aDOMDocument || aPrincipal,
+                  "Can't set context without doc or principal");
+  NS_ENSURE_ARG(aDOMDocument || aPrincipal);
 
-  // first use aSelfURI.  If that's not available get the URI from aChannel.
-  mSelfURI = aSelfURI;
-  if (!mSelfURI) {
-    nsresult rv = aChannel->GetURI(getter_AddRefs(mSelfURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  NS_ASSERTION(mSelfURI, "No aSelfURI and no URI available from channel in SetRequestContext, can not translate 'self' into actual URI");
-
-  if (aChannel) {
-    mInnerWindowID = nsContentUtils::GetInnerWindowID(aChannel);
-    aChannel->GetLoadGroup(getter_AddRefs(mCallingChannelLoadGroup));
-
-    // Storing the nsINode from the LoadInfo of the original channel,
-    // so we can reuse that information when sending reports.
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-    if (loadInfo) {
-      nsINode* loadingNode = loadInfo->LoadingNode();
-      if (loadingNode) {
-        mLoadingContext = do_GetWeakReference(loadingNode);
-      }
-    }
+  if (aDOMDocument) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDocument);
+    mLoadingContext = do_GetWeakReference(doc);
+    mSelfURI = doc->GetDocumentURI();
+    doc->GetReferrer(mReferrer);
+    mInnerWindowID = doc->InnerWindowID();
+    mCallingChannelLoadGroup = doc->GetDocumentLoadGroup();
   }
   else {
-    NS_WARNING("Channel needed (but null) in SetRequestContext.  Cannot query loadgroup, which means report sending may fail.");
+    mLoadingPrincipal = aPrincipal;
+    mLoadingPrincipal->GetURI(getter_AddRefs(mSelfURI));
+    NS_WARNING("No Document in SetRequestContext; can not query loadgroup; sending reports may fail.");
   }
 
-  mReferrer = aReferrer;
-  if (!mReferrer) {
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel) {
-      httpChannel->GetReferrer(getter_AddRefs(mReferrer));
-    }
-    else {
-      NS_WARNING("Channel provided to SetRequestContext is not an nsIHttpChannel so referrer is not available for reporting." );
-    }
-  }
-
+  NS_ASSERTION(mSelfURI, "mSelfURI not available, can not translate 'self' into actual URI");
   return NS_OK;
 }
 
@@ -720,10 +698,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
   report.mCsp_report.mOriginal_policy = originalPolicy;
 
   // referrer
-  if (mReferrer) {
-    nsAutoCString referrerURI;
-    mReferrer->GetSpec(referrerURI);
-    report.mCsp_report.mReferrer = NS_ConvertUTF8toUTF16(referrerURI);
+  if (!mReferrer.IsEmpty()) {
+    report.mCsp_report.mReferrer = mReferrer;
   }
 
   // violated-directive
@@ -765,11 +741,10 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
   nsTArray<nsString> reportURIs;
   mPolicies[aViolatedPolicyIndex]->getReportURIs(reportURIs);
 
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
   nsCOMPtr<nsIURI> reportURI;
   nsCOMPtr<nsIChannel> reportChannel;
-
-  nsCOMPtr<nsIDOMNode> loadingContext = do_QueryReferent(mLoadingContext);
-  nsCOMPtr<nsINode> loadingNode = do_QueryInterface(loadingContext);
 
   for (uint32_t r = 0; r < reportURIs.Length(); r++) {
     nsAutoCString reportURICstring = NS_ConvertUTF16toUTF8(reportURIs[r]);
@@ -786,27 +761,19 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       continue; // don't return yet, there may be more URIs
     }
 
-    nsIDocShell* docShell = nullptr;
-
     // try to create a new channel for every report-uri
-    if (loadingNode) {
-      nsIDocument* doc = loadingNode->OwnerDoc();
-      if (doc) {
-        docShell = doc->GetDocShell();
-      }
+    if (doc) {
       rv = NS_NewChannel(getter_AddRefs(reportChannel),
                          reportURI,
-                         loadingNode,
-                         nsILoadInfo::SEC_NORMAL,
+                         doc,
+                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                          nsIContentPolicy::TYPE_CSP_REPORT);
     }
     else {
-      nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-      NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
       rv = NS_NewChannel(getter_AddRefs(reportChannel),
                          reportURI,
-                         nullPrincipal,
-                         nsILoadInfo::SEC_NORMAL,
+                         mLoadingPrincipal,
+                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                          nsIContentPolicy::TYPE_CSP_REPORT);
     }
 
@@ -841,8 +808,9 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     // we need to set an nsIChannelEventSink on the channel object
     // so we can tell it to not follow redirects when posting the reports
     RefPtr<CSPReportRedirectSink> reportSink = new CSPReportRedirectSink();
-    if (docShell) {
-      nsCOMPtr<nsINetworkInterceptController> interceptController = do_QueryInterface(docShell);
+    if (doc && doc->GetDocShell()) {
+      nsCOMPtr<nsINetworkInterceptController> interceptController =
+        do_QueryInterface(doc->GetDocShell());
       reportSink->SetInterceptController(interceptController);
     }
     reportChannel->SetNotificationCallbacks(reportSink);
@@ -852,32 +820,6 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     // the channel cannot query the iTabChild).
     rv = reportChannel->SetLoadGroup(mCallingChannelLoadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // check content policy
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    nsCOMPtr<nsIContentPolicy> cp = do_GetService(NS_CONTENTPOLICY_CONTRACTID);
-    if (!cp) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = cp->ShouldLoad(nsIContentPolicy::TYPE_CSP_REPORT,
-                        reportURI,
-                        mSelfURI,
-                        nullptr,        // Context
-                        EmptyCString(), // mime type
-                        nullptr,        // Extra parameter
-                        nullptr,        // optional request principal
-                        &shouldLoad);
-
-    // refuse to load if we can't do a security check
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (NS_CP_REJECTED(shouldLoad)) {
-      // skip unauthorized URIs
-      CSPCONTEXTLOG(("nsIContentPolicy blocked sending report to %s",
-                     reportURICstring.get()));
-      continue; // don't return yet, there may be more URIs
-    }
 
     // wire in the string input stream to send the report
     nsCOMPtr<nsIStringInputStream> sis(do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID));
@@ -897,7 +839,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     }
 
     RefPtr<CSPViolationReportListener> listener = new CSPViolationReportListener();
-    rv = reportChannel->AsyncOpen(listener, nullptr);
+    rv = reportChannel->AsyncOpen2(listener);
 
     // AsyncOpen should not fail, but could if there's no load group (like if
     // SetRequestContext is not given a channel).  This should fail quietly and
