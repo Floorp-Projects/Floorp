@@ -106,6 +106,8 @@ typedef struct InstanceData {
   bool asyncCallbackResult;
   bool invalidateDuringPaint;
   bool slowPaint;
+  bool playingAudio;
+  bool audioMuted;
   int32_t winX;
   int32_t winY;
   int32_t lastMouseX;
