@@ -60,6 +60,18 @@ struct GetServiceStateEnabledRequest
   uint32_t service;
 };
 
+struct ReadContactsRequest
+{
+  uint32_t contactType;
+};
+
+struct UpdateContactRequest
+{
+  uint32_t contactType;
+  nsString pin2;
+  IccContactData contact;
+};
+
 union IccRequest
 {
   GetCardLockEnabledRequest;
@@ -69,6 +81,8 @@ union IccRequest
   GetCardLockRetryCountRequest;
   MatchMvnoRequest;
   GetServiceStateEnabledRequest;
+  ReadContactsRequest;
+  UpdateContactRequest;
 };
 
 sync protocol PIcc

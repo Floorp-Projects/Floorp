@@ -80,6 +80,86 @@ CdmaIccInfo.prototype = {
   prlVersion: 0
 };
 
+function IccContact(aContact) {
+  this.id = aContact.contactId || null;
+  this._names = [];
+  this._numbers = [];
+  this._emails = [];
+
+  if (aContact.alphaId) {
+    this._names.push(aContact.alphaId);
+  }
+
+  if (aContact.number) {
+    this._numbers.push(aContact.number);
+  }
+
+  let anrLen = aContact.anr ? aContact.anr.length : 0;
+  for (let i = 0; i < anrLen; i++) {
+    this._numbers.push(anr[i]);
+  }
+
+  if (aContact.email) {
+    this._emails.push(aContact.email);
+  }
+}
+IccContact.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIccContact]),
+
+  _names: null,
+  _numbers: null,
+  _emails: null,
+
+  // nsIIccContact
+
+  id: null,
+
+  getNames: function(aCount) {
+    if (!this._names) {
+      if (aCount) {
+        aCount.value = 0;
+      }
+      return null;
+    }
+
+    if (aCount) {
+      aCount.value = this._names.length;
+    }
+
+    return this._names.slice();
+  },
+
+  getNumbers: function(aCount) {
+    if (!this._numbers) {
+      if (aCount) {
+        aCount.value = 0;
+      }
+      return null;
+    }
+
+    if (aCount) {
+      aCount.value = this._numbers.length;
+    }
+
+    return this._numbers.slice();
+  },
+
+  getEmails: function(aCount) {
+    if (!this._emails) {
+      if (aCount) {
+        aCount.value = 0;
+      }
+      return null;
+    }
+
+    if (aCount) {
+      aCount.value = this._emails.length;
+    }
+
+    return this._emails.slice();
+  },
+};
+
 function IccService() {
   this._iccs = [];
 
@@ -600,7 +680,67 @@ Icc.prototype = {
     this._radioInterface
       .sendWorkerMessage("sendStkEventDownload",
                          { event: gStkCmdFactory.createEventMessage(aEvent) });
-  }
+  },
+
+  readContacts: function(aContactType, aCallback) {
+    this._radioInterface
+      .sendWorkerMessage("readICCContacts",
+                         { contactType: aContactType },
+                         (aResponse) => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyError(aResponse.errorMsg);
+        return;
+      }
+
+      let iccContacts = [];
+
+      aResponse.contacts.forEach(c => iccContacts.push(new IccContact(c)));
+
+      aCallback.notifyRetrievedIccContacts(iccContacts, iccContacts.length);
+    });
+  },
+
+  updateContact: function(aContactType, aContact, aPin2, aCallback) {
+    let iccContact = { contactId: aContact.id };
+    let count = { value: 0 };
+    let names = aContact.getNames(count);
+    if (count.value > 0) {
+      iccContact.alphaId = names[0];
+    }
+
+    let numbers = aContact.getNumbers(count);
+    if (count.value > 0) {
+      iccContact.number = numbers[0];
+
+      let anrArray = numbers.slice(1);
+      let length = anrArray.length;
+      if (length > 0) {
+        iccContact.anr = [];
+        for (let i = 0; i < length; i++) {
+          iccContact.anr.push(anrArray[i].value);
+        }
+      }
+    }
+
+    let emails = aContact.getEmails(count);
+    if (count.value > 0) {
+      iccContact.email = emails[0];
+    }
+
+    this._radioInterface
+      .sendWorkerMessage("updateICCContact",
+                         { contactType: aContactType,
+                           contact: iccContact,
+                           pin2: aPin2 },
+                         (aResponse) => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyError(aResponse.errorMsg);
+        return;
+      }
+
+      aCallback.notifyUpdatedIccContact(new IccContact(aResponse.contact));
+    });
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([IccService]);

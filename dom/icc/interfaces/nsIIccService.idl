@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIIcc;
+interface nsIIccContact;
 interface nsIIccInfo;
 interface nsIStkDownloadEvent;
 interface nsIStkProactiveCmd;
@@ -22,7 +23,7 @@ interface nsIIccListener : nsISupports
 /**
  * A callback interface for handling asynchronous response.
  */
-[scriptable, uuid(b0e2899a-adc3-11e4-89cf-1b60eaa35b06)]
+[scriptable, uuid(b7b0623f-fb2c-4cec-b0dc-00ac2fe7b296)]
 interface nsIIccCallback : nsISupports
 {
   /**
@@ -46,8 +47,27 @@ interface nsIIccCallback : nsISupports
   void notifyGetCardLockRetryCount(in long aCount);
 
   /**
+   * The success callback of |readContacts|.
+   *
+   * @param aContacts
+   *        The list of contacts retrieved from ICC.
+   * @param aCount
+   *        The number of contacts retrieved from ICC.
+   */
+  void notifyRetrievedIccContacts([array, size_is(aCount)] in nsIIccContact aContacts,
+                                  in uint32_t aCount);
+
+  /**
+   * The success callback of |updateContact|.
+   *
+   * @param aContact
+   *        The contact with the updated result.
+   */
+  void notifyUpdatedIccContact(in nsIIccContact aContact);
+
+  /**
    * The error callback of |getCardLockEnabled|, |getCardLockRetryCount|,
-   * |matchMvno|, and |getServiceStateEnabled|.
+   * |matchMvno|, |getServiceStateEnabled|, |readContacts| and |updateContact|.
    *
    * @param aErrorMsg
    *        The error message.
@@ -138,7 +158,7 @@ NS_CreateIccService();
 /**
  * XPCOM component that provides the access to the selected ICC.
  */
-[scriptable, uuid(6ded322c-fadd-11e4-9cb6-3f4fc3f241d3)]
+[scriptable, uuid(1791f102-b081-4435-8555-37eb035fa4e2)]
 interface nsIIcc : nsISupports
 {
   /**
@@ -234,6 +254,15 @@ interface nsIIcc : nsISupports
    * Note: MUST be matched with enum IccService in MozIcc.webidl!
    */
   const unsigned long CARD_SERVICE_FDN = 0;
+
+  /**
+   * Icc Contact Type Constants
+   *
+   * Note: MUST be matched with enum IccContactType in MozIcc.webidl!
+   */
+  const unsigned long CONTACT_TYPE_ADN = 0;
+  const unsigned long CONTACT_TYPE_FDN = 1;
+  const unsigned long CONTACT_TYPE_SDN = 2;
 
   /**
    * Called to register icc-related changes.
@@ -472,4 +501,38 @@ interface nsIIcc : nsISupports
    *        The event that ICC listening to in STK_CMD_SET_UP_EVENT_LIST.
    */
    void sendStkEventDownload(in nsIStkDownloadEvent aEvent);
+
+  /**
+   * Read Specified type of Contact from ICC.
+   *
+   * @param aContactType
+   *        One of CONTACT_TYPE_*.
+   *
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifyRetrievedIccContacts() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+   void readContacts(in unsigned long aContactType,
+                     in nsIIccCallback aCallback);
+
+   /**
+   * Update Specified type of Contact in ICC.
+   *
+   * @param aContactType
+   *        One of CONTACT_TYPE_*.
+   * @param aContact
+   *        an nsIIccContact instance with information to be updated.
+   * @param aPin2 (Optional)
+   *        The PIN2 required to update FDN contact.
+   *
+   * @param aCallback
+   *        An instance of nsIIccCallback:
+   *        nsIIccCallback::notifyUpdatedIccContact() if success.
+   *        nsIIccCallback::notifyError(), otherwise.
+   */
+   void updateContact(in unsigned long aContactType,
+                      in nsIIccContact aContact,
+                      in DOMString aPin2,
+                      in nsIIccCallback aCallback);
 };

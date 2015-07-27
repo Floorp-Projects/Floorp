@@ -35,7 +35,6 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsRadioInterfaceLayer.h"
 #include "WifiWorker.h"
 #include "mozilla/Services.h"
 
