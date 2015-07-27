@@ -150,10 +150,7 @@ loop.shared.views.chat = (function(mozL10n) {
       var lastTimestamp = 0;
 
       var entriesClasses = React.addons.classSet({
-        "text-chat-entries": true,
-        // XXX Only required until we get the desktop rooms on media-layout
-        // as well.
-        "text-chat-entries-empty": !this.props.messageList.length
+        "text-chat-entries": true
       });
 
       return (
@@ -385,7 +382,7 @@ loop.shared.views.chat = (function(mozL10n) {
       var textChatViewClasses = React.addons.classSet({
         "text-chat-view": true,
         "text-chat-disabled": !this.state.textChatEnabled,
-        "text-chat-entries-empty": !this.state.messageList.length
+        "text-chat-entries-empty": !messageList.length
       });
 
       return (
