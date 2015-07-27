@@ -51,6 +51,7 @@
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -7972,4 +7973,23 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
 
   net::ReferrerPolicy referrerPolicy = aDoc->GetReferrerPolicy();
   return aChannel->SetReferrerWithPolicy(referrerURI, referrerPolicy);
+}
+
+// static
+bool
+nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.push.enabled", false);
+  }
+
+  using namespace workers;
+
+  // Otherwise, check the pref via the WorkerPrivate
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->PushEnabled();
 }
