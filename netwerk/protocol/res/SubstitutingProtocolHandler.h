@@ -13,6 +13,7 @@
 #include "nsIOService.h"
 #include "nsStandardURL.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
+#include "mozilla/Maybe.h"
 
 class nsIIOService;
 
@@ -27,6 +28,7 @@ class SubstitutingProtocolHandler
 {
 public:
   SubstitutingProtocolHandler(const char* aScheme, uint32_t aFlags, bool aEnforceFileOrJar = true);
+  explicit SubstitutingProtocolHandler(const char* aScheme);
 
   NS_INLINE_DECL_REFCOUNTING(SubstitutingProtocolHandler);
   NS_DECL_NON_VIRTUAL_NSIPROTOCOLHANDLER;
@@ -36,6 +38,7 @@ public:
 
 protected:
   virtual ~SubstitutingProtocolHandler() {}
+  void ConstructInternal();
 
   void SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI);
 
@@ -51,7 +54,7 @@ protected:
 
 private:
   nsCString mScheme;
-  uint32_t mFlags;
+  Maybe<uint32_t> mFlags;
   nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
 
