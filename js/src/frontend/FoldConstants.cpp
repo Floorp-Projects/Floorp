@@ -959,6 +959,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+      case PNK_POWASSIGN:
       case PNK_ELEM:
       case PNK_SUPERELEM:
       case PNK_COLON:
@@ -1009,6 +1010,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_STAR:
       case PNK_DIV:
       case PNK_MOD:
+      case PNK_POW:
       case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
