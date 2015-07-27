@@ -1165,8 +1165,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         union {
             struct {
                 Type::Which type_;
-                uint32_t scalarOrSimdIndex_;
-                uint32_t compilerIndex_;
+                uint32_t index_;
                 AsmJSNumLit literalValue_;
             } varOrConst;
             uint32_t funcIndex_;
@@ -1202,13 +1201,9 @@ class MOZ_STACK_CLASS ModuleCompiler
             MOZ_ASSERT(which_ == Variable || which_ == ConstantLiteral || which_ == ConstantImport);
             return u.varOrConst.type_;
         }
-        uint32_t varOrConstScalarOrSimdIndex() const {
+        uint32_t varOrConstIndex() const {
             MOZ_ASSERT(which_ == Variable || which_ == ConstantImport);
-            return u.varOrConst.scalarOrSimdIndex_;
-        }
-        uint32_t varOrConstCompilerIndex() const {
-            MOZ_ASSERT(which_ == Variable || which_ == ConstantImport);
-            return u.varOrConst.compilerIndex_;
+            return u.varOrConst.index_;
         }
         bool isConst() const {
             return which_ == ConstantLiteral || which_ == ConstantImport;
@@ -1400,7 +1395,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
     typedef Vector<SlowFunction> SlowFunctionVector;
     typedef Vector<ArrayView> ArrayViewVector;
-    typedef Vector<Global*> GlobalVector;
     typedef Vector<Signature*> SignatureVector;
 
     ExclusiveContext *             cx_;
@@ -1414,7 +1408,6 @@ class MOZ_STACK_CLASS ModuleCompiler
     PropertyName *                 moduleFunctionName_;
 
     GlobalMap                      globals_;
-    GlobalVector                   globalsVector_;
     FuncVector                     functions_;
     FuncPtrTableVector             funcPtrTables_;
     ArrayViewVector                arrayViews_;
@@ -1478,7 +1471,6 @@ class MOZ_STACK_CLASS ModuleCompiler
         moduleFunctionNode_(parser.pc->maybeFunction),
         moduleFunctionName_(nullptr),
         globals_(cx),
-        globalsVector_(cx),
         functions_(cx),
         funcPtrTables_(cx),
         arrayViews_(cx),
@@ -1668,9 +1660,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return p->value();
         return nullptr;
     }
-    const Global* global(uint32_t index) const {
-        return globalsVector_[index];
-    }
     Func* lookupFunction(PropertyName* name) {
         if (GlobalMap::Ptr p = globals_.lookup(name)) {
             Global* value = p->value();
@@ -1737,35 +1726,33 @@ class MOZ_STACK_CLASS ModuleCompiler
         // The type of a const is the exact type of the literal (since its value
         // cannot change) which is more precise than the corresponding vartype.
         Type type = isConst ? Type::Of(lit) : VarType::Of(lit).toType();
-        uint32_t scalarOrSimdIndex;
-        if (!module_->addGlobalVarInit(lit, &scalarOrSimdIndex))
+        uint32_t globalIndex;
+        if (!module_->addGlobalVarInit(lit, &globalIndex))
             return false;
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
         Global* global = moduleLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.scalarOrSimdIndex_ = scalarOrSimdIndex;
-        global->u.varOrConst.compilerIndex_ = globalsVector_.length();
+        global->u.varOrConst.index_ = globalIndex;
         global->u.varOrConst.type_ = type.which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
-        return globalsVector_.append(global) && globals_.putNew(varName, global);
+        return globals_.putNew(varName, global);
     }
     bool addGlobalVarImport(PropertyName* varName, PropertyName* fieldName, AsmJSCoercion coercion,
                             bool isConst)
     {
-        uint32_t scalarOrSimdIndex;
-        if (!module_->addGlobalVarImport(fieldName, coercion, &scalarOrSimdIndex))
+        uint32_t globalIndex;
+        if (!module_->addGlobalVarImport(fieldName, coercion, &globalIndex))
             return false;
 
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
         Global* global = moduleLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.scalarOrSimdIndex_ = scalarOrSimdIndex;
-        global->u.varOrConst.compilerIndex_ = globalsVector_.length();
+        global->u.varOrConst.index_ = globalIndex;
         global->u.varOrConst.type_ = VarType(coercion).toType().which();
-        return globalsVector_.append(global) && globals_.putNew(varName, global);
+        return globals_.putNew(varName, global);
     }
     bool addFunction(PropertyName* name, Signature&& sig, Func** func, uint32_t* outFuncIndex) {
         MOZ_ASSERT(!finishedFunctionBodies_);
@@ -3641,18 +3628,16 @@ class FunctionCompiler
         return load;
     }
 
-    void storeGlobalVar(const ModuleCompiler::Global* global, MDefinition* v)
+    void storeGlobalVar(uint32_t globalIndex, MDefinition* v)
     {
         if (inDeadCode())
             return;
 
-        MOZ_ASSERT(!global->isConst());
-
         unsigned globalDataOffset;
         if (IsSimdType(v->type()))
-            globalDataOffset = module().globalSimdVarIndexToGlobalDataOffset(global->varOrConstScalarOrSimdIndex());
+            globalDataOffset = module().globalSimdVarIndexToGlobalDataOffset(globalIndex);
         else
-            globalDataOffset = module().globalScalarVarIndexToGlobalDataOffset(global->varOrConstScalarOrSimdIndex());
+            globalDataOffset = module().globalScalarVarIndexToGlobalDataOffset(globalIndex);
 
         curBlock_->add(MAsmJSStoreGlobalVar::New(alloc(), globalDataOffset, v));
     }
@@ -5181,7 +5166,8 @@ CheckVarRef(FunctionBuilder& f, ParseNode* varRef, Type* type)
               case Type::Float32x4: f.writeOp(F32X4::GetGlobal); break;
               default: MOZ_CRASH("unexpected global type");
             }
-            f.writeU32(global->varOrConstCompilerIndex());
+            f.writeU32(global->varOrConstIndex());
+            f.writeU8(uint8_t(global->isConst()));
             *type = global->varOrConstType();
             break;
           case ModuleCompiler::Global::Function:
@@ -5216,8 +5202,8 @@ static bool
 EmitGetGlo(FunctionCompiler& f, MIRType type, MDefinition** def)
 {
     uint32_t globalIndex = f.readU32();
-    const ModuleCompiler::Global* global = f.m().global(globalIndex);
-    *def = f.loadGlobalVar(global->varOrConstScalarOrSimdIndex(), global->isConst(), type);
+    bool isConst = bool(f.readU8());
+    *def = f.loadGlobalVar(globalIndex, isConst, type);
     return true;
 }
 
@@ -5654,7 +5640,7 @@ CheckAssignName(FunctionBuilder& f, ParseNode* lhs, ParseNode* rhs, Type* type)
           default: MOZ_CRASH("unexpected global type");
         }
 
-        f.patch32(indexAt, global->varOrConstCompilerIndex());
+        f.patch32(indexAt, global->varOrConstIndex());
         *type = rhsType;
         return true;
     }
@@ -5681,8 +5667,7 @@ EmitSetGlo(FunctionCompiler& f, AsmType type, MDefinition**def)
     MDefinition* expr;
     if (!EmitExpr(f, type, &expr))
         return false;
-    const ModuleCompiler::Global* global = f.m().global(globalIndex);
-    f.storeGlobalVar(global, expr);
+    f.storeGlobalVar(globalIndex, expr);
     *def = expr;
     return true;
 }
