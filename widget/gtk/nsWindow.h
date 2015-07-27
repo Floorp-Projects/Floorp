@@ -166,6 +166,8 @@ public:
     // value that can be passed to gdk_window_set_decorations
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
 
+    GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
+
     // event callbacks
 #if (MOZ_WIDGET_GTK == 2)
     gboolean           OnExposeEvent(GdkEventExpose *aEvent);
@@ -499,7 +501,6 @@ private:
     gint DevicePixelsToGdkCoordRoundUp(int pixels);
     gint DevicePixelsToGdkCoordRoundDown(int pixels);
     GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
-    GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
     GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
 
     // From GDK
