@@ -84,10 +84,9 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  nsBaseHashtableCCTraversalData userData(aCallback, aName, aFlags);
-
-  aField.EnumerateRead(ImplCycleCollectionTraverse_EnumFunc<typename K::KeyType, T*>,
-                       &userData);
+  for (auto iter = aField.ConstIter(); !iter.Done(); iter.Next()) {
+    CycleCollectionNoteChild(aCallback, iter.UserData(), aName, aFlags);
+  }
 }
 
 //
