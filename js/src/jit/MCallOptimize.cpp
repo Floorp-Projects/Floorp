@@ -1347,11 +1347,17 @@ IonBuilder::inlineMathHypot(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outputType)
+IonBuilder::inlineMathPow(CallInfo& callInfo)
 {
+    if (callInfo.argc() != 2 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
     // Typechecking.
-    MIRType baseType = lhs->type();
-    MIRType powerType = rhs->type();
+    MIRType baseType = callInfo.getArg(0)->type();
+    MIRType powerType = callInfo.getArg(1)->type();
+    MIRType outputType = getInlineReturnType();
 
     if (outputType != MIRType_Int32 && outputType != MIRType_Double)
         return InliningStatus_NotInlined;
@@ -1360,13 +1366,17 @@ IonBuilder::inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outp
     if (!IsNumberType(powerType))
         return InliningStatus_NotInlined;
 
-    MDefinition* base = lhs;
-    MDefinition* power = rhs;
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MDefinition* base = callInfo.getArg(0);
+    MDefinition* power = callInfo.getArg(1);
     MDefinition* output = nullptr;
 
     // Optimize some constant powers.
-    if (rhs->isConstantValue() && rhs->constantValue().isNumber()) {
-        double pow = rhs->constantValue().toNumber();
+    if (callInfo.getArg(1)->isConstantValue() &&
+        callInfo.getArg(1)->constantValue().isNumber())
+    {
+        double pow = callInfo.getArg(1)->constantValue().toNumber();
 
         // Math.pow(x, 0.5) is a sqrt with edge-case detection.
         if (pow == 0.5) {
@@ -1439,23 +1449,6 @@ IonBuilder::inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outp
 
     current->push(output);
     return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineMathPow(CallInfo& callInfo)
-{
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
-    IonBuilder::InliningStatus status =
-        inlineMathPowHelper(callInfo.getArg(0), callInfo.getArg(1), getInlineReturnType());
-
-    if (status == IonBuilder::InliningStatus_Inlined)
-        callInfo.setImplicitlyUsedUnchecked();
-
-    return status;
 }
 
 IonBuilder::InliningStatus

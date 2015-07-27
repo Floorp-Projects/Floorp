@@ -6351,8 +6351,7 @@ static const JSOp ParseNodeKindToJSOp[] = {
     JSOP_SUB,
     JSOP_MUL,
     JSOP_DIV,
-    JSOP_MOD,
-    JSOP_POW
+    JSOP_MOD
 };
 
 static inline JSOp
@@ -6393,11 +6392,10 @@ static const int PrecedenceTable[] = {
     9, /* PNK_SUB */
     10, /* PNK_STAR */
     10, /* PNK_DIV */
-    10, /* PNK_MOD */
-    11  /* PNK_POW */
+    10  /* PNK_MOD */
 };
 
-static const int PRECEDENCE_CLASSES = 11;
+static const int PRECEDENCE_CLASSES = 10;
 
 static int
 Precedence(ParseNodeKind pnk) {
@@ -6417,8 +6415,8 @@ MOZ_ALWAYS_INLINE typename ParseHandler::Node
 Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling,
                               InvokedPrediction invoked)
 {
-    // Shift-reduce parser for the binary operator part of the JS expression
-    // syntax.
+    // Shift-reduce parser for the left-associative binary operator part of
+    // the JS syntax.
 
     // Conceptually there's just one stack, a stack of pairs (lhs, op).
     // It's implemented using two separate arrays, though.
@@ -6450,9 +6448,10 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
         // stack, reduce. This combines nodes on the stack until we form the
         // actual lhs of pnk.
         //
-        // The >= in this condition works because it is appendOrCreateList's
-        // job to decide if the operator in question is left- or
-        // right-associative, and build the corresponding tree.
+        // The >= in this condition works because all the operators in question
+        // are left-associative; if any were not, the case where two operators
+        // have equal precedence would need to be handled specially, and the
+        // stack would need to be a Vector.
         while (depth > 0 && Precedence(kindStack[depth - 1]) >= Precedence(pnk)) {
             depth--;
             ParseNodeKind combiningPnk = kindStack[depth];
@@ -6614,7 +6613,6 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
       case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    op = JSOP_MUL;    break;
       case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    op = JSOP_DIV;    break;
       case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    op = JSOP_MOD;    break;
-      case TOK_POWASSIGN:    kind = PNK_POWASSIGN;    op = JSOP_POW;    break;
 
       case TOK_ARROW: {
         // A line terminator between ArrowParameters and the => should trigger a SyntaxError.
