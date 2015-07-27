@@ -112,6 +112,9 @@ function check_test_pt4() {
     if (macutils.isUniversalBinary) {
       abi += "-u-" + macutils.architecturesInBinary;
     }
+  } else if (IS_WIN) {
+    // Windows build should report the CPU architecture that it's running on.
+    abi += "-" + getProcArchitecture();
   }
 
   Assert.equal(getResult(gRequestURL), gAppInfo.OS + "_" + abi,

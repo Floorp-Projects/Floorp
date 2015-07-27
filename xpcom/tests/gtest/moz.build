@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     'TestThreadPool.cpp',
     'TestThreads.cpp',
     'TestTimeStamp.cpp',
+    'TestTokenizer.cpp',
     'TestUTF.cpp',
     'TestXPIDLString.cpp',
 ]

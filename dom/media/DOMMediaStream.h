@@ -198,6 +198,13 @@ public:
   static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                                                  MediaStreamGraph* aGraph = nullptr);
 
+  /**
+   * Create an nsDOMMediaStream whose underlying stream is an
+   * AudioCaptureStream
+   */
+  static already_AddRefed<DOMMediaStream> CreateAudioCaptureStream(
+    nsIDOMWindow* aWindow, MediaStreamGraph* aGraph = nullptr);
+
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
     mLogicalStreamStartTime = aTime;
@@ -261,6 +268,8 @@ protected:
                         MediaStreamGraph* aGraph = nullptr);
   void InitTrackUnionStream(nsIDOMWindow* aWindow,
                             MediaStreamGraph* aGraph = nullptr);
+  void InitAudioCaptureStream(nsIDOMWindow* aWindow,
+                              MediaStreamGraph* aGraph = nullptr);
   void InitStreamCommon(MediaStream* aStream);
   already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
   already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
@@ -350,6 +359,12 @@ public:
   static already_AddRefed<DOMLocalMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
                          MediaStreamGraph* aGraph = nullptr);
+
+  /**
+   * Create an nsDOMLocalMediaStream whose underlying stream is an
+   * AudioCaptureStream. */
+  static already_AddRefed<DOMLocalMediaStream> CreateAudioCaptureStream(
+    nsIDOMWindow* aWindow, MediaStreamGraph* aGraph = nullptr);
 
 protected:
   virtual ~DOMLocalMediaStream();

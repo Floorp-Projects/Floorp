@@ -1130,6 +1130,10 @@ class Activation
     // Value of asyncCause to be attached to asyncStack_.
     RootedString asyncCause_;
 
+    // True if the async call was explicitly requested, e.g. via
+    // callFunctionWithAsyncStack.
+    bool asyncCallIsExplicit_;
+
     // The entry point monitor that was set on cx_->runtime() when this
     // Activation was created. Subclasses should report their entry frame's
     // function or script here.
@@ -1213,6 +1217,10 @@ class Activation
 
     JSString* asyncCause() {
         return asyncCause_;
+    }
+
+    bool asyncCallIsExplicit() const {
+        return asyncCallIsExplicit_;
     }
 
   private:

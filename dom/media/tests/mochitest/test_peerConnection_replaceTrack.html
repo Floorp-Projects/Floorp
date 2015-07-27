@@ -136,7 +136,7 @@
     ]);
     test.chain.append([
       function PC_LOCAL_CHECK_WEBAUDIO_FLOW_PRESENT(test) {
-        return test.pcRemote.checkReceivingToneFrom(test.pcLocal);
+        return test.pcRemote.checkReceivingToneFrom(test.audioCtx, test.pcLocal);
       }
     ]);
     test.chain.append([
