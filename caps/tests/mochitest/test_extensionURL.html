@@ -104,7 +104,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
         } catch (e) {
           ifr.remove();
           threw = true;
-          ok(/denied|insecure/.test(e), "exceiton correct: " + e);
+          ok(/denied|insecure/.test(e), "exception correct: " + e);
         }
         is(threw, !!shouldThrow, "Correct throwing behavior for: " + url);
         !threw || resolve();

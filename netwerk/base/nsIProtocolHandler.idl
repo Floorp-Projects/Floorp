@@ -5,14 +5,34 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsCOMPtr.h"
+%}
+
 interface nsIURI;
 interface nsIChannel;
 interface nsILoadInfo;
 
 /**
+ * nsIProtocolHandlerWithDynamicFlags
+ *
+ * Protocols that wish to return different flags depending on the URI should
+ * implement this interface.
+ */
+[scriptable, builtinclass, uuid(65a8e823-0591-4fc0-a56a-03265e0a4ce8)]
+interface nsIProtocolHandlerWithDynamicFlags : nsISupports
+{
+    /*
+     * Returns protocol flags for the given URI, which may be different from the
+     * flags for another URI of the same scheme.
+     */
+    unsigned long getFlagsForURI(in nsIURI aURI);
+};
+
+/**
  * nsIProtocolHandler
  */
-[scriptable, uuid(a7aad716-e72c-435d-82f1-7582dffae661)]
+[scriptable, uuid(3393c327-ce70-47f1-9be3-cc312e21c012)]
 interface nsIProtocolHandler : nsISupports
 {
     /**
@@ -31,6 +51,15 @@ interface nsIProtocolHandler : nsISupports
      * Returns the protocol specific flags (see flag definitions below).  
      */
     readonly attribute unsigned long protocolFlags;
+
+%{C++
+  // Helper method to get the protocol flags in the right way.
+  nsresult DoGetProtocolFlags(nsIURI* aURI, uint32_t* aFlags)
+  {
+      nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
+      return dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
+  }
+%}
 
     /**
      * Makes a URI object that is suitable for loading by this protocol,
@@ -258,8 +287,6 @@ interface nsIProtocolHandler : nsISupports
      * by nsMixedContentBlocker
      */
     const unsigned long URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT = (1<<18);
-
-
 };
 
 %{C++
