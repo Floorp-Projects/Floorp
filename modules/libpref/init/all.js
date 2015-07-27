@@ -4739,7 +4739,7 @@ pref("browser.trackingprotection.gethashURL", "https://tracking.services.mozilla
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
-// Original caret implementation on collapsed selection.
+// Turn off touch caret by default.
 pref("touchcaret.enabled", false);
 
 // This will inflate the size of the touch caret frame when checking if user
@@ -4751,7 +4751,7 @@ pref("touchcaret.inflatesize.threshold", 40);
 // In milliseconds. (0 means disable this feature)
 pref("touchcaret.expiration.time", 3000);
 
-// Original caret implementation on non-collapsed selection.
+// Turn off selection caret by default
 pref("selectioncaret.enabled", false);
 
 // This will inflate size of selection caret frame when we checking if
