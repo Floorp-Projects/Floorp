@@ -5,6 +5,9 @@
 
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
+
 var security = {
   // Display the server certificate (static)
   viewCert : function () {
@@ -158,19 +161,8 @@ var security = {
   /**
    * Open the login manager window
    */
-  viewPasswords : function()
-  {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("Toolkit:PasswordManager");
-    if (win) {
-      win.setFilter(this._getSecurityInfo().hostName);
-      win.focus();
-    }
-    else
-      window.openDialog("chrome://passwordmgr/content/passwordManager.xul",
-                        "Toolkit:PasswordManager", "",
-                        {filterString : this._getSecurityInfo().hostName});
+  viewPasswords : function() {
+    LoginHelper.openPasswordManager(window, this._getSecurityInfo().hostName);
   },
 
   _cert : null
