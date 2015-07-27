@@ -67,6 +67,7 @@ load 952756.html
 load 966636.html
 load 986901.html
 load 990794.html
+load 1012609.html
 load 1015662.html
 skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load analyser-channels-1.html
