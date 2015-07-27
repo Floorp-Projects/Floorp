@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -5514,14 +5515,21 @@ struct PerformanceGroup {
         stopwatch_ = nullptr;
     }
 
-    explicit PerformanceGroup(JSContext* cx, void* key);
-    ~PerformanceGroup()
-    {
-        MOZ_ASSERT(refCount_ == 0);
-    }
-  private:
+    // Refcounting. For use with mozilla::RefPtr.
+    void AddRef();
+    void Release();
+
+    // Construct a PerformanceGroup for a single compartment.
+    explicit PerformanceGroup(JSRuntime* rt);
+
+    // Construct a PerformanceGroup for a group of compartments.
+    explicit PerformanceGroup(JSContext* rt, void* key);
+
+private:
     PerformanceGroup& operator=(const PerformanceGroup&) = delete;
     PerformanceGroup(const PerformanceGroup&) = delete;
+
+    JSRuntime* runtime_;
 
     // The stopwatch currently monitoring the group,
     // or `nullptr` if none. Used ony for comparison.
@@ -5534,20 +5542,14 @@ struct PerformanceGroup {
     // The hash key for this PerformanceGroup.
     void* const key_;
 
-    // Increment/decrement the refcounter, return the updated value.
-    uint64_t incRefCount() {
-        MOZ_ASSERT(refCount_ + 1 > 0);
-        return ++refCount_;
-    }
-    uint64_t decRefCount() {
-        MOZ_ASSERT(refCount_ > 0);
-        return --refCount_;
-    }
-    friend struct PerformanceGroupHolder;
-
-private:
-    // A reference counter. Maintained by PerformanceGroupHolder.
+    // A reference counter.
     uint64_t refCount_;
+
+
+    // `true` if this PerformanceGroup may be shared by several
+    // compartments, `false` if it is dedicated to a single
+    // compartment.
+    const bool isSharedGroup_;
 };
 
 //
@@ -5564,7 +5566,7 @@ struct PerformanceGroupHolder {
     js::PerformanceGroup* getSharedGroup(JSContext*);
 
     // Get the own group.
-    js::PerformanceGroup* getOwnGroup(JSContext*);
+    js::PerformanceGroup* getOwnGroup();
 
     // `true` if the this holder is currently associated to a shared
     // PerformanceGroup, `false` otherwise. Use this method to avoid
@@ -5584,8 +5586,6 @@ struct PerformanceGroupHolder {
 
     explicit PerformanceGroupHolder(JSRuntime* runtime)
       : runtime_(runtime)
-      , sharedGroup_(nullptr)
-      , ownGroup_(nullptr)
     {   }
     ~PerformanceGroupHolder();
 
@@ -5600,8 +5600,8 @@ struct PerformanceGroupHolder {
     // The PerformanceGroups held by this object.
     // Initially set to `nullptr` until the first call to `getGroup`.
     // May be reset to `nullptr` by a call to `unlink`.
-    js::PerformanceGroup* sharedGroup_;
-    js::PerformanceGroup* ownGroup_;
+    mozilla::RefPtr<js::PerformanceGroup> sharedGroup_;
+    mozilla::RefPtr<js::PerformanceGroup> ownGroup_;
 };
 
 /**
