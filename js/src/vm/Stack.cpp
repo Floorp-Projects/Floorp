@@ -471,15 +471,6 @@ InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Val
 
 /*****************************************************************************/
 
-bool
-FrameIter::hasCachedSavedFrame(JSContext* cx, bool* hasCachedSavedFramep)
-{
-    if (isIon() && !ensureHasRematerializedFrame(cx))
-        return false;
-    *hasCachedSavedFramep = abstractFramePtr().hasCachedSavedFrame();
-    return true;
-}
-
 void
 FrameIter::popActivation()
 {
