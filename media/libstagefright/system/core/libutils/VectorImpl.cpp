@@ -16,6 +16,7 @@
 
 #define LOG_TAG "Vector"
 
+#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,6 +26,10 @@
 #include <utils/Errors.h>
 #include <utils/SharedBuffer.h>
 #include <utils/VectorImpl.h>
+
+#if !defined(SSIZE_MAX)
+#define SSIZE_MAX ((ssize_t)(SIZE_MAX/2))
+#endif
 
 /*****************************************************************************/
 
@@ -325,12 +330,13 @@ const void* VectorImpl::itemLocation(size_t index) const
 
 ssize_t VectorImpl::setCapacity(size_t new_capacity)
 {
-    size_t current_capacity = capacity();
-    ssize_t amount = new_capacity - size();
-    if (amount <= 0) {
+    if (new_capacity <= size()) {
         // we can't reduce the capacity
-        return current_capacity;
-    } 
+        return capacity();
+    }
+    if (new_capacity >= (SSIZE_MAX / mItemSize)) {
+        return NO_MEMORY;
+    }
     SharedBuffer* sb = SharedBuffer::alloc(new_capacity * mItemSize);
     if (sb) {
         void* array = sb->data();
