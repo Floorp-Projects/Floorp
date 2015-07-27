@@ -353,8 +353,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
       aMoz2DBackend == gfx::BackendType::CAIRO &&
       aAllocator->IsSameProcess() &&
       aSize.width <= maxTextureSize &&
-      aSize.height <= maxTextureSize &&
-      NS_IsMainThread()) {
+      aSize.height <= maxTextureSize) {
     if (gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
       texture = new TextureClientD3D9(aAllocator, aFormat, aTextureFlags);
     }
@@ -362,8 +361,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
 
   if (!texture && aFormat == SurfaceFormat::B8G8R8X8 &&
       aAllocator->IsSameProcess() &&
-      aMoz2DBackend == gfx::BackendType::CAIRO &&
-      NS_IsMainThread()) {
+      aMoz2DBackend == gfx::BackendType::CAIRO) {
     if (aAllocator->IsSameProcess()) {
       texture = new TextureClientMemoryDIB(aAllocator, aFormat, aTextureFlags);
     } else {
@@ -803,7 +801,6 @@ gfx::DrawTarget*
 BufferTextureClient::BorrowDrawTarget()
 {
   MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mLocked, "BorrowDrawTarget should be called on locked textures only");
   if (!mLocked) {
     return nullptr;
@@ -827,33 +824,6 @@ BufferTextureClient::BorrowDrawTarget()
   mDrawTarget = serializer.GetAsDrawTarget(BackendType::CAIRO);
 
   return mDrawTarget;
-}
-
-void
-BufferTextureClient::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
-{
-  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
-
-  RefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
-
-  if (surface->GetSize() != aSurface->GetSize() || surface->GetFormat() != aSurface->GetFormat()) {
-    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << surface->GetSize() << " " << surface->GetFormat() << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
-    return;
-  }
-
-  DataSourceSurface::MappedSurface sourceMap;
-  DataSourceSurface::MappedSurface destMap;
-  aSurface->Map(DataSourceSurface::READ, &sourceMap);
-  surface->Map(DataSourceSurface::WRITE, &destMap);
-
-  for (int y = 0; y < aSurface->GetSize().height; y++) {
-    memcpy(destMap.mData + destMap.mStride * y,
-           sourceMap.mData + sourceMap.mStride * y,
-           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
-  }
-
-  aSurface->Unmap();
-  surface->Unmap();
 }
 
 bool
