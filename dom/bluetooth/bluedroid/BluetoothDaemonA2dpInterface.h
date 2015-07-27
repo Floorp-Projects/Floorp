@@ -10,6 +10,7 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothInterface.h"
 #include "BluetoothInterfaceHelpers.h"
+#include "mozilla/ipc/DaemonRunnables.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -62,11 +63,12 @@ protected:
   // Responses
   //
 
-  typedef BluetoothResultRunnable0<BluetoothA2dpResultHandler, void>
+  typedef mozilla::ipc::DaemonResultRunnable0<
+    BluetoothA2dpResultHandler, void>
     ResultRunnable;
 
-  typedef BluetoothResultRunnable1<BluetoothA2dpResultHandler, void,
-                                   BluetoothStatus, BluetoothStatus>
+  typedef mozilla::ipc::DaemonResultRunnable1<
+    BluetoothA2dpResultHandler, void, BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
@@ -91,23 +93,19 @@ protected:
 
   class NotificationHandlerWrapper;
 
-  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
-                                         BluetoothA2dpConnectionState,
-                                         nsString,
-                                         BluetoothA2dpConnectionState,
-                                         const nsAString&>
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
+    NotificationHandlerWrapper, void, BluetoothA2dpConnectionState, nsString,
+    BluetoothA2dpConnectionState, const nsAString&>
     ConnectionStateNotification;
 
-  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
-                                         BluetoothA2dpAudioState,
-                                         nsString,
-                                         BluetoothA2dpAudioState,
-                                         const nsAString&>
+  typedef mozilla::ipc::DaemonNotificationRunnable2<
+    NotificationHandlerWrapper, void, BluetoothA2dpAudioState, nsString,
+    BluetoothA2dpAudioState, const nsAString&>
     AudioStateNotification;
 
-  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
-                                         nsString, uint32_t, uint8_t,
-                                         const nsAString&, uint32_t, uint8_t>
+  typedef mozilla::ipc::DaemonNotificationRunnable3<
+    NotificationHandlerWrapper, void, nsString, uint32_t, uint8_t,
+    const nsAString&, uint32_t, uint8_t>
     AudioConfigNotification;
 
   class ConnectionStateInitOp;

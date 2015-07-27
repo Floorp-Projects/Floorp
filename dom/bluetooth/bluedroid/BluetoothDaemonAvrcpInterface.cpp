@@ -1090,8 +1090,8 @@ void
 BluetoothDaemonAvrcpInterface::DispatchError(
   BluetoothAvrcpResultHandler* aRes, BluetoothStatus aStatus)
 {
-  BluetoothResultRunnable1<BluetoothAvrcpResultHandler, void,
-                           BluetoothStatus, BluetoothStatus>::Dispatch(
+  DaemonResultRunnable1<BluetoothAvrcpResultHandler, void,
+                        BluetoothStatus, BluetoothStatus>::Dispatch(
     aRes, &BluetoothAvrcpResultHandler::OnError,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }
