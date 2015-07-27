@@ -1533,7 +1533,15 @@
      *   Stack: =>
      */ \
     macro(JSOP_BACKPATCH,     149,"backpatch", NULL,      5,  0,  0,  JOF_JUMP) \
-    macro(JSOP_UNUSED150,     150,"unused150", NULL,      1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top two values 'lval' and 'rval' from the stack, then pushes
+     * the result of 'Math.pow(lval, rval)'.
+     *   Category: Operators
+     *   Type: Arithmetic Operators
+     *   Operands:
+     *   Stack: lval, rval => (lval ** rval)
+     */ \
+    macro(JSOP_POW,           150, "pow",     "**",       1,  2,  1, JOF_BYTE|JOF_ARITH) \
     \
     /*
      * Pops the top of stack value as 'v', sets pending exception as 'v',

@@ -363,6 +363,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_STAR:
       case PNK_DIV:
       case PNK_MOD:
+      case PNK_POW:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
       case PNK_SUBASSIGN:
@@ -375,6 +376,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+      case PNK_POWASSIGN:
       case PNK_COMMA:
       case PNK_ARRAY:
       case PNK_OBJECT:
@@ -528,6 +530,10 @@ FoldBinaryNumeric(ExclusiveContext* cx, JSOp op, ParseNode* pn1, ParseNode* pn2,
         } else {
             d = js_fmod(d, d2);
         }
+        break;
+
+      case JSOP_POW:
+        d = ecmaPow(d, d2);
         break;
 
       default:;
@@ -1398,6 +1404,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_URSH:
       case PNK_DIV:
       case PNK_MOD:
+      case PNK_POW:
         MOZ_ASSERT(pn->getArity() == PN_LIST);
         MOZ_ASSERT(pn->pn_count >= 2);
         for (pn2 = pn1; pn2; pn2 = pn2->pn_next) {
@@ -1409,6 +1416,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
             if (!pn2->isKind(PNK_NUMBER))
                 break;
         }
+
+        // No constant-folding for (2**3**5), because (**) is right-
+        // associative. We would have to reverse the list. It's not worth it.
+        if (pn->getKind() == PNK_POW && pn->pn_count > 2)
+            break;
+
         if (!pn2) {
             JSOp op = pn->getOp();
 
