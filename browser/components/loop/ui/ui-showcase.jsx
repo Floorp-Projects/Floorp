@@ -267,7 +267,10 @@
   });
 
   var invitationRoomStore = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.INIT
+    })
   });
 
   var roomStore = new loop.store.RoomStore(dispatcher, {
@@ -283,6 +286,20 @@
       roomState: ROOM_STATES.HAS_PARTICIPANTS,
       mediaConnected: false,
       remoteSrcVideoObject: false
+    })
+  });
+
+  var desktopRoomStoreMedium = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS
+    })
+  });
+
+  var desktopRoomStoreLarge = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS
     })
   });
 
@@ -998,7 +1015,8 @@
 
           <Section name="DesktopRoomConversationView">
             <FramedExample
-              height={254}
+              height={398}
+              onContentsRendered={invitationRoomStore.activeRoomStore.forcedUpdate}
               summary="Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)"
               width={298}>
               <div className="fx-embedded">
@@ -1015,6 +1033,7 @@
             <FramedExample
               dashed={true}
               height={394}
+              onContentsRendered={desktopRoomStoreLoading.activeRoomStore.forcedUpdate}
               summary="Desktop room conversation (loading)"
               width={298}>
               {/* Hide scrollbars here. Rotating loading div overflows and causes
@@ -1031,8 +1050,12 @@
               </div>
             </FramedExample>
 
-            <FramedExample height={254}
-                           summary="Desktop room conversation">
+            <FramedExample
+              dashed={true}
+              height={394}
+              onContentsRendered={roomStore.activeRoomStore.forcedUpdate}
+              summary="Desktop room conversation"
+              width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
                   dispatcher={dispatcher}
@@ -1045,10 +1068,48 @@
               </div>
             </FramedExample>
 
-            <FramedExample dashed={true}
-                           height={394}
-                           summary="Desktop room conversation local face-mute"
-                           width={298}>
+            <FramedExample
+              dashed={true}
+              height={482}
+              onContentsRendered={desktopRoomStoreMedium.activeRoomStore.forcedUpdate}
+              summary="Desktop room conversation (medium)"
+              width={602}>
+              <div className="fx-embedded">
+                <DesktopRoomConversationView
+                  dispatcher={dispatcher}
+                  localPosterUrl="sample-img/video-screen-local.png"
+                  mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
+                  remotePosterUrl="sample-img/video-screen-remote.png"
+                  roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                  roomStore={desktopRoomStoreMedium} />
+              </div>
+            </FramedExample>
+
+            <FramedExample
+              dashed={true}
+              height={485}
+              onContentsRendered={desktopRoomStoreLarge.activeRoomStore.forcedUpdate}
+              summary="Desktop room conversation (large)"
+              width={646}>
+              <div className="fx-embedded">
+                <DesktopRoomConversationView
+                  dispatcher={dispatcher}
+                  localPosterUrl="sample-img/video-screen-local.png"
+                  mozLoop={navigator.mozLoop}
+                  onCallTerminated={function(){}}
+                  remotePosterUrl="sample-img/video-screen-remote.png"
+                  roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                  roomStore={desktopRoomStoreLarge} />
+              </div>
+            </FramedExample>
+
+            <FramedExample
+              dashed={true}
+              height={394}
+              onContentsRendered={desktopLocalFaceMuteRoomStore.activeRoomStore.forcedUpdate}
+              summary="Desktop room conversation local face-mute"
+              width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
                   dispatcher={dispatcher}
@@ -1059,7 +1120,9 @@
               </div>
             </FramedExample>
 
-            <FramedExample dashed={true} height={394}
+            <FramedExample dashed={true}
+                           height={394}
+                           onContentsRendered={desktopRemoteFaceMuteRoomStore.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation remote face-mute"
                            width={298} >
               <div className="fx-embedded">
@@ -1068,6 +1131,7 @@
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
                   onCallTerminated={function(){}}
+                  remotePosterUrl="sample-img/video-screen-remote.png"
                   roomStore={desktopRemoteFaceMuteRoomStore} />
               </div>
             </FramedExample>
@@ -1384,7 +1448,7 @@
 
       // This simulates the mocha layout for errors which means we can run
       // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 19;
+      var expectedWarningsCount = 18;
       var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
       if (uncaughtError || warningsMismatch) {
         $("#results").append("<div class='failures'><em>" +
