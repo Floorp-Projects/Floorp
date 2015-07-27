@@ -7,9 +7,11 @@
 * https://w3c.github.io/push-api/
 */
 
+// Please see comments in dom/push/PushManager.h for the split between
+// PushManagerImpl and PushManager.
 [JSImplementation="@mozilla.org/push/PushManager;1",
- Pref="dom.push.enabled"]
-interface PushManager {
+ NoInterfaceObject]
+interface PushManagerImpl {
     Promise<PushSubscription>     subscribe();
     Promise<PushSubscription?>    getSubscription();
     Promise<PushPermissionState> permissionState();
@@ -18,6 +20,19 @@ interface PushManager {
     // but we don't want it exposed to client JS.  WebPushMethodHider
     // always returns false.
     [Func="ServiceWorkerRegistration::WebPushMethodHider"] void setScope(DOMString scope);
+};
+
+[Exposed=(Window,Worker), Func="mozilla::dom::PushManager::Enabled"]
+interface PushManager {
+  [ChromeOnly, Throws, Exposed=Window]
+  void setPushManagerImpl(PushManagerImpl store);
+
+  [Throws]
+  Promise<PushSubscription>     subscribe();
+  [Throws]
+  Promise<PushSubscription?>    getSubscription();
+  [Throws]
+  Promise<PushPermissionState> permissionState();
 };
 
 enum PushPermissionState

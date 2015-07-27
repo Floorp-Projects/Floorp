@@ -10,6 +10,7 @@
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/fallible.h"
 #include "mozilla/MathAlgorithms.h"
@@ -660,7 +661,7 @@ struct nsTArray_CopyWithConstructors
 // The default behaviour is to use memcpy/memmove for everything.
 //
 template<class E>
-struct nsTArray_CopyChooser
+struct MOZ_NEEDS_MEMMOVABLE_TYPE nsTArray_CopyChooser
 {
   typedef nsTArray_CopyWithMemutils Type;
 };
@@ -2187,7 +2188,7 @@ public:
 // You shouldn't use this class directly.
 //
 template<class TArrayBase, size_t N>
-class nsAutoArrayBase : public TArrayBase
+class MOZ_NON_MEMMOVABLE nsAutoArrayBase : public TArrayBase
 {
   static_assert(N != 0, "nsAutoArrayBase<TArrayBase, 0> should be specialized");
 public:

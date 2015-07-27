@@ -115,7 +115,7 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
   nsContentPolicyType contentPolicyType = aLoadInfo->GetContentPolicyType();
   nsCString mimeTypeGuess;
-  nsCOMPtr<nsISupports> requestingContext = nullptr;
+  nsCOMPtr<nsINode> requestingContext = nullptr;
 
   switch(contentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER:
@@ -132,30 +132,37 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     // alias nsIContentPolicy::TYPE_DATAREQUEST:
     case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
     case nsIContentPolicy::TYPE_DTD:
-    case nsIContentPolicy::TYPE_FONT:
+    case nsIContentPolicy::TYPE_FONT: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;
+    }
 
-    case nsIContentPolicy::TYPE_MEDIA:
-      mimeTypeGuess = EmptyCString();
-      requestingContext = aLoadInfo->LoadingNode();
-#ifdef DEBUG
-      {
-        nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(requestingContext);
-        NS_ASSERTION(element != nullptr,
-                     "type_media requires requestingContext of type Element");
+    case nsIContentPolicy::TYPE_MEDIA: {
+      nsContentPolicyType internalContentPolicyType =
+        aLoadInfo->InternalContentPolicyType();
+
+      if (internalContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_TRACK) {
+        mimeTypeGuess = NS_LITERAL_CSTRING("text/vtt");
       }
-#endif
+      else {
+        mimeTypeGuess = EmptyCString();
+      }
+      requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(!requestingContext ||
+                 requestingContext->NodeType() == nsIDOMNode::ELEMENT_NODE,
+                 "type_media requires requestingContext of type Element");
       break;
+    }
 
     case nsIContentPolicy::TYPE_WEBSOCKET:
     case nsIContentPolicy::TYPE_CSP_REPORT:
     case nsIContentPolicy::TYPE_XSLT:
     case nsIContentPolicy::TYPE_BEACON:
     case nsIContentPolicy::TYPE_FETCH:
-    case nsIContentPolicy::TYPE_IMAGESET:
+    case nsIContentPolicy::TYPE_IMAGESET: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;
+    }
 
     default:
       // nsIContentPolicy::TYPE_INVALID

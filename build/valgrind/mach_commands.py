@@ -109,6 +109,7 @@ class MachCommands(MachCommandBase):
                 '--show-possibly-lost=no',
                 '--track-origins=yes',
                 '--trace-children=yes',
+                '-v',  # Enable verbosity to get the list of used suppressions
             ]
 
             for s in suppressions:

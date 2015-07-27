@@ -8,22 +8,25 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtr.h"
+
 #include "jsprf.h"
+
 #include "gc/Marking.h"
 #include "gc/Statistics.h"
-
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
-
 #include "js/Vector.h"
 #include "vm/SPSProfiler.h"
+
 #include "jsscriptinlines.h"
+
+using mozilla::Maybe;
 
 namespace js {
 namespace jit {
-
 
 static inline JitcodeRegionEntry
 RegionAtAddr(const JitcodeGlobalEntry::IonEntry& entry, void* ptr,
@@ -1052,7 +1055,7 @@ JitcodeGlobalEntry::IonCacheEntry::forEachOptimizationAttempt(
     entry.forEachOptimizationAttempt(rt, index, op);
 
     // Record the outcome associated with the stub.
-    op(TrackedStrategy::InlineCache_OptimizedStub, trackedOutcome_);
+    op(JS::TrackedStrategy::InlineCache_OptimizedStub, trackedOutcome_);
 }
 
 void

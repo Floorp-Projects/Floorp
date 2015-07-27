@@ -26,6 +26,7 @@
 #include "HwcComposer2D.h"
 #include "VsyncSource.h"
 #include "nsWindow.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Services.h"
 #include "mozilla/ProcessPriorityManager.h"
 #include "nsIdleService.h"
@@ -47,6 +48,7 @@ using namespace mozilla;
 using namespace mozilla::hal;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
+using namespace mozilla::layers;
 using namespace mozilla::dom;
 
 namespace {
@@ -120,8 +122,8 @@ nsScreenGonk::nsScreenGonk(uint32_t aId,
     , mDisplaySurface(aNativeData.mDisplaySurface)
 #endif
     , mDisplayType(aDisplayType)
-    , mDpy(EGL_NO_DISPLAY)
-    , mSur(EGL_NO_SURFACE)
+    , mEGLDisplay(EGL_NO_DISPLAY)
+    , mEGLSurface(EGL_NO_SURFACE)
     , mGLContext(nullptr)
 {
     if (mNativeWindow->query(mNativeWindow.get(), NATIVE_WINDOW_WIDTH, &mVirtualBounds.width) ||
@@ -360,21 +362,24 @@ void
 nsScreenGonk::SetEGLInfo(hwc_display_t aDisplay, hwc_surface_t aSurface,
                          gl::GLContext* aGLContext)
 {
-    mDpy = aDisplay;
-    mSur = aSurface;
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+    mEGLDisplay = aDisplay;
+    mEGLSurface = aSurface;
     mGLContext = aGLContext;
 }
 
 hwc_display_t
-nsScreenGonk::GetDpy()
+nsScreenGonk::GetEGLDisplay()
 {
-    return mDpy;
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+    return mEGLDisplay;
 }
 
 hwc_surface_t
-nsScreenGonk::GetSur()
+nsScreenGonk::GetEGLSurface()
 {
-    return mSur;
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+    return mEGLSurface;
 }
 
 NS_IMPL_ISUPPORTS(nsScreenManagerGonk, nsIScreenManager)

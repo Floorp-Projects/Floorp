@@ -1248,6 +1248,7 @@ IMMHandler::HandleStartComposition(nsWindow* aWindow,
   AdjustCompositionFont(aContext, selection.mWritingMode);
 
   mCompositionStart = selection.mOffset;
+  mCursorPosition = NO_IME_CARET;
 
   WidgetCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
   nsIntPoint point(0, 0);
@@ -2096,23 +2097,63 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     return false;
   }
 
-  uint32_t offset = selection.mOffset + aOffset;
-  bool useCaretRect = selection.mString.IsEmpty();
-  if (useCaretRect && ShouldDrawCompositionStringOurselves() &&
-      mIsComposing && !mCompositionString.IsEmpty()) {
-    // There is not a normal selection, but we have composition string.
-    // XXX mnakano - Should we implement NS_QUERY_IME_SELECTED_TEXT?
-    useCaretRect = false;
-    if (mCursorPosition != NO_IME_CARET) {
-      uint32_t cursorPosition =
-        std::min<uint32_t>(mCursorPosition, mCompositionString.Length());
-      NS_ASSERTION(offset >= cursorPosition, "offset is less than cursorPosition!");
-      offset -= cursorPosition;
+  // The base offset of aOffset is the start of composition string during
+  // composing or the start of selected string not during composing.
+  uint32_t baseOffset =
+    mIsComposing ? mCompositionStart : selection.mOffset;
+
+  CheckedInt<uint32_t> checkingOffset =
+    CheckedInt<uint32_t>(baseOffset) + aOffset;
+  if (NS_WARN_IF(!checkingOffset.isValid()) ||
+      checkingOffset.value() == UINT32_MAX) {
+    MOZ_LOG(gIMMLog, LogLevel::Error,
+      ("IMM: GetCharacterRectOfSelectedTextAt, FAILED, due to "
+       "aOffset is too large (aOffset=%u, baseOffset=%u, mIsComposing=%s)",
+       aOffset, baseOffset, GetBoolName(mIsComposing)));
+    return false;
+  }
+
+  // If the offset is larger than the end of composition string or selected
+  // string, we should return false since such case must be a bug of the caller
+  // or the active IME.  If it's an IME's bug, we need to set targetLength to
+  // aOffset.
+  uint32_t targetLength =
+    mIsComposing ? mCompositionString.Length() : selection.Length();
+  if (NS_WARN_IF(aOffset > targetLength)) {
+    MOZ_LOG(gIMMLog, LogLevel::Error,
+      ("IMM: GetCharacterRectOfSelectedTextAt, FAILED, due to "
+       "aOffset is too large (aOffset=%u, targetLength=%u, mIsComposing=%s)",
+       aOffset, targetLength, GetBoolName(mIsComposing)));
+    return false;
+  }
+
+  uint32_t offset = checkingOffset.value();
+
+  // If there is caret, we might be able to use caret rect.
+  uint32_t caretOffset = UINT32_MAX;
+  // There is a caret only when the normal selection is collapsed.
+  if (selection.Collapsed()) {
+    if (mIsComposing) {
+      // If it's composing, mCursorPosition is the offset to caret in
+      // the composition string.
+      if (mCursorPosition != NO_IME_CARET) {
+        MOZ_ASSERT(mCursorPosition >= 0);
+        caretOffset = mCompositionStart + mCursorPosition;
+      } else if (!ShouldDrawCompositionStringOurselves() ||
+                 mCompositionString.IsEmpty()) {
+        // Otherwise, if there is no composition string, we should assume that
+        // there is a caret at the start of composition string.
+        caretOffset = mCompositionStart;
+      }
+    } else {
+      // If there is no composition, the selection offset is the caret offset.
+      caretOffset = selection.mOffset;
     }
   }
 
-  nsIntRect r;
-  if (!useCaretRect) {
+  // If there is a caret and retrieving offset is same as the caret offset,
+  // we should use the caret rect.
+  if (offset != caretOffset) {
     WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, aWindow);
     charRect.InitForQueryTextRect(offset, 1);
     aWindow->InitEvent(charRect, &point);

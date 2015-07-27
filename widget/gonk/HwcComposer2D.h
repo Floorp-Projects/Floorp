@@ -111,7 +111,7 @@ private:
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
     bool                    mHasHWVsync;
-    nsRefPtr<layers::CompositorParent> mCompositorParent;
+    layers::CompositorParent* mCompositorParent;
     Mutex mLock;
 };
 

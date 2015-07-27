@@ -306,6 +306,8 @@ protected:
   // Creates native caret over our caret.  This method only works on desktop
   // application.  Otherwise, this does nothing.
   void     CreateNativeCaret();
+  // Destroys native caret if there is.
+  void     MaybeDestroyNativeCaret();
 
   // Holds the pointer to our current win32 widget
   nsRefPtr<nsWindowBase>       mWidget;
@@ -622,6 +624,11 @@ protected:
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
       mInitialized = true;
+    }
+
+    void OnLayoutChanged()
+    {
+      mMinTextModifiedOffset = NOT_MODIFIED;
     }
 
     const nsDependentSubstring GetSelectedText() const;

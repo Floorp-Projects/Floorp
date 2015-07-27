@@ -450,7 +450,7 @@ class StoreBuffer
 
     }
 
-    void assertHasValueEdge(Value* vp) {
+    void assertHasValueEdge(JS::Value* vp) {
         MOZ_ASSERT(bufferVal.has(this, ValueEdge(vp)) ||
                    !ValueEdge(vp).maybeInRememberedSet(nursery_));
     }

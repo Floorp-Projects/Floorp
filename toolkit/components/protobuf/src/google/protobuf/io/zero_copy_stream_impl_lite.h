@@ -44,6 +44,7 @@
 #ifndef GOOGLE_PROTOBUF_IO_ZERO_COPY_STREAM_IMPL_LITE_H__
 #define GOOGLE_PROTOBUF_IO_ZERO_COPY_STREAM_IMPL_LITE_H__
 
+#include <vector> /* See Bug 1186561 */
 #include <string>
 #include <iosfwd>
 #include <google/protobuf/io/zero_copy_stream.h>

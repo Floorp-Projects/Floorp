@@ -227,7 +227,7 @@ for test_certificate in test_certificates:
     GENERATED_FILES += [test_certificate]
     props = GENERATED_FILES[test_certificate]
     props.script = '../pycert.py'
-    props.inputs = [input_file, '!/config/buildid']
+    props.inputs = [input_file]
     TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_cert_eku += ['!%s' % test_certificate]
 """
 

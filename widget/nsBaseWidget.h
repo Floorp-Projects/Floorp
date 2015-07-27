@@ -484,7 +484,7 @@ protected:
    * require the compositor to be destroyed before ~nsBaseWidget is
    * reached (This is the case with gtk2 for instance).
    */
-  void DestroyCompositor();
+  virtual void DestroyCompositor();
   void DestroyLayerManager();
 
   void FreeShutdownObserver();

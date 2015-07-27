@@ -34,16 +34,16 @@ HwcICS::HwcICS()
 HwcICS::~HwcICS()
 {
     mHwc = nullptr;
-    mDpy = nullptr;
-    mSur = nullptr;
+    mEGLDisplay = nullptr;
+    mEGLSurface = nullptr;
 }
 
 void
-HwcICS::SetEGLInfo(hwc_display_t aDpy,
-                   hwc_surface_t aSur)
+HwcICS::SetEGLInfo(hwc_display_t aEGLDisplay,
+                   hwc_surface_t aEGLSurface)
 {
-    mDpy = aDpy;
-    mSur = aSur;
+    mEGLDisplay = aEGLDisplay;
+    mEGLSurface = aEGLSurface;
 }
 
 bool
@@ -74,7 +74,7 @@ HwcICS::Set(HwcList* aList,
     if (!mHwc) {
         return -1;
     }
-    return mHwc->set(mHwc, mDpy, mSur, aList);
+    return mHwc->set(mHwc, mEGLDisplay, mEGLSurface, aList);
 }
 
 int

@@ -601,8 +601,8 @@ pref("apz.test.logging_enabled", false);
 pref("gfx.hidpi.enabled", 2);
 #endif
 
-#if !defined(MOZ_WIDGET_ANDROID)
-// Containerless scrolling for root frames does not yet pass tests on Android.
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+// Use containerless scrolling for now on desktop.
 pref("layout.scroll.root-frame-containers", false);
 #endif
 
@@ -4716,9 +4716,6 @@ pref("dom.voicemail.enabled", false);
 // Numeric default service id for Voice Mail API calls with |serviceId|
 // parameter omitted.
 pref("dom.voicemail.defaultServiceId", 0);
-
-// DOM BroadcastChannel API.
-pref("dom.broadcastChannel.enabled", true);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);

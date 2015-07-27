@@ -6,9 +6,7 @@
 
 #ifndef pldhash_h___
 #define pldhash_h___
-/*
- * Double hashing, a la Knuth 6.
- */
+
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
 #include "mozilla/fallible.h"
@@ -30,24 +28,22 @@ typedef uint32_t PLDHashNumber;
 class PLDHashTable;
 struct PLDHashTableOps;
 
-/*
- * Table entry header structure.
- *
- * In order to allow in-line allocation of key and value, we do not declare
- * either here.  Instead, the API uses const void *key as a formal parameter.
- * The key need not be stored in the entry; it may be part of the value, but
- * need not be stored at all.
- *
- * Callback types are defined below and grouped into the PLDHashTableOps
- * structure, for single static initialization per hash table sub-type.
- *
- * Each hash table sub-type should make its entry type a subclass of
- * PLDHashEntryHdr. The mKeyHash member contains the result of multiplying the
- * hash code returned from the hashKey callback (see below) by kGoldenRatio,
- * then constraining the result to avoid the magic 0 and 1 values. The stored
- * mKeyHash value is table size invariant, and it is maintained automatically
- * -- users need never access it.
- */
+// Table entry header structure.
+//
+// In order to allow in-line allocation of key and value, we do not declare
+// either here. Instead, the API uses const void *key as a formal parameter.
+// The key need not be stored in the entry; it may be part of the value, but
+// need not be stored at all.
+//
+// Callback types are defined below and grouped into the PLDHashTableOps
+// structure, for single static initialization per hash table sub-type.
+//
+// Each hash table sub-type should make its entry type a subclass of
+// PLDHashEntryHdr. The mKeyHash member contains the result of multiplying the
+// hash code returned from the hashKey callback (see below) by kGoldenRatio,
+// then constraining the result to avoid the magic 0 and 1 values. The stored
+// mKeyHash value is table size invariant, and it is maintained automatically
+// -- users need never access it.
 struct PLDHashEntryHdr
 {
 private:
@@ -206,31 +202,29 @@ private:
 };
 #endif
 
-/*
- * A PLDHashTable may be allocated on the stack or within another structure or
- * class. No entry storage is allocated until the first element is added. This
- * means that empty hash tables are cheap, which is good because they are
- * common.
- *
- * There used to be a long, math-heavy comment here about the merits of
- * double hashing vs. chaining; it was removed in bug 1058335. In short, double
- * hashing is more space-efficient unless the element size gets large (in which
- * case you should keep using double hashing but switch to using pointer
- * elements). Also, with double hashing, you can't safely hold an entry pointer
- * and use it after an ADD or REMOVE operation, unless you sample
- * aTable->mGeneration before adding or removing, and compare the sample after,
- * dereferencing the entry pointer only if aTable->mGeneration has not changed.
- */
+// A PLDHashTable may be allocated on the stack or within another structure or
+// class. No entry storage is allocated until the first element is added. This
+// means that empty hash tables are cheap, which is good because they are
+// common.
+//
+// There used to be a long, math-heavy comment here about the merits of
+// double hashing vs. chaining; it was removed in bug 1058335. In short, double
+// hashing is more space-efficient unless the element size gets large (in which
+// case you should keep using double hashing but switch to using pointer
+// elements). Also, with double hashing, you can't safely hold an entry pointer
+// and use it after an ADD or REMOVE operation, unless you sample
+// aTable->mGeneration before adding or removing, and compare the sample after,
+// dereferencing the entry pointer only if aTable->mGeneration has not changed.
 class PLDHashTable
 {
 private:
-  const PLDHashTableOps* const mOps;  /* Virtual operations; see below. */
-  int16_t             mHashShift;     /* multiplicative hash shift */
-  const uint32_t      mEntrySize;     /* number of bytes in an entry */
-  uint32_t            mEntryCount;    /* number of entries in table */
-  uint32_t            mRemovedCount;  /* removed entry sentinels in table */
-  uint32_t            mGeneration;    /* entry storage generation number */
-  char*               mEntryStore;    /* entry storage; allocated lazily */
+  const PLDHashTableOps* const mOps;  // Virtual operations; see below.
+  int16_t             mHashShift;     // Multiplicative hash shift.
+  const uint32_t      mEntrySize;     // Number of bytes in an entry.
+  uint32_t            mEntryCount;    // Number of entries in table.
+  uint32_t            mRemovedCount;  // Removed entry sentinels in table.
+  uint32_t            mGeneration;    // Entry storage generation number.
+  char*               mEntryStore;    // Entry storage; allocated lazily.
 
 #ifdef DEBUG
   mutable Checker mChecker;
@@ -287,11 +281,9 @@ public:
   // This should be used rarely.
   const PLDHashTableOps* const Ops() { return mOps; }
 
-  /*
-   * Size in entries (gross, not net of free and removed sentinels) for table.
-   * This can be zero if no elements have been added yet, in which case the
-   * entry storage will not have yet been allocated.
-   */
+  // Size in entries (gross, not net of free and removed sentinels) for table.
+  // This can be zero if no elements have been added yet, in which case the
+  // entry storage will not have yet been allocated.
   uint32_t Capacity() const
   {
     return mEntryStore ? CapacityFromHashShift() : 0;
@@ -301,11 +293,43 @@ public:
   uint32_t EntryCount() const { return mEntryCount; }
   uint32_t Generation() const { return mGeneration; }
 
+  // To search for a |key| in |table|, call:
+  //
+  //   entry = table.Search(key);
+  //
+  // If |entry| is non-null, |key| was found. If |entry| is null, key was not
+  // found.
   PLDHashEntryHdr* Search(const void* aKey);
+
+  // To add an entry identified by |key| to table, call:
+  //
+  //   entry = table.Add(key, mozilla::fallible);
+  //
+  // If |entry| is null upon return, then the table is severely overloaded and
+  // memory can't be allocated for entry storage.
+  //
+  // Otherwise, |aEntry->mKeyHash| has been set so that
+  // PLDHashTable::EntryIsFree(entry) is false, and it is up to the caller to
+  // initialize the key and value parts of the entry sub-type, if they have not
+  // been set already (i.e. if entry was not already in the table, and if the
+  // optional initEntry hook was not used).
   PLDHashEntryHdr* Add(const void* aKey, const mozilla::fallible_t&);
+
+  // This is like the other Add() function, but infallible, and so never
+  // returns null.
   PLDHashEntryHdr* Add(const void* aKey);
+
+  // To remove an entry identified by |key| from table, call:
+  //
+  //   table.Remove(key);
+  //
+  // If |key|'s entry is found, it is cleared (via table->mOps->clearEntry).
   void Remove(const void* aKey);
 
+  // Remove an entry already accessed via Search() or Add().
+  //
+  // NB: this is a "raw" or low-level method. It does not shrink the table if
+  // it is underloaded. Don't use it unless you know what you are doing.
   void RawRemove(PLDHashEntryHdr* aEntry);
 
   // This function is equivalent to
@@ -322,15 +346,22 @@ public:
   // a new |aLength| argument.
   void ClearAndPrepareForLength(uint32_t aLength);
 
+  // Measure the size of the table's entry storage, and if
+  // |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
+  // pointed to by entries.
   size_t SizeOfIncludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
     mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
 
+  // Like SizeOfExcludingThis(), but includes sizeof(*this).
   size_t SizeOfExcludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
     mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr) const;
 
 #ifdef DEBUG
+  // Mark a table as immutable for the remainder of its lifetime. This
+  // changes the implementation from asserting one set of invariants to
+  // asserting a different set.
   void MarkImmutable();
 #endif
 
@@ -456,208 +487,140 @@ private:
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
 };
 
-/*
- * Compute the hash code for a given key to be looked up, added, or removed
- * from aTable.  A hash code may have any PLDHashNumber value.
- */
+// Compute the hash code for a given key to be looked up, added, or removed
+// from aTable. A hash code may have any PLDHashNumber value.
 typedef PLDHashNumber (*PLDHashHashKey)(PLDHashTable* aTable,
                                         const void* aKey);
 
-/*
- * Compare the key identifying aEntry in aTable with the provided key parameter.
- * Return true if keys match, false otherwise.
- */
+// Compare the key identifying aEntry in aTable with the provided key parameter.
+// Return true if keys match, false otherwise.
 typedef bool (*PLDHashMatchEntry)(PLDHashTable* aTable,
                                   const PLDHashEntryHdr* aEntry,
                                   const void* aKey);
 
-/*
- * Copy the data starting at aFrom to the new entry storage at aTo. Do not add
- * reference counts for any strong references in the entry, however, as this
- * is a "move" operation: the old entry storage at from will be freed without
- * any reference-decrementing callback shortly.
- */
+// Copy the data starting at aFrom to the new entry storage at aTo. Do not add
+// reference counts for any strong references in the entry, however, as this
+// is a "move" operation: the old entry storage at from will be freed without
+// any reference-decrementing callback shortly.
 typedef void (*PLDHashMoveEntry)(PLDHashTable* aTable,
                                  const PLDHashEntryHdr* aFrom,
                                  PLDHashEntryHdr* aTo);
 
-/*
- * Clear the entry and drop any strong references it holds.  This callback is
- * invoked by PL_DHashTableRemove(), but only if the given key is found in the
- * table.
- */
+// Clear the entry and drop any strong references it holds. This callback is
+// invoked by Remove(), but only if the given key is found in the table.
 typedef void (*PLDHashClearEntry)(PLDHashTable* aTable,
                                   PLDHashEntryHdr* aEntry);
 
-/*
- * Initialize a new entry, apart from mKeyHash.  This function is called when
- * PL_DHashTableAdd finds no existing entry for the given key, and must add a
- * new one.  At that point, aEntry->mKeyHash is not set yet, to avoid claiming
- * the last free entry in a severely overloaded table.
- */
+// Initialize a new entry, apart from mKeyHash. This function is called when
+// Add() finds no existing entry for the given key, and must add a new one. At
+// that point, |aEntry->mKeyHash| is not set yet, to avoid claiming the last
+// free entry in a severely overloaded table.
 typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
 
-/*
- * Finally, the "vtable" structure for PLDHashTable.  The first four hooks
- * must be provided by implementations; they're called unconditionally by the
- * generic pldhash.c code.  Hooks after these may be null.
- *
- * Summary of allocation-related hook usage with C++ placement new emphasis:
- *  initEntry           Call placement new using default key-based ctor.
- *  moveEntry           Call placement new using copy ctor, run dtor on old
- *                      entry storage.
- *  clearEntry          Run dtor on entry.
- *
- * Note the reason why initEntry is optional: the default hooks (stubs) clear
- * entry storage:  On successful PL_DHashTableAdd(tbl, key), the returned entry
- * pointer addresses an entry struct whose mKeyHash member has been set
- * non-zero, but all other entry members are still clear (null).
- * PL_DHashTableAdd callers can test such members to see whether the entry was
- * newly created by the PL_DHashTableAdd call that just succeeded.  If
- * placement new or similar initialization is required, define an initEntry
- * hook.  Of course, the clearEntry hook must zero or null appropriately.
- *
- * XXX assumes 0 is null for pointer types.
- */
+// Finally, the "vtable" structure for PLDHashTable. The first four hooks
+// must be provided by implementations; they're called unconditionally by the
+// generic pldhash.c code. Hooks after these may be null.
+//
+// Summary of allocation-related hook usage with C++ placement new emphasis:
+//  initEntry           Call placement new using default key-based ctor.
+//  moveEntry           Call placement new using copy ctor, run dtor on old
+//                      entry storage.
+//  clearEntry          Run dtor on entry.
+//
+// Note the reason why initEntry is optional: the default hooks (stubs) clear
+// entry storage:  On successful Add(tbl, key), the returned entry pointer
+// addresses an entry struct whose mKeyHash member has been set non-zero, but
+// all other entry members are still clear (null). Add() callers can test such
+// members to see whether the entry was newly created by the Add() call that
+// just succeeded. If placement new or similar initialization is required,
+// define an |initEntry| hook. Of course, the |clearEntry| hook must zero or
+// null appropriately.
+//
+// XXX assumes 0 is null for pointer types.
 struct PLDHashTableOps
 {
-  /* Mandatory hooks.  All implementations must provide these. */
+  // Mandatory hooks. All implementations must provide these.
   PLDHashHashKey      hashKey;
   PLDHashMatchEntry   matchEntry;
   PLDHashMoveEntry    moveEntry;
   PLDHashClearEntry   clearEntry;
 
-  /* Optional hooks start here.  If null, these are not called. */
+  // Optional hooks start here. If null, these are not called.
   PLDHashInitEntry    initEntry;
 };
 
-/*
- * Default implementations for the above mOps.
- */
+// Default implementations for the above mOps.
 
-PLDHashNumber PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
+PLDHashNumber
+PL_DHashStringKey(PLDHashTable* aTable, const void* aKey);
 
-/* A minimal entry is a subclass of PLDHashEntryHdr and has void key pointer. */
+// A minimal entry is a subclass of PLDHashEntryHdr and has void key pointer.
 struct PLDHashEntryStub : public PLDHashEntryHdr
 {
   const void* key;
 };
 
-PLDHashNumber PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey);
+PLDHashNumber
+PL_DHashVoidPtrKeyStub(PLDHashTable* aTable, const void* aKey);
 
-bool PL_DHashMatchEntryStub(PLDHashTable* aTable,
-                            const PLDHashEntryHdr* aEntry,
-                            const void* aKey);
+bool
+PL_DHashMatchEntryStub(PLDHashTable* aTable,
+                       const PLDHashEntryHdr* aEntry,
+                       const void* aKey);
 
-bool PL_DHashMatchStringKey(PLDHashTable* aTable,
-                            const PLDHashEntryHdr* aEntry,
-                            const void* aKey);
+bool
+PL_DHashMatchStringKey(PLDHashTable* aTable,
+                       const PLDHashEntryHdr* aEntry,
+                       const void* aKey);
 
 void
 PL_DHashMoveEntryStub(PLDHashTable* aTable,
                       const PLDHashEntryHdr* aFrom,
                       PLDHashEntryHdr* aTo);
 
-void PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+void
+PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-/*
- * If you use PLDHashEntryStub or a subclass of it as your entry struct, and
- * if your entries move via memcpy and clear via memset(0), you can use these
- * stub operations.
- */
-const PLDHashTableOps* PL_DHashGetStubOps(void);
+// If you use PLDHashEntryStub or a subclass of it as your entry struct, and
+// if your entries move via memcpy and clear via memset(0), you can use these
+// stub operations.
+const PLDHashTableOps*
+PL_DHashGetStubOps(void);
 
-/*
- * To search for a key in |table|, call:
- *
- *  entry = PL_DHashTableSearch(table, key);
- *
- * If |entry| is non-null, |key| was found.  If |entry| is null, key was not
- * found.
- */
+// The following function are deprecated. Use the equivalent class methods
+// instead: PLDHashTable::Search() instead of PL_DHashTableSearch(), etc.
+
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
 
-/*
- * To add an entry identified by key to table, call:
- *
- *  entry = PL_DHashTableAdd(table, key, mozilla::fallible);
- *
- * If entry is null upon return, then the table is severely overloaded and
- * memory can't be allocated for entry storage.
- *
- * Otherwise, aEntry->mKeyHash has been set so that
- * PLDHashTable::EntryIsFree(entry) is false, and it is up to the caller to
- * initialize the key and value parts of the entry sub-type, if they have not
- * been set already (i.e. if entry was not already in the table, and if the
- * optional initEntry hook was not used).
- */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
                  const mozilla::fallible_t&);
 
-/*
- * This is like the other PL_DHashTableAdd() function, but infallible, and so
- * never returns null.
- */
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey);
 
-/*
- * To remove an entry identified by key from table, call:
- *
- *  PL_DHashTableRemove(table, key);
- *
- * If key's entry is found, it is cleared (via table->mOps->clearEntry).
- */
 void PL_DHASH_FASTCALL
 PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey);
 
-/*
- * Remove an entry already accessed via PL_DHashTableSearch or PL_DHashTableAdd.
- *
- * NB: this is a "raw" or low-level routine, intended to be used only where
- * the inefficiency of a full PL_DHashTableRemove (which rehashes in order
- * to find the entry given its key) is not tolerable.  This function does not
- * shrink the table if it is underloaded.
- */
-void PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
+void
+PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-/**
- * Measure the size of the table's entry storage, and if
- * |aSizeOfEntryExcludingThis| is non-nullptr, measure the size of things
- * pointed to by entries.  Doesn't measure |mOps| because it's often shared
- * between tables.
- */
-size_t PL_DHashTableSizeOfExcludingThis(
+size_t
+PL_DHashTableSizeOfExcludingThis(
   const PLDHashTable* aTable,
   PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
   mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
 
-/**
- * Like PL_DHashTableSizeOfExcludingThis, but includes sizeof(*this).
- */
-size_t PL_DHashTableSizeOfIncludingThis(
+size_t
+PL_DHashTableSizeOfIncludingThis(
   const PLDHashTable* aTable,
   PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
   mozilla::MallocSizeOf aMallocSizeOf, void* aArg = nullptr);
 
 #ifdef DEBUG
-/**
- * Mark a table as immutable for the remainder of its lifetime.  This
- * changes the implementation from ASSERTing one set of invariants to
- * ASSERTing a different set.
- *
- * When a table is NOT marked as immutable, the table implementation
- * asserts that the table is not mutated from its own callbacks.  It
- * assumes the caller protects the table from being accessed on multiple
- * threads simultaneously.
- *
- * When the table is marked as immutable, the re-entry assertions will
- * no longer trigger erroneously due to multi-threaded access.  Instead,
- * mutations will cause assertions.
- */
-void PL_DHashMarkTableImmutable(PLDHashTable* aTable);
+void
+PL_DHashMarkTableImmutable(PLDHashTable* aTable);
 #endif
 
 #endif /* pldhash_h___ */
