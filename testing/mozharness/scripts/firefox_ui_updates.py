@@ -124,6 +124,7 @@ class FirefoxUIUpdates(FirefoxUITests):
         self.tools_tag = self.config['tools_tag']
 
         if self.config.get('update_verify_config'):
+            self.update_verify_config = self.config['update_verify_config']
             self.updates_config_file = os.path.join(
                 dirs['abs_tools_dir'], 'release', 'updates',
                 self.config['update_verify_config']
@@ -252,8 +253,10 @@ class FirefoxUIUpdates(FirefoxUITests):
         version = (re.search('/firefox/releases/(%s.*)\/.*\/.*\/.*' % rel_info['release'], installer_from)).group(1)
 
         temp_from = installer_from.replace(version, '%s-candidates/build%s' % (version, self.config["build_number"]), 1).replace('releases', 'candidates')
+        temp_url = rel_info["ftp_server_from"] + urllib.quote(temp_from.replace('%locale%', 'en-US'))
+        self.info('Installer url under stage/candidates dir %s' % temp_url)
 
-        return rel_info["ftp_server_from"] + urllib.quote(temp_from.replace('%locale%', 'en-US'))
+        return temp_url
 
 
     def _query_symbols_url(self, installer_url):
@@ -263,6 +266,7 @@ class FirefoxUIUpdates(FirefoxUITests):
                 continue
 
         if symbols_url:
+            self.info('Candidate symbols_url: %s' % symbols_url)
             if not symbols_url.startswith('http'):
                 return symbols_url
 
@@ -321,6 +325,9 @@ class FirefoxUIUpdates(FirefoxUITests):
 
         # Return more output if we fail
         if return_code != 0:
+            self.info('Internally this is the command fx-ui-updates executed')
+            self.info('%s' % ' '.join(map(str, cmd)))
+
             if os.path.exists(gecko_log):
                 contents = self.read_from_file(gecko_log, verbose=False)
                 self.warning('== Dumping gecko output ==')
@@ -387,12 +394,12 @@ class FirefoxUIUpdates(FirefoxUITests):
                     symbols_url = self._query_symbols_url(installer_url=ftp_candidates_installer_url)
 
                     # Determine from where to download the file
-                    url = '%s/%s' % (
+                    installer_url = '%s/%s' % (
                         rel_info['ftp_server_from'],
                         urllib.quote(rel_info['from'].replace('%locale%', locale))
                     )
                     installer_path = self.download_file(
-                        url=url,
+                        url=installer_url,
                         parent_dir=dirs['abs_work_dir']
                     )
 
@@ -406,18 +413,23 @@ class FirefoxUIUpdates(FirefoxUITests):
 
                     if retcode != 0:
                         self.warning('FAIL: firefox-ui-update has failed.' )
-                        self.info('You can run the following command on the same machine to reproduce the issue:')
-                        self.info('python scripts/firefox_ui_updates.py --cfg generic_releng_config.py '
-                                  '--firefox-ui-branch %s --update-verify-config %s '
-                                  '--tools-tag %s --installer-url %s '
-                                  '--determine-testing-configuration --run-tests '
-                                  % (self.firefox_ui_branch, self.updates_config_file, self.tools_tag, url))
-                        self.info('If you want to run this on your development machine:')
-                        self.info('python scripts/firefox_ui_updates.py '
-                                  '--firefox-ui-branch %s --update-verify-config %s '
-                                  '--tools-tag %s --installer-url %s '
-                                  '--cfg developer_config.py '
-                                  % (self.firefox_ui_branch, self.updates_config_file, self.tools_tag, url))
+
+                        base_cmd = 'python scripts/firefox_ui_updates.py'
+                        for c in self.config['config_files']:
+                            base_cmd += ' --cfg %s' % c
+
+                        base_cmd += ' --firefox-ui-branch %s --update-verify-config %s --tools-tag %s' % \
+                            (self.firefox_ui_branch, self.update_verify_config, self.tools_tag)
+
+                        base_cmd += ' --installer-url %s' % installer_url
+                        if symbols_url:
+                            base_cmd += ' --symbols-path %s' % symbols_url
+
+                        self.info('You can run the *specific* locale on the same machine with:')
+                        self.info('%s' % base_cmd)
+
+                        self.info('You can run the *specific* locale on *your* machine with:')
+                        self.info('%s --cfg developer_config.py' % base_cmd)
 
                     results[build_id][locale] = retcode
 
