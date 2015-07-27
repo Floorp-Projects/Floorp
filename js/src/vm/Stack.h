@@ -279,7 +279,7 @@ enum ExecuteType {
 class InterpreterFrame
 {
   public:
-    enum Flags {
+    enum Flags : uint32_t {
         /* Primary frame type */
         GLOBAL             =        0x1,  /* frame pushed for a global script */
         FUNCTION           =        0x2,  /* frame pushed for a scripted call */
