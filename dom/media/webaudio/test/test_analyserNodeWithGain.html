@@ -3,15 +3,17 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script>
-async_test(function(t) {
-  // fftSize <= 128 so that the time domain data is full of input after
-  // notification that the first block has been processed.
+promise_test(function() {
+  // fftSize <= bufferSize so that the time domain data is full of input after
+  // processing the buffer.
   const fftSize = 32;
+  const bufferSize = 128;
 
-  var context = new AudioContext();
+  var context = new OfflineAudioContext(1, bufferSize, 48000);
 
   var analyser1 = context.createAnalyser();
   analyser1.fftSize = fftSize;
+  analyser1.connect(context.destination);
   var analyser2 = context.createAnalyser();
   analyser2.fftSize = fftSize;
 
@@ -30,18 +32,16 @@ async_test(function(t) {
   source.connect(gain);
   source.start();
 
-  // Waiting for an ended event ensures that the AnalyserNode has received the
-  // signal.
-  var timer = context.createBufferSource();
-  timer.buffer = buffer;
-  timer.onended = t.step_func_done(function() {
-    var data = new Float32Array(1);
-    analyser1.getFloatTimeDomainData(data);
-    assert_equals(data[0], 1.0, "analyser1 time domain data");
-    analyser2.getFloatTimeDomainData(data);
-    assert_equals(data[0], 1.0, "analyser2 time domain data");
-  });
+  return context.startRendering().
+    then(function(buffer) {
+      assert_equals(buffer.getChannelData(0)[0], 1.0,
+                    "analyser1 output");
 
-  timer.start()
+      var data = new Float32Array(1);
+      analyser1.getFloatTimeDomainData(data);
+      assert_equals(data[0], 1.0, "analyser1 time domain data");
+      analyser2.getFloatTimeDomainData(data);
+      assert_equals(data[0], 1.0, "analyser2 time domain data");
+    });
 });
 </script>
