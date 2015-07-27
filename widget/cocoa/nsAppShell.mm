@@ -34,6 +34,9 @@
 #include "mozilla/HangMonitor.h"
 #include "GeckoProfiler.h"
 #include "pratom.h"
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#include "nsSandboxViolationSink.h"
+#endif
 
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include "nsIDOMWakeLockListener.h"
@@ -319,6 +322,13 @@ nsAppShell::Init()
     // turns on CGEvent logging.
     CGSSetDebugOptions(0x80000007);
   }
+
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+  if (nsCocoaFeatures::OnMavericksOrLater() &&
+      Preferences::GetBool("security.sandbox.mac.track.violations", false)) {
+    nsSandboxViolationSink::Start();
+  }
+#endif
 
   [localPool release];
 
@@ -673,6 +683,12 @@ nsAppShell::Exit(void)
   }
 
   mTerminated = true;
+
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+  if (nsCocoaFeatures::OnMavericksOrLater()) {
+    nsSandboxViolationSink::Stop();
+  }
+#endif
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their
   // doc on the NSApplication class):  "If this method is invoked during a
