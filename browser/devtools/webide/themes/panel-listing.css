@@ -14,7 +14,7 @@ label,
 #runtime-panel-projects {
   display: block;
   float: left;
-  width: auto;
+  width: 100%;
   text-align: left;
 }
 
