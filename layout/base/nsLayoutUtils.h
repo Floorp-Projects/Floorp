@@ -2606,6 +2606,17 @@ public:
   }
 
   /**
+   * Calculate a basic FrameMetrics with enough fields set to perform some
+   * layout calculations. The fields set are dev-to-css ratio, pres shell
+   * resolution, cumulative resolution, zoom, composition size, root
+   * composition size, scroll offset and scrollable rect.
+   *
+   * By contrast, ComputeFrameMetrics() computes all the fields, but requires
+   * extra inputs and can only be called during frame layer building.
+   */
+  static FrameMetrics CalculateBasicFrameMetrics(nsIScrollableFrame* aScrollFrame);
+
+  /**
    * Calculate a default set of displayport margins for the given scrollframe
    * and set them on the scrollframe's content element. The margins are set with
    * the default priority, which may clobber previously set margins. The repaint
