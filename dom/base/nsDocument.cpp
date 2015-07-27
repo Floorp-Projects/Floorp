@@ -336,86 +336,55 @@ const nsIID nsIStyleRule::COMTypeInfo<css::Rule, void>::kIID = NS_ISTYLE_RULE_II
 namespace mozilla {
 namespace dom {
 
-static PLDHashOperator
-CustomDefinitionsTraverse(CustomElementHashKey* aKey,
-                          CustomElementDefinition* aDefinition,
-                          void* aArg)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-
-  nsAutoPtr<LifecycleCallbacks>& callbacks = aDefinition->mCallbacks;
-
-  if (callbacks->mAttributeChangedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mAttributeChangedCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mAttributeChangedCallback.Value());
-  }
-
-  if (callbacks->mCreatedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mCreatedCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mCreatedCallback.Value());
-  }
-
-  if (callbacks->mAttachedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mAttachedCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mAttachedCallback.Value());
-  }
-
-  if (callbacks->mDetachedCallback.WasPassed()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mDetachedCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mDetachedCallback.Value());
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-CandidatesTraverse(CustomElementHashKey* aKey,
-                   nsTArray<nsRefPtr<Element>>* aData,
-                   void* aArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  for (size_t i = 0; i < aData->Length(); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mCandidatesMap->Element");
-    cb->NoteXPCOMChild(aData->ElementAt(i));
-  }
-  return PL_DHASH_NEXT;
-}
-
-struct CustomDefinitionTraceArgs
-{
-  const TraceCallbacks& callbacks;
-  void* closure;
-};
-
-static PLDHashOperator
-CustomDefinitionTrace(CustomElementHashKey *aKey,
-                      CustomElementDefinition *aData,
-                      void *aArg)
-{
-  CustomDefinitionTraceArgs* traceArgs = static_cast<CustomDefinitionTraceArgs*>(aArg);
-  MOZ_ASSERT(aData, "Definition must not be null");
-  traceArgs->callbacks.Trace(&aData->mPrototype, "mCustomDefinitions prototype",
-                             traceArgs->closure);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(Registry)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Registry)
-  CustomDefinitionTraceArgs customDefinitionArgs = { aCallbacks, aClosure };
-  tmp->mCustomDefinitions.EnumerateRead(CustomDefinitionTrace,
-                                        &customDefinitionArgs);
+  for (auto iter = tmp->mCustomDefinitions.ConstIter(); !iter.Done();
+       iter.Next()) {
+    aCallbacks.Trace(&iter.UserData()->mPrototype,
+                     "mCustomDefinitions prototype",
+                     aClosure);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Registry)
-  tmp->mCustomDefinitions.EnumerateRead(CustomDefinitionsTraverse, &cb);
-  tmp->mCandidatesMap.EnumerateRead(CandidatesTraverse, &cb);
+  for (auto iter = tmp->mCustomDefinitions.ConstIter(); !iter.Done();
+       iter.Next()) {
+    CustomElementDefinition* definition = iter.UserData();
+    auto callbacks = definition->mCallbacks;
+
+    if (callbacks->mAttributeChangedCallback.WasPassed()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+        "mCustomDefinitions->mCallbacks->mAttributeChangedCallback");
+      cb.NoteXPCOMChild(callbacks->mAttributeChangedCallback.Value());
+    }
+
+    if (callbacks->mCreatedCallback.WasPassed()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+        "mCustomDefinitions->mCallbacks->mCreatedCallback");
+      cb.NoteXPCOMChild(callbacks->mCreatedCallback.Value());
+    }
+
+    if (callbacks->mAttachedCallback.WasPassed()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+        "mCustomDefinitions->mCallbacks->mAttachedCallback");
+      cb.NoteXPCOMChild(callbacks->mAttachedCallback.Value());
+    }
+
+    if (callbacks->mDetachedCallback.WasPassed()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+        "mCustomDefinitions->mCallbacks->mDetachedCallback");
+      cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
+    }
+  }
+
+  for (auto iter = tmp->mCandidatesMap.ConstIter(); !iter.Done(); iter.Next()) {
+    auto data = iter.UserData();
+    for (size_t i = 0; i < data->Length(); ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCandidatesMap->Element");
+      cb.NoteXPCOMChild(data->ElementAt(i));
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -942,99 +911,60 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   return nullptr;
 }
 
-struct
-nsExternalResourceEnumArgs
-{
-  nsIDocument::nsSubDocEnumFunc callback;
-  void *data;
-};
-
-static PLDHashOperator
-ExternalResourceEnumerator(nsIURI* aKey,
-                           nsExternalResourceMap::ExternalResource* aData,
-                           void* aClosure)
-{
-  nsExternalResourceEnumArgs* args =
-    static_cast<nsExternalResourceEnumArgs*>(aClosure);
-  bool next =
-    aData->mDocument ? args->callback(aData->mDocument, args->data) : true;
-  return next ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
 void
 nsExternalResourceMap::EnumerateResources(nsIDocument::nsSubDocEnumFunc aCallback,
                                           void* aData)
 {
-  nsExternalResourceEnumArgs args = { aCallback, aData };
-  mMap.EnumerateRead(ExternalResourceEnumerator, &args);
-}
-
-static PLDHashOperator
-ExternalResourceTraverser(nsIURI* aKey,
-                          nsExternalResourceMap::ExternalResource* aData,
-                          void* aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mDocument");
-  cb->NoteXPCOMChild(aData->mDocument);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mViewer");
-  cb->NoteXPCOMChild(aData->mViewer);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mLoadGroup");
-  cb->NoteXPCOMChild(aData->mLoadGroup);
-
-  return PL_DHASH_NEXT;
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    auto data = iter.UserData();
+    if (data->mDocument && !aCallback(data->mDocument, aData)) {
+      break;
+    }
+  }
 }
 
 void
-nsExternalResourceMap::Traverse(nsCycleCollectionTraversalCallback* aCallback) const
+nsExternalResourceMap::Traverse(nsCycleCollectionTraversalCallback* cb) const
 {
   // mPendingLoads will get cleared out as the requests complete, so
   // no need to worry about those here.
-  mMap.EnumerateRead(ExternalResourceTraverser, aCallback);
-}
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    auto data = iter.UserData();
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mDocument");
+    cb->NoteXPCOMChild(data->mDocument);
 
-static PLDHashOperator
-ExternalResourceHider(nsIURI* aKey,
-                      nsExternalResourceMap::ExternalResource* aData,
-                      void* aClosure)
-{
-  if (aData->mViewer) {
-    aData->mViewer->Hide();
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mViewer");
+    cb->NoteXPCOMChild(data->mViewer);
+
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mLoadGroup");
+    cb->NoteXPCOMChild(data->mLoadGroup);
   }
-  return PL_DHASH_NEXT;
 }
 
 void
 nsExternalResourceMap::HideViewers()
 {
-  mMap.EnumerateRead(ExternalResourceHider, nullptr);
-}
-
-static PLDHashOperator
-ExternalResourceShower(nsIURI* aKey,
-                       nsExternalResourceMap::ExternalResource* aData,
-                       void* aClosure)
-{
-  if (aData->mViewer) {
-    aData->mViewer->Show();
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    if (auto viewer = iter.UserData()->mViewer) {
+      viewer->Hide();
+    }
   }
-  return PL_DHASH_NEXT;
 }
 
 void
 nsExternalResourceMap::ShowViewers()
 {
-  mMap.EnumerateRead(ExternalResourceShower, nullptr);
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    if (auto viewer = iter.UserData()->mViewer) {
+      viewer->Show();
+    }
+  }
 }
 
 void
@@ -1603,15 +1533,6 @@ nsDocument::nsDocument(const char* aContentType)
   }
 }
 
-static PLDHashOperator
-ClearAllBoxObjects(nsIContent* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
-{
-  if (aBoxObject) {
-    aBoxObject->Clear();
-  }
-  return PL_DHASH_NEXT;
-}
-
 nsIDocument::~nsIDocument()
 {
   MOZ_ASSERT(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
@@ -1752,10 +1673,7 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
 
-  if (mBoxObjectTable) {
-    mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-    delete mBoxObjectTable;
-  }
+  MaybeClearBoxObjectTable();
 
   mPendingTitleChangeEvent.Revoke();
 
@@ -1866,18 +1784,6 @@ RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-BoxObjectTraverser(nsIContent* key, nsPIBoxObject* boxObject, void* userArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mBoxObjectTable entry");
-  cb->NoteXPCOMChild(boxObject);
-
-  return PL_DHASH_NEXT;
-}
-
 static const char* kNSURIs[] = {
   "([none])",
   "(xmlns)",
@@ -1959,7 +1865,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   // The boxobject for an element will only exist as long as it's in the
   // document, so we'll traverse the table here instead of from the element.
   if (tmp->mBoxObjectTable) {
-    tmp->mBoxObjectTable->EnumerateRead(BoxObjectTraverser, &cb);
+    for (auto iter = tmp->mBoxObjectTable->ConstIter(); !iter.Done();
+         iter.Next()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mBoxObjectTable entry");
+      cb.NoteXPCOMChild(iter.UserData());
+    }
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
@@ -2078,12 +1988,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadingImages)
 
-
-  if (tmp->mBoxObjectTable) {
-   tmp->mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-   delete tmp->mBoxObjectTable;
-   tmp->mBoxObjectTable = nullptr;
- }
+  tmp->MaybeClearBoxObjectTable();
 
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();
@@ -3852,6 +3757,23 @@ nsDocument::MaybeRescheduleAnimationFrameNotifications()
 }
 
 void
+nsDocument::MaybeClearBoxObjectTable()
+{
+  if (!mBoxObjectTable) {
+    return;
+  }
+
+  for (auto iter = mBoxObjectTable->ConstIter(); !iter.Done(); iter.Next()) {
+    if (auto boxObject = iter.UserData()) {
+      boxObject->Clear();
+    }
+  }
+
+  delete mBoxObjectTable;
+  mBoxObjectTable = nullptr;
+}
+
+void
 nsIDocument::TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks)
 {
   aCallbacks.AppendElements(mFrameRequestCallbacks);
@@ -3899,14 +3821,6 @@ nsIDocument::ShouldThrottleFrameRequests()
   return false;
 }
 
-PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
-                                         uint32_t aData,
-                                         void* userArg)
-{
-  aKey->RequestDiscard();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsDocument::DeleteShell()
 {
@@ -3921,7 +3835,9 @@ nsDocument::DeleteShell()
   // When our shell goes away, request that all our images be immediately
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
-  mImageTracker.EnumerateRead(RequestDiscardEnumerator, nullptr);
+  for (auto iter = mImageTracker.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Key()->RequestDiscard();
+  }
 
   // Now that we no longer have a shell, we need to forget about any FontFace
   // objects for @font-face rules that came from the style set.
@@ -10629,24 +10545,6 @@ nsDocument::NotifyMediaFeatureValuesChanged()
   }
 }
 
-PLDHashOperator LockEnumerator(imgIRequest* aKey,
-                               uint32_t aData,
-                               void*    userArg)
-{
-  aKey->LockImage();
-  aKey->RequestDecode();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
-                                 uint32_t aData,
-                                 void*    userArg)
-{
-  aKey->UnlockImage();
-  return PL_DHASH_NEXT;
-}
-
-
 nsresult
 nsDocument::SetImageLockingState(bool aLocked)
 {
@@ -10660,30 +10558,20 @@ nsDocument::SetImageLockingState(bool aLocked)
     return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  mImageTracker.EnumerateRead(aLocked ? LockEnumerator
-                                      : UnlockEnumerator,
-                              nullptr);
+  for (auto iter = mImageTracker.ConstIter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
+    if (aLocked) {
+      image->LockImage();
+      image->RequestDecode();
+    } else {
+      image->UnlockImage();
+    }
+  }
 
   // Update state.
   mLockingImages = aLocked;
 
   return NS_OK;
-}
-
-PLDHashOperator IncrementAnimationEnumerator(imgIRequest* aKey,
-                                             uint32_t aData,
-                                             void*    userArg)
-{
-  aKey->IncrementAnimationConsumers();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator DecrementAnimationEnumerator(imgIRequest* aKey,
-                                             uint32_t aData,
-                                             void*    userArg)
-{
-  aKey->DecrementAnimationConsumers();
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -10694,9 +10582,14 @@ nsDocument::SetImagesNeedAnimating(bool aAnimating)
     return;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  mImageTracker.EnumerateRead(aAnimating ? IncrementAnimationEnumerator
-                                         : DecrementAnimationEnumerator,
-                              nullptr);
+  for (auto iter = mImageTracker.ConstIter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
+    if (aAnimating) {
+      image->IncrementAnimationConsumers();
+    } else {
+      image->DecrementAnimationConsumers();
+    }
+  }
 
   // Update state.
   mAnimatingImages = aAnimating;
