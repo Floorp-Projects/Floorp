@@ -13,6 +13,7 @@ const NODES = [
   {selector: "#i21", result: "i2 i21 i211 i2111"},
   {selector: "#i22211", result: "i2 i22 i222 i2221 i22211"},
   {selector: "#i22", result: "i2 i22 i222 i2221 i22211"},
+  {selector: "#i3", result: "i3 i31"},
 ];
 
 add_task(function*() {
