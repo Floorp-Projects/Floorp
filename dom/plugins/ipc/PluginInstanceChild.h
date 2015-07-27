@@ -80,6 +80,8 @@ protected:
                                                            NPError* aResult) override;
     virtual bool
     AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) override;
+    virtual bool
+    AnswerNPP_SetValue_NPNVmuteAudioBool(const bool& value, NPError* result) override;
 
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) override;

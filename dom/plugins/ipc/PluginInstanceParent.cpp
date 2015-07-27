@@ -1151,11 +1151,18 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 NPError
 PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
 {
+    NPError result;
     switch (variable) {
     case NPNVprivateModeBool:
-        NPError result;
         if (!CallNPP_SetValue_NPNVprivateModeBool(*static_cast<NPBool*>(value),
                                                   &result))
+            return NPERR_GENERIC_ERROR;
+
+        return result;
+
+    case NPNVmuteAudioBool:
+        if (!CallNPP_SetValue_NPNVmuteAudioBool(*static_cast<NPBool*>(value),
+                                                &result))
             return NPERR_GENERIC_ERROR;
 
         return result;
