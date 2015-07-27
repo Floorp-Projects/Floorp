@@ -9,7 +9,7 @@
 
 interface Principal;
 
-[Exposed=(Window,Worker), Func="mozilla::dom::PushManager::Enabled",
+[Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled",
  ChromeConstructor(DOMString pushEndpoint, DOMString scope)]
 interface PushSubscription
 {
