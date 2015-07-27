@@ -130,7 +130,7 @@ nsPluginArray::Refresh(bool aReloadDocuments)
   // that plugins did not change and was not reloaded
   if (pluginHost->ReloadPlugins() ==
       NS_ERROR_PLUGINS_PLUGINSNOTCHANGED) {
-    nsTArray<nsRefPtr<nsPluginTag> > newPluginTags;
+    nsTArray<nsCOMPtr<nsIInternalPluginTag> > newPluginTags;
     pluginHost->GetPlugins(newPluginTags);
 
     // Check if the number of plugins we know about are different from
@@ -279,7 +279,7 @@ operator<(const nsRefPtr<nsPluginElement>& lhs,
           const nsRefPtr<nsPluginElement>& rhs)
 {
   // Sort plugins alphabetically by name.
-  return lhs->PluginTag()->mName < rhs->PluginTag()->mName;
+  return lhs->PluginTag()->Name() < rhs->PluginTag()->Name();
 }
 
 void
@@ -296,14 +296,13 @@ nsPluginArray::EnsurePlugins()
     return;
   }
 
-  nsTArray<nsRefPtr<nsPluginTag> > pluginTags;
+  nsTArray<nsCOMPtr<nsIInternalPluginTag> > pluginTags;
   pluginHost->GetPlugins(pluginTags);
 
   // need to wrap each of these with a nsPluginElement, which is
   // scriptable.
   for (uint32_t i = 0; i < pluginTags.Length(); ++i) {
-    nsPluginTag* pluginTag = pluginTags[i];
-    mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTag));
+    mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
   }
 
   // Alphabetize the enumeration order of non-hidden plugins to reduce
@@ -323,7 +322,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginElement, mWindow, mMimeTypes)
 
 nsPluginElement::nsPluginElement(nsPIDOMWindow* aWindow,
-                                 nsPluginTag* aPluginTag)
+                                 nsIInternalPluginTag* aPluginTag)
   : mWindow(aWindow),
     mPluginTag(aPluginTag)
 {
@@ -349,25 +348,25 @@ nsPluginElement::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 nsPluginElement::GetDescription(nsString& retval) const
 {
-  CopyUTF8toUTF16(mPluginTag->mDescription, retval);
+  CopyUTF8toUTF16(mPluginTag->Description(), retval);
 }
 
 void
 nsPluginElement::GetFilename(nsString& retval) const
 {
-  CopyUTF8toUTF16(mPluginTag->mFileName, retval);
+  CopyUTF8toUTF16(mPluginTag->FileName(), retval);
 }
 
 void
 nsPluginElement::GetVersion(nsString& retval) const
 {
-  CopyUTF8toUTF16(mPluginTag->mVersion, retval);
+  CopyUTF8toUTF16(mPluginTag->Version(), retval);
 }
 
 void
 nsPluginElement::GetName(nsString& retval) const
 {
-  CopyUTF8toUTF16(mPluginTag->mName, retval);
+  CopyUTF8toUTF16(mPluginTag->Name(), retval);
 }
 
 nsMimeType*
@@ -452,8 +451,18 @@ nsPluginElement::EnsurePluginMimeTypes()
     return;
   }
 
-  for (uint32_t i = 0; i < mPluginTag->mMimeTypes.Length(); ++i) {
-    NS_ConvertUTF8toUTF16 type(mPluginTag->mMimeTypes[i]);
-    mMimeTypes.AppendElement(new nsMimeType(mWindow, this, i, type));
+  if (mPluginTag->MimeTypes().Length() != mPluginTag->MimeDescriptions().Length() ||
+      mPluginTag->MimeTypes().Length() != mPluginTag->Extensions().Length()) {
+    MOZ_ASSERT(false, "mime type arrays expected to be the same length");
+    return;
+  }
+
+  for (uint32_t i = 0; i < mPluginTag->MimeTypes().Length(); ++i) {
+    NS_ConvertUTF8toUTF16 type(mPluginTag->MimeTypes()[i]);
+    NS_ConvertUTF8toUTF16 description(mPluginTag->MimeDescriptions()[i]);
+    NS_ConvertUTF8toUTF16 extension(mPluginTag->Extensions()[i]);
+
+    mMimeTypes.AppendElement(new nsMimeType(mWindow, this, type, description,
+                                            extension));
   }
 }

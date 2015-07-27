@@ -47,8 +47,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BroadcastChannel,
                                            DOMEventTargetHelper)
 
-  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
-
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

@@ -85,18 +85,7 @@ function MixedContentTestCase(scenario, description, sanityChecker) {
   var mixed_content_test = async_test(description);
 
   function runTest() {
-    var testCompleted = false;
-
-    // Due to missing implementations, tests time out, so we fail them early.
-    // TODO(kristijanburnik): Once WPT rolled in:
-    //   https://github.com/w3c/testharness.js/pull/127
-    // Refactor to make use of step_timeout.
-    setTimeout(function() {
-      mixed_content_test.step(function() {
-        assert_true(testCompleted, "Expected test to complete.");
-        mixed_content_test.done();
-      })
-    }, 1000);
+    sanityChecker.setFailTimeout(mixed_content_test);
 
     var key = guid();
     var value = guid();
@@ -147,7 +136,6 @@ function MixedContentTestCase(scenario, description, sanityChecker) {
                   "'.");
          }, "Check if request was sent.");
          mixed_content_test.done();
-         testCompleted = true;
       });
 
   }  // runTest

@@ -167,6 +167,11 @@ CompositorOGL::CleanupResources()
   if (!mGLContext)
     return;
 
+#ifdef MOZ_WIDGET_GONK
+  mWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
+                         reinterpret_cast<uintptr_t>(nullptr));
+#endif
+
   nsRefPtr<GLContext> ctx = mGLContext->GetSharedContext();
   if (!ctx) {
     ctx = mGLContext;

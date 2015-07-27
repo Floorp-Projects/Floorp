@@ -1065,14 +1065,14 @@ PuppetWidget::GetNativeData(uint32_t aDataType)
     }
     return (void*)nativeData;
   }
-  case NS_NATIVE_WINDOW:
+  case NS_NATIVE_WIDGET:
   case NS_NATIVE_DISPLAY:
+    // These types are ignored (see bug 1183828).
+    break;
+  case NS_NATIVE_WINDOW:
   case NS_NATIVE_PLUGIN_PORT:
   case NS_NATIVE_GRAPHIC:
   case NS_NATIVE_SHELLWIDGET:
-  case NS_NATIVE_WIDGET:
-    NS_WARNING("nsWindow::GetNativeData not implemented for this type");
-    break;
   default:
     NS_WARNING("nsWindow::GetNativeData called with bad value");
     break;

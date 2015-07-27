@@ -11,5 +11,4 @@ toolkit.jar:
         content/global/BrowserElementPanning.js (../browser-element/BrowserElementPanning.js)
 *       content/global/BrowserElementPanningAPZDisabled.js (../browser-element/BrowserElementPanningAPZDisabled.js)
         content/global/manifestMessages.js (manifestMessages.js)
-        content/global/PushServiceChildPreload.js (../push/PushServiceChildPreload.js)
         content/global/preload.js (preload.js)

@@ -31,7 +31,7 @@
 #endif
 #include "mozilla/EventForwards.h"
 
-#include "nsGtkIMModule.h"
+#include "IMContextWrapper.h"
 
 #undef LOG
 #ifdef MOZ_LOGGING
@@ -165,6 +165,8 @@ public:
     // utility method, -1 if no change should be made, otherwise returns a
     // value that can be passed to gdk_window_set_decorations
     gint               ConvertBorderStyles(nsBorderStyle aStyle);
+
+    GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
 
     // event callbacks
 #if (MOZ_WIDGET_GTK == 2)
@@ -478,7 +480,7 @@ private:
     virtual int32_t RoundsWidgetCoordinatesTo() override;
 
     /**
-     * |mIMModule| takes all IME related stuff.
+     * |mIMContext| takes all IME related stuff.
      *
      * This is owned by the top-level nsWindow or the topmost child
      * nsWindow embedded in a non-Gecko widget.
@@ -490,7 +492,7 @@ private:
      * level window is released, the children still have a valid pointer,
      * however, IME doesn't work at that time.
      */
-    nsRefPtr<nsGtkIMModule> mIMModule;
+    nsRefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     // HiDPI scale conversion
     gint GdkScaleFactor();
@@ -499,7 +501,6 @@ private:
     gint DevicePixelsToGdkCoordRoundUp(int pixels);
     gint DevicePixelsToGdkCoordRoundDown(int pixels);
     GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
-    GdkRectangle DevicePixelsToGdkRectRoundOut(nsIntRect rect);
     GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
 
     // From GDK

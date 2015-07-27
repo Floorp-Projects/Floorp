@@ -355,10 +355,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (accWrap) {
-    Accessible* acc = accWrap->GetChildAt(i);
-    return acc ? GetNativeFromGeckoAccessible(acc) : nil;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    Accessible* child = accWrap->GetChildAt(i);
+    return child ? GetNativeFromGeckoAccessible(child) : nil;
+  } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    ProxyAccessible* child = proxy->ChildAt(i);
+    return child ? GetNativeFromProxy(child) : nil;
   }
 
   return nil;
@@ -849,11 +851,13 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  nsIntRect rect;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    rect = accWrap->Bounds();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    rect = proxy->Bounds();
+  else
     return nil;
-
-  nsIntRect rect = accWrap->Bounds();
 
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
@@ -869,11 +873,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = [self getGeckoAccessible];
-  if (!accWrap)
+  nsIntRect rect;
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
+    rect = accWrap->Bounds();
+  else if (ProxyAccessible* proxy = [self getProxyAccessible])
+    rect = proxy->Bounds();
+  else
     return nil;
 
-  nsIntRect rect = accWrap->Bounds();
   CGFloat scaleFactor =
     nsCocoaUtils::GetBackingScaleFactor([[NSScreen screens] objectAtIndex:0]);
   return [NSValue valueWithSize:NSMakeSize(static_cast<CGFloat>(rect.width) / scaleFactor,

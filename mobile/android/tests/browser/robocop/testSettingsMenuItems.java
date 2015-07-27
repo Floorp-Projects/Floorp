@@ -233,6 +233,12 @@ public class testSettingsMenuItems extends PixelTest {
             String[] voiceInputUi = { mStringHelper.VOICE_INPUT_TITLE_LABEL, mStringHelper.VOICE_INPUT_SUMMARY_LABEL };
             settingsMap.get(PATH_DISPLAY).add(voiceInputUi);
         }
+
+        // QR Code input
+        if (InputOptionsUtils.supportsQrCodeReader(this.getActivity().getApplicationContext())) {
+            String[] qrCodeInputUi = { mStringHelper.QRCODE_INPUT_TITLE_LABEL, mStringHelper.QRCODE_INPUT_SUMMARY_LABEL };
+            settingsMap.get(PATH_DISPLAY).add(qrCodeInputUi);
+        }
     }
 
     public void checkMenuHierarchy(Map<String[], List<String[]>> settingsMap) {
