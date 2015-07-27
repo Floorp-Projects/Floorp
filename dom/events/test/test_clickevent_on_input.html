@@ -52,8 +52,7 @@ function isEnabledMiddleClickPaste()
 function isEnabledTouchCaret()
 {
   try {
-    return SpecialPowers.getBoolPref("touchcaret.enabled") ||
-           SpecialPowers.getBoolPref("layout.accessiblecaret.enabled");
+    return SpecialPowers.getBoolPref("touchcaret.enabled");
   } catch (e) {
     return false;
   }
