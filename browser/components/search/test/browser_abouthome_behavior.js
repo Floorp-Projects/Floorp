@@ -90,7 +90,7 @@ function test() {
     },
     {
       name: "Search with Amazon.com from about:home",
-      searchURL: replaceUrl("http://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"),
+      searchURL: replaceUrl("https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"),
       run: function () {
         verify_about_home_search("Amazon.com");
       }
