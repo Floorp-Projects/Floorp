@@ -853,7 +853,6 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, false);
-    NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 #endif
 
     CxxStackFrame f(*this, OUT_MESSAGE, msg);
@@ -995,7 +994,6 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
-    NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 #endif
 
     // This must come before MonitorAutoLock, as its destructor acquires the
@@ -1033,12 +1031,6 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
             ReportConnectionError("MessageChannel::Call");
             return false;
         }
-
-#ifdef OS_WIN
-        /* We should pump messages at this point to ensure that the IPC peer
-           does not become deadlocked on a pending inter-thread SendMessage() */
-        neuteredRgn.PumpOnce();
-#endif
 
         // Now might be the time to process a message deferred because of race
         // resolution.
@@ -1156,7 +1148,6 @@ MessageChannel::WaitForIncomingMessage()
 {
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
-    NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 #endif
 
     { // Scope for lock
