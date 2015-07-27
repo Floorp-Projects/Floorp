@@ -1100,14 +1100,11 @@ pref("dom.wakelock.enabled", true);
 // Enable webapps add-ons
 pref("dom.apps.customization.enabled", true);
 
-// Original caret implementation on collapsed selection.
-pref("touchcaret.enabled", false);
+// Enable touch caret by default
+pref("touchcaret.enabled", true);
 
-// Original caret implementation on non-collapsed selection.
-pref("selectioncaret.enabled", false);
-
-// New implementation to unify touch-caret and selection-carets.
-pref("layout.accessiblecaret.enabled", true);
+// Enable selection caret by default
+pref("selectioncaret.enabled", true);
 
 // Enable sync and mozId with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);
