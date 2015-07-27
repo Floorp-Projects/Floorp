@@ -333,6 +333,12 @@ browser.jar:
         skin/classic/browser/tabbrowser/tab-background-middle@2x.png (tabbrowser/tab-background-middle@2x.png)
         skin/classic/browser/tabbrowser/tab-background-end.png       (tabbrowser/tab-background-end.png)
         skin/classic/browser/tabbrowser/tab-background-end@2x.png    (tabbrowser/tab-background-end@2x.png)
+        skin/classic/browser/tabbrowser/tab-background-start-preWin10.png     (tabbrowser/tab-background-start-preWin10.png)
+        skin/classic/browser/tabbrowser/tab-background-start-preWin10@2x.png  (tabbrowser/tab-background-start-preWin10@2x.png)
+        skin/classic/browser/tabbrowser/tab-background-middle-preWin10.png    (tabbrowser/tab-background-middle-preWin10.png)
+        skin/classic/browser/tabbrowser/tab-background-middle-preWin10@2x.png (tabbrowser/tab-background-middle-preWin10@2x.png)
+        skin/classic/browser/tabbrowser/tab-background-end-preWin10.png       (tabbrowser/tab-background-end-preWin10.png)
+        skin/classic/browser/tabbrowser/tab-background-end-preWin10@2x.png    (tabbrowser/tab-background-end-preWin10@2x.png)
         skin/classic/browser/tabbrowser/tab-overflow-indicator.png   (../shared/tabbrowser/tab-overflow-indicator.png)
         skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
 
@@ -684,3 +690,9 @@ browser.jar:
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-preWin10.png      os=WINNT osversion<=6.3
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-preWin10@2x.png   os=WINNT osversion<=6.3
 
+% override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3
+% override chrome://browser/skin/tabbrowser/tab-background-start@2x.png  chrome://browser/skin/tabbrowser/tab-background-start-preWin10@2x.png  os=WINNT osversion<=6.3
+% override chrome://browser/skin/tabbrowser/tab-background-middle.png    chrome://browser/skin/tabbrowser/tab-background-middle-preWin10.png    os=WINNT osversion<=6.3
+% override chrome://browser/skin/tabbrowser/tab-background-middle@2x.png chrome://browser/skin/tabbrowser/tab-background-middle-preWin10@2x.png os=WINNT osversion<=6.3
+% override chrome://browser/skin/tabbrowser/tab-background-end.png       chrome://browser/skin/tabbrowser/tab-background-end-preWin10.png       os=WINNT osversion<=6.3
+% override chrome://browser/skin/tabbrowser/tab-background-end@2x.png    chrome://browser/skin/tabbrowser/tab-background-end-preWin10@2x.png    os=WINNT osversion<=6.3
