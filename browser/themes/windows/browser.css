@@ -2043,6 +2043,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   .tab-background-start[visuallyselected=true]:-moz-locale-dir(rtl)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
   }
+
+  .tab-throbber[busy] {
+    list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
+  }
+
+  .tab-throbber[progress] {
+    list-style-image: url("chrome://browser/skin/tabbrowser/loading@2x.png");
+  }
 }
 
 /* Remove border between tab strip and navigation toolbar on Windows 10+ */
