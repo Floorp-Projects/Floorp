@@ -49,6 +49,8 @@ add_task(function* test_execute() {
   let glue = Cc["@mozilla.org/browser/browserglue;1"].
              getService(Ci.nsIObserver);
   glue.observe(null, "initial-migration-will-import-default-bookmarks", null);
+  glue.observe(null, "test-initialize-sanitizer", null);
+
 
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cache", true);
   Services.prefs.setBoolPref("privacy.clearOnShutdown.cookies", true);
