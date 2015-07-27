@@ -11,8 +11,8 @@ describe("loop.store.ActiveRoomStore", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
-  var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
-  var fakeMultiplexGum;
+  var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver, fakeMultiplexGum;
+  var standaloneMediaRestore;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -52,9 +52,10 @@ describe("loop.store.ActiveRoomStore", function () {
     };
 
     fakeMultiplexGum = {
-        reset: sandbox.spy()
+      reset: sandbox.spy()
     };
 
+    standaloneMediaRestore = loop.standaloneMedia;
     loop.standaloneMedia = {
       multiplexGum: fakeMultiplexGum
     };
@@ -67,6 +68,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
   afterEach(function() {
     sandbox.restore();
+    loop.standaloneMedia = standaloneMediaRestore;
   });
 
   describe("#constructor", function() {

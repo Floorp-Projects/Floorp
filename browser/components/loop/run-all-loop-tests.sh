@@ -7,6 +7,7 @@ if [ "$1" == "--help" ]; then
   exit 0;
 fi
 
+# Causes script to abort immediately if error code is not checked.
 set -e
 
 # Main tests
@@ -21,6 +22,16 @@ if [ -x "${LOOPDIR}/${ESLINT}" ]; then
   fi
   echo 'eslint run finished.'
 fi
+
+# Build tests coverage.
+MISSINGDEPSMSG="\nMake sure all dependencies are up to date by running
+'npm install' inside the 'browser/components/loop/test/' directory.\n"
+(
+cd ${LOOPDIR}/test
+if ! npm run-script build-coverage ; then
+  echo $MISSINGDEPSMSG && exit 1
+fi
+)
 
 ./mach xpcshell-test ${LOOPDIR}/
 ./mach marionette-test ${LOOPDIR}/manifest.ini
