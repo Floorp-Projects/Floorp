@@ -1657,9 +1657,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_MOD:
         return jsop_binary(op);
 
-      case JSOP_POW:
-        return jsop_pow();
-
       case JSOP_POS:
         return jsop_pos();
 
@@ -4598,25 +4595,6 @@ IonBuilder::jsop_binary(JSOp op, MDefinition* left, MDefinition* right)
     if (ins->isEffectful())
         return resumeAfter(ins);
     return maybeInsertResume();
-}
-
-bool
-IonBuilder::jsop_pow()
-{
-    MDefinition* exponent = current->pop();
-    MDefinition* base = current->pop();
-
-    if (inlineMathPowHelper(base, exponent, MIRType_Double) == InliningStatus_Inlined) {
-        base->setImplicitlyUsedUnchecked();
-        exponent->setImplicitlyUsedUnchecked();
-        return true;
-    }
-
-    // For now, use MIRType_Double, as a safe cover-all. See bug 1188079.
-    MPow* pow = MPow::New(alloc(), base, exponent, MIRType_Double);
-    current->add(pow);
-    current->push(pow);
-    return true;
 }
 
 bool
