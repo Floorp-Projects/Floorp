@@ -43,6 +43,8 @@ class TextureClientX11 : public TextureClient
 
   virtual gfx::DrawTarget* BorrowDrawTarget() override;
 
+  virtual void UpdateFromSurface(gfx::DataSourceSurface* aSurface) override;
+
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
   virtual bool HasInternalBuffer() const override { return false; }

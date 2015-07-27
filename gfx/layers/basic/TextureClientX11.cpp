@@ -152,3 +152,18 @@ TextureClientX11::BorrowDrawTarget()
 
   return mDrawTarget;
 }
+
+void
+TextureClientX11::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+{
+  MOZ_ASSERT(CanExposeDrawTarget());
+
+  DrawTarget* dt = BorrowDrawTarget();
+
+  if (!dt) {
+    gfxCriticalError() << "Failed to borrow drawtarget for TextureClientX11::UpdateFromSurface";
+    return;
+  }
+
+  dt->CopySurface(aSurface, IntRect(IntPoint(), aSurface->GetSize()), IntPoint());
+}
