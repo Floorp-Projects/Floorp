@@ -697,6 +697,12 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSString* asyncCauseForNewActivations;
 
+    /*
+     * True if the async call was explicitly requested, e.g. via
+     * callFunctionWithAsyncStack.
+     */
+    bool asyncCallIsExplicit;
+
     /* If non-null, report JavaScript entry points to this monitor. */
     JS::dbg::AutoEntryMonitor* entryMonitor;
 
@@ -1484,6 +1490,29 @@ struct JSRuntime : public JS::shadow::Runtime,
        ------------------------------------------ */
     struct Stopwatch {
         /**
+         * A map used to collapse compartments belonging to the same
+         * add-on (respectively to the same webpage, to the platform)
+         * into a single group.
+         *
+         * Keys: for system compartments, a `JSAddonId*` (which may be
+         * `nullptr`), and for webpages, a `JSPrincipals*` (which may
+         * not). Note that compartments may start as non-system
+         * compartments and become compartments later during their
+         * lifetime, which requires an invalidation.
+         *
+         * This map is meant to be accessed only by instances of
+         * PerformanceGroupHolder, which handle both reference-counting
+         * of the values and invalidation of the key/value pairs.
+         */
+        typedef js::HashMap<void*, js::PerformanceGroup*,
+                            js::DefaultHasher<void*>,
+                            js::SystemAllocPolicy> Groups;
+
+        Groups& groups() {
+            return groups_;
+        }
+
+        /**
          * The number of times we have entered the event loop.
          * Used to reset counters whenever we enter the loop,
          * which may be caused either by having completed the
@@ -1523,6 +1552,7 @@ struct JSRuntime : public JS::shadow::Runtime,
           , currentPerfGroupCallback(nullptr)
           , isMonitoringJank_(false)
           , isMonitoringCPOW_(false)
+          , isMonitoringPerCompartment_(false)
           , idCounter_(0)
         { }
 
@@ -1564,6 +1594,21 @@ struct JSRuntime : public JS::shadow::Runtime,
             return isMonitoringJank_;
         }
 
+        bool setIsMonitoringPerCompartment(bool value) {
+            if (isMonitoringPerCompartment_ != value)
+                reset();
+
+            if (value && !groups_.initialized()) {
+                if (!groups_.init(128))
+                    return false;
+            }
+
+            isMonitoringPerCompartment_ = value;
+            return true;
+        }
+        bool isMonitoringPerCompartment() const {
+            return isMonitoringPerCompartment_;
+        }
 
         /**
          * Activate/deactivate stopwatch measurement of CPOW.
@@ -1607,25 +1652,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         MonotonicTimeStamp userTimeFix;
 
     private:
-        /**
-         * A map used to collapse compartments belonging to the same
-         * add-on (respectively to the same webpage, to the platform)
-         * into a single group.
-         *
-         * Keys: for system compartments, a `JSAddonId*` (which may be
-         * `nullptr`), and for webpages, a `JSPrincipals*` (which may
-         * not). Note that compartments may start as non-system
-         * compartments and become compartments later during their
-         * lifetime, which requires an invalidation.
-         *
-         * This map is meant to be accessed only by instances of
-         * PerformanceGroupHolder, which handle both reference-counting
-         * of the values and invalidation of the key/value pairs.
-         */
-        typedef js::HashMap<void*, js::PerformanceGroup*,
-                            js::DefaultHasher<void*>,
-                            js::SystemAllocPolicy> Groups;
-
         Groups groups_;
         friend struct js::PerformanceGroupHolder;
 
@@ -1634,6 +1660,7 @@ struct JSRuntime : public JS::shadow::Runtime,
          */
         bool isMonitoringJank_;
         bool isMonitoringCPOW_;
+        bool isMonitoringPerCompartment_;
 
         /**
          * A counter used to generate unique identifiers for groups.

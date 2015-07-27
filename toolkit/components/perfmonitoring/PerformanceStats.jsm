@@ -146,6 +146,16 @@ Probe.prototype = {
     return this._impl.subtract(a, b);
   },
 
+  importChildCompartments: function(parent, children) {
+    if (!Array.isArray(children)) {
+      throw new TypeError();
+    }
+    if (!parent || !(parent instanceof PerformanceData)) {
+      throw new TypeError();
+    }
+    return this._impl.importChildCompartments(parent, children);
+  },
+
   /**
    * The name of the probe.
    */
@@ -228,7 +238,8 @@ let Probes = {
       }
       result.longestDuration = lastNonZero(result.durations);
       return result;
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
 
   /**
@@ -258,7 +269,8 @@ let Probes = {
       return {
         totalCPOWTime: a.totalCPOWTime - b.totalCPOWTime
       };
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
 
   /**
@@ -287,7 +299,8 @@ let Probes = {
       return {
         ticks: a.ticks - b.ticks
       };
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
 
   "jank-content": new Probe("jank-content", {
@@ -311,7 +324,8 @@ let Probes = {
     },
     subtract: function(a, b) {
       return null;
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
 
   "cpow-content": new Probe("cpow-content", {
@@ -335,15 +349,22 @@ let Probes = {
     },
     subtract: function(a, b) {
       return null;
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
 
   "ticks-content": new Probe("ticks-content", {
+    _isActive: false,
     set isActive(x) {
-      // Ignore: This probe is always active.
+      this._isActive = x;
+      if (x) {
+        Process.broadcast("acquire", ["ticks"]);
+      } else {
+        Process.broadcast("release", ["ticks"]);
+      }
     },
     get isActive() {
-      return true;
+      return this._isActive;
     },
     extract: function(xpcom) {
       return {};
@@ -353,8 +374,30 @@ let Probes = {
     },
     subtract: function(a, b) {
       return null;
-    }
+    },
+    importChildCompartments: function() { /* nothing to do */ },
   }),
+
+  compartments: new Probe("compartments", {
+    set isActive(x) {
+      performanceStatsService.isMonitoringPerCompartment = x;
+    },
+    get isActive() {
+      return performanceStatsService.isMonitoringPerCompartment;
+    },
+    extract: function(xpcom) {
+      return null;
+    },
+    isEqual: function(a, b) {
+      return true;
+    },
+    subtract: function(a, b) {
+      return true;
+    },
+    importChildCompartments: function(parent, children) {
+      parent.children = children;
+    },
+  })
 };
 
 
@@ -657,16 +700,32 @@ function PerformanceDiff(current, old = null) {
 function Snapshot({xpcom, childProcesses, probes}) {
   this.componentsData = [];
 
-  // Parent process
+  // Current process
   if (xpcom) {
+    let children = new Map();
     let enumeration = xpcom.getComponentsData().enumerate();
     while (enumeration.hasMoreElements()) {
       let xpcom = enumeration.getNext().QueryInterface(Ci.nsIPerformanceStats);
-      this.componentsData.push(new PerformanceData({xpcom, probes}));
+      let stat = new PerformanceData({xpcom, probes});
+      if (!stat.parentId) {
+        this.componentsData.push(stat);
+      } else {
+        let siblings = children.get(stat.parentId);
+        if (!siblings) {
+          children.set(stat.parentId, (siblings = []));
+        }
+        siblings.push(stat);
+      }
+    }
+
+    for (let parent of this.componentsData) {
+      for (let probe of probes) {
+        probe.importChildCompartments(parent, children.get(parent.groupId) || []);
+      }
     }
   }
 
-  // Content processes
+  // Child processes
   if (childProcesses) {
     for (let {componentsData} of childProcesses) {
       // We are only interested in `componentsData` for the time being.
