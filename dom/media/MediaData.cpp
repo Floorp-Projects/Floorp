@@ -115,7 +115,7 @@ VideoData::VideoData(int64_t aOffset,
                      int64_t aTimecode,
                      IntSize aDisplay,
                      layers::ImageContainer::FrameID aFrameID)
-  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration)
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration, 1)
   , mDisplay(aDisplay)
   , mFrameID(aFrameID)
   , mSentToCompositor(false)
@@ -488,7 +488,7 @@ VideoData::Create(const VideoInfo& aInfo,
 #define RAW_DATA_DEFAULT_SIZE 4096
 
 MediaRawData::MediaRawData()
-  : MediaData(RAW_DATA)
+  : MediaData(RAW_DATA, 0)
   , mData(nullptr)
   , mSize(0)
   , mCrypto(mCryptoInternal)
@@ -499,7 +499,7 @@ MediaRawData::MediaRawData()
 }
 
 MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
-  : MediaData(RAW_DATA)
+  : MediaData(RAW_DATA, 0)
   , mData(nullptr)
   , mSize(0)
   , mCrypto(mCryptoInternal)
