@@ -8,6 +8,7 @@
 interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
+interface nsIDOMDocument;
 interface nsIPrincipal;
 interface nsIURI;
 
@@ -20,7 +21,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(36c6d419-24c2-40e8-9adb-11d0b1341770)]
+[scriptable, builtinclass, uuid(b756d344-ee2f-44d0-825e-ea4febd0af14)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -173,16 +174,12 @@ interface nsIContentSecurityPolicy : nsISerializable
 
   /**
    * Called after the CSP object is created to fill in appropriate request
-   * context and give it a reference to its owning principal for violation
-   * report generation.
-   * This will use whatever data is available, choosing earlier arguments first
-   * if multiple are available.  Either way, it will attempt to obtain the URI,
-   * referrer and the principal from whatever is available.  If the channel is
-   * available, it'll also store that for processing policy-uri directives.
+   * context. Either use
+   *  * aDocument (preferred), or if no document is available, then provide
+   *  * aPrincipal
    */
-  void setRequestContext(in nsIURI selfURI,
-                         in nsIURI referrer,
-                         in nsIChannel aChannel);
+  void setRequestContext(in nsIDOMDocument aDocument,
+                         in nsIPrincipal aPrincipal);
 
   /**
    * Verifies ancestry as permitted by the policy.
