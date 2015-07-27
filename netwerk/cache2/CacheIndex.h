@@ -743,9 +743,6 @@ private:
   // Finalizes writing process.
   void FinishWrite(bool aSucceeded);
 
-  static PLDHashOperator CopyRecordsToRWBuf(CacheIndexEntry *aEntry,
-                                            void* aClosure);
-
   // Following methods perform writing of the journal during shutdown. All these
   // methods must be called only during shutdown since they write/delete files
   // directly on the main thread instead of using CacheFileIOManager that does
@@ -815,9 +812,6 @@ private:
   void EnsureCorrectStats();
   // Finalizes reading process.
   void FinishRead(bool aSucceeded);
-
-  static PLDHashOperator ProcessJournalEntry(CacheIndexEntry *aEntry,
-                                             void* aClosure);
 
   // Following methods perform updating and building of the index.
   // Timer callback that starts update or build process.
