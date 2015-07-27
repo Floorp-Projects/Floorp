@@ -40,7 +40,6 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute DOMString              name;
   readonly attribute boolean                discoverable;
   readonly attribute boolean                discovering;
-  readonly attribute BluetoothGattServer?   gattServer;
 
   [AvailableIn=CertifiedApps]
   readonly attribute BluetoothPairingListener pairingReqs;
