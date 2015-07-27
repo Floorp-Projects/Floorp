@@ -212,13 +212,22 @@ exports.ERROR_MSG_METHOD_NOT_ALLOWED         = "METHOD_NOT_ALLOWED";
 
 // FxAccounts has the ability to "split" the credentials between a plain-text
 // JSON file in the profile dir and in the login manager.
-// These constants relate to that.
+// In order to prevent new fields accidentally ending up in the "wrong" place,
+// all fields stored are listed here.
 
 // The fields we save in the plaintext JSON.
 // See bug 1013064 comments 23-25 for why the sessionToken is "safe"
-exports.FXA_PWDMGR_PLAINTEXT_FIELDS = ["email", "verified", "authAt",
-                                       "sessionToken", "uid", "oauthTokens",
-                                       "profile"];
+exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set(
+  ["email", "verified", "authAt", "sessionToken", "uid", "oauthTokens", "profile"]);
+
+// Fields we store in secure storage if it exists.
+exports.FXA_PWDMGR_SECURE_FIELDS = new Set(
+  ["kA", "kB", "keyFetchToken", "unwrapBKey", "assertion"]);
+
+// Fields we keep in memory and don't persist anywhere.
+exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(
+  ["cert", "keyPair"]);
+
 // The pseudo-host we use in the login manager
 exports.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
 // The realm we use in the login manager.

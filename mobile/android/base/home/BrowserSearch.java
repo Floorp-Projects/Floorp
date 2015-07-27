@@ -237,6 +237,8 @@ public class BrowserSearch extends HomeFragment
         // Fetch engines if we need to.
         if (mSearchEngines.isEmpty() || !Locale.getDefault().equals(mLastLocale)) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
+        } else {
+            updateSearchEngineBar();
         }
 
         Telemetry.startUISession(TelemetryContract.Session.FRECENCY);
@@ -342,10 +344,6 @@ public class BrowserSearch extends HomeFragment
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "SearchEngines:Data");
 
-        // If the view backed by this Fragment is being recreated, we will not receive
-        // a new search engine data event so refresh the new search engine bar's data
-        // & Views with the data we have.
-        updateSearchEngineBar();
         mSearchEngineBar.setOnSearchBarClickListener(this);
     }
 

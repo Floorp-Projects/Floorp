@@ -102,7 +102,6 @@ protected:
 
   virtual ~AsyncFaviconHelperBase();
 
-  nsRefPtr<Database> mDB;
   // Strong reference since we are responsible for its existence.
   nsCOMPtr<nsIFaviconDataCallback> mCallback;
 };

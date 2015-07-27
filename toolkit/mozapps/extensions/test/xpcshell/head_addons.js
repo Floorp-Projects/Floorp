@@ -1108,9 +1108,13 @@ const AddonListener = {
 const InstallListener = {
   onNewInstall: function(install) {
     if (install.state != AddonManager.STATE_DOWNLOADED &&
+        install.state != AddonManager.STATE_DOWNLOAD_FAILED &&
         install.state != AddonManager.STATE_AVAILABLE)
       do_throw("Bad install state " + install.state);
-    do_check_eq(install.error, 0);
+    if (install.state != AddonManager.STATE_DOWNLOAD_FAILED)
+      do_check_eq(install.error, 0);
+    else
+      do_check_neq(install.error, 0);
     do_check_eq("onNewInstall", getExpectedInstall());
     return check_test_completed(arguments);
   },

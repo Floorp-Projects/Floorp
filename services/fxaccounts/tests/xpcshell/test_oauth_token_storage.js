@@ -85,7 +85,7 @@ function MockFxAccounts() {
       // we use a real accountState but mocked storage.
       let storage = new MockStorageManager();
       storage.initialize(credentials);
-      return new AccountState(this, storage);
+      return new AccountState(storage);
     },
   });
 }

@@ -34,6 +34,7 @@ const Utils = TelemetryUtils;
 const DATAREPORTING_DIR = "datareporting";
 const PINGS_ARCHIVE_DIR = "archived";
 const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
+const DELETION_PING_FILE_NAME = "pending-deletion-ping";
 
 XPCOMUtils.defineLazyGetter(this, "gDataReportingDir", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
@@ -43,6 +44,9 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
 });
 XPCOMUtils.defineLazyGetter(this, "gAbortedSessionFilePath", function() {
   return OS.Path.join(gDataReportingDir, ABORTED_SESSION_FILE_NAME);
+});
+XPCOMUtils.defineLazyGetter(this, "gDeletionPingFilePath", function() {
+  return OS.Path.join(gDataReportingDir, DELETION_PING_FILE_NAME);
 });
 
 // Maxmimum time, in milliseconds, archive pings should be retained.
@@ -260,6 +264,30 @@ this.TelemetryStorage = {
    */
   loadAbortedSessionPing: function() {
     return TelemetryStorageImpl.loadAbortedSessionPing();
+  },
+
+  /**
+   * Save the deletion ping.
+   * @param ping The deletion ping.
+   * @return {Promise} A promise resolved when the ping is saved.
+   */
+  saveDeletionPing: function(ping) {
+    return TelemetryStorageImpl.saveDeletionPing(ping);
+  },
+
+  /**
+   * Remove the deletion ping.
+   * @return {Promise} Resolved when the ping is deleted from the disk.
+   */
+  removeDeletionPing: function() {
+    return TelemetryStorageImpl.removeDeletionPing();
+  },
+
+  /**
+   * Check if the ping id identifies a deletion ping.
+   */
+  isDeletionPing: function(aPingId) {
+    return TelemetryStorageImpl.isDeletionPing(aPingId);
   },
 
   /**
@@ -482,6 +510,8 @@ let TelemetryStorageImpl = {
   _logger: null,
   // Used to serialize aborted session ping writes to disk.
   _abortedSessionSerializer: new SaveSerializer(),
+  // Used to serialize deletion ping writes to disk.
+  _deletionPingSerializer: new SaveSerializer(),
 
   // Tracks the archived pings in a Map of (id -> {timestampCreated, type}).
   // We use this to cache info on archived pings to avoid scanning the disk more than once.
@@ -521,6 +551,7 @@ let TelemetryStorageImpl = {
   shutdown: Task.async(function*() {
     this._shutdown = true;
     yield this._abortedSessionSerializer.flushTasks();
+    yield this._deletionPingSerializer.flushTasks();
     // If the tasks for archive cleaning or pending ping quota are still running, block on
     // them. They will bail out as soon as possible.
     yield this._cleanArchiveTask;
@@ -1225,6 +1256,18 @@ let TelemetryStorageImpl = {
     }
 
     yield iter.close();
+
+    // Explicitly load the deletion ping from its known path, if it's there.
+    if (yield OS.File.exists(gDeletionPingFilePath)) {
+      this._log.trace("_scanPendingPings - Adding pending deletion ping.");
+      // We can't get the ping id or the last modification date without hitting the disk.
+      // Since deletion has a special handling, we don't really need those.
+      this._pendingPings.set(Utils.generateUUID(), {
+        path: gDeletionPingFilePath,
+        lastModificationDate: Date.now(),
+      });
+    }
+
     this._scannedPendingDirectory = true;
     return this._buildPingList();
   }),
@@ -1378,6 +1421,50 @@ let TelemetryStorageImpl = {
         this._log.error("removeAbortedSessionPing - error removing ping", ex)
       }
     }.bind(this)));
+  },
+
+  /**
+   * Save the deletion ping.
+   * @param ping The deletion ping.
+   * @return {Promise} Resolved when the ping is saved.
+   */
+  saveDeletionPing: Task.async(function*(ping) {
+    this._log.trace("saveDeletionPing - ping path: " + gDeletionPingFilePath);
+    yield OS.File.makeDir(gDataReportingDir, { ignoreExisting: true });
+
+    return this._deletionPingSerializer.enqueueTask(() =>
+      this.savePingToFile(ping, gDeletionPingFilePath, true));
+  }),
+
+  /**
+   * Remove the deletion ping.
+   * @return {Promise} Resolved when the ping is deleted from the disk.
+   */
+  removeDeletionPing: Task.async(function*() {
+    return this._deletionPingSerializer.enqueueTask(Task.async(function*() {
+      try {
+        yield OS.File.remove(gDeletionPingFilePath, { ignoreAbsent: false });
+        this._log.trace("removeDeletionPing - success");
+      } catch (ex if ex.becauseNoSuchFile) {
+        this._log.trace("removeDeletionPing - no such file");
+      } catch (ex) {
+        this._log.error("removeDeletionPing - error removing ping", ex)
+      }
+    }.bind(this)));
+  }),
+
+  isDeletionPing: function(aPingId) {
+    this._log.trace("isDeletionPing - id: " + aPingId);
+    let pingInfo = this._pendingPings.get(aPingId);
+    if (!pingInfo) {
+      return false;
+    }
+
+    if (pingInfo.path != gDeletionPingFilePath) {
+      return false;
+    }
+
+    return true;
   },
 };
 

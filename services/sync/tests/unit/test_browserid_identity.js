@@ -595,7 +595,7 @@ add_task(function test_getKeysMissing() {
       }
       let storageManager = new MockFxaStorageManager();
       storageManager.initialize(identityConfig.fxaccount.user);
-      return new AccountState(this, storageManager);
+      return new AccountState(storageManager);
     },
   });
 
@@ -674,7 +674,7 @@ function* initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) {
       }
       let storageManager = new MockFxaStorageManager();
       storageManager.initialize(config.fxaccount.user);
-      return new AccountState(this, storageManager);
+      return new AccountState(storageManager);
     },
   }
   let fxa = new FxAccounts(internal);

@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(98690931-c9a5-4675-9ab4-90932ec32bf2)]
+[scriptable, uuid(4b5ea59e-af89-44f7-8c1c-2dea47a170d1)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -102,6 +102,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_HARDWARE_VIDEO_DECODING = 12;
   /* Whether Direct3D 11 is supported for ANGLE, starting in 38. */
   const long FEATURE_DIRECT3D_11_ANGLE = 13;
+  /* Whether Webrtc Hardware acceleration is supported, starting in 42. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_ENCODE = 14;
+  /* Whether Webrtc Hardware acceleration is supported, starting in 42. */
+  const long FEATURE_WEBRTC_HW_ACCELERATION_DECODE = 15;
 
   /*
    * A set of return values from GetFeatureStatus

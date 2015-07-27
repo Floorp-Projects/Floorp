@@ -218,7 +218,7 @@ let Logins = {
       if ((newUsername === origUsername) &&
           (newPassword === origPassword) &&
           (newDomain === origDomain) ) {
-        gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved"), "short");
+        gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
         this._showList();
         return;
       }
@@ -240,7 +240,7 @@ let Logins = {
       gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), "short");
       return;
     }
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved"), "short");
+    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
     this._showList();
   },
 
