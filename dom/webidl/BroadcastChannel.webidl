@@ -8,8 +8,7 @@
  */
 
 [Constructor(DOMString channel),
- Exposed=(Window,Worker),
- Func="BroadcastChannel::IsEnabled"]
+ Exposed=(Window,Worker)]
 interface BroadcastChannel : EventTarget {
   readonly attribute DOMString name;
 

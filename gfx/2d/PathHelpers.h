@@ -17,63 +17,50 @@ template <typename T>
 void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
                  float aStartAngle, float aEndAngle, bool aAntiClockwise)
 {
-  Point startPoint(aOrigin.x + cosf(aStartAngle) * aRadius.width,
-                   aOrigin.y + sinf(aStartAngle) * aRadius.height);
+  Float sweepDirection = aAntiClockwise ? -1.0f : 1.0f;
 
-  aSink->LineTo(startPoint);
+  // Calculate the total arc we're going to sweep.
+  Float arcSweepLeft = (aEndAngle - aStartAngle) * sweepDirection;
 
   // Clockwise we always sweep from the smaller to the larger angle, ccw
   // it's vice versa.
-  if (!aAntiClockwise && (aEndAngle < aStartAngle)) {
-    Float correction = Float(ceil((aStartAngle - aEndAngle) / (2.0f * M_PI)));
-    aEndAngle += float(correction * 2.0f * M_PI);
-  } else if (aAntiClockwise && (aStartAngle < aEndAngle)) {
-    Float correction = (Float)ceil((aEndAngle - aStartAngle) / (2.0f * M_PI));
-    aStartAngle += float(correction * 2.0f * M_PI);
+  if (arcSweepLeft < 0) {
+    // Rerverse sweep is modulo'd into range rather than clamped.
+    arcSweepLeft = Float(2.0f * M_PI) + fmodf(arcSweepLeft, Float(2.0f * M_PI));
+    // Recalculate the start angle to land closer to end angle.
+    aStartAngle = aEndAngle - arcSweepLeft * sweepDirection;
+  } else if (arcSweepLeft > Float(2.0f * M_PI)) {
+    // Sweeping more than 2 * pi is a full circle.
+    arcSweepLeft = Float(2.0f * M_PI);
   }
-
-  // Sweeping more than 2 * pi is a full circle.
-  if (!aAntiClockwise && (aEndAngle - aStartAngle > 2 * M_PI)) {
-    aEndAngle = float(aStartAngle + 2.0f * M_PI);
-  } else if (aAntiClockwise && (aStartAngle - aEndAngle > 2.0f * M_PI)) {
-    aEndAngle = float(aStartAngle - 2.0f * M_PI);
-  }
-
-  // Calculate the total arc we're going to sweep.
-  Float arcSweepLeft = fabs(aEndAngle - aStartAngle);
-
-  Float sweepDirection = aAntiClockwise ? -1.0f : 1.0f;
 
   Float currentStartAngle = aStartAngle;
+  Point currentStartPoint(aOrigin.x + cosf(aStartAngle) * aRadius.width,
+                          aOrigin.y + sinf(aStartAngle) * aRadius.height);
+
+  aSink->LineTo(currentStartPoint);
 
   while (arcSweepLeft > 0) {
     // We guarantee here the current point is the start point of the next
     // curve segment.
-    Float currentEndAngle;
+    Float currentEndAngle =
+      currentStartAngle + std::min(arcSweepLeft, Float(M_PI / 2.0f)) * sweepDirection;
 
-    if (arcSweepLeft > M_PI / 2.0f) {
-      currentEndAngle = Float(currentStartAngle + M_PI / 2.0f * sweepDirection);
-    } else {
-      currentEndAngle = currentStartAngle + arcSweepLeft * sweepDirection;
-    }
-
-    Point currentStartPoint(aOrigin.x + cosf(currentStartAngle) * aRadius.width,
-                            aOrigin.y + sinf(currentStartAngle) * aRadius.height);
     Point currentEndPoint(aOrigin.x + cosf(currentEndAngle) * aRadius.width,
                           aOrigin.y + sinf(currentEndAngle) * aRadius.height);
 
     // Calculate kappa constant for partial curve. The sign of angle in the
     // tangent will actually ensure this is negative for a counter clockwise
     // sweep, so changing signs later isn't needed.
-    Float kappaFactor = (4.0f / 3.0f) * tan((currentEndAngle - currentStartAngle) / 4.0f);
+    Float kappaFactor = (4.0f / 3.0f) * tanf((currentEndAngle - currentStartAngle) / 4.0f);
     Float kappaX = kappaFactor * aRadius.width;
     Float kappaY = kappaFactor * aRadius.height;
 
-    Point tangentStart(-sin(currentStartAngle), cos(currentStartAngle));
+    Point tangentStart(-sinf(currentStartAngle), cosf(currentStartAngle));
     Point cp1 = currentStartPoint;
     cp1 += Point(tangentStart.x * kappaX, tangentStart.y * kappaY);
 
-    Point revTangentEnd(sin(currentEndAngle), -cos(currentEndAngle));
+    Point revTangentEnd(sinf(currentEndAngle), -cosf(currentEndAngle));
     Point cp2 = currentEndPoint;
     cp2 += Point(revTangentEnd.x * kappaX, revTangentEnd.y * kappaY);
 
@@ -81,6 +68,7 @@ void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
 
     arcSweepLeft -= Float(M_PI / 2.0f);
     currentStartAngle = currentEndAngle;
+    currentStartPoint = currentEndPoint;
   }
 }
 

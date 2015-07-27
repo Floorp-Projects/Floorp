@@ -24,7 +24,7 @@ ac_add_options --enable-warnings-as-errors
 export MOZ_PACKAGE_JSSHELL=1
 
 # Include Firefox OS fonts.
-MOZTTDIR=$topsrcdir/moztt
+MOZTTDIR=$topsrcdir/moz-tt
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"

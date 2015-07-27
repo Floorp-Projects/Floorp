@@ -89,8 +89,8 @@ public:
     virtual const hwc_rect_t GetHwcRect() const = 0;
 
     // Set EGL info (only ICS need this info)
-    virtual void SetEGLInfo(hwc_display_t aDpy,
-                            hwc_surface_t aSur) = 0;
+    virtual void SetEGLInfo(hwc_display_t aEGLDisplay,
+                            hwc_surface_t aEGLSurface) = 0;
 
     // HwcDevice query properties
     virtual bool Query(QueryType aType) = 0;

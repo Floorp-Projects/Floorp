@@ -99,7 +99,8 @@ public:
   CDMProxy* GetCDMProxy() { return mProxy; }
 
   // Makes a new promise, or nullptr on failure.
-  already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv);
+  already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv,
+                                                const nsACString& aName);
   // Stores promise in mPromises, returning an ID that can be used to retrieve
   // it later. The ID is passed to the CDM, so that it can signal specific
   // promises to be resolved.

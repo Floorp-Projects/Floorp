@@ -5,7 +5,12 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 
 <style id="sheet"></style>
-<div id="test" class="test"></div>
+
+<!-- specify size for <body> to avoid unconstrained-isize warnings
+     when writing-mode of the test <div> is vertical-* -->
+<body style="width:100px; height: 100px;">
+  <div id="test" class="test"></div>
+</body>
 
 <script>
 var gSheet = document.getElementById("sheet");

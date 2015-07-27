@@ -444,7 +444,7 @@ WifiGeoPositionProvider.prototype = {
               break;
             // CDMA cases to be handled in bug 1010282
           };
-          result.push({ radio: radioTechFamily,
+          result.push({ radioType: radioTechFamily,
                       mobileCountryCode: voice.network.mcc,
                       mobileNetworkCode: voice.network.mnc,
                       locationAreaCode: cell.gsmLocationAreaCode,

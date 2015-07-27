@@ -6,12 +6,15 @@
 
 #include "DetailedPromise.h"
 #include "mozilla/dom/DOMException.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace dom {
 
-DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal)
+DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
+                                 const nsACString& aName)
   : Promise(aGlobal)
+  , mName(aName)
   , mResponded(false)
 {
 }
@@ -21,25 +24,16 @@ DetailedPromise::~DetailedPromise()
   MOZ_ASSERT(mResponded == IsPending());
 }
 
-static void
-LogToConsole(const nsAString& aMsg)
-{
-  nsCOMPtr<nsIConsoleService> console(
-    do_GetService("@mozilla.org/consoleservice;1"));
-  if (!console) {
-    NS_WARNING("Failed to log message to console.");
-    return;
-  }
-  nsAutoString msg(aMsg);
-  console->LogStringMessage(msg.get());
-}
-
 void
 DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 {
+  nsPrintfCString msg("%s promise rejected 0x%x '%s'", mName.get(), aArg,
+                      PromiseFlatCString(aReason).get());
+  EME_LOG(msg.get());
+
   mResponded = true;
 
-  LogToConsole(NS_ConvertUTF8toUTF16(aReason));
+  LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
   nsRefPtr<DOMException> exception =
     DOMException::Create(aArg, aReason);
@@ -53,9 +47,11 @@ DetailedPromise::MaybeReject(ErrorResult&, const nsACString& aReason)
 }
 
 /* static */ already_AddRefed<DetailedPromise>
-DetailedPromise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv)
+DetailedPromise::Create(nsIGlobalObject* aGlobal,
+                        ErrorResult& aRv,
+                        const nsACString& aName)
 {
-  nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal);
+  nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
   promise->CreateWrapper(aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
