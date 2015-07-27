@@ -167,3 +167,19 @@ add_task(function* test_screen_share() {
   MozLoopService.setScreenShareState("1", false);
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
 });
+
+add_task(function* test_private_browsing_window() {
+  let win = OpenBrowserWindow({ private: true });
+  yield new Promise(resolve => {
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener);
+      resolve();
+    });
+  });
+
+  let button = win.LoopUI.toolbarButton.node;
+  Assert.ok(button, "Loop button should be present");
+  Assert.ok(button.getAttribute("disabled"), "Disabled attribute should be set");
+
+  win.close();
+});

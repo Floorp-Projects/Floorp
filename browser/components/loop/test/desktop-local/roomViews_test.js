@@ -598,21 +598,6 @@ describe("loop.roomViews", function () {
 
     });
 
-    describe("Mute", function() {
-      it("should render local media as audio-only if video is muted",
-        function() {
-          activeRoomStore.setStoreState({
-            roomState: ROOM_STATES.SESSION_CONNECTED,
-            videoMuted: true
-          });
-
-          view = mountTestComponent();
-
-          expect(view.getDOMNode().querySelector(".local-stream-audio"))
-            .not.eql(null);
-        });
-    });
-
     describe("Edit Context", function() {
       it("should show the form when the edit button is clicked", function() {
         view = mountTestComponent();

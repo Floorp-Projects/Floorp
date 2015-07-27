@@ -659,7 +659,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-padding-end: 5px;
 }
 
-#nav-bar .toolbarbutton-1[type=panel]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button),
+#nav-bar .toolbarbutton-1[type=panel],
 #nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) {
   padding-left: 5px;
   padding-right: 5px;
@@ -771,8 +771,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   width: 32px;
 }
 
-#nav-bar .toolbarbutton-1[type=panel]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=panel]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) > .toolbarbutton-badge-container,
+#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-badge-container,
 #nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) > .toolbarbutton-badge-container,
 #nav-bar .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
@@ -1203,6 +1203,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-padding-end: 2px;
 }
 
+/* overlap the urlbar's border */
+#PopupAutoCompleteRichResult {
+  margin-top: -1px;
+}
+
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
@@ -1245,6 +1250,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
     #urlbar:not(:-moz-lwtheme)[focused],
     .searchbar-textbox:not(:-moz-lwtheme)[focused] {
       box-shadow: 0 0 0 1px Highlight inset;
+    }
+
+    /* overlap the urlbar's border and inset box-shadow */
+    #PopupAutoCompleteRichResult:not(:-moz-lwtheme) {
+      margin-top: -2px;
     }
   }
 

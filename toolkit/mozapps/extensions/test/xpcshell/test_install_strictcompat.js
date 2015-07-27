@@ -639,6 +639,8 @@ function run_test_11() {
     "onNewInstall",
     "onNewInstall",
     "onNewInstall",
+    "onNewInstall",
+    "onNewInstall",
     "onNewInstall"
   ]);
 
@@ -646,11 +648,22 @@ function run_test_11() {
     ensure_test_completed();
     do_check_neq(install, null);
     do_check_neq(install.linkedInstalls, null);
-    do_check_eq(install.linkedInstalls.length, 3);
+    do_check_eq(install.linkedInstalls.length, 5);
 
     // Might be in any order so sort them based on ID
     let installs = [install].concat(install.linkedInstalls);
     installs.sort(function(a, b) {
+      if (a.state != b.state) {
+        if (a.state == AddonManager.STATE_DOWNLOAD_FAILED)
+          return 1;
+        else if (b.state == AddonManager.STATE_DOWNLOAD_FAILED)
+          return -1;
+      }
+
+      // Don't care what order the failed installs show up in
+      if (a.state == AddonManager.STATE_DOWNLOAD_FAILED)
+        return 0;
+
       if (a.addon.id < b.addon.id)
         return -1;
       if (a.addon.id > b.addon.id)
@@ -697,6 +710,12 @@ function run_test_11() {
     do_check_eq(installs[3].state, AddonManager.STATE_DOWNLOADED);
     do_check_true(hasFlag(installs[3].addon.operationsRequiringRestart,
                           AddonManager.OP_NEEDS_RESTART_INSTALL));
+
+    do_check_eq(installs[4].state, AddonManager.STATE_DOWNLOAD_FAILED);
+    do_check_eq(installs[4].error, AddonManager.ERROR_CORRUPT_FILE);
+
+    do_check_eq(installs[5].state, AddonManager.STATE_DOWNLOAD_FAILED);
+    do_check_eq(installs[5].error, AddonManager.ERROR_CORRUPT_FILE);
 
     AddonManager.getAllInstalls(function(aInstalls) {
       do_check_eq(aInstalls.length, 4);
@@ -806,6 +825,8 @@ function run_test_12() {
         "onNewInstall",
         "onNewInstall",
         "onNewInstall",
+        "onNewInstall",
+        "onNewInstall",
         "onDownloadEnded"
       ],
       "addon4@tests.mozilla.org": [
@@ -830,11 +851,22 @@ function run_test_12() {
 }
 
 function check_test_12() {
-  do_check_eq(gInstall.linkedInstalls.length, 3);
+  do_check_eq(gInstall.linkedInstalls.length, 5);
 
   // Might be in any order so sort them based on ID
   let installs = [gInstall].concat(gInstall.linkedInstalls);
   installs.sort(function(a, b) {
+    if (a.state != b.state) {
+      if (a.state == AddonManager.STATE_DOWNLOAD_FAILED)
+        return 1;
+      else if (b.state == AddonManager.STATE_DOWNLOAD_FAILED)
+        return -1;
+    }
+
+    // Don't care what order the failed installs show up in
+    if (a.state == AddonManager.STATE_DOWNLOAD_FAILED)
+      return 0;
+
     if (a.addon.id < b.addon.id)
       return -1;
     if (a.addon.id > b.addon.id)
@@ -873,6 +905,12 @@ function check_test_12() {
   do_check_eq(installs[3].version, "5.0");
   do_check_eq(installs[3].name, "Multi Test 4");
   do_check_eq(installs[3].state, AddonManager.STATE_INSTALLED);
+
+  do_check_eq(installs[4].state, AddonManager.STATE_DOWNLOAD_FAILED);
+  do_check_eq(installs[4].error, AddonManager.ERROR_CORRUPT_FILE);
+
+  do_check_eq(installs[5].state, AddonManager.STATE_DOWNLOAD_FAILED);
+  do_check_eq(installs[5].error, AddonManager.ERROR_CORRUPT_FILE);
 
   restartManager();
 
@@ -1650,5 +1688,43 @@ function finish_test_27(aInstall) {
 
   ensure_test_completed();
 
-  end_test();
+  run_test_30();
+}
+
+// Tests that a multi-package XPI with no add-ons inside shows up as a
+// corrupt file
+function run_test_30() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  AddonManager.getInstallForFile(do_get_addon("test_install7"), function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+    do_check_eq(install.error, AddonManager.ERROR_CORRUPT_FILE);
+    do_check_eq(install.linkedInstalls, null);
+
+    run_test_31();
+  });
+}
+
+// Tests that a multi-package XPI with no valid add-ons inside shows up as a
+// corrupt file
+function run_test_31() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  AddonManager.getInstallForFile(do_get_addon("test_install8"), function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+    do_check_eq(install.error, AddonManager.ERROR_CORRUPT_FILE);
+    do_check_eq(install.linkedInstalls, null);
+
+    end_test();
+  });
 }
