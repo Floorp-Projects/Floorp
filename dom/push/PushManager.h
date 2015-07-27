@@ -106,9 +106,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushManager)
 
-  static bool
-  Enabled(JSContext* aCx, JSObject* aObj);
-
   explicit PushManager(nsIGlobalObject* aGlobal, const nsAString& aScope);
 
   nsIGlobalObject*
