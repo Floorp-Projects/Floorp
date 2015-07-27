@@ -206,6 +206,7 @@ enum WorkerPreference
   WORKERPREF_SERVICEWORKERS_TESTING, // dom.serviceWorkers.testing.enabled
   WORKERPREF_INTERCEPTION_OPAQUE_ENABLED, // dom.serviceWorkers.interception.opaque.enabled
   WORKERPREF_PERFORMANCE_LOGGING_ENABLED, // dom.performance.enable_user_timing_logging
+  WORKERPREF_PUSH, // dom.push.enabled
   WORKERPREF_COUNT
 };
 
