@@ -5055,3 +5055,6 @@ pref("memory.report_concurrency", 10);
 pref("media.useAudioChannelService", true);
 // Add Mozilla AudioChannel APIs.
 pref("media.useAudioChannelAPI", false);
+
+// Expose Request.context. Currently disabled since the spec is in flux.
+pref("dom.requestcontext.enabled", false);

@@ -17,6 +17,7 @@ interface Request {
   readonly attribute USVString url;
   [SameObject] readonly attribute Headers headers;
 
+  [Func="mozilla::dom::Request::RequestContextEnabled"]
   readonly attribute RequestContext context;
   readonly attribute DOMString referrer;
   readonly attribute RequestMode mode;
@@ -41,6 +42,8 @@ dictionary RequestInit {
   RequestCache cache;
 };
 
+// Gecko currently does not ship RequestContext, so please don't use it in IDL
+// that is exposed to script.
 enum RequestContext {
   "audio", "beacon", "cspreport", "download", "embed", "eventsource", "favicon", "fetch",
   "font", "form", "frame", "hyperlink", "iframe", "image", "imageset", "import",
