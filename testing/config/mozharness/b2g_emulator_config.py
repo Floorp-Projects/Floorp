@@ -71,6 +71,7 @@ config = {
                 "--this-chunk=%(this_chunk)s",
                 "--quiet",
                 "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
                 "%(test_path)s"
@@ -93,6 +94,7 @@ config = {
                 "--quiet",
                 "--chrome",
                 "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
                 "%(test_path)s"
@@ -133,7 +135,8 @@ config = {
                 "--busybox=%(busybox)s",
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
-                "--log-raw=%(raw_log_file)s"
+                "--log-raw=%(raw_log_file)s",
+                "--log-errorsummary=%(error_summary_file)s",
             ],
             "run_filename": "runtestsb2g.py",
             "testsdir": "xpcshell"

@@ -3824,6 +3824,13 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
     // Linking & patching:
 
+    void assertValidJmpSrc(JmpSrc src)
+    {
+        // The target offset is stored at offset - 4.
+        MOZ_ASSERT(src.offset() > int32_t(sizeof(int32_t)));
+        MOZ_ASSERT(size_t(src.offset()) <= size());
+    }
+
     bool nextJump(const JmpSrc& from, JmpSrc* next)
     {
         // Sanity check - if the assembler has OOM'd, it will start overwriting
@@ -3831,10 +3838,14 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         if (oom())
             return false;
 
+        assertValidJmpSrc(from);
+
         const unsigned char* code = m_formatter.data();
         int32_t offset = GetInt32(code + from.offset());
         if (offset == -1)
             return false;
+
+        MOZ_ASSERT(size_t(offset) < size());
         *next = JmpSrc(offset);
         return true;
     }
@@ -3844,6 +3855,9 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         // its internal buffer and thus our links could be garbage.
         if (oom())
             return;
+
+        assertValidJmpSrc(from);
+        MOZ_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
         unsigned char* code = m_formatter.data();
         SetInt32(code + from.offset(), to.offset());
@@ -3858,6 +3872,9 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         // its internal buffer and thus our links could be garbage.
         if (oom())
             return;
+
+        assertValidJmpSrc(from);
+        MOZ_ASSERT(size_t(to.offset()) <= size());
 
         spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();

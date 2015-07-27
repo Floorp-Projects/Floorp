@@ -9,6 +9,7 @@
 #include "jsopcode.h"
 #include "jit/JitSpewer.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::jit;

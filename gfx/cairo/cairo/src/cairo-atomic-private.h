@@ -45,6 +45,10 @@
 #include "config.h"
 #endif
 
+#if HAVE_WIN32_ATOMIC_PRIMITIVES
+#include <Windows.h>
+#endif
+
 /* The autoconf on OpenBSD 4.5 produces the malformed constant name
  * SIZEOF_VOID__ rather than SIZEOF_VOID_P.  Work around that here. */
 #if !defined(SIZEOF_VOID_P) && defined(SIZEOF_VOID__)
@@ -140,6 +144,28 @@ _cairo_atomic_ptr_cmpxchg_return_old_impl(void **x, void *oldv, void *newv)
 
 #define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
   _cairo_atomic_ptr_cmpxchg_return_old_impl(x, oldv, newv)
+
+#endif
+
+#if HAVE_WIN32_ATOMIC_PRIMITIVES
+
+#define HAS_ATOMIC_OPS 1
+
+typedef volatile long cairo_atomic_int_t;
+
+# define _cairo_atomic_int_get(x) ((int)*x)
+# define _cairo_atomic_ptr_get(x) ((void*)*x)
+
+# define _cairo_atomic_int_inc(x) ((void) InterlockedIncrement(x))
+# define _cairo_atomic_int_dec(x) ((void) InterlockedDecrement(x))
+# define _cairo_atomic_int_dec_and_test(x) (InterlockedDecrement(x) == 0)
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) (InterlockedCompareExchange(x, newv, oldv) == oldv)
+# define _cairo_atomic_int_cmpxchg_return_old(x, oldv, newv) InterlockedCompareExchange(x, newv, oldv)
+
+typedef volatile void* cairo_atomic_intptr_t;
+
+#define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) (InterlockedCompareExchangePointer(x, newv, oldv) == oldv)
+#define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) (InterlockedCompareExchangePointer(x, newv, oldv))
 
 #endif
 

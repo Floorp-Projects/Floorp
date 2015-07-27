@@ -20,6 +20,7 @@
 #include "js/HashTable.h"
 
 #include "jscntxtinlines.h"
+#include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"

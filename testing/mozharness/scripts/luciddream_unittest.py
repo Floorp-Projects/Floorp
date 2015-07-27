@@ -236,6 +236,7 @@ class LuciddreamTest(TestingMixin, MercurialScript, MozbaseMixin, BaseScript,
         str_format_values = {
             'browser_path': self.binary_path,
             'raw_log_file': os.path.join(dirs['abs_work_dir'], 'luciddream_raw.log'),
+            'error_summary_file': os.path.join(dirs['abs_work_dir'], 'luciddream_errorsummary.log'),
             'test_manifest': os.path.join(ld_dir, 'example-tests', 'luciddream.ini')
         }
 

@@ -146,6 +146,7 @@ WEBIDL_FILES = [
     'EventSource.webidl',
     'EventTarget.webidl',
     'ExtendableEvent.webidl',
+    'FakePluginTagInit.webidl',
     'Fetch.webidl',
     'FetchEvent.webidl',
     'File.webidl',

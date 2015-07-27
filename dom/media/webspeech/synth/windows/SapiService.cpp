@@ -13,8 +13,6 @@
 #include "mozilla/dom/nsSpeechTask.h"
 #include "mozilla/Preferences.h"
 
-#include <sphelper.h>
-
 namespace mozilla {
 namespace dom {
 
@@ -226,9 +224,19 @@ SapiService::RegisterVoices()
     return false;
   }
 
+  nsRefPtr<ISpObjectTokenCategory> category;
+  if (FAILED(CoCreateInstance(CLSID_SpObjectTokenCategory, nullptr, CLSCTX_ALL,
+                              IID_ISpObjectTokenCategory,
+                              getter_AddRefs(category)))) {
+    return false;
+  }
+  if (FAILED(category->SetId(SPCAT_VOICES, FALSE))) {
+    return false;
+  }
+
   nsRefPtr<IEnumSpObjectTokens> voiceTokens;
-  if (FAILED(SpEnumTokens(SPCAT_VOICES, nullptr, nullptr,
-                          getter_AddRefs(voiceTokens)))) {
+  if (FAILED(category->EnumTokens(nullptr, nullptr,
+                                  getter_AddRefs(voiceTokens)))) {
     return false;
   }
 
@@ -236,11 +244,6 @@ SapiService::RegisterVoices()
     nsRefPtr<ISpObjectToken> voiceToken;
     if (voiceTokens->Next(1, getter_AddRefs(voiceToken), nullptr) != S_OK) {
       break;
-    }
-
-    WCHAR* description = nullptr;
-    if (FAILED(SpGetDescription(voiceToken, &description))) {
-      continue;
     }
 
     nsRefPtr<ISpDataKey> attributes;
@@ -258,8 +261,14 @@ SapiService::RegisterVoices()
     // name.
     nsAutoString hexLcid;
     LCID lcid = wcstol(language, nullptr, 16);
+    CoTaskMemFree(language);
     nsAutoString locale;
     nsWin32Locale::GetXPLocale(lcid, locale);
+
+    WCHAR* description = nullptr;
+    if (FAILED(voiceToken->GetStringValue(nullptr, &description))) {
+      continue;
+    }
 
     nsAutoString uri;
     uri.AssignLiteral("urn:moz-tts:sapi:");
@@ -269,6 +278,7 @@ SapiService::RegisterVoices()
 
     rv = registry->AddVoice(this, uri, nsDependentString(description), locale,
                             true);
+    CoTaskMemFree(description);
     if (NS_FAILED(rv)) {
       continue;
     }
