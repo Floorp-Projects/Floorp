@@ -747,8 +747,6 @@ private:
 
   static PLDHashOperator CopyRecordsToRWBuf(CacheIndexEntry *aEntry,
                                             void* aClosure);
-  static PLDHashOperator ApplyIndexChanges(CacheIndexEntry *aEntry,
-                                           void* aClosure);
 
   // Following methods perform writing of the journal during shutdown. All these
   // methods must be called only during shutdown since they write/delete files
@@ -853,8 +851,7 @@ private:
   // Finalizes update or build process.
   void FinishUpdate(bool aSucceeded);
 
-  static PLDHashOperator RemoveNonFreshEntries(CacheIndexEntry *aEntry,
-                                               void* aClosure);
+  void RemoveNonFreshEntries();
 
   enum EState {
     // Initial state in which the index is not usable
