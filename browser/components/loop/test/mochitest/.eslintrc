@@ -21,6 +21,7 @@
     "gMozLoopAPI": true,
     "mockDb": true,
     "mockPushHandler": true,
+    "OpenBrowserWindow": true,
     "promiseDeletedOAuthParams": false,
     "promiseOAuthGetRegistration": false,
     "promiseOAuthParamsSetup": false,

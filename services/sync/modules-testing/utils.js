@@ -181,17 +181,17 @@ this.configureFxAccountIdentity = function(authService,
       }
       let storageManager = new MockFxaStorageManager();
       storageManager.initialize(config.fxaccount.user);
-      let accountState = new AccountState(this, storageManager);
-      // mock getCertificate
-      accountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
-        accountState.cert = {
-          validUntil: fxa.internal.now() + CERT_LIFETIME,
-          cert: "certificate",
-        };
-        return Promise.resolve(this.cert.cert);
-      }
+      let accountState = new AccountState(storageManager);
       return accountState;
-    }
+    },
+    getCertificate(data, keyPair, mustBeValidUntil) {
+      let cert = {
+        validUntil: this.now() + CERT_LIFETIME,
+        cert: "certificate",
+      };
+      this.currentAccountState.updateUserAccountData({cert: cert});
+      return Promise.resolve(cert.cert);
+    },
   };
   fxa = new FxAccounts(MockInternal);
 

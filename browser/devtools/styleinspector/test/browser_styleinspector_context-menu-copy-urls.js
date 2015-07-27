@@ -80,6 +80,7 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   yield popup;
 
   info("Context menu is displayed");
+  ok(!view._contextmenu.menuitemCopyUrl.hidden, "\"Copy URL\" menu entry is displayed");
   ok(!view._contextmenu.menuitemCopyImageDataUrl.hidden, "\"Copy Image Data-URL\" menu entry is displayed");
 
   if (type == "data-uri") {

@@ -957,9 +957,8 @@ const CustomizableWidgets = [
     type: "custom",
     label: "loop-call-button3.label",
     tooltiptext: "loop-call-button3.tooltiptext",
+    privateBrowsingTooltiptext: "loop-call-button3-pb.tooltiptext",
     defaultArea: CustomizableUI.AREA_NAVBAR,
-    // Not in private browsing, see bug 1108187.
-    showInPrivateBrowsing: false,
     introducedInVersion: 4,
     onBuild: function(aDocument) {
       // If we're not supposed to see the button, return zip.
@@ -967,13 +966,21 @@ const CustomizableWidgets = [
         return null;
       }
 
+      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView);
+
       let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
       node.setAttribute("id", this.id);
       node.classList.add("toolbarbutton-1");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("badged-button");
       node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
-      node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      if (isWindowPrivate)
+        node.setAttribute("disabled", "true");
+      let tooltiptext = isWindowPrivate ?
+        CustomizableUI.getLocalizedProperty(this, "privateBrowsingTooltiptext",
+          [CustomizableUI.getLocalizedProperty(this, "label")]) :
+        CustomizableUI.getLocalizedProperty(this, "tooltiptext");
+      node.setAttribute("tooltiptext", tooltiptext);
       node.setAttribute("removable", "true");
       node.addEventListener("command", function(event) {
         aDocument.defaultView.LoopUI.togglePanel(event);

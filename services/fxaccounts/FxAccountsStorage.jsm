@@ -62,10 +62,18 @@ this.FxAccountsStorageManager.prototype = {
         this._needToReadSecure = false;
         // split it into the 2 parts, write it and we are done.
         for (let [name, val] of Iterator(accountData)) {
-          if (FXA_PWDMGR_PLAINTEXT_FIELDS.indexOf(name) >= 0) {
+          if (FXA_PWDMGR_PLAINTEXT_FIELDS.has(name)) {
             this.cachedPlain[name] = val;
-          } else {
+          } else if (FXA_PWDMGR_SECURE_FIELDS.has(name)) {
             this.cachedSecure[name] = val;
+          } else {
+            // Hopefully it's an "in memory" field. If it's not we log a warning
+            // but still treat it as such (so it will still be available in this
+            // session but isn't persisted anywhere.)
+            if (!FXA_PWDMGR_MEMORY_FIELDS.has(name)) {
+              log.warn("Unknown FxA field name in user data, treating as in-memory", name);
+            }
+            this.cachedMemory[name] = val;
           }
         }
         // write it out and we are done.
@@ -121,7 +129,12 @@ this.FxAccountsStorageManager.prototype = {
   },
 
   // Get the account data by combining the plain and secure storage.
-  getAccountData: Task.async(function* () {
+  // If fieldNames is specified, it may be a string or an array of strings,
+  // and only those fields are returned. If not specified the entire account
+  // data is returned except for "in memory" fields. Note that not specifying
+  // field names will soon be deprecated/removed - we want all callers to
+  // specify the fields they care about.
+  getAccountData: Task.async(function* (fieldNames = null) {
     yield this._promiseInitialized;
     // We know we are initialized - this means our .cachedPlain is accurate
     // and doesn't need to be read (it was read if necessary by initialize).
@@ -130,20 +143,52 @@ this.FxAccountsStorageManager.prototype = {
       return null;
     }
     let result = {};
-    for (let [name, value] of Iterator(this.cachedPlain)) {
-      result[name] = value;
+    if (fieldNames === null) {
+      // The "old" deprecated way of fetching a logged in user.
+      for (let [name, value] of Iterator(this.cachedPlain)) {
+        result[name] = value;
+      }
+      // But the secure data may not have been read, so try that now.
+      yield this._maybeReadAndUpdateSecure();
+      // .cachedSecure now has as much as it possibly can (which is possibly
+      // nothing if (a) secure storage remains locked and (b) we've never updated
+      // a field to be stored in secure storage.)
+      for (let [name, value] of Iterator(this.cachedSecure)) {
+        result[name] = value;
+      }
+      // Note we don't return cachedMemory fields here - they must be explicitly
+      // requested.
+      return result;
     }
-    // But the secure data may not have been read, so try that now.
-    yield this._maybeReadAndUpdateSecure();
-    // .cachedSecure now has as much as it possibly can (which is possibly
-    // nothing if (a) secure storage remains locked and (b) we've never updated
-    // a field to be stored in secure storage.)
-    for (let [name, value] of Iterator(this.cachedSecure)) {
-      result[name] = value;
+    // The new explicit way of getting attributes.
+    if (!Array.isArray(fieldNames)) {
+      fieldNames = [fieldNames];
+    }
+    let checkedSecure = false;
+    for (let fieldName of fieldNames) {
+      if (FXA_PWDMGR_MEMORY_FIELDS.has(fieldName)) {
+        if (this.cachedMemory[fieldName] !== undefined) {
+          result[fieldName] = this.cachedMemory[fieldName];
+        }
+      } else if (FXA_PWDMGR_PLAINTEXT_FIELDS.has(fieldName)) {
+        if (this.cachedPlain[fieldName] !== undefined) {
+          result[fieldName] = this.cachedPlain[fieldName];
+        }
+      } else if (FXA_PWDMGR_SECURE_FIELDS.has(fieldName)) {
+        // We may not have read secure storage yet.
+        if (!checkedSecure) {
+          yield this._maybeReadAndUpdateSecure();
+          checkedSecure = true;
+        }
+        if (this.cachedSecure[fieldName] !== undefined) {
+          result[fieldName] = this.cachedSecure[fieldName];
+        }
+      } else {
+        throw new Error("unexpected field '" + name + "'");
+      }
     }
     return result;
   }),
-
 
   // Update just the specified fields. This DOES NOT allow you to change to
   // a different user, nor to set the user as signed-out.
@@ -163,16 +208,27 @@ this.FxAccountsStorageManager.prototype = {
     log.debug("_updateAccountData with items", Object.keys(newFields));
     // work out what bucket.
     for (let [name, value] of Iterator(newFields)) {
-      if (FXA_PWDMGR_PLAINTEXT_FIELDS.indexOf(name) >= 0) {
+      if (FXA_PWDMGR_MEMORY_FIELDS.has(name)) {
+        if (value == null) {
+          delete this.cachedMemory[name];
+        } else {
+          this.cachedMemory[name] = value;
+        }
+      } else if (FXA_PWDMGR_PLAINTEXT_FIELDS.has(name)) {
         if (value == null) {
           delete this.cachedPlain[name];
         } else {
           this.cachedPlain[name] = value;
         }
-      } else {
+      } else if (FXA_PWDMGR_SECURE_FIELDS.has(name)) {
         // don't do the "delete on null" thing here - we need to keep it until
         // we have managed to read so we can nuke it on write.
         this.cachedSecure[name] = value;
+      } else {
+        // Throwing seems reasonable here as some client code has explicitly
+        // specified the field name, so it's either confused or needs to update
+        // how this field is to be treated.
+        throw new Error("unexpected field '" + name + "'");
       }
     }
     // If we haven't yet read the secure data, do so now, else we may write
@@ -185,6 +241,7 @@ this.FxAccountsStorageManager.prototype = {
   }),
 
   _clearCachedData() {
+    this.cachedMemory = {};
     this.cachedPlain = {};
     // If we don't have secure storage available we have cachedPlain and
     // cachedSecure be the same object.
