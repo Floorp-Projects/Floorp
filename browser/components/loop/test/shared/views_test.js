@@ -1057,6 +1057,7 @@ describe("loop.shared.views", function() {
         isRemoteLoading: false,
         isScreenShareLoading: false,
         localVideoMuted: false,
+        matchMedia: window.matchMedia,
         renderRemoteVideo: false,
         showContextRoomName: false,
         useDesktopPaths: false
@@ -1143,6 +1144,36 @@ describe("loop.shared.views", function() {
 
       expect(view.getDOMNode().querySelector(".media-wrapper")
         .classList.contains("showing-local-streams")).eql(true);
+    });
+
+    it("should not mark the wrapper as showing remote streams when not displaying a stream", function() {
+      view = mountTestComponent({
+        remoteSrcVideoObject: null,
+        remotePosterUrl: null
+      });
+
+      expect(view.getDOMNode().querySelector(".media-wrapper")
+        .classList.contains("showing-remote-streams")).eql(false);
+    });
+
+    it("should mark the wrapper as showing remote streams when displaying a stream", function() {
+      view = mountTestComponent({
+        remoteSrcVideoObject: {},
+        remotePosterUrl: null
+      });
+
+      expect(view.getDOMNode().querySelector(".media-wrapper")
+        .classList.contains("showing-remote-streams")).eql(true);
+    });
+
+    it("should mark the wrapper as showing remote streams when displaying a poster url", function() {
+      view = mountTestComponent({
+        remoteSrcVideoObject: {},
+        remotePosterUrl: "fake/url"
+      });
+
+      expect(view.getDOMNode().querySelector(".media-wrapper")
+        .classList.contains("showing-remote-streams")).eql(true);
     });
   });
 });
