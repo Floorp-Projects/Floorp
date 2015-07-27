@@ -138,6 +138,9 @@ status_t ESDS::parseESDescriptor(size_t offset, size_t size) {
 
     if (streamDependenceFlag) {
         offset += 2;
+        if (size <= 2) {
+            return ERROR_MALFORMED;
+        }
         size -= 2;
     }
 
@@ -147,14 +150,21 @@ status_t ESDS::parseESDescriptor(size_t offset, size_t size) {
         }
         unsigned URLlength = mData[offset];
         offset += URLlength + 1;
+        if (size <= URLlength + 1) {
+            return ERROR_MALFORMED;
+        }
         size -= URLlength + 1;
     }
 
     if (OCRstreamFlag) {
         offset += 2;
+        if (size <= 2) {
+            return ERROR_MALFORMED;
+        }
         size -= 2;
 
         if ((offset >= size || mData[offset] != kTag_DecoderConfigDescriptor)
+                && offset >= 2
                 && offset - 2 < size
                 && mData[offset - 2] == kTag_DecoderConfigDescriptor) {
             // Content found "in the wild" had OCRstreamFlag set but was
