@@ -733,7 +733,7 @@ nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
     nsIScrollableFrame* scrollable = do_QueryFrame(mListControlFrame);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
     scrollbarWidth = scrollable->GetNondisappearingScrollbarWidth(
-      presContext, aRenderingContext);
+      presContext, aRenderingContext, GetWritingMode());
   }
 
   nscoord displayISize = 0;
@@ -848,6 +848,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // Get the width of the vertical scrollbar.  That will be the inline
   // size of the dropdown button.
+  WritingMode wm = aReflowState.GetWritingMode();
   nscoord buttonISize;
   const nsStyleDisplay *disp = StyleDisplay();
   if ((IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) ||
@@ -858,7 +859,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     nsIScrollableFrame* scrollable = do_QueryFrame(mListControlFrame);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
     buttonISize = scrollable->GetNondisappearingScrollbarWidth(
-      PresContext(), aReflowState.rendContext);
+      PresContext(), aReflowState.rendContext, wm);
     if (buttonISize > aReflowState.ComputedISize()) {
       buttonISize = 0;
     }
@@ -869,8 +870,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   // The button should occupy the same space as a scrollbar
-  WritingMode wm = aReflowState.GetWritingMode();
-  nsSize containerSize = aReflowState.ComputedSizeAsContainerIfConstrained();
+  nsSize containerSize = aDesiredSize.PhysicalSize();
   LogicalRect buttonRect = mButtonFrame->GetLogicalRect(containerSize);
 
   buttonRect.IStart(wm) =
