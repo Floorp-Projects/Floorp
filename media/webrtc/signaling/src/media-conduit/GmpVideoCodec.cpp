@@ -8,11 +8,11 @@
 namespace mozilla {
 
 VideoEncoder* GmpVideoCodec::CreateEncoder() {
-  return static_cast<VideoEncoder*>(new WebrtcVideoEncoderProxy());
+  return static_cast<VideoEncoder*>(new WebrtcGmpVideoEncoder());
 }
 
 VideoDecoder* GmpVideoCodec::CreateDecoder() {
-  return static_cast<VideoDecoder*>(new WebrtcVideoDecoderProxy());
+  return static_cast<VideoDecoder*>(new WebrtcGmpVideoDecoder());
 }
 
 }
