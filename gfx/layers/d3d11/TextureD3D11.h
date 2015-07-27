@@ -64,8 +64,6 @@ public:
 
   virtual gfx::DrawTarget* BorrowDrawTarget() override;
 
-  virtual void UpdateFromSurface(gfx::DataSourceSurface* aSurface) override;
-
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
 
