@@ -317,12 +317,6 @@ class nsCookieService final : public nsICookieService
     void                          UpdateCookieOldestTime(DBState* aDBState, nsCookie* aCookie);
 
     /**
-     * This method is used to iterate the cookie hash table and select the ones
-     * that are part of a specific app.
-     */
-    static PLDHashOperator GetCookiesForApp(nsCookieEntry* entry, void* arg);
-
-    /**
      * This method is a helper that allows calling nsICookieManager::Remove()
      * with appId/inBrowserElement parameters.
      * NOTE: this could be added to a public interface if we happen to need it.
@@ -356,7 +350,6 @@ class nsCookieService final : public nsICookieService
     int64_t                       mCookiePurgeAge;
 
     // friends!
-    friend PLDHashOperator purgeCookiesCallback(nsCookieEntry *aEntry, void *aArg);
     friend class DBListenerErrorHandler;
     friend class ReadCookieDBListener;
     friend class CloseCookieDBListener;
