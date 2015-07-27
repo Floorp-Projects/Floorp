@@ -7789,13 +7789,13 @@ BytecodeEmitter::emitTree(ParseNode* pn)
             if (!emitTree(subexpr))
                 return false;
         }
-        for (uint32_t i = 0; i < pn->pn_count - 1; i++) {
+        for (int i = 0; i < pn->pn_count - 1; i++) {
             if (!emit1(JSOP_POW))
                 return false;
         }
         break;
       }
-
+          
       case PNK_TYPEOFNAME:
         ok = emitTypeof(pn, JSOP_TYPEOF);
         break;
