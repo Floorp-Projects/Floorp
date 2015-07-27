@@ -148,8 +148,13 @@ let wrapper = {
 
     if (accountData.customizeSync) {
       Services.prefs.setBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION, true);
-      delete accountData.customizeSync;
     }
+    delete accountData.customizeSync;
+    // sessionTokenContext is erroneously sent by the content server.
+    // https://github.com/mozilla/fxa-content-server/issues/2766
+    // To avoid having the FxA storage manager not knowing what to do with
+    // it we delete it here.
+    delete accountData.sessionTokenContext;
 
     // We need to confirm a relink - see shouldAllowRelink for more
     let newAccountEmail = accountData.email;

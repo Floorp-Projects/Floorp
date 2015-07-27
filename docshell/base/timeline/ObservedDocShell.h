@@ -15,6 +15,9 @@ class nsDocShell;
 class TimelineMarker;
 
 namespace mozilla {
+namespace dom {
+struct ProfileTimelineMarker;
+}
 
 // # ObservedDocShell
 //
@@ -24,18 +27,16 @@ class ObservedDocShell : public LinkedListElement<ObservedDocShell>
 {
 private:
   nsRefPtr<nsDocShell> mDocShell;
-
-public:
-  // FIXME: make this private once all marker-specific logic has been
-  // moved out of nsDocShell.
   nsTArray<UniquePtr<TimelineMarker>> mTimelineMarkers;
 
+public:
   explicit ObservedDocShell(nsDocShell* aDocShell);
   nsDocShell* operator*() const { return mDocShell.get(); }
 
   void AddMarker(const char* aName, TracingMetadata aMetaData);
   void AddMarker(UniquePtr<TimelineMarker>&& aMarker);
   void ClearMarkers();
+  void PopMarkers(JSContext* aCx, nsTArray<dom::ProfileTimelineMarker>& aStore);
 };
 
 } // namespace mozilla

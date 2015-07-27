@@ -61,15 +61,26 @@ loop.OTSdkDriver = (function() {
 
     /**
      * XXX This is a workaround for desktop machines that do not have a
-     * camera installed. As we don't yet have device enumeration, when
-     * we do, this can be removed (bug 1138851), and the sdk should handle it.
+     * camera installed. The SDK doesn't currently do use the new device
+     * enumeration apis, when it does (bug 1138851), we can drop this part.
      */
-    if (this._isDesktop && !window.MediaStreamTrack.getSources) {
+    if (this._isDesktop) {
       // If there's no getSources function, the sdk defines its own and caches
-      // the result. So here we define the "normal" one which doesn't get cached, so
-      // we can change it later.
+      // the result. So here we define our own one which wraps around the
+      // real device enumeration api.
       window.MediaStreamTrack.getSources = function(callback) {
-        callback([{kind: "audio"}, {kind: "video"}]);
+        navigator.mediaDevices.enumerateDevices().then(function(devices) {
+          var result = [];
+          devices.forEach(function(device) {
+            if (device.kind === "audioinput") {
+              result.push({kind: "audio"});
+            }
+            if (device.kind === "videoinput") {
+              result.push({kind: "video"});
+            }
+          });
+          callback(result);
+        });
       };
     }
   };
@@ -109,21 +120,13 @@ loop.OTSdkDriver = (function() {
 
       this.sdk.on("exception", this._onOTException.bind(this));
 
-      // At this state we init the publisher, even though we might be waiting for
-      // the initial connect of the session. This saves time when setting up
-      // the media.
-      this._publishLocalStreams();
-    },
-
-    /**
-     * Internal function to publish a local stream.
-     * XXX This can be simplified when bug 1138851 is actioned.
-     */
-    _publishLocalStreams: function() {
       // We expect the local video to be muted automatically by the SDK. Hence
       // we don't mute it manually here.
       this._mockPublisherEl = document.createElement("div");
 
+      // At this state we init the publisher, even though we might be waiting for
+      // the initial connect of the session. This saves time when setting up
+      // the media.
       this.publisher = this.sdk.initPublisher(this._mockPublisherEl,
         _.extend(this._getDataChannelSettings, this._getCopyPublisherConfig));
 
@@ -133,17 +136,6 @@ loop.OTSdkDriver = (function() {
       this.publisher.on("accessDenied", this._onPublishDenied.bind(this));
       this.publisher.on("accessDialogOpened",
         this._onAccessDialogOpened.bind(this));
-    },
-
-    /**
-     * Forces the sdk into not using video, and starts publishing again.
-     * XXX This is part of the work around that will be removed by bug 1138851.
-     */
-    retryPublishWithoutVideo: function() {
-      window.MediaStreamTrack.getSources = function(callback) {
-        callback([{kind: "audio"}]);
-      };
-      this._publishLocalStreams();
     },
 
     /**

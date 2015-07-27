@@ -83,6 +83,7 @@ gujar.sources += [
     'util/GeckoEventListener.java',
     'util/GeckoJarReader.java',
     'util/GeckoRequest.java',
+    'util/HardwareCodecCapabilityUtils.java',
     'util/HardwareUtils.java',
     'util/INIParser.java',
     'util/INISection.java',
