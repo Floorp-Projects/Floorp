@@ -419,3 +419,14 @@ x86-only on some OSes:
 Returns the contents scale factor. On platforms without support for this query
 always returns 1.0 (a double value). Likewise on hardware without HiDPI mode
 support.
+
+== Plugin audio channel support ==
+
+* startAudioPlayback()
+Simulates the plugin starting to play back audio.
+
+* stopAudioPlayback()
+Simulates the plugin stopping to play back audio.
+
+* audioMuted()
+Returns the last value set by NPP_SetValue(NPNVmuteAudioBool).
