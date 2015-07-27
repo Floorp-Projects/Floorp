@@ -6,9 +6,6 @@ MAINTAINER    Morgan Reece Phillips <winter2718@gmail.com>
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
-# Add custom mozharness configs
-ADD             configs /home/worker/configs
-
 ##
 # COMPILER HACKS
 ##
