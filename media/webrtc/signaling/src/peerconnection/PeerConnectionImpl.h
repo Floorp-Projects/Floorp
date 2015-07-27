@@ -605,8 +605,6 @@ public:
   static std::string GetStreamId(const DOMMediaStream& aStream);
   static std::string GetTrackId(const dom::MediaStreamTrack& track);
 
-  void OnMediaError(const std::string& aError);
-
 private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
