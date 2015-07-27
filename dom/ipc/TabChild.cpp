@@ -27,6 +27,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/DoubleTapToZoom.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
@@ -116,7 +117,6 @@ NS_IMPL_ISUPPORTS(ContentListener, nsIDOMEventListener)
 
 static const CSSSize kDefaultViewportSize(980, 480);
 
-static const char BROWSER_ZOOM_TO_RECT[] = "browser-zoom-to-rect";
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
@@ -283,39 +283,6 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 
     FrameMetrics newMetrics = aFrameMetrics;
     APZCCallbackHelper::UpdateRootFrame(newMetrics);
-
-    CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
-    // The BrowserElementScrolling helper must know about these updated metrics
-    // for other functions it performs, such as double tap handling.
-    // Note, %f must not be used because it is locale specific!
-    nsString data;
-    data.AppendPrintf("{ \"x\" : %d", NS_lround(newMetrics.GetScrollOffset().x));
-    data.AppendPrintf(", \"y\" : %d", NS_lround(newMetrics.GetScrollOffset().y));
-    data.AppendLiteral(", \"viewport\" : ");
-        data.AppendLiteral("{ \"width\" : ");
-        data.AppendFloat(newMetrics.GetViewport().width);
-        data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(newMetrics.GetViewport().height);
-        data.AppendLiteral(" }");
-    data.AppendLiteral(", \"cssPageRect\" : ");
-        data.AppendLiteral("{ \"x\" : ");
-        data.AppendFloat(newMetrics.GetScrollableRect().x);
-        data.AppendLiteral(", \"y\" : ");
-        data.AppendFloat(newMetrics.GetScrollableRect().y);
-        data.AppendLiteral(", \"width\" : ");
-        data.AppendFloat(newMetrics.GetScrollableRect().width);
-        data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(newMetrics.GetScrollableRect().height);
-        data.AppendLiteral(" }");
-    data.AppendLiteral(", \"cssCompositedRect\" : ");
-        data.AppendLiteral("{ \"width\" : ");
-        data.AppendFloat(cssCompositedSize.width);
-        data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(cssCompositedSize.height);
-        data.AppendLiteral(" }");
-    data.AppendLiteral(" }");
-
-    DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
 }
 
 NS_IMETHODIMP
@@ -638,23 +605,7 @@ TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const char16_t *aData)
 {
-  if (!strcmp(aTopic, BROWSER_ZOOM_TO_RECT)) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
-    if (tabChild == this) {
-      nsCOMPtr<nsIDocument> doc(GetDocument());
-      uint32_t presShellId;
-      ViewID viewId;
-      if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(doc->GetDocumentElement(),
-                                                           &presShellId, &viewId)) {
-        CSSRect rect;
-        sscanf(NS_ConvertUTF16toUTF8(aData).get(),
-               "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f}",
-               &rect.x, &rect.y, &rect.width, &rect.height);
-        SendZoomToRect(presShellId, viewId, rect);
-      }
-    }
-  } else if (!strcmp(aTopic, BEFORE_FIRST_PAINT)) {
+  if (!strcmp(aTopic, BEFORE_FIRST_PAINT)) {
     if (AsyncPanZoomEnabled()) {
       nsCOMPtr<nsIDocument> subject(do_QueryInterface(aSubject));
       nsCOMPtr<nsIDocument> doc(GetDocument());
@@ -1764,14 +1715,18 @@ TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifier
     // Note: there is nothing to do with the modifiers here, as we are not
     // synthesizing any sort of mouse event.
     CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
-    nsString data;
-    data.AppendLiteral("{ \"x\" : ");
-    data.AppendFloat(point.x);
-    data.AppendLiteral(", \"y\" : ");
-    data.AppendFloat(point.y);
-    data.AppendLiteral(" }");
-
-    DispatchMessageManagerMessage(NS_LITERAL_STRING("Gesture:DoubleTap"), data);
+    nsCOMPtr<nsIDocument> document = GetDocument();
+    CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
+    // The double-tap can be dispatched by any scroll frame (so |aGuid| could be
+    // the guid of any scroll frame), but the zoom-to-rect operation must be
+    // performed by the root content scroll frame, so query its identifiers
+    // for the SendZoomToRect() call rather than using the ones from |aGuid|.
+    uint32_t presShellId;
+    ViewID viewId;
+    if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+        document->GetDocumentElement(), &presShellId, &viewId)) {
+      SendZoomToRect(presShellId, viewId, zoomToRect);
+    }
 
     return true;
 }
@@ -2454,7 +2409,6 @@ TabChild::RecvDestroy()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
 
-  observerService->RemoveObserver(this, BROWSER_ZOOM_TO_RECT);
   observerService->RemoveObserver(this, BEFORE_FIRST_PAINT);
 
   const nsAttrValue::EnumTable* table =
@@ -2656,9 +2610,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
         mozilla::services::GetObserverService();
 
     if (observerService) {
-        observerService->AddObserver(this,
-                                     BROWSER_ZOOM_TO_RECT,
-                                     false);
         observerService->AddObserver(this,
                                      BEFORE_FIRST_PAINT,
                                      false);
