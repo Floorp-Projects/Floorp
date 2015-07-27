@@ -316,18 +316,13 @@ nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
   mFirstBinding = aBinding;
 }
 
-static PLDHashOperator
-FlushScopedSkinSheets(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  aProto->FlushSkinSheets();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsXBLDocumentInfo::FlushSkinStylesheets()
 {
   if (mBindingTable) {
-    mBindingTable->EnumerateRead(FlushScopedSkinSheets, nullptr);
+    for (auto iter = mBindingTable->ConstIter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->FlushSkinSheets();
+    }
   }
 }
 

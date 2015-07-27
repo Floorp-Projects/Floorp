@@ -120,26 +120,18 @@ nsFrameMessageManager::~nsFrameMessageManager()
   }
 }
 
-static PLDHashOperator
-CycleCollectorTraverseListeners(const nsAString& aKey,
-                                nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                                void* aCb)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*> (aCb);
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "listeners[i] mStrongListener");
-    cb->NoteXPCOMChild(aListeners->ElementAt(i).mStrongListener.get());
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
-  tmp->mListeners.EnumerateRead(CycleCollectorTraverseListeners,
-                                static_cast<void*>(&cb));
+  for (auto iter = tmp->mListeners.ConstIter(); !iter.Done(); iter.Next()) {
+    auto listeners = iter.UserData();
+    const uint32_t count = listeners->Length();
+
+    for (uint32_t i = 0; i < count; ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "listeners[i] mStrongListener");
+      cb.NoteXPCOMChild(listeners->ElementAt(i).mStrongListener.get());
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildManagers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -415,35 +407,6 @@ nsFrameMessageManager::RemoveMessageListener(const nsAString& aMessage,
   return NS_OK;
 }
 
-#ifdef DEBUG
-typedef struct
-{
-  nsCOMPtr<nsISupports> mCanonical;
-  nsWeakPtr mWeak;
-} CanonicalCheckerParams;
-
-static PLDHashOperator
-CanonicalChecker(const nsAString& aKey,
-                 nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                 void* aParams)
-{
-  CanonicalCheckerParams* params =
-    static_cast<CanonicalCheckerParams*> (aParams);
-
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; i++) {
-    if (!aListeners->ElementAt(i).mWeakListener) {
-      continue;
-    }
-    nsCOMPtr<nsISupports> otherCanonical =
-      do_QueryReferent(aListeners->ElementAt(i).mWeakListener);
-    MOZ_ASSERT((params->mCanonical == otherCanonical) ==
-               (params->mWeak == aListeners->ElementAt(i).mWeakListener));
-  }
-  return PL_DHASH_NEXT;
-}
-#endif
-
 NS_IMETHODIMP
 nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
                                               nsIMessageListener* aListener)
@@ -452,15 +415,24 @@ nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
   NS_ENSURE_TRUE(weak, NS_ERROR_NO_INTERFACE);
 
 #ifdef DEBUG
-  // It's technically possible that one object X could give two different
-  // nsIWeakReference*'s when you do_GetWeakReference(X).  We really don't want
-  // this to happen; it will break e.g. RemoveWeakMessageListener.  So let's
-  // check that we're not getting ourselves into that situation.
-  nsCOMPtr<nsISupports> canonical = do_QueryInterface(aListener);
-  CanonicalCheckerParams params;
-  params.mCanonical = canonical;
-  params.mWeak = weak;
-  mListeners.EnumerateRead(CanonicalChecker, (void*)&params);
+  {
+    // It's technically possible that one object X could give two different
+    // nsIWeakReference*'s when you do_GetWeakReference(X).  We really don't
+    // want this to happen; it will break e.g. RemoveWeakMessageListener.  So
+    // let's check that we're not getting ourselves into that situation.
+    nsCOMPtr<nsISupports> canonical = do_QueryInterface(aListener);
+
+    for (auto iter = mListeners.ConstIter(); !iter.Done(); iter.Next()) {
+      auto listeners = iter.UserData();
+      const uint32_t count = listeners->Length();
+      for (uint32_t i = 0; i < count; i++) {
+        if (auto listener = listeners->ElementAt(i).mWeakListener) {
+          nsCOMPtr<nsISupports> otherCanonical = do_QueryReferent(listener);
+          MOZ_ASSERT((canonical == otherCanonical) == (weak == listener));
+        }
+      }
+    }
+  }
 #endif
 
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
@@ -1472,55 +1444,45 @@ protected:
 
 NS_IMPL_ISUPPORTS(MessageManagerReporter, nsIMemoryReporter)
 
-static PLDHashOperator
-CollectMessageListenerData(const nsAString& aKey,
-                           nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                           void* aData)
-{
-  MessageManagerReferentCount* referentCount =
-    static_cast<MessageManagerReferentCount*>(aData);
-
-  uint32_t listenerCount = aListeners->Length();
-  if (!listenerCount) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsString key(aKey);
-  uint32_t oldCount = 0;
-  referentCount->mMessageCounter.Get(key, &oldCount);
-  uint32_t currentCount = oldCount + listenerCount;
-  referentCount->mMessageCounter.Put(key, currentCount);
-
-  // Keep track of messages that have a suspiciously large
-  // number of referents (symptom of leak).
-  if (currentCount == MessageManagerReporter::kSuspectReferentCount) {
-    referentCount->mSuspectMessages.AppendElement(key);
-  }
-
-  for (uint32_t i = 0; i < listenerCount; ++i) {
-    const nsMessageListenerInfo& listenerInfo =
-      aListeners->ElementAt(i);
-    if (listenerInfo.mWeakListener) {
-      nsCOMPtr<nsISupports> referent =
-        do_QueryReferent(listenerInfo.mWeakListener);
-      if (referent) {
-        referentCount->mWeakAlive++;
-      } else {
-        referentCount->mWeakDead++;
-      }
-    } else {
-      referentCount->mStrong++;
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 MessageManagerReporter::CountReferents(nsFrameMessageManager* aMessageManager,
                                        MessageManagerReferentCount* aReferentCount)
 {
-  aMessageManager->mListeners.EnumerateRead(CollectMessageListenerData,
-                                            aReferentCount);
+  for (auto iter = aMessageManager->mListeners.ConstIter();
+       !iter.Done(); iter.Next()) {
+    auto listeners = iter.UserData();
+    const uint32_t listenerCount = listeners->Length();
+    if (!listenerCount) {
+      continue;
+    }
+
+    nsString key(iter.Key());
+    uint32_t oldCount = 0;
+    aReferentCount->mMessageCounter.Get(key, &oldCount);
+    uint32_t currentCount = oldCount + listenerCount;
+    aReferentCount->mMessageCounter.Put(key, currentCount);
+
+    // Keep track of messages that have a suspiciously large
+    // number of referents (symptom of leak).
+    if (currentCount == MessageManagerReporter::kSuspectReferentCount) {
+      aReferentCount->mSuspectMessages.AppendElement(key);
+    }
+
+    for (uint32_t i = 0; i < listenerCount; ++i) {
+      const nsMessageListenerInfo& listenerInfo = listeners->ElementAt(i);
+      if (listenerInfo.mWeakListener) {
+        nsCOMPtr<nsISupports> referent =
+          do_QueryReferent(listenerInfo.mWeakListener);
+        if (referent) {
+          aReferentCount->mWeakAlive++;
+        } else {
+          aReferentCount->mWeakDead++;
+        }
+      } else {
+        aReferentCount->mStrong++;
+      }
+    }
+  }
 
   // Add referent count in child managers because the listeners
   // participate in messages dispatched from parent message manager.
@@ -2167,24 +2129,19 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
 
 }
 
-static PLDHashOperator
-CycleCollectorMarkListeners(const nsAString& aKey,
-                            nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                            void* aData)
-{
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; i++) {
-    if (aListeners->ElementAt(i).mStrongListener) {
-      xpc_TryUnmarkWrappedGrayObject(aListeners->ElementAt(i).mStrongListener);
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 bool
 nsFrameMessageManager::MarkForCC()
 {
-  mListeners.EnumerateRead(CycleCollectorMarkListeners, nullptr);
+  for (auto iter = mListeners.ConstIter(); !iter.Done(); iter.Next()) {
+    auto listeners = iter.UserData();
+    const uint32_t count = listeners->Length();
+
+    for (uint32_t i = 0; i < count; i++) {
+      if (auto listener = listeners->ElementAt(i).mStrongListener) {
+        xpc_TryUnmarkWrappedGrayObject(listener);
+      }
+    }
+  }
 
   if (mRefCnt.IsPurple()) {
     mRefCnt.RemovePurple();
