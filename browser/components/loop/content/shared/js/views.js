@@ -955,6 +955,9 @@ loop.shared.views = (function(_, mozL10n) {
       localPosterUrl: React.PropTypes.string,
       localSrcVideoObject: React.PropTypes.object,
       localVideoMuted: React.PropTypes.bool.isRequired,
+      // Passing in matchMedia, allows it to be overriden for ui-showcase's
+      // benefit. We expect either the override or window.matchMedia.
+      matchMedia: React.PropTypes.func.isRequired,
       remotePosterUrl: React.PropTypes.string,
       remoteSrcVideoObject: React.PropTypes.object,
       renderRemoteVideo: React.PropTypes.bool.isRequired,
@@ -962,6 +965,60 @@ loop.shared.views = (function(_, mozL10n) {
       screenShareVideoObject: React.PropTypes.object,
       showContextRoomName: React.PropTypes.bool.isRequired,
       useDesktopPaths: React.PropTypes.bool.isRequired
+    },
+
+    isLocalMediaAbsolutelyPositioned: function(matchMedia) {
+      if (!matchMedia) {
+        matchMedia = this.props.matchMedia;
+      }
+      return matchMedia &&
+        // The screen width is less than 640px and we are not screen sharing.
+        ((matchMedia("screen and (max-width:640px)").matches &&
+         !this.props.displayScreenShare) ||
+         // or the screen width is less than 300px.
+         (matchMedia("screen and (max-width:300px)").matches));
+    },
+
+    getInitialState: function() {
+      return {
+        localMediaAboslutelyPositioned: this.isLocalMediaAbsolutelyPositioned()
+      };
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+      // This is all for the ui-showcase's benefit.
+      if (this.props.matchMedia != nextProps.matchMedia) {
+        this.updateLocalMediaState(null, nextProps.matchMedia);
+      }
+    },
+
+    componentDidMount: function() {
+      window.addEventListener("resize", this.updateLocalMediaState);
+    },
+
+    componentWillUnmount: function() {
+      window.removeEventListener("resize", this.updateLocalMediaState);
+    },
+
+    updateLocalMediaState: function(event, matchMedia) {
+      var newState = this.isLocalMediaAbsolutelyPositioned(matchMedia);
+      if (this.state.localMediaAboslutelyPositioned != newState) {
+        this.setState({
+          localMediaAboslutelyPositioned: newState
+        });
+      }
+    },
+
+    renderLocalVideo: function() {
+      return (
+        React.createElement("div", {className: "local"}, 
+          React.createElement(MediaView, {displayAvatar: this.props.localVideoMuted, 
+            isLoading: this.props.isLocalLoading, 
+            mediaType: "local", 
+            posterUrl: this.props.localPosterUrl, 
+            srcVideoObject: this.props.localSrcVideoObject})
+        )
+      );
     },
 
     render: function() {
@@ -979,7 +1036,9 @@ loop.shared.views = (function(_, mozL10n) {
         "media-wrapper": true,
         "receiving-screen-share": this.props.displayScreenShare,
         "showing-local-streams": this.props.localSrcVideoObject ||
-          this.props.localPosterUrl
+          this.props.localPosterUrl,
+        "showing-remote-streams": this.props.remoteSrcVideoObject ||
+          this.props.remotePosterUrl || this.props.isRemoteLoading
       });
 
       return (
@@ -993,7 +1052,9 @@ loop.shared.views = (function(_, mozL10n) {
                 isLoading: this.props.isRemoteLoading, 
                 mediaType: "remote", 
                 posterUrl: this.props.remotePosterUrl, 
-                srcVideoObject: this.props.remoteSrcVideoObject})
+                srcVideoObject: this.props.remoteSrcVideoObject}), 
+               this.state.localMediaAboslutelyPositioned ?
+                this.renderLocalVideo() : null
             ), 
             React.createElement("div", {className: screenShareStreamClasses}, 
               React.createElement(MediaView, {displayAvatar: false, 
@@ -1006,13 +1067,8 @@ loop.shared.views = (function(_, mozL10n) {
               dispatcher: this.props.dispatcher, 
               showRoomName: this.props.showContextRoomName, 
               useDesktopPaths: false}), 
-            React.createElement("div", {className: "local"}, 
-              React.createElement(MediaView, {displayAvatar: this.props.localVideoMuted, 
-                isLoading: this.props.isLocalLoading, 
-                mediaType: "local", 
-                posterUrl: this.props.localPosterUrl, 
-                srcVideoObject: this.props.localSrcVideoObject})
-            )
+             this.state.localMediaAboslutelyPositioned ?
+              null : this.renderLocalVideo()
           )
         )
       );

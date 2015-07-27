@@ -256,11 +256,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
     mixins: [
       Backbone.Events,
       sharedMixins.MediaSetupMixin,
-      sharedMixins.RoomsAudioMixin,
-      loop.store.StoreMixin("activeRoomStore")
+      sharedMixins.RoomsAudioMixin
     ],
 
     propTypes: {
+      // We pass conversationStore here rather than use the mixin, to allow
+      // easy configurability for the ui-showcase.
       activeRoomStore: React.PropTypes.oneOfType([
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
         React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
@@ -280,6 +281,16 @@ loop.standaloneRoomViews = (function(mozL10n) {
         // Used by the UI showcase.
         roomState: this.props.roomState || storeState.roomState
       });
+    },
+
+    componentWillMount: function() {
+      this.props.activeRoomStore.on("change", function() {
+        this.setState(this.props.activeRoomStore.getStoreState());
+      }, this);
+    },
+
+    componentWillUnmount: function() {
+      this.props.activeRoomStore.off("change", null, this);
     },
 
     componentDidMount: function() {
@@ -456,6 +467,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
             localPosterUrl={this.props.localPosterUrl}
             localSrcVideoObject={this.state.localSrcVideoObject}
             localVideoMuted={this.state.videoMuted}
+            matchMedia={this.state.matchMedia || window.matchMedia.bind(window)}
             remotePosterUrl={this.props.remotePosterUrl}
             remoteSrcVideoObject={this.state.remoteSrcVideoObject}
             renderRemoteVideo={this.shouldRenderRemoteVideo()}
