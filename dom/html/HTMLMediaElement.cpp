@@ -105,6 +105,12 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 
 #include "mozilla/EventStateManager.h"
 
+#if defined(MOZ_B2G) && !defined(MOZ_GRAPHENE)
+// This controls the b2g specific of pausing the media element when the
+// AudioChannel tells us to mute it.
+#define PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+#endif
+
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 
@@ -4004,7 +4010,7 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
   }
 
   bool pauseElement = !IsActive();
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   pauseElement |= ComputedMuted();
 #endif
 
@@ -4448,7 +4454,7 @@ nsresult HTMLMediaElement::UpdateChannelMuteState(float aVolume, bool aMuted)
     }
   }
 
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   SuspendOrResumeElement(ComputedMuted(), false);
 #endif
   return NS_OK;
@@ -4518,7 +4524,7 @@ NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged(float aVolume, bool aMuted)
 
   UpdateChannelMuteState(aVolume, aMuted);
 
-#ifdef MOZ_B2G
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   mPaused.SetCanPlay(!aMuted);
 #endif
 
