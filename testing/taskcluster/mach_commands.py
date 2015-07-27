@@ -112,6 +112,26 @@ def decorate_task_treeherder_routes(task, suffix):
     for env in treeheder_env:
         task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
 
+def decorate_task_json_routes(build, task, json_routes, parameters):
+    """
+    Decorate the given task with routes.json routes.
+
+    :param dict task: task definition.
+    :param json_routes: the list of routes to use from routes.json
+    :param parameters: dictionary of parameters to use in route templates
+    """
+    fmt = parameters.copy()
+    fmt.update({
+        'build_product': task['extra']['build_product'],
+        'build_name': build['build_name'],
+        'build_type': build['build_type'],
+    })
+    routes = task.get('routes', [])
+    for route in json_routes:
+        routes.append(route.format(**fmt))
+
+    task['routes'] = routes
+
 def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
     """
     Configure a build dependent task. This is shared between post-build and test tasks.
@@ -267,6 +287,7 @@ class Graph(object):
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
+            'index': 'index.garbage.staging.mshal-testing', #TODO
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,
@@ -288,6 +309,12 @@ class Graph(object):
             params['project'],
             params.get('revision_hash', '')
         )
+
+        routes_file = os.path.join(ROOT, 'routes.json')
+        with open(routes_file) as f:
+            contents = json.load(f)
+            json_routes = contents['routes']
+            # TODO: Nightly and/or l10n routes
 
         # Task graph we are generating for taskcluster...
         graph = {
@@ -312,12 +339,13 @@ class Graph(object):
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
 
-            if 'routes' not in build_task['task']:
-                build_task['task']['routes'] = []
-
             if params['revision_hash']:
                 decorate_task_treeherder_routes(build_task['task'],
                                                 treeherder_route)
+                decorate_task_json_routes(build,
+                                          build_task['task'],
+                                          json_routes,
+                                          build_parameters)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
