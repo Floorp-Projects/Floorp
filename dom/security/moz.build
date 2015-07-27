@@ -36,3 +36,6 @@ LOCAL_INCLUDES += [
     '/caps',
     '/netwerk/base',
 ]
+
+CFLAGS += ['-Wshadow']
+CXXFLAGS += ['-Wshadow']
