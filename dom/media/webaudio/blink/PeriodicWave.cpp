@@ -258,18 +258,16 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
     unsigned fftSize = periodicWaveSize();
     unsigned halfSize = fftSize / 2;
 
-    AudioFloatArray real(halfSize + 1);
-    AudioFloatArray imag(halfSize + 1);
+    AudioFloatArray real(halfSize);
+    AudioFloatArray imag(halfSize);
     float* realP = real.Elements();
     float* imagP = imag.Elements();
 
-    // Clear DC and Nyquist.
+    // Clear DC and imag value which is ignored.
     realP[0] = 0;
     imagP[0] = 0;
-    realP[halfSize] = 0;
-    imagP[halfSize] = 0;
 
-    for (unsigned n = 1; n < halfSize + 1; ++n) {
+    for (unsigned n = 1; n < halfSize; ++n) {
         float omega = 2 * piFloat * n;
         float invOmega = 1 / omega;
 
@@ -319,7 +317,7 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
         imagP[n] = b;
     }
 
-    createBandLimitedTables(realP, imagP, halfSize + 1);
+    createBandLimitedTables(realP, imagP, halfSize);
 }
 
 } // namespace WebCore
