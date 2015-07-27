@@ -11,6 +11,7 @@
 #include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "gfxPoint.h"                   // for gfxPoint, gfxSize
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 #include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
