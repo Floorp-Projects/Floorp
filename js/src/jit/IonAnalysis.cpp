@@ -20,6 +20,8 @@
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
+#include "jit/shared/Lowering-shared-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
