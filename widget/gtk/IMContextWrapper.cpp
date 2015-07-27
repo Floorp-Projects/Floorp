@@ -1585,19 +1585,16 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
         static_cast<nsWindow*>(mLastFocusedWindow->GetTopLevelWidget());
 
     // Get the position of the rootWindow in screen.
-    gint rootX, rootY;
-    gdk_window_get_origin(rootWindow->GetGdkWindow(), &rootX, &rootY);
+    LayoutDeviceIntPoint root = rootWindow->WidgetToScreenOffset();
 
     // Get the position of IM context owner window in screen.
-    gint ownerX, ownerY;
-    gdk_window_get_origin(mOwnerWindow->GetGdkWindow(), &ownerX, &ownerY);
+    LayoutDeviceIntPoint owner = mOwnerWindow->WidgetToScreenOffset();
 
     // Compute the caret position in the IM owner window.
-    GdkRectangle area;
-    area.x = charRect.mReply.mRect.x + rootX - ownerX;
-    area.y = charRect.mReply.mRect.y + rootY - ownerY;
-    area.width  = 0;
-    area.height = charRect.mReply.mRect.height;
+    LayoutDeviceIntRect rect = charRect.mReply.mRect + root - owner;
+    rect.width = 0;
+    GdkRectangle area = rootWindow->DevicePixelsToGdkRectRoundOut(
+                            LayoutDeviceIntRect::ToUntyped(rect));
 
     gtk_im_context_set_cursor_location(aContext, &area);
 }
