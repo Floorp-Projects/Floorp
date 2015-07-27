@@ -231,6 +231,7 @@ StyleInspectorMenu.prototype = {
     this.menuitemCopy.hidden = !this._hasTextSelected();
     this.menuitemCopyColor.hidden = !this._isColorPopup();
     this.menuitemCopyImageDataUrl.hidden = !this._isImageUrl();
+    this.menuitemCopyUrl.hidden = !this._isImageUrl();
 
     this.menuitemCopyRule.hidden = true;
     this.menuitemCopyLocation.hidden = true;
@@ -378,6 +379,10 @@ StyleInspectorMenu.prototype = {
    * Retrieve the url for the selected image and copy it to the clipboard
    */
   _onCopyUrl: function() {
+    if (!this._clickedNodeInfo) {
+      return;
+    }
+
     clipboardHelper.copyString(this._clickedNodeInfo.value.url);
   },
 
