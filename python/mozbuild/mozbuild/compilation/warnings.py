@@ -12,6 +12,7 @@ import os
 import re
 
 from mozbuild.util import hash_file
+import mozpack.path as mozpath
 
 
 # Regular expression to strip ANSI color sequences from a string. This is
@@ -147,17 +148,19 @@ class WarningsDatabase(object):
             for w in value['warnings']:
                 yield w
 
-    @property
-    def type_counts(self):
+    def type_counts(self, dirpath=None):
         """Returns a mapping of warning types to their counts."""
 
         types = {}
         for value in self._files.values():
             for warning in value['warnings']:
-                count = types.get(warning['flag'], 0)
+                if dirpath and not mozpath.normsep(warning['filename']).startswith(dirpath):
+                    continue
+                flag = warning['flag']
+                count = types.get(flag, 0)
                 count += 1
 
-                types[warning['flag']] = count
+                types[flag] = count
 
         return types
 

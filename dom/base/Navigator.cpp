@@ -2728,8 +2728,52 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                        const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
                                        ErrorResult& aRv)
 {
+  nsAutoCString logMsg;
+  logMsg.AppendPrintf("Navigator::RequestMediaKeySystemAccess(keySystem='%s' options=[",
+                      NS_ConvertUTF16toUTF8(aKeySystem).get());
+  if (aOptions.WasPassed()) {
+    const Sequence<MediaKeySystemOptions>& options = aOptions.Value();
+    for (size_t i = 0; i < options.Length(); i++) {
+      const MediaKeySystemOptions& op = options[i];
+      if (i > 0) {
+        logMsg.AppendLiteral(",");
+      }
+      logMsg.AppendLiteral("{");
+      logMsg.AppendPrintf("stateful='%s'",
+        MediaKeysRequirementValues::strings[(size_t)op.mStateful].value);
+
+      logMsg.AppendPrintf(", uniqueIdentifier='%s'",
+        MediaKeysRequirementValues::strings[(size_t)op.mUniqueidentifier].value);
+
+      if (!op.mAudioCapability.IsEmpty()) {
+        logMsg.AppendPrintf(", audioCapability='%s'",
+                            NS_ConvertUTF16toUTF8(op.mAudioCapability).get());
+      }
+      if (!op.mAudioType.IsEmpty()) {
+        logMsg.AppendPrintf(", audioType='%s'",
+          NS_ConvertUTF16toUTF8(op.mAudioType).get());
+      }
+      if (!op.mInitDataType.IsEmpty()) {
+        logMsg.AppendPrintf(", initDataType='%s'",
+          NS_ConvertUTF16toUTF8(op.mInitDataType).get());
+      }
+      if (!op.mVideoCapability.IsEmpty()) {
+        logMsg.AppendPrintf(", videoCapability='%s'",
+          NS_ConvertUTF16toUTF8(op.mVideoCapability).get());
+      }
+      if (!op.mVideoType.IsEmpty()) {
+        logMsg.AppendPrintf(", videoType='%s'",
+          NS_ConvertUTF16toUTF8(op.mVideoType).get());
+      }
+      logMsg.AppendLiteral("}");
+    }
+  }
+  logMsg.AppendPrintf("])");
+  EME_LOG(logMsg.get());
+
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  nsRefPtr<DetailedPromise> promise = DetailedPromise::Create(go, aRv);
+  nsRefPtr<DetailedPromise> promise = DetailedPromise::Create(go, aRv,
+    NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess"));
   if (aRv.Failed()) {
     return nullptr;
   }

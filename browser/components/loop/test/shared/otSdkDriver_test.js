@@ -133,43 +133,6 @@ describe("loop.OTSdkDriver", function () {
     });
   });
 
-  describe("#retryPublishWithoutVideo", function() {
-    beforeEach(function() {
-      sdk.initPublisher.returns(publisher);
-
-      driver.setupStreamElements(new sharedActions.SetupStreamElements({
-        publisherConfig: publisherConfig
-      }));
-    });
-
-    it("should make MediaStreamTrack.getSources return without a video source", function(done) {
-      driver.retryPublishWithoutVideo();
-
-      window.MediaStreamTrack.getSources(function(sources) {
-        expect(sources.some(function(src) {
-          return src.kind === "video";
-        })).eql(false);
-
-        done();
-      });
-    });
-
-    it("should call initPublisher", function() {
-      driver.retryPublishWithoutVideo();
-
-      var expectedConfig = _.extend({
-        channels: {
-          text: {}
-        }
-      }, publisherConfig);
-
-      sinon.assert.calledTwice(sdk.initPublisher);
-      sinon.assert.calledWith(sdk.initPublisher,
-        sinon.match.instanceOf(HTMLDivElement),
-        expectedConfig);
-    });
-  });
-
   describe("#setMute", function() {
     beforeEach(function() {
       sdk.initPublisher.returns(publisher);

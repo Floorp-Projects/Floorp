@@ -150,8 +150,7 @@ loop.shared.views.chat = (function(mozL10n) {
       var lastTimestamp = 0;
 
       var entriesClasses = React.addons.classSet({
-        "text-chat-entries": true,
-        "text-chat-entries-empty": !this.props.messageList.length
+        "text-chat-entries": true
       });
 
       return (
@@ -382,7 +381,8 @@ loop.shared.views.chat = (function(mozL10n) {
 
       var textChatViewClasses = React.addons.classSet({
         "text-chat-view": true,
-        "text-chat-disabled": !this.state.textChatEnabled
+        "text-chat-disabled": !this.state.textChatEnabled,
+        "text-chat-entries-empty": !messageList.length
       });
 
       return (

@@ -95,6 +95,7 @@ H264Converter::Drain()
   if (mDecoder) {
     return mDecoder->Drain();
   }
+  mCallback->DrainComplete();
   return mLastError;
 }
 

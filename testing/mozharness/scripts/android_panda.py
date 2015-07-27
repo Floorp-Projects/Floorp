@@ -458,6 +458,8 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
 
         raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                     '%s_raw.log' % suite)
+        error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
+                                          '%s_errorsummary.log' % suite)
         str_format_values = {
             'device_ip': self.device_ip,
             'hostname': self.mozpool_device,
@@ -468,6 +470,7 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
             'apk_name':  self.filename_apk,
             'apk_path':  self.apk_path,
             'raw_log_file': raw_log_file,
+            'error_summary_file': error_summary_file,
         }
         if '%s_options' % suite_category in self.tree_config:
             for option in self.tree_config['%s_options' % suite_category]:

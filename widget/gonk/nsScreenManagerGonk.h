@@ -90,8 +90,8 @@ public:
     // Set EGL info of primary display. Used for BLIT Composition.
     void SetEGLInfo(hwc_display_t aDisplay, hwc_surface_t aSurface,
                     mozilla::gl::GLContext* aGLContext);
-    hwc_display_t GetDpy();
-    hwc_surface_t GetSur();
+    hwc_display_t GetEGLDisplay();
+    hwc_surface_t GetEGLSurface();
 
 protected:
     uint32_t mId;
@@ -107,10 +107,12 @@ protected:
 #if ANDROID_VERSION >= 17
     android::sp<android::DisplaySurface> mDisplaySurface;
 #endif
+
+    // Accessed and updated only on compositor thread
     GonkDisplay::DisplayType mDisplayType;
-    hwc_display_t mDpy; // Store for BLIT Composition and GonkDisplayICS
-    hwc_surface_t mSur; // Store for BLIT Composition and GonkDisplayICS
-    mozilla::gl::GLContext* mGLContext; // Store for BLIT Composition
+    hwc_display_t mEGLDisplay;
+    hwc_surface_t mEGLSurface;
+    mozilla::gl::GLContext* mGLContext;
 };
 
 class nsScreenManagerGonk final : public nsIScreenManager

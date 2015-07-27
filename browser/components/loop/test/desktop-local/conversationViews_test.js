@@ -474,7 +474,9 @@ describe("loop.conversationViews", function () {
   describe("OngoingConversationView", function() {
     function mountTestComponent(extraProps) {
       var props = _.extend({
-        dispatcher: dispatcher
+        conversationStore: conversationStore,
+        dispatcher: dispatcher,
+        matchMedia: window.matchMedia
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.OngoingConversationView, props));
@@ -489,15 +491,6 @@ describe("loop.conversationViews", function () {
           sinon.match.hasOwn("name", "setupStreamElements"));
       });
 
-    it("should display an avatar for remote video when the stream is not enabled", function() {
-      view = mountTestComponent({
-        mediaConnected: true,
-        remoteVideoEnabled: false
-      });
-
-      TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
-    });
-
     it("should display the remote video when the stream is enabled", function() {
       conversationStore.setStoreState({
         remoteSrcVideoObject: { fake: 1 }
@@ -509,16 +502,6 @@ describe("loop.conversationViews", function () {
       });
 
       expect(view.getDOMNode().querySelector(".remote video")).not.eql(null);
-    });
-
-    it("should display an avatar for local video when the stream is not enabled", function() {
-      view = mountTestComponent({
-        video: {
-          enabled: false
-        }
-      });
-
-      TestUtils.findRenderedComponentWithType(view, sharedViews.AvatarView);
     });
 
     it("should display the local video when the stream is enabled", function() {

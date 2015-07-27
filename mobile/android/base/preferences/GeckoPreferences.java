@@ -831,7 +831,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_QRCODE_ENABLED.equals(key)) {
-                    if (!AppConstants.NIGHTLY_BUILD || !InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
+                    if (!InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
                         // Remove UI for qr code input on non nightly builds
                         preferences.removePreference(pref);
                         i--;

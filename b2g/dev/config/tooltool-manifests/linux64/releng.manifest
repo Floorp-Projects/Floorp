@@ -14,10 +14,10 @@
 "unpack": true
 },
 {
-"size": 31057326,
-"digest": "b844c3e52be493d2cacafa58c4a924b89c9be8d2dcc2a7c71aed58c253d8035fba4d51df309f73e3c4342a1f3c3898a9a25c4815e2112888d1280f43c41c8e51",
+"size": 31078810,
+"digest": "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
 "algorithm": "sha512",
-"filename": "moztt.tar.bz2",
+"filename": "moz-tt.tar.bz2",
 "unpack": true
 }
 ]

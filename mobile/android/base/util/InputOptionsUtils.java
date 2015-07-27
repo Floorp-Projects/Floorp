@@ -38,7 +38,10 @@ public class InputOptionsUtils {
 
     public static Intent createQRCodeReaderIntent() {
         // Bug 602818 enables QR code input if you have the particular app below installed in your device
-        Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+        final String appPackage = "com.google.zxing.client.android";
+
+        Intent intent = new Intent(appPackage + ".SCAN");
+        intent.setPackage(appPackage);
         intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return intent;

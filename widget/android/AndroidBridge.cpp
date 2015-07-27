@@ -472,6 +472,27 @@ AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
 }
 
 bool
+AndroidBridge::GetHWEncoderCapability()
+{
+  ALOG_BRIDGE("AndroidBridge::GetHWEncoderCapability");
+
+  bool value = GeckoAppShell::GetHWEncoderCapability();
+
+  return value;
+}
+
+
+bool
+AndroidBridge::GetHWDecoderCapability()
+{
+  ALOG_BRIDGE("AndroidBridge::GetHWDecoderCapability");
+
+  bool value = GeckoAppShell::GetHWDecoderCapability();
+
+  return value;
+}
+
+bool
 AndroidBridge::GetHandlersForURL(const nsAString& aURL,
                                  nsIMutableArray* aHandlersArray,
                                  nsIHandlerApp **aDefaultApp,

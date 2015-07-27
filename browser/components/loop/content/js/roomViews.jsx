@@ -665,7 +665,7 @@ loop.roomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _shouldRenderLocalLoading: function () {
+    _isLocalLoading: function () {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
              !this.state.localSrcVideoObject;
     },
@@ -677,7 +677,7 @@ loop.roomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _shouldRenderRemoteLoading: function() {
+    _isRemoteLoading: function() {
       return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
                 !this.state.remoteSrcVideoObject &&
                 !this.state.mediaConnected);
@@ -741,63 +741,54 @@ loop.roomViews = (function(mozL10n) {
           return null;
         }
         default: {
-
           return (
-            <div className="room-conversation-wrapper">
-              <div className="video-layout-wrapper">
-                <div className="conversation room-conversation">
-                  <div className="media nested">
-                    <DesktopRoomInvitationView
-                      dispatcher={this.props.dispatcher}
-                      error={this.state.error}
-                      mozLoop={this.props.mozLoop}
-                      onAddContextClick={this.handleAddContextClick}
-                      onEditContextClose={this.handleEditContextClose}
-                      roomData={roomData}
-                      savingContext={this.state.savingContext}
-                      show={shouldRenderInvitationOverlay}
-                      showEditContext={shouldRenderInvitationOverlay && shouldRenderEditContextView}
-                      socialShareProviders={this.state.socialShareProviders} />
-                    <div className="video_wrapper remote_wrapper">
-                      <div className="video_inner remote focus-stream">
-                        <sharedViews.MediaView displayAvatar={!this.shouldRenderRemoteVideo()}
-                          isLoading={this._shouldRenderRemoteLoading()}
-                          mediaType="remote"
-                          posterUrl={this.props.remotePosterUrl}
-                          srcVideoObject={this.state.remoteSrcVideoObject} />
-                      </div>
-                    </div>
-                    <div className={localStreamClasses}>
-                      <sharedViews.MediaView displayAvatar={this.state.videoMuted}
-                        isLoading={this._shouldRenderLocalLoading()}
-                        mediaType="local"
-                        posterUrl={this.props.localPosterUrl}
-                        srcVideoObject={this.state.localSrcVideoObject} />
-                    </div>
-                    <DesktopRoomEditContextView
-                      dispatcher={this.props.dispatcher}
-                      error={this.state.error}
-                      mozLoop={this.props.mozLoop}
-                      onClose={this.handleEditContextClose}
-                      roomData={roomData}
-                      savingContext={this.state.savingContext}
-                      show={!shouldRenderInvitationOverlay && shouldRenderEditContextView} />
-                  </div>
-                  <sharedViews.ConversationToolbar
-                    audio={{enabled: !this.state.audioMuted, visible: true}}
-                    dispatcher={this.props.dispatcher}
-                    edit={{ visible: this.state.contextEnabled, enabled: !this.state.showEditContext }}
-                    hangup={this.leaveRoom}
-                    onEditClick={this.handleEditContextClick}
-                    publishStream={this.publishStream}
-                    screenShare={screenShareData}
-                    video={{enabled: !this.state.videoMuted, visible: true}} />
-                </div>
-              </div>
-              <sharedViews.chat.TextChatView
+            <div className="room-conversation-wrapper desktop-room-wrapper">
+              <sharedViews.MediaLayoutView
                 dispatcher={this.props.dispatcher}
-                showRoomName={false}
-                useDesktopPaths={true} />
+                displayScreenShare={false}
+                isLocalLoading={this._isLocalLoading()}
+                isRemoteLoading={this._isRemoteLoading()}
+                isScreenShareLoading={false}
+                localPosterUrl={this.props.localPosterUrl}
+                localSrcVideoObject={this.state.localSrcVideoObject}
+                localVideoMuted={this.state.videoMuted}
+                matchMedia={this.state.matchMedia || window.matchMedia.bind(window)}
+                remotePosterUrl={this.props.remotePosterUrl}
+                remoteSrcVideoObject={this.state.remoteSrcVideoObject}
+                renderRemoteVideo={this.shouldRenderRemoteVideo()}
+                screenSharePosterUrl={null}
+                screenShareVideoObject={this.state.screenShareVideoObject}
+                showContextRoomName={false}
+                useDesktopPaths={true}>
+                <DesktopRoomInvitationView
+                  dispatcher={this.props.dispatcher}
+                  error={this.state.error}
+                  mozLoop={this.props.mozLoop}
+                  onAddContextClick={this.handleAddContextClick}
+                  onEditContextClose={this.handleEditContextClose}
+                  roomData={roomData}
+                  savingContext={this.state.savingContext}
+                  show={shouldRenderInvitationOverlay}
+                  showEditContext={shouldRenderInvitationOverlay && shouldRenderEditContextView}
+                  socialShareProviders={this.state.socialShareProviders} />
+                <DesktopRoomEditContextView
+                  dispatcher={this.props.dispatcher}
+                  error={this.state.error}
+                  mozLoop={this.props.mozLoop}
+                  onClose={this.handleEditContextClose}
+                  roomData={roomData}
+                  savingContext={this.state.savingContext}
+                  show={!shouldRenderInvitationOverlay && shouldRenderEditContextView} />
+              </sharedViews.MediaLayoutView>
+              <sharedViews.ConversationToolbar
+                audio={{enabled: !this.state.audioMuted, visible: true}}
+                dispatcher={this.props.dispatcher}
+                edit={{ visible: this.state.contextEnabled, enabled: !this.state.showEditContext }}
+                hangup={this.leaveRoom}
+                onEditClick={this.handleEditContextClick}
+                publishStream={this.publishStream}
+                screenShare={screenShareData}
+                video={{enabled: !this.state.videoMuted, visible: true}} />
             </div>
           );
         }

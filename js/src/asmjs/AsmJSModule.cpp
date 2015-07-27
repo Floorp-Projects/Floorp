@@ -1742,6 +1742,13 @@ AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext* cx)
     return true;
 }
 
+size_t
+AsmJSModule::heapLength() const
+{
+    MOZ_ASSERT(isDynamicallyLinked());
+    return maybeHeap_ ? maybeHeap_->byteLength() : 0;
+}
+
 void
 AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 {

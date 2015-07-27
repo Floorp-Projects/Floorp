@@ -40,6 +40,10 @@
 #include "mozilla/Preferences.h"
 #endif
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#include "WebrtcGmpVideoCodec.h"
+#endif
+
 #include <stdlib.h>
 
 namespace mozilla {
@@ -315,6 +319,14 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack)
 {
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // The GMP code is all the way on the other side of webrtc.org, and it is not
+  // feasible to plumb this information all the way through. So, we set it (for
+  // the duration of this call) in a global variable. This allows the GMP code
+  // to report errors to the PC.
+  WebrtcGmpPCHandleSetter setter(mPC->GetHandle());
+#endif
+
   MOZ_ASSERT(aTrackPair.mRtpTransport);
 
   bool receiving =
@@ -886,7 +898,7 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
          nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
          if (gfxInfo) {
            int32_t status;
-           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE, &status))) {
              if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
                NS_WARNING("VP8 encoder hardware is not whitelisted: disabling.\n");
              } else {
@@ -911,11 +923,10 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
          nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
          if (gfxInfo) {
            int32_t status;
-           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION, &status))) {
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE, &status))) {
              if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
                NS_WARNING("VP8 decoder hardware is not whitelisted: disabling.\n");
              } else {
-
                VideoDecoder* decoder;
                decoder = MediaCodecVideoCodec::CreateDecoder(MediaCodecVideoCodec::CodecType::CODEC_VP8);
                if (decoder) {

@@ -657,13 +657,22 @@ class Warnings(MachCommandBase):
 
     @Command('warnings-summary', category='post-build',
         description='Show a summary of compiler warnings.')
+    @CommandArgument('-C', '--directory', default=None,
+        help='Change to a subdirectory of the build directory first.')
     @CommandArgument('report', default=None, nargs='?',
         help='Warnings report to display. If not defined, show the most '
             'recent report.')
-    def summary(self, report=None):
+    def summary(self, directory=None, report=None):
         database = self.database
 
-        type_counts = database.type_counts
+        if directory:
+            dirpath = self.join_ensure_dir(self.topsrcdir, directory)
+            if not dirpath:
+                return 1
+        else:
+            dirpath = None
+
+        type_counts = database.type_counts(dirpath)
         sorted_counts = sorted(type_counts.iteritems(),
             key=operator.itemgetter(1))
 
@@ -676,19 +685,41 @@ class Warnings(MachCommandBase):
 
     @Command('warnings-list', category='post-build',
         description='Show a list of compiler warnings.')
+    @CommandArgument('-C', '--directory', default=None,
+        help='Change to a subdirectory of the build directory first.')
+    @CommandArgument('--flags', default=None, nargs='+',
+        help='Which warnings flags to match.')
     @CommandArgument('report', default=None, nargs='?',
         help='Warnings report to display. If not defined, show the most '
             'recent report.')
-    def list(self, report=None):
+    def list(self, directory=None, flags=None, report=None):
         database = self.database
 
         by_name = sorted(database.warnings)
 
-        for warning in by_name:
-            filename = warning['filename']
+        topsrcdir = mozpath.normpath(self.topsrcdir)
 
-            if filename.startswith(self.topsrcdir):
-                filename = filename[len(self.topsrcdir) + 1:]
+        if directory:
+            directory = mozpath.normsep(directory)
+            dirpath = self.join_ensure_dir(topsrcdir, directory)
+            if not dirpath:
+                return 1
+
+        if flags:
+            # Flatten lists of flags.
+            flags = set(itertools.chain(*[flaglist.split(',') for flaglist in flags]))
+
+        for warning in by_name:
+            filename = mozpath.normsep(warning['filename'])
+
+            if filename.startswith(topsrcdir):
+                filename = filename[len(topsrcdir) + 1:]
+
+            if directory and not filename.startswith(directory):
+                continue
+
+            if flags and warning['flag'] not in flags:
+                continue
 
             if warning['column'] is not None:
                 print('%s:%d:%d [%s] %s' % (filename, warning['line'],
@@ -696,6 +727,16 @@ class Warnings(MachCommandBase):
             else:
                 print('%s:%d [%s] %s' % (filename, warning['line'],
                     warning['flag'], warning['message']))
+
+    def join_ensure_dir(self, dir1, dir2):
+        dir1 = mozpath.normpath(dir1)
+        dir2 = mozpath.normsep(dir2)
+        joined_path = mozpath.join(dir1, dir2)
+        if os.path.isdir(joined_path):
+            return joined_path
+        else:
+            print('Specified directory not found.')
+            return None
 
 @CommandProvider
 class GTestCommands(MachCommandBase):

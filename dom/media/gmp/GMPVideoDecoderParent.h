@@ -79,9 +79,13 @@ private:
                                Shmem* aMem) override;
   virtual bool Recv__delete__() override;
 
+  void UnblockResetAndDrain();
+
   bool mIsOpen;
   bool mShuttingDown;
   bool mActorDestroyed;
+  bool mIsAwaitingResetComplete;
+  bool mIsAwaitingDrainComplete;
   nsRefPtr<GMPContentParent> mPlugin;
   GMPVideoDecoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;

@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EMEUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIConsoleService.h"
 
 namespace mozilla {
 
@@ -107,6 +109,19 @@ ParseKeySystem(const nsAString& aInputKeySystem,
     }
   }
   return false;
+}
+
+void
+LogToBrowserConsole(const nsAString& aMsg)
+{
+  nsCOMPtr<nsIConsoleService> console(
+    do_GetService("@mozilla.org/consoleservice;1"));
+  if (!console) {
+    NS_WARNING("Failed to log message to console.");
+    return;
+  }
+  nsAutoString msg(aMsg);
+  console->LogStringMessage(msg.get());
 }
 
 } // namespace mozilla

@@ -18,7 +18,7 @@ void misuseStackClass(int len) {
   Stack valid;
   Stack alsoValid[2];
   static Stack notValid; // expected-error {{variable of type 'Stack' only valid on the stack}}
-  static Stack alsoNotValid[2]; // expected-error {{variable of type 'Stack [2]' only valid on the stack}}
+  static Stack alsoNotValid[2]; // expected-error {{variable of type 'Stack [2]' only valid on the stack}} expected-note {{'Stack [2]' is a stack type because it is an array of stack type 'Stack'}}
 
   gobble(&valid);
   gobble(&notValid);
@@ -35,7 +35,7 @@ void misuseStackClass(int len) {
 
 Stack notValid; // expected-error {{variable of type 'Stack' only valid on the stack}}
 struct RandomClass {
-  Stack nonstaticMember; // expected-note {{'RandomClass' is a stack class because member 'nonstaticMember' is a stack class 'Stack'}}
+  Stack nonstaticMember; // expected-note {{'RandomClass' is a stack type because member 'nonstaticMember' is a stack type 'Stack'}}
   static Stack staticMember; // expected-error {{variable of type 'Stack' only valid on the stack}}
 };
 struct MOZ_STACK_CLASS RandomStackClass {
@@ -43,7 +43,7 @@ struct MOZ_STACK_CLASS RandomStackClass {
   static Stack staticMember; // expected-error {{variable of type 'Stack' only valid on the stack}}
 };
 
-struct BadInherit : Stack {}; // expected-note {{'BadInherit' is a stack class because it inherits from a stack class 'Stack'}}
+struct BadInherit : Stack {}; // expected-note {{'BadInherit' is a stack type because it inherits from a stack type 'Stack'}}
 struct MOZ_STACK_CLASS GoodInherit : Stack {};
 
 BadInherit moreInvalid; // expected-error {{variable of type 'BadInherit' only valid on the stack}}
