@@ -624,6 +624,7 @@ class IonBuilder
     bool jsop_bitop(JSOp op);
     bool jsop_binary(JSOp op);
     bool jsop_binary(JSOp op, MDefinition* left, MDefinition* right);
+    bool jsop_pow();
     bool jsop_pos();
     bool jsop_neg();
     bool jsop_setarg(uint32_t arg);
@@ -756,6 +757,7 @@ class IonBuilder
     InliningStatus inlineMathHypot(CallInfo& callInfo);
     InliningStatus inlineMathMinMax(CallInfo& callInfo, bool max);
     InliningStatus inlineMathPow(CallInfo& callInfo);
+    InliningStatus inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outputType);
     InliningStatus inlineMathRandom(CallInfo& callInfo);
     InliningStatus inlineMathImul(CallInfo& callInfo);
     InliningStatus inlineMathFRound(CallInfo& callInfo);
