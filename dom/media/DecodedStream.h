@@ -19,8 +19,7 @@
 
 namespace mozilla {
 
-class AudioData;
-class VideoData;
+class MediaData;
 class AudioSegment;
 class MediaStream;
 class MediaInputPort;
@@ -97,8 +96,8 @@ public:
 class DecodedStream {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStream);
 public:
-  DecodedStream(MediaQueue<AudioData>& aAudioQueue,
-                MediaQueue<VideoData>& aVideoQueue);
+  DecodedStream(MediaQueue<MediaData>& aAudioQueue,
+                MediaQueue<MediaData>& aVideoQueue);
 
   // Mimic MDSM::StartAudioThread.
   // Must be called before any calls to SendData().
@@ -149,8 +148,8 @@ private:
   Maybe<int64_t> mStartTime;
   MediaInfo mInfo;
 
-  MediaQueue<AudioData>& mAudioQueue;
-  MediaQueue<VideoData>& mVideoQueue;
+  MediaQueue<MediaData>& mAudioQueue;
+  MediaQueue<MediaData>& mVideoQueue;
 };
 
 } // namespace mozilla
