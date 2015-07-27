@@ -773,6 +773,12 @@ nsWindow::DestroyCompositor()
     nsBaseWidget::DestroyCompositor();
 }
 
+CompositorParent*
+nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+{
+    return new CompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
+}
+
 void
 nsWindow::BringToTop()
 {

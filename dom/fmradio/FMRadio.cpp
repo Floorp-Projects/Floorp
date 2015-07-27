@@ -471,6 +471,12 @@ FMRadio::WindowVolumeChanged(float aVolume, bool aMuted)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FMRadio::WindowAudioCaptureChanged()
+{
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FMRadio)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
