@@ -1638,7 +1638,7 @@ class AsmJSActivation : public Activation
 //
 // FrameIter is parameterized by what it includes in the stack iteration:
 //  - The SavedOption controls whether FrameIter stops when it finds an
-//    activation that was set aside via JS_SaveFrameChain (and not yet retored
+//    activation that was set aside via JS_SaveFrameChain (and not yet restored
 //    by JS_RestoreFrameChain). (Hopefully this will go away.)
 //  - The ContextOption determines whether the iteration will view frames from
 //    all JSContexts or just the given JSContext. (Hopefully this will go away.)
