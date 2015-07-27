@@ -71,6 +71,7 @@ load 1012609.html
 load 1015662.html
 load 1020205.html
 load 1041466.html
+load 1045650.html
 skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load analyser-channels-1.html
 load buffer-source-ended-1.html
