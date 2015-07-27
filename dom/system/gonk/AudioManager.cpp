@@ -676,32 +676,6 @@ AudioManager::SetPhoneState(int32_t aState)
   }
 
   mPhoneState = aState;
-
-  if (mPhoneAudioAgent) {
-    mPhoneAudioAgent->NotifyStoppedPlaying();
-    mPhoneAudioAgent = nullptr;
-  }
-
-  if (aState == PHONE_STATE_IN_CALL || aState == PHONE_STATE_RINGTONE) {
-    mPhoneAudioAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
-    MOZ_ASSERT(mPhoneAudioAgent);
-    if (aState == PHONE_STATE_IN_CALL) {
-      // Telephony doesn't be paused by any other channels.
-      mPhoneAudioAgent->Init(nullptr, (int32_t)AudioChannel::Telephony, nullptr);
-    } else {
-      mPhoneAudioAgent->Init(nullptr, (int32_t)AudioChannel::Ringer, nullptr);
-    }
-
-    // Telephony can always play.
-    float volume = 0.0;
-    bool muted = true;
-
-    nsresult rv = mPhoneAudioAgent->NotifyStartedPlaying(&volume, &muted);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   return NS_OK;
 }
 

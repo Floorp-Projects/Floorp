@@ -20,6 +20,7 @@ namespace dom {
 
 class DOMRequest;
 class OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo;
+class mozContact;
 class Promise;
 
 class Icc final : public DOMEventTargetHelper
@@ -29,8 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Icc, DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Icc(nsPIDOMWindow* aWindow, long aClientId,
-      nsIIcc* aHandler, nsIIccInfo* aIccInfo);
+  Icc(nsPIDOMWindow* aWindow, nsIIcc* aHandler, nsIIccInfo* aIccInfo);
 
   void
   Shutdown();
@@ -99,9 +99,8 @@ public:
   ReadContacts(IccContactType aContactType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  UpdateContact(const JSContext* aCx, IccContactType aContactType,
-                JS::Handle<JS::Value> aContact, const nsAString& aPin2,
-                ErrorResult& aRv);
+  UpdateContact(IccContactType aContactType, mozContact& aContact,
+                const nsAString& aPin2, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
   MatchMvno(IccMvnoType aMvnoType, const nsAString& aMatchData,
@@ -122,11 +121,7 @@ private:
   ~Icc();
 
   bool mLive;
-  uint32_t mClientId;
   nsString mIccId;
-  // mProvider is a xpcom service and will be released at Shutdown(), so it
-  // doesn't need to be cycle collected.
-  nsCOMPtr<nsIIccProvider> mProvider;
   // mHandler will be released at Shutdown(), so there is no need to join cycle
   // collection.
   nsCOMPtr<nsIIcc> mHandler;

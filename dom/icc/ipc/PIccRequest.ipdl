@@ -34,12 +34,24 @@ struct IccReplyCardLockError
   nsString message;
 };
 
+struct IccReplyReadContacts
+{
+  IccContactData[] contacts;
+};
+
+struct IccReplyUpdateContact
+{
+  IccContactData contact;
+};
+
 union IccReply
 {
   // Success
   IccReplySuccess;
   IccReplySuccessWithBoolean;
   IccReplyCardLockRetryCount;
+  IccReplyReadContacts;
+  IccReplyUpdateContact;
   // Error
   IccReplyError;
   IccReplyCardLockError;

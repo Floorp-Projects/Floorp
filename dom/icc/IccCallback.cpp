@@ -6,16 +6,109 @@
 
 #include "IccCallback.h"
 
+#include "mozilla/dom/ContactsBinding.h"
 #include "mozilla/dom/IccCardLockError.h"
 #include "mozilla/dom/MozIccBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsIIccContact.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
 namespace icc {
+
+namespace {
+
+static nsresult
+IccContactToMozContact(JSContext* aCx, GlobalObject& aGlobal,
+                       nsIIccContact* aIccContact,
+                       mozContact** aMozContact)
+{
+  *aMozContact = nullptr;
+
+  ContactProperties properties;
+
+  // Names
+  char16_t** rawStringArray = nullptr;
+  uint32_t count = 0;
+  nsresult rv = aIccContact->GetNames(&count, &rawStringArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (count > 0) {
+    Sequence<nsString>& nameSeq = properties.mName.Construct().SetValue();
+    for (uint32_t i = 0; i < count; i++) {
+      nameSeq.AppendElement(nsDependentString(rawStringArray[i]), fallible);
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
+  }
+
+  // Numbers
+  rawStringArray = nullptr;
+  count = 0;
+  rv = aIccContact->GetNumbers(&count, &rawStringArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (count > 0) {
+    Sequence<ContactTelField>& numberSeq = properties.mTel.Construct().SetValue();
+    for (uint32_t i = 0; i < count; i++) {
+      ContactTelField number;
+      number.mValue.Construct() = nsDependentString(rawStringArray[i]);
+      numberSeq.AppendElement(number, fallible);
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
+  }
+
+  // Emails
+  rawStringArray = nullptr;
+  count = 0;
+  rv = aIccContact->GetEmails(&count, &rawStringArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (count > 0) {
+    Sequence<ContactField>& emailSeq = properties.mEmail.Construct().SetValue();
+    for (uint32_t i = 0; i < count; i++) {
+      ContactField email;
+      email.mValue.Construct() = nsDependentString(rawStringArray[i]);
+      emailSeq.AppendElement(email, fallible);
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
+  }
+
+  ErrorResult er;
+  nsRefPtr<mozContact> contact
+    = mozContact::Constructor(aGlobal, aCx, properties, er);
+  NS_ENSURE_FALSE(er.Failed(), er.StealNSResult());
+
+  nsAutoString contactId;
+  rv = aIccContact->GetId(contactId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  contact->SetId(contactId, er);
+  NS_ENSURE_FALSE(er.Failed(), er.StealNSResult());
+
+  contact.forget(aMozContact);
+
+  return NS_OK;
+}
+
+static NS_IMETHODIMP
+IccContactListToMozContactList(JSContext* aCx, GlobalObject& aGlobal,
+                               nsIIccContact** aContacts, uint32_t aCount,
+                               nsTArray<nsRefPtr<mozContact>>& aContactList)
+{
+  aContactList.SetCapacity(aCount);
+  for (uint32_t i = 0; i < aCount ; i++) {
+    nsRefPtr<mozContact> contact;
+    nsresult rv =
+      IccContactToMozContact(aCx, aGlobal, aContacts[i], getter_AddRefs(contact));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aContactList.AppendElement(contact);
+  }
+
+  return NS_OK;
+}
+
+} // anonymous namespace
 
 NS_IMPL_ISUPPORTS(IccCallback, nsIIccCallback)
 
@@ -130,6 +223,64 @@ IccCallback::NotifyCardLockError(const nsAString & aErrorMsg,
   mRequest->FireDetailedError(error);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+IccCallback::NotifyRetrievedIccContacts(nsIIccContact** aContacts,
+                                        uint32_t aCount)
+{
+  MOZ_ASSERT(aContacts);
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  GlobalObject global(cx, go->GetGlobalJSObject());
+
+  nsTArray<nsRefPtr<mozContact>> contactList;
+
+  nsresult rv =
+    IccContactListToMozContactList(cx, global, aContacts, aCount, contactList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::Rooted<JS::Value> jsResult(cx);
+
+  if (!ToJSValue(cx, contactList, &jsResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NotifySuccess(jsResult);
+}
+
+NS_IMETHODIMP
+IccCallback::NotifyUpdatedIccContact(nsIIccContact* aContact)
+{
+  MOZ_ASSERT(aContact);
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  GlobalObject global(cx, go->GetGlobalJSObject());
+
+  nsRefPtr<mozContact> mozContact;
+  nsresult rv =
+    IccContactToMozContact(cx, global, aContact, getter_AddRefs(mozContact));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::Rooted<JS::Value> jsResult(cx);
+
+  if (!ToJSValue(cx, mozContact, &jsResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NotifySuccess(jsResult);
 }
 
 } // namespace icc

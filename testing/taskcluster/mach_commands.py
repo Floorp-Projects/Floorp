@@ -450,10 +450,6 @@ class CIBuild(object):
     @CommandArgument('--head-rev',
         required=True,
         help='Commit revision to use')
-    @CommandArgument('--mozharness-repository',
-        help='URL for custom mozharness repo')
-    @CommandArgument('--mozharness-rev',
-        help='Commit revision to use from mozharness repository')
     @CommandArgument('--owner',
         default='foobar@mozilla.com',
         help='email address of who owns this graph')
@@ -475,16 +471,6 @@ class CIBuild(object):
 
         head_ref = params['head_ref'] or head_rev
 
-        mozharness = load_mozharness_info()
-
-        mozharness_repo = params['mozharness_repository']
-        if mozharness_repo is None:
-            mozharness_repo = mozharness['repo']
-
-        mozharness_rev = params['mozharness_rev']
-        if mozharness_rev is None:
-            mozharness_rev = mozharness['revision']
-
         from taskcluster_graph.from_now import (
             json_time_from_now,
             current_json_time,
@@ -498,9 +484,6 @@ class CIBuild(object):
             'head_repository': head_repository,
             'head_rev': head_rev,
             'head_ref': head_ref,
-            'mozharness_repository': mozharness_repo,
-            'mozharness_ref': mozharness_rev,
-            'mozharness_rev': mozharness_rev
         }.items())
 
         try:

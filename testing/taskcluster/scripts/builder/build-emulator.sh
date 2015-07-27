@@ -11,19 +11,9 @@ test -d $WORKSPACE
 test $GECKO_HEAD_REPOSITORY # Should be an hg repository url to pull from
 test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
-test $MOZHARNESS_REPOSITORY # mozharness repository
-test $MOZHARNESS_REV # mozharness revision
-test $MOZHARNESS_REF # mozharness ref
 test $TARGET
 
 . setup-ccache.sh
-
-# First check if the mozharness directory is available. This is intended to be
-# used locally in development to test mozharness changes:
-#
-#   $ docker -v your_mozharness:/home/worker/mozharness ...
-#
-tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
 
 # Figure out where the remote manifest is so we can use caches for it.
 
@@ -44,7 +34,7 @@ fi
 
 rm -rf $WORKSPACE/B2G/out/target/product/generic/tests/
 
-./mozharness/scripts/b2g_build.py \
+$WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-emulator.py \
   "$debug_flag" \
   --disable-mock \
@@ -53,8 +43,7 @@ rm -rf $WORKSPACE/B2G/out/target/product/generic/tests/
   --target=$TARGET \
   --b2g-config-dir=$TARGET \
   --checkout-revision=$GECKO_HEAD_REV \
-  --base-repo=$GECKO_BASE_REPOSITORY \
-  --repo=$GECKO_HEAD_REPOSITORY
+  --repo=$WORKSPACE/gecko
 
 # Move files into artifact locations!
 mkdir -p $HOME/artifacts
