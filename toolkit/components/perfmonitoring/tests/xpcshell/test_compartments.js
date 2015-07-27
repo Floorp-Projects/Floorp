@@ -19,10 +19,12 @@ let promiseStatistics = Task.async(function*(name) {
   let componentsData = [];
   let componentsEnum = snapshot.getComponentsData().enumerate();
   while (componentsEnum.hasMoreElements()) {
-    componentsData.push(componentsEnum.getNext().QueryInterface(Ci.nsIPerformanceStats));
+    let data = componentsEnum.getNext().QueryInterface(Ci.nsIPerformanceStats);
+    let normalized = JSON.parse(JSON.stringify(data));
+    componentsData.push(data);
   }
   return {
-    processData: snapshot.getProcessData(),
+    processData: JSON.parse(JSON.stringify(snapshot.getProcessData())),
     componentsData
   };
 });
@@ -35,11 +37,19 @@ let promiseSetMonitoring = Task.async(function*(to) {
   yield Promise.resolve();
 });
 
+let promiseSetPerCompartment = Task.async(function*(to) {
+  let service = Cc["@mozilla.org/toolkit/performance-stats-service;1"].
+    getService(Ci.nsIPerformanceStatsService);
+  service.isMonitoringPerCompartment = to;
+  yield Promise.resolve();
+});
+
 function getBuiltinStatistics(name, snapshot) {
   let stats = snapshot.componentsData.find(stats =>
     stats.isSystem && !stats.addonId
   );
   do_print(`Built-in statistics for ${name} were ${stats?"":"not "}found`);
+  do_print(JSON.stringify(snapshot.componentsData, null, "\t"));
   return stats;
 }
 
@@ -57,17 +67,25 @@ function burnCPU(ms) {
 }
 
 function ensureEquals(snap1, snap2, name) {
-  Assert.equal(
-    JSON.stringify(snap1.processData),
-    JSON.stringify(snap2.processData),
-    "Same process data: " + name);
+  for (let k of Object.keys(snap1.processData)) {
+    if (k == "ticks") {
+      // Ticks monitoring cannot be deactivated
+      continue;
+    }
+    Assert.equal(snap1.processData[k], snap2.processData[k], `Same process data value ${k} (${name})`)
+  }
   let stats1 = snap1.componentsData.sort((a, b) => a.name <= b.name);
   let stats2 = snap2.componentsData.sort((a, b) => a.name <= b.name);
-  Assert.equal(
-    JSON.stringify(stats1),
-    JSON.stringify(stats2),
-    "Same components data: " + name
-  );
+  Assert.equal(stats1.length, stats2.length, `Same number of components (${name})`);
+  for (let i = 0; i < stats1.length; ++i) {
+    for (let k of Object.keys(stats1[i])) {
+      if (k == "ticks") {
+        // Ticks monitoring cannot be deactivated
+        continue;
+      }
+      Assert.equal(stats1[i][k], stats1[i][k], `Same component data value ${i} ${k} (${name})`)
+    }
+  }
 }
 
 function hasLowPrecision() {
@@ -88,6 +106,7 @@ function hasLowPrecision() {
 
 add_task(function* test_measure() {
   let skipPrecisionTests = hasLowPrecision();
+  yield promiseSetPerCompartment(false);
 
   do_print("Burn CPU without the stopwatch");
   yield promiseSetMonitoring(false);
@@ -137,4 +156,14 @@ add_task(function* test_measure() {
   Assert.equal(builtin2.totalCPOWTime, builtin1.totalCPOWTime, "No CPOW for built-in statistics");
   Assert.equal(builtin4.totalUserTime, builtin3.totalUserTime, "After deactivating the stopwatch, we didn't count any time for the built-in");
   Assert.equal(builtin4.totalCPOWTime, builtin3.totalCPOWTime, "After deactivating the stopwatch, we didn't count any CPOW time for the built-in");
+
+  // Ideally, we should be able to look for test_compartments.js, but
+  // it doesn't have its own compartment.
+  for (let stats of [stats1, stats2, stats3, stats4]) {
+    Assert.ok(!stats.componentsData.find(x => x.name.includes("Task.jsm")), "At this stage, Task.jsm doesn't show up in the components data");
+  }
+  yield promiseSetPerCompartment(true);
+  burnCPU(300);
+  let stats5 = yield promiseStatistics("With per-compartment monitoring");
+  Assert.ok(stats5.componentsData.find(x => x.name.includes("Task.jsm")), "With per-compartment monitoring, test_compartments.js shows up");
 });
