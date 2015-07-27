@@ -1737,6 +1737,8 @@ private:
   // requestAnimationFrame, if it's OK to do so.
   void MaybeRescheduleAnimationFrameNotifications();
 
+  void MaybeClearBoxObjectTable();
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
