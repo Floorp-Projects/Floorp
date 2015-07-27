@@ -117,6 +117,7 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindow* aOwnerWindow)
   , mSpeechDetectionTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
   , mSpeechGrammarList(new SpeechGrammarList(GetParentObject()))
   , mInterimResults(false)
+  , mMaxAlternatives(1)
 {
   SR_LOG("created SpeechRecognition");
 
@@ -685,14 +686,13 @@ SpeechRecognition::SetInterimResults(bool aArg)
 uint32_t
 SpeechRecognition::GetMaxAlternatives(ErrorResult& aRv) const
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return 0;
+  return mMaxAlternatives;
 }
 
 void
 SpeechRecognition::SetMaxAlternatives(uint32_t aArg, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  mMaxAlternatives = aArg;
   return;
 }
 
