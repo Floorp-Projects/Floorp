@@ -22,7 +22,6 @@
 #include "nsIVariant.h"
 #include "nsJSON.h"
 #include "nsJSUtils.h"
-#include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 
 #define MOBILECONN_ERROR_INVALID_PARAMETER NS_LITERAL_STRING("InvalidParameter")

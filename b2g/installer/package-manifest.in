@@ -516,8 +516,6 @@
 #endif
 @RESPATH@/components/StkCmdFactory.js
 @RESPATH@/components/StkCmdFactory.manifest
-@RESPATH@/components/RILContentHelper.js
-@RESPATH@/components/RILContentHelper.manifest
 @RESPATH@/components/RILSystemMessengerHelper.js
 @RESPATH@/components/RILSystemMessengerHelper.manifest
 @RESPATH@/components/TelephonyAudioService.js
