@@ -119,8 +119,8 @@ Installer.prototype = {
         if (install.linkedInstalls) {
           install.linkedInstalls.forEach(function(aInstall) {
             aInstall.addListener(this);
-            // App disabled items are not compatible and so fail to install
-            if (aInstall.addon.appDisabled)
+            // Corrupt or incompatible items fail to install
+            if (aInstall.state == AddonManager.STATE_DOWNLOAD_FAILED || aInstall.addon.appDisabled)
               failed.push(aInstall);
             else
               installs.push(aInstall);
@@ -132,7 +132,7 @@ Installer.prototype = {
         break;
       default:
         logger.warn("Download of " + install.sourceURI.spec + " in unexpected state " +
-             install.state);
+                    install.state);
       }
     }
 

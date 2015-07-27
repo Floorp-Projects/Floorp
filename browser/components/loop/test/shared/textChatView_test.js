@@ -56,27 +56,6 @@ describe("loop.shared.views.TextChatView", function () {
       store.setStoreState({ textChatEnabled: true });
     });
 
-    it("should add an empty class when the list is empty", function() {
-      view = mountTestComponent({
-        messageList: []
-      });
-
-      expect(view.getDOMNode().classList.contains("text-chat-entries-empty")).eql(true);
-    });
-
-    it("should not add an empty class when the list is has items", function() {
-      view = mountTestComponent({
-        messageList: [{
-          type: CHAT_MESSAGE_TYPES.RECEIVED,
-          contentType: CHAT_CONTENT_TYPES.TEXT,
-          message: "Hello!",
-          receivedTimestamp: "2015-06-25T17:53:55.357Z"
-        }]
-      });
-
-      expect(view.getDOMNode().classList.contains("text-chat-entries-empty")).eql(false);
-    });
-
     it("should render message entries when message were sent/ received", function() {
       view = mountTestComponent({
         messageList: [{
@@ -297,6 +276,41 @@ describe("loop.shared.views.TextChatView", function () {
       fakeServer.restore();
     });
 
+    it("should add a disabled class when text chat is disabled", function() {
+      view = mountTestComponent();
+
+      store.setStoreState({ textChatEnabled: false });
+
+      expect(view.getDOMNode().classList.contains("text-chat-disabled")).eql(true);
+    });
+
+    it("should not a disabled class when text chat is enabled", function() {
+      view = mountTestComponent();
+
+      store.setStoreState({ textChatEnabled: true });
+
+      expect(view.getDOMNode().classList.contains("text-chat-disabled")).eql(false);
+    });
+
+    it("should add an empty class when the entries list is empty", function() {
+      view = mountTestComponent();
+
+      expect(view.getDOMNode().classList.contains("text-chat-entries-empty")).eql(true);
+    });
+
+    it("should not add an empty class when the entries list is has items", function() {
+      view = mountTestComponent();
+
+      store.sendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!",
+        sentTimestamp: "1970-01-01T00:02:00.000Z",
+        receivedTimestamp: "1970-01-01T00:02:00.000Z"
+      });
+
+      expect(view.getDOMNode().classList.contains("text-chat-entries-empty")).eql(false);
+    });
+
     it("should show timestamps from msgs sent more than 1 min apart", function() {
       view = mountTestComponent();
 
@@ -324,12 +338,6 @@ describe("loop.shared.views.TextChatView", function () {
 
       expect(node.querySelectorAll(".text-chat-entry-timestamp").length)
           .to.eql(2);
-    });
-
-    it("should display the view if no messages and text chat is enabled", function() {
-      view = mountTestComponent();
-
-      expect(view.getDOMNode()).not.eql(null);
     });
 
     it("should render message entries when message were sent/ received", function() {

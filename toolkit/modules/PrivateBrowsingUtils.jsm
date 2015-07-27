@@ -51,6 +51,18 @@ this.PrivateBrowsingUtils = {
                   .QueryInterface(Ci.nsILoadContext);
   },
 
+  addToTrackingAllowlist(aURI) {
+    let pbmtpWhitelist = Cc["@mozilla.org/url-classifier/pbm-tp-whitelist;1"]
+                           .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
+    pbmtpWhitelist.addToAllowList(aURI);
+  },
+
+  removeFromTrackingAllowlist(aURI) {
+    let pbmtpWhitelist = Cc["@mozilla.org/url-classifier/pbm-tp-whitelist;1"]
+                           .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
+    pbmtpWhitelist.removeFromAllowList(aURI);
+  },
+
   get permanentPrivateBrowsing() {
     try {
       return gTemporaryAutoStartMode ||
