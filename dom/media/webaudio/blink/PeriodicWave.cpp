@@ -193,29 +193,24 @@ void PeriodicWave::createBandLimitedTables(const float* realData, const float* i
         nsAutoArrayPtr<float> realP(new float[halfSize + 1]);
         nsAutoArrayPtr<float> imagP(new float[halfSize + 1]);
 
+        // Find the starting bin where we should start culling the aliasing
+        // partials for this pitch range.  We need to clear out the highest
+        // frequencies to band-limit the waveform.
+        unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
+        // Also clear bins where components are not provided.
+        numberOfPartials = std::min(numberOfPartials, numberOfComponents - 1);
+
         // Copy from loaded frequency data and scale.
         float scale = fftSize;
-        AudioBufferCopyWithScale(realData, scale, realP, numberOfComponents);
-        AudioBufferCopyWithScale(imagData, scale, imagP, numberOfComponents);
-
-        // If fewer components were provided than 1/2 FFT size,
-        // then clear the remaining bins.
-        for (i = numberOfComponents; i < halfSize + 1; ++i) {
-            realP[i] = 0;
-            imagP[i] = 0;
-        }
+        AudioBufferCopyWithScale(realData, scale, realP, numberOfPartials + 1);
+        AudioBufferCopyWithScale(imagData, scale, imagP, numberOfPartials + 1);
 
         // Generate complex conjugate because of the way the
         // inverse FFT is defined.
         float minusOne = -1;
-        AudioBufferInPlaceScale(imagP, minusOne, halfSize + 1);
+        AudioBufferInPlaceScale(imagP, minusOne, numberOfPartials + 1);
 
-        // Find the starting bin where we should start culling.
-        // We need to clear out the highest frequencies to band-limit
-        // the waveform.
-        unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
-
-        // Cull the aliasing partials for this pitch range.
+        // Clear the remaining bins.
         for (i = numberOfPartials + 1; i < halfSize + 1; ++i) {
             realP[i] = 0;
             imagP[i] = 0;
