@@ -34,7 +34,7 @@ struct BaselineDebugModeOSRInfo;
 class BaselineFrame
 {
   public:
-    enum Flags {
+    enum Flags : uint32_t {
         // The frame has a valid return value. See also InterpreterFrame::HAS_RVAL.
         HAS_RVAL         = 1 << 0,
 
