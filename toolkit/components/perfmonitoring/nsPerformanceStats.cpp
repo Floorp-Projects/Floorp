@@ -30,6 +30,7 @@
 class nsPerformanceStats: public nsIPerformanceStats {
 public:
   nsPerformanceStats(const nsAString& aName,
+                     nsIPerformanceStats* aParent,
                      const nsAString& aGroupId,
                      const nsAString& aAddonId,
                      const nsAString& aTitle,
@@ -44,6 +45,10 @@ public:
     , mIsSystem(aIsSystem)
     , mPerformanceData(aPerformanceData)
   {
+    if (aParent) {
+      mozilla::DebugOnly<nsresult> rv = aParent->GetGroupId(mParentId);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
   }
   explicit nsPerformanceStats() {}
 
@@ -58,6 +63,12 @@ public:
   /* readonly attribute AString groupId; */
   NS_IMETHOD GetGroupId(nsAString& aGroupId) override {
     aGroupId.Assign(mGroupId);
+    return NS_OK;
+  };
+
+  /* readonly attribute AString parentId; */
+  NS_IMETHOD GetParentId(nsAString& aParentId) override {
+    aParentId.Assign(mParentId);
     return NS_OK;
   };
 
@@ -124,6 +135,7 @@ public:
 
 private:
   nsString mName;
+  nsString mParentId;
   nsString mGroupId;
   nsString mAddonId;
   nsString mTitle;
@@ -159,13 +171,18 @@ private:
    * entire process, rather than the statistics for a specific set of
    * compartments.
    */
-  already_AddRefed<nsIPerformanceStats> ImportStats(JSContext* cx, const js::PerformanceData& data, uint64_t uid);
+  already_AddRefed<nsIPerformanceStats> ImportStats(JSContext* cx, const js::PerformanceData& data, uint64_t uid, nsIPerformanceStats* parent);
 
   /**
    * Callbacks for iterating through the `PerformanceStats` of a runtime.
    */
-  bool IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats, uint64_t uid);
-  static bool IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, uint64_t uid, void* self);
+  bool IterPerformanceStatsCallbackInternal(JSContext* cx,
+                                            const js::PerformanceData& ownStats, const uint64_t ownId,
+                                            const uint64_t* parentId);
+  static bool IterPerformanceStatsCallback(JSContext* cx,
+                                           const js::PerformanceData& ownStats, const uint64_t ownId,
+                                           const uint64_t* parentId,
+                                           void* self);
 
   // If the context represents a window, extract the title and window ID.
   // Otherwise, extract "" and 0.
@@ -175,6 +192,11 @@ private:
   void GetGroupId(JSContext*,
                   uint64_t uid,
                   nsString& groupId);
+
+  static void GetName(JSContext*,
+                      JS::Handle<JSObject*> global,
+                      nsString& name);
+
   // If the context presents an add-on, extract the addon ID.
   // Otherwise, extract "".
   static void GetAddonId(JSContext*,
@@ -188,6 +210,7 @@ private:
 private:
   nsCOMArray<nsIPerformanceStats> mComponentsData;
   nsCOMPtr<nsIPerformanceStats> mProcessData;
+  nsBaseHashtable<nsUint64HashKey, nsCOMPtr<nsIPerformanceStats>, nsCOMPtr<nsIPerformanceStats> > mCachedStats;
   uint64_t mProcessId;
 };
 
@@ -273,8 +296,44 @@ nsPerformanceSnapshot::GetIsSystem(JSContext*,
   return nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(global));
 }
 
+/* static */
+void
+nsPerformanceSnapshot::GetName(JSContext* cx,
+                               JS::Handle<JSObject*> global,
+                               nsString& name)
+{
+  nsAutoCString cname;
+  do {
+    // Attempt to use the URL as name.
+    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(global);
+    if (!principal) {
+      break;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = principal->GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv) || !uri) {
+      break;
+    }
+
+    rv = uri->GetSpec(cname);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+
+    name.Assign(NS_ConvertUTF8toUTF16(cname));
+    return;
+  } while(false);
+  xpc::GetCurrentCompartmentName(cx, cname);
+  name.Assign(NS_ConvertUTF8toUTF16(cname));
+}
+
 already_AddRefed<nsIPerformanceStats>
-nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& performance, const uint64_t uid) {
+nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& performance, const uint64_t uid, nsIPerformanceStats* parent) {
+  if (performance.ticks == 0) {
+    // Ignore compartments with no activity.
+    return nullptr;
+  }
   JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
   if (!global) {
@@ -293,28 +352,34 @@ nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& per
   uint64_t windowId;
   GetWindowData(cx, title, &windowId);
 
-  nsAutoString name;
-  nsAutoCString cname;
-  xpc::GetCurrentCompartmentName(cx, cname);
-  name.Assign(NS_ConvertUTF8toUTF16(cname));
+  nsString name;
+  GetName(cx, global, name);
 
   bool isSystem = GetIsSystem(cx, global);
 
   nsCOMPtr<nsIPerformanceStats> result =
-    new nsPerformanceStats(name, groupId, addonId, title, windowId, isSystem, performance);
+    new nsPerformanceStats(name, parent, groupId, addonId, title, windowId, isSystem, performance);
   return result.forget();
 }
 
 /*static*/ bool
-nsPerformanceSnapshot::IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, const uint64_t uid, void* self) {
-  return reinterpret_cast<nsPerformanceSnapshot*>(self)->IterPerformanceStatsCallbackInternal(cx, stats, uid);
+nsPerformanceSnapshot::IterPerformanceStatsCallback(JSContext* cx,
+                                                    const js::PerformanceData& stats, const uint64_t id,
+                                                    const uint64_t* parentId,
+                                                    void* self) {
+  return reinterpret_cast<nsPerformanceSnapshot*>(self)->IterPerformanceStatsCallbackInternal(cx, stats, id, parentId);
 }
 
 bool
-nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats, const uint64_t uid) {
-  nsCOMPtr<nsIPerformanceStats> result = ImportStats(cx, stats, uid);
+nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx,
+                                                            const js::PerformanceData& stats, const uint64_t id,
+                                                            const uint64_t* parentId) {
+
+  nsCOMPtr<nsIPerformanceStats> parent = parentId ? mCachedStats.Get(*parentId) : nullptr;
+  nsCOMPtr<nsIPerformanceStats> result = ImportStats(cx, stats, id, parent);
   if (result) {
     mComponentsData.AppendElement(result);
+    mCachedStats.Put(id, result);
   }
 
   return true;
@@ -328,8 +393,12 @@ nsPerformanceSnapshot::Init(JSContext* cx, uint64_t processId) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsAutoString processGroupId;
+  processGroupId.AssignLiteral("process: ");
+  processGroupId.AppendInt(processId);
   mProcessData = new nsPerformanceStats(NS_LITERAL_STRING("<process>"), // name
-                                        NS_LITERAL_STRING("<process:?>"), // group id
+                                        nullptr,                        // parent
+                                        processGroupId,                 // group id
                                         NS_LITERAL_STRING(""),          // add-on id
                                         NS_LITERAL_STRING(""),          // title
                                         0,                              // window id
@@ -401,6 +470,20 @@ NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool
 {
   JSRuntime *runtime = JS_GetRuntime(cx);
   if (!js::SetStopwatchIsMonitoringJank(runtime, aIsStopwatchActive)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP nsPerformanceStatsService::GetIsMonitoringPerCompartment(JSContext* cx, bool *aIsStopwatchActive)
+{
+  JSRuntime *runtime = JS_GetRuntime(cx);
+  *aIsStopwatchActive = js::GetStopwatchIsMonitoringPerCompartment(runtime);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPerformanceStatsService::SetIsMonitoringPerCompartment(JSContext* cx, bool aIsStopwatchActive)
+{
+  JSRuntime *runtime = JS_GetRuntime(cx);
+  if (!js::SetStopwatchIsMonitoringPerCompartment(runtime, aIsStopwatchActive)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

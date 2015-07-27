@@ -458,6 +458,8 @@ ContentSearchUIController.prototype = {
     this._strings = strings;
     this._updateDefaultEngineHeader();
     this._updateSearchWithHeader();
+    document.getElementById("contentSearchSettingsButton").textContent =
+      this._strings.searchSettings;
   },
 
   _updateDefaultEngineHeader: function () {
@@ -484,12 +486,10 @@ ContentSearchUIController.prototype = {
       searchWithHeader.firstChild.remove();
     }
     if (this.input.value) {
-      searchWithHeader.appendChild(document.createTextNode(this._strings.searchFor));
-      let span = document.createElementNS(HTML_NS, "span");
-      span.setAttribute("class", "contentSearchSearchWithHeaderSearchText");
-      span.appendChild(document.createTextNode(" " + this.input.value + " "));
-      searchWithHeader.appendChild(span);
-      searchWithHeader.appendChild(document.createTextNode(this._strings.searchWith));
+      let html = "<span class='contentSearchSearchWithHeaderSearchText'>" +
+                 this.input.value + "</span>";
+      html = this._strings.searchForKeywordsWith.replace("%S", html);
+      searchWithHeader.innerHTML = html;
       return;
     }
     searchWithHeader.appendChild(document.createTextNode(this._strings.searchWithHeader));
@@ -654,7 +654,6 @@ ContentSearchUIController.prototype = {
     this._oneOffsTable.appendChild(headerRow);
 
     let button = document.createElementNS(HTML_NS, "button");
-    button.appendChild(document.createTextNode("Change Search Settings"));
     button.setAttribute("class", "contentSearchSettingsButton");
     button.classList.add("contentSearchHeaderRow");
     button.classList.add("contentSearchHeader");

@@ -41,9 +41,10 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
 /**
- * Webrtc audio source.
+ * Webrtc microphone source source.
  */
-NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioSource)
+NS_IMPL_ISUPPORTS0(MediaEngineWebRTCMicrophoneSource)
+NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioCaptureSource)
 
 // XXX temp until MSG supports registration
 StaticRefPtr<AudioOutputObserver> gFarendObserver;
@@ -177,7 +178,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
 }
 
 void
-MediaEngineWebRTCAudioSource::GetName(nsAString& aName)
+MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName)
 {
   if (mInitDone) {
     aName.Assign(mDeviceName);
@@ -187,7 +188,7 @@ MediaEngineWebRTCAudioSource::GetName(nsAString& aName)
 }
 
 void
-MediaEngineWebRTCAudioSource::GetUUID(nsACString& aUUID)
+MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID)
 {
   if (mInitDone) {
     aUUID.Assign(mDeviceUUID);
@@ -197,10 +198,10 @@ MediaEngineWebRTCAudioSource::GetUUID(nsACString& aUUID)
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
-                                     bool aAgcOn, uint32_t aAGC,
-                                     bool aNoiseOn, uint32_t aNoise,
-                                     int32_t aPlayoutDelay)
+MediaEngineWebRTCMicrophoneSource::Config(bool aEchoOn, uint32_t aEcho,
+                                          bool aAgcOn, uint32_t aAGC,
+                                          bool aNoiseOn, uint32_t aNoise,
+                                          int32_t aPlayoutDelay)
 {
   LOG(("Audio config: aec: %d, agc: %d, noise: %d",
        aEchoOn ? aEcho : -1,
@@ -267,7 +268,7 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
 // Infinity = UINT32_MAX e.g. device cannot satisfy accumulated ConstraintSets.
 // A finite result may be used to calculate this device's ranking as a choice.
 
-uint32_t MediaEngineWebRTCAudioSource::GetBestFitnessDistance(
+uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
     const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId)
 {
@@ -281,9 +282,9 @@ uint32_t MediaEngineWebRTCAudioSource::GetBestFitnessDistance(
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
-                                       const MediaEnginePrefs &aPrefs,
-                                       const nsString& aDeviceId)
+MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aConstraints,
+                                            const MediaEnginePrefs &aPrefs,
+                                            const nsString& aDeviceId)
 {
   if (mState == kReleased) {
     if (mInitDone) {
@@ -309,7 +310,7 @@ MediaEngineWebRTCAudioSource::Allocate(const dom::MediaTrackConstraints &aConstr
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Deallocate()
+MediaEngineWebRTCMicrophoneSource::Deallocate()
 {
   bool empty;
   {
@@ -331,7 +332,8 @@ MediaEngineWebRTCAudioSource::Deallocate()
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
+MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
+                                         TrackID aID)
 {
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
@@ -384,7 +386,7 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
+MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
 {
   {
     MonitorAutoLock lock(mMonitor);
@@ -421,17 +423,17 @@ MediaEngineWebRTCAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
 }
 
 void
-MediaEngineWebRTCAudioSource::NotifyPull(MediaStreamGraph* aGraph,
-                                         SourceMediaStream *aSource,
-                                         TrackID aID,
-                                         StreamTime aDesiredTime)
+MediaEngineWebRTCMicrophoneSource::NotifyPull(MediaStreamGraph *aGraph,
+                                              SourceMediaStream *aSource,
+                                              TrackID aID,
+                                              StreamTime aDesiredTime)
 {
   // Ignore - we push audio data
   LOG_FRAMES(("NotifyPull, desired = %ld", (int64_t) aDesiredTime));
 }
 
 void
-MediaEngineWebRTCAudioSource::Init()
+MediaEngineWebRTCMicrophoneSource::Init()
 {
   mVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
 
@@ -496,7 +498,7 @@ MediaEngineWebRTCAudioSource::Init()
 }
 
 void
-MediaEngineWebRTCAudioSource::Shutdown()
+MediaEngineWebRTCMicrophoneSource::Shutdown()
 {
   if (!mInitDone) {
     // duplicate these here in case we failed during Init()
@@ -551,9 +553,10 @@ MediaEngineWebRTCAudioSource::Shutdown()
 typedef int16_t sample;
 
 void
-MediaEngineWebRTCAudioSource::Process(int channel,
-  webrtc::ProcessingTypes type, sample* audio10ms,
-  int length, int samplingFreq, bool isStereo)
+MediaEngineWebRTCMicrophoneSource::Process(int channel,
+                                           webrtc::ProcessingTypes type,
+                                           sample *audio10ms, int length,
+                                           int samplingFreq, bool isStereo)
 {
   // On initial capture, throw away all far-end data except the most recent sample
   // since it's already irrelevant and we want to keep avoid confusing the AEC far-end
@@ -618,4 +621,55 @@ MediaEngineWebRTCAudioSource::Process(int channel,
   return;
 }
 
+void
+MediaEngineWebRTCAudioCaptureSource::GetName(nsAString &aName)
+{
+  aName.AssignLiteral("AudioCapture");
+}
+void
+MediaEngineWebRTCAudioCaptureSource::GetUUID(nsACString &aUUID)
+{
+  nsID uuid;
+  char uuidBuffer[NSID_LENGTH];
+  nsCString asciiString;
+  ErrorResult rv;
+
+  rv = nsContentUtils::GenerateUUIDInPlace(uuid);
+  if (rv.Failed()) {
+    aUUID.AssignLiteral("");
+    return;
+  }
+
+
+  uuid.ToProvidedString(uuidBuffer);
+  asciiString.AssignASCII(uuidBuffer);
+
+  // Remove {} and the null terminator
+  aUUID.Assign(Substring(asciiString, 1, NSID_LENGTH - 3));
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Start(SourceMediaStream *aMediaStream,
+                                           TrackID aId)
+{
+  aMediaStream->AddTrack(aId, 0, new AudioSegment());
+  return NS_OK;
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
+                                          TrackID aId)
+{
+  aMediaStream->EndAllTrackAndFinish();
+  return NS_OK;
+}
+
+uint32_t
+MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsString& aDeviceId)
+{
+  // There is only one way of capturing audio for now, and it's always adequate.
+  return 0;
+}
 }

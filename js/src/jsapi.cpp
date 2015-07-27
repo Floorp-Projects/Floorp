@@ -317,16 +317,21 @@ IterPerformanceStats(JSContext* cx,
     }
 
     JSRuntime* rt = JS_GetRuntime(cx);
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
+
+    // First report the shared groups
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         JSCompartment* compartment = c.get();
-        if (!compartment->performanceMonitoring.isLinked()) {
+        if (!c->principals()) {
+            // Compartments without principals could show up here, but
+            // reporting them doesn't really make sense.
+            continue;
+        }
+        if (!c->performanceMonitoring.hasSharedGroup()) {
             // Don't report compartments that do not even have a PerformanceGroup.
             continue;
         }
-
         js::AutoCompartment autoCompartment(cx, compartment);
-        PerformanceGroup* group = compartment->performanceMonitoring.getGroup(cx);
-
+        PerformanceGroup* group = compartment->performanceMonitoring.getSharedGroup(cx);
         if (group->data.ticks == 0) {
             // Don't report compartments that have never been used.
             continue;
@@ -338,7 +343,9 @@ IterPerformanceStats(JSContext* cx,
             continue;
         }
 
-        if (!(*walker)(cx, group->data, group->uid, closure)) {
+        if (!(*walker)(cx,
+                       group->data, group->uid, nullptr,
+                       closure)) {
             // Issue in callback
             return false;
         }
@@ -347,6 +354,35 @@ IterPerformanceStats(JSContext* cx,
             return false;
         }
     }
+
+    // Then report the own groups
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        JSCompartment* compartment = c.get();
+        if (!c->principals()) {
+            // Compartments without principals could show up here, but
+            // reporting them doesn't really make sense.
+            continue;
+        }
+        if (!c->performanceMonitoring.hasOwnGroup()) {
+            // Don't report compartments that do not even have a PerformanceGroup.
+            continue;
+        }
+        js::AutoCompartment autoCompartment(cx, compartment);
+        PerformanceGroup* ownGroup = compartment->performanceMonitoring.getOwnGroup(cx);
+        if (ownGroup->data.ticks == 0) {
+            // Don't report compartments that have never been used.
+            continue;
+        }
+        PerformanceGroup* sharedGroup = compartment->performanceMonitoring.getSharedGroup(cx);
+        if (!(*walker)(cx,
+                       ownGroup->data, ownGroup->uid, &sharedGroup->uid,
+                       closure)) {
+            // Issue in callback
+            return false;
+        }
+    }
+
+    // Finally, report the process stats
     *processStats = rt->stopwatch.performance;
     return true;
 }
@@ -4730,10 +4766,12 @@ JS_RestoreFrameChain(JSContext* cx)
 }
 
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
-  JSContext* cx, HandleObject stack, HandleString asyncCause)
+  JSContext* cx, HandleObject stack, HandleString asyncCause,
+  JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
   : cx(cx),
     oldAsyncStack(cx, cx->runtime()->asyncStackForNewActivations),
-    oldAsyncCause(cx, cx->runtime()->asyncCauseForNewActivations)
+    oldAsyncCause(cx, cx->runtime()->asyncCauseForNewActivations),
+    oldAsyncCallIsExplicit(cx->runtime()->asyncCallIsExplicit)
 {
     CHECK_REQUEST(cx);
 
@@ -4748,6 +4786,7 @@ JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
 
     cx->runtime()->asyncStackForNewActivations = asyncStack;
     cx->runtime()->asyncCauseForNewActivations = asyncCause;
+    cx->runtime()->asyncCallIsExplicit = kind == AsyncCallKind::EXPLICIT;
 }
 
 JS::AutoSetAsyncStackForNewCalls::~AutoSetAsyncStackForNewCalls()
@@ -4755,6 +4794,7 @@ JS::AutoSetAsyncStackForNewCalls::~AutoSetAsyncStackForNewCalls()
     cx->runtime()->asyncCauseForNewActivations = oldAsyncCause;
     cx->runtime()->asyncStackForNewActivations =
       oldAsyncStack ? &oldAsyncStack->as<SavedFrame>() : nullptr;
+    cx->runtime()->asyncCallIsExplicit = oldAsyncCallIsExplicit;
 }
 
 /************************************************************************/
