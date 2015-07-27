@@ -39,42 +39,14 @@ using namespace mozilla::dom;
 static const char kXBLCachePrefix[] = "xblcache";
 
 /* Implementation file */
-
-static PLDHashOperator
-TraverseProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-  aProto->Traverse(*cb);
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-UnlinkProto(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  aProto->Unlink();
-  return PL_DHASH_NEXT;
-}
-
-struct ProtoTracer
-{
-  const TraceCallbacks &mCallbacks;
-  void *mClosure;
-};
-
-static PLDHashOperator
-TraceProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
-  aProto->Trace(closure->mCallbacks, closure->mClosure);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    tmp->mBindingTable->EnumerateRead(UnlinkProto, nullptr);
+    for (auto iter = tmp->mBindingTable->ConstIter();
+         !iter.Done(); iter.Next()) {
+      iter.UserData()->Unlink();
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -86,14 +58,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   if (tmp->mBindingTable) {
-    tmp->mBindingTable->EnumerateRead(TraverseProtos, &cb);
+    for (auto iter = tmp->mBindingTable->ConstIter();
+         !iter.Done(); iter.Next()) {
+      iter.UserData()->Traverse(cb);
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    ProtoTracer closure = { aCallbacks, aClosure };
-    tmp->mBindingTable->EnumerateRead(TraceProtos, &closure);
+    for (auto iter = tmp->mBindingTable->ConstIter();
+         !iter.Done(); iter.Next()) {
+      iter.UserData()->Trace(aCallbacks, aClosure);
+    }
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
