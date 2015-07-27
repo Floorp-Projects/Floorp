@@ -1588,6 +1588,15 @@ gfxWindowsPlatform::GetD3D11ImageBridgeDevice()
   return mD3D11ImageBridgeDevice;
 }
 
+ID3D11Device*
+gfxWindowsPlatform::GetD3D11DeviceForCurrentThread()
+{
+  if (NS_IsMainThread()) {
+    return GetD3D11ContentDevice();
+  } else {
+    return GetD3D11ImageBridgeDevice();
+  }
+}
 
 ReadbackManagerD3D11*
 gfxWindowsPlatform::GetReadbackManager()

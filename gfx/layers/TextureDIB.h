@@ -34,6 +34,8 @@ public:
 
   virtual gfx::DrawTarget* BorrowDrawTarget() override;
 
+  virtual void UpdateFromSurface(gfx::DataSourceSurface* aSurface) override;
+
   virtual bool HasInternalBuffer() const override { return true; }
 
 protected:
