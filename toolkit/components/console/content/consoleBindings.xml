@@ -538,7 +538,7 @@
           var url = document.getBindingParent(this).mSourceName;
           url = url.substring(url.lastIndexOf(" ") + 1);
           var line = getAttribute("line");
-          gViewSourceUtils.viewSource(url, null, null, line);
+          gViewSourceUtils.viewSource({URL: url, lineNumber: line});
         ]]>
       </handler>
     </handlers>
