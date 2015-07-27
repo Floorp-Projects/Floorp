@@ -13,7 +13,7 @@ function test() {
   let engine = Services.search.getEngineByName("Amazon.com");
   ok(engine, "Amazon.com");
 
-  let base = "http://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
+  let base = "https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search";
   let url;
 
   // Test search URLs (including purposes).
@@ -29,7 +29,7 @@ function test() {
     name: "Amazon.com",
     alias: null,
     description: "Amazon.com Search",
-    searchForm: "http://www.amazon.com/exec/obidos/external-search/?field-keywords=&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
+    searchForm: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
     type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
@@ -45,7 +45,7 @@ function test() {
         {
           type: "text/html",
           method: "GET",
-          template: "http://www.amazon.com/exec/obidos/external-search/",
+          template: "https://www.amazon.com/exec/obidos/external-search/",
           params: [
             {
               name: "field-keywords",
