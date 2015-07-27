@@ -2909,8 +2909,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 }
 
 // aScrollFrameAsScrollable must be non-nullptr and queryable to an nsIFrame
-static FrameMetrics
-CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
+FrameMetrics
+nsLayoutUtils::CalculateBasicFrameMetrics(nsIScrollableFrame* aScrollFrame) {
   nsIFrame* frame = do_QueryFrame(aScrollFrame);
   MOZ_ASSERT(frame);
 
@@ -2982,7 +2982,7 @@ nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFram
   nsIContent* content = frame->GetContent();
   MOZ_ASSERT(content);
 
-  FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame);
+  FrameMetrics metrics = CalculateBasicFrameMetrics(aScrollFrame);
   ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
       metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
   nsIPresShell* presShell = frame->PresContext()->GetPresShell();
