@@ -386,7 +386,11 @@ FetchEvent::GetClient()
       return nullptr;
     }
 
-    mClient = new ServiceWorkerClient(GetParentObject(), *mClientInfo);
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    nsRefPtr<nsIGlobalObject> global = worker->GlobalScope();
+
+    mClient = new ServiceWorkerClient(global, *mClientInfo);
   }
   nsRefPtr<ServiceWorkerClient> client = mClient;
   return client.forget();
