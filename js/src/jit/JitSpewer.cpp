@@ -12,6 +12,7 @@
 
 #include "jit/Ion.h"
 #include "jit/MIR.h"
+#include "jit/MIRGenerator.h"
 
 #include "vm/HelperThreads.h"
 
@@ -236,6 +237,15 @@ IonSpewer::~IonSpewer()
 
     jsonOutput_.printf("\n]}\n");
     release();
+}
+
+GraphSpewer::GraphSpewer(TempAllocator *alloc)
+  : graph_(nullptr),
+    c1Printer_(alloc->lifoAlloc()),
+    jsonPrinter_(alloc->lifoAlloc()),
+    c1Spewer_(c1Printer_),
+    jsonSpewer_(jsonPrinter_)
+{
 }
 
 void

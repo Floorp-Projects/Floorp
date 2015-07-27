@@ -14,6 +14,7 @@
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/Assembler-mips.h"
 #endif
+#include "jit/JitCompartment.h"
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/TrackedOptimizationInfo.h"

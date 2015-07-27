@@ -19,6 +19,7 @@
 #include <X11/XKBlib.h>
 #include "WidgetUtils.h"
 #include "keysym2ucs.h"
+#include "nsGtkUtils.h"
 #include "nsIBidiKeyboard.h"
 #include "nsServiceManagerUtils.h"
 

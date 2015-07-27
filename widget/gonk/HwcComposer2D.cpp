@@ -709,7 +709,7 @@ HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
             return false;
         } else if (blitComposite) {
             // BLIT Composition, flip DispSurface target
-            GetGonkDisplay()->UpdateDispSurface(aScreen->GetDpy(), aScreen->GetSur());
+            GetGonkDisplay()->UpdateDispSurface(aScreen->GetEGLDisplay(), aScreen->GetEGLSurface());
             DisplaySurface* dispSurface = aScreen->GetDisplaySurface();
             if (!dispSurface) {
                 LOGE("H/W Composition failed. NULL DispSurface.");
@@ -731,7 +731,7 @@ HwcComposer2D::Render(nsIWidget* aWidget)
 
     // HWC module does not exist or mList is not created yet.
     if (!mHal->HasHwc() || !mList) {
-        return GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
+        return GetGonkDisplay()->SwapBuffers(screen->GetEGLDisplay(), screen->GetEGLSurface());
     } else if (!mList && !ReallocLayerList()) {
         LOGE("Cannot realloc layer list");
         return false;
@@ -829,7 +829,7 @@ HwcComposer2D::Commit(nsScreenGonk* aScreen)
 bool
 HwcComposer2D::TryHwComposition(nsScreenGonk* aScreen)
 {
-    mHal->SetEGLInfo(aScreen->GetDpy(), aScreen->GetSur());
+    mHal->SetEGLInfo(aScreen->GetEGLDisplay(), aScreen->GetEGLSurface());
     return !mHal->Set(mList, aScreen->GetDisplayType());
 }
 
@@ -837,7 +837,7 @@ bool
 HwcComposer2D::Render(nsIWidget* aWidget)
 {
     nsScreenGonk* screen = static_cast<nsWindow*>(aWidget)->GetScreen();
-    GetGonkDisplay()->SwapBuffers(screen->GetDpy(), screen->GetSur());
+    GetGonkDisplay()->SwapBuffers(screen->GetEGLDisplay(), screen->GetEGLSurface());
 
     if (!mHal->HasHwc()) {
         return true;

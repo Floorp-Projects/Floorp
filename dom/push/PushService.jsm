@@ -406,12 +406,6 @@ this.PushService = {
 
     this._setState(PUSH_SERVICE_ACTIVATING);
 
-    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-                     .getService(Ci.nsIFrameScriptLoader);
-
-    globalMM.loadFrameScript("chrome://global/content/PushServiceChildPreload.js",
-                             true);
-
     // Debugging
     prefs.observe("debug", this);
 
@@ -662,8 +656,6 @@ this.PushService = {
   },
 
   _notifySubscriptionChangeObservers: function(record) {
-    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
-                     .getService(Ci.nsIMessageListenerManager);
     // Notify XPCOM observers.
     Services.obs.notifyObservers(
       null,
@@ -676,7 +668,9 @@ this.PushService = {
       scope: record.scope
     };
 
-    globalMM.broadcastAsyncMessage('pushsubscriptionchange', data);
+    let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
+                 .getService(Ci.nsIMessageListenerManager);
+    ppmm.broadcastAsyncMessage('pushsubscriptionchange', data);
   },
 
   // Fires a push-register system message to all applications that have
@@ -804,9 +798,9 @@ this.PushService = {
       scope: aPushRecord.scope
     };
 
-    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+    let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
                  .getService(Ci.nsIMessageListenerManager);
-    globalMM.broadcastAsyncMessage('push', data);
+    ppmm.broadcastAsyncMessage('push', data);
   },
 
   getByKeyID: function(aKeyID) {

@@ -1341,8 +1341,8 @@ PluginModuleParent::GetPluginDetails()
     if (!pluginTag) {
         return false;
     }
-    mPluginName = pluginTag->mName;
-    mPluginVersion = pluginTag->mVersion;
+    mPluginName = pluginTag->Name();
+    mPluginVersion = pluginTag->Version();
     mIsFlashPlugin = pluginTag->mIsFlashPlugin;
     return true;
 }
@@ -2412,7 +2412,10 @@ PluginModuleParent::DoShutdown(NPError* error)
     // CallNP_Shutdown() message
     Close();
 
-    mShutdown = ok;
+    // mShutdown should either be initialized to false, or be transitiong from
+    // false to true. It is never ok to go from true to false. Using OR for
+    // the following assignment to ensure this.
+    mShutdown |= ok;
     if (!ok) {
         *error = NPERR_GENERIC_ERROR;
     }

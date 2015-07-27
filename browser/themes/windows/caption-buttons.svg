@@ -9,7 +9,7 @@
       fill: none;
     }
 
-    g:not(#close) {
+    g:not([id|="close"]) {
       shape-rendering: crispEdges;
     }
 
@@ -21,17 +21,36 @@
       display: initial;
     }
 
-    [id$="-highlight"] > g {
+    g.highlight {
+      stroke-width: 1.9px;
+    }
+
+    g.themes {
+      stroke: #fff;
+      stroke-width: 1.9px;
+    }
+
+    .outer-stroke {
+      stroke: #000;
+      stroke-width: 3.6;
+      opacity: .75;
+    }
+
+    .restore-background-window {
+      stroke-width: .9;
+    }
+
+    [id$="-highcontrast-hover"] > g {
       stroke: HighlightText;
     }
 
     [id$="-white"] > g {
       stroke: #fff;
     }
+
   </style>
   <g id="close">
-    <line x1="1" y1="1" x2="11" y2="11"/>
-    <line x1="11" y1="1" x2="1" y2="11"/>
+    <path d="M1,1 l 10,10 M1,11 l 10,-10"/>
   </g>
   <g id="maximize">
     <rect x="1.5" y="1.5" width="9" height="9"/>
@@ -43,13 +62,46 @@
     <rect x="1.5" y="3.5" width="7" height="7"/>
     <polyline points="3.5,3.5 3.5,1.5 10.5,1.5 10.5,8.5 8.5,8.5"/>
   </g>
-  <use id="close-highlight" xlink:href="#close"/>
-  <use id="maximize-highlight" xlink:href="#maximize"/>
-  <use id="minimize-highlight" xlink:href="#minimize"/>
-  <use id="restore-highlight" xlink:href="#restore"/>
 
   <use id="close-white" xlink:href="#close"/>
   <use id="maximize-white" xlink:href="#maximize"/>
   <use id="minimize-white" xlink:href="#minimize"/>
   <use id="restore-white" xlink:href="#restore"/>
+
+  <g id="close-highcontrast" class="highlight">
+    <path d="M1,1 l 10,10 M1,11 l 10,-10"/>
+  </g>
+  <g id="maximize-highcontrast" class="highlight">
+    <rect x="2" y="2" width="8" height="8"/>
+  </g>
+  <g id="minimize-highcontrast" class="highlight">
+    <line x1="1" y1="6" x2="11" y2="6"/>
+  </g>
+  <g id="restore-highcontrast" class="highlight">
+    <rect x="2" y="4" width="6" height="6"/>
+    <polyline points="3.5,1.5 10.5,1.5 10.5,8.5" class="restore-background-window"/>
+  </g>
+
+  <use id="close-highcontrast-hover" xlink:href="#close-highcontrast"/>
+  <use id="maximize-highcontrast-hover" xlink:href="#maximize-highcontrast"/>
+  <use id="minimize-highcontrast-hover" xlink:href="#minimize-highcontrast"/>
+  <use id="restore-highcontrast-hover" xlink:href="#restore-highcontrast"/>
+
+  <g id="close-themes" class="themes">
+    <path d="M1,1 l 10,10 M1,11 l 10,-10" class="outer-stroke" />
+    <path d="M1.75,1.75 l 8.5,8.5 M1.75,10.25 l 8.5,-8.5"/>
+  </g>
+  <g id="maximize-themes" class="themes">
+    <rect x="2" y="2" width="8" height="8" class="outer-stroke"/>
+    <rect x="2" y="2" width="8" height="8"/>
+  </g>
+  <g id="minimize-themes" class="themes">
+    <line x1="0" y1="6" x2="12" y2="6" class="outer-stroke"/>
+    <line x1="1" y1="6" x2="11" y2="6"/>
+  </g>
+  <g id="restore-themes" class="themes">
+    <path d="M2,4 l 6,0 l 0,6 l -6,0z M2.5,1.5 l 8,0 l 0,8" class="outer-stroke"/>
+    <rect x="2" y="4" width="6" height="6"/>
+    <polyline points="3.5,1.5 10.5,1.5 10.5,8.5" class="restore-background-window"/>
+  </g>
 </svg>

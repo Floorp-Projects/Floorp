@@ -203,26 +203,6 @@ HTMLTrackElement::LoadResource()
     mChannel = nullptr;
   }
 
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckLoadURIWithPrincipal(NodePrincipal(), uri,
-                              nsIScriptSecurityManager::STANDARD);
-  NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-
-  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_TRACK,
-                                 uri,
-                                 NodePrincipal(),
-                                 static_cast<Element*>(this),
-                                 NS_LITERAL_CSTRING("text/vtt"), // mime type
-                                 nullptr, // extra
-                                 &shouldLoad,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
-  NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-  if (NS_CP_REJECTED(shouldLoad)) {
-    return;
-  }
-
   // We may already have a TextTrack at this point if GetTrack() has already
   // been called. This happens, for instance, if script tries to get the
   // TextTrack before its mTrackElement has been bound to the DOM tree.
@@ -235,7 +215,7 @@ HTMLTrackElement::LoadResource()
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,
                      static_cast<Element*>(this),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
                      nsIContentPolicy::TYPE_INTERNAL_TRACK,
                      loadGroup);
 
@@ -247,7 +227,7 @@ HTMLTrackElement::LoadResource()
   channel->SetNotificationCallbacks(mListener);
 
   LOG(LogLevel::Debug, ("opening webvtt channel"));
-  rv = channel->AsyncOpen(mListener, nullptr);
+  rv = channel->AsyncOpen2(mListener);
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
   mChannel = channel;

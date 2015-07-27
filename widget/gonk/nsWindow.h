@@ -113,6 +113,7 @@ public:
                         LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                         LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                         bool* aAllowRetaining = nullptr);
+    virtual void DestroyCompositor();
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);

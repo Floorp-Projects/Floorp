@@ -843,6 +843,29 @@ public:
     return (mDependentBits & NS_RULE_NODE_USED_DIRECTLY) != 0;
   }
 
+  /**
+   * Is the mRule of this rule node an AnimValuesStyleRule?
+   */
+  void SetIsAnimationRule() {
+    MOZ_ASSERT(!HaveChildren() ||
+               (mDependentBits & NS_RULE_NODE_IS_ANIMATION_RULE),
+               "SetIsAnimationRule must only set the IS_ANIMATION_RULE bit "
+               "before the rule node has children");
+    mDependentBits |= NS_RULE_NODE_IS_ANIMATION_RULE;
+    mNoneBits |= NS_RULE_NODE_HAS_ANIMATION_DATA;
+  }
+  bool IsAnimationRule() const {
+    return (mDependentBits & NS_RULE_NODE_IS_ANIMATION_RULE) != 0;
+  }
+
+  /**
+   * Is the mRule of this rule node or any of its ancestors an
+   * AnimValuesStyleRule?
+   */
+  bool HasAnimationData() const {
+    return (mNoneBits & NS_RULE_NODE_HAS_ANIMATION_DATA) != 0;
+  }
+
   // NOTE:  Does not |AddRef|.  Null only for the root.
   nsIStyleRule* GetRule() const { return mRule; }
   // NOTE: Does not |AddRef|.  Never null.
@@ -866,9 +889,14 @@ public:
                  "in some way.");                                             \
                                                                               \
     const nsStyle##name_ *data;                                               \
-    data = mStyleData.GetStyle##name_();                                      \
-    if (MOZ_LIKELY(data != nullptr))                                          \
-      return data;                                                            \
+                                                                              \
+    /* Never use cached data for animated style inside a pseudo-element; */   \
+    /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
+    if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
+      data = mStyleData.GetStyle##name_();                                    \
+      if (MOZ_LIKELY(data != nullptr))                                        \
+        return data;                                                          \
+    }                                                                         \
                                                                               \
     if (!aComputeData)                                                        \
       return nullptr;                                                         \
@@ -891,9 +919,14 @@ public:
                  "in some way.");                                             \
                                                                               \
     const nsStyle##name_ *data;                                               \
-    data = mStyleData.GetStyle##name_(aContext);                              \
-    if (MOZ_LIKELY(data != nullptr))                                          \
-      return data;                                                            \
+                                                                              \
+    /* Never use cached data for animated style inside a pseudo-element; */   \
+    /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
+    if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
+      data = mStyleData.GetStyle##name_(aContext);                            \
+      if (MOZ_LIKELY(data != nullptr))                                        \
+        return data;                                                          \
+    }                                                                         \
                                                                               \
     if (!aComputeData)                                                        \
       return nullptr;                                                         \
@@ -1017,6 +1050,8 @@ public:
                            nsPresContext* aPresContext,
                            nsStyleContext* aStyleContext,
                            nscolor& aResult);
+
+  static bool ParentHasPseudoElementData(nsStyleContext* aContext);
 };
 
 #endif

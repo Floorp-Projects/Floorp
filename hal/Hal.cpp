@@ -202,7 +202,6 @@ public:
   void RemoveObserver(Observer<InfoType>* aObserver) {
     bool removed = mObservers && mObservers->RemoveObserver(aObserver);
     if (!removed) {
-      NS_WARNING("RemoveObserver() called for unregistered observer");
       return;
     }
 

@@ -845,6 +845,7 @@ ReplaceAnimationRule(nsRuleNode *aOldRuleNode,
 
   if (aNewAnimRule) {
     n = n->Transition(aNewAnimRule, nsStyleSet::eAnimationSheet, false);
+    n->SetIsAnimationRule();
   }
 
   for (uint32_t i = moreSpecificNodes.Length(); i-- != 0; ) {
@@ -1439,6 +1440,7 @@ struct RuleNodeInfo {
   nsIStyleRule* mRule;
   uint8_t mLevel;
   bool mIsImportant;
+  bool mIsAnimationRule;
 };
 
 struct CascadeLevel {
@@ -1508,6 +1510,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
     curRule->mRule = ruleNode->GetRule();
     curRule->mLevel = ruleNode->GetLevel();
     curRule->mIsImportant = ruleNode->IsImportantRule();
+    curRule->mIsAnimationRule = ruleNode->IsAnimationRule();
   }
 
   nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
@@ -1538,6 +1541,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
               GetAnimationRule(aElement, aPseudoType);
             if (rule) {
               ruleWalker.ForwardOnPossiblyCSSRule(rule);
+              ruleWalker.CurrentNode()->SetIsAnimationRule();
             }
           }
           break;
@@ -1550,6 +1554,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
               GetAnimationRule(aElement, aPseudoType);
             if (rule) {
               ruleWalker.ForwardOnPossiblyCSSRule(rule);
+              ruleWalker.CurrentNode()->SetIsAnimationRule();
             }
           }
           break;
@@ -1615,6 +1620,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
       if (!doReplace) {
         ruleWalker.ForwardOnPossiblyCSSRule(ruleInfo.mRule);
+        if (ruleInfo.mIsAnimationRule) {
+          ruleWalker.CurrentNode()->SetIsAnimationRule();
+        }
       }
     }
   }
