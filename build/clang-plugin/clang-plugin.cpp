@@ -96,6 +96,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class NoDuplicateRefCntMemberChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   class NeedsNoVTableTypeChecker : public MatchFinder::MatchCallback {
   public:
     virtual void run(const MatchFinder::MatchResult &Result);
@@ -115,6 +120,7 @@ private:
   NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
   RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
   ExplicitOperatorBoolChecker explicitOperatorBoolChecker;
+  NoDuplicateRefCntMemberChecker noDuplicateRefCntMemberChecker;
   NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
   NonMemMovableChecker nonMemMovableChecker;
   MatchFinder astMatcher;
@@ -581,6 +587,48 @@ bool IsInSystemHeader(const ASTContext &AC, const T &D) {
   return SourceManager.isInSystemHeader(ExpansionLoc);
 }
 
+const FieldDecl *getClassRefCntMember(const CXXRecordDecl *D) {
+  for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
+       field != e; ++field) {
+    if (field->getName() == "mRefCnt") {
+      return *field;
+    }
+  }
+  return 0;
+}
+
+const FieldDecl *getClassRefCntMember(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  return clazz ? getClassRefCntMember(clazz) : 0;
+}
+
+const FieldDecl *getBaseRefCntMember(QualType T);
+
+const FieldDecl *getBaseRefCntMember(const CXXRecordDecl *D) {
+  const FieldDecl *refCntMember = getClassRefCntMember(D);
+  if (refCntMember && isClassRefCounted(D)) {
+    return refCntMember;
+  }
+
+  for (CXXRecordDecl::base_class_const_iterator base = D->bases_begin(), e = D->bases_end();
+       base != e; ++base) {
+    refCntMember = getBaseRefCntMember(base->getType());
+    if (refCntMember) {
+      return refCntMember;
+    }
+  }
+  return 0;
+}
+
+const FieldDecl *getBaseRefCntMember(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  return clazz ? getBaseRefCntMember(clazz) : 0;
+}
+
 bool typeHasVTable(QualType T) {
   while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
     T = arrTy->getElementType();
@@ -741,6 +789,10 @@ AST_POLYMORPHIC_MATCHER_P(equalsBoundNode,
 }
 
 #endif
+
+AST_MATCHER(CXXRecordDecl, hasRefCntMember) {
+  return isClassRefCounted(&Node) && getClassRefCntMember(&Node);
+}
 
 AST_MATCHER(QualType, hasVTable) {
   return typeHasVTable(Node);
@@ -984,6 +1036,10 @@ DiagnosticsMatcher::DiagnosticsMatcher()
                                          hasName("operator _Bool"))).bind("node"),
     &explicitOperatorBoolChecker);
 
+  astMatcher.addMatcher(recordDecl(allOf(decl().bind("decl"),
+                                         hasRefCntMember())),
+                        &noDuplicateRefCntMemberChecker);
+
   astMatcher.addMatcher(classTemplateSpecializationDecl(
              allOf(hasAnyTemplateArgument(refersToType(hasVTable())),
                    hasNeedsNoVTableTypeAttr())).bind("node"),
@@ -1174,6 +1230,32 @@ void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
       isInterestingDeclForImplicitConversion(method)) {
     Diag.Report(method->getLocStart(), errorID) << clazz;
     Diag.Report(method->getLocStart(), noteID) << "'operator bool'";
+  }
+}
+
+void DiagnosticsMatcher::NoDuplicateRefCntMemberChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned warningID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Refcounted record %0 has multiple mRefCnt members");
+  unsigned note1ID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Superclass %0 also has an mRefCnt member");
+  unsigned note2ID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Consider using the _INHERITED macros for AddRef and Release here");
+
+  const CXXRecordDecl *decl = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
+  const FieldDecl *refCntMember = getClassRefCntMember(decl);
+  assert(refCntMember && "The matcher checked to make sure we have a refCntMember");
+
+  // Check every superclass for whether it has a base with a refcnt member, and warn for those which do
+  for (CXXRecordDecl::base_class_const_iterator base = decl->bases_begin(), e = decl->bases_end();
+       base != e; ++base) {
+    const FieldDecl *baseRefCntMember = getBaseRefCntMember(base->getType());
+    if (baseRefCntMember) {
+      Diag.Report(decl->getLocStart(), warningID) << decl;
+      Diag.Report(baseRefCntMember->getLocStart(), note1ID) << baseRefCntMember->getParent();
+      Diag.Report(refCntMember->getLocStart(), note2ID);
+    }
   }
 }
 
