@@ -28,9 +28,7 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 #ifdef DEBUG
-NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfo2, nsIGfxInfoDebug)
-#else
-NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfo2)
+NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 GfxInfo::GfxInfo()
@@ -98,20 +96,6 @@ GfxInfo::GetDeviceInfo()
   }
 }
 
-void
-GfxInfo::GetSelectedCityInfo()
-{
-  NSDictionary* selected_city =
-    [[NSUserDefaults standardUserDefaults]
-      objectForKey:@"com.apple.preferences.timezone.selected_city"];
-  NSString *countryCode = (NSString *)
-    [selected_city objectForKey:@"CountryCode"];
-  const char *countryCodeUTF8 = [countryCode UTF8String];
-  if (countryCodeUTF8) {
-    AppendUTF8toUTF16(countryCodeUTF8, mCountryCode);
-  }
-}
-
 nsresult
 GfxInfo::Init()
 {
@@ -122,8 +106,6 @@ GfxInfo::Init()
   // use the device ids.
 
   GetDeviceInfo();
-
-  GetSelectedCityInfo();
 
   AddCrashReportAnnotations();
 
@@ -282,15 +264,6 @@ NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
   return NS_ERROR_FAILURE;
-}
-
-/* interface nsIGfxInfo2 */
-/* readonly attribute DOMString countryCode; */
-NS_IMETHODIMP
-GfxInfo::GetCountryCode(nsAString & aCountryCode)
-{
-  aCountryCode = mCountryCode;
-  return NS_OK;
 }
 
 void
