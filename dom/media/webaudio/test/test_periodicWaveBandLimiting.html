@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<title>Test effect of band limiting on PeriodicWave signals</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+const sampleRate = 48000;
+const bufferSize = 12800;
+const epsilon = 0.01;
+
+// "All implementations must support arrays up to at least 8192", but the
+// linear interpolation of the current implementation distorts the higher
+// frequency components too much to pass this test.
+const frequencyIndexMax = 100;
+
+// A set of oscillators are created near the Nyquist frequency.
+// These are factors giving each oscillator frequency relative to the Nyquist.
+// The first is an octave below Nyquist and the last is just above.
+const OCTAVE_BELOW = 0;
+const HALF_BELOW = 1;
+const NEAR_BELOW = 2;
+const ABOVE = 3;
+const oscillatorFactors = [0.5, Math.sqrt(0.5), 0.99, 1.01];
+const oscillatorCount = oscillatorFactors.length;
+
+// Return magnitude relative to unit sine wave
+function magnitude(array) {
+  var mag = 0
+  for (var i = 0; i < array.length; ++i) {
+    sample = array[i];
+    mag += sample * sample;
+  }
+  return Math.sqrt(2 * mag / array.length);
+}
+
+function test_frequency_index(frequencyIndex) {
+
+  var context =
+    new OfflineAudioContext(oscillatorCount, bufferSize, sampleRate);
+
+  var merger = context.createChannelMerger(oscillatorCount);
+  merger.connect(context.destination);
+
+  var real = new Float32Array(frequencyIndex + 1);
+  real[frequencyIndex] = 1;
+  var image = new Float32Array(real.length);
+  var wave = context.createPeriodicWave(real, image);
+
+  for (var i = 0; i < oscillatorCount; ++i) {
+    var oscillator = context.createOscillator();
+    oscillator.frequency.value =
+      oscillatorFactors[i] * sampleRate / (2 * frequencyIndex);
+    oscillator.connect(merger, 0, i);
+    oscillator.setPeriodicWave(wave);
+    oscillator.start(0);
+  }
+
+  return context.startRendering().
+    then((buffer) => {
+      assert_equals(buffer.numberOfChannels, oscillatorCount);
+      var magnitudes = [];
+      for (var i = 0; i < oscillatorCount; ++i) {
+        magnitudes[i] = magnitude(buffer.getChannelData(i));
+      }
+      // Unaffected by band-limiting one octave below Nyquist.
+      assert_approx_equals(magnitudes[OCTAVE_BELOW], 1, epsilon,
+                           "magnitude with frequency octave below Nyquist");
+      // Still at least half the amplitude at half octave below Nyquist.
+      assert_greater_than(magnitudes[HALF_BELOW], 0.5 * (1 - epsilon),
+                          "magnitude with frequency half octave below Nyquist");
+      // Approaching zero or zero near Nyquist.
+      assert_less_than(magnitudes[NEAR_BELOW], 0.1,
+                       "magnitude with frequency near Nyquist");
+      assert_equals(magnitudes[ABOVE], 0,
+                   "magnitude with frequency above Nyquist");
+    });
+}
+
+// The 5/4 ratio with rounding up provides sampling across a range of
+// octaves and offsets within octaves.
+for (var frequencyIndex = 1;
+     frequencyIndex < frequencyIndexMax;
+     frequencyIndex = Math.floor((5 * frequencyIndex + 3) / 4)) {
+  promise_test(() => test_frequency_index(frequencyIndex),
+               "Frequency " + frequencyIndex);
+}
+</script>
