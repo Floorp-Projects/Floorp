@@ -1292,6 +1292,9 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
 
     val = JS::BooleanValue(platform->DoesD3D11TextureSharingWork());
     JS_SetProperty(aCx, obj, "textureSharing", val);
+
+    val = JS::BooleanValue(!platform->CanUseDirect3D11());
+    JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
   gfx::FeatureStatus d2d = platform->GetD2DStatus();
