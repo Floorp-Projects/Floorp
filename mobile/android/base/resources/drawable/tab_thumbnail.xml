@@ -9,8 +9,31 @@
     <item android:state_focused="true">
 
         <shape android:shape="rectangle">
+            <!-- @color/fennec_ui_orange with alpha -->
             <solid android:color="#B3FF9500"/>
             <corners android:radius="3dp"/>            
+        </shape>
+
+    </item>
+
+    <item android:state_focused="true"
+          gecko:state_private="true">
+
+        <shape android:shape="rectangle">
+            <!-- @color/private_browsing_purple with alpha -->
+            <solid android:color="#B3CF68FF"/>
+            <corners android:radius="3dp"/>
+        </shape>
+
+    </item>
+
+    <item android:state_pressed="true"
+          gecko:state_private="true">
+
+        <shape android:shape="rectangle">
+            <!-- @color/private_browsing_purple with alpha -->
+            <solid android:color="#B3CF68FF"/>
+            <corners android:radius="3dp"/>
         </shape>
 
     </item>
@@ -18,6 +41,7 @@
     <item android:state_pressed="true">
 
         <shape android:shape="rectangle">
+            <!-- @color/fennec_ui_orange with alpha -->
             <solid android:color="#B3FF9500"/>
             <corners android:radius="3dp"/>
         </shape>
