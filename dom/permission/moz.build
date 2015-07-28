@@ -5,10 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'Permissions.h',
     'PermissionStatus.h',
 ]
 
 UNIFIED_SOURCES += [
+    'Permissions.cpp',
     'PermissionStatus.cpp',
 ]
 

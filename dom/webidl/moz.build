@@ -354,6 +354,7 @@ WEBIDL_FILES = [
     'PerformanceResourceTiming.webidl',
     'PerformanceTiming.webidl',
     'PeriodicWave.webidl',
+    'Permissions.webidl',
     'PermissionSettings.webidl',
     'PermissionStatus.webidl',
     'PhoneNumberService.webidl',
