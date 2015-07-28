@@ -97,6 +97,25 @@ function run_test() {
   var simplePrin = ssm.getSimpleCodebasePrincipal(makeURI('http://example.com'));
   try { simplePrin.origin; do_check_true(false); } catch (e) { do_check_true(true); }
 
+  // Just userContext.
+  var exampleOrg_userContext = ssm.createCodebasePrincipal(makeURI('http://example.org'), {userContextId: 42});
+  checkOriginAttributes(exampleOrg_userContext, { userContextId: 42 }, '^userContextId=42');
+  do_check_eq(exampleOrg_userContext.origin, 'http://example.org^userContextId=42');
+
+  // UserContext and Addon.
+  var exampleOrg_userContextAddon = ssm.createCodebasePrincipal(makeURI('http://example.org'), {addonId: 'dummy', userContextId: 42});
+  var nullPrin_userContextAddon = ssm.createNullPrincipal({addonId: 'dummy', userContextId: 42});
+  checkOriginAttributes(exampleOrg_userContextAddon, {addonId: 'dummy', userContextId: 42}, '^addonId=dummy&userContextId=42');
+  checkOriginAttributes(nullPrin_userContextAddon, {addonId: 'dummy', userContextId: 42}, '^addonId=dummy&userContextId=42');
+  do_check_eq(exampleOrg_userContextAddon.origin, 'http://example.org^addonId=dummy&userContextId=42');
+
+  // UserContext and App.
+  var exampleOrg_userContextApp = ssm.createCodebasePrincipal(makeURI('http://example.org'), {appId: 24, userContextId: 42});
+  var nullPrin_userContextApp = ssm.createNullPrincipal({appId: 24, userContextId: 42});
+  checkOriginAttributes(exampleOrg_userContextApp, {appId: 24, userContextId: 42}, '^appId=24&userContextId=42');
+  checkOriginAttributes(nullPrin_userContextApp, {appId: 24, userContextId: 42}, '^appId=24&userContextId=42');
+  do_check_eq(exampleOrg_userContextApp.origin, 'http://example.org^appId=24&userContextId=42');
+
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
   checkCrossOrigin(exampleOrg_app, nullPrin_app);
@@ -106,4 +125,8 @@ function run_test() {
   checkCrossOrigin(exampleOrg_appBrowser, nullPrin_appBrowser);
   checkCrossOrigin(exampleOrg_appBrowser, exampleCom_appBrowser);
   checkCrossOrigin(exampleOrg_addon, exampleOrg);
+  checkCrossOrigin(exampleOrg_userContext, exampleOrg);
+  checkCrossOrigin(exampleOrg_userContextAddon, exampleOrg);
+  checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextAddon);
+  checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextApp);
 }

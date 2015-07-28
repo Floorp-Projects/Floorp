@@ -35,7 +35,8 @@ public:
   {
     return mAppId == aOther.mAppId &&
            mInBrowser == aOther.mInBrowser &&
-           mAddonId == aOther.mAddonId;
+           mAddonId == aOther.mAddonId &&
+           mUserContextId == aOther.mUserContextId;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
@@ -80,6 +81,10 @@ public:
     }
 
     if (mAddonId.WasPassed() && mAddonId.Value() != aAttrs.mAddonId) {
+      return false;
+    }
+
+    if (mUserContextId.WasPassed() && mUserContextId.Value() != aAttrs.mUserContextId) {
       return false;
     }
 

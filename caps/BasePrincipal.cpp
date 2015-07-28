@@ -47,6 +47,12 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
     params->Set(NS_LITERAL_STRING("addonId"), mAddonId);
   }
 
+  if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
+    value.Truncate();
+    value.AppendInt(mUserContextId);
+    params->Set(NS_LITERAL_STRING("userContextId"), value);
+  }
+
   aStr.Truncate();
 
   params->Serialize(value);
@@ -97,6 +103,16 @@ public:
     if (aName.EqualsLiteral("addonId")) {
       MOZ_RELEASE_ASSERT(mOriginAttributes->mAddonId.IsEmpty());
       mOriginAttributes->mAddonId.Assign(aValue);
+      return true;
+    }
+
+    if (aName.EqualsLiteral("userContextId")) {
+      nsresult rv;
+      mOriginAttributes->mUserContextId = aValue.ToInteger(&rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return false;
+      }
+
       return true;
     }
 
