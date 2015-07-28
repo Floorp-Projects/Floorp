@@ -44,12 +44,13 @@ loader.lazyGetter(this, "DOMUtils", function() {
  *      Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
  *   const {OutputParser} = devtools.require("devtools/output-parser");
  *
- *   let parser = new OutputParser();
+ *   let parser = new OutputParser(document);
  *
  *   parser.parseCssProperty("color", "red"); // Returns document fragment.
  */
-function OutputParser() {
+function OutputParser(document) {
   this.parsed = [];
+  this.doc = document;
   this.colorSwatches = new WeakMap();
   this._onSwatchMouseDown = this._onSwatchMouseDown.bind(this);
 }
@@ -442,12 +443,10 @@ OutputParser.prototype = {
    * @param  {String} [value]
    *         If a value is included it will be appended as a text node inside
    *         the tag. This is useful e.g. for span tags.
-   * @return {Node} Newly created Node.
+   * @return {Node} Newly created Node.
    */
   _createNode: function(tagName, attributes, value="") {
-    let win = Services.appShell.hiddenDOMWindow;
-    let doc = win.document;
-    let node = doc.createElementNS(HTML_NS, tagName);
+    let node = this.doc.createElementNS(HTML_NS, tagName);
     let attrs = Object.getOwnPropertyNames(attributes);
 
     for (let attr of attrs) {
@@ -457,7 +456,7 @@ OutputParser.prototype = {
     }
 
     if (value) {
-      let textNode = doc.createTextNode(value);
+      let textNode = this.doc.createTextNode(value);
       node.appendChild(textNode);
     }
 
@@ -503,13 +502,11 @@ OutputParser.prototype = {
    *         Document Fragment
    */
   _toDOM: function() {
-    let win = Services.appShell.hiddenDOMWindow;
-    let doc = win.document;
-    let frag = doc.createDocumentFragment();
+    let frag = this.doc.createDocumentFragment();
 
     for (let item of this.parsed) {
       if (typeof item === "string") {
-        frag.appendChild(doc.createTextNode(item));
+        frag.appendChild(this.doc.createTextNode(item));
       } else {
         frag.appendChild(item);
       }
