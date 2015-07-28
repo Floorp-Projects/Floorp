@@ -205,23 +205,7 @@ nsTimerImpl::InitCommon(uint32_t aType, uint32_t aDelay)
     return rv;
   }
 
-  /**
-   * In case of re-Init, both with and without a preceding Cancel, clear the
-   * mCanceled flag and assign a new mGeneration.  But first, remove any armed
-   * timer from the timer thread's list.
-   *
-   * If we are racing with the timer thread to remove this timer and we lose,
-   * the RemoveTimer call made here will fail to find this timer in the timer
-   * thread's list, and will return false harmlessly.  We test mArmed here to
-   * avoid the small overhead in RemoveTimer of locking the timer thread and
-   * checking its list for this timer.  It's safe to test mArmed even though
-   * it might be cleared on another thread in the next cycle (or even already
-   * be cleared by another CPU whose store hasn't reached our CPU's cache),
-   * because RemoveTimer is idempotent.
-   */
-  if (mArmed) {
-    gThread->RemoveTimer(this);
-  }
+  gThread->RemoveTimer(this);
   mCanceled = false;
   mTimeout = TimeStamp();
   mGeneration = gGenerator++;
