@@ -1322,13 +1322,6 @@ public:
   }
 
   bool
-  PushEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_PUSH];
-  }
-
-  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();
