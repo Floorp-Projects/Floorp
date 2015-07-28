@@ -4,6 +4,8 @@
 
 "use strict";
 
+this.EXPORTED_SYMBOLS = [];
+
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
