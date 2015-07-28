@@ -495,6 +495,11 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             level = ERROR
             tbpl_status = TBPL_FAILURE
 
+        qemu = os.path.join(dirs['abs_work_dir'], 'qemu.log')
+        if os.path.isfile(qemu):
+            self.copyfile(qemu, os.path.join(dirs['abs_blob_upload_dir'],
+                                             'qemu.log'))
+
         # dump logcat output if there were failures
         if self.config.get('emulator'):
             if marionette_parser.failed != "0" or 'T-FAIL' in marionette_parser.tsummary:
