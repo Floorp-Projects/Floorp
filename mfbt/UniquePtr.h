@@ -238,6 +238,7 @@ public:
   }
 
   template<typename U, class E>
+  MOZ_IMPLICIT
   UniquePtr(UniquePtr<U, E>&& aOther,
             typename EnableIf<IsConvertible<typename UniquePtr<U, E>::Pointer,
                                             Pointer>::value &&
@@ -478,9 +479,9 @@ public:
   MOZ_CONSTEXPR DefaultDelete() {}
 
   template<typename U>
-  DefaultDelete(const DefaultDelete<U>& aOther,
-                typename EnableIf<mozilla::IsConvertible<U*, T*>::value,
-                                  int>::Type aDummy = 0)
+  MOZ_IMPLICIT DefaultDelete(const DefaultDelete<U>& aOther,
+                             typename EnableIf<mozilla::IsConvertible<U*, T*>::value,
+                                               int>::Type aDummy = 0)
   {}
 
   void operator()(T* aPtr) const
