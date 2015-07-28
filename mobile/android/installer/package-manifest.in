@@ -484,9 +484,9 @@
 #endif
 
 ; Private Browsing
-@RESPATH@/components/privatebrowsing.xpt
-@RESPATH@/components/PrivateBrowsing.manifest
-@RESPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
+@BINPATH@/components/privatebrowsing.xpt
+@BINPATH@/components/PrivateBrowsing.manifest
+@BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
