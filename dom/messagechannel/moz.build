@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     'MessagePortList.cpp',
     'MessagePortParent.cpp',
     'MessagePortService.cpp',
-    'MessagePortUtils.cpp',
     'SharedMessagePortMessage.cpp',
 ]
 
