@@ -56,6 +56,25 @@ TextureClientDIB::BorrowDrawTarget()
   return mDrawTarget;
 }
 
+void
+TextureClientDIB::UpdateFromSurface(gfx::DataSourceSurface* aSurface)
+{
+  MOZ_ASSERT(mIsLocked && IsAllocated());
+
+  nsRefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
+
+  DataSourceSurface::MappedSurface sourceMap;
+  aSurface->Map(DataSourceSurface::READ, &sourceMap);
+
+  for (int y = 0; y < aSurface->GetSize().height; y++) {
+    memcpy(imgSurf->Data() + imgSurf->Stride() * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat()));
+  }
+
+  aSurface->Unmap();
+}
+
 TextureClientMemoryDIB::TextureClientMemoryDIB(ISurfaceAllocator* aAllocator,
                                    gfx::SurfaceFormat aFormat,
                                    TextureFlags aFlags)

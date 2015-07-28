@@ -3,7 +3,7 @@
 <body>
 <script>
 onmessage = function(e) {
-  parent.postMessage(e.data, '*');
+  parent.postMessage(e.data, '*', e.ports);
 }
 </script>
 </body>

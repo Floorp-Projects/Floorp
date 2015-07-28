@@ -8,7 +8,8 @@
 #include "BroadcastChannelChild.h"
 #include "mozilla/dom/BroadcastChannelBinding.h"
 #include "mozilla/dom/Navigator.h"
-#include "mozilla/dom/StructuredCloneUtils.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -30,20 +31,18 @@ namespace dom {
 
 using namespace workers;
 
-class BroadcastChannelMessage final
+class BroadcastChannelMessage final : public StructuredCloneHelper
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelMessage)
 
-  JSAutoStructuredCloneBuffer mBuffer;
-  StructuredCloneClosure mClosure;
-
   BroadcastChannelMessage()
-  { }
+    : StructuredCloneHelper(CloningSupported, TransferringNotSupported)
+  {}
 
 private:
   ~BroadcastChannelMessage()
-  { }
+  {}
 };
 
 namespace {
@@ -166,13 +165,13 @@ public:
     ClonedMessageData message;
 
     SerializedStructuredCloneBuffer& buffer = message.data();
-    buffer.data = mData->mBuffer.data();
-    buffer.dataLength = mData->mBuffer.nbytes();
+    buffer.data = mData->BufferData();
+    buffer.dataLength = mData->BufferSize();
 
     PBackgroundChild* backgroundManager = mActor->Manager();
     MOZ_ASSERT(backgroundManager);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = mData->mClosure.mBlobImpls;
+    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = mData->ClonedBlobImpls();
 
     if (!blobImpls.IsEmpty()) {
       message.blobsChild().SetCapacity(blobImpls.Length());
@@ -455,12 +454,12 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
 {
   nsRefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
 
-  if (!WriteStructuredClone(aCx, aMessage, data->mBuffer, data->mClosure)) {
+  if (!data->Write(aCx, aMessage)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
 
-  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->mClosure.mBlobImpls;
+  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->ClonedBlobImpls();
   for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
     if (!blobImpls[i]->MayBeClonedToOtherThreads()) {
       aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);

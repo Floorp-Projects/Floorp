@@ -15,6 +15,15 @@ namespace mozilla {
 void
 AllocateAudioBlock(uint32_t aChannelCount, AudioChunk* aChunk)
 {
+  if (aChunk->mBuffer && !aChunk->mBuffer->IsShared() &&
+      aChunk->ChannelCount() == aChannelCount) {
+    MOZ_ASSERT(aChunk->mBufferFormat == AUDIO_FORMAT_FLOAT32);
+    MOZ_ASSERT(aChunk->mDuration == WEBAUDIO_BLOCK_SIZE);
+    // No need to allocate again.
+    aChunk->mVolume = 1.0f;
+    return;
+  }
+
   CheckedInt<size_t> size = WEBAUDIO_BLOCK_SIZE;
   size *= aChannelCount;
   size *= sizeof(float);
@@ -42,9 +51,9 @@ WriteZeroesToAudioBlock(AudioChunk* aChunk, uint32_t aStart, uint32_t aLength)
   MOZ_ASSERT(!aChunk->IsNull(), "You should pass a non-null chunk");
   if (aLength == 0)
     return;
+
   for (uint32_t i = 0; i < aChunk->mChannelData.Length(); ++i) {
-    memset(static_cast<float*>(const_cast<void*>(aChunk->mChannelData[i])) + aStart,
-           0, aLength*sizeof(float));
+    PodZero(aChunk->ChannelFloatsForWrite(i) + aStart, aLength);
   }
 }
 

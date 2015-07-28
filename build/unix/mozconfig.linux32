@@ -1,5 +1,7 @@
 . "$topsrcdir/build/unix/mozconfig.linux"
 
+export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
+
 if test `uname -m` = "x86_64"; then
   # -march=pentiumpro is what our 32-bit native toolchain defaults to
   CC="$CC -m32 -march=pentiumpro"
@@ -7,5 +9,4 @@ if test `uname -m` = "x86_64"; then
   ac_add_options --target=i686-pc-linux
   ac_add_options --host=i686-pc-linux
   ac_add_options --x-libraries=/usr/lib
-  export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
 fi
