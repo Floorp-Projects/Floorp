@@ -106,6 +106,8 @@ using mozilla::plugins::PluginModuleContentParent;
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #endif
 
+#include "nsIAudioChannelAgent.h"
+
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
 
@@ -2403,23 +2405,42 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     }
 
     case NPPVpluginIsPlayingAudio: {
-      // For testing, remove me
-      printf("set audio %p\n", result);
-      bool isPlaying = !!result;
+      bool isMuted = !result;
 
-      nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
-      if (doc) {
-        nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
-        nsCOMPtr<nsIObserverService> observerService =
-          services::GetObserverService();
-        if (observerService) {
-          // XXX THIS NEEDS A BETTER API
-          observerService->NotifyObservers(ToSupports(domwindow),
-                                           "media-playback",
-                                           isPlaying ? NS_LITERAL_STRING("active").get() :
-                                                       NS_LITERAL_STRING("inactive").get());
+      nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*) npp->ndata;
+      MOZ_ASSERT(inst);
+
+      if (isMuted && !inst->HasAudioChannelAgent()) {
+        return NPERR_NO_ERROR;
+      }
+
+      nsCOMPtr<nsIAudioChannelAgent> agent;
+      nsresult rv = inst->GetOrCreateAudioChannelAgent(getter_AddRefs(agent));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NPERR_NO_ERROR;
+      }
+
+      MOZ_ASSERT(agent);
+
+      if (isMuted) {
+        rv = agent->NotifyStoppedPlaying();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+      } else {
+        float volume = 0.0;
+        bool muted = true;
+        rv = agent->NotifyStartedPlaying(&volume, &muted);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+
+        rv = inst->WindowVolumeChanged(volume, muted);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
         }
       }
+
       return NPERR_NO_ERROR;
     }
 
