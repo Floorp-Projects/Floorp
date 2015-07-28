@@ -229,9 +229,8 @@ public:
 
 #ifdef CAIRO_HAS_DWRITE_FONT
     IDWriteFactory *GetDWriteFactory() { return mDWriteFactory; }
-    inline bool DWriteEnabled() { return mUseDirectWrite; }
+    inline bool DWriteEnabled() { return !!mDWriteFactory; }
     inline DWRITE_MEASURING_MODE DWriteMeasuringMode() { return mMeasuringMode; }
-    IDWriteTextAnalyzer *GetDWriteAnalyzer() { return mDWriteAnalyzer; }
 
     IDWriteRenderingParams *GetRenderingParams(TextRenderingMode aRenderMode)
     { return mRenderingParams[aRenderMode]; }
@@ -263,17 +262,18 @@ public:
     }
     bool SupportsApzTouchInput() const override;
 
+    // Recreate devices as needed for a device reset. Returns true if a device
+    // reset occurred.
+    bool HandleDeviceReset();
+    void UpdateBackendPrefs();
+
     // Return the diagnostic status of DirectX initialization. If
     // initialization has not been attempted, this returns
     // FeatureStatus::Unused.
-    mozilla::gfx::FeatureStatus GetD3D11Status() const {
-      return mD3D11Status;
-    }
-    mozilla::gfx::FeatureStatus GetD2DStatus() const {
-      return mD2DStatus;
-    }
+    mozilla::gfx::FeatureStatus GetD3D11Status() const;
+    mozilla::gfx::FeatureStatus GetD2DStatus() const;
+    mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
-    mozilla::gfx::FeatureStatus GetD2D1Status();
 
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;
@@ -286,6 +286,7 @@ protected:
       return true;
     }
     void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends);
+    virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 
 protected:
     RenderMode mRenderMode;
@@ -296,34 +297,31 @@ protected:
 private:
     void Init();
 
-    void InitD3D11Devices();
+    void InitializeDevices();
+    void InitializeD3D11();
+    void InitializeD2D();
+    bool InitializeD2D1();
+    bool InitDWriteSupport();
 
-    // Used by InitD3D11Devices().
+    void DisableD2D();
+
+    // Used by InitializeD3D11().
     enum class D3D11Status {
       Ok,
-      TryWARP,
-      ForceWARP,
+      OnlyWARP,
       Blocked
     };
     D3D11Status CheckD3D11Support();
-    bool AttemptD3D11DeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels);
-    bool AttemptWARPDeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels);
-    bool AttemptD3D11ImageBridgeDeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels);
-    bool AttemptD3D11ContentDeviceCreation(const nsTArray<D3D_FEATURE_LEVEL>& aFeatureLevels);
-
-    // Used by UpdateRenderMode().
-    mozilla::gfx::FeatureStatus InitD2DSupport();
-    void InitDWriteSupport();
+    bool AttemptD3D11DeviceCreation();
+    bool AttemptWARPDeviceCreation();
+    bool AttemptD3D11ImageBridgeDeviceCreation();
+    bool AttemptD3D11ContentDeviceCreation();
 
     IDXGIAdapter1 *GetDXGIAdapter();
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
 
-    bool mUseDirectWrite;
-    bool mUsingGDIFonts;
-
 #ifdef CAIRO_HAS_DWRITE_FONT
     nsRefPtr<IDWriteFactory> mDWriteFactory;
-    nsRefPtr<IDWriteTextAnalyzer> mDWriteAnalyzer;
     nsRefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 #endif
@@ -333,17 +331,20 @@ private:
     mozilla::RefPtr<ID3D11Device> mD3D11Device;
     mozilla::RefPtr<ID3D11Device> mD3D11ContentDevice;
     mozilla::RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
-    bool mD3D11DeviceInitialized;
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
     bool mDoesD3D11TextureSharingWork;
     DeviceResetReason mDeviceResetReason;
 
+    // These should not be accessed directly. Use the Get[Feature]Status
+    // accessors instead.
+    mozilla::gfx::FeatureStatus mAcceleration;
     mozilla::gfx::FeatureStatus mD3D11Status;
     mozilla::gfx::FeatureStatus mD2DStatus;
+    mozilla::gfx::FeatureStatus mD2D1Status;
 
-    virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
+    nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

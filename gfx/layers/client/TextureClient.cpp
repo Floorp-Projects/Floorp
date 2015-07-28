@@ -342,11 +342,11 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
 #ifdef XP_WIN
   LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
   if (parentBackend == LayersBackend::LAYERS_D3D11 &&
-      (aMoz2DBackend == gfx::BackendType::DIRECT2D ||
-        aMoz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
-      gfxWindowsPlatform::GetPlatform()->GetD3D10Device() &&
+      ((aMoz2DBackend == gfx::BackendType::DIRECT2D && Factory::GetDirect3D10Device()) ||
+       (aMoz2DBackend == gfx::BackendType::DIRECT2D1_1 && Factory::GetDirect3D11Device())) &&
       aSize.width <= maxTextureSize &&
-      aSize.height <= maxTextureSize) {
+      aSize.height <= maxTextureSize)
+  {
     texture = new TextureClientD3D11(aAllocator, aFormat, aTextureFlags);
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
