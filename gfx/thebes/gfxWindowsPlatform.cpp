@@ -557,6 +557,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 
       imgLoader::Singleton()->ClearCache(true);
       imgLoader::Singleton()->ClearCache(false);
+      gfxAlphaBoxBlur::ShutdownBlurCache();
       Factory::SetDirect3D11Device(nullptr);
 
       didReset = true;
