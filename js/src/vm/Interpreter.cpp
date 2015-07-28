@@ -2052,7 +2052,6 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED150)
 CASE(JSOP_UNUSED161)
 CASE(JSOP_UNUSED162)
 CASE(JSOP_UNUSED163)
@@ -2654,6 +2653,17 @@ CASE(JSOP_MOD)
     REGS.sp--;
 }
 END_CASE(JSOP_MOD)
+
+CASE(JSOP_POW)
+{
+    ReservedRooted<Value> lval(&rootValue0, REGS.sp[-2]);
+    ReservedRooted<Value> rval(&rootValue1, REGS.sp[-1]);
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!math_pow_handle(cx, lval, rval, res))
+        goto error;
+    REGS.sp--;
+}
+END_CASE(JSOP_POW)
 
 CASE(JSOP_NOT)
 {

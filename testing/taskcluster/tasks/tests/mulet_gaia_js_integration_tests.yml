@@ -1,7 +1,6 @@
 ---
 $inherits:
   from: 'tasks/test.yml'
-reruns: 2
 task:
   metadata:
     name: '[TC] Mulet Gaia JS Integration Test'
@@ -18,9 +17,9 @@ task:
         --config-file b2g/gaia_integration_config.py
         --config-file ./mozharness_configs/gaia_integration_override.py
         --config-file ./mozharness_configs/remove_executables.py
-        --installer-url {{build_url}}
         --no-pull
-        --test-url {{tests_url}}
+        --installer-url {{build_url}}
+        --test-packages-url {{test_packages_url}}
         --download-symbols ondemand
         --total-chunk {{total_chunks}}
         --this-chunk {{chunk}}
@@ -35,8 +34,11 @@ task:
   extra:
     chunks:
       total: 20
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupName: Gaia JS Integration Test
-      groupSymbol: tc-Gij
+      groupSymbol: Gij
       symbol: '{{chunk}}'
       productName: b2g

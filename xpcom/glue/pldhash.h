@@ -212,19 +212,48 @@ private:
 // hashing is more space-efficient unless the element size gets large (in which
 // case you should keep using double hashing but switch to using pointer
 // elements). Also, with double hashing, you can't safely hold an entry pointer
-// and use it after an ADD or REMOVE operation, unless you sample
-// aTable->mGeneration before adding or removing, and compare the sample after,
-// dereferencing the entry pointer only if aTable->mGeneration has not changed.
+// and use it after an add or remove operation, unless you sample Generation()
+// before adding or removing, and compare the sample after, dereferencing the
+// entry pointer only if Generation() has not changed.
 class PLDHashTable
 {
 private:
+  // This class maintains the invariant that every time the entry store is
+  // changed, the generation is updated.
+  class EntryStore
+  {
+  private:
+    char* mEntryStore;
+    uint32_t mGeneration;
+
+  public:
+    EntryStore() : mEntryStore(nullptr), mGeneration(0) {}
+
+    ~EntryStore()
+    {
+      free(mEntryStore);
+      mEntryStore = nullptr;
+      mGeneration++;    // a little paranoid, but why not be extra safe?
+    }
+
+    char* Get() { return mEntryStore; }
+    const char* Get() const { return mEntryStore; }
+
+    void Set(char* aEntryStore)
+    {
+      mEntryStore = aEntryStore;
+      mGeneration++;
+    }
+
+    uint32_t Generation() const { return mGeneration; }
+  };
+
   const PLDHashTableOps* const mOps;  // Virtual operations; see below.
   int16_t             mHashShift;     // Multiplicative hash shift.
   const uint32_t      mEntrySize;     // Number of bytes in an entry.
   uint32_t            mEntryCount;    // Number of entries in table.
   uint32_t            mRemovedCount;  // Removed entry sentinels in table.
-  uint32_t            mGeneration;    // Entry storage generation number.
-  char*               mEntryStore;    // Entry storage; allocated lazily.
+  EntryStore          mEntryStore;    // (Lazy) entry storage and generation.
 
 #ifdef DEBUG
   mutable Checker mChecker;
@@ -264,9 +293,9 @@ public:
       // move assignment operator cannot modify them.
     : mOps(aOther.mOps)
     , mEntrySize(aOther.mEntrySize)
-      // Initialize these two fields because they are required for a safe call
-      // to the destructor, which the move assignment operator does.
-    , mEntryStore(nullptr)
+      // Initialize this field because it is required for a safe call to the
+      // destructor, which the move assignment operator does.
+    , mEntryStore()
 #ifdef DEBUG
     , mChecker()
 #endif
@@ -286,12 +315,12 @@ public:
   // entry storage will not have yet been allocated.
   uint32_t Capacity() const
   {
-    return mEntryStore ? CapacityFromHashShift() : 0;
+    return mEntryStore.Get() ? CapacityFromHashShift() : 0;
   }
 
   uint32_t EntrySize()  const { return mEntrySize; }
   uint32_t EntryCount() const { return mEntryCount; }
-  uint32_t Generation() const { return mGeneration; }
+  uint32_t Generation() const { return mEntryStore.Generation(); }
 
   // To search for a |key| in |table|, call:
   //
