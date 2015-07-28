@@ -25,6 +25,10 @@
 #include "nsWindowsHelpers.h"
 #endif
 
+#ifdef XP_MACOSX
+#include "MacHelpers.h"
+#endif
+
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
 #endif
@@ -172,6 +176,30 @@ nsresult GetInstallYear(uint32_t& aYear)
   return NS_OK;
 }
 
+nsresult GetCountryCode(nsAString& aCountryCode)
+{
+  GEOID geoid = GetUserGeoID(GEOCLASS_NATION);
+  if (geoid == GEOID_NOT_AVAILABLE) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  // Get required length
+  int numChars = GetGeoInfoW(geoid, GEO_ISO2, nullptr, 0, 0);
+  if (!numChars) {
+    return NS_ERROR_FAILURE;
+  }
+  // Now get the string for real
+  aCountryCode.SetLength(numChars);
+  numChars = GetGeoInfoW(geoid, GEO_ISO2, wwc(aCountryCode.BeginWriting()),
+                         aCountryCode.Length(), 0);
+  if (!numChars) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // numChars includes null terminator
+  aCountryCode.Truncate(numChars - 1);
+  return NS_OK;
+}
+
 } // namespace
 #endif // defined(XP_WIN)
 
@@ -295,12 +323,26 @@ nsSystemInfo::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsAutoString countryCode;
+  if (NS_SUCCEEDED(GetCountryCode(countryCode))) {
+    rv = SetPropertyAsAString(NS_LITERAL_STRING("countryCode"), countryCode);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   uint32_t installYear = 0;
   if (NS_SUCCEEDED(GetInstallYear(installYear))) {
     rv = SetPropertyAsUint32(NS_LITERAL_STRING("installYear"), installYear);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
+#endif
+
+#if defined(XP_MACOSX)
+  nsAutoString countryCode;
+  if (NS_SUCCEEDED(GetSelectedCityInfo(countryCode))) {
+    rv = SetPropertyAsAString(NS_LITERAL_STRING("countryCode"), countryCode);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
 
