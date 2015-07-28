@@ -174,42 +174,11 @@ AudioSink::AudioLoop()
         break;
       }
     }
-    // See if there's a gap in the audio. If there is, push silence into the
-    // audio hardware, so we can play across the gap.
-    // Calculate the timestamp of the next chunk of audio in numbers of
-    // samples.
-    NS_ASSERTION(AudioQueue().GetSize() > 0, "Should have data to play");
-    CheckedInt64 sampleTime = UsecsToFrames(AudioQueue().PeekFront()->mTime, mInfo.mRate);
-
-    // Calculate the number of frames that have been pushed onto the audio hardware.
-    CheckedInt64 playedFrames = UsecsToFrames(mStartTime, mInfo.mRate) +
-                                static_cast<int64_t>(mWritten);
-
-    CheckedInt64 missingFrames = sampleTime - playedFrames;
-    if (!missingFrames.isValid() || !sampleTime.isValid()) {
-      NS_WARNING("Int overflow adding in AudioLoop");
+    if (!PlayAudio()) {
       break;
     }
-
-    if (missingFrames.value() > AUDIO_FUZZ_FRAMES) {
-      // The next audio chunk begins some time after the end of the last chunk
-      // we pushed to the audio hardware. We must push silence into the audio
-      // hardware so that the next audio chunk begins playback at the correct
-      // time.
-      missingFrames = std::min<int64_t>(UINT32_MAX, missingFrames.value());
-      mWritten += PlaySilence(static_cast<uint32_t>(missingFrames.value()));
-    } else {
-      mWritten += PlayFromAudioQueue();
-    }
   }
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  MOZ_ASSERT(mStopAudioThread || AudioQueue().AtEndOfStream());
-  if (!mStopAudioThread && mPlaying) {
-    Drain();
-  }
-  SINK_LOG("AudioLoop complete");
-  Cleanup();
-  SINK_LOG("AudioLoop exit");
+  FinishAudioLoop();
 }
 
 nsresult
@@ -295,6 +264,53 @@ AudioSink::IsPlaybackContinuing()
   UpdateStreamSettings();
 
   return true;
+}
+
+bool
+AudioSink::PlayAudio()
+{
+  // See if there's a gap in the audio. If there is, push silence into the
+  // audio hardware, so we can play across the gap.
+  // Calculate the timestamp of the next chunk of audio in numbers of
+  // samples.
+  NS_ASSERTION(AudioQueue().GetSize() > 0, "Should have data to play");
+  CheckedInt64 sampleTime = UsecsToFrames(AudioQueue().PeekFront()->mTime, mInfo.mRate);
+
+  // Calculate the number of frames that have been pushed onto the audio hardware.
+  CheckedInt64 playedFrames = UsecsToFrames(mStartTime, mInfo.mRate) +
+                              static_cast<int64_t>(mWritten);
+
+  CheckedInt64 missingFrames = sampleTime - playedFrames;
+  if (!missingFrames.isValid() || !sampleTime.isValid()) {
+    NS_WARNING("Int overflow adding in AudioLoop");
+    return false;
+  }
+
+  if (missingFrames.value() > AUDIO_FUZZ_FRAMES) {
+    // The next audio chunk begins some time after the end of the last chunk
+    // we pushed to the audio hardware. We must push silence into the audio
+    // hardware so that the next audio chunk begins playback at the correct
+    // time.
+    missingFrames = std::min<int64_t>(UINT32_MAX, missingFrames.value());
+    mWritten += PlaySilence(static_cast<uint32_t>(missingFrames.value()));
+  } else {
+    mWritten += PlayFromAudioQueue();
+  }
+
+  return true;
+}
+
+void
+AudioSink::FinishAudioLoop()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(mStopAudioThread || AudioQueue().AtEndOfStream());
+  if (!mStopAudioThread && mPlaying) {
+    Drain();
+  }
+  SINK_LOG("AudioLoop complete");
+  Cleanup();
+  SINK_LOG("AudioLoop exit");
 }
 
 uint32_t
