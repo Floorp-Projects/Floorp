@@ -246,26 +246,48 @@ StructuredCloneHelper::ReadFromBuffer(nsISupports* aParent,
                                       JSContext* aCx,
                                       uint64_t* aBuffer,
                                       size_t aBufferLength,
-                                      nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
                                       JS::MutableHandle<JS::Value> aValue)
 {
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
-  MOZ_ASSERT(mBlobImplArray.IsEmpty());
-
   MOZ_ASSERT(aBuffer);
-  MOZ_ASSERT_IF(!mSupportsCloning, aBlobImpls.IsEmpty());
 
   mozilla::AutoRestore<nsISupports*> guard(mParent);
   mParent = aParent;
 
-  mBlobImplArray.AppendElements(aBlobImpls);
+  return JS_ReadStructuredClone(aCx, aBuffer, aBufferLength,
+                                JS_STRUCTURED_CLONE_VERSION, aValue,
+                                &gCallbacks, this);
+}
 
-  bool ok = JS_ReadStructuredClone(aCx, aBuffer, aBufferLength,
-                                   JS_STRUCTURED_CLONE_VERSION, aValue,
-                                   &gCallbacks, this);
+void
+StructuredCloneHelper::MoveBufferDataToArray(FallibleTArray<uint8_t>& aArray,
+                                             ErrorResult& aRv)
+{
+  MOZ_ASSERT(mBuffer, "MoveBuffer() cannot be called without a Write().");
 
-  mBlobImplArray.Clear();
-  return ok;
+  if (NS_WARN_IF(!aArray.SetLength(BufferSize(), mozilla::fallible))) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  uint64_t* buffer;
+  size_t size;
+  mBuffer->steal(&buffer, &size);
+  mBuffer = nullptr;
+
+  memcpy(aArray.Elements(), buffer, size);
+  js_free(buffer);
+}
+
+void
+StructuredCloneHelper::FreeBuffer(uint64_t* aBuffer,
+                                  size_t aBufferLength)
+{
+  MOZ_ASSERT(!mBuffer, "FreeBuffer() must be called without a Write().");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aBufferLength);
+
+  JS_ClearStructuredClone(aBuffer, aBufferLength, &gCallbacks, this, false);
 }
 
 JSObject*
