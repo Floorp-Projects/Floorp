@@ -19,6 +19,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "prtime.h"
 #include "prthread.h"
+#include <dlfcn.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
@@ -38,6 +39,7 @@
 #include "nsGtkUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatform.h"
+#include "nsScreenGtk.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -406,7 +408,6 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
                               int32_t aYOffset,
                               const nsIntRect& dragRect)
 {
-#if (MOZ_WIDGET_GTK == 2)
     GdkScreen* screen = gtk_widget_get_screen(mHiddenWidget);
 
     // Transparent drag icons need, like a lot of transparency-related things,
@@ -414,6 +415,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!gdk_screen_is_composited(screen))
       return false;
 
+#if (MOZ_WIDGET_GTK == 2)
     GdkColormap* alphaColormap = gdk_screen_get_rgba_colormap(screen);
     if (!alphaColormap)
       return false;
@@ -454,8 +456,46 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     g_object_unref(pixmap);
     return true;
 #else
-    // TODO GTK3
-    return false;
+#ifdef cairo_image_surface_create
+#error "Looks like we're including Mozilla's cairo instead of system cairo"
+#endif
+    // TODO: grab X11 pixmap or image data instead of expensive readback.
+    cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                                       dragRect.width,
+                                                       dragRect.height);
+    if (!surf)
+        return false;
+
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+        CreateDrawTargetForData(cairo_image_surface_get_data(surf),
+                                dragRect.Size(),
+                                cairo_image_surface_get_stride(surf),
+                                SurfaceFormat::B8G8R8A8);
+    if (!dt)
+        return false;
+
+    dt->ClearRect(Rect(0, 0, dragRect.width, dragRect.height));
+    dt->DrawSurface(aSurface,
+                    Rect(0, 0, dragRect.width, dragRect.height),
+                    Rect(0, 0, dragRect.width, dragRect.height),
+                    DrawSurfaceOptions(),
+                    DrawOptions(DRAG_IMAGE_ALPHA_LEVEL, CompositionOp::OP_SOURCE));
+
+    cairo_surface_mark_dirty(surf);
+    cairo_surface_set_device_offset(surf, -aXOffset, -aYOffset);
+
+    // Ensure that the surface is drawn at the correct scale on HiDPI displays.
+    static auto sCairoSurfaceSetDeviceScalePtr =
+        (void (*)(cairo_surface_t*,double,double))
+        dlsym(RTLD_DEFAULT, "cairo_surface_set_device_scale");
+    if (sCairoSurfaceSetDeviceScalePtr) {
+        gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+        sCairoSurfaceSetDeviceScalePtr(surf, scale, scale);
+    }
+
+    gtk_drag_set_icon_surface(aContext, surf);
+    cairo_surface_destroy(surf);
+    return true;
 #endif
 }
 
