@@ -58,7 +58,7 @@ public:
                       uint32_t aVersion,
                       mozilla::CORSMode aCORSMode)
     : mElement(aElement),
-      mLoading(true),
+      mProgress(Progress_Loading),
       mIsInline(true),
       mHasSourceMapURL(false),
       mIsDefer(false),
@@ -107,11 +107,28 @@ public:
     return mOffThreadToken ?  &mOffThreadToken : nullptr;
   }
 
+  enum Progress {
+    Progress_Loading,
+    Progress_DoneLoading,
+    Progress_Compiling,
+    Progress_DoneCompiling
+  };
+  bool IsReadyToRun() {
+    return mProgress == Progress_DoneLoading ||
+           mProgress == Progress_DoneCompiling;
+  }
+  bool IsDoneLoading() {
+    return mProgress == Progress_DoneLoading;
+  }
+  bool InCompilingStage() {
+    return (mProgress == Progress_Compiling) || (mProgress == Progress_DoneCompiling);
+  }
+
   using super::getNext;
   using super::isInList;
 
   nsCOMPtr<nsIScriptElement> mElement;
-  bool mLoading;          // Are we still waiting for a load to complete?
+  Progress mProgress;     // Are we still waiting for a load to complete?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mIsDefer;          // True if we live in mDeferRequests.
@@ -447,7 +464,7 @@ private:
 
   nsresult AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest);
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
-  nsresult ParseOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest);
+  nsresult CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult,
