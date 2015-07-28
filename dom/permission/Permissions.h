@@ -12,9 +12,11 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
-struct PermissionDescriptor;
 class Promise;
 
 class Permissions final
@@ -32,7 +34,9 @@ public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  already_AddRefed<Promise> Query(const PermissionDescriptor& aPermission);
+  already_AddRefed<Promise> Query(JSContext* aCx,
+                                  JS::Handle<JSObject*> aPermission,
+                                  ErrorResult& aRv);
 
 private:
   ~Permissions();
