@@ -11,7 +11,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/StructuredCloneUtils.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -86,15 +86,15 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   }
 
   JSContext* cx = jsapi.cx();
-
   const SerializedStructuredCloneBuffer& buffer = aData.data();
-  StructuredCloneData cloneData;
-  cloneData.mData = buffer.data;
-  cloneData.mDataLength = buffer.dataLength;
-  cloneData.mClosure.mBlobImpls.SwapElements(blobs);
+  StructuredCloneHelper cloneHelper(StructuredCloneHelper::CloningSupported,
+                                    StructuredCloneHelper::TransferringNotSupported);
 
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
-  if (cloneData.mDataLength && !ReadStructuredClone(cx, cloneData, &value)) {
+  if (buffer.dataLength &&
+      !cloneHelper.ReadFromBuffer(mBC->GetParentObject(), cx,
+                                  buffer.data, buffer.dataLength, blobs,
+                                  &value)) {
     JS_ClearPendingException(cx);
     return false;
   }
