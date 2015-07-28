@@ -85,7 +85,7 @@ class StackAllocator : public std::allocator<T> {
   // TODO: If we were fancy pants, perhaps we could share storage
   // iff sizeof(T) == sizeof(U).
   template<typename U, size_t other_capacity>
-  StackAllocator(const StackAllocator<U, other_capacity>& other)
+  explicit StackAllocator(const StackAllocator<U, other_capacity>& other)
       : source_(NULL) {
   }
 

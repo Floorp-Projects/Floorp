@@ -231,6 +231,7 @@ function test_windowToIframeURL(url) {
   document.body.appendChild(ifr);
 }
 
+// PostMessage for BroadcastChannel
 function test_broadcastChannel() {
   info("Testing broadcastChannel");
 
@@ -268,6 +269,41 @@ function test_broadcastChannel() {
   });
 }
 
+// PostMessage for MessagePort
+function test_messagePort() {
+  info("Testing messagePort");
+
+  var mc = new MessageChannel();
+  var resolve;
+
+  mc.port2.onmessage = function(e) {
+    if (!resolve) {
+      ok(false, "Unexpected message!");
+      return;
+    }
+
+    let tmp = resolve;
+    resolve = null;
+    tmp({ data: e.data, ports: e.ports });
+  }
+
+  runTests({
+    clonableObjects: true,
+    transferableObjects: true,
+    send: function(what, ports) {
+      return new Promise(function(r, rr) {
+        resolve = r;
+        mc.port1.postMessage(what, ports);
+      });
+    },
+
+    finished: function() {
+      onmessage = null;
+      next();
+    }
+  });
+}
+
 var tests = [
   create_fileList,
 
@@ -276,6 +312,10 @@ var tests = [
   test_windowToCrossOriginIframe,
 
   test_broadcastChannel,
+  // TODO BroadcastChannel in worker
+
+  test_messagePort,
+  // TODO MessagePort in worker
 ];
 
 function next() {

@@ -14,6 +14,8 @@ import os
 import platform
 import re
 import sys
+from .string_version import StringVersion
+
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
@@ -75,7 +77,7 @@ else:
     os_version = version = unknown
 
 info['version'] = version
-info['os_version'] = os_version
+info['os_version'] = StringVersion(os_version)
 
 # processor type and bits
 if processor in ["i386", "i686"]:
@@ -194,6 +196,7 @@ __all__ += [
     'choices',
     'update',
     'find_and_update_from_json',
+    'StringVersion',
     ]
 
 def main(args=None):

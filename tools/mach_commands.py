@@ -74,7 +74,7 @@ class Interface(object):
     from, what its uuid is, and where in the source file the uuid is.
     '''
     def __init__(self, filename, production):
-        import xpidl
+        from xpidl import xpidl
         assert isinstance(production, xpidl.Interface)
         self.name = production.name
         self.base = production.base
@@ -171,7 +171,7 @@ class UUIDProvider(object):
                           'Their descendants are updated as well.')
     def update_uuids(self, path, interfaces):
         import os
-        import xpidl
+        from xpidl import xpidl
         from mozpack.files import FileFinder
         import mozpack.path as mozpath
         from tempfile import mkdtemp

@@ -11,6 +11,7 @@ except ImportError:
     blessings = None
 
 import base
+from .process import strstatus
 
 def format_seconds(total):
     """Format number of seconds to MM:SS.DD form."""
@@ -317,7 +318,15 @@ class MachFormatter(base.BaseFormatter):
 
         return rv
 
+    def process_start(self, data):
+        rv = "Started process `%s`" % data['process']
+        desc = data.get('command')
+        if desc:
+            rv = '%s (%s)' % (rv, desc)
+        return rv
 
+    def process_exit(self, data):
+        return "%s: %s" % (data['process'], strstatus(data['exitcode']))
 
     def log(self, data):
         level = data.get("level").upper()

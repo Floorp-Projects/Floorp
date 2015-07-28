@@ -984,11 +984,11 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
     return;
   }
   decoder.mNeedDraining = false;
-  if (!decoder.mDecoder) {
-    return;
-  }
+  // mOutputRequest must be set, otherwise NotifyDrainComplete()
+  // may reject the drain if a Flush recently occurred.
   decoder.mOutputRequested = true;
-  if (decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
+  if (!decoder.mDecoder ||
+      decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
     // No frames to drain.
     NotifyDrainComplete(aTrack);
     return;

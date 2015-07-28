@@ -1,0 +1,95 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Permissions API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload='runTests()'>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+const PERMISSIONS = [
+  { name: 'geolocation', perm: 'geo' },
+  { name: 'notifications', perm: 'desktop-notification' },
+  { name: 'push', perm: 'push' },
+];
+
+const UNSUPPORTED_PERMISSIONS = [
+  'midi',
+];
+
+function setup() {
+  return new Promise((resolve, reject) => {
+    SpecialPowers.pushPrefEnv({'set': [
+      ['dom.permissions.enabled', true],
+    ]}, resolve);
+  });
+}
+
+function setPermissions(action) {
+  let permissions = PERMISSIONS.map(x => {
+    return { 'type': x.perm, 'allow': action, 'context': document };
+  });
+  return new Promise((resolve, reject) => {
+    SpecialPowers.popPermissions(() => {
+      SpecialPowers.pushPermissions(permissions, resolve);
+    });
+  });
+}
+
+function checkPermissions(state) {
+  return Promise.all(PERMISSIONS.map(x => {
+    return navigator.permissions.query({ name: x.name }).then(
+      result => is(result.state, state, `correct state for '${x.name}'`),
+      error => ok(false, `query should not have rejected for '${x.name}'`));
+  }));
+}
+
+function checkUnsupportedPermissions() {
+  return Promise.all(UNSUPPORTED_PERMISSIONS.map(name => {
+    return navigator.permissions.query({ name }).then(
+      result => ok(false, `query should not have resolved for '${name}'`),
+      error => ok(true, `query should have rejected for '${name}'`));
+  }));
+}
+
+function checkUserVisiblePushPermission() {
+  return navigator.permissions.query({ name: 'push', userVisible: true }).then(
+    result => ok(false, `query should not have resolved for userVisible push`),
+    error => ok(true, `query should have rejected for userVisible push`));
+}
+
+function runTests() {
+  let permMgr = SpecialPowers.Ci.nsIPermissionManager;
+
+  setup()
+    .then(checkUnsupportedPermissions)
+    .then(checkUserVisiblePushPermission)
+    .then(() => setPermissions(permMgr.UNKNOWN_ACTION))
+    .then(() => checkPermissions('prompt'))
+    .then(() => setPermissions(permMgr.PROMPT_ACTION))
+    .then(() => checkPermissions('prompt'))
+    .then(() => setPermissions(permMgr.ALLOW_ACTION))
+    .then(() => checkPermissions('granted'))
+    .then(() => setPermissions(permMgr.DENY_ACTION))
+    .then(() => checkPermissions('denied'))
+    .then(SimpleTest.finish)
+    .catch ((e) => {
+      ok(false, 'Unexpected error ' + e);
+      SimpleTest.finish();
+    });
+}
+</script>
+</pre>
+</body>
+</html>
+

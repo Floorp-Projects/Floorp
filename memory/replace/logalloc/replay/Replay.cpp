@@ -126,7 +126,7 @@ public:
 
   /* Constructor for string literals. */
   template <size_t Size>
-  Buffer(const char (&aStr)[Size])
+  explicit Buffer(const char (&aStr)[Size])
     : mBuf(aStr), mLength(Size - 1)
   {}
 
