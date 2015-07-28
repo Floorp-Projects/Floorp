@@ -18,8 +18,13 @@ dictionary PermissionDescriptor {
   required PermissionName name;
 };
 
+dictionary PushPermissionDescriptor : PermissionDescriptor {
+  boolean userVisible = false;
+};
+
 [Exposed=(Window),
  Pref="dom.permissions.enabled"]
 interface Permissions {
-  Promise<PermissionStatus> query(PermissionDescriptor permission);
+  [Throws]
+  Promise<PermissionStatus> query(object permission);
 };

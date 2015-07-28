@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Services.h"
 
 #include "nsIPermissionManager.h"
 
@@ -39,22 +40,119 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return PermissionsBinding::Wrap(aCx, this, aGivenProto);
 }
 
+namespace {
+
+PermissionState
+ActionToPermissionState(uint32_t aAction)
+{
+  switch (aAction) {
+    case nsIPermissionManager::ALLOW_ACTION:
+      return PermissionState::Granted;
+
+    case nsIPermissionManager::DENY_ACTION:
+      return PermissionState::Denied;
+
+    default:
+    case nsIPermissionManager::PROMPT_ACTION:
+      return PermissionState::Prompt;
+  }
+}
+
+nsresult
+CheckPermission(const char* aName,
+                nsPIDOMWindow* aWindow,
+                PermissionState& aResult)
+{
+  MOZ_ASSERT(aName);
+  MOZ_ASSERT(aWindow);
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (NS_WARN_IF(!permMgr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t action = nsIPermissionManager::DENY_ACTION;
+  nsresult rv = permMgr->TestPermissionFromWindow(aWindow, aName, &action);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aResult = ActionToPermissionState(action);
+  return NS_OK;
+}
+
+nsresult
+CheckPushPermission(JSContext* aCx,
+                    JS::Handle<JSObject*> aPermission,
+                    nsPIDOMWindow* aWindow,
+                    PermissionState& aResult)
+{
+  PushPermissionDescriptor permission;
+  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
+  if (NS_WARN_IF(!permission.Init(aCx, value))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (permission.mUserVisible) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return CheckPermission("push", aWindow, aResult);
+}
+
+nsresult
+CheckPermission(JSContext* aCx,
+                JS::Handle<JSObject*> aPermission,
+                nsPIDOMWindow* aWindow,
+                PermissionState& aResult)
+{
+  PermissionDescriptor permission;
+  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
+  if (NS_WARN_IF(!permission.Init(aCx, value))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  switch (permission.mName) {
+    case PermissionName::Geolocation:
+      return CheckPermission("geo", aWindow, aResult);
+
+    case PermissionName::Notifications:
+      return CheckPermission("desktop-notification", aWindow, aResult);
+
+    case PermissionName::Push:
+      return CheckPushPermission(aCx, aPermission, aWindow, aResult);
+
+    case PermissionName::Midi:
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
+} // namespace
+
 already_AddRefed<Promise>
-Permissions::Query(const PermissionDescriptor& aPermission)
+Permissions::Query(JSContext* aCx,
+                   JS::Handle<JSObject*> aPermission,
+                   ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   if (!global) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  ErrorResult aRv;
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
-
+  PermissionState state = PermissionState::Denied;
+  nsresult rv = CheckPermission(aCx, aPermission, mWindow, state);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+  } else {
+    promise->MaybeResolve(new PermissionStatus(mWindow, state));
+  }
   return promise.forget();
 }
 
