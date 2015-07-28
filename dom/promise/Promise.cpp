@@ -1512,9 +1512,7 @@ public:
       return false;
     }
 
-    // TODO Bug 975246 - nsRefPtr should support operator |nsRefPtr->*funcType|.
-    (workerPromise.get()->*mFunc)(aCx,
-                                  value);
+    (workerPromise->*mFunc)(aCx, value);
 
     // Release the Promise because it has been resolved/rejected for sure.
     mPromiseWorkerProxy->CleanUp(aCx);
