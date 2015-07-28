@@ -55,6 +55,10 @@ extern "C" {
   __attribute__ ((visibility("default")))
   jclass
   jsjni_GetGlobalClassRef(const char *className) {
+    if (NS_IsMainThread()) {
+      return __jsjni_GetGlobalClassRef(className);
+    }
+
     nsCOMPtr<nsIThread> mainThread;
     mozilla::DebugOnly<nsresult> rv = NS_GetMainThread(getter_AddRefs(mainThread));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
