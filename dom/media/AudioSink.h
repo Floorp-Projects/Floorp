@@ -81,6 +81,12 @@ private:
   // should shutdown.
   bool IsPlaybackContinuing();
 
+  // Write audio samples or silence to the audio hardware.
+  // Return false if any error. Called on the audio thread.
+  bool PlayAudio();
+
+  void FinishAudioLoop();
+
   // Write aFrames of audio frames of silence to the audio hardware. Returns
   // the number of frames actually written. The write size is capped at
   // SILENCE_BYTES_CHUNK (32kB), so must be called in a loop to write the
