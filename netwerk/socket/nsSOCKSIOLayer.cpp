@@ -195,7 +195,7 @@ public:
   : mBuf(aBuf), mLength(aLength) {}
 
   template <size_t Size2>
-  Buffer(const Buffer<Size2>& aBuf) : mBuf(aBuf.mBuf), mLength(aBuf.mLength) {
+  MOZ_IMPLICIT Buffer(const Buffer<Size2>& aBuf) : mBuf(aBuf.mBuf), mLength(aBuf.mLength) {
       static_assert(Size2 > Size, "Cannot cast buffer");
   }
 
