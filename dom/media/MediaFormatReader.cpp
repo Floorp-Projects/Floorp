@@ -984,15 +984,13 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
     return;
   }
   decoder.mNeedDraining = false;
-  if (!decoder.mDecoder) {
-    return;
-  }
-  decoder.mOutputRequested = true;
-  if (decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
+  if (!decoder.mDecoder ||
+      decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
     // No frames to drain.
     NotifyDrainComplete(aTrack);
     return;
   }
+  decoder.mOutputRequested = true;
   decoder.mDecoder->Drain();
   decoder.mDraining = true;
   LOG("Requesting %s decoder to drain", TrackTypeToStr(aTrack));
