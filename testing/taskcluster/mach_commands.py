@@ -21,6 +21,7 @@ from mach.decorators import (
 ROOT = os.path.dirname(os.path.realpath(__file__))
 GECKO = os.path.realpath(os.path.join(ROOT, '..', '..'))
 DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
+MOZHARNESS_CONFIG = os.path.join(GECKO, 'testing', 'mozharness', 'mozharness.json')
 
 # XXX: If/when we have the taskcluster queue use construct url instead
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
@@ -38,6 +39,10 @@ DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
+
+def load_mozharness_info():
+    with open(MOZHARNESS_CONFIG) as content:
+        return json.load(content)
 
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
@@ -258,6 +263,7 @@ class Graph(object):
         jobs = templates.load(job_path, {})
 
         job_graph = parse_commit(message, jobs)
+        mozharness = load_mozharness_info()
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
@@ -272,6 +278,9 @@ class Graph(object):
             'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': current_json_time(),
+            'mozharness_repository': mozharness['repo'],
+            'mozharness_rev': mozharness['revision'],
+            'mozharness_ref':mozharness.get('reference', mozharness['revision']),
             'revision_hash': params['revision_hash']
         }.items())
 
