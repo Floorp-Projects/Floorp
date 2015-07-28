@@ -60,6 +60,15 @@ struct RootedBase<MyContainer> {
     RelocatablePtrObject& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
     RelocatablePtrString& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
 };
+template <>
+struct PersistentRootedBase<MyContainer> {
+    RelocatablePtrObject& obj() {
+        return static_cast<PersistentRooted<MyContainer>*>(this)->get().obj;
+    }
+    RelocatablePtrString& str() {
+        return static_cast<PersistentRooted<MyContainer>*>(this)->get().str;
+    }
+};
 } // namespace js
 
 BEGIN_TEST(testGCRootedStaticStructInternalStackStorage)
@@ -90,6 +99,40 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
     JS::RootedObject obj(cx, container.obj());
     JS::RootedValue val(cx, StringValue(container.str()));
     CHECK(JS_SetProperty(cx, obj, "foo", val));
+    obj = nullptr;
+    val = UndefinedValue();
+
+    {
+        JS::RootedString actual(cx);
+        bool same;
+
+        // Automatic move from stack to heap.
+        JS::PersistentRooted<MyContainer> heap(cx, container);
+
+        // clear prior rooting.
+        container.obj() = nullptr;
+        container.str() = nullptr;
+
+        obj = heap.obj();
+        CHECK(JS_GetProperty(cx, obj, "foo", &val));
+        actual = val.toString();
+        CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+        CHECK(same);
+        obj = nullptr;
+        actual = nullptr;
+
+        JS_GC(cx->runtime());
+        JS_GC(cx->runtime());
+
+        obj = heap.obj();
+        CHECK(JS_GetProperty(cx, obj, "foo", &val));
+        actual = val.toString();
+        CHECK(JS_StringEqualsAscii(cx, actual, "Hello", &same));
+        CHECK(same);
+        obj = nullptr;
+        actual = nullptr;
+    }
+
     return true;
 }
 END_TEST(testGCRootedStaticStructInternalStackStorageAugmented)

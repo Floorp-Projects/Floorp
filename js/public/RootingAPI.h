@@ -1021,6 +1021,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
                    kind == js::THING_ROOT_STRING ||
                    kind == js::THING_ROOT_ID ||
                    kind == js::THING_ROOT_VALUE ||
+                   kind == js::THING_ROOT_STATIC_TRACEABLE ||
                    kind == js::THING_ROOT_DYNAMIC_TRACEABLE);
     }
 
@@ -1101,7 +1102,13 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         ptr = value;
     }
 
-    T ptr;
+    // See the comment above Rooted::ptr.
+    using MaybeWrapped = typename mozilla::Conditional<
+        mozilla::IsBaseOf<StaticTraceable, T>::value,
+        js::DispatchWrapper<T>,
+        T>::Type;
+
+    MaybeWrapped ptr;
 };
 
 class JS_PUBLIC_API(ObjectPtr)
