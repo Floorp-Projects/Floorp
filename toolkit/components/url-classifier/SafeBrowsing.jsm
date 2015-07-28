@@ -214,6 +214,10 @@ this.SafeBrowsing = {
     const phishURL    = "itisatrap.org/firefox/its-a-trap.html";
     const malwareURL  = "itisatrap.org/firefox/its-an-attack.html";
     const unwantedURL = "itisatrap.org/firefox/unwanted.html";
+    const trackerURLs  = [
+      "trackertest.org/",
+      "itisatracker.org/",
+    ];
 
     let update = "n:1000\ni:test-malware-simple\nad:1\n" +
                  "a:1:32:" + malwareURL.length + "\n" +
@@ -224,6 +228,11 @@ this.SafeBrowsing = {
     update += "n:1000\ni:test-unwanted-simple\nad:1\n" +
               "a:1:32:" + unwantedURL.length + "\n" +
               unwantedURL;
+    trackerURLs.forEach((trackerURL, i) => {
+      update += "n:1000\ni:test-track-simple\nad:1\n" +
+                "a:" + (i + 1) + ":32:" + trackerURL.length + "\n" +
+                trackerURL;
+    });
     log("addMozEntries:", update);
 
     let db = Cc["@mozilla.org/url-classifier/dbservice;1"].
@@ -238,7 +247,8 @@ this.SafeBrowsing = {
     };
 
     try {
-      db.beginUpdate(dummyListener, "test-malware-simple,test-phish-simple,test-unwanted-simple", "");
+      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple";
+      db.beginUpdate(dummyListener, tables, "");
       db.beginStream("", "");
       db.updateStream(update);
       db.finishStream();

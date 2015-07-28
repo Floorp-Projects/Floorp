@@ -4737,11 +4737,11 @@ pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,tes
 pref("urlclassifier.phishTable", "goog-phish-shavar,test-phish-simple");
 pref("urlclassifier.downloadBlockTable", "");
 pref("urlclassifier.downloadAllowTable", "");
-pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,goog-downloadwhite-digest256,mozpub-track-digest256");
+pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,goog-downloadwhite-digest256,mozpub-track-digest256");
 
 // The table and update/gethash URLs for Safebrowsing phishing and malware
 // checks.
-pref("urlclassifier.trackingTable", "mozpub-track-digest256");
+pref("urlclassifier.trackingTable", "test-track-simple,mozpub-track-digest256");
 pref("browser.trackingprotection.updateURL", "https://tracking.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
 pref("browser.trackingprotection.gethashURL", "https://tracking.services.mozilla.com/gethash?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
 

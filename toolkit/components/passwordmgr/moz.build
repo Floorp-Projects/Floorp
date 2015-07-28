@@ -41,10 +41,10 @@ EXTRA_PP_JS_MODULES += [
 
 EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
-    'LoginDoorhangers.jsm',
     'LoginHelper.jsm',
     'LoginManagerContent.jsm',
     'LoginRecipes.jsm',
+    'OSCrypto.jsm',
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
@@ -56,8 +56,14 @@ else:
         'storage-json.js',
     ]
     EXTRA_JS_MODULES += [
+        'LoginDoorhangers.jsm',
         'LoginImport.jsm',
         'LoginStore.jsm',
+    ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    EXTRA_JS_MODULES += [
+        'OSCrypto_win.js',
     ]
 
 JAR_MANIFESTS += ['jar.mn']

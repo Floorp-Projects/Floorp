@@ -213,6 +213,20 @@ Sensitive information such as your Bugzilla credentials could be
 stolen if others have access to this file/machine.
 '''.strip()
 
+MULTIPLE_VCT = '''
+*** WARNING ***
+
+Multiple version-control-tools repositories are referenced in your
+Mercurial config. Extensions and other code within the
+version-control-tools repository could run with inconsistent results.
+
+Please manually edit the following file to reference a single
+version-control-tools repository:
+
+    %s
+'''.lstrip()
+
+
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
 
@@ -403,6 +417,23 @@ class MercurialSetupWizard(object):
                     shutil.rmtree(path)
 
         c.add_mozilla_host_fingerprints()
+
+        # References to multiple version-control-tools checkouts can confuse
+        # version-control-tools, since various Mercurial extensions resolve
+        # dependencies via __file__ and repos could reference another copy.
+        seen_vct = set()
+        for k, v in c.config.get('extensions', {}).items():
+            if 'version-control-tools' not in v:
+                continue
+
+            i = v.index('version-control-tools')
+            vct = v[0:i + len('version-control-tools')]
+            seen_vct.add(os.path.realpath(os.path.expanduser(vct)))
+
+        if len(seen_vct) > 1:
+            print(MULTIPLE_VCT % c.config_path)
+
+        # At this point the config should be finalized.
 
         b = StringIO()
         c.write(b)
