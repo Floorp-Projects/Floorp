@@ -41,6 +41,8 @@ void JNICALL ProvideCameraFrame(
     jint rotation,
     jlong timeStamp,
     jlong context) {
+  if (!context)
+    return;
   webrtc::videocapturemodule::VideoCaptureAndroid* captureModule =
       reinterpret_cast<webrtc::videocapturemodule::VideoCaptureAndroid*>(
           context);
@@ -167,7 +169,14 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   if (_captureStarted)
     StopCapture();
   AttachThreadScoped ats(g_jvm);
-  ats.env()->DeleteGlobalRef(_jCapturer);
+  JNIEnv* env = ats.env();
+
+  // Avoid callbacks into ourself even if the above stopCapture fails.
+  jmethodID j_unlink =
+    env->GetMethodID(g_java_capturer_class, "unlinkCapturer", "()V");
+  env->CallVoidMethod(_jCapturer, j_unlink);
+
+  env->DeleteGlobalRef(_jCapturer);
 }
 
 int32_t VideoCaptureAndroid::StartCapture(
@@ -216,6 +225,7 @@ int32_t VideoCaptureAndroid::StopCapture() {
   // onIncomingFrame() call.
   _apiCs.Leave();
 
+  // try to stop the capturer.
   jmethodID j_stop =
       env->GetMethodID(g_java_capturer_class, "stopCapture", "()Z");
   return env->CallBooleanMethod(_jCapturer, j_stop) ? 0 : -1;
