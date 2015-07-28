@@ -64,6 +64,16 @@ Performance::GetPerformanceTimingFromString(const nsAString& aProperty)
   return 0;
 }
 
+void
+Performance::InsertUserEntry(PerformanceEntry* aEntry)
+{
+  if (mWorkerPrivate->PerformanceLoggingEnabled()) {
+    PerformanceBase::LogEntry(aEntry,
+                              NS_ConvertUTF16toUTF8(mWorkerPrivate->ScriptURL()));
+  }
+  PerformanceBase::InsertUserEntry(aEntry);
+}
+
 DOMHighResTimeStamp
 Performance::DeltaFromNavigationStart(DOMHighResTimeStamp aTime)
 {
