@@ -2442,6 +2442,13 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
         return false;
     }
 
+    /*
+     * ES6 9.1.2 step 3-4 if |obj.[[Prototype]]| has SameValue as |proto| return true.
+     * Since the values in question are objects, we can just compare pointers.
+     */
+    if (proto == obj->getProto())
+        return result.succeed();
+
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
     bool extensible;
     if (!IsExtensible(cx, obj, &extensible))
