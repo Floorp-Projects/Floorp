@@ -19,6 +19,8 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
   if (mShutdown)
     return true;
 
+  CheckDocTree();
+
   if (aData.NewTree().IsEmpty()) {
     NS_ERROR("no children being added");
     return false;
@@ -47,6 +49,8 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
     MOZ_ASSERT(mAccessibles.GetEntry(id));
   }
 #endif
+
+  CheckDocTree();
 
   return true;
 }
@@ -117,6 +121,8 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
   ProxyAccessible* parent = root->Parent();
   parent->RemoveChild(root);
   root->Shutdown();
+
+  CheckDocTree();
 
   return true;
 }
@@ -190,9 +196,12 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   if (!aID)
     return false;
 
+  CheckDocTree();
+
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
   bool result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
+  CheckDocTree();
   return result;
 }
 
