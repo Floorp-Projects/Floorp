@@ -414,3 +414,71 @@ add_task(function* mixup_frecency() {
 
   yield cleanUpSuggestions();
 });
+
+add_task(function* prohibit_suggestions() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+
+  yield check_autocomplete({
+    search: "localhost",
+    matches: [
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost foo",
+          searchQuery: "localhost",
+          searchSuggestion: "localhost foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost bar",
+          searchQuery: "localhost",
+          searchSuggestion: "localhost bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", true);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
+  });
+  yield check_autocomplete({
+    search: "localhost",
+    matches: [],
+  });
+
+  yield check_autocomplete({
+    search: "1.2.3.4",
+    matches: [],
+  });
+  yield check_autocomplete({
+    search: "[2001::1]:30",
+    matches: [],
+  });
+  yield check_autocomplete({
+    search: "user:pass@test",
+    matches: [],
+  });
+  yield check_autocomplete({
+    search: "test/test",
+    matches: [],
+  });
+  yield check_autocomplete({
+    search: "data:text/plain,Content",
+    matches: [],
+  });
+
+  yield check_autocomplete({
+    search: "a",
+    matches: [],
+  });
+
+  yield cleanUpSuggestions();
+});
